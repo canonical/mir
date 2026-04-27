@@ -19,62 +19,37 @@
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
+#include "client.h"
+#include "protocol_error.h"
 #include <mir/geometry/rectangle.h>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
-namespace mir
-{
-namespace frontend
-{
-class WlSubcompositorInstance: wayland::Subcompositor
-{
-public:
-    WlSubcompositorInstance(wl_resource* new_resource);
-
-private:
-    void get_subsurface(wl_resource* new_subsurface, wl_resource* surface, wl_resource* parent) override;
-};
-}
-}
-
-mf::WlSubcompositor::WlSubcompositor(wl_display* display)
-    : Global{display, Version<1>()}
+mf::WlSubcompositor::WlSubcompositor(std::shared_ptr<wayland_rs::Client> const& client)
+    : client(client)
 {
 }
 
-void mf::WlSubcompositor::bind(wl_resource* new_wl_subcompositor)
+auto mf::WlSubcompositor::get_subsurface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface, wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent)
+    -> std::shared_ptr<wayland_rs::WlSubsurfaceImpl>
 {
-    new WlSubcompositorInstance(new_wl_subcompositor);
+    return std::make_shared<WlSubsurface>(client, surface, parent);
 }
 
-mf::WlSubcompositorInstance::WlSubcompositorInstance(wl_resource* new_resource)
-    : wayland::Subcompositor(new_resource, Version<1>())
-{
-}
-
-void mf::WlSubcompositorInstance::get_subsurface(
-    wl_resource* new_subsurface,
-    wl_resource* surface,
-    wl_resource* parent)
-{
-    new WlSubsurface(new_subsurface, WlSurface::from(surface), WlSurface::from(parent));
-}
-
-mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface)
-    : wayland::Subsurface(new_subsurface, Version<1>()),
-      surface{surface},
-      parent{parent_surface},
+mf::WlSubsurface::WlSubsurface(
+    std::shared_ptr<wayland_rs::Client> const& client,
+    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface_impl, wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent_impl)
+    : client{client},
+      surface{WlSurface::from(&surface_impl.value())->shared_from_this()},
+      parent{WlSurface::from(&parent_impl.value())->shared_from_this()},
       synchronized_{true}
 {
-    parent_surface->add_subsurface(this);
-    surface->set_role(this);
-    surface->pending_invalidate_surface_data();
+    parent.value().add_subsurface(this);
+    surface.value().set_role(this);
+    surface.value().pending_invalidate_surface_data();
 }
 
 mf::WlSubsurface::~WlSubsurface()
@@ -83,7 +58,7 @@ mf::WlSubsurface::~WlSubsurface()
     {
         parent.value().remove_subsurface(this);
     }
-    surface->clear_role();
+    surface.value().clear_role();
     refresh_surface_data_now();
 }
 
@@ -91,10 +66,10 @@ void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecificat
                                              std::vector<mir::geometry::Rectangle>& input_shape_accumulator,
                                              geometry::Displacement const& parent_offset) const
 {
-    if (surface->buffer_size())
+    if (surface.value().buffer_size())
     {
         // surface is mapped
-        surface->populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
+        surface.value().populate_surface_data(buffer_streams, input_shape_accumulator, parent_offset);
     }
 }
 
@@ -122,22 +97,22 @@ void mf::WlSubsurface::parent_has_committed()
 {
     if (cached_state && synchronized())
     {
-        surface->commit(cached_state.value());
+        surface.value().commit(cached_state.value());
         cached_state = std::nullopt;
     }
 }
 
 auto mf::WlSubsurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*>
 {
-    return surface->subsurface_at(point);
+    return surface.value().subsurface_at(point);
 }
 
 void mf::WlSubsurface::set_position(int32_t x, int32_t y)
 {
-    surface->set_pending_offset(geom::Displacement{x, y});
+    surface.value().set_pending_offset(geom::Displacement{x, y});
 }
 
-void mf::WlSubsurface::place_above(struct wl_resource* sibling)
+void mf::WlSubsurface::place_above(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& sibling)
 {
     if (!parent)
     {
@@ -145,28 +120,28 @@ void mf::WlSubsurface::place_above(struct wl_resource* sibling)
         return;
     }
 
-    WlSurface* sibling_surface = WlSurface::from(sibling);
+    WlSurface* sibling_surface = WlSurface::from(&sibling.value());
 
-    if (sibling_surface == surface)
+    if (sibling_surface == &surface.value())
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            mw::WlSubsurfaceImpl::Error::bad_surface,
             "wl_subsurface.place_above: sibling cannot be the subsurface itself"));
     }
 
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            mw::WlSubsurfaceImpl::Error::bad_surface,
             "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
     }
 
     parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
 }
 
-void mf::WlSubsurface::place_below(struct wl_resource* sibling)
+void mf::WlSubsurface::place_below(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& sibling)
 {
     if (!parent)
     {
@@ -174,21 +149,21 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
         return;
     }
 
-    WlSurface* sibling_surface = WlSurface::from(sibling);
+    WlSurface* sibling_surface = WlSurface::from(&sibling.value());
 
-    if (sibling_surface == surface)
+    if (sibling_surface == &surface.value())
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            mw::WlSubsurfaceImpl::Error::bad_surface,
             "wl_subsurface.place_below: sibling cannot be the subsurface itself"));
     }
 
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            mw::WlSubsurfaceImpl::Error::bad_surface,
             "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"));
     }
 
@@ -222,7 +197,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 
     if (cached_state.value().buffer)
     {
-        bool const currently_mapped = static_cast<bool>(surface->buffer_size());
+        bool const currently_mapped = static_cast<bool>(surface.value().buffer_size());
         bool const pending_mapped = cached_state.value().buffer.value();
         if (currently_mapped != pending_mapped)
         {
@@ -239,7 +214,7 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
     }
     else
     {
-        surface->commit(cached_state.value());
+        surface.value().commit(cached_state.value());
         if (cached_state.value().surface_data_needs_refresh())
             refresh_surface_data_now();
         cached_state = std::nullopt;
@@ -252,8 +227,8 @@ void mf::WlSubsurface::surface_destroyed()
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
         BOOST_THROW_EXCEPTION(std::runtime_error{
-            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
-            " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
+            "wl_surface@" + std::to_string(surface.value().object_id()) +
+            " destroyed before it's associated wl_subsurface@" + std::to_string(object_id())});
     }
     else
     {
