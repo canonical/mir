@@ -925,6 +925,17 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     );
     class.add_method(get_box_method);
 
+    // Add a post_error method that posts a protocol error to the client for this resource.
+    // This follows the same pattern as event-sending methods, routing through the Rust
+    // middleware Ext type to call wayland-server's DisplayHandle::post_error().
+    let mut post_error_method = CppMethod::new("post_error", None, false, false, false, true);
+    post_error_method.add_arg(CppArg::new(CppType::CppU32, "code", false));
+    post_error_method.add_arg(CppArg::new(CppType::String, "message", false));
+    post_error_method.set_body(
+        "if (!instance_.has_value()) {\n    throw \"post_error() used before associate()\";\n}\ninstance_.value()->post_error(code, message);",
+    );
+    class.add_method(post_error_method);
+
     // Add a protected constructor and member so that subclasses know which client
     // they are serving and can interact with it as they please.
     class.add_protected_constructor_arg(CppArg::new(
