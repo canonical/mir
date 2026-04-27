@@ -19,7 +19,7 @@
 
 #include "wayland_input_dispatcher.h"
 #include <mir/scene/null_surface_observer.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <memory>
 #include <optional>
@@ -83,14 +83,14 @@ private:
     struct Impl
     {
         Impl(
-            wayland::Weak<WindowWlSurfaceRole> window,
+            wayland_rs::Weak<WindowWlSurfaceRole> window,
             std::unique_ptr<WaylandInputDispatcher> input_dispatcher)
             : window{window},
               input_dispatcher{std::move(input_dispatcher)}
         {
         }
 
-        wayland::Weak<WindowWlSurfaceRole> const window;
+        wayland_rs::Weak<WindowWlSurfaceRole> const window;
         std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 
         geometry::Size window_size{};

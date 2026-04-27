@@ -40,7 +40,7 @@ namespace frontend
 class DisplayChanger;
 class OutputGlobal;
 
-class OutputConfigListener : public virtual wayland_rs::LifetimeTracker, public std::enable_shared_from_this<OutputConfigListener>
+class OutputConfigListener : public virtual wayland_rs::LifetimeTracker
 {
 public:
     // Returns true if the wl_output needs to send a done event
@@ -52,7 +52,7 @@ public:
     OutputConfigListener& operator=(OutputConfigListener const&) = delete;
 };
 
-class OutputInstance : public wayland_rs::WlOutputImpl, OutputConfigListener
+class OutputInstance : public wayland_rs::WlOutputImpl, OutputConfigListener, public std::enable_shared_from_this<OutputInstance>
 {
 public:
     OutputInstance(OutputGlobal* global, std::shared_ptr<wayland_rs::Client> const& client);
@@ -89,7 +89,7 @@ private:
     void instance_destroyed(OutputInstance* instance);
 
     graphics::DisplayConfigurationOutput output_config;
-    std::vector<wayland_rs::Weak<OutputConfigListener>> listeners;
+    std::vector<OutputConfigListener*> listeners;
     std::unordered_map<wayland_rs::Client*, std::vector<wayland_rs::Weak<OutputInstance>>> instances;
 };
 

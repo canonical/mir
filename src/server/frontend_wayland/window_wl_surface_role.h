@@ -64,7 +64,8 @@ class SurfaceRegistry;
 class WindowWlSurfaceRole
     : public WlSurfaceRole,
       public OutputManagerListener,
-      public OutputConfigListener
+      public OutputConfigListener,
+      public std::enable_shared_from_this<WindowWlSurfaceRole>
 {
 public:
     WindowWlSurfaceRole(

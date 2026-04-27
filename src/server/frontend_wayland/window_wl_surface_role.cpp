@@ -243,7 +243,7 @@ void mf::WindowWlSurfaceRole::set_fullscreen(mw::Weak<mw::WlOutputImpl> const& o
     else
     {
         spec().state = mir_window_state_fullscreen;
-        if (auto const output_id = OutputManager::output_id_for(output))
+        if (auto const output_id = OutputManager::output_id_for(&output.value()))
         {
             spec().output_id = output_id.value();
         }
@@ -469,7 +469,7 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
                     {
                         if (auto const fractional_scale = surface.value().get_fractional_scale())
                             fractional_scale.value().output_entered(config);
-                        surface.value().send_enter_event(instance->resource);
+                        surface.value().send_enter_event(instance->shared_from_this());
                         pending_enter_events.erase(id_it);
                         output_scales[config.id] = std::ceil(config.scale);
                     });
@@ -571,7 +571,7 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
                     client,
                     [&](OutputInstance* instance)
                     {
-                        surface.value().send_enter_event(instance->resource);
+                        surface.value().send_enter_event(instance->shared_from_this());
                         event_sent = true;
                     });
             }
@@ -606,7 +606,7 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
                     client,
                     [&](OutputInstance* instance)
                     {
-                        surface.value().send_leave_event(instance->resource);
+                        surface.value().send_leave_event(instance->shared_from_this());
                     });
             }
         }

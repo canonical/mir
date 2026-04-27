@@ -151,7 +151,7 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
     bool needs_done = false;
     for (auto& listener : listeners)
     {
-        if (listener && listener.value().output_config_changed(config))
+        if (listener && listener->output_config_changed(config))
         {
             needs_done = true;
         }
@@ -187,12 +187,12 @@ void mf::OutputGlobal::for_each_output_bound_by(
 
 void mf::OutputGlobal::add_listener(OutputConfigListener* listener)
 {
-    listeners.emplace_back(listener->shared_from_this());
+    listeners.emplace_back(listener);
 }
 
 void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
 {
-    std::erase_if(listeners, [&](auto candidate) { return !candidate || &candidate.value() == listener; });
+    std::erase_if(listeners, [&](auto candidate) { return !candidate || candidate == listener; });
 }
 
  std::shared_ptr<mf::OutputInstance> mf::OutputGlobal::create(std::shared_ptr<wayland_rs::Client> const& client)
@@ -201,7 +201,7 @@ void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
     instances[client.get()].push_back(mw::Weak(instance));
     for (auto const& listener : listeners)
     {
-        if (listener) listener.value().output_config_changed(output_config);
+        if (listener) listener->output_config_changed(output_config);
     }
     instance->send_done();
     return instance;
