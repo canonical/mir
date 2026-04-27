@@ -54,6 +54,11 @@ execute: |
       ${RELEASE}
     )
 
+    if [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
+      MKSBUILD_OPTS+=("--debootstrap-mirror=http://azure.archive.ubuntu.com/ubuntu/")
+      export SOURCES_SECURITY_URL=http://azure.archive.ubuntu.com/ubuntu/
+    fi
+
     SBUILD_OPTS=(
       --jobs=$(nproc)
       --verbose
@@ -84,6 +89,7 @@ execute: |
     # Cross building
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
       MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
+      unset SOURCES_SECURITY_URL
 
       SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
 
