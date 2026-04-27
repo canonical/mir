@@ -317,10 +317,10 @@ void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_a
     auto const scene_surface_{scene_surface()};
     if (scene_surface_)
     {
-        shell->modify_surface(
-            scene_surface_.value()->session().lock(),
-            scene_surface_.value(),
-            spec);
+        if (auto const session = scene_surface_.value()->session().lock())
+        {
+            shell->modify_surface(session, scene_surface_.value(), spec);
+        }
     }
     else
     {
@@ -348,10 +348,10 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     auto const scene_surface_{scene_surface()};
     if (scene_surface_)
     {
-        shell->modify_surface(
-            scene_surface_.value()->session().lock(),
-            scene_surface_.value(),
-            positioner);
+        if (auto const session = scene_surface_.value()->session().lock())
+        {
+            shell->modify_surface(session, scene_surface_.value(), positioner);
+        }
     }
     else
     {
@@ -769,6 +769,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
+        case Anchor::none:
+            placement = mir_placement_gravity_center;
+            break;
+
         case Anchor::top:
             placement = mir_placement_gravity_north;
             break;
@@ -802,7 +806,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            placement = mir_placement_gravity_center;
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid anchor value %u", anchor));
     }
 
     aux_rect_placement_gravity = placement;
