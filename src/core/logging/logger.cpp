@@ -67,6 +67,8 @@ ml::Tag::Tag(Tag const& parent, std::string_view name)
 {
 }
 
+ml::Tag::~Tag() = default;
+
 ml::Tag::Tag(std::unique_ptr<Impl> impl)
     : impl{std::move(impl)}
 {
