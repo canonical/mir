@@ -27,7 +27,7 @@ namespace input
 {
 class Surface;
 }
-namespace wayland
+namespace wayland_rs
 {
 template <typename T> class Weak;
 }
@@ -39,13 +39,13 @@ class SurfaceRegistry
 {
 public:
     void add_surface(
-        std::shared_ptr<input::Surface const> const& surf, wayland::Weak<frontend::WlSurface> const& wl_surf);
+        std::shared_ptr<input::Surface const> const& surf, wayland_rs::Weak<frontend::WlSurface> const& wl_surf);
     void remove_surface(std::shared_ptr<input::Surface const> const& surf);
     auto lookup_wayland_surface(std::shared_ptr<input::Surface const> const& surf)
-        -> std::optional<wayland::Weak<frontend::WlSurface>>;
+        -> std::optional<wayland_rs::Weak<frontend::WlSurface>>;
 
 private:
-    std::unordered_map<std::shared_ptr<input::Surface const>, wayland::Weak<frontend::WlSurface> const>
+    std::unordered_map<std::shared_ptr<input::Surface const>, wayland_rs::Weak<frontend::WlSurface> const>
         scene_surface_to_wayland_surface;
 };
 

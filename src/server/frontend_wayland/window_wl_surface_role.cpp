@@ -22,8 +22,9 @@
 #include "wl_surface.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
+#include "wayland.h"
+#include "client.h"
 #include <mir/frontend/wayland.h>
-#include <mir/wayland/client.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/scene/surface.h>
@@ -35,7 +36,7 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -65,7 +66,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     Executor& wayland_executor,
     WlSeat* seat,
     mw::Client* client,
-    WlSurface* surface,
+    std::shared_ptr<WlSurface> const& surface,
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
@@ -75,7 +76,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       session{client->client_session()},
       output_manager{output_manager},
       wayland_executor{wayland_executor},
-      observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface, this)},
+      observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface.get(), this)},
       committed_min_size{0, 0},
       committed_max_size{max_possible_size},
       surface_registry{surface_registry}
@@ -226,14 +227,14 @@ void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
     mods.min_height = geom::Height{height};
 }
 
-void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> const& output)
+void mf::WindowWlSurfaceRole::set_fullscreen(mw::Weak<mw::WlOutputImpl> const& output)
 {
     // We must process this request immediately (i.e. don't defer until commit())
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell::SurfaceSpecification mods;
         mods.state = scene_surface->state_tracker().with(mir_window_state_fullscreen).active_state();
-        if (auto const output_global = OutputGlobal::from(output.value_or(nullptr)))
+        if (auto const output_global = output ? OutputGlobal::from(&output.value()) : nullptr)
         {
             mods.output_id = output_global->current_config().id;
         }
@@ -418,7 +419,7 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in its implementation
         // NOTE: it's also overridden in layer shell, for reasons explained there
         log_warning("wl_surface@%s destroyed before associated role",
-                    (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str());
+                    (surface ? std::to_string(surface.value().object_id()) : "?").c_str());
 
         // This isn't strictly correct (as it only applies to wl-shell) but is commonly assumed (e.g. by SDL2) and
         // implemented (e.g. Mutter for xdg-shell)
@@ -487,7 +488,7 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
 
         if (prev_scale != max_scale)
         {
-            surface.value().send_preferred_buffer_scale_event_if_supported(max_scale);
+            surface.value().send_preferred_buffer_scale_event(max_scale);
         }
     }
 
@@ -580,7 +581,7 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
 
         if (prev_scale != max_scale)
         {
-            surface.value().send_preferred_buffer_scale_event_if_supported(max_scale);
+            surface.value().send_preferred_buffer_scale_event(max_scale);
         }
     }
     if (!event_sent)
