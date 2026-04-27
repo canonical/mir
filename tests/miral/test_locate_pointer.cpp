@@ -38,7 +38,7 @@ namespace
 {
 static constexpr auto locate_pointer_delay = 100ms;
 // Accounts for CI slowness - provides ample time for the alarm to fire after scheduling
-static constexpr auto locate_pointer_callback_timeout = std::chrono::seconds{5};
+static constexpr auto locate_pointer_callback_timeout = std::chrono::seconds{1};
 }
 
 struct TestLocatePointer : miral::TestServer
