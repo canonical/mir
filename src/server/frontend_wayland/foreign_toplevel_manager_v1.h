@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_FOREIGN_TOPLEVEL_MANAGER_V1_H
 #define MIR_FRONTEND_FOREIGN_TOPLEVEL_MANAGER_V1_H
 
-#include "wlr-foreign-toplevel-management-unstable-v1_wrapper.h"
+#include "wlr_foreign_toplevel_management_unstable_v1.h"
 #include "desktop_file_manager.h"
 #include <mir/synchronised.h>
 
@@ -33,17 +33,36 @@ namespace shell
 {
 class Shell;
 }
+namespace scene
+{
+class Observer;
+}
 namespace frontend
 {
 class SurfaceStack;
 
-auto create_foreign_toplevel_manager_v1(
-    wl_display* display,
-    std::shared_ptr<shell::Shell> const& shell,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
--> std::shared_ptr<wayland::ForeignToplevelManagerV1::Global>;
+/// Informs a client about toplevels from itself and other clients
+/// The Wayland objects it creates for each toplevel can be used to aquire information and control that toplevel
+/// Useful for task bars and app switchers
+class ForeignToplevelManagerV1
+    : public wayland_rs::ZwlrForeignToplevelManagerV1Impl
+{
+public:
+    ForeignToplevelManagerV1(std::shared_ptr<shell::Shell> const& shell,
+        std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<SurfaceStack> const& surface_stack,
+        std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
+
+    ~ForeignToplevelManagerV1();
+    auto stop() -> void override;
+    std::shared_ptr<shell::Shell> const shell;
+private:
+
+    std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
+    std::shared_ptr<scene::Observer> const observer;
+};
 
 class GDesktopFileCache : public DesktopFileCache
 {
