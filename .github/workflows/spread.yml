@@ -45,7 +45,6 @@ jobs:
 
         TASKS+=(
           "lxd:...:debian_sid"
-          "lxd:...:fedora_42"
           "lxd:...:fedora_43"
           "lxd:...:fedora_clang"
           "lxd:...:fedora_rawhide"
