@@ -1,4 +1,4 @@
-# User libraries
+# Mir libraries for compositor authors
 
 These are the principle libraries *Mir* provides compositor authors.
 
