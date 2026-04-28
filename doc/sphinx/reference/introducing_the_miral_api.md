@@ -2,7 +2,7 @@
 
 # Introducing the MirAL API
 
-When using Mir to develop a compositor the principle library API you will be
+When using Mir to develop a compositor the principal library API you will be
 using is MirAL - the "Mir Abstraction Layer". This provides a stable ABI onto
 the most useful functionality Mir provides.
 
