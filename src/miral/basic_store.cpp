@@ -1,5 +1,6 @@
 #include "basic_store.h"
 
+#include <algorithm>
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
@@ -9,7 +10,6 @@
 #include <map>
 #include <mutex>
 #include <ranges>
-#include <set>
 #include <stdexcept>
 
 namespace mlc = miral::live_config;
@@ -91,7 +91,7 @@ private:
         std::string const description;
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
-        std::set<std::filesystem::path> modification_paths;
+        std::vector<std::filesystem::path> modification_paths;
         bool clear_requested = false;
     };
 
@@ -160,7 +160,8 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
             details.parsed_values.push_back(std::string{value});
         }
 
-        details.modification_paths.insert(modification_path);
+        if (std::ranges::contains(details.modification_paths, modification_path))
+            details.modification_paths.push_back(modification_path);
     }
     else
     {
