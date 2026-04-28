@@ -194,8 +194,7 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
         }),
     make_extension_builder<mw::IdleInhibitManagerV1>([](auto const& ctx)
         {
-            return mf::create_idle_inhibit_manager_v1(
-                ctx.display,
+            return std::make_shared<mf::IdleInhibitManagerV1>(
                 ctx.wayland_executor,
                 ctx.idle_hub);
         }),
