@@ -26,6 +26,8 @@ namespace mir
 {
 namespace wayland_rs
 {
+constexpr uint32_t generic_error_code = -1;
+
 class ProtocolError : public std::runtime_error
 {
 public:
