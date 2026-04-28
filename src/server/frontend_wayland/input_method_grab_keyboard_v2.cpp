@@ -21,11 +21,10 @@
 #include <mir/input/event_filter.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/events/event_builders.h>
-#include <mir/wayland/client.h>
 #include <mir/executor.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mi = mir::input;
 namespace mev = mir::events;
 
@@ -34,7 +33,7 @@ class mf::InputMethodGrabKeyboardV2::Handler
 {
 public:
     Handler(InputMethodGrabKeyboardV2* keyboard, std::shared_ptr<Executor> const& wayland_executor)
-        : keyboard{keyboard},
+        : keyboard{keyboard->shared_from_this()},
           wayland_executor{wayland_executor}
     {
     }
@@ -63,16 +62,16 @@ public:
     }
 
 private:
-    wayland::Weak<InputMethodGrabKeyboardV2> const keyboard;
+    wayland_rs::Weak<InputMethodGrabKeyboardV2> const keyboard;
     std::shared_ptr<Executor> const wayland_executor;
 };
 
 mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
-    wl_resource* resource,
+    std::shared_ptr<wayland_rs::Client> const& client,
     WlSeat& seat,
     std::shared_ptr<Executor> const& wayland_executor,
     input::CompositeEventFilter& event_filter)
-    : wayland::InputMethodKeyboardGrabV2{resource, Version<1>()},
+    : client{client},
       handler{std::make_shared<Handler>(this, wayland_executor)},
       helper{seat.make_keyboard_helper(this)}
 {
@@ -87,7 +86,7 @@ void mf::InputMethodGrabKeyboardV2::send_repeat_info(int32_t rate, int32_t delay
 
 void mf::InputMethodGrabKeyboardV2::send_keymap_xkb_v1(mir::Fd const& fd, size_t length)
 {
-    send_keymap_event(mw::Keyboard::KeymapFormat::xkb_v1, fd, length);
+    send_keymap_event(mw::WlKeyboardImpl::KeymapFormat::xkb_v1, fd, length);
 }
 
 void mf::InputMethodGrabKeyboardV2::send_key(std::shared_ptr<MirKeyboardEvent const> const& event)
@@ -100,8 +99,8 @@ void mf::InputMethodGrabKeyboardV2::send_key(std::shared_ptr<MirKeyboardEvent co
     auto const timestamp = mir_input_event_get_wayland_timestamp(event.get());
     int const scancode = event->scan_code();
     auto const state = (event->action() == mir_keyboard_action_down) ?
-        mw::Keyboard::KeyState::pressed :
-        mw::Keyboard::KeyState::released;
+        mw::WlKeyboardImpl::KeyState::pressed :
+        mw::WlKeyboardImpl::KeyState::released;
     send_key_event(serial, timestamp, scancode, state);
 }
 

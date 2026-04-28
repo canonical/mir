@@ -392,7 +392,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
 
             // Remember Wayland objects manage their own lifetime
-            // TODO: This is probably broken cause rust wi
+            // TODO: This is probably broken cause rust will ntoo
             auto const handle_ptr = std::make_shared<ExtForeignToplevelHandleV1>(manager.value(), surface);
             handle = mw::Weak(handle_ptr);
 
