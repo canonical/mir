@@ -22,6 +22,17 @@
 using namespace testing;
 namespace mlc = miral::live_config;
 
+template<typename T>
+auto IsAppended(auto matcher)
+{
+    return VariantWith<mlc::BasicStore::ArrayAppended<T>>(Field(&mlc::BasicStore::ArrayAppended<T>::values, matcher));
+}
+
+auto IsUnset()
+{
+    return VariantWith<mlc::BasicStore::ArrayUnset>(_);
+}
+
 namespace
 {
 auto const a_path = std::filesystem::path{"/some/config/file"};
@@ -34,9 +45,9 @@ struct BasicStoreTest : Test
     MOCK_METHOD(void, bool_handler, (mlc::Key const&, std::optional<bool>));
     MOCK_METHOD(void, float_handler, (mlc::Key const&, std::optional<float>));
     MOCK_METHOD(void, string_handler, (mlc::Key const&, std::optional<std::string_view>));
-    MOCK_METHOD(void, strings_handler, (mlc::Key const&, std::optional<std::span<std::string const>>));
-    MOCK_METHOD(void, ints_handler, (mlc::Key const&, std::optional<std::span<int const>>));
-    MOCK_METHOD(void, floats_handler, (mlc::Key const&, std::optional<std::span<float const>>));
+    MOCK_METHOD(void, strings_handler, (mlc::Key const&, mlc::BasicStore::ArrayUpdate<std::string>));
+    MOCK_METHOD(void, ints_handler, (mlc::Key const&, mlc::BasicStore::ArrayUpdate<int>));
+    MOCK_METHOD(void, floats_handler, (mlc::Key const&, mlc::BasicStore::ArrayUpdate<float>));
 
     mlc::Key const an_int_key{"an_int"};
     mlc::Key const a_bool_key{"a_bool"};
@@ -233,7 +244,7 @@ TEST_F(BasicStoreTest, valid_ints_values_are_handled)
 {
     store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2, 3))));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, IsAppended<int>(ElementsAre(1, 2, 3))));
 
     store.do_transaction([&]
     {
@@ -247,7 +258,7 @@ TEST_F(BasicStoreTest, valid_floats_values_are_handled)
 {
     store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.0f, 2.5f))));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, IsAppended<float>(ElementsAre(1.0f, 2.5f))));
 
     store.do_transaction([&]
     {
@@ -260,7 +271,7 @@ TEST_F(BasicStoreTest, valid_strings_values_are_handled)
 {
     store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
 
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, IsAppended<std::string>(ElementsAre("foo", "bar"))));
 
     store.do_transaction([&]
     {
@@ -274,7 +285,7 @@ TEST_F(BasicStoreTest, ints_preset_is_used_when_no_values_are_set)
     std::vector<int> const preset_vals{10, 20};
     store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, IsAppended<int>(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
@@ -284,7 +295,7 @@ TEST_F(BasicStoreTest, ints_preset_is_used_when_all_values_cannot_be_parsed)
     std::vector<int> const preset_vals{10, 20};
     store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, IsAppended<int>(ElementsAreArray(preset_vals))));
 
     store.do_transaction([&]
     {
@@ -298,7 +309,7 @@ TEST_F(BasicStoreTest, floats_preset_is_used_when_no_values_are_set)
     std::vector<float> const preset_vals{1.1f, 2.2f};
     store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAreArray(preset_vals))));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, IsAppended<float>(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
@@ -308,7 +319,7 @@ TEST_F(BasicStoreTest, floats_preset_is_used_when_all_values_cannot_be_parsed)
     std::vector<float> const preset_vals{1.1f, 2.2f};
     store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAreArray(preset_vals))));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, IsAppended<float>(ElementsAreArray(preset_vals))));
 
     store.do_transaction([&]
     {
@@ -322,7 +333,7 @@ TEST_F(BasicStoreTest, strings_preset_is_used_when_no_values_are_set)
     std::vector<std::string> const preset_vals{"alpha", "beta"};
     store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); });
 
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAreArray(preset_vals))));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, IsAppended<std::string>(ElementsAreArray(preset_vals))));
 
     run_empty();
 }
@@ -331,7 +342,7 @@ TEST_F(BasicStoreTest, ints_bad_element_is_skipped_and_good_values_are_handled)
 {
     store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1))));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, IsAppended<int>(ElementsAre(1))));
 
     store.do_transaction([&]
     {
@@ -344,7 +355,7 @@ TEST_F(BasicStoreTest, floats_bad_element_is_skipped_and_good_values_are_handled
 {
     store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.0f)))));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, IsAppended<float>(ElementsAre(FloatEq(1.0f)))));
 
     store.do_transaction([&]
     {
@@ -357,7 +368,7 @@ TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_no_value
 {
     store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, IsUnset()));
 
     run_empty();
 }
@@ -366,7 +377,7 @@ TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_no_val
 {
     store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, IsUnset()));
 
     run_empty();
 }
@@ -375,7 +386,7 @@ TEST_F(BasicStoreTest, strings_handler_receives_nullopt_when_no_preset_and_no_va
 {
     store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
 
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, strings_handler(a_strings_key, IsUnset()));
 
     run_empty();
 }
@@ -384,7 +395,7 @@ TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_all_valu
 {
     store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, IsUnset()));
 
     store.do_transaction([&]
     {
@@ -396,7 +407,7 @@ TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_all_va
 {
     store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
 
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, floats_handler(a_floats_key, IsUnset()));
 
     store.do_transaction([&]
     {

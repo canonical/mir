@@ -20,39 +20,68 @@
 #include <miral/live_config.h>
 
 #include <filesystem>
+#include <functional>
+#include <span>
+#include <string>
+#include <variant>
 
 namespace miral::live_config
 {
-class BasicStore : public Store
+class BasicStore
 {
 public:
+    /// Represents "never assigned, including no preset"
+    struct ArrayUnset {};
+
+    /// The array was appended to (no explicit clear in this transaction).
+    template<typename T>
+    struct ArrayAppended
+    {
+        std::span<T const> values;
+    };
+
+    /// The array was explicitly cleared, then optionally new values were assigned.
+    template<typename T>
+    struct ArrayReset
+    {
+        std::span<T const> values;
+    };
+
+    /// Tri-state result passed to array attribute handlers registered with BasicStore.
+    template<typename T>
+    using ArrayUpdate = std::variant<ArrayUnset, ArrayAppended<T>, ArrayReset<T>>;
+
+    using HandleInts    = std::function<void(Key const& key, ArrayUpdate<int> value)>;
+    using HandleFloats  = std::function<void(Key const& key, ArrayUpdate<float> value)>;
+    using HandleStrings = std::function<void(Key const& key, ArrayUpdate<std::string> value)>;
+
     BasicStore();
     ~BasicStore();
 
-    void add_int_attribute(Key const& key, std::string_view description, HandleInt handler) override;
-    void add_ints_attribute(Key const& key, std::string_view description, HandleInts handler) override;
-    void add_bool_attribute(Key const& key, std::string_view description, HandleBool handler) override;
-    void add_float_attribute(Key const& key, std::string_view description, HandleFloat handler) override;
-    void add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler) override;
-    void add_string_attribute(Key const& key, std::string_view description, HandleString handler) override;
-    void add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler) override;
+    void add_int_attribute(Key const& key, std::string_view description, Store::HandleInt handler);
+    void add_ints_attribute(Key const& key, std::string_view description, HandleInts handler);
+    void add_bool_attribute(Key const& key, std::string_view description, Store::HandleBool handler);
+    void add_float_attribute(Key const& key, std::string_view description, Store::HandleFloat handler);
+    void add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler);
+    void add_string_attribute(Key const& key, std::string_view description, Store::HandleString handler);
+    void add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler);
 
-    void add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler) override;
+    void add_int_attribute(Key const& key, std::string_view description, int preset, Store::HandleInt handler);
     void add_ints_attribute(
-        Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler) override;
-    void add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler) override;
-    void add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler) override;
+        Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler);
+    void add_bool_attribute(Key const& key, std::string_view description, bool preset, Store::HandleBool handler);
+    void add_float_attribute(Key const& key, std::string_view description, float preset, Store::HandleFloat handler);
     void add_floats_attribute(
-        Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler) override;
+        Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler);
     void add_string_attribute(
-        Key const& key, std::string_view description, std::string_view preset, HandleString handler) override;
+        Key const& key, std::string_view description, std::string_view preset, Store::HandleString handler);
     void add_strings_attribute(
         Key const& key,
         std::string_view description,
         std::span<std::string const> preset,
-        HandleStrings handler) override;
+        HandleStrings handler);
 
-    void on_done(HandleDone handler) override;
+    void on_done(Store::HandleDone handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);

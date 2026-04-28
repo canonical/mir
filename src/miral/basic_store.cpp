@@ -1,3 +1,19 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "basic_store.h"
 
 #include <algorithm>
@@ -58,14 +74,14 @@ class mlc::BasicStore::Self
 public:
     Self() = default;
 
-    void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
-    void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
+    void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, Store::HandleString handler);
+    void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, BasicStore::HandleStrings handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     bool clear_array(Key const& key);
     void do_transaction(std::function<void()> transaction_body);
 
-    void on_done(HandleDone handler);
+    void on_done(Store::HandleDone handler);
 
 private:
     Self(Self const&) = delete;
@@ -79,7 +95,7 @@ private:
 
     struct AttributeDetails
     {
-        HandleString const handler;
+        Store::HandleString const handler;
         std::string const description;
         std::optional<std::string> const preset;
         std::optional<ScalarValue> value;
@@ -87,26 +103,25 @@ private:
 
     struct ArrayAttributeDetails
     {
-        HandleStrings const handler;
+        BasicStore::HandleStrings const handler;
         std::string const description;
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
         std::vector<std::filesystem::path> modification_paths;
-        std::filesystem::path last_clear_file;
         bool clear_requested = false;
     };
 
     std::mutex mutex;
     std::map<Key, AttributeDetails> attribute_handlers;
     std::map<Key, ArrayAttributeDetails> array_attribute_handlers;
-    std::list<HandleDone> done_handlers;
+    std::list<Store::HandleDone> done_handlers;
 };
 
 void mlc::BasicStore::Self::add_key(
     Key const& key,
     std::string_view description,
     std::optional<std::string> preset,
-    HandleString handler)
+    Store::HandleString handler)
 {
     std::lock_guard lock{mutex};
 
@@ -119,14 +134,14 @@ void mlc::BasicStore::Self::add_key(
     attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
 }
 
-void mlc::BasicStore::Self::on_done(HandleDone handler)
+void mlc::BasicStore::Self::on_done(Store::HandleDone handler)
 {
     std::lock_guard lock{mutex};
     done_handlers.emplace_back(std::move(handler));
 }
 
 void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description,
-    std::optional<std::vector<std::string>> preset, HandleStrings handler)
+    std::optional<std::vector<std::string>> preset, BasicStore::HandleStrings handler)
 {
     std::lock_guard lock{mutex};
 
@@ -137,7 +152,7 @@ void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description
     }
 
     array_attribute_handlers.emplace(
-        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}, {}});
+        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}});
 }
 
 void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
@@ -154,7 +169,6 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
         if (value.empty())
         {
             details.parsed_values.clear();
-            details.last_clear_file = modification_path;
             details.clear_requested = true;
         }
         else
@@ -195,7 +209,6 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         details.parsed_values.resize(0);
         details.modification_paths.clear();
         details.clear_requested = false;
-        details.last_clear_file.clear();
     }
 
     transaction_body();
@@ -258,34 +271,6 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
     for (auto const& [key, details] : array_attribute_handlers)
     {
-        if (details.clear_requested)
-        {
-            try
-            {
-                details.handler(key, std::span<std::string const>{});
-                if (details.parsed_values.empty())
-                    continue;
-            }
-            catch (std::exception const& e)
-            {
-                mir::log_warning(
-                    "Error clearing key '%s' in file '%s': %s",
-                    key.to_string().c_str(),
-                    details.last_clear_file.c_str(),
-                    e.what());
-            }
-        }
-
-        auto const maybe_value = [&]() -> std::optional<std::vector<std::string>>
-        {
-            if (!details.parsed_values.empty())
-                return details.parsed_values;
-            else if (details.preset)
-                return details.preset;
-            else
-                return std::nullopt;
-        }();
-
         auto const modification_paths_str = [&]
         {
             if (details.modification_paths.empty())
@@ -295,23 +280,40 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
                 std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); }));
         }();
 
+        auto const update = [&]() -> ArrayUpdate<std::string>
+        {
+            if (details.clear_requested)
+                return ArrayReset<std::string>{details.parsed_values};
+            if (!details.parsed_values.empty())
+                return ArrayAppended<std::string>{details.parsed_values};
+            if (details.preset)
+                return ArrayAppended<std::string>{*details.preset};
+            return ArrayUnset{};
+        }();
+
         try
         {
-            details.handler(key, maybe_value);
+            details.handler(key, update);
         }
         catch (NoValidValuesError const& nvv)
         {
             if (auto const preset = details.preset)
             {
-                auto const preset_str = join_comma(*details.preset);
-
+                auto const preset_str = join_comma(*preset);
                 mir::log_warning(
                     "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
                     nvv.what(),
                     modification_paths_str.c_str(),
                     preset_str.c_str());
 
-                details.handler(key, preset);
+                auto const preset_update = [&]() -> ArrayUpdate<std::string>
+                {
+                    if (details.clear_requested)
+                        return ArrayReset<std::string>{*preset};
+                    return ArrayAppended<std::string>{*preset};
+                }();
+
+                details.handler(key, preset_update);
             }
             else
             {
@@ -319,17 +321,14 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
                     "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
                     nvv.what(),
                     modification_paths_str.c_str());
-                details.handler(key, std::nullopt);
+                details.handler(key, ArrayUnset{});
             }
         }
         catch (std::exception const& e)
         {
-            auto const value_str = maybe_value.transform([](auto const& v) { return join_comma(v); }).value_or("unset");
-
             mir::log_warning(
-                "Error processing key '%s' with values [%s] in file '%s': %s",
+                "Error processing key '%s' in file '%s': %s",
                 key.to_string().c_str(),
-                value_str.c_str(),
                 modification_paths_str.c_str(),
                 e.what());
         }
@@ -348,6 +347,11 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
 namespace
 {
+template<typename... Visitors>
+struct overloaded : Visitors... { using Visitors::operator()...; };
+
+using mlc::BasicStore;
+
 template<typename Type>
 void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const& handler, mlc::Key const& key, std::optional<std::string_view> val)
 {
@@ -357,7 +361,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<Type>)> const&
 
         auto const [end, err] = std::from_chars(val->data(), val->data() + val->size(), parsed_val);
 
-        if ((err == std::errc{}) && (end ==val->data() + val->size()))
+        if ((err == std::errc{}) && (end == val->data() + val->size()))
         {
             handler(key, parsed_val);
         }
@@ -397,21 +401,23 @@ void process_as<bool>(std::function<void(mlc::Key const&, std::optional<bool>)> 
 }
 
 template<typename Type>
-void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type>>)> const& handler, mlc::Key const& key,
-    std::optional<std::span<std::string const>> val)
+void process_as(
+    std::function<void(mlc::Key const&, BasicStore::ArrayUpdate<Type>)> const& handler,
+    mlc::Key const& key,
+    BasicStore::ArrayUpdate<std::string> const& update)
 {
-    if (val)
+    auto parse_span = [&](std::span<std::string const> strings) -> std::vector<Type>
     {
-        std::vector<Type> parsed_vals;
+        std::vector<Type> result;
 
-        for (auto const& v : *val)
+        for (auto const& v : strings)
         {
-            Type parsed_val{};
-            auto const [end, err] = std::from_chars(v.data(), v.data() + v.size(), parsed_val);
+            Type parsed{};
+            auto const [end, err] = std::from_chars(v.data(), v.data() + v.size(), parsed);
 
             if ((err == std::errc{}) && (end == v.data() + v.size()))
             {
-                parsed_vals.push_back(parsed_val);
+                result.push_back(parsed);
             }
             else
             {
@@ -419,17 +425,25 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
             }
         }
 
-        if (!val->empty() && parsed_vals.empty())
-        {
-            BOOST_THROW_EXCEPTION(NoValidValuesError(key, *val));
-        }
+        if (!strings.empty() && result.empty())
+            BOOST_THROW_EXCEPTION(NoValidValuesError(key, strings));
 
-        handler(key, parsed_vals);
-    }
-    else
-    {
-        handler(key, std::nullopt);
-    }
+        return result;
+    };
+
+    std::visit(overloaded{
+        [&](BasicStore::ArrayUnset) { handler(key, BasicStore::ArrayUnset{}); },
+        [&](BasicStore::ArrayAppended<std::string> const& a)
+        {
+            auto parsed = parse_span(a.values);
+            handler(key, BasicStore::ArrayAppended<Type>{std::span<Type const>{parsed}});
+        },
+        [&](BasicStore::ArrayReset<std::string> const& r)
+        {
+            auto parsed = parse_span(r.values);
+            handler(key, BasicStore::ArrayReset<Type>{std::span<Type const>{parsed}});
+        },
+    }, update);
 }
 }
 
@@ -440,10 +454,10 @@ mlc::BasicStore::BasicStore() :
 
 mlc::BasicStore::~BasicStore() = default;
 
-void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, HandleInt handler)
+void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, Store::HandleInt handler)
 {
     self->add_key(key, description, std::nullopt,
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        [handler](Key const& key, std::optional<std::string_view> val)
     {
         process_as<int>(handler, key, val);
     });
@@ -451,25 +465,25 @@ void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view descrip
 
 void mlc::BasicStore::add_ints_attribute(Key const& key, std::string_view description, HandleInts handler)
 {
-    self->add_key(key, description, std::nullopt, [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    self->add_key(key, description, std::nullopt, [handler](Key const& key, ArrayUpdate<std::string> update)
     {
-        process_as<int>(handler, key, val);
+        process_as<int>(handler, key, update);
     });
 }
 
-void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
+void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, Store::HandleBool handler)
 {
     self->add_key(key, description, std::nullopt,
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        [handler](Key const& key, std::optional<std::string_view> val)
     {
         process_as<bool>(handler, key, val);
     });
 }
 
-void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, HandleFloat handler)
+void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, Store::HandleFloat handler)
 {
     self->add_key(key, description, std::nullopt,
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        [handler](Key const& key, std::optional<std::string_view> val)
     {
         process_as<float>(handler, key, val);
     });
@@ -477,13 +491,13 @@ void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view descr
 
 void mlc::BasicStore::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
 {
-    self->add_key(key, description, std::nullopt, [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    self->add_key(key, description, std::nullopt, [handler](Key const& key, ArrayUpdate<std::string> update)
     {
-        process_as<float>(handler, key, val);
+        process_as<float>(handler, key, update);
     });
 }
 
-void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
+void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, Store::HandleString handler)
 {
     self->add_key(key, description, std::nullopt, handler);
 }
@@ -493,10 +507,10 @@ void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view des
     self->add_key(key, description, std::nullopt, handler);
 }
 
-void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler)
+void mlc::BasicStore::add_int_attribute(Key const& key, std::string_view description, int preset, Store::HandleInt handler)
 {
     self->add_key(key, description, std::to_string(preset),
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        [handler](Key const& key, std::optional<std::string_view> val)
         {
             process_as<int>(handler, key, val);
         });
@@ -511,25 +525,25 @@ void mlc::BasicStore::add_ints_attribute(Key const& key, std::string_view descri
         str_preset.emplace_back(std::to_string(p));
     }
 
-    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, ArrayUpdate<std::string> update)
     {
-        process_as<int>(handler, key, val);
+        process_as<int>(handler, key, update);
     });
 }
 
-void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
+void mlc::BasicStore::add_bool_attribute(Key const& key, std::string_view description, bool preset, Store::HandleBool handler)
 {
     self->add_key(key, description, (preset ? "true" : "false"),
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        [handler](Key const& key, std::optional<std::string_view> val)
         {
             process_as<bool>(handler, key, val);
         });
 }
 
-void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler)
+void mlc::BasicStore::add_float_attribute(Key const& key, std::string_view description, float preset, Store::HandleFloat handler)
 {
     self->add_key(key, description, std::to_string(preset),
-        [handler](live_config::Key const& key, std::optional<std::string_view> val)
+        [handler](Key const& key, std::optional<std::string_view> val)
     {
         process_as<float>(handler, key, val);
     });
@@ -544,13 +558,13 @@ void mlc::BasicStore::add_floats_attribute(Key const& key, std::string_view desc
         str_preset.emplace_back(std::to_string(p));
     }
 
-    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, std::optional<std::span<std::string const>> val)
+    self->add_key(key, description, std::move(str_preset), [handler](Key const& key, ArrayUpdate<std::string> update)
     {
-        process_as<float>(handler, key, val);
+        process_as<float>(handler, key, update);
     });
 }
 
-void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler)
+void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view description, std::string_view preset, Store::HandleString handler)
 {
     self->add_key(key, description, std::string{preset}, handler);
 }
@@ -560,7 +574,7 @@ void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view des
     self->add_key(key, description, std::vector<std::string>{preset.begin(), preset.end()}, handler);
 }
 
-void mlc::BasicStore::on_done(HandleDone handler)
+void mlc::BasicStore::on_done(Store::HandleDone handler)
 {
     self->on_done(std::move(handler));
 }

@@ -44,6 +44,29 @@ auto trim_start_and_end(std::string_view string) -> std::string_view
     auto const last_non_space = string.find_last_not_of(whitespace);
     return string.substr(first_non_space, last_non_space - first_non_space + 1);
 }
+
+template<typename... Visitors>
+struct overloaded : Visitors... { using Visitors::operator()...; };
+
+using mlc::BasicStore;
+
+template<typename T>
+auto make_array_adapter(auto handler)
+{
+    return [handler = std::move(handler)](mlc::Key const& key, BasicStore::ArrayUpdate<T> update)
+    {
+        std::visit(overloaded{
+            [&](BasicStore::ArrayUnset) { handler(key, std::nullopt); },
+            [&](BasicStore::ArrayAppended<T> const& a) { handler(key, a.values); },
+            [&](BasicStore::ArrayReset<T> const& r)
+            {
+                handler(key, std::span<T const>{});
+                if (!r.values.empty())
+                    handler(key, r.values);
+            },
+        }, update);
+    };
+}
 }
 
 void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path const& path)
@@ -86,7 +109,7 @@ void mlc::IniFile::add_int_attribute(Key const& key, std::string_view descriptio
 
 void mlc::IniFile::add_ints_attribute(Key const& key, std::string_view description, HandleInts handler)
 {
-    self->add_ints_attribute(key, description, std::move(handler));
+    self->add_ints_attribute(key, description, make_array_adapter<int>(std::move(handler)));
 }
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, HandleBool handler)
@@ -101,7 +124,7 @@ void mlc::IniFile::add_float_attribute(Key const& key, std::string_view descript
 
 void mlc::IniFile::add_floats_attribute(Key const& key, std::string_view description, HandleFloats handler)
 {
-    self->add_floats_attribute(key, description, std::move(handler));
+    self->add_floats_attribute(key, description, make_array_adapter<float>(std::move(handler)));
 }
 
 void mlc::IniFile::add_string_attribute(Key const& key, std::string_view description, HandleString handler)
@@ -111,7 +134,7 @@ void mlc::IniFile::add_string_attribute(Key const& key, std::string_view descrip
 
 void mlc::IniFile::add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler)
 {
-    self->add_strings_attribute(key, description, std::move(handler));
+    self->add_strings_attribute(key, description, make_array_adapter<std::string>(std::move(handler)));
 }
 
 void mlc::IniFile::add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler)
@@ -122,7 +145,7 @@ void mlc::IniFile::add_int_attribute(Key const& key, std::string_view descriptio
 void mlc::IniFile::add_ints_attribute(
     Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler)
 {
-    self->add_ints_attribute(key, description, preset, std::move(handler));
+    self->add_ints_attribute(key, description, preset, make_array_adapter<int>(std::move(handler)));
 }
 
 void mlc::IniFile::add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler)
@@ -138,7 +161,7 @@ void mlc::IniFile::add_float_attribute(Key const& key, std::string_view descript
 void mlc::IniFile::add_floats_attribute(
     Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler)
 {
-    self->add_floats_attribute(key, description, preset, std::move(handler));
+    self->add_floats_attribute(key, description, preset, make_array_adapter<float>(std::move(handler)));
 }
 
 void mlc::IniFile::add_string_attribute(
@@ -153,7 +176,7 @@ void mlc::IniFile::add_strings_attribute(
     std::span<std::string const> preset,
     HandleStrings handler)
 {
-    self->add_strings_attribute(key, description, preset, std::move(handler));
+    self->add_strings_attribute(key, description, preset, make_array_adapter<std::string>(std::move(handler)));
 }
 
 void mlc::IniFile::on_done(HandleDone handler)
