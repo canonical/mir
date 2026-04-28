@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_VIRTUAL_POINTER_V1_H_
 #define MIR_FRONTEND_VIRTUAL_POINTER_V1_H_
 
-#include "wlr-virtual-pointer-unstable-v1_wrapper.h"
+#include "wlr_virtual_pointer_unstable_v1.h"
 
 #include <memory>
 
@@ -30,12 +30,26 @@ class InputDeviceRegistry;
 namespace frontend
 {
 class OutputManager;
+struct VirtualPointerV1Ctx;
 
-auto create_virtual_pointer_manager_v1(
-    wl_display* display,
-    OutputManager* output_manager,
-    std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland::VirtualPointerManagerV1::Global>;
+class VirtualPointerManagerV1
+    : public wayland_rs::ZwlrVirtualPointerManagerV1Impl
+{
+public:
+    VirtualPointerManagerV1(
+        OutputManager* output_manager,
+        std::shared_ptr<input::InputDeviceRegistry> const& device_registry);
+
+    auto create_virtual_pointer(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat, bool has_seat)
+        -> std::shared_ptr<wayland_rs::ZwlrVirtualPointerV1Impl> override;
+    auto create_virtual_pointer_with_output(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat,
+        bool has_seat,
+        wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output,
+        bool has_output) -> std::shared_ptr<wayland_rs::ZwlrVirtualPointerV1Impl> override;
+
+private:
+    std::shared_ptr<VirtualPointerV1Ctx> const ctx;
+};
 }
 }
 
