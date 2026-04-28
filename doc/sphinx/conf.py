@@ -30,6 +30,7 @@ from pathlib import Path
 
 project = "Mir"
 author = "Canonical Ltd."
+version = os.getenv("READTHEDOCS_VERSION", "local")
 
 
 # Sidebar documentation title; best kept reasonably short
@@ -80,7 +81,7 @@ copyright = '%s, %s' % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = "https://canonical.com/mir/docs/"
+ogp_site_url = f"https://canonical.com/mir/docs/{version}"
 
 
 # Preview name of the documentation website
@@ -192,13 +193,13 @@ slug = 'mir/docs'
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
 #######################
 
-# Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
+# Need to hardcode the RTD proxy URL, it's not known when building
 
-html_baseurl = "https://canonical.com/mir/docs/"
+html_baseurl = f"https://canonical.com/mir/docs/{version}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
 
-sitemap_url_scheme = f"{os.environ.get('READTHEDOCS_VERSION', '')}/{{link}}"
+sitemap_url_scheme = "{link}"
 
 # Include `lastmod` dates in the sitemap:
 
