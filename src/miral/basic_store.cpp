@@ -195,6 +195,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         details.parsed_values.resize(0);
         details.modification_paths.clear();
         details.clear_requested = false;
+        details.last_clear_file.clear();
     }
 
     transaction_body();
