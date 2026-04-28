@@ -92,6 +92,7 @@ private:
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
         std::vector<std::filesystem::path> modification_paths;
+        std::filesystem::path last_clear_file;
         bool clear_requested = false;
     };
 
@@ -136,7 +137,7 @@ void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description
     }
 
     array_attribute_handlers.emplace(
-        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}});
+        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}, {}});
 }
 
 void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
@@ -153,6 +154,7 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
         if (value.empty())
         {
             details.parsed_values.clear();
+            details.last_clear_file = modification_path;
             details.clear_requested = true;
         }
         else
@@ -255,15 +257,6 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
     for (auto const& [key, details] : array_attribute_handlers)
     {
-        auto const modification_paths_str = [&]
-        {
-            if (details.modification_paths.empty())
-                return std::string{"never set"};
-
-            return join_comma(
-                std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); }));
-        }();
-
         if (details.clear_requested)
         {
             try
@@ -274,9 +267,11 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             }
             catch (std::exception const& e)
             {
-
                 mir::log_warning(
-                    "Error clearing key '%s' in file '%s': %s", key.to_string().c_str(), modification_paths_str.c_str(), e.what());
+                    "Error clearing key '%s' in file '%s': %s",
+                    key.to_string().c_str(),
+                    details.last_clear_file.c_str(),
+                    e.what());
             }
         }
 
@@ -288,6 +283,15 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
                 return details.preset;
             else
                 return std::nullopt;
+        }();
+
+        auto const modification_paths_str = [&]
+        {
+            if (details.modification_paths.empty())
+                return std::string{"never set"};
+
+            return join_comma(
+                std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); }));
         }();
 
         try
