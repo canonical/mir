@@ -64,8 +64,6 @@ public:
     using mw::XdgSurface::resource;
 
 private:
-    void set_window_role(WindowWlSurfaceRole* role);
-
     mw::Weak<WindowWlSurfaceRole> window_role_;
     mw::Weak<WlSurface> const surface;
 
@@ -180,8 +178,15 @@ void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
             mw::generic_error_code,
             "Tried to create toplevel after destroying surface"));
     }
+    if (window_role_)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_constructed,
+            "Tried to create toplevel on surface with existing role"));
+    }
     auto toplevel = new XdgToplevelStable{new_toplevel, this, &surface.value()};
-    set_window_role(toplevel);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel);
 }
 
 void mf::XdgSurfaceStable::get_popup(
@@ -215,9 +220,16 @@ void mf::XdgSurfaceStable::get_popup(
             mw::generic_error_code,
             "Tried to create popup after destroying surface"));
     }
+    if (window_role_)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::already_constructed,
+            "Tried to create popup on surface with existing role"));
+    }
 
     auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
-    set_window_role(popup);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(popup);
 }
 
 void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -252,16 +264,6 @@ void mf::XdgSurfaceStable::send_configure()
 mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceStable::window_role()
 {
     return window_role_;
-}
-
-void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
-{
-    if (window_role_)
-    {
-        log_warning("XdgSurfaceStable::window_role set multiple times");
-    }
-
-    window_role_ = mw::make_weak(role);
 }
 
 // XdgPopupStable
@@ -315,10 +317,10 @@ void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_a
     auto const scene_surface_{scene_surface()};
     if (scene_surface_)
     {
-        shell->modify_surface(
-            scene_surface_.value()->session().lock(),
-            scene_surface_.value(),
-            spec);
+        if (auto const session = scene_surface_.value()->session().lock())
+        {
+            shell->modify_surface(session, scene_surface_.value(), spec);
+        }
     }
     else
     {
@@ -346,10 +348,10 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     auto const scene_surface_{scene_surface()};
     if (scene_surface_)
     {
-        shell->modify_surface(
-            scene_surface_.value()->session().lock(),
-            scene_surface_.value(),
-            positioner);
+        if (auto const session = scene_surface_.value()->session().lock())
+        {
+            shell->modify_surface(session, scene_surface_.value(), positioner);
+        }
     }
     else
     {
@@ -547,11 +549,25 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
 
 void mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Invalid maximum size %dx%d", width, height));
+    }
     WindowWlSurfaceRole::set_max_size(width, height);
 }
 
 void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_size,
+            "Invalid minimum size %dx%d", width, height));
+    }
     WindowWlSurfaceRole::set_min_size(width, height);
 }
 
@@ -753,6 +769,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
+        case Anchor::none:
+            placement = mir_placement_gravity_center;
+            break;
+
         case Anchor::top:
             placement = mir_placement_gravity_north;
             break;
@@ -786,7 +806,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            placement = mir_placement_gravity_center;
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid anchor value %u", anchor));
     }
 
     aux_rect_placement_gravity = placement;
@@ -859,7 +882,7 @@ void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adju
     {
         new_placement_hints |= mir_placement_hints_flip_x;
     }
-    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    if (constraint_adjustment & ConstraintAdjustment::flip_y)
     {
         new_placement_hints |= mir_placement_hints_flip_y;
     }

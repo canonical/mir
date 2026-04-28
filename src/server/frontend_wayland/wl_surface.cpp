@@ -796,6 +796,13 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
 
 void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
+    if (scale <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            Error::invalid_scale,
+            "Invalid scale %d", scale};
+    }
     pending.scale = scale;
 }
 

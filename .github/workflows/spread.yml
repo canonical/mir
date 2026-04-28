@@ -7,6 +7,11 @@ on:
     - release/[0-9]+.[0-9]+
     tags:
     - v[0-9]+[0-9]+.[0-9]+
+    paths-ignore:
+    - ".github/**"
+    - "!.github/workflows/spread.yml"
+    - "doc/**"
+    - "snap/**"
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -56,8 +61,10 @@ jobs:
           "lxd:...:ubuntu_devel"
           "lxd:...:ubuntu_proposed"
           "lxd:...:ubuntu_questing"
-          "lxd:alpine-3.20:...:amd64"
+          "lxd:...:ubuntu_resolute"
           "lxd:alpine-3.21:...:amd64"
+          "lxd:alpine-3.22:...:amd64"
+          "lxd:alpine-3.23:...:amd64"
           "lxd:alpine-edge:...:amd64"
         )
 
@@ -100,6 +107,17 @@ jobs:
           [ -e "/dev/loop${i}" ] || sudo mknod -m 660 "/dev/loop${i}" b 7 "${i}"
           lxc profile device add default "loop${i}" unix-block "source=/dev/loop${i}"
         done
+
+        # Use the Azure Ubuntu mirror
+        lxc profile set default user.user-data - <<EOF
+        #cloud-config
+        apt:
+          sources_list: |
+            Types: deb
+            URIs: http://azure.archive.ubuntu.com/ubuntu/
+            Suites: noble noble-updates noble-security
+            Components: main universe
+        EOF
 
         sudo apt-get update
         sudo apt-get install --yes binfmt-support qemu-user-static

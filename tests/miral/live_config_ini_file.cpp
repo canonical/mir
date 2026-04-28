@@ -22,6 +22,7 @@
 
 using namespace testing;
 using namespace std::string_literals;
+using namespace std::string_view_literals;
 namespace mlc = miral::live_config;
 
 struct LiveConfigIniFile : Test
@@ -258,70 +259,6 @@ TEST_F(LiveConfigIniFile, a_floats_preset_is_handled)
     ini_file.load_file(istream, fake_filename());
 }
 
-TEST_F(LiveConfigIniFile, a_bad_integer_value_is_ignored)
-{
-    std::istringstream bad_istream{
-        a_key.to_string()+"=42x"};
-
-    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
-
-    EXPECT_CALL(*this, int_handler(a_key, _)).Times(0);
-
-    ini_file.load_file(bad_istream, fake_filename());
-}
-
-TEST_F(LiveConfigIniFile, a_bad_float_value_is_ignored)
-{
-    std::istringstream bad_istream{
-        a_key.to_string()+"=42x"};
-
-    ini_file.add_float_attribute(a_key, "bad float", [this](auto... args) { float_handler(args...); });
-
-    EXPECT_CALL(*this, float_handler(a_key, _)).Times(0);
-
-    ini_file.load_file(bad_istream, fake_filename());
-}
-
-TEST_F(LiveConfigIniFile, a_bad_bool_value_is_ignored)
-{
-    std::istringstream bad_istream{
-        a_key.to_string()+"=42x"};
-
-    ini_file.add_bool_attribute(a_key, "bad bool", [this](auto... args) { bool_handler(args...); });
-
-    EXPECT_CALL(*this, bool_handler(a_key, _)).Times(0);
-
-    ini_file.load_file(bad_istream, fake_filename());
-}
-
-TEST_F(LiveConfigIniFile, a_bad_integer_value_in_an_array_is_skipped)
-{
-    std::istringstream bad_istream{
-        an_ints_key.to_string()+"=1\n" +
-        an_ints_key.to_string()+"=42x\n" +
-        an_ints_key.to_string()+"=2"};
-
-    ini_file.add_ints_attribute(an_ints_key, "bad int array", [this](auto... args) { ints_handler(args...); });
-
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
-
-    ini_file.load_file(bad_istream, fake_filename());
-}
-
-TEST_F(LiveConfigIniFile, a_bad_float_value_in_an_array_is_skipped)
-{
-    std::istringstream bad_istream{
-        a_floats_key.to_string()+"=1.5\n" +
-        a_floats_key.to_string()+"=42x\n" +
-        a_floats_key.to_string()+"=2.5"};
-
-    ini_file.add_floats_attribute(a_floats_key, "bad float array", [this](auto... args) { floats_handler(args...); });
-
-    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1.5f, 2.5f))));
-
-    ini_file.load_file(bad_istream, fake_filename());
-}
-
 TEST_F(LiveConfigIniFile, done_handlers_run_last)
 {
     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
@@ -389,4 +326,175 @@ TEST_F(LiveConfigIniFile, the_last_registration_of_a_key_is_used)
     EXPECT_CALL(*this, ints_handler(another_key, _)).Times(1);
 
     ini_file.load_file(istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, non_ini_content_is_ignored)
+{
+    std::istringstream yaml_containing_istream{R"(
+        a_scope_an_int=12
+        yaml_key: value
+        a_string=foo
+    )"};
+
+    auto const yaml_key = mlc::Key{"yaml_key"};
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_string_attribute(yaml_key, "a yaml key", [this](auto... args) { string_handler(args...); });
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Optional(12)));
+    EXPECT_CALL(*this, string_handler(yaml_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, string_handler(a_string_key, Optional("foo"sv)));
+
+    ini_file.load_file(yaml_containing_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_key_is_skipped)
+{
+    std::istringstream no_key_istream{"=some_value"};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, Eq(std::nullopt)));
+
+    ini_file.load_file(no_key_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_string_value_is_passed_to_string_handler)
+{
+    std::istringstream no_value_istream{"a_string="};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, Optional(""sv)));
+
+    ini_file.load_file(no_value_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_int_value_is_skipped)
+{
+    std::istringstream no_value_istream{"a_scope_an_int="};
+
+    ini_file.add_int_attribute(a_key, "an int key", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Eq(std::nullopt)));
+
+    ini_file.load_file(no_value_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_int_value_with_a_preset_results_in_the_preset_value)
+{
+    std::istringstream no_value_istream{"a_scope_an_int="};
+
+    ini_file.add_int_attribute(a_key, "an int key", 17, [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Eq(17)));
+
+    ini_file.load_file(no_value_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_value_containing_equals_is_split_at_the_first_equals)
+{
+    std::istringstream extra_equal_istream{"a_string=foo=bar"};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, Optional("foo=bar"sv)));
+
+    ini_file.load_file(extra_equal_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, whitespace_is_trimmed_from_around_keys_and_values)
+{
+    std::istringstream whitespace_istream{" a_string = foo bar "};
+
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, string_handler(a_string_key, Optional("foo bar"sv)));
+
+    ini_file.load_file(whitespace_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, blank_and_whitespace_lines_are_ignored_and_valid_lines_are_processed)
+{
+    std::istringstream whitespace_and_blanks_istream{
+        "\n"     // Empty
+        "   \n"  // Spaces
+        "\t\t\n" // Tabs
+        R"(
+        a_scope_an_int=42
+        a_string=foo
+    )"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Optional(42)));
+    EXPECT_CALL(*this, string_handler(a_string_key, Optional("foo"sv)));
+
+    ini_file.load_file(whitespace_and_blanks_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, an_empty_file_results_in_nullopt_values)
+{
+    std::istringstream empty_istream{""};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+    ini_file.add_string_attribute(a_string_key, "a string", [this](auto... args) { string_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Eq(std::nullopt)));
+    EXPECT_CALL(*this, string_handler(a_string_key, Eq(std::nullopt)));
+
+    ini_file.load_file(empty_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_file_with_only_comments_results_in_nullopt_values)
+{
+    std::istringstream comment_istream{
+        "# this is a comment\n"
+        "# another comment\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Eq(std::nullopt)));
+
+    ini_file.load_file(comment_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, a_file_with_only_blank_lines_results_in_nullopt_values)
+{
+    std::istringstream blank_istream{"\n\n\n"};
+
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    EXPECT_CALL(*this, int_handler(a_key, Eq(std::nullopt)));
+
+    ini_file.load_file(blank_istream, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, loading_a_file_twice_does_not_accumulate_array_values)
+{
+    ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2)))).Times(2);
+
+    std::istringstream first_load{"ints=1\nints=2"};
+    ini_file.load_file(first_load, fake_filename());
+
+    std::istringstream second_load{"ints=1\nints=2"};
+    ini_file.load_file(second_load, fake_filename());
+}
+
+TEST_F(LiveConfigIniFile, loading_a_file_twice_uses_the_latest_file_values)
+{
+    ini_file.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
+
+    InSequence seq;
+    EXPECT_CALL(*this, int_handler(a_key, Optional(42)));
+    EXPECT_CALL(*this, int_handler(a_key, Optional(99)));
+
+    std::istringstream first_load{"a_scope_an_int=42"};
+    ini_file.load_file(first_load, fake_filename());
+
+    std::istringstream second_load{"a_scope_an_int=99"};
+    ini_file.load_file(second_load, fake_filename());
 }

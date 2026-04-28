@@ -55,19 +55,6 @@ jobs:
             exit 1
           fi
 
-      - name: Release Debian symbols
-        run: |
-          awk --include=inplace \
-            -v version_pat="${INPUTS_VERSION}~dev$" \
-            -v version="${INPUTS_VERSION}" '
-            $0~version_pat {
-              gsub(version "~dev$", version)
-            }
-            { print }
-          ' debian/*.symbols
-
-          git add debian/*.symbols
-
       - name: Update CMake version
         run: |
           sed --in-place -E "s/(VERSION\s+)[0-9]+\.[0-9]+\.[0-9]+/\1${INPUTS_VERSION}/" CMakeLists.txt
@@ -96,7 +83,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
 
-          debchange --newversion "${INPUTS_VERSION}~rc" "Begin Release Candidate for ${INPUTS_VERSION} release"
+          debchange --newversion "${INPUTS_VERSION}" "Begin Release Candidate for ${INPUTS_VERSION} release"
           git add debian/changelog
 
       - name: Update the RPM changelog
@@ -210,7 +197,7 @@ jobs:
 
             const commentBody = [
               `## ${process.env.INPUTS_VERSION}~rc1`,
-              'Please test this release candidate following the [test-mir-for-a-release](https://canonical-mir.readthedocs.io/en/latest/contributing/how-to/test-mir-for-a-release.html) document.',
+              'Please test this release candidate following the [test-mir-for-a-release](https://canonical.com/mir/docs/latest/contributing/how-to/test-mir-for-a-release) document.',
               ...markedSections,
             ].join('\n\n');
 
@@ -315,7 +302,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
 
-          debchange --newversion "${NEXT_VERSION}~dev" ''
+          debchange --newversion "${NEXT_VERSION}" ''
           git add debian/changelog
 
       - name: Update the RPM changelog

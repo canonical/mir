@@ -129,6 +129,7 @@ kms
 libEGL
 libhybris
 libinput
+libmiral
 libmirclient
 libVA
 linux
@@ -203,6 +204,7 @@ RenderingPlatform
 replug
 RPi
 runtime
+sandboxed
 sanitizer
 Sanitizer
 sanitizers
@@ -250,6 +252,8 @@ ubuntu
 udev
 unary
 UndefinedBehaviourSanitizer
+untrusted
+URIs
 usecases
 userland
 userspace

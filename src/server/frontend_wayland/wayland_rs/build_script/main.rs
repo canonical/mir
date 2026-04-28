@@ -226,6 +226,8 @@ fn generate_global_dispatch_impl(
                 // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
                 // Finally, we associate this "extension" object with our C++ object.
                 let instance = data_init.init(resource, arc.clone());
+                register_resource(&instance);
+                let protocol_id = Resource::id(&instance).protocol_id();
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
                 let mut guard = arc.lock().unwrap();
                 // SAFETY: `guard` is a `MutexGuard`, so we have exclusive access to the
@@ -234,7 +236,7 @@ fn generate_global_dispatch_impl(
                 // so taking a pinned mutable reference here does not move it, and the pinned
                 // reference is used only for this immediate FFI call and does not escape.
                 unsafe {
-                    guard.pin_mut_unchecked().associate(boxed);
+                    guard.pin_mut_unchecked().associate(boxed, protocol_id);
                 }
             }
         }
@@ -349,21 +351,31 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // the call is in progress, so this cannot introduce aliased mutable access across
             // FFI. The unchecked pin is used only for the duration of the `associate()` call,
             // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-            let child = unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) };
-            let arc = Arc::new(Mutex::new(child));
+            match unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+                Ok(child) => {
+                    let arc = Arc::new(Mutex::new(child));
 
-            // The initialization strategy here mirrors the global bind flow: First,
-            // we associate the C++ implementation with the Rust data. Afterwards, we wrap
-            // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
-            // Finally, we associate this "extension" object with our C++ object.
-            let instance = data_init.init(#new_id_name, arc.clone());
-            let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
-            let mut guard = arc.lock().unwrap();
-            // SAFETY: The mutex guard provides the only mutable access to this child while
-            // the call is in progress, so this cannot introduce aliased mutable access across
-            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
-            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-            unsafe { guard.pin_mut_unchecked().associate(boxed); }
+                    // The initialization strategy here mirrors the global bind flow: First,
+                    // we associate the C++ implementation with the Rust data. Afterwards, we wrap
+                    // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
+                    // Finally, we associate this "extension" object with our C++ object.
+                    let instance = data_init.init(#new_id_name, arc.clone());
+                    register_resource(&instance);
+                    let protocol_id = Resource::id(&instance).protocol_id();
+                    let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
+                    let mut guard = arc.lock().unwrap();
+
+                    // SAFETY: The mutex guard provides the only mutable access to this child while
+                    // the call is in progress, so this cannot introduce aliased mutable access across
+                    // FFI. The unchecked pin is used only for the duration of the `associate()` call,
+                    // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
+                    unsafe { guard.pin_mut_unchecked().associate(boxed, protocol_id); };
+                }
+                Err(err) => {
+                    let (object_id, code, message) = parse_post_error(err.what());
+                    post_protocol_error(resource, object_id, code, message);
+                }
+            }
         }
     } else {
         let call_arg_names: Vec<TokenStream> =
@@ -375,7 +387,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // the call is in progress, so this cannot introduce aliased mutable access across
             // FFI. The unchecked pin is used only for the duration of the `associate()` call,
             // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-            unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*); }
+            if let Err(err) = unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+                let (object_id, code, message) = parse_post_error(err.what());
+                post_protocol_error(resource, object_id, code, message);
+            }
         }
     }
 }
@@ -486,6 +501,15 @@ fn generate_dispatch_impl(
         }
     );
 
+    let resource_name = format_ident!(
+        "{}",
+        if interface_has_requests {
+            "resource"
+        } else {
+            "_resource"
+        }
+    );
+
     quote! {
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
@@ -496,7 +520,7 @@ fn generate_dispatch_impl(
             fn request(
                 _state: &mut Self,
                 _client: &Client,
-                _resource: &#namespace_name::#interface_name::#protocol_struct_name,
+                #resource_name: &#namespace_name::#interface_name::#protocol_struct_name,
                 request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
                 #data_name: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
                 _dhandle: &DisplayHandle,
@@ -505,6 +529,15 @@ fn generate_dispatch_impl(
                 match request {
                     #(#request_handler_arms),*
                 }
+            }
+
+            fn destroyed(
+                _state: &mut Self,
+                _client: ClientId,
+                resource: &#namespace_name::#interface_name::#protocol_struct_name,
+                _data: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
+            ) {
+                unregister_resource(resource);
             }
         }
     }
@@ -545,11 +578,47 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
         #[allow(dead_code, unused_imports)]
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
+            use wayland_server::backend::{ClientId, ObjectId};
             use crate::protocols;
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
             use std::os::fd::{AsRawFd, RawFd};
-            use std::sync::{Arc, Mutex};
+            use std::sync::{Arc, LazyLock, Mutex, RwLock};
+            use std::collections::HashMap;
+            use std::ffi::CString;
+
+            static OBJECT_REGISTRY: LazyLock<RwLock<HashMap<u32, ObjectId>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
+
+            fn register_resource(resource: &impl Resource) {
+                let id = resource.id();
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).insert(id.protocol_id(), id);
+            }
+
+            fn unregister_resource(resource: &impl Resource) {
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
+            }
+
+            fn parse_post_error(what: &str) -> (u32, u32, String) {
+                let mut parts = what.splitn(3, ':');
+                let object_id = parts.next()
+                    .and_then(|s| s.trim().parse::<u32>().ok())
+                    .unwrap_or(0);
+                let code = parts.next()
+                    .and_then(|s| s.trim().parse::<u32>().ok())
+                    .unwrap_or(0);
+                let message = parts.next()
+                    .map(|s| s.trim().to_string())
+                    .unwrap_or_else(|| what.to_string());
+                (object_id, code, message)
+            }
+
+            fn post_protocol_error(resource: &impl Resource, object_id: u32, code: u32, message: String) {
+                let target_id = OBJECT_REGISTRY.read().unwrap_or_else(|e| e.into_inner()).get(&object_id).cloned();
+                if let Some(handle) = resource.handle().upgrade() {
+                    let id = target_id.unwrap_or_else(|| resource.id());
+                    handle.post_error(id, code, CString::new(message).expect("Error message contained null byte"));
+                }
+            }
 
             #(#generated_dispatch_implementations)*
         }
@@ -578,10 +647,48 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                     format!("create_{}", global_interface.name),
                     Some(CppType::Object(class_name)),
                     true,
+                    false,
+                    true,
+                    true,
                 );
                 class.add_method(method);
             })
     });
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
+fn create_wayland_server_notification_handler() -> CppBuilder {
+    let mut builder: CppBuilder = CppBuilder::new(
+        "MIR_WAYLANDRS_WAYLAND_SERVER_NOTIFICATION_HANDLER",
+        "wayland_server_notification_handler",
+    );
+    builder.add_header_include("<memory>");
+    builder.add_header_include("<rust/cxx.h>");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    namespace.add_forward_declaration_class("WaylandClient");
+    namespace.add_forward_declaration_class("WaylandClientId");
+    let mut class = CppClass::new("WaylandServerNotificationHandler");
+
+    let mut client_added_method = CppMethod::new("client_added", None, true, false, true, true);
+    client_added_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClient".to_string()),
+        "wayland_client",
+        false,
+    ));
+    class.add_method(client_added_method);
+
+    let mut client_removed_method = CppMethod::new("client_removed", None, true, false, true, true);
+    client_removed_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClientId".to_string()),
+        "id",
+        false,
+    ));
+    class.add_method(client_removed_method);
+
     namespace.add_class(class);
     builder.add_namespace(namespace);
     builder
@@ -597,6 +704,9 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     // First, create the global factory.
     let global_builder = create_global_factory(protocols);
 
+    // Then, create the WaylandServerNotificationHandler.
+    let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
+
     // Generate ffi_fwd.h first so that protocol headers can include it without
     // creating a circular dependency with the CXX-generated ffi.rs.h.
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
@@ -607,6 +717,7 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
         .map(|protocol| create_cpp_builder(protocol))
         .collect();
     builders.push(global_builder);
+    builders.push(wayland_server_notification_handler_builder);
 
     // Write the protocol headers
     for builder in &builders {
@@ -677,6 +788,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     // CXX-generated ffi.rs.h to avoid a circular include dependency:
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_header_include("\"ffi_fwd.h\"");
+    builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
     builder.add_header_include("<optional>");
     builder.add_header_include("<cstdint>");
@@ -710,22 +822,26 @@ fn write_cpp_source(builder: &CppBuilder) {
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let class_name = format_wayland_interface_to_cpp_class(&interface.name);
     let mut class = CppClass::new(class_name);
-    let methods = interface.items.iter().filter_map(|item| {
-        if let protocol_parser::InterfaceItem::Request(request) = item {
-            Some(wayland_request_to_cpp_method(request))
-        } else if let protocol_parser::InterfaceItem::Event(event) = item {
-            Some(wayland_event_to_cpp_method(event))
-        } else {
-            None
-        }
-    });
+    let methods = interface
+        .items
+        .iter()
+        .filter_map(|item| {
+            if let protocol_parser::InterfaceItem::Request(request) = item {
+                Some(wayland_request_to_cpp_method(request))
+            } else if let protocol_parser::InterfaceItem::Event(event) = item {
+                Some(vec![wayland_event_to_cpp_method(event)])
+            } else {
+                None
+            }
+        })
+        .flatten();
 
     for enum_ in wayland_interface_to_enums(interface) {
         class.add_enum(enum_);
     }
 
     // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate", None, true);
+    let mut associate_method = CppMethod::new("associate", None, true, false, true, true);
     associate_method.add_arg(CppArg::new(
         CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
@@ -733,7 +849,8 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         "instance",
         false,
     ));
-    associate_method.set_body("instance_ = std::move(instance);");
+    associate_method.add_arg(CppArg::new(CppType::CppU32, "object_id", false));
+    associate_method.set_body("object_id_ = object_id;\ninstance_ = std::move(instance);");
     class.add_method(associate_method);
     class.add_private_member(CppArg::new(
         CppType::Box(snake_to_pascal(
@@ -743,6 +860,22 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         true,
     ));
 
+    // Add a private member for the object ID of the associated resource.
+    class.add_private_member(CppArg::new(CppType::CppU32, "object_id_", false));
+
+    // Add a public accessor for the object ID so that C++ implementations
+    // can pass it to ProtocolError.
+    let mut object_id_method = CppMethod::new(
+        "object_id",
+        Some(CppType::CppU32),
+        false,
+        false,
+        false,
+        false,
+    );
+    object_id_method.set_body("return object_id_;");
+    class.add_method(object_id_method);
+
     // Add the "get_box" method that will return the boxes rust interface. This is used
     // when sending a Box from C++ to Rust.
     let mut get_box_method = CppMethod::new(
@@ -751,6 +884,9 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         ))),
         false,
+        false,
+        true,
+        true,
     );
     get_box_method.set_body(
         "if (!instance_) { throw \"get_box() called before associate()\"; }\nreturn instance_.value();",
@@ -779,7 +915,7 @@ fn wayland_enum_to_cpp_enum(enum_: &WaylandEnum) -> CppEnum {
 
     for option in &enum_.entries {
         result.add_option(CppEnumOption::new(
-            snake_to_pascal(option.name.as_str()),
+            option.name.as_str(),
             option.value as u32,
         ));
     }
@@ -806,7 +942,7 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
     CppArg::new(type_, arg.name.as_str(), arg.allow_null.unwrap_or(false))
 }
 
-fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
+fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     // Methods will have a return value in C++ if they are creating a new Wayland object.
     // Otherwise they always return void.
     let retval = match method
@@ -826,38 +962,151 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> CppMethod {
         None => None,
     };
 
-    let mut cpp_method = CppMethod::new(method.name.as_str(), retval, true);
     let args = method
         .args
         .iter()
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
         .map(wayland_arg_to_cpp_arg);
 
+    // If a C++ argument is being sent from Rust to C++ as a shared_ptr, we do NOT want
+    // to encourage the protocol implementer to hold a shared reference to the object, as
+    // that muddies up the lifetimes significantly. Only the Rust Wayland frontend should
+    // have access to the lifetime. However, it is important for the protocol business logic
+    // to be able to interact with other protocol implementations. Hence, we wrap the shared_ptr
+    // in our own "Weak" construct.
+    //
+    // If this is the case, we need to do the following:
+    // 1. Generate a different virtual method that is NOT called from Rust which will handle
+    //    the logic using the weak value.
+    // 2. Make the original handler NOT be virtual, as the overridable logic will be delegated
+    //    to the new method from #1.
+    let wayland_weak_transformers: Vec<String> = args
+        .clone()
+        .flat_map(|arg| match arg.cpp_type() {
+            CppType::Object(type_name) => Some(format!(
+                "auto const wrapped_{name} = wayland_rs::Weak<{type_name}>({name});",
+                name = arg.name(),
+                type_name = type_name
+            )),
+            _ => None,
+        })
+        .collect();
+
+    let delegation_args: Vec<String> = args
+        .clone()
+        .flat_map(|arg| {
+            let call_arg = match arg.cpp_type() {
+                CppType::Object(_) => format!("wrapped_{}", arg.name()),
+                _ => arg.name().to_string(),
+            };
+            if let Some(has_name) = arg.has_name() {
+                vec![call_arg, has_name]
+            } else {
+                vec![call_arg]
+            }
+        })
+        .collect();
+
+    let has_retval = retval.is_some();
+    let mut cpp_method = CppMethod::new(
+        method.name.as_str(),
+        retval,
+        wayland_weak_transformers.is_empty(),
+        true,
+        true,
+        true,
+    );
     for arg in args {
         cpp_method.add_arg(arg);
     }
 
     if let Some(type_) = &method.type_ {
         if type_ == "destructor" {
+            assert!(wayland_weak_transformers.is_empty());
             cpp_method.set_body("");
         }
     }
 
-    cpp_method
+    if !wayland_weak_transformers.is_empty() {
+        // Build the body: wrap shared_ptrs in Weak, then delegate to the virtual overload
+        let return_prefix = if has_retval { "return " } else { "" };
+        let delegation_call = format!(
+            "{}{}({});",
+            return_prefix,
+            sanitize_identifier(&method.name),
+            delegation_args.join(", ")
+        );
+        let mut body_lines = wayland_weak_transformers;
+        body_lines.push(delegation_call);
+        cpp_method.set_body(body_lines.join("\n"));
+
+        // Generate the virtual method that protocol implementers override.
+        // This method uses Weak args instead of shared_ptr args.
+        let virtual_retval = method
+            .args
+            .iter()
+            .find(|arg| arg.type_ == WaylandArgType::NewId)
+            .map(|new_id_arg| {
+                CppType::Object(format_wayland_interface_to_cpp_class(
+                    new_id_arg
+                        .interface
+                        .as_ref()
+                        .expect("NewId is missing interface"),
+                ))
+            });
+        let mut virtual_method = CppMethod::new(
+            method.name.as_str(),
+            virtual_retval,
+            true,
+            true,
+            true,
+            false,
+        );
+        for wayland_arg in method
+            .args
+            .iter()
+            .filter(|arg| arg.type_ != WaylandArgType::NewId)
+        {
+            let cpp_arg = wayland_arg_to_cpp_arg(wayland_arg);
+            match cpp_arg.cpp_type() {
+                CppType::Object(type_name) => {
+                    virtual_method.add_arg(CppArg::new(
+                        CppType::Weak(type_name.clone()),
+                        wayland_arg.name.as_str(),
+                        wayland_arg.allow_null.unwrap_or(false),
+                    ));
+                }
+                _ => {
+                    virtual_method.add_arg(cpp_arg);
+                }
+            }
+        }
+
+        vec![cpp_method, virtual_method]
+    } else {
+        vec![cpp_method]
+    }
 }
 
 fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(format!("send_{}_event", event.name), None, false);
+    let mut cpp_method = CppMethod::new(
+        format!("send_{}_event", event.name),
+        None,
+        false,
+        false,
+        false,
+        true,
+    );
     let args = event.args.iter().map(wayland_arg_to_cpp_arg);
 
     let sanitized_args: Vec<String> = args
         .clone()
         .flat_map(|arg| {
-            let arg_name = match arg.cpp_type {
-                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name)),
-                _ => sanitize_identifier(&arg.name),
+            let arg_name = match arg.cpp_type() {
+                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name())),
+                _ => sanitize_identifier(&arg.name()),
             };
-            if let Some(has_name) = arg.has_name {
+            if let Some(has_name) = arg.has_name() {
                 vec![arg_name, has_name]
             } else {
                 vec![arg_name]

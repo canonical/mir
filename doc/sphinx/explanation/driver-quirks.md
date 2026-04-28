@@ -1,4 +1,4 @@
-# Graphics Driver Quriks
+# Graphics driver quirks in Mir
 
 The gbm-kms and atomic-kms graphics platform modules provide a
 `--driver-quirks` option that can control how the module behaves.
@@ -35,7 +35,7 @@ specific device if its driver is blocked.
 Examples:
 
 - `--driver-quirks=skip:driver:nvidia`
-- `--driver-quirks=allow:device:/dev/dri/card0`
+- `--driver-quirks=allow:devnode:/dev/dri/card0`
 
 ## Disable probing for modesetting support
 

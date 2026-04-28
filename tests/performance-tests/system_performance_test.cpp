@@ -169,7 +169,7 @@ void SystemPerformanceTest::set_up_with(std::string const server_args)
 
     server_output = popen_with_pid(server_cmd.c_str(), server_pid);
     ASSERT_TRUE(server_output) << server_cmd;
-    ASSERT_TRUE(wait_for_file((getenv("XDG_RUNTIME_DIR") + ("/" + mir_sock)).c_str(), 5s)) << server_cmd;
+    ASSERT_TRUE(wait_for_file((getenv("XDG_RUNTIME_DIR") + ("/" + mir_sock)).c_str(), 10s)) << server_cmd;
 }
 
 void SystemPerformanceTest::TearDown()

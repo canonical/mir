@@ -1,4 +1,4 @@
-# Performance
+# Performance considerations for Mir-based compositors
 
 This document aims to explore in depth the performance considerations around Mir
 based compositors.
