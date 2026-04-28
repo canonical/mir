@@ -132,7 +132,7 @@ TEST_P(TestPointerMovementTracking, cursor_location_is_tracked_on_movement)
             locate_pointer.schedule_request();
         });
 
-    EXPECT_TRUE(locate_pointer_invoked.wait_for(locate_pointer_callback_timeout));
+    ASSERT_TRUE(locate_pointer_invoked.wait_for(locate_pointer_callback_timeout));
 
     auto const expected_position = final_pointer_position.value_or(mir::geometry::PointF{0, 0});
     EXPECT_THAT(locate_pointer_position, Optional(expected_position));
