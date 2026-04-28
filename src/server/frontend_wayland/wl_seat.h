@@ -63,7 +63,7 @@ class KeyboardStateTracker;
 class PointerEventDispatcher
 {
 public:
-    explicit PointerEventDispatcher(WlPointer* wl_pointer);
+    explicit PointerEventDispatcher(std::shared_ptr<WlPointer> const& wl_pointer);
 
     void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
 
@@ -74,10 +74,10 @@ private:
     wayland_rs::Weak<WlDataDevice> wl_data_device;
 };
 
-class WlSeat : public wayland_rs::WlSeatImpl
+class WlSeatGlobal
 {
 public:
-    WlSeat(
+    WlSeatGlobal(
         Executor& wayland_executor,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
@@ -88,14 +88,15 @@ public:
         std::shared_ptr<InputTriggerRegistry> const& input_trigger_registry,
         std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker);
 
-    ~WlSeat();
+    ~WlSeatGlobal();
 
-    WlSeat(WlSeat const&) = delete;
-    WlSeat& operator=(WlSeat const&) = delete;
-    WlSeat(WlSeat&&) = delete;
-    WlSeat& operator=(WlSeat&&) = delete;
+    WlSeatGlobal(WlSeatGlobal const&) = delete;
+    WlSeatGlobal& operator=(WlSeatGlobal const&) = delete;
+    WlSeatGlobal(WlSeatGlobal&&) = delete;
+    WlSeatGlobal& operator=(WlSeatGlobal&&) = delete;
 
-    static auto from(WlSeatImpl* impl) -> WlSeat*;
+    static auto from(wayland_rs::WlSeatImpl* impl) -> WlSeatGlobal*;
+    auto create(std::shared_ptr<wayland_rs::Client> const& client) -> std::shared_ptr<wayland_rs::WlSeatImpl>;
 
     void for_each_listener(wayland_rs::Client* client, std::function<void(PointerEventDispatcher*)> func);
     void for_each_listener(wayland_rs::Client* client, std::function<void(WlKeyboard*)> func);
