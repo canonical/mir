@@ -124,6 +124,7 @@ public:
           fake_vt_mode_auto{VT_AUTO, 0, 0, 0, 0},
           fake_vt_mode_process{VT_PROCESS, 0, SIGUSR1, SIGUSR2, 0},
           fake_kb_mode{K_RAW},
+          fake_prev_active_vt{1},
           fake_tc_attr()
     {
     }
@@ -186,6 +187,8 @@ public:
 
         if (activate)
         {
+            set_up_expectations_for_current_vt_search(fake_prev_active_vt);
+
             EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, vt_num))
                     .WillOnce(Return(0));
 
@@ -220,22 +223,22 @@ public:
                                      MatcherCast<void*>(ModeUsesSignal(sig))));
     }
 
-    void set_up_expectations_for_vt_teardown()
+    void set_up_expectations_for_vt_teardown(bool restore_prev_vt = false)
     {
-        set_up_expectations_for_vt_teardown(fake_vt_mode_auto);
+        set_up_expectations_for_vt_teardown(fake_vt_mode_auto, restore_prev_vt);
     }
 
-    void set_up_expectations_for_vt_teardown(vt_mode const& vt_mode)
+    void set_up_expectations_for_vt_teardown(vt_mode const& vt_mode, bool restore_prev_vt = false)
     {
         using namespace testing;
 
-        set_up_expectations_for_vt_restore(vt_mode);
+        set_up_expectations_for_vt_restore(vt_mode, restore_prev_vt);
 
         EXPECT_CALL(mock_fops, close(fake_vt_fd))
             .WillOnce(Return(0));
     }
 
-    void set_up_expectations_for_vt_restore(vt_mode const& vt_mode)
+    void set_up_expectations_for_vt_restore(vt_mode const& vt_mode, bool restore_prev_vt = false)
     {
         using namespace testing;
 
@@ -257,6 +260,14 @@ public:
             EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_SETMODE, An<void*>()))
                 .Times(0);
         }
+
+        if (restore_prev_vt)
+        {
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, fake_prev_active_vt))
+                .WillOnce(Return(0));
+            EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_WAITACTIVE, fake_prev_active_vt))
+                .WillOnce(Return(0));
+        }
     }
 
     int const fake_vt_fd;
@@ -264,6 +275,7 @@ public:
     vt_mode const fake_vt_mode_auto;
     vt_mode const fake_vt_mode_process;
     int const fake_kb_mode;
+    int const fake_prev_active_vt;
     struct termios fake_tc_attr;
     std::function<void(int)> sig_handler;
     MockVTFileOperations mock_fops;
@@ -281,7 +293,7 @@ TEST_F(LinuxVirtualTerminalTest, use_provided_vt)
     InSequence s;
 
     set_up_expectations_for_vt_setup(vt_num, true);
-    set_up_expectations_for_vt_teardown();
+    set_up_expectations_for_vt_teardown(true);
 
     auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
     auto pops = std::make_unique<StubPosixProcessOperations>();
@@ -576,7 +588,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_try_to_reaquire_session_leader)
     EXPECT_CALL(*pops, setsid()).Times(0);
 
     set_up_expectations_for_vt_setup(vt_num, true);
-    set_up_expectations_for_vt_teardown();
+    set_up_expectations_for_vt_teardown(true);
 
     mir::LinuxVirtualTerminal vt{
         fops,
@@ -620,7 +632,7 @@ TEST_F(LinuxVirtualTerminalTest, relinquishes_group_leader_before_claiming_sessi
         .WillOnce(Return(0));
 
     set_up_expectations_for_vt_setup(vt_num, true);
-    set_up_expectations_for_vt_teardown();
+    set_up_expectations_for_vt_teardown(true);
 
     mir::LinuxVirtualTerminal vt{
         fops,
@@ -723,7 +735,44 @@ TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
 
     set_up_expectations_for_vt_setup(vt_num, true);
 
-    set_up_expectations_for_vt_restore(fake_vt_mode_auto);
+    // restore() should also switch back to the previously active VT
+    set_up_expectations_for_vt_restore(fake_vt_mode_auto, true);
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(
+        fops,
+        std::move(pops),
+        vt_num,
+        null_cleanup_registry,
+        null_report);
+
+    vt.restore();
+
+    Mock::VerifyAndClearExpectations(&mock_fops);
+
+    // restore() resets prev_active_vt to 0, so the destructor does not
+    // issue a second VT_ACTIVATE
+    set_up_expectations_for_vt_teardown();
+}
+
+TEST_F(LinuxVirtualTerminalTest, restores_previously_active_vt_on_restore)
+{
+    // When Mir takes over a specific VT (activate=true), restore() must
+    // switch back to whichever VT was active before.
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    set_up_expectations_for_vt_setup(vt_num, true);
+
+    // restore() should restore keyboard/graphics and switch back to the
+    // previously active VT
+    set_up_expectations_for_vt_restore(fake_vt_mode_auto, true);
 
     auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
     auto pops = std::make_unique<StubPosixProcessOperations>();
@@ -741,6 +790,102 @@ TEST_F(LinuxVirtualTerminalTest, restores_keyboard_and_graphics)
     Mock::VerifyAndClearExpectations(&mock_fops);
 
     set_up_expectations_for_vt_teardown();
+}
+
+TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_if_constructed_without_activation)
+{
+    // When Mir attaches to the current VT without switching (activate=false),
+    // restore() must NOT issue VT_ACTIVATE — there is no previous VT to return to.
+    using namespace testing;
+
+    int const vt_num{7};
+
+    InSequence s;
+
+    set_up_expectations_for_current_vt_search(vt_num);
+    set_up_expectations_for_vt_setup(vt_num, false);
+
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, An<int>()))
+        .Times(0);
+
+    set_up_expectations_for_vt_teardown();
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(
+        fops,
+        std::move(pops),
+        0,
+        null_cleanup_registry,
+        null_report);
+}
+
+TEST_F(LinuxVirtualTerminalTest, does_not_restore_vt_if_active_vt_lookup_fails_during_setup)
+{
+    // If find_active_vt_number() fails while taking over a specific VT,
+    // open_vt() must continue (so the server can still come up) and
+    // restore() must NOT issue VT_ACTIVATE on shutdown — we have no
+    // record of which VT to switch back to.
+    using namespace testing;
+
+    int const vt_num{7};
+    int const search_tmp_fd{3};
+
+    InSequence s;
+
+    EXPECT_CALL(mock_fops, open(StrEq("/dev/tty7"), _))
+        .WillOnce(Return(fake_vt_fd));
+
+    // find_active_vt_number(): /dev/tty opens but VT_GETSTATE fails;
+    // /dev/tty0 fails to open under both O_RDONLY and O_WRONLY.
+    EXPECT_CALL(mock_fops, open(StrEq("/dev/tty"), _))
+        .WillOnce(Return(search_tmp_fd));
+    EXPECT_CALL(mock_fops, ioctl(search_tmp_fd, VT_GETSTATE, An<void*>()))
+        .WillOnce(Return(-1));
+    EXPECT_CALL(mock_fops, close(search_tmp_fd))
+        .WillOnce(Return(0));
+    EXPECT_CALL(mock_fops, open(StrEq("/dev/tty0"), _))
+        .WillOnce(Return(-1))
+        .WillOnce(Return(-1));
+
+    // Activation of the requested VT proceeds normally.
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, vt_num))
+        .WillOnce(Return(0));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_WAITACTIVE, vt_num))
+        .WillOnce(Return(0));
+
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGETMODE, An<void*>()))
+        .WillOnce(DoAll(SetIoctlPointee<int>(fake_kd_mode), Return(0)));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_GETMODE, An<void*>()))
+        .WillOnce(DoAll(SetIoctlPointee<vt_mode>(fake_vt_mode_auto), Return(0)));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDGKBMODE, An<void*>()))
+        .WillOnce(DoAll(SetIoctlPointee<int>(fake_kb_mode), Return(0)));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSKBMODE, K_OFF))
+        .WillOnce(Return(0));
+    EXPECT_CALL(mock_fops, tcgetattr(fake_vt_fd, An<struct termios *>()))
+        .WillOnce(DoAll(SetTcAttrPointee<struct termios>(fake_tc_attr), Return(0)));
+    EXPECT_CALL(mock_fops, tcsetattr(fake_vt_fd, TCSANOW, An<const struct termios *>()))
+        .WillOnce(Return(0));
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, KDSETMODE, KD_GRAPHICS))
+        .WillOnce(Return(0));
+
+    // Teardown: prev_active_vt is 0, so restore() must not switch back.
+    EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_ACTIVATE, fake_prev_active_vt))
+        .Times(0);
+    set_up_expectations_for_vt_teardown(false);
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(
+        fops,
+        std::move(pops),
+        vt_num,
+        null_cleanup_registry,
+        null_report);
 }
 
 namespace
@@ -857,7 +1002,8 @@ TEST_F(LinuxVirtualTerminalTest, restores_vt_and_drops_master_on_emergency_clean
         EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
             .WillOnce(Return(0));
 
-        set_up_expectations_for_vt_restore(fake_vt_mode_auto);
+        // Emergency handler restores VT state and switches back to prev VT
+        set_up_expectations_for_vt_restore(fake_vt_mode_auto, true);
     }
 
     auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
@@ -881,7 +1027,107 @@ TEST_F(LinuxVirtualTerminalTest, restores_vt_and_drops_master_on_emergency_clean
     Mock::VerifyAndClearExpectations(&mock_fops);
     Mock::VerifyAndClearExpectations(&drm);
 
+    // The emergency handler captures prev_active_vt by value; the member is still
+    // set, so the destructor's restore() also issues VT_ACTIVATE + VT_WAITACTIVE
+    set_up_expectations_for_vt_teardown(true);
+}
+
+TEST_F(LinuxVirtualTerminalTest, restore_drops_master_before_switching_back_to_previous_vt)
+{
+    // restore() must suspend any still-active devices (dropping DRM master)
+    // before issuing VT_ACTIVATE on the previous VT. Otherwise the previous
+    // owner receives the kernel acquire signal while Mir still holds master,
+    // its drmSetMaster fails, and the framebuffer never gets reprogrammed.
+    // The screen stays blank until a subsequent chvt forces another acquire.
+    using namespace testing;
+
+    int const vt_num{7};
+    mtd::MockDRM drm;
+
+    auto const device_node = "/dev/dri/card0";
+    set_expectations_for_uevent_probe_of_drm(mock_fops, 226, 1, device_node);
+
+    int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
+    EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
+        .WillOnce(Return(fake_device_fd));
+    EXPECT_CALL(drm, drmSetMaster(fake_device_fd))
+        .WillRepeatedly(Return(0));
+
+    {
+        InSequence s;
+
+        set_up_expectations_for_vt_setup(vt_num, true);
+
+        // The drop must occur before any of the VT_ACTIVATE/VT_WAITACTIVE
+        // ioctls inside set_up_expectations_for_vt_restore(...).
+        EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
+            .WillOnce(Return(0));
+
+        set_up_expectations_for_vt_restore(fake_vt_mode_auto, true);
+    }
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(
+        fops,
+        std::move(pops),
+        vt_num,
+        null_cleanup_registry,
+        null_report);
+
+    auto device = vt.acquire_device(
+        226, 1,
+        std::make_unique<mtd::NullDeviceObserver>()).get();
+
+    vt.restore();
+
+    Mock::VerifyAndClearExpectations(&mock_fops);
+    Mock::VerifyAndClearExpectations(&drm);
+
+    // restore() resets prev_active_vt to 0, so the destructor does not
+    // issue another VT_ACTIVATE. DRMDevice's is_master is false after
+    // suspend(), so ~DRMDevice does not call drmDropMaster again.
     set_up_expectations_for_vt_teardown();
+}
+
+TEST_F(LinuxVirtualTerminalTest, restores_previously_active_vt_on_emergency_cleanup)
+{
+    // The emergency cleanup handler must also switch back to the previously
+    // active VT, not just restore keyboard/graphics state.
+    using namespace testing;
+
+    StubEmergencyCleanupRegistry emergency_cleanup_registry;
+
+    int const vt_num{7};
+
+    {
+        InSequence s;
+
+        set_up_expectations_for_vt_setup(vt_num, true);
+
+        // The emergency handler must restore keyboard/graphics and switch
+        // back to the previously active VT, just like restore() does.
+        set_up_expectations_for_vt_restore(fake_vt_mode_auto, true);
+    }
+
+    auto fops = mt::fake_shared<mir::VTFileOperations>(mock_fops);
+    auto pops = std::make_unique<StubPosixProcessOperations>();
+    auto null_report = mr::null_display_report();
+
+    mir::LinuxVirtualTerminal vt(
+        fops,
+        std::move(pops),
+        vt_num,
+        emergency_cleanup_registry,
+        null_report);
+
+    (*emergency_cleanup_registry.handler)();
+
+    Mock::VerifyAndClearExpectations(&mock_fops);
+
+    set_up_expectations_for_vt_teardown(true);
 }
 
 TEST_F(LinuxVirtualTerminalTest, throws_expected_error_when_opening_file_fails)
