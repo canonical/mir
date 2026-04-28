@@ -61,10 +61,7 @@ void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path 
                         auto const key = Key{trim_start_and_end(line_view.substr(0, eq))};
                         auto const value = trim_start_and_end(line_view.substr(eq + 1));
 
-                        if (!value.empty())
-                            update_key(key, value, path);
-                        else if (!clear_array(key))
-                            update_key(key, value, path);
+                        update_key(key, value, path);
                     }
                     catch (std::exception const& e)
                     {

@@ -55,7 +55,6 @@ public:
     void on_done(HandleDone handler) override;
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
-    bool clear_array(Key const& key);
     void do_transaction(std::function<void()> transaction_body);
 
 private:

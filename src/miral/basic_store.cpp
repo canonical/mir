@@ -149,7 +149,17 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     else if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
     {
         auto& details = details_iter->second;
-        details.parsed_values.push_back(std::string{value});
+
+        if (value.empty())
+        {
+            details.parsed_values.clear();
+            details.clear_requested = true;
+        }
+        else
+        {
+            details.parsed_values.push_back(std::string{value});
+        }
+
         details.modification_paths.insert(modification_path);
     }
     else
@@ -552,11 +562,6 @@ void mlc::BasicStore::on_done(HandleDone handler)
 void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
 {
     self->update_key(key, value, modification_path);
-}
-
-auto mlc::BasicStore::clear_array(Key const& key) -> bool
-{
-    return self->clear_array(key);
 }
 
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)
