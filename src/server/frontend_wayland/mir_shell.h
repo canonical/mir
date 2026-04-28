@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_MIR_SHELL_H
 #define MIR_FRONTEND_MIR_SHELL_H
 
-#include <mir-shell-unstable-v1_wrapper.h>
+#include "mir_shell_unstable_v1.h"
 
 #include <memory>
 
@@ -27,7 +27,17 @@ namespace mir
 {
 namespace frontend
 {
-auto create_mir_shell_v1(struct wl_display* display) -> std::shared_ptr<wayland::MirShellV1::Global>;
+class MirShellV1 : public wayland_rs::MirShellV1Impl
+{
+public:
+    MirShellV1(struct wl_resource* resource);
+
+    auto get_regular_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::MirRegularSurfaceV1Impl> override;
+    auto get_floating_regular_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::MirFloatingRegularSurfaceV1Impl> override;
+    auto get_dialog_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::MirDialogSurfaceV1Impl> override;
+    auto get_satellite_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface, wayland_rs::Weak<wayland_rs::MirPositionerV1Impl> const& positioner) -> std::shared_ptr<wayland_rs::MirSatelliteSurfaceV1Impl> override;
+    auto create_positioner() -> std::shared_ptr<wayland_rs::MirPositionerV1Impl> override;
+};
 }
 }
 
