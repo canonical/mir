@@ -39,7 +39,7 @@ For faster iteration, use ccache and the mold linker:
 ```sh
 sudo apt install ccache mold
 cmake -B build -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-  -DMIR_USE_PRECOMPILED_HEADERS=OFF -DMIR_USE_LD=mold
+    -DMIR_USE_PRECOMPILED_HEADERS=OFF -DMIR_USE_LD=mold
 cmake --build build -j$(nproc)
 ```
 
@@ -255,6 +255,7 @@ Mir uses a tag-based strong-type system for geometry in `include/core/mir/geomet
 - **Generic vs concrete**: `generic::Point<T>` is the template; `Point` is `generic::Point<int>`, `PointF` is `generic::Point<float>`
 
 **Type-safe arithmetic** — the compiler prevents mixing incompatible axes:
+
 - ✅ `X + DeltaX → X`, `Point + Displacement → Point`, `Point - Point → Displacement`
 - ❌ `X + DeltaY` — **compile error**
 - ❌ `Width + Height` — **compile error**
@@ -297,30 +298,30 @@ MirAL provides a stable ABI. Any changes to the public API must be reflected in 
 #### miral / miroil — adding a new symbol (non-breaking)
 
 1. Add the new method/class to the public header and implementation
-2. If not already bumped this release cycle, bump `MIRAL_VERSION_MINOR` in `src/CMakeLists.txt` (or `MIROIL_VERSION_MINOR` in `src/miroil/CMakeLists.txt`)
-3. `cmake --build <BUILD_DIR> --target generate-miral-symbols-map` (or `generate-miroil-symbols-map`)
-4. Verify with `git diff src/miral/symbols.map`
-5. `cmake --build <BUILD_DIR> --target regenerate-miral-debian-symbols` (or `regenerate-miroil-debian-symbols`)
+1. If not already bumped this release cycle, bump `MIRAL_VERSION_MINOR` in `src/CMakeLists.txt` (or `MIROIL_VERSION_MINOR` in `src/miroil/CMakeLists.txt`)
+1. `cmake --build <BUILD_DIR> --target generate-miral-symbols-map` (or `generate-miroil-symbols-map`)
+1. Verify with `git diff src/miral/symbols.map`
+1. `cmake --build <BUILD_DIR> --target regenerate-miral-debian-symbols` (or `regenerate-miroil-debian-symbols`)
 
 No `*_ABI` bump is required for additive changes.
 
 #### miral / miroil — removing or changing a symbol (ABI break)
 
 1. Make the destructive change
-2. Bump `MIRAL_VERSION_MAJOR` in `src/CMakeLists.txt`, reset `MIRAL_VERSION_MINOR` and `MIRAL_VERSION_PATCH` to 0
-3. Bump `MIRAL_ABI` in `src/miral/CMakeLists.txt`
-4. Run `generate-miral-symbols-map` then `regenerate-miral-debian-symbols`
-5. Run `./tools/update_package_abis.sh` to update Debian package names (control file, `.install` file renames)
+1. Bump `MIRAL_VERSION_MAJOR` in `src/CMakeLists.txt`, reset `MIRAL_VERSION_MINOR` and `MIRAL_VERSION_PATCH` to 0
+1. Bump `MIRAL_ABI` in `src/miral/CMakeLists.txt`
+1. Run `generate-miral-symbols-map` then `regenerate-miral-debian-symbols`
+1. Run `./tools/update_package_abis.sh` to update Debian package names (control file, `.install` file renames)
 
 #### mirserver — any symbol change (additive or breaking)
 
 mirserver has no stable ABI promise. **Every** symbol change requires bumping `MIRSERVER_ABI`:
 
 1. Make the change
-2. Bump `MIRSERVER_ABI` in `src/server/CMakeLists.txt`
-3. Bump the minor number in `project(Mir VERSION X.Y.Z)` in the **top-level** `CMakeLists.txt` (the stanza name `MIR_SERVER_INTERNAL_X.Y` derives from this)
-4. `cmake --build <BUILD_DIR> --target generate-mirserver-symbols-map`
-5. Run `./tools/update_package_abis.sh` (handles `debian/control` and `.install` file renames)
+1. Bump `MIRSERVER_ABI` in `src/server/CMakeLists.txt`
+1. Bump the minor number in `project(Mir VERSION X.Y.Z)` in the **top-level** `CMakeLists.txt` (the stanza name `MIR_SERVER_INTERNAL_X.Y` derives from this)
+1. `cmake --build <BUILD_DIR> --target generate-mirserver-symbols-map`
+1. Run `./tools/update_package_abis.sh` (handles `debian/control` and `.install` file renames)
 
 **Note**: there is no `regenerate-mirserver-debian-symbols` target — mirserver debian packaging is managed by `update_package_abis.sh`.
 
@@ -537,7 +538,7 @@ Every new doc page must include:
 
    # Page Title
    ```
-2. **A meta description** in frontmatter (for search engines and social previews):
+1. **A meta description** in frontmatter (for search engines and social previews):
    ```markdown
    ---
    myst:
