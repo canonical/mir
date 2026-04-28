@@ -258,29 +258,11 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
     for (auto const& [key, details] : array_attribute_handlers)
     {
-        if (details.clear_requested)
-        {
-            try
-            {
-                details.handler(key, std::span<std::string const>{});
-                if (details.parsed_values.empty())
-                    continue;
-            }
-            catch (std::exception const& e)
-            {
-                mir::log_warning(
-                    "Error clearing key '%s' in file '%s': %s",
-                    key.to_string().c_str(),
-                    details.last_clear_file.c_str(),
-                    e.what());
-            }
-        }
-
         auto const maybe_value = [&]() -> std::optional<std::vector<std::string>>
         {
             if (!details.parsed_values.empty())
                 return details.parsed_values;
-            else if (details.preset)
+            else if (details.preset && !details.clear_requested)
                 return details.preset;
             else
                 return std::nullopt;

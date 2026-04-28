@@ -503,8 +503,6 @@ TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_clears_previously_accu
 {
     ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
 
-    InSequence seq;
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(3))));
 
     std::istringstream istream_with_clear{"ints=1\nints=2\nints=\nints=3"};
@@ -515,7 +513,7 @@ TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_with_no_following_valu
 {
     ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
 
     std::istringstream istream_with_only_clear{"ints=1\nints=2\nints="};
     ini_file.load_file(istream_with_only_clear, fake_filename());
@@ -525,7 +523,7 @@ TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_with_preset_and_no_fol
 {
     ini_file.add_ints_attribute(an_ints_key, "ints", {{10, 20}}, [this](auto... args) { ints_handler(args...); });
 
-    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(IsEmpty())));
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
 
     std::istringstream istream_with_only_clear{"ints=1\nints="};
     ini_file.load_file(istream_with_only_clear, fake_filename());
@@ -535,8 +533,6 @@ TEST_F(LiveConfigIniFile, an_empty_value_for_a_strings_array_key_clears_previous
 {
     ini_file.add_strings_attribute(a_strings_key, "strings", [this](auto... args) { strings_handler(args...); });
 
-    InSequence seq;
-    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(IsEmpty())));
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     std::istringstream istream_with_clear{"strings=foo\nstrings=bar\nstrings=\nstrings=baz"};
