@@ -328,7 +328,9 @@ private:
 
         void modifiers_map(struct wl_array *map) override
         {
-            change.pending_change.modifier_map = scene::CopyableWlArray(map);
+            change.pending_change.modifier_map = std::vector<uint8_t>(
+                static_cast<uint8_t*>(map->data),
+                static_cast<uint8_t*>(map->data) + map->size);
             change.waiting_status = InputMethodV1ChangeWaitingStatus::none;
         }
 
