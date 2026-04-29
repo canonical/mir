@@ -1,6 +1,6 @@
 (exp-window-positions-under-wayland)=
 
-# Window positions under Wayland
+# Window positioning under Wayland
 
 ## Preamble
 

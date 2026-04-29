@@ -1,6 +1,6 @@
 (configuring-reference-index)=
 
-# Reference
+# Mir configuration reference
 
 These pages provide detailed reference on configuring Mir compositors.
 

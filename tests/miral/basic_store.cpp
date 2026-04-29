@@ -403,3 +403,75 @@ TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_all_va
         store.update_key(a_floats_key, "not_a_float", a_path);
     });
 }
+
+TEST_F(BasicStoreTest, empty_value_clears_previously_accumulated_ints_in_same_transaction)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(3))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "2", a_path);
+        store.update_key(an_ints_key, "", a_path);
+        store.update_key(an_ints_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, empty_value_with_no_following_values_results_in_nullopt_for_ints)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "2", a_path);
+        store.update_key(an_ints_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, empty_value_with_preset_and_no_following_values_suppresses_preset_for_ints)
+{
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, empty_value_clears_previously_accumulated_strings_in_same_transaction)
+{
+    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "foo", a_path);
+        store.update_key(a_strings_key, "bar", a_path);
+        store.update_key(a_strings_key, "", a_path);
+        store.update_key(a_strings_key, "baz", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, empty_value_with_preset_and_no_following_values_suppresses_preset_for_strings)
+{
+    std::vector<std::string> const preset_vals{"alpha", "beta"};
+    store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); });
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "foo", a_path);
+        store.update_key(a_strings_key, "", a_path);
+    });
+}

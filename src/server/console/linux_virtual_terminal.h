@@ -119,6 +119,9 @@ private:
     std::shared_ptr<VTFileOperations> const fops;
     std::unique_ptr<PosixProcessOperations> const pops;
     std::shared_ptr<graphics::DisplayReport> const report;
+    // prev_active_vt must be declared before vt_fd: open_vt() (called during
+    // vt_fd construction) writes to it, so it must already be initialised.
+    int prev_active_vt{0};
     FDWrapper const vt_fd;
     int prev_kd_mode;
     struct vt_mode prev_vt_mode;
