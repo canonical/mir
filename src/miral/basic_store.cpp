@@ -163,7 +163,12 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     else if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
     {
         auto& details = details_iter->second;
-        details.parsed_values.push_back(std::string{value});
+
+        if (value.empty())
+            details.parsed_values.clear();
+        else
+            details.parsed_values.push_back(std::string{value});
+
         details.modification_paths.insert(modification_path);
     }
     else
