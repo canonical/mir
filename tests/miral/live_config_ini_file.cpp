@@ -509,7 +509,7 @@ TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_clears_previously_accu
     ini_file.load_file(istream_with_clear, fake_filename());
 }
 
-TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_with_no_following_values_results_in_empty)
+TEST_F(LiveConfigIniFile, an_empty_value_for_an_array_key_with_no_following_values_results_in_nullopt)
 {
     ini_file.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
 

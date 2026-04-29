@@ -270,7 +270,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
                 auto const preset_str = join_comma(*details.preset);
 
                 mir::log_warning(
-                    "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
+                    "Parsing error: %s in file(s) %s. Using preset value(s) '[%s]' instead.",
                     nvv.what(),
                     modification_paths_str.c_str(),
                     preset_str.c_str());
@@ -280,7 +280,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             else
             {
                 mir::log_warning(
-                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    "Parsing error: %s in file(s) %s, but no preset value. Using nullopt instead.",
                     nvv.what(),
                     modification_paths_str.c_str());
                 details.handler(key, std::nullopt);
@@ -291,7 +291,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             auto const value_str = maybe_value.transform([](auto const& v) { return join_comma(v); }).value_or("unset");
 
             mir::log_warning(
-                "Error processing key '%s' with values [%s] in file '%s': %s",
+                "Error processing key '%s' with values [%s] in file(s) '%s': %s",
                 key.to_string().c_str(),
                 value_str.c_str(),
                 modification_paths_str.c_str(),
