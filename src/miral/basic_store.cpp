@@ -67,6 +67,9 @@ public:
 
     void on_done(HandleDone handler);
 
+    void foreach_attribute(BasicStore::ForeachAttributeCallback const& callback) const;
+    void foreach_array_attribute(BasicStore::ForeachArrayCallback const& callback) const;
+
 private:
     Self(Self const&) = delete;
     Self& operator=(Self const&) = delete;
@@ -417,6 +420,22 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
 }
 }
 
+void mlc::BasicStore::Self::foreach_attribute(
+    BasicStore::ForeachAttributeCallback const& callback) const
+{
+    // std::lock_guard lock{mutex};
+    for (auto const& [key, details] : attribute_handlers)
+        callback(key, details.description, details.preset);
+}
+
+void mlc::BasicStore::Self::foreach_array_attribute(
+    BasicStore::ForeachArrayCallback const& callback) const
+{
+    // std::lock_guard lock{mutex};
+    for (auto const& [key, details] : array_attribute_handlers)
+        callback(key, details.description, details.parsed_values, details.preset);
+}
+
 mlc::BasicStore::BasicStore() :
     self{std::make_shared<Self>()}
 {
@@ -586,4 +605,16 @@ void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::fi
 void mlc::BasicStore::do_transaction(std::function<void()> transaction_body)
 {
     self->do_transaction(std::move(transaction_body));
+}
+
+void mlc::BasicStore::foreach_attribute(
+    ForeachAttributeCallback const& callback) const
+{
+    self->foreach_attribute(callback);
+}
+
+void mlc::BasicStore::foreach_array_attribute(
+    ForeachArrayCallback const& callback) const
+{
+    self->foreach_array_attribute(callback);
 }
