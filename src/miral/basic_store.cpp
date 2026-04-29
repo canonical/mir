@@ -4,12 +4,12 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
 #include <format>
 #include <list>
 #include <map>
 #include <mutex>
 #include <ranges>
-#include <set>
 #include <stdexcept>
 
 namespace mlc = miral::live_config;
@@ -90,7 +90,8 @@ private:
         std::string const description;
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
-        std::set<std::filesystem::path> modification_paths;
+        std::vector<std::filesystem::path> modification_paths;
+        bool clear_requested = false;
     };
 
     std::mutex mutex;
@@ -134,7 +135,7 @@ void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description
     }
 
     array_attribute_handlers.emplace(
-        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}});
+        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}, {}});
 }
 
 void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
@@ -147,8 +148,19 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     else if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
     {
         auto& details = details_iter->second;
-        details.parsed_values.push_back(std::string{value});
-        details.modification_paths.insert(modification_path);
+
+        if (value.empty())
+        {
+            details.parsed_values.clear();
+            details.clear_requested = true;
+        }
+        else
+        {
+            details.parsed_values.push_back(std::string{value});
+        }
+
+        if (!std::ranges::contains(details.modification_paths, modification_path))
+            details.modification_paths.push_back(modification_path);
     }
     else
     {
@@ -166,6 +178,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
     {
         details.parsed_values.resize(0);
         details.modification_paths.clear();
+        details.clear_requested = false;
     }
 
     transaction_body();
@@ -232,10 +245,19 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         {
             if (!details.parsed_values.empty())
                 return details.parsed_values;
-            else if (details.preset)
+            else if (details.preset && !details.clear_requested)
                 return details.preset;
             else
                 return std::nullopt;
+        }();
+
+        auto const modification_paths_str = [&]
+        {
+            if (details.modification_paths.empty())
+                return std::string{"never set"};
+
+            return join_comma(
+                std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); }));
         }();
 
         try
@@ -244,23 +266,14 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         }
         catch (NoValidValuesError const& nvv)
         {
-            auto const path = [&]
-            {
-                if (details.modification_paths.empty())
-                    return std::string{"never set"};
-
-                return join_comma(
-                    details.modification_paths | std::views::transform([](auto const& p) { return p.string(); }));
-            }();
-
             if (auto const preset = details.preset)
             {
                 auto const preset_str = join_comma(*details.preset);
 
                 mir::log_warning(
-                    "Parsing error: %s in file %s. Using preset value(s) '[%s]' instead.",
+                    "Parsing error: %s in file(s) %s. Using preset value(s) '[%s]' instead.",
                     nvv.what(),
-                    path.c_str(),
+                    modification_paths_str.c_str(),
                     preset_str.c_str());
 
                 details.handler(key, preset);
@@ -268,29 +281,21 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             else
             {
                 mir::log_warning(
-                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    "Parsing error: %s in file(s) %s, but no preset value. Using nullopt instead.",
                     nvv.what(),
-                    path.c_str());
+                    modification_paths_str.c_str());
                 details.handler(key, std::nullopt);
             }
         }
         catch (std::exception const& e)
         {
-            auto const path = [&]
-            {
-                if (details.modification_paths.empty())
-                    return std::string{"never set"};
-
-                return join_comma(
-                    std::ranges::views::transform(details.modification_paths, [](auto const& p) { return p.string(); }));
-            }();
             auto const value_str = maybe_value.transform([](auto const& v) { return join_comma(v); }).value_or("unset");
 
             mir::log_warning(
-                "Error processing key '%s' with values [%s] in file '%s': %s",
+                "Error processing key '%s' with values [%s] in file(s) '%s': %s",
                 key.to_string().c_str(),
                 value_str.c_str(),
-                path.c_str(),
+                modification_paths_str.c_str(),
                 e.what());
         }
     }
