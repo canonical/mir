@@ -457,3 +457,79 @@ TEST_F(BasicStoreTest, floats_handler_receives_nullopt_when_no_preset_and_all_va
         store.update_key(a_floats_key, "not_a_float", a_path);
     });
 }
+
+TEST_F(BasicStoreTest, set_ints_value_values_are_handled)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(7, 8, 9))));
+
+    store.do_transaction([&]
+    {
+        store.set_ints_value(an_ints_key, std::vector<int>{7, 8, 9});
+    });
+}
+
+TEST_F(BasicStoreTest, set_floats_value_values_are_handled)
+{
+    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); });
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.5f), FloatEq(2.5f)))));
+
+    store.do_transaction([&]
+    {
+        store.set_floats_value(a_floats_key, std::vector<float>{1.5f, 2.5f});
+    });
+}
+
+TEST_F(BasicStoreTest, set_strings_value_values_are_handled)
+{
+    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("hello", "world"))));
+
+    store.do_transaction([&]
+    {
+        store.set_strings_value(a_strings_key, std::vector<std::string>{"hello", "world"});
+    });
+}
+
+TEST_F(BasicStoreTest, set_ints_value_replaces_values_accumulated_via_update_key)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(99))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "2", a_path);
+        store.set_ints_value(an_ints_key, std::vector<int>{99});
+    });
+}
+
+TEST_F(BasicStoreTest, set_ints_value_overrides_preset)
+{
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(42))));
+
+    store.do_transaction([&]
+    {
+        store.set_ints_value(an_ints_key, std::vector<int>{42});
+    });
+}
+
+TEST_F(BasicStoreTest, update_key_appends_to_values_set_via_set_ints_value)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(99, 100))));
+
+    store.do_transaction([&]
+    {
+        store.set_ints_value(an_ints_key, std::vector<int>{99});
+        store.update_key(an_ints_key, "100", a_path);
+    });
+}
