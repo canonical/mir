@@ -16,6 +16,7 @@
 
 #include "basic_store.h"
 
+#include "gtest/gtest.h"
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
@@ -378,6 +379,59 @@ TEST_F(BasicStoreTest, strings_handler_receives_nullopt_when_no_preset_and_no_va
     EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
 
     run_empty();
+}
+
+TEST_F(BasicStoreTest, strings_handler_receives_empty_array_reset_when_cleared_with_no_values)
+{
+    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); });
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_handler_receives_array_reset_with_values_when_cleared_then_values_set)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "", a_path);
+        store.update_key(an_ints_key, "1", a_path);
+        store.update_key(an_ints_key, "2", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_preset_is_used_as_reset_when_cleared_and_all_values_cannot_be_parsed)
+{
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAreArray(preset_vals))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "", a_path);
+        store.update_key(an_ints_key, "not_a_number", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_cleared_and_all_values_are_bad_and_no_preset)
+{
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); });
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "", a_path);
+        store.update_key(an_ints_key, "not_a_number", a_path);
+    });
 }
 
 TEST_F(BasicStoreTest, ints_handler_receives_nullopt_when_no_preset_and_all_values_are_bad)
