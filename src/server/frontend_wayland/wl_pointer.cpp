@@ -250,15 +250,17 @@ auto mf::WlPointer::axis(
     uint32_t wayland_axis) -> bool
 {
     bool event_sent = false;
+    bool value120_sent = false;
 
     if (axis.value120.as_value() && version_supports_axis_value120())
     {
         send_axis_value120_event(wayland_axis, axis.value120.as_value());
         event_sent = true;
+        value120_sent = true;
     }
 
-    // Only send discrete on versions pre-value120
-    if (axis.discrete.as_value() && version_supports_axis_discrete() && !version_supports_axis_value120())
+    // Only send discrete if value120 was not already sent (to avoid duplicating discrete info)
+    if (axis.discrete.as_value() && version_supports_axis_discrete() && !value120_sent)
     {
         send_axis_discrete_event(wayland_axis, axis.discrete.as_value());
         event_sent = true;
