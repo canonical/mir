@@ -31,7 +31,7 @@ MIR_CORE_2.27 {
     "mir::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)";
 	/* Ideally, mir::logv would follow the exact specifier as above, but the specific type of va_args differs across architectures
 	 * Also, “logv” is less likely to spuriously prefix-match
-	 */ 
+	 */
     mir::logv*;
     mir::log_critical*;
     mir::log_debug*;
