@@ -35,6 +35,7 @@ struct libinput_event;
 struct libinput_event_keyboard;
 struct libinput_event_touch;
 struct libinput_event_pointer;
+struct libinput_event_switch;
 struct libinput_device_group;
 
 namespace mir
@@ -73,6 +74,8 @@ private:
     EventUPtr convert_absolute_motion_event(libinput_event_pointer* pointer);
     EventUPtr convert_axis_event(libinput_event_pointer* pointer);
     EventUPtr convert_touch_frame(libinput_event_touch* touch);
+    EventUPtr convert_switch_event(libinput_event_switch* switch_event);
+
     void handle_touch_down(libinput_event_touch* touch);
     void handle_touch_up(libinput_event_touch* touch);
     void handle_touch_motion(libinput_event_touch* touch);

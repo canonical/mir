@@ -43,6 +43,7 @@ bool mi::IdlePokingDispatcher::dispatch(std::shared_ptr<MirEvent const> const& e
                 break;
 
             case mir_input_event_type_keyboard_resync:
+            case mir_input_event_type_switch:
             case mir_input_event_types:
                 break;
         }

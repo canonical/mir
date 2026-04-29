@@ -20,11 +20,15 @@
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/geometry/rectangle.h>
+#include <mir/shell/display_configuration_controller.h>
 #include <mir_toolkit/common.h>
 
 #include <algorithm>
 #include <array>
 #include <map>
+
+#define MIR_LOG_COMPONENT "basicseat"
+#include <mir/log.h>
 
 namespace mi = mir::input;
 namespace mf = mir::frontend;
@@ -34,8 +38,10 @@ namespace geom = mir::geometry;
 
 struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
 {
-    OutputTracker(SeatInputDeviceTracker& tracker)
-        : input_state_tracker{tracker}
+    OutputTracker(SeatInputDeviceTracker& tracker,
+                  std::function<std::shared_ptr<shell::DisplayConfigurationController>()> display_configuration_controller) :
+         input_state_tracker{tracker},
+         display_configuration_controller{std::move(display_configuration_controller)}
     {
     }
 
@@ -94,6 +100,32 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
             });
         input_state_tracker.update_outputs(output_rectangles);
         bounding_rectangle = output_rectangles.bounding_rectangle();
+    }
+
+    void set_tablet_mode(bool enabled)
+    {
+        auto const controller = display_configuration_controller();
+        if (!controller)
+        {
+            mir::log_warning("Tablet mode change ignored: display configuration controller unavailable");
+            return;
+        }
+
+        mir::log_warning("Tablet mode %sabled, updating display configuration", enabled ? "en" : "dis");
+        auto config = controller->base_configuration();
+        config->for_each_output(
+            [enabled](mg::UserDisplayConfigurationOutput& output)
+            {
+                // Find an internal display first
+                if (output.type == mg::DisplayConfigurationOutputType::lvds
+                    || output.type == mg::DisplayConfigurationOutputType::edp)
+                {
+                    output.form_factor = enabled ? mir_form_factor_tablet : mir_form_factor_monitor;
+                }
+            }
+        );
+
+        controller->set_base_configuration(config);
     }
 
     void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
@@ -163,6 +195,7 @@ private:
     mi::SeatInputDeviceTracker& input_state_tracker;
     std::map<uint32_t, mi::OutputInfo> outputs;
     geom::Rectangle bounding_rectangle;
+    std::function<std::shared_ptr<shell::DisplayConfigurationController>()> display_configuration_controller;
 };
 
 mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
@@ -171,14 +204,15 @@ mi::BasicSeat::BasicSeat(std::shared_ptr<mi::InputDispatcher> const& dispatcher,
                          std::shared_ptr<Registrar> const& registrar,
                          std::shared_ptr<mi::KeyMapper> const& key_mapper,
                          std::shared_ptr<time::Clock> const& clock,
-                         std::shared_ptr<mi::SeatObserver> const& observer) :
+                         std::shared_ptr<mi::SeatObserver> const& observer,
+                         std::function<std::shared_ptr<mir::shell::DisplayConfigurationController>()> display_configuration_controller) :
       input_state_tracker{dispatcher,
                           touch_visualizer,
                           cursor_observer,
                           key_mapper,
                           clock,
                           observer},
-      output_tracker{std::make_shared<OutputTracker>(input_state_tracker)}
+      output_tracker{std::make_shared<OutputTracker>(input_state_tracker, std::move(display_configuration_controller))}
 {
     registrar->register_interest(output_tracker);
 }
@@ -199,6 +233,21 @@ void mi::BasicSeat::remove_device(input::Device const& device)
 
 void mi::BasicSeat::dispatch_event(std::shared_ptr<MirEvent> const& event)
 {
+    // Intercept the switch events here so we can appropriately update display configurations
+    if (mir_event_get_type(event.get()) == mir_event_type_input)
+    {
+        auto input_event = mir_event_get_input_event(event.get());
+        if (mir_input_event_get_type(input_event) == mir_input_event_type_switch)
+        {
+            auto switch_event = mir_input_event_get_switch_event(input_event);
+            if (mir_switch_event_action(switch_event) == mir_switch_action_tablet_mode)
+                output_tracker->set_tablet_mode(mir_switch_event_state(switch_event) == mir_switch_state_on);
+
+            // We don't want to dispatch the tablet mode switch event to the rest of the system, as it's not an input event that clients should be aware of.
+            return;
+        }
+    }
+
     input_state_tracker.dispatch(event);
 }
 

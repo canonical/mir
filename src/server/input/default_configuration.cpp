@@ -309,7 +309,11 @@ std::shared_ptr<mi::Seat> mir::DefaultServerConfiguration::the_seat()
                     the_display_configuration_observer_registrar(),
                     the_key_mapper(),
                     the_clock(),
-                    the_seat_observer());
+                    the_seat_observer(),
+                    [this]
+                    {
+                    return the_display_configuration_controller();
+                    });
         });
 }
 
