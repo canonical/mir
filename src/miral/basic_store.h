@@ -89,6 +89,17 @@ public:
 
     void on_done(HandleDone handler) override;
 
+    using ForeachAttributeCallback =
+        std::function<void(Key const&, std::string_view, std::optional<std::string> const& preset)>;
+    using ForeachArrayCallback = std::function<void(
+        Key const&,
+        std::string_view,
+        std::span<std::string const> current_value,
+        std::optional<std::span<std::string const>> preset)>;
+
+    void foreach_attribute(ForeachAttributeCallback const& callback) const;
+    void foreach_array_attribute(ForeachArrayCallback const& callback) const;
+
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
 
