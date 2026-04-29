@@ -52,6 +52,41 @@ public:
         std::span<std::string const> preset,
         HandleStrings handler) override;
 
+    void add_ints_attribute(
+        Key const& key,
+        std::string_view description,
+        HandleInts handler,
+        std::span<int const> initial_values);
+    void add_floats_attribute(
+        Key const& key,
+        std::string_view description,
+        HandleFloats handler,
+        std::span<float const> initial_values);
+    void add_strings_attribute(
+        Key const& key,
+        std::string_view description,
+        HandleStrings handler,
+        std::span<std::string const> initial_values);
+
+    void add_ints_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<int const> preset,
+        HandleInts handler,
+        std::span<int const> initial_values);
+    void add_floats_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<float const> preset,
+        HandleFloats handler,
+        std::span<float const> initial_values);
+    void add_strings_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<std::string const> preset,
+        HandleStrings handler,
+        std::span<std::string const> initial_values);
+
     void on_done(HandleDone handler) override;
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
