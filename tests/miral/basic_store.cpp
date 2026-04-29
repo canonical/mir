@@ -709,4 +709,3 @@ TEST_F(BasicStoreTest, strings_clearing_initial_values_no_preset_results_in_null
         store.update_key(a_strings_key, "", a_path);
     });
 }
-
