@@ -264,7 +264,7 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
         preferred_action = DndAction::move;
     }
 
-    auto const acceptable_options = this->dnd_actions | dnd_actions;
+    auto const acceptable_options = this->dnd_actions & dnd_actions;
 
     for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
     {
