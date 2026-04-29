@@ -5,12 +5,14 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
+#include <charconv>
 #include <format>
 #include <list>
 #include <map>
 #include <mutex>
 #include <ranges>
 #include <stdexcept>
+#include <type_traits>
 
 namespace mlc = miral::live_config;
 
@@ -60,6 +62,7 @@ public:
 
     void add_key(Key const& key, std::string_view description, std::optional<std::string> preset, HandleString handler);
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
+    void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler, std::vector<std::string> initial_values);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
     void do_transaction(std::function<void()> transaction_body);
@@ -89,6 +92,7 @@ private:
         HandleStrings const handler;
         std::string const description;
         std::optional<std::vector<std::string>> const preset;
+        std::vector<std::string> const initial_values;
         std::vector<std::string> parsed_values;
         std::vector<std::filesystem::path> modification_paths;
         bool clear_requested = false;
@@ -126,6 +130,16 @@ void mlc::BasicStore::Self::on_done(HandleDone handler)
 void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description,
     std::optional<std::vector<std::string>> preset, HandleStrings handler)
 {
+    add_key(key, description, std::move(preset), std::move(handler), {});
+}
+
+void mlc::BasicStore::Self::add_key(
+    Key const& key,
+    std::string_view description,
+    std::optional<std::vector<std::string>> preset,
+    HandleStrings handler,
+    std::vector<std::string> initial_values)
+{
     std::lock_guard lock{mutex};
 
     if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
@@ -135,7 +149,14 @@ void mlc::BasicStore::Self::add_key(Key const& key, std::string_view description
     }
 
     array_attribute_handlers.emplace(
-        key, ArrayAttributeDetails{handler, std::string{description}, preset, std::vector<std::string>{}, {}, {}});
+        key, ArrayAttributeDetails{
+            .handler = std::move(handler),
+            .description = std::string{description},
+            .preset = std::move(preset),
+            .initial_values = std::move(initial_values),
+            .parsed_values = {},
+            .modification_paths = {},
+            .clear_requested = false});
 }
 
 void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path)
@@ -176,7 +197,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
 
     for (auto& [key, details] : array_attribute_handlers)
     {
-        details.parsed_values.resize(0);
+        details.parsed_values = details.initial_values;
         details.modification_paths.clear();
         details.clear_requested = false;
     }
@@ -523,6 +544,35 @@ void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view desc
 void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler)
 {
     self->add_key(key, description, std::vector<std::string>{preset.begin(), preset.end()}, handler);
+}
+
+
+void mlc::BasicStore::add_strings_attribute(
+    Key const& key,
+    std::string_view description,
+    std::span<std::string const> preset,
+    HandleStrings handler,
+    std::span<std::string const> initial_values)
+{
+    self->add_key(
+        key, description,
+        std::vector<std::string>{preset.begin(), preset.end()},
+        handler,
+        std::vector<std::string>{initial_values.begin(), initial_values.end()});
+}
+
+
+void mlc::BasicStore::add_strings_attribute(
+    Key const& key,
+    std::string_view description,
+    HandleStrings handler,
+    std::span<std::string const> initial_values)
+{
+    self->add_key(
+        key, description,
+        std::nullopt,
+        handler,
+        std::vector<std::string>{initial_values.begin(), initial_values.end()});
 }
 
 void mlc::BasicStore::on_done(HandleDone handler)
