@@ -1,10 +1,10 @@
 #include "basic_store.h"
 
-#include <algorithm>
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
 #include <format>
 #include <list>
 #include <map>
@@ -62,7 +62,6 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
-    bool clear_array(Key const& key);
     void do_transaction(std::function<void()> transaction_body);
 
     void on_done(HandleDone handler);
@@ -92,7 +91,6 @@ private:
         std::optional<std::vector<std::string>> const preset;
         std::vector<std::string> parsed_values;
         std::vector<std::filesystem::path> modification_paths;
-        std::filesystem::path last_clear_file;
         bool clear_requested = false;
     };
 
@@ -154,7 +152,6 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
         if (value.empty())
         {
             details.parsed_values.clear();
-            details.last_clear_file = modification_path;
             details.clear_requested = true;
         }
         else
@@ -162,26 +159,12 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
             details.parsed_values.push_back(std::string{value});
         }
 
-        if (std::ranges::contains(details.modification_paths, modification_path))
-            details.modification_paths.push_back(modification_path);
+        details.modification_paths.push_back(modification_path);
     }
     else
     {
         mir::log_warning("Config key '%s' not recognized", key.to_string().c_str());
     }
-}
-
-auto mlc::BasicStore::Self::clear_array(Key const& key) -> bool
-{
-    if (auto const details_iter = array_attribute_handlers.find(key); details_iter != array_attribute_handlers.end())
-    {
-        auto& details = details_iter->second;
-        details.parsed_values.clear();
-        details.modification_paths.clear();
-        details.clear_requested = true;
-        return true;
-    }
-    return false;
 }
 
 void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_body)
@@ -195,7 +178,6 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         details.parsed_values.resize(0);
         details.modification_paths.clear();
         details.clear_requested = false;
-        details.last_clear_file.clear();
     }
 
     transaction_body();
