@@ -15,6 +15,9 @@
  */
 
 #include "wlr_screencopy_v1.h"
+#include "weak.h"
+#include "protocol_error.h"
+#include "wayland.h"
 
 #include <mir/log.h>
 #include <mir/compositor/screen_shooter.h>
@@ -25,10 +28,7 @@
 #include <mir/scene/scene_change_notification.h>
 #include <mir/frontend/surface_stack.h>
 #include <mir/geometry/rectangles.h>
-#include <mir/wayland/weak.h>
-#include <mir/wayland/protocol_error.h>
 #include <mir/executor.h>
-#include "wayland_wrapper.h"
 #include "wayland_timespec.h"
 #include "output_manager.h"
 #include "shm.h"
@@ -38,7 +38,7 @@
 #include <optional>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
@@ -85,7 +85,7 @@ private:
     /// Only has meaning when damage_amount is partial
     geom::Rectangle output_space_damage;
     /// The frame that will be captured once this capture area takes damage
-    wayland::Weak<Frame> pending_frame;
+    wayland_rs::Weak<Frame> pending_frame;
 };
 
 namespace mir
@@ -100,52 +100,12 @@ struct WlrScreencopyV1Ctx
     std::shared_ptr<SurfaceStack> const surface_stack;
 };
 
-class WlrScreencopyManagerV1Global
-    : public wayland::WlrScreencopyManagerV1::Global
-{
-public:
-    WlrScreencopyManagerV1Global(wl_display* display, std::shared_ptr<WlrScreencopyV1Ctx> const& ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
-};
-
-class WlrScreencopyFrameV1;
-
-class WlrScreencopyManagerV1
-    : public wayland::WlrScreencopyManagerV1
-{
-public:
-    WlrScreencopyManagerV1(wl_resource* resource, std::shared_ptr<WlrScreencopyV1Ctx> const& ctx);
-
-    void capture_on_damage(WlrScreencopyV1DamageTracker::Frame* frame);
-
-    std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
-private:
-    /// From wayland::WlrScreencopyManagerV1
-    /// @{
-    void capture_output(wl_resource* frame, int32_t overlay_cursor, wl_resource* output) override;
-    void capture_output_region(
-        wl_resource* frame,
-        int32_t overlay_cursor,
-        wl_resource* output,
-        int32_t x, int32_t y,
-        int32_t width, int32_t height) override;
-    /// @}
-
-    std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
-    WlrScreencopyV1DamageTracker damage_tracker;
-};
-
 class WlrScreencopyFrameV1
-    : public wayland::WlrScreencopyFrameV1,
+    : public mw::ZwlrScreencopyFrameV1Impl,
       WlrScreencopyV1DamageTracker::Frame
 {
 public:
     WlrScreencopyFrameV1(
-        wl_resource* resource,
         WlrScreencopyManagerV1* manager,
         std::shared_ptr<WlrScreencopyV1Ctx> const& ctx,
         WlrScreencopyV1DamageTracker::FrameParams const& params);
@@ -157,17 +117,14 @@ public:
     void capture(geometry::Rectangle buffer_space_damage) override;
     /// @}
 
-private:
-    void prepare_target(wl_resource* buffer);
+    auto copy(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer) -> void override;
+    auto copy_with_damage(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer) -> void override;
     void report_result(std::optional<time::Timestamp> captured_time, geom::Rectangle buffer_space_damage);
 
-    /// From wayland::WlrScreencopyFrameV1
-    /// @{
-    void copy(wl_resource* buffer) override;
-    void copy_with_damage(wl_resource* buffer) override;
-    /// @}
+private:
+    void prepare_target(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer);
 
-    wayland::Weak<WlrScreencopyManagerV1> const manager;
+    mw::Weak<WlrScreencopyManagerV1> const manager;
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
     WlrScreencopyV1DamageTracker::FrameParams const params;
     geometry::Stride const stride;
@@ -180,22 +137,6 @@ private:
     /// @}
 };
 }
-}
-
-auto mf::create_wlr_screencopy_manager_unstable_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
--> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>
-{
-    auto ctx = std::shared_ptr<WlrScreencopyV1Ctx>{new WlrScreencopyV1Ctx{
-        wayland_executor,
-        allocator,
-        screen_shooter_factory,
-        surface_stack}};
-    return std::make_shared<WlrScreencopyManagerV1Global>(display, std::move(ctx));
 }
 
 mf::WlrScreencopyV1DamageTracker::WlrScreencopyV1DamageTracker(Executor& wayland_executor, SurfaceStack& surface_stack)
@@ -245,13 +186,14 @@ void mf::WlrScreencopyV1DamageTracker::capture_on_damage(Frame* frame)
 
 void mf::WlrScreencopyV1DamageTracker::create_change_notifier()
 {
-    auto callback = [this, weak_self=mw::make_weak(this)](std::optional<geom::Rectangle> const& damage)
+    // TODO: This ain't safe
+    auto callback = [this, weak_self=this](std::optional<geom::Rectangle> const& damage)
         {
             wayland_executor.spawn([weak_self, damage]()
                 {
                     if (weak_self)
                     {
-                        for (auto& area : weak_self.value().areas)
+                        for (auto& area : weak_self->areas)
                         {
                             area->apply_damage(damage);
                         }
@@ -309,7 +251,7 @@ void mf::WlrScreencopyV1DamageTracker::Area::add_frame(Frame* frame)
 {
     // Do not allow multiple frames to build up, instead capture now
     capture_frame();
-    pending_frame = mw::make_weak(frame);
+    pending_frame = mw::Weak(frame->shared_from_this());
     if (damage_amount != DamageAmount::none)
     {
         capture_frame();
@@ -346,26 +288,18 @@ void mf::WlrScreencopyV1DamageTracker::Area::capture_frame()
     pending_frame = {};
 }
 
-mf::WlrScreencopyManagerV1Global::WlrScreencopyManagerV1Global(
-    wl_display* display,
-    std::shared_ptr<WlrScreencopyV1Ctx> const& ctx)
-    : Global{display, Version<3>()},
-      ctx{ctx}
-{
-}
-
-void mf::WlrScreencopyManagerV1Global::bind(wl_resource* new_resource)
-{
-    new WlrScreencopyManagerV1{new_resource, ctx};
-}
-
 mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
-    wl_resource* resource,
-    std::shared_ptr<WlrScreencopyV1Ctx> const& ctx)
-    : wayland::WlrScreencopyManagerV1{resource, Version<3>()},
-      screen_shooter(ctx->screen_shooter_factory->create(thread_pool_executor)),
-      ctx{ctx},
-      damage_tracker{*ctx->wayland_executor, *ctx->surface_stack}
+std::shared_ptr<Executor> const& wayland_executor,
+ std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+ std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
+ std::shared_ptr<SurfaceStack> const& surface_stack)
+    : screen_shooter(screen_shooter_factory->create(thread_pool_executor)),
+      ctx{std::shared_ptr<WlrScreencopyV1Ctx>{new WlrScreencopyV1Ctx{
+        wayland_executor,
+        allocator,
+        screen_shooter_factory,
+        surface_stack}}},
+      damage_tracker{WlrScreencopyV1DamageTracker(*wayland_executor, *surface_stack)}
 {
 }
 
@@ -374,48 +308,39 @@ void mf::WlrScreencopyManagerV1::capture_on_damage(WlrScreencopyV1DamageTracker:
     damage_tracker.capture_on_damage(frame);
 }
 
-void mf::WlrScreencopyManagerV1::capture_output(
-    wl_resource* frame,
-    int32_t overlay_cursor,
-    wl_resource* output)
+auto mf::WlrScreencopyManagerV1::capture_output(int32_t overlay_cursor, wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output)
+    -> std::shared_ptr<wayland_rs::ZwlrScreencopyFrameV1Impl>
 {
-    auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
+    auto const& output_config = OutputGlobal::from_or_throw(&output.value()).current_config();
     auto const output_area = output_config.extents();
     auto const buffer_size = output_config.modes[output_config.current_mode_index].size;
-    new WlrScreencopyFrameV1{frame, this, ctx, {output, output_area, buffer_size, output_config.transformation(), overlay_cursor == 1}};
+    return std::make_shared<WlrScreencopyFrameV1>(this, ctx, WlrScreencopyV1DamageTracker::FrameParams{output, output_area, buffer_size, output_config.transformation(), overlay_cursor == 1});
 }
 
-void mf::WlrScreencopyManagerV1::capture_output_region(
-    wl_resource* frame,
-    int32_t overlay_cursor,
-    wl_resource* output,
-    int32_t x, int32_t y,
-    int32_t width, int32_t height)
+auto mf::WlrScreencopyManagerV1::capture_output_region(int32_t overlay_cursor, wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, int32_t x, int32_t y, int32_t width, int32_t height) -> std::shared_ptr<wayland_rs::ZwlrScreencopyFrameV1Impl>
 {
-    auto const& output_config = OutputGlobal::from_or_throw(output).current_config();
+    auto const& output_config = OutputGlobal::from_or_throw(&output.value()).current_config();
     auto const extents = output_config.extents();
     auto const intersection = intersection_of({{x, y}, {width, height}}, extents);
     auto const buffer_size = translate_and_scale(intersection, extents, {{}, extents.size}).size;
-    new WlrScreencopyFrameV1{frame, this, ctx, {output, intersection, buffer_size, output_config.transformation(), overlay_cursor == 1}};
+    return std::make_shared<WlrScreencopyFrameV1>(this, ctx, WlrScreencopyV1DamageTracker::FrameParams{output, intersection, buffer_size, output_config.transformation(), overlay_cursor == 1});
 }
 
 mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
-    wl_resource* resource,
     WlrScreencopyManagerV1* manager,
     std::shared_ptr<WlrScreencopyV1Ctx> const& ctx,
     WlrScreencopyV1DamageTracker::FrameParams const& params)
-    : wayland::WlrScreencopyFrameV1{resource, Version<3>()},
-      manager{manager},
+    : manager{manager->shared_from_this()},
       ctx{ctx},
       params{params},
       stride{params.buffer_size.width.as_uint32_t() * 4}
 {
     send_buffer_event(
-        wayland::Shm::Format::argb8888,
+        mw::WlShmImpl::Format::argb8888,
         params.buffer_size.width.as_uint32_t(),
         params.buffer_size.height.as_uint32_t(),
         stride.as_uint32_t());
-    send_buffer_done_event_if_supported();
+    send_buffer_done_event();
 }
 
 void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
@@ -435,35 +360,36 @@ void mf::WlrScreencopyFrameV1::capture(geom::Rectangle buffer_space_damage)
         return;
     }
 
+    // TODO: This ain't safe
     manager.value().screen_shooter->capture(std::move(target), params.output_space_area, params.transform, params.overlay_cursor,
-        [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=mw::make_weak(this)]
+        [wayland_executor=ctx->wayland_executor, buffer_space_damage, self=this]
             (std::optional<time::Timestamp> captured_time)
         {
             wayland_executor->spawn([self, captured_time, buffer_space_damage]()
                 {
                     if (self)
                     {
-                        self.value().report_result(captured_time, buffer_space_damage);
+                        self->report_result(captured_time, buffer_space_damage);
                     }
                 });
         });
 }
 
-void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
+void mf::WlrScreencopyFrameV1::prepare_target(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer)
 {
     if (copy_has_been_called)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::already_used,
             "Attempted to copy frame multiple times"));
     }
     copy_has_been_called = true;
-    auto shm_buffer = mf::ShmBuffer::from(buffer);
+    auto shm_buffer = mf::ShmBuffer::from(&buffer.value());
     if (!shm_buffer)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_buffer,
             "Copy target is not a wl_shm buffer"));
     }
@@ -471,7 +397,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
     if (shm_data->format() != mir_pixel_format_argb_8888)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_buffer,
             "Invalid pixel format %d",
             shm_data->format()));
@@ -479,7 +405,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
     if (shm_data->size() != params.buffer_size)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_buffer,
             "Invalid buffer size %dx%d, should be %dx%d",
             shm_data->size().width.as_int(),
@@ -490,7 +416,7 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
     if (shm_data->stride() != stride)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_buffer,
             "Invalid stride %d, should be %d",
             shm_data->stride().as_int(),
@@ -499,16 +425,14 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
 
     target = std::shared_ptr<mir::renderer::software::WriteMappable>{
         shm_data.get(),
-        [shm_data, weak_buffer = mw::make_weak(shm_buffer), executor = ctx->wayland_executor](auto*)
+        [shm_data, shm_buffer = shm_buffer, executor = ctx->wayland_executor](auto*)
         {
             // Send release event for underlying buffer if necessary
             executor->spawn(
-                [shm_data, weak_buffer]()
+                [shm_data, shm_buffer]()
                 {
-                    if (weak_buffer)
-                    {
-                        weak_buffer.value().send_release_event();
-                    }
+                    // TODO: This ain't safe
+                    shm_buffer->send_release_event();
                 });
         }
     };
@@ -544,13 +468,13 @@ void mf::WlrScreencopyFrameV1::report_result(
     }
 }
 
-void mf::WlrScreencopyFrameV1::copy(wl_resource* buffer)
+auto mf::WlrScreencopyFrameV1::copy(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer) -> void
 {
     prepare_target(buffer);
     capture(params.full_buffer_space_damage());
 }
 
-void mf::WlrScreencopyFrameV1::copy_with_damage(wl_resource* buffer)
+void mf::WlrScreencopyFrameV1::copy_with_damage(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer)
 {
     prepare_target(buffer);
     should_send_damage = true;
