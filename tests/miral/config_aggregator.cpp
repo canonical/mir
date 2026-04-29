@@ -392,7 +392,7 @@ TEST_F(ConfigAggregatorTest, unset_key_yields_nullopt)
     load_one(stream, fake_filename());
 }
 
-TEST_F(ConfigAggregatorTest, done_handler_is_called_on_load_all)
+TEST_F(ConfigAggregatorTest, done_handler_is_called_on_load_one)
 {
     int done_count = 0;
     aggregator.on_done([&done_count] { done_count++; });
@@ -413,7 +413,6 @@ TEST_F(ConfigAggregatorTest, empty_value_clears_earlier_array_entries_in_same_st
         a_strings_key.to_string() + "=\n" +
         a_strings_key.to_string() + "=baz\n"};
 
-    InSequence seq;
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     load_one(stream, fake_filename());
@@ -508,7 +507,6 @@ TEST_F(ConfigAggregatorTest, empty_value_in_later_file_clears_entries_from_earli
     std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
     std::istringstream stream2{a_strings_key.to_string() + "=\n" + a_strings_key.to_string() + "=baz\n"};
 
-    InSequence seq;
     EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
 
     load_all({{std::ref(stream1), "base.conf"},
@@ -613,7 +611,7 @@ TEST_F(ConfigAggregatorTest, override_wins_for_shared_key_after_base_update)
               {std::ref(override_again), "base.conf.d/99-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_nullopt_valid_value_1)
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_nullopt_valid_value_across_streams_without_appending)
 {
     aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
@@ -626,7 +624,7 @@ TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_null
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_nullopt_2)
+TEST_F(ConfigAggregatorTest, invalid_scalar_value_in_one_of_multiple_yields_nullopt_across_streams_with_appending)
 {
     aggregator.add_int_attribute(a_key, "a scoped int", [this](auto... args) { int_handler(args...); });
 
@@ -697,7 +695,7 @@ TEST_F(ConfigAggregatorTest, invalid_ini_file_among_multiple_files_leaves_array_
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
-TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_empty)
+TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_nullopt)
 {
     aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });
 
