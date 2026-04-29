@@ -156,6 +156,21 @@ void mlc::IniFile::add_strings_attribute(
     self->add_strings_attribute(key, description, preset, std::move(handler));
 }
 
+void mlc::IniFile::set_ints_value(Key const& key, std::span<int const> values)
+{
+   self->set_ints_value(key, values);
+}
+
+void mlc::IniFile::set_floats_value(Key const& key, std::span<float const> values)
+{
+   self->set_floats_value(key, values);
+}
+
+void mlc::IniFile::set_strings_value(Key const& key, std::span<std::string const> values)
+{
+   self->set_strings_value(key, values);
+}
+
 void mlc::IniFile::on_done(HandleDone handler)
 {
     self->on_done(std::move(handler));

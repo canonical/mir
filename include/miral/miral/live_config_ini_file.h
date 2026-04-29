@@ -48,6 +48,10 @@ public:
     void add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler) override;
     void add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler) override;
 
+    void set_ints_value(Key const& key, std::span<int const> values) override;
+    void set_floats_value(Key const& key, std::span<float const> values) override;
+    void set_strings_value(Key const& key, std::span<std::string const> values) override;
+
     void on_done(HandleDone handler) override;
 
     void load_file(std::istream& istream, std::filesystem::path const& path);

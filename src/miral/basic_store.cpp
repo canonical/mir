@@ -62,6 +62,22 @@ public:
     void add_key(Key const& key, std::string_view description, std::optional<std::vector<std::string>> preset, HandleStrings handler);
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);
+    template <typename T> void set_value(Key const& key, std::span<T const> values)
+    {
+        if (auto array_iter = array_attribute_handlers.find(key); array_iter != array_attribute_handlers.end())
+        {
+            auto& details = array_iter->second;
+            auto const str_values = values | std::views::transform([](auto const& v) -> std::string {
+                if constexpr (!std::is_same_v<T, std::string>) {
+                    return std::to_string(v);
+                } else {
+                    return v;
+                }
+            });
+            details.parsed_values = std::vector<std::string>{str_values.begin(), str_values.end()};
+        }
+    }
+
     void do_transaction(std::function<void()> transaction_body);
 
     void on_done(HandleDone handler);
@@ -518,6 +534,21 @@ void mlc::BasicStore::add_string_attribute(Key const& key, std::string_view desc
 void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler)
 {
     self->add_key(key, description, std::vector<std::string>{preset.begin(), preset.end()}, handler);
+}
+
+void mlc::BasicStore::set_ints_value(Key const& key, std::span<int const> values)
+{
+    self->set_value(key, values);
+}
+
+void mlc::BasicStore::set_floats_value(Key const& key, std::span<float const> values)
+{
+    self->set_value(key, values);
+}
+
+void mlc::BasicStore::set_strings_value(Key const& key, std::span<std::string const> values)
+{
+    self->set_value(key, values);
 }
 
 void mlc::BasicStore::on_done(HandleDone handler)

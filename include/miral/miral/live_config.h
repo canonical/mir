@@ -94,6 +94,10 @@ public:
     virtual void add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler) = 0;
     virtual void add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler) = 0;
 
+    virtual void set_ints_value(Key const& key, std::span<int const> values) = 0;
+    virtual void set_floats_value(Key const& key, std::span<float const> values) = 0;
+    virtual void set_strings_value(Key const& key, std::span<std::string const> values) = 0;
+
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
     virtual void on_done(HandleDone handler) = 0;
