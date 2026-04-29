@@ -159,7 +159,8 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
             details.parsed_values.push_back(std::string{value});
         }
 
-        details.modification_paths.push_back(modification_path);
+        if (!std::ranges::contains(details.modification_paths, modification_path))
+            details.modification_paths.push_back(modification_path);
     }
     else
     {
