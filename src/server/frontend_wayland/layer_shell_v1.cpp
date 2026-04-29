@@ -605,6 +605,10 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 
     if (acked_event == std::end(inflight_configures))
     {
+        // FIXME: There doesn't seem to be an error code for this case.
+        // It might be zwlr_layer_surface_v1::error::invalid_surface_state but
+        // that's not mentioned in the documentation or the wlroots source.
+        // Update this when we know the correct error code.
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
             resource, mw::generic_error_code,
             "Could not find acked configure with serial %u", serial));
