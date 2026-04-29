@@ -40,7 +40,7 @@ namespace frontend
 class DisplayChanger;
 class OutputGlobal;
 
-class OutputConfigListener : public virtual wayland_rs::LifetimeTracker
+class OutputConfigListener
 {
 public:
     // Returns true if the wl_output needs to send a done event
