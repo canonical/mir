@@ -18,7 +18,8 @@
 #define MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 
 #include <mir/scene/data_exchange.h>
-#include "primary-selection-unstable-v1_wrapper.h"
+#include "wp_primary_selection_unstable_v1.h"
+#include "client.h"
 
 namespace mir
 {
@@ -29,27 +30,38 @@ class Clipboard;
 }
 namespace frontend
 {
-class PrimarySelectionSource : public mir::wayland::PrimarySelectionSourceV1
+class PrimarySelectionSource : public wayland_rs::ZwpPrimarySelectionSourceV1Impl, public std::enable_shared_from_this<PrimarySelectionSource>
 {
-private:
-    std::vector<std::string> mime_types;
-    std::shared_ptr<mir::Executor> const wayland_executor;
-
 public:
     class Source;
 
-    PrimarySelectionSource(wl_resource* resource, std::shared_ptr<mir::Executor> wayland_executor);
+    PrimarySelectionSource(std::shared_ptr<mir::Executor> wayland_executor);
 
-    static auto from(struct wl_resource* resource) -> PrimarySelectionSource*;
-
-    void offer(std::string const& mime_type) override;
+    static auto from(ZwpPrimarySelectionSourceV1Impl* resource) -> PrimarySelectionSource*;
+    void offer(rust::String mime_type) override;
     auto make_source() const -> std::shared_ptr<mir::scene::DataExchangeSource>;
+
+private:
+    std::vector<std::string> mime_types;
+    std::shared_ptr<mir::Executor> const wayland_executor;
 };
-auto create_primary_selection_device_manager_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> wayland_executor,
-    std::shared_ptr<scene::Clipboard> primary_selection_clipboard)
--> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1::Global>;
+
+class PrimarySelectionManager : public wayland_rs::ZwpPrimarySelectionDeviceManagerV1Impl
+{
+public:
+    PrimarySelectionManager(
+        std::shared_ptr<wayland_rs::Client> const& client,
+        std::shared_ptr<mir::Executor> wayland_executor,
+        std::shared_ptr<scene::Clipboard> primary_selection_clipboard);
+    auto create_source() -> std::shared_ptr<wayland_rs::ZwpPrimarySelectionSourceV1Impl> override;
+    auto get_device(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat)
+        -> std::shared_ptr<wayland_rs::ZwpPrimarySelectionDeviceV1Impl> override;
+
+    std::shared_ptr<wayland_rs::Client> const& client;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<scene::Clipboard> const primary_selection_clipboard;
+};
+
 }
 }
 
