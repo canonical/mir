@@ -475,3 +475,266 @@ TEST_F(BasicStoreTest, empty_value_with_preset_and_no_following_values_suppresse
         store.update_key(a_strings_key, "", a_path);
     });
 }
+
+TEST_F(BasicStoreTest, ints_initial_values_are_used_as_starting_point)
+{
+    std::vector<int> const initial_vals{1, 2};
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2, 3))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_initial_values_are_restored_between_transactions)
+{
+    std::vector<int> const initial_vals{1, 2};
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2)))).Times(2);
+
+    run_empty();
+    run_empty();
+}
+
+TEST_F(BasicStoreTest, ints_initial_values_can_be_cleared_within_transaction)
+{
+    std::vector<int> const initial_vals{1, 2};
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(3))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "", a_path);
+        store.update_key(an_ints_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_clearing_initial_values_with_no_following_values_suppresses_preset)
+{
+    std::vector<int> const initial_vals{1, 2};
+    std::vector<int> const preset_vals{10, 20};
+    store.add_ints_attribute(an_ints_key, "some ints", preset_vals, [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, floats_initial_values_are_used_as_starting_point)
+{
+    std::vector<float> const initial_vals{1.0f, 2.0f};
+    std::vector<float> const preset_vals{10.0f};
+    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f)))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_floats_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, floats_initial_values_are_restored_between_transactions)
+{
+    std::vector<float> const initial_vals{1.0f, 2.0f};
+    std::vector<float> const preset_vals{10.0f};
+    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.0f), FloatEq(2.0f))))).Times(2);
+
+    run_empty();
+    run_empty();
+}
+
+TEST_F(BasicStoreTest, floats_initial_values_can_be_cleared_within_transaction)
+{
+    std::vector<float> const initial_vals{1.0f, 2.0f};
+    std::vector<float> const preset_vals{10.0f};
+    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(3.0f)))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_floats_key, "", a_path);
+        store.update_key(a_floats_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, floats_clearing_initial_values_with_no_following_values_suppresses_preset)
+{
+    std::vector<float> const initial_vals{1.0f, 2.0f};
+    std::vector<float> const preset_vals{10.0f};
+    store.add_floats_attribute(a_floats_key, "some floats", preset_vals, [this](auto k, auto v){ floats_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_floats_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, strings_initial_values_are_used_as_starting_point)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    std::vector<std::string> const preset_vals{"default"};
+    store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz"))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "baz", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, strings_initial_values_are_restored_between_transactions)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    std::vector<std::string> const preset_vals{"default"};
+    store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar")))).Times(2);
+
+    run_empty();
+    run_empty();
+}
+
+TEST_F(BasicStoreTest, strings_initial_values_can_be_cleared_within_transaction)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    std::vector<std::string> const preset_vals{"default"};
+    store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("baz"))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "", a_path);
+        store.update_key(a_strings_key, "baz", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, strings_clearing_initial_values_with_no_following_values_suppresses_preset)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    std::vector<std::string> const preset_vals{"default"};
+    store.add_strings_attribute(a_strings_key, "some strings", preset_vals, [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_initial_values_no_preset_are_used_as_starting_point)
+{
+    std::vector<int> const initial_vals{1, 2};
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2, 3))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, ints_initial_values_no_preset_are_restored_between_transactions)
+{
+    std::vector<int> const initial_vals{1, 2};
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2)))).Times(2);
+
+    run_empty();
+    run_empty();
+}
+
+TEST_F(BasicStoreTest, ints_clearing_initial_values_no_preset_results_in_nullopt)
+{
+    std::vector<int> const initial_vals{1, 2};
+    store.add_ints_attribute(an_ints_key, "some ints", [this](auto k, auto v){ ints_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, ints_handler(an_ints_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(an_ints_key, "", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, floats_initial_values_no_preset_are_used_as_starting_point)
+{
+    std::vector<float> const initial_vals{1.0f, 2.0f};
+    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.0f), FloatEq(2.0f), FloatEq(3.0f)))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_floats_key, "3", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, floats_initial_values_no_preset_are_restored_between_transactions)
+{
+    std::vector<float> const initial_vals{1.0f, 2.0f};
+    store.add_floats_attribute(a_floats_key, "some floats", [this](auto k, auto v){ floats_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(FloatEq(1.0f), FloatEq(2.0f))))).Times(2);
+
+    run_empty();
+    run_empty();
+}
+
+TEST_F(BasicStoreTest, strings_initial_values_no_preset_are_used_as_starting_point)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar", "baz"))));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "baz", a_path);
+    });
+}
+
+TEST_F(BasicStoreTest, strings_initial_values_no_preset_are_restored_between_transactions)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar")))).Times(2);
+
+    run_empty();
+    run_empty();
+}
+
+TEST_F(BasicStoreTest, strings_clearing_initial_values_no_preset_results_in_nullopt)
+{
+    std::vector<std::string> const initial_vals{"foo", "bar"};
+    store.add_strings_attribute(a_strings_key, "some strings", [this](auto k, auto v){ strings_handler(k, v); }, initial_vals);
+
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Eq(std::nullopt)));
+
+    store.do_transaction([&]
+    {
+        store.update_key(a_strings_key, "", a_path);
+    });
+}
