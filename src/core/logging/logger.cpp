@@ -41,7 +41,7 @@ struct ml::Tag
     Tag const* parent;
 };
 
-mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "core", nullptr}}};
+mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "core", nullptr}}}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
 
 auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
 {
