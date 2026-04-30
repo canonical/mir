@@ -58,23 +58,22 @@ TEST_F(TestLog, log_calls_logger)
 {
     auto const severity = mir::logging::Severity::informational;
     auto const message = "test message";
-    auto const& tag = ml::core;
 
-    EXPECT_CALL(*logger, log(severity, message, std::string{tag.name()}));
+    EXPECT_CALL(*logger, log(severity, message, "core"));
 
-    mir::log(severity, {tag}, message);
+    mir::log(severity, {ml::core()}, message);
 }
 
 TEST_F(TestLog, log_calls_logger_with_colon_separated_component_for_multiple_tags)
 {
     auto const severity = mir::logging::Severity::debug;
     auto const message = "A message, and a system of messages";
-    std::string expected_component = std::string{ml::graphics.name()} + ":" + std::string{ml::wayland.name()};
+    std::string expected_component = "graphics:wayland";
 
 
     EXPECT_CALL(*logger, log(severity, message, expected_component));
 
-    mir::log(severity, {ml::graphics, ml::wayland}, message);
+    mir::log(severity, {ml::graphics(), ml::wayland()}, message);
 }
 
 TEST_F(TestLog, log_debug_works)
@@ -82,12 +81,11 @@ TEST_F(TestLog, log_debug_works)
     constexpr auto fmt_string = "{} around the world";
     auto const value = "Twice";
     auto const message = std::format(fmt_string, value);
-    std::string const expected_component{ml::core.name()};
 
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, expected_component)).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "core")).Times(2);
 
-    mir::log_debug({ml::core}, message);
-    mir::log_debug({ml::core}, fmt_string, value);
+    mir::log_debug({ml::core()}, message);
+    mir::log_debug({ml::core()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_info_works)
@@ -95,12 +93,11 @@ TEST_F(TestLog, log_info_works)
     constexpr auto fmt_string = "Arbitrarium {}";
     auto const value = 18;
     auto const message = std::format(fmt_string, value);
-    std::string const expected_component{ml::core.name()};
 
-    EXPECT_CALL(*logger, log(ml::Severity::informational, message, expected_component)).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message, "core")).Times(2);
 
-    mir::log_info({ml::core}, message);
-    mir::log_info({ml::core}, fmt_string, value);
+    mir::log_info({ml::core()}, message);
+    mir::log_info({ml::core()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_warning_works)
@@ -108,12 +105,11 @@ TEST_F(TestLog, log_warning_works)
     constexpr auto fmt_string = "Abort! Abort! {:.2f}";
     auto const value = 23.22222222;
     auto const message = std::format(fmt_string, value);
-    std::string const expected_component{ml::core.name()};
 
-    EXPECT_CALL(*logger, log(ml::Severity::warning, message, expected_component)).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message, "core")).Times(2);
 
-    mir::log_warning({ml::core}, message);
-    mir::log_warning({ml::core}, fmt_string, value);
+    mir::log_warning({ml::core()}, message);
+    mir::log_warning({ml::core()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_error_works)
@@ -121,12 +117,11 @@ TEST_F(TestLog, log_error_works)
     constexpr std::string_view fmt_string = "Terrain warning: {}m";
     auto const value = 100;
     auto const message = std::format(fmt_string, value);
-    std::string const expected_component{ml::core.name()};
 
-    EXPECT_CALL(*logger, log(ml::Severity::error, message, expected_component)).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::error, message, "core")).Times(2);
 
-    mir::log_error({ml::core}, message);
-    mir::log_error({ml::core}, fmt_string, value);
+    mir::log_error({ml::core()}, message);
+    mir::log_error({ml::core()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_critical_works)
@@ -134,19 +129,17 @@ TEST_F(TestLog, log_critical_works)
     constexpr std::string_view fmt_string = "Critical error: {}";
     auto const value = "ENOCAKE";
     auto const message = std::format(fmt_string, value);
-    std::string const expected_component{ml::core.name()};
 
-    EXPECT_CALL(*logger, log(ml::Severity::critical, message, expected_component)).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::critical, message, "core")).Times(2);
 
-    mir::log_critical({ml::core}, message);
-    mir::log_critical({ml::core}, fmt_string, value);
+    mir::log_critical({ml::core()}, message);
+    mir::log_critical({ml::core()}, fmt_string, value);
 }
 
 TEST_F(TestLog, can_use_format_string)
 {
     auto const severity = mir::logging::Severity::informational;
     constexpr std::string_view fmt_string = "now: {}, then: {:10.5f}, again: {:.{}}";
-    auto const& tag = ml::input;
 
     auto const now = std::chrono::system_clock::now();
     auto const a_float = 3.1415f;
@@ -154,7 +147,7 @@ TEST_F(TestLog, can_use_format_string)
 
     auto const message = std::format(fmt_string, now, a_float, a_stringish, strlen("Merrily"));
 
-    EXPECT_CALL(*logger, log(severity, message, std::string{tag.name()}));
+    EXPECT_CALL(*logger, log(severity, message, "input"));
 
-    mir::log(severity, {tag}, message);
+    mir::log(severity, {ml::input()}, message);
 }
