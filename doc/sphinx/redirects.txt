@@ -9,6 +9,7 @@
 "_static/cppguide" "contributing/reference/cppguide"
 "explanation/architecture" "contributing/explanation/architecture"
 "explanation/component_reports" "configuring/explanation/component-reports"
+"explanation/driver-quriks" "explanation/driver-quirks"
 "explanation/libraries" "contributing/explanation/libraries"
 "explanation/mir-graphics-support" "explanation/platform-support"
 "explanation/ok-so-what-is-this-wayland-thing-anyway" "tutorial/write-your-first-wayland-compositor"
