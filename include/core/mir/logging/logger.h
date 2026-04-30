@@ -21,6 +21,7 @@
 #include <functional>
 #include <initializer_list>
 #include <iosfwd>
+#include <boost/program_options/options_description.hpp>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -64,6 +65,7 @@ enum class Severity
     debug = 4
 };
 
+
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
@@ -97,6 +99,7 @@ public:
     }
 
 protected:
+
     Logger() {}
     virtual ~Logger() = default;
     Logger(const Logger&) = delete;
@@ -109,6 +112,9 @@ void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);
 auto logging_enabled_for(Tag const& tag, Severity sev) -> bool;
 
+// TODO: This should probably not be in the public header; it's leaking
+// implementation details
+void add_logging_options(boost::program_options::options_description_easy_init options);
 }
 }
 

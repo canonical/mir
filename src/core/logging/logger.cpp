@@ -18,6 +18,9 @@
 
 #include <mir/synchronised.h>
 #include <mir/logging/dumb_console_logger.h>
+#include <mir/logging/logger.h>
+#include <boost/throw_exception.hpp>
+#include <mir/logging/logger.h>
 #include <mir/fatal.h>
 
 #include <atomic>
@@ -31,6 +34,7 @@
 #include <iterator>
 #include <ranges>
 #include <stdexcept>
+#include <string>
 #include <string_view>
 #include <list>
 
@@ -64,8 +68,8 @@ auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
 
 auto ml::base() -> Tag const&
 {
-    static Tag const& core = known_tags.lock()->front();
-    return core;
+    static Tag const& base = known_tags.lock()->front();
+    return base;
 }
 
 auto ml::input() -> Tag const&
@@ -111,12 +115,18 @@ void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
     // TODO: Remove the log(Severity, std::string, std::string) interface and replace
     // with this one.
 
-
-    std::string component;
-    std::ranges::copy(
-        tags | std::views::transform([](Tag const& tag) { return tag.name; }) | std::views::join_with(':'),
-        std::back_inserter(component));
-    log(severity, std::string{message}, component);
+    for (auto const& tag: tags)
+    {
+        if (logging_enabled_for(tag, severity))
+        {
+            std::string component;
+            std::ranges::copy(
+                tags | std::views::transform([](Tag const& tag) { return tag.name; }) | std::views::join_with(':'),
+                std::back_inserter(component));
+            log(severity, std::string{message}, component);
+            return;
+        }
+    }
 }
 
 namespace
@@ -191,10 +201,124 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     }
 }
 
+namespace
+{
+auto split_assignment(std::string const& value)
+    -> std::pair<std::string_view, std::string_view>
+{
+    auto equals_pos = value.find('=');
+    if (equals_pos == value.length() || equals_pos == value.npos)
+    {
+      BOOST_THROW_EXCEPTION((std::runtime_error{
+          std::format("Failed to parse log-level: {}", value)}));
+    }
+    return std::make_pair(
+        std::string_view{value.data(), equals_pos},
+        std::string_view{value.data() + equals_pos + 1, value.length() - equals_pos - 1});
+}
+
+auto lookup_tag(std::string_view tag_name) -> ml::Tag&
+{
+    for (auto& tag : *known_tags.lock())
+    {
+        if (tag.name == tag_name)
+        {
+            return tag;
+        }
+    }
+    BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Looking up nonexistent tag: {}", tag_name)}));
+}
+
+auto parse_severity(std::string_view const severity_name) -> ml::Severity
+{
+    if (severity_name == "critical")
+    {
+        return ml::Severity::critical;
+    }
+    else if (severity_name == "error")
+    {
+        return ml::Severity::error;
+    }
+    else if (severity_name == "warn" || severity_name == "warning")
+    {
+        return ml::Severity::warning;
+    }
+    else if (severity_name == "info" || severity_name == "informational")
+    {
+        return ml::Severity::informational;
+    }
+    else if (severity_name == "debug")
+    {
+        return ml::Severity::debug;
+
+    }
+    BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Unrecognised severity: {}", severity_name)}));
+}
+
+void update_tag_filtering(std::vector<std::string> const& option_values)
+{
+    for (auto const& value : option_values)
+    {
+        try
+        {
+            auto [tag_name, severity_name] = split_assignment(value);
+            auto& tag = lookup_tag(tag_name);
+            auto const severity = parse_severity(severity_name);
+            tag.logging_severity = severity;
+        }
+        catch(std::exception const& err)
+        {
+            ml::log(ml::Severity::critical, {ml::base()}, std::format("Failed to parse log-level option “{}”: {}", value, err.what()));
+        }
+    }
+}
+
+auto full_path_to_tag(ml::Tag const& tag) -> std::string
+{
+    if (!tag.parent)
+    {
+        return tag.name;
+    }
+    else
+    {
+        return full_path_to_tag(*tag.parent) + "/" + tag.name;
+    }
+}
+}
+
 auto ml::logging_enabled_for(const Tag &tag, Severity sev) -> bool
 {
     return tag.logging_severity >= sev;
 }
+
+void ml::add_logging_options(
+    boost::program_options::options_description_easy_init options)
+{
+    namespace po = boost::program_options;
+
+    // Ensure the tags are registered.
+    base();
+    input();
+    graphics();
+    wayland();
+    window_management();
+
+    std::string tag_descriptions;
+    std::ranges::copy(
+        *known_tags.lock() |
+            std::views::transform([](Tag const& tag) { return full_path_to_tag(tag); }) | std::views::join_with('\n'),
+        std::back_inserter(tag_descriptions));
+
+
+    options("log-level",
+        po::value<std::vector<std::string>>()->notifier(update_tag_filtering),
+        ("Minimum severity of a log message required for it to be printed.\n"
+        "Valid severities are: critical, error, warning, informational, debug (“warn” and “info” can be used as short forms of “warning” and “informational”)\n"
+        "Must be specified in the form “tag=severity”\n"
+        "Possible tags to filter on are:\n"
+        "\t" + tag_descriptions).c_str());
+}
+
 namespace mir
 {
 namespace logging

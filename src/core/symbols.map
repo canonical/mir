@@ -92,6 +92,7 @@ MIR_CORE_2.27 {
     /* mir::logging::Logger::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >); */
     _ZN3mir7logging6Logger3logENS0_8SeverityESt16initializer_listIKSt17reference_wrapperIKNS0_3TagEEESt17basic_string_viewIcSt11char_traitsIcEE;
     extern "C++" {
+      "mir::logging::add_logging_options(boost::program_options::options_description_easy_init)";
       mir::logging::create_tag*;
       mir::logging::base*;
       mir::logging::input*;

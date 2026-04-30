@@ -23,6 +23,7 @@
 #include <mir/options/program_option.h>
 #include <mir/shared_library.h>
 #include <mir/shared_library_prober.h>
+#include <mir/logging/logger.h>
 
 #include <algorithm>
 #include <cstring>
@@ -219,6 +220,11 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Only used when `--console-provider=vt|logind`.");
 
         add_platform_options();
+
+        // We deliberately add logging options last, so that modules loaded
+        // during `add_platform_options()` have a chance to set up their
+        // tags first.
+        logging::add_logging_options(add_options());
 }
 
 namespace

@@ -14,18 +14,55 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/options/program_option.h"
+#include <boost/program_options/detail/cmdline.hpp>
+#include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
 #include <mir/log.h>
 
+#include <boost/program_options.hpp>
 #include <chrono>
 #include <format>
 #include <string_view>
 #include <cstring>
+#include <list>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace ml = mir::logging;
+
+class CmdLine
+{
+public:
+    CmdLine()
+    {
+        add_argument("mir_unit_tests");
+    }
+
+    void add_argument(std::string_view arg)
+    {
+        arg_storage.emplace_back(arg);
+        args.push_back(arg_storage.back().c_str());
+    }
+
+    /* This *should* be argv() const -> char const* const*, but
+     * mo::ProgramOptions::parse_arguments() incorrectly takes a char const**
+     */
+    auto argv() -> char const**
+    {
+        return args.data();
+    }
+
+    auto argc() const -> int
+    {
+        return args.size();
+    }
+
+private:
+    std::vector<char const*> args;
+    std::list<std::string> arg_storage;
+};
 
 class MockLogger : public mir::logging::Logger
 {
@@ -51,6 +88,22 @@ public:
         logger.reset();
     }
 
+    void set_log_level(std::string_view tag_name, ml::Severity sev)
+    {
+        /*
+         * We don't have access to the Tag internals, but we *can* bounce
+         * through the options infrastructure.
+         */
+        boost::program_options::options_description desc;
+        ml::add_logging_options(desc.add_options());
+
+        CmdLine cmdline{};
+        cmdline.add_argument(std::format("--log-level={}={}", tag_name, sev));
+
+        mir::options::ProgramOption mo;
+        mo.parse_arguments(desc, cmdline.argc(), cmdline.argv());
+    }
+
     std::shared_ptr<testing::NiceMock<MockLogger>> logger;
 };
 
@@ -61,6 +114,7 @@ TEST_F(TestLog, log_calls_logger)
 
     EXPECT_CALL(*logger, log(severity, message, "base"));
 
+    set_log_level("base", severity);
     mir::log(severity, {ml::base()}, message);
 }
 
@@ -73,6 +127,7 @@ TEST_F(TestLog, log_calls_logger_with_colon_separated_component_for_multiple_tag
 
     EXPECT_CALL(*logger, log(severity, message, expected_component));
 
+    set_log_level("graphics", severity);
     mir::log(severity, {ml::graphics(), ml::wayland()}, message);
 }
 
@@ -84,6 +139,7 @@ TEST_F(TestLog, log_debug_works)
 
     EXPECT_CALL(*logger, log(ml::Severity::debug, message, "base")).Times(2);
 
+    set_log_level("base", ml::Severity::debug);
     mir::log_debug({ml::base()}, message);
     mir::log_debug({ml::base()}, fmt_string, value);
 }
@@ -96,6 +152,7 @@ TEST_F(TestLog, log_info_works)
 
     EXPECT_CALL(*logger, log(ml::Severity::informational, message, "base")).Times(2);
 
+    set_log_level("base", ml::Severity::informational);
     mir::log_info({ml::base()}, message);
     mir::log_info({ml::base()}, fmt_string, value);
 }
@@ -108,6 +165,7 @@ TEST_F(TestLog, log_warning_works)
 
     EXPECT_CALL(*logger, log(ml::Severity::warning, message, "base")).Times(2);
 
+    set_log_level("base", ml::Severity::warning);
     mir::log_warning({ml::base()}, message);
     mir::log_warning({ml::base()}, fmt_string, value);
 }
@@ -120,6 +178,7 @@ TEST_F(TestLog, log_error_works)
 
     EXPECT_CALL(*logger, log(ml::Severity::error, message, "base")).Times(2);
 
+    set_log_level("base", ml::Severity::error);
     mir::log_error({ml::base()}, message);
     mir::log_error({ml::base()}, fmt_string, value);
 }
@@ -132,6 +191,7 @@ TEST_F(TestLog, log_critical_works)
 
     EXPECT_CALL(*logger, log(ml::Severity::critical, message, "base")).Times(2);
 
+    set_log_level("base", ml::Severity::critical);
     mir::log_critical({ml::base()}, message);
     mir::log_critical({ml::base()}, fmt_string, value);
 }
@@ -149,5 +209,74 @@ TEST_F(TestLog, can_use_format_string)
 
     EXPECT_CALL(*logger, log(severity, message, "input"));
 
+    set_log_level("input", severity);
     mir::log(severity, {ml::input()}, message);
+}
+
+TEST_F(TestLog, can_set_options)
+{
+    namespace po = boost::program_options;
+    using namespace testing;
+
+    po::options_description desc;
+    ml::add_logging_options(desc.add_options());
+
+    CmdLine cmdline{};
+    cmdline.add_argument("--log-level=base=debug");
+    cmdline.add_argument("--log-level=wayland:critical");
+
+    mir::options::ProgramOption mo;
+    mo.parse_arguments(desc, cmdline.argc(), cmdline.argv());
+
+    EXPECT_THAT(mo.is_set("log-level"), Eq(true));
+}
+
+TEST_F(TestLog, invalid_log_levels_are_ignored)
+{
+    namespace po = boost::program_options;
+    using namespace testing;
+
+    po::options_description desc;
+    ml::add_logging_options(desc.add_options());
+
+    CmdLine cmdline{};
+    // Log-level is of the form “tag=severity”
+    cmdline.add_argument("--log-level=base");
+    // Trying to set the log level of an unknown tag
+    cmdline.add_argument("--log-level=not_a_tag=info");
+    // Trying to set the log level to an invalid severity
+    cmdline.add_argument("--log-level=input=not_a_severity");
+
+    mir::options::ProgramOption mo;
+
+    EXPECT_NO_THROW(mo.parse_arguments(desc, cmdline.argc(), cmdline.argv()));
+}
+
+TEST_F(TestLog, can_set_multiple_different_log_levels)
+{
+    namespace po = boost::program_options;
+    using namespace testing;
+
+    po::options_description desc;
+    ml::add_logging_options(desc.add_options());
+
+    CmdLine cmdline{};
+    cmdline.add_argument("--log-level=input=error");
+    cmdline.add_argument("--log-level=wayland=info");
+
+    mir::options::ProgramOption mo;
+    mo.parse_arguments(desc, cmdline.argc(), cmdline.argv());
+
+    std::string message = "hello";
+
+    EXPECT_CALL(*logger, log(ml::Severity::error, message, "input")).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message, "input")).Times(0);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message, "wayland")).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "wayland")).Times(0);
+
+    mir::log_error({ml::input()}, message);
+    mir::log_warning({ml::input()}, message);
+
+    mir::log_info({ml::wayland()}, message);
+    mir::log_debug({ml::wayland()}, message);
 }
