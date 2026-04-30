@@ -25,12 +25,13 @@ import subprocess
 # Product name
 project = 'Mir'
 author = 'Canonical Group Ltd.'
+version = os.getenv("READTHEDOCS_VERSION", "local")
 
 # The title you want to display for the documentation in the sidebar.
 # You might want to include a version number here.
 # To not display any title, set this option to an empty string.
 try:
-    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8").strip()
+    release = subprocess.check_output(["git", "describe", "--always", "--abbrev=0"], encoding="utf-8").strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
         matches = re.findall(r"set\(MIR_VERSION_(MAJOR|MINOR|PATCH) (\d+)\)", cmake.read())
@@ -59,7 +60,7 @@ copyright = '%s, %s' % (datetime.date.today().year, author)
 # don't know yet)
 # NOTE: If no ogp_* variable is defined (e.g. if you remove this section) the
 # sphinxext.opengraph extension will be disabled.
-ogp_site_url = 'https://canonical-mir.readthedocs-hosted.com/'
+ogp_site_url = f'https://canonical.com/mir/docs/{version}/'
 # The documentation website name (usually the same as the product name)
 ogp_site_name = project
 # The URL of an image or logo that is used in the preview
@@ -77,7 +78,7 @@ html_context = {
     # For example: "ubuntu.com/lxd" or "microcloud.is"
     # If there is no product website, edit the header template to remove the
     # link (see the readme for instructions).
-    'product_page': 'mir-server.io',
+    'product_page': 'canonical.com/mir',
 
     # Add your product tag (the orange part of your logo, will be used in the
     # header) to ".sphinx/_static" and change the path here (start with "_static")
@@ -115,7 +116,7 @@ html_context = {
 
 # If your project is on documentation.ubuntu.com, specify the project
 # slug (for example, "lxd") here.
-slug = ""
+slug = f"mir/docs/{version}"
 
 ############################################################
 ### Redirects
@@ -198,7 +199,9 @@ custom_excludes = [
 custom_html_css_files = []
 
 # Add JavaScript files (located in .sphinx/_static/)
-custom_html_js_files = []
+custom_html_js_files = [
+    'js/overwrite_links.js',
+]
 
 ## The following settings override the default configuration.
 
