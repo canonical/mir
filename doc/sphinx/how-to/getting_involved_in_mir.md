@@ -2,7 +2,7 @@
 
 ## Getting involved
 
-The Mir project website is <https://mir-server.io/>,
+The Mir project website is <https://canonical.com/mir/>,
 the code is [hosted on GitHub](https://github.com/canonical)
 
 For announcements and other discussions on Mir see:
