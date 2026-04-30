@@ -30,7 +30,7 @@ mf::WlClientRegistry::WlClientRegistry(
     : shell(shell), session_authorizer(session_authorizer)
 {}
 
-mf::WlClient* mf::WlClientRegistry::add_client(RawWlClient client)
+mf::WlClient* mf::WlClientRegistry::add_client(wayland_rs::RawWlClient client)
 {
     auto session = shell->open_session(
         client->pid(),
@@ -42,7 +42,7 @@ mf::WlClient* mf::WlClientRegistry::add_client(RawWlClient client)
     return wl_client.get();
 }
 
-void mf::WlClientRegistry::delete_client(RawWlClientId client_id)
+void mf::WlClientRegistry::delete_client(wayland_rs::RawWlClientId client_id)
 {
     std::erase_if(clients, [&](std::shared_ptr<WlClient> const& client)
     {
@@ -50,7 +50,7 @@ void mf::WlClientRegistry::delete_client(RawWlClientId client_id)
     });
 }
 
-std::shared_ptr<mir::frontend::WlClient> mf::WlClientRegistry::from(RawWlClient const& raw_client)
+std::shared_ptr<mir::frontend::WlClient> mf::WlClientRegistry::from(wayland_rs::RawWlClient const& raw_client)
 {
     auto const it = std::find_if(clients.begin(), clients.end(), [&](auto const& client)
     {

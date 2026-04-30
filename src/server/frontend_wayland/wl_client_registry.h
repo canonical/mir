@@ -46,9 +46,9 @@ public:
         std::shared_ptr<SessionAuthorizer> const& session_authorizer);
     virtual ~WlClientRegistry() = default;
 
-    WlClient* add_client(RawWlClient client);
-    void delete_client(RawWlClientId client);
-    std::shared_ptr<WlClient> from(RawWlClient const& client);
+    WlClient* add_client(wayland_rs::RawWlClient client);
+    void delete_client(wayland_rs::RawWlClientId client);
+    std::shared_ptr<WlClient> from(wayland_rs::RawWlClient const& client);
 
 private:
     WlClientRegistry(const WlClientRegistry&) = delete;

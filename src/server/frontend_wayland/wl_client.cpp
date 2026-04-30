@@ -30,7 +30,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 
-mf::WlClient::WlClient(RawWlClient client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
+mf::WlClient::WlClient(wayland_rs::RawWlClient client, std::shared_ptr<ms::Session> const& session, msh::Shell* shell)
     : shell{shell},
       client{std::move(client)},
       session{session},

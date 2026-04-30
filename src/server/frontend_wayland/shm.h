@@ -49,7 +49,7 @@ namespace mir::frontend
 class Shm;
 class ShmPool;
 
-class ShmBuffer : public wayland_rs::WlBufferImpl
+class ShmBuffer : public wayland_rs::WlBufferImpl, public std::enable_shared_from_this<ShmBuffer>
 {
 public:
     auto data() -> std::shared_ptr<renderer::software::RWMappable>;
@@ -58,14 +58,13 @@ public:
 private:
     friend class ShmPool;
     ShmBuffer(
-        struct wl_resource* resource,
         std::shared_ptr<Executor> wayland_executor,
         std::shared_ptr<shm::RWMappableRange> data,
         geometry::Size size,
         geometry::Stride stride,
         graphics::DRMFormat format);
 
-    wayland_rs::Weak<ShmBuffer> const weak_me;
+    std::shared_ptr<int> const weak_me;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shm::RWMappableRange> const data_;
     geometry::Size const size_;
@@ -95,6 +94,7 @@ class Shm : public wayland_rs::WlShmImpl
 {
 public:
     explicit Shm(std::shared_ptr<Executor> wayland_executor);
+    auto associate(rust::Box<wayland_rs::WlShmExt> instance, uint32_t object_id) -> void override;
     auto create_pool(int32_t fd, int32_t size) -> std::shared_ptr<wayland_rs::WlShmPoolImpl> override;
 
 private:

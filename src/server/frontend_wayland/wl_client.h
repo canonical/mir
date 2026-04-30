@@ -40,14 +40,14 @@ namespace frontend
 {
 class SessionAuthorizer;
 
-class WlClient : public Client
+class WlClient : public wayland_rs::Client
 {
 public:
-    WlClient(RawWlClient client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
+    WlClient(wayland_rs::RawWlClient client, std::shared_ptr<scene::Session> const& session, shell::Shell* shell);
 
     ~WlClient() override;
 
-    auto raw_client() const -> RawWlClient const& override { return client; }
+    auto raw_client() const -> wayland_rs::RawWlClient const& override { return client; }
 
     auto is_being_destroyed() const -> bool override { return !owned_self; }
 
@@ -63,7 +63,7 @@ public:
 private:
     /// This shell is owned by the ClientSessionConstructor, which outlives all clients.
     shell::Shell* const shell;
-    RawWlClient const client;
+    wayland_rs::RawWlClient const client;
     std::shared_ptr<scene::Session> const session;
 
     // A shared pointer that indicates whether or not the class is destroyed.
