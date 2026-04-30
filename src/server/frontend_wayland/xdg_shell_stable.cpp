@@ -79,9 +79,6 @@ public:
     void ensure_complete() const;
 
     bool reactive{false};
-    /// Serial of the parent's xdg_surface configure event this positioner is a response to.
-    /// Stored for popup repositioning synchronization (protocol: xdg_positioner.set_parent_configure).
-    std::optional<uint32_t> parent_configure_serial;
 
 private:
     void set_size(int32_t width, int32_t height) override;
@@ -916,9 +913,10 @@ void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t pare
     parent_size = geom::Size{parent_width, parent_height};
 }
 
-void mf::XdgPositionerStable::set_parent_configure(uint32_t serial)
+void mf::XdgPositionerStable::set_parent_configure(uint32_t /*serial*/)
 {
-    parent_configure_serial = serial;
+    // TODO
+    log_warning("xdg_positioner.set_parent_configure not implemented");
 }
 
 auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>
