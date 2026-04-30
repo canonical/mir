@@ -156,6 +156,13 @@ mir::EventUPtr mi::DefaultEventBuilder::touch_event(
     return me::make_touch_event(device_id, timestamp, mir_input_event_modifier_none, contacts);
 }
 
+mir::EventUPtr mi::DefaultEventBuilder::switch_event(
+    MirSwitchAction action,
+    MirSwitchState state)
+{
+    return me::make_switch_event(action, state);
+}
+
 auto mi::DefaultEventBuilder::calibrate_timestamp(std::optional<Timestamp> timestamp) -> Timestamp
 {
     using namespace std::chrono_literals;

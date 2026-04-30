@@ -22,10 +22,15 @@
 #include <mir/frontend/event_sink.h>
 #include <mir/observer_registrar.h>
 
+#include <functional>
 #include <mutex>
 
 namespace mir
 {
+namespace shell
+{
+class DisplayConfigurationController;
+}
 namespace time
 {
 class Clock;
@@ -53,7 +58,8 @@ public:
               std::shared_ptr<Registrar> const& registrar,
               std::shared_ptr<KeyMapper> const& key_mapper,
               std::shared_ptr<time::Clock> const& clock,
-              std::shared_ptr<SeatObserver> const& observer);
+              std::shared_ptr<SeatObserver> const& observer,
+              std::function<std::shared_ptr<shell::DisplayConfigurationController>()> display_configuration_controller);
     // Seat methods:
     void add_device(Device const& device) override;
     void remove_device(Device const& device) override;

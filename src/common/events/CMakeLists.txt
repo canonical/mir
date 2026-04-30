@@ -26,6 +26,7 @@ add_library(mirevents OBJECT
   input_device_state_event.cpp
   orientation_event.cpp
   resize_event.cpp
+  switch_event.cpp
   window_output_event.cpp
   event_helpers.cpp
   window_placement_event.cpp ${PROJECT_SOURCE_DIR}/include/common/mir/events/window_placement_event.h

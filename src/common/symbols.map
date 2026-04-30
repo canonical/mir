@@ -32,6 +32,7 @@ global:
   mir_input_event_get_event_time;
   mir_input_event_get_keyboard_event;
   mir_input_event_get_pointer_event;
+  mir_input_event_get_switch_event;
   mir_input_event_get_touch_event;
   mir_input_event_get_type;
   mir_input_event_get_wayland_timestamp;
@@ -52,6 +53,8 @@ global:
   mir_pointer_event_input_event;
   mir_pointer_event_modifiers;
   mir_pointing_hand_cursor_name;
+  mir_switch_event_action;
+  mir_switch_event_state;
   mir_touch_event_action;
   mir_touch_event_axis_value;
   mir_touch_event_id;
@@ -415,6 +418,7 @@ global:
     mir::events::make_pointer_axis_with_stop_event*;
     mir::events::make_pointer_event*;
     mir::events::make_prompt_session_state_event*;
+    mir::events::make_switch_event*;
     mir::events::make_start_drag_and_drop_event*;
     mir::events::make_surface_orientation_event*;
     mir::events::make_touch_event*;

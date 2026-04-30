@@ -187,6 +187,9 @@ void mie::LibInputDevice::process_event(libinput_event* event)
                 }
             }
             break;
+        case LIBINPUT_EVENT_SWITCH_TOGGLE:
+            sink->handle_input(convert_switch_event(libinput_event_get_switch_event(event)));
+            break;
         default:
             break;
         }
@@ -364,6 +367,22 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
         return {nullptr, [](auto){}};
 
     return builder->touch_event(time, contacts);
+}
+
+mir::EventUPtr mie::LibInputDevice::convert_switch_event(libinput_event_switch* switch_event)
+{
+    auto const libinput_switch_type = libinput_event_switch_get_switch(switch_event);
+    auto const libinput_switch_state = libinput_event_switch_get_switch_state(switch_event);
+
+    switch (libinput_switch_type)
+    {
+        case LIBINPUT_SWITCH_TABLET_MODE:
+            return builder->switch_event(
+                mir_switch_action_tablet_mode,
+                libinput_switch_state == LIBINPUT_SWITCH_STATE_ON ? mir_switch_state_on : mir_switch_state_off);
+        default:
+            return {nullptr, [](auto){}};
+    }
 }
 
 void mie::LibInputDevice::handle_touch_down(libinput_event_touch* touch)

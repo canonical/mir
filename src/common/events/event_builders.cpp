@@ -19,6 +19,7 @@
 #include "event_private.h"
 
 #include <mir/events/window_placement_event.h>
+#include <mir/events/switch_event.h>
 #include <mir/input/xkb_mapper.h>
 
 #include <boost/throw_exception.hpp>
@@ -367,6 +368,17 @@ mir::EventUPtr mev::make_input_configure_event(
     e->set_pointer_axis(mir_pointer_axis_x, x_axis_value);
     e->set_pointer_axis(mir_pointer_axis_y, y_axis_value);
     e->set_device_states(device_states);
+
+    return make_uptr_event(e);
+}
+
+mir::EventUPtr mev::make_switch_event(
+    MirSwitchAction action,
+    MirSwitchState state)
+{
+    auto e = new_event<MirSwitchEvent>();
+    e->set_action(action);
+    e->set_state(state);
 
     return make_uptr_event(e);
 }
