@@ -15,8 +15,7 @@
  */
 
 #include "surface_registry.h"
-
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland_rs;
