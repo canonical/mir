@@ -15,6 +15,7 @@
  */
 
 #include "shm.h"
+#include <limits>
 #include <mir/graphics/drm_formats.h>
 #include "../shm_backing.h"
 #include <mir/log.h>
@@ -251,6 +252,58 @@ void mf::ShmPool::create_buffer(
     int32_t stride,
     uint32_t format)
 {
+    if (offset < 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer offset %d", offset};
+    }
+    if (width <= 0 || height <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer size %dx%d", width, height};
+    }
+    if (stride <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer stride %d", stride};
+    }
+    // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
+    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_format,
+            "Invalid SHM format %u", format};
+    }
+    auto const pixel_size = 4; // All supported formats are 4 bytes per pixel
+
+    auto const max_size = std::numeric_limits<int32_t>::max();
+    auto const max_width = max_size / pixel_size;
+    auto const max_height = max_size / stride;
+    if (width > max_width || height > max_height)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Requested SHM buffer size %dx%d (stride %d) is too large", width, height, stride};
+    }
+
+    auto const min_stride = width * pixel_size;
+    if (stride < min_stride)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
+            stride, width};
+    }
+
     auto const size = stride * height;
     std::unique_ptr<shm::RWMappableRange> backing_range;
     try
@@ -268,25 +321,6 @@ void mf::ShmPool::create_buffer(
             "Attempt to create_buffer outside the range of the backing store"};
     }
 
-    // TODO: Extend DRMFormat to include bytes-per-pixel info and drop this hardcoded "4"
-    if (stride < (width * 4))
-    {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
-            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
-            stride, width};
-    }
-
-    // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
-    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
-    {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_format,
-            "Invalid SHM format requested"};
-    }
-
     new ShmBuffer{
         id,
         wayland_executor,
@@ -299,6 +333,20 @@ void mf::ShmPool::create_buffer(
 
 void mf::ShmPool::resize(int32_t new_size)
 {
+    if (new_size < 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid new size %d", new_size};
+    }
+    if (static_cast<size_t>(new_size) < backing_store->size())
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "New size %d is smaller than the current size of the backing store", new_size};
+    }
     backing_store->resize(new_size);
 }
 

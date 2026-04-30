@@ -259,6 +259,8 @@ public:
 
     void resize(size_t new_size);
 
+    size_t size() const;
+
     template<typename T>
     auto lock_range(size_t start, size_t len)
         -> std::unique_ptr<mir::shm::Mapping<T>>;
@@ -418,6 +420,12 @@ void ShmBacking::resize(size_t new_size)
         backing_size_is_guaranteed_at_least(this->backing_store, new_size));
 }
 
+size_t ShmBacking::size() const
+{
+    auto mapping = *current_mapping.lock();
+    return mapping->size;
+}
+
 class ROMappableRange : public mir::shm::ReadMappableRange
 {
 public:
@@ -525,6 +533,11 @@ public:
     void resize(size_t new_size) override
     {
         backing_store.resize(new_size);
+    }
+
+    size_t size() const override
+    {
+        return backing_store.size();
     }
 private:
     ShmBacking backing_store;
