@@ -19,6 +19,7 @@
 #include <mir/executor.h>
 #include <mir/scene/clipboard.h>
 #include <mir/wayland/weak.h>
+#include <mir/wayland/protocol_error.h>
 
 #include <vector>
 
@@ -245,8 +246,24 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
     }
 }
 
+static bool valid_actions(uint32_t dnd_actions)
+{
+    return (dnd_actions & ~(
+        mw::DataDeviceManager::DndAction::none |
+        mw::DataDeviceManager::DndAction::copy |
+        mw::DataDeviceManager::DndAction::move |
+        mw::DataDeviceManager::DndAction::ask)) == 0;
+}
+
 void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
+    if (!valid_actions(dnd_actions))
+    {
+        throw mw::ProtocolError(
+            resource,
+            Error::invalid_action_mask,
+            "Invalid DnD actions 0x%x", dnd_actions);
+    }
     this->dnd_actions = dnd_actions;
 }
 
