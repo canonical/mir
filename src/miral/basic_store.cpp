@@ -592,39 +592,6 @@ void mlc::BasicStore::add_strings_attribute(Key const& key, std::string_view des
     self->add_key(key, description, std::vector<std::string>{preset.begin(), preset.end()}, handler);
 }
 
-void mlc::BasicStore::add_ints_attribute(
-    Key const& key,
-    std::string_view description,
-    std::span<int const> preset,
-    HandleInts handler,
-    std::span<int const> initial_values)
-{
-    self->add_key(
-        key, description,
-        to_str_vec(preset),
-        [handler](Key const& key, std::optional<std::span<std::string const>> val)
-        {
-            process_as<int>(handler, key, val);
-        },
-        to_str_vec(initial_values));
-}
-
-void mlc::BasicStore::add_floats_attribute(
-    Key const& key,
-    std::string_view description,
-    std::span<float const> preset,
-    HandleFloats handler,
-    std::span<float const> initial_values)
-{
-    self->add_key(
-        key, description,
-        to_str_vec(preset),
-        [handler](Key const& key, std::optional<std::span<std::string const>> val)
-        {
-            process_as<float>(handler, key, val);
-        },
-        to_str_vec(initial_values));
-}
 
 void mlc::BasicStore::add_strings_attribute(
     Key const& key,
@@ -638,38 +605,6 @@ void mlc::BasicStore::add_strings_attribute(
         std::vector<std::string>{preset.begin(), preset.end()},
         handler,
         std::vector<std::string>{initial_values.begin(), initial_values.end()});
-}
-
-void mlc::BasicStore::add_ints_attribute(
-    Key const& key,
-    std::string_view description,
-    HandleInts handler,
-    std::span<int const> initial_values)
-{
-    self->add_key(
-        key, description,
-        std::nullopt,
-        [handler](Key const& key, std::optional<std::span<std::string const>> val)
-        {
-            process_as<int>(handler, key, val);
-        },
-        to_str_vec(initial_values));
-}
-
-void mlc::BasicStore::add_floats_attribute(
-    Key const& key,
-    std::string_view description,
-    HandleFloats handler,
-    std::span<float const> initial_values)
-{
-    self->add_key(
-        key, description,
-        std::nullopt,
-        [handler](Key const& key, std::optional<std::span<std::string const>> val)
-        {
-            process_as<float>(handler, key, val);
-        },
-        to_str_vec(initial_values));
 }
 
 void mlc::BasicStore::add_strings_attribute(
