@@ -466,7 +466,36 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
 {
     if (parent && parent.value())
     {
-        WindowWlSurfaceRole::set_parent(XdgToplevelStable::from(parent.value())->scene_surface());
+        auto parent_toplevel = XdgToplevelStable::from(parent.value());
+
+        if (parent_toplevel == this)
+        {
+            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                resource,
+                Error::invalid_parent,
+                "A toplevel cannot be its own parent"));
+        }
+
+        // Check that the parent is not a descendant of this toplevel
+        auto const this_surface = scene_surface();
+        if (this_surface)
+        {
+            auto parent_surface = parent_toplevel->scene_surface();
+            while (parent_surface)
+            {
+                if (parent_surface.value() == this_surface.value())
+                {
+                    BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                        resource,
+                        Error::invalid_parent,
+                        "Parent toplevel must not be a descendant of the child toplevel"));
+                }
+                auto const grandparent = parent_surface.value()->parent();
+                parent_surface = grandparent ? std::optional{grandparent} : std::nullopt;
+            }
+        }
+
+        WindowWlSurfaceRole::set_parent(parent_toplevel->scene_surface());
     }
     else
     {
