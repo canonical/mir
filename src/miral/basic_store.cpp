@@ -209,7 +209,8 @@ void mlc::BasicStore::Self::set_array(
             details.clear_requested = true;
         }
 
-        details.modification_paths.push_back(modification_path);
+        if (!std::ranges::contains(details.modification_paths, modification_path))
+            details.modification_paths.push_back(modification_path);
     }
     else
     {
