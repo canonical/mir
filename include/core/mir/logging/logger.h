@@ -31,6 +31,20 @@ namespace mir
 namespace logging
 {
 struct Tag;
+/**
+ * Create a tag for use in logging
+ *
+ * This creates a new tag and registers it with the logging subsystem,
+ * with lifetime of the whole process. It should be called exactly once
+ * for each desired tag and the reference it returns stored.
+ *
+ * For leaf tags — tags not used as a `parent` or which are only used in a single
+ * translation unit, it is suggested that this be called at global scope
+ * so that the tag is registered with the logging subsystem during
+ * server initialisation. Eg:
+ *
+ * `static Tag const& bypass = mir::logging::create_tag(logging::graphics(), "bypass");`
+ */
 Tag const& create_tag(Tag const& parent, std::string_view name);
 
 Tag const& core();
