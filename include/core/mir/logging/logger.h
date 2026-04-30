@@ -107,6 +107,7 @@ void log(Severity severity, const std::string& message, const std::string& compo
 void log(Severity severity, Tags tags, std::string_view message);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);
+auto logging_enabled_for(Tag const& tag, Severity sev) -> bool;
 
 }
 }

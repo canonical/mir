@@ -20,6 +20,7 @@
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
 
+#include <atomic>
 #include <iostream>
 #include <chrono>
 #include <format>
@@ -38,15 +39,26 @@ namespace ml = mir::logging;
 struct ml::Tag
 {
     std::string const name;
+    std::atomic<Severity> logging_severity;
     Tag const* parent;
 };
 
-mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "base", nullptr}}}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
+namespace
+{
+auto construct_initial_tag_list() -> std::list<ml::Tag>
+{
+    decltype(construct_initial_tag_list()) list;
+    list.emplace_back("base", ml::Severity::warning, nullptr);
+    return list;
+}
+}
+
+mir::Synchronised<std::list<ml::Tag>> known_tags{construct_initial_tag_list()}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
 
 auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
 {
     auto locked_tags = known_tags.lock();
-    locked_tags->emplace_back(ml::Tag {std::string{name}, &parent});
+    locked_tags->emplace_back(std::string{name}, Severity::warning, &parent);
     return locked_tags->back();
 }
 
@@ -179,6 +191,10 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     }
 }
 
+auto ml::logging_enabled_for(const Tag &tag, Severity sev) -> bool
+{
+    return tag.logging_severity >= sev;
+}
 namespace mir
 {
 namespace logging
