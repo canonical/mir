@@ -8,7 +8,6 @@
 #include <array>
 #include <charconv>
 #include <format>
-#include <limits>
 #include <list>
 #include <map>
 #include <mutex>
@@ -55,36 +54,6 @@ public:
     {
     }
 };
-
-template <typename T>
-auto to_str_vec(std::span<T const> s) -> std::vector<std::string>
-{
-    if constexpr (std::is_same_v<T, std::string>)
-    {
-        return std::vector<std::string>{s.begin(), s.end()};
-    }
-
-    std::vector<std::string> v;
-    v.reserve(s.size());
-    for (auto const& p : s)
-    {
-        if constexpr (std::is_floating_point_v<T>)
-        {
-            // Extra bytes account for sign, decimal point, and exponent (e.g. "e+38")
-            std::array<char, std::numeric_limits<T>::max_digits10 + 10> buf;
-            auto const [ptr, ec] = std::to_chars(buf.data(), buf.data() + buf.size(), p, std::chars_format::general, std::numeric_limits<T>::max_digits10);
-            if (ec == std::errc{})
-                v.emplace_back(buf.data(), ptr);
-            else
-                v.emplace_back(std::to_string(p));
-        }
-        else if constexpr (std::is_integral_v<T>)
-        {
-            v.emplace_back(std::to_string(p));
-        }
-    }
-    return v;
-}
 }
 
 class mlc::BasicStore::Self
@@ -234,7 +203,7 @@ void mlc::BasicStore::Self::set_array(
 
         if(value)
         {
-            details.parsed_values = to_str_vec(*value);
+            details.parsed_values = std::vector<std::string>{value->begin(), value->end()};
             details.clear_requested = false;
         }
         else
