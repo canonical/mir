@@ -17,11 +17,11 @@
 #include "input_trigger_action_v1.h"
 #include "input_trigger_registry.h"
 
-#include <mir/wayland/weak.h>
-#include <mir/wayland/protocol_error.h>
+#include "weak.h"
+#include "protocol_error.h"
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 using ActivationToken = mf::InputTriggerRegistry::ActivationToken;
 using Action = mf::InputTriggerRegistry::Action;
@@ -32,71 +32,74 @@ namespace
 
 class InputTriggerActionV1 :
     virtual public Action,
-    virtual public mw::InputTriggerActionV1
+    virtual public mw::ExtInputTriggerActionV1Impl
 {
 public:
-    using mw::InputTriggerActionV1::InputTriggerActionV1;
+    using mw::ExtInputTriggerActionV1Impl::ExtInputTriggerActionV1Impl;
 
-    void end(ActivationToken const& activation_token) const override;
-    void begin(ActivationToken const& activation_token) const override;
-    void unavailable() const override;
+    void end(ActivationToken const& activation_token) override;
+    void begin(ActivationToken const& activation_token) override;
+    void unavailable() override;
 };
 
 // Used  when a client provides a revoked token to call
 // `send_unavailable_event`.
-class NullInputTriggerActionV1 : public mw::InputTriggerActionV1
+class NullInputTriggerActionV1 : public mw::ExtInputTriggerActionV1Impl
 {
 public:
-    NullInputTriggerActionV1(wl_resource* id) :
-        mw::InputTriggerActionV1{id, Version<1>{}}
+    NullInputTriggerActionV1()
     {
+    }
+
+    auto associate(rust::Box<mir::wayland_rs::ExtInputTriggerActionV1Ext> instance, uint32_t object_id) -> void override
+    {
+        mw::ExtInputTriggerActionV1Impl::associate(std::move(instance), object_id);
         send_unavailable_event();
     }
 };
 
-class InputTriggerActionManagerV1 : public mw::InputTriggerActionManagerV1::Global
+class InputTriggerActionManagerV1 : public mf::InputTriggerActionManagerV1Global
 {
 public:
-    InputTriggerActionManagerV1(wl_display* display, std::shared_ptr<ActionGroupManager> const& action_group_manager) :
-        Global{display, Version<1>{}},
+    InputTriggerActionManagerV1(std::shared_ptr<ActionGroupManager> const& action_group_manager) :
         action_group_manager{action_group_manager}
     {
     }
 
 private:
-    class Instance : public mir::wayland::InputTriggerActionManagerV1
+    class Instance : public mir::wayland_rs::ExtInputTriggerActionManagerV1Impl
     {
         std::shared_ptr<ActionGroupManager> const action_group_manager;
 
-        void get_input_trigger_action(std::string const& token, struct wl_resource* id) override
+        auto get_input_trigger_action(rust::String token) -> std::shared_ptr<mir::wayland_rs::ExtInputTriggerActionV1Impl> override
         {
-            if (action_group_manager->was_revoked(token))
+            if (action_group_manager->was_revoked(token.c_str()))
             {
                 BOOST_THROW_EXCEPTION(
                     mw::ProtocolError(
-                        resource,
+                        object_id(),
                         Error::invalid_token,
                         "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) that's no longer valid",
                         token.c_str()));
             }
 
-            if (auto const& action_group = action_group_manager->get_action_group(token))
+            if (auto const& action_group = action_group_manager->get_action_group(token.c_str()))
             {
                 if(action_group->was_cancelled())
                 {
-                    new NullInputTriggerActionV1{id};
-                    return;
+                    return std::make_shared<NullInputTriggerActionV1>();
                 }
 
-                auto const action = new InputTriggerActionV1{id, Version<1>{}};
-                action_group->add(mw::make_weak<Action const>(action));
+                auto const action = std::make_shared<InputTriggerActionV1>();
+                action_group->add(mw::Weak<Action const>(action));
+                return action;
             }
             else
             {
                 // Token is not currently valid, nor was it previously revoked. It must be an invalid token.
                 BOOST_THROW_EXCEPTION(
                     mw::ProtocolError(
-                        resource,
+                        object_id(),
                         Error::invalid_token,
                         "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) we "
                         "never issued",
@@ -106,40 +109,39 @@ private:
 
     public:
         Instance(
-            wl_resource* new_ext_input_trigger_action_manager_v1, std::shared_ptr<ActionGroupManager> const& action_group_manager) :
-            InputTriggerActionManagerV1{new_ext_input_trigger_action_manager_v1, Version<1>{}},
+            std::shared_ptr<ActionGroupManager> const& action_group_manager) :
             action_group_manager{action_group_manager}
         {
         }
     };
 
-    void bind(wl_resource* new_ext_input_trigger_action_manager_v1) override
+    auto create() -> std::shared_ptr<mir::wayland_rs::ExtInputTriggerActionManagerV1Impl> override
     {
-        new Instance{new_ext_input_trigger_action_manager_v1, action_group_manager};
+        return std::make_shared<Instance>(action_group_manager);
     }
 
     std::shared_ptr<ActionGroupManager> const action_group_manager;
 };
 
 
-void InputTriggerActionV1::end(ActivationToken const& activation_token) const
+void InputTriggerActionV1::end(ActivationToken const& activation_token)
 {
     send_end_event(activation_token.timestamp_ms(), activation_token.token_string());
 }
 
-void InputTriggerActionV1::begin(ActivationToken const& activation_token) const
+void InputTriggerActionV1::begin(ActivationToken const& activation_token)
 {
     send_begin_event(activation_token.timestamp_ms(), activation_token.token_string());
 }
 
-void InputTriggerActionV1::unavailable() const
+void InputTriggerActionV1::unavailable()
 {
     send_unavailable_event();
 }
 }
 
-auto mf::create_input_trigger_action_manager_v1(wl_display* display, std::shared_ptr<ActionGroupManager> const& action_group_manager)
-    -> std::shared_ptr<mw::InputTriggerActionManagerV1::Global>
+auto mf::create_input_trigger_action_manager_v1(std::shared_ptr<ActionGroupManager> const& action_group_manager)
+    -> std::shared_ptr<mf::InputTriggerActionManagerV1Global>
 {
-    return std::make_shared<InputTriggerActionManagerV1>(display, action_group_manager);
+    return std::make_shared<InputTriggerActionManagerV1>(action_group_manager);
 }

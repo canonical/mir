@@ -102,9 +102,9 @@ public:
     Action(Action&&) = delete;
     auto operator=(Action&&) -> Action& = delete;
 
-    virtual void end(ActivationToken const& activation_token) const = 0;
-    virtual void begin(ActivationToken const& activation_token) const = 0;
-    virtual void unavailable() const = 0;
+    virtual void end(ActivationToken const& activation_token) = 0;
+    virtual void begin(ActivationToken const& activation_token) = 0;
+    virtual void unavailable() = 0;
 };
 
 class InputTriggerRegistry::ActionGroup
