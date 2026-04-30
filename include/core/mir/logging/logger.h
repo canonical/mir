@@ -111,4 +111,11 @@ void format_message(std::ostream& stream, Severity severity, std::string const& 
 }
 }
 
+template<>
+struct std::formatter<mir::logging::Severity> : std::formatter<std::string>
+{
+    auto format(mir::logging::Severity sev, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
+
 #endif // MIR_LOGGING_LOGGER_H_

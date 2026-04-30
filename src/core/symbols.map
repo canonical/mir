@@ -100,3 +100,10 @@ MIR_CORE_2.27 {
       mir::logging::window_management*;
     };
 } MIR_CORE_2.26;
+
+MIR_CORE_2.29 {
+  global:
+    extern "C++" {
+      "std::formatter<mir::logging::Severity, char>::format(mir::logging::Severity, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+  };
+} MIR_CORE_2.27;
