@@ -42,16 +42,16 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"mir::logging::Tag::Tag(mir::logging::Tag const&, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::Tag::Tag(std::unique_ptr<mir::logging::Tag::Impl, std::default_delete<mir::logging::Tag::Impl> >)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::Tag::name() const@MIR_CORE_2.27" 2.27.0
- (c++)"mir::logging::core@MIR_CORE_2.27" 2.27.0
+ (c++)"mir::logging::core()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::format_message(std::basic_ostream<char, std::char_traits<char> >&, mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.27" 2.27.0
- (c++)"mir::logging::graphics@MIR_CORE_2.27" 2.27.0
- (c++)"mir::logging::input@MIR_CORE_2.27" 2.27.0
+ (c++)"mir::logging::graphics()@MIR_CORE_2.27" 2.27.0
+ (c++)"mir::logging::input()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::set_logger(std::shared_ptr<mir::logging::Logger> const&)@MIR_CORE_2.27" 2.27.0
- (c++)"mir::logging::wayland@MIR_CORE_2.27" 2.27.0
- (c++)"mir::logging::window_management@MIR_CORE_2.27" 2.27.0
+ (c++)"mir::logging::wayland()@MIR_CORE_2.27" 2.27.0
+ (c++)"mir::logging::window_management()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::mir_depth_layer_get_index(MirDepthLayer)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::report_exception()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::report_exception(std::basic_ostream<char, std::char_traits<char> >&)@MIR_CORE_2.27" 2.27.0

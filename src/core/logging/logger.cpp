@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
+
+#include <mir/synchronised.h>
+#include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
 
 #include <iostream>
@@ -29,61 +31,54 @@
 #include <ranges>
 #include <stdexcept>
 #include <string_view>
+#include <list>
 
 namespace ml = mir::logging;
 
-class ml::Tag::Impl
+struct ml::Tag
 {
-public:
-    Impl(Tag const& parent, std::string_view name)
-        : name_{name},
-          parent{&parent}
-    {
-    }
-
-    auto name() const -> std::string_view
-    {
-        return name_;
-    }
-
-    static auto make_top_level_tag(std::string_view name) -> Tag
-    {
-        return Tag{std::unique_ptr<Impl>(new Impl{name})};
-    }
-private:
-    Impl(std::string_view name)
-        : name_{name},
-          parent{nullptr}
-    {
-    }
-
-    std::string name_;
-    [[maybe_unused]]
+    std::string const name;
     Tag const* parent;
 };
 
-ml::Tag::Tag(Tag const& parent, std::string_view name)
-    : impl{std::make_unique<Impl>(parent, name)}
+mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "core", nullptr}}};
+
+auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
 {
+    auto locked_tags = known_tags.lock();
+    locked_tags->emplace_back(ml::Tag {std::string{name}, &parent});
+    return locked_tags->back();
 }
 
-ml::Tag::~Tag() = default;
-
-ml::Tag::Tag(std::unique_ptr<Impl> impl)
-    : impl{std::move(impl)}
+auto ml::core() -> Tag const&
 {
+    static Tag const& core = known_tags.lock()->front();
+    return core;
 }
 
-auto ml::Tag::name() const -> std::string_view
+auto ml::input() -> Tag const&
 {
-    return impl->name();
+    static Tag const& input = create_tag(core(), "input");
+    return input;
 }
 
-ml::Tag const ml::core{ml::Tag::Impl::make_top_level_tag("core")};
-ml::Tag const ml::input{ml::Tag::Impl::make_top_level_tag("input")};
-ml::Tag const ml::wayland{ml::Tag::Impl::make_top_level_tag("wayland")};
-ml::Tag const ml::graphics{ml::Tag::Impl::make_top_level_tag("graphics")};
-ml::Tag const ml::window_management{ml::Tag::Impl::make_top_level_tag("window_management")};
+auto ml::wayland() -> Tag const&
+{
+    static Tag const& wayland = create_tag(core(), "wayland");
+    return wayland;
+}
+
+auto ml::graphics() -> Tag const&
+{
+    static Tag const& graphics = create_tag(core(), "graphics");
+    return graphics;
+}
+
+auto ml::window_management() -> Tag const&
+{
+    static Tag const& window_management = create_tag(core(), "window-management");
+    return window_management;
+}
 
 void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
 {
@@ -107,7 +102,7 @@ void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
 
     std::string component;
     std::ranges::copy(
-        tags | std::views::transform([](Tag const& tag) { return tag.name(); }) | std::views::join_with(':'),
+        tags | std::views::transform([](Tag const& tag) { return tag.name; }) | std::views::join_with(':'),
         std::back_inserter(component));
     log(severity, std::string{message}, component);
 }

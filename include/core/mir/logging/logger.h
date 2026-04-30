@@ -30,27 +30,14 @@ namespace mir
 {
 namespace logging
 {
-class Tag
-{
-public:
-    class Impl;
+struct Tag;
+Tag const& create_tag(Tag const& parent, std::string_view name);
 
-    Tag(Tag const& parent, std::string_view name);
-    ~Tag();
-
-    auto name() const -> std::string_view;
-private:
-    friend class Impl;
-    explicit Tag(std::unique_ptr<Impl> impl);
-
-    std::unique_ptr<Impl> const impl;
-};
-
-extern Tag const core;
-extern Tag const input;
-extern Tag const wayland;
-extern Tag const graphics;
-extern Tag const window_management;
+Tag const& core();
+Tag const& input();
+Tag const& wayland();
+Tag const& graphics();
+Tag const& window_management();
 
 using Tags = std::initializer_list<std::reference_wrapper<Tag const> const>;
 
