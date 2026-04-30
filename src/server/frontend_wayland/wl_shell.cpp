@@ -54,6 +54,12 @@ public:
     {
     }
 
+    void handle_commit() override
+    {
+        // TODO?
+        WindowWlSurfaceRole::handle_commit();
+    }
+
     void set_transient(
         wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent,
         int32_t x,
@@ -101,31 +107,24 @@ public:
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,
-        wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool has_output) override
-    {
-        WindowWlSurfaceRole::set_fullscreen(has_output);
-    }
-    void set_fullscreen(
-        uint32_t /*method*/,
-        uint32_t /*framerate*/,
-        std::optional<struct wl_resource*> const& output) override
+        wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool) override
     {
         WindowWlSurfaceRole::set_fullscreen(output);
     }
 
     void set_popup(
-        struct wl_resource* /*seat*/,
+        wayland_rs::Weak<wayland_rs::WlSeatImpl> const& /*seat*/,
         uint32_t /*serial*/,
-        struct wl_resource* parent,
+        wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent,
         int32_t x,
         int32_t y,
         uint32_t flags) override
     {
-        auto& parent_surface = *WlSurface::from(parent);
+        auto& parent_surface = *WlSurface::from(&parent.value());
 
         mir::shell::SurfaceSpecification mods;
 
-        if (flags & mw::ShellSurface::Transient::inactive)
+        if (flags & mw::WlShellSurfaceImpl::Transient::inactive)
             mods.type = mir_window_type_tip;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
@@ -139,61 +138,61 @@ public:
         apply_spec(mods);
     }
 
-    void set_maximized(std::optional<struct wl_resource*> const& output) override
+    auto set_maximized(wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool) -> void override
     {
         (void)output;
         WindowWlSurfaceRole::add_state_now(mir_window_state_maximized);
     }
 
-    void set_title(std::string const& title) override
+    void set_title(rust::String title) override
     {
-        WindowWlSurfaceRole::set_title(title);
+        WindowWlSurfaceRole::set_title(title.c_str());
     }
 
     void pong(uint32_t /*serial*/) override
     {
     }
 
-    void move(struct wl_resource* /*seat*/, uint32_t serial) override
+    void r_move(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& /*seat*/, uint32_t serial) override
     {
         WindowWlSurfaceRole::initiate_interactive_move(serial);
     }
 
-    void resize(struct wl_resource* /*seat*/, uint32_t serial, uint32_t edges) override
+    void resize(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& /*seat*/, uint32_t serial, uint32_t edges) override
     {
         MirResizeEdge edge = mir_resize_edge_none;
 
         switch (edges)
         {
-        case mw::ShellSurface::Resize::top:
+        case Resize::top:
             edge = mir_resize_edge_north;
             break;
 
-        case mw::ShellSurface::Resize::bottom:
+        case Resize::bottom:
             edge = mir_resize_edge_south;
             break;
 
-        case mw::ShellSurface::Resize::left:
+        case Resize::left:
             edge = mir_resize_edge_west;
             break;
 
-        case mw::ShellSurface::Resize::top_left:
+        case Resize::top_left:
             edge = mir_resize_edge_northwest;
             break;
 
-        case mw::ShellSurface::Resize::bottom_left:
+        case Resize::bottom_left:
             edge = mir_resize_edge_southwest;
             break;
 
-        case mw::ShellSurface::Resize::right:
+        case Resize::right:
             edge = mir_resize_edge_east;
             break;
 
-        case mw::ShellSurface::Resize::top_right:
+        case Resize::top_right:
             edge = mir_resize_edge_northeast;
             break;
 
-        case mw::ShellSurface::Resize::bottom_right:
+        case Resize::bottom_right:
             edge = mir_resize_edge_southeast;
             break;
 
@@ -203,23 +202,26 @@ public:
         WindowWlSurfaceRole::initiate_interactive_resize(edge, serial);
     }
 
-    void set_class(std::string const& /*class_*/) override
+    void set_class(rust::String /*class_*/) override
     {
     }
 
     void destroy_role() const override
     {
-        wl_resource_destroy(resource);
+        // TODO:
+        // wl_resource_destroy(resource);
     }
 };
 
 WlShell::WlShell(
+    std::shared_ptr<wayland_rs::Client> const& client,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat& seat,
     OutputManager* const output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : wayland_executor{wayland_executor},
+    : client{client},
+      wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
       output_manager{output_manager},
@@ -231,6 +233,7 @@ auto WlShell::get_shell_surface(mw::Weak<mw::WlSurfaceImpl> const& surface)
     -> std::shared_ptr<wayland_rs::WlShellSurfaceImpl>
 {
     return std::make_shared<WlShellSurface>(
+        client,
         wayland_executor,
         WlSurface::from(&surface.value()),
         shell,
@@ -241,18 +244,14 @@ auto WlShell::get_shell_surface(mw::Weak<mw::WlSurfaceImpl> const& surface)
 }
 }
 
-auto mf::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
+auto mf::get_wl_shell_window(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<scene::Surface>
 {
-    if (mw::Surface::is_instance(surface))
+    auto const wlsurface = WlSurface::from(&surface.value());
+    if (auto const scene_surface = wlsurface->scene_surface())
     {
-        auto const wlsurface = WlSurface::from(surface);
-        if (auto const scene_surface = wlsurface->scene_surface())
-        {
-            return scene_surface.value();
-        }
-
-        log_debug("No window currently associated with wayland::Surface %p", static_cast<void*>(surface));
+        return scene_surface.value();
     }
 
+    log_debug("No window currently associated with wayland::Surface %p", static_cast<void*>(&surface.value()));
     return {};
 }

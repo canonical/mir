@@ -28,7 +28,7 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland_rs;
 namespace mi = mir::input;
 
-mf::WlKeyboard::WlKeyboard(WlSeat& seat, std::shared_ptr<wayland_rs::Client> const& client)
+mf::WlKeyboard::WlKeyboard(WlSeatGlobal& seat, std::shared_ptr<wayland_rs::Client> const& client)
     : helper{seat.make_keyboard_helper(this)},
       client{client}
 {

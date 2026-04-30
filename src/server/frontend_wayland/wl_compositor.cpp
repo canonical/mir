@@ -21,7 +21,16 @@
 namespace mw = mir::wayland_rs;
 namespace mf = mir::frontend;
 
-mf::WlCompositor::WlCompositor(std::shared_ptr<WlClient> const& client)
+mf::WlCompositor::WlCompositor(std::shared_ptr<WlClient> const& client,
+    std::shared_ptr<mir::Executor> const& wayland_executor,
+    std::shared_ptr<mir::Executor> const& frame_callback_executor,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    rust::Box<wayland_rs::WaylandEventLoopHandle> event_loop_handle)
+    : client{client},
+      wayland_executor(wayland_executor),
+      frame_callback_executor(frame_callback_executor),
+      allocator(allocator),
+      event_loop_handle(std::move(event_loop_handle))
 {
 }
 
@@ -32,5 +41,11 @@ auto mf::WlCompositor::create_region() -> std::shared_ptr<wayland_rs::WlRegionIm
 
 auto mf::WlCompositor::create_surface() -> std::shared_ptr<wayland_rs::WlSurfaceImpl>
 {
-
+    return std::make_shared<WlSurface>(
+        client,
+        wayland_executor,
+        frame_callback_executor,
+        allocator,
+        event_loop_handle->clone_box()
+    );
 }

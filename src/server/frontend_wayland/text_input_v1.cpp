@@ -324,7 +324,7 @@ void TextInputV1::activate(mw::Weak<mw::WlSeatImpl> const& seat_weak, mw::Weak<m
 {
     (void)surface;
 
-    auto const wl_seat = mf::WlSeat::from(&seat_weak.value());
+    auto const wl_seat = mf::WlSeatGlobal::from(&seat_weak.value());
     if (!wl_seat)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat activating TextInputV1"));

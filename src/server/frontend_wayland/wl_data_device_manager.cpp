@@ -46,7 +46,7 @@ auto mf::WlDataDeviceManager::create_data_source() -> std::shared_ptr<wayland_rs
 
 auto mf::WlDataDeviceManager::get_data_device(mw::Weak<mw::WlSeatImpl> const& seat) -> std::shared_ptr<mw::WlDataDeviceImpl>
 {
-    auto const realseat = mf::WlSeat::from(&seat.value());
+    auto const realseat = mf::WlSeatGlobal::from(&seat.value());
     return std::make_shared<WlDataDevice>(
         *wayland_executor,
         *clipboard,

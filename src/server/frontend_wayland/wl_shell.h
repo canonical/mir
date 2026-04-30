@@ -52,6 +52,7 @@ public:
     auto get_shell_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::WlShellSurfaceImpl> override;
 
 private:
+    std::shared_ptr<wayland_rs::Client> client;
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     WlSeat& seat;

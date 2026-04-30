@@ -141,7 +141,7 @@ mf::InputMethodManagerV2::InputMethodManagerV2(
 auto mf::InputMethodManagerV2::get_input_method(
     wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) -> std::shared_ptr<wayland_rs::ZwpInputMethodV2Impl>
 {
-    auto const wl_seat = WlSeat::from(&seat.value());
+    auto const wl_seat = WlSeatGlobal::from(&seat.value());
     return std::make_shared<InputMethodV2>(ctx->client, wl_seat, ctx);
 }
 

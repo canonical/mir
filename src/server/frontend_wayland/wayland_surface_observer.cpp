@@ -32,7 +32,7 @@ namespace mw = mir::wayland_rs;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     Executor& wayland_executor,
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     WlSurface* surface,
     WindowWlSurfaceRole* window)
     : wayland_executor{wayland_executor},

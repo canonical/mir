@@ -45,7 +45,7 @@ class WaylandInputDispatcher;
 class WaylandSurfaceObserver : public scene::NullSurfaceObserver
 {
 public:
-    WaylandSurfaceObserver(Executor& wayland_executor, WlSeat* seat, WlSurface* surface, WindowWlSurfaceRole* window);
+    WaylandSurfaceObserver(Executor& wayland_executor, WlSeatGlobal* seat, WlSurface* surface, WindowWlSurfaceRole* window);
     ~WaylandSurfaceObserver();
 
     /// Overrides from scene::SurfaceObserver

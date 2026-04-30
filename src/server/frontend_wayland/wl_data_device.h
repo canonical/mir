@@ -38,13 +38,13 @@ namespace frontend
 class PointerInputDispatcher;
 class DragIconController;
 
-class WlDataDevice : public wayland_rs::WlDataDeviceImpl, public WlSeat::FocusListener, std::enable_shared_from_this<WlDataDevice>
+class WlDataDevice : public wayland_rs::WlDataDeviceImpl, public WlSeatGlobal::FocusListener, std::enable_shared_from_this<WlDataDevice>
 {
 public:
     WlDataDevice(
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
         std::shared_ptr<DragIconController> drag_icon_controller,
         std::shared_ptr<wayland_rs::Client> const& client);
@@ -94,7 +94,7 @@ private:
     void end_of_dnd_gesture();
 
     scene::Clipboard& clipboard;
-    WlSeat& seat;
+    WlSeatGlobal& seat;
     std::shared_ptr<ClipboardObserver> const clipboard_observer;
     std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
     std::shared_ptr<DragIconController> const drag_icon_controller;

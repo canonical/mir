@@ -98,7 +98,6 @@ mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
         }
     );
     output_manager->remove_listener(this);
-    mark_destroyed();
     if (surface)
     {
         surface.value().clear_role();
@@ -413,8 +412,6 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
 {
     if (!client->is_being_destroyed())
     {
-        mark_destroyed();
-
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' before the wl_surface"
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in its implementation
         // NOTE: it's also overridden in layer shell, for reasons explained there

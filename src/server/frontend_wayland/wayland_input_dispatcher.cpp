@@ -32,7 +32,7 @@ namespace mi = mir::input;
 namespace mw = mir::wayland_rs;
 
 mf::WaylandInputDispatcher::WaylandInputDispatcher(
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     WlSurface* wl_surface)
     : seat{seat},
       wl_surface{mw::Weak(wl_surface->shared_from_this())}

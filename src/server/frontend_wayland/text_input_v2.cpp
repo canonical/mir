@@ -216,7 +216,7 @@ mf::TextInputManagerV2::TextInputManagerV2(
 auto mf::TextInputManagerV2::get_text_input(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat)
     -> std::shared_ptr<wayland_rs::ZwpTextInputV2Impl>
 {
-    auto const wl_seat = WlSeat::from(&seat.value());
+    auto const wl_seat = WlSeatGlobal::from(&seat.value());
     if (!wl_seat)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat creating TextInputV2"));

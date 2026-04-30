@@ -37,7 +37,7 @@ class WlKeyboard
       private KeyboardCallbacks
 {
 public:
-    WlKeyboard(WlSeat& seat, std::shared_ptr<wayland_rs::Client> const& client);
+    WlKeyboard(WlSeatGlobal& seat, std::shared_ptr<wayland_rs::Client> const& client);
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
     void focus_on(WlSurface* surface);

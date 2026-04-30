@@ -35,7 +35,7 @@ class Keymap;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class WlSurface;
 
 /// Dispatches input events to Wayland clients
@@ -44,7 +44,7 @@ class WaylandInputDispatcher
 {
 public:
     WaylandInputDispatcher(
-        WlSeat* seat,
+        WlSeatGlobal* seat,
         WlSurface* wl_surface);
     ~WaylandInputDispatcher() = default;
 
@@ -54,7 +54,7 @@ private:
     WaylandInputDispatcher(WaylandInputDispatcher const&) = delete;
     WaylandInputDispatcher& operator=(WaylandInputDispatcher const&) = delete;
 
-    WlSeat* const seat;
+    WlSeatGlobal* const seat;
     wayland_rs::Weak<WlSurface> const wl_surface;
 };
 }

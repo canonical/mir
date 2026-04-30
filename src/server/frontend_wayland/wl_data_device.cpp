@@ -145,7 +145,7 @@ auto mf::WlDataDevice::Offer::receive(rust::String mime_type, int32_t fd) -> voi
 mf::WlDataDevice::WlDataDevice(
     Executor& wayland_executor,
     scene::Clipboard& clipboard,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
     std::shared_ptr<DragIconController> drag_icon_controller,
     std::shared_ptr<wayland_rs::Client> const& client)
@@ -206,7 +206,7 @@ auto mir::frontend::WlDataDevice::start_drag(
 
     pointer_input_dispatcher->disable_dispatch_to_gesture_owner(end_of_gesture_callback);
 
-    seat.for_each_listener(client, [this](PointerEventDispatcher* pointer)
+    seat.for_each_listener(client.get(), [this](PointerEventDispatcher* pointer)
         {
             pointer->start_dispatch_to_data_device(this);
         });
@@ -274,7 +274,7 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
 void mf::WlDataDevice::drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source)
 {
     weak_source = source;
-    seat.for_each_listener(client, [this](PointerEventDispatcher* pointer)
+    seat.for_each_listener(client.get(), [this](PointerEventDispatcher* pointer)
         {
             pointer->start_dispatch_to_data_device(this);
         });
@@ -363,7 +363,7 @@ void mf::WlDataDevice::drag_n_drop_source_cleared()
 
 void mf::WlDataDevice::end_of_dnd_gesture()
 {
-    seat.for_each_listener(client, [](PointerEventDispatcher* pointer)
+    seat.for_each_listener(client.get(), [](PointerEventDispatcher* pointer)
     {
         pointer->stop_dispatch_to_data_device();
     });
