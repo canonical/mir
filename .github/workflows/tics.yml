@@ -7,6 +7,8 @@ on:
     paths-ignore:
     - ".github/**"
     - "!.github/workflows/tics.yml"
+    - "*.md"
+    - "COPYING.*"
     - "doc/**"
     - "snap/**"
     - "spread.yaml"
