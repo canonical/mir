@@ -332,6 +332,36 @@ TEST_F(ConfigAggregatorTest, invalid_ini_file_among_multiple_files_leaves_array_
               {std::ref(stream2), "base.conf.d/10-override.conf"}});
 }
 
+TEST_F(ConfigAggregatorTest, preset_with_array_value_in_base_and_missing_in_override_yields_base_values)
+{
+    aggregator.add_strings_attribute(
+        a_strings_key, "strings", {{"default1"s, "default2"s}}, [this](auto... args) { strings_handler(args...); });
+
+    std::istringstream stream1{a_strings_key.to_string() + "=foo\n" + a_strings_key.to_string() + "=bar\n"};
+    std::istringstream stream2{another_key.to_string() + "=99\n"}; // override does not contain a_strings_key
+
+    // Base has ["foo", "bar"]; override is silent, so base values should be used (not the preset)
+    EXPECT_CALL(*this, strings_handler(a_strings_key, Optional(ElementsAre("foo", "bar"))));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
+TEST_F(ConfigAggregatorTest, preset_with_value_in_base_and_missing_in_override_yields_base_value)
+{
+    int const preset_value = 5;
+    aggregator.add_int_attribute(a_key, "a scoped int", preset_value, [this](auto... args) { int_handler(args...); });
+
+    std::istringstream stream1{a_key.to_string() + "=42\n"};
+    std::istringstream stream2{another_key.to_string() + "=99\n"}; // override does not contain a_key
+
+    // Base has a_key=42; override is silent on a_key, so base value should be used (not the preset)
+    EXPECT_CALL(*this, int_handler(a_key, std::optional<int>{42}));
+
+    load_all({{std::ref(stream1), "base.conf"},
+              {std::ref(stream2), "base.conf.d/10-override.conf"}});
+}
+
 TEST_F(ConfigAggregatorTest, clear_followed_by_invalid_array_value_yields_empty)
 {
     aggregator.add_ints_attribute(an_ints_key, "ints", [this](auto... args) { ints_handler(args...); });

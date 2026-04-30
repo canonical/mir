@@ -81,14 +81,14 @@ void mlc::ConfigAggregator::reload_all()
             {
                 self->file_being_loaded = source.file_path;
 
-                // Catch up the new source on all attributes already registered
+                // Catch up the new source on all attributes already registered.
+                // We intentionally do NOT pass presets to source stores: if a source omits a key,
+                // it should report nullopt ("not set"), not the preset value. The aggregated store
+                // applies the preset as a final fallback after all sources have been consulted.
                 self->foreach_attribute(
-                    [&](Key const& key, std::string_view description, std::optional<std::string> const& preset)
+                    [&](Key const& key, std::string_view description, std::optional<std::string> const& /*preset*/)
                     {
-                        if (preset)
-                            source.store->add_string_attribute(key, description, *preset, self->scalar_accumulator());
-                        else
-                            source.store->add_string_attribute(key, description, self->scalar_accumulator());
+                        source.store->add_string_attribute(key, description, self->scalar_accumulator());
                     });
 
                 self->foreach_array_attribute(
