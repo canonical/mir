@@ -19,10 +19,11 @@ import subprocess
 # Product name
 project = 'Mir'
 author = 'Canonical Group Ltd.'
+version = os.getenv("READTHEDOCS_VERSION", "local")
 
 # Uncomment if your product uses release numbers
 try:
-    release = subprocess.check_output(["git", "describe", "--always"], encoding="utf-8")
+    release = subprocess.check_output(["git", "describe", "--always", "--abbrev=0"], encoding="utf-8").strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     release = "v@MIR_VERSION_MAJOR@.@MIR_VERSION_MINOR@.@MIR_VERSION_MICRO@"
 
@@ -31,7 +32,7 @@ copyright = '%s, %s' % (datetime.date.today().year, author)
 
 ## Open Graph configuration - defines what is displayed in the website preview
 # The URL of the documentation output
-ogp_site_url = 'https://canonical-mir.readthedocs-hosted.com/'
+ogp_site_url = f'https://canonical.com/mir/docs/{version}/'
 # The documentation website name (usually the same as the product name)
 ogp_site_name = project
 # An image or logo that is used in the preview
@@ -45,7 +46,7 @@ html_favicon = '.sphinx/_static/favicon.png'
 html_context = {
 
     # Change to the link to your product website (without "https://")
-    'product_page': 'mir-server.io',
+    'product_page': 'canonical.com/mir',
 
     # Add your product tag to ".sphinx/_static" and change the path
     # here (start with "_static"), default is the circle of friends
@@ -75,7 +76,7 @@ html_context = {
 
 # If your project is on documentation.ubuntu.com, specify the project
 # slug (for example, "lxd") here.
-slug = ""
+slug = f"mir/docs/{version}"
 
 ############################################################
 ### Redirects
@@ -123,7 +124,9 @@ custom_excludes = []
 custom_html_css_files = []
 
 # Add JavaScript files (located in .sphinx/_static/)
-custom_html_js_files = []
+custom_html_js_files = [
+    'js/overwrite_links.js',
+]
 
 ## The following settings override the default configuration.
 
