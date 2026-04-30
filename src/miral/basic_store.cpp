@@ -625,7 +625,8 @@ void mlc::BasicStore::update_key(Key const& key, std::string_view value, std::fi
     self->update_key(key, value, modification_path);
 }
 
-void mlc::BasicStore::set_array(Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path)
+void mlc::BasicStore::set_array(
+    Key const& key, std::optional<std::span<std::string const>> value, std::filesystem::path const& modification_path)
 {
     self->set_array(key, value, modification_path);
 }
