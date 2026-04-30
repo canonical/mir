@@ -22,7 +22,6 @@
 #include "wl_subcompositor.h"
 #include "wl_region.h"
 #include "shm.h"
-#include "resource_lifetime_tracker.h"
 #include "linux_drm_syncobj.h"
 #include "protocol_error.h"
 #include "fd_ready_callback.h"
