@@ -18,9 +18,9 @@
 #ifndef MIR_FRONTEND_WP_VIEWPORTER_H
 #define MIR_FRONTEND_WP_VIEWPORTER_H
 
-#include <mir/wayland/weak.h>
-#include "viewporter_wrapper.h"
-#include "wayland_wrapper.h"
+#include "weak.h"
+#include "viewporter.h"
+#include "wayland.h"
 
 #include <mir/geometry/rectangle.h>
 
@@ -30,13 +30,11 @@ namespace mir::frontend
 {
 class WlSurface;
 
-class WpViewporter : public wayland::Viewporter::Global
+class WpViewporter
 {
 public:
-    explicit WpViewporter(wl_display* display);
-
-private:
-    void bind(wl_resource* new_wp_viewporter) override;
+    WpViewporter();
+    auto create() -> std::shared_ptr<wayland_rs::WpViewporterImpl>;
 };
 
 /**
@@ -44,10 +42,10 @@ private:
  *
  * Threadsafety: This is a Wayland object, and should only be accessed from the Wayland thread
  */
-class Viewport : public wayland::Viewport
+class Viewport : public wayland_rs::WpViewportImpl, public std::enable_shared_from_this<Viewport>
 {
 public:
-    Viewport(wl_resource* new_viewport, WlSurface* surface);
+    Viewport(WlSurface* surface);
     ~Viewport() override;
 
     /**
@@ -69,7 +67,7 @@ private:
     void set_destination(int32_t width, int32_t height) override;
 
     bool mutable viewport_changed;
-    wayland::Weak<wayland::Surface> surface;
+    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> surface;
     std::optional<geometry::RectangleD> source;
     std::optional<geometry::Size> destination;
 };
