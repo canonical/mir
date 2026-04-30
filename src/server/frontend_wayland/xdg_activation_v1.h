@@ -17,7 +17,8 @@
 #ifndef MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 #define MIR_FRONTEND_XDG_ACTIVATION_UNSTABLE_V1_H
 
-#include "xdg-activation-v1_wrapper.h"
+#include "wayland_rs/wayland_rs_cpp/include/xdg_activation_v1.h"
+#include "client.h"
 #include <mir/observer_registrar.h>
 
 struct wl_display;
@@ -41,15 +42,21 @@ class KeyboardObserver;
 
 namespace frontend
 {
+class XdgActivationV1Global
+{
+public:
+    virtual ~XdgActivationV1Global() = default;
+    virtual auto create( std::shared_ptr<wayland_rs::Client> const& client) -> std::shared_ptr<wayland_rs::XdgActivationV1Impl>;
+};
+
 auto create_xdg_activation_v1(
-    struct wl_display* display,
     std::shared_ptr<shell::Shell> const&,
     std::shared_ptr<scene::SessionCoordinator> const&,
     std::shared_ptr<MainLoop> const&,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const&,
     Executor& wayland_executor,
     std::shared_ptr<shell::TokenAuthority> const&) ->
-    std::shared_ptr<wayland::XdgActivationV1::Global>;
+    std::shared_ptr<XdgActivationV1Global>;
 }
 }
 

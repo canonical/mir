@@ -15,6 +15,7 @@
  */
 
 #include "xdg_activation_v1.h"
+#include "protocol_error.h"
 
 #include <mir/events/keyboard_event.h>
 #include <mir/input/keyboard_observer.h>
@@ -25,8 +26,6 @@
 #include <mir/scene/session_listener.h>
 #include <mir/shell/shell.h>
 #include <mir/shell/token_authority.h>
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
 #include <mir/log.h>
 #include "wl_seat.h"
 #include "wl_surface.h"
@@ -39,7 +38,7 @@
 #include <vector>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
@@ -56,7 +55,7 @@ struct XdgActivationTokenData
         Token const& token,
         std::shared_ptr<ms::Session> session,
         std::optional<uint32_t> serial,
-        std::optional<struct wl_resource*> seat) :
+        wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) :
         token{token},
         session{session},
         serial{serial},
@@ -67,14 +66,13 @@ struct XdgActivationTokenData
     Token const token;
     std::weak_ptr<ms::Session> session;
     std::optional<uint32_t> serial;
-    std::optional<struct wl_resource*> seat;
+     wayland_rs::Weak<wayland_rs::WlSeatImpl> seat;
 };
 
-class XdgActivationV1 : public wayland::XdgActivationV1::Global
+class XdgActivationV1 : public XdgActivationV1Global
 {
 public:
     XdgActivationV1(
-        struct wl_display* display,
         std::shared_ptr<msh::Shell> const& shell,
         std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
         std::shared_ptr<MainLoop> const& main_loop,
@@ -87,23 +85,24 @@ public:
     std::shared_ptr<XdgActivationTokenData> create_token(struct XdgActivationTokenV1* owner, std::shared_ptr<ms::Session> session);
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<ms::Session> const&);
+    auto create(std::shared_ptr<wayland_rs::Client> const& client) -> std::shared_ptr<wayland_rs::XdgActivationV1Impl> override;
 
 private:
-    class Instance : public wayland::XdgActivationV1
+    class Instance : public mw::XdgActivationV1Impl
     {
     public:
         Instance(
-            struct wl_resource* resource,
+            std::shared_ptr<wayland_rs::Client> const& client,
             mf::XdgActivationV1* xdg_activation_v1,
             std::shared_ptr<msh::Shell> const& shell,
             std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
             std::shared_ptr<MainLoop> const& main_loop);
 
+        auto get_activation_token() -> std::shared_ptr<wayland_rs::XdgActivationTokenV1Impl> override;
+        auto activate(rust::String token, wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> void override;
+
     private:
-        void get_activation_token(struct wl_resource* id) override;
-
-        void activate(std::string const& token, struct wl_resource* surface) override;
-
+        std::shared_ptr<wayland_rs::Client> client;
         mf::XdgActivationV1* xdg_activation_v1;
         std::shared_ptr<msh::Shell> shell;
         std::shared_ptr<ms::SessionCoordinator> const session_coordinator;
@@ -135,7 +134,6 @@ private:
         std::shared_ptr<ms::Session> focused_session;
     };
 
-    void bind(wl_resource* resource) override;
     void remove_token(Token const& token);
 
     std::shared_ptr<msh::Shell> const shell;
@@ -150,24 +148,24 @@ private:
     std::mutex pending_tokens_mutex;
 };
 
-class XdgActivationTokenV1 : public wayland::XdgActivationTokenV1
+class XdgActivationTokenV1 : public mw::XdgActivationTokenV1Impl
 {
 public:
-    XdgActivationTokenV1(struct wl_resource* resource, XdgActivationV1* xdg_activation);
+    XdgActivationTokenV1(std::shared_ptr<wayland_rs::Client> const& client, XdgActivationV1* xdg_activation);
+
+    auto set_serial(uint32_t serial, wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) -> void override;
+    auto set_app_id(rust::String app_id) -> void override;
+    auto set_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> void override;
+    void commit() override;
 
     std::optional<uint32_t> serial;
-    std::optional<struct wl_resource*> seat;
+    wayland_rs::Weak<wayland_rs::WlSeatImpl> seat;
+
 private:
-    void set_serial(uint32_t serial, struct wl_resource* seat) override;
-
-    void set_app_id(std::string const& app_id) override;
-
-    void set_surface(struct wl_resource* surface) override;
-
-    void commit() override;
 
     bool used{false};
     std::shared_ptr<XdgActivationTokenData> token;
+    std::shared_ptr<wayland_rs::Client> client;
     XdgActivationV1* const xdg_activation;
     std::shared_ptr<ms::Session> session;
 };
@@ -175,28 +173,25 @@ private:
 }
 
 auto mf::create_xdg_activation_v1(
-    struct wl_display* display,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     Executor& wayland_executor,
     std::shared_ptr<msh::TokenAuthority> const& token_authority)
-    -> std::shared_ptr<mw::XdgActivationV1::Global>
+    -> std::shared_ptr<XdgActivationV1Global>
 {
-    return std::make_shared<mf::XdgActivationV1>(display, shell, session_coordinator, main_loop, keyboard_observer_registrar, wayland_executor, token_authority);
+    return std::make_shared<mf::XdgActivationV1>(shell, session_coordinator, main_loop, keyboard_observer_registrar, wayland_executor, token_authority);
 }
 
 mf::XdgActivationV1::XdgActivationV1(
-    struct wl_display* display,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop,
     std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const& keyboard_observer_registrar,
     Executor& wayland_executor,
     std::shared_ptr<msh::TokenAuthority> const& token_authority)
-    : Global(display, Version<1>()),
-      shell{shell},
+    : shell{shell},
       session_coordinator{session_coordinator},
       main_loop{main_loop},
       keyboard_observer_registrar{keyboard_observer_registrar},
@@ -287,18 +282,18 @@ void mf::XdgActivationV1::invalidate_if_not_from_session(std::shared_ptr<ms::Ses
         token_authority->revoke_token(token->token);
 }
 
-void mf::XdgActivationV1::bind(struct wl_resource* resource)
+auto mf::XdgActivationV1::create(std::shared_ptr<wayland_rs::Client> const& client) -> std::shared_ptr<wayland_rs::XdgActivationV1Impl>
 {
-    new Instance{resource, this, shell, session_coordinator, main_loop};
+    return std::make_shared<Instance>(client, this, shell, session_coordinator, main_loop);
 }
 
 mf::XdgActivationV1::Instance::Instance(
-    struct wl_resource* resource,
+    std::shared_ptr<wayland_rs::Client> const& client,
     mf::XdgActivationV1* xdg_activation_v1,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
     std::shared_ptr<MainLoop> const& main_loop)
-    : XdgActivationV1(resource, Version<1>()),
+    : client{client},
       xdg_activation_v1{xdg_activation_v1},
       shell{shell},
       session_coordinator{session_coordinator},
@@ -351,12 +346,12 @@ bool mf::XdgActivationV1::SessionListener::is_focused_session(std::shared_ptr<ms
     return focused_session == session;
 }
 
-void mf::XdgActivationV1::Instance::get_activation_token(struct wl_resource* id)
+auto mf::XdgActivationV1::Instance::get_activation_token() -> std::shared_ptr<wayland_rs::XdgActivationTokenV1Impl>
 {
-    new XdgActivationTokenV1(id, this->xdg_activation_v1);
+    return std::make_shared<XdgActivationTokenV1>(client, this->xdg_activation_v1);
 }
 
-void mf::XdgActivationV1::Instance::activate(std::string const& string_token, struct wl_resource* surface)
+auto mf::XdgActivationV1::Instance::activate(rust::String string_token, wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> void
 {
     // This function handles requests from clients for activation.
     // This will fail if the client cannot find their token in the list.
@@ -371,8 +366,7 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
     //    of the surface with that token
     //
 
-
-    auto token = xdg_activation_v1->token_authority->get_token_for_string(string_token);
+    auto token = xdg_activation_v1->token_authority->get_token_for_string(string_token.c_str());
 
     // Invalid token, ignore it
     if(!token)
@@ -400,7 +394,7 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
             return;
         }
 
-        auto const wl_surface = mf::WlSurface::from(surface);
+        auto const wl_surface = mf::WlSurface::from(&surface.value());
         if (!wl_surface)
         {
             mir::log_error("XdgActivationV1::activate wl_surface not found");
@@ -418,7 +412,7 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
         if (xdg_token && xdg_token->seat && xdg_token->serial)
         {
             // First, assert that the seat still exists.
-            auto const wl_seat = mf::WlSeat::from(xdg_token->seat.value());
+            auto const wl_seat = mf::WlSeatGlobal::from(&xdg_token->seat.value());
             if (!wl_seat)
                 mir::log_warning("XdgActivationTokenV1::activate wl_seat not found");
 
@@ -434,20 +428,21 @@ void mf::XdgActivationV1::Instance::activate(std::string const& string_token, st
     });
 }
 
-mf::XdgActivationTokenV1::XdgActivationTokenV1(struct wl_resource* resource, XdgActivationV1* xdg_activation) :
-    wayland::XdgActivationTokenV1(resource, Version<1>()),
+mf::XdgActivationTokenV1::XdgActivationTokenV1(
+    std::shared_ptr<wayland_rs::Client> const& client, XdgActivationV1* xdg_activation) :
+    client{client},
     xdg_activation{xdg_activation},
     session{client->client_session()}
 {
 }
 
-void mf::XdgActivationTokenV1::set_serial(uint32_t serial_, struct wl_resource* seat_)
+auto mf::XdgActivationTokenV1::set_serial(uint32_t serial_, wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat_) -> void
 {
     serial = serial_;
     seat = seat_;
 }
 
-void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id)
+void mf::XdgActivationTokenV1::set_app_id(rust::String app_id)
 {
     // TODO: This is the application id of the surface that is coming up.
     //  Until it presents itself as a problem, we will ignore it for now.
@@ -457,7 +452,7 @@ void mf::XdgActivationTokenV1::set_app_id(std::string const& app_id)
     (void)app_id;
 }
 
-void mf::XdgActivationTokenV1::set_surface(struct wl_resource* surface)
+void mf::XdgActivationTokenV1::set_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface)
 {
     // TODO: This is the requesting surface. Until it presents itself
     //  as a problem, we will ignore it or now. Instead, we only ensure
@@ -471,7 +466,7 @@ void mf::XdgActivationTokenV1::commit()
     if (used)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::already_used,
             "The activation token has already been used"));
         return;
