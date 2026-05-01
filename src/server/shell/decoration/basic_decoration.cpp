@@ -28,7 +28,6 @@
 #include <mir/graphics/buffer_properties.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/input/cursor_images.h>
-#include <mir/wayland/weak.h>
 
 #include <boost/throw_exception.hpp>
 #include <functional>

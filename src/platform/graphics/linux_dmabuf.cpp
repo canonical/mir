@@ -1392,6 +1392,11 @@ auto mg::LinuxDmaBufGlobal::buffer_from_resource(
     return nullptr;
 }
 
+auto mg::LinuxDmaBufGlobal::create() -> std::shared_ptr<LinuxDmaBuf>
+{
+    return std::make_shared<LinuxDmaBuf>(provider);
+}
+
 namespace
 {
 dev_t get_devnum(EGLDisplay dpy)

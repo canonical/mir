@@ -81,7 +81,7 @@ auto is_move_resize_event(MirInputEvent const* event) -> bool
 
 mf::XWaylandSurfaceObserver::XWaylandSurfaceObserver(
     Executor& wayland_executor,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     WlSurface* wl_surface,
     XWaylandSurfaceObserverSurface* wm_surface,
     float scale)

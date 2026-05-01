@@ -91,6 +91,22 @@ public:
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
+mf::XdgShellStable::XdgShellStable(
+    std::shared_ptr<wayland_rs::Client> const& client,
+    Executor& wayland_executor,
+    std::shared_ptr<shell::Shell> const& shell,
+    WlSeatGlobal& seat,
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
+    : client{client},
+      wayland_executor{wayland_executor},
+      shell{shell},
+      seat{seat},
+      output_manager{output_manager},
+      surface_registry{surface_registry}
+{
+}
+
 auto mf::XdgShellStable::create_positioner() -> std::shared_ptr<wayland_rs::XdgPositionerImpl>
 {
     return std::make_shared<XdgPositionerStable>();

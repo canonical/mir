@@ -46,7 +46,7 @@ class XdgActivationV1Global
 {
 public:
     virtual ~XdgActivationV1Global() = default;
-    virtual auto create( std::shared_ptr<wayland_rs::Client> const& client) -> std::shared_ptr<wayland_rs::XdgActivationV1Impl>;
+    virtual auto create( std::shared_ptr<wayland_rs::Client> const& client) -> std::shared_ptr<wayland_rs::XdgActivationV1Impl> = 0;
 };
 
 auto create_xdg_activation_v1(

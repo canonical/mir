@@ -29,7 +29,7 @@
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/events/input_event.h>
-#include <mir/wayland/weak.h>
+#include "wayland_rs/wayland_rs_cpp/include/weak.h"
 
 #include "boost/throw_exception.hpp"
 
@@ -39,7 +39,7 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace geom = mir::geometry;
 
 namespace
@@ -699,7 +699,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     {
         log_debug(
             "Attaching wl_surface@%u to %s...",
-            wl_resource_get_id(wl_surface->resource),
+            wl_surface->object_id(),
             connection->window_debug_string(window).c_str());
     }
 
@@ -756,7 +756,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
             [&](std::string const&)
             {
                 log_warning("X11 app is not local, grouping it under the default XWayland application");
-                session = get_session(wl_surface->resource);
+                session = wl_surface->session;
             }
         }));
 
@@ -792,7 +792,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     }
 
     auto const surface = shell->create_surface(session, spec, observer, nullptr);
-    wm_shell.surface_registry->add_surface(surface, mw::Weak<WlSurface>(wl_surface));
+    wm_shell.surface_registry->add_surface(surface, mw::Weak<WlSurface>(wl_surface->shared_from_this()));
     XWaylandSurfaceObserverManager local_surface_observer_manager{surface, std::move(observer)};
     inform_client_of_window_state(std::unique_lock{mutex}, state);
     auto const top_left = scaled_top_left_of(*surface) + scaled_content_offset_of(*surface);

@@ -21,6 +21,16 @@
 namespace mw = mir::wayland_rs;
 namespace mf = mir::frontend;
 
+mf::WlCompositorGlobal::WlCompositorGlobal(
+    std::shared_ptr<mir::Executor> const& wayland_executor,
+    std::shared_ptr<mir::Executor> const& frame_callback_executor,
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
+    : allocator{allocator},
+      wayland_executor{wayland_executor},
+      frame_callback_executor{frame_callback_executor}
+{
+}
+
 void mf::WlCompositorGlobal::on_surface_created(std::shared_ptr<WlSurface> const& surface, std::function<void(WlSurface*)> const& callback)
 {
     if (surface)

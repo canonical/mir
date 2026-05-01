@@ -389,3 +389,15 @@ void mf::DataControlDeviceV1::on_clipboard_set(std::shared_ptr<ms::DataExchangeS
     //         send_selection_event({}, false);
     // }
 }
+
+mf::DataControlManagerV1::DataControlManagerV1(
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<ms::Clipboard> const& primary_clipboard)
+    : state{std::make_shared<DataControlStateV1>(clipboard, primary_clipboard)}
+{
+}
+
+auto mf::DataControlManagerV1::create() -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1Impl>
+{
+    return std::make_shared<Instance>(state);
+}

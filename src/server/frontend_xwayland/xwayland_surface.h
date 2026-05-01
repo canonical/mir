@@ -44,7 +44,7 @@ class SurfaceSpecification;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class XWaylandWM;
 class XWaylandSurfaceObserver;
 

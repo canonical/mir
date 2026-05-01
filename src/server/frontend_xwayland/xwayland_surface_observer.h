@@ -33,7 +33,7 @@ namespace mir
 class Executor;
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class WlSurface;
 class WaylandInputDispatcher;
 class XWaylandSurfaceObserverSurface;
@@ -45,7 +45,7 @@ class XWaylandSurfaceObserver
 public:
     XWaylandSurfaceObserver(
         Executor& wayland_executor,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         WlSurface* wl_surface,
         XWaylandSurfaceObserverSurface* wm_surface,
         float scale);

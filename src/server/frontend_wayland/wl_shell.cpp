@@ -57,7 +57,6 @@ public:
     void handle_commit() override
     {
         // TODO?
-        WindowWlSurfaceRole::handle_commit();
     }
 
     void set_transient(

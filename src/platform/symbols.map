@@ -61,6 +61,10 @@ MIR_PLATFORM_2.24 {
     mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::buffer_from_resource*;
+    mir::graphics::LinuxDmaBufGlobal::?LinuxDmaBufGlobal*;
+    mir::graphics::LinuxDmaBufGlobal::LinuxDmaBufGlobal*;
+    mir::graphics::LinuxDmaBufGlobal::buffer_from_resource*;
+    mir::graphics::LinuxDmaBufGlobal::create*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;

@@ -161,6 +161,11 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
     return std::nullopt;
 }
 
+mf::WlPointer* mf::WlPointer::from(wayland_rs::WlPointerImpl* pointer)
+{
+    return static_cast<WlPointer*>(pointer);
+}
+
 mf::WlPointer::WlPointer(std::shared_ptr<wayland_rs::Client> const& client)
     : client{client},
       cursor{std::make_unique<NullCursor>()}
