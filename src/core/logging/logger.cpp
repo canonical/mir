@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
+
+#include <mir/synchronised.h>
+#include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
 
 #include <iostream>
@@ -26,9 +28,57 @@
 #include <cstdarg>
 #include <cstdio>
 #include <iterator>
+#include <ranges>
 #include <stdexcept>
+#include <string_view>
+#include <list>
 
 namespace ml = mir::logging;
+
+struct ml::Tag
+{
+    std::string const name;
+    Tag const* parent;
+};
+
+mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "core", nullptr}}}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
+
+auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
+{
+    auto locked_tags = known_tags.lock();
+    locked_tags->emplace_back(ml::Tag {std::string{name}, &parent});
+    return locked_tags->back();
+}
+
+auto ml::core() -> Tag const&
+{
+    static Tag const& core = known_tags.lock()->front();
+    return core;
+}
+
+auto ml::input() -> Tag const&
+{
+    static Tag const& input = create_tag(core(), "input");
+    return input;
+}
+
+auto ml::wayland() -> Tag const&
+{
+    static Tag const& wayland = create_tag(core(), "wayland");
+    return wayland;
+}
+
+auto ml::graphics() -> Tag const&
+{
+    static Tag const& graphics = create_tag(core(), "graphics");
+    return graphics;
+}
+
+auto ml::window_management() -> Tag const&
+{
+    static Tag const& window_management = create_tag(core(), "window-management");
+    return window_management;
+}
 
 void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
 {
@@ -41,6 +91,20 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
 
     // Inefficient, but maintains API: Constructing a std::string for message/component.
     log(severity, std::string{message}, std::string{component});
+}
+
+void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
+{
+    // Default implementation uses :-delimited tags as the component
+    // TODO: Remove the log(Severity, std::string, std::string) interface and replace
+    // with this one.
+
+
+    std::string component;
+    std::ranges::copy(
+        tags | std::views::transform([](Tag const& tag) { return tag.name; }) | std::views::join_with(':'),
+        std::back_inserter(component));
+    log(severity, std::string{message}, component);
 }
 
 namespace
@@ -64,6 +128,13 @@ void ml::log(ml::Severity severity, const std::string& message, const std::strin
     auto const logger = get_logger();
 
     logger->log(severity, message, component);
+}
+
+void ml::log(Severity severity, Tags tags, std::string_view message)
+{
+    auto const logger = get_logger();
+
+    logger->log(severity, tags, message);
 }
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)

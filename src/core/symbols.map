@@ -1,5 +1,15 @@
-MIR_CORE_2.9 {
+MIR_CORE_2.27 {
  global:
+  /* LLD, for some reason, has trouble finding these symbols if they're in a demangled "extern C++" block */
+  /* mir::log(mir::logging::Severity, char const*, char const*, ...) */
+  _ZN3mir3logENS_7logging8SeverityEPKcS3_z;
+  /* mir::log(mir::logging::Severity, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)" */
+  _ZN3mir3logENS_7logging8SeverityEPKcRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE;
+  /* mir::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)" */
+  _ZN3mir3logENS_7logging8SeverityEPKcRKNSt15__exception_ptr13exception_ptrERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE;
+  /* "mir::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)" */
+  _ZN3mir3logENS_7logging8SeverityESt16initializer_listIKSt17reference_wrapperIKNS0_3TagEEESt17basic_string_viewIcSt11char_traitsIcEE;
+
   extern "C++" {
     mir::AnonymousShmFile::?AnonymousShmFile*;
     mir::AnonymousShmFile::AnonymousShmFile*;
@@ -22,44 +32,45 @@ MIR_CORE_2.9 {
     mir::geometry::Rectangles::remove*;
     mir::geometry::Rectangles::size*;
     mir::geometry::operator*;
+    mir::input::MouseKeysKeymap*;
+    mir::input::MouseKeysKeymap::get_action*;
+    mir::input::MouseKeysKeymap::set_action*;
+	/* Ideally, mir::logv would follow the exact specifier like the other mir::log symbols, but the specific type of va_args differs across architectures
+	 * Also, “logv” is less likely to spuriously prefix-match
+	 */
+    mir::logv*;
+    mir::log_critical*;
+    mir::log_debug*;
+    mir::log_error*;
+    mir::log_info*;
+    mir::log_warning*;
+    mir::logging::DumbConsoleLogger::log*;
+    mir::logging::Logger::?Logger*;
+    mir::logging::Logger::Logger*;
+    mir::logging::Logger::log*;
+    mir::logging::Logger::operator*;
+    mir::logging::Tag::?Tag*;
+    mir::logging::Tag::Tag*;
+    mir::logging::Tag::name*;
+    mir::logging::core*;
+    mir::logging::format_message*;
+    mir::logging::graphics*;
+    mir::logging::input*;
+    mir::logging::log*;
+    mir::logging::set_logger*;
+    mir::logging::wayland*;
+    mir::logging::window_management*;
     mir::mir_depth_layer_get_index?MirDepthLayer?;
+    mir::report_exception*;
+    mir::security_log*;
+    non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
     typeinfo?for?mir::AnonymousShmFile;
     typeinfo?for?mir::ShmFile;
+    typeinfo?for?mir::logging::DumbConsoleLogger;
+    typeinfo?for?mir::logging::Logger;
     vtable?for?mir::AnonymousShmFile;
+    vtable?for?mir::logging::DumbConsoleLogger;
+    vtable?for?mir::logging::Logger;
   };
 local: *;
 };
-
-MIR_CORE_2.21 {
- global:
-  extern "C++" {
-    mir::input::MouseKeysKeymap*;
-    mir::input::MouseKeysKeymap::set_action*;
-    mir::input::MouseKeysKeymap::get_action*;
-  };
-} MIR_CORE_2.9;
-
-MIR_CORE_2.24 {
-global:
-  extern "C++" {
-    mir::report_exception*;
-  };
-} MIR_CORE_2.21;
-
-MIR_CORE_2.26 {
-  global:
-    extern "C++" {
-      mir::log*;
-      mir::logging::DumbConsoleLogger::log*;
-      mir::logging::Logger::?Logger*;
-      mir::logging::Logger::Logger*;
-      mir::logging::Logger::log*;
-      mir::logging::Logger::operator*;
-      mir::security_log*;
-      non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
-      typeinfo?for?mir::logging::DumbConsoleLogger;
-      typeinfo?for?mir::logging::Logger;
-      vtable?for?mir::logging::DumbConsoleLogger;
-      vtable?for?mir::logging::Logger;
-    };
-} MIR_CORE_2.24;

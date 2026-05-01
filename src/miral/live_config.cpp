@@ -90,3 +90,10 @@ auto miral::live_config::Key::operator==(Key const& that) const -> bool
 
 miral::live_config::Store::Store() = default;
 miral::live_config::Store::~Store() = default;
+
+
+auto std::formatter<miral::live_config::Key>::format(miral::live_config::Key const& key, std::format_context& ctx) const
+    -> decltype(std::declval<std::formatter<std::string>>().format(std::declval<std::string>(), std::declval<std::format_context&>()))
+{
+    return std::formatter<std::string>::format(key.to_string(), ctx);
+}
