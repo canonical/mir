@@ -21,6 +21,8 @@
 #include "window_wl_surface_role.h"
 #include "client.h"
 
+#include <mir/shell/surface_specification.h>
+
 namespace mir
 {
 namespace scene
@@ -70,6 +72,8 @@ public:
         XdgPositionerStable& positioner,
         WlSurface* surface);
 
+    auto associate(rust::Box<wayland_rs::XdgPopupExt> instance, uint32_t object_id) -> void override;
+
     /// Used when the aux rect needs to be adjusted due to the parent logical Wayland surface not lining up with the
     /// parent scene surface (as is the case for layer shell surfaces with a margin)
     void set_aux_rect_offset_now(geometry::Displacement const& new_aux_rect_offset);
@@ -102,6 +106,9 @@ private:
     std::shared_ptr<shell::Shell> const shell;
     wayland_rs::Weak<XdgSurfaceStable> const xdg_surface;
 
+    shell::SurfaceSpecification initial_positioner;
+    std::optional<WlSurfaceRole*> initial_parent_role;
+
     auto popup_rect() const -> std::optional<geometry::Rectangle>;
 };
 
@@ -112,6 +119,8 @@ public:
     std::shared_ptr<wayland_rs::Client> const& client,
         XdgSurfaceStable* xdg_surface,
         WlSurface* surface);
+
+    auto associate(rust::Box<wayland_rs::XdgToplevelExt> instance, uint32_t object_id) -> void override;
 
     auto set_parent(wayland_rs::Weak<XdgToplevelImpl> const& parent, bool has_parent) -> void override;
     auto set_title(rust::String title) -> void override;

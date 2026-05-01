@@ -50,6 +50,8 @@ public:
         std::shared_ptr<wayland_rs::Client> const& client);
     ~WlDataDevice() override;
 
+    auto associate(rust::Box<wayland_rs::WlDataDeviceExt> instance, uint32_t object_id) -> void override;
+
     /// Wayland requests
     /// @{
     auto start_drag(
@@ -93,9 +95,10 @@ private:
 
     void end_of_dnd_gesture();
 
+    Executor& wayland_executor;
     scene::Clipboard& clipboard;
     WlSeatGlobal& seat;
-    std::shared_ptr<ClipboardObserver> const clipboard_observer;
+    std::shared_ptr<ClipboardObserver> clipboard_observer;
     std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
     std::shared_ptr<DragIconController> const drag_icon_controller;
     std::shared_ptr<wayland_rs::Client> client;

@@ -29,9 +29,15 @@ namespace mw = mir::wayland_rs;
 namespace mi = mir::input;
 
 mf::WlKeyboard::WlKeyboard(WlSeatGlobal& seat, std::shared_ptr<wayland_rs::Client> const& client)
-    : helper{seat.make_keyboard_helper(this)},
+    : seat{seat},
       client{client}
 {
+}
+
+auto mf::WlKeyboard::associate(rust::Box<wayland_rs::WlKeyboardExt> instance, uint32_t object_id) -> void
+{
+    mw::WlKeyboardImpl::associate(std::move(instance), object_id);
+    helper = seat.make_keyboard_helper(this);
 }
 
 void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
@@ -41,7 +47,7 @@ void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
 
 void mf::WlKeyboard::focus_on(WlSurface* surface)
 {
-    if ((!focused_surface && !surface) || &focused_surface.value() == surface)
+    if ((!focused_surface) || &focused_surface.value() == surface)
     {
         return;
     }

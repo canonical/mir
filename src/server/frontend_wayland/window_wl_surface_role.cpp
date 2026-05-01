@@ -76,7 +76,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
       session{client->client_session()},
       output_manager{output_manager},
       wayland_executor{wayland_executor},
-      observer{std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, surface.get(), this)},
+      seat{seat},
       committed_min_size{0, 0},
       committed_max_size{max_possible_size},
       surface_registry{surface_registry}
@@ -84,6 +84,11 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     spec().type = mir_window_type_freestyle;
     surface->set_role(this);
     output_manager->add_listener(this);
+}
+
+void mf::WindowWlSurfaceRole::init_observer()
+{
+    observer = std::make_shared<WaylandSurfaceObserver>(wayland_executor, seat, &surface.value(), this);
 }
 
 mf::WindowWlSurfaceRole::~WindowWlSurfaceRole()
@@ -333,7 +338,7 @@ auto mf::WindowWlSurfaceRole::is_active() const -> bool
 
 void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 {
-    if (!surface)
+    if (!surface || !observer)
     {
         return;
     }

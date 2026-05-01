@@ -54,6 +54,8 @@ class SyncTimeline : public wayland_rs::WpLinuxDrmSyncobjSurfaceV1Impl, std::ena
 public:
     explicit SyncTimeline(WlSurface* surface);
 
+    auto associate(rust::Box<wayland_rs::WpLinuxDrmSyncobjSurfaceV1Ext> instance, uint32_t object_id) -> void override;
+
     struct Points
     {
         SyncPoint acquire;
@@ -78,6 +80,7 @@ public:
     auto set_release_point(wayland_rs::Weak<wayland_rs::WpLinuxDrmSyncobjTimelineV1Impl> const& timeline, uint32_t point_hi, uint32_t point_lo) -> void override;
 
 private:
+    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> surface;
     std::optional<SyncPoint> acquire_point;
     std::optional<SyncPoint> release_point;
 };

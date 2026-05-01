@@ -251,19 +251,28 @@ mf::XdgPopupStable::XdgPopupStable(
       reactive{positioner.reactive},
       aux_rect{positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{}},
       shell{xdg_surface->xdg_shell.shell},
-      xdg_surface{xdg_surface->shared_from_this()}
+      xdg_surface{xdg_surface->shared_from_this()},
+      initial_positioner{positioner},
+      initial_parent_role{parent_role}
 {
     positioner.ensure_complete();
-    positioner.type = mir_window_type_tip;
-    if (parent_role)
+}
+
+auto mf::XdgPopupStable::associate(rust::Box<wayland_rs::XdgPopupExt> instance, uint32_t object_id) -> void
+{
+    XdgPopupImpl::associate(std::move(instance), object_id);
+    init_observer();
+
+    initial_positioner.type = mir_window_type_tip;
+    if (initial_parent_role)
     {
-        if (auto scene_surface = parent_role.value()->scene_surface())
+        if (auto scene_surface = initial_parent_role.value()->scene_surface())
         {
-            positioner.parent = scene_surface.value();
+            initial_positioner.parent = scene_surface.value();
         }
     }
 
-    apply_spec(positioner);
+    apply_spec(initial_positioner);
 }
 
 void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_aux_rect_offset)
@@ -402,6 +411,13 @@ mf::XdgToplevelStable::XdgToplevelStable(
           xdg_surface->xdg_shell.surface_registry),
       xdg_surface{xdg_surface->shared_from_this()}
 {
+}
+
+auto mf::XdgToplevelStable::associate(rust::Box<wayland_rs::XdgToplevelExt> instance, uint32_t object_id) -> void
+{
+    XdgToplevelImpl::associate(std::move(instance), object_id);
+    init_observer();
+
     std::vector<uint8_t> capabilities{
         WmCapabilities::maximize,
         WmCapabilities::minimize,
@@ -409,9 +425,9 @@ mf::XdgToplevelStable::XdgToplevelStable(
     };
     send_wm_capabilities_event(capabilities);
 
-     std::vector<uint8_t> states{};
+    std::vector<uint8_t> states{};
     send_configure_event(0, 0, states);
-    xdg_surface->send_configure();
+    if (xdg_surface) xdg_surface.value().send_configure();
 }
 
 auto mf::XdgToplevelStable::set_parent(wayland_rs::Weak<XdgToplevelImpl> const& parent, bool has_parent) -> void

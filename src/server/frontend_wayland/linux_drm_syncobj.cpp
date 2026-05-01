@@ -45,17 +45,7 @@ public:
         -> std::shared_ptr<wayland_rs::WpLinuxDrmSyncobjSurfaceV1Impl> override
     {
         auto surface = WlSurface::from(&wl_surface.value());
-        try
-        {
-            return std::make_shared<SyncTimeline>(surface);
-        }
-        catch (WlSurface::TimelineAlreadyAssociated const&)
-        {
-            throw mw::ProtocolError{
-                object_id(),
-                Error::surface_exists,
-                "Surface already has a linux_drm_syncobj_surface_v1 associated"};
-        }
+        return std::make_shared<SyncTimeline>(surface);
     }
 
     auto import_timeline(int32_t fd) -> std::shared_ptr<wayland_rs::WpLinuxDrmSyncobjTimelineV1Impl> override
@@ -112,8 +102,24 @@ auto mf::SyncPoint::to_eventfd() const -> Fd
 }
 
 mf::SyncTimeline::SyncTimeline(WlSurface* surface)
+    : surface{surface->shared_from_this()}
 {
-    surface->associate_sync_timeline(mw::Weak(shared_from_this()));
+}
+
+auto mf::SyncTimeline::associate(rust::Box<mw::WpLinuxDrmSyncobjSurfaceV1Ext> instance, uint32_t object_id) -> void
+{
+    WpLinuxDrmSyncobjSurfaceV1Impl::associate(std::move(instance), object_id);
+    try
+    {
+        WlSurface::from(&surface.value())->associate_sync_timeline(mw::Weak(shared_from_this()));
+    }
+    catch (WlSurface::TimelineAlreadyAssociated const&)
+    {
+        throw mw::ProtocolError{
+            object_id,
+            Error::no_surface,
+            "Surface already has a linux_drm_syncobj_surface_v1 associated"};
+    }
 }
 
 auto mf::SyncTimeline::claim_timeline() -> Points

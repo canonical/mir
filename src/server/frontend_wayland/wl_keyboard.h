@@ -38,12 +38,14 @@ class WlKeyboard
 {
 public:
     WlKeyboard(WlSeatGlobal& seat, std::shared_ptr<wayland_rs::Client> const& client);
+    auto associate(rust::Box<wayland_rs::WlKeyboardExt> instance, uint32_t object_id) -> void override;
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
     void focus_on(WlSurface* surface);
 
 private:
-    std::shared_ptr<KeyboardHelper> const helper;
+    std::shared_ptr<KeyboardHelper> helper;
+    WlSeatGlobal& seat;
     std::shared_ptr<wayland_rs::Client> client;
     wayland_rs::Weak<WlSurface> focused_surface;
 

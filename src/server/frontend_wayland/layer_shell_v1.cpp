@@ -77,6 +77,8 @@ public:
 
     ~LayerSurfaceV1() = default;
 
+    auto associate(rust::Box<wayland_rs::ZwlrLayerSurfaceV1Ext> instance, uint32_t object_id) -> void override;
+
     static auto from(wayland_rs::ZwlrLayerSurfaceV1Impl* surface) -> std::optional<LayerSurfaceV1*>;
 
     void set_size(uint32_t width, uint32_t height) override;
@@ -280,6 +282,12 @@ std::shared_ptr<mw::Client> const& client,
     if (output_id)
         spec.output_id = output_id.value();
     apply_spec(spec);
+}
+
+auto mf::LayerSurfaceV1::associate(rust::Box<wayland_rs::ZwlrLayerSurfaceV1Ext> instance, uint32_t object_id) -> void
+{
+    ZwlrLayerSurfaceV1Impl::associate(std::move(instance), object_id);
+    init_observer();
 }
 
 auto mf::LayerSurfaceV1::from(ZwlrLayerSurfaceV1Impl* surface) -> std::optional<LayerSurfaceV1*>

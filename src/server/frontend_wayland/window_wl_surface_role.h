@@ -120,6 +120,8 @@ public:
     virtual void handle_tiled_edges(Flags<MirTiledEdge> tiled_edges) = 0;
 
 protected:
+    void init_observer();
+
     /// The size the window will be after the next commit
     auto pending_size() const -> geometry::Size;
 
@@ -147,7 +149,8 @@ private:
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;
     Executor& wayland_executor;
-    std::shared_ptr<WaylandSurfaceObserver> const observer;
+    WlSeatGlobal* seat;
+    std::shared_ptr<WaylandSurfaceObserver> observer;
     bool scene_surface_marked_ready{false};
     std::weak_ptr<scene::Surface> weak_scene_surface;
 

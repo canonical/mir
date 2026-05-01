@@ -149,15 +149,21 @@ mf::WlDataDevice::WlDataDevice(
     std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
     std::shared_ptr<DragIconController> drag_icon_controller,
     std::shared_ptr<wayland_rs::Client> const& client)
-    : clipboard{clipboard},
+    : wayland_executor{wayland_executor},
+      clipboard{clipboard},
       seat{seat},
-      clipboard_observer{std::make_shared<ClipboardObserver>(shared_from_this())},
       pointer_input_dispatcher{std::move(pointer_input_dispatcher)},
       drag_icon_controller{std::move(drag_icon_controller)},
       client{client},
       end_of_gesture_callback{[this, &wayland_executor] { wayland_executor.spawn([this]
         { this->clipboard.end_of_dnd_gesture(); drag_surface.reset(); }); }}
 {
+}
+
+auto mf::WlDataDevice::associate(rust::Box<mw::WlDataDeviceExt> instance, uint32_t object_id) -> void
+{
+    WlDataDeviceImpl::associate(std::move(instance), object_id);
+    clipboard_observer = std::make_shared<ClipboardObserver>(shared_from_this());
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
     seat.add_focus_listener(client.get(), this);
@@ -165,7 +171,8 @@ mf::WlDataDevice::WlDataDevice(
 
 mf::WlDataDevice::~WlDataDevice()
 {
-    clipboard.unregister_interest(*clipboard_observer);
+    if (clipboard_observer)
+        clipboard.unregister_interest(*clipboard_observer);
     seat.remove_focus_listener(client.get(), this);
 }
 

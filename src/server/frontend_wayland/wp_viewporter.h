@@ -48,6 +48,8 @@ public:
     Viewport(WlSurface* surface);
     ~Viewport() override;
 
+    auto associate(rust::Box<wayland_rs::WpViewportExt> instance, uint32_t object_id) -> void override;
+
     /**
      * Have the source or destination values changed since the last `resolve_viewport`?
      */

@@ -102,6 +102,8 @@ public:
         graphics::DisplayConfigurationOutputId output_id);
     ~SessionLockSurfaceV1() = default;
 
+    auto associate(rust::Box<mw::ExtSessionLockSurfaceV1Ext> instance, uint32_t object_id) -> void override;
+
     // From mw::SessionLockSurfaceV1
     void ack_configure(uint32_t serial) override;
 private:
@@ -310,6 +312,12 @@ mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
     spec.visible_on_lock_screen = true;
     spec.ignore_exclusion_zones = true;
     apply_spec(spec);
+}
+
+auto mf::SessionLockSurfaceV1::associate(rust::Box<mw::ExtSessionLockSurfaceV1Ext> instance, uint32_t object_id) -> void
+{
+    ExtSessionLockSurfaceV1Impl::associate(std::move(instance), object_id);
+    init_observer();
     auto const serial = client->next_serial(nullptr);
     send_configure_event(serial, 100, 100);
 }

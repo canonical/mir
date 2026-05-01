@@ -850,7 +850,7 @@ void mf::WaylandConnector::start()
                 std::make_unique<GlobalFactory>(
                     client_registry,
                     executor,
-                    nullptr, // TODO
+                    std::make_shared<mf::FrameExecutor>(*main_loop),
                     allocator,
                     main_loop,
                     clock,

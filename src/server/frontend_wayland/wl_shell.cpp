@@ -50,6 +50,12 @@ public:
 
     ~WlShellSurface() override = default;
 
+    auto associate(rust::Box<mw::WlShellSurfaceExt> instance, uint32_t object_id) -> void override
+    {
+        WlShellSurfaceImpl::associate(std::move(instance), object_id);
+        init_observer();
+    }
+
     auto set_toplevel() -> void override
     {
     }

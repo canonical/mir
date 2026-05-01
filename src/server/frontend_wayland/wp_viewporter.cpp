@@ -38,18 +38,7 @@ public:
     auto get_viewport(mir::wayland_rs::Weak<mir::wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<mir::wayland_rs::WpViewportImpl> override
     {
         auto surf = mf::WlSurface::from(&surface.value());
-        try
-        {
-            return std::make_shared<mf::Viewport>(surf);
-        }
-        catch (std::logic_error const&)
-        {
-            // We get a std::logic_error if the surface already had a viewport; translate to protocol exception here
-            throw mir::wayland_rs::ProtocolError{
-                object_id(),
-                Error::viewport_exists,
-                "Surface already has a viewport associated"};
-        }
+        return std::make_shared<mf::Viewport>(surf);
     }
 };
 }
@@ -65,8 +54,23 @@ auto mf::WpViewporter::create() -> std::shared_ptr<wayland_rs::WpViewporterImpl>
 
 mf::Viewport::Viewport(WlSurface* surface)
 {
-    surface->associate_viewport(wayland_rs::Weak<Viewport>(shared_from_this()));
     this->surface = wayland_rs::Weak<wayland_rs::WlSurfaceImpl>(surface->shared_from_this());
+}
+
+auto mf::Viewport::associate(rust::Box<wayland_rs::WpViewportExt> instance, uint32_t object_id) -> void
+{
+    WpViewportImpl::associate(std::move(instance), object_id);
+    try
+    {
+        WlSurface::from(&surface.value())->associate_viewport(wayland_rs::Weak<Viewport>(shared_from_this()));
+    }
+    catch (std::logic_error const&)
+    {
+        throw wayland_rs::ProtocolError{
+            object_id,
+            wayland_rs::WpViewporterImpl::Error::viewport_exists,
+            "Surface already has a viewport associated"};
+    }
 }
 
 mf::Viewport::~Viewport()
