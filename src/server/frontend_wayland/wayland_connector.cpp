@@ -279,6 +279,10 @@ public:
             mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
             linux_drm_sync_obj = std::make_unique<mf::LinuxDRMSyncobjManagerGlobal>(providers);
         }
+        if (auto provider = allocator->dmabuf_provider())
+        {
+            linux_dmabuf_global = std::make_unique<mg::LinuxDmaBufGlobal>(std::move(provider));
+        }
     }
 
     auto can_view(rust::String interface_name, rust::Box<mw::WaylandClientId> client_id) -> bool override
@@ -727,22 +731,6 @@ void cleanup_display(wl_display *display)
     wl_display_flush_clients(display);
     wl_display_destroy(display);
 }
-
-std::shared_ptr<mg::GraphicBufferAllocator> allocator_for_display(
-    std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
-    wl_display* display,
-    std::shared_ptr<mir::Executor> executor)
-{
-    try
-    {
-        buffer_allocator->bind_display(display, std::move(executor));
-        return buffer_allocator;
-    }
-    catch (...)
-    {
-        std::throw_with_nested(std::runtime_error{"Failed to bind Wayland EGL display"});
-    }
-}
 }
 
 void mf::WaylandExtensions::init(Context const& context)
@@ -805,7 +793,7 @@ mf::WaylandConnector::WaylandConnector(
     : extension_filter{extension_filter},
       server{wayland_rs::create_wayland_server()},
       executor{std::make_shared<WaylandExecutor>()},
-      allocator{allocator_for_display(allocator, display.get(), executor)},
+      allocator{allocator},
       shell{shell},
       clock{clock},
       input_hub{input_hub},
@@ -860,46 +848,17 @@ mf::WaylandConnector::WaylandConnector(
             drm_rendering_providers.push_back(std::move(provider));
         }
     }
+
 }
 
-namespace
-{
-void unbind_display(mg::GraphicBufferAllocator& allocator, wl_display* display) noexcept
-try
-{
-    allocator.unbind_display(display);
-}
-catch (...)
-{
-    mir::log(
-        mir::logging::Severity::warning,
-        MIR_LOG_COMPONENT,
-        std::current_exception(),
-        "Failed to unbind EGL display");
-}
-}
+
 
 mf::WaylandConnector::~WaylandConnector()
 {
     if (dispatch_thread.joinable())
     {
-        auto cleanup_promise = std::make_shared<std::promise<void>>();
-        auto cleanup_done = cleanup_promise->get_future();
-        executor->spawn(
-            [cleanup_promise, this]()
-            {
-                unbind_display(*allocator, display.get());
-                cleanup_promise->set_value();
-            });
-        cleanup_done.get();
-
         stop();
     }
-    else
-    {
-        unbind_display(*allocator, display.get());
-    }
-    wl_event_source_remove(pause_source);
 }
 
 void mf::WaylandConnector::start()
@@ -961,10 +920,7 @@ void mf::WaylandConnector::start()
 
 void mf::WaylandConnector::stop()
 {
-    if (eventfd_write(pause_signal, 1) < 0)
-    {
-        log_error("WaylandConnector::stop() failed to send IPC eventloop pause signal: %s (%i)", mir::errno_to_cstr(errno), errno);
-    }
+    server->stop();
     if (dispatch_thread.joinable())
     {
         dispatch_thread.join();

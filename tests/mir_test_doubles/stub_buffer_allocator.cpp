@@ -18,10 +18,10 @@
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_buffer.h>
 #include <mir/graphics/shm_buffer.h>
+#include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/test/doubles/null_gl_context.h>
 #include <mir/renderer/sw/pixel_source.h>
-#include <wayland-server.h>
 
 #include <vector>
 #include <memory>
@@ -42,20 +42,6 @@ auto mtd::StubBufferAllocator::supported_pixel_formats() -> std::vector<MirPixel
     return { mir_pixel_format_argb_8888 };
 }
 
-void mtd::StubBufferAllocator::bind_display(wl_display*, std::shared_ptr<mir::Executor>)
-{
-}
-
-void mtd::StubBufferAllocator::unbind_display(wl_display*)
-{
-}
-
-auto mtd::StubBufferAllocator::buffer_from_resource(wl_resource*, std::function<void()>&&, std::function<void()>&&)
-    -> std::shared_ptr<mg::Buffer>
-{
-    BOOST_THROW_EXCEPTION((std::runtime_error{"StubBufferAllocator doesn't do HW Wayland buffers"}));
-}
-
 auto mtd::StubBufferAllocator::buffer_from_shm(
     std::shared_ptr<mir::renderer::software::RWMappable> data,
     std::function<void()>&& on_consumed,
@@ -67,4 +53,12 @@ auto mtd::StubBufferAllocator::buffer_from_shm(
         std::move(on_release));
 
     return buffer;
+}
+
+auto mtd::StubBufferAllocator::buffer_from_dmabuf(
+    mg::DMABufBuffer const& /*dmabuf*/,
+    std::function<void()>&& /*on_consumed*/,
+    std::function<void()>&& /*on_release*/) -> std::shared_ptr<mg::Buffer>
+{
+    BOOST_THROW_EXCEPTION((std::runtime_error{"StubBufferAllocator doesn't support DMA-BUF import"}));
 }

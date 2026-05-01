@@ -60,26 +60,24 @@ public:
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
-    void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
-    void unbind_display(wl_display* display) override;
-    auto buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
     auto buffer_from_shm(
         std::shared_ptr<renderer::software::RWMappable> data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
+    auto buffer_from_dmabuf(
+        DMABufBuffer const& dmabuf,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
+
+    auto dmabuf_provider() const -> std::shared_ptr<DMABufEGLProvider> override;
+
     auto shared_egl_context() -> EGLContext;
 private:
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
-    std::shared_ptr<Executor> wayland_executor;
-    std::unique_ptr<LinuxDmaBuf> dmabuf_extension;
     std::shared_ptr<EGLExtensions> const egl_extensions;
-    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
-    bool egl_display_bound{false};
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider_;
 };
 
 class GLRenderingProvider : public graphics::GLRenderingProvider

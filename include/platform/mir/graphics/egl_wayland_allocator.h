@@ -22,19 +22,9 @@
 #include <EGL/egl.h>
 
 struct wl_resource;
-struct wl_display;
 
 namespace mir
 {
-class Executor;
-
-namespace renderer
-{
-namespace gl
-{
-class Context;
-}
-}
 
 namespace graphics
 {
@@ -48,16 +38,6 @@ class EGLContextExecutor;
 
 namespace wayland
 {
-void bind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
-void unbind_display(EGLDisplay egl_dpy, wl_display* wl_dpy, EGLExtensions const& extensions);
-
-auto buffer_from_resource(
-    wl_resource* buffer,
-    std::function<void()>&& on_consumed,
-    std::function<void()>&& on_release,
-    EGLExtensions const& extensions,
-    std::shared_ptr<common::EGLContextExecutor> egl_executor) -> std::unique_ptr<Buffer>;
-
 }
 }
 }

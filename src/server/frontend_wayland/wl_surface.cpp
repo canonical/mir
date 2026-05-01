@@ -35,6 +35,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/executor.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/dmabuf_buffer.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/log.h>
@@ -51,6 +52,7 @@
 #include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland_rs;
 namespace msh = mir::shell;
@@ -533,17 +535,21 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     object_id(),
                     current_buffer->id().as_value());
             }
-            else
+            else if (auto const* dmabuf = dynamic_cast<mg::DMABufBuffer*>(&weak_buffer.value()))
             {
-                current_buffer = allocator->buffer_from_resource(
-                    weak_buffer.value(),
+                current_buffer = allocator->buffer_from_dmabuf(
+                    *dmabuf,
                     std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
                 tracepoint(
                     mir_server_wayland,
                     hw_buffer_committed,
-                    wl_resource_get_client(resource),
+                    object_id(),
                     current_buffer->id().as_value());
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Unknown buffer type committed to surface"}));
             }
 
             needs_buffer_submission = true;

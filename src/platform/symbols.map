@@ -97,9 +97,6 @@ MIR_PLATFORM_2.24 {
     mir::graphics::scale_cursor_image*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::valid_pixel_format*;
-    mir::graphics::wayland::bind_display*;
-    mir::graphics::wayland::buffer_from_resource*;
-    mir::graphics::wayland::unbind_display*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;

@@ -347,71 +347,6 @@ void mge::BufferAllocator::bind_eglstream_controller(
         nullptr);
 }
 
-
-void mir::graphics::eglstream::BufferAllocator::bind_display(
-    wl_display* display,
-    std::shared_ptr<Executor>)
-{
-    if (!wl_global_create(
-        display,
-        &wl_eglstream_controller_interface,
-        1,
-        this,
-        &bind_eglstream_controller))
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to publish wayland-eglstream-controller global"}));
-    }
-
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { wayland_ctx->make_current(); },
-        [this]() { wayland_ctx->release_current(); });
-
-    auto dpy = eglGetCurrentDisplay();
-
-    if (extensions(dpy).eglBindWaylandDisplayWL(dpy, display) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to bind Wayland EGL display")));
-    }
-
-    std::vector<char const*> missing_extensions;
-    for (char const* extension : {
-        "EGL_KHR_stream_consumer_gltexture",
-        "EGL_NV_stream_attrib"})
-    {
-        if (!epoxy_has_egl_extension(dpy, extension))
-        {
-            missing_extensions.push_back(extension);
-        }
-    }
-
-    if (!missing_extensions.empty())
-    {
-        std::stringstream message;
-        message << "Missing required extension" << (missing_extensions.size() > 1 ? "s:" : ":");
-        for (auto missing_extension : missing_extensions)
-        {
-            message << " " << missing_extension;
-        }
-
-        BOOST_THROW_EXCEPTION((std::runtime_error{message.str()}));
-    }
-
-    mir::log_info("Bound EGLStreams-backed Wayland display");
-}
-
-void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display* display)
-{
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { wayland_ctx->make_current(); },
-        [this]() { wayland_ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
-
-    if (extensions(dpy).eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));
-    }
-}
-
 namespace
 {
 class EGLStreamBuffer :
@@ -568,55 +503,6 @@ private:
 };
 }
 
-std::shared_ptr<mir::graphics::Buffer>
-mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
-    wl_resource* buffer,
-    std::function<void()>&& on_consumed,
-    std::function<void()>&& /*on_release*/) //TICS !cppcoreguidelines-rvalue-reference-param-not-moved: We don't use this parameter *at all*.
-{
-
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { wayland_ctx->make_current(); },
-        [this]() { wayland_ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
-
-    EGLint width{0}, height{0};
-    if (extensions(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_WIDTH, &width) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer width"));
-    }
-    if (extensions(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_HEIGHT, &height) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to query Wayland buffer height"));
-    }
-    mg::gl::Texture::Layout const layout =
-        [&]()
-        {
-            EGLint y_inverted{false};
-            if (extensions(dpy).eglQueryWaylandBufferWL(dpy, buffer, EGL_WAYLAND_Y_INVERTED_WL, &y_inverted) != EGL_TRUE)
-            {
-                // If querying Y_INVERTED fails, we must have the default, GL, layout
-                return mg::gl::Texture::Layout::GL;
-            }
-            if (y_inverted)
-            {
-                return mg::gl::Texture::Layout::GL;
-            }
-            else
-            {
-                return mg::gl::Texture::Layout::TopRowFirst;
-            }
-        }();
-
-    return std::make_shared<EGLStreamBuffer>(
-        egl_delegate,
-        BoundEGLStream::texture_for_buffer(buffer),
-        std::move(on_consumed),
-        mir_pixel_format_argb_8888,
-        geom::Size{width, height},
-        layout);
-}
-
 auto mge::BufferAllocator::buffer_from_shm(
     std::shared_ptr<renderer::software::RWMappable> data,
     std::function<void()>&& on_consumed,
@@ -626,6 +512,14 @@ auto mge::BufferAllocator::buffer_from_shm(
         std::move(data),
         std::move(on_consumed),
         std::move(on_release));
+}
+
+auto mge::BufferAllocator::buffer_from_dmabuf(
+    mg::DMABufBuffer const& /*dmabuf*/,
+    std::function<void()>&& /*on_consumed*/,
+    std::function<void()>&& /*on_release*/) -> std::shared_ptr<Buffer>
+{
+    BOOST_THROW_EXCEPTION((std::runtime_error{"EGLStream platform does not support DMA-BUF import"}));
 }
 
 namespace
