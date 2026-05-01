@@ -52,9 +52,14 @@ void mf::WlClientRegistry::delete_client(wayland_rs::RawWlClientId client_id)
 
 std::shared_ptr<mir::frontend::WlClient> mf::WlClientRegistry::from(wayland_rs::RawWlClient const& raw_client)
 {
+    return from(raw_client->id());
+}
+
+std::shared_ptr<mir::frontend::WlClient> mf::WlClientRegistry::from(wayland_rs::RawWlClientId const& raw_client)
+{
     auto const it = std::find_if(clients.begin(), clients.end(), [&](auto const& client)
     {
-        return raw_client->id()->equals(client->raw_client()->id());
+        return raw_client->equals(client->raw_client()->id());
     });
 
     if (it != clients.end())

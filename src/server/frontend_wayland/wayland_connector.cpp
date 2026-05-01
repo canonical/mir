@@ -57,6 +57,8 @@
 #include <type_traits>
 #include <cstring>
 
+#include "wl_compositor.h"
+
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
@@ -108,95 +110,82 @@ private:
     std::mutex event_loop_handle_mutex;
     std::optional<rust::Box<mw::WaylandEventLoopHandle>> event_loop_handle_;
 };
-}
 
-namespace mir
-{
-namespace frontend
-{
-class WlCompositor : public wayland::Compositor::Global
+class GlobalFactory : public mw::GlobalFactory
 {
 public:
-    WlCompositor(
-        struct wl_display* display,
+    GlobalFactory(std::shared_ptr<mf::WlClientRegistry> const& client_registry,
         std::shared_ptr<mir::Executor> const& wayland_executor,
         std::shared_ptr<mir::Executor> const& frame_callback_executor,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-        : Global(display, Version<6>()),
-          allocator{allocator},
+        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<mir::MainLoop> const& main_loop,
+        std::shared_ptr<mir::time::Clock> const& clock,
+        std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
+        std::shared_ptr<mir::ObserverRegistrar<mi::KeyboardObserver>> const& keyboard_observer_registrar,
+        std::shared_ptr<mir::input::Seat> const& seat,
+        std::shared_ptr<msh::AccessibilityManager> const& accessibility_manager,
+        std::shared_ptr<mf::SurfaceRegistry> const& surface_registry,
+        std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
+        std::shared_ptr<mf::KeyboardStateTracker> const& keyboard_state_tracker,
+        mf::WaylandConnector::WaylandProtocolExtensionFilter const& extension_filter,
+        std::vector<std::shared_ptr<mg::DRMRenderingProvider>> providers)
+        : client_registry{client_registry},
           wayland_executor{wayland_executor},
-          frame_callback_executor{frame_callback_executor}
+          frame_callback_executor{frame_callback_executor},
+          allocator{allocator},
+          extension_filter{extension_filter},
+          compositor_global(std::make_unique<mf::WlCompositorGlobal>(
+            wayland_executor,
+            std::make_shared<mf::FrameExecutor>(*main_loop),
+            this->allocator)),
+          seat_global(std::make_unique<mf::WlSeatGlobal>(
+            *wayland_executor,
+            clock,
+            input_hub,
+            keyboard_observer_registrar,
+            seat,
+            accessibility_manager,
+            surface_registry,
+            input_trigger_registry,
+            keyboard_state_tracker
+          )),
+          viewporter(std::make_unique<mf::WpViewporter>())
     {
+        if (!providers.empty())
+        {
+            mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
+            linux_drm_sync_obj = std::make_unique<mf::LinuxDRMSyncobjManagerGlobal>(providers);
+        }
     }
 
-    void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
+    auto can_view(rust::String interface_name, rust::Box<mir::wayland_rs::WaylandClientId> client_id) -> bool override
+    {
+        auto const session = client_registry->from(client_id)->client_session();
+        return extension_filter(session, interface_name.c_str());
+    }
 
 private:
-    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mir::Executor> const wayland_executor;
-    std::shared_ptr<mir::Executor> const frame_callback_executor;
-    std::map<std::pair<wl_client*, uint32_t>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
+    std::shared_ptr<mf::WlClientRegistry> client_registry;
+    std::shared_ptr<mir::Executor> wayland_executor;
+    std::shared_ptr<mir::Executor> frame_callback_executor;
+    std::shared_ptr<mg::GraphicBufferAllocator> allocator;
+    mf::WaylandConnector::WaylandProtocolExtensionFilter extension_filter;
 
-    class Instance : wayland::Compositor
-    {
-    public:
-        Instance(wl_resource* new_resource, WlCompositor* compositor)
-            : mw::Compositor{new_resource, Version<6>()},
-              compositor{compositor}
-        {
-        }
-
-    private:
-        void create_surface(wl_resource* new_surface) override;
-        void create_region(wl_resource* new_region) override;
-        WlCompositor* const compositor;
-    };
-
-    void bind(wl_resource* new_resource)
-    {
-        new Instance{new_resource, this};
-    }
+    /*
+     * TODO: Publish the globals in this exact order
+     * Here be Dragons!
+     *
+     * Some clients expect a certain order in the publication of globals, and will
+     * crash with a different order. Yay!
+     *
+     * So far I've only found ones which expect wl_compositor before anything else,
+     * so stick that first.
+     */
+    std::unique_ptr<mf::WlCompositorGlobal> compositor_global;
+    std::unique_ptr<mf::WlSeatGlobal> seat_global;
+    std::unique_ptr<mf::WpViewporter> viewporter;
+    std::unique_ptr<mf::LinuxDRMSyncobjManagerGlobal> linux_drm_sync_obj;
 };
-
-void WlCompositor::on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback)
-{
-    wl_resource* resource = wl_client_get_object(client, id);
-    auto const wl_surface = resource ? WlSurface::from(resource) : nullptr;
-    if (wl_surface)
-    {
-        callback(wl_surface);
-    }
-    else
-    {
-        surface_callbacks[std::make_pair(client, id)].push_back(callback);
-    }
-}
-
-void WlCompositor::Instance::create_surface(wl_resource* new_surface)
-{
-    auto const surface = new WlSurface{
-        new_surface,
-        compositor->wayland_executor,
-        compositor->frame_callback_executor,
-        compositor->allocator};
-    auto const key = std::make_pair(wl_resource_get_client(new_surface), wl_resource_get_id(new_surface));
-    auto const callbacks = compositor->surface_callbacks.find(key);
-    if (callbacks != compositor->surface_callbacks.end())
-    {
-        for (auto const& callback : callbacks->second)
-        {
-            callback(surface);
-        }
-        compositor->surface_callbacks.erase(callbacks);
-    }
-    // Wayland ojects delete themselves
-}
-
-void WlCompositor::Instance::create_region(wl_resource* new_region)
-{
-    new WlRegion{new_region};
-}
-}
 }
 
 namespace
@@ -301,186 +290,63 @@ mf::WaylandConnector::WaylandConnector(
     std::vector<std::shared_ptr<mg::RenderingPlatform>> const& render_platforms,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer)
     : extension_filter{extension_filter},
-      display{wl_display_create(), &cleanup_display},
-      // TODO(mattkae): Run the server and hook it up to the rest of the system
-      #ifdef MIR_ENABLE_RUST
-      server_wrapper{std::make_unique<ServerWrapper>(wayland_rs::create_wayland_server())},
-      #else
-      server_wrapper{std::make_unique<ServerWrapper>()},
-      #endif
-      pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
+      server{wayland_rs::create_wayland_server()},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
       allocator{allocator_for_display(allocator, display.get(), executor)},
       shell{shell},
+      clock{clock},
+      input_hub{input_hub},
+      seat{seat},
+      keyboard_observer_registrar{keyboard_observer_registrar},
+      input_device_registry{input_device_registry},
+      composite_event_filter{composite_event_filter},
+      drag_icon_controller{drag_icon_controller},
+      pointer_input_dispatcher{pointer_input_dispatcher},
+      session_authorizer{session_authorizer},
+      surface_stack{surface_stack},
+      display_config_registrar{display_config_registrar},
+      main_clipboard{main_clipboard},
+      primary_selection_clipboard{primary_selection_clipboard},
+      text_input_hub{text_input_hub},
+      idle_hub{idle_hub},
+      screen_shooter_factory{screen_shooter_factory},
+      main_loop{main_loop},
+      arw_socket{arw_socket},
       extensions{std::move(extensions_)},
-      session_lock_{session_lock}
+      accessibility_manager{accessibility_manager},
+      session_lock_{session_lock},
+      decoration_strategy{decoration_strategy},
+      session_coordinator{session_coordinator},
+      token_authority{token_authority},
+      render_platforms{render_platforms},
+      cursor_observer_multiplexer{cursor_observer_multiplexer}
 {
-    if (pause_signal == mir::Fd::invalid)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{
-            errno,
-            std::system_category(),
-            "Failed to create IPC pause notification eventfd"}));
-    }
-
-    if (!display)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to create wl_display"});
-    }
-
-    wl_display_set_global_filter(display.get(), &wl_display_global_filter_func_thunk, this);
-
     // Run the builders before creating the seat (because that's what GTK3 expects)
-    extensions->run_builders(
-        display.get(),
-        [executor=executor](std::function<void()>&& work) { executor->spawn(std::move(work)); });
+    // extensions->run_builders(
+    //     display.get(),
+    //     [executor=executor](std::function<void()>&& work) { executor->spawn(std::move(work)); });
 
-    /*
-     * Here be Dragons!
-     *
-     * Some clients expect a certain order in the publication of globals, and will
-     * crash with a different order. Yay!
-     *
-     * So far I've only found ones which expect wl_compositor before anything else,
-     * so stick that first.
-     */
-    compositor_global = std::make_unique<mf::WlCompositor>(
-        display.get(),
-        executor,
-        std::make_shared<FrameExecutor>(*main_loop),
-        this->allocator);
-    subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
-    auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
-    auto const action_group_manager =
+    surface_registry = std::make_shared<mf::SurfaceRegistry>();
+
+    action_group_manager =
         std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
-    auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>();
-    auto const keyboard_state_tracker = std::make_shared<KeyboardStateTracker>();
-    seat_global = std::make_unique<mf::WlSeat>(
-        display.get(),
-        *executor,
-        clock,
-        input_hub,
-        keyboard_observer_registrar,
-        seat,
-        accessibility_manager,
-        surface_registry,
-        input_trigger_registry,
-        keyboard_state_tracker);
+    input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>();
+    keyboard_state_tracker = std::make_shared<KeyboardStateTracker>();
     output_manager = std::make_unique<mf::OutputManager>(
-        display.get(),
         executor,
         display_config_registrar);
 
     desktop_file_manager = std::make_shared<mf::DesktopFileManager>(
         std::make_shared<mf::GDesktopFileCache>(main_loop));
 
-    data_device_manager_global = std::make_unique<WlDataDeviceManager>(
-        display.get(),
-        executor,
-        main_clipboard,
-        std::move(drag_icon_controller),
-        std::move(pointer_input_dispatcher));
-
-    extensions->init(WaylandExtensions::Context{
-        display.get(),
-        executor,
-        shell,
-        session_authorizer,
-        main_clipboard,
-        primary_selection_clipboard,
-        text_input_hub,
-        idle_hub,
-        seat_global.get(),
-        output_manager.get(),
-        surface_stack,
-        input_device_registry,
-        composite_event_filter,
-        allocator,
-        screen_shooter_factory,
-        main_loop,
-        desktop_file_manager,
-        session_lock_,
-        decoration_strategy,
-        session_coordinator,
-        keyboard_observer_registrar,
-        token_authority,
-        surface_registry,
-        clock,
-        cursor_observer_multiplexer,
-        action_group_manager,
-        input_trigger_registry,
-        keyboard_state_tracker});
-
-    shm_global = std::make_unique<WlShm>(display.get(), executor);
-
-    viewporter = std::make_unique<WpViewporter>(display.get());
-
+    for (auto const& platform : render_platforms)
     {
-        std::vector<std::shared_ptr<mg::DRMRenderingProvider>> providers;
-        for (auto platform : render_platforms)
+        if (auto provider = mg::RenderingPlatform::acquire_provider<mg::DRMRenderingProvider>(platform))
         {
-            if (auto provider = mg::RenderingPlatform::acquire_provider<mg::DRMRenderingProvider>(platform))
-            {
-                providers.push_back(std::move(provider));
-            }
-        }
-        if (!providers.empty())
-        {
-            mir::log_debug("Detected DRM Syncobj capable rendering platform. Enabling linux_drm_syncobj_v1 explicit sync support.");
-            drm_syncobj = std::make_unique<LinuxDRMSyncobjManager>(display.get(), providers);
+            drm_rendering_providers.push_back(std::move(provider));
         }
     }
-
-    char const* wayland_display = nullptr;
-
-    if (auto const display_name = getenv("WAYLAND_DISPLAY"))
-    {
-        if (wl_display_add_socket(display.get(), display_name) != 0)
-        {
-            BOOST_THROW_EXCEPTION(
-                std::system_error(errno, std::system_category(),
-                    "Try unsetting or changing WAYLAND_DISPLAY. The current value can not be used:"));
-        }
-
-        wayland_display = display_name;
-    }
-    else
-    {
-        wayland_display = wl_display_add_socket_auto(display.get());
-    }
-
-    if (wayland_display)
-    {
-        if (arw_socket)
-        {
-            chmod((std::string{getenv("XDG_RUNTIME_DIR")} + "/" + wayland_display).c_str(),
-                  S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP | S_IROTH|S_IWOTH);
-        };
-
-        this->wayland_display = wayland_display;
-    }
-    else
-    {
-        fatal_error("Unable to bind Wayland socket");
-    }
-
-    auto wayland_loop = wl_display_get_event_loop(display.get());
-
-    WlClient::setup_new_client_handler(display.get(), shell, session_authorizer, [this](WlClient& client)
-        {
-            int const fd = wl_client_get_fd(client.raw_client());
-            auto const handler_iter = connect_handlers.find(fd);
-
-            if (handler_iter != std::end(connect_handlers))
-            {
-                auto const callback = handler_iter->second;
-                connect_handlers.erase(handler_iter);
-                callback(client.client_session());
-            }
-        });
-
-    pause_source = wl_event_loop_add_fd(wayland_loop, pause_signal, WL_EVENT_READABLE, &halt_eventloop, display.get());
 }
 
 namespace
@@ -502,8 +368,6 @@ catch (...)
 
 mf::WaylandConnector::~WaylandConnector()
 {
-    wl_display_destroy_clients(display.get());
-
     if (dispatch_thread.joinable())
     {
         auto cleanup_promise = std::make_shared<std::promise<void>>();
@@ -528,12 +392,34 @@ mf::WaylandConnector::~WaylandConnector()
 void mf::WaylandConnector::start()
 {
     dispatch_thread = std::thread{
-        [](wl_display* d)
+        [&](wayland_rs::WaylandServer* server)
         {
             mir::set_thread_name("Mir/Wayland");
-            wl_display_run(d);
+
+            // TODO: Resolve the socket
+            server->run("wayland-98",
+                std::make_unique<GlobalFactory>(
+                    client_registry,
+                    executor,
+                    nullptr, // TODO
+                    allocator,
+                    main_loop,
+                    clock,
+                    input_hub,
+                    keyboard_observer_registrar,
+                    seat,
+                    accessibility_manager,
+                    surface_registry,
+                    input_trigger_registry,
+                    keyboard_state_tracker,
+                    extension_filter,
+                    drm_rendering_providers
+                ),
+                std::make_unique<WaylandServerNotificationHandler>(
+                    client_registry
+                ));
         },
-        display.get()};
+        server.into_raw()};
 }
 
 void mf::WaylandConnector::stop()
@@ -653,18 +539,6 @@ void mf::WaylandConnector::for_each_output_binding(
     {
         (*og)->for_each_output_bound_by(client, [&](OutputInstance* o) { callback(o->resource); });
     }
-}
-
-bool mf::WaylandConnector::wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void *data)
-{
-    return static_cast<WaylandConnector*>(data)->wl_display_global_filter_func(client, global);
-}
-
-bool mf::WaylandConnector::wl_display_global_filter_func(wl_client const* client, wl_global const* global) const
-{
-    auto const* const interface = wl_global_get_interface(global);
-    auto const session = get_session(client);
-    return extension_filter(session, interface->name);
 }
 
 auto mir::frontend::get_session(wl_client const* wl_client) -> std::shared_ptr<scene::Session>

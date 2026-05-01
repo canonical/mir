@@ -77,6 +77,19 @@ private:
     std::shared_ptr<DRMProviderList const> const providers;
 };
 
+mf::LinuxDRMSyncobjManagerGlobal::LinuxDRMSyncobjManagerGlobal(
+    std::span<std::shared_ptr<graphics::DRMRenderingProvider>> providers)
+    : providers{std::make_shared<std::vector<std::shared_ptr<graphics::DRMRenderingProvider>>>(
+          providers.begin(),
+          providers.end())}
+{
+}
+
+auto mf::LinuxDRMSyncobjManagerGlobal::create() -> std::shared_ptr<wayland_rs::WpLinuxDrmSyncobjManagerV1Impl>
+{
+    return std::make_shared<syncobj::Manager>(providers);
+}
+
 mf::SyncPoint::SyncPoint(std::shared_ptr<mg::drm::Syncobj> timeline, uint64_t point)
     : timeline{std::move(timeline)},
       point{point}

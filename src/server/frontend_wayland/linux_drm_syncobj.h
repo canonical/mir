@@ -25,6 +25,16 @@ namespace mir::frontend
 {
 class WlSurface;
 
+class LinuxDRMSyncobjManagerGlobal
+{
+public:
+    LinuxDRMSyncobjManagerGlobal(std::span<std::shared_ptr<graphics::DRMRenderingProvider>> providers);
+    auto create() -> std::shared_ptr<wayland_rs::WpLinuxDrmSyncobjManagerV1Impl>;
+
+private:
+    std::shared_ptr<std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const> const providers;
+};
+
 class SyncPoint
 {
 public:

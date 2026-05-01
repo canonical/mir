@@ -19,6 +19,7 @@
 
 #include "wayland.h"
 #include "wl_client.h"
+#include <map>
 
 namespace mir
 {
@@ -29,10 +30,31 @@ class GraphicBufferAllocator;
 }
 namespace frontend
 {
+class WlSurface;
+class WlCompositor;
+class WlCompositorGlobal
+{
+public:
+    WlCompositorGlobal(
+        std::shared_ptr<mir::Executor> const& wayland_executor,
+        std::shared_ptr<mir::Executor> const& frame_callback_executor,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+
+    void on_surface_created(std::shared_ptr<WlSurface> const& surface, std::function<void(WlSurface*)> const& callback);
+private:
+    friend WlCompositor;
+    std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<mir::Executor> const frame_callback_executor;
+    std::map<std::shared_ptr<WlSurface>, std::vector<std::function<void(WlSurface*)>>> surface_callbacks;
+};
+
 class WlCompositor : public wayland_rs::WlCompositorImpl
 {
 public:
-    WlCompositor(std::shared_ptr<WlClient> const& client,
+    WlCompositor(
+        WlCompositorGlobal* global,
+        std::shared_ptr<WlClient> const& client,
         std::shared_ptr<mir::Executor> const& wayland_executor,
         std::shared_ptr<mir::Executor> const& frame_callback_executor,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
@@ -42,6 +64,7 @@ public:
     auto create_region() -> std::shared_ptr<wayland_rs::WlRegionImpl> override;
 
 private:
+    WlCompositorGlobal* global;
     std::shared_ptr<WlClient> client;
     std::shared_ptr<mir::Executor> wayland_executor;
     std::shared_ptr<mir::Executor> frame_callback_executor;
