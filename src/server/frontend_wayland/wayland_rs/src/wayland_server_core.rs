@@ -62,7 +62,7 @@ impl WaylandServer {
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
     pub fn run(
-        &mut self,
+        &self,
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
         notification_handler: UniquePtr<WaylandServerNotificationHandler>,

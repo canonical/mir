@@ -10,6 +10,7 @@ MIR_PLATFORM_2.24 {
     mir::graphics::DMABufEGLProvider::?DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::as_texture*;
+    mir::graphics::DMABufEGLProvider::import_dma_buf*;
     mir::graphics::DRMFormat::DRMFormat*;
     mir::graphics::DRMFormat::Info::alpha_equivalent*;
     mir::graphics::DRMFormat::Info::components*;

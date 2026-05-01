@@ -768,6 +768,7 @@ mf::WaylandConnector::WaylandConnector(
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer)
     : extension_filter{extension_filter},
       server{wayland_rs::create_wayland_server()},
+      client_registry{std::make_shared<WlClientRegistry>(shell, session_authorizer)},
       executor{std::make_shared<WaylandExecutor>()},
       allocator{allocator},
       shell{shell},
@@ -839,10 +840,8 @@ mf::WaylandConnector::~WaylandConnector()
 
 void mf::WaylandConnector::start()
 {
-    auto event_loop_state = std::make_shared<EventLoopState>();
-
     dispatch_thread = std::thread{
-        [&](wayland_rs::WaylandServer* server)
+        [this, event_loop_state=std::make_shared<EventLoopState>()]()
         {
             mir::set_thread_name("Mir/Wayland");
 
@@ -890,8 +889,7 @@ void mf::WaylandConnector::start()
                     event_loop_state,
                     executor
                 ));
-        },
-        server.into_raw()};
+        }};
 }
 
 void mf::WaylandConnector::stop()

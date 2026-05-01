@@ -44,7 +44,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
                 fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>) -> Result<()>;
-                fn stop(self: &mut WaylandServer);
+                fn stop(self: &WaylandServer);
 
                 fn next_serial() -> u32;
 

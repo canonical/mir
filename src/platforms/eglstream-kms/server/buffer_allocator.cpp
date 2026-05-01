@@ -39,8 +39,6 @@
 #include <mir/graphics/display.h>
 #include <mir/renderer/gl/context.h>
 #include <mir/raii.h>
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/wayland_base.h>
 #include <mir/renderer/gl/gl_surface.h>
 #include <optional>
 
@@ -315,9 +313,14 @@ try
 
     allocator->wayland_ctx->release_current();
 }
-catch (std::exception const& err)
+catch (...)
 {
-    mir::wayland::internal_error_processing_request(client,  "create_buffer_eglstream_resource");
+    wl_client_post_implementation_error(client, "Mir internal error processing create_buffer_eglstream_resource request");
+    mir::log(
+        mir::logging::Severity::warning,
+        "frontend:Wayland",
+        std::current_exception(),
+        "Exception processing create_buffer_eglstream_resource request");
 }
 
 struct wl_eglstream_controller_interface const mge::BufferAllocator::impl{

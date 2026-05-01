@@ -278,18 +278,34 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
                     arg.interface.as_ref().expect("Object is missing interface"),
                 )
             );
+            let arg_name_str = arg.name.as_str();
             if arg.allow_null.unwrap_or(false) {
                 let has_arg_name = format_has_arg_ident(&arg.name);
                 Some(quote! {
                     let #has_arg_name = #arg_name.is_some();
                     let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
-                        Some(o) => o.data().unwrap(),
+                        Some(o) => match o.data() {
+                            Some(d) => d,
+                            None => {
+                                log::warn!(
+                                    "Object argument '{}' has no associated data; skipping request",
+                                    #arg_name_str
+                                );
+                                return;
+                            }
+                        },
                         None => &cxx::SharedPtr::<ffi::#arg_type>::null()
                     };
                 })
             } else {
                 Some(quote! {
-                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = #arg_name.data().unwrap();
+                    let Some(#arg_name): Option<&cxx::SharedPtr<ffi::#arg_type>> = #arg_name.data() else {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        return;
+                    };
                 })
             }
         }

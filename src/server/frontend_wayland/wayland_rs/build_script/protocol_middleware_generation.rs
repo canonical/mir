@@ -166,11 +166,27 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
         })
         .collect();
 
-    // Generate the ffi code that will call into the underlying method that is defined on the object
-    // The first item is the definition, and the second is the method declaration for the trait.
+    let since_version = event.since.unwrap_or(1);
+    let send_call = quote! {
+        self.wrapped.#event_name(#(#rust_args),*)
+    };
+
+    // Events introduced after version 1 must only be sent if the client
+    // bound a version that supports them.
+    let body = if since_version > 1 {
+        quote! {
+            use wayland_server::Resource;
+            if self.wrapped.version() >= #since_version {
+                #send_call;
+            }
+        }
+    } else {
+        quote! { #send_call; }
+    };
+
     quote! {
         pub fn #event_name(&mut self, #(#ffi_args),*) {
-            self.wrapped.#event_name(#(#rust_args),*)
+            #body
         }
     }
 }
