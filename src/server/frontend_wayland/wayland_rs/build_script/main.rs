@@ -262,7 +262,10 @@ struct NewIdContext {
 }
 
 /// Generate a TokenStream that transforms a single argument for crossing the Rust/C++ boundary.
-fn transform_argument_for_cpp(arg: &WaylandArg, new_id_ctx: Option<&NewIdContext>) -> Option<TokenStream> {
+fn transform_argument_for_cpp(
+    arg: &WaylandArg,
+    new_id_ctx: Option<&NewIdContext>,
+) -> Option<TokenStream> {
     let arg_name = format_ident!("{}", arg.name);
 
     // Enums are provided as WlEnum, so we need to cast them to u32 so that
