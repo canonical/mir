@@ -252,8 +252,17 @@ fn generate_global_dispatch_impl(
     }
 }
 
+/// Context about a `new_id` argument in the same request, used to ensure
+/// `data_init.init()` is always called even in error paths.
+struct NewIdContext {
+    /// The variable name of the new_id argument (e.g., `id`).
+    new_id_name: Ident,
+    /// The C++ impl class name (e.g., `XdgSurfaceImpl`).
+    impl_class_name: Ident,
+}
+
 /// Generate a TokenStream that transforms a single argument for crossing the Rust/C++ boundary.
-fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
+fn transform_argument_for_cpp(arg: &WaylandArg, new_id_ctx: Option<&NewIdContext>) -> Option<TokenStream> {
     let arg_name = format_ident!("{}", arg.name);
 
     // Enums are provided as WlEnum, so we need to cast them to u32 so that
@@ -271,6 +280,9 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         // The Wayland Rust crate will provide us with raw Wayland Rust objects.
         // C++ expects the shared_ptr data that backs these rust objects to be sent
         // as parameters for objects.
+        // The user data stored on wayland resources is Arc<Mutex<SharedPtr<...>>>,
+        // so we need to request that type from .data(), lock the mutex, and then
+        // extract a reference to the inner SharedPtr.
         WaylandArgType::Object => {
             let arg_type = format_ident!(
                 "{}",
@@ -279,33 +291,72 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
                 )
             );
             let arg_name_str = arg.name.as_str();
+            let arg_guard_name = format_ident!("{}_guard", arg.name);
             if arg.allow_null.unwrap_or(false) {
                 let has_arg_name = format_has_arg_ident(&arg.name);
+                let no_data_handler = if let Some(ctx) = new_id_ctx {
+                    let new_id_name = &ctx.new_id_name;
+                    let impl_class_name = &ctx.impl_class_name;
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        data_init.init(#new_id_name, Arc::new(Mutex::new(cxx::SharedPtr::<ffi::#impl_class_name>::null())));
+                        return;
+                    }
+                } else {
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        return;
+                    }
+                };
                 Some(quote! {
                     let #has_arg_name = #arg_name.is_some();
+                    let #arg_guard_name;
                     let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
-                        Some(o) => match o.data() {
-                            Some(d) => d,
+                        Some(o) => match o.data::<Arc<Mutex<cxx::SharedPtr<ffi::#arg_type>>>>() {
+                            Some(d) => {
+                                #arg_guard_name = d.lock().unwrap();
+                                &*#arg_guard_name
+                            },
                             None => {
-                                log::warn!(
-                                    "Object argument '{}' has no associated data; skipping request",
-                                    #arg_name_str
-                                );
-                                return;
+                                #no_data_handler
                             }
                         },
                         None => &cxx::SharedPtr::<ffi::#arg_type>::null()
                     };
                 })
             } else {
-                Some(quote! {
-                    let Some(#arg_name): Option<&cxx::SharedPtr<ffi::#arg_type>> = #arg_name.data() else {
+                let no_data_handler = if let Some(ctx) = new_id_ctx {
+                    let new_id_name = &ctx.new_id_name;
+                    let impl_class_name = &ctx.impl_class_name;
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        data_init.init(#new_id_name, Arc::new(Mutex::new(cxx::SharedPtr::<ffi::#impl_class_name>::null())));
+                        return;
+                    }
+                } else {
+                    quote! {
                         log::warn!(
                             "Object argument '{}' has no associated data; skipping request",
                             #arg_name_str
                         );
                         return;
+                    }
+                };
+                Some(quote! {
+                    let Some(#arg_guard_name) = #arg_name.data::<Arc<Mutex<cxx::SharedPtr<ffi::#arg_type>>>>() else {
+                        #no_data_handler
                     };
+                    let #arg_guard_name = #arg_guard_name.lock().unwrap();
+                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = &*#arg_guard_name;
                 })
             }
         }
@@ -364,14 +415,17 @@ fn generate_request_body(request: &WaylandRequest, interface: &WaylandInterface)
 
     if let Some(new_id_arg) = new_id_arg {
         let new_id_name = format_ident!("{}", new_id_arg.name);
+        let new_id_interface = new_id_arg
+            .interface
+            .as_ref()
+            .expect("NewId is missing interface");
         let ext_interface_struct_name = format_ident!(
             "{}",
-            format_wayland_interface_to_rust_extension_struct(
-                new_id_arg
-                    .interface
-                    .as_ref()
-                    .expect("NewId is missing interface")
-            )
+            format_wayland_interface_to_rust_extension_struct(new_id_interface)
+        );
+        let impl_class_name = format_ident!(
+            "{}",
+            format_wayland_interface_to_cpp_class(new_id_interface)
         );
         let call_arg_names: Vec<TokenStream> = request
             .args
@@ -407,6 +461,10 @@ fn generate_request_body(request: &WaylandRequest, interface: &WaylandInterface)
                     unsafe { guard.pin_mut_unchecked().associate(boxed, protocol_id); };
                 }
                 Err(err) => {
+                    // We must always call data_init.init() for new_id requests, even on
+                    // failure, otherwise wayland-backend panics because the new object has
+                    // no associated data.
+                    data_init.init(#new_id_name, Arc::new(Mutex::new(cxx::SharedPtr::<ffi::#impl_class_name>::null())));
                     let (object_id, code, message) = parse_post_error(err.what());
                     post_protocol_error(resource, object_id, code, message);
                 }
@@ -495,10 +553,28 @@ fn generate_request_handler_arms(
                 })
                 .collect();
 
+            let new_id_ctx = request
+                .args
+                .iter()
+                .find(|arg| arg.type_ == WaylandArgType::NewId)
+                .map(|new_id_arg| {
+                    let new_id_interface = new_id_arg
+                        .interface
+                        .as_ref()
+                        .expect("NewId is missing interface");
+                    NewIdContext {
+                        new_id_name: format_ident!("{}", new_id_arg.name),
+                        impl_class_name: format_ident!(
+                            "{}",
+                            format_wayland_interface_to_cpp_class(new_id_interface)
+                        ),
+                    }
+                });
+
             let transformed_args: Vec<TokenStream> = request
                 .args
                 .iter()
-                .filter_map(transform_argument_for_cpp)
+                .filter_map(|arg| transform_argument_for_cpp(arg, new_id_ctx.as_ref()))
                 .collect();
 
             let body = generate_request_body(request, interface);
