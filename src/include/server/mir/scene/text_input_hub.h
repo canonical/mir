@@ -20,13 +20,11 @@
 #include <mir/observer_registrar.h>
 #include <mir/int_wrapper.h>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
-#include <wayland-server.h>
-#include <algorithm>
-
-struct wl_array;
+#include <vector>
 
 namespace mir
 {
@@ -99,38 +97,7 @@ struct TextInputState
     std::optional<TextInputContentPurpose> content_purpose;
 };
 
-class CopyableWlArray
-{
-public:
-    explicit CopyableWlArray(wl_array const* in_data)
-    {
-        wl_array_init(&data_);
-        wl_array_copy(&data_, const_cast<wl_array*>(in_data));
-    }
 
-    CopyableWlArray(CopyableWlArray const& other)
-        : CopyableWlArray{&other.data_}
-    {
-    }
-
-    CopyableWlArray& operator=(CopyableWlArray other)
-    {
-        std::swap(data_, other.data_);
-        return *this;
-    }
-
-    ~CopyableWlArray()
-    {
-        wl_array_release(&data_);
-    }
-
-    [[nodiscard]] wl_array* data() const
-    {
-        return const_cast<wl_array*>(&data_);
-    }
-private:
-    wl_array data_;
-};
 
 /// See text-input-unstable-v3.xml for details
 struct TextInputChange
@@ -177,7 +144,7 @@ struct TextInputChange
     std::optional<TextInputKeySym> keysym;
 
     /// \remark Defined for text input v1 and v2, not v3.
-    std::optional<CopyableWlArray> modifier_map;
+    std::optional<std::vector<uint8_t>> modifier_map;
 
     /// \remark Defined for text input v1 and v2, not v3.
     std::optional<CursorPosition> cursor_position;

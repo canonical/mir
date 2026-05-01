@@ -17,8 +17,8 @@
 #ifndef MIR_FRONTEND_WAYLAND_WL_SHELL_H_
 #define MIR_FRONTEND_WAYLAND_WL_SHELL_H_
 
-#include "wayland_wrapper.h"
-
+#include "wayland.h"
+#include "client.h"
 #include <memory>
 
 namespace mir
@@ -34,19 +34,33 @@ class Surface;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class OutputManager;
 class SurfaceRegistry;
 
-auto create_wl_shell(
-    wl_display* display,
-    Executor& wayland_executor,
-    std::shared_ptr<shell::Shell> const& shell,
-    WlSeat* seat,
-    OutputManager* const output_manager,
-    std::shared_ptr<SurfaceRegistry> const& surface_registry) -> std::shared_ptr<wayland::Shell::Global>;
+class WlShell : public wayland_rs::WlShellImpl
+{
+public:
+    WlShell(
+        std::shared_ptr<wayland_rs::Client> const& client,
+        Executor& wayland_executor,
+        std::shared_ptr<shell::Shell> const& shell,
+        WlSeatGlobal& seat,
+        OutputManager* const output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
-auto get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
+    auto get_shell_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::WlShellSurfaceImpl> override;
+
+private:
+    std::shared_ptr<wayland_rs::Client> client;
+    Executor& wayland_executor;
+    std::shared_ptr<shell::Shell> const shell;
+    WlSeatGlobal& seat;
+    OutputManager* const output_manager;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
+};
+
+auto get_wl_shell_window(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<scene::Surface>;
 }
 }
 

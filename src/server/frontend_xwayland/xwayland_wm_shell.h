@@ -36,7 +36,7 @@ namespace frontend
 {
 class OutputManager;
 class SurfaceStack;
-class WlSeat;
+class WlSeatGlobal;
 class WlSurface;
 class XWaylandSurface;
 class SessionAuthorizer;
@@ -50,7 +50,7 @@ public:
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
         std::shared_ptr<scene::Clipboard> const& clipboard,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceRegistry> const& surface_registry)
         : wayland_executor{wayland_executor},
@@ -67,7 +67,7 @@ public:
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
     std::shared_ptr<scene::Clipboard> const clipboard;
-    WlSeat& seat;
+    WlSeatGlobal& seat;
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
 };

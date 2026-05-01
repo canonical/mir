@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_WLR_SCREENCOPY_V1_H
 #define MIR_FRONTEND_WLR_SCREENCOPY_V1_H
 
-#include "wlr-screencopy-unstable-v1_wrapper.h"
+#include "wlr_screencopy_unstable_v1.h"
 #include <mir/geometry/rectangle.h>
 
 #include <memory>
@@ -38,26 +38,23 @@ namespace scene
 {
 class SceneChangeNotification;
 }
+namespace compositor
+{
+class ScreenShooter;
+}
 namespace frontend
 {
 class OutputManager;
 class SurfaceStack;
-
-auto create_wlr_screencopy_manager_unstable_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
-    std::shared_ptr<SurfaceStack> const& surface_stack)
--> std::shared_ptr<wayland::WlrScreencopyManagerV1::Global>;
+struct WlrScreencopyV1Ctx;
 
 /// Tracks damage and captures frames when needed. Each instance used by a single manager (and thus a single client).
-class WlrScreencopyV1DamageTracker : public wayland::LifetimeTracker
+class WlrScreencopyV1DamageTracker : public wayland_rs::LifetimeTracker
 {
 public:
     struct FrameParams
     {
-        wl_resource* output;
+        wayland_rs::Weak<wayland_rs::WlOutputImpl> output;
         geometry::Rectangle output_space_area;
         geometry::Size buffer_size;
         glm::mat2 transform;
@@ -77,7 +74,7 @@ public:
         }
     };
 
-    class Frame
+    class Frame : public std::enable_shared_from_this<Frame>
     {
     public:
         virtual ~Frame() = default;
@@ -113,6 +110,29 @@ private:
     /// Frames that are waiting for damage before they are captured. If the frame object is null that means no damage
     /// has been received since a previous frame with the same params.
     std::vector<std::unique_ptr<Area>> areas;
+};
+
+class WlrScreencopyManagerV1
+    : public wayland_rs::ZwlrScreencopyManagerV1Impl,
+      public std::enable_shared_from_this<WlrScreencopyManagerV1>
+{
+public:
+    WlrScreencopyManagerV1(std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
+        std::shared_ptr<SurfaceStack> const& surface_stack);
+
+    void capture_on_damage(WlrScreencopyV1DamageTracker::Frame* frame);
+
+    std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
+    /// From mw::WlrScreencopyManagerV1
+    /// @{
+    auto capture_output(int32_t overlay_cursor, wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output) -> std::shared_ptr<wayland_rs::ZwlrScreencopyFrameV1Impl> override;
+    auto capture_output_region(int32_t overlay_cursor, wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, int32_t x, int32_t y, int32_t width, int32_t height) -> std::shared_ptr<wayland_rs::ZwlrScreencopyFrameV1Impl> override;
+    /// @}
+private:
+    std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
+    WlrScreencopyV1DamageTracker damage_tracker;
 };
 }
 }

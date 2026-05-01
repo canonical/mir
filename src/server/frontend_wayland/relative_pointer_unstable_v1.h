@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
 #define MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
 
-#include "relative-pointer-unstable-v1_wrapper.h"
+#include "wayland_rs/wayland_rs_cpp/include/relative_pointer_unstable_v1.h"
 
 #include <memory>
 
@@ -27,10 +27,16 @@ namespace shell { class Shell; }
 
 namespace frontend
 {
-auto create_relative_pointer_unstable_v1(
-    wl_display* display,
-    std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<wayland::RelativePointerManagerV1::Global>;
+class RelativePointerManagerV1 : public wayland_rs::ZwpRelativePointerManagerV1Impl
+{
+public:
+    explicit RelativePointerManagerV1(std::shared_ptr<shell::Shell> shell);
+    auto get_relative_pointer(wayland_rs::Weak<wayland_rs::WlPointerImpl> const& pointer)
+        -> std::shared_ptr<wayland_rs::ZwpRelativePointerV1Impl> override;
+
+private:
+    std::shared_ptr<shell::Shell> const shell;
+};
 }
 }
 

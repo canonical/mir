@@ -42,7 +42,8 @@ auto format_message(uint32_t object_id, uint32_t error_code, char const* fmt, va
 }
 
 mir::wayland_rs::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...)
-    : std::runtime_error{"Client protocol error"}
+    : std::runtime_error{"Client protocol error"},
+      error_code(error_code)
 {
     va_list args;
     va_start(args, fmt);
@@ -53,4 +54,14 @@ mir::wayland_rs::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error
 auto mir::wayland_rs::ProtocolError::what() const noexcept -> char const*
 {
     return message_.c_str();
+}
+
+auto mir::wayland_rs::ProtocolError::code() const noexcept -> uint32_t
+{
+    return error_code;
+}
+
+auto mir::wayland_rs::ProtocolError::message() const noexcept -> std::string
+{
+    return message_;
 }

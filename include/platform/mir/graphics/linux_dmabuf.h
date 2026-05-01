@@ -18,7 +18,7 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-stable-v1_wrapper.h"
+#include "linux_dmabuf_v1.h"
 
 #include <EGL/egl.h>
 #include <memory>
@@ -100,23 +100,33 @@ private:
     std::unique_ptr<EGLBufferCopier> const blitter;
 };
 
-class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
+class LinuxDmaBuf : public wayland_rs::ZwpLinuxDmabufV1Impl
 {
 public:
-    LinuxDmaBuf(
-        wl_display* display,
-        std::shared_ptr<DMABufEGLProvider> provider);
+    explicit LinuxDmaBuf(std::shared_ptr<DMABufEGLProvider> provider);
+    auto create_params() -> std::shared_ptr<wayland_rs::ZwpLinuxBufferParamsV1Impl> override;
+    auto get_default_feedback() -> std::shared_ptr<wayland_rs::ZwpLinuxDmabufFeedbackV1Impl> override;
+    auto get_surface_feedback(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::ZwpLinuxDmabufFeedbackV1Impl> override;
+
+private:
+    void send_formats();
+    std::shared_ptr<DMABufEGLProvider> const provider;
+};
+
+class LinuxDmaBufGlobal
+{
+public:
+    explicit LinuxDmaBufGlobal(std::shared_ptr<DMABufEGLProvider> provider);
 
     auto buffer_from_resource(
-        wl_resource* buffer,
+        wayland_rs::WlBufferImpl* buffer,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate)
         -> std::shared_ptr<Buffer>;
-private:
-    class Instance;
-    void bind(wl_resource* new_resource) override;
 
+    auto create() -> std::shared_ptr<LinuxDmaBuf>;
+private:
     std::shared_ptr<DMABufEGLProvider> const provider;
 };
 

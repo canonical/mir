@@ -19,7 +19,8 @@
 #include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "relative-pointer-unstable-v1_wrapper.h"
+#include "relative_pointer_unstable_v1.h"
+#include "client.h"
 
 #include <mir/log.h>
 #include <mir/executor.h>
@@ -32,7 +33,6 @@
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/events/pointer_event.h>
-#include <mir/wayland/client.h>
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>
@@ -41,7 +41,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;
@@ -109,16 +109,16 @@ auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint3
         return std::nullopt;
 
     case mir_pointer_axis_source_wheel:
-        return mw::Pointer::AxisSource::wheel;
+        return mw::WlPointerImpl::AxisSource::wheel;
 
     case mir_pointer_axis_source_finger:
-        return mw::Pointer::AxisSource::finger;
+        return mw::WlPointerImpl::AxisSource::finger;
 
     case mir_pointer_axis_source_continuous:
-        return mw::Pointer::AxisSource::continuous;
+        return mw::WlPointerImpl::AxisSource::continuous;
 
     case mir_pointer_axis_source_wheel_tilt:
-        return mw::Pointer::AxisSource::wheel_tilt;
+        return mw::WlPointerImpl::AxisSource::wheel_tilt;
     }
 
     mir::fatal_error("Invalid MirPointerAxisSource %d", mir_source);
@@ -161,8 +161,13 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
     return std::nullopt;
 }
 
-mf::WlPointer::WlPointer(wl_resource* new_resource)
-    : Pointer(new_resource, Version<9>()),
+mf::WlPointer* mf::WlPointer::from(wayland_rs::WlPointerImpl* pointer)
+{
+    return static_cast<WlPointer*>(pointer);
+}
+
+mf::WlPointer::WlPointer(std::shared_ptr<wayland_rs::Client> const& client)
+    : client{client},
       cursor{std::make_unique<NullCursor>()}
 {
 }
@@ -173,9 +178,9 @@ mf::WlPointer::~WlPointer()
         surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
 }
 
-void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
+void mir::frontend::WlPointer::set_relative_pointer(std::shared_ptr<mw::ZwpRelativePointerV1Impl> const& relative_ptr)
 {
-    relative_pointer = make_weak(relative_ptr);
+    relative_pointer = mw::Weak(relative_ptr);
 }
 
 void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
@@ -214,7 +219,7 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
     auto const serial = client->next_serial(event.value_or(nullptr));
     send_leave_event(
         serial,
-        surface_under_cursor.value().raw_resource());
+        surface_under_cursor.value().shared_from_this());
     current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
     // to prevent changing surfaces while buttons are pressed, we wouldn't need to clear current_buttons regardless)
@@ -251,14 +256,14 @@ auto mf::WlPointer::axis(
 {
     bool event_sent = false;
 
-    if (axis.value120.as_value() && version_supports_axis_value120())
+    if (axis.value120.as_value())
     {
         send_axis_value120_event(wayland_axis, axis.value120.as_value());
         event_sent = true;
     }
 
     // Only send discrete on versions pre-value120
-    if (axis.discrete.as_value() && version_supports_axis_discrete() && !version_supports_axis_value120())
+    if (axis.discrete.as_value())
     {
         send_axis_discrete_event(wayland_axis, axis.discrete.as_value());
         event_sent = true;
@@ -272,7 +277,7 @@ auto mf::WlPointer::axis(
         event_sent = true;
     }
 
-    if (axis.stop && version_supports_axis_stop())
+    if (axis.stop)
     {
         send_axis_stop_event(timestamp_of(event), wayland_axis);
         event_sent = true;
@@ -291,7 +296,7 @@ void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
 
     // Don't send an axis source unless we have one and we're also sending some sort of axis event.
     auto const axis_source = wayland_axis_source(event->axis_source());
-    if (axis_source && axis_event_sent && version_supports_axis_source())
+    if (axis_source && axis_event_sent)
     {
         send_axis_source_event(axis_source.value());
         needs_frame = true;
@@ -332,7 +337,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
         buttons(event);
         send_enter_event(
             enter_serial.value(),
-            target_surface->raw_resource(),
+            target_surface->shared_from_this(),
             position_on_target.x.as_value(),
             position_on_target.y.as_value());
         current_position = position_on_target;
@@ -342,7 +347,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
                 leave(std::nullopt);
                 maybe_frame();
             });
-        surface_under_cursor = mw::make_weak(target_surface);
+        surface_under_cursor = mw::Weak(target_surface->shared_from_this());
     }
     else if (position_on_target != current_position)
     {
@@ -387,7 +392,7 @@ void mf::WlPointer::maybe_frame()
 {
     if (needs_frame)
     {
-        send_frame_event_if_supported();
+        send_frame_event();
     }
     needs_frame = false;
 }
@@ -398,8 +403,8 @@ struct CursorSurfaceRole : mf::NullWlSurfaceRole
 {
     mw::Weak<mf::WlSurface> const surface;
     mf::CommitHandler* const commit_handler;
-    explicit CursorSurfaceRole(mf::WlSurface* surface, mf::CommitHandler* commit_handler) :
-        NullWlSurfaceRole(surface),
+    explicit CursorSurfaceRole(std::shared_ptr<mf::WlSurface> const& surface, mf::CommitHandler* commit_handler) :
+        NullWlSurfaceRole(surface.get()),
         surface{surface},
         commit_handler{commit_handler} {}
 
@@ -421,7 +426,7 @@ struct CursorSurfaceRole : mf::NullWlSurfaceRole
 struct WlSurfaceCursor : mf::WlPointer::Cursor
 {
     WlSurfaceCursor(
-        mf::WlSurface* surface,
+        std::shared_ptr<mf::WlSurface> const& surface,
         geom::Displacement hotspot,
         mf::CommitHandler* commit_handler);
     ~WlSurfaceCursor();
@@ -444,7 +449,7 @@ private:
 struct WlHiddenCursor : mf::WlPointer::Cursor
 {
     WlHiddenCursor(
-        mf::WlSurface* surface,
+        std::shared_ptr<mf::WlSurface> const& surface,
         mf::CommitHandler* commit_handler);
     void apply_to(mf::WlSurface* surface) override;
     void set_hotspot(geom::Displacement const&) override {};
@@ -456,9 +461,8 @@ private:
 }
 
 void mf::WlPointer::set_cursor(
-    uint32_t serial,
-    std::optional<wl_resource*> const& surface,
-    int32_t hotspot_x, int32_t hotspot_y)
+    uint32_t serial, wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
+    bool /*has_surface*/, int32_t hotspot_x, int32_t hotspot_y)
 {
     if (!enter_serial || serial != enter_serial.value())
     {
@@ -471,12 +475,12 @@ void mf::WlPointer::set_cursor(
 
     if (surface)
     {
-        auto const wl_surface = WlSurface::from(*surface);
+        auto const wl_surface = WlSurface::from(&surface.value());
         cursor_hotspot = {hotspot_x, hotspot_y};
         if (!cursor->cursor_surface() || wl_surface != *cursor->cursor_surface())
         {
             cursor.reset(); // clean up old cursor before creating new one
-            cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot, commit_handler);
+            cursor = std::make_unique<WlSurfaceCursor>(wl_surface->shared_from_this(), cursor_hotspot, commit_handler);
             if (surface_under_cursor)
                 cursor->apply_to(&surface_under_cursor.value());
         }
@@ -500,7 +504,7 @@ void mf::WlPointer::on_commit(WlSurface* surface)
     {
         // No buffer: We should be unmapping the cursor
 
-        cursor = std::make_unique<WlHiddenCursor>(surface, commit_handler);
+        cursor = std::make_unique<WlHiddenCursor>(surface->shared_from_this(), commit_handler);
         if (surface_under_cursor)
             cursor->apply_to(&surface_under_cursor.value());
     }
@@ -513,14 +517,14 @@ void mf::WlPointer::on_commit(WlSurface* surface)
         else
         {
             cursor.reset(); // clean up old cursor before creating new one
-            cursor = std::make_unique<WlSurfaceCursor>(surface, cursor_hotspot, commit_handler);
+            cursor = std::make_unique<WlSurfaceCursor>(surface->shared_from_this(), cursor_hotspot, commit_handler);
             if (surface_under_cursor)
                 cursor->apply_to(&surface_under_cursor.value());
         }
     }
 }
 
-WlSurfaceCursor::WlSurfaceCursor(mf::WlSurface* surface, geom::Displacement hotspot, mf::CommitHandler* commit_handler)
+WlSurfaceCursor::WlSurfaceCursor(std::shared_ptr<mf::WlSurface> const& surface, geom::Displacement hotspot, mf::CommitHandler* commit_handler)
     : surface{surface},
       stream{surface->stream},
       surface_role{surface, commit_handler},
@@ -598,7 +602,7 @@ void WlSurfaceCursor::apply_latest_buffer()
     }
 }
 
-WlHiddenCursor::WlHiddenCursor(mf::WlSurface* surface, mf::CommitHandler* commit_handler) :
+WlHiddenCursor::WlHiddenCursor( std::shared_ptr<mf::WlSurface> const& surface, mf::CommitHandler* commit_handler) :
     surface_role{surface, std::move(commit_handler)}
 {
 }

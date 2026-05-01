@@ -19,7 +19,6 @@
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/scene/surface.h>
-#include <mir/wayland/weak.h>
 #include <mir/geometry/rectangle.h>
 #include <mir_toolkit/common.h>
 #include <mir/synchronised.h>
@@ -255,7 +254,6 @@ private:
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
     std::unordered_map<graphics::DisplayConfigurationOutputId, float> tracked_output_scales;
-    wayland::Weak<frontend::WlSurface> weak_surface;
     std::weak_ptr<Session> const session_;
 };
 

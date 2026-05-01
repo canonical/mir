@@ -16,7 +16,7 @@
 
 #include "input_method_v2.h"
 #include "input_method_grab_keyboard_v2.h"
-#include "text-input-unstable-v3_wrapper.h"
+#include "text_input_unstable_v3.h"
 #include "wl_seat.h"
 #include "input_method_common.h"
 
@@ -27,7 +27,7 @@
 #include <ranges>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 
 namespace mir
@@ -39,38 +39,28 @@ struct InputMethodV2Ctx
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<input::CompositeEventFilter> const event_filter;
-};
-
-class InputMethodManagerV2Global
-    : public wayland::InputMethodManagerV2::Global
-{
-public:
-    InputMethodManagerV2Global(wl_display* display, std::shared_ptr<InputMethodV2Ctx> const& ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<InputMethodV2Ctx> const ctx;
-};
-
-class InputMethodManagerV2
-    : public wayland::InputMethodManagerV2
-{
-public:
-    InputMethodManagerV2(wl_resource* resource, std::shared_ptr<InputMethodV2Ctx> const& ctx);
-
-private:
-    void get_input_method(struct wl_resource* seat, struct wl_resource* input_method) override;
-
-    std::shared_ptr<InputMethodV2Ctx> const ctx;
+    std::shared_ptr<wayland_rs::Client> const client;
 };
 
 class InputMethodV2
-    : public wayland::InputMethodV2
+    : public mw::ZwpInputMethodV2Impl
 {
 public:
-    InputMethodV2(wl_resource* resource, WlSeat* seat, std::shared_ptr<InputMethodV2Ctx> const& ctx);
+    InputMethodV2(
+        std::shared_ptr<wayland_rs::Client> const& client,
+        WlSeatGlobal* seat,
+        std::shared_ptr<InputMethodV2Ctx> const& ctx);
     ~InputMethodV2();
+
+    /// Wayland requests
+    /// @{
+    void commit_string(rust::String text) override;
+    void set_preedit_string(rust::String text, int32_t cursor_begin, int32_t cursor_end) override;
+    void delete_surrounding_text(uint32_t before_length, uint32_t after_length) override;
+    void commit(uint32_t serial) override;
+    auto get_input_popup_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::ZwpInputPopupSurfaceV2Impl> override;
+    auto grab_keyboard() -> std::shared_ptr<wayland_rs::ZwpInputMethodKeyboardGrabV2Impl> override;
+    /// @}
 
 private:
     struct StateObserver : ms::TextInputStateObserver
@@ -101,11 +91,12 @@ private:
 
     static size_t constexpr max_remembered_serials{10};
 
-    WlSeat* const seat;
+    std::shared_ptr<wayland_rs::Client> client;
+    WlSeatGlobal* const seat;
     std::shared_ptr<InputMethodV2Ctx> const ctx;
     std::shared_ptr<StateObserver> const state_observer;
     bool is_activated{false};
-    wayland::Weak<wayland::InputMethodKeyboardGrabV2> current_grab_keyboard;
+    mw::Weak<mw::ZwpInputMethodKeyboardGrabV2Impl> current_grab_keyboard;
     scene::TextInputState cached_state{};
     scene::TextInputChange pending_change{{}};
     /// The first value is the number of the done event that corresponds to the second value. When we get a commit it
@@ -124,77 +115,43 @@ private:
 
     /// Wraps wayland::InputMethodV2::send_done_event() and increments done_event_count
     void send_done_event();
-
-    /// Wayland requests
-    /// @{
-    void commit_string(std::string const& text) override;
-    void set_preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end) override;
-    void delete_surrounding_text(uint32_t before_length, uint32_t after_length) override;
-    void commit(uint32_t serial) override;
-    void get_input_popup_surface(struct wl_resource* id, struct wl_resource* surface) override;
-    void grab_keyboard(struct wl_resource* keyboard) override;
-    /// @}
 };
 
 // TODO: correctly implement popup surface
 class InputPopupSurfaceV2
-    : public wayland::InputPopupSurfaceV2
+    : public mw::ZwpInputPopupSurfaceV2Impl
 {
 public:
-    InputPopupSurfaceV2(wl_resource* resource);
+    InputPopupSurfaceV2();
 };
 }
-}
-
-auto mf::create_input_method_manager_v2(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::CompositeEventFilter> const event_filter)
--> std::shared_ptr<mw::InputMethodManagerV2::Global>
-{
-    auto ctx = std::shared_ptr<InputMethodV2Ctx>{new InputMethodV2Ctx{wayland_executor, text_input_hub, event_filter}};
-    return std::make_shared<InputMethodManagerV2Global>(display, std::move(ctx));
-}
-
-// InputMethodManagerV2Global
-
-mf::InputMethodManagerV2Global::InputMethodManagerV2Global(
-    wl_display* display,
-    std::shared_ptr<InputMethodV2Ctx> const& ctx)
-    : Global{display, Version<1>()},
-      ctx{ctx}
-{
-}
-
-void mf::InputMethodManagerV2Global::bind(wl_resource* new_resource)
-{
-    new InputMethodManagerV2{new_resource, ctx};
 }
 
 // InputMethodManagerV2
 
 mf::InputMethodManagerV2::InputMethodManagerV2(
-    wl_resource* resource,
-    std::shared_ptr<InputMethodV2Ctx> const& ctx)
-    : mw::InputMethodManagerV2{resource, Version<1>()},
-      ctx{ctx}
+    std::shared_ptr<wayland_rs::Client> const& client,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+    std::shared_ptr<input::CompositeEventFilter> const& event_filter)
+    : ctx{std::shared_ptr<InputMethodV2Ctx>{new InputMethodV2Ctx{wayland_executor, text_input_hub, event_filter, client}}}
 {
 }
 
-void mf::InputMethodManagerV2::get_input_method(struct wl_resource* seat, struct wl_resource* input_method)
+auto mf::InputMethodManagerV2::get_input_method(
+    wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) -> std::shared_ptr<wayland_rs::ZwpInputMethodV2Impl>
 {
-    auto const wl_seat = WlSeat::from(seat);
-    new InputMethodV2{input_method, wl_seat, ctx};
+    auto const wl_seat = WlSeatGlobal::from(&seat.value());
+    return std::make_shared<InputMethodV2>(ctx->client, wl_seat, ctx);
 }
 
 // InputMethodV2
 
 mf::InputMethodV2::InputMethodV2(
-    wl_resource* resource,
-    WlSeat* seat,
+    std::shared_ptr<wayland_rs::Client> const& client,
+    WlSeatGlobal* seat,
     std::shared_ptr<InputMethodV2Ctx> const& ctx)
-    : mw::InputMethodV2{resource, Version<1>()},
+    : client{client},
       seat{seat},
       ctx{ctx},
       state_observer{std::make_shared<StateObserver>(this)}
@@ -283,17 +240,17 @@ auto mf::InputMethodV2::find_serial(uint32_t done_event_count) const -> std::opt
 void mf::InputMethodV2::send_done_event()
 {
     done_event_count++;
-    mw::InputMethodV2::send_done_event();
+    mw::ZwpInputMethodV2Impl::send_done_event();
 }
 
-void mf::InputMethodV2::commit_string(std::string const& text)
+void mf::InputMethodV2::commit_string(rust::String text)
 {
-    pending_change.commit_text = text;
+    pending_change.commit_text = text.c_str();
 }
 
-void mf::InputMethodV2::set_preedit_string(std::string const& text, int32_t cursor_begin, int32_t cursor_end)
+void mf::InputMethodV2::set_preedit_string(rust::String text, int32_t cursor_begin, int32_t cursor_end)
 {
-    pending_change.preedit_text = text;
+    pending_change.preedit_text = text.c_str();
     pending_change.preedit_cursor_begin = cursor_begin;
     pending_change.preedit_cursor_end = cursor_end;
 }
@@ -314,35 +271,36 @@ void mf::InputMethodV2::commit(uint32_t serial)
     }
     else
     {
-        log_warning("%s: invalid commit serial %d", interface_name, serial);
+        log_warning("%s: invalid commit serial %d", "input_method_v2", serial);
     }
     pending_change = ms::TextInputChange{{}};
 }
 
-void mf::InputMethodV2::get_input_popup_surface(struct wl_resource* id, struct wl_resource* surface)
+auto mir::frontend::InputMethodV2::get_input_popup_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<wayland_rs::ZwpInputPopupSurfaceV2Impl>
 {
     (void)surface;
-    new InputPopupSurfaceV2{id};
+    return std::make_shared<InputPopupSurfaceV2>();
 }
 
-void mf::InputMethodV2::grab_keyboard(struct wl_resource* keyboard)
+auto mir::frontend::InputMethodV2::grab_keyboard() -> std::shared_ptr<wayland_rs::ZwpInputMethodKeyboardGrabV2Impl>
 {
     if (!is_activated)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            std::string{} + "got " + interface_name + ".grab_keyboard when input method was not active"));
+            std::string{} + "got " + "input_method_v2" + ".grab_keyboard when input method was not active"));
     }
     if (current_grab_keyboard)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("tried to grab the keyboard multiple times"));
     }
-    current_grab_keyboard = mw::make_weak<wayland::InputMethodKeyboardGrabV2>(
-        new InputMethodGrabKeyboardV2{keyboard, *seat, ctx->wayland_executor, *ctx->event_filter});
+    auto const keyboard = std::shared_ptr<wayland_rs::ZwpInputMethodKeyboardGrabV2Impl>(
+        new InputMethodGrabKeyboardV2{client, *seat, ctx->wayland_executor, *ctx->event_filter});
+    current_grab_keyboard = wayland_rs::Weak(keyboard);
+    return keyboard;
 }
 
 // InputPopupSurfaceV2
 
-mf::InputPopupSurfaceV2::InputPopupSurfaceV2(wl_resource* resource)
-    : mw::InputPopupSurfaceV2{resource, Version<1>()}
+mf::InputPopupSurfaceV2::InputPopupSurfaceV2()
 {
 }

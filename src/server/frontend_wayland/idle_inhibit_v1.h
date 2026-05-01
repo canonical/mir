@@ -17,7 +17,8 @@
 #ifndef MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 #define MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 
-#include "idle-inhibit-unstable-v1_wrapper.h"
+#include "idle_inhibit_unstable_v1.h"
+#include "weak.h"
 #include <mir/scene/idle_hub.h>
 
 #include <memory>
@@ -27,11 +28,21 @@ namespace mir
 class Executor;
 namespace frontend
 {
-auto create_idle_inhibit_manager_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> wayland_executor,
-    std::shared_ptr<scene::IdleHub> idle_hub)
--> std::shared_ptr<wayland::IdleInhibitManagerV1::Global>;
+struct IdleInhibitV1Ctx;
+
+class IdleInhibitManagerV1 : public wayland_rs::ZwpIdleInhibitManagerV1Impl
+{
+public:
+    IdleInhibitManagerV1(
+        std::shared_ptr<Executor> wayland_executor,
+        std::shared_ptr<scene::IdleHub> idle_hub);
+
+    auto create_inhibitor(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface)
+        -> std::shared_ptr<wayland_rs::ZwpIdleInhibitorV1Impl> override;
+
+private:
+    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
+};
 }
 }
 

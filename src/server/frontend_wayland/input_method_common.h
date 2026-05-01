@@ -19,10 +19,8 @@
 
 #include <cstdint>
 #include <mir/scene/text_input_hub.h>
-#include "text-input-unstable-v3_wrapper.h"
 
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
 
 namespace mir
 {

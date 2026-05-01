@@ -24,7 +24,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 using namespace mir::geometry;
 
 namespace
@@ -35,33 +35,33 @@ auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> uint32_t
     {
     default:
     case mir_subpixel_arrangement_unknown:
-        return mw::Output::Subpixel::unknown;
+        return mw::WlOutputImpl::Subpixel::unknown;
 
     case mir_subpixel_arrangement_horizontal_rgb:
-        return mw::Output::Subpixel::horizontal_rgb;
+        return mw::WlOutputImpl::Subpixel::horizontal_rgb;
 
     case mir_subpixel_arrangement_horizontal_bgr:
-        return mw::Output::Subpixel::horizontal_bgr;
+        return mw::WlOutputImpl::Subpixel::horizontal_bgr;
 
     case mir_subpixel_arrangement_vertical_rgb:
-        return mw::Output::Subpixel::vertical_rgb;
+        return mw::WlOutputImpl::Subpixel::vertical_rgb;
 
     case mir_subpixel_arrangement_vertical_bgr:
-        return mw::Output::Subpixel::vertical_bgr;
+        return mw::WlOutputImpl::Subpixel::vertical_bgr;
 
     case mir_subpixel_arrangement_none:
-        return mw::Output::Subpixel::none;
+        return mw::WlOutputImpl::Subpixel::none;
     }
 }
 
 }
 
-mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
-    : Output{resource, Version<4>()},
-      global{mw::make_weak(global)}
+mf::OutputInstance::OutputInstance(OutputGlobal* global, std::shared_ptr<wayland_rs::Client> const& client)
+    : global{mw::Weak(global->shared_from_this())},
+      client{client}
 {
     global->add_listener(this);
-    send_name_event_if_supported(global->output_config.name);
+    send_name_event(global->output_config.name);
 }
 
 // clang can't tell that .value() won't throw in this context
@@ -76,9 +76,9 @@ mf::OutputInstance::~OutputInstance()
 }
 // NOLINTEND(bugprone-exception-escape)
 
-auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
+auto mf::OutputInstance::from(WlOutputImpl* impl) -> OutputInstance*
 {
-    return dynamic_cast<OutputInstance*>(mw::Output::from(output));
+    return dynamic_cast<OutputInstance*>(impl);
 }
 
 auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
@@ -98,56 +98,48 @@ auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput co
         auto const& mode = config.modes[i];
 
         send_mode_event(
-            ((i == config.preferred_mode_index ? mw::Output::Mode::preferred : 0) |
-             (i == config.current_mode_index ? mw::Output::Mode::current : 0)),
+            ((i == config.preferred_mode_index ? mw::WlOutputImpl::Mode::preferred : 0) |
+             (i == config.current_mode_index ? mw::WlOutputImpl::Mode::current : 0)),
              mode.size.width.as_int(),
              mode.size.height.as_int(),
             mode.vrefresh_hz * 1000);
     }
 
-    if (version_supports_scale())
-    {
-        send_scale_event(ceil(config.scale));
-    }
-
+    send_scale_event(ceil(config.scale));
     return true;
 }
 
 void mf::OutputInstance::send_done()
 {
-    if (version_supports_done())
-    {
-        send_done_event();
-    }
+    send_done_event();
 }
 
-mf::OutputGlobal::OutputGlobal(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration)
-    : Global{display, Version<4>{}},
-      output_config{initial_configuration}
+mf::OutputGlobal::OutputGlobal(mg::DisplayConfigurationOutput const& initial_configuration)
+    : output_config{initial_configuration}
 {
 }
 
-auto mf::OutputGlobal::from(wl_resource* output) -> OutputGlobal*
+auto mf::OutputGlobal::from(wayland_rs::WlOutputImpl* output) -> OutputGlobal*
 {
     auto const instance = OutputInstance::from(output);
-    return instance ? mw::as_nullable_ptr(instance->global) : nullptr;
+    return instance ? &instance->global.value() : nullptr;
 }
 
-auto mf::OutputGlobal::from_or_throw(wl_resource* output) -> OutputGlobal&
+auto mf::OutputGlobal::from_or_throw(wayland_rs::WlOutputImpl* output) -> OutputGlobal&
 {
     auto const instance = OutputInstance::from(output);
     if (!instance)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "wl_output@" +
-            std::to_string(wl_resource_get_id(output)) +
+            std::to_string(output->object_id()) +
             " is not a mir::frontend::OutputInstance"));
     }
     if (!instance->global)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "the output global associated with wl_output@" +
-            std::to_string(wl_resource_get_id(output)) +
+            std::to_string(output->object_id()) +
             " has been destroyed"));
     }
     return instance->global.value();
@@ -159,7 +151,7 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
     bool needs_done = false;
     for (auto& listener : listeners)
     {
-        if (listener && listener.value().output_config_changed(config))
+        if (listener && listener->output_config_changed(config))
         {
             needs_done = true;
         }
@@ -170,14 +162,15 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
         {
             for (auto const& instance : client.second)
             {
-                instance->send_done();
+                if (instance)
+                    instance.value().send_done();
             }
         }
     }
 }
 
 void mf::OutputGlobal::for_each_output_bound_by(
-    wayland::Client* client,
+    wayland_rs::Client* client,
     std::function<void(OutputInstance*)> const& functor)
 {
     auto const resources = instances.find(client);
@@ -186,7 +179,8 @@ void mf::OutputGlobal::for_each_output_bound_by(
     {
         for (auto const& resource : resources->second)
         {
-            functor(resource);
+            if (resource)
+                functor(&resource.value());
         }
     }
 }
@@ -198,29 +192,33 @@ void mf::OutputGlobal::add_listener(OutputConfigListener* listener)
 
 void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
 {
-    std::erase_if(listeners, [&](auto candidate) { return !candidate || &candidate.value() == listener; });
+    std::erase_if(listeners, [&](auto candidate) { return !candidate || candidate == listener; });
 }
 
-void mf::OutputGlobal::bind(wl_resource* resource)
+ std::shared_ptr<mf::OutputInstance> mf::OutputGlobal::create(std::shared_ptr<wayland_rs::Client> const& client)
 {
-    auto const instance = new OutputInstance(resource, this);
-    instances[instance->client].push_back(instance);
+    auto const instance = std::make_shared<OutputInstance>(this, client);
+    instances[client.get()].push_back(mw::Weak(instance));
     for (auto const& listener : listeners)
     {
-        if (listener) listener.value().output_config_changed(output_config);
+        if (listener) listener->output_config_changed(output_config);
     }
     instance->send_done();
+    return instance;
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
 {
-    auto const iter = instances.find(instance->client);
+    auto const iter = std::find_if(instances.begin(), instances.end(), [instance](auto const& other)
+    {
+        return other.first == instance->client.get();
+    });
     if (iter == instances.end())
     {
         return;
     }
     auto& vec = iter->second;
-    std::erase_if(vec, [&](auto candidate) { return candidate == instance; });
+    std::erase_if(vec, [&](auto candidate) { return &candidate.value() == instance; });
     if (vec.empty())
     {
         instances.erase(iter);
@@ -252,11 +250,9 @@ private:
 };
 
 mf::OutputManager::OutputManager(
-    wl_display* display,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar)
-    : display{display},
-      registrar{registrar},
+    : registrar{registrar},
       display_config_observer{std::make_shared<DisplayConfigObserver>(*this, executor)}
 {
     registrar->register_interest(display_config_observer, *executor);
@@ -267,12 +263,12 @@ mf::OutputManager::~OutputManager()
     registrar->unregister_interest(*display_config_observer);
 }
 
-auto mf::OutputManager::output_id_for(std::optional<wl_resource*> output)
+auto mf::OutputManager::output_id_for(wayland_rs::WlOutputImpl* output)
     -> std::optional<graphics::DisplayConfigurationOutputId>
 {
     if (output)
     {
-        if (auto const global = OutputGlobal::from(output.value()))
+        if (auto const global = OutputGlobal::from(output))
         {
             return global->current_config().id;
         }
@@ -310,30 +306,30 @@ auto mf::OutputManager::from_output_transform(int32_t transform) -> std::tuple<M
     MirMirrorMode mirror_mode = mir_mirror_mode_none;
     switch (transform)
     {
-        case mw::Output::Transform::normal:
+        case mw::WlOutputImpl::Transform::normal:
             break;
-        case mw::Output::Transform::_90:
+    case mw::WlOutputImpl::Transform::r_90:
             orientation = mir_orientation_left;
             break;
-        case mw::Output::Transform::_180:
+        case mw::WlOutputImpl::Transform::r_180:
             orientation = mir_orientation_inverted;
             break;
-        case mw::Output::Transform::_270:
+        case mw::WlOutputImpl::Transform::r_270:
             orientation = mir_orientation_right;
             break;
-        case mw::Output::Transform::flipped:
+        case mw::WlOutputImpl::Transform::flipped:
             orientation = mir_orientation_normal;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
-        case mw::Output::Transform::flipped_90:
+        case mw::WlOutputImpl::Transform::flipped_90:
             orientation = mir_orientation_left;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
-        case mw::Output::Transform::flipped_180:
+        case mw::WlOutputImpl::Transform::flipped_180:
             orientation = mir_orientation_inverted;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
-        case mw::Output::Transform::flipped_270:
+        case mw::WlOutputImpl::Transform::flipped_270:
             orientation = mir_orientation_right;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
@@ -362,19 +358,19 @@ auto mir::frontend::OutputManager::to_output_transform(MirOrientation orientatio
             orientation_index = 3;
             break;
         default:
-            return mw::Output::Transform::normal;
+            return mw::WlOutputImpl::Transform::normal;
     }
 
     // Lookup table: [orientation_index][mirror_mode]
     static constexpr int32_t transform_table[4][3] = {
         // mir_orientation_normal
-        { mw::Output::Transform::normal, mw::Output::Transform::normal, mw::Output::Transform::flipped },
+        { mw::WlOutputImpl::Transform::normal, mw::WlOutputImpl::Transform::normal, mw::WlOutputImpl::Transform::flipped },
         // mir_orientation_left
-        { mw::Output::Transform::_90, mw::Output::Transform::_90, mw::Output::Transform::flipped_90 },
+        { mw::WlOutputImpl::Transform::r_90, mw::WlOutputImpl::Transform::r_90, mw::WlOutputImpl::Transform::flipped_90 },
         // mir_orientation_inverted
-        { mw::Output::Transform::_180, mw::Output::Transform::_180, mw::Output::Transform::flipped_180 },
+        { mw::WlOutputImpl::Transform::r_180, mw::WlOutputImpl::Transform::r_180, mw::WlOutputImpl::Transform::flipped_180 },
         // mir_orientation_right
-        { mw::Output::Transform::_270, mw::Output::Transform::_270, mw::Output::Transform::flipped_270 },
+        { mw::WlOutputImpl::Transform::r_270, mw::WlOutputImpl::Transform::r_270, mw::WlOutputImpl::Transform::flipped_270 },
     };
 
     return transform_table[orientation_index][mirror_mode];
@@ -399,7 +395,7 @@ void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayC
             }
             else if (output_config.used)
             {
-                auto output_global{std::make_unique<OutputGlobal>(display, output_config)};
+                auto output_global{std::make_unique<OutputGlobal>(output_config)};
                 auto* output_global_pointer{output_global.get()};
                 outputs[output_config.id] = std::move(output_global);
                 for (auto& listener : listeners)

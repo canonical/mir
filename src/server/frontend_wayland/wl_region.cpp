@@ -20,24 +20,11 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
-
-mf::WlRegion::WlRegion(wl_resource* new_resource)
-    : mw::Region(new_resource, Version<1>())
-{}
-
-mf::WlRegion::~WlRegion()
-{}
+namespace mw = mir::wayland_rs;
 
 std::vector<geom::Rectangle> mf::WlRegion::rectangle_vector()
 {
     return rects;
-}
-
-mf::WlRegion* mf::WlRegion::from(wl_resource* resource)
-{
-    void* raw = wl_resource_get_user_data(resource);
-    return static_cast<WlRegion*>(static_cast<wayland::Region*>(raw));
 }
 
 void mf::WlRegion::add(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -52,4 +39,9 @@ void mf::WlRegion::subtract(int32_t x, int32_t y, int32_t width, int32_t height)
     (void)width;
     (void)height;
     log_warning("WlRegion::subtract not implemented. ignoring.");
+}
+
+mir::frontend::WlRegion* mf::WlRegion::from(WlRegionImpl* region)
+{
+    return dynamic_cast<WlRegion*>(region);
 }

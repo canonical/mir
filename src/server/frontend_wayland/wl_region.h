@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_WL_REGION_H_
 #define MIR_FRONTEND_WL_REGION_H_
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
 
 #include <mir/geometry/rectangle.h>
 
@@ -28,19 +28,16 @@ namespace mir
 namespace frontend
 {
 
-class WlRegion: wayland::Region
+class WlRegion: public wayland_rs::WlRegionImpl
 {
 public:
-    WlRegion(wl_resource* new_resource);
-    ~WlRegion();
-
     std::vector<geometry::Rectangle> rectangle_vector();
-
-    static WlRegion* from(wl_resource* resource);
-
-private:
     void add(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void subtract(int32_t x, int32_t y, int32_t width, int32_t height) override;
+
+    static WlRegion* from(WlRegionImpl* region);
+
+private:
 
     std::vector<geometry::Rectangle> rects;
 };

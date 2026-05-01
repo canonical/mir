@@ -18,13 +18,17 @@
 #define MIR_FRONTEND_INPUT_METHOD_V2_H
 
 
-#include "input-method-unstable-v2_wrapper.h"
+#include "input_method_unstable_v2.h"
 
 #include <memory>
 
 namespace mir
 {
 class Executor;
+namespace wayland_rs
+{
+class Client;
+}
 namespace scene
 {
 class TextInputHub;
@@ -35,12 +39,21 @@ class CompositeEventFilter;
 }
 namespace frontend
 {
-auto create_input_method_manager_v2(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::CompositeEventFilter> const event_filter)
--> std::shared_ptr<wayland::InputMethodManagerV2::Global>;
+struct InputMethodV2Ctx;
+class InputMethodManagerV2
+    : public wayland_rs::ZwpInputMethodManagerV2Impl
+{
+public:
+    InputMethodManagerV2(
+    std::shared_ptr<wayland_rs::Client> const& client,
+        std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+        std::shared_ptr<input::CompositeEventFilter> const& event_filter);
+    auto get_input_method(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) -> std::shared_ptr<wayland_rs::ZwpInputMethodV2Impl> override;
+
+private:
+    std::shared_ptr<InputMethodV2Ctx> const ctx;
+};
 }
 }
 

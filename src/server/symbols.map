@@ -545,10 +545,6 @@ global:
     mir::scene::BasicSurface::window_size*;
     mir::scene::ClipboardObserver::?ClipboardObserver*;
     mir::scene::ClipboardObserver::ClipboardObserver*;
-    mir::scene::CopyableWlArray::?CopyableWlArray*;
-    mir::scene::CopyableWlArray::CopyableWlArray*;
-    mir::scene::CopyableWlArray::data*;
-    mir::scene::CopyableWlArray::operator*;
     mir::scene::DataExchangeSource::?DataExchangeSource*;
     mir::scene::DataExchangeSource::DataExchangeSource*;
     mir::scene::IdleHub::?IdleHub*;
@@ -1374,7 +1370,6 @@ global:
     typeinfo?for?mir::scene::BasicSurface;
     typeinfo?for?mir::scene::Clipboard;
     typeinfo?for?mir::scene::ClipboardObserver;
-    typeinfo?for?mir::scene::CopyableWlArray;
     typeinfo?for?mir::scene::DataExchangeSource;
     typeinfo?for?mir::scene::IdleHub;
     typeinfo?for?mir::scene::IdleStateObserver;

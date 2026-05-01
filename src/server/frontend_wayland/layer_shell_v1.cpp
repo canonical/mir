@@ -21,12 +21,12 @@
 #include "xdg_shell_stable.h"
 #include "wayland_utils.h"
 #include "output_manager.h"
+#include "weak.h"
+#include "client.h"
+#include "protocol_error.h"
 
 #include <mir/shell/surface_specification.h>
 #include <mir/log.h>
-#include <mir/wayland/weak.h>
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
 #include <boost/throw_exception.hpp>
 #include <deque>
 #include <vector>
@@ -36,7 +36,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 namespace
 {
@@ -45,13 +45,13 @@ auto layer_shell_layer_to_mir_depth_layer(uint32_t layer) -> MirDepthLayer
 {
     switch (layer)
     {
-    case mw::LayerShellV1::Layer::background:
+    case mw::ZwlrLayerShellV1Impl::Layer::background:
         return mir_depth_layer_background;
-    case mw::LayerShellV1::Layer::bottom:
+    case mw::ZwlrLayerShellV1Impl::Layer::bottom:
         return mir_depth_layer_below;
-    case mw::LayerShellV1::Layer::top:
+    case mw::ZwlrLayerShellV1Impl::Layer::top:
         return mir_depth_layer_above;
-    case mw::LayerShellV1::Layer::overlay:
+    case mw::ZwlrLayerShellV1Impl::Layer::overlay:
         return mir_depth_layer_overlay;
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid Layer Shell layer " + std::to_string(layer)));
@@ -65,31 +65,11 @@ namespace mir
 namespace frontend
 {
 
-class LayerShellV1::Instance : wayland::LayerShellV1
-{
-public:
-    Instance(wl_resource* new_resource, mf::LayerShellV1* shell)
-        : LayerShellV1{new_resource, Version<4>()},
-          shell{shell}
-    {
-    }
-
-private:
-    void get_layer_surface(
-        wl_resource* new_layer_surface,
-        wl_resource* surface,
-        std::optional<wl_resource*> const& output,
-        uint32_t layer,
-        std::string const& namespace_) override;
-
-    mf::LayerShellV1* const shell;
-};
-
-class LayerSurfaceV1 : public wayland::LayerSurfaceV1, public WindowWlSurfaceRole
+class LayerSurfaceV1 : public wayland_rs::ZwlrLayerSurfaceV1Impl, public WindowWlSurfaceRole
 {
 public:
     LayerSurfaceV1(
-        wl_resource* new_resource,
+        std::shared_ptr<mw::Client> const& client,
         WlSurface* surface,
         std::optional<graphics::DisplayConfigurationOutputId> output_id,
         LayerShellV1 const& layer_shell,
@@ -97,7 +77,18 @@ public:
 
     ~LayerSurfaceV1() = default;
 
-    static auto from(wl_resource* surface) -> std::optional<LayerSurfaceV1*>;
+    auto associate(rust::Box<wayland_rs::ZwlrLayerSurfaceV1Ext> instance, uint32_t object_id) -> void override;
+
+    static auto from(wayland_rs::ZwlrLayerSurfaceV1Impl* surface) -> std::optional<LayerSurfaceV1*>;
+
+    void set_size(uint32_t width, uint32_t height) override;
+    void set_anchor(uint32_t anchor) override;
+    void set_exclusive_zone(int32_t zone) override;
+    void set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left) override;
+    void set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
+    auto get_popup(wayland_rs::Weak<wayland_rs::XdgPopupImpl> const& popup) -> void override;
+    void ack_configure(uint32_t serial) override;
+    void set_layer(uint32_t layer) override;
 
 private:
     template<typename T>
@@ -171,16 +162,6 @@ private:
     /// Sends a configure event if needed
     void configure();
 
-    // from wayland::LayerSurfaceV1
-    void set_size(uint32_t width, uint32_t height) override;
-    void set_anchor(uint32_t anchor) override;
-    void set_exclusive_zone(int32_t zone) override;
-    void set_margin(int32_t top, int32_t right, int32_t bottom, int32_t left) override;
-    void set_keyboard_interactivity(uint32_t keyboard_interactivity) override;
-    void get_popup(wl_resource* popup) override;
-    void ack_configure(uint32_t serial) override;
-    void set_layer(uint32_t layer) override;
-
     // from WindowWlSurfaceRole
     void handle_commit() override;
     void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -194,9 +175,11 @@ private:
 
     void destroy_role() const override
     {
-        wl_resource_destroy(resource);
+        // TODO:
+        // wl_resource_destroy(resource);
     }
 
+    std::shared_ptr<mw::Client> client;
     DoubleBuffered<int32_t> exclusive_zone{0};
     DoubleBuffered<Anchors> anchors;
     DoubleBuffered<Margin> margin;
@@ -209,7 +192,7 @@ private:
     bool configure_on_next_commit{false}; ///< If to send a .configure event at the end of the next or current commit
     MirFocusMode current_focus_mode{mir_focus_mode_disabled};
     std::deque<std::pair<uint32_t, OptionalSize>> inflight_configures;
-    std::vector<wayland::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
+    std::vector<wayland_rs::Weak<XdgPopupStable>> popups; ///< We have to keep track of popups to adjust their offset
 };
 
 }
@@ -218,13 +201,13 @@ private:
 // LayerShellV1
 
 mf::LayerShellV1::LayerShellV1(
-    struct wl_display* display,
+    std::shared_ptr<mw::Client> const& client,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : Global(display, Version<4>()),
+    : client{client},
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
@@ -233,73 +216,63 @@ mf::LayerShellV1::LayerShellV1(
 {
 }
 
-auto mf::LayerShellV1::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
+auto mf::LayerShellV1::get_window(wayland_rs::ZwlrLayerSurfaceV1Impl* surface) -> std::shared_ptr<ms::Surface>
 {
-    namespace mw = mir::wayland;
+    namespace mw = mir::wayland_rs;
 
-    if (mw::LayerSurfaceV1::is_instance(surface))
+    if (auto const layer_surface = LayerSurfaceV1::from(surface))
     {
-        if (auto const layer_surface = LayerSurfaceV1::from(surface))
+        if (auto const scene_surface = layer_surface.value()->scene_surface())
         {
-            if (auto const scene_surface = layer_surface.value()->scene_surface())
-            {
-                return scene_surface.value();
-            }
+            return scene_surface.value();
         }
-
-        log_debug("No window currently associated with wayland::LayerSurfaceV1 %p", static_cast<void*>(surface));
     }
 
+    log_debug("No window currently associated with wayland::LayerSurfaceV1 %p", static_cast<void*>(surface));
     return {};
 }
 
-void mf::LayerShellV1::bind(wl_resource* new_resource)
-{
-    new Instance{new_resource, this};
-}
-
-void mf::LayerShellV1::Instance::get_layer_surface(
-    wl_resource* new_layer_surface,
-    wl_resource* surface,
-    std::optional<wl_resource*> const& output,
-    uint32_t layer,
-    std::string const& namespace_)
+auto mf::LayerShellV1::get_layer_surface(
+    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
+    wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output,
+    bool has_output, uint32_t layer, rust::String namespace_) -> std::shared_ptr<wayland_rs::ZwlrLayerSurfaceV1Impl>
 {
     (void)namespace_; // Can be ignored if no special behavior is required;
 
-    if (layer > mw::LayerShellV1::Layer::overlay)
+    if (layer > mw::ZwlrLayerShellV1Impl::Layer::overlay)
     {
-        throw wayland::ProtocolError{
-            resource,
-            mw::LayerShellV1::Error::invalid_layer,
+        throw wayland_rs::ProtocolError{
+            object_id(),
+            mw::ZwlrLayerShellV1Impl::Error::invalid_layer,
             "Invalid layer %u", layer};
     }
 
-    new LayerSurfaceV1(
-        new_layer_surface,
-        WlSurface::from(surface),
-        OutputManager::output_id_for(output),
-        *shell,
-        layer_shell_layer_to_mir_depth_layer(layer));
+    return std::make_shared<LayerSurfaceV1>(
+        client,
+        WlSurface::from(&surface.value()),
+        has_output ? OutputManager::output_id_for(&output.value()) : std::nullopt,
+        *this,
+        layer_shell_layer_to_mir_depth_layer(layer)
+    );
 }
 
 // LayerSurfaceV1
 
 mf::LayerSurfaceV1::LayerSurfaceV1(
-    wl_resource* new_resource,
+std::shared_ptr<mw::Client> const& client,
     WlSurface* surface,
     std::optional<graphics::DisplayConfigurationOutputId> output_id,
     LayerShellV1 const& layer_shell,
     MirDepthLayer layer)
-    : mw::LayerSurfaceV1(new_resource, Version<4>()),
-      WindowWlSurfaceRole(
+    : WindowWlSurfaceRole(
           layer_shell.wayland_executor,
           &layer_shell.seat,
-          wayland::LayerSurfaceV1::client,
-          surface,
+          client.get(),
+          surface->shared_from_this(),
           layer_shell.shell,
           layer_shell.output_manager,
-          layer_shell.surface_registry)
+          layer_shell.surface_registry),
+      client{client}
 {
     // TODO: Error if surface has buffer attached or committed
     shell::SurfaceSpecification spec;
@@ -311,12 +284,15 @@ mf::LayerSurfaceV1::LayerSurfaceV1(
     apply_spec(spec);
 }
 
-auto mf::LayerSurfaceV1::from(wl_resource* surface) -> std::optional<LayerSurfaceV1*>
+auto mf::LayerSurfaceV1::associate(rust::Box<wayland_rs::ZwlrLayerSurfaceV1Ext> instance, uint32_t object_id) -> void
 {
-    if (!mw::LayerSurfaceV1::is_instance(surface))
-        return std::nullopt;
-    auto const mw_surface = mw::LayerSurfaceV1::from(surface);
-    auto const mf_surface = dynamic_cast<mf::LayerSurfaceV1*>(mw_surface);
+    ZwlrLayerSurfaceV1Impl::associate(std::move(instance), object_id);
+    init_observer();
+}
+
+auto mf::LayerSurfaceV1::from(ZwlrLayerSurfaceV1Impl* surface) -> std::optional<LayerSurfaceV1*>
+{
+    auto const mf_surface = dynamic_cast<mf::LayerSurfaceV1*>(surface);
     if (mf_surface)
         return mf_surface;
     else
@@ -488,7 +464,7 @@ void mf::LayerSurfaceV1::configure()
         configure_size.height = client_size.committed().height;
     }
 
-    auto const serial = Resource::client->next_serial(nullptr);
+    auto const serial = client->next_serial(nullptr);
     if (!inflight_configures.empty() && serial <= inflight_configures.back().first)
         BOOST_THROW_EXCEPTION(std::runtime_error("Generated invalid configure serial"));
     inflight_configures.push_back(std::make_pair(serial, configure_size));
@@ -571,7 +547,7 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
 
     default:
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_keyboard_interactivity,
             "Invalid keyboard interactivity %d",
             keyboard_interactivity));
@@ -581,7 +557,7 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
     apply_spec(spec);
 }
 
-void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
+auto mir::frontend::LayerSurfaceV1::get_popup(wayland_rs::Weak<wayland_rs::XdgPopupImpl> const& popup) -> void
 {
     auto const scene_surface_ = scene_surface();
     if (!scene_surface_)
@@ -590,7 +566,7 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
         return;
     }
 
-    auto* const popup_window_role = XdgPopupStable::from(popup);
+    auto popup_window_role = XdgPopupStable::from(&popup.value());
 
     popup_window_role->set_aux_rect_offset_now(offset.pending());
 
@@ -601,7 +577,8 @@ void mf::LayerSurfaceV1::get_popup(struct wl_resource* popup)
     // Ideally we'd do this in a callback when popups are destroyed, but in practice waiting until a new popup is
     // created to clear out the destroyed ones is fine
     std::erase_if(popups, [](auto const& popup) { return !popup; });
-    popups.push_back(mw::make_weak(popup_window_role));
+    auto const sh = std::dynamic_pointer_cast<XdgPopupStable>(popup_window_role->shared_from_this());
+    popups.push_back(mw::Weak(sh));
 }
 
 void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
@@ -643,16 +620,16 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 
 void mf::LayerSurfaceV1::set_layer(uint32_t layer)
 {
-    if (layer > mw::LayerShellV1::Layer::overlay)
+    if (layer > mw::ZwlrLayerShellV1Impl::Layer::overlay)
     {
         // FIXME: This should be an invalid_layer error, but that isn't defined in the protocol yet
         // See https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/142
         // wlroots incorrectly uses the zwlr_layer_shell_v1.error.invalid_layer error code for this,
         // so we are matching that even though it will be interpreted as zwlr_layer_surface_v1.error.invalid_size
         // in the client.
-        throw wayland::ProtocolError{
-            resource,
-            mw::LayerShellV1::Error::invalid_layer,
+        throw wayland_rs::ProtocolError{
+            object_id(),
+            mw::ZwlrLayerShellV1Impl::Error::invalid_layer,
             "Invalid layer %u", layer};
     }
 
@@ -689,14 +666,14 @@ void mf::LayerSurfaceV1::handle_commit()
     if (!horiz_stretched && !width_set_by_client)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_size,
             "Width may be unspecified only when surface is anchored to left and right edges"));
     }
     if (!vert_stretched && !height_set_by_client)
     {
         BOOST_THROW_EXCEPTION(mw::ProtocolError(
-            resource,
+            object_id(),
             Error::invalid_size,
             "Height may be unspecified only when surface is anchored to top and bottom edges"));
     }
@@ -722,13 +699,13 @@ void mf::LayerSurfaceV1::handle_close_request()
 
 void mf::LayerSurfaceV1::surface_destroyed()
 {
-    if (!Resource::client->is_being_destroyed())
-    {
-        // Squeekboard (and possibly other purism apps) violate the protocol by destroying the surface before the role.
-        // Until it gets fixed we ignore this error for layer shell specifically.
-        // See: https://gitlab.gnome.org/World/Phosh/squeekboard/-/issues/285
-        log_warning(
-            "Ignoring layer shell protocol violation: wl_surface destroyed before associated zwlr_layer_surface_v1@%u",
-            wl_resource_get_id(resource));
-    }
+    // if (!Resource::client->is_being_destroyed())
+    // {
+    //     // Squeekboard (and possibly other purism apps) violate the protocol by destroying the surface before the role.
+    //     // Until it gets fixed we ignore this error for layer shell specifically.
+    //     // See: https://gitlab.gnome.org/World/Phosh/squeekboard/-/issues/285
+    //     log_warning(
+    //         "Ignoring layer shell protocol violation: wl_surface destroyed before associated zwlr_layer_surface_v1@%u",
+    //         wl_resource_get_id(resource));
+    // }
 }

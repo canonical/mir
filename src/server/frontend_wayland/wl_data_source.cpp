@@ -15,21 +15,21 @@
  */
 
 #include "wl_data_source.h"
+#include "weak.h"
 
 #include <mir/executor.h>
 #include <mir/scene/clipboard.h>
-#include <mir/wayland/weak.h>
 
 #include <vector>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 class mf::WlDataSource::ClipboardObserver : public ms::ClipboardObserver
 {
 public:
-    ClipboardObserver(WlDataSource* owner) : owner{owner}
+    explicit ClipboardObserver(std::shared_ptr<WlDataSource> const& owner) : owner{owner}
     {
     }
 
@@ -66,16 +66,16 @@ private:
         }
     }
 
-    wayland::Weak<WlDataSource> const owner;
+    mw::Weak<WlDataSource> const owner;
 };
 
 class mf::WlDataSource::Source : public ms::DataExchangeSource
 {
 public:
-    Source(WlDataSource& wl_data_source) :
-        wayland_executor{wl_data_source.wayland_executor},
-        wl_data_source{&wl_data_source},
-        types{wl_data_source.mime_types}
+    explicit Source(std::shared_ptr<WlDataSource> const& wl_data_source) :
+        wayland_executor{wl_data_source->wayland_executor},
+        wl_data_source{wl_data_source},
+        types{wl_data_source->mime_types}
     {
     }
 
@@ -108,7 +108,7 @@ public:
     {
         if (wl_data_source && !performed_or_cancelled)
         {
-            wl_data_source.value().send_dnd_drop_performed_event_if_supported();
+            wl_data_source.value().send_dnd_drop_performed_event();
             performed_or_cancelled = true;
         }
     }
@@ -129,7 +129,7 @@ public:
     {
         if (wl_data_source)
         {
-            wl_data_source.value().send_target_event(mime_type);
+            wl_data_source.value().send_target_event(*mime_type, true);
         }
     }
 
@@ -141,7 +141,7 @@ public:
         }
         else
         {
-            return mw::DataDeviceManager::DndAction::none;
+            return mw::WlDataDeviceManagerImpl::DndAction::none;
         }
     }
 
@@ -149,25 +149,23 @@ public:
     {
         if (wl_data_source)
         {
-            return wl_data_source.value().send_dnd_finished_event_if_supported();
+            return wl_data_source.value().send_dnd_finished_event();
         }
     }
 
 private:
     std::shared_ptr<Executor> const wayland_executor;
-    wayland::Weak<WlDataSource> const wl_data_source;
+    mw::Weak<WlDataSource> const wl_data_source;
     std::vector<std::string> const types;
     bool performed_or_cancelled{false};
 };
 
 mf::WlDataSource::WlDataSource(
-    wl_resource* new_resource,
     std::shared_ptr<Executor> const& wayland_executor,
     scene::Clipboard& clipboard)
-    : mw::DataSource{new_resource, Version<3>()},
-      wayland_executor{wayland_executor},
+    : wayland_executor{wayland_executor},
       clipboard{clipboard},
-      clipboard_observer{std::make_shared<ClipboardObserver>(this)}
+      clipboard_observer{std::make_shared<ClipboardObserver>(shared_from_this())}
 {
     clipboard.register_interest(clipboard_observer, *wayland_executor);
 }
@@ -185,9 +183,9 @@ mf::WlDataSource::~WlDataSource()
     }
 }
 
-auto mf::WlDataSource::from(struct wl_resource* resource) -> WlDataSource*
+auto mf::WlDataSource::from(WlDataSourceImpl* resource) -> WlDataSource*
 {
-    return dynamic_cast<mf::WlDataSource*>(wayland::DataSource::from(resource));
+    return dynamic_cast<WlDataSource*>(resource);
 }
 
 void mf::WlDataSource::set_clipboard_paste_source()
@@ -196,7 +194,7 @@ void mf::WlDataSource::set_clipboard_paste_source()
     {
         return;
     }
-    auto const source = std::make_shared<Source>(*this);
+    auto const source = std::make_shared<Source>(shared_from_this());
     paste_source = source;
     clipboards_paste_source_is_ours = false; // set to true once our observer gets notified of the change
     clipboard.set_paste_source(source);
@@ -204,15 +202,15 @@ void mf::WlDataSource::set_clipboard_paste_source()
 
 void mf::WlDataSource::start_drag_n_drop_gesture()
 {
-    send_target_event(std::nullopt);
-    auto const source = std::make_shared<Source>(*this);
+    send_target_event("", false);
+    auto const source = std::make_shared<Source>(shared_from_this());
     dnd_source = source;
     clipboard.set_drag_n_drop_source(source);
 }
 
-void mf::WlDataSource::offer(std::string const& mime_type)
+auto mir::frontend::WlDataSource::offer(rust::String mime_type) -> void
 {
-    mime_types.push_back(mime_type);
+    mime_types.push_back(mime_type.c_str());
 }
 
 void mf::WlDataSource::paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
@@ -252,28 +250,28 @@ void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 
 uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
 {
-    using DndAction = mw::DataDeviceManager::DndAction;
+    using DndAction = mw::WlDataDeviceManagerImpl::DndAction;
 
     if (preferred_action == DndAction::ask)
     {
-        preferred_action = DndAction::move;
+        preferred_action = DndAction::r_move;
     }
 
     if (dnd_actions | DndAction::ask)
     {
-        preferred_action |= DndAction::move;
+        preferred_action |= DndAction::r_move;
     }
 
     auto const acceptable_options = this->dnd_actions | dnd_actions;
 
-    for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
+    for (auto action : {preferred_action, DndAction::copy, DndAction::r_move, DndAction::none})
     {
         if (action | acceptable_options)
         {
             if (!dnd_action || dnd_action.value() != action)
             {
                 dnd_action = action;
-                send_action_event_if_supported(action);
+                send_action_event(action);
             }
             return action;
         }
@@ -284,5 +282,5 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
 
 auto mf::WlDataSource::make_source() -> std::shared_ptr<mir::scene::DataExchangeSource>
 {
-    return std::make_shared<Source>(*this);
+    return std::make_shared<Source>(shared_from_this());
 }

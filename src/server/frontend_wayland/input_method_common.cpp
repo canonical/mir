@@ -15,16 +15,16 @@
  */
 
 #include "input_method_common.h"
-#include "text-input-unstable-v3_wrapper.h"
+#include "text_input_unstable_v3.h"
 #include <boost/throw_exception.hpp>
 
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 auto mir::frontend::mir_to_wayland_content_hint(ms::TextInputContentHint hint) -> uint32_t
 {
 #define MIR_TO_WAYLAND_HINT(name) \
-    ((hint & ms::TextInputContentHint::name) != ms::TextInputContentHint::none ? mw::TextInputV3::ContentHint::name : 0)
+    ((hint & ms::TextInputContentHint::name) != ms::TextInputContentHint::none ? mw::ZwpTextInputV3Impl::ContentHint::name : 0)
 
     return
         MIR_TO_WAYLAND_HINT(completion) |
@@ -46,46 +46,46 @@ auto mir::frontend::mir_to_wayland_content_purpose(ms::TextInputContentPurpose p
     switch (purpose)
     {
         case ms::TextInputContentPurpose::normal:
-            return mw::TextInputV3::ContentPurpose::normal;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::normal;
 
         case ms::TextInputContentPurpose::alpha:
-            return mw::TextInputV3::ContentPurpose::alpha;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::alpha;
 
         case ms::TextInputContentPurpose::digits:
-            return mw::TextInputV3::ContentPurpose::digits;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::digits;
 
         case ms::TextInputContentPurpose::number:
-            return mw::TextInputV3::ContentPurpose::number;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::number;
 
         case ms::TextInputContentPurpose::phone:
-            return mw::TextInputV3::ContentPurpose::phone;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::phone;
 
         case ms::TextInputContentPurpose::url:
-            return mw::TextInputV3::ContentPurpose::url;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::url;
 
         case ms::TextInputContentPurpose::email:
-            return mw::TextInputV3::ContentPurpose::email;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::email;
 
         case ms::TextInputContentPurpose::name:
-            return mw::TextInputV3::ContentPurpose::name;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::name;
 
         case ms::TextInputContentPurpose::password:
-            return mw::TextInputV3::ContentPurpose::password;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::password;
 
         case ms::TextInputContentPurpose::pin:
-            return mw::TextInputV3::ContentPurpose::pin;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::pin;
 
         case ms::TextInputContentPurpose::date:
-            return mw::TextInputV3::ContentPurpose::date;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::date;
 
         case ms::TextInputContentPurpose::time:
-            return mw::TextInputV3::ContentPurpose::time;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::time;
 
         case ms::TextInputContentPurpose::datetime:
-            return mw::TextInputV3::ContentPurpose::datetime;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::datetime;
 
         case ms::TextInputContentPurpose::terminal:
-            return mw::TextInputV3::ContentPurpose::terminal;
+            return mw::ZwpTextInputV3Impl::ContentPurpose::terminal;
 
         default:
             BOOST_THROW_EXCEPTION(std::invalid_argument{
@@ -98,10 +98,10 @@ auto mir::frontend::mir_to_wayland_change_cause(ms::TextInputChangeCause cause) 
     switch (cause)
     {
         case ms::TextInputChangeCause::input_method:
-            return mw::TextInputV3::ChangeCause::input_method;
+            return mw::ZwpTextInputV3Impl::ChangeCause::input_method;
 
         case ms::TextInputChangeCause::other:
-            return mw::TextInputV3::ChangeCause::other;
+            return mw::ZwpTextInputV3Impl::ChangeCause::other;
 
         default:
             BOOST_THROW_EXCEPTION(std::invalid_argument{

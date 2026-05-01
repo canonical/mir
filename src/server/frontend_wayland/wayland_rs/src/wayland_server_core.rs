@@ -14,19 +14,33 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler};
+use crate::ffi::{FdReadyCallback, GlobalFactory, WaylandServerNotificationHandler, WorkCallback};
 use crate::wayland_client::{WaylandClient, WaylandClientId};
+use calloop::channel::{self, Event};
 use calloop::ping::Ping;
-use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
+use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction, RegistrationToken};
 use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{mpsc, Arc, Mutex};
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
     Display, DisplayHandle, ListeningSocket,
 };
+
+// SAFETY: WorkCallback instances are created on one thread and sent to the event loop
+// thread via calloop::channel. The C++ implementation must be safe to call from the
+// event loop thread, which matches the existing WaylandExecutor contract.
+unsafe impl Send for WorkCallback {}
+
+// SAFETY: FdReadyCallback instances are created on one thread and moved into a calloop
+// source callback. They are only ever called from the event loop thread.
+unsafe impl Send for FdReadyCallback {}
+
+static SERIAL_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 /// The wayland server.
 pub struct WaylandServer {
@@ -48,7 +62,7 @@ impl WaylandServer {
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
     pub fn run(
-        &mut self,
+        &self,
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
         notification_handler: UniquePtr<WaylandServerNotificationHandler>,
@@ -86,6 +100,7 @@ impl WaylandServer {
                                 // spoken to on a single thread.
                                 let _ = disconnect_tx.send((client_id, reason));
                             }),
+                            socket_fd: stream.as_raw_fd(),
                         };
                         match state.handle.insert_client(stream, Arc::new(client_state)) {
                             Err(e) => log::error!("Failed to add client: {}", e),
@@ -139,6 +154,26 @@ impl WaylandServer {
             })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
+        // Set up the work channel for cross-thread work queueing.
+        let (work_sender, work_channel) = channel::channel::<UniquePtr<WorkCallback>>();
+        loop_handle
+            .insert_source(work_channel, |event, _, _state: &mut ServerState| {
+                if let Event::Msg(mut work) = event {
+                    work.pin_mut().execute();
+                }
+            })
+            .map_err(|_| "Failed to insert work channel into event loop")?;
+
+        // Create the event loop handle and notify C++ that the loop is ready.
+        let event_loop_handle = WaylandEventLoopHandle {
+            loop_handle: loop_handle.clone(),
+            work_sender,
+        };
+        state
+            .notification_handler
+            .pin_mut()
+            .loop_ready(Box::new(event_loop_handle));
+
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
 
         // TODO: Don't spin continuously
@@ -186,6 +221,100 @@ pub fn create_wayland_server() -> Box<WaylandServer> {
     Box::new(WaylandServer::new())
 }
 
+/// Increment and return the next serial number for the Wayland display.
+pub fn next_serial() -> u32 {
+    SERIAL_COUNTER.fetch_add(1, Ordering::Relaxed) + 1
+}
+
+/// A handle to the Wayland event loop that allows C++ code to watch file descriptors
+/// and queue arbitrary work onto the loop thread.
+///
+/// This is safe to use from any thread: the `work_sender` is `Send + Sync`.
+pub struct WaylandEventLoopHandle {
+    loop_handle: calloop::LoopHandle<'static, ServerState>,
+    work_sender: channel::Sender<UniquePtr<WorkCallback>>,
+}
+
+impl WaylandEventLoopHandle {
+    /// Register a file descriptor for one-shot readable notification.
+    ///
+    /// When the fd becomes readable, `callback.ready()` is called on the event loop thread
+    /// and the watch is automatically removed.
+    ///
+    /// The returned `FdWatchToken` can be used to cancel the watch early. Dropping the token
+    /// also cancels the watch.
+    ///
+    /// # Safety
+    /// The caller must ensure `fd` is a valid, open file descriptor. Ownership of the fd
+    /// is transferred to this function — it will be closed when the watch is removed.
+    pub fn watch_fd(&self, fd: i32, callback: UniquePtr<FdReadyCallback>) -> Box<FdWatchToken> {
+        // SAFETY: caller guarantees fd is valid and transfers ownership
+        let owned_fd = unsafe { OwnedFd::from_raw_fd(fd) };
+        let callback = Arc::new(Mutex::new(Some(callback)));
+        let callback_clone = callback.clone();
+        let token = self
+            .loop_handle
+            .insert_source(
+                Generic::new(owned_fd, Interest::READ, Mode::Level),
+                move |_, _, _| {
+                    if let Some(mut cb) = callback_clone
+                        .lock()
+                        .expect("No recovery from lock poisoning")
+                        .take()
+                    {
+                        cb.pin_mut().ready();
+                    }
+                    Ok(PostAction::Remove)
+                },
+            )
+            .expect("Failed to insert fd source into event loop");
+        Box::new(FdWatchToken {
+            token: Some(token),
+            loop_handle: self.loop_handle.clone(),
+        })
+    }
+
+    /// Queue work to be executed on the Wayland event loop thread.
+    ///
+    /// This is safe to call from any thread. The work will be dispatched
+    /// during the next event loop iteration.
+    pub fn spawn(&self, work: UniquePtr<WorkCallback>) {
+        if let Err(e) = self.work_sender.send(work) {
+            log::error!("Failed to send work to event loop: {}", e);
+        }
+    }
+
+    /// Clone this handle so it can be shared with other C++ components.
+    pub fn clone_box(&self) -> Box<WaylandEventLoopHandle> {
+        Box::new(WaylandEventLoopHandle {
+            loop_handle: self.loop_handle.clone(),
+            work_sender: self.work_sender.clone(),
+        })
+    }
+}
+
+/// A token representing a registered fd watch. Dropping or calling `cancel()` removes the watch.
+pub struct FdWatchToken {
+    token: Option<RegistrationToken>,
+    loop_handle: calloop::LoopHandle<'static, ServerState>,
+}
+
+impl FdWatchToken {
+    /// Cancel the fd watch, removing it from the event loop.
+    /// Safe to call multiple times — subsequent calls are no-ops.
+    pub fn cancel(&mut self) {
+        if let Some(token) = self.token.take() {
+            self.loop_handle.remove(token);
+        }
+    }
+}
+
+impl Drop for FdWatchToken {
+    fn drop(&mut self) {
+        self.cancel();
+    }
+}
+
 /// The state of the wayland server.
 pub struct ServerState {
     pub handle: DisplayHandle,
@@ -195,8 +324,16 @@ pub struct ServerState {
 }
 
 /// The state of a wayland client.
-struct ClientState {
+pub struct ClientState {
     on_disconnect: Box<dyn Fn(ClientId, DisconnectReason) + Send + Sync>,
+    socket_fd: std::os::fd::RawFd,
+}
+
+impl ClientState {
+    /// Retrieve the socket file descriptor for this client's connection.
+    pub fn fd(&self) -> i32 {
+        self.socket_fd
+    }
 }
 
 impl ClientData for ClientState {

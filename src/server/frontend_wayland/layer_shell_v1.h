@@ -17,7 +17,11 @@
 #ifndef MIR_FRONTEND_LAYER_SHELL_V1_H
 #define MIR_FRONTEND_LAYER_SHELL_V1_H
 
-#include "wlr-layer-shell-unstable-v1_wrapper.h"
+#include <wayland-server.h>
+#include <wlcs/display_server.h>
+
+#include "wlr_layer_shell_unstable_v1.h"
+#include "client.h"
 
 namespace mir
 {
@@ -33,26 +37,29 @@ class Surface;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class OutputManager;
 class SurfaceRegistry;
 
-class LayerShellV1 : public wayland::LayerShellV1::Global
+class LayerShellV1 : public wayland_rs::ZwlrLayerShellV1Impl
 {
 public:
     LayerShellV1(
-        wl_display* display,
+        std::shared_ptr<wayland_rs::Client> const& client,
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
-    static auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
+    auto get_layer_surface(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface, wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool has_output, uint32_t layer, rust::String namespace_)
+        -> std::shared_ptr<wayland_rs::ZwlrLayerSurfaceV1Impl> override;
+    static auto get_window(wayland_rs::ZwlrLayerSurfaceV1Impl* surface) -> std::shared_ptr<scene::Surface>;
 
+    std::shared_ptr<wayland_rs::Client> client;
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    WlSeat& seat;
+    WlSeatGlobal& seat;
     OutputManager* const output_manager;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
 

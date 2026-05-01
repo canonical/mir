@@ -30,6 +30,8 @@ template<typename T>
 class Weak
 {
 public:
+    Weak() = default;
+
     explicit Weak(std::shared_ptr<T> const& ptr)
         : ptr_{ptr}
     {
@@ -37,12 +39,9 @@ public:
 
     Weak(Weak const& weak) = default;
 
-    template<typename F>
-    decltype(auto) with_value(F&& f) const
+    T& value() const
     {
-        if (auto locked = ptr_.lock())
-            return std::forward<F>(f)(*locked);
-        BOOST_THROW_EXCEPTION(std::logic_error{"Accessing expired wayland_rs::Weak"});
+        return *ptr_.lock();
     }
 
     operator bool() const

@@ -18,8 +18,8 @@
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
 #include <mir/shell/token_authority.h>
-#include "wayland_wrapper.h"
 #include "input_trigger_registry.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/fd.h>
 #include <mir/frontend/connector.h>
@@ -60,6 +60,7 @@ namespace graphics
 class GraphicBufferAllocator;
 class DisplayConfigurationObserver;
 class RenderingPlatform;
+class DRMRenderingProvider;
 }
 namespace shell
 {
@@ -86,9 +87,9 @@ class PointerInputDispatcher;
 class SessionAuthorizer;
 class SurfaceStack;
 class WlApplication;
-class WlCompositor;
+class WlCompositorGlobal;
 class WlDataDeviceManager;
-class WlSeat;
+class WlSeatGlobal;
 class WlShm;
 class WlSubcompositor;
 class WlSurface;
@@ -98,6 +99,8 @@ class DesktopFileManager;
 class SurfaceRegistry;
 class InputTriggerRegistry;
 class KeyboardStateTracker;
+class WlClientRegistry;
+class WaylandExecutor;
 
 class WaylandExtensions
 {
@@ -105,7 +108,6 @@ public:
     /// The resources needed to init Wayland extensions
     struct Context
     {
-        wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         std::shared_ptr<SessionAuthorizer> session_authorizer;
@@ -113,7 +115,7 @@ public:
         std::shared_ptr<scene::Clipboard> primary_selection_clipboard;
         std::shared_ptr<scene::TextInputHub> text_input_hub;
         std::shared_ptr<scene::IdleHub> idle_hub;
-        WlSeat* seat;
+        WlSeatGlobal* seat;
         OutputManager* output_manager;
         std::shared_ptr<SurfaceStack> surface_stack;
         std::shared_ptr<input::InputDeviceRegistry> input_device_registry;
@@ -212,15 +214,10 @@ public:
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 private:
-    struct ServerWrapper;
-
     void for_each_output_binding(
         wayland::Client* client,
         graphics::DisplayConfigurationOutputId output,
         std::function<void(wl_resource* output)> const& callback) override;
-
-    bool wl_display_global_filter_func(wl_client const* client, wl_global const* global) const;
-    static bool wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void* data);
 
     /* The wayland global filter is called during wl_global_remove
      * (libwayland needs to know if it should broadcast the removal)
@@ -233,26 +230,45 @@ private:
      */
     WaylandProtocolExtensionFilter const extension_filter;
 
-    std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
-    std::unique_ptr<ServerWrapper> server_wrapper;
-    mir::Fd const pause_signal;
-    std::unique_ptr<WlCompositor> compositor_global;
-    std::unique_ptr<WlSubcompositor> subcompositor_global;
-    std::unique_ptr<WlSeat> seat_global;
+    rust::Box<mir::wayland_rs::WaylandServer> server;
+    std::shared_ptr<WlClientRegistry> client_registry;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
-    std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
-    std::unique_ptr<WlShm> shm_global;
-    std::unique_ptr<WpViewporter> viewporter;
-    std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
-    std::shared_ptr<Executor> const executor;
+    std::shared_ptr<WaylandExecutor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
+    std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<input::InputDeviceHub> const input_hub;
+    std::shared_ptr<input::Seat> const seat;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const keyboard_observer_registrar;
+    std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
+    std::shared_ptr<input::CompositeEventFilter> const composite_event_filter;
+    std::shared_ptr<DragIconController> const drag_icon_controller;
+    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
+    std::shared_ptr<SessionAuthorizer> const session_authorizer;
+    std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const display_config_registrar;
+    std::shared_ptr<scene::Clipboard> const main_clipboard;
+    std::shared_ptr<scene::Clipboard> const primary_selection_clipboard;
+    std::shared_ptr<scene::TextInputHub> const text_input_hub;
+    std::shared_ptr<scene::IdleHub> const idle_hub;
+    std::shared_ptr<compositor::ScreenShooterFactory> const screen_shooter_factory;
+    std::shared_ptr<MainLoop> const main_loop;
+    bool const arw_socket;
     std::unique_ptr<WaylandExtensions> const extensions;
+    std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
     std::shared_ptr<scene::SessionLock> session_lock_;
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
+    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::vector<std::shared_ptr<graphics::RenderingPlatform>> const render_platforms;
+    std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
     std::thread dispatch_thread;
-    wl_event_source* pause_source;
-    std::string wayland_display;
+    std::shared_ptr<SurfaceRegistry> surface_registry;
+    std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager;
+    std::shared_ptr<InputTriggerRegistry> input_trigger_registry;
+    std::shared_ptr<KeyboardStateTracker> keyboard_state_tracker;
+    std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> drm_rendering_providers;
 
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;

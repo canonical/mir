@@ -17,7 +17,8 @@
 #ifndef MIR_FRONTEND_XDG_OUTPUT_V1_H
 #define MIR_FRONTEND_XDG_OUTPUT_V1_H
 
-#include "xdg-output-unstable-v1_wrapper.h"
+#include "wayland_rs/wayland_rs_cpp/include/xdg_output_unstable_v1.h"
+#include "client.h"
 #include <memory>
 
 struct wl_display;
@@ -26,7 +27,17 @@ namespace mir
 {
 namespace frontend
 {
-auto create_xdg_output_manager_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgOutputManagerV1::Global>;
+
+class XdgOutputManagerV1 : public wayland_rs::ZxdgOutputManagerV1Impl
+{
+public:
+    XdgOutputManagerV1(std::shared_ptr<wayland_rs::Client> const&);
+    auto get_xdg_output(wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output)
+        -> std::shared_ptr<wayland_rs::ZxdgOutputV1Impl> override;
+
+private:
+    std::shared_ptr<wayland_rs::Client> client;
+};
 }
 }
 

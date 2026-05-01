@@ -43,6 +43,11 @@ public:
     {
         std::cout << "Client disconnected." << std::endl;
     }
+
+    auto loop_ready(rust::Box<mir::wayland_rs::WaylandEventLoopHandle>) -> void override
+    {
+
+    }
 };
 }
 

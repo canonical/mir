@@ -22,22 +22,22 @@
 #include <mir/executor.h>
 #include <mir/log.h>
 #include <mir/events/input_event.h>
-#include <mir/wayland/client.h>
+#include "client.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     Executor& wayland_executor,
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     WlSurface* surface,
     WindowWlSurfaceRole* window)
     : wayland_executor{wayland_executor},
       impl{std::make_shared<Impl>(
-          mw::make_weak(window),
+          mw::Weak(window->shared_from_this()),
           std::make_unique<WaylandInputDispatcher>(seat, surface))}
 {
 }

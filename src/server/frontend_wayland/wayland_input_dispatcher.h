@@ -19,7 +19,7 @@
 
 #include <mir_toolkit/common.h>
 #include <mir/geometry/point.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <memory>
 #include <chrono>
@@ -35,7 +35,7 @@ class Keymap;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class WlSurface;
 
 /// Dispatches input events to Wayland clients
@@ -44,7 +44,7 @@ class WaylandInputDispatcher
 {
 public:
     WaylandInputDispatcher(
-        WlSeat* seat,
+        WlSeatGlobal* seat,
         WlSurface* wl_surface);
     ~WaylandInputDispatcher() = default;
 
@@ -54,8 +54,8 @@ private:
     WaylandInputDispatcher(WaylandInputDispatcher const&) = delete;
     WaylandInputDispatcher& operator=(WaylandInputDispatcher const&) = delete;
 
-    WlSeat* const seat;
-    wayland::Weak<WlSurface> const wl_surface;
+    WlSeatGlobal* const seat;
+    wayland_rs::Weak<WlSurface> const wl_surface;
 };
 }
 }

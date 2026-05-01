@@ -17,7 +17,9 @@
 #ifndef MIR_FRONTEND_TEXT_INPUT_V3_H
 #define MIR_FRONTEND_TEXT_INPUT_V3_H
 
-#include "text-input-unstable-v3_wrapper.h"
+#include "text_input_unstable_v3.h"
+#include "client.h"
+#include "weak.h"
 
 #include <memory>
 
@@ -34,12 +36,25 @@ class InputDeviceRegistry;
 }
 namespace frontend
 {
-auto create_text_input_manager_v3(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::InputDeviceRegistry> const device_registry)
--> std::shared_ptr<wayland::TextInputManagerV3::Global>;
+struct TextInputV3Ctx;
+
+class TextInputManagerV3
+    : public wayland_rs::ZwpTextInputManagerV3Impl
+{
+public:
+    TextInputManagerV3(
+        std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<scene::TextInputHub> const& text_input_hub,
+        std::shared_ptr<input::InputDeviceRegistry> const& device_registry,
+        std::shared_ptr<wayland_rs::Client> const& client);
+
+    auto get_text_input(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat)
+        -> std::shared_ptr<wayland_rs::ZwpTextInputV3Impl> override;
+
+private:
+    std::shared_ptr<TextInputV3Ctx> const ctx;
+    std::shared_ptr<wayland_rs::Client> const client;
+};
 }
 }
 

@@ -2,9 +2,7 @@ include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
 
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
-if (MIR_ENABLE_RUST)
-  add_subdirectory(wayland_rs/)
-endif()
+add_subdirectory(wayland_rs/)
 
 set(
   WAYLAND_SOURCES
@@ -12,6 +10,7 @@ set(
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
   wl_client.cpp                 wl_client.h
+  wl_client_registry.cpp        wl_client_registry.h
   wayland_executor.cpp          wayland_executor.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
@@ -21,6 +20,7 @@ set(
   output_manager.cpp            output_manager.h
   pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
   relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
+  wl_compositor.cpp             wl_compositor.h
   wl_subcompositor.cpp          wl_subcompositor.h
                                 wl_surface_role.h
   window_wl_surface_role.cpp    window_wl_surface_role.h
@@ -35,7 +35,6 @@ set(
   xdg_output_v1.cpp             xdg_output_v1.h
   layer_shell_v1.cpp            layer_shell_v1.h
   mir_shell.cpp                 mir_shell.h
-  resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
   foreign_toplevel_list_v1.cpp  foreign_toplevel_list_v1.h
   foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
@@ -131,9 +130,7 @@ target_link_libraries(mirfrontend-wayland
     PkgConfig::GIOUnix
 )
 
-if (MIR_ENABLE_RUST)
-  target_link_libraries(mirfrontend-wayland
-    PUBLIC
-      mirwayland_rs
-  )
-endif()
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)

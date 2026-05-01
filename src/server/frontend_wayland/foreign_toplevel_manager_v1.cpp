@@ -18,6 +18,7 @@
 
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
+#include "weak.h"
 
 #include <mir/constexpr_utils.h>
 #include <mir/executor.h>
@@ -30,7 +31,6 @@
 #include <mir/scene/session.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
-#include <mir/wayland/weak.h>
 
 #include <algorithm>
 #include <mutex>
@@ -44,7 +44,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 namespace mir
 {
@@ -54,29 +54,6 @@ class ForeignSceneObserver;
 class ForeignSurfaceObserver;
 class ForeignToplevelManagerV1;
 class ForeignToplevelHandleV1;
-
-/// Informs a client about toplevels from itself and other clients
-/// The Wayland objects it creates for each toplevel can be used to aquire information and control that toplevel
-/// Useful for task bars and app switchers
-class ForeignToplevelManagerV1Global
-    : public wayland::ForeignToplevelManagerV1::Global
-{
-public:
-    ForeignToplevelManagerV1Global(
-        wl_display* display,
-        std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<SurfaceStack> const& surface_stack,
-        std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
-
-    std::shared_ptr<shell::Shell> const shell;
-    std::shared_ptr<Executor> const wayland_executor;
-    std::shared_ptr<SurfaceStack> const surface_stack;
-    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
-
-private:
-    void bind(wl_resource* new_resource) override;
-};
 
 class ForeignSceneObserver
     : public ms::NullObserver
@@ -101,7 +78,7 @@ private:
     void clear_surface_observers(); ///< Should NOT be called under lock
 
     std::shared_ptr<Executor> const wayland_executor;
-    wayland::Weak<ForeignToplevelManagerV1> const manager; ///< Can only be safely accessed on the Wayland thread
+    ForeignToplevelManagerV1* manager; ///< Can only be safely accessed on the Wayland thread
     std::mutex mutex;
     std::map<
         std::weak_ptr<scene::Surface>,
@@ -117,7 +94,7 @@ class ForeignSurfaceObserver
 {
 public:
     ForeignSurfaceObserver(
-        wayland::Weak<ForeignToplevelManagerV1> manager,
+        ForeignToplevelManagerV1* manager,
         std::shared_ptr<scene::Surface> const& surface,
         std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
     ~ForeignSurfaceObserver();
@@ -136,42 +113,25 @@ private:
     void application_id_set_to(scene::Surface const*, std::string const& application_id) override;
     ///@}
 
-    wayland::Weak<ForeignToplevelManagerV1> const manager;
+    ForeignToplevelManagerV1* manager;
 
     std::mutex mutex;
     std::weak_ptr<scene::Surface> weak_surface;
     /// If nullptr, the surface is not supposed to have a handle (such as when it does not have a toplevel type)
     /// If it points to an empty Weak, the handle is being created or was destroyed by the client
-    std::shared_ptr<wayland::Weak<ForeignToplevelHandleV1>> handle;
+    std::shared_ptr<mw::Weak<ForeignToplevelHandleV1>> handle;
 
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 };
 
-class ForeignToplevelManagerV1
-    : public wayland::ForeignToplevelManagerV1
-{
-public:
-    ForeignToplevelManagerV1(wl_resource* new_resource, ForeignToplevelManagerV1Global& global);
-    ~ForeignToplevelManagerV1();
-
-    std::shared_ptr<shell::Shell> const shell;
-
-private:
-    /// Wayland requests
-    ///@{
-    void stop() override;
-    ///@}
-
-    std::shared_ptr<SurfaceStack> const surface_stack;
-    std::shared_ptr<ForeignSceneObserver> const observer;
-};
-
 /// Used by a client to aquire information about or control a specific toplevel
 class ForeignToplevelHandleV1
-    : public wayland::ForeignToplevelHandleV1
+    : public mw::ZwlrForeignToplevelHandleV1Impl
 {
 public:
-    ForeignToplevelHandleV1(ForeignToplevelManagerV1 const& manager, std::shared_ptr<scene::Surface> const& surface);
+    ForeignToplevelHandleV1(ForeignToplevelManagerV1& manager, std::shared_ptr<scene::Surface> const& surface);
+
+    auto associate(rust::Box<wayland_rs::ZwlrForeignToplevelHandleV1Ext> instance, uint32_t object_id) -> void override;
 
     /// Sends the required .state event
     void send_state(MirWindowFocusState focused, ms::SurfaceStateTracker state);
@@ -179,9 +139,6 @@ public:
     /// Sends the .closed event and makes this surface inert
     void should_close();
 
-private:
-    /// Modifies the surface state if possible, silently fails if not
-    void attempt_change_surface_state(MirWindowState state, bool has_state);
 
     /// Wayland requests
     ///@{
@@ -189,13 +146,19 @@ private:
     void unset_maximized() override;
     void set_minimized() override;
     void unset_minimized() override;
-    void activate(struct wl_resource* seat) override;
+    auto activate(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat) -> void override;
     void close() override;
-    void set_rectangle(struct wl_resource* surface, int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
+    auto set_rectangle(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface, int32_t x, int32_t y, int32_t width, int32_t height) -> void override;
+    auto set_fullscreen(wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool has_output) -> void override;
     void unset_fullscreen() override;
     ///@}
 
+private:
+    /// Modifies the surface state if possible, silently fails if not
+    void attempt_change_surface_state(MirWindowState state, bool has_state);
+
+
+    ForeignToplevelManagerV1& manager;
     std::weak_ptr<shell::Shell> const weak_shell;
     std::weak_ptr<scene::Surface> weak_surface;
 };
@@ -203,37 +166,6 @@ private:
 }
 }
 
-auto mf::create_foreign_toplevel_manager_v1(
-    wl_display* display,
-    std::shared_ptr<shell::Shell> const& shell,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
--> std::shared_ptr<mw::ForeignToplevelManagerV1::Global>
-{
-    return std::make_shared<ForeignToplevelManagerV1Global>(display, shell, wayland_executor, surface_stack, desktop_file_manager);
-}
-
-// ForeignToplevelManagerV1Global
-
-mf::ForeignToplevelManagerV1Global::ForeignToplevelManagerV1Global(
-    wl_display* display,
-    std::shared_ptr<shell::Shell> const& shell,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
-    : Global{display, Version<2>()},
-      shell{shell},
-      wayland_executor{wayland_executor},
-      surface_stack{surface_stack},
-      desktop_file_manager{desktop_file_manager}
-{
-}
-
-void mf::ForeignToplevelManagerV1Global::bind(wl_resource* new_resource)
-{
-    new ForeignToplevelManagerV1{new_resource, *this};
-}
 
 // ForeignSceneObserver
 
@@ -316,7 +248,7 @@ void mf::ForeignSceneObserver::clear_surface_observers()
 // ForeignSurfaceObserver
 
 mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
-    mw::Weak<ForeignToplevelManagerV1> manager,
+    ForeignToplevelManagerV1* manager,
     std::shared_ptr<scene::Surface> const& surface,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
     : manager{manager},
@@ -403,8 +335,8 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             auto const state = surface->state_tracker();
 
             // Remember Wayland objects manage their own lifetime
-            auto const handle_ptr = new ForeignToplevelHandleV1{manager.value(), surface};
-            *handle = mw::make_weak(handle_ptr);
+            auto const handle_ptr = std::make_shared<ForeignToplevelHandleV1>(*manager, surface);
+            *handle = mw::Weak(handle_ptr);
 
             if (!name.empty())
                 handle->value().send_title_event(name);
@@ -658,12 +590,15 @@ std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_exec_string(st
 // ForeignToplevelManagerV1
 
 mf::ForeignToplevelManagerV1::ForeignToplevelManagerV1(
-    wl_resource* new_resource,
-    ForeignToplevelManagerV1Global& global)
-    : mw::ForeignToplevelManagerV1{new_resource, Version<2>()},
-      shell{global.shell},
-      surface_stack{global.surface_stack},
-      observer{std::make_shared<ForeignSceneObserver>(global.wayland_executor, this, global.desktop_file_manager)}
+    std::shared_ptr<shell::Shell> const& shell,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<SurfaceStack> const& surface_stack,
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
+    : shell{shell},
+      wayland_executor(wayland_executor),
+      surface_stack(surface_stack),
+      desktop_file_manager(desktop_file_manager),
+      observer{std::make_shared<ForeignSceneObserver>(wayland_executor, this, desktop_file_manager)}
 {
     surface_stack->add_observer(observer);
 }
@@ -682,46 +617,45 @@ void mf::ForeignToplevelManagerV1::stop()
 // ForeignToplevelHandleV1
 
 mf::ForeignToplevelHandleV1::ForeignToplevelHandleV1(
-    ForeignToplevelManagerV1 const& manager,
+    ForeignToplevelManagerV1& manager,
     std::shared_ptr<ms::Surface> const& surface)
-    : mw::ForeignToplevelHandleV1{manager},
+    : manager{manager},
       weak_shell{manager.shell},
       weak_surface{surface}
 {
-    manager.send_toplevel_event(resource);
+}
+
+auto mf::ForeignToplevelHandleV1::associate(rust::Box<wayland_rs::ZwlrForeignToplevelHandleV1Ext> instance, uint32_t object_id) -> void
+{
+    manager.send_toplevel_event(instance);
+    ZwlrForeignToplevelHandleV1Impl::associate(std::move(instance), object_id);
 }
 
 void mf::ForeignToplevelHandleV1::send_state(MirWindowFocusState focused, ms::SurfaceStateTracker state)
 {
-    wl_array states{};
-    wl_array_init(&states);
+    std::vector<uint8_t> states{};
 
     if (focused == mir_window_focus_state_focused)
     {
-        if (uint32_t* state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::activated;
+        states.push_back(State::activated);
     }
 
     if (state.has(mir_window_state_horizmaximized) || state.has(mir_window_state_vertmaximized))
     {
-        if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::maximized;
+        states.push_back(State::maximized);
     }
 
     if (state.has(mir_window_state_fullscreen))
     {
-        if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::fullscreen;
+        states.push_back(State::fullscreen);
     }
 
     if (state.has(mir_window_state_minimized))
     {
-        if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::minimized;
+        states.push_back(State::minimized);
     }
 
-    send_state_event(&states);
-    wl_array_release(&states);
+    send_state_event(states);
 }
 
 void mf::ForeignToplevelHandleV1::should_close()
@@ -772,10 +706,10 @@ void mf::ForeignToplevelHandleV1::set_minimized()
 void mf::ForeignToplevelHandleV1::unset_minimized()
 {
     attempt_change_surface_state(mir_window_state_minimized, false);
-    activate(nullptr);
+    activate({});
 }
 
-void mf::ForeignToplevelHandleV1::activate(struct wl_resource* /*seat*/)
+auto mf::ForeignToplevelHandleV1::activate(wayland_rs::Weak<wayland_rs::WlSeatImpl> const&) -> void
 {
     auto timestamp = std::numeric_limits<uint64_t>::max(); // TODO: make this correct
     auto const shell = weak_shell.lock();
@@ -799,7 +733,7 @@ void mf::ForeignToplevelHandleV1::close()
 }
 
 void mf::ForeignToplevelHandleV1::set_rectangle(
-    struct wl_resource* /*surface*/,
+    wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& /*surface*/,
     int32_t /*x*/,
     int32_t /*y*/,
     int32_t /*width*/,
@@ -809,7 +743,7 @@ void mf::ForeignToplevelHandleV1::set_rectangle(
     // Nothing must be done with this info. It is not a protocol violation to ignore it
 }
 
-void mf::ForeignToplevelHandleV1::set_fullscreen(std::optional<struct wl_resource*> const& /*output*/)
+void mf::ForeignToplevelHandleV1::set_fullscreen( wayland_rs::Weak<wayland_rs::WlOutputImpl> const& /*output*/, bool /*has_output*/)
 {
     attempt_change_surface_state(mir_window_state_fullscreen, true);
     // TODO: respect output

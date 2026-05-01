@@ -11,3 +11,4 @@ wayland_rs_cpp/src/*
 !wayland_rs_cpp/include/weak.h
 !wayland_rs_cpp/src/lifetime_tracker.cpp
 !wayland_rs_cpp/src/protocol_error.cpp
+!wayland_rs_cpp/src/client.h

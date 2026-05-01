@@ -16,11 +16,13 @@
 
 #include "text_input_v3.h"
 
+#include "wayland.h"
+#include "weak.h"
+#include "client.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
 #include <mir/executor.h>
 #include <mir/scene/text_input_hub.h>
-#include <mir/wayland/client.h>
 #include <mir/input/virtual_input_device.h>
 #include <mir/input/device.h>
 #include <mir/input/input_device_registry.h>
@@ -34,7 +36,7 @@
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 namespace mi = mir::input;
 
@@ -44,10 +46,10 @@ auto wayland_to_mir_change_cause(uint32_t cause) -> ms::TextInputChangeCause
 {
     switch (cause)
     {
-    case mw::TextInputV3::ChangeCause::input_method:
+    case mw::ZwpTextInputV3Impl::ChangeCause::input_method:
         return ms::TextInputChangeCause::input_method;
 
-    case mw::TextInputV3::ChangeCause::other:
+    case mw::ZwpTextInputV3Impl::ChangeCause::other:
         return ms::TextInputChangeCause::other;
 
     default:
@@ -58,7 +60,7 @@ auto wayland_to_mir_change_cause(uint32_t cause) -> ms::TextInputChangeCause
 auto wayland_to_mir_content_hint(uint32_t hint) -> ms::TextInputContentHint
 {
 #define WAYLAND_TO_MIR_HINT(name) \
-    (hint & mw::TextInputV3::ContentHint::name ? ms::TextInputContentHint::name : ms::TextInputContentHint::none)
+    (hint & mw::ZwpTextInputV3Impl::ContentHint::name ? ms::TextInputContentHint::name : ms::TextInputContentHint::none)
 
     return
         WAYLAND_TO_MIR_HINT(completion) |
@@ -79,46 +81,46 @@ auto wayland_to_mir_content_purpose(uint32_t purpose) -> ms::TextInputContentPur
 {
     switch (purpose)
     {
-    case mw::TextInputV3::ContentPurpose::normal:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::normal:
         return ms::TextInputContentPurpose::normal;
 
-    case mw::TextInputV3::ContentPurpose::alpha:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::alpha:
         return ms::TextInputContentPurpose::alpha;
 
-    case mw::TextInputV3::ContentPurpose::digits:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::digits:
         return ms::TextInputContentPurpose::digits;
 
-    case mw::TextInputV3::ContentPurpose::number:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::number:
         return ms::TextInputContentPurpose::number;
 
-    case mw::TextInputV3::ContentPurpose::phone:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::phone:
         return ms::TextInputContentPurpose::phone;
 
-    case mw::TextInputV3::ContentPurpose::url:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::url:
         return ms::TextInputContentPurpose::url;
 
-    case mw::TextInputV3::ContentPurpose::email:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::email:
         return ms::TextInputContentPurpose::email;
 
-    case mw::TextInputV3::ContentPurpose::name:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::name:
         return ms::TextInputContentPurpose::name;
 
-    case mw::TextInputV3::ContentPurpose::password:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::password:
         return ms::TextInputContentPurpose::password;
 
-    case mw::TextInputV3::ContentPurpose::pin:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::pin:
         return ms::TextInputContentPurpose::pin;
 
-    case mw::TextInputV3::ContentPurpose::date:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::date:
         return ms::TextInputContentPurpose::date;
 
-    case mw::TextInputV3::ContentPurpose::time:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::time:
         return ms::TextInputContentPurpose::time;
 
-    case mw::TextInputV3::ContentPurpose::datetime:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::datetime:
         return ms::TextInputContentPurpose::datetime;
 
-    case mw::TextInputV3::ContentPurpose::terminal:
+    case mw::ZwpTextInputV3Impl::ContentPurpose::terminal:
         return ms::TextInputContentPurpose::terminal;
 
     default:
@@ -130,9 +132,9 @@ auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
 {
     switch (wayland_state)
     {
-        case mw::Keyboard::KeyState::pressed:
+        case mw::WlKeyboardImpl::KeyState::pressed:
             return mir_keyboard_action_down;
-        case mw::Keyboard::KeyState::released:
+        case mw::WlKeyboardImpl::KeyState::released:
             return mir_keyboard_action_up;
         default:
             // Protocol does not provide an appropriate error code, so throw a generic runtime_error. This will be expressed
@@ -175,43 +177,24 @@ struct TextInputV3Ctx
     std::shared_ptr<mi::InputDeviceRegistry> const device_registry;
 };
 
-class TextInputManagerV3Global
-    : public wayland::TextInputManagerV3::Global
-{
-public:
-    TextInputManagerV3Global(wl_display* display, std::shared_ptr<TextInputV3Ctx> const& ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<TextInputV3Ctx> const ctx;
-};
-
-class TextInputManagerV3
-    : public wayland::TextInputManagerV3
-{
-public:
-    TextInputManagerV3(wl_resource* resource, std::shared_ptr<TextInputV3Ctx> const& ctx);
-
-private:
-    void get_text_input(struct wl_resource* id, struct wl_resource* seat) override;
-
-    std::shared_ptr<TextInputV3Ctx> const ctx;
-};
-
 class TextInputV3
-    : public wayland::TextInputV3,
-      private WlSeat::FocusListener
+    : public mw::ZwpTextInputV3Impl,
+      private WlSeatGlobal::FocusListener,
+      public std::enable_shared_from_this<TextInputV3>
 {
 public:
-    TextInputV3(wl_resource* resource, std::shared_ptr<TextInputV3Ctx> const& ctx, WlSeat& seat);
+    TextInputV3(std::shared_ptr<TextInputV3Ctx> const& ctx, WlSeatGlobal& seat,
+        std::shared_ptr<wayland_rs::Client> const& client);
     ~TextInputV3();
+
+    /// Must be called after construction to set up the handler (requires shared_from_this())
+    void init();
 
 private:
     struct Handler : ms::TextInputChangeHandler
     {
-        Handler(TextInputV3* const text_input, std::shared_ptr<Executor> const wayland_executor)
-            : text_input{text_input},
+        Handler(std::weak_ptr<TextInputV3> text_input, std::shared_ptr<Executor> const wayland_executor)
+            : text_input{std::move(text_input)},
               wayland_executor{wayland_executor}
         {
         }
@@ -220,23 +203,24 @@ private:
         {
             wayland_executor->spawn([text_input=text_input, change]()
                 {
-                    if (text_input)
+                    if (auto const locked = text_input.lock())
                     {
-                        text_input.value().send_text_change(change);
+                        locked->send_text_change(change);
                     }
                 });
         }
 
-        wayland::Weak<TextInputV3> const text_input;
+        std::weak_ptr<TextInputV3> const text_input;
         std::shared_ptr<Executor> const wayland_executor;
     };
 
     static size_t constexpr max_remembered_serials{10};
 
     std::shared_ptr<TextInputV3Ctx> const ctx;
-    WlSeat& seat;
-    std::shared_ptr<Handler> const handler;
-    wayland::Weak<WlSurface> current_surface;
+    WlSeatGlobal& seat;
+    std::shared_ptr<wayland_rs::Client> const client;
+    std::shared_ptr<Handler> handler;
+    mw::Weak<WlSurface> current_surface;
     /// Set to true if and only if the text input has been enabled since the last commit
     bool on_new_input_field{false};
     /// nullopt if the state is inactive, otherwise holds the pending and/or committed state
@@ -259,13 +243,13 @@ private:
     auto find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>;
 
     /// From WlSeat::FocusListener
-    void focus_on(WlSurface* surface) override;
+    void focus_on(std::shared_ptr<WlSurface> const& surface) override;
 
-    /// From wayland::TextInputV3
+    /// From wayland_rs::ZwpTextInputV3Impl
     /// @{
     void enable() override;
     void disable() override;
-    void set_surrounding_text(std::string const& text, int32_t cursor, int32_t anchor) override;
+    void set_surrounding_text(rust::String text, int32_t cursor, int32_t anchor) override;
     void set_text_change_cause(uint32_t cause) override;
     void set_content_type(uint32_t hint, uint32_t purpose) override;
     void set_cursor_rectangle(int32_t x, int32_t y, int32_t width, int32_t height) override;
@@ -275,65 +259,50 @@ private:
 }
 }
 
-auto mf::create_text_input_manager_v3(
-    wl_display* display,
+mf::TextInputManagerV3::TextInputManagerV3(
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<mi::InputDeviceRegistry> const device_registry)
--> std::shared_ptr<mw::TextInputManagerV3::Global>
-{
-    auto ctx = std::shared_ptr<TextInputV3Ctx>{new TextInputV3Ctx{wayland_executor, text_input_hub, device_registry}};
-    return std::make_shared<TextInputManagerV3Global>(display, std::move(ctx));
-}
-
-mf::TextInputManagerV3Global::TextInputManagerV3Global(
-    wl_display* display,
-    std::shared_ptr<TextInputV3Ctx> const& ctx)
-    : Global{display, Version<1>()},
-      ctx{ctx}
+    std::shared_ptr<mi::InputDeviceRegistry> const& device_registry,
+    std::shared_ptr<wayland_rs::Client> const& client)
+    : ctx{std::shared_ptr<TextInputV3Ctx>{new TextInputV3Ctx{wayland_executor, text_input_hub, device_registry}}},
+      client{client}
 {
 }
 
-void mf::TextInputManagerV3Global::bind(wl_resource* new_resource)
+auto mf::TextInputManagerV3::get_text_input(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& seat)
+    -> std::shared_ptr<wayland_rs::ZwpTextInputV3Impl>
 {
-    new TextInputManagerV3{new_resource, ctx};
-}
-
-mf::TextInputManagerV3::TextInputManagerV3(
-    wl_resource* resource,
-    std::shared_ptr<TextInputV3Ctx> const& ctx)
-    : wayland::TextInputManagerV3{resource, Version<1>()},
-      ctx{ctx}
-{
-}
-
-void mf::TextInputManagerV3::get_text_input(struct wl_resource* id, struct wl_resource* seat)
-{
-    auto const wl_seat = WlSeat::from(seat);
+    auto const wl_seat = WlSeatGlobal::from(&seat.value());
     if (!wl_seat)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat creating TextInputV3"));
     }
-    new TextInputV3{id, ctx, *wl_seat};
+    auto text_input = std::make_shared<TextInputV3>(ctx, *wl_seat, client);
+    text_input->init();
+    return text_input;
 }
 
 mf::TextInputV3::TextInputV3(
-    wl_resource* resource,
     std::shared_ptr<TextInputV3Ctx> const& ctx,
-    WlSeat& seat)
-    : wayland::TextInputV3{resource, Version<1>()},
-      ctx{ctx},
+    WlSeatGlobal& seat,
+    std::shared_ptr<wayland_rs::Client> const& client)
+    : ctx{ctx},
       seat{seat},
-      handler{std::make_shared<Handler>(this, ctx->wayland_executor)},
+      client{client},
       keyboard_device{std::make_shared<mi::VirtualInputDevice>("virtual-keyboard", mi::DeviceCapability::keyboard)},
       device_handle{ctx->device_registry->add_device(keyboard_device)}
 {
-    seat.add_focus_listener(client, this);
+    seat.add_focus_listener(client.get(), this);
+}
+
+void mf::TextInputV3::init()
+{
+    handler = std::make_shared<Handler>(weak_from_this(), ctx->wayland_executor);
 }
 
 mf::TextInputV3::~TextInputV3()
 {
-    seat.remove_focus_listener(client, this);
+    seat.remove_focus_listener(client.get(), this);
     ctx->device_registry->remove_device(keyboard_device);
     ctx->text_input_hub->deactivate_handler(handler);
 }
@@ -360,7 +329,8 @@ void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
     if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
     {
         send_preedit_string_event(
-            change.preedit_text,
+            change.preedit_text.value_or(""),
+            change.preedit_text.has_value(),
             change.preedit_cursor_begin.value_or(0),
             change.preedit_cursor_end.value_or(0));
     }
@@ -370,7 +340,7 @@ void mf::TextInputV3::send_text_change(ms::TextInputChange const& change)
     }
     if(change.commit_text)
     {
-        send_commit_string_event(change.commit_text.value());
+        send_commit_string_event(change.commit_text.value(), true);
     }
     send_done_event(client_serial.value());
 }
@@ -388,16 +358,16 @@ auto mf::TextInputV3::find_client_serial(ms::TextInputStateSerial state_serial) 
     return std::nullopt;
 }
 
-void mf::TextInputV3::focus_on(WlSurface* surface)
+void mf::TextInputV3::focus_on(std::shared_ptr<WlSurface> const& surface)
 {
     if (current_surface)
     {
-        send_leave_event(current_surface.value().resource);
+        send_leave_event(current_surface.value().shared_from_this());
     }
-    current_surface = mw::make_weak(surface);
+    current_surface = mw::Weak<WlSurface>(surface);
     if (surface)
     {
-        send_enter_event(surface->resource);
+        send_enter_event(surface);
     }
     else
     {
@@ -421,11 +391,11 @@ void mf::TextInputV3::disable()
     pending_state.reset();
 }
 
-void mf::TextInputV3::set_surrounding_text(std::string const& text, int32_t cursor, int32_t anchor)
+void mf::TextInputV3::set_surrounding_text(rust::String text, int32_t cursor, int32_t anchor)
 {
     if (pending_state)
     {
-        pending_state->surrounding_text = text;
+        pending_state->surrounding_text = std::string(text);
         pending_state->cursor = cursor;
         pending_state->anchor = anchor;
     }

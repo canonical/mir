@@ -911,7 +911,7 @@ void mf::XWaylandWM::handle_surface_id(
                         {
                             log_debug(
                                 "wl_surface@%u created but surface or shell has been destroyed",
-                                wl_resource_get_id(wl_surface->resource));
+                                wl_surface->object_id());
                         }
                     }
                 });

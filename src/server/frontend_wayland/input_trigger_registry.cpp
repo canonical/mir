@@ -29,6 +29,7 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace sr = std::ranges;
+namespace mw = mir::wayland_rs;
 
 using ActivationToken = mf::InputTriggerRegistry::ActivationToken;
 using Action = mf::InputTriggerRegistry::Action;
@@ -57,7 +58,7 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
 
 template <typename T>
 void iterate_and_erase_expired(
-    std::vector<mir::wayland::Weak<T>>& vec, auto&& callback)
+    std::vector<mw::Weak<T>>& vec, auto&& callback)
 {
     std::erase_if(
         vec,
@@ -73,7 +74,7 @@ void iterate_and_erase_expired(
 
 mf::InputTriggerRegistry::InputTriggerRegistry() = default;
 
-bool mf::InputTriggerRegistry::register_trigger(Trigger* trigger)
+bool mf::InputTriggerRegistry::register_trigger(std::shared_ptr<Trigger> const& trigger)
 {
     // Housekeeping
     std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
@@ -84,7 +85,7 @@ bool mf::InputTriggerRegistry::register_trigger(Trigger* trigger)
     if (already_registered)
         return false;
 
-    triggers.push_back(wayland::make_weak(trigger));
+    triggers.push_back(mw::Weak(trigger));
     return true;
 }
 
@@ -131,7 +132,7 @@ ActionGroup::~ActionGroup()
     on_destroy();
 }
 
-void ActionGroup::add(wayland::Weak<Action const> action)
+void ActionGroup::add(mw::Weak<Action> action)
 {
     actions.push_back(action);
     if (activation_token)
@@ -144,7 +145,7 @@ void ActionGroup::send_end(MirEvent const& event)
 {
     iterate_and_erase_expired(
         actions,
-        [activation_token = ActivationToken{*event.to_input(), *token_authority}](auto const& valid_action)
+        [activation_token = ActivationToken{*event.to_input(), *token_authority}](auto& valid_action)
         { valid_action.end(activation_token); });
 
     activation_token.reset();
@@ -155,7 +156,7 @@ void ActionGroup::send_begin(MirEvent const& event)
     activation_token = ActivationToken{*event.to_input(), *token_authority};
 
     iterate_and_erase_expired(
-        actions, [&](auto const& valid_action) { valid_action.begin(*activation_token); });
+        actions, [&](auto& valid_action) { valid_action.begin(*activation_token); });
 }
 
 void ActionGroup::cancel()

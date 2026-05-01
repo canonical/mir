@@ -26,44 +26,32 @@
 #include <memory>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 
-namespace
+namespace mir
+{
+namespace frontend
 {
 struct IdleInhibitV1Ctx
 {
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<ms::IdleHub> const idle_hub;
 };
+}
+}
 
-class IdleInhibitManagerV1Global : public mw::IdleInhibitManagerV1::Global
+namespace
+{
+class IdleInhibitorV1
+    : public mw::ZwpIdleInhibitorV1Impl,
+      public std::enable_shared_from_this<IdleInhibitorV1>
 {
 public:
-    IdleInhibitManagerV1Global(wl_display* display, std::shared_ptr<IdleInhibitV1Ctx> ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
-};
-
-class IdleInhibitManagerV1 : public mw::IdleInhibitManagerV1
-{
-public:
-    IdleInhibitManagerV1(wl_resource* resource, std::shared_ptr<IdleInhibitV1Ctx>  ctx);
-
-private:
-    void create_inhibitor(struct wl_resource* id, struct wl_resource* surface) override;
-
-    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
-};
-
-class IdleInhibitorV1 : public mw::IdleInhibitorV1
-{
-public:
-    IdleInhibitorV1(wl_resource *resource, std::shared_ptr<IdleInhibitV1Ctx> const& ctx, mf::WlSurface* surface);
+    IdleInhibitorV1(std::shared_ptr<mf::IdleInhibitV1Ctx> const& ctx, mf::WlSurface* surface);
     ~IdleInhibitorV1();
+
+    void init();
 
 private:
     class VisibilityObserver;
@@ -71,10 +59,10 @@ private:
     void notify(std::optional<bool> visible, std::optional<bool> hidden);
     void finalize(); ///< May be safely called multiple times
 
-    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
+    std::shared_ptr<mf::IdleInhibitV1Ctx> const ctx;
     mw::Weak<mf::WlSurface> const wl_surface;
     mw::DestroyListenerId const surface_destroyed_listener_id;
-    std::shared_ptr<VisibilityObserver> const visibility_observer;
+    std::shared_ptr<VisibilityObserver> visibility_observer;
 
     bool visible = false;
     bool hidden = false;
@@ -84,49 +72,29 @@ private:
 };
 }
 
-auto mf::create_idle_inhibit_manager_v1(
-    wl_display* display,
+mf::IdleInhibitManagerV1::IdleInhibitManagerV1(
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<ms::IdleHub> idle_hub)
--> std::shared_ptr<mw::IdleInhibitManagerV1::Global>
-{
-    auto ctx = std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{
-        std::move(wayland_executor),
-        std::move(idle_hub)});
-    return std::make_shared<IdleInhibitManagerV1Global>(display, std::move(ctx));
-}
-
-IdleInhibitManagerV1Global::IdleInhibitManagerV1Global(
-    wl_display *display,
-    std::shared_ptr<IdleInhibitV1Ctx> const ctx)
-    : Global{display, Version<1>()},
-      ctx{ctx}
+    : ctx{std::make_shared<IdleInhibitV1Ctx>(IdleInhibitV1Ctx{
+          std::move(wayland_executor),
+          std::move(idle_hub)})}
 {
 }
 
-void IdleInhibitManagerV1Global::bind(wl_resource* new_resource)
+auto mf::IdleInhibitManagerV1::create_inhibitor(mw::Weak<mw::WlSurfaceImpl> const& surface)
+    -> std::shared_ptr<mw::ZwpIdleInhibitorV1Impl>
 {
-    new IdleInhibitManagerV1{new_resource, ctx};
-}
-
-IdleInhibitManagerV1::IdleInhibitManagerV1(
-        wl_resource *resource,
-        std::shared_ptr<IdleInhibitV1Ctx> ctx)
-        : mw::IdleInhibitManagerV1{resource, Version<1>()},
-          ctx{std::move(ctx)}
-{
-}
-
-void IdleInhibitManagerV1::create_inhibitor(struct wl_resource* id, struct wl_resource* surface)
-{
-    new IdleInhibitorV1{id, ctx, mf::WlSurface::from(surface)};
+    auto* wl_surface = &dynamic_cast<WlSurface&>(surface.value());
+    auto inhibitor = std::make_shared<IdleInhibitorV1>(ctx, wl_surface);
+    inhibitor->init();
+    return inhibitor;
 }
 
 class IdleInhibitorV1::VisibilityObserver : public mir::scene::NullSurfaceObserver
 {
 public:
     VisibilityObserver(
-        mw::Weak<IdleInhibitorV1> inhibitor,
+        std::weak_ptr<IdleInhibitorV1> inhibitor,
         std::shared_ptr<mir::Executor> const executor)
         : executor{std::move(executor)},
           inhibitor{std::move(inhibitor)}
@@ -139,9 +107,9 @@ public:
         {
             executor->spawn([inhibitor=inhibitor, value]
                 {
-                    if (inhibitor)
+                    if (auto const locked = inhibitor.lock())
                     {
-                        inhibitor.value().notify(value == mir_window_visibility_exposed, std::nullopt);
+                        locked->notify(value == mir_window_visibility_exposed, std::nullopt);
                     }
                 });
         }
@@ -151,40 +119,44 @@ public:
     {
         executor->spawn([inhibitor=inhibitor, hide]
             {
-                if (inhibitor)
+                if (auto const locked = inhibitor.lock())
                 {
-                    inhibitor.value().notify(std::nullopt, hide);
+                    locked->notify(std::nullopt, hide);
                 }
             });
     }
 
 private:
     std::shared_ptr<mir::Executor> const executor;
-    mw::Weak<IdleInhibitorV1> const inhibitor;
+    std::weak_ptr<IdleInhibitorV1> const inhibitor;
 };
 
 IdleInhibitorV1::IdleInhibitorV1(
-    wl_resource *resource,
-    std::shared_ptr<IdleInhibitV1Ctx> const& ctx,
+    std::shared_ptr<mf::IdleInhibitV1Ctx> const& ctx,
     mf::WlSurface* wl_surface)
-    : mw::IdleInhibitorV1{resource, Version<1>()},
-      ctx{ctx},
-      wl_surface{wl_surface},
+    : ctx{ctx},
+      wl_surface{wl_surface->shared_from_this()},
       surface_destroyed_listener_id{wl_surface->add_destroy_listener([this]()
           {
               finalize();
-          })},
-      visibility_observer{std::make_shared<VisibilityObserver>(mw::make_weak(this), this->ctx->wayland_executor)}
+          })}
 {
-    wl_surface->on_scene_surface_created(
-        [weak_self=mw::make_weak(this)](std::shared_ptr<ms::Surface> scene_surface)
+}
+
+void IdleInhibitorV1::init()
+{
+    visibility_observer = std::make_shared<VisibilityObserver>(weak_from_this(), ctx->wayland_executor);
+
+    auto* surface = &wl_surface.value();
+    surface->on_scene_surface_created(
+        [weak_self=weak_from_this()](std::shared_ptr<ms::Surface> scene_surface)
         {
-            if (weak_self)
+            if (auto const self = weak_self.lock())
             {
                 // Use immediate_executor so uninteresting observations are processed quickly, we punt interesting
                 // observations to an executor ourselves
-                scene_surface->register_interest(weak_self.value().visibility_observer, mir::immediate_executor);
-                weak_self.value().notify(
+                scene_surface->register_interest(self->visibility_observer, mir::immediate_executor);
+                self->notify(
                     scene_surface->query(mir_window_attrib_visibility) == mir_window_visibility_exposed,
                     std::nullopt);
             }

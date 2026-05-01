@@ -22,7 +22,6 @@
 #include "wl_touch.h"
 
 #include <mir/input/keymap.h>
-#include <mir/wayland/client.h>
 #include <mir/events/pointer_event.h>
 #include <mir/events/touch_event.h>
 
@@ -30,13 +29,13 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 mf::WaylandInputDispatcher::WaylandInputDispatcher(
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     WlSurface* wl_surface)
     : seat{seat},
-      wl_surface{mw::make_weak(wl_surface)}
+      wl_surface{mw::Weak(wl_surface->shared_from_this())}
 {
 }
 
@@ -52,7 +51,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_pointer:
     {
         auto const pointer_event = dynamic_pointer_cast<MirPointerEvent const>(event);
-        seat->for_each_listener(wl_surface.value().client, [&](PointerEventDispatcher* pointer)
+        seat->for_each_listener(wl_surface.value().client.lock().get(), [&](PointerEventDispatcher* pointer)
             {
                 pointer->event(pointer_event, wl_surface.value());
             });
@@ -61,7 +60,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_touch:
     {
         auto const touch_event = dynamic_pointer_cast<MirTouchEvent const>(event);
-        seat->for_each_listener(wl_surface.value().client, [&](WlTouch* touch)
+        seat->for_each_listener(wl_surface.value().client.lock().get(), [&](WlTouch* touch)
             {
                 touch->event(touch_event, wl_surface.value());
             });

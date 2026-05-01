@@ -26,7 +26,7 @@
 #include <unordered_set>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mi = mir::input;
 
 mf::KeyboardHelper::KeyboardHelper(

@@ -330,36 +330,3 @@ private:
     std::shared_ptr<mir::graphics::common::EGLContextExecutor> const egl_delegate;
 };
 }
-
-
-
-void mg::wayland::bind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
-{
-    if (extensions.wayland(egl_dpy).eglBindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to bind Wayland EGL display"));
-    }
-}
-
-void mg::wayland::unbind_display(EGLDisplay egl_dpy, wl_display* wayland_dpy, EGLExtensions const& extensions)
-{
-    if (extensions.wayland(egl_dpy).eglUnbindWaylandDisplayWL(egl_dpy, wayland_dpy) == EGL_FALSE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to unbind Wayland EGL display"));
-    }
-}
-
-auto mg::wayland::buffer_from_resource(
-    wl_resource* buffer,
-    std::function<void()>&& on_consumed,
-    std::function<void()>&& on_release,
-    mg::EGLExtensions const& extensions,
-    std::shared_ptr<mir::graphics::common::EGLContextExecutor> egl_delegate) -> std::unique_ptr<mg::Buffer>
-{
-    return std::make_unique<WaylandTexBuffer>(
-        buffer,
-        extensions,
-        std::move(egl_delegate),
-        std::move(on_consumed),
-        std::move(on_release));
-}

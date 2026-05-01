@@ -19,27 +19,31 @@
 
 #include "fractional_scale_v1.h"
 #include <mir/geometry/forward.h>
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
-
+#include "wayland.h"
+#include "weak.h"
 #include "wl_surface_role.h"
+#include "wl_client.h"
+#include "linux_drm_syncobj.h"
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/size.h>
-#include <mir/geometry/point.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/shell/surface_specification.h>
-#include "linux_drm_syncobj.h"
+#include <rust/cxx.h>
 
-#include <atomic>
 #include <vector>
 #include <list>
-#include <map>
 
 namespace mir
 {
 class Executor;
+
+namespace wayland_rs
+{
+struct WaylandEventLoopHandle;
+struct FdWatchToken;
+}
 
 namespace graphics
 {
@@ -68,10 +72,8 @@ class SyncTimeline;
 
 struct WlSurfaceState
 {
-    class Callback : public wayland::Callback
+    class Callback : public wayland_rs::WlCallbackImpl
     {
-    public:
-        Callback(wl_resource* new_resource);
     };
 
     // if you add variables, don't forget to update this
@@ -84,7 +86,7 @@ struct WlSurfaceState
     // NOTE: nullopt has a distinct meaning from the optional containing a null Weak here
     // nullopt: the current state should not be changed
     // null Weak: the current buffer, if any, should be cleared
-    std::optional<wayland::Weak<ResourceLifetimeTracker>> buffer;
+    std::optional<wayland_rs::Weak<wayland_rs::WlBufferImpl>> buffer;
 
     shell::SurfaceSpecification surface_spec;
     std::optional<float> scale;
@@ -93,8 +95,8 @@ struct WlSurfaceState
     std::optional<geometry::Rectangles> opaque_region;
     std::optional<MirOrientation> orientation;
     std::optional<MirMirrorMode> mirror_mode;
-    std::vector<wayland::Weak<Callback>> frame_callbacks;
-    wayland::Weak<Viewport> viewport;
+    std::vector<wayland_rs::Weak<Callback>> frame_callbacks;
+    wayland_rs::Weak<Viewport> viewport;
 
     std::optional<SyncPoint> release_fence;
 
@@ -119,15 +121,16 @@ private:
     WlSurface* const surface;
 };
 
-class WlSurface : public wayland::Surface
+class WlSurface : public wayland_rs::WlSurfaceImpl, public std::enable_shared_from_this<WlSurface>
 {
 public:
-    WlSurface(wl_resource* new_resource,
+    WlSurface(std::shared_ptr<wayland_rs::Client> const& client,
               std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
-              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+              rust::Box<wayland_rs::WaylandEventLoopHandle> event_loop_handle);
 
-    ~WlSurface();
+    ~WlSurface() override;
 
     using SceneSurfaceCreatedCallback = std::function<void(std::shared_ptr<scene::Surface>)>;
 
@@ -136,7 +139,6 @@ public:
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
-    wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
     /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
     /// one exists
@@ -160,15 +162,15 @@ public:
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
 
-    void set_fractional_scale(FractionalScaleV1* fractional_scale);
-    auto get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>;
+    void set_fractional_scale(std::shared_ptr<FractionalScaleV1> const& fractional_scale);
+    auto get_fractional_scale() const -> wayland_rs::Weak<FractionalScaleV1>;
 
     /**
      * Associate a viewport (buffer scale & crop metadata) with this surface
      *
      * \throws A std::logic_error if the surface already has a viewport associated
      */
-    void associate_viewport(wayland::Weak<Viewport> viewport);
+    void associate_viewport(wayland_rs::Weak<Viewport> viewport);
 
     /**
      * Associate a DRM Syncobj timeline with this surface
@@ -179,7 +181,18 @@ public:
      *
      * \throws A TimelineAlreadyAssociated if the surface already has a timeline associated
      */
-    void associate_sync_timeline(wayland::Weak<SyncTimeline> timeline);
+    void associate_sync_timeline(wayland_rs::Weak<SyncTimeline> timeline);
+
+    auto attach(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer, bool has_buffer, int32_t x, int32_t y) -> void override;
+    void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    auto frame() -> std::shared_ptr<wayland_rs::WlCallbackImpl> override;
+    auto set_opaque_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) -> void override;
+    auto set_input_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) -> void override;
+    void commit() override;
+    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    auto set_buffer_transform(uint32_t transform) -> void override;
+    void set_buffer_scale(int32_t scale) override;
+    void offset(int32_t x, int32_t y) override;
 
     class TimelineAlreadyAssociated : public std::logic_error
     {
@@ -193,7 +206,8 @@ public:
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
-    static WlSurface* from(wl_resource* resource);
+    static WlSurface* from(WlSurfaceImpl* impl);
+    std::weak_ptr<wayland_rs::Client> const client;
 
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
@@ -217,8 +231,11 @@ private:
     /* State for when a buffer update is waiting for a client fence to signal
      */
     struct PendingBufferState;
+    struct BufferReadyCallback;
     std::unique_ptr<PendingBufferState> pending_context;
-    struct wl_event_source* buffer_ready_source{nullptr};
+    std::optional<rust::Box<wayland_rs::FdWatchToken>> buffer_ready_token;
+
+    rust::Box<wayland_rs::WaylandEventLoopHandle> event_loop_handle;
 
     static void complete_commit(WlSurface* surf);
 
@@ -231,27 +248,16 @@ private:
     float scale{1};
     std::optional<geometry::Size> buffer_size_;
 
-    using CallbackList = std::vector<wayland::Weak<WlSurfaceState::Callback>>;
+    using CallbackList = std::vector<wayland_rs::Weak<WlSurfaceState::Callback>>;
     CallbackList frame_callbacks;
     CallbackList heartbeat_quirk_frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
-    wayland::Weak<Viewport> viewport;
-    wayland::Weak<FractionalScaleV1> fractional_scale;
-    wayland::Weak<SyncTimeline> sync_timeline;
+    wayland_rs::Weak<Viewport> viewport;
+    wayland_rs::Weak<FractionalScaleV1> fractional_scale;
+    wayland_rs::Weak<SyncTimeline> sync_timeline;
 
     void send_frame_callbacks(CallbackList& list);
-
-    void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
-    void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void frame(wl_resource* callback) override;
-    void set_opaque_region(std::optional<wl_resource*> const& region) override;
-    void set_input_region(std::optional<wl_resource*> const& region) override;
-    void commit() override;
-    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_buffer_transform(int32_t transform) override;
-    void set_buffer_scale(int32_t scale) override;
-    void offset(int32_t x, int32_t y) override;
 
     std::optional<geometry::Rectangles> opaque_region_;
 };

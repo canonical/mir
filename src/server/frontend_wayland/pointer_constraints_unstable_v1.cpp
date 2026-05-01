@@ -24,104 +24,70 @@
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
 
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 
 namespace mir
 {
 namespace frontend
 {
-class PointerConstraintsV1 : public wayland::PointerConstraintsV1
+class LockedPointerV1 : public mw::ZwpLockedPointerV1Impl, public std::enable_shared_from_this<LockedPointerV1>
 {
 public:
-    PointerConstraintsV1(wl_resource* resource, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell);
+    LockedPointerV1(
+        Executor& wayland_executor,
+        std::shared_ptr<shell::Shell> shell,
+        std::shared_ptr<scene::Surface> const& scene_surface,
+        mw::Weak<mw::WlRegionImpl> const& region,
+        PointerConstraintsV1::Lifetime lifetime);
+    ~LockedPointerV1() override;
 
-    class Global : public wayland::PointerConstraintsV1::Global
-    {
-    public:
-        Global(wl_display* display, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell);
-
-    private:
-        void bind(wl_resource* new_zwp_pointer_constraints_v1) override;
-        Executor& wayland_executor;
-        std::shared_ptr<shell::Shell> const shell;
-    };
-
-    enum class Lifetime : uint32_t
-    {
-        oneshot = wayland::PointerConstraintsV1::Lifetime::oneshot,
-        persistent = wayland::PointerConstraintsV1::Lifetime::persistent,
-    };
+    auto associate(rust::Box<mw::ZwpLockedPointerV1Ext> instance, uint32_t object_id) -> void override;
+    auto set_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) -> void override;
+    void set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/) override;
 
 private:
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-
-    void lock_pointer(
-        wl_resource* id,
-        wl_resource* surface,
-        wl_resource* pointer,
-        const std::optional<wl_resource*>& region,
-        uint32_t lifetime) override;
-
-    void confine_pointer(
-        wl_resource* id,
-        wl_resource* surface,
-        wl_resource* pointer,
-        const std::optional<wl_resource*>& region,
-        uint32_t lifetime) override;
-};
-
-class LockedPointerV1 : public wayland::LockedPointerV1
-{
-public:
-    LockedPointerV1(
-        wl_resource* id,
-        Executor& wayland_executor,
-        std::shared_ptr<shell::Shell> shell,
-        std::shared_ptr<scene::Surface> const& scene_surface,
-        std::optional<wl_resource*> const& region,
-        PointerConstraintsV1::Lifetime lifetime);
-    ~LockedPointerV1();
-
-private:
-    std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<scene::Surface> const weak_scene_surface;
+    mw::Weak<mw::WlRegionImpl> const initial_region;
+    PointerConstraintsV1::Lifetime const lifetime;
 
     struct MyWaylandSurfaceObserver;
 
-    std::shared_ptr<MyWaylandSurfaceObserver> const my_surface_observer;
-
-    void set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/) override;
-    void set_region(const std::optional<wl_resource*>& /*region*/) override;
+    std::shared_ptr<MyWaylandSurfaceObserver> my_surface_observer;
 };
 
-class ConfinedPointerV1 : public wayland::ConfinedPointerV1
+class ConfinedPointerV1 : public mw::ZwpConfinedPointerV1Impl, std::enable_shared_from_this<ConfinedPointerV1>
 {
 public:
     ConfinedPointerV1(
-        wl_resource* id,
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> shell,
         std::shared_ptr<scene::Surface> const& scene_surface,
-        std::optional<wl_resource*> const& region,
+        mw::Weak<mw::WlRegionImpl> const& region,
         PointerConstraintsV1::Lifetime lifetime);
-    ~ConfinedPointerV1();
+    ~ConfinedPointerV1() override;
+
+    auto associate(rust::Box<mw::ZwpConfinedPointerV1Ext> instance, uint32_t object_id) -> void override;
+    auto set_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) -> void override;
 
 private:
+    Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     std::weak_ptr<scene::Surface> const weak_scene_surface;
+    mw::Weak<mw::WlRegionImpl> const initial_region;
+    PointerConstraintsV1::Lifetime const lifetime;
 
     struct SurfaceObserver;
 
-    std::shared_ptr<SurfaceObserver> const my_surface_observer;
-
-    void set_region(const std::optional<wl_resource*>& /*region*/) override;
+    std::shared_ptr<SurfaceObserver> my_surface_observer;
 };
 
 struct LockedPointerV1::MyWaylandSurfaceObserver : ms::NullSurfaceObserver
 {
-    MyWaylandSurfaceObserver(LockedPointerV1* const self) : self{self} {}
+    MyWaylandSurfaceObserver(std::shared_ptr<LockedPointerV1> const& self) : self{self} {}
 
     void attrib_changed(const scene::Surface* surf, MirWindowAttrib attrib, int value) override;
     mw::Weak<LockedPointerV1> const self;
@@ -160,7 +126,7 @@ void LockedPointerV1::MyWaylandSurfaceObserver::attrib_changed(
 
 struct ConfinedPointerV1::SurfaceObserver : ms::NullSurfaceObserver
 {
-    SurfaceObserver(ConfinedPointerV1* const self) : self{self} {}
+    SurfaceObserver(std::shared_ptr<ConfinedPointerV1> const& self) : self{self} {}
 
     void attrib_changed(const scene::Surface* surf, MirWindowAttrib attrib, int value) override;
     mw::Weak<ConfinedPointerV1> const self;
@@ -199,80 +165,74 @@ void ConfinedPointerV1::SurfaceObserver::attrib_changed(
 }
 }
 
-auto mir::frontend::create_pointer_constraints_unstable_v1(
-    wl_display* display,
-    Executor& wayland_executor,
-    std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<mw::PointerConstraintsV1::Global>
-{
-    return std::make_shared<PointerConstraintsV1::Global>(display, wayland_executor, std::move(shell));
-}
-
-mir::frontend::PointerConstraintsV1::Global::Global(wl_display* display, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell) :
-    wayland::PointerConstraintsV1::Global::Global{display, Version<1>{}},
+mir::frontend::PointerConstraintsV1::PointerConstraintsV1(Executor& wayland_executor, std::shared_ptr<shell::Shell> shell) :
     wayland_executor{wayland_executor},
     shell{std::move(shell)}
 {
 }
 
-void mir::frontend::PointerConstraintsV1::Global::bind(wl_resource* new_zwp_pointer_constraints_v1)
+auto mir::frontend::PointerConstraintsV1::lock_pointer(
+    mw::Weak<mw::WlSurfaceImpl> const& surface,
+    mw::Weak<mw::WlPointerImpl> const&,
+    mw::Weak<mw::WlRegionImpl> const& region,
+    bool /*has_region*/,
+    uint32_t lifetime) -> std::shared_ptr<mw::ZwpLockedPointerV1Impl>
 {
-    new PointerConstraintsV1{new_zwp_pointer_constraints_v1, wayland_executor, shell};
-}
-
-mir::frontend::PointerConstraintsV1::PointerConstraintsV1(wl_resource* resource, Executor& wayland_executor, std::shared_ptr<shell::Shell> shell) :
-    wayland::PointerConstraintsV1{resource, Version<1>{}},
-    wayland_executor{wayland_executor},
-    shell{std::move(shell)}
-{
-}
-
-void mir::frontend::PointerConstraintsV1::lock_pointer(
-    wl_resource* id,
-    wl_resource* surface,
-    wl_resource* /*pointer*/,
-    std::optional<wl_resource*> const& region,
-    uint32_t lifetime)
-{
-    if (auto const s = WlSurface::from(surface)->scene_surface())
+    if (auto const s = WlSurface::from(&surface.value())->scene_surface())
     {
         if (auto const ss = s.value())
         {
             // TODO we need to be able to report "already constrained"
-            new LockedPointerV1{id, wayland_executor, shell, ss, region, Lifetime{lifetime}};
+            return std::make_shared<LockedPointerV1>(wayland_executor, shell, ss, region, Lifetime{lifetime});
         }
     }
+
+    return nullptr;
 }
 
-void mir::frontend::PointerConstraintsV1::confine_pointer(
-    wl_resource* id,
-    wl_resource* surface,
-    wl_resource* /*pointer*/,
-    std::optional<wl_resource*> const& region,
-    uint32_t lifetime)
+auto mir::frontend::PointerConstraintsV1::confine_pointer(
+    mw::Weak<mw::WlSurfaceImpl> const& surface,
+    mw::Weak<mw::WlPointerImpl> const&,
+    mw::Weak<mw::WlRegionImpl> const& region,
+    bool /*has_region*/,
+    uint32_t lifetime) -> std::shared_ptr<mw::ZwpConfinedPointerV1Impl>
 {
-    if (auto const s = WlSurface::from(surface)->scene_surface())
+    if (auto const s = WlSurface::from(&surface.value())->scene_surface())
     {
         if (auto const ss = s.value())
         {
             // TODO we need to be able to report "already constrained"
-            new ConfinedPointerV1{id, wayland_executor, shell, ss, region, Lifetime{lifetime}};
+            return std::make_shared<ConfinedPointerV1>(wayland_executor, shell, ss, region, Lifetime{lifetime});
         }
     }
+
+    return nullptr;
 }
 
 mir::frontend::LockedPointerV1::LockedPointerV1(
-    wl_resource* id,
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> shell,
     std::shared_ptr<scene::Surface> const& scene_surface,
-    std::optional<wl_resource*> const& region,
+    mw::Weak<mw::WlRegionImpl> const& region,
     PointerConstraintsV1::Lifetime lifetime) :
-    wayland::LockedPointerV1{id, Version<1>{}},
+    wayland_executor{wayland_executor},
     shell{std::move(shell)},
     weak_scene_surface{scene_surface},
-    my_surface_observer{std::make_shared<MyWaylandSurfaceObserver>(this)}
+    initial_region{region},
+    lifetime{lifetime}
 {
+}
+
+auto mir::frontend::LockedPointerV1::associate(rust::Box<mw::ZwpLockedPointerV1Ext> instance, uint32_t object_id) -> void
+{
+    ZwpLockedPointerV1Impl::associate(std::move(instance), object_id);
+
+    my_surface_observer = std::make_shared<MyWaylandSurfaceObserver>(shared_from_this());
+
+    auto const scene_surface = weak_scene_surface.lock();
+    if (!scene_surface)
+        return;
+
     scene_surface->register_interest(my_surface_observer, wayland_executor);
 
     shell::SurfaceSpecification mods;
@@ -288,9 +248,9 @@ mir::frontend::LockedPointerV1::LockedPointerV1(
         break;
     }
 
-    if (region)
+    if (initial_region)
     {
-        if (WlRegion* wlregion = WlRegion::from(region.value()))
+        if (WlRegion* wlregion = WlRegion::from(&initial_region.value()))
         {
             auto shape = wlregion->rectangle_vector();
             mods.input_shape = {shape};
@@ -313,33 +273,46 @@ mir::frontend::LockedPointerV1::~LockedPointerV1()
     mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        scene_surface->unregister_interest(*my_surface_observer);
+        if (my_surface_observer)
+            scene_surface->unregister_interest(*my_surface_observer);
         shell::SurfaceSpecification mods;
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
 }
 
-void mir::frontend::LockedPointerV1::set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/)
+void mf::LockedPointerV1::set_cursor_position_hint(double /*surface_x*/, double /*surface_y*/)
 {
 }
 
-void mir::frontend::LockedPointerV1::set_region(const std::optional<wl_resource*>& /*region*/)
+auto mir::frontend::LockedPointerV1::set_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const&, bool) -> void
 {
 }
 
 mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
-    wl_resource* id,
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> shell,
     std::shared_ptr<scene::Surface> const& scene_surface,
-    std::optional<wl_resource*> const& region,
+    wayland_rs::Weak<mw::WlRegionImpl> const& region,
     PointerConstraintsV1::Lifetime lifetime) :
-    wayland::ConfinedPointerV1{id, Version<1>{}},
+    wayland_executor{wayland_executor},
     shell{std::move(shell)},
     weak_scene_surface(scene_surface),
-    my_surface_observer{std::make_shared<SurfaceObserver>(this)}
+    initial_region{region},
+    lifetime{lifetime}
 {
+}
+
+auto mir::frontend::ConfinedPointerV1::associate(rust::Box<mw::ZwpConfinedPointerV1Ext> instance, uint32_t object_id) -> void
+{
+    ZwpConfinedPointerV1Impl::associate(std::move(instance), object_id);
+
+    my_surface_observer = std::make_shared<SurfaceObserver>(shared_from_this());
+
+    auto const scene_surface = weak_scene_surface.lock();
+    if (!scene_surface)
+        return;
+
     scene_surface->register_interest(my_surface_observer, wayland_executor);
 
     shell::SurfaceSpecification mods;
@@ -355,9 +328,9 @@ mir::frontend::ConfinedPointerV1::ConfinedPointerV1(
         break;
     }
 
-    if (region)
+    if (initial_region)
     {
-        if (WlRegion* wlregion = WlRegion::from(region.value()))
+        if (WlRegion* wlregion = WlRegion::from(&initial_region.value()))
         {
             auto shape = wlregion->rectangle_vector();
             mods.input_shape = {shape};
@@ -379,13 +352,14 @@ mir::frontend::ConfinedPointerV1::~ConfinedPointerV1()
     mark_destroyed();
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        scene_surface->unregister_interest(*my_surface_observer);
+        if (my_surface_observer)
+            scene_surface->unregister_interest(*my_surface_observer);
         shell::SurfaceSpecification mods;
         mods.confine_pointer = MirPointerConfinementState::mir_pointer_unconfined;
         shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
     }
 }
 
-void mir::frontend::ConfinedPointerV1::set_region(const std::optional<wl_resource*>& /*region*/)
+auto mir::frontend::ConfinedPointerV1::set_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const&, bool) -> void
 {
 }

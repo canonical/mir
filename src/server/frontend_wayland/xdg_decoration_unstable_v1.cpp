@@ -15,14 +15,13 @@
  */
 
 #include "xdg_decoration_unstable_v1.h"
+#include "client.h"
+#include "protocol_error.h"
 
 #include <mir/decoration_strategy.h>
 #include <mir/log.h>
 #include <mir/shell/surface_specification.h>
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
 
-#include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
 
@@ -30,6 +29,17 @@
 #include <memory>
 #include <unordered_set>
 #include <utility>
+
+namespace std {
+    template <>
+    struct hash<mir::wayland_rs::Weak<mir::wayland_rs::XdgToplevelImpl>> {
+        size_t operator()(const mir::wayland_rs::Weak<mir::wayland_rs::XdgToplevelImpl>& k) const {
+            // Replace 'get_raw_ptr()' with whatever method accesses
+            // the unique underlying value (like a pointer or ID).
+            return std::hash<void*>()(&k.value());
+        }
+    };
+}
 
 namespace mir
 {
@@ -43,49 +53,31 @@ public:
     ToplevelsWithDecorations& operator=(ToplevelsWithDecorations const&) = delete;
 
     /// \return true if no duplicates existed before insertion, false otherwise.
-    bool register_toplevel(wl_resource* toplevel)
+    bool register_toplevel(wayland_rs::Weak<wayland_rs::XdgToplevelImpl> const& toplevel)
     {
         auto [_, inserted] = toplevels_with_decorations.insert(toplevel);
         return inserted;
     }
 
     /// \return true if the toplevel was still registered, false otherwise.
-    bool unregister_toplevel(wl_resource* toplevel)
+    bool unregister_toplevel(wayland_rs::Weak<wayland_rs::XdgToplevelImpl> const& toplevel)
     {
         return toplevels_with_decorations.erase(toplevel) > 0;
     }
 
 private:
-    std::unordered_set<wl_resource*> toplevels_with_decorations;
+    std::unordered_set<wayland_rs::Weak<wayland_rs::XdgToplevelImpl>> toplevels_with_decorations;
 };
 
-class XdgDecorationManagerV1 : public wayland::XdgDecorationManagerV1
-{
-public:
-    XdgDecorationManagerV1(wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy);
 
-    class Global : public wayland::XdgDecorationManagerV1::Global
-    {
-    public:
-        Global(wl_display* display, std::shared_ptr<DecorationStrategy> strategy);
 
-    private:
-        std::shared_ptr<DecorationStrategy> const decoration_strategy;
-        void bind(wl_resource* new_zxdg_decoration_manager_v1) override;
-    };
-
-private:
-    void get_toplevel_decoration(wl_resource* id, wl_resource* toplevel) override;
-
-    std::shared_ptr<ToplevelsWithDecorations> const toplevels_with_decorations;
-    std::shared_ptr<DecorationStrategy> const decoration_strategy;
-};
-
-class XdgToplevelDecorationV1 : public wayland::XdgToplevelDecorationV1
+class XdgToplevelDecorationV1 : public wayland_rs::ZxdgToplevelDecorationV1Impl
 {
 public:
     XdgToplevelDecorationV1(
-        wl_resource* id, mir::frontend::XdgToplevelStable* toplevel, std::shared_ptr<DecorationStrategy> strategy);
+        std::shared_ptr<wayland_rs::Client> const& client,
+        XdgToplevelStable* toplevel,
+        std::shared_ptr<DecorationStrategy> strategy);
 
     void set_mode(uint32_t mode) override;
     void unset_mode() override;
@@ -95,53 +87,38 @@ private:
     auto to_decorations_type(uint32_t) -> DecorationStrategy::DecorationsType;
     void update_mode(uint32_t new_mode);
 
-    mir::frontend::XdgToplevelStable* toplevel;
+    std::shared_ptr<wayland_rs::Client> client;
+    XdgToplevelStable* toplevel;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
 };
 } // namespace frontend
 } // namespace mir
 
-auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display, std::shared_ptr<DecorationStrategy> strategy)
-    -> std::shared_ptr<mir::wayland::XdgDecorationManagerV1::Global>
-{
-    return std::make_shared<XdgDecorationManagerV1::Global>(display, std::move(strategy));
-}
-
-mir::frontend::XdgDecorationManagerV1::Global::Global(
-    wl_display* display, std::shared_ptr<DecorationStrategy> strategy) :
-    wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}},
-    decoration_strategy{std::move(strategy)}
-{
-}
-
-void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_decoration_manager_v1)
-{
-    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1, std::move(decoration_strategy)};
-}
-
 mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(
-    wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy) :
-    mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}},
+    std::shared_ptr<wayland_rs::Client> const& client,
+    std::shared_ptr<DecorationStrategy> strategy) :
+    client{client},
     toplevels_with_decorations{std::make_shared<ToplevelsWithDecorations>()},
     decoration_strategy{std::move(strategy)}
 {
 }
 
-void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource* id, wl_resource* toplevel)
+auto mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wayland_rs::Weak<wayland_rs::XdgToplevelImpl> const& toplevel)
+    -> std::shared_ptr<wayland_rs::ZxdgToplevelDecorationV1Impl>
 {
     using Error = mir::frontend::XdgToplevelDecorationV1::Error;
 
-    auto* tl = mir::frontend::XdgToplevelStable::from(toplevel);
+    auto* tl = mir::frontend::XdgToplevelStable::from(&toplevel.value());
     if (!tl)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
-    auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
+    auto decoration = std::make_shared<XdgToplevelDecorationV1>(client, tl, decoration_strategy);
     if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
-        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
-            resource, Error::already_constructed, "Decoration already constructed for this toplevel"));
+        BOOST_THROW_EXCEPTION(mir::wayland_rs::ProtocolError(
+            object_id(), Error::already_constructed, "Decoration already constructed for this toplevel"));
     }
 
     decoration->add_destroy_listener(
@@ -170,11 +147,14 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
                 /*     resource, Error::orphaned, "Toplevel destroyed before its attached decoration")); */
             }
         });
+    return decoration;
 }
 
 mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
-    wl_resource* id, mir::frontend::XdgToplevelStable* toplevel, std::shared_ptr<DecorationStrategy> strategy) :
-    wayland::XdgToplevelDecorationV1{id, Version<1>{}},
+    std::shared_ptr<wayland_rs::Client> const& client,
+    XdgToplevelStable* toplevel,
+    std::shared_ptr<DecorationStrategy> strategy) :
+    client{client},
     toplevel{toplevel},
     decoration_strategy{std::move(strategy)}
 {
@@ -203,9 +183,7 @@ auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode) 
         return DecorationStrategy::DecorationsType::ssd;
     default:
     {
-        pid_t pid;
-        wl_client_get_credentials(client->raw_client(), &pid, nullptr, nullptr); // null pointers are allowed
-
+        pid_t pid = client->raw_client()->pid();
         mir::log_warning("Client PID: %d, attempted to set invalid zxdg_toplevel_decoration_v1 mode (%d), defaulting to client side.", pid, mode);
 
         return DecorationStrategy::DecorationsType::csd;

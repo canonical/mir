@@ -34,17 +34,15 @@ public:
 
     auto supported_pixel_formats() -> std::vector<MirPixelFormat> override;
 
-    void bind_display(wl_display*, std::shared_ptr<mir::Executor>) override;
-
-    void unbind_display(wl_display*) override;
-
-    auto buffer_from_resource(wl_resource*, std::function<void()>&&, std::function<void()>&&)
-        -> std::shared_ptr<graphics::Buffer> override;
-
     auto buffer_from_shm(
         std::shared_ptr<renderer::software::RWMappable> data,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer>;
+        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer> override;
+
+    auto buffer_from_dmabuf(
+        graphics::DMABufBuffer const& dmabuf,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer> override;
 };
 
 }

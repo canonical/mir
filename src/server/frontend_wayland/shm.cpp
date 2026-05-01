@@ -18,12 +18,12 @@
 #include <mir/graphics/drm_formats.h>
 #include "../shm_backing.h"
 #include <mir/log.h>
-#include <mir/wayland/protocol_error.h>
+#include "protocol_error.h"
+#include "weak.h"
+#include "wayland.h"
 
-#include <mir/wayland/weak.h>
 #include <mir/executor.h>
 #include <mir/renderer/sw/pixel_source.h>
-#include "wayland_wrapper.h"
 
 #include <drm_fourcc.h>
 #include <boost/throw_exception.hpp>
@@ -34,14 +34,12 @@ namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
 
 mf::ShmBuffer::ShmBuffer(
-    struct wl_resource* resource,
     std::shared_ptr<mir::Executor> wayland_executor,
     std::shared_ptr<shm::RWMappableRange> data,
     geometry::Size size,
     geometry::Stride stride,
     graphics::DRMFormat format)
-    : Buffer{resource, Version<1>{}},
-      weak_me{wayland::make_weak(this)},
+    : weak_me{std::make_shared<int>(0)},
       wayland_executor{std::move(wayland_executor)},
       data_{std::move(data)},
       size_{std::move(size)},
@@ -56,7 +54,7 @@ class ErrorNotifyingRWMappableBuffer : public mrs::RWMappable
 {
 public:
     ErrorNotifyingRWMappableBuffer(
-        mir::wayland::Weak<mf::ShmBuffer> buffer,
+        mir::wayland_rs::Weak<mf::ShmBuffer> buffer,
         std::shared_ptr<mir::Executor> wayland_executor,
         std::shared_ptr<mir::shm::RWMappableRange> data,
         mir::geometry::Size size,
@@ -72,7 +70,7 @@ public:
 
     void notify_access_error() const;
 private:
-    mir::wayland::Weak<mf::ShmBuffer> const weak_buffer;
+    mir::wayland_rs::Weak<mf::ShmBuffer> const weak_buffer;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::shm::RWMappableRange> const data;
     mir::geometry::Size const size_;
@@ -131,7 +129,7 @@ private:
 };
 
 ErrorNotifyingRWMappableBuffer::ErrorNotifyingRWMappableBuffer(
-    mir::wayland::Weak<mf::ShmBuffer> buffer,
+    mir::wayland_rs::Weak<mf::ShmBuffer> buffer,
     std::shared_ptr<mir::Executor> wayland_executor,
     std::shared_ptr<mir::shm::RWMappableRange> data,
     mir::geometry::Size size,
@@ -153,9 +151,8 @@ void ErrorNotifyingRWMappableBuffer::notify_access_error() const
         {
             if (buffer)
             {
-                wl_resource_post_error(
-                    buffer.value().resource,
-                    mir::wayland::Shm::Error::invalid_fd,
+                buffer.value().post_error(
+                    mir::wayland_rs::WlShmImpl::Error::invalid_fd,
                     "Error accessing SHM buffer");
             }
             else
@@ -197,7 +194,7 @@ auto ErrorNotifyingRWMappableBuffer::map_writeable() -> std::unique_ptr<mrs::Map
 auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappable>
 {
     return std::make_shared<ErrorNotifyingRWMappableBuffer>(
-        wayland::make_weak<mf::ShmBuffer>(this),
+        wayland_rs::Weak<mf::ShmBuffer>(shared_from_this()),
         wayland_executor,
         data_,
         size_,
@@ -205,21 +202,15 @@ auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappable>
         format_.as_mir_format().value());
 }
 
-auto mf::ShmBuffer::from(wl_resource* resource) -> ShmBuffer*
+auto mf::ShmBuffer::from(WlBufferImpl* impl) -> ShmBuffer*
 {
-    if (auto buffer = wayland::Buffer::from(resource))
-    {
-        return dynamic_cast<ShmBuffer*>(buffer);
-    }
-    return nullptr;
+    return dynamic_cast<ShmBuffer*>(impl);
 }
 
 mf::ShmPool::ShmPool(
-    struct wl_resource* resource,
     std::shared_ptr<Executor> wayland_executor,
     Fd backing_store,
     int32_t claimed_size) :
-    wayland::ShmPool(resource, Version<1>{}),
     wayland_executor{std::move(wayland_executor)},
     backing_store{shm::rw_pool_from_fd(std::move(backing_store), claimed_size)}
 {
@@ -244,12 +235,8 @@ auto wl_shm_format_to_drm_format(uint32_t format) -> mg::DRMFormat
 }
 }
 
-void mf::ShmPool::create_buffer(
-    struct wl_resource* id,
-    int32_t offset,
-    int32_t width, int32_t height,
-    int32_t stride,
-    uint32_t format)
+auto mf::ShmPool::create_buffer(int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
+    -> std::shared_ptr<wayland_rs::WlBufferImpl>
 {
     auto const size = stride * height;
     std::unique_ptr<shm::RWMappableRange> backing_range;
@@ -262,39 +249,39 @@ void mf::ShmPool::create_buffer(
         /* get_*_range throws a logic error when attempting to access outside the backing
          * store. This should be translated into a ProtocolError.
          */
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
+        throw wayland_rs::ProtocolError{
+            object_id(),
+            wayland_rs::WlShmImpl::Error::invalid_stride,
             "Attempt to create_buffer outside the range of the backing store"};
     }
 
     // TODO: Extend DRMFormat to include bytes-per-pixel info and drop this hardcoded "4"
     if (stride < (width * 4))
     {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
+        throw wayland_rs::ProtocolError{
+            object_id(),
+            wayland_rs::WlShmImpl::Error::invalid_stride,
             "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
             stride, width};
     }
 
     // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
-    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
+    if (format != wayland_rs::WlShmImpl::Format::argb8888 && format != wayland_rs::WlShmImpl::Format::xrgb8888)
     {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_format,
+        throw wayland_rs::ProtocolError{
+            object_id(),
+            wayland_rs::WlShmImpl::Error::invalid_format,
             "Invalid SHM format requested"};
     }
 
-    new ShmBuffer{
-        id,
-        wayland_executor,
-        std::move(backing_range),
-        geometry::Size{width, height},
-        geometry::Stride{stride},
-        wl_shm_format_to_drm_format(format)
-    };
+    return std::shared_ptr<ShmBuffer>(
+        new ShmBuffer(
+            wayland_executor,
+            std::move(backing_range),
+            geometry::Size{width, height},
+            geometry::Stride{stride},
+            wl_shm_format_to_drm_format(format)
+        ));
 }
 
 void mf::ShmPool::resize(int32_t new_size)
@@ -302,21 +289,15 @@ void mf::ShmPool::resize(int32_t new_size)
     backing_store->resize(new_size);
 }
 
-mf::WlShm::WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor)
-    : wayland::Shm::Global(display, Version<1>{}),
-      wayland_executor{std::move(wayland_executor)}
+mf::Shm::Shm(std::shared_ptr<Executor> wayland_executor)
+    : wayland_executor{std::move(wayland_executor)}
 {
+
 }
 
-void mf::WlShm::bind(wl_resource* new_wl_shm)
+auto mf::Shm::associate(rust::Box<wayland_rs::WlShmExt> instance, uint32_t object_id) -> void
 {
-    new Shm{new_wl_shm, wayland_executor};
-}
-
-mf::Shm::Shm(wl_resource* resource, std::shared_ptr<Executor> wayland_executor)
-    : wayland::Shm(resource, Version<1>{}),
-      wayland_executor{std::move(wayland_executor)}
-{
+    WlShmImpl::associate(std::move(instance), object_id);
     // TODO: send all the formats we support, beyond the mandatory ones.
     for (auto format : { Format::argb8888, Format::xrgb8888 })
     {
@@ -324,15 +305,15 @@ mf::Shm::Shm(wl_resource* resource, std::shared_ptr<Executor> wayland_executor)
     }
 }
 
-void mf::Shm::create_pool(wl_resource* id, Fd fd, int32_t size)
+auto mf::Shm::create_pool(int32_t fd, int32_t size) -> std::shared_ptr<wayland_rs::WlShmPoolImpl>
 {
     if (size <= 0)
     {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
+        throw wayland_rs::ProtocolError{
+            object_id(),
+            wayland_rs::WlShmImpl::Error::invalid_stride,
             "Invalid requested size"};
     }
 
-    new ShmPool{id, wayland_executor, fd, size};
+    return std::make_shared<ShmPool>(wayland_executor, mir::Fd{fd}, size);
 }

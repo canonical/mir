@@ -17,7 +17,9 @@
 #ifndef MIR_FRONTEND_TEXT_INPUT_V1_H
 #define MIR_FRONTEND_TEXT_INPUT_V1_H
 
-#include "text-input-unstable-v1_wrapper.h"
+#include "text_input_unstable_v1.h"
+#include "client.h"
+#include "weak.h"
 
 #include <memory>
 
@@ -30,11 +32,23 @@ class TextInputHub;
 }
 namespace frontend
 {
-auto create_text_input_manager_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> wayland_executor,
-    std::shared_ptr<scene::TextInputHub> text_input_hub)
--> std::unique_ptr<wayland::TextInputManagerV1::Global>;
+struct TextInputV1Ctx;
+
+class TextInputManagerV1
+    : public wayland_rs::ZwpTextInputManagerV1Impl
+{
+public:
+    TextInputManagerV1(
+        std::shared_ptr<Executor> wayland_executor,
+        std::shared_ptr<scene::TextInputHub> text_input_hub,
+        std::shared_ptr<wayland_rs::Client> const& client);
+
+    auto create_text_input() -> std::shared_ptr<wayland_rs::ZwpTextInputV1Impl> override;
+
+private:
+    std::shared_ptr<TextInputV1Ctx> ctx;
+    std::shared_ptr<wayland_rs::Client> const client;
+};
 }
 }
 

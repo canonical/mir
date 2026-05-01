@@ -17,29 +17,25 @@
 #include "wl_surface.h"
 #include "output_manager.h"
 #include "fractional_scale_v1.h"
-#include <mir/wayland/weak.h>
-#include "viewporter_wrapper.h"
 #include "wayland_connector.h"
-#include "wayland_utils.h"
 #include "wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_region.h"
 #include "shm.h"
-#include "resource_lifetime_tracker.h"
 #include "linux_drm_syncobj.h"
-
-#include "wayland_wrapper.h"
-
+#include "protocol_error.h"
+#include "fd_ready_callback.h"
+#include "wayland_server_notification_handler.h"
+#include <rust/cxx.h>
+#include "wayland_rs/src/ffi.rs.h"
 #include "wayland_frontend.tp.h"
 
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/client.h>
 #include <mir/graphics/buffer_properties.h>
 #include <mir/scene/session.h>
-#include <mir/frontend/wayland.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/executor.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/dmabuf_buffer.h>
 #include <mir/scene/surface.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/log.h>
@@ -56,8 +52,9 @@
 #include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
+namespace mg = mir::graphics;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace msh = mir::shell;
 
 struct mf::WlSurface::PendingBufferState
@@ -67,10 +64,19 @@ struct mf::WlSurface::PendingBufferState
     mf::SyncPoint release;
 };
 
-mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
-    : mw::Callback{new_resource, Version<1>()}
+struct mf::WlSurface::BufferReadyCallback : public mw::FdReadyCallback
 {
-}
+    BufferReadyCallback(WlSurface* surf, SyncPoint release)
+        : surf{surf},
+          release{std::move(release)}
+    {
+    }
+
+    auto ready() -> void override;
+
+    WlSurface* surf;
+    SyncPoint release;
+};
 
 void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 {
@@ -114,18 +120,20 @@ bool mf::WlSurfaceState::surface_data_needs_refresh() const
 }
 
 mf::WlSurface::WlSurface(
-    wl_resource* new_resource,
+    std::shared_ptr<mw::Client> const& client,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<Executor> const& frame_callback_executor,
-    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
-    : Surface(new_resource, Version<6>()),
-        session{client->client_session()},
+    std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+    rust::Box<wayland_rs::WaylandEventLoopHandle> event_loop_handle)
+    :   session{client->client_session()},
         stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
+        client{client},
         allocator{allocator},
         wayland_executor{wayland_executor},
         frame_callback_executor{frame_callback_executor},
         null_role{this},
-        role{&null_role}
+        role{&null_role},
+        event_loop_handle{std::move(event_loop_handle)}
 {
 }
 
@@ -142,7 +150,8 @@ mf::WlSurface::~WlSurface()
     }
     catch (...)
     {
-        mw::internal_error_processing_request(client->raw_client(), "WlSurface::~WlSurface()");
+        if (auto const locked = client.lock())
+            locked->raw_client()->kill(object_id(), 3, "Mir internal error processing WlSurface::~WlSurface() request");
     }
 }
 
@@ -258,8 +267,8 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     {
         log_warning(
             "Subsurface (wl_surface@%u) attempted to reorder but not found in parent's (wl_surface@%u) children list",
-            wl_resource_get_id(child->get_surface()->raw_resource()),
-            wl_resource_get_id(raw_resource()));
+            child->get_surface()->object_id(),
+            object_id());
         return;
     }
     else
@@ -280,9 +289,9 @@ void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_s
     {
         log_warning(
             "Subsurface (wl_surface@%u) attempted to reorder relative to a sibling (wl_surface@%u) not found in parent's (wl_surface@%u) children list",
-            wl_resource_get_id(child->get_surface()->raw_resource()),
-            wl_resource_get_id(sibling_surface->raw_resource()),
-            wl_resource_get_id(raw_resource()));
+            child->get_surface()->object_id(),
+            sibling_surface->object_id(),
+            object_id());
         return;
     }
 
@@ -347,12 +356,6 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
     }
 }
 
-mf::WlSurface* mf::WlSurface::from(wl_resource* resource)
-{
-    void* raw_surface = wl_resource_get_user_data(resource);
-    return static_cast<WlSurface*>(static_cast<wayland::Surface*>(raw_surface));
-}
-
 void mf::WlSurface::send_frame_callbacks(CallbackList& list)
 {
     for (auto const& frame : list)
@@ -368,14 +371,14 @@ void mf::WlSurface::send_frame_callbacks(CallbackList& list)
     list.clear();
 }
 
-void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y)
+void mf::WlSurface::attach(wayland_rs::Weak<wayland_rs::WlBufferImpl> const& buffer, bool, int32_t x, int32_t y)
 {
     if (x != 0 || y != 0)
     {
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
-    pending.buffer = mw::make_weak(buffer ? ResourceLifetimeTracker::from(buffer.value()) : nullptr);
+    pending.buffer = buffer;
 }
 
 void mf::WlSurface::damage(int32_t x, int32_t y, int32_t width, int32_t height)
@@ -396,29 +399,32 @@ void mf::WlSurface::damage_buffer(int32_t x, int32_t y, int32_t width, int32_t h
     // This isn't essential, but could enable optimizations
 }
 
-void mf::WlSurface::frame(wl_resource* new_callback)
+auto mir::frontend::WlSurface::frame() -> std::shared_ptr<wayland_rs::WlCallbackImpl>
 {
-    auto callback = new WlSurfaceState::Callback{new_callback};
-    pending.frame_callbacks.push_back(wayland::make_weak(callback));
+    auto callback = std::make_shared<WlSurfaceState::Callback>();
+    pending.frame_callbacks.push_back(wayland_rs::Weak(callback));
+    return callback;
 }
 
-void mf::WlSurface::set_opaque_region(std::optional<wl_resource*> const& region)
+auto mir::frontend::WlSurface::set_opaque_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) -> void
 {
-    pending.opaque_region = region.transform([](auto*r)
-        {
-            geom::Rectangles opaque_region;
-            for (auto const& subregion : WlRegion::from(r)->rectangle_vector())
-                opaque_region.add(subregion);
-            return opaque_region;
-        });
+    if (!has_region)
+        pending.opaque_region = std::nullopt;
+    else
+    {
+        geom::Rectangles opaque_region;
+        for (auto const& subregion : WlRegion::from(&region.value())->rectangle_vector())
+            opaque_region.add(subregion);
+        pending.opaque_region = opaque_region;
+    }
 }
 
-void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
+auto mir::frontend::WlSurface::set_input_region(wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region, bool has_region) -> void
 {
-    if (region)
+    if (has_region)
     {
         // since pending.input_shape is an optional optional, this is needed
-        auto shape = WlRegion::from(region.value())->rectangle_vector();
+        auto shape = WlRegion::from(&region.value())->rectangle_vector();
         pending.input_shape = decltype(pending.input_shape)::value_type{std::move(shape)};
     }
     else
@@ -473,7 +479,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         // callbacks should be sent at once.
         frame_callbacks.insert(end(frame_callbacks), begin(state.frame_callbacks), end(state.frame_callbacks));
 
-        mw::Weak<ResourceLifetimeTracker> const& weak_buffer = state.buffer.value();
+        mw::Weak<mw::WlBufferImpl> const& weak_buffer = state.buffer.value();
 
         if (!weak_buffer)
         {
@@ -500,25 +506,24 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                         {
                             if (weak_buffer)
                             {
-                                wl_resource_post_event(weak_buffer.value(), wayland::Buffer::Opcode::release);
+                                weak_buffer.value().send_release_event();
                             }
                         });
                 };
             }
 
-            auto executor_send_frame_callbacks = [executor = wayland_executor, weak_self = mw::make_weak(this)]()
+            auto executor_send_frame_callbacks = [executor = wayland_executor, weak_self =std::weak_ptr<WlSurface>(shared_from_this())]()
                 {
                     executor->spawn([weak_self]()
                         {
-                            if (weak_self)
+                            if (auto const self = weak_self.lock())
                             {
-                                auto& self = weak_self.value();
-                                self.send_frame_callbacks(self.frame_callbacks);
+                                self->send_frame_callbacks(self->frame_callbacks);
                             }
                         });
                 };
 
-            if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
+            if (auto const shm_buffer = ShmBuffer::from(&weak_buffer.value()))
             {
                 current_buffer = allocator->buffer_from_shm(
                     shm_buffer->data(),
@@ -527,20 +532,24 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 tracepoint(
                     mir_server_wayland,
                     sw_buffer_committed,
-                    wl_resource_get_client(resource),
-                    current_buffer->id().as_value());
+                    reinterpret_cast<void*>(static_cast<uintptr_t>(object_id())),
+                    static_cast<int>(current_buffer->id().as_value()));
             }
-            else
+            else if (auto const* dmabuf = dynamic_cast<mg::DMABufBuffer*>(&weak_buffer.value()))
             {
-                current_buffer = allocator->buffer_from_resource(
-                    weak_buffer.value(),
+                current_buffer = allocator->buffer_from_dmabuf(
+                    *dmabuf,
                     std::move(executor_send_frame_callbacks),
                     std::move(release_buffer));
                 tracepoint(
                     mir_server_wayland,
                     hw_buffer_committed,
-                    wl_resource_get_client(resource),
-                    current_buffer->id().as_value());
+                    reinterpret_cast<void*>(static_cast<uintptr_t>(object_id())),
+                    static_cast<int>(current_buffer->id().as_value()));
+            }
+            else
+            {
+                BOOST_THROW_EXCEPTION((std::runtime_error{"Unknown buffer type committed to surface"}));
             }
 
             needs_buffer_submission = true;
@@ -550,9 +559,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     {
         if (state.release_fence)
         {
-            throw wayland::ProtocolError{
-                sync_timeline.value().resource,
-                SyncTimeline::Error::no_buffer,
+            throw mw::ProtocolError{
+                sync_timeline.value().object_id(),
+                mw::WpLinuxDrmSyncobjSurfaceV1Impl::Error::no_buffer,
             "Timeline release sync point set, but no buffer committed"};
         }
 
@@ -588,15 +597,14 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 end(state.frame_callbacks));
 
             frame_callback_executor->spawn(
-                [executor = wayland_executor, weak_self = mw::make_weak(this)]
+                [executor = wayland_executor, weak_self = std::weak_ptr<WlSurface>(shared_from_this())]
                 {
                     executor->spawn(
                         [weak_self]()
                         {
-                            if (weak_self)
+                            if (auto const self = weak_self.lock())
                             {
-                                auto& self = weak_self.value();
-                                self.send_frame_callbacks(self.heartbeat_quirk_frame_callbacks);
+                                self->send_frame_callbacks(self->heartbeat_quirk_frame_callbacks);
                             }
                         });
                 }
@@ -659,15 +667,14 @@ void mf::WlSurface::commit()
 
     /* Any previously committed, but not yet ready, buffer is now superceded
      */
-    if (buffer_ready_source)
+    if (buffer_ready_token)
     {
         // We don't need to handle the buffer becoming ready anymore...
-        wl_event_source_remove(buffer_ready_source);
+        buffer_ready_token.reset();
         // ...and the client is now free to reuse it
         pending_context->release.signal();
         // Now clean up our context handling.
         pending_context.reset();
-        buffer_ready_source = nullptr;
     }
 
     if (acquire_syncpoint && release_syncpoint)
@@ -681,8 +688,8 @@ void mf::WlSurface::commit()
 
         if (!pending.buffer || !(*pending.buffer))
         {
-            throw wayland::ProtocolError{
-                sync_timeline.value().resource,
+            throw mw::ProtocolError{
+                sync_timeline.value().object_id(),
                 SyncTimeline::Error::no_buffer,
                 "Timeline acquire sync point set, but no buffer committed"};
         }
@@ -692,47 +699,9 @@ void mf::WlSurface::commit()
             acquire_syncpoint->to_eventfd(),
             *release_syncpoint});
 
-        wl_event_loop_fd_func_t handle_buffer_ready =
-            [](int /*fd*/, uint32_t /*mask*/, void* data)
-            {
-                /* Because we are dispatched from the Wayland event loop we do not
-                 * need locking here; either data is valid, or we should have been
-                 * removed from the run queue.
-                 */
-                auto& state = *static_cast<PendingBufferState*>(data);
-
-                state.surf->pending.release_fence = state.release;
-
-                try
-                {
-                    complete_commit(state.surf);
-                }
-                catch (wayland::ProtocolError const& err)
-                {
-                    wl_resource_post_error(err.resource(), err.code(), "%s", err.message());
-                }
-                catch (...)
-                {
-                    wayland::internal_error_processing_request(state.surf->client->raw_client(), "Surface::commit()");
-                }
-
-                wl_event_source_remove(state.surf->buffer_ready_source);
-                state.surf->buffer_ready_source = nullptr;
-                state.surf->pending_context.reset();
-
-                return 0;
-            };
-
-        auto client = wl_resource_get_client(resource);
-        auto display = wl_client_get_display(client);
-        auto event_loop = wl_display_get_event_loop(display);
-
-        buffer_ready_source = wl_event_loop_add_fd(
-            event_loop,
+        buffer_ready_token = event_loop_handle->watch_fd(
             pending_context->eventfd,
-            WL_EVENT_READABLE,
-            handle_buffer_ready,
-            pending_context.get());
+            std::make_unique<BufferReadyCallback>(this, *release_syncpoint));
     }
     else
     {
@@ -776,7 +745,33 @@ void mf::WlSurface::complete_commit(WlSurface* surf)
     }
 }
 
-void mf::WlSurface::set_buffer_transform(int32_t transform)
+auto mf::WlSurface::BufferReadyCallback::ready() -> void
+{
+    /* Because we are dispatched from the Wayland event loop we do not
+     * need locking here; either data is valid, or we should have been
+     * removed from the run queue.
+     */
+    surf->pending.release_fence = release;
+
+    try
+    {
+        complete_commit(surf);
+    }
+    catch (mw::ProtocolError const& err)
+    {
+        surf->post_error(err.code(), err.message());
+    }
+    catch (...)
+    {
+        if (auto const locked = surf->client.lock())
+            locked->raw_client()->kill(surf->object_id(), 3, "Mir internal error processing Surface::commit() request");
+    }
+
+    surf->buffer_ready_token.reset();
+    surf->pending_context.reset();
+}
+
+void mf::WlSurface::set_buffer_transform(uint32_t transform)
 {
     try
     {
@@ -786,8 +781,8 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
     }
     catch (std::out_of_range const&)
     {
-        throw wayland::ProtocolError{
-            resource,
+        throw mw::ProtocolError{
+            object_id(),
             Error::invalid_transform,
             "Invalid transform"};
     }
@@ -798,8 +793,8 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
     if (scale <= 0)
     {
-        throw wayland::ProtocolError{
-            resource,
+        throw mw::ProtocolError{
+            object_id(),
             Error::invalid_scale,
             "Invalid scale %d", scale};
     }
@@ -812,6 +807,11 @@ void mir::frontend::WlSurface::offset(int32_t x, int32_t y)
     {
         mir::log_warning("Client requested unimplemented non-zero offset. Rendering will be incorrect.");
     }
+}
+
+mir::frontend::WlSurface* mir::frontend::WlSurface::from(WlSurfaceImpl* impl)
+{
+    return dynamic_cast<WlSurface*>(impl);
 }
 
 auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
@@ -827,7 +827,7 @@ auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
     return mir_pointer_unconfined;
 }
 
-void mf::WlSurface::associate_viewport(wayland::Weak<Viewport> viewport)
+void mf::WlSurface::associate_viewport(mw::Weak<Viewport> viewport)
 {
     if (this->viewport || pending.viewport)
     {
@@ -836,7 +836,7 @@ void mf::WlSurface::associate_viewport(wayland::Weak<Viewport> viewport)
     pending.viewport = viewport;
 }
 
-void mf::WlSurface::associate_sync_timeline(wayland::Weak<SyncTimeline> timeline)
+void mf::WlSurface::associate_sync_timeline(mw::Weak<SyncTimeline> timeline)
 {
     if (this->sync_timeline)
     {
@@ -860,12 +860,12 @@ auto mf::NullWlSurfaceRole::scene_surface() const -> std::optional<std::shared_p
     return std::nullopt;
 }
 
-void mf::WlSurface::set_fractional_scale(mir::frontend::FractionalScaleV1* fractional_scale)
+void mf::WlSurface::set_fractional_scale(std::shared_ptr<FractionalScaleV1> const& fractional_scale)
 {
-    this->fractional_scale = wayland::Weak{fractional_scale};
+    this->fractional_scale = mw::Weak{fractional_scale};
 }
 
-auto mf::WlSurface::get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>
+auto mf::WlSurface::get_fractional_scale() const -> mw::Weak<FractionalScaleV1>
 {
     return fractional_scale;
 }

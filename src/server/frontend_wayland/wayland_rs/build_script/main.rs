@@ -252,8 +252,20 @@ fn generate_global_dispatch_impl(
     }
 }
 
+/// Context about a `new_id` argument in the same request, used to ensure
+/// `data_init.init()` is always called even in error paths.
+struct NewIdContext {
+    /// The variable name of the new_id argument (e.g., `id`).
+    new_id_name: Ident,
+    /// The C++ impl class name (e.g., `XdgSurfaceImpl`).
+    impl_class_name: Ident,
+}
+
 /// Generate a TokenStream that transforms a single argument for crossing the Rust/C++ boundary.
-fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
+fn transform_argument_for_cpp(
+    arg: &WaylandArg,
+    new_id_ctx: Option<&NewIdContext>,
+) -> Option<TokenStream> {
     let arg_name = format_ident!("{}", arg.name);
 
     // Enums are provided as WlEnum, so we need to cast them to u32 so that
@@ -271,6 +283,9 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         // The Wayland Rust crate will provide us with raw Wayland Rust objects.
         // C++ expects the shared_ptr data that backs these rust objects to be sent
         // as parameters for objects.
+        // The user data stored on wayland resources is Arc<Mutex<SharedPtr<...>>>,
+        // so we need to request that type from .data(), lock the mutex, and then
+        // extract a reference to the inner SharedPtr.
         WaylandArgType::Object => {
             let arg_type = format_ident!(
                 "{}",
@@ -278,18 +293,73 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
                     arg.interface.as_ref().expect("Object is missing interface"),
                 )
             );
+            let arg_name_str = arg.name.as_str();
+            let arg_guard_name = format_ident!("{}_guard", arg.name);
             if arg.allow_null.unwrap_or(false) {
                 let has_arg_name = format_has_arg_ident(&arg.name);
+                let no_data_handler = if let Some(ctx) = new_id_ctx {
+                    let new_id_name = &ctx.new_id_name;
+                    let impl_class_name = &ctx.impl_class_name;
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        data_init.init(#new_id_name, Arc::new(Mutex::new(cxx::SharedPtr::<ffi::#impl_class_name>::null())));
+                        return;
+                    }
+                } else {
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        return;
+                    }
+                };
                 Some(quote! {
                     let #has_arg_name = #arg_name.is_some();
+                    let #arg_guard_name;
                     let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
-                        Some(o) => o.data().unwrap(),
+                        Some(o) => match o.data::<Arc<Mutex<cxx::SharedPtr<ffi::#arg_type>>>>() {
+                            Some(d) => {
+                                #arg_guard_name = d.lock().unwrap();
+                                &*#arg_guard_name
+                            },
+                            None => {
+                                #no_data_handler
+                            }
+                        },
                         None => &cxx::SharedPtr::<ffi::#arg_type>::null()
                     };
                 })
             } else {
+                let no_data_handler = if let Some(ctx) = new_id_ctx {
+                    let new_id_name = &ctx.new_id_name;
+                    let impl_class_name = &ctx.impl_class_name;
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        data_init.init(#new_id_name, Arc::new(Mutex::new(cxx::SharedPtr::<ffi::#impl_class_name>::null())));
+                        return;
+                    }
+                } else {
+                    quote! {
+                        log::warn!(
+                            "Object argument '{}' has no associated data; skipping request",
+                            #arg_name_str
+                        );
+                        return;
+                    }
+                };
                 Some(quote! {
-                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = #arg_name.data().unwrap();
+                    let Some(#arg_guard_name) = #arg_name.data::<Arc<Mutex<cxx::SharedPtr<ffi::#arg_type>>>>() else {
+                        #no_data_handler
+                    };
+                    let #arg_guard_name = #arg_guard_name.lock().unwrap();
+                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = &*#arg_guard_name;
                 })
             }
         }
@@ -310,6 +380,16 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
     }
 }
 
+/// Returns true for the special-case `zwp_linux_buffer_params_v1::create` request.
+///
+/// This request doesn't carry a `new_id` arg itself, but it asynchronously creates
+/// a `wl_buffer` via the `created` event.  The C++ side returns a
+/// `SharedPtr<WlBufferImpl>` (null on failure) and the Rust dispatch creates the
+/// Wayland resource and sends the event.
+fn is_linux_dmabuf_create(interface: &WaylandInterface, request: &WaylandRequest) -> bool {
+    interface.name == "zwp_linux_buffer_params_v1" && request.name == "create"
+}
+
 /// Generate the body of a request handler arm.
 ///
 /// Requests come in two distinct forms:
@@ -317,7 +397,7 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
 /// 2. Resource creation requests which ask the C++ interface to create
 ///    the resource for them. These methods MUST call data_init.init()
 ///    with the newly created C++ resource.
-fn generate_request_body(request: &WaylandRequest) -> TokenStream {
+fn generate_request_body(request: &WaylandRequest, interface: &WaylandInterface) -> TokenStream {
     let snake_request_name = dash_to_snake_ident(&sanitize_identifier(request.name.as_str()));
     let new_id_arg = request
         .args
@@ -338,14 +418,17 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
     if let Some(new_id_arg) = new_id_arg {
         let new_id_name = format_ident!("{}", new_id_arg.name);
+        let new_id_interface = new_id_arg
+            .interface
+            .as_ref()
+            .expect("NewId is missing interface");
         let ext_interface_struct_name = format_ident!(
             "{}",
-            format_wayland_interface_to_rust_extension_struct(
-                new_id_arg
-                    .interface
-                    .as_ref()
-                    .expect("NewId is missing interface")
-            )
+            format_wayland_interface_to_rust_extension_struct(new_id_interface)
+        );
+        let impl_class_name = format_ident!(
+            "{}",
+            format_wayland_interface_to_cpp_class(new_id_interface)
         );
         let call_arg_names: Vec<TokenStream> = request
             .args
@@ -379,6 +462,51 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     // FFI. The unchecked pin is used only for the duration of the `associate()` call,
                     // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
                     unsafe { guard.pin_mut_unchecked().associate(boxed, protocol_id); };
+                }
+                Err(err) => {
+                    // We must always call data_init.init() for new_id requests, even on
+                    // failure, otherwise wayland-backend panics because the new object has
+                    // no associated data.
+                    data_init.init(#new_id_name, Arc::new(Mutex::new(cxx::SharedPtr::<ffi::#impl_class_name>::null())));
+                    let (object_id, code, message) = parse_post_error(err.what());
+                    post_protocol_error(resource, object_id, code, message);
+                }
+            }
+        }
+    } else if is_linux_dmabuf_create(interface, request) {
+        // Special case: zwp_linux_buffer_params_v1::create returns a WlBufferImpl from C++.
+        // Rust creates the wl_buffer resource and sends either the `created` or `failed` event.
+        let call_arg_names: Vec<TokenStream> =
+            request.args.iter().flat_map(arg_to_tokens).collect();
+
+        quote! {
+            let mut params_guard = data.lock().unwrap();
+            // SAFETY: see other request handler arms for the safety rationale on pin_mut_unchecked.
+            match unsafe { (&mut *params_guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+                Ok(child) => {
+                    if child.is_null() {
+                        unsafe { (&mut *params_guard).pin_mut_unchecked().send_failed_event(); }
+                    } else {
+                        let child_arc = Arc::new(Mutex::new(child));
+                        let child_resource = client.create_resource::<
+                            wayland_server::protocol::wl_buffer::WlBuffer,
+                            Arc<Mutex<cxx::SharedPtr<ffi::WlBufferImpl>>>,
+                            ServerState
+                        >(
+                            dhandle,
+                            1,
+                            child_arc.clone(),
+                        ).expect("Failed to create wl_buffer for linux-dmabuf create");
+                        register_resource(&child_resource);
+                        let protocol_id = Resource::id(&child_resource).protocol_id();
+                        let boxed = Box::new(crate::middleware::WlBufferExt { wrapped: child_resource });
+                        {
+                            let mut child_guard = child_arc.lock().unwrap();
+                            unsafe { child_guard.pin_mut_unchecked().associate(boxed, protocol_id); }
+                            let child_box = unsafe { child_guard.pin_mut_unchecked().get_box() };
+                            unsafe { (&mut *params_guard).pin_mut_unchecked().send_created_event(child_box); }
+                        }
+                    }
                 }
                 Err(err) => {
                     let (object_id, code, message) = parse_post_error(err.what());
@@ -428,13 +556,31 @@ fn generate_request_handler_arms(
                 })
                 .collect();
 
+            let new_id_ctx = request
+                .args
+                .iter()
+                .find(|arg| arg.type_ == WaylandArgType::NewId)
+                .map(|new_id_arg| {
+                    let new_id_interface = new_id_arg
+                        .interface
+                        .as_ref()
+                        .expect("NewId is missing interface");
+                    NewIdContext {
+                        new_id_name: format_ident!("{}", new_id_arg.name),
+                        impl_class_name: format_ident!(
+                            "{}",
+                            format_wayland_interface_to_cpp_class(new_id_interface)
+                        ),
+                    }
+                });
+
             let transformed_args: Vec<TokenStream> = request
                 .args
                 .iter()
-                .filter_map(transform_argument_for_cpp)
+                .filter_map(|arg| transform_argument_for_cpp(arg, new_id_ctx.as_ref()))
                 .collect();
 
-            let body = generate_request_body(request);
+            let body = generate_request_body(request, interface);
 
             Some(quote! {
                 #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
@@ -485,6 +631,10 @@ fn generate_dispatch_impl(
         _ => false,
     });
 
+    // Check if any request uses deferred creation (needs client + dhandle to create resources).
+    // Currently only zwp_linux_buffer_params_v1::create uses this pattern.
+    let interface_has_deferred_creation = interface.name == "zwp_linux_buffer_params_v1";
+
     let data_init_name = format_ident!(
         "{}",
         if interface_creates_wayland_objects {
@@ -519,6 +669,24 @@ fn generate_dispatch_impl(
         }
     );
 
+    let client_name = format_ident!(
+        "{}",
+        if interface_has_deferred_creation {
+            "client"
+        } else {
+            "_client"
+        }
+    );
+
+    let dhandle_name = format_ident!(
+        "{}",
+        if interface_has_deferred_creation {
+            "dhandle"
+        } else {
+            "_dhandle"
+        }
+    );
+
     quote! {
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
@@ -528,11 +696,11 @@ fn generate_dispatch_impl(
         {
             fn request(
                 _state: &mut Self,
-                _client: &Client,
+                #client_name: &Client,
                 #resource_name: &#namespace_name::#interface_name::#protocol_struct_name,
                 request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
                 #data_name: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
-                _dhandle: &DisplayHandle,
+                #dhandle_name: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
                 match request {
@@ -687,6 +855,36 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder
 }
 
+fn create_work_callback_builder() -> CppBuilder {
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_WORK_CALLBACK", "work_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("WorkCallback");
+
+    let execute_method = CppMethod::new("execute", None, true, false, true, true);
+    class.add_method(execute_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
+fn create_fd_ready_callback_builder() -> CppBuilder {
+    let mut builder = CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("FdReadyCallback");
+
+    let ready_method = CppMethod::new("ready", None, true, false, true, true);
+    class.add_method(ready_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
 fn create_wayland_server_notification_handler() -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new(
         "MIR_WAYLANDRS_WAYLAND_SERVER_NOTIFICATION_HANDLER",
@@ -699,6 +897,7 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
     let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
     namespace.add_forward_declaration_class("WaylandClient");
     namespace.add_forward_declaration_class("WaylandClientId");
+    namespace.add_forward_declaration_class("WaylandEventLoopHandle");
     let mut class = CppClass::new("WaylandServerNotificationHandler");
 
     let mut client_added_method = CppMethod::new("client_added", None, true, false, true, true);
@@ -716,6 +915,14 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
         false,
     ));
     class.add_method(client_removed_method);
+
+    let mut loop_ready_method = CppMethod::new("loop_ready", None, true, false, true, true);
+    loop_ready_method.add_arg(CppArg::new(
+        CppType::Box("WaylandEventLoopHandle".to_string()),
+        "event_loop_handle",
+        false,
+    ));
+    class.add_method(loop_ready_method);
 
     namespace.add_class(class);
     builder.add_namespace(namespace);
@@ -746,6 +953,8 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
         .collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
+    builders.push(create_work_callback_builder());
+    builders.push(create_fd_ready_callback_builder());
 
     // Write the protocol headers
     for builder in &builders {
@@ -777,7 +986,6 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
-    // WaylandClient is used in the protected constructor of every generated XxxImpl.
     namespace.add_forward_declaration_class("WaylandClient");
 
     for protocol in protocols {
@@ -859,7 +1067,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         .iter()
         .filter_map(|item| {
             if let protocol_parser::InterfaceItem::Request(request) = item {
-                Some(wayland_request_to_cpp_method(request))
+                Some(wayland_request_to_cpp_method(request, interface))
             } else if let protocol_parser::InterfaceItem::Event(event) = item {
                 Some(vec![wayland_event_to_cpp_method(event)])
             } else {
@@ -905,6 +1113,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         false,
         false,
     );
+    object_id_method.set_const();
     object_id_method.set_body("return object_id_;");
     class.add_method(object_id_method);
 
@@ -936,20 +1145,13 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     );
     class.add_method(post_error_method);
 
-    // Add a protected constructor and member so that subclasses know which client
-    // they are serving and can interact with it as they please.
-    class.add_protected_constructor_arg(CppArg::new(
-        CppType::Box("WaylandClient".to_string()),
-        "client",
-        false,
-    ));
-    class
-        .add_public_member(CppArg::new(
-            CppType::Box("WaylandClient".to_string()),
-            "client",
-            false,
-        ))
-        .set_const();
+    // Add a destroy_and_delete method that drops the Rust-side instance, allowing
+    // C++ code to manually deallocate an interface object.
+    let mut destroy_and_delete_method =
+        CppMethod::new("destroy_and_delete", None, false, false, false, false);
+    destroy_and_delete_method.set_body("instance_.reset();");
+    class.add_method(destroy_and_delete_method);
+
     for method in methods {
         class.add_method(method);
     }
@@ -999,9 +1201,12 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
     CppArg::new(type_, arg.name.as_str(), arg.allow_null.unwrap_or(false))
 }
 
-fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
-    // Methods will have a return value in C++ if they are creating a new Wayland object.
-    // Otherwise they always return void.
+fn wayland_request_to_cpp_method(
+    method: &WaylandRequest,
+    interface: &WaylandInterface,
+) -> Vec<CppMethod> {
+    // Methods will have a return value in C++ if they are creating a new Wayland object
+    // (either directly via a new_id arg, or via deferred creation through a subsequent event).
     let retval = match method
         .args
         .iter()
@@ -1016,7 +1221,14 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
             );
             Some(CppType::Object(name))
         }
-        None => None,
+        None => {
+            // Special case: zwp_linux_buffer_params_v1::create returns a WlBufferImpl
+            if is_linux_dmabuf_create(interface, method) {
+                Some(CppType::Object("WlBufferImpl".to_string()))
+            } else {
+                None
+            }
+        }
     };
 
     let args = method
@@ -1110,6 +1322,13 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
                         .as_ref()
                         .expect("NewId is missing interface"),
                 ))
+            })
+            .or_else(|| {
+                if is_linux_dmabuf_create(interface, method) {
+                    Some(CppType::Object("WlBufferImpl".to_string()))
+                } else {
+                    None
+                }
             });
         let mut virtual_method = CppMethod::new(
             method.name.as_str(),

@@ -25,15 +25,14 @@
 #include <mir/events/touch_event.h>
 #include <mir/log.h>
 #include <mir/time/clock.h>
-#include <mir/wayland/client.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace geom = mir::geometry;
 
-mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
-    : Touch(new_resource, Version<9>()),
-      clock{clock}
+mf::WlTouch::WlTouch(std::shared_ptr<time::Clock> const& clock, std::shared_ptr<wayland_rs::Client> const& client)
+    : clock{clock},
+      client{client}
 {
 }
 
@@ -109,12 +108,12 @@ void mf::WlTouch::down(
             up(serial, timestamp, touch_id);
             maybe_frame();
         });
-    touch_id_to_surface[touch_id] = {mw::make_weak(target_surface), listener_id};
+    touch_id_to_surface[touch_id] = {mw::Weak(target_surface->shared_from_this()), listener_id};
 
     send_down_event(
         serial,
         ms.count(),
-        target_surface->raw_resource(),
+        target_surface->shared_from_this(),
         touch_id,
         position_on_target.x.as_value(),
         position_on_target.y.as_value());

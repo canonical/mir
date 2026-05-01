@@ -23,7 +23,7 @@
 #include <mir/log.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -32,41 +32,50 @@ namespace mir
 {
 namespace frontend
 {
-class WlShellSurface : public wayland::ShellSurface, public WindowWlSurfaceRole
+class WlShellSurface : public mw::WlShellSurfaceImpl, public WindowWlSurfaceRole
 {
 public:
     WlShellSurface(
-        wl_resource* new_resource,
+        std::shared_ptr<wayland_rs::Client> const& client,
         Executor& wayland_executor,
         WlSurface* surface,
         std::shared_ptr<msh::Shell> const& shell,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry) :
-        ShellSurface(new_resource, Version<1>()),
         WindowWlSurfaceRole{
-            wayland_executor, &seat, wayland::ShellSurface::client, surface, shell, output_manager, surface_registry}
+            wayland_executor, &seat, client.get(), surface->shared_from_this(), shell, output_manager, surface_registry}
     {
     }
 
-    ~WlShellSurface() = default;
+    ~WlShellSurface() override = default;
 
-protected:
-    void set_toplevel() override
+    auto associate(rust::Box<mw::WlShellSurfaceExt> instance, uint32_t object_id) -> void override
     {
+        WlShellSurfaceImpl::associate(std::move(instance), object_id);
+        init_observer();
+    }
+
+    auto set_toplevel() -> void override
+    {
+    }
+
+    void handle_commit() override
+    {
+        // TODO?
     }
 
     void set_transient(
-        struct wl_resource* parent,
+        wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent,
         int32_t x,
         int32_t y,
         uint32_t flags) override
     {
-        auto& parent_surface = *WlSurface::from(parent);
+        auto& parent_surface = *WlSurface::from(&parent.value());
 
         mir::shell::SurfaceSpecification mods;
 
-        if (flags & mw::ShellSurface::Transient::inactive)
+        if (flags & Transient::inactive)
             mods.type = mir_window_type_tip;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
@@ -80,7 +89,6 @@ protected:
         apply_spec(mods);
     }
 
-    void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override {};
     void handle_active_change(bool /*is_now_active*/) override {};
 
@@ -89,7 +97,7 @@ protected:
         geometry::Size const& new_size) override
     {
         send_configure_event(
-            mw::ShellSurface::Resize::none,
+            mw::WlShellSurfaceImpl::Resize::none,
             new_size.width.as_int(),
             new_size.height.as_int());
     }
@@ -104,24 +112,24 @@ protected:
     void set_fullscreen(
         uint32_t /*method*/,
         uint32_t /*framerate*/,
-        std::optional<struct wl_resource*> const& output) override
+        wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool) override
     {
         WindowWlSurfaceRole::set_fullscreen(output);
     }
 
     void set_popup(
-        struct wl_resource* /*seat*/,
+        wayland_rs::Weak<wayland_rs::WlSeatImpl> const& /*seat*/,
         uint32_t /*serial*/,
-        struct wl_resource* parent,
+        wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& parent,
         int32_t x,
         int32_t y,
         uint32_t flags) override
     {
-        auto& parent_surface = *WlSurface::from(parent);
+        auto& parent_surface = *WlSurface::from(&parent.value());
 
         mir::shell::SurfaceSpecification mods;
 
-        if (flags & mw::ShellSurface::Transient::inactive)
+        if (flags & mw::WlShellSurfaceImpl::Transient::inactive)
             mods.type = mir_window_type_tip;
         if (auto parent = parent_surface.scene_surface())
             mods.parent = parent.value();
@@ -135,61 +143,61 @@ protected:
         apply_spec(mods);
     }
 
-    void set_maximized(std::optional<struct wl_resource*> const& output) override
+    auto set_maximized(wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output, bool) -> void override
     {
         (void)output;
         WindowWlSurfaceRole::add_state_now(mir_window_state_maximized);
     }
 
-    void set_title(std::string const& title) override
+    void set_title(rust::String title) override
     {
-        WindowWlSurfaceRole::set_title(title);
+        WindowWlSurfaceRole::set_title(title.c_str());
     }
 
     void pong(uint32_t /*serial*/) override
     {
     }
 
-    void move(struct wl_resource* /*seat*/, uint32_t serial) override
+    void r_move(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& /*seat*/, uint32_t serial) override
     {
         WindowWlSurfaceRole::initiate_interactive_move(serial);
     }
 
-    void resize(struct wl_resource* /*seat*/, uint32_t serial, uint32_t edges) override
+    void resize(wayland_rs::Weak<wayland_rs::WlSeatImpl> const& /*seat*/, uint32_t serial, uint32_t edges) override
     {
         MirResizeEdge edge = mir_resize_edge_none;
 
         switch (edges)
         {
-        case mw::ShellSurface::Resize::top:
+        case Resize::top:
             edge = mir_resize_edge_north;
             break;
 
-        case mw::ShellSurface::Resize::bottom:
+        case Resize::bottom:
             edge = mir_resize_edge_south;
             break;
 
-        case mw::ShellSurface::Resize::left:
+        case Resize::left:
             edge = mir_resize_edge_west;
             break;
 
-        case mw::ShellSurface::Resize::top_left:
+        case Resize::top_left:
             edge = mir_resize_edge_northwest;
             break;
 
-        case mw::ShellSurface::Resize::bottom_left:
+        case Resize::bottom_left:
             edge = mir_resize_edge_southwest;
             break;
 
-        case mw::ShellSurface::Resize::right:
+        case Resize::right:
             edge = mir_resize_edge_east;
             break;
 
-        case mw::ShellSurface::Resize::top_right:
+        case Resize::top_right:
             edge = mir_resize_edge_northeast;
             break;
 
-        case mw::ShellSurface::Resize::bottom_right:
+        case Resize::bottom_right:
             edge = mir_resize_edge_southeast;
             break;
 
@@ -199,103 +207,56 @@ protected:
         WindowWlSurfaceRole::initiate_interactive_resize(edge, serial);
     }
 
-    void set_class(std::string const& /*class_*/) override
+    void set_class(rust::String /*class_*/) override
     {
     }
 
     void destroy_role() const override
     {
-        wl_resource_destroy(resource);
+        // TODO:
+        // wl_resource_destroy(resource);
     }
 };
 
-class WlShell : public wayland::Shell::Global
-{
-public:
-    WlShell(
-        wl_display* display,
-        Executor& wayland_executor,
-        std::shared_ptr<msh::Shell> const& shell,
-        WlSeat& seat,
-        OutputManager* const output_manager,
-        std::shared_ptr<SurfaceRegistry> const& surface_registry)
-        : Global(display, Version<1>()),
-          wayland_executor{wayland_executor},
-          shell{shell},
-          seat{seat},
-          output_manager{output_manager},
-          surface_registry{surface_registry}
-    {
-    }
-
-    static auto get_window(wl_resource* window) -> std::shared_ptr<Surface>;
-
-private:
-    Executor& wayland_executor;
-    std::shared_ptr<msh::Shell> const shell;
-    WlSeat& seat;
-    OutputManager* const output_manager;
-    std::shared_ptr<SurfaceRegistry> const surface_registry;
-
-    class Instance : public wayland::Shell
-    {
-    public:
-        Instance(wl_resource* new_resource, WlShell* shell, std::shared_ptr<SurfaceRegistry> const& surface_registry) :
-            mw::Shell{new_resource, Version<1>()},
-            shell{shell},
-            surface_registry{surface_registry}
-        {
-        }
-
-    private:
-        WlShell* const shell;
-        std::shared_ptr<SurfaceRegistry> const surface_registry;
-
-        void get_shell_surface(wl_resource* new_shell_surface, wl_resource* surface) override
-        {
-            new WlShellSurface(
-                new_shell_surface,
-                shell->wayland_executor,
-                WlSurface::from(surface),
-                shell->shell,
-                shell->seat,
-                shell->output_manager,
-                surface_registry);
-        }
-    };
-
-    void bind(wl_resource* new_resource) override
-    {
-        new Instance{new_resource, this, surface_registry};
-    }
-};
-}
-}
-
-auto mf::create_wl_shell(
-    wl_display* display,
+WlShell::WlShell(
+    std::shared_ptr<wayland_rs::Client> const& client,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
-    WlSeat* seat,
+    WlSeatGlobal& seat,
     OutputManager* const output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
--> std::shared_ptr<mw::Shell::Global>
+    : client{client},
+      wayland_executor{wayland_executor},
+      shell{shell},
+      seat{seat},
+      output_manager{output_manager},
+      surface_registry{surface_registry}
 {
-    return std::make_shared<mf::WlShell>(display, wayland_executor, shell, *seat, output_manager, surface_registry);
 }
 
-auto mf::get_wl_shell_window(wl_resource* surface) -> std::shared_ptr<ms::Surface>
+auto WlShell::get_shell_surface(mw::Weak<mw::WlSurfaceImpl> const& surface)
+    -> std::shared_ptr<wayland_rs::WlShellSurfaceImpl>
 {
-    if (mw::Surface::is_instance(surface))
-    {
-        auto const wlsurface = WlSurface::from(surface);
-        if (auto const scene_surface = wlsurface->scene_surface())
-        {
-            return scene_surface.value();
-        }
+    return std::make_shared<WlShellSurface>(
+        client,
+        wayland_executor,
+        WlSurface::from(&surface.value()),
+        shell,
+        seat,
+        output_manager,
+        surface_registry);
+}
+}
+}
 
-        log_debug("No window currently associated with wayland::Surface %p", static_cast<void*>(surface));
+auto mf::get_wl_shell_window(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface) -> std::shared_ptr<scene::Surface>
+{
+    auto const wlsurface = WlSurface::from(&surface.value());
+    if (auto const scene_surface = wlsurface->scene_surface())
+    {
+        return scene_surface.value();
     }
 
+    log_debug("No window currently associated with wayland::Surface %p", static_cast<void*>(&surface.value()));
     return {};
 }

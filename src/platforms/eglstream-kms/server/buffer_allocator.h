@@ -59,16 +59,13 @@ public:
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
     std::vector<MirPixelFormat> supported_pixel_formats() override;
 
-    void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) override;
-    void unbind_display(wl_display* display) override;
-
-    std::shared_ptr<Buffer> buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release) override;
-
     auto buffer_from_shm(
         std::shared_ptr<renderer::software::RWMappable> shm_data,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
+
+    auto buffer_from_dmabuf(
+        DMABufBuffer const& dmabuf,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 

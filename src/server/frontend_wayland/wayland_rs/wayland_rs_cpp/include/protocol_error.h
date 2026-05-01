@@ -26,13 +26,18 @@ namespace mir
 {
 namespace wayland_rs
 {
+constexpr uint32_t generic_error_code = -1;
+
 class ProtocolError : public std::runtime_error
 {
 public:
     ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...);
     auto what() const noexcept -> char const* override;
+    auto code() const noexcept -> uint32_t;
+    auto message() const noexcept -> std::string;
 
 private:
+    uint32_t error_code;
     std::string message_;
 };
 }

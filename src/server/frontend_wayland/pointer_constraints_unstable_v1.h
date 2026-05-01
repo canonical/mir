@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
 #define MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
 
-#include "pointer-constraints-unstable-v1_wrapper.h"
+#include "wayland_rs/wayland_rs_cpp/include/pointer_constraints_unstable_v1.h"
 
 #include <memory>
 
@@ -32,11 +32,32 @@ namespace frontend
 {
 class WlSeat;
 
-auto create_pointer_constraints_unstable_v1(
-    wl_display* display,
-    Executor& wayland_executor,
-    std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<wayland::PointerConstraintsV1::Global>;
+class PointerConstraintsV1 : public wayland_rs::ZwpPointerConstraintsV1Impl
+{
+public:
+    PointerConstraintsV1(Executor& wayland_executor, std::shared_ptr<shell::Shell> shell);
+
+    auto lock_pointer(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
+        wayland_rs::Weak<wayland_rs::WlPointerImpl> const& pointer,
+        wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region,
+        bool has_region,
+        uint32_t lifetime) -> std::shared_ptr<wayland_rs::ZwpLockedPointerV1Impl> override;
+    auto confine_pointer(wayland_rs::Weak<wayland_rs::WlSurfaceImpl> const& surface,
+        wayland_rs::Weak<wayland_rs::WlPointerImpl> const& pointer,
+        wayland_rs::Weak<wayland_rs::WlRegionImpl> const& region,
+        bool has_region,
+        uint32_t lifetime) -> std::shared_ptr<wayland_rs::ZwpConfinedPointerV1Impl> override;
+
+    enum class Lifetime : uint32_t
+    {
+        oneshot = ZwpPointerConstraintsV1Impl::Lifetime::oneshot,
+        persistent = ZwpPointerConstraintsV1Impl::Lifetime::persistent,
+    };
+
+private:
+    Executor& wayland_executor;
+    std::shared_ptr<shell::Shell> const shell;
+};
 
 }
 }

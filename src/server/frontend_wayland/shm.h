@@ -14,10 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/geometry/size.h>
-#include <mir/wayland/weak.h>
-#include "wayland_wrapper.h"
+#ifndef MIR_FRONTEND_SHM_H
+#define MIR_FRONTEND_SHM_H
+
+#include "wayland.h"
+#include "weak.h"
 #include <mir/graphics/drm_formats.h>
+#include <mir/geometry/size.h>
+#include <mir/fd.h>
 
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -45,23 +49,22 @@ namespace mir::frontend
 class Shm;
 class ShmPool;
 
-class ShmBuffer : public wayland::Buffer
+class ShmBuffer : public wayland_rs::WlBufferImpl, public std::enable_shared_from_this<ShmBuffer>
 {
 public:
     auto data() -> std::shared_ptr<renderer::software::RWMappable>;
 
-    static auto from(wl_resource* resource) -> ShmBuffer*;
+    static auto from(WlBufferImpl* impl) -> ShmBuffer*;
 private:
     friend class ShmPool;
     ShmBuffer(
-        struct wl_resource* resource,
         std::shared_ptr<Executor> wayland_executor,
         std::shared_ptr<shm::RWMappableRange> data,
         geometry::Size size,
         geometry::Stride stride,
         graphics::DRMFormat format);
 
-    wayland::Weak<ShmBuffer> const weak_me;
+    std::shared_ptr<int> const weak_me;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shm::RWMappableRange> const data_;
     geometry::Size const size_;
@@ -69,49 +72,34 @@ private:
     graphics::DRMFormat const format_;
 };
 
-class ShmPool : public wayland::ShmPool
+class ShmPool : public wayland_rs::WlShmPoolImpl
 {
-private:
-    friend class Shm;
+public:
     ShmPool(
-        struct wl_resource* resource,
         std::shared_ptr<Executor> wayland_executor,
         Fd backing_store,
         int32_t claimed_size);
 
-    void create_buffer(
-        struct wl_resource* id,
-        int32_t offset,
-        int32_t width, int32_t height,
-        int32_t stride,
-        uint32_t format) override;
+    auto create_buffer(int32_t offset, int32_t width, int32_t height, int32_t stride, uint32_t format)
+        -> std::shared_ptr<wayland_rs::WlBufferImpl> override;
 
     void resize(int32_t new_size) override;
 
+private:
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shm::ReadWritePool> const backing_store;
 };
 
-class Shm : public wayland::Shm
+class Shm : public wayland_rs::WlShmImpl
 {
 public:
-private:
-    friend class WlShm;
-    Shm(struct wl_resource* resource, std::shared_ptr<Executor> wayland_executor);
-
-    void create_pool(struct wl_resource* id, Fd fd, int32_t size) override;
-
-    std::shared_ptr<Executor> const wayland_executor;
-};
-
-class WlShm : public wayland::Shm::Global
-{
-public:
-    WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor);
+    explicit Shm(std::shared_ptr<Executor> wayland_executor);
+    auto associate(rust::Box<wayland_rs::WlShmExt> instance, uint32_t object_id) -> void override;
+    auto create_pool(int32_t fd, int32_t size) -> std::shared_ptr<wayland_rs::WlShmPoolImpl> override;
 
 private:
-    void bind(wl_resource* new_wl_shm) override;
-
     std::shared_ptr<Executor> const wayland_executor;
 };
 }
+
+#endif  // MIR_FRONTEND_SHM_H

@@ -23,12 +23,8 @@
 #include <memory>
 #include <functional>
 
-struct wl_display;
-struct wl_resource;
-
 namespace mir
 {
-class Executor;
 
 namespace renderer::software
 {
@@ -37,6 +33,8 @@ class RWMappable;
 
 namespace graphics
 {
+class DMABufBuffer;
+class DMABufEGLProvider;
 
 /**
  * Interface to graphic buffer allocation.
@@ -60,36 +58,30 @@ public:
      */
     virtual std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) = 0;
 
-    /**
-     * Initialise the BufferAllocator for this Wayland display
-     *
-     * This should do whatever setup is required for client buffer submission. For example,
-     * calling eglBindWaylandDisplayWL.
-     *
-     * \param display [in]          The Wayland display to initialise on
-     * \param wayland_executor [in] An Executor that spawns tasks on the event loop of display.
-     */
-    virtual void bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor) = 0;
-
-    /**
-     * Deinitialise the BufferAllocator for this Wayland display
-     *
-     * This should do whatever is required to clean up before the Wayland loop is stopped. For
-     * example, calling eglUnbindWaylandDisplayWL.
-     *
-     * \param display [in] The Wayland display to unbind from
-     */
-    virtual void unbind_display(wl_display* display) = 0;
-
-    virtual std::shared_ptr<Buffer> buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release) = 0;
-
     virtual auto buffer_from_shm(
         std::shared_ptr<renderer::software::RWMappable> shm_data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> = 0;
+
+    /**
+     * Import a DMA-BUF buffer for use in compositing.
+     *
+     * \param dmabuf [in]       The DMA-BUF buffer to import
+     * \param on_consumed [in]  Callback invoked when the buffer contents have been consumed
+     * \param on_release [in]   Callback invoked when the buffer is no longer in use
+     */
+    virtual auto buffer_from_dmabuf(
+        DMABufBuffer const& dmabuf,
+        std::function<void()>&& on_consumed,
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer> = 0;
+
+    /**
+     * Get the DMA-BUF EGL provider, if available.
+     *
+     * Used for linux-dmabuf protocol format negotiation and buffer import.
+     * May return nullptr if the platform does not support DMA-BUF.
+     */
+    virtual auto dmabuf_provider() const -> std::shared_ptr<DMABufEGLProvider> { return nullptr; }
 
 protected:
     GraphicBufferAllocator() = default;

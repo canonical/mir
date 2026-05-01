@@ -17,8 +17,10 @@
 #ifndef MIR_FRONTEND_WL_TOUCH_H
 #define MIR_FRONTEND_WL_TOUCH_H
 
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
+#include "lifetime_tracker.h"
+#include "client.h"
 #include <mir/geometry/point.h>
 
 #include <unordered_map>
@@ -43,10 +45,10 @@ namespace frontend
 {
 class WlSurface;
 
-class WlTouch : public wayland::Touch
+class WlTouch : public wayland_rs::WlTouchImpl
 {
 public:
-    WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock);
+    WlTouch(std::shared_ptr<time::Clock> const& clock, std::shared_ptr<wayland_rs::Client> const& client);
 
     ~WlTouch();
 
@@ -57,11 +59,12 @@ public:
 private:
     struct TouchedSurface
     {
-        wayland::Weak<WlSurface> surface;
-        wayland::DestroyListenerId destroy_listener_id;
+        wayland_rs::Weak<WlSurface> surface;
+        wayland_rs::DestroyListenerId destroy_listener_id;
     };
 
     std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<wayland_rs::Client> client;
 
     /// Maps touch IDs to the surfaces the touch is on
     std::unordered_map<int32_t, TouchedSurface> touch_id_to_surface;

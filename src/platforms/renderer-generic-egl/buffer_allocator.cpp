@@ -17,6 +17,7 @@
 #include "buffer_allocator.h"
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/linux_dmabuf.h>
+#include <mir/graphics/dmabuf_buffer.h>
 #include <mir/anonymous_shm_file.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/platform.h>
@@ -28,7 +29,6 @@
 #include <mir/raii.h>
 #include <mir/graphics/display.h>
 #include <mir/renderer/gl/context.h>
-#include <mir/graphics/egl_wayland_allocator.h>
 #include <mir/executor.h>
 #include <mir/renderer/gl/gl_surface.h>
 #include <mir/graphics/display_sink.h>
@@ -164,7 +164,7 @@ mge::BufferAllocator::BufferAllocator(
       egl_delegate{
           std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
       egl_extensions(std::make_shared<mg::EGLExtensions>()),
-      dmabuf_provider{std::move(dmabuf_provider)}
+      dmabuf_provider_{std::move(dmabuf_provider)}
 {
 }
 
@@ -209,88 +209,6 @@ std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
     return pixel_formats;
 }
 
-void mge::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
-{
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
-
-    try
-    {
-        mg::wayland::bind_display(dpy, display, *egl_extensions);
-        egl_display_bound = true;
-    }
-    catch (...)
-    {
-        log(
-            logging::Severity::warning,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Failed to bind EGL Display to Wayland display, falling back to software buffers");
-    }
-
-    try
-    {
-        if (dmabuf_provider)
-        {
-            dmabuf_extension = std::make_unique<LinuxDmaBuf>(display, dmabuf_provider);
-            mir::log_info("Enabled linux-dmabuf import support");
-        }
-    }
-    catch (std::runtime_error const& error)
-    {
-        mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
-        mir::log(
-            mir::logging::Severity::debug,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Detailed error: ");
-    }
-
-    this->wayland_executor = std::move(wayland_executor);
-}
-
-void mge::BufferAllocator::unbind_display(wl_display* display)
-{
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
-
-    if (egl_display_bound)
-    {
-        mg::wayland::unbind_display(dpy, display, *egl_extensions);
-    }
-    dmabuf_extension.reset();
-}
-
-std::shared_ptr<mg::Buffer> mge::BufferAllocator::buffer_from_resource(
-    wl_resource* buffer,
-    std::function<void()>&& on_consumed,
-    std::function<void()>&& on_release)
-{
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-
-    if (auto dmabuf = dmabuf_extension->buffer_from_resource(
-        buffer,
-        std::function<void()>{on_consumed},
-        std::function<void()>{on_release},
-        egl_delegate))
-    {
-        return dmabuf;
-    }
-    return mg::wayland::buffer_from_resource(
-        buffer,
-        std::move(on_consumed),
-        std::move(on_release),
-        *egl_extensions,
-        egl_delegate);
-}
-
 auto mge::BufferAllocator::buffer_from_shm(
     std::shared_ptr<renderer::software::RWMappable> data,
     std::function<void()>&& on_consumed,
@@ -300,6 +218,19 @@ auto mge::BufferAllocator::buffer_from_shm(
         std::move(data),
         std::move(on_consumed),
         std::move(on_release));
+}
+
+auto mge::BufferAllocator::buffer_from_dmabuf(
+    mg::DMABufBuffer const& dmabuf,
+    std::function<void()>&& on_consumed,
+    std::function<void()>&& on_release) -> std::shared_ptr<Buffer>
+{
+    return dmabuf_provider_->import_dma_buf(dmabuf, std::move(on_consumed), std::move(on_release));
+}
+
+auto mge::BufferAllocator::dmabuf_provider() const -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    return dmabuf_provider_;
 }
 
 auto mge::BufferAllocator::shared_egl_context() -> EGLContext

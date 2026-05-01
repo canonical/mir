@@ -10,6 +10,7 @@ MIR_PLATFORM_2.24 {
     mir::graphics::DMABufEGLProvider::?DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::as_texture*;
+    mir::graphics::DMABufEGLProvider::import_dma_buf*;
     mir::graphics::DRMFormat::DRMFormat*;
     mir::graphics::DRMFormat::Info::alpha_equivalent*;
     mir::graphics::DRMFormat::Info::components*;
@@ -61,6 +62,10 @@ MIR_PLATFORM_2.24 {
     mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::buffer_from_resource*;
+    mir::graphics::LinuxDmaBufGlobal::?LinuxDmaBufGlobal*;
+    mir::graphics::LinuxDmaBufGlobal::LinuxDmaBufGlobal*;
+    mir::graphics::LinuxDmaBufGlobal::buffer_from_resource*;
+    mir::graphics::LinuxDmaBufGlobal::create*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
@@ -97,9 +102,6 @@ MIR_PLATFORM_2.24 {
     mir::graphics::scale_cursor_image*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::valid_pixel_format*;
-    mir::graphics::wayland::bind_display*;
-    mir::graphics::wayland::buffer_from_resource*;
-    mir::graphics::wayland::unbind_display*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;

@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_WL_DATA_SOURCE_H_
 #define MIR_FRONTEND_WL_DATA_SOURCE_H_
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
 
 namespace mir
 {
@@ -30,23 +30,22 @@ class DataExchangeSource;
 
 namespace frontend
 {
-class WlDataSource : public wayland::DataSource
+class WlDataSource : public wayland_rs::WlDataSourceImpl, std::enable_shared_from_this<WlDataSource>
 {
 public:
     WlDataSource(
-        wl_resource* new_resource,
         std::shared_ptr<Executor> const& wayland_executor,
         scene::Clipboard& clipboard);
     ~WlDataSource();
 
-    static auto from(struct wl_resource* resource) -> WlDataSource*;
+    static auto from(WlDataSourceImpl* resource) -> WlDataSource*;
 
     void set_clipboard_paste_source();
     void start_drag_n_drop_gesture();
 
     /// Wayland requests
     /// @{
-    void offer(std::string const& mime_type) override;
+    auto offer(rust::String mime_type) -> void override;
     void set_actions(uint32_t dnd_actions) override;
     /// @}
 
