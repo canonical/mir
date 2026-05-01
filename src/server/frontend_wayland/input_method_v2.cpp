@@ -48,7 +48,7 @@ class InputMethodV2
 public:
     InputMethodV2(
         std::shared_ptr<wayland_rs::Client> const& client,
-        WlSeat* seat,
+        WlSeatGlobal* seat,
         std::shared_ptr<InputMethodV2Ctx> const& ctx);
     ~InputMethodV2();
 
@@ -92,7 +92,7 @@ private:
     static size_t constexpr max_remembered_serials{10};
 
     std::shared_ptr<wayland_rs::Client> client;
-    WlSeat* const seat;
+    WlSeatGlobal* const seat;
     std::shared_ptr<InputMethodV2Ctx> const ctx;
     std::shared_ptr<StateObserver> const state_observer;
     bool is_activated{false};
@@ -149,7 +149,7 @@ auto mf::InputMethodManagerV2::get_input_method(
 
 mf::InputMethodV2::InputMethodV2(
     std::shared_ptr<wayland_rs::Client> const& client,
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     std::shared_ptr<InputMethodV2Ctx> const& ctx)
     : client{client},
       seat{seat},

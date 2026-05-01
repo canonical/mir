@@ -274,13 +274,14 @@ auto mf::ShmPool::create_buffer(int32_t offset, int32_t width, int32_t height, i
             "Invalid SHM format requested"};
     }
 
-    new ShmBuffer{
-        wayland_executor,
-        std::move(backing_range),
-        geometry::Size{width, height},
-        geometry::Stride{stride},
-        wl_shm_format_to_drm_format(format)
-    };
+    return std::shared_ptr<ShmBuffer>(
+        new ShmBuffer(
+            wayland_executor,
+            std::move(backing_range),
+            geometry::Size{width, height},
+            geometry::Stride{stride},
+            wl_shm_format_to_drm_format(format)
+        ));
 }
 
 void mf::ShmPool::resize(int32_t new_size)

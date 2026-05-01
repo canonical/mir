@@ -68,7 +68,7 @@ private:
 
 mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
     std::shared_ptr<wayland_rs::Client> const& client,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     std::shared_ptr<Executor> const& wayland_executor,
     input::CompositeEventFilter& event_filter)
     : client{client},

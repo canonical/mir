@@ -707,30 +707,6 @@ private:
 
 namespace
 {
-int halt_eventloop(int fd, uint32_t /*mask*/, void* data)
-{
-    auto display = static_cast<wl_display*>(data);
-    wl_display_terminate(display);
-
-    eventfd_t ignored{};
-    if (eventfd_read(fd, &ignored) < 0)
-    {
-        BOOST_THROW_EXCEPTION((std::system_error{
-           errno,
-           std::system_category(),
-           "Failed to consume pause event notification"}));
-    }
-    return 0;
-}
-}
-
-namespace
-{
-void cleanup_display(wl_display *display)
-{
-    wl_display_flush_clients(display);
-    wl_display_destroy(display);
-}
 }
 
 void mf::WaylandExtensions::init(Context const& context)
@@ -934,75 +910,25 @@ void mf::WaylandConnector::stop()
 
 int mf::WaylandConnector::client_socket_fd() const
 {
-    enum { server, client, size };
-    int socket_fd[size];
-
-    char const* error = nullptr;
-
-    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
-    {
-        error = "Could not create socket pair";
-    }
-    else
-    {
-        // TODO: Wait on the result of wl_client_create so we can throw an exception on failure.
-        executor->spawn(
-                [socket = socket_fd[server], display = display.get()]()
-                {
-                    if (!wl_client_create(display, socket))
-                    {
-                        mir::log_error(
-                            "Failed to create Wayland client object: %s (errno %i)",
-                            mir::errno_to_cstr(errno),
-                            errno);
-                    }
-                });
-    }
-
-    if (error)
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), error}));
-
-    return socket_fd[client];
+    // TODO: Implement client_socket_fd() for wayland_rs backend.
+    // The Rust-based WaylandServer does not currently expose an API to insert a client from a socket fd.
+    BOOST_THROW_EXCEPTION(std::logic_error("client_socket_fd() not yet implemented for wayland_rs backend"));
 }
 
 int mf::WaylandConnector::client_socket_fd(
     std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const
 {
-    enum { server, client, size };
-    int socket_fd[size];
-
-    char const* error = nullptr;
-
-    if (socketpair(AF_LOCAL, SOCK_STREAM, 0, socket_fd))
-    {
-        error = "Could not create socket pair";
-    }
-    else
-    {
-        executor->spawn(
-                [socket = socket_fd[server], display = display.get(), this, connect_handler]()
-                    {
-                        connect_handlers[socket] = std::move(connect_handler);
-                        if (!wl_client_create(display, socket))
-                        {
-                            mir::log_error(
-                                "Failed to create Wayland client object: %s (errno %i)",
-                                mir::errno_to_cstr(errno),
-                                errno);
-                        }
-                    });
-        // TODO: Wait on the result of wl_client_create so we can throw an exception on failure.
-    }
-
-    if (error)
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), error}));
-
-    return socket_fd[client];
+    // TODO: Implement client_socket_fd(connect_handler) for wayland_rs backend.
+    (void)connect_handler;
+    BOOST_THROW_EXCEPTION(std::logic_error("client_socket_fd() not yet implemented for wayland_rs backend"));
 }
 
 void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
 {
-    executor->spawn([display_ref = display.get(), functor]() { functor(display_ref); });
+    // TODO: run_on_wayland_display() needs reworking for the Rust-based Wayland architecture.
+    // The wl_display is now managed internally by the Rust WaylandServer.
+    (void)functor;
+    BOOST_THROW_EXCEPTION(std::logic_error("run_on_wayland_display() not yet implemented for wayland_rs backend"));
 }
 
 void mf::WaylandConnector::on_surface_created(
@@ -1010,7 +936,11 @@ void mf::WaylandConnector::on_surface_created(
     uint32_t id,
     std::function<void(WlSurface*)> const& callback)
 {
-    compositor_global->on_surface_created(client, id, callback);
+    // TODO: on_surface_created() needs reworking for the Rust-based Wayland architecture.
+    // The compositor_global no longer tracks surface creation by wl_client*/id.
+    (void)client;
+    (void)id;
+    (void)callback;
 }
 
 auto mf::WaylandConnector::socket_name() const -> std::optional<std::string>
@@ -1028,20 +958,25 @@ void mf::WaylandConnector::for_each_output_binding(
     graphics::DisplayConfigurationOutputId output,
     std::function<void(wl_resource* output)> const& callback)
 {
-    if (auto const& og = output_manager->output_for(output))
-    {
-        (*og)->for_each_output_bound_by(client, [&](OutputInstance* o) { callback(o->resource); });
-    }
+    // TODO: for_each_output_binding() needs reworking for the Rust-based Wayland architecture.
+    // The OutputInstance no longer exposes a wl_resource*, and wayland::Client has been
+    // replaced by wayland_rs::Client.
+    (void)client;
+    (void)output;
+    (void)callback;
 }
 
 auto mir::frontend::get_session(wl_client const* wl_client) -> std::shared_ptr<scene::Session>
 {
-    return WlClient::from(wl_client).client_session();
+    // TODO: get_session(wl_client) needs reworking for the Rust-based Wayland architecture.
+    // WlClient::from(wl_client) no longer exists; clients are tracked via WlClientRegistry.
+    (void)wl_client;
+    return {};
 }
 
 auto mf::get_session(wl_resource* surface) -> std::shared_ptr<ms::Session>
 {
-    // TODO: evaluate if this is actually what we want. Sometime's a surface's client's session is not the most
-    // applicable session for the surface. See WlClient::client_session for details.
-    return get_session(wl_resource_get_client(surface));
+    // TODO: get_session(wl_resource*) needs reworking for the Rust-based Wayland architecture.
+    (void)surface;
+    return {};
 }

@@ -68,6 +68,12 @@ private:
 class KeyboardHelper : public mir::shell::KeyboardHelper
 {
 public:
+    KeyboardHelper(
+        KeyboardCallbacks* keybaord_impl,
+        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
+        std::shared_ptr<input::Seat> const& seat,
+        std::optional<int> default_repeat_rate,
+        int default_repeat_delay);
     ~KeyboardHelper() override;
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
@@ -82,12 +88,6 @@ public:
 private:
     friend class mir::frontend::WlSeat;
     friend class mir::shell::AccessibilityManager;
-    KeyboardHelper(
-        KeyboardCallbacks* keybaord_impl,
-        std::shared_ptr<mir::input::Keymap> const& initial_keymap,
-        std::shared_ptr<input::Seat> const& seat,
-        std::optional<int> default_repeat_rate,
-        int default_repeat_delay);
 
     void handle_keyboard_event(std::shared_ptr<MirKeyboardEvent const> const& event);
     void set_keymap(std::shared_ptr<mir::input::Keymap> const& new_keymap);

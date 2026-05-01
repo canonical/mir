@@ -34,7 +34,7 @@ class Client;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class WlClient;
 
 /// A keyboard that sends all key events to it's client without ever entering a surface
@@ -46,7 +46,7 @@ class InputMethodGrabKeyboardV2
 public:
     InputMethodGrabKeyboardV2(
         std::shared_ptr<wayland_rs::Client> const& client,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         std::shared_ptr<Executor> const& wayland_executor,
         input::CompositeEventFilter& event_filter);
 

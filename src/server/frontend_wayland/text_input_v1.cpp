@@ -112,7 +112,7 @@ auto wayland_to_mir_content_purpose(uint32_t purpose) -> ms::TextInputContentPur
 
 class TextInputV1
     : public mw::ZwpTextInputV1Impl,
-      private mf::WlSeat::FocusListener,
+      private mf::WlSeatGlobal::FocusListener,
       public std::enable_shared_from_this<TextInputV1>
 {
 public:
@@ -151,7 +151,7 @@ private:
 
     std::shared_ptr<mf::TextInputV1Ctx> const ctx;
     std::shared_ptr<mw::Client> const client;
-    std::optional<mf::WlSeat*> seat;
+    std::optional<mf::WlSeatGlobal*> seat;
     std::shared_ptr<Handler> handler;
     mw::Weak<mf::WlSurface> current_surface;
     /// Set to true if and only if the text input has been enabled since the last commit

@@ -449,8 +449,10 @@ mf::ExtOutputImageCaptureSourceManagerV1::ExtOutputImageCaptureSourceManagerV1(
 auto mf::ExtOutputImageCaptureSourceManagerV1::create_source(wayland_rs::Weak<wayland_rs::WlOutputImpl> const& output)
     -> std::shared_ptr<wayland_rs::ExtImageCaptureSourceV1Impl>
 {
-    auto const backend_factory = [output=output, ctx=ctx](auto *session, bool overlay_cursor) {
-        return std::make_shared<ExtOutputImageCopyBackend>(session, overlay_cursor, output, ctx);
+    auto const output_instance = OutputInstance::from(&output.value());
+    auto const output_global = output_instance ? output_instance->global : mw::Weak<OutputGlobal>{};
+    auto const backend_factory = [output_global=output_global, ctx=ctx](auto *session, bool overlay_cursor) {
+        return std::make_shared<ExtOutputImageCopyBackend>(session, overlay_cursor, output_global, ctx);
     };
     ExtImageCopyCursorMapPosition cursor_map_position = [output=output](float abs_x, float abs_y) -> std::optional<geom::Point>
     {

@@ -28,7 +28,7 @@ class mf::PrimarySelectionSource::Source : public ms::DataExchangeSource
 {
 public:
     Source(
-        PrimarySelectionSource const* owner,
+        PrimarySelectionSource* owner,
         std::shared_ptr<mir::Executor> wayland_executor,
         std::vector<std::string> types) :
         owner{owner->shared_from_this()},
@@ -76,7 +76,7 @@ private:
     {
     }
 
-    mw::Weak<PrimarySelectionSource const> const owner;
+    mw::Weak<PrimarySelectionSource> const owner;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::vector<std::string> const types;
 };
@@ -97,7 +97,7 @@ void mf::PrimarySelectionSource::offer(rust::String mime_type)
     mime_types.push_back(mime_type.c_str());
 }
 
-auto mf::PrimarySelectionSource::make_source() const -> std::shared_ptr<ms::DataExchangeSource>
+auto mf::PrimarySelectionSource::make_source() -> std::shared_ptr<ms::DataExchangeSource>
 {
     return std::make_shared<Source>(this, wayland_executor, mime_types);
 }

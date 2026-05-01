@@ -487,7 +487,8 @@ private:
         };
         virtual void destroy_role() const override
         {
-            wl_resource_destroy(resource);
+            // TODO:
+            // wl_resource_destroy(resource);
         };
 
     private:

@@ -473,7 +473,7 @@ void mf::PointerEventDispatcher::event(std::shared_ptr<MirPointerEvent const> co
 
 void mf::PointerEventDispatcher::start_dispatch_to_data_device(WlDataDevice* wl_data_device)
 {
-    this->wl_data_device = mw::Weak<WlDataDevice>{wl_data_device};
+    this->wl_data_device = mw::Weak<WlDataDevice>{wl_data_device->shared_from_this()};
 
     if (wl_pointer)
     {

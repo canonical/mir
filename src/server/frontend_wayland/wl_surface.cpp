@@ -532,8 +532,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 tracepoint(
                     mir_server_wayland,
                     sw_buffer_committed,
-                    object_id(),
-                    current_buffer->id().as_value());
+                    reinterpret_cast<void*>(static_cast<uintptr_t>(object_id())),
+                    static_cast<int>(current_buffer->id().as_value()));
             }
             else if (auto const* dmabuf = dynamic_cast<mg::DMABufBuffer*>(&weak_buffer.value()))
             {
@@ -544,8 +544,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                 tracepoint(
                     mir_server_wayland,
                     hw_buffer_committed,
-                    object_id(),
-                    current_buffer->id().as_value());
+                    reinterpret_cast<void*>(static_cast<uintptr_t>(object_id())),
+                    static_cast<int>(current_buffer->id().as_value()));
             }
             else
             {

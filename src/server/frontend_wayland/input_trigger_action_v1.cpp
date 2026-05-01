@@ -91,7 +91,7 @@ private:
                 }
 
                 auto const action = std::make_shared<InputTriggerActionV1>();
-                action_group->add(mw::Weak<Action const>(action));
+                action_group->add(mw::Weak<Action>(action));
                 return action;
             }
             else

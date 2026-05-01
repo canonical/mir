@@ -38,7 +38,7 @@ namespace frontend
 class PointerInputDispatcher;
 class DragIconController;
 
-class WlDataDevice : public wayland_rs::WlDataDeviceImpl, public WlSeatGlobal::FocusListener, std::enable_shared_from_this<WlDataDevice>
+class WlDataDevice : public wayland_rs::WlDataDeviceImpl, public WlSeatGlobal::FocusListener, public std::enable_shared_from_this<WlDataDevice>
 {
 public:
     WlDataDevice(

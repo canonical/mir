@@ -39,7 +39,7 @@ public:
 
     static auto from(ZwpPrimarySelectionSourceV1Impl* resource) -> PrimarySelectionSource*;
     void offer(rust::String mime_type) override;
-    auto make_source() const -> std::shared_ptr<mir::scene::DataExchangeSource>;
+    auto make_source() -> std::shared_ptr<mir::scene::DataExchangeSource>;
 
 private:
     std::vector<std::string> mime_types;

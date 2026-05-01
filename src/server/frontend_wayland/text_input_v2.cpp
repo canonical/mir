@@ -126,11 +126,11 @@ struct TextInputV2Ctx
 
 class TextInputV2
     : public mw::ZwpTextInputV2Impl,
-      private WlSeat::FocusListener,
+      private WlSeatGlobal::FocusListener,
       public std::enable_shared_from_this<TextInputV2>
 {
 public:
-    TextInputV2(std::shared_ptr<TextInputV2Ctx> const& ctx, WlSeat& seat,
+    TextInputV2(std::shared_ptr<TextInputV2Ctx> const& ctx, WlSeatGlobal& seat,
         std::shared_ptr<wayland_rs::Client> const& client);
     ~TextInputV2();
 
@@ -177,7 +177,7 @@ private:
     static size_t constexpr max_remembered_serials{10};
 
     std::shared_ptr<TextInputV2Ctx> const ctx;
-    WlSeat& seat;
+    WlSeatGlobal& seat;
     std::shared_ptr<wayland_rs::Client> const client;
     std::shared_ptr<Handler> handler;
     mw::Weak<WlSurface> current_surface;
@@ -228,7 +228,7 @@ auto mf::TextInputManagerV2::get_text_input(wayland_rs::Weak<wayland_rs::WlSeatI
 
 mf::TextInputV2::TextInputV2(
     std::shared_ptr<TextInputV2Ctx> const& ctx,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     std::shared_ptr<wayland_rs::Client> const& client)
     : ctx{ctx},
       seat{seat},
