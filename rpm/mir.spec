@@ -24,7 +24,7 @@
 %bcond check 1
 
 # Track various library soversions
-%global miral_sover 7
+%global miral_sover 8
 %global mircommon_sover 12
 %global mircore_sover 3
 %global miroil_sover 8

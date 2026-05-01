@@ -567,7 +567,7 @@ Description: Display server for Ubuntu - x driver metapackage
  This package depends on a full set of graphics and input drivers for X
  systems.
 
-Package: libmiral7
+Package: libmiral8
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -585,7 +585,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmiral7 (= ${libmiral7:Version}),
+Depends: libmiral8 (= ${libmiral:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
          libmircore-dev (= ${source:Version}),
