@@ -30,7 +30,7 @@ class Surface;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class OutputManager;
 class WlSurface;
 class XdgSurfaceStable;
@@ -43,7 +43,7 @@ public:
         std::shared_ptr<wayland_rs::Client> const& client,
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
@@ -55,7 +55,7 @@ public:
     std::shared_ptr<wayland_rs::Client> client;
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    WlSeat& seat;
+    WlSeatGlobal& seat;
     OutputManager* const output_manager;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
 };

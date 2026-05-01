@@ -40,7 +40,7 @@ namespace frontend
 
 class WlSurface;
 
-class WlSubcompositor : wayland_rs::WlSubcompositorImpl
+class WlSubcompositor : public wayland_rs::WlSubcompositorImpl
 {
 public:
     explicit WlSubcompositor(std::shared_ptr<wayland_rs::Client> const& client);

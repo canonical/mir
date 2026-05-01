@@ -100,6 +100,7 @@ class SurfaceRegistry;
 class InputTriggerRegistry;
 class KeyboardStateTracker;
 class WlClientRegistry;
+class WaylandExecutor;
 
 class WaylandExtensions
 {
@@ -233,7 +234,7 @@ private:
     std::shared_ptr<WlClientRegistry> client_registry;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
-    std::shared_ptr<Executor> const executor;
+    std::shared_ptr<WaylandExecutor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<time::Clock> const clock;

@@ -202,7 +202,7 @@ mf::LayerShellV1::LayerShellV1(
     std::shared_ptr<mw::Client> const& client,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : client{client},

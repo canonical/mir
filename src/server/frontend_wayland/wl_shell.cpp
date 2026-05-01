@@ -40,7 +40,7 @@ public:
         Executor& wayland_executor,
         WlSurface* surface,
         std::shared_ptr<msh::Shell> const& shell,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry) :
         WindowWlSurfaceRole{
@@ -217,7 +217,7 @@ WlShell::WlShell(
     std::shared_ptr<wayland_rs::Client> const& client,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     OutputManager* const output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : client{client},

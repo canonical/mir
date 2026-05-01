@@ -132,7 +132,7 @@ mf::SessionLockManagerV1::SessionLockManagerV1(
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<ms::SessionLock> const& session_lock,
-    WlSeat& seat,
+    WlSeatGlobal& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)

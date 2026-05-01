@@ -64,7 +64,7 @@ inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache
 
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     Executor& wayland_executor,
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     mw::Client* client,
     std::shared_ptr<WlSurface> const& surface,
     std::shared_ptr<msh::Shell> const& shell,

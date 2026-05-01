@@ -33,7 +33,7 @@ class SessionLock;
 }
 namespace frontend
 {
-class WlSeat;
+class WlSeatGlobal;
 class SurfaceStack;
 class OutputManager;
 class SessionLockV1;
@@ -46,7 +46,7 @@ public:
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<scene::SessionLock> const& session_lock,
-        WlSeat& seat,
+        WlSeatGlobal& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceRegistry> const& surface_registry);
@@ -54,7 +54,7 @@ public:
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::SessionLock> const session_lock;
-    WlSeat& seat;
+    WlSeatGlobal& seat;
     OutputManager* const output_manager;
     std::shared_ptr<SurfaceStack> surface_stack;
     std::shared_ptr<SurfaceRegistry> const surface_registry;

@@ -38,7 +38,7 @@ class Shell;
 namespace frontend
 {
 
-class WlSeat;
+class WlSeatGlobal;
 class OutputManager;
 class SurfaceRegistry;
 
@@ -63,7 +63,7 @@ public:
     InputPanelV1(
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
-        WlSeat* seat,
+        WlSeatGlobal* seat,
         OutputManager* output_manager,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<SurfaceRegistry> const& surface_registry);
@@ -75,7 +75,7 @@ private:
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    WlSeat* seat;
+    WlSeatGlobal* seat;
     OutputManager* const output_manager;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<SurfaceRegistry> const surface_registry;

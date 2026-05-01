@@ -18,31 +18,39 @@
 #define MIR_FRONTEND_EXECUTOR_H
 
 #include <mir/executor.h>
-#include <mir/fd.h>
 
-#include <wayland-server-core.h>
+#include <rust/cxx.h>
 
 #include <mutex>
-#include <memory>
 #include <deque>
+#include <functional>
+#include <optional>
 
 namespace mir
 {
+namespace wayland_rs
+{
+struct WaylandEventLoopHandle;
+}
 namespace frontend
 {
 class WaylandExecutor : public Executor
 {
 public:
-    explicit WaylandExecutor(wl_event_loop* loop);
+    WaylandExecutor();
     ~WaylandExecutor();
 
     void spawn(std::function<void()>&& work) override;
 
-    class State;
+    /// Connect the executor to the Rust event loop.
+    /// Called from the event loop thread once the loop is ready.
+    /// Any work buffered before this call will be flushed.
+    void set_loop_handle(rust::Box<wayland_rs::WaylandEventLoopHandle> handle);
+
 private:
-    std::shared_ptr<State> state;
-    mir::Fd const notify_fd;
-    wl_event_source* const source;
+    std::mutex mutex;
+    std::optional<rust::Box<wayland_rs::WaylandEventLoopHandle>> loop_handle;
+    std::deque<std::function<void()>> pending;
 };
 }
 }

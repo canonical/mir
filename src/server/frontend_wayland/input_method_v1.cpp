@@ -395,7 +395,7 @@ public:
         std::shared_ptr<wayland_rs::Client> const& client,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
-        WlSeat* seat,
+        WlSeatGlobal* seat,
         OutputManager* const output_manager,
         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
         std::shared_ptr<SurfaceRegistry> const& surface_registry) :
@@ -417,7 +417,7 @@ private:
         InputPanelSurfaceV1(
             std::shared_ptr<wayland_rs::Client> const& client,
             std::shared_ptr<Executor> const& wayland_executor,
-            WlSeat* seat,
+            WlSeatGlobal* seat,
             WlSurface* surface,
             std::shared_ptr<shell::Shell> const& shell,
             OutputManager* const output_manager,
@@ -562,7 +562,7 @@ private:
     std::shared_ptr<wayland_rs::Client> client;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
-    WlSeat* seat;
+    WlSeatGlobal* seat;
     OutputManager* const output_manager;
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
@@ -571,7 +571,7 @@ private:
 mf::InputPanelV1::InputPanelV1(
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<shell::Shell> const& shell,
-    WlSeat* seat,
+    WlSeatGlobal* seat,
     OutputManager* const output_manager,
     std::shared_ptr<scene::TextInputHub> const& text_input_hub,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)

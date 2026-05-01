@@ -58,7 +58,7 @@ namespace frontend
 {
 class WaylandSurfaceObserver;
 class WlSurface;
-class WlSeat;
+class WlSeatGlobal;
 class SurfaceRegistry;
 
 class WindowWlSurfaceRole
@@ -70,7 +70,7 @@ class WindowWlSurfaceRole
 public:
     WindowWlSurfaceRole(
         Executor& wayland_executor,
-        WlSeat* seat,
+        WlSeatGlobal* seat,
         wayland_rs::Client* client,
         std::shared_ptr<WlSurface> const& surface,
         std::shared_ptr<shell::Shell> const& shell,
