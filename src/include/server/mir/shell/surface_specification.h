@@ -77,6 +77,9 @@ struct SurfaceSpecification
     optional_value<MirPlacementGravity> aux_rect_placement_gravity;
     optional_value<int> aux_rect_placement_offset_x;
     optional_value<int> aux_rect_placement_offset_y;
+    /// The expected size of the parent surface at the time of popup placement.
+    /// Used to constrain popup placement when the parent is being resized.
+    optional_value<geometry::Size> parent_size;
     optional_value<geometry::Width> min_width;
     optional_value<geometry::Height> min_height;
     optional_value<geometry::Width> max_width;

@@ -1179,9 +1179,10 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         if (auto parent = window_info.parent())
         {
             std::shared_ptr<scene::Surface> const parent_scene_surface{parent};
+            auto const parent_size = modifications.parent_size().value_or(parent_scene_surface->content_size());
             Rectangle const parent_content_area{
                 parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
-                parent_scene_surface->content_size()};
+                parent_size};
             auto new_pos = place_relative(parent_content_area, modifications, window.size());
 
             if (new_pos.is_set())
@@ -1908,9 +1909,10 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     {
         if (parameters.aux_rect().is_set() && parameters.placement_hints().is_set())
         {
+            auto const parent_size = parameters.parent_size().value_or(parent_scene_surface->content_size());
             Rectangle const parent_content_area{
                 parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
-                parent_scene_surface->content_size()};
+                parent_size};
 
             auto const position = place_relative(
                 parent_content_area,
