@@ -280,3 +280,58 @@ TEST_F(TestLog, can_set_multiple_different_log_levels)
     mir::log_info({ml::wayland()}, message);
     mir::log_debug({ml::wayland()}, message);
 }
+
+TEST_F(TestLog, setting_parent_severity_sets_child_severities)
+{
+    auto const& parent = ml::create_tag(ml::base(), "parent");
+    auto const& child1 = ml::create_tag(parent, "child1");
+    auto const& child2 = ml::create_tag(parent, "child2");
+
+    namespace po = boost::program_options;
+    using namespace testing;
+
+    po::options_description desc;
+    ml::add_logging_options(desc.add_options());
+
+    CmdLine cmdline{};
+    cmdline.add_argument("--log-level=parent=error");
+
+    mir::options::ProgramOption mo;
+    mo.parse_arguments(desc, cmdline.argc(), cmdline.argv());
+
+    std::string message = "hello";
+    EXPECT_CALL(*logger, log(ml::Severity::error, _, _)).Times(3);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, _, _)).Times(0);
+
+    mir::log_error({parent}, message);
+    mir::log_error({child1}, message);
+    mir::log_error({child2}, message);
+
+    mir::log_warning({parent}, message);
+    mir::log_warning({child1}, message);
+    mir::log_warning({child2}, message);
+}
+
+TEST_F(TestLog, subsequent_log_level_overrides_previous)
+{
+    auto const& tag = ml::create_tag(ml::base(), "test_tag");
+
+    namespace po = boost::program_options;
+    using namespace testing;
+
+    po::options_description desc;
+    ml::add_logging_options(desc.add_options());
+
+    CmdLine cmdline{};
+    cmdline.add_argument("--log-level=base=critical");
+    cmdline.add_argument("--log-level=test_tag=debug");
+
+    mir::options::ProgramOption mo;
+    mo.parse_arguments(desc, cmdline.argc(), cmdline.argv());
+
+    std::string message = "hello";
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "test_tag")).Times(1);
+
+    mir::log_debug({tag}, message);
+    mir::log_debug({ml::base()}, message);
+}

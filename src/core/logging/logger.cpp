@@ -20,6 +20,7 @@
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
 #include <boost/throw_exception.hpp>
+#include <concepts>
 #include <mir/logging/logger.h>
 #include <mir/fatal.h>
 
@@ -217,9 +218,9 @@ auto split_assignment(std::string const& value)
         std::string_view{value.data() + equals_pos + 1, value.length() - equals_pos - 1});
 }
 
-auto lookup_tag(std::string_view tag_name) -> ml::Tag&
+auto lookup_tag(decltype(known_tags)::Locked const& tag_list, std::string_view tag_name) -> ml::Tag&
 {
-    for (auto& tag : *known_tags.lock())
+    for (auto& tag : *tag_list)
     {
         if (tag.name == tag_name)
         {
@@ -255,16 +256,32 @@ auto parse_severity(std::string_view const severity_name) -> ml::Severity
     BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Unrecognised severity: {}", severity_name)}));
 }
 
+template<typename Functor>
+requires std::invocable<Functor, ml::Tag&>
+void for_each_child(ml::Tag const& parent, decltype(known_tags)::Locked const& tag_list, Functor&& func)
+{
+    for (auto& tag : *tag_list)
+    {
+        if (tag.parent == &parent)
+        {
+            func(tag);
+            for_each_child(tag, tag_list, std::forward<Functor&&>(func));
+        }
+    }
+}
+
 void update_tag_filtering(std::vector<std::string> const& option_values)
 {
+    auto locked_tags = known_tags.lock();
     for (auto const& value : option_values)
     {
         try
         {
             auto [tag_name, severity_name] = split_assignment(value);
-            auto& tag = lookup_tag(tag_name);
+            auto& tag = lookup_tag(locked_tags, tag_name);
             auto const severity = parse_severity(severity_name);
             tag.logging_severity = severity;
+            for_each_child(tag, locked_tags, [severity](ml::Tag& tag) { tag.logging_severity = severity; });
         }
         catch(std::exception const& err)
         {
