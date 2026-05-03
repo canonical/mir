@@ -34,9 +34,9 @@ jobs:
       name: Determine which architectures to build for
       run: |
         ARCHES=( amd64 )
-        if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
-          ARCHES+=( armhf arm64 )
-        fi
+        # if ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}; then
+        #   ARCHES+=( armhf arm64 )
+        # fi
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
 
   mir-libs:
@@ -73,7 +73,7 @@ jobs:
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: 24/edge/pr${{ github.event.number }}
+        publish-channel: 26/edge/pr${{ github.event.number }}
 
   snap:
     # Only run if we have access to secrets.
@@ -96,15 +96,15 @@ jobs:
         - canonical/confined-shell-wip
         - canonical/ubuntu-frame
         - Miriway/Miriway
-        snapcraft-channel: [stable]
+        snapcraft-channel: [edge]
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
-          track: 24
+          track: 26
         - snap: canonical/confined-shell-wip
           track: latest
         - snap: canonical/ubuntu-frame
-          track: 24
+          track: 26
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic
@@ -114,7 +114,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-libs-build
+        ref: mir-libs-build-26
         fetch-depth: 0  # needed for version determination
         persist-credentials: false
 
