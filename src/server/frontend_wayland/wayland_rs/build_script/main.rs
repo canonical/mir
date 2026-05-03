@@ -198,6 +198,7 @@ fn generate_global_dispatch_impl(
         format_wayland_interface_to_rust_extension_struct(&interface.name)
     );
     let create_global_method = format_ident!("create_{}", &interface.name);
+    let interface_name_str = &interface.name;
     quote! {
         impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>>
             for ServerState
@@ -238,6 +239,13 @@ fn generate_global_dispatch_impl(
                 unsafe {
                     guard.pin_mut_unchecked().associate(boxed, protocol_id);
                 }
+            }
+
+            fn can_view(client: Client, global_data: &Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>) -> bool {
+                let interface_name = #interface_name_str.to_string();
+                let client_id = Box::new(WaylandClientId::new(client.id()));
+                let mut guard = global_data.lock().unwrap();
+                (&mut *guard).pin_mut().can_view(interface_name, client_id)
             }
         }
     }
@@ -582,6 +590,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
             use crate::protocols;
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
+            use crate::wayland_client::WaylandClientId;
             use std::os::fd::{AsRawFd, RawFd};
             use std::sync::{Arc, LazyLock, Mutex, RwLock};
             use std::collections::HashMap;
@@ -654,7 +663,19 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                 class.add_method(method);
             })
     });
+
+    let mut can_view_method =
+        CppMethod::new("can_view", Some(CppType::Bool), true, false, true, true);
+    can_view_method.add_arg(CppArg::new(CppType::String, "interface_name", false));
+    can_view_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClientId".to_string()),
+        "client_id",
+        false,
+    ));
+    class.add_method(can_view_method);
+
     namespace.add_class(class);
+    namespace.add_forward_declaration_class("WaylandClientId");
     builder.add_namespace(namespace);
     builder
 }
