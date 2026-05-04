@@ -61,11 +61,11 @@ auto mgv::Platform::parse_output_sizes(std::vector<std::string> virtual_outputs)
     std::vector<VirtualOutputConfig> configs;
     for (auto const& output : virtual_outputs)
     {
-        std::vector<geom::Size > sizes;
-        for (int start = 0, end; start - 1 < (int)output.size(); start = end + 1)
+        std::vector<geom::Size> sizes;
+        for (size_t start = 0, end; start <= output.size(); start = end + 1)
         {
             end = output.find(':', start);
-            if (end == (int)std::string::npos)
+            if (end == std::string::npos)
                 end = output.size();
             sizes.push_back(common::parse_size(output.substr(start, end - start)));
         }
