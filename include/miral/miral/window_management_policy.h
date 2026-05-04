@@ -38,7 +38,7 @@ class Zone;
 struct WindowInfo;
 
 
-/// An opaque workspace indentifier.
+/// An opaque workspace identifier.
 ///
 /// This symbol is purposefully opaque because it is only ever provided as a
 /// `std::shared_ptr` which is used as a unique identifier.

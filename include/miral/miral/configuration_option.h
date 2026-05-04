@@ -152,7 +152,7 @@ public:
         std::string const& option,
         std::string const& description);
 
-    // Construct a configuration option for a generic type value, given by `Lambda`.
+    /// Construct a configuration option for a generic type value, given by `Lambda`.
     ///
     /// \param callback Callback when the option is processed
     /// \param option Name of the option
