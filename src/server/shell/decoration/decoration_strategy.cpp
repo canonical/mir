@@ -125,7 +125,7 @@ inline void render_close_icon(
 {
     for (geom::Y y = box.top(); y < box.bottom(); y += geom::DeltaY{1})
     {
-        float const height = (y - box.top()).as_int() / (float)box.size.height.as_int();
+        float const height = (y - box.top()).as_int() / static_cast<float>(box.size.height.as_int());
         geom::X const left_line_left = box.left() + as_delta(box.size.width * height);
         geom::X const right_line_left = box.right() - as_delta(box.size.width * height) - as_delta(line_width);
         render_row(data, buf_size, {left_line_left, y}, line_width, color);
@@ -618,14 +618,14 @@ void RendererStrategy::Text::Impl::render_glyph(
         for (geom::X buffer_x = buffer_left; buffer_x < buffer_right; buffer_x += geom::DeltaX{1})
         {
             geom::X const glyph_x = buffer_x - glyph_offset.dx;
-            unsigned char const glyph_alpha = ((int)glyph_row[glyph_x.as_int()] * color_alpha) / 255;
+            unsigned char const glyph_alpha = (static_cast<int>(glyph_row[glyph_x.as_int()]) * color_alpha) / 255;
             unsigned char* const buffer_pixels = (unsigned char *)(buffer_row + buffer_x.as_int());
             for (int i = 0; i < 3; i++)
             {
                 // Blend color with the previous buffer color based on the glyph's alpha
                 buffer_pixels[i] =
-                    ((int)buffer_pixels[i] * (255 - glyph_alpha)) / 255 +
-                    ((int)color_pixels[i] * glyph_alpha) / 255;
+                    (static_cast<int>(buffer_pixels[i]) * (255 - glyph_alpha)) / 255 +
+                    (static_cast<int>(color_pixels[i]) * glyph_alpha) / 255;
             }
         }
     }
