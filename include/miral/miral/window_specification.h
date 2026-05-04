@@ -71,7 +71,7 @@ public:
     /// Construct a new window specification.
     WindowSpecification();
 
-    /// Construct a copy of the given speficiation.
+    /// Construct a copy of the given specification.
     ///
     /// \param that to copy
     WindowSpecification(WindowSpecification const& that);
@@ -229,7 +229,7 @@ public:
 
     /// The maximum height of the window.
     ///
-    /// \returns a const refence to the maximum height
+    /// \returns a const reference to the maximum height
     auto max_height() const -> mir::optional_value<Height> const&;
 
     /// The size increments of the window in the X direction.
@@ -448,7 +448,7 @@ public:
 
     /// The maximum height of the window
     ///
-    /// \returns a refence to the maximum height
+    /// \returns a reference to the maximum height
     auto max_height() -> mir::optional_value<Height>&;
 
     /// The size increments of the window in the X direction.

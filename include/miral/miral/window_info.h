@@ -210,7 +210,7 @@ struct WindowInfo
     ///
     /// Defaults to 1.
     ///
-    /// \returns the width increment
+    /// \returns the height increment
     auto height_inc() const -> mir::geometry::DeltaY;
 
     /// The minimum aspect ratio.
@@ -239,7 +239,7 @@ struct WindowInfo
 
     /// The output id that this window is associated with.
     ///
-    /// If #miral::WindoInfo::has_output_id is false, then this method
+    /// If #miral::WindowInfo::has_output_id is false, then this method
     /// will throw a fatal error when accessed.
     ///
     /// Callers may match this value with an id from #miral::Output::id()
