@@ -71,3 +71,7 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::logging::Logger::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::wayland()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::graphics()@MIR_CORE_2.27" 2.27.0
+ MIR_CORE_2.29@MIR_CORE_2.29 2.29.0
+ (c++)"mir::logging::add_logging_options(boost::program_options::options_description_easy_init)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::logging::logging_enabled_for(mir::logging::Tag const&, mir::logging::Severity)@MIR_CORE_2.29" 2.29.0
+ (c++)"std::formatter<mir::logging::Severity, char>::format(mir::logging::Severity, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const@MIR_CORE_2.29" 2.29.0
