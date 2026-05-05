@@ -1,6 +1,6 @@
 (mir-libraries)=
 
-# Mir libraries and module architecture
+# Libraries and module architecture
 
 The Mir project is a collection of C++ libraries for writing Wayland
 compositors. This document describes what those libraries are and how they
