@@ -22,6 +22,10 @@
 #include <boost/throw_exception.hpp>
 #include <concepts>
 #include <mir/logging/logger.h>
+#include <core/logging_internal.h>
+
+#include <mir/synchronised.h>
+#include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
 
 #include <atomic>

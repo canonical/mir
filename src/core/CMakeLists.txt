@@ -37,9 +37,16 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/input/mousekeys_keymap.h
 )
 
+target_link_libraries(mircore
+  PRIVATE
+    Boost::program_options
+)
+
 target_include_directories(mircore
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/core
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include
 )
 
 

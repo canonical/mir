@@ -19,6 +19,7 @@
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
 #include <mir/log.h>
+#include <core/logging_internal.h>
 
 #include <boost/program_options.hpp>
 #include <chrono>

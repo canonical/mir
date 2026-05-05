@@ -24,6 +24,7 @@
 #include <mir/shared_library.h>
 #include <mir/shared_library_prober.h>
 #include <mir/logging/logger.h>
+#include <core/logging_internal.h>
 
 #include <algorithm>
 #include <cstring>
