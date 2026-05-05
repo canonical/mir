@@ -1,4 +1,4 @@
-set(MIRWAYLAND_ABI 5)
+set(MIRWAYLAND_ABI 6)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
 
@@ -17,7 +17,6 @@ add_library(mirwayland SHARED
 )
 
 mir_generate_protocol_wrapper(mirwayland "wl_" wayland.xml)
-mir_generate_protocol_wrapper(mirwayland "z" xdg-shell-unstable-v6.xml)
 mir_generate_protocol_wrapper(mirwayland "" xdg-shell.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-output-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zwlr_" wlr-layer-shell-unstable-v1.xml)

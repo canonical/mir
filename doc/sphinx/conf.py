@@ -30,6 +30,7 @@ from pathlib import Path
 
 project = "Mir"
 author = "Canonical Ltd."
+version = os.getenv("READTHEDOCS_VERSION", "local")
 
 
 # Sidebar documentation title; best kept reasonably short
@@ -80,7 +81,7 @@ copyright = '%s, %s' % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = "https://canonical-mir.readthedocs-hosted.com/"
+ogp_site_url = f"https://canonical.com/mir/docs/{version}"
 
 
 # Preview name of the documentation website
@@ -186,19 +187,19 @@ html_theme_options = {
 # TODO: If your documentation is hosted on https://docs.ubuntu.com/,
 #       uncomment and update as needed.
 
-# slug = ''
+slug = 'mir/docs'
 
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
 #######################
 
-# Use RTD canonical URL to ensure duplicate pages have a specific canonical URL
+# Need to hardcode the RTD proxy URL, it's not known when building
 
-html_baseurl = os.environ.get("READTHEDOCS_CANONICAL_URL", "/")
+html_baseurl = f"https://canonical.com/mir/docs/{version}/"
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
 
-sitemap_url_scheme = '{link}'
+sitemap_url_scheme = "{link}"
 
 # Include `lastmod` dates in the sitemap:
 
@@ -219,7 +220,7 @@ sitemap_excludes = [
 # Template and asset locations #
 ################################
 
-# html_static_path = ["_static"]
+html_static_path = ["_static"]
 templates_path = ["_templates"]
 
 
@@ -343,6 +344,7 @@ html_css_files = [
 # Adds custom JavaScript files, located under 'html_static_path'
 
 html_js_files = [
+    "js/overwrite_links.js",
     "https://assets.ubuntu.com/v1/287a5e8f-bundle.js",
 ]
 
@@ -401,6 +403,7 @@ if os.path.exists('./reuse/substitutions.yaml'):
 # Add configuration for intersphinx mapping
 # Map only the Sphinx documentation sets that you need to link to from your docs set.
 intersphinx_mapping = {
+    'frame': ("https://ubuntu.com/frame/docs/24", None),
     'checkbox': ("https://canonical-checkbox.readthedocs-hosted.com/latest/", None),
     'server': ('https://documentation.ubuntu.com/server/', None),
     'snapcraft': ('https://documentation.ubuntu.com/snapcraft/stable/', None),

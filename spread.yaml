@@ -21,9 +21,9 @@ environment:
     RELEASE: noble
     RELEASE/ubuntu: noble
     RELEASE/ubuntu_questing: questing
-    RELEASE/ubuntu_devel: resolute
+    RELEASE/ubuntu_resolute: resolute
+    RELEASE/ubuntu_devel: stonking
     RELEASE/debian_sid: sid
-    RELEASE/fedora_42: 42
     RELEASE/fedora_43: 43
     RELEASE/fedora_rawhide: rawhide
     RELEASE/fedora_clang: 43

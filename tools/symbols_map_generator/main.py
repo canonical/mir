@@ -388,10 +388,11 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
     """
     added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
 
-    print("")
-    print("  \033[1mNew Symbols 🟢🟢🟢\033[0m")
-    for s in added_symbols:
-        print(f"\033[92m    {s}\033[0m")
+    if len(added_symbols) > 0:
+        print("")
+        print("  \033[1mNew Symbols 🟢🟢🟢\033[0m")
+        for s in added_symbols:
+            print(f"\033[92m    {s}\033[0m")
 
     # Deleted symbols
     deleted_symbols = set()
@@ -402,12 +403,19 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
     deleted_symbols = list(deleted_symbols)
     deleted_symbols.sort()
 
-    print("")
-    print("  \033[1mDeleted Symbols 🔻🔻🔻\033[0m")
-    for s in deleted_symbols:
-        print(f"\033[91m    {s}\033[0m")
+    if len(deleted_symbols) > 0:
+        print("")
+        print("  \033[1mDeleted Symbols 🔻🔻🔻\033[0m")
+        for s in deleted_symbols:
+            print(f"\033[91m    {s}\033[0m")
 
-    return len(deleted_symbols) > 0 or len(added_symbols) > 0
+    symbols_changed = len(deleted_symbols) > 0 or len(added_symbols) > 0
+
+    if not symbols_changed:
+        print("")
+        print("  \033[1mNo symbol changes! ❤️\033[0m")
+
+    return symbols_changed
 
 
 def main():
@@ -550,16 +558,15 @@ def main():
 
     previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
-    has_changed_symbols = False
     if args.diff:
         print("External Symbols Diff:")
-        has_changed_symbols = report_symbols_diff(previous_symbols, external_symbols, False)
+        has_changed_external_symbols = report_symbols_diff(previous_symbols, external_symbols, False)
 
         print("")
         print("Internal Symbols Diff:")
-        has_changed_symbols = has_changed_symbols or report_symbols_diff(previous_symbols, internal_symbols, True)
+        has_changed_internal_symbols = report_symbols_diff(previous_symbols, internal_symbols, True)
         print("")
-        if has_changed_symbols:
+        if has_changed_external_symbols or has_changed_internal_symbols:
             exit(1)
     else:
         _logger.info(f"Outputting the symbols file to: {args.symbols_map_path.name}")

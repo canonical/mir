@@ -122,7 +122,9 @@ public:
           egl_format{get_wl_egl_format(buffer, extensions)},
           egl_delegate{std::move(egl_delegate)}
     {
-        if (egl_format != EGL_TEXTURE_RGB && egl_format != EGL_TEXTURE_RGBA)
+        if (egl_format != EGL_TEXTURE_RGB &&
+            egl_format != EGL_TEXTURE_RGBA &&
+            egl_format != EGL_TEXTURE_EXTERNAL_WL)
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"YUV textures unimplemented"}));
         }

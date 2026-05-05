@@ -1,6 +1,6 @@
 (contributing-reference-index)=
 
-# Reference
+# Mir contributor reference
 
 These pages provide detailed reference to Mir's development practices.
 

@@ -20,7 +20,7 @@ $ cmake ..
 $ make guides
 ```
 
-(Or online, [here](https://canonical-mir.readthedocs-hosted.com/latest/_static/cppguide)).
+(Or online, [here](https://canonical.com/mir/docs/latest/_static/cppguide)).
 
 ## Code structure
 
