@@ -231,13 +231,13 @@ public:
     /// Modify the provided window with the provided \p modifications.
     ///
     /// \param window_info the window to modify
-    /// \param modifications the modification sto make on the window
+    /// \param modifications the modifications to make on the window
     void modify_window(WindowInfo& window_info, WindowSpecification const& modifications);
 
     /// Modify the provided \p window with the provided \p modifications.
     ///
     /// \param window the window to modify
-    /// \param modifications the modification sto make on the window
+    /// \param modifications the modifications to make on the window
     void modify_window(Window const& window, WindowSpecification const& modifications);
 
     /// Set a default size and position to reflect state change.
@@ -310,7 +310,7 @@ public:
     /// \param callback the method to call under lock
     void invoke_under_lock(std::function<void()> const& callback);
 
-    /// Move the cursor to the provided \point.
+    /// Move the cursor to the provided \p point.
     ///
     /// If the point is beyond the range of the outputs, the point is clamped to the output area.
     /// \param point to move the cursor to
