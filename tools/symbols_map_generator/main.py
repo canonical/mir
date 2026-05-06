@@ -197,6 +197,10 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
         return []
 
     spelling = node.spelling
+    n_template_args = node.type.get_num_template_arguments()
+    if n_template_args != -1:
+        template_types = [node.type.get_template_argument_type(i).spelling for i in range(n_template_args)]
+        spelling += "<" + ",".join(template_types) + ">"
     if is_operator(node):
         spelling = "operator"
     elif node.kind == clang.cindex.CursorKind.DESTRUCTOR:
@@ -253,7 +257,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                 is_virtual = True
             else:
                 # Check if we're marked override
-                for  child in node.get_children():
+                for child in node.get_children():
                     if child.kind == clang.cindex.CursorKind.CXX_OVERRIDE_ATTR:
                         add_internal(f"non-virtual?thunk?to?{namespace_str}")
                         is_virtual = True
