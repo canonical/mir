@@ -230,6 +230,9 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
 
         def add_symbol_str(s: str):
+            if '<' in s or '>' in s:
+                s = f'"{s}"'
+            s += ';'
             if not s in HIDDEN_SYMBOLS:
                 result.add(s)
 
@@ -237,16 +240,13 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             if has_vtable(node):
-                add_symbol_str(f"vtable?for?{namespace_str};")
+                add_symbol_str(f"vtable?for?{namespace_str}")
             if has_virtual_base_class(node):
-                add_symbol_str(f"VTT?for?{namespace_str};")
-            add_symbol_str(f"typeinfo?for?{namespace_str};")
+                add_symbol_str(f"VTT?for?{namespace_str}")
+            add_symbol_str(f"typeinfo?for?{namespace_str}")
         else:
             def add_internal(s: str):
-                if '<' in s or '>' in s:
-                    add_symbol_str(f"\"{s}*\";")
-                else:
-                    add_symbol_str(f"{s}*;")
+                add_symbol_str(f"{s}*")
             add_internal(namespace_str)
 
             # Check if we're marked virtual
