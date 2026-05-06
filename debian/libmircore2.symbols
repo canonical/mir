@@ -73,5 +73,9 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::logging::graphics()@MIR_CORE_2.27" 2.27.0
  MIR_CORE_2.29@MIR_CORE_2.29 2.29.0
  (c++)"mir::logging::add_logging_options(boost::program_options::options_description_easy_init)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::logging::list_known_tags[abi:cxx11]()@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::logging_enabled_for(mir::logging::Tag const&, mir::logging::Severity)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::logging::parse_severity(std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::logging::tag::name(mir::logging::Tag const&)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::logging::tag::set_severity(std::basic_string_view<char, std::char_traits<char> >, mir::logging::Severity)@MIR_CORE_2.29" 2.29.0
  (c++)"std::formatter<mir::logging::Severity, char>::format(mir::logging::Severity, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const@MIR_CORE_2.29" 2.29.0

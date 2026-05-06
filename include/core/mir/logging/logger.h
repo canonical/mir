@@ -17,9 +17,9 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <mir/logging/tag.h>
+
 #include <format>
-#include <functional>
-#include <initializer_list>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -30,41 +30,6 @@ namespace mir
 {
 namespace logging
 {
-struct Tag;
-/**
- * Create a tag for use in logging
- *
- * This creates a new tag and registers it with the logging subsystem,
- * with lifetime of the whole process. It should be called exactly once
- * for each desired tag and the reference it returns stored.
- *
- * For leaf tags — tags not used as a `parent` or which are only used in a single
- * translation unit, it is suggested that this be called at global scope
- * so that the tag is registered with the logging subsystem during
- * server initialisation. Eg:
- *
- * `static Tag const& bypass = mir::logging::create_tag(logging::graphics(), "bypass");`
- */
-Tag const& create_tag(Tag const& parent, std::string_view name);
-
-Tag const& base();
-Tag const& input();
-Tag const& wayland();
-Tag const& graphics();
-Tag const& window_management();
-
-using Tags = std::initializer_list<std::reference_wrapper<Tag const> const>;
-
-enum class Severity
-{
-    critical = 0,
-    error = 1,
-    warning = 2,
-    informational = 3,
-    debug = 4
-};
-
-
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
@@ -109,15 +74,8 @@ void log(Severity severity, const std::string& message, const std::string& compo
 void log(Severity severity, Tags tags, std::string_view message);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);
-auto logging_enabled_for(Tag const& tag, Severity sev) -> bool;
-}
-}
 
-template<>
-struct std::formatter<mir::logging::Severity> : std::formatter<std::string>
-{
-    auto format(mir::logging::Severity sev, std::format_context& ctx) const
-        -> std::format_context::iterator;
-};
+}
+}
 
 #endif // MIR_LOGGING_LOGGER_H_

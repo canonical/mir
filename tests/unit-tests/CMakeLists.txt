@@ -29,7 +29,6 @@ include_directories(
 
   ${PROJECT_SOURCE_DIR}/src/include/server
   ${CMAKE_BINARY_DIR}/src/server/console
-  ${PROJECT_SOURCE_DIR}/src/include
 )
 
 add_library(example SHARED library_example.cpp)
