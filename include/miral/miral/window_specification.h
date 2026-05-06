@@ -657,6 +657,26 @@ public:
     /// \remark Since MirAL 5.7
     auto alpha() const -> mir::optional_value<float> const&;
 
+    /// The expected size of the parent window for constrained popup placement.
+    ///
+    /// Set when the compositor should use a specific parent geometry (rather than
+    /// the current parent geometry) to constrain the popup placement. This is used
+    /// when repositioning a popup in response to a parent resize.
+    ///
+    /// \returns the expected parent size
+    /// \remark Since MirAL 5.8
+    auto parent_size() -> mir::optional_value<Size>&;
+
+    /// The expected size of the parent window for constrained popup placement.
+    ///
+    /// Set when the compositor should use a specific parent geometry (rather than
+    /// the current parent geometry) to constrain the popup placement. This is used
+    /// when repositioning a popup in response to a parent resize.
+    ///
+    /// \returns the expected parent size
+    /// \remark Since MirAL 5.8
+    auto parent_size() const -> mir::optional_value<Size> const&;
+
     /// Create a [mir::shell::SurfaceSpecification] from this window spec.
     ///
     /// \returns a surface specification
