@@ -243,7 +243,10 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             add_symbol_str(f"typeinfo?for?{namespace_str};")
         else:
             def add_internal(s: str):
-                add_symbol_str(f"{s}*;")
+                if '<' in s or '>' in s:
+                    add_symbol_str(f"\"{s}*\";")
+                else:
+                    add_symbol_str(f"{s}*;")
             add_internal(namespace_str)
 
             # Check if we're marked virtual
