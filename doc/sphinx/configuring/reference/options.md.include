@@ -121,6 +121,27 @@ Rate of repeating keys in characters per second.
 
 Defaults to `25`.
 
+(global-log-level)=
+### `log-level`
+
+Minimum severity of a log message required for it to be printed.
+Valid severities are: critical, error, warning, informational, debug (“warn” and “info” can be used as short forms of “warning” and “informational”)
+Must be specified in the form “tag=severity”
+
+Tags are heirarchical. Setting a tag&apos;s severity implicitly sets the severity of all its children.
+The root of the tag hierarchy is “core”, so --log-level=core=debug will enable all tags at debug level.
+
+This option can be specified multiple times, and filters are applied in the order they are encountered.
+For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level
+except for graphics (and its children), which will be enabled at the debug level.
+
+Possible tags to filter on are:
+ - core
+ - core/input
+ - core/wayland
+ - core/graphics
+ - core/window-management
+
 (global-mouse-cursor-acceleration)=
 ### `mouse-cursor-acceleration`
 
