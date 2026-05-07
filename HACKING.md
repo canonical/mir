@@ -8,6 +8,128 @@ For build instructions, and a brief guide describing how to run the *Mir binarie
   _You might think it's obvious but there are some important things you need to know to get it working,
   and also to prevent your existing *X server* from dying at the same time!_
 
+## Git hooks
+
+The project uses **git's native `core.hooksPath`** for version-controlled git hooks combined with **pre-commit** for commit-time checks.
+
+### Setup
+
+After cloning, run this one-time setup command:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Then install pre-commit for commit-time checks:
+
+```bash
+pre-commit install --install-hooks
+```
+
+Or both in one command:
+
+```bash
+git config core.hooksPath .githooks && pre-commit install --install-hooks
+```
+
+### What Each Hook Does
+
+**Pre-commit hooks** (run at `git commit` time):
+- Trailing whitespace removal
+- End-of-file fixers
+- Large file detection
+- Security scanning (zizmor, actionlint)
+- Markdown formatting (mdformat)
+- Rust formatting (cargo-fmt)
+
+**Pre-push hook** (run at `git push` time):
+- ABI symbol checks (verifies `check-miral-symbols-map`, etc.)
+- Optional code review (Claude Haiku 4.5)
+
+### Running Hooks Manually
+
+Run pre-commit checks on staged changes:
+
+```bash
+pre-commit run
+```
+
+Run pre-commit checks on all files:
+
+```bash
+pre-commit run --all-files
+```
+
+Run the pre-push hook manually:
+
+```bash
+./.githooks/pre-push
+```
+
+### Skipping Checks
+
+**Skip all pre-commit checks:**
+
+```bash
+git commit --no-verify
+```
+
+**Skip all pre-push checks:**
+
+```bash
+git push --no-verify
+```
+
+**Skip symbol checks only:**
+
+```bash
+MIR_SKIP_SYMBOL_CHECK=true git push
+```
+
+**Skip code review only:**
+
+```bash
+MIR_CODE_REVIEW=false git push
+```
+
+### Code Review Setup (Optional)
+
+The pre-push hook can automatically review code using Claude Haiku 4.5. To enable it, install the GitHub Copilot CLI:
+
+```bash
+npm install -g @github/copilot-cli
+copilot auth login
+```
+
+After authentication, code review will run automatically before push. To test it:
+
+```bash
+./.githooks/pre-push
+```
+
+**Disable code review:**
+
+```bash
+MIR_CODE_REVIEW=false git push
+```
+
+**Build directory missing for symbol checks:**
+
+Symbol checks will automatically configure CMake if the build directory is missing.
+
+**Symbol check failures:**
+
+Run detailed checks manually:
+
+```bash
+cmake --build build --target check-miral-symbols-map
+cmake --build build --target check-miroil-symbols-map
+cmake --build build --target check-mirserver-symbols-map
+cmake --build build --target check-mircommon-symbols-map
+```
+
+See `.githooks/pre-push` and `.pre-commit-config.yaml` for details.
+
 ## Style guide
 
 See the *[style guide](./doc/sphinx/contributing/reference/cppguide.md)* for the C++ style used in Mir.
