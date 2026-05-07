@@ -87,7 +87,7 @@ MIR_CODE_REVIEW=false git push
 The pre-push hook can automatically review code using Claude Haiku 4.5. To enable it, install the GitHub Copilot CLI:
 
 ```bash
-npm install -g @github/copilot-cli
+snap install copilot-cli
 copilot auth login
 ```
 
