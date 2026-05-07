@@ -219,10 +219,23 @@ void mf::VirtualPointerV1::motion(uint32_t time, double dx, double dy)
 
 void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y, uint32_t x_extent, uint32_t y_extent)
 {
+    if (x > x_extent || y > y_extent)
+    {
+        // FIXME: Specific error proposed in https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/143
+        BOOST_THROW_EXCEPTION(
+            mw::ProtocolError(resource, mw::generic_error_code, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent));
+    }
+
     pending.timestamp = std::chrono::milliseconds{time};
-    auto const local_x = geom::DeltaXF{x} * absolute_motion_area.size.width.as_value() / x_extent;
-    auto const local_y = geom::DeltaYF{y} * absolute_motion_area.size.height.as_value() / y_extent;
-    pending.position = geom::PointF{absolute_motion_area.top_left} + local_x + local_y;
+    pending.position = geom::PointF{absolute_motion_area.top_left};
+    if (x_extent > 0)
+    {
+        pending.position += geom::DeltaXF{x} * absolute_motion_area.size.width.as_value() / x_extent;
+    }
+    if (y_extent > 0)
+    {
+        pending.position += geom::DeltaYF{y} * absolute_motion_area.size.height.as_value() / y_extent;
+    }
     pending.has_absolute_motion = true;
 }
 

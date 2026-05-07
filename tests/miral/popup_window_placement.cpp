@@ -590,3 +590,52 @@ TEST_F(PopupWindowPlacement, correctly_placed_when_surface_has_content_offset)
         }
     }
 }
+
+TEST_F(PopupWindowPlacement, modify_window_uses_provided_parent_size)
+{
+    std::shared_ptr<mir::scene::Surface> const parent_scene_surface{parent};
+    auto const parent_origin = parent_scene_surface->top_left() + parent_scene_surface->content_offset();
+
+    // The aux_rect's northeast corner is at x+260, inside the actual parent (600x400)
+    // but outside the provided parent_size (200x200). With the override, constrain_to()
+    // clamps the anchor to x+200 (right edge of the 200px parent).
+    modification.aux_rect() = Rectangle{{250, 20}, {10, 20}};
+    modification.placement_hints() = MirPlacementHints{};
+    modification.aux_rect_placement_gravity() = mir_placement_gravity_northeast;
+    modification.window_placement_gravity() = mir_placement_gravity_northwest;
+    modification.parent_size() = Size{200, 200};
+
+    Point const expected_position{parent_origin.x + DeltaX{200}, parent_origin.y + DeltaY{20}};
+
+    EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
+    basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
+    ASSERT_THAT(child.top_left(), Eq(expected_position));
+}
+
+TEST_F(PopupWindowPlacement, place_new_surface_uses_provided_parent_size)
+{
+    Window new_child;
+    EXPECT_CALL(*window_manager_policy, advise_new_window(_))
+        .WillOnce(Invoke([&new_child](WindowInfo const& window_info){ new_child = window_info.window(); }));
+
+    mir::shell::SurfaceSpecification params;
+    params.type = mir_window_type_menu;
+    params.parent = parent;
+    params.set_size(initial_child_size);
+    // The aux_rect's northeast corner is at x+260, inside the actual parent (600x400)
+    // but outside the provided parent_size (200x200). With the override, constrain_to()
+    // clamps the anchor to x+200 (right edge of the 200px parent).
+    params.aux_rect = Rectangle{{250, 20}, {10, 20}};
+    params.placement_hints = MirPlacementHints{};
+    params.aux_rect_placement_gravity = mir_placement_gravity_northeast;
+    params.surface_placement_gravity = mir_placement_gravity_northwest;
+    params.parent_size = Size{200, 200};
+
+    basic_window_manager.add_surface(session, params, &create_surface);
+
+    std::shared_ptr<mir::scene::Surface> const parent_scene_surface{parent};
+    auto const parent_origin = parent_scene_surface->top_left() + parent_scene_surface->content_offset();
+    Point const expected_position{parent_origin.x + DeltaX{200}, parent_origin.y + DeltaY{20}};
+
+    ASSERT_THAT(new_child.top_left(), Eq(expected_position));
+}
