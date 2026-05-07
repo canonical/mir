@@ -35,6 +35,7 @@ git config core.hooksPath .githooks && pre-commit install --install-hooks
 ### What Each Hook Does
 
 **Pre-commit hooks** (run at `git commit` time):
+
 - Trailing whitespace removal
 - End-of-file fixers
 - Large file detection
@@ -43,6 +44,7 @@ git config core.hooksPath .githooks && pre-commit install --install-hooks
 - Rust formatting (cargo-fmt)
 
 **Pre-push hook** (run at `git push` time):
+
 - ABI symbol checks (verifies `check-miral-symbols-map`, etc.)
 - Optional code review (Claude Haiku 4.5)
 
