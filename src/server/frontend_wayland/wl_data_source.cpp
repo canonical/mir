@@ -15,6 +15,7 @@
  */
 
 #include "wl_data_source.h"
+#include "wl_data_device_manager.h"
 
 #include <mir/executor.h>
 #include <mir/scene/clipboard.h>
@@ -246,18 +247,9 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
     }
 }
 
-static bool valid_actions(uint32_t dnd_actions)
-{
-    return (dnd_actions & ~(
-        mw::DataDeviceManager::DndAction::none |
-        mw::DataDeviceManager::DndAction::copy |
-        mw::DataDeviceManager::DndAction::move |
-        mw::DataDeviceManager::DndAction::ask)) == 0;
-}
-
 void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
-    if (!valid_actions(dnd_actions))
+    if (!mf::validate_dnd_actions(dnd_actions))
     {
         throw mw::ProtocolError(
             resource,

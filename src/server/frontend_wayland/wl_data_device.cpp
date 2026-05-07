@@ -15,6 +15,7 @@
  */
 
 #include "wl_data_device.h"
+#include "wl_data_device_manager.h"
 #include "wl_data_source.h"
 #include "wl_surface.h"
 
@@ -96,33 +97,16 @@ public:
         source->dnd_finished();
     }
 
-    static bool valid_actions(uint32_t dnd_actions)
-    {
-        return (dnd_actions & ~(
-            mw::DataDeviceManager::DndAction::none |
-            mw::DataDeviceManager::DndAction::copy |
-            mw::DataDeviceManager::DndAction::move |
-            mw::DataDeviceManager::DndAction::ask)) == 0;
-    }
-
-    static bool valid_action(uint32_t dnd_action)
-    {
-        return dnd_action == mw::DataDeviceManager::DndAction::none ||
-            dnd_action == mw::DataDeviceManager::DndAction::copy ||
-            dnd_action == mw::DataDeviceManager::DndAction::move ||
-            dnd_action == mw::DataDeviceManager::DndAction::ask;
-    }
-
     void set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
     {
-        if (!valid_actions(dnd_actions))
+        if (!mf::validate_dnd_actions(dnd_actions))
         {
             throw mw::ProtocolError(
                 resource,
                 Error::invalid_action_mask,
                 "Invalid DnD actions 0x%x", dnd_actions);
         }
-        if (!valid_action(preferred_action))
+        if (!mf::validate_dnd_action(preferred_action))
         {
             throw mw::ProtocolError(
                 resource,
