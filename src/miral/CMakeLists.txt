@@ -21,6 +21,7 @@ add_library(miral-internal STATIC
     fd_manager.cpp                       fd_manager.h
     input_device_config.cpp              input_device_configuration_options.h input_device_config.h
     launch_app.cpp                       launch_app.h
+    live_config_overrides_list_builder.cpp    live_config_overrides_list_builder.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
