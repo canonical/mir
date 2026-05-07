@@ -262,7 +262,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
 
     std::string tags;
     std::ranges::copy(
-        mir::logging::list_known_tags() | std::views::transform([](std::string const& tag) { return "\t" + tag; }) | std::views::join_with('\n'),
+        mir::logging::list_known_tags() | std::views::transform([](std::string const& tag) { return " - " + tag; }) | std::views::join_with('\n'),
         std::back_inserter(tags)
     );
 
@@ -272,6 +272,14 @@ mo::DefaultConfiguration::DefaultConfiguration(
             ("Minimum severity of a log message required for it to be printed.\n"
             "Valid severities are: critical, error, warning, informational, debug (“warn” and “info” can be used as short forms of “warning” and “informational”)\n"
             "Must be specified in the form “tag=severity”\n"
+            "\n"
+            "Tags are heirarchical. Setting a tag's severity implicitly sets the severity of all its children.\n"
+            "The root of the tag hierarchy is “core”, so --log-level=core=debug will enable all tags at debug level.\n"
+            "\n"
+            "This option can be specified multiple times, and filters are applied in the order they are encountered.\n"
+            "For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level\n"
+            "except for graphics (and its children), which will be enabled at the debug level.\n"
+            "\n"
             "Possible tags to filter on are:\n"
             + tags).c_str());
 
