@@ -780,5 +780,33 @@ MIRAL_5.8 {
 global:
   extern "C++" {
     miral::WindowSpecification::parent_size*;
+    miral::live_config::OverridesList::?OverridesList*;
+    miral::live_config::OverridesList::OverridesList*;
+    miral::live_config::OverridesList::for_each*;
+    miral::live_config::OverridesList::operator*;
+    miral::live_config::IniFileWithOverrides::operator*;
+    miral::live_config::IniFileWithOverrides::?IniFileWithOverrides*;
+    miral::live_config::IniFileWithOverrides::IniFileWithOverrides*;
+    miral::live_config::IniFileWithOverrides::add_bool_attribute*;
+    miral::live_config::IniFileWithOverrides::add_float_attribute*;
+    miral::live_config::IniFileWithOverrides::add_floats_attribute*;
+    miral::live_config::IniFileWithOverrides::add_int_attribute*;
+    miral::live_config::IniFileWithOverrides::add_ints_attribute*;
+    miral::live_config::IniFileWithOverrides::add_string_attribute*;
+    miral::live_config::IniFileWithOverrides::add_strings_attribute*;
+    miral::live_config::IniFileWithOverrides::load*;
+    miral::live_config::IniFileWithOverrides::on_done*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::?IniFileWithOverrides*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_bool_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_float_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_floats_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_int_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_ints_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_string_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::add_strings_attribute*;
+    non-virtual?thunk?to?miral::live_config::IniFileWithOverrides::on_done*;
+    typeinfo?for?miral::live_config::OverridesList;
+    typeinfo?for?miral::live_config::IniFileWithOverrides;
+    vtable?for?miral::live_config::IniFileWithOverrides;
   };
 } MIRAL_5.7;
