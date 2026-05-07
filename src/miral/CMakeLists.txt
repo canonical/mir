@@ -151,7 +151,9 @@ add_library(miral-external OBJECT
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
     simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h
     live_config.cpp                     ${miral_include}/miral/live_config.h
+    live_config_overrides_list.cpp        ${miral_include}/miral/live_config_overrides_list.h
     live_config_ini_file.cpp            ${miral_include}/miral/live_config_ini_file.h
+    live_config_ini_file_with_overrides.cpp ${miral_include}/miral/live_config_ini_file_with_overrides.h
     hover_click.cpp                     ${miral_include}/miral/hover_click.h
     magnifier.cpp                       ${miral_include}/miral/magnifier.h
     bounce_keys.cpp                     ${miral_include}/miral/bounce_keys.h
