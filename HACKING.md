@@ -79,7 +79,7 @@ MIR_SKIP_SYMBOL_CHECK=true git push
 **Skip code review only:**
 
 ```bash
-MIR_CODE_REVIEW=false git push
+MIR_SKIP_CODE_REVIEW=true git push
 ```
 
 ### Code Review Setup (Optional)
@@ -100,7 +100,7 @@ After authentication, code review will run automatically before push. To test it
 **Disable code review:**
 
 ```bash
-MIR_CODE_REVIEW=false git push
+MIR_SKIP_CODE_REVIEW=true git push
 ```
 
 **Build directory missing for symbol checks:**
