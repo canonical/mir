@@ -27,6 +27,8 @@
 #include <mir/executor.h>
 
 #include "protocol/xdg-shell-client.h"
+#include "protocol/fractional-scale-v1-client.h"
+#include "protocol/viewporter-client.h"
 #include <wayland-client.h>
 #include <EGL/egl.h>
 
@@ -141,6 +143,8 @@ protected:
     xdg_wm_base* shell = nullptr;
     wl_seat* seat = nullptr;
     wl_shm* shm = nullptr;
+    wp_fractional_scale_manager_v1* fractional_scale_manager = nullptr;
+    wp_viewporter* viewporter = nullptr;
 
     static void new_global(
         void* data,
@@ -168,7 +172,7 @@ protected:
     bool fake_pointer_frame = false;
     geometry::DisplacementF pointer_displacement; // Position of current output
     geometry::Displacement touch_displacement;   // Position of current output
-    int32_t pointer_scale{1};
+    float pointer_scale{1.0f};
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 
