@@ -40,6 +40,15 @@
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
 
+namespace
+{
+// The wp_fractional_scale_v1 protocol expresses scale as a fixed-point numerator
+// with a denominator of 120 (e.g. 1.75x scale = 210/120).
+float constexpr fractional_scale_denominator = 120.0f;
+
+// Epsilon for floating-point scale comparison to avoid unnecessary reconfigurations.
+float constexpr scale_change_epsilon = 1e-6f;
+}
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
     public DisplaySink
@@ -373,8 +382,8 @@ void mgw::DisplayClient::Output::preferred_scale(uint32_t scale)
     // (required for non-integer buffer-to-surface mapping)
     if (!viewport) return;
 
-    float const new_scale = scale / 120.0f;
-    if (std::abs(new_scale - host_scale) < 1e-6f)
+    float const new_scale = scale / fractional_scale_denominator;
+    if (std::abs(new_scale - host_scale) < scale_change_epsilon)
         return;
 
     host_scale = new_scale;
