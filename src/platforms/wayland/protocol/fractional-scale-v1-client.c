@@ -70,4 +70,3 @@ WL_PRIVATE const struct wl_interface wp_fractional_scale_v1_interface = {
 	1, wp_fractional_scale_v1_requests,
 	1, wp_fractional_scale_v1_events,
 };
-

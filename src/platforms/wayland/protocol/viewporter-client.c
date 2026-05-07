@@ -71,4 +71,3 @@ WL_PRIVATE const struct wl_interface wp_viewport_interface = {
 	3, wp_viewport_requests,
 	0, NULL,
 };
-
