@@ -17,18 +17,6 @@ The project uses **git's native `core.hooksPath`** for version-controlled git ho
 After cloning, run this one-time setup command:
 
 ```bash
-git config core.hooksPath .githooks
-```
-
-Then install pre-commit for commit-time checks:
-
-```bash
-pre-commit install --install-hooks
-```
-
-Or both in one command:
-
-```bash
 git config core.hooksPath .githooks && pre-commit install --install-hooks
 ```
 
