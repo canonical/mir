@@ -113,7 +113,7 @@ public:
                 Error::invalid_action,
                 "Invalid DnD action 0x%x", preferred_action);
         }
-        if ((dnd_actions & preferred_action) == 0)
+        if (preferred_action != mw::DataDeviceManager::DndAction::none && (dnd_actions & preferred_action) == 0)
         {
             throw mw::ProtocolError(
                 resource,
