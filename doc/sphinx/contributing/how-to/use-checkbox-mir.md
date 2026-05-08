@@ -8,7 +8,7 @@ This document explains how to use checkbox-mir to validate the graphical environ
 
 To support graphics on Linux on a given piece of hardware, usually a kernel and userspace driver is required. When using snaps, the kernel driver is managed by the operating system, but the userspace driver needs to be available to your application.
 
-The recommended approach for this is using a content snap, through the appropriate content interface. The current iteration is `gpu-2404`, see here for more information on that setup: [The gpu-2404 interface](https://canonical.com/mir/docs/the-gpu-2404-snap-interface).
+The recommended approach for this is using a content snap, through the appropriate content interface. See here for more information on that setup: {ref}`frame:use-snap-graphics`.
 
 ## Checkbox
 

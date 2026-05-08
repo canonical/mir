@@ -78,11 +78,11 @@ jobs:
           sudo apt-get install --yes --no-install-recommends devscripts
 
           # Ensure there's a matching "Begin Release Candidate" entry
-          dch --newversion "${VERSION}~rc" ""
+          dch --newversion "${VERSION}" ""
 
           # Remove "Begin" lines and append release notes
           awk --include=inplace \
-            --assign version_pat="^mir \\\(${VERSION}~rc\\\)" '
+            --assign version_pat="^mir \\\(${VERSION}\\\)" '
             $0~version_pat {
               in_target = 1
               print

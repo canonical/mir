@@ -71,7 +71,7 @@ public:
     /// Construct a new window specification.
     WindowSpecification();
 
-    /// Construct a copy of the given speficiation.
+    /// Construct a copy of the given specification.
     ///
     /// \param that to copy
     WindowSpecification(WindowSpecification const& that);
@@ -229,7 +229,7 @@ public:
 
     /// The maximum height of the window.
     ///
-    /// \returns a const refence to the maximum height
+    /// \returns a const reference to the maximum height
     auto max_height() const -> mir::optional_value<Height> const&;
 
     /// The size increments of the window in the X direction.
@@ -448,7 +448,7 @@ public:
 
     /// The maximum height of the window
     ///
-    /// \returns a refence to the maximum height
+    /// \returns a reference to the maximum height
     auto max_height() -> mir::optional_value<Height>&;
 
     /// The size increments of the window in the X direction.
@@ -656,6 +656,26 @@ public:
     /// \returns the alpha
     /// \remark Since MirAL 5.7
     auto alpha() const -> mir::optional_value<float> const&;
+
+    /// The expected size of the parent window for constrained popup placement.
+    ///
+    /// Set when the compositor should use a specific parent geometry (rather than
+    /// the current parent geometry) to constrain the popup placement. This is used
+    /// when repositioning a popup in response to a parent resize.
+    ///
+    /// \returns the expected parent size
+    /// \remark Since MirAL 5.8
+    auto parent_size() -> mir::optional_value<Size>&;
+
+    /// The expected size of the parent window for constrained popup placement.
+    ///
+    /// Set when the compositor should use a specific parent geometry (rather than
+    /// the current parent geometry) to constrain the popup placement. This is used
+    /// when repositioning a popup in response to a parent resize.
+    ///
+    /// \returns the expected parent size
+    /// \remark Since MirAL 5.8
+    auto parent_size() const -> mir::optional_value<Size> const&;
 
     /// Create a [mir::shell::SurfaceSpecification] from this window spec.
     ///

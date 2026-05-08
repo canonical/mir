@@ -7,6 +7,11 @@ on:
     - release/[0-9]+.[0-9]+
     tags:
     - v[0-9]+[0-9]+.[0-9]+
+    paths-ignore:
+    - ".github/**"
+    - "!.github/workflows/spread.yml"
+    - "doc/**"
+    - "snap/**"
   merge_group:
     types: [checks_requested]
   pull_request:
@@ -27,18 +32,40 @@ jobs:
     steps:
     - id: set-matrix
       name: Determine BuildAndTest matrix
-      env:
-        SPREAD_JOBS_MAIN: ${{ vars.SPREAD_JOBS_MAIN }}
-        SPREAD_JOBS_COMMON: ${{ vars.SPREAD_JOBS_COMMON }}
       run: |
         set -euo pipefail
 
         TASKS=()
         if ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}; then
-           mapfile -O "${#TASKS[@]}" -t TASKS <<< "${SPREAD_JOBS_MAIN//$'\r'/}"
+          TASKS+=(
+            "lxd:...:spread/ubuntu:tsan"
+            "lxd:...:spread/ubuntu:tsan_clang"
+          )
         fi
 
-        mapfile -O "${#TASKS[@]}" -t TASKS <<< "${SPREAD_JOBS_COMMON//$'\r'/}"
+        TASKS+=(
+          "lxd:...:debian_sid"
+          "lxd:...:fedora_43"
+          "lxd:...:fedora_clang"
+          "lxd:...:fedora_rawhide"
+          "lxd:...:spread/ubuntu:asan"
+          "lxd:...:spread/ubuntu:asan_clang"
+          "lxd:...:spread/ubuntu:clang"
+          "lxd:...:spread/ubuntu:mold"
+          "lxd:...:spread/ubuntu:ubsan"
+          "lxd:...:spread/ubuntu:ubsan_clang"
+          "lxd:...:ubuntu"
+          "lxd:...:ubuntu_arm64"
+          "lxd:...:ubuntu_armhf"
+          "lxd:...:ubuntu_devel"
+          "lxd:...:ubuntu_proposed"
+          "lxd:...:ubuntu_questing"
+          "lxd:...:ubuntu_resolute"
+          "lxd:alpine-3.21:...:amd64"
+          "lxd:alpine-3.22:...:amd64"
+          "lxd:alpine-3.23:...:amd64"
+          "lxd:alpine-edge:...:amd64"
+        )
 
         jq -cn '{"spread-task": $ARGS.positional}' --args "${TASKS[@]}" | awk '{ print "matrix=" $0 }' >> "$GITHUB_OUTPUT"
 

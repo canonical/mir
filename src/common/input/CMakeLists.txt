@@ -17,4 +17,5 @@ target_include_directories(mircommoninput
 target_link_libraries(mircommoninput
   PUBLIC
     mircore
+    PkgConfig::XKBCOMMON
 )
