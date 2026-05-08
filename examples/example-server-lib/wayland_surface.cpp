@@ -21,10 +21,13 @@ namespace geom = mir::geometry;
 // If building against newer Wayland protocol definitions we may miss trailing fields
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wmissing-field-initializers"
-wl_shell_surface_listener const WaylandSurface::shell_surface_listener {
-    handle_ping,
-    handle_configure,
-    [](auto, auto){}  // popup_done
+xdg_surface_listener const WaylandSurface::xdg_surface_listener_ {
+    handle_surface_configure,
+};
+
+xdg_toplevel_listener const WaylandSurface::xdg_toplevel_listener_ {
+    handle_toplevel_configure,
+    [](auto...){},  // close
 };
 #pragma GCC diagnostic pop
 
@@ -33,10 +36,15 @@ mir::geometry::Size const WaylandSurface::default_size{640, 480};
 WaylandSurface::WaylandSurface(WaylandApp const* app)
     : app_{app},
       surface_{wl_compositor_create_surface(app->compositor()), wl_surface_destroy},
-      shell_surface_{wl_shell_get_shell_surface(app->shell(), surface_), wl_shell_surface_destroy},
-      configured_size_{default_size}
+      xdg_surface_{xdg_wm_base_get_xdg_surface(app->xdg_wm_base(), surface_), xdg_surface_destroy},
+      xdg_toplevel_{xdg_surface_get_toplevel(xdg_surface_), xdg_toplevel_destroy},
+      configured_size_{default_size},
+      pending_size_{default_size}
 {
-    wl_shell_surface_add_listener(shell_surface_, &shell_surface_listener, this);
+    xdg_surface_add_listener(xdg_surface_, &xdg_surface_listener_, this);
+    xdg_toplevel_add_listener(xdg_toplevel_, &xdg_toplevel_listener_, this);
+    // Callers must call set_fullscreen() (or other configuration) and then
+    // commit() + roundtrip() to trigger the initial xdg_surface.configure event.
 }
 
 void WaylandSurface::attach_buffer(wl_buffer* buffer, int scale)
@@ -47,6 +55,10 @@ void WaylandSurface::attach_buffer(wl_buffer* buffer, int scale)
         buffer_scale = scale;
     }
     wl_surface_attach(surface_, buffer, 0, 0);
+    if (wl_surface_get_version(surface_) >= WL_SURFACE_DAMAGE_BUFFER_SINCE_VERSION)
+        wl_surface_damage_buffer(surface_, 0, 0, INT32_MAX, INT32_MAX);
+    else
+        wl_surface_damage(surface_, 0, 0, INT32_MAX, INT32_MAX);
 }
 
 void WaylandSurface::commit() const
@@ -56,11 +68,7 @@ void WaylandSurface::commit() const
 
 void WaylandSurface::set_fullscreen(wl_output* output)
 {
-    wl_shell_surface_set_fullscreen(
-        shell_surface_,
-        WL_SHELL_SURFACE_FULLSCREEN_METHOD_DEFAULT,
-        0,
-        output);
+    xdg_toplevel_set_fullscreen(xdg_toplevel_, output);
 }
 
 void WaylandSurface::add_frame_callback(std::function<void()>&& func)
@@ -68,28 +76,24 @@ void WaylandSurface::add_frame_callback(std::function<void()>&& func)
     WaylandCallback::create(wl_surface_frame(surface_), std::move(func));
 }
 
-void WaylandSurface::handle_ping(void* data, struct wl_shell_surface*, uint32_t serial)
+void WaylandSurface::handle_surface_configure(void* data, xdg_surface* xdg_surface, uint32_t serial)
 {
     auto const self = static_cast<WaylandSurface*>(data);
-    wl_shell_surface_pong(self->shell_surface_, serial);
-}
+    xdg_surface_ack_configure(xdg_surface, serial);
 
-void WaylandSurface::handle_configure(void* data, wl_shell_surface*, uint32_t /*edges*/, int32_t w, int32_t h)
-{
-    auto const self = static_cast<WaylandSurface*>(data);
-    geom::Width width{w};
-    geom::Height height{h};
     bool changed{false};
 
-    if (width > geom::Width{} && width != self->configured_size_.width)
+    if (self->pending_size_.width > geom::Width{} &&
+        self->pending_size_.width != self->configured_size_.width)
     {
-        self->configured_size_.width = geom::Width{width};
+        self->configured_size_.width = self->pending_size_.width;
         changed = true;
     }
 
-    if (height > geom::Height{} && height != self->configured_size_.height)
+    if (self->pending_size_.height > geom::Height{} &&
+        self->pending_size_.height != self->configured_size_.height)
     {
-        self->configured_size_.height = geom::Height{height};
+        self->configured_size_.height = self->pending_size_.height;
         changed = true;
     }
 
@@ -97,4 +101,20 @@ void WaylandSurface::handle_configure(void* data, wl_shell_surface*, uint32_t /*
     {
         self->configured();
     }
+}
+
+void WaylandSurface::handle_toplevel_configure(
+    void* data,
+    xdg_toplevel* /*toplevel*/,
+    int32_t width,
+    int32_t height,
+    wl_array* /*states*/)
+{
+    auto const self = static_cast<WaylandSurface*>(data);
+
+    if (width > 0)
+        self->pending_size_.width = geom::Width{width};
+
+    if (height > 0)
+        self->pending_size_.height = geom::Height{height};
 }

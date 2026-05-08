@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_WAYLAND_SURFACE_H
-#define MIRAL_WAYLAND_SURFACE_H
+#ifndef EXAMPLE_SERVER_LIB_WAYLAND_SURFACE_H
+#define EXAMPLE_SERVER_LIB_WAYLAND_SURFACE_H
 
 #include "wayland_app.h"
 
@@ -44,23 +44,26 @@ protected:
     virtual void configured() {};
 
 private:
-    static void handle_ping(void* data, struct wl_shell_surface* shell_surface, uint32_t serial);
-    static void handle_configure(
+    static void handle_surface_configure(void* data, xdg_surface* xdg_surface, uint32_t serial);
+    static void handle_toplevel_configure(
         void* data,
-        wl_shell_surface* shell_surface,
-        uint32_t edges,
+        xdg_toplevel* toplevel,
         int32_t width,
-        int32_t height);
+        int32_t height,
+        wl_array* states);
 
-    static wl_shell_surface_listener const shell_surface_listener;
+    static xdg_surface_listener const xdg_surface_listener_;
+    static xdg_toplevel_listener const xdg_toplevel_listener_;
     static mir::geometry::Size const default_size;
 
     WaylandApp const* const app_;
     WaylandObject<wl_surface> const surface_;
-    WaylandObject<wl_shell_surface> const shell_surface_;
+    WaylandObject<xdg_surface> const xdg_surface_;
+    WaylandObject<xdg_toplevel> const xdg_toplevel_;
     mir::geometry::Size configured_size_;
+    mir::geometry::Size pending_size_;
     int buffer_scale{1};
 };
 
 
-#endif // MIRAL_WAYLAND_SURFACE_H
+#endif // EXAMPLE_SERVER_LIB_WAYLAND_SURFACE_H
