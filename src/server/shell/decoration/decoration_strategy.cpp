@@ -606,7 +606,7 @@ void RendererStrategy::Text::Impl::render_glyph(
 
     geom::Displacement const glyph_offset = as_displacement(top_left);
 
-    unsigned char* const color_pixels = (unsigned char *)&color;
+    unsigned char* const color_pixels = reinterpret_cast<unsigned char *>(&color);
     unsigned char const color_alpha = color_pixels[3];
 
     for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
@@ -619,7 +619,7 @@ void RendererStrategy::Text::Impl::render_glyph(
         {
             geom::X const glyph_x = buffer_x - glyph_offset.dx;
             unsigned char const glyph_alpha = (static_cast<int>(glyph_row[glyph_x.as_int()]) * color_alpha) / 255;
-            unsigned char* const buffer_pixels = (unsigned char *)(buffer_row + buffer_x.as_int());
+            unsigned char* const buffer_pixels = reinterpret_cast<unsigned char *>(buffer_row + buffer_x.as_int());
             for (int i = 0; i < 3; i++)
             {
                 // Blend color with the previous buffer color based on the glyph's alpha
