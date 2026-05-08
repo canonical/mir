@@ -352,13 +352,12 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
         auto const new_pixel_size = pending_toplevel_size.value();
         pending_toplevel_size.reset();
 
-        bool const size_is_changed = !has_initialized || output_size != new_pixel_size;
-
         // logical_size is the host's window logical size (from toplevel_configure).
         // output_size is the physical pixel buffer size rendered into by the GL renderer.
         // dcout.custom_logical_size overrides the logical area for surface placement; it must
         // match the logical window size so that nested clients see the correct output geometry.
         // view_area() returns output_size (pixel coordinates) for the GL renderer.
+        bool const size_is_changed = !has_initialized || output_size != new_pixel_size;
         output_size = new_pixel_size;
         dcout.custom_logical_size = logical_size;
         dcout.scale = host_scale;
@@ -368,7 +367,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
             wp_viewport_set_destination(viewport, logical_size.width.as_int(), logical_size.height.as_int());
         }
 
-        if (!has_initialized || size_is_changed)
+        if (size_is_changed)
         {
             has_initialized = true;
             {
