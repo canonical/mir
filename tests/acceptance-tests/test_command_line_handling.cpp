@@ -101,7 +101,11 @@ namespace ml = mir::logging;
 TEST_F(CommandLineHandling, invalid_log_levels_are_ignored)
 {
     char const* argv[] =
-     { "dummy-exe-name", "--log-level=base", "--log-level=not_a_tag=info", "--log-level=input=not_a_severity"};
+     { "dummy-exe-name",
+       "--log-level=base",
+       "--log-level=not_a_tag=info",
+       "--log-level=input=not_a_severity",
+       "--log-level=graphics=",};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
