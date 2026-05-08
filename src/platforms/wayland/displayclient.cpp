@@ -349,12 +349,19 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 
     if (pending_toplevel_size)
     {
-        bool const size_is_changed = !dcout.custom_logical_size ||
-            dcout.custom_logical_size.value() != pending_toplevel_size.value();
-        dcout.custom_logical_size = pending_toplevel_size.value();
-        dcout.scale = host_scale;
+        auto const new_pixel_size = pending_toplevel_size.value();
         pending_toplevel_size.reset();
-        output_size = dcout.extents().size;
+
+        bool const size_is_changed = !has_initialized || output_size != new_pixel_size;
+
+        // logical_size is the host's window logical size (from toplevel_configure).
+        // output_size is the physical pixel buffer size rendered into by the GL renderer.
+        // dcout.custom_logical_size overrides the logical area for surface placement; it must
+        // match the logical window size so that nested clients see the correct output geometry.
+        // view_area() returns output_size (pixel coordinates) for the GL renderer.
+        output_size = new_pixel_size;
+        dcout.custom_logical_size = logical_size;
+        dcout.scale = host_scale;
 
         if (viewport && logical_size.width.as_int() > 0 && logical_size.height.as_int() > 0)
         {
@@ -378,8 +385,8 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 
 void mgw::DisplayClient::Output::preferred_scale(uint32_t scale)
 {
-    // Only use fractional scale when viewporter is available
-    // (required for non-integer buffer-to-surface mapping)
+    // Only resize the EGL buffer when viewporter is available
+    // (viewporter is required for non-integer buffer-to-surface mapping)
     if (!viewport) return;
 
     float const new_scale = scale / fractional_scale_denominator;
@@ -389,37 +396,39 @@ void mgw::DisplayClient::Output::preferred_scale(uint32_t scale)
     host_scale = new_scale;
     dcout.scale = host_scale;
 
-    // Always update pending_toplevel_size if we have a logical size,
-    // whether or not we're initialized yet.
-    if (logical_size.width.as_int() > 0 && logical_size.height.as_int() > 0)
+    if (logical_size.width.as_int() <= 0 || logical_size.height.as_int() <= 0)
+        return;
+
+    auto const new_pixel_size = geometry::Size{
+        static_cast<int>(std::round(host_scale * logical_size.width.as_int())),
+        static_cast<int>(std::round(host_scale * logical_size.height.as_int()))};
+
+    if (!has_initialized)
     {
-        pending_toplevel_size = geometry::Size{
-            static_cast<int>(std::round(host_scale * logical_size.width.as_int())),
-            static_cast<int>(std::round(host_scale * logical_size.height.as_int()))};
+        // surface_configure hasn't fired yet; update pending_toplevel_size so
+        // it picks up the correct pixel size when it does.
+        pending_toplevel_size = new_pixel_size;
+        return;
     }
 
-    if (has_initialized && pending_toplevel_size)
+    bool const size_is_changed = (new_pixel_size != output_size);
+    output_size = new_pixel_size;
+    // dcout.custom_logical_size stays as logical_size (set in surface_configure);
+    // only the pixel buffer size changes with the scale.
+
+    wp_viewport_set_destination(viewport, logical_size.width.as_int(), logical_size.height.as_int());
+
+    if (size_is_changed)
     {
-        bool const size_is_changed = !dcout.custom_logical_size ||
-            dcout.custom_logical_size.value() != pending_toplevel_size.value();
-        dcout.custom_logical_size = pending_toplevel_size.value();
-        pending_toplevel_size.reset();
-        output_size = dcout.extents().size;
-
-        wp_viewport_set_destination(viewport, logical_size.width.as_int(), logical_size.height.as_int());
-
-        if (size_is_changed)
-        {
-            {
-                std::lock_guard lock{mutex};
-                provider = std::make_shared<WlDisplayAllocator>(
-                    owner_->provider->get_egl_display(),
-                    surface,
-                    output_size);
-            }
-            owner_->on_display_config_changed();
-        }
+        std::lock_guard lock{mutex};
+        provider = std::make_shared<WlDisplayAllocator>(
+            owner_->provider->get_egl_display(),
+            surface,
+            output_size);
     }
+
+    // Always notify on scale change so nested clients receive the updated wl_output.scale.
+    owner_->on_display_config_changed();
 }
 
 void mgw::DisplayClient::Output::for_each_display_sink(std::function<void(DisplaySink&)> const& f)
@@ -498,7 +507,11 @@ auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milli
 
 auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
 {
-    return dcout.extents();
+    // output_size is the physical pixel buffer size; this is what the GL renderer needs
+    // for glViewport.  dcout.extents() returns the logical output area (used by the
+    // nested compositor for surface placement), which differs from the pixel size when
+    // the host scale is not 1.
+    return {dcout.top_left, output_size};
 }
 
 bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
