@@ -75,7 +75,8 @@ inline auto validate_dnd_actions(uint32_t dnd_actions) -> bool {
 inline auto validate_dnd_action(uint32_t dnd_action) -> bool {
     return dnd_action == mir::wayland::DataDeviceManager::DndAction::none ||
            dnd_action == mir::wayland::DataDeviceManager::DndAction::copy ||
-           dnd_action == mir::wayland::DataDeviceManager::DndAction::move;
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::move ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::ask;
 }
 }
 }
