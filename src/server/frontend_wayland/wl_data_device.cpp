@@ -113,6 +113,13 @@ public:
                 Error::invalid_action,
                 "Invalid DnD action 0x%x", preferred_action);
         }
+        if ((dnd_actions & preferred_action) == 0)
+        {
+            throw mw::ProtocolError(
+                resource,
+                Error::invalid_action,
+                "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions);
+        }
 
         const auto action = source->offer_set_actions(dnd_actions, preferred_action);
 
