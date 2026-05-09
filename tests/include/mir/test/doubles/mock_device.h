@@ -25,6 +25,8 @@
 #include <mir/input/mir_touchscreen_config.h>
 #include <mir/optional_value.h>
 
+#include <gmock/gmock.h>
+
 #include <string>
 
 namespace mir
