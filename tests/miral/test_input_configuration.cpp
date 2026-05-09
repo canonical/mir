@@ -15,11 +15,20 @@
  */
 
 #include <mir_toolkit/mir_input_device_types.h>
+#include <miral/test_server.h>
 #include <miral/input_configuration.h>
+
+#include "basic_store.h"
+#include "input_device_config.h"
+
+#include <mir/input/device_capability.h>
+#include <mir/input/mir_touchpad_config.h>
+#include <mir/test/doubles/mock_device.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <filesystem>
 #include <functional>
 #include <span>
 
@@ -28,6 +37,9 @@ using namespace testing;
 using Mouse = miral::InputConfiguration::Mouse;
 using Keyboard = miral::InputConfiguration::Keyboard;
 using Touchpad = miral::InputConfiguration::Touchpad;
+namespace mi = mir::input;
+namespace mlc = miral::live_config;
+namespace mtd = mir::test::doubles;
 
 template <typename T> using PropertySetter = std::function<void(T&)>;
 
@@ -525,6 +537,55 @@ TEST_F(TestTouchpadInputConfiguration, middle_mouse_button_emulation_returns_exp
     auto const value = true;
     touch_config.middle_mouse_button_emulation(value);
     EXPECT_THAT(touch_config.middle_mouse_button_emulation(), Eq(value));
+}
+
+TEST_F(TestTouchpadInputConfiguration, apply_to_sets_disable_with_external_mouse_independently)
+{
+    mtd::MockDevice device{
+        MirInputDeviceId{1},
+        mi::DeviceCapability::touchpad | mi::DeviceCapability::pointer,
+        "touchpad",
+        "touchpad-1"};
+
+    miral::TouchpadInputConfiguration config;
+    config.disable_while_typing = false;
+    config.disable_with_external_mouse = true;
+
+    EXPECT_CALL(
+        device,
+        apply_touchpad_configuration(
+            Truly(
+                [](MirTouchpadConfig const& applied)
+                {
+                    return !applied.disable_while_typing() && applied.disable_with_external_mouse();
+                })));
+
+    config.apply_to(device);
+}
+
+struct TestLiveInputConfigurationAtStartup : miral::TestServer
+{
+    TestLiveInputConfigurationAtStartup()
+    {
+        start_server_in_setup = false;
+    }
+
+    mlc::BasicStore config_store;
+    miral::InputConfiguration input_config{config_store};
+    std::filesystem::path const config_path{"/tmp/test-input-configuration.settings"};
+};
+
+TEST_F(TestLiveInputConfigurationAtStartup, touchpad_live_config_is_applied_when_server_starts)
+{
+    config_store.do_transaction([&]
+    {
+        config_store.update_key({"touchpad", "tap_to_click"}, "true", config_path);
+    });
+
+    add_server_init(input_config);
+    start_server();
+
+    EXPECT_THAT(input_config.touchpad().tap_to_click(), Eq(std::optional<bool>{true}));
 }
 
 struct TestTouchpadMergeOneProperty : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>
