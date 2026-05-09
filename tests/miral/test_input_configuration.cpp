@@ -28,8 +28,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <chrono>
 #include <filesystem>
 #include <functional>
+#include <string>
 #include <span>
 
 using namespace testing;
@@ -572,11 +574,15 @@ struct TestLiveInputConfigurationAtStartup : miral::TestServer
 
     mlc::BasicStore config_store;
     miral::InputConfiguration input_config{config_store};
-    std::filesystem::path const config_path{"/tmp/test-input-configuration.settings"};
 };
 
 TEST_F(TestLiveInputConfigurationAtStartup, touchpad_live_config_is_applied_when_server_starts)
 {
+    auto const config_path = std::filesystem::temp_directory_path() /
+        ("mir-test-input-configuration-" +
+         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
+         ".settings");
+
     config_store.do_transaction([&]
     {
         config_store.update_key({"touchpad", "tap_to_click"}, "true", config_path);
