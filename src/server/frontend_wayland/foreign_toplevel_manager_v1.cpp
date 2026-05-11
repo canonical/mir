@@ -18,6 +18,7 @@
 
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
+#include "foreign_toplevel_handle_creation.h"
 
 #include <mir/constexpr_utils.h>
 #include <mir/executor.h>
@@ -134,6 +135,7 @@ private:
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int) override;
     void renamed(scene::Surface const*, std::string const& name) override;
     void application_id_set_to(scene::Surface const*, std::string const& application_id) override;
+    void depth_layer_set_to(scene::Surface const*, MirDepthLayer) override;
     ///@}
 
     wayland::Weak<ForeignToplevelManagerV1> const manager;
@@ -351,39 +353,12 @@ void mf::ForeignSurfaceObserver::with_toplevel_handle(
 
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::lock_guard<std::mutex>& lock)
 {
-    bool should_have_handle = true;
+    bool should_have_handle = false;
 
     auto const surface = weak_surface.lock();
     if (surface)
     {
-        switch(surface->state())
-        {
-        case mir_window_state_attached:
-            should_have_handle = false;
-            break;
-
-        default:
-            break;
-        }
-
-        switch (surface->type())
-        {
-        case mir_window_type_normal:
-        case mir_window_type_utility:
-        case mir_window_type_freestyle:
-            break;
-
-        default:
-            should_have_handle = false;
-            break;
-        }
-
-        if (!surface->session().lock())
-            should_have_handle = false;
-    }
-    else
-    {
-        should_have_handle = false;
+        should_have_handle = should_create_foreign_toplevel_handle(*surface);
     }
 
     bool const currently_have_handle{handle};
@@ -397,8 +372,8 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
 
             handle = std::make_shared<mw::Weak<ForeignToplevelHandleV1>>();
 
-            std::string name = surface->name();
-            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
+            auto const name = surface->name();
+            auto const app_id = desktop_file_manager->resolve_app_id(*surface);
             auto const focused = surface->focus_state();
             auto const state = surface->state_tracker();
 
@@ -484,20 +459,29 @@ void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& 
 
 void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const* surface,
-    std::string const& application_id)
+    std::string const& /*application_id*/)
 {
     std::lock_guard lock{mutex};
 
-    std::string id = application_id;
+    bool const toplevel_handle_existed_before{handle};
+    create_or_close_toplevel_handle_as_needed(lock);
+
+    if (!toplevel_handle_existed_before)
+    {
+        return;
+    }
+
     with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
-            auto app_id = desktop_file_manager->resolve_app_id(surface);
-            if (!app_id.empty())
-            {
-                handle.send_app_id_event(app_id);
-                handle.send_done_event();
-            }
+            handle.send_app_id_event(desktop_file_manager->resolve_app_id(*surface));
+            handle.send_done_event();
         });
+}
+
+void mf::ForeignSurfaceObserver::depth_layer_set_to(scene::Surface const*, MirDepthLayer)
+{
+    std::lock_guard lock{mutex};
+    create_or_close_toplevel_handle_as_needed(lock);
 }
 
 // GDesktopFileCache
