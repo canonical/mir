@@ -358,7 +358,8 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
     auto const surface = weak_surface.lock();
     if (surface)
     {
-        app_id = foreign_toplevel_app_id(surface->application_id(), desktop_file_manager->resolve_app_id(surface.get()));
+        auto const application_id = surface->application_id();
+        app_id = application_id.empty() ? desktop_file_manager->resolve_app_id(surface.get()) : application_id;
         should_have_handle = should_create_foreign_toplevel_handle(
             surface->type(),
             static_cast<bool>(surface->session().lock()),
@@ -474,7 +475,7 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
         return;
     }
 
-    auto app_id = foreign_toplevel_app_id(application_id, desktop_file_manager->resolve_app_id(surface));
+    auto app_id = application_id.empty() ? desktop_file_manager->resolve_app_id(surface) : application_id;
     with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
             if (!app_id.empty())
