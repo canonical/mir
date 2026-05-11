@@ -25,6 +25,8 @@
 #include <mir/log.h>
 #include <mir/geometry/displacement.h>
 #include <mutex>
+#include <queue>
+#include <unordered_set>
 #include <sys/eventfd.h>
 #include <poll.h>
 #include <string>
@@ -32,18 +34,14 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <codecvt>
-#include <filesystem>
 #include <locale>
 
 #include "layer_shell_wayland_surface.h"
-#include <mir/server.h>
-#include <mir/synchronised.h>
 #include <miral/append_keyboard_event_filter.h>
 #include <miral/internal_client.h>
 #include <miral/wayland_extensions.h>
 
 namespace geom = mir::geometry;
-namespace msh = mir::shell;
 
 namespace
 {
@@ -52,11 +50,15 @@ struct ToplevelInfo
     zwlr_foreign_toplevel_handle_v1* handle;
     std::string app_id;
     std::string window_title;
+    /// True until the first app_id or title event is received from the compositor.
+    /// Ghost entries (done fired before any identity) are tracked but excluded from
+    /// display and navigation — they are a Mir bug: https://github.com/canonical/mir/issues/4944
+    bool ghost = true;
 };
 
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 {
-    preferred_codecvt() : std::codecvt_byname<wchar_t, char, std::mbstate_t>("C") {}
+    preferred_codecvt() : std::codecvt_byname<wchar_t, char, std::mbstate_t>("") {}
     ~preferred_codecvt() override = default;
 
     static std::locale::id id;
@@ -79,7 +81,7 @@ struct ToplevelInfoPrinter
 
         if (FT_New_Face(lib, mir::default_font().c_str(), 0, &face))
         {
-            mir::log_error("Failed to load find: %s", mir::default_font().c_str());
+            mir::log_error("ApplicationSwitcher: Failed to load font: %s", mir::default_font().c_str());
             FT_Done_FreeType(lib);
             return;
         }
@@ -111,7 +113,7 @@ struct ToplevelInfoPrinter
         auto const region_size = buffer->size();
         FT_Set_Pixel_Sizes(face, 20, 0);
 
-        const auto [width, height, line_height, lines, selected_line_index] = compute_text_metrics(info_list, selector_state, selected_window_index);
+        auto const& [width, height, line_height, lines, is_app_header, selected_line_index] = compute_text_metrics(info_list, selector_state, selected_window_index);
         auto base_pos_y = 0.5 * (region_size.height - height);
         static constexpr int region_pixel_bytes = 4;
         auto const region_buffer = static_cast<unsigned char*>(buffer->data());
@@ -120,8 +122,21 @@ struct ToplevelInfoPrinter
         {
             auto const& line = lines[i];
             auto base_pos_x = 0.5 * (region_size.width - width);
-            auto line_text = converter.from_bytes(line);
-            Color color = selected_line_index == i ? yellow : white;
+            std::wstring const line_text = [&]
+            {
+                try
+                {
+                    return converter.from_bytes(line);
+                }
+                catch (std::exception const&)
+                {
+                    std::wstring ascii;
+                    for (auto c : line) if (static_cast<unsigned char>(c) < 128) ascii += static_cast<wchar_t>(c);
+                    return ascii;
+                }
+            }();
+            Color color = selected_line_index == i ? yellow :
+                is_app_header[i] ? grey   : white;
 
             for (auto const ch : line_text)
             {
@@ -146,6 +161,7 @@ private:
         geom::Height height{};
         geom::DeltaY line_height{};
         std::vector<std::string> lines;
+        std::vector<bool> is_app_header;
         std::optional<int> selected_index;
     };
 
@@ -155,6 +171,7 @@ private:
 
     static constexpr Color white{255, 255, 255, 255};
     static constexpr Color yellow{255, 255, 0, 255};
+    static constexpr Color grey{128, 128, 128, 255};
 
     TextMetrics compute_text_metrics(
         std::vector<ToplevelInfo> const& info_list,
@@ -167,10 +184,12 @@ private:
             selected_top_level = info_list[*selected_window_index];
 
         // First, sort the information such that application ids are displayed in order alongside
-        // their associated list of windows.
+        // their associated list of windows. Ghost entries (no app_id or title) are excluded.
         std::vector<std::pair<std::string, std::vector<ToplevelInfo>>> list_of_app_id_to_window_mapping;
         for (auto const& info : info_list)
         {
+            if (info.ghost)
+                continue;
             auto const& app_id = info.app_id;
             bool found = false;
             for (auto& mapping : list_of_app_id_to_window_mapping)
@@ -187,10 +206,23 @@ private:
                 list_of_app_id_to_window_mapping.push_back({app_id, {info}});
         }
 
-        auto const add_text = [&](std::string const& text)
+        auto const add_text = [&](std::string const& text, bool is_header)
         {
             metrics.lines.push_back(text);
-            auto const line_text = converter.from_bytes(text);
+            metrics.is_app_header.push_back(is_header);
+            std::wstring const line_text = [&]
+            {
+                try
+                {
+                    return converter.from_bytes(text);
+                }
+                catch (std::exception const&)
+                {
+                    std::wstring ascii;
+                    for (auto c : text) if (static_cast<unsigned char>(c) < 128) ascii += static_cast<wchar_t>(c);
+                    return ascii;
+                }
+            }();
             geom::Width line_width{};
 
             for (auto const ch : line_text)
@@ -210,16 +242,25 @@ private:
         // Using the sorted list, we then create the displayed list.
         for (const auto& [app_id, window_info_list] : list_of_app_id_to_window_mapping)
         {
-            add_text(app_id);
-            if (selected_top_level && selector_state == SelectorState::Applications)
-            {
-                if (selected_top_level->app_id == app_id)
-                    metrics.selected_index = metrics.lines.size() - 1;
-            }
+            add_text(app_id, true);
+            // App-id rows are never selected — the focus always sits on a window title.
+
+            // In Applications mode the first window title of the selected app is highlighted.
+            bool const highlight_first_window =
+                selector_state == SelectorState::Applications
+                && selected_top_level
+                && selected_top_level->app_id == app_id;
+            bool first_window = true;
 
             for (auto const& window_info : window_info_list)
             {
-                add_text("    " + window_info.window_title);
+                add_text("    " + window_info.window_title, /*is_header=*/false);
+                if (highlight_first_window && first_window)
+                {
+                    metrics.selected_index = static_cast<int>(metrics.lines.size()) - 1;
+                    first_window = false;
+                }
+
                 if (selected_top_level && selector_state == SelectorState::Windows)
                 {
                     if (selected_top_level->handle == window_info.handle)
@@ -326,11 +367,13 @@ public:
             }
         }
         toplevels_in_focus_order.clear();
+        for (auto* handle : ghost_handles)
+            zwlr_foreign_toplevel_handle_v1_destroy(handle);
+        ghost_handles.clear();
     }
 
     void add(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
-        std::lock_guard lock{mutex};
         toplevels_in_focus_order.push_back(ToplevelInfo{toplevel, "<unset>", "<unset>"});
         if (!tentative_focus_index)
             tentative_focus_index = 0;
@@ -345,24 +388,36 @@ public:
 
         if (it != toplevels_in_focus_order.end())
         {
+            if (tentative_focus_index)
+            {
+                auto const focused_idx = static_cast<size_t>(std::distance(toplevels_in_focus_order.begin(), it));
+                if (focused_idx > 0 && *tentative_focus_index < focused_idx)
+                    (*tentative_focus_index)++;
+                else if (focused_idx > 0 && *tentative_focus_index == focused_idx)
+                    tentative_focus_index = 0;
+            }
+
             auto const element = *it;
             toplevels_in_focus_order.erase(it);
             toplevels_in_focus_order.insert(toplevels_in_focus_order.begin(), element);
         }
         else
         {
-            toplevels_in_focus_order.insert(toplevels_in_focus_order.begin(), ToplevelInfo{toplevel, "<unset>", "<unset>"});
+            mir::log_info("ApplicationSwitcher: focus() called for unknown toplevel handle — ignoring");
         }
     }
 
     void confirm()
     {
-        std::lock_guard lock{mutex};
         if (!is_running)
             return;
 
         if (tentative_focus_index)
-            zwlr_foreign_toplevel_handle_v1_activate(toplevels_in_focus_order[*tentative_focus_index].handle, seat());
+        {
+            auto const& info = toplevels_in_focus_order[*tentative_focus_index];
+            if (!info.ghost)
+                zwlr_foreign_toplevel_handle_v1_activate(info.handle, seat());
+        }
         is_running = false;
         tentative_focus_index = std::nullopt;
         draw_internal();
@@ -370,7 +425,6 @@ public:
 
     void cancel()
     {
-        std::lock_guard lock{mutex};
         is_running = false;
         tentative_focus_index = std::nullopt;
         draw_internal();
@@ -378,7 +432,6 @@ public:
 
     void next_app()
     {
-        std::lock_guard lock{mutex};
         if (start_if_not_running(SelectorState::Applications))
             return;
 
@@ -386,6 +439,9 @@ public:
             return;
 
         // Find the window with the next unique application id.
+        // Guaranteed to terminate: if every entry shares the same app_id (or all are
+        // ghosts) the index wraps all the way back to its starting position, which passes
+        // is_first_toplevel_with_app_id for the original entry.
         do
         {
             (*tentative_focus_index)++;
@@ -399,7 +455,6 @@ public:
 
     void prev_app()
     {
-        std::lock_guard lock{mutex};
         if (start_if_not_running(SelectorState::Applications))
             return;
 
@@ -407,6 +462,7 @@ public:
             return;
 
         // Find the window with the next unique application id in reverse.
+        // Guaranteed to terminate for the same reason as next_app().
         do
         {
             if (*tentative_focus_index == 0)
@@ -421,7 +477,6 @@ public:
 
     void next_window()
     {
-        std::lock_guard lock{mutex};
         if (start_if_not_running(SelectorState::Windows))
             return;
 
@@ -443,7 +498,6 @@ public:
 
     void prev_window()
     {
-        std::lock_guard lock{mutex};
         if (start_if_not_running(SelectorState::Windows))
             return;
 
@@ -464,12 +518,6 @@ public:
         draw_internal();
     }
 
-    void draw()
-    {
-        std::lock_guard lock{mutex};
-        draw_internal();
-    }
-
 protected:
     void new_global(
         wl_registry* registry,
@@ -479,7 +527,7 @@ protected:
     {
         if (std::string_view(interface) == "zwlr_foreign_toplevel_manager_v1")
         {
-            toplevel_manager = miral::tk::WaylandObject{
+            toplevel_manager = miral::tk::WaylandObject<zwlr_foreign_toplevel_manager_v1>{
                 static_cast<zwlr_foreign_toplevel_manager_v1*>(
                     wl_registry_bind(registry, id, &zwlr_foreign_toplevel_manager_v1_interface, 2)),
                 zwlr_foreign_toplevel_manager_v1_destroy
@@ -489,10 +537,35 @@ protected:
     }
 
 private:
+    /// Erase the entry pointed to by `it` from `toplevels_in_focus_order` and adjust
+    /// `tentative_focus_index` accordingly.  Does NOT destroy the Wayland handle.
+    void remove_from_list(std::vector<ToplevelInfo>::iterator it)
+    {
+        auto const erased_index = static_cast<size_t>(std::distance(toplevels_in_focus_order.begin(), it));
+        toplevels_in_focus_order.erase(it);
+
+        if (toplevels_in_focus_order.empty())
+        {
+            tentative_focus_index = std::nullopt;
+        }
+        else if (tentative_focus_index)
+        {
+            if (*tentative_focus_index > erased_index)
+                (*tentative_focus_index)--;
+            if (*tentative_focus_index >= toplevels_in_focus_order.size())
+                tentative_focus_index = toplevels_in_focus_order.size() - 1;
+        }
+    }
+
     bool is_first_toplevel_with_app_id(ToplevelInfo const& info) const
     {
+        if (info.ghost)
+            return false;  // ghosts are never navigable
+
         for (auto const& other : toplevels_in_focus_order)
         {
+            if (other.ghost)
+                continue;  // skip ghosts when scanning for duplicates
             if (other.handle == info.handle)
                 return true;
             if (other.app_id == info.app_id)
@@ -520,7 +593,8 @@ private:
 
     void app_id(zwlr_foreign_toplevel_handle_v1* toplevel, char const* app_id)
     {
-        std::lock_guard lock{mutex};
+        if (ghost_handles.count(toplevel))
+            return;
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
         {
             return element.handle == toplevel;
@@ -528,12 +602,19 @@ private:
         if (it != toplevels_in_focus_order.end())
         {
             it->app_id = app_id;
+            it->ghost = false;
+        }
+        else
+        {
+            mir::log_info("ApplicationSwitcher: app_id() event for unknown handle %p (app_id='%s') — missed add?",
+                static_cast<void*>(toplevel), app_id);
         }
     }
 
     void window_title(zwlr_foreign_toplevel_handle_v1* toplevel, char const* window_title)
     {
-        std::lock_guard lock{mutex};
+        if (ghost_handles.count(toplevel))
+            return;
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
         {
             return element.handle == toplevel;
@@ -542,10 +623,18 @@ private:
         {
             it->window_title = window_title;
         }
+        else
+        {
+            mir::log_info("ApplicationSwitcher: window_title() event for unknown handle %p (title='%s') — missed add?",
+                static_cast<void*>(toplevel), window_title);
+        }
     }
 
     void state(zwlr_foreign_toplevel_handle_v1* handle, wl_array* states)
     {
+        if (ghost_handles.count(handle))
+            return;
+
         auto const* states_casted = static_cast<zwlr_foreign_toplevel_handle_v1_state*>(states->data);
         for (size_t i = 0; i < states->size / sizeof(zwlr_foreign_toplevel_handle_v1_state); i++)
         {
@@ -559,19 +648,25 @@ private:
 
     void remove(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
-        std::lock_guard lock{mutex};
+        if (ghost_handles.count(toplevel))
+        {
+            ghost_handles.erase(toplevel);
+            zwlr_foreign_toplevel_handle_v1_destroy(toplevel);
+            return;
+        }
+
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
         {
             return element.handle == toplevel;
         });
         if (it != toplevels_in_focus_order.end())
         {
-            toplevels_in_focus_order.erase(it);
-
-            if (toplevels_in_focus_order.empty())
-                tentative_focus_index = std::nullopt;
-            else if (!tentative_focus_index || *tentative_focus_index == toplevels_in_focus_order.size())
-                tentative_focus_index = toplevels_in_focus_order.size() - 1;
+            remove_from_list(it);
+        }
+        else
+        {
+            mir::log_info("ApplicationSwitcher: remove() closed event for unknown toplevel handle %p — already removed?",
+                static_cast<void*>(toplevel));
         }
         zwlr_foreign_toplevel_handle_v1_destroy(toplevel);
     }
@@ -582,7 +677,29 @@ private:
         .output_enter = [](void*, auto*, wl_output*) {},
         .output_leave = [](void*, auto*, wl_output*) {},
         .state = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->state(args...); },
-        .done = [](void*, auto*) {},
+        .done = [](void* data, zwlr_foreign_toplevel_handle_v1* handle)
+        {
+            auto const self = static_cast<WaylandApp*>(data);
+
+            if (self->ghost_handles.count(handle))
+                return;
+
+            auto const it = std::ranges::find_if(self->toplevels_in_focus_order, [handle](auto const& element)
+            {
+                return element.handle == handle;
+            });
+
+            if (it == self->toplevels_in_focus_order.end())
+                return;
+
+            if (it->ghost)
+            {
+                mir::log_info("ApplicationSwitcher: compositor sent done for toplevel with no app_id or title "
+                    "(handle=%p) — likely a Mir bug. Hiding from switcher.", static_cast<void*>(handle));
+                self->remove_from_list(it);
+                self->ghost_handles.insert(handle);
+            }
+        },
         .closed = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->remove(args...); },
     };
 
@@ -595,8 +712,20 @@ private:
             return false;
 
         is_running = true;
-        tentative_focus_index = toplevels_in_focus_order.empty() ? std::optional<size_t>() : 0;
         selector_state = next_state;
+
+        // Find the first non-ghost entry to select initially.
+        // Ghost entries (no app_id and no title received from compositor) are hidden from the UI.
+        tentative_focus_index = std::nullopt;
+        for (size_t i = 0; i < toplevels_in_focus_order.size(); i++)
+        {
+            if (!toplevels_in_focus_order[i].ghost)
+            {
+                tentative_focus_index = i;
+                break;
+            }
+        }
+
         draw_internal();
         return true;
     }
@@ -605,9 +734,13 @@ private:
     {
         if (!is_running)
         {
-            surface_->attach_buffer(nullptr, 1);
-            surface_->commit();
-            wl_display_flush(display());
+            if (surface_visible)
+            {
+                surface_->attach_buffer(nullptr, 1);
+                surface_->commit();
+                wl_display_flush(display());
+                surface_visible = false;
+            }
             return;
         }
 
@@ -615,6 +748,13 @@ private:
 
         auto const width = size.width.as_int();
         auto const height = size.height.as_int();
+
+        if (width <= 0 || height <= 0)
+        {
+            mir::log_info("ApplicationSwitcher: surface not yet configured (%dx%d) — deferring draw", width, height);
+            return;
+        }
+
         auto const stride = 4 * width;
         auto const buffer = shm_->get_buffer(geom::Size(width, height), geom::Stride(stride));
 
@@ -654,28 +794,35 @@ private:
 
         surface_->attach_buffer(buffer->use(), 1);
         surface_->commit();
+        surface_visible = true;
         wl_display_flush(display());
     }
 
-    std::mutex mutex;
     std::optional<miral::tk::WaylandObject<zwlr_foreign_toplevel_manager_v1>> toplevel_manager;
     std::shared_ptr<miral::tk::WaylandShmPool> shm_;
     std::shared_ptr<miral::tk::LayerShellWaylandSurface> surface_;
     ToplevelInfoPrinter printer;
     std::vector<ToplevelInfo> toplevels_in_focus_order;
+    /// Handles that were identified as Mir ghost toplevels (no app_id/title after done).
+    /// All subsequent events for these handles are silently dropped.
+    std::unordered_set<zwlr_foreign_toplevel_handle_v1*> ghost_handles;
     std::optional<size_t> tentative_focus_index;
     SelectorState selector_state = SelectorState::Applications;
     bool is_running = false;
+    bool surface_visible = false;
 };
 }
 
 class miral::ApplicationSwitcher::Self
 {
+    enum class Command { next_app, prev_app, next_window, prev_window, confirm, cancel };
 public:
-    Self() : shutdown_signal(eventfd(0, EFD_CLOEXEC))
+    Self() : shutdown_signal(eventfd(0, EFD_CLOEXEC)), command_signal(eventfd(0, EFD_CLOEXEC))
     {
         if (shutdown_signal == mir::Fd::invalid)
-            mir::log_error("Failed to create shutdown notifier");
+            mir::log_warning("ApplicationSwitcher: Failed to create shutdown notifier");
+        if (command_signal == mir::Fd::invalid)
+            mir::log_warning("ApplicationSwitcher: Failed to create command signal");
     }
 
     ~Self()
@@ -685,101 +832,136 @@ public:
 
     void run_client(wl_display* display)
     {
-        {
-            std::lock_guard lock{mutex};
-            app = std::make_shared<WaylandApp>();
-        }
+        app = std::make_shared<WaylandApp>();
         app->init(display);
 
         enum FdIndices {
             display_fd = 0,
-            shutdown,
+            command_fd,
+            shutdown_fd,
             indices
         };
 
         pollfd fds[indices];
         fds[display_fd] = {wl_display_get_fd(display), POLLIN, 0};
-        fds[shutdown] = {shutdown_signal, POLLIN, 0};
+        fds[command_fd] = {command_signal, POLLIN, 0};
+        fds[shutdown_fd] = {shutdown_signal, POLLIN, 0};
 
-        while (!(fds[shutdown].revents & (POLLIN | POLLERR)))
+        try
         {
+        while (!(fds[shutdown_fd].revents & (POLLIN | POLLERR)))
+        {
+            // Dispatch any events already in libwayland's queue (e.g. configure after
+            // a commit, buffer releases). We do NOT redraw here — any draw needed was
+            // already triggered by the command that caused the commit
             while (wl_display_prepare_read(display) != 0)
             {
                 if (wl_display_dispatch_pending(display) == -1)
-                    mir::log_error("Failed to dispatch Wayland events");
+                {
+                    mir::log_warning("ApplicationSwitcher: Failed to dispatch Wayland events (errno=%d)", errno);
+                    break;
+                }
             }
 
-            app->draw();
+            // Flush any outgoing requests (ack_configure, or a command-triggered draw).
+            if (wl_display_flush(display) == -1 && errno != EAGAIN)
+                mir::log_warning("ApplicationSwitcher: wl_display_flush failed (errno=%d)", errno);
 
             if (poll(fds, indices, -1) == -1)
-                mir::log_error("Failed to wait for Wayland events");
+            {
+                if (errno != EINTR)
+                    mir::log_warning("ApplicationSwitcher: Failed to wait for Wayland events (errno=%d)", errno);
+                wl_display_cancel_read(display);
+                continue;
+            }
 
             if (fds[display_fd].revents & (POLLIN | POLLERR))
             {
                 if (wl_display_read_events(display))
-                    mir::log_error("Failed to read Wayland events");
+                    mir::log_warning("ApplicationSwitcher: Failed to read Wayland events");
             }
             else
             {
                 wl_display_cancel_read(display);
             }
+
+            if (fds[command_fd].revents & (POLLIN | POLLERR))
+            {
+                eventfd_t val;
+                eventfd_read(command_signal, &val);
+                drain_commands();
+            }
+        }
+        }
+        catch (std::exception const& e)
+        {
+            mir::log_warning("ApplicationSwitcher: uncaught exception in Wayland thread: %s", e.what());
+        }
+        catch (...)
+        {
+            mir::log_warning("ApplicationSwitcher: unknown exception in Wayland thread");
         }
 
-        std::lock_guard lock{mutex};
         app = nullptr;
     }
 
-    void confirm()
-    {
-        std::lock_guard lock{mutex};
-        if (app)
-            app->confirm();
-    }
-
-    void cancel()
-    {
-        std::lock_guard lock{mutex};
-        if (app)
-            app->cancel();
-    }
+    void confirm()     { push_command(Command::confirm); }
+    void cancel()      { push_command(Command::cancel); }
+    void next_app()    { push_command(Command::next_app); }
+    void prev_app()    { push_command(Command::prev_app); }
+    void next_window() { push_command(Command::next_window); }
+    void prev_window() { push_command(Command::prev_window); }
 
     void stop() const
     {
         if (shutdown_signal != mir::Fd::invalid && eventfd_write(shutdown_signal, 1) == -1)
-            mir::log_error("Failed to notify internal decoration client to shutdown");
+            mir::log_warning("ApplicationSwitcher: Failed to send shutdown signal");
     }
 
-    void next_app()
+private:
+    void push_command(Command cmd)
     {
-        std::lock_guard lock{mutex};
-        if (app)
-            app->next_app();
+        {
+            std::lock_guard lock{command_mutex};
+            command_queue.push(cmd);
+        }
+        if (eventfd_write(command_signal, 1) == -1)
+            mir::log_warning("ApplicationSwitcher: Failed to signal command to Wayland thread");
     }
 
-    void prev_app()
+    /// Called on the Wayland thread — safe to call app methods directly.
+    void drain_commands()
     {
-        std::lock_guard lock{mutex};
-        if (app)
-            app->prev_app();
-    }
-
-    void next_window()
-    {
-        std::lock_guard lock{mutex};
-        if (app)
-            app->next_window();
-    }
-
-    void prev_window()
-    {
-        std::lock_guard lock{mutex};
-        if (app)
-            app->prev_window();
+        while (true)
+        {
+            Command cmd;
+            {
+                std::lock_guard lock{command_mutex};
+                if (command_queue.empty())
+                    break;
+                cmd = command_queue.front();
+                command_queue.pop();
+            }
+            if (!app) continue;
+            switch (cmd)
+            {
+            case Command::next_app:    app->next_app();    break;
+            case Command::prev_app:    app->prev_app();    break;
+            case Command::next_window: app->next_window(); break;
+            case Command::prev_window: app->prev_window(); break;
+            case Command::confirm:    app->confirm();     break;
+            case Command::cancel:     app->cancel();      break;
+            }
+        }
     }
 
 private:
     mir::Fd const shutdown_signal;
-    std::mutex mutex;
+    mir::Fd const command_signal;
+    std::mutex command_mutex;
+    std::queue<Command> command_queue;
+
+    // only accessed from the Wayland thread - no need for synchronization
     std::shared_ptr<WaylandApp> app;
 };
 
@@ -788,9 +970,7 @@ miral::ApplicationSwitcher::ApplicationSwitcher()
 {
 }
 
-miral::ApplicationSwitcher::~ApplicationSwitcher()
-{
-}
+miral::ApplicationSwitcher::~ApplicationSwitcher() = default;
 
 miral::ApplicationSwitcher::ApplicationSwitcher(ApplicationSwitcher const&) = default;
 
