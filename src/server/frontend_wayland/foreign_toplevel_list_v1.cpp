@@ -18,6 +18,7 @@
 
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
+#include "foreign_toplevel_handle_creation.h"
 #include "mir/wayland/weak.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/surface_specification.h"
@@ -381,39 +382,17 @@ void mf::ForeignSurfaceObserver::cease_and_desist()
 
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 {
-    bool should_have_handle = true;
+    bool should_have_handle = false;
+    std::string app_id;
 
     auto const surface = weak_surface.lock();
     if (surface)
     {
-        switch(surface->state())
-        {
-        case mir_window_state_attached:
-            should_have_handle = false;
-            break;
-
-        default:
-            break;
-        }
-
-        switch (surface->type())
-        {
-        case mir_window_type_normal:
-        case mir_window_type_utility:
-        case mir_window_type_freestyle:
-            break;
-
-        default:
-            should_have_handle = false;
-            break;
-        }
-
-        if (surface->session().expired())
-            should_have_handle = false;
-    }
-    else
-    {
-        should_have_handle = false;
+        app_id = foreign_toplevel_app_id(surface->application_id(), desktop_file_manager->resolve_app_id(surface.get()));
+        should_have_handle = should_create_foreign_toplevel_handle(
+            surface->type(),
+            !surface->session().expired(),
+            app_id);
     }
 
     if (should_have_handle != has_handle)
@@ -426,7 +405,6 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 
             std::string toplevel_id = id_map->toplevel_id(surface);
             std::string name = surface->name();
-            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
 
             // Remember Wayland objects manage their own lifetime
             auto const handle_ptr = new ExtForeignToplevelHandleV1{manager.value(), surface};
@@ -482,10 +460,17 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const* surface,
     std::string const& application_id)
 {
-    std::string id = application_id;
+    bool const toplevel_handle_existed_before{has_handle};
+    create_or_close_toplevel_handle_as_needed();
+
+    if (!toplevel_handle_existed_before)
+    {
+        return;
+    }
+
+    auto app_id = foreign_toplevel_app_id(application_id, desktop_file_manager->resolve_app_id(surface));
     if (handle)
     {
-        auto app_id = desktop_file_manager->resolve_app_id(surface);
         if (!app_id.empty())
         {
             handle.value().send_app_id_event(app_id);

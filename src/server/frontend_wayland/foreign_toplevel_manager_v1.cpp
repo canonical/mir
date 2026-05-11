@@ -18,6 +18,7 @@
 
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
+#include "foreign_toplevel_handle_creation.h"
 
 #include <mir/constexpr_utils.h>
 #include <mir/executor.h>
@@ -351,39 +352,17 @@ void mf::ForeignSurfaceObserver::with_toplevel_handle(
 
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::lock_guard<std::mutex>& lock)
 {
-    bool should_have_handle = true;
+    bool should_have_handle = false;
+    std::string app_id;
 
     auto const surface = weak_surface.lock();
     if (surface)
     {
-        switch(surface->state())
-        {
-        case mir_window_state_attached:
-            should_have_handle = false;
-            break;
-
-        default:
-            break;
-        }
-
-        switch (surface->type())
-        {
-        case mir_window_type_normal:
-        case mir_window_type_utility:
-        case mir_window_type_freestyle:
-            break;
-
-        default:
-            should_have_handle = false;
-            break;
-        }
-
-        if (!surface->session().lock())
-            should_have_handle = false;
-    }
-    else
-    {
-        should_have_handle = false;
+        app_id = foreign_toplevel_app_id(surface->application_id(), desktop_file_manager->resolve_app_id(surface.get()));
+        should_have_handle = should_create_foreign_toplevel_handle(
+            surface->type(),
+            static_cast<bool>(surface->session().lock()),
+            app_id);
     }
 
     bool const currently_have_handle{handle};
@@ -398,7 +377,6 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             handle = std::make_shared<mw::Weak<ForeignToplevelHandleV1>>();
 
             std::string name = surface->name();
-            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
             auto const focused = surface->focus_state();
             auto const state = surface->state_tracker();
 
@@ -488,10 +466,17 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
 {
     std::lock_guard lock{mutex};
 
-    std::string id = application_id;
+    bool const toplevel_handle_existed_before{handle};
+    create_or_close_toplevel_handle_as_needed(lock);
+
+    if (!toplevel_handle_existed_before)
+    {
+        return;
+    }
+
+    auto app_id = foreign_toplevel_app_id(application_id, desktop_file_manager->resolve_app_id(surface));
     with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
-            auto app_id = desktop_file_manager->resolve_app_id(surface);
             if (!app_id.empty())
             {
                 handle.send_app_id_event(app_id);
