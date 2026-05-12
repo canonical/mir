@@ -17,26 +17,27 @@
 #ifndef MIR_FRONTEND_FOREIGN_TOPLEVEL_HANDLE_CREATION_H
 #define MIR_FRONTEND_FOREIGN_TOPLEVEL_HANDLE_CREATION_H
 
+#include "mir/scene/surface.h"
+
 #include <mir_toolkit/common.h>
 
 #include <string>
 
 namespace mir::frontend
 {
-inline auto foreign_toplevel_app_id(std::string const& application_id, std::string const& resolved_app_id) -> std::string
-{
-    if (!application_id.empty())
-        return application_id;
-
-    return resolved_app_id;
-}
-
 inline auto should_create_foreign_toplevel_handle(
-    MirWindowType type,
-    bool has_session,
+    scene::Surface const& surface,
     std::string const& app_id) -> bool
 {
-    return has_session && type == mir_window_type_normal && !app_id.empty();
+    auto const type = surface.type();
+    auto const is_supported_window_type =
+        type == mir_window_type_normal ||
+        type == mir_window_type_utility ||
+        type == mir_window_type_freestyle;
+    auto const has_session = static_cast<bool>(surface.session().lock());
+    auto const is_application_layer = surface.depth_layer() == mir_depth_layer_application;
+    auto const can_focus = surface.focus_mode() != mir_focus_mode_disabled;
+    return has_session && is_application_layer && can_focus && is_supported_window_type && !app_id.empty();
 }
 }
 

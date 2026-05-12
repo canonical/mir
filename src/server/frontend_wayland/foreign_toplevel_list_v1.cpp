@@ -122,6 +122,7 @@ private:
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int) override;
     void renamed(scene::Surface const*, std::string const& name) override;
     void application_id_set_to(scene::Surface const*, std::string const& application_id) override;
+    void depth_layer_set_to(scene::Surface const*, MirDepthLayer) override;
     ///@}
 
     wayland::Weak<ExtForeignToplevelListV1> const manager;
@@ -390,10 +391,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
     {
         auto const application_id = surface->application_id();
         app_id = application_id.empty() ? desktop_file_manager->resolve_app_id(surface.get()) : application_id;
-        should_have_handle = should_create_foreign_toplevel_handle(
-            surface->type(),
-            !surface->session().expired(),
-            app_id);
+        should_have_handle = should_create_foreign_toplevel_handle(*surface, app_id);
     }
 
     if (should_have_handle != has_handle)
@@ -478,6 +476,11 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
             handle.value().send_done_event();
         }
     };
+}
+
+void mf::ForeignSurfaceObserver::depth_layer_set_to(scene::Surface const*, MirDepthLayer)
+{
+    create_or_close_toplevel_handle_as_needed();
 }
 
 // ExtForeignToplevelListV1

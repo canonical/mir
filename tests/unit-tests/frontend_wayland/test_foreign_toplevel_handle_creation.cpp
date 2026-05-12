@@ -15,37 +15,70 @@
  */
 
 #include "src/server/frontend_wayland/foreign_toplevel_handle_creation.h"
+#include <mir/test/doubles/mock_scene_session.h>
+#include <mir/test/doubles/mock_surface.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace ms = mir::scene;
+namespace mtd = mir::test::doubles;
+using namespace testing;
 
-TEST(ForeignToplevelHandleCreation, prefers_application_id_from_app)
+namespace
 {
-    EXPECT_EQ(mf::foreign_toplevel_app_id("app.id", "resolved.desktop"), "app.id");
+
+class ForeignToplevelHandleCreation : public Test
+{
+public:
+    NiceMock<mtd::MockSurface> surface;
+    std::shared_ptr<NiceMock<mtd::MockSceneSession>> session{
+        std::make_shared<NiceMock<mtd::MockSceneSession>>()};
+
+    void SetUp() override
+    {
+        ON_CALL(surface, type())
+            .WillByDefault(Return(mir_window_type_normal));
+        ON_CALL(surface, session())
+            .WillByDefault(Return(std::weak_ptr<ms::Session>{session}));
+    }
+};
+
 }
 
-TEST(ForeignToplevelHandleCreation, falls_back_to_resolved_app_id_when_app_id_is_empty)
+TEST_F(ForeignToplevelHandleCreation, creates_handles_for_application_layer_normal_windows)
 {
-    EXPECT_EQ(mf::foreign_toplevel_app_id("", "resolved.desktop"), "resolved.desktop");
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
 }
 
-TEST(ForeignToplevelHandleCreation, creates_handles_for_normal_windows_with_session_and_app_id)
+TEST_F(ForeignToplevelHandleCreation, creates_handles_for_freestyle_windows)
 {
-    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(mir_window_type_normal, true, "app.id"));
+    ON_CALL(surface, type())
+        .WillByDefault(Return(mir_window_type_freestyle));
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
 }
 
-TEST(ForeignToplevelHandleCreation, does_not_create_handles_for_non_normal_window_types)
+TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_application_layer_windows)
 {
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(mir_window_type_utility, true, "app.id"));
+    surface.set_depth_layer(mir_depth_layer_above);
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
 }
 
-TEST(ForeignToplevelHandleCreation, does_not_create_handles_without_session)
+TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_focusable_windows)
 {
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(mir_window_type_normal, false, "app.id"));
+    surface.set_focus_mode(mir_focus_mode_disabled);
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
 }
 
-TEST(ForeignToplevelHandleCreation, does_not_create_handles_with_empty_app_id)
+TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_without_session)
 {
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(mir_window_type_normal, true, ""));
+    ON_CALL(surface, session())
+        .WillByDefault(Return(std::weak_ptr<ms::Session>{}));
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+}
+
+TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_with_empty_app_id)
+{
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, ""));
 }
