@@ -59,6 +59,14 @@ TEST_F(ForeignToplevelHandleCreation, creates_handles_for_freestyle_windows)
     EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
 }
 
+TEST_F(ForeignToplevelHandleCreation, creates_handles_for_utility_windows_in_application_layer)
+{
+    ON_CALL(surface, type())
+        .WillByDefault(Return(mir_window_type_utility));
+    surface.set_depth_layer(mir_depth_layer_application);
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+}
+
 TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_application_layer_windows)
 {
     surface.set_depth_layer(mir_depth_layer_above);
