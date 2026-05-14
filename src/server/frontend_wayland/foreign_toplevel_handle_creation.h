@@ -29,15 +29,22 @@ inline auto should_create_foreign_toplevel_handle(
     scene::Surface const& surface,
     std::string const& app_id) -> bool
 {
+    if (app_id.empty())
+        return false;
+
+    if (!surface.session().lock())
+        return false;
+
     auto const type = surface.type();
-    auto const is_supported_window_type =
-        type == mir_window_type_normal ||
-        type == mir_window_type_utility ||
-        type == mir_window_type_freestyle;
-    auto const has_session = static_cast<bool>(surface.session().lock());
-    auto const is_application_layer = surface.depth_layer() == mir_depth_layer_application;
-    auto const can_focus = surface.focus_mode() != mir_focus_mode_disabled;
-    return has_session && is_application_layer && can_focus && is_supported_window_type && !app_id.empty();
+    if (type != mir_window_type_normal &&
+        type != mir_window_type_utility &&
+        type != mir_window_type_freestyle)
+        return false;
+
+    if (surface.depth_layer() != mir_depth_layer_application)
+        return false;
+
+    return surface.focus_mode() != mir_focus_mode_disabled;
 }
 }
 
