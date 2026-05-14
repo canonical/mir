@@ -113,7 +113,8 @@ struct ToplevelInfoPrinter
         auto const region_size = buffer->size();
         FT_Set_Pixel_Sizes(face, 20, 0);
 
-        auto const& [width, height, line_height, lines, is_app_header, selected_line_index] = compute_text_metrics(info_list, selector_state, selected_window_index);
+        int const max_text_width = region_size.width.as_int() * 3 / 4;
+        auto const& [width, height, line_height, lines, is_app_header, selected_line_index] = compute_text_metrics(info_list, selector_state, selected_window_index, max_text_width);
         auto base_pos_y = 0.5 * (region_size.height - height);
         static constexpr int region_pixel_bytes = 4;
         auto const region_buffer = static_cast<unsigned char*>(buffer->data());
@@ -173,10 +174,70 @@ private:
     static constexpr Color yellow{255, 255, 0, 255};
     static constexpr Color grey{128, 128, 128, 255};
 
+    /// Returns a UTF-8 string that fits within \p max_pixel_width, appending "…" if truncated.
+    [[nodiscard]] std::string truncate_to_fit(std::string const& text, int max_pixel_width)
+    {
+        if (!initialized || max_pixel_width <= 0)
+            return text;
+
+        // Decode to wide characters, tolerating bad sequences.
+        std::wstring wide_text;
+        try { wide_text = converter.from_bytes(text); }
+        catch (std::exception const&)
+        {
+            for (auto c : text) if (static_cast<unsigned char>(c) < 128) wide_text += static_cast<wchar_t>(c);
+        }
+
+        // Measure the full string.
+        int total_width = 0;
+        for (auto ch : wide_text)
+        {
+            FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
+            total_width += face->glyph->advance.x >> 6;
+        }
+        if (total_width <= max_pixel_width)
+            return text;   // fits — nothing to do
+
+        // Measure the ellipsis we'll append.
+        std::wstring wide_ellipsis;
+        try { wide_ellipsis = converter.from_bytes("…"); }
+        catch (std::exception const&) { wide_ellipsis = L"..."; }
+
+        int ellipsis_width = 0;
+        for (auto ch : wide_ellipsis)
+        {
+            FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
+            ellipsis_width += face->glyph->advance.x >> 6;
+        }
+
+        // Find the last character that still leaves room for the ellipsis.
+        int current_width = 0;
+        size_t fit_count = 0;
+        for (size_t i = 0; i < wide_text.size(); i++)
+        {
+            FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(wide_text[i])), FT_LOAD_DEFAULT);
+            int const advance = face->glyph->advance.x >> 6;
+            if (current_width + advance + ellipsis_width > max_pixel_width)
+                break;
+            current_width += advance;
+            fit_count = i + 1;
+        }
+
+        std::wstring const result = wide_text.substr(0, fit_count) + wide_ellipsis;
+        try { return converter.to_bytes(result); }
+        catch (std::exception const&)
+        {
+            std::string fallback;
+            for (auto c : result) if (static_cast<unsigned char>(c) < 128) fallback += static_cast<char>(c);
+            return fallback;
+        }
+    }
+
     TextMetrics compute_text_metrics(
         std::vector<ToplevelInfo> const& info_list,
         SelectorState selector_state,
-        std::optional<size_t> selected_window_index)
+        std::optional<size_t> selected_window_index,
+        int const max_text_width)
     {
         TextMetrics metrics;
         std::optional<ToplevelInfo> selected_top_level;
@@ -206,8 +267,9 @@ private:
                 list_of_app_id_to_window_mapping.push_back({app_id, {info}});
         }
 
-        auto const add_text = [&](std::string const& text, bool is_header)
+        auto const add_text = [&](std::string const& raw_text, bool is_header)
         {
+            auto const text = truncate_to_fit(raw_text, max_text_width);
             metrics.lines.push_back(text);
             metrics.is_app_header.push_back(is_header);
             std::wstring const line_text = [&]
