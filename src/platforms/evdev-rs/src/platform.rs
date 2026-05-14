@@ -64,6 +64,7 @@ impl PlatformRs {
     /// was already started.  The caller must only schedule `assign_seat()` when
     /// this returns `true` to avoid calling `udev_assign_seat()` on an already-
     /// assigned libinput context.
+    #[allow(clippy::arc_with_non_send_sync)]
     pub fn start(&mut self) -> bool {
         if self.state.is_some() {
             // Already started; stop() was not called before start(). This is a
@@ -279,6 +280,7 @@ impl PlatformRs {
         Box::new(LibinputDeviceObserver::new())
     }
 
+    #[allow(clippy::arc_with_non_send_sync)]
     pub fn create_input_device(&mut self, device_id: i32) -> Box<LibinputDevice> {
         let state_arc = match self.state.as_mut() {
             Some(s) => s.clone(),

@@ -76,7 +76,7 @@ fn main() {
         .compile("wayland_rs");
 }
 
-fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
+fn write_protocols_rs(protocols: &[WaylandProtocol]) {
     let generated_protocols = protocols.iter().map(|protocol| {
         // We rely on the wayland_server crate for the core Wayland protocol.
         if protocol.name == "wayland" {
@@ -487,10 +487,10 @@ fn generate_dispatch_impl(
 
     // This snippet checks if the interface has any requests at all. If not, then data
     // will be prefixed with an underscore.
-    let interface_has_requests = interface.items.iter().any(|item| match item {
-        InterfaceItem::Request(_) => true,
-        _ => false,
-    });
+    let interface_has_requests = interface
+        .items
+        .iter()
+        .any(|item| matches!(item, InterfaceItem::Request(_)));
 
     let data_name = format_ident!(
         "{}",
@@ -569,7 +569,7 @@ fn generate_dispatch_implementations(protocol: &WaylandProtocol) -> TokenStream 
     }
 }
 
-fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
+fn write_dispatch_rs(protocols: &[WaylandProtocol]) {
     let generated_dispatch_implementations =
         protocols.iter().map(generate_dispatch_implementations);
 
@@ -626,7 +626,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
     write_generated_rust_file(generated_protocol_rs, "dispatch.rs");
 }
 
-fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
+fn create_global_factory(protocols: &[WaylandProtocol]) -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_GLOBALS", "global_factory");
     builder.add_header_include("<memory>");
     builder.add_header_include("<rust/cxx.h>");
@@ -693,13 +693,13 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
     builder
 }
 
-fn write_protocol_middleware(protocols: &Vec<WaylandProtocol>) {
+fn write_protocol_middleware(protocols: &[WaylandProtocol]) {
     let middleware = generate_wayland_interface_middleware(protocols);
     write_generated_rust_file(middleware, "middleware.rs");
 }
 
 /// Write a header file for each protocol containing abstract classes per-interface.
-fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
+fn write_cpp_protocol_implementations(protocols: &[WaylandProtocol]) {
     // First, create the global factory.
     let global_builder = create_global_factory(protocols);
 
@@ -735,7 +735,7 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
 /// Plain `struct Foo;` forward declarations are sufficient because rust::Box<T>
 /// only stores a T* internally and does not require T to be a complete type at
 /// the point of a virtual function declaration.
-fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
+fn create_ffi_fwd_builder(protocols: &[WaylandProtocol]) -> CppBuilder {
     let mut builder = CppBuilder::new("MIR_WAYLANDRS_FFI_FWD", "ffi_fwd");
     // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
     // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
@@ -1122,7 +1122,7 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
     cpp_method
 }
 
-fn write_wayland_server_generated(protocols: &Vec<WaylandProtocol>) {
+fn write_wayland_server_generated(protocols: &[WaylandProtocol]) {
     let tokens = generate_wayland_server_generated_rs(protocols);
     write_generated_rust_file(tokens, "wayland_server_generated.rs");
 }

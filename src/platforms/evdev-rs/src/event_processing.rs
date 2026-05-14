@@ -85,7 +85,7 @@ fn get_scroll_axis(value120: f64, value: f64, scale: f64, accum: &mut f64) -> Sc
 }
 
 fn get_device_info_from_libinput_device<'a>(
-    known_devices: &'a mut Vec<LibinputDeviceInfo>,
+    known_devices: &'a mut [LibinputDeviceInfo],
     libinput_device: &input::Device,
 ) -> Option<&'a mut LibinputDeviceInfo> {
     known_devices
@@ -158,12 +158,9 @@ fn handle_device_event(
         }
         event::DeviceEvent::Removed(removed_event) => {
             let dev = removed_event.device();
-            let Some(index) = known_devices
+            let index = known_devices
                 .iter()
-                .position(|x| x.device.as_raw() == dev.as_raw())
-            else {
-                return None;
-            };
+                .position(|x| x.device.as_raw() == dev.as_raw())?;
 
             // Remove from known_devices immediately (while holding the state lock), but
             // spawn a thread to call remove_device() on the registry.  Calling remove_device()

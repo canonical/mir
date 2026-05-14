@@ -268,9 +268,9 @@ mod ffi_bridge {
             -> SharedPtr<InputDevice>;
         pub fn raw_fd(self: &DeviceWrapper) -> i32;
 
-        // # Safety
-        //
-        // This is unsafe because it receives a raw C++ pointer as an argument.
+        /// # Safety
+        ///
+        /// This is unsafe because it receives a raw C++ pointer as an argument.
         pub unsafe fn create_event_builder_wrapper(
             self: &PlatformBridge,
             event_builder: *mut EventBuilder,

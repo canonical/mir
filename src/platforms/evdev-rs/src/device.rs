@@ -128,9 +128,10 @@ impl LibinputDevice {
             eprintln!(
                 "LibinputDevice::get_pointer_settings: unable to acquire state lock; lock poisoned"
             );
-            let mut settings = PointerSettings::default();
-            settings.has_error = true;
-            return Box::new(settings);
+            return Box::new(PointerSettings {
+                has_error: true,
+                ..Default::default()
+            });
         };
 
         let Some(device_info) = guard.find_device_by_id(self.device_id) else {
@@ -232,7 +233,7 @@ pub struct LibinputDeviceState {
 }
 
 impl LibinputDeviceState {
-    pub fn find_device_by_id<'a>(&mut self, id: i32) -> Option<&'_ mut LibinputDeviceInfo> {
+    pub fn find_device_by_id(&mut self, id: i32) -> Option<&mut LibinputDeviceInfo> {
         self.known_devices.iter_mut().find(|d| d.id == id)
     }
 }
