@@ -1084,17 +1084,30 @@ void miral::ApplicationSwitcher::stop() const
 
 class miral::BasicApplicationSwitcher::Self
 {
+    struct RealKeybindConfiguration : KeybindConfiguration
+    {
+        RealKeybindConfiguration(KeybindConfiguration const& user_config)
+         : KeybindConfiguration(user_config) {}
+        // Hardcoded KEY_ESC to avoid breaking ABI
+        int escape_key = KEY_ESC;
+    };
 public:
     explicit Self(KeybindConfiguration const& keybind_configuration)
         : startup_internal_client(switcher, switcher, [switcher=switcher] { switcher.stop(); }),
-          keyboard_event_filter([this, keybind_configuration, is_running = false](MirKeyboardEvent const* key_event) mutable
+          keyboard_event_filter([this, keybind_configuration=RealKeybindConfiguration{keybind_configuration}, is_running = false](MirKeyboardEvent const* key_event) mutable
          {
             auto const modifiers = toolkit::mir_keyboard_event_modifiers(key_event);
             if (toolkit::mir_keyboard_event_action(key_event) == mir_keyboard_action_down)
             {
+                auto const scancode = miral::toolkit::mir_keyboard_event_scan_code(key_event);
+                if (is_running && scancode == keybind_configuration.escape_key)
+                {
+                    switcher.cancel();
+                    is_running = false;
+                    return true;
+                }
                 if (modifiers & keybind_configuration.primary_modifier)
                 {
-                    auto const scancode = toolkit::mir_keyboard_event_scan_code(key_event);
                     if (modifiers & keybind_configuration.reverse_modifier)
                     {
                         if (scancode == keybind_configuration.application_key)
