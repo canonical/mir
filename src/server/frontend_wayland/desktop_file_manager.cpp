@@ -109,32 +109,34 @@ std::string mf::DesktopFileManager::resolve_app_id(const scene::Surface* surface
         return found->id;
     }
 
-    auto session = surface->session().lock();
-    auto pid = session->process_id();
-    auto socket_fd = session->socket_fd();
-
-    // Fourth, check if the window belongs to snap
-    found = resolve_if_snap(pid, socket_fd);
-    if (found)
+    if (auto session = surface->session().lock())
     {
-        mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
-        return found->id;
-    }
+        auto pid = session->process_id();
+        auto socket_fd = session->socket_fd();
 
-    // Fifth, check if the window belongs to flatpak
-    found = resolve_if_flatpak(pid);
-    if (found)
-    {
-        mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
-        return found->id;
-    }
+        // Fourth, check if the window belongs to snap
+        found = resolve_if_snap(pid, socket_fd);
+        if (found)
+        {
+            mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
+            return found->id;
+        }
 
-    // Sixth, get the exec command from our pid and see if we can match it to a GAppInfo's Exec
-    found = resolve_if_executable_matches(pid);
-    if (found)
-    {
-        mir::log_info("Successfully resolved app id from executable, id=%s", found->id.c_str());
-        return found->id;
+        // Fifth, check if the window belongs to flatpak
+        found = resolve_if_flatpak(pid);
+        if (found)
+        {
+            mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
+            return found->id;
+        }
+
+        // Sixth, get the exec command from our pid and see if we can match it to a GAppInfo's Exec
+        found = resolve_if_executable_matches(pid);
+        if (found)
+        {
+            mir::log_info("Successfully resolved app id from executable, id=%s", found->id.c_str());
+            return found->id;
+        }
     }
 
     // NOTE: Here is the list of things that we aren't doing, as we don't have a good way of doing it:
