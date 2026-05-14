@@ -20,7 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - run: |
-        sudo apt-get install --yes \
+        sudo apt-get update
+        sudo apt-get install --yes --no-install-recommends \
           pkg-config \
           libboost-dev \
           libudev-dev
