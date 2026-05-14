@@ -20,6 +20,7 @@
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
 #include <mir/default_font.h>
 
+#include <cerrno>
 #include <memory>
 #include <mir/fd.h>
 #include <mir/log.h>
@@ -983,6 +984,12 @@ public:
 private:
     void push_command(Command cmd)
     {
+        if (command_signal == mir::Fd::invalid)
+        {
+            mir::log_warning("ApplicationSwitcher: Dropping command because command signal is unavailable");
+            return;
+        }
+
         {
             std::lock_guard lock{command_mutex};
             command_queue.push(cmd);
