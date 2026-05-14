@@ -15,7 +15,6 @@
  */
 
 use cxx::SharedPtr;
-use input;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -101,7 +100,7 @@ impl LibinputDevice {
             .device
             .has_capability(input::DeviceCapability::Pointer)
         {
-            capabilities = capabilities | DeviceCapability::pointer.repr;
+            capabilities |= DeviceCapability::pointer.repr;
         }
         if device_info
             .device
@@ -110,7 +109,7 @@ impl LibinputDevice {
             capabilities |= DeviceCapability::touchpad.repr | DeviceCapability::pointer.repr;
         }
 
-        return Box::new(LibinputDeviceMetadata {
+        Box::new(LibinputDeviceMetadata {
             name: device_info.device.name().to_string(),
             unique_id: format!(
                 "{} {} {} {}",
@@ -119,9 +118,9 @@ impl LibinputDevice {
                 device_info.device.id_vendor(),
                 device_info.device.id_product()
             ),
-            capabilities: capabilities,
+            capabilities,
             valid: true,
-        });
+        })
     }
 
     pub fn get_pointer_settings(&self) -> Box<PointerSettings> {
@@ -168,17 +167,17 @@ impl LibinputDevice {
             }
         };
 
-        let acceleration_bias = device_info.device.config_accel_speed() as f64;
+        let acceleration_bias = device_info.device.config_accel_speed();
 
-        return Box::new(PointerSettings {
+        Box::new(PointerSettings {
             is_set: true,
-            handedness: handedness,
+            handedness,
             cursor_acceleration_bias: acceleration_bias,
-            acceleration: acceleration,
+            acceleration,
             horizontal_scroll_scale: guard.x_scroll_scale,
             vertical_scroll_scale: guard.y_scroll_scale,
             has_error: false,
-        });
+        })
     }
 
     pub fn set_pointer_settings(&self, settings: &SetPointerSettingsData) {
@@ -216,7 +215,7 @@ impl LibinputDevice {
         let _ = device_info.device.config_accel_set_profile(accel_profile);
         let _ = device_info
             .device
-            .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
+            .config_accel_set_speed(settings.cursor_acceleration_bias);
         guard.x_scroll_scale = settings.horizontal_scroll_scale;
         guard.y_scroll_scale = settings.vertical_scroll_scale;
     }

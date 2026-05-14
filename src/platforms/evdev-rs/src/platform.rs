@@ -19,8 +19,6 @@ use crate::event_processing::{
     drain_initial_events, process_deferred_events, process_libinput_events,
 };
 use crate::libinput_interface::LibinputInterfaceImpl;
-use cxx;
-use input;
 use std::os::fd::AsRawFd;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -149,7 +147,7 @@ impl PlatformRs {
                     None
                 } else {
                     Some(drain_initial_events(
-                        &mut *state,
+                        &mut state,
                         self.device_registry.clone(),
                         self.bridge.clone(),
                     ))
@@ -202,7 +200,7 @@ impl PlatformRs {
         if !deferred.is_empty() {
             match state_arc.lock() {
                 Ok(mut state) => {
-                    process_deferred_events(&mut *state, &self.bridge, deferred, &self.report);
+                    process_deferred_events(&mut state, &self.bridge, deferred, &self.report);
                 }
                 Err(_) => {
                     self.state.take();
@@ -293,10 +291,7 @@ impl PlatformRs {
                     fds: Vec::new(),
                 });
 
-                let started = match libinput.udev_assign_seat("seat0") {
-                    Err(_) => false,
-                    _ => true,
-                };
+                let started = libinput.udev_assign_seat("seat0").is_ok();
                 if !started {
                     println!(
                         "PlatformRs::create_input_device: failed to assign seat for fallback state"
@@ -327,17 +322,14 @@ impl PlatformRs {
             return;
         }
 
-        match self.state.as_mut().unwrap().try_lock() {
-            Ok(mut state) => {
-                // Drop handles: runtime hotplug registration is fire-and-forget.
-                let _ = process_libinput_events(
-                    &mut *state,
-                    self.device_registry.clone(),
-                    self.bridge.clone(),
-                    &self.report,
-                );
-            }
-            _ => {}
+        if let Ok(mut state) = self.state.as_mut().unwrap().try_lock() {
+            // Drop handles: runtime hotplug registration is fire-and-forget.
+            let _ = process_libinput_events(
+                &mut state,
+                self.device_registry.clone(),
+                self.bridge.clone(),
+                &self.report,
+            );
         }
     }
 }

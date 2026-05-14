@@ -570,9 +570,8 @@ fn generate_dispatch_implementations(protocol: &WaylandProtocol) -> TokenStream 
 }
 
 fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
-    let generated_dispatch_implementations = protocols
-        .iter()
-        .map(|protocol| generate_dispatch_implementations(protocol));
+    let generated_dispatch_implementations =
+        protocols.iter().map(generate_dispatch_implementations);
 
     let generated_protocol_rs = quote! {
         #[allow(dead_code, unused_imports)]
@@ -712,20 +711,17 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
     write_cpp_header(&ffi_fwd_builder);
 
-    let mut builders: Vec<CppBuilder> = protocols
-        .iter()
-        .map(|protocol| create_cpp_builder(protocol))
-        .collect();
+    let mut builders: Vec<CppBuilder> = protocols.iter().map(create_cpp_builder).collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
 
     // Write the protocol headers
     for builder in &builders {
-        write_cpp_header(&builder);
-        write_cpp_source(&builder);
+        write_cpp_header(builder);
+        write_cpp_source(builder);
     }
 
-    let ffi = generate_ffi(&protocols, &builders);
+    let ffi = generate_ffi(protocols, &builders);
     write_generated_rust_file(ffi, "ffi.rs");
 }
 
@@ -774,7 +770,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .map(|interface| wayland_interface_to_cpp_class(interface));
+        .map(wayland_interface_to_cpp_class);
 
     for class in classes {
         namespace.add_class(class);
@@ -1103,8 +1099,8 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
         .clone()
         .flat_map(|arg| {
             let arg_name = match arg.cpp_type() {
-                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name())),
-                _ => sanitize_identifier(&arg.name()),
+                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(arg.name())),
+                _ => sanitize_identifier(arg.name()),
             };
             if let Some(has_name) = arg.has_name() {
                 vec![arg_name, has_name]
@@ -1127,6 +1123,6 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
 }
 
 fn write_wayland_server_generated(protocols: &Vec<WaylandProtocol>) {
-    let tokens = generate_wayland_server_generated_rs(&protocols);
+    let tokens = generate_wayland_server_generated_rs(protocols);
     write_generated_rust_file(tokens, "wayland_server_generated.rs");
 }

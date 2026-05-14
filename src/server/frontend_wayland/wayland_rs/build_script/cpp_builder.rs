@@ -119,7 +119,7 @@ impl CppBuilder {
                         ));
                     }
                     result.push_str("    };\n");
-                    result.push_str("\n");
+                    result.push('\n');
                 }
 
                 // Virtual destructor
@@ -403,7 +403,7 @@ impl CppEnumOption {
     pub fn new(name: impl Into<String>, value: u32) -> CppEnumOption {
         CppEnumOption {
             name: sanitize_identifier(&name.into()),
-            value: value,
+            value,
         }
     }
 }
