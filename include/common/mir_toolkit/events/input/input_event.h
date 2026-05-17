@@ -26,6 +26,7 @@
 #include <mir_toolkit/events/input/touch_event.h>
 #include <mir_toolkit/events/input/keyboard_event.h>
 #include <mir_toolkit/events/input/pointer_event.h>
+#include <mir_toolkit/events/input/switch_event.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -89,6 +90,8 @@ MirTouchEvent const* mir_input_event_get_touch_event(MirInputEvent const* event)
  * \pre             The event type is mir_input_event_type_pointer
  */
 MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* event);
+
+MirSwitchEvent const* mir_input_event_get_switch_event(MirInputEvent const* event);
 
 /**
  * Retrieve the MirEvent associated with a given input event.

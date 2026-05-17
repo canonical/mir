@@ -22,6 +22,7 @@
 #include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir_toolkit/events/input/pointer_event.h>
+#include <mir_toolkit/events/input/switch_event.h>
 
 #include "../handle_event_exception.h"
 
@@ -53,6 +54,8 @@ char const* input_event_type_to_c_str(MirInputEventType input_event_type)
         return "mir_input_event_type_pointer";
     case mir_input_event_type_keyboard_resync:
         return "mir_input_event_type_keyboard_resync";
+    case mir_input_event_type_switch:
+        return "mir_input_event_type_switch";
     case mir_input_event_types:
         mir::fatal_error_abort("Sentinel value 'mir_input_event_types' not supported");
     }
@@ -252,6 +255,17 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
     return reinterpret_cast<MirPointerEvent const*>(ev);
 })
 
+extern "C" MirSwitchEvent const* mir_input_event_get_switch_event(MirInputEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    if(ev->input_type() != mir_input_event_type_switch)
+    {
+        mir::fatal_error_abort("expected switch input event but event was of type ",
+            input_event_type_to_c_str(ev->input_type()));
+    }
+
+    return reinterpret_cast<MirSwitchEvent const*>(ev);
+})
+
 MirEvent const* mir_input_event_get_event(MirInputEvent const* event)
 {
     return event;
@@ -333,4 +347,14 @@ bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis
    default:
        mir::fatal_error_abort("Invalid axis enumeration %d", axis);
    }
+})
+
+extern "C" MirSwitchAction mir_switch_event_action(MirSwitchEvent const* sev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return sev->action();
+})
+
+extern "C" MirSwitchState mir_switch_event_state(MirSwitchEvent const* sev) MIR_HANDLE_EVENT_EXCEPTION(
+{
+    return sev->state();
 })
