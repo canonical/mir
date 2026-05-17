@@ -180,6 +180,8 @@ struct MockEventBuilder : mi::EventBuilder
     {
         BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
     }
+
+    MOCK_METHOD(mir::EventUPtr, switch_event, (MirSwitchAction, MirSwitchState), ());
 };
 
 struct LibInputDevice : public ::testing::Test

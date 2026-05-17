@@ -113,6 +113,10 @@ public:
         std::optional<Timestamp> timestamp,
         std::vector<mir::events::TouchContact> const& contacts) = 0;
 
+    virtual EventUPtr switch_event(
+        MirSwitchAction action,
+        MirSwitchState state) = 0;
+
 protected:
     EventBuilder(EventBuilder const&) = delete;
     EventBuilder& operator=(EventBuilder const&) = delete;

@@ -47,6 +47,7 @@ typedef enum {
     mir_input_event_type_touch = 1,
     mir_input_event_type_pointer = 2,
     mir_input_event_type_keyboard_resync = 3,
+    mir_input_event_type_switch = 4,
 
     mir_input_event_types
 } MirInputEventType;
@@ -162,6 +163,19 @@ typedef enum {
 
     mir_pointer_actions
 } MirPointerAction;
+
+typedef enum {
+    mir_switch_action_tablet_mode = 0,
+
+    mir_switch_actions
+} MirSwitchAction;
+
+typedef enum {
+    mir_switch_state_off = 0,
+    mir_switch_state_on = 1,
+
+    mir_switch_states
+} MirSwitchState;
 
 /**
  * Identifiers for pointer axis

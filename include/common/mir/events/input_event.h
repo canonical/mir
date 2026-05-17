@@ -19,6 +19,8 @@
 
 #include <mir/events/event.h>
 
+typedef struct MirSwitchEvent MirSwitchEvent;
+
 struct MirInputEvent : MirEvent
 {
     MirInputEventType input_type() const;
@@ -43,6 +45,9 @@ struct MirInputEvent : MirEvent
 
     MirTouchEvent* to_touch();
     MirTouchEvent const* to_touch() const;
+
+    MirSwitchEvent* to_switch();
+    MirSwitchEvent const* to_switch() const;
 
 protected:
     MirInputEvent(MirInputEventType input_type,

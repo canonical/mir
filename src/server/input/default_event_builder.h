@@ -105,6 +105,10 @@ public:
         std::optional<Timestamp> timestamp,
         std::vector<mir::events::TouchContactV2> const& contacts) override;
 
+    EventUPtr switch_event(
+        MirSwitchAction action,
+        MirSwitchState state) override;
+
 private:
     auto calibrate_timestamp(std::optional<Timestamp> source_timestamp) -> Timestamp;
 
