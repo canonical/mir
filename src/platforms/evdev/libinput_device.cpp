@@ -188,7 +188,10 @@ void mie::LibInputDevice::process_event(libinput_event* event)
             }
             break;
         case LIBINPUT_EVENT_SWITCH_TOGGLE:
-            sink->handle_input(convert_switch_event(libinput_event_get_switch_event(event)));
+            if (auto input = convert_switch_event(libinput_event_get_switch_event(event)))
+            {
+                sink->handle_input(std::move(input));
+            }
             break;
         default:
             break;
