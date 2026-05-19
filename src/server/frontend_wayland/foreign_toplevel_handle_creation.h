@@ -25,6 +25,12 @@
 
 namespace mir::frontend
 {
+/**
+ * Returns true when a surface should be exposed via the foreign-toplevel protocols.
+ *
+ * Eligibility requires a non-empty app_id and a live session, and only includes
+ * focusable application-layer normal/utility/freestyle windows.
+ */
 inline auto should_create_foreign_toplevel_handle(
     scene::Surface const& surface,
     std::string const& app_id) -> bool
