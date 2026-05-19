@@ -60,7 +60,6 @@ struct ToplevelInfo
 struct preferred_codecvt : std::codecvt_byname<wchar_t, char, std::mbstate_t>
 {
     preferred_codecvt() : std::codecvt_byname<wchar_t, char, std::mbstate_t>("") {}
-    ~preferred_codecvt() override = default;
 
     static std::locale::id id;
 };
@@ -100,6 +99,8 @@ struct ToplevelInfoPrinter
         }
     }
 
+    ToplevelInfoPrinter(ToplevelInfoPrinter&&) = delete;
+    ToplevelInfoPrinter& operator=(ToplevelInfoPrinter&&) = delete;
     ToplevelInfoPrinter(ToplevelInfoPrinter const&) = delete;
     ToplevelInfoPrinter& operator=(ToplevelInfoPrinter const&) = delete;
 
@@ -434,6 +435,12 @@ public:
             zwlr_foreign_toplevel_handle_v1_destroy(handle);
         ghost_handles.clear();
     }
+
+    using miral::tk::WaylandApp::WaylandApp;
+    WaylandApp(WaylandApp&&) = delete;
+    WaylandApp& operator=(WaylandApp&&) = delete;
+    WaylandApp(WaylandApp const&) = delete;
+    WaylandApp& operator=(WaylandApp const&) = delete;
 
     void add(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
@@ -885,6 +892,11 @@ public:
     {
         stop();
     }
+
+    Self(Self&& other) = delete;
+    Self& operator=(Self&& other) = delete;
+    Self(Self const& other) = delete;
+    Self& operator=(Self const& other) = delete;
 
     void run_client(wl_display* display)
     {
