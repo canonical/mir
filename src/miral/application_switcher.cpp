@@ -116,7 +116,25 @@ struct ToplevelInfoPrinter
         FT_Set_Pixel_Sizes(face, 20, 0);
 
         int const max_text_width = region_size.width.as_int() * 3 / 4;
-        auto const& [width, height, line_height, lines, is_app_header, selected_line_index] = compute_text_metrics(info_list, selector_state, selected_window_index, max_text_width);
+        // The usable vertical band is the middle 3/4 of the surface (edges fade to transparent).
+        int const max_text_height = region_size.height.as_int() * 3 / 4;
+
+        // Try decreasing font sizes until the text fits, stopping at a minimum of 8px.
+        static constexpr int default_font_size = 20;
+        static constexpr int min_font_size = 8;
+        static constexpr int font_size_step = 2;
+
+        TextMetrics metrics_storage;
+        int font_size = default_font_size;
+        while (true)
+        {
+            FT_Set_Pixel_Sizes(face, font_size, 0);
+            metrics_storage = compute_text_metrics(info_list, selector_state, selected_window_index, max_text_width);
+            if (metrics_storage.height.as_int() <= max_text_height || font_size <= min_font_size)
+                break;
+            font_size -= font_size_step;
+        }
+        auto const& [width, height, line_height, lines, is_app_header, selected_line_index] = metrics_storage;
         auto base_pos_y = 0.5 * (region_size.height - height);
         static constexpr int region_pixel_bytes = 4;
         auto const region_buffer = static_cast<unsigned char*>(buffer->data());
