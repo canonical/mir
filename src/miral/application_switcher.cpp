@@ -209,7 +209,7 @@ private:
         }
 
         // Measure the full string.
-        int total_width = 0;
+        long total_width = 0;
         for (auto ch : wide_text)
         {
             FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
@@ -223,7 +223,7 @@ private:
         try { wide_ellipsis = converter.from_bytes("…"); }
         catch (std::exception const&) { wide_ellipsis = L"..."; }
 
-        int ellipsis_width = 0;
+        long ellipsis_width = 0;
         for (auto ch : wide_ellipsis)
         {
             FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(ch)), FT_LOAD_DEFAULT);
@@ -231,12 +231,12 @@ private:
         }
 
         // Find the last character that still leaves room for the ellipsis.
-        int current_width = 0;
+        long current_width = 0;
         size_t fit_count = 0;
         for (size_t i = 0; i < wide_text.size(); i++)
         {
             FT_Load_Glyph(face, FT_Get_Char_Index(face, static_cast<FT_ULong>(wide_text[i])), FT_LOAD_DEFAULT);
-            int const advance = face->glyph->advance.x >> 6;
+            auto const advance = face->glyph->advance.x >> 6;
             if (current_width + advance + ellipsis_width > max_pixel_width)
                 break;
             current_width += advance;
