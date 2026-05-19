@@ -1,3 +1,5 @@
+<img src="assets/logo.png" alt="Canonical Mir logo"/>
+
 # Mir - Wayland compositor
 
 **Mir** is a set of libraries for building Wayland based shells. Mir
