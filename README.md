@@ -1,6 +1,6 @@
 # Mir - Wayland compositor
 
-**Mir** is set of libraries for building Wayland based shells. Mir
+**Mir** is a set of libraries for building Wayland based shells. Mir
 simplifies the complexity that shell authors need to deal with: it
 provides a stable, well tested and performant platform with touch,
 mouse and tablet input, multi-display capability and secure
