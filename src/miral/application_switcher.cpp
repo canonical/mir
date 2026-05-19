@@ -991,21 +991,25 @@ private:
             mir::log_warning("ApplicationSwitcher: Failed to signal command to Wayland thread");
     }
 
+    auto pop_command() -> std::optional<Command>
+    {
+        std::lock_guard lock{command_mutex};
+        if (command_queue.empty())
+            return std::nullopt;
+
+        auto const cmd = command_queue.front();
+        command_queue.pop();
+        return cmd;
+    };
+
     /// Called on the Wayland thread — safe to call app methods directly.
     void drain_commands()
     {
-        while (true)
+        while (auto const& cmd = pop_command())
         {
-            Command cmd;
-            {
-                std::lock_guard lock{command_mutex};
-                if (command_queue.empty())
-                    break;
-                cmd = command_queue.front();
-                command_queue.pop();
-            }
             if (!app) continue;
-            switch (cmd)
+
+            switch (*cmd)
             {
             case Command::next_app:    app->next_app();    break;
             case Command::prev_app:    app->prev_app();    break;
