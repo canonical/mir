@@ -973,7 +973,7 @@ public:
 
             if (fds[command_fd].revents & (POLLIN | POLLERR))
             {
-                eventfd_t val;
+                eventfd_t val{};
                 eventfd_read(command_signal, &val);
                 drain_commands();
             }
