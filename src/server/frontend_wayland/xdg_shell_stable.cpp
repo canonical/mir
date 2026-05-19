@@ -910,15 +910,18 @@ void mf::XdgPositionerStable::set_reactive()
 
 void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t parent_height)
 {
-    (void)parent_width;
-    (void)parent_height;
-    // TODO
-    log_warning("xdg_positioner.set_parent_size not implemented");
+    if (parent_width <= 0 || parent_height <= 0)
+    {
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource,
+            Error::invalid_input,
+            "Invalid popup positioner parent size: %dx%d", parent_width, parent_height));
+    }
+    parent_size = geom::Size{parent_width, parent_height};
 }
 
-void mf::XdgPositionerStable::set_parent_configure(uint32_t serial)
+void mf::XdgPositionerStable::set_parent_configure(uint32_t /*serial*/)
 {
-    (void)serial;
     // TODO
     log_warning("xdg_positioner.set_parent_configure not implemented");
 }

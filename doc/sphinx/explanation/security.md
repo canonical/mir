@@ -1,4 +1,4 @@
-# Security
+# Security considerations for Mir-based compositors
 
 This document aims to explore in depth the security considerations around Mir
 based compositors.

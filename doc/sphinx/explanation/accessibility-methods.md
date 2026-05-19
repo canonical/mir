@@ -1,4 +1,4 @@
-# Accessibility methods
+# Accessibility methods in Mir
 
 Accessibility methods are options which
 accommodate users with disabilities. Mir offers a variety of accessibility
