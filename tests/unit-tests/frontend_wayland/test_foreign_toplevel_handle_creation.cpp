@@ -85,4 +85,3 @@ TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_without_session)
         .WillByDefault(Return(std::weak_ptr<ms::Session>{}));
     EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface));
 }
-
