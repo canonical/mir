@@ -109,6 +109,10 @@ private:
 
         void spawn(std::function<void()>&& work)
         {
+            if (!is_active())
+            {
+                return;
+            }
             // Executor only guaranteed to be alive as long as observer
             if (auto const live_observer = observer.lock())
             {
@@ -118,6 +122,10 @@ private:
 
         void spawn_if_eq(Observer const& candidate_observer, std::function<void()>&& work)
         {
+            if (!is_active())
+            {
+                return;
+            }
             // Executor is only guaranteed to be live as long as observer
             auto const live_observer = observer.lock();
             if (live_observer.get() == &candidate_observer)
@@ -213,6 +221,12 @@ private:
             }
         }
     private:
+        auto is_active() -> bool
+        {
+            auto const state = synchronised_state.lock();
+            return state->status == Status::active;
+        }
+
         /// Only guaranteed to be alive while the observer is live. All observations should be run
         /// through this executor.
         Executor* executor;

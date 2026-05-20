@@ -1021,7 +1021,10 @@ TEST(ObserverMultiplexer, sending_to_single_observer_does_nothing_if_executor_de
     auto observer_one = std::make_shared<StrictMock<MockObserver>>();
     auto observer_two = std::make_shared<StrictMock<MockObserver>>();
 
-    multiplexer.register_interest(observer_one);
+    {
+        CountingExecutor deleted_executor;
+        multiplexer.register_interest(observer_one, deleted_executor);
+    }
     multiplexer.register_interest(observer_two);
 
     multiplexer.unregister_interest(*observer_one);
