@@ -49,14 +49,14 @@ public:
 
 TEST_F(ForeignToplevelHandleCreation, creates_handles_for_application_layer_normal_windows)
 {
-    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
 TEST_F(ForeignToplevelHandleCreation, creates_handles_for_freestyle_windows)
 {
     ON_CALL(surface, type())
         .WillByDefault(Return(mir_window_type_freestyle));
-    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
 TEST_F(ForeignToplevelHandleCreation, creates_handles_for_utility_windows_in_application_layer)
@@ -64,29 +64,25 @@ TEST_F(ForeignToplevelHandleCreation, creates_handles_for_utility_windows_in_app
     ON_CALL(surface, type())
         .WillByDefault(Return(mir_window_type_utility));
     surface.set_depth_layer(mir_depth_layer_application);
-    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
 TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_application_layer_windows)
 {
     surface.set_depth_layer(mir_depth_layer_above);
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
 TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_focusable_windows)
 {
     surface.set_focus_mode(mir_focus_mode_disabled);
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
 TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_without_session)
 {
     ON_CALL(surface, session())
         .WillByDefault(Return(std::weak_ptr<ms::Session>{}));
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, "app.id"));
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
-TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_with_empty_app_id)
-{
-    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface, ""));
-}

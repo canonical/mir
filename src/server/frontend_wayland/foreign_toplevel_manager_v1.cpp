@@ -361,7 +361,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
     {
         auto const application_id = surface->application_id();
         app_id = application_id.empty() ? desktop_file_manager->resolve_app_id(surface.get()) : application_id;
-        should_have_handle = should_create_foreign_toplevel_handle(*surface, app_id);
+        should_have_handle = should_create_foreign_toplevel_handle(*surface);
     }
 
     bool const currently_have_handle{handle};
