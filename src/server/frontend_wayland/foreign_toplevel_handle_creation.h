@@ -21,8 +21,6 @@
 
 #include <mir_toolkit/common.h>
 
-#include <string>
-
 namespace mir::frontend
 {
 /**
