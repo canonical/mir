@@ -470,11 +470,8 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     auto app_id = application_id.empty() ? desktop_file_manager->resolve_app_id(surface) : application_id;
     if (handle)
     {
-        if (!app_id.empty())
-        {
-            handle.value().send_app_id_event(app_id);
-            handle.value().send_done_event();
-        }
+        handle.value().send_app_id_event(app_id);
+        handle.value().send_done_event();
     };
 }
 
