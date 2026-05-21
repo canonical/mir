@@ -133,6 +133,7 @@ impl PlatformRs {
             }
         };
         let Some(libinput) = self.libinput.as_mut() else {
+            eprintln!("assign_seat(): state is initialized but libinput context is missing; resetting state");
             self.state.take();
             return;
         };
@@ -234,7 +235,11 @@ impl PlatformRs {
         // code at that point. This results in a segfault.
         let Some(state_arc) = self.state.take() else {
             // Platform not started or already stopped.
-            self.libinput.take();
+            if self.libinput.take().is_some() {
+                eprintln!(
+                    "stop(): libinput context existed without state; clearing dangling libinput"
+                );
+            }
             return;
         };
 
@@ -292,14 +297,29 @@ impl PlatformRs {
                 println!(
                     "PlatformRs::create_input_device: state not initialized; creating fallback state"
                 );
-                Arc::new(Mutex::new(LibinputDeviceState {
+                let bridge = self.bridge.clone();
+                let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
+                    bridge,
+                    fds: Vec::new(),
+                });
+
+                if libinput.udev_assign_seat("seat0").is_err() {
+                    println!(
+                        "PlatformRs::create_input_device: failed to assign seat for fallback state"
+                    );
+                }
+
+                self.libinput = Some(libinput);
+                let state_arc = Arc::new(Mutex::new(LibinputDeviceState {
                     known_devices: Vec::new(),
                     next_device_id: 0,
                     scroll_axis_x_accum: 0.0,
                     scroll_axis_y_accum: 0.0,
                     x_scroll_scale: 1.0,
                     y_scroll_scale: 1.0,
-                }))
+                }));
+                self.state = Some(state_arc.clone());
+                state_arc
             }
         };
 
@@ -312,6 +332,10 @@ impl PlatformRs {
 
     pub fn process(&mut self) {
         let Some(libinput) = self.libinput.as_mut() else {
+            if self.state.is_some() {
+                eprintln!("process(): state exists without libinput context; resetting state");
+                self.state.take();
+            }
             return;
         };
 
