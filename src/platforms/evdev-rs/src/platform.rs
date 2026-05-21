@@ -32,6 +32,7 @@ pub struct PlatformRs {
 
     report: cxx::UniquePtr<crate::InputReport>,
 
+    libinput: Option<input::Libinput>,
     state: Option<Arc<Mutex<LibinputDeviceState>>>,
 }
 
@@ -45,6 +46,7 @@ impl PlatformRs {
             bridge,
             device_registry,
             report,
+            libinput: None,
             state: None,
         }
     }
@@ -64,9 +66,8 @@ impl PlatformRs {
     /// was already started.  The caller must only schedule `assign_seat()` when
     /// this returns `true` to avoid calling `udev_assign_seat()` on an already-
     /// assigned libinput context.
-    #[allow(clippy::arc_with_non_send_sync)]
     pub fn start(&mut self) -> bool {
-        if self.state.is_some() {
+        if self.state.is_some() || self.libinput.is_some() {
             // Already started; stop() was not called before start(). This is a
             // programming error, but we handle it gracefully by doing nothing rather
             // than creating a second libinput context and leaking the existing one.
@@ -81,8 +82,8 @@ impl PlatformRs {
             fds: Vec::new(),
         });
 
+        self.libinput = Some(libinput);
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
-            libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
             scroll_axis_x_accum: 0.0,
@@ -131,6 +132,10 @@ impl PlatformRs {
                 return;
             }
         };
+        let Some(libinput) = self.libinput.as_mut() else {
+            self.state.take();
+            return;
+        };
 
         // Phase 1: assign the seat, dispatch once to surface DEVICE_ADDED events,
         // and split the resulting queue into device events (handled immediately)
@@ -143,11 +148,12 @@ impl PlatformRs {
         let phase1_result = match state_arc.lock() {
             Ok(mut state) => {
                 // Note: udev_assign_seat returns Result<(), ()> — no error details are available.
-                if state.libinput.udev_assign_seat("seat0").is_err() {
+                if libinput.udev_assign_seat("seat0").is_err() {
                     eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
                     None
                 } else {
                     Some(drain_initial_events(
+                        libinput,
                         &mut state,
                         self.device_registry.clone(),
                         self.bridge.clone(),
@@ -211,13 +217,9 @@ impl PlatformRs {
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
-        match self.state.as_mut() {
-            Some(state_arc) => match state_arc.lock() {
-                Ok(state) => state.libinput.as_raw_fd(),
-                Err(_) => -1,
-            },
-            None => -1,
-        }
+        self.libinput
+            .as_mut()
+            .map_or(-1, |libinput| libinput.as_raw_fd())
     }
 
     pub fn continue_after_config(&self) {}
@@ -232,6 +234,7 @@ impl PlatformRs {
         // code at that point. This results in a segfault.
         let Some(state_arc) = self.state.take() else {
             // Platform not started or already stopped.
+            self.libinput.take();
             return;
         };
 
@@ -274,13 +277,14 @@ impl PlatformRs {
                     .remove_device(input_device);
             }
         }
+
+        self.libinput.take();
     }
 
     pub fn create_device_observer(&self) -> Box<LibinputDeviceObserver> {
         Box::new(LibinputDeviceObserver::new())
     }
 
-    #[allow(clippy::arc_with_non_send_sync)]
     pub fn create_input_device(&mut self, device_id: i32) -> Box<LibinputDevice> {
         let state_arc = match self.state.as_mut() {
             Some(s) => s.clone(),
@@ -288,20 +292,7 @@ impl PlatformRs {
                 println!(
                     "PlatformRs::create_input_device: state not initialized; creating fallback state"
                 );
-                let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
-                    bridge: self.bridge.clone(),
-                    fds: Vec::new(),
-                });
-
-                let started = libinput.udev_assign_seat("seat0").is_ok();
-                if !started {
-                    println!(
-                        "PlatformRs::create_input_device: failed to assign seat for fallback state"
-                    );
-                }
-
                 Arc::new(Mutex::new(LibinputDeviceState {
-                    libinput,
                     known_devices: Vec::new(),
                     next_device_id: 0,
                     scroll_axis_x_accum: 0.0,
@@ -320,13 +311,18 @@ impl PlatformRs {
     }
 
     pub fn process(&mut self) {
-        if self.state.is_none() {
+        let Some(libinput) = self.libinput.as_mut() else {
             return;
-        }
+        };
 
-        if let Ok(mut state) = self.state.as_mut().unwrap().try_lock() {
+        let Some(state_arc) = self.state.as_mut() else {
+            return;
+        };
+
+        if let Ok(mut state) = state_arc.try_lock() {
             // Drop handles: runtime hotplug registration is fire-and-forget.
             let _ = process_libinput_events(
+                libinput,
                 &mut state,
                 self.device_registry.clone(),
                 self.bridge.clone(),

@@ -271,6 +271,7 @@ mod ffi_bridge {
         /// # Safety
         ///
         /// This is unsafe because it receives a raw C++ pointer as an argument.
+        #[allow(clippy::missing_safety_doc)]
         pub unsafe fn create_event_builder_wrapper(
             self: &PlatformBridge,
             event_builder: *mut EventBuilder,

@@ -748,6 +748,7 @@ fn handle_touch_frame(
 /// `TakeDevice` round-trip) are also returned as deferred events rather than being
 /// processed in the same pass as `DEVICE_ADDED`, preventing the #4723 drop race.
 pub fn drain_initial_events(
+    libinput: &mut input::Libinput,
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
@@ -755,11 +756,11 @@ pub fn drain_initial_events(
     let mut handles = Vec::new();
     let mut deferred = Vec::new();
 
-    if state.libinput.dispatch().is_err() {
+    if libinput.dispatch().is_err() {
         panic!("evdev-rs: libinput dispatch() failed in assign_seat()");
     }
 
-    for event in state.libinput.by_ref() {
+    for event in libinput.by_ref() {
         let libinput_device = event.device();
         if let input::Event::Device(device_event) = event {
             if let Some(handle) = handle_device_event(
@@ -879,6 +880,7 @@ pub fn process_deferred_events(
 ///
 /// For *runtime hotplug* events the caller should drop the handles (fire-and-forget).
 pub fn process_libinput_events(
+    libinput: &mut input::Libinput,
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
@@ -886,15 +888,15 @@ pub fn process_libinput_events(
 ) -> Vec<thread::JoinHandle<()>> {
     let mut handles = Vec::new();
 
-    if state.libinput.dispatch().is_err() {
+    if libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
         return handles;
     }
 
-    // Use .next() rather than `for event in &mut state.libinput` so that
-    // the borrow on state.libinput is released after each call and the loop
+    // Use .next() rather than `for event in libinput` so that
+    // the borrow on libinput is released after each call and the loop
     // body is free to borrow other fields of `state` via process_input_event.
-    while let Some(event) = state.libinput.next() {
+    while let Some(event) = libinput.next() {
         match event {
             input::Event::Device(device_event) => {
                 let libinput_device = device_event.device();
