@@ -108,7 +108,7 @@ TEST_F(DesktopFileManager, can_find_app_when_app_id_matches)
 {
     auto new_file = std::make_shared<mf::DesktopFile>(DESKTOP_FILE_APP_ID, nullptr, nullptr);
     cache->files.push_back(new_file);
-    auto app_id = file_manager->resolve_app_id(&surface);
+    auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, Eq(new_file->id));
 }
 
@@ -116,7 +116,7 @@ TEST_F(DesktopFileManager, can_find_gnome_terminal_server)
 {
     ON_CALL(surface, application_id())
         .WillByDefault(testing::Invoke([]() { return "gnome-terminal-server"; }));
-    auto app_id = file_manager->resolve_app_id(&surface);
+    auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, "org.gnome.Terminal");
 }
 
@@ -124,7 +124,7 @@ TEST_F(DesktopFileManager, can_find_app_when_wm_class_matches)
 {
     auto new_file = std::make_shared<mf::DesktopFile>(nullptr, APPLICATION_ID, nullptr);
     cache->files.push_back(new_file);
-    auto app_id = file_manager->resolve_app_id(&surface);
+    auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, Eq(new_file->id));
 }
 
@@ -139,13 +139,13 @@ TEST_F(DesktopFileManager, can_find_app_when_app_id_matches_despite_being_upperc
 
     auto new_file = std::make_shared<mf::DesktopFile>(DESKTOP_FILE_APP_ID, nullptr, nullptr);
     cache->files.push_back(new_file);
-    auto app_id = file_manager->resolve_app_id(&surface);
+    auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, Eq(new_file->id));
 }
 
 TEST_F(DesktopFileManager, when_every_check_fails_then_application_id_is_returned)
 {
-    auto app_id = file_manager->resolve_app_id(&surface);
+    auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, Eq(APPLICATION_ID));
 }
 
@@ -158,7 +158,7 @@ TEST_P(DesktopFileManagerParameterizedTestFixture, can_find_app_when_app_id_matc
     const std::string prefixed = prefix + DESKTOP_FILE_APP_ID;
     auto new_file = std::make_shared<mf::DesktopFile>(prefixed.c_str(), nullptr, nullptr);
     cache->files.push_back(new_file);
-    auto app_id = file_manager->resolve_app_id(&surface);
+    auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, Eq(new_file->id));
 }
 
@@ -221,7 +221,7 @@ TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
 
     auto new_file = std::make_shared<mf::DesktopFile>(desktop_app_id, nullptr, nullptr);
     cache->files.push_back(new_file);
-    auto found_app_id = file_manager->resolve_app_id(&surface);
+    auto found_app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(found_app_id, Eq(desktop_app_id));
     ::unlink(tmp_file_name);
 }
@@ -259,7 +259,7 @@ TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_i
 
     auto new_file = std::make_shared<mf::DesktopFile>(desktop_app_id, nullptr, nullptr);
     cache->files.push_back(new_file);
-    auto found_app_id = file_manager->resolve_app_id(&surface);
+    auto found_app_id = file_manager->resolve_app_id(surface);
     EXPECT_NE(found_app_id, desktop_app_id);
     EXPECT_EQ(found_app_id, APPLICATION_ID);
     ::unlink(tmp_file_name);
