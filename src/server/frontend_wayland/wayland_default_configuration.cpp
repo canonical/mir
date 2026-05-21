@@ -51,6 +51,8 @@
 #include "xdg_activation_v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_decoration_unstable_v1.h"
+#include "server-decoration_wrapper.h"
+#include "server_decoration_manager.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
 #include "xwayland_wm_shell.h"
@@ -249,6 +251,10 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
         {
             return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
+        }),
+    make_extension_builder<mw::ServerDecorationManager>([](auto const& ctx)
+        {
+            return mf::create_server_decoration_manager(ctx.display, ctx.decoration_strategy);
         }),
     make_extension_builder<mw::FractionalScaleManagerV1>([](auto const& ctx)
         {
