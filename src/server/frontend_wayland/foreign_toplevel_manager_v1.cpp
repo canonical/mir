@@ -398,7 +398,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             handle = std::make_shared<mw::Weak<ForeignToplevelHandleV1>>();
 
             std::string name = surface->name();
-            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
+            std::string app_id = surface->application_id();
             auto const focused = surface->focus_state();
             auto const state = surface->state_tracker();
 
@@ -486,15 +486,13 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const* surface,
     std::string const& application_id)
 {
+    (void)surface;
     std::lock_guard lock{mutex};
-
-    std::string id = application_id;
     with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
-            auto app_id = desktop_file_manager->resolve_app_id(surface);
-            if (!app_id.empty())
+            if (!application_id.empty())
             {
-                handle.send_app_id_event(app_id);
+                handle.send_app_id_event(application_id);
                 handle.send_done_event();
             }
         });

@@ -426,7 +426,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 
             std::string toplevel_id = id_map->toplevel_id(surface);
             std::string name = surface->name();
-            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
+            std::string app_id = surface->application_id();
 
             // Remember Wayland objects manage their own lifetime
             auto const handle_ptr = new ExtForeignToplevelHandleV1{manager.value(), surface};
@@ -482,13 +482,12 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const* surface,
     std::string const& application_id)
 {
-    std::string id = application_id;
+    (void)surface;
     if (handle)
     {
-        auto app_id = desktop_file_manager->resolve_app_id(surface);
-        if (!app_id.empty())
+        if (!application_id.empty())
         {
-            handle.value().send_app_id_event(app_id);
+            handle.value().send_app_id_event(application_id);
             handle.value().send_done_event();
         }
     };
