@@ -68,11 +68,32 @@ std::string mf::DesktopFileManager::resolve_app_id(scene::Surface const& surface
     // Hence, we jump through a series of hoops in the hope that we'll find what we're looking for.
     // For more info on the checks happening here, see:
     // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/shell-window-tracker.c?ref_type=heads#L387
+
+    if (auto session = surface.session().lock())
+    {
+        auto pid = session->process_id();
+        auto socket_fd = session->socket_fd();
+
+        // First, check if the window belongs to snap
+        if (auto const found = resolve_if_snap(pid, socket_fd))
+        {
+            mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
+            return found->id;
+        }
+
+        // Second, check if the window belongs to flatpak
+        if (auto const found = resolve_if_flatpak(pid))
+        {
+            mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
+            return found->id;
+        }
+    }
+
     auto app_id = surface.application_id();
     rtrim(app_id); // Sometimes, the app id has a space at the end
     mir::log_info("Attempting to resolve app id from app_id=%s", app_id.c_str());
 
-    // First, let's see if this is just a WM_CLASS
+    // Third, let's see if this is just a WM_CLASS
     if (auto const app = cache->lookup_by_wm_class(app_id))
     {
         mir::log_info("Successfully resolved app id from wm_class, id=%s", app->id.c_str());
@@ -88,14 +109,14 @@ std::string mf::DesktopFileManager::resolve_app_id(scene::Surface const& surface
         }
     }
 
-    // Second, let's see if we can map it straight to a desktop file
+    // Fourth, let's see if we can map it straight to a desktop file
     if (auto const found = lookup_basename(app_id))
     {
         mir::log_info("Successfully resolved app id from basename, id=%s", found->id.c_str());
         return found->id;
     }
 
-    // Third, lowercase it and try again
+    // Fifth, lowercase it and try again
     auto lowercase_desktop_file = app_id;
     for(char &ch : lowercase_desktop_file)
         ch = std::tolower(ch);
@@ -109,21 +130,6 @@ std::string mf::DesktopFileManager::resolve_app_id(scene::Surface const& surface
     if (auto session = surface.session().lock())
     {
         auto pid = session->process_id();
-        auto socket_fd = session->socket_fd();
-
-        // Fourth, check if the window belongs to snap
-        if (auto const found = resolve_if_snap(pid, socket_fd))
-        {
-            mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
-            return found->id;
-        }
-
-        // Fifth, check if the window belongs to flatpak
-        if (auto const found = resolve_if_flatpak(pid))
-        {
-            mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
-            return found->id;
-        }
 
         // Sixth, get the exec command from our pid and see if we can match it to a GAppInfo's Exec
         if (auto const found = resolve_if_executable_matches(pid))
