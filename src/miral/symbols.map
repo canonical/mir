@@ -460,10 +460,11 @@ local: *;
 
 MIRAL_5.1 {
 global:
+  _ZN5miral10ConfigFileC1ERNS_9MirRunnerENSt10filesystem7__cxx114pathENS0_4ModeESt8functionIFvRSiRKS5_EE;
+
   extern "C++" {
     "miral::InputConfiguration::InputConfiguration()";
     miral::ConfigFile::?ConfigFile*;
-    miral::ConfigFile::ConfigFile*;
     miral::Decorations::Decorations*;
     miral::Decorations::always_csd*;
     miral::Decorations::always_ssd*;
@@ -778,6 +779,8 @@ global:
 
 MIRAL_5.8 {
 global:
+  _ZN5miral10ConfigFileC1ERNS_9MirRunnerENSt10filesystem7__cxx114pathENS0_4ModeESt18move_only_functionIJFvRKNS_11live_config13OverridesListEEEESt17basic_string_viewIcSt11char_traitsIcEE;
+
   extern "C++" {
     miral::WindowSpecification::parent_size*;
     miral::live_config::OverridesList::?OverridesList*;

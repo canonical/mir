@@ -20,13 +20,15 @@
 #include <mir/fd.h>
 
 #include <filesystem>
-#include <istream>
+#include <iosfwd>
+#include <string_view>
 #include <functional>
 
 namespace miral
 {
 class MirRunner;
 class FdHandle;
+namespace live_config { struct OverridesList; }
 }
 
 namespace miral
@@ -49,6 +51,7 @@ class ConfigFile
 public:
     /// Loader functor is passed both the open stream and the actual path (for use in reporting problems)
     using Loader = std::function<void(std::istream& istream, std::filesystem::path const& path)>;
+    using OverrideLoader = std::move_only_function<void(live_config::OverridesList const&)>;
 
     /// Mode of reloading
     enum class Mode
@@ -58,6 +61,22 @@ public:
     };
 
     ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, Loader load_config);
+
+    /// Loads the base configuration file together with any override (drop-in)
+    /// files from `<config-file>.d/` directories across all XDG config roots.
+    /// Files are sorted by basename and deduplicated following systemd
+    /// conventions: when multiple roots provide a file with the same basename,
+    /// only the highest-priority root's copy is used.
+    /// If the base file is not found, \p load_config is not invoked.
+    /// \remark since MirAL 5.8
+    /// \param extension file extension (including the leading dot) used to filter override files.
+    ConfigFile(
+        MirRunner& runner,
+        std::filesystem::path file,
+        Mode mode,
+        OverrideLoader load_config,
+        std::string_view extension);
+
     ~ConfigFile();
 
 private:

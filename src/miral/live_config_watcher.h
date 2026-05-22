@@ -35,6 +35,7 @@ namespace miral
 {
 namespace live_config
 {
+class OverridesList;
 /// RAII wrapper for an inotify watch descriptor.
 class InotifyWatch
 {
@@ -75,6 +76,10 @@ protected:
 
 auto config_directory(std::filesystem::path const& file) -> std::optional<std::filesystem::path>;
 auto get_config_roots(std::filesystem::path const& file) -> std::vector<std::filesystem::path>;
+auto collect_override_files(std::filesystem::path const& override_directory, std::string_view extension)
+    -> std::set<std::filesystem::path>;
+auto collect_paths(miral::live_config::OverridesList const& config_files) -> std::string;
+auto open_file(std::filesystem::path const& path) -> std::unique_ptr<std::istream>;
 
 }
 }

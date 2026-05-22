@@ -184,3 +184,58 @@ auto mlc::get_config_roots(path const& file) -> std::vector<path>
 
     return config_roots;
 }
+
+auto mlc::collect_override_files(path const& override_directory, std::string_view extension) -> std::set<path>
+{
+    std::error_code ec;
+    if (!fs::exists(override_directory, ec) || !fs::is_directory(override_directory, ec))
+        return {};
+
+    fs::directory_iterator dir{override_directory, ec};
+    if (ec)
+    {
+        mir::log_warning(
+            "Failed to read override directory '%s': %s", override_directory.c_str(), ec.message().c_str());
+        return {};
+    }
+
+    auto matching = dir
+                  | std::views::filter(
+                        [extension](auto const& f)
+                        {
+                            std::error_code ec;
+                            return fs::is_regular_file(f, ec) && f.path().extension() == extension;
+                        })
+                  | std::views::transform([](auto const& f) { return f.path(); });
+
+    std::set<path> result;
+    std::ranges::copy(matching, std::inserter(result, result.end()));
+    return result;
+}
+
+auto mlc::collect_paths(mlc::OverridesList const& config_files) -> std::string
+{
+    std::string result;
+    auto const append = [&](std::string_view label, auto const& path, auto&&...)
+    {
+        if (!result.empty())
+            result += ", ";
+        result += std::format("{} ({})", path.string(), label);
+    };
+
+    config_files.for_each(
+        [&](auto const& p, auto&&...) { append("unchanged", p); },
+        [&](auto const& p, auto&&...) { append("new", p); },
+        [&](auto const& p, auto&&...) { append("modified", p); },
+        [&](auto const& p, auto&&...) { append("dropped", p); });
+
+    return result;
+}
+
+auto mlc::open_file(std::filesystem::path const& path) -> std::unique_ptr<std::istream>
+{
+    auto stream = std::make_unique<std::ifstream>(path);
+    if (!stream->is_open())
+        return nullptr;
+    return stream;
+}

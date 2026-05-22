@@ -15,7 +15,11 @@
  */
 
 #include "miral/config_file.h"
+#include "live_config_overrides_list_builder.h"
 #include "live_config_watcher.h"
+#include "override_watcher.h"
+
+#include "miral/live_config_overrides_list.h"
 
 #include <mir/log.h>
 #include <miral/runner.h>
@@ -25,7 +29,9 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <map>
 #include <optional>
+#include <ranges>
 #include <string>
 
 namespace fs = std::filesystem;
@@ -48,6 +54,31 @@ auto find_config_file(std::vector<path> const& config_roots, path const& filenam
         return *it / filename;
     else
         return std::nullopt;
+}
+
+auto get_all_config_files(
+    std::vector<path> const& config_roots,
+    path const& resolved_base_config,
+    std::string_view extension) -> mlc::OverridesList
+{
+    auto const override_directory_name = resolved_base_config.filename().string() + ".d";
+
+    mlc::OverridesListBuilder config_streams;
+    config_streams.push_new(resolved_base_config, mlc::open_file);
+
+    // Collect override files from all roots, deduplicating by basename.
+    // Higher-priority roots (earlier in config_roots, later in reverse iteration) shadow lower ones.
+    std::map<std::string, path> by_basename;
+    for (auto const& root : config_roots | std::views::reverse)
+    {
+        for (auto const& override_file : mlc::collect_override_files(root / override_directory_name, extension))
+            by_basename.insert_or_assign(override_file.filename().string(), override_file);
+    }
+
+    for (auto const& [_, file] : by_basename)
+        config_streams.push_new(file, mlc::open_file);
+
+    return config_streams.build();
 }
 
 class SingleFileWatcher : public mlc::Watcher
@@ -75,6 +106,7 @@ class miral::ConfigFile::Self
 {
 public:
     Self(MirRunner& runner, path file, Mode mode, Loader load_config);
+    Self(MirRunner& runner, path file, Mode mode, OverrideLoader load_config, std::string_view extension);
 
 private:
     std::shared_ptr<mlc::Watcher> watcher;
@@ -102,8 +134,39 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
     }
 }
 
+miral::ConfigFile::Self::Self(
+    MirRunner& runner, path file, Mode mode, OverrideLoader load_multi_configs, std::string_view extension)
+{
+    auto const config_roots = mlc::get_config_roots(file);
+    if (auto const config_file = find_config_file(config_roots, file.filename()))
+    {
+        auto config_files = get_all_config_files(config_roots, *config_file, extension);
+        load_multi_configs(config_files);
+
+        mir::log_debug("Loaded [%s]", collect_paths(config_files).c_str());
+    }
+
+    switch (mode)
+    {
+    case Mode::no_reloading:
+        break;
+
+    case Mode::reload_on_change:
+        watcher =
+            std::make_shared<mlc::OverrideWatcher>(std::move(file), std::move(load_multi_configs), extension);
+        watcher->register_handler(runner);
+        break;
+    }
+}
+
 miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader load_config) :
     self{std::make_shared<Self>(runner, file, mode, load_config)}
+{
+}
+
+miral::ConfigFile::ConfigFile(
+    MirRunner& runner, path file, Mode mode, OverrideLoader load_config, std::string_view extension) :
+    self{std::make_shared<Self>(runner, std::move(file), mode, std::move(load_config), extension)}
 {
 }
 
