@@ -54,8 +54,7 @@ struct IniFileWithOverridesTest : Test
         mlc::OverridesListBuilder changes;
         for (auto const& [contents, path] : contents_and_paths)
             changes.push_modified(
-                path,
-                [s = contents]{ return std::make_unique<std::istringstream>(s); });
+                path, [s = contents](auto const&) { return std::make_unique<std::istringstream>(s); });
 
         config_store.load(changes.build());
     }
