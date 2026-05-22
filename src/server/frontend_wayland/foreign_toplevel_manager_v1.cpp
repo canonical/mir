@@ -473,8 +473,11 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
 
     with_toplevel_handle(lock, [&](ForeignToplevelHandleV1& handle)
         {
-            handle.send_app_id_event(desktop_file_manager->resolve_app_id(*surface));
-            handle.send_done_event();
+            if (auto const app_id = desktop_file_manager->resolve_app_id(*surface); !app_id.empty())
+            {
+                handle.send_app_id_event(app_id);
+                handle.send_done_event();
+            }
         });
 }
 

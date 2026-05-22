@@ -383,13 +383,8 @@ void mf::ForeignSurfaceObserver::cease_and_desist()
 
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 {
-    bool should_have_handle = false;
-
     auto const surface = weak_surface.lock();
-    if (surface)
-    {
-        should_have_handle = should_create_foreign_toplevel_handle(*surface);
-    }
+    bool const should_have_handle = surface && should_create_foreign_toplevel_handle(*surface);
 
     if (should_have_handle != has_handle)
     {
@@ -467,8 +462,11 @@ void mf::ForeignSurfaceObserver::application_id_set_to(
 
     if (handle)
     {
-        handle.value().send_app_id_event(desktop_file_manager->resolve_app_id(*surface));
-        handle.value().send_done_event();
+        if (auto const app_id = desktop_file_manager->resolve_app_id(*surface); !app_id.empty())
+        {
+            handle.value().send_app_id_event(app_id);
+            handle.value().send_done_event();
+        }
     };
 }
 
