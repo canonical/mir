@@ -30,6 +30,9 @@
 #include <mir/graphics/platform.h>
 #include <mir/options/configuration.h>
 
+#include <cstdlib>
+#include <algorithm>
+
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -52,6 +55,36 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             if (providers.empty())
             {
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
+            }
+
+            if (auto const pin_to = getenv("MIR_PIN_COMPOSITING_TO"))
+            {
+                auto const provider_it = std::ranges::find_if(
+                    the_rendering_platforms(),
+                    [&](auto const& platform)
+                    {
+                        auto it = rendering_platform_names.find(platform.get());
+                        return it != rendering_platform_names.end() && it->second == pin_to;
+                    });
+
+                if (provider_it == the_rendering_platforms().end())
+                {
+                    mir::log_warning(
+                        "MIR_PIN_COMPOSITING_TO is set to '%s', but no such rendering platform was found", pin_to);
+                }
+                else if (
+                    auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(*provider_it))
+                {
+                    mir::log_info("Pinning all compositing to provider: %s", pin_to);
+                    providers = {gl_provider};
+                }
+                else
+                {
+                    mir::log_warning(
+                        "MIR_PIN_COMPOSITING_TO is set to '%s', but that rendering platform does not support GL "
+                        "compositing",
+                        pin_to);
+                }
             }
 
             return wrap_display_buffer_compositor_factory(

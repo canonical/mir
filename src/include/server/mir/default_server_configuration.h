@@ -383,6 +383,7 @@ protected:
     // after everything else.
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+    std::map<graphics::RenderingPlatform*, std::string> rendering_platform_names;
     std::shared_ptr<input::InputManager>    input_manager;
 
     CachedPtr<frontend::Connector>   wayland_connector;

@@ -299,13 +299,18 @@ auto mir::DefaultServerConfiguration::the_rendering_platforms() ->
                 }
 
                 // TODO: Do we want to be able to continue on partial failure here?
-                rendering_platform_map.emplace(
-                    description->name,
-                    create_rendering_platform(
-                        device,
-                        display_targets,
-                        *the_options_provider()->options_for(*platform),
-                        *the_emergency_cleanup()));
+                auto rendering_platform = create_rendering_platform(
+                    device,
+                    display_targets,
+                    *the_options_provider()->options_for(*platform),
+                    *the_emergency_cleanup());
+
+                // Use the device node as the pin identifier when available (unique per physical GPU),
+                // falling back to the module name for deviceless platforms (e.g. mir:virtual).
+                auto const pin_id = device.device ? device.device->devnode() : description->name;
+                rendering_platform_names[rendering_platform.get()] = pin_id;
+
+                rendering_platform_map.emplace(description->name, std::move(rendering_platform));
                 // Add this module to the list searched by the input stack later
                 // TODO: Come up with a more principled solution for combined input/rendering/output platforms
                 platform_libraries.push_back(platform);
