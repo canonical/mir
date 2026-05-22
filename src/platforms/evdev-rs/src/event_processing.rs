@@ -893,9 +893,6 @@ pub fn process_libinput_events(
         return handles;
     }
 
-    // Use .next() rather than `for event in libinput` so that
-    // the borrow on libinput is released after each call and the loop
-    // body is free to borrow other fields of `state` via process_input_event.
     for event in libinput.by_ref() {
         match event {
             input::Event::Device(device_event) => {
