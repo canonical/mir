@@ -52,6 +52,13 @@ TEST_F(ForeignToplevelHandleCreation, creates_handles_for_application_layer_norm
     EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
+TEST_F(ForeignToplevelHandleCreation, creates_handles_for_attached_windows)
+{
+    ON_CALL(surface, state())
+        .WillByDefault(Return(mir_window_state_attached));
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
+}
+
 TEST_F(ForeignToplevelHandleCreation, creates_handles_for_freestyle_windows)
 {
     ON_CALL(surface, type())
