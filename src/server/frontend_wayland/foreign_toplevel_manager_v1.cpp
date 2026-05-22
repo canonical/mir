@@ -353,15 +353,10 @@ void mf::ForeignSurfaceObserver::with_toplevel_handle(
 
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::lock_guard<std::mutex>& lock)
 {
-    bool should_have_handle = false;
-
     auto const surface = weak_surface.lock();
-    if (surface)
-    {
-        should_have_handle = should_create_foreign_toplevel_handle(*surface);
-    }
-
+    bool const should_have_handle = surface && should_create_foreign_toplevel_handle(*surface);
     bool const currently_have_handle{handle};
+
     if (should_have_handle != currently_have_handle)
     {
         if (should_have_handle)
@@ -391,9 +386,9 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
         else
         {
             with_toplevel_handle(lock, [](ForeignToplevelHandleV1& handle)
-                {
-                    handle.should_close();
-                });
+            {
+                handle.should_close();
+            });
             handle = {};
         }
     }

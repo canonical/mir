@@ -69,6 +69,10 @@ std::string mf::DesktopFileManager::resolve_app_id(scene::Surface const& surface
     // For more info on the checks happening here, see:
     // https://gitlab.gnome.org/GNOME/gnome-shell/-/blob/main/src/shell-window-tracker.c?ref_type=heads#L387
 
+    // When packaged as a snap or flatpack the resulting desktop entry may not follow
+    // the naming style expected by the app. So we find the name based on the packaging
+    // and ignore the name provided by the application.
+    // https://github.com/canonical/mir/issues/4954#issuecomment-4510527223
     if (auto session = surface.session().lock())
     {
         auto pid = session->process_id();
