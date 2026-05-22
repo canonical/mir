@@ -18,6 +18,7 @@
 
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
+#include "foreign_toplevel_handle_creation.h"
 #include "mir/wayland/weak.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/surface_specification.h"
@@ -121,6 +122,7 @@ private:
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int) override;
     void renamed(scene::Surface const*, std::string const& name) override;
     void application_id_set_to(scene::Surface const*, std::string const& application_id) override;
+    void depth_layer_set_to(scene::Surface const*, MirDepthLayer) override;
     ///@}
 
     wayland::Weak<ExtForeignToplevelListV1> const manager;
@@ -381,40 +383,8 @@ void mf::ForeignSurfaceObserver::cease_and_desist()
 
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 {
-    bool should_have_handle = true;
-
     auto const surface = weak_surface.lock();
-    if (surface)
-    {
-        switch(surface->state())
-        {
-        case mir_window_state_attached:
-            should_have_handle = false;
-            break;
-
-        default:
-            break;
-        }
-
-        switch (surface->type())
-        {
-        case mir_window_type_normal:
-        case mir_window_type_utility:
-        case mir_window_type_freestyle:
-            break;
-
-        default:
-            should_have_handle = false;
-            break;
-        }
-
-        if (surface->session().expired())
-            should_have_handle = false;
-    }
-    else
-    {
-        should_have_handle = false;
-    }
+    bool const should_have_handle = surface && should_create_foreign_toplevel_handle(*surface);
 
     if (should_have_handle != has_handle)
     {
@@ -424,9 +394,9 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             if (!manager)
                 return;
 
-            std::string toplevel_id = id_map->toplevel_id(surface);
-            std::string name = surface->name();
-            std::string app_id = desktop_file_manager->resolve_app_id(surface.get());
+            auto const toplevel_id = id_map->toplevel_id(surface);
+            auto const name = surface->name();
+            auto const app_id = desktop_file_manager->resolve_app_id(*surface);
 
             // Remember Wayland objects manage their own lifetime
             auto const handle_ptr = new ExtForeignToplevelHandleV1{manager.value(), surface};
@@ -480,18 +450,29 @@ void mf::ForeignSurfaceObserver::renamed(ms::Surface const*, std::string const& 
 
 void mf::ForeignSurfaceObserver::application_id_set_to(
     scene::Surface const* surface,
-    std::string const& application_id)
+    std::string const& /*application_id*/)
 {
-    std::string id = application_id;
+    bool const toplevel_handle_existed_before{has_handle};
+    create_or_close_toplevel_handle_as_needed();
+
+    if (!toplevel_handle_existed_before)
+    {
+        return;
+    }
+
     if (handle)
     {
-        auto app_id = desktop_file_manager->resolve_app_id(surface);
-        if (!app_id.empty())
+        if (auto const app_id = desktop_file_manager->resolve_app_id(*surface); !app_id.empty())
         {
             handle.value().send_app_id_event(app_id);
             handle.value().send_done_event();
         }
     };
+}
+
+void mf::ForeignSurfaceObserver::depth_layer_set_to(scene::Surface const*, MirDepthLayer)
+{
+    create_or_close_toplevel_handle_as_needed();
 }
 
 // ExtForeignToplevelListV1
