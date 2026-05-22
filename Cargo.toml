@@ -1,7 +1,10 @@
 [workspace]
 members = [
   "src/platforms/evdev-rs",
-  "src/server/frontend_wayland/wayland_rs"
+  "src/server/frontend_wayland/wayland_rs",
+  "miral-sys",
+  "miral-rs",
+  "examples/miral-rs-tiling",
 ]
 resolver = "2"
 

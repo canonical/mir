@@ -1,0 +1,753 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+//! Low-level FFI bindings to the miral C++ library.
+//!
+//! This crate provides:
+//! - **bindgen-generated** Rust equivalents of C-linkage Mir enums
+//! - **cxx.rs bridge** for C++ class interactions (MirRunner, WindowManagerTools, etc.)
+//!
+//! Compositor authors should use the `miral` crate instead of this one directly.
+
+#![allow(non_upper_case_globals)]
+#![allow(non_camel_case_types)]
+#![allow(non_snake_case)]
+#![allow(dead_code)]
+
+/// Raw bindgen-generated bindings for Mir C enums.
+///
+/// These are auto-generated from `mir_toolkit/common.h` and `mir_toolkit/events/enums.h`.
+pub mod enums {
+    include!(concat!(env!("OUT_DIR"), "/mir_enums.rs"));
+}
+
+#[cxx::bridge(namespace = "miral_sys")]
+pub mod ffi {
+    /// Geometry types shared between Rust and C++.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    struct Point {
+        x: i32,
+        y: i32,
+    }
+
+    /// A 2D size with width and height.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    struct Size {
+        width: i32,
+        height: i32,
+    }
+
+    /// A rectangle defined by a top-left point and a size.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    struct Rectangle {
+        top_left: Point,
+        size: Size,
+    }
+
+    /// A 2D displacement vector.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+    struct Displacement {
+        dx: i32,
+        dy: i32,
+    }
+
+    /// Information about a keyboard event, extracted on the C++ side.
+    #[derive(Debug, Clone, Copy)]
+    struct KeyboardEventInfo {
+        action: i32,
+        keysym: i32,
+        scan_code: i32,
+        modifiers: u32,
+        event_time: i64,
+    }
+
+    /// Information about a pointer event, extracted on the C++ side.
+    #[derive(Debug, Clone, Copy)]
+    struct PointerEventInfo {
+        action: i32,
+        modifiers: u32,
+        buttons: u32,
+        x: f32,
+        y: f32,
+        dx: f32,
+        dy: f32,
+        event_time: i64,
+    }
+
+    /// Information about a touch event, extracted on the C++ side.
+    #[derive(Debug, Clone, Copy)]
+    struct TouchEventInfo {
+        id: i32,
+        action: i32,
+        modifiers: u32,
+        x: f32,
+        y: f32,
+        event_time: i64,
+    }
+
+    /// Read-only snapshot of window information passed across FFI.
+    #[derive(Debug, Clone)]
+    struct WindowInfoSnapshot {
+        name: String,
+        window_type: i32,
+        state: i32,
+        top_left: Point,
+        size: Size,
+        min_width: i32,
+        min_height: i32,
+        max_width: i32,
+        max_height: i32,
+        depth_layer: i32,
+        has_parent: bool,
+        can_be_active: bool,
+        is_visible: bool,
+        focus_mode: i32,
+    }
+
+    /// Read-only snapshot of application information passed across FFI.
+    #[derive(Debug, Clone)]
+    struct ApplicationInfoSnapshot {
+        name: String,
+        window_count: u32,
+    }
+
+    /// Read-only snapshot of output information passed across FFI.
+    #[derive(Debug, Clone)]
+    struct OutputSnapshot {
+        id: i32,
+        name: String,
+        connected: bool,
+        used: bool,
+        extents: Rectangle,
+        refresh_rate: f64,
+        scale: f32,
+        power_mode: i32,
+        orientation: i32,
+        form_factor: i32,
+    }
+
+    /// Read-only snapshot of zone information passed across FFI.
+    #[derive(Debug, Clone, Copy)]
+    struct ZoneSnapshot {
+        id: i32,
+        extents: Rectangle,
+    }
+
+    /// Fields for a window specification, used to create or modify windows.
+    #[derive(Debug, Clone)]
+    struct WindowSpecData {
+        has_top_left: bool,
+        top_left: Point,
+        has_size: bool,
+        size: Size,
+        has_state: bool,
+        state: i32,
+        has_type: bool,
+        window_type: i32,
+        has_name: bool,
+        name: String,
+    }
+
+    unsafe extern "C++" {
+        include!("bridge.h");
+
+        // --- Opaque C++ types ---
+
+        /// Opaque handle to a miral::Window on the C++ side.
+        type MiralWindow;
+        /// Opaque handle to a miral::WindowInfo on the C++ side.
+        type MiralWindowInfo;
+        /// Opaque handle to a miral::ApplicationInfo on the C++ side.
+        type MiralApplicationInfo;
+        /// Opaque handle to the policy tools on the C++ side.
+        type MiralTools;
+        /// Opaque handle to the Mir runner on the C++ side.
+        type MiralRunner;
+
+        // --- Runner lifecycle ---
+
+        /// Create a new MirRunner from command-line arguments.
+        fn miral_runner_new(args: &[String]) -> UniquePtr<MiralRunner>;
+        /// Run the server with no policy. Blocks until exit.
+        fn miral_runner_run(runner: Pin<&mut MiralRunner>) -> i32;
+        /// Run the server with a Rust policy. Blocks until exit.
+        fn miral_runner_run_with_rust_policy(runner: Pin<&mut MiralRunner>) -> i32;
+        /// Run the server with a Rust policy and extensions configured.
+        ///
+        /// decoration_mode: 0=none, 1=prefer_csd, 2=prefer_ssd, 3=always_ssd, 4=always_csd
+        /// keymap_layout: XKB layout string (empty = no keymap configuration)
+        /// x11_enabled: whether to enable X11 support
+        fn miral_runner_run_with_config(
+            runner: Pin<&mut MiralRunner>,
+            decoration_mode: i32,
+            keymap_layout: &str,
+            x11_enabled: bool,
+        ) -> i32;
+        /// Tell the server to stop.
+        fn miral_runner_stop(runner: Pin<&mut MiralRunner>);
+        /// Register a start callback (will call rust_on_start_callback when server starts).
+        fn miral_runner_register_start_callback(runner: Pin<&mut MiralRunner>);
+        /// Register a stop callback (will call rust_on_stop_callback when server stops).
+        fn miral_runner_register_stop_callback(runner: Pin<&mut MiralRunner>);
+
+        /// Enable the external client launcher for this runner.
+        ///
+        /// Must be called before `miral_runner_run_with_config`. Causes the launcher to
+        /// be registered with the server so `miral_launcher_launch` works after startup.
+        fn miral_runner_enable_external_launcher(runner: Pin<&mut MiralRunner>);
+
+        /// Launch an external client by command string.
+        ///
+        /// Returns the pid of the launched process, or -1 on failure.
+        /// Only valid after the server has started with the launcher enabled.
+        fn miral_launcher_launch(command: &str) -> i32;
+
+        // --- Window info queries ---
+
+        /// Get a snapshot of window information.
+        fn miral_window_info_snapshot(info: &MiralWindowInfo) -> WindowInfoSnapshot;
+        /// Get the window handle from a WindowInfo.
+        fn miral_window_info_window(info: &MiralWindowInfo) -> UniquePtr<MiralWindow>;
+        /// Get the unique ID for the window in a WindowInfo.
+        fn miral_window_info_id(info: &MiralWindowInfo) -> u64;
+        /// Get the unique ID for an application.
+        fn miral_app_info_id(info: &MiralApplicationInfo) -> u64;
+
+        // --- Application info queries ---
+
+        /// Get a snapshot of application information.
+        fn miral_app_info_snapshot(info: &MiralApplicationInfo) -> ApplicationInfoSnapshot;
+
+        // --- Window manager tools (ID-based for Rust interop) ---
+
+        /// Get the number of connected applications.
+        fn miral_tools_count_applications(tools: &MiralTools) -> u32;
+        /// Get the active window info snapshot.
+        fn miral_tools_active_window(tools: &MiralTools) -> WindowInfoSnapshot;
+        /// Get the active window ID (0 if none).
+        fn miral_tools_active_window_id(tools: &MiralTools) -> u64;
+        /// Focus the next application.
+        fn miral_tools_focus_next_application(tools: Pin<&mut MiralTools>);
+        /// Focus the previous application.
+        fn miral_tools_focus_prev_application(tools: Pin<&mut MiralTools>);
+        /// Focus the next window within the current application.
+        fn miral_tools_focus_next_within_application(tools: Pin<&mut MiralTools>);
+        /// Focus the previous window within the current application.
+        fn miral_tools_focus_prev_within_application(tools: Pin<&mut MiralTools>);
+        /// Raise a window tree by ID.
+        fn miral_tools_raise_tree_by_id(tools: Pin<&mut MiralTools>, window_id: u64);
+        /// Ask a client to close its window by ID.
+        fn miral_tools_ask_client_to_close_by_id(tools: Pin<&mut MiralTools>, window_id: u64);
+        /// Modify a window with a specification by ID.
+        fn miral_tools_modify_window_by_id(
+            tools: Pin<&mut MiralTools>,
+            window_id: u64,
+            spec: &WindowSpecData,
+        );
+        /// Drag a window by a displacement, by ID.
+        fn miral_tools_drag_window_by_id(
+            tools: Pin<&mut MiralTools>,
+            window_id: u64,
+            movement: Displacement,
+        );
+        /// Select (focus) a window by ID.
+        fn miral_tools_select_active_window_by_id(tools: Pin<&mut MiralTools>, window_id: u64);
+        /// Find the window at a given point.
+        fn miral_tools_window_at(tools: &MiralTools, point: Point) -> UniquePtr<MiralWindow>;
+        /// Get the active output rectangle.
+        fn miral_tools_active_output(tools: &MiralTools) -> Rectangle;
+        /// Get the active application zone.
+        fn miral_tools_active_application_zone(tools: &MiralTools) -> ZoneSnapshot;
+
+        // --- Window queries ---
+
+        /// Get the top-left position of a window.
+        fn miral_window_top_left(window: &MiralWindow) -> Point;
+        /// Get the size of a window.
+        fn miral_window_size(window: &MiralWindow) -> Size;
+        /// Check if a window is valid.
+        fn miral_window_is_valid(window: &MiralWindow) -> bool;
+        /// Get a unique ID for a window (for use as HashMap key).
+        fn miral_window_id(window: &MiralWindow) -> u64;
+    }
+
+    // --- Rust exports to C++ (for policy dispatch) ---
+    extern "Rust" {
+        type RustPolicyHolder;
+
+        /// Called by C++ to create the policy holder (reads from thread-local factory).
+        fn rust_create_policy_holder() -> Box<RustPolicyHolder>;
+
+        /// Called by C++ to set the tools pointer on the holder after creation.
+        fn rust_policy_set_tools(holder: &mut RustPolicyHolder, tools_ptr: u64);
+
+        fn rust_policy_place_new_window(
+            holder: &mut RustPolicyHolder,
+            app_info: &MiralApplicationInfo,
+            spec: &WindowSpecData,
+        ) -> WindowSpecData;
+
+        fn rust_policy_handle_window_ready(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_handle_modify_window(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            spec: &WindowSpecData,
+        );
+
+        fn rust_policy_handle_raise_window(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_handle_keyboard_event(
+            holder: &mut RustPolicyHolder,
+            event: &KeyboardEventInfo,
+        ) -> bool;
+
+        fn rust_policy_handle_touch_event(
+            holder: &mut RustPolicyHolder,
+            event: &TouchEventInfo,
+        ) -> bool;
+
+        fn rust_policy_handle_pointer_event(
+            holder: &mut RustPolicyHolder,
+            event: &PointerEventInfo,
+        ) -> bool;
+
+        fn rust_policy_handle_request_move(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_handle_request_resize(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            edge: i32,
+        );
+
+        fn rust_policy_confirm_inherited_move(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            movement: Displacement,
+        ) -> Rectangle;
+
+        fn rust_policy_confirm_placement_on_display(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            new_state: i32,
+            new_placement: &Rectangle,
+        ) -> Rectangle;
+
+        fn rust_policy_advise_new_app(
+            holder: &mut RustPolicyHolder,
+            app_info: &MiralApplicationInfo,
+        );
+
+        fn rust_policy_advise_delete_app(
+            holder: &mut RustPolicyHolder,
+            app_info: &MiralApplicationInfo,
+        );
+
+        fn rust_policy_advise_new_window(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_advise_delete_window(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_advise_focus_gained(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_advise_focus_lost(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+        );
+
+        fn rust_policy_advise_state_change(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            state: i32,
+        );
+
+        fn rust_policy_advise_move_to(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            top_left: Point,
+        );
+
+        fn rust_policy_advise_resize(
+            holder: &mut RustPolicyHolder,
+            window_info: &MiralWindowInfo,
+            new_size: Size,
+        );
+
+        fn rust_policy_advise_begin(holder: &mut RustPolicyHolder);
+        fn rust_policy_advise_end(holder: &mut RustPolicyHolder);
+
+        fn rust_policy_advise_output_create(holder: &mut RustPolicyHolder, output: &OutputSnapshot);
+        fn rust_policy_advise_output_update(
+            holder: &mut RustPolicyHolder,
+            updated: &OutputSnapshot,
+            original: &OutputSnapshot,
+        );
+        fn rust_policy_advise_output_delete(holder: &mut RustPolicyHolder, output: &OutputSnapshot);
+
+        fn rust_policy_advise_zone_create(holder: &mut RustPolicyHolder, zone: &ZoneSnapshot);
+        fn rust_policy_advise_zone_update(
+            holder: &mut RustPolicyHolder,
+            updated: &ZoneSnapshot,
+            original: &ZoneSnapshot,
+        );
+        fn rust_policy_advise_zone_delete(holder: &mut RustPolicyHolder, zone: &ZoneSnapshot);
+
+        /// Called from C++ when the server has started.
+        fn rust_on_start_callback();
+        /// Called from C++ when the server is stopping.
+        fn rust_on_stop_callback();
+    }
+}
+
+/// The Rust-side policy holder that wraps a trait object.
+///
+/// This is the type that C++ holds a reference to and dispatches virtual calls through.
+pub struct RustPolicyHolder {
+    /// The actual policy implementation, provided by the compositor author.
+    pub policy: Box<dyn PolicyBridge>,
+    /// Raw pointer to the C++ MiralTools object (set by C++ after construction).
+    /// Valid for the lifetime of the runner. Only used by the `miral` crate.
+    pub tools_ptr: u64,
+}
+
+/// Internal trait used by the FFI layer to dispatch policy calls.
+///
+/// This mirrors the public `WindowManagementPolicy` trait from the `miral` crate
+/// but uses FFI-compatible types.
+pub trait PolicyBridge: Send {
+    /// Called after tools_ptr has been set on the holder — gives the policy a chance
+    /// to store a reference to the tools.
+    fn set_tools_ptr(&mut self, tools_ptr: u64);
+
+    fn place_new_window(
+        &mut self,
+        app_info: &ffi::MiralApplicationInfo,
+        spec: &ffi::WindowSpecData,
+    ) -> ffi::WindowSpecData;
+    fn handle_window_ready(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn handle_modify_window(&mut self, window_info: &ffi::MiralWindowInfo, spec: &ffi::WindowSpecData);
+    fn handle_raise_window(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn handle_keyboard_event(&mut self, event: &ffi::KeyboardEventInfo) -> bool;
+    fn handle_touch_event(&mut self, event: &ffi::TouchEventInfo) -> bool;
+    fn handle_pointer_event(&mut self, event: &ffi::PointerEventInfo) -> bool;
+    fn handle_request_move(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn handle_request_resize(&mut self, window_info: &ffi::MiralWindowInfo, edge: i32);
+    fn confirm_inherited_move(
+        &mut self,
+        window_info: &ffi::MiralWindowInfo,
+        movement: ffi::Displacement,
+    ) -> ffi::Rectangle;
+    fn confirm_placement_on_display(
+        &mut self,
+        window_info: &ffi::MiralWindowInfo,
+        new_state: i32,
+        new_placement: &ffi::Rectangle,
+    ) -> ffi::Rectangle;
+    fn advise_new_app(&mut self, app_info: &ffi::MiralApplicationInfo);
+    fn advise_delete_app(&mut self, app_info: &ffi::MiralApplicationInfo);
+    fn advise_new_window(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn advise_delete_window(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn advise_focus_gained(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn advise_focus_lost(&mut self, window_info: &ffi::MiralWindowInfo);
+    fn advise_state_change(&mut self, window_info: &ffi::MiralWindowInfo, state: i32);
+    fn advise_move_to(&mut self, window_info: &ffi::MiralWindowInfo, top_left: ffi::Point);
+    fn advise_resize(&mut self, window_info: &ffi::MiralWindowInfo, new_size: ffi::Size);
+    fn advise_begin(&mut self);
+    fn advise_end(&mut self);
+    fn advise_output_create(&mut self, output: &ffi::OutputSnapshot);
+    fn advise_output_update(&mut self, updated: &ffi::OutputSnapshot, original: &ffi::OutputSnapshot);
+    fn advise_output_delete(&mut self, output: &ffi::OutputSnapshot);
+    fn advise_zone_create(&mut self, zone: &ffi::ZoneSnapshot);
+    fn advise_zone_update(&mut self, updated: &ffi::ZoneSnapshot, original: &ffi::ZoneSnapshot);
+    fn advise_zone_delete(&mut self, zone: &ffi::ZoneSnapshot);
+}
+
+// --- Thread-local policy factory ---
+
+use std::cell::RefCell;
+
+type PolicyFactoryFn = Box<dyn FnOnce() -> Box<dyn PolicyBridge>>;
+type LifecycleCallback = Box<dyn FnOnce() + Send>;
+
+thread_local! {
+    static POLICY_FACTORY: RefCell<Option<PolicyFactoryFn>> = RefCell::new(None);
+    static ON_START_CALLBACK: RefCell<Option<LifecycleCallback>> = RefCell::new(None);
+    static ON_STOP_CALLBACK: RefCell<Option<LifecycleCallback>> = RefCell::new(None);
+}
+
+/// Set the policy factory that will be called when C++ creates the policy.
+/// Must be called before `miral_runner_run_with_rust_policy`.
+pub fn set_policy_factory(factory: PolicyFactoryFn) {
+    POLICY_FACTORY.with(|f| {
+        *f.borrow_mut() = Some(factory);
+    });
+}
+
+/// Set the start callback, to be invoked when the server starts.
+pub fn set_on_start_callback(callback: LifecycleCallback) {
+    ON_START_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Set the stop callback, to be invoked when the server stops.
+pub fn set_on_stop_callback(callback: LifecycleCallback) {
+    ON_STOP_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+// --- Functions called from C++ ---
+
+fn rust_create_policy_holder() -> Box<RustPolicyHolder> {
+    let policy = POLICY_FACTORY.with(|f| {
+        let factory = f.borrow_mut().take()
+            .expect("No policy factory registered. Call set_policy_factory before run.");
+        factory()
+    });
+    Box::new(RustPolicyHolder { policy, tools_ptr: 0 })
+}
+
+fn rust_policy_set_tools(holder: &mut RustPolicyHolder, tools_ptr: u64) {
+    holder.tools_ptr = tools_ptr;
+    holder.policy.set_tools_ptr(tools_ptr);
+}
+
+// --- Policy dispatch functions called from C++ ---
+
+fn rust_policy_place_new_window(
+    holder: &mut RustPolicyHolder,
+    app_info: &ffi::MiralApplicationInfo,
+    spec: &ffi::WindowSpecData,
+) -> ffi::WindowSpecData {
+    holder.policy.place_new_window(app_info, spec)
+}
+
+fn rust_policy_handle_window_ready(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.handle_window_ready(window_info);
+}
+
+fn rust_policy_handle_modify_window(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    spec: &ffi::WindowSpecData,
+) {
+    holder.policy.handle_modify_window(window_info, spec);
+}
+
+fn rust_policy_handle_raise_window(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.handle_raise_window(window_info);
+}
+
+fn rust_policy_handle_keyboard_event(
+    holder: &mut RustPolicyHolder,
+    event: &ffi::KeyboardEventInfo,
+) -> bool {
+    holder.policy.handle_keyboard_event(event)
+}
+
+fn rust_policy_handle_touch_event(
+    holder: &mut RustPolicyHolder,
+    event: &ffi::TouchEventInfo,
+) -> bool {
+    holder.policy.handle_touch_event(event)
+}
+
+fn rust_policy_handle_pointer_event(
+    holder: &mut RustPolicyHolder,
+    event: &ffi::PointerEventInfo,
+) -> bool {
+    holder.policy.handle_pointer_event(event)
+}
+
+fn rust_policy_handle_request_move(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.handle_request_move(window_info);
+}
+
+fn rust_policy_handle_request_resize(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    edge: i32,
+) {
+    holder.policy.handle_request_resize(window_info, edge);
+}
+
+fn rust_policy_confirm_inherited_move(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    movement: ffi::Displacement,
+) -> ffi::Rectangle {
+    holder.policy.confirm_inherited_move(window_info, movement)
+}
+
+fn rust_policy_confirm_placement_on_display(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    new_state: i32,
+    new_placement: &ffi::Rectangle,
+) -> ffi::Rectangle {
+    holder.policy.confirm_placement_on_display(window_info, new_state, new_placement)
+}
+
+fn rust_policy_advise_new_app(
+    holder: &mut RustPolicyHolder,
+    app_info: &ffi::MiralApplicationInfo,
+) {
+    holder.policy.advise_new_app(app_info);
+}
+
+fn rust_policy_advise_delete_app(
+    holder: &mut RustPolicyHolder,
+    app_info: &ffi::MiralApplicationInfo,
+) {
+    holder.policy.advise_delete_app(app_info);
+}
+
+fn rust_policy_advise_new_window(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.advise_new_window(window_info);
+}
+
+fn rust_policy_advise_delete_window(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.advise_delete_window(window_info);
+}
+
+fn rust_policy_advise_focus_gained(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.advise_focus_gained(window_info);
+}
+
+fn rust_policy_advise_focus_lost(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+) {
+    holder.policy.advise_focus_lost(window_info);
+}
+
+fn rust_policy_advise_state_change(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    state: i32,
+) {
+    holder.policy.advise_state_change(window_info, state);
+}
+
+fn rust_policy_advise_move_to(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    top_left: ffi::Point,
+) {
+    holder.policy.advise_move_to(window_info, top_left);
+}
+
+fn rust_policy_advise_resize(
+    holder: &mut RustPolicyHolder,
+    window_info: &ffi::MiralWindowInfo,
+    new_size: ffi::Size,
+) {
+    holder.policy.advise_resize(window_info, new_size);
+}
+
+fn rust_policy_advise_begin(holder: &mut RustPolicyHolder) {
+    holder.policy.advise_begin();
+}
+
+fn rust_policy_advise_end(holder: &mut RustPolicyHolder) {
+    holder.policy.advise_end();
+}
+
+fn rust_policy_advise_output_create(holder: &mut RustPolicyHolder, output: &ffi::OutputSnapshot) {
+    holder.policy.advise_output_create(output);
+}
+
+fn rust_policy_advise_output_update(
+    holder: &mut RustPolicyHolder,
+    updated: &ffi::OutputSnapshot,
+    original: &ffi::OutputSnapshot,
+) {
+    holder.policy.advise_output_update(updated, original);
+}
+
+fn rust_policy_advise_output_delete(holder: &mut RustPolicyHolder, output: &ffi::OutputSnapshot) {
+    holder.policy.advise_output_delete(output);
+}
+
+fn rust_policy_advise_zone_create(holder: &mut RustPolicyHolder, zone: &ffi::ZoneSnapshot) {
+    holder.policy.advise_zone_create(zone);
+}
+
+fn rust_policy_advise_zone_update(
+    holder: &mut RustPolicyHolder,
+    updated: &ffi::ZoneSnapshot,
+    original: &ffi::ZoneSnapshot,
+) {
+    holder.policy.advise_zone_update(updated, original);
+}
+
+fn rust_policy_advise_zone_delete(holder: &mut RustPolicyHolder, zone: &ffi::ZoneSnapshot) {
+    holder.policy.advise_zone_delete(zone);
+}
+
+// --- Lifecycle callbacks called from C++ ---
+
+fn rust_on_start_callback() {
+    ON_START_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow_mut().take() {
+            callback();
+        }
+    });
+}
+
+fn rust_on_stop_callback() {
+    ON_STOP_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow_mut().take() {
+            callback();
+        }
+    });
+}

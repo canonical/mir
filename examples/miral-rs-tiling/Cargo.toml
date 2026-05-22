@@ -1,0 +1,9 @@
+[package]
+name = "miral-rs-tiling"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Minimal tiling window manager example using the miral Rust API"
+
+[dependencies]
+miral = { path = "../../miral-rs" }
