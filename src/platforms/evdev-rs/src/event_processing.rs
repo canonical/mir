@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState};
+use crate::device::{
+    InputDevicePtr, InputSinkPtr, LibinputDeviceHandle, LibinputDeviceInfo, LibinputDeviceState,
+};
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
@@ -127,8 +129,8 @@ fn handle_device_event(
         event::DeviceEvent::Added(_) => {
             known_devices.push(LibinputDeviceInfo {
                 id: *next_device_id,
-                device: libinput_device,
-                input_device: bridge.create_input_device(*next_device_id),
+                device: LibinputDeviceHandle(libinput_device),
+                input_device: InputDevicePtr(bridge.create_input_device(*next_device_id)),
                 input_sink: None,
                 event_builder: None,
                 button_state: 0,

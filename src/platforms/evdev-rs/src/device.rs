@@ -66,8 +66,9 @@ impl LibinputDevice {
             // # Safety
             //
             // Calling create_event_builder_wrapper with a raw pointer is unsafe.
-            device_info.event_builder =
-                Some(unsafe { self.bridge.create_event_builder_wrapper(event_builder) });
+            device_info.event_builder = Some(EventBuilderWrapperPtr(unsafe {
+                self.bridge.create_event_builder_wrapper(event_builder)
+            }));
         }
     }
 
@@ -239,10 +240,10 @@ impl LibinputDeviceState {
 
 pub struct LibinputDeviceInfo {
     pub id: i32,
-    pub device: input::Device,
-    pub input_device: cxx::SharedPtr<InputDevice>,
+    pub device: LibinputDeviceHandle,
+    pub input_device: InputDevicePtr,
     pub input_sink: Option<InputSinkPtr>,
-    pub event_builder: Option<cxx::UniquePtr<EventBuilderWrapper>>,
+    pub event_builder: Option<EventBuilderWrapperPtr>,
     pub button_state: u32,
     pub pointer_x: f32,
     pub pointer_y: f32,
@@ -311,12 +312,12 @@ impl LibinputDeviceObserver {
     }
 }
 
-// Because *mut InputSink and *mut EventBuilder are raw pointers, Rust assumes
-// that they are neither Send nor Sync. However, we know that the other side of
-// the pointer is actually a C++ object that is thread-safe, so we can assert
-// that these pointers are Send and Sync. We cannot define Send and Sync on the
-// raw types to fix the issue unfortunately, so we have to wrap them in a new type
-// and define Send and Sync on that.
+// cxx's SharedPtr and UniquePtr wrapping opaque C++ types do not automatically
+// implement Send or Sync, because Rust cannot verify thread-safety of the
+// underlying C++ objects. However, we know that the C++ side is thread-safe,
+// and all access is guarded by a Mutex. We therefore wrap the problematic types
+// in newtypes and assert Send + Sync on those.
+
 pub struct InputSinkPtr(pub std::ptr::NonNull<InputSink>);
 impl InputSinkPtr {
     pub fn handle_input(&mut self, event: &cxx::SharedPtr<MirEvent>) {
@@ -328,8 +329,50 @@ impl InputSinkPtr {
     }
 }
 
+pub struct InputDevicePtr(pub cxx::SharedPtr<InputDevice>);
+impl Clone for InputDevicePtr {
+    fn clone(&self) -> Self {
+        InputDevicePtr(self.0.clone())
+    }
+}
+impl std::ops::Deref for InputDevicePtr {
+    type Target = cxx::SharedPtr<InputDevice>;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+pub struct EventBuilderWrapperPtr(pub cxx::UniquePtr<EventBuilderWrapper>);
+impl EventBuilderWrapperPtr {
+    pub fn pin_mut(&mut self) -> std::pin::Pin<&mut EventBuilderWrapper> {
+        self.0.pin_mut()
+    }
+}
+
+/// Newtype wrapper around `input::Device` to allow asserting `Send + Sync`.
+pub struct LibinputDeviceHandle(pub input::Device);
+impl std::ops::Deref for LibinputDeviceHandle {
+    type Target = input::Device;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+impl std::ops::DerefMut for LibinputDeviceHandle {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
 // # Safety
 //
-// These needs to be unsafe because we are asserting that Send and Sync are valid on them.
+// These impls are unsafe because we are asserting that Send and Sync are valid.
+// This is sound because the underlying C++ objects are thread-safe, and all
+// access is serialised through the Mutex wrapping LibinputDeviceState.
 unsafe impl Send for InputSinkPtr {}
 unsafe impl Sync for InputSinkPtr {}
+unsafe impl Send for InputDevicePtr {}
+unsafe impl Sync for InputDevicePtr {}
+unsafe impl Send for EventBuilderWrapperPtr {}
+unsafe impl Sync for EventBuilderWrapperPtr {}
+unsafe impl Send for LibinputDeviceHandle {}
+unsafe impl Sync for LibinputDeviceHandle {}

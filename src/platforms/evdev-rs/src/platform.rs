@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{LibinputDevice, LibinputDeviceObserver, LibinputDeviceState};
+use crate::device::{InputDevicePtr, LibinputDevice, LibinputDeviceObserver, LibinputDeviceState};
 use crate::event_processing::{
     drain_initial_events, process_deferred_events, process_libinput_events,
 };
@@ -249,7 +249,7 @@ impl PlatformRs {
         //   - This thread: holds Rust state mutex, waiting for InputDeviceHub mutex (in remove_device)
         //   - A spawned add_device thread: holds InputDeviceHub mutex, waiting for Rust state mutex
         //     (in LibinputDevice::start)
-        let devices_to_remove: Vec<cxx::SharedPtr<crate::InputDevice>> = {
+        let devices_to_remove: Vec<InputDevicePtr> = {
             match state_arc.lock() {
                 Ok(mut state_guard) => state_guard
                     .known_devices
