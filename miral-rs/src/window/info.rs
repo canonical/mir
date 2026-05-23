@@ -1,6 +1,6 @@
 //! Window information and metadata.
 
-use crate::geometry::{Point, Size, Rectangle};
+use crate::geometry::{Point, Rectangle, Size};
 use crate::window::{Window, WindowState, WindowType};
 
 /// Provides read-only information about a window.
@@ -27,11 +27,7 @@ impl WindowInfo {
     /// Create a WindowInfo from an FFI snapshot.
     pub(crate) fn from_ffi(snapshot: &miral_sys::ffi::WindowInfoSnapshot, window_id: u64) -> Self {
         Self {
-            window: Window::from_ffi(
-                window_id,
-                snapshot.top_left.into(),
-                snapshot.size.into(),
-            ),
+            window: Window::from_ffi(window_id, snapshot.top_left.into(), snapshot.size.into()),
             name: snapshot.name.clone(),
             window_type: WindowType::from_raw(snapshot.window_type),
             state: WindowState::from_raw(snapshot.state),

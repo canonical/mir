@@ -44,32 +44,32 @@
 
 #![deny(missing_docs)]
 
-pub mod geometry;
-pub mod window;
-pub mod policy;
 pub mod application;
-pub mod output;
-pub mod input;
-pub mod extensions;
 pub mod client;
 pub mod decorations;
+pub mod extensions;
+pub mod geometry;
+pub mod input;
 pub mod keymap;
-pub mod workspace;
+pub mod output;
+pub mod policy;
 pub mod runner;
+pub mod window;
+pub mod workspace;
 
 /// Convenience re-exports for the most commonly used types.
 ///
 /// Import with `use miral::prelude::*` to get everything needed for a basic compositor.
 pub mod prelude {
-    pub use crate::geometry::{Displacement, Point, Rectangle, Size};
-    pub use crate::window::{Window, WindowInfo, WindowSpecification, WindowState, WindowType};
-    pub use crate::policy::{Advice, WindowManagementPolicy, WindowManagerTools};
     pub use crate::application::{Application, ApplicationInfo};
-    pub use crate::output::{Output, Zone};
-    pub use crate::input::{InputEvent, KeyAction, KeyboardEvent, PointerEvent, TouchEvent};
-    pub use crate::extensions::{ServerExtension, WaylandExtensions, X11Support};
     pub use crate::client::ExternalClientLauncher;
     pub use crate::decorations::Decorations;
+    pub use crate::extensions::{ServerExtension, WaylandExtensions, X11Support};
+    pub use crate::geometry::{Displacement, Point, Rectangle, Size};
+    pub use crate::input::{InputEvent, KeyAction, KeyboardEvent, PointerEvent, TouchEvent};
     pub use crate::keymap::Keymap;
+    pub use crate::output::{Output, Zone};
+    pub use crate::policy::{Advice, WindowManagementPolicy, WindowManagerTools};
     pub use crate::runner::MirRunner;
+    pub use crate::window::{Window, WindowInfo, WindowSpecification, WindowState, WindowType};
 }

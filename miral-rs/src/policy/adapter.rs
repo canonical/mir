@@ -142,7 +142,9 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
         let info = Self::make_window_info(window_info);
         let state = WindowState::from_raw(new_state);
         let placement: Rectangle = (*new_placement).into();
-        let result = self.policy.confirm_placement_on_display(&info, state, placement);
+        let result = self
+            .policy
+            .confirm_placement_on_display(&info, state, placement);
         result.into()
     }
 
@@ -222,7 +224,11 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
         self.policy.advise(Advice::OutputCreate { output: out });
     }
 
-    fn advise_output_update(&mut self, updated: &ffi::OutputSnapshot, original: &ffi::OutputSnapshot) {
+    fn advise_output_update(
+        &mut self,
+        updated: &ffi::OutputSnapshot,
+        original: &ffi::OutputSnapshot,
+    ) {
         let upd = Output::new(
             updated.id as u32,
             updated.extents.into(),

@@ -119,11 +119,7 @@ impl WindowManagerTools {
 
     /// Drag a window by the given displacement.
     pub fn drag_window(&self, window: &Window, movement: crate::geometry::Displacement) {
-        miral_sys::ffi::miral_tools_drag_window_by_id(
-            self.pin_mut(),
-            window.id(),
-            movement.into(),
-        );
+        miral_sys::ffi::miral_tools_drag_window_by_id(self.pin_mut(), window.id(), movement.into());
     }
 
     /// Get the active (focused) window, if any.

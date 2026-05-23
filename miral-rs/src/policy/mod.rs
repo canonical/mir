@@ -7,9 +7,9 @@
 //! The [`WindowManagerTools`] struct provides actions the policy can take,
 //! such as raising, focusing, or modifying windows.
 
-mod traits;
-mod tools;
 pub(crate) mod adapter;
+mod tools;
+mod traits;
 
-pub use traits::{Advice, WindowManagementPolicy};
 pub use tools::WindowManagerTools;
+pub use traits::{Advice, WindowManagementPolicy};

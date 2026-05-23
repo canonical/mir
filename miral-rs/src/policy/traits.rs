@@ -186,7 +186,8 @@ pub trait WindowManagementPolicy: Send + 'static {
         window_info: &WindowInfo,
         modifications: &WindowSpecification,
     ) {
-        self.tools().modify_window(window_info.window(), modifications);
+        self.tools()
+            .modify_window(window_info.window(), modifications);
     }
 
     /// Called when a client requests its window be raised.

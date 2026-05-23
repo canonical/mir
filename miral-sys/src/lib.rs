@@ -455,7 +455,11 @@ pub trait PolicyBridge: Send {
         spec: &ffi::WindowSpecData,
     ) -> ffi::WindowSpecData;
     fn handle_window_ready(&mut self, window_info: &ffi::MiralWindowInfo);
-    fn handle_modify_window(&mut self, window_info: &ffi::MiralWindowInfo, spec: &ffi::WindowSpecData);
+    fn handle_modify_window(
+        &mut self,
+        window_info: &ffi::MiralWindowInfo,
+        spec: &ffi::WindowSpecData,
+    );
     fn handle_raise_window(&mut self, window_info: &ffi::MiralWindowInfo);
     fn handle_keyboard_event(&mut self, event: &ffi::KeyboardEventInfo) -> bool;
     fn handle_touch_event(&mut self, event: &ffi::TouchEventInfo) -> bool;
@@ -485,7 +489,11 @@ pub trait PolicyBridge: Send {
     fn advise_begin(&mut self);
     fn advise_end(&mut self);
     fn advise_output_create(&mut self, output: &ffi::OutputSnapshot);
-    fn advise_output_update(&mut self, updated: &ffi::OutputSnapshot, original: &ffi::OutputSnapshot);
+    fn advise_output_update(
+        &mut self,
+        updated: &ffi::OutputSnapshot,
+        original: &ffi::OutputSnapshot,
+    );
     fn advise_output_delete(&mut self, output: &ffi::OutputSnapshot);
     fn advise_zone_create(&mut self, zone: &ffi::ZoneSnapshot);
     fn advise_zone_update(&mut self, updated: &ffi::ZoneSnapshot, original: &ffi::ZoneSnapshot);
@@ -531,11 +539,16 @@ pub fn set_on_stop_callback(callback: LifecycleCallback) {
 
 fn rust_create_policy_holder() -> Box<RustPolicyHolder> {
     let policy = POLICY_FACTORY.with(|f| {
-        let factory = f.borrow_mut().take()
+        let factory = f
+            .borrow_mut()
+            .take()
             .expect("No policy factory registered. Call set_policy_factory before run.");
         factory()
     });
-    Box::new(RustPolicyHolder { policy, tools_ptr: 0 })
+    Box::new(RustPolicyHolder {
+        policy,
+        tools_ptr: 0,
+    })
 }
 
 fn rust_policy_set_tools(holder: &mut RustPolicyHolder, tools_ptr: u64) {
@@ -625,13 +638,12 @@ fn rust_policy_confirm_placement_on_display(
     new_state: i32,
     new_placement: &ffi::Rectangle,
 ) -> ffi::Rectangle {
-    holder.policy.confirm_placement_on_display(window_info, new_state, new_placement)
+    holder
+        .policy
+        .confirm_placement_on_display(window_info, new_state, new_placement)
 }
 
-fn rust_policy_advise_new_app(
-    holder: &mut RustPolicyHolder,
-    app_info: &ffi::MiralApplicationInfo,
-) {
+fn rust_policy_advise_new_app(holder: &mut RustPolicyHolder, app_info: &ffi::MiralApplicationInfo) {
     holder.policy.advise_new_app(app_info);
 }
 

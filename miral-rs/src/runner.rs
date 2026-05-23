@@ -30,8 +30,7 @@ use crate::policy::WindowManagementPolicy;
 pub struct MirRunner {
     args: Vec<String>,
     extensions: Vec<Box<dyn ServerExtension>>,
-    policy_factory:
-        Option<Box<dyn FnOnce() -> Box<dyn miral_sys::PolicyBridge> + Send>>,
+    policy_factory: Option<Box<dyn FnOnce() -> Box<dyn miral_sys::PolicyBridge> + Send>>,
     on_start: Option<Box<dyn FnOnce() + Send>>,
     on_stop: Option<Box<dyn FnOnce() + Send>>,
 }
@@ -93,9 +92,9 @@ impl MirRunner {
     /// Returns `Ok(())` on clean shutdown, or an error if the server
     /// failed to start or encountered a fatal error.
     pub fn run(self) -> Result<(), Box<dyn std::error::Error>> {
-        let policy_factory = self
-            .policy_factory
-            .ok_or("No window management policy set. Call add_window_management_policy() before run().")?;
+        let policy_factory = self.policy_factory.ok_or(
+            "No window management policy set. Call add_window_management_policy() before run().",
+        )?;
 
         // Register the policy factory in the thread-local for C++ to call
         miral_sys::set_policy_factory(Box::new(policy_factory));
