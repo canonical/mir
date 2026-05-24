@@ -132,7 +132,7 @@ public:
         std::function<void(struct ::wl_display* display)> const& wayland_fd,
         std::function<void(std::weak_ptr<mir::scene::Session> const session)> const& connect_notification) const;
 
-    /// Launch an internal client in another read.
+    /// Launch an internal client in another thread.
     ///
     /// The \p client_object instance must define:
     /// - `operator()(struct wl_display*)` - the method called when the client has been initialized
