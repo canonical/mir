@@ -267,6 +267,14 @@ void mf::LayerShellV1::Instance::get_layer_surface(
 {
     (void)namespace_; // Can be ignored if no special behavior is required;
 
+    if (layer > mw::LayerShellV1::Layer::overlay)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            mw::LayerShellV1::Error::invalid_layer,
+            "Invalid layer %u", layer};
+    }
+
     new LayerSurfaceV1(
         new_layer_surface,
         WlSurface::from(surface),
@@ -605,8 +613,13 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 
     if (acked_event == std::end(inflight_configures))
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Could not find acked configure with serial " + std::to_string(serial)));
+        // FIXME: There doesn't seem to be an error code for this case.
+        // It might be zwlr_layer_surface_v1::error::invalid_surface_state but
+        // that's not mentioned in the documentation or the wlroots source.
+        // Update this when we know the correct error code.
+        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            resource, mw::generic_error_code,
+            "Could not find acked configure with serial %u", serial));
     }
 
     auto const acked_configure_size = acked_event->second;
@@ -635,6 +648,19 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
 
 void mf::LayerSurfaceV1::set_layer(uint32_t layer)
 {
+    if (layer > mw::LayerShellV1::Layer::overlay)
+    {
+        // FIXME: This should be an invalid_layer error, but that isn't defined in the protocol yet
+        // See https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/142
+        // wlroots incorrectly uses the zwlr_layer_shell_v1.error.invalid_layer error code for this,
+        // so we are matching that even though it will be interpreted as zwlr_layer_surface_v1.error.invalid_size
+        // in the client.
+        throw wayland::ProtocolError{
+            resource,
+            mw::LayerShellV1::Error::invalid_layer,
+            "Invalid layer %u", layer};
+    }
+
     shell::SurfaceSpecification spec;
     spec.depth_layer = layer_shell_layer_to_mir_depth_layer(layer);
     apply_spec(spec);

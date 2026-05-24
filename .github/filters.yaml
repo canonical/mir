@@ -23,7 +23,7 @@ spread:
 
 symbols:
   - '.github/workflows/symbols-check.yml'
-  - 'include/**.h'
+  - 'include/**/*.h'
 
 tics:
   - '.github/workflows/tics.yml'

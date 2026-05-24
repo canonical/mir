@@ -75,6 +75,23 @@ set(BROKEN_TESTS
   Anchor/LayerSurfaceLayoutTest.surfaces_with_exclusive_zone_set_to_negative_one_do_not_respect_other_exclusive_zones/*
 
   ExtImageCopyCaptureTest.cursor_session_captures_pointer_image  # TODO: flaky https://github.com/canonical/mir/issues/4775
+
+  # The following tests are expected to fail due to the fact that we don't yet support subsurface commits that are not
+  # synchronized with their parent surface. They also get skipped with the current release of wlcs, and so cannot be
+  # marked as expected failures, but we should be able to remove them from this list once wlcs is released.
+  TouchInputSubsurfaces/SubsurfaceMultilevelTest.subsurface_moves_after_both_sync_parent_and_grandparent_commit/0
+  TouchInputSubsurfaces/SubsurfaceMultilevelTest.subsurface_with_desync_parent_moves_when_only_parent_committed/0
+  TouchInputSubsurfaces/SubsurfaceTest.desync_subsurface_moves_when_only_parent_committed/0
+  TouchInputSubsurfaces/SubsurfaceTest.one_subsurface_to_another_fallthrough/0
+  TouchInputSubsurfaces/SubsurfaceTest.place_above_simple/0
+  TouchInputSubsurfaces/SubsurfaceTest.place_below_simple/0
+  TouchInputSubsurfaces/SubsurfaceTest.pointer_input_correctly_offset_for_subsurface/0
+  TouchInputSubsurfaces/SubsurfaceTest.subsurface_does_not_move_when_parent_not_committed/0
+  TouchInputSubsurfaces/SubsurfaceTest.subsurface_extends_parent_input_region/0
+  TouchInputSubsurfaces/SubsurfaceTest.subsurface_moves_out_from_under_input_device/0
+  TouchInputSubsurfaces/SubsurfaceTest.subsurface_moves_under_input_device_once/0
+  TouchInputSubsurfaces/SubsurfaceTest.subsurface_moves_under_input_device_twice/0
+  TouchInputSubsurfaces/SubsurfaceTest.sync_subsurface_moves_when_only_parent_committed/0
 )
 
 if (MIR_RUN_WLCS_TESTS)

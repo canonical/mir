@@ -197,6 +197,10 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
         return []
 
     spelling = node.spelling
+    n_template_args = node.type.get_num_template_arguments()
+    if n_template_args != -1:
+        template_types = [node.type.get_template_argument_type(i).spelling for i in range(n_template_args)]
+        spelling += "<" + ",".join(template_types) + ">"
     if is_operator(node):
         spelling = "operator"
     elif node.kind == clang.cindex.CursorKind.DESTRUCTOR:
@@ -226,6 +230,9 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
 
         def add_symbol_str(s: str):
+            if '<' in s or '>' in s:
+                s = f'"{s}"'
+            s += ';'
             if not s in HIDDEN_SYMBOLS:
                 result.add(s)
 
@@ -233,13 +240,13 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         if (node.kind == clang.cindex.CursorKind.CLASS_DECL
             or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
             if has_vtable(node):
-                add_symbol_str(f"vtable?for?{namespace_str};")
+                add_symbol_str(f"vtable?for?{namespace_str}")
             if has_virtual_base_class(node):
-                add_symbol_str(f"VTT?for?{namespace_str};")
-            add_symbol_str(f"typeinfo?for?{namespace_str};")
+                add_symbol_str(f"VTT?for?{namespace_str}")
+            add_symbol_str(f"typeinfo?for?{namespace_str}")
         else:
             def add_internal(s: str):
-                add_symbol_str(f"{s}*;")
+                add_symbol_str(f"{s}*")
             add_internal(namespace_str)
 
             # Check if we're marked virtual
@@ -253,7 +260,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                 is_virtual = True
             else:
                 # Check if we're marked override
-                for  child in node.get_children():
+                for child in node.get_children():
                     if child.kind == clang.cindex.CursorKind.CXX_OVERRIDE_ATTR:
                         add_internal(f"non-virtual?thunk?to?{namespace_str}")
                         is_virtual = True
@@ -388,10 +395,11 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
     """
     added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
 
-    print("")
-    print("  \033[1mNew Symbols 🟢🟢🟢\033[0m")
-    for s in added_symbols:
-        print(f"\033[92m    {s}\033[0m")
+    if len(added_symbols) > 0:
+        print("")
+        print("  \033[1mNew Symbols 🟢🟢🟢\033[0m")
+        for s in added_symbols:
+            print(f"\033[92m    {s}\033[0m")
 
     # Deleted symbols
     deleted_symbols = set()
@@ -402,12 +410,19 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
     deleted_symbols = list(deleted_symbols)
     deleted_symbols.sort()
 
-    print("")
-    print("  \033[1mDeleted Symbols 🔻🔻🔻\033[0m")
-    for s in deleted_symbols:
-        print(f"\033[91m    {s}\033[0m")
+    if len(deleted_symbols) > 0:
+        print("")
+        print("  \033[1mDeleted Symbols 🔻🔻🔻\033[0m")
+        for s in deleted_symbols:
+            print(f"\033[91m    {s}\033[0m")
 
-    return len(deleted_symbols) > 0 or len(added_symbols) > 0
+    symbols_changed = len(deleted_symbols) > 0 or len(added_symbols) > 0
+
+    if not symbols_changed:
+        print("")
+        print("  \033[1mNo symbol changes! ❤️\033[0m")
+
+    return symbols_changed
 
 
 def main():
@@ -550,16 +565,15 @@ def main():
 
     previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
-    has_changed_symbols = False
     if args.diff:
         print("External Symbols Diff:")
-        has_changed_symbols = report_symbols_diff(previous_symbols, external_symbols, False)
+        has_changed_external_symbols = report_symbols_diff(previous_symbols, external_symbols, False)
 
         print("")
         print("Internal Symbols Diff:")
-        has_changed_symbols = has_changed_symbols or report_symbols_diff(previous_symbols, internal_symbols, True)
+        has_changed_internal_symbols = report_symbols_diff(previous_symbols, internal_symbols, True)
         print("")
-        if has_changed_symbols:
+        if has_changed_external_symbols or has_changed_internal_symbols:
             exit(1)
     else:
         _logger.info(f"Outputting the symbols file to: {args.symbols_map_path.name}")

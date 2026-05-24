@@ -21,10 +21,12 @@
  */
 
 #include "xcursor.h"
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dirent.h>
+#include <pthread.h>
 
 /*
  * From libXcursor/include/X11/extensions/Xcursor.h
@@ -606,18 +608,121 @@ XcursorFileLoadImages (FILE *file, int size)
 #define XCURSORPATH "~/.icons:/usr/share/icons:/usr/share/pixmaps:~/.cursors:/usr/share/cursors/xorg-x11:"ICONDIR
 #endif
 
+/* Legacy-only entries from XCURSORPATH that are not already covered by the
+ * XDG spec search order (i.e. not $HOME/.icons, $XDG_DATA_HOME/icons,
+ * $HOME/.cursors, $XDG_DATA_DIRS/icons, or /usr/share/pixmaps — those are
+ * added explicitly by _XcursorBuildXdgPath). */
+#define XCURSORLEGACYPATH "/usr/share/cursors/xorg-x11:"ICONDIR
+
+/* Append str to *path_ptr by realloc-growing the buffer.
+ * On failure frees *path_ptr, sets it to NULL and returns 0. */
+static int
+_xcursor_path_append (char **path_ptr, char const *str)
+{
+    size_t const old_len = *path_ptr ? strlen (*path_ptr) : 0;
+    size_t const str_len = strlen (str);
+    char *new_path = realloc (*path_ptr, old_len + str_len + 1);
+    if (!new_path)
+    {
+        free (*path_ptr);
+        *path_ptr = NULL;
+        return 0;
+    }
+    memcpy (new_path + old_len, str, str_len + 1);
+    *path_ptr = new_path;
+    return 1;
+}
+
+static char *
+_XcursorBuildXdgPath (void)
+{
+    char const *home = getenv ("HOME");
+    char const *xdg_data_home = getenv ("XDG_DATA_HOME");
+    char const *xdg_data_dirs = getenv ("XDG_DATA_DIRS");
+
+    /* Default XDG_DATA_HOME to $HOME/.local/share when unset or empty */
+    char *default_xdg_data_home = NULL;
+    if ((!xdg_data_home || xdg_data_home[0] == '\0') && home)
+    {
+        size_t const default_len = strlen (home) + strlen ("/.local/share") + 1;
+        default_xdg_data_home = malloc (default_len);
+        if (!default_xdg_data_home)
+            return NULL;
+        snprintf (default_xdg_data_home, default_len, "%s/.local/share", home);
+        xdg_data_home = default_xdg_data_home;
+    }
+
+    if (!xdg_data_dirs || xdg_data_dirs[0] == '\0')
+        xdg_data_dirs = "/usr/local/share:/usr/share";
+
+    char *path = NULL;
+    /* Temporary buffer for formatted entries; PATH_MAX covers any valid path
+     * component and "/icons:" suffix. */
+    char buf[PATH_MAX + 8];
+
+    if (home)
+    {
+        snprintf (buf, sizeof (buf), "%s/.icons:", home);
+        if (!_xcursor_path_append (&path, buf)) goto done;
+    }
+
+    if (xdg_data_home)
+    {
+        snprintf (buf, sizeof (buf), "%s/icons:", xdg_data_home);
+        if (!_xcursor_path_append (&path, buf)) goto done;
+    }
+
+    if (home)
+    {
+        snprintf (buf, sizeof (buf), "%s/.cursors:", home);
+        if (!_xcursor_path_append (&path, buf)) goto done;
+    }
+
+    for (char const *p = xdg_data_dirs; p && *p; )
+    {
+        char const *colon = strchr (p, ':');
+        size_t const component_len = colon ? (size_t)(colon - p) : strlen (p);
+        char const *component_start = p;
+        p = colon ? colon + 1 : NULL;
+        if (component_len == 0)
+            continue;
+        if (component_len > PATH_MAX)
+        {
+            fprintf (stderr, "xcursor: XDG_DATA_DIRS component length exceeds PATH_MAX\n");
+            abort ();
+        }
+        snprintf (buf, sizeof (buf), "%.*s/icons:", (int)component_len, component_start);
+        if (!_xcursor_path_append (&path, buf)) goto done;
+    }
+
+    if (!_xcursor_path_append (&path, "/usr/share/pixmaps:")) goto done;
+    _xcursor_path_append (&path, XCURSORLEGACYPATH);
+
+done:
+    free (default_xdg_data_home);
+    return path;
+}
+
+static pthread_once_t xcursor_path_once = PTHREAD_ONCE_INIT;
+static char const *xcursor_library_path = NULL;
+
+static void
+_XcursorInitPath (void)
+{
+    xcursor_library_path = getenv ("XCURSOR_PATH");
+    if (!xcursor_library_path)
+    {
+        xcursor_library_path = _XcursorBuildXdgPath ();
+        if (!xcursor_library_path)
+            xcursor_library_path = XCURSORPATH;
+    }
+}
+
 static const char *
 XcursorLibraryPath (void)
 {
-    static const char	*path;
-
-    if (!path)
-    {
-	path = getenv ("XCURSOR_PATH");
-	if (!path)
-	    path = XCURSORPATH;
-    }
-    return path;
+    pthread_once (&xcursor_path_once, _XcursorInitPath);
+    return xcursor_library_path;
 }
 
 static  void

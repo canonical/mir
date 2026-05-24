@@ -110,9 +110,7 @@ template<>
 struct std::formatter<miral::live_config::Key> : std::formatter<std::string>
 {
     auto format(miral::live_config::Key const& key, std::format_context& ctx) const
-    {
-        return std::formatter<std::string>::format(key.to_string(), ctx);
-    }
+        -> std::format_context::iterator;
 };
 
 #endif //MIRAL_LIVE_CONFIG_H

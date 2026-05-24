@@ -163,6 +163,8 @@ std::vector<std::string> run_client_enumerator(mir::Server& server)
         return {};
     }
 
+    auto const wayland_display = server.wayland_display();
+
     auto const pid = fork();
     if (pid == 0)
     {
@@ -170,7 +172,6 @@ std::vector<std::string> run_client_enumerator(mir::Server& server)
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]);
 
-        auto const wayland_display = server.wayland_display();
         setenv("WAYLAND_DISPLAY", wayland_display.value().c_str(),  true);
 
         ClientGlobalEnumerator enumerator;
@@ -422,7 +423,7 @@ TEST_F(WaylandExtensions, recommeded_extensions_subset_of_supported_extensions)
 
 TEST_F(WaylandExtensions, disable_can_remove_default_extensions)
 {
-    std::string const extension_to_remove{"zxdg_shell_v6"};
+    std::string const extension_to_remove{"xdg_wm_base"};
     miral::WaylandExtensions extensions;
     extensions.disable(extension_to_remove);
 
