@@ -15,7 +15,6 @@
  */
 
 #include "shm.h"
-#include <limits>
 #include <mir/graphics/drm_formats.h>
 #include "../shm_backing.h"
 #include <mir/log.h>
@@ -29,6 +28,8 @@
 #include <drm_fourcc.h>
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
+
+#include <limits>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
