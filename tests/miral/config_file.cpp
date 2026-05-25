@@ -1020,6 +1020,37 @@ TEST_F(TestOverrideConfigFile, missing_base_config_does_not_call_loader)
     EXPECT_THAT(load_call_count, Eq(0));
 }
 
+TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_created_after_startup)
+{
+    // No base config file yet — the config directory exists but the file does not
+    start_config(ConfigFile::Mode::reload_on_change);
+
+    EXPECT_THAT(load_call_count, Eq(0));
+
+    write_base_config();
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(load_call_count, Eq(1));
+    EXPECT_THAT(last_load_stream_count, Eq(1u)); // base config only
+    EXPECT_THAT(last_modified_paths, ElementsAre(base_config_path()));
+}
+
+TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_created_after_startup_with_existing_overrides)
+{
+    // Override directory and files exist, but no base config yet
+    write_override_file("10-first.conf");
+
+    start_config(ConfigFile::Mode::reload_on_change);
+
+    EXPECT_THAT(load_call_count, Eq(0));
+
+    write_base_config();
+    wait_for_load(FailOnTimeout::yes);
+    EXPECT_THAT(load_call_count, Eq(1));
+    EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + override
+    EXPECT_THAT(last_modified_paths, ElementsAre(base_config_path()));
+    EXPECT_THAT(last_unchanged_paths, ElementsAre(override_dir() / "10-first.conf"));
+}
+
 TEST_F(TestOverrideConfigFile, custom_extension_loads_matching_files)
 {
     write_base_config();
