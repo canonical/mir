@@ -808,7 +808,7 @@ global:
     typeinfo?for?miral::live_config::OverridesList;
     typeinfo?for?miral::live_config::IniFileWithOverrides;
     vtable?for?miral::live_config::IniFileWithOverrides;
-    "std::formatter<miral::live_config::Key,char>::format*";
-    "typeinfo?for?std::formatter<miral::live_config::Key,char>";
+    std::formatter?miral::live_config::Key*char?::format*;
+    typeinfo?for?std::formatter?miral::live_config::Key*char?;
   };
 } MIRAL_5.7;
