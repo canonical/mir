@@ -31,7 +31,6 @@
 #include <mir/options/configuration.h>
 
 #include <cstdlib>
-#include <algorithm>
 
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
@@ -57,25 +56,11 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
             }
 
-            if (auto const pin_to = getenv("MIR_PIN_COMPOSITING_TO"))
+            if (auto pinned = find_pinned_rendering_platform())
             {
-                auto const provider_it = std::ranges::find_if(
-                    the_rendering_platforms(),
-                    [&](auto const& platform)
-                    {
-                        auto it = rendering_platform_names.find(platform.get());
-                        return it != rendering_platform_names.end() && it->second == pin_to;
-                    });
-
-                if (provider_it == the_rendering_platforms().end())
+                if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
                 {
-                    mir::log_warning(
-                        "MIR_PIN_COMPOSITING_TO is set to '%s', but no such rendering platform was found", pin_to);
-                }
-                else if (
-                    auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(*provider_it))
-                {
-                    mir::log_info("Pinning all compositing to provider: %s", pin_to);
+                    mir::log_info("Pinning all compositing to provider: %s", getenv("MIR_PIN_COMPOSITING_TO"));
                     providers = {gl_provider};
                 }
                 else
@@ -83,7 +68,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                     mir::log_warning(
                         "MIR_PIN_COMPOSITING_TO is set to '%s', but that rendering platform does not support GL "
                         "compositing",
-                        pin_to);
+                        getenv("MIR_PIN_COMPOSITING_TO"));
                 }
             }
 

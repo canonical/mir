@@ -359,6 +359,24 @@ auto mir::DefaultServerConfiguration::the_platform_libaries()
     return platform_libraries;
 }
 
+std::shared_ptr<mg::RenderingPlatform>
+mir::DefaultServerConfiguration::find_pinned_rendering_platform()
+{
+    auto const pin_to = std::getenv("MIR_PIN_COMPOSITING_TO");
+    if (!pin_to)
+        return nullptr;
+
+    for (auto const& platform : the_rendering_platforms())
+    {
+        auto const it = rendering_platform_names.find(platform.get());
+        if (it != rendering_platform_names.end() && it->second == pin_to)
+            return platform;
+    }
+
+    mir::log_warning("MIR_PIN_COMPOSITING_TO is set to '%s', but no such rendering platform was found", pin_to);
+    return nullptr;
+}
+
 std::shared_ptr<mg::GraphicBufferAllocator>
 mir::DefaultServerConfiguration::the_buffer_allocator()
 {
@@ -366,6 +384,8 @@ mir::DefaultServerConfiguration::the_buffer_allocator()
         [&]() -> std::shared_ptr<graphics::GraphicBufferAllocator>
         {
             auto rendering_platforms = the_rendering_platforms();
+            if (auto pinned = find_pinned_rendering_platform())
+                rendering_platforms = {pinned};
             auto best_provider = graphics::select_buffer_allocating_renderer(
                 *the_display(),
                 rendering_platforms);
