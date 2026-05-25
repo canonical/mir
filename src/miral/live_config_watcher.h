@@ -63,6 +63,10 @@ class Watcher : public std::enable_shared_from_this<Watcher>
 public:
     Watcher();
     virtual ~Watcher() = default;
+    Watcher(Watcher const&) = delete;
+    Watcher& operator=(Watcher const&) = delete;
+    Watcher(Watcher&&) = delete;
+    Watcher& operator=(Watcher&&) = delete;
     void register_handler(MirRunner& runner);
     virtual void handler(int) = 0;
 
