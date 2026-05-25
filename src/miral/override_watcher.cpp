@@ -121,7 +121,7 @@ auto mlc::OverrideWatcher::WatchedRoot::has_base_watch() const -> bool
     return static_cast<bool>(base_dir_wd);
 }
 
-auto mlc::OverrideWatcher::WatchedRoot::classify_event(
+auto mlc::OverrideWatcher::WatchedRoot::classify_event(  // NOLINT(bugprone-easily-swappable-parameters)
     inotify_event const& event,
     std::string_view base_config_filename,
     std::string_view override_dir_name,
