@@ -24,9 +24,11 @@
 #include <unistd.h>
 #include <cstring>
 
+#include <array>
 #include <format>
 #include <fstream>
 #include <ranges>
+#include <span>
 #include <sstream>
 
 namespace mlc = miral::live_config;
@@ -114,22 +116,23 @@ void mlc::Watcher::register_handler(miral::MirRunner& runner)
 
 void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const&)> const& callback) const
 {
-    alignas(inotify_event) char buffer[sizeof(inotify_event) + NAME_MAX + 1];
+    alignas(inotify_event) std::array<std::byte, sizeof(inotify_event) + NAME_MAX + 1> buffer;
 
-    auto const readsize = read(inotify_fd, buffer, sizeof(buffer));
+    auto const readsize = read(inotify_fd, buffer.data(), buffer.size());
     if (readsize < static_cast<ssize_t>(sizeof(inotify_event)))
         return;
 
-    auto const* const end = buffer + readsize;
-    auto raw_buffer = buffer;
-    while (raw_buffer + sizeof(inotify_event) <= end)
+    auto remaining = std::span{buffer}.first(static_cast<std::size_t>(readsize));
+    while (remaining.size() >= sizeof(inotify_event))
     {
-        auto const& event = reinterpret_cast<inotify_event const&>(*raw_buffer);
+        // LEGACY(Clang) Replace with std::start_lifetime_as<inotify_event const> once Clang supports it (C++23, P2590).
+        auto const& event = reinterpret_cast<inotify_event const&>(
+            *remaining.data()); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
         auto const event_size = sizeof(inotify_event) + event.len;
-        if (raw_buffer + event_size > end)
+        if (remaining.size() < event_size)
             break;
         callback(event);
-        raw_buffer += event_size;
+        remaining = remaining.subspan(event_size);
     }
 }
 
