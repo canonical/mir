@@ -128,7 +128,7 @@ auto mlc::OverrideWatcher::WatchedRoot::classify_event(
     std::string_view extension,
     BatchSummary& summary) const -> bool
 {
-    auto const event_name = event.len > 0 ? std::string_view{event.name} : std::string_view{};
+    auto const event_name = event.len > 0 ? std::string_view{static_cast<char const*>(event.name)} : std::string_view{};
     auto const write_or_move = event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO);
     auto const remove = event.mask & (IN_DELETE | IN_MOVED_FROM);
 
