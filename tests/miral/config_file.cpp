@@ -1383,7 +1383,6 @@ TEST_F(TestMultiRootConfigFile, reload_matches_initial_load_when_base_config_is_
     auto const initial_paths = last_load_paths;
 
     // Trigger a reload by rewriting the system base config
-    mark_pending();
     write_system_base_config("updated system base");
     wait_for_load();
 
