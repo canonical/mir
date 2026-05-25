@@ -71,8 +71,9 @@ public:
         cv.notify_one();
     }
 
-private:
     std::mutex mutex;
+
+private:
     std::condition_variable cv;
     bool pending_loads = false;
 };
@@ -619,7 +620,6 @@ struct OverrideConfigTestBase : PendingLoad, miral::TestServer
 {
     std::optional<ConfigFile> config;
 
-    std::mutex load_mutex;
     std::size_t last_load_stream_count{0};
     std::vector<std::filesystem::path> last_load_paths;
     std::vector<std::filesystem::path> last_fresh_paths;
@@ -631,20 +631,22 @@ struct OverrideConfigTestBase : PendingLoad, miral::TestServer
     void record_load(miral::live_config::OverridesList const& overrides)
     {
         {
-            std::lock_guard lock{load_mutex};
             auto rec = record(overrides);
-            last_unchanged_paths = std::move(rec.unchanged);
-            last_fresh_paths     = std::move(rec.fresh);
-            last_modified_paths  = std::move(rec.modified);
-            last_dropped_paths   = std::move(rec.dropped);
-            last_load_paths.clear();
-            overrides.for_each(
-                [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
-                [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
-                [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
-                [&](auto const&) {});
-            last_load_stream_count = last_load_paths.size();
-            ++load_call_count;
+            {
+                std::lock_guard lock{PendingLoad::mutex};
+                last_unchanged_paths = std::move(rec.unchanged);
+                last_fresh_paths     = std::move(rec.fresh);
+                last_modified_paths  = std::move(rec.modified);
+                last_dropped_paths   = std::move(rec.dropped);
+                last_load_paths.clear();
+                overrides.for_each(
+                    [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
+                    [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
+                    [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
+                    [&](auto const&) {});
+                last_load_stream_count = last_load_paths.size();
+                ++load_call_count;
+            }
         }
         notify_load();
     }
