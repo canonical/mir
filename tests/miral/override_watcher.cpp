@@ -44,7 +44,7 @@ auto make_tmp(std::string const& label) -> fs::path
     return fs::path{raw};
 }
 
-auto make_watcher(fs::path config) -> std::shared_ptr<mlc::OverrideWatcher>
+auto make_watcher_common(fs::path config) -> std::shared_ptr<mlc::OverrideWatcher>
 {
     return std::make_shared<mlc::OverrideWatcher>(std::move(config), [](auto const&) {}, ".conf");
 }
@@ -84,7 +84,7 @@ struct TestOverrideWatcher : testing::Test
 
     auto make_watcher() -> std::shared_ptr<mlc::OverrideWatcher>
     {
-        return ::make_watcher(base_config);
+        return ::make_watcher_common(base_config);
     }
 };
 
@@ -453,7 +453,7 @@ struct TestMultiRootOverrideWatcher : testing::Test
 
     auto make_watcher() -> std::shared_ptr<mlc::OverrideWatcher>
     {
-        return ::make_watcher(fs::path{"test.conf"});
+        return ::make_watcher_common(fs::path{"test.conf"});
     }
 };
 }
@@ -836,7 +836,7 @@ struct TestThreeRootOverrideWatcher : testing::Test
 
     auto make_watcher() -> std::shared_ptr<mlc::OverrideWatcher>
     {
-        return ::make_watcher(fs::path{"test.conf"});
+        return ::make_watcher_common(fs::path{"test.conf"});
     }
 };
 }
