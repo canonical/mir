@@ -631,22 +631,19 @@ struct OverrideConfigTestBase : PendingLoad, miral::TestServer
     void record_load(miral::live_config::OverridesList const& overrides)
     {
         {
-            auto rec = record(overrides);
-            {
-                std::lock_guard lock{PendingLoad::mutex};
-                last_unchanged_paths = std::move(rec.unchanged);
-                last_fresh_paths     = std::move(rec.fresh);
-                last_modified_paths  = std::move(rec.modified);
-                last_dropped_paths   = std::move(rec.dropped);
-                last_load_paths.clear();
-                overrides.for_each(
-                    [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
-                    [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
-                    [&](auto const& p, auto&&) { last_load_paths.push_back(p); },
-                    [&](auto const&) {});
-                last_load_stream_count = last_load_paths.size();
-                ++load_call_count;
-            }
+            std::lock_guard lock{PendingLoad::mutex};
+            last_load_paths.clear();
+            last_unchanged_paths.clear();
+            last_fresh_paths.clear();
+            last_modified_paths.clear();
+            last_dropped_paths.clear();
+            overrides.for_each(
+                [&](auto const& p, auto&&) { last_unchanged_paths.push_back(p); last_load_paths.push_back(p); },
+                [&](auto const& p, auto&&) { last_fresh_paths.push_back(p);     last_load_paths.push_back(p); },
+                [&](auto const& p, auto&&) { last_modified_paths.push_back(p);  last_load_paths.push_back(p); },
+                [&](auto const& p)         { last_dropped_paths.push_back(p); });
+            last_load_stream_count = last_load_paths.size();
+            ++load_call_count;
         }
         notify_load();
     }
