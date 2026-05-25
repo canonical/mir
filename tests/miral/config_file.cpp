@@ -16,7 +16,7 @@
 
 #include <miral/test_server.h>
 #include <miral/config_file.h>
-#include "live_config_test_helpers.h"
+#include <miral/live_config_overrides_list.h>
 
 #include <wayland_wrapper.h>
 #include <gmock/gmock.h>
