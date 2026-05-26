@@ -29,7 +29,7 @@ namespace mir
 {
 class GLibMainLoop;
 
-class LogindConsoleServices : public ConsoleServices, public scene::SessionLockObserver
+class LogindConsoleServices : public ConsoleServices, public scene::SessionLockObserver, public std::enable_shared_from_this<LogindConsoleServices>
 {
 public:
     static std::shared_ptr<LogindConsoleServices> create(

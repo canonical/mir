@@ -504,33 +504,32 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
     auto context = std::make_unique<TakeDeviceContext>();
     context->device = std::make_unique<Device>(
         std::move(observer),
-        [this, devnum = makedev(major, minor)](Device const* destroying)
+        [weak_self = std::weak_ptr<LogindConsoleServices>{shared_from_this()},
+         devnum = makedev(major, minor)](Device const* destroying)
         {
-            auto const it = acquired_devices.find(devnum);
+            auto self = weak_self.lock();
+            if (!self) return;
+
+            auto const it = self->acquired_devices.find(devnum);
             // Device could have been removed from the map by a PauseDevice("gone") signal
-            if (it != acquired_devices.end())
+            if (it != self->acquired_devices.end())
             {
                 // It could have been removed and then re-added by a subsequent acquire_device…
                 if (it->second == destroying)
                 {
-                    acquired_devices.erase(it);
+                    self->acquired_devices.erase(it);
                     /* Like TakeDevice, we might be trying to release a device before the
                      * main loop is running.
                      *
                      * Opportunistically release the device asynchronously
                      */
-                    if (ml->running())
+                    if (self->ml->running())
                     {
-                        ml->run_with_context_as_thread_default(
-                            [
-                                session = std::shared_ptr<GObject>{
-                                    G_OBJECT(g_object_ref(session_proxy.get())),
-                                    &g_object_unref},
-                                devnum
-                            ]()
+                        self->ml->run_with_context_as_thread_default(
+                            [self = std::shared_ptr<LogindConsoleServices>(self), devnum]()
                             {
                                 logind_session_call_release_device(
-                                    LOGIND_SESSION(session.get()),
+                                    LOGIND_SESSION(self->session_proxy.get()),
                                     major(devnum), minor(devnum),
                                     nullptr,
                                     &complete_release_device_call,
@@ -541,7 +540,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                     {
                         GErrorPtr error;
                         if (!logind_session_call_release_device_sync(
-                            session_proxy.get(),
+                            self->session_proxy.get(),
                             major(devnum), minor(devnum),
                             nullptr,
                             &error))
