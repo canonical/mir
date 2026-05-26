@@ -150,7 +150,7 @@ public:
 
 private:
     friend mf::WlDataDevice;
-    OfferType type;
+    OfferType const type;
     wayland::Weak<WlDataDevice> const device;
     std::shared_ptr<ms::DataExchangeSource> const source;
     std::optional<std::string> accepted_mime_type;
