@@ -400,7 +400,7 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
         {
             MirTouchpadConfig touch_config( optional_touchpad_config.value() );
             if (disable_while_typing) touch_config.disable_while_typing(*disable_while_typing);
-            if (disable_with_external_mouse) touch_config.disable_while_typing(*disable_with_external_mouse);
+            if (disable_with_external_mouse) touch_config.disable_with_external_mouse(*disable_with_external_mouse);
             if (click_mode) touch_config.click_mode(*click_mode);
             if (scroll_mode) touch_config.scroll_mode(*scroll_mode);
             if (tap_to_click) touch_config.tap_to_click(*tap_to_click);
