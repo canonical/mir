@@ -284,7 +284,7 @@ void mf::ShmPool::create_buffer(
     }
     auto const pixel_size = 4; // All supported formats are 4 bytes per pixel
 
-    auto const max_size = std::numeric_limits<int32_t>::max();
+    auto const max_size = std::numeric_limits<geometry::Size::ValueType>::max();
     auto const max_width = max_size / pixel_size;
     auto const max_height = max_size / stride;
     if (width > max_width || height > max_height)
