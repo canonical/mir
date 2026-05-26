@@ -60,6 +60,7 @@ struct MockSurface : public scene::BasicSurface
     ~MockSurface() noexcept {}
 
     MOCK_METHOD(MirWindowType, type, (), (const));
+    MOCK_METHOD(MirWindowState, state, (), (const));
     MOCK_METHOD(void, hide, ());
     MOCK_METHOD(void, show, ());
     MOCK_METHOD(bool, visible, (), (const));
