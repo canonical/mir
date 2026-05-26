@@ -762,7 +762,13 @@ fn process_input_event_for_device(
 
     match event {
         input::Event::Pointer(pointer_event) => {
-            handle_pointer_event(device_info, &mut scroll_state, bridge, pointer_event, report);
+            handle_pointer_event(
+                device_info,
+                &mut scroll_state,
+                bridge,
+                pointer_event,
+                report,
+            );
         }
 
         input::Event::Keyboard(keyboard_event) => {

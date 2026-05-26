@@ -66,9 +66,10 @@ impl PlatformRs {
         println!("Starting the evdev-rs platform");
 
         let bridge = self.bridge.clone();
-        let libinput = input::Libinput::new_from_path(crate::libinput_interface::LibinputInterfaceImpl {
-            bridge: bridge.clone(),
-        });
+        let libinput =
+            input::Libinput::new_from_path(crate::libinput_interface::LibinputInterfaceImpl {
+                bridge: bridge.clone(),
+            });
 
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
             libinput,
@@ -127,7 +128,10 @@ impl PlatformRs {
                 let input_device = device_info.input_device.clone();
                 let registry = self.device_registry.clone();
                 std::thread::spawn(move || unsafe {
-                    registry.clone().pin_mut_unchecked().remove_device(&input_device);
+                    registry
+                        .clone()
+                        .pin_mut_unchecked()
+                        .remove_device(&input_device);
                 });
             }
             Err(_) => {
