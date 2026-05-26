@@ -17,7 +17,12 @@
 use std::os::fd::AsRawFd;
 use udev;
 
-use crate::ffi_bridge::UdevEventType;
+/// Type of udev device event.
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
+pub enum UdevEventType {
+    Added,
+    Removed,
+}
 
 /// Rust-owned udev monitor that watches for input device hotplug events.
 ///

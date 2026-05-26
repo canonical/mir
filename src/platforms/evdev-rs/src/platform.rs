@@ -16,8 +16,7 @@
 
 use crate::device::{LibinputDevice, LibinputDeviceState};
 use crate::event_processing::process_libinput_events;
-use crate::ffi_bridge::UdevEventType;
-use crate::udev_monitor::UdevMonitor;
+use crate::udev_monitor::{UdevEventType, UdevMonitor};
 use cxx;
 use input;
 use std::collections::HashSet;

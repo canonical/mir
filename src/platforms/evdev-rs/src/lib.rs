@@ -171,13 +171,6 @@ mod ffi_bridge {
         pub contacts: Vec<TouchContactData>,
     }
 
-    #[repr(i32)]
-    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
-    pub enum UdevEventType {
-        Added = 0,
-        Removed = 1,
-    }
-
     extern "Rust" {
         type PlatformRs;
         type LibinputDevice;
