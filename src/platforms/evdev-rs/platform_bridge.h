@@ -110,20 +110,20 @@ public:
     /// Called from the C++ Device::Observer::activated() callback (GLib main loop thread)
     /// before enqueuing path_add_device() on the input dispatch thread.  The stored fd
     /// is consumed by claim_pending_fd() inside open_restricted().
-    void store_pending_fd(std::string const& devnode, int fd);
+    void store_pending_fd(rust::Str devnode, int32_t fd) const;
 
     /// Claim and remove the pre-acquired fd for a device path.
     ///
     /// Called from Rust's open_restricted() on the input dispatch thread.
     /// Returns the raw fd, or -1 if no pending fd exists for the given devnode.
-    int claim_pending_fd(std::string const& devnode);
+    int32_t claim_pending_fd(rust::Str devnode) const;
 
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;
 
-    std::mutex pending_fds_mutex;
-    std::unordered_map<std::string, int> pending_fds;
+    mutable std::mutex pending_fds_mutex;
+    mutable std::unordered_map<std::string, int> pending_fds;
 };
 }
 }

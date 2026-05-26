@@ -33,16 +33,16 @@ miers::PlatformBridge::PlatformBridge(
     std::shared_ptr<mir::ConsoleServices> const& console)
     : platform(platform), console(console) {}
 
-void miers::PlatformBridge::store_pending_fd(std::string const& devnode, int fd)
+void miers::PlatformBridge::store_pending_fd(rust::Str devnode, int32_t fd) const
 {
     std::lock_guard lock{pending_fds_mutex};
-    pending_fds[devnode] = fd;
+    pending_fds[std::string(devnode)] = fd;
 }
 
-int miers::PlatformBridge::claim_pending_fd(std::string const& devnode)
+int32_t miers::PlatformBridge::claim_pending_fd(rust::Str devnode) const
 {
     std::lock_guard lock{pending_fds_mutex};
-    auto it = pending_fds.find(devnode);
+    auto it = pending_fds.find(std::string(devnode));
     if (it == pending_fds.end())
         return -1;
     int fd = it->second;
@@ -51,6 +51,9 @@ int miers::PlatformBridge::claim_pending_fd(std::string const& devnode)
 }
 
 std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const
+{
+    return platform->create_input_device(device_id);
+}
 
 std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridge::create_event_builder_wrapper(EventBuilder* event_builder) const
 {

@@ -118,7 +118,7 @@ public:
         std::atomic<bool> const& running,
         std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices,
         std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers,
-        rust::Box<PlatformRs>& platform_impl)
+        rust::Box<miers::PlatformRs>& platform_impl)
         : devnode{std::move(devnode)},
           devnum{devnum},
           bridge{std::move(bridge)},
@@ -137,7 +137,7 @@ public:
 
         // dup() so that mir::Fd's destructor closes the original without
         // invalidating the fd we hand to libinput via open_restricted().
-        int const duped = ::dup(*device_fd);
+        int const duped = ::dup(static_cast<int>(device_fd));
         if (duped < 0)
         {
             mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
@@ -221,7 +221,7 @@ private:
     std::atomic<bool> const& running;
     std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices;
     std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers;
-    rust::Box<PlatformRs>& platform_impl;
+    rust::Box<miers::PlatformRs>& platform_impl;
 };
 
 template <typename Impl>
@@ -468,7 +468,7 @@ void miers::Platform::start()
             {
                 mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
                     std::current_exception(),
-                    "Failed to handle UDev event for %s", device.syspath());
+                    std::string{"Failed to handle UDev event for "} + device.syspath());
             }
         });
 
