@@ -28,7 +28,6 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <string>
@@ -579,9 +578,7 @@ struct TestLiveInputConfigurationAtStartup : miral::TestServer
 TEST_F(TestLiveInputConfigurationAtStartup, touchpad_live_config_is_applied_when_server_starts)
 {
     auto const config_path = std::filesystem::temp_directory_path() /
-        ("mir-test-input-configuration-" +
-         std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()) +
-         ".settings");
+        "mir-test-input-configuration.settings";
 
     config_store.do_transaction([&]
     {
