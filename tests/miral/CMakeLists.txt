@@ -90,7 +90,12 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     runner.cpp
     wayland_extensions.cpp
     zone.cpp
+    example_xdg_shell_v6.cpp example_xdg_shell_v6.h
 )
+
+mir_generate_protocol_wrapper(miral-test "z" xdg-shell-unstable-v6.xml)
+
+set_source_files_properties(example_xdg_shell_v6.cpp wayland_extensions.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(miral-test
     mir-test-assist
