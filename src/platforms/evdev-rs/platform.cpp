@@ -246,9 +246,6 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
-    if (!self->platform_impl->start())
-        return;
-
     // Clean up any stale watches from a previous start()/stop() cycle.
     if (self->device_queue)
     {
@@ -266,11 +263,23 @@ void miers::Platform::start()
         self->libinput_dispatch.reset();
     }
 
+    // Create the device_queue before start() because Rust's start()
+    // enumerates existing udev devices, which triggers acquire_device()
+    // and may fire activated() synchronously — needing the queue.
+    self->device_queue = std::make_shared<md::ActionQueue>();
+
+    if (!self->platform_impl->start())
+    {
+        self->device_queue.reset();
+        return;
+    }
+
     auto const libinput_fd = self->platform_impl->libinput_fd();
     if (libinput_fd < 0)
     {
         mir::log_error("evdev-rs platform: failed to obtain libinput fd after start(); resetting platform state");
         self->platform_impl->stop();
+        self->device_queue.reset();
         return;
     }
 
@@ -278,13 +287,12 @@ void miers::Platform::start()
         mir::Fd{mir::IntOwnedFd{libinput_fd}},
         [this]() { self->platform_impl->process(); });
 
-    self->device_queue = std::make_shared<md::ActionQueue>();
-
     auto const udev_fd = self->platform_impl->udev_monitor_fd();
     if (udev_fd < 0)
     {
         mir::log_error("evdev-rs platform: failed to obtain udev monitor fd; resetting platform state");
         self->platform_impl->stop();
+        self->device_queue.reset();
         return;
     }
 
