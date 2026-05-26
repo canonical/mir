@@ -48,13 +48,29 @@ global:
 
 MIR_CORE_2.26 {
   global:
+    /* For some reason lld does not correctly identify these symbols if in an "extern C++" block. */
+    /* Include the full, demangled symbols here instead to work around this */
+
+    /* mir::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&); */
+    _ZN3mir3logENS_7logging8SeverityEPKcRKNSt15__exception_ptr13exception_ptrERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE;
+    /* mir::log(mir::logging::Severity, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&); */
+    _ZN3mir3logENS_7logging8SeverityEPKcRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE;
+    /* mir::log(mir::logging::Severity, char const*, char const*, ...); */
+    _ZN3mir3logENS_7logging8SeverityEPKcS3_z;
+    /* mir::logging::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&); */
+    _ZN3mir7logging3logENS0_8SeverityERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE;
+    /* mir::logging::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&); */
+    _ZN3mir7logging3logENS0_8SeverityERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEES9_;
     extern "C++" {
-      mir::log*;
+      mir::logv*;
+      mir::logging::DumbConsoleLogger::?DumbConsoleLogger*;
       mir::logging::DumbConsoleLogger::log*;
       mir::logging::Logger::?Logger*;
       mir::logging::Logger::Logger*;
-      mir::logging::Logger::log*;
+      "mir::logging::Logger::log(char const*, mir::logging::Severity, char const*, ...)";
       mir::logging::Logger::operator*;
+      mir::logging::format_message*;
+      mir::logging::set_logger*;
       mir::security_log*;
       non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
       typeinfo?for?mir::logging::DumbConsoleLogger;
@@ -63,3 +79,24 @@ MIR_CORE_2.26 {
       vtable?for?mir::logging::Logger;
     };
 } MIR_CORE_2.24;
+
+MIR_CORE_2.27 {
+  global:
+    /* As above, lld does not correctly identify these symbols if in an "extern C++" block. */
+    /* Include the full, demangled symbols here instead to work around this */
+
+    /* mir::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >); */
+    _ZN3mir3logENS_7logging8SeverityESt16initializer_listIKSt17reference_wrapperIKNS0_3TagEEESt17basic_string_viewIcSt11char_traitsIcEE;
+    /* mir::logging::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >); */
+    _ZN3mir7logging3logENS0_8SeverityESt16initializer_listIKSt17reference_wrapperIKNS0_3TagEEESt17basic_string_viewIcSt11char_traitsIcEE;
+    /* mir::logging::Logger::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >); */
+    _ZN3mir7logging6Logger3logENS0_8SeverityESt16initializer_listIKSt17reference_wrapperIKNS0_3TagEEESt17basic_string_viewIcSt11char_traitsIcEE;
+    extern "C++" {
+      mir::logging::create_tag*;
+      mir::logging::core*;
+      mir::logging::input*;
+      mir::logging::wayland*;
+      mir::logging::graphics*;
+      mir::logging::window_management*;
+    };
+} MIR_CORE_2.26;

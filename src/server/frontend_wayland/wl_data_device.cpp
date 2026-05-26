@@ -15,6 +15,7 @@
  */
 
 #include "wl_data_device.h"
+#include "wl_data_device_manager.h"
 #include "wl_data_source.h"
 #include "wl_surface.h"
 
@@ -110,6 +111,27 @@ public:
 
     void set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
     {
+        if (!mf::validate_dnd_actions(dnd_actions))
+        {
+            throw mw::ProtocolError(
+                resource,
+                Error::invalid_action_mask,
+                "Invalid DnD actions 0x%x", dnd_actions);
+        }
+        if (!mf::validate_dnd_action(preferred_action))
+        {
+            throw mw::ProtocolError(
+                resource,
+                Error::invalid_action,
+                "Invalid DnD action 0x%x", preferred_action);
+        }
+        if (preferred_action != mw::DataDeviceManager::DndAction::none && (dnd_actions & preferred_action) == 0)
+        {
+            throw mw::ProtocolError(
+                resource,
+                Error::invalid_action,
+                "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions);
+        }
         if (type != OfferType::dnd) {
             throw mw::ProtocolError(
                 resource,

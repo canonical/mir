@@ -15,10 +15,12 @@
  */
 
 #include "wl_data_source.h"
+#include "wl_data_device_manager.h"
 
 #include <mir/executor.h>
 #include <mir/scene/clipboard.h>
 #include <mir/wayland/weak.h>
+#include <mir/wayland/protocol_error.h>
 
 #include <vector>
 
@@ -247,6 +249,13 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
 
 void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
+    if (!mf::validate_dnd_actions(dnd_actions))
+    {
+        throw mw::ProtocolError(
+            resource,
+            Error::invalid_action_mask,
+            "Invalid DnD actions 0x%x", dnd_actions);
+    }
     this->dnd_actions = dnd_actions;
 }
 
