@@ -29,45 +29,199 @@
 #include <mir/input/touchscreen_settings.h>
 #include <mir/input/input_device_info.h>
 #include <mir/dispatch/action_queue.h>
+#include <mir/udev/wrapper.h>
+#include <mir/constexpr_utils.h>
 #include <mir/log.h>
+
+#include <atomic>
+#include <future>
+#include <unordered_map>
+#include <unistd.h>
 
 namespace mi = mir::input;
 namespace miers = mi::evdev_rs;
 namespace md = mir::dispatch;
+namespace mu = mir::udev;
 
 namespace
 {
-template <typename Impl>
-class DeviceObserverWrapper : public miers::DeviceObserverWithFd
+
+class DispatchableUDevMonitor : public md::Dispatchable
 {
 public:
-    explicit DeviceObserverWrapper(rust::Box<Impl>&& box)
-        : box(std::move(box)) {}
+    DispatchableUDevMonitor(
+        mu::Context& context,
+        std::function<void(mu::Monitor::EventType, mu::Device const&)> on_event)
+        : monitor(context),
+          on_event{std::move(on_event)}
+    {
+        monitor.filter_by_subsystem("input");
+        monitor.enable();
+
+        auto fake_shared_context = std::shared_ptr<mu::Context>{&context, [](auto){}};
+        mu::Enumerator device_enumerator{fake_shared_context};
+
+        device_enumerator.match_subsystem("input");
+        device_enumerator.scan_devices();
+
+        for (auto const& device : device_enumerator)
+        {
+            if (device.initialised())
+            {
+                this->on_event(mu::Monitor::EventType::ADDED, device);
+            }
+        }
+    }
+
+    mir::Fd watch_fd() const override
+    {
+        return mir::Fd{mir::IntOwnedFd{monitor.fd()}};
+    }
+
+    bool dispatch(md::FdEvents events) override
+    {
+        if (events & md::FdEvent::error)
+            return false;
+        monitor.process_events(on_event);
+        return true;
+    }
+
+    md::FdEvents relevant_events() const override
+    {
+        return md::FdEvent::readable;
+    }
+
+private:
+    mu::Monitor monitor;
+    std::function<void(mu::Monitor::EventType, mu::Device const&)> const on_event;
+};
+
+/// Observer for a single input device being acquired via ConsoleServices.
+///
+/// When activated() fires (on the GLib main loop thread):
+///   1. dup() the fd and store it in the bridge's pending-fd map.
+///   2. Enqueue path_add_device() on the input dispatch thread via device_queue.
+///
+/// On suspended() / removed(): enqueue path_remove_device() similarly.
+///
+/// References to pending_devices, device_watchers, and platform_impl are safe
+/// because the device_queue is removed from the dispatchable before Platform::stop()
+/// returns, so enqueued lambdas never run after the platform is torn down.
+class InputDeviceObserver : public mir::Device::Observer
+{
+public:
+    InputDeviceObserver(
+        std::string devnode,
+        dev_t devnum,
+        std::shared_ptr<miers::PlatformBridge> bridge,
+        std::shared_ptr<md::ActionQueue> device_queue,
+        std::atomic<bool> const& running,
+        std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices,
+        std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers,
+        rust::Box<PlatformRs>& platform_impl)
+        : devnode{std::move(devnode)},
+          devnum{devnum},
+          bridge{std::move(bridge)},
+          device_queue{std::move(device_queue)},
+          running{running},
+          pending_devices{pending_devices},
+          device_watchers{device_watchers},
+          platform_impl{platform_impl}
+    {
+    }
 
     void activated(mir::Fd&& device_fd) override
     {
-        fd = std::move(device_fd);
-        box->activated(fd.value());
+        if (!running.load())
+            return;
+
+        // dup() so that mir::Fd's destructor closes the original without
+        // invalidating the fd we hand to libinput via open_restricted().
+        int const duped = ::dup(*device_fd);
+        if (duped < 0)
+        {
+            mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
+            return;
+        }
+        // device_fd goes out of scope here and closes the original fd.
+
+        bridge->store_pending_fd(devnode, duped);
+
+        device_queue->enqueue(
+            [this,
+             devnum = devnum,
+             devnode = devnode,
+             &running = running,
+             &pending_devices = pending_devices,
+             &device_watchers = device_watchers,
+             &platform_impl = platform_impl]()
+            {
+                if (!running.load())
+                    return;
+
+                // Transfer the Device from pending to active watchers.
+                // .get() is non-blocking because activated() already fired,
+                // meaning the future is resolved.
+                auto pending_it = pending_devices.find(devnum);
+                if (pending_it != pending_devices.end())
+                {
+                    device_watchers.emplace(devnum, pending_it->second.get());
+                    pending_devices.erase(pending_it);
+                }
+
+                platform_impl->path_add_device(devnode);
+            });
     }
 
     void suspended() override
     {
-        box->suspended();
+        if (!running.load())
+            return;
+
+        device_queue->enqueue(
+            [this,
+             devnum = devnum,
+             devnode = devnode,
+             &running = running,
+             &device_watchers = device_watchers,
+             &platform_impl = platform_impl]()
+            {
+                if (!running.load())
+                    return;
+                device_watchers.erase(devnum);
+                platform_impl->path_remove_device(devnode);
+            });
     }
 
     void removed() override
     {
-        box->removed();
-    }
+        if (!running.load())
+            return;
 
-    std::optional<mir::Fd> raw_fd() const override
-    {
-        return fd;
+        device_queue->enqueue(
+            [this,
+             devnum = devnum,
+             devnode = devnode,
+             &running = running,
+             &device_watchers = device_watchers,
+             &platform_impl = platform_impl]()
+            {
+                if (!running.load())
+                    return;
+                device_watchers.erase(devnum);
+                platform_impl->path_remove_device(devnode);
+            });
     }
 
 private:
-    rust::Box<Impl> box;
-    std::optional<mir::Fd> fd;
+    std::string devnode;
+    dev_t devnum;
+    std::shared_ptr<miers::PlatformBridge> bridge;
+    std::shared_ptr<md::ActionQueue> device_queue;
+    std::atomic<bool> const& running;
+    std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices;
+    std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers;
+    rust::Box<PlatformRs>& platform_impl;
 };
 
 template <typename Impl>
@@ -156,26 +310,38 @@ public:
 private:
     rust::Box<Impl> impl;
 };
-}
+
+} // namespace
 
 class miers::Platform::Self
 {
 public:
-    Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
-        std::shared_ptr<mi::InputReport> const& report)
-        : platform_impl(evdev_rs_create(
-            std::make_shared<PlatformBridge>(platform, console),
-            input_device_registry,
-            std::make_unique<miers::InputReport>(report))),
-          dispatchable{std::make_shared<md::MultiplexingDispatchable>()} {}
+    Self(Platform* platform,
+         std::shared_ptr<ConsoleServices> const& console,
+         std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+         std::shared_ptr<mi::InputReport> const& report)
+        : bridge{std::make_shared<PlatformBridge>(platform, console)},
+          console{console},
+          platform_impl{evdev_rs_create(
+              bridge,
+              input_device_registry,
+              std::make_unique<miers::InputReport>(report))},
+          dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
+    {
+    }
 
+    std::shared_ptr<PlatformBridge> bridge;
+    std::shared_ptr<ConsoleServices> console;
     rust::Box<PlatformRs> platform_impl;
     std::shared_ptr<md::ReadableFd> libinput_dispatch;
     std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
-    /// One-shot queue used to defer udev_assign_seat() until after
-    /// start_platforms() returns and the GLib main loop is free.
-    std::shared_ptr<md::ActionQueue> assign_seat_queue;
+    std::shared_ptr<md::ActionQueue> device_queue;
+    std::shared_ptr<DispatchableUDevMonitor> udev_dispatchable;
+    std::unique_ptr<mu::Context> udev_context;
+
+    std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>> pending_devices;
+    std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;
+    std::atomic<bool> running{false};
 };
 
 miers::Platform::Platform(
@@ -193,25 +359,19 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
-    // Phase 1 (non-blocking): create the libinput context without assigning a
-    // seat.  This returns quickly so that start_platforms() can return and the
-    // GLib main loop thread is no longer blocked.
-    // Returns false if already started (e.g. stop() was not called before
-    // this start()); in that case skip the rest of start() to avoid tearing down the
-    // active watches or re-assigning the udev seat on an already-assigned
-    // libinput context.
     if (!self->platform_impl->start())
         return;
 
-    // Remove any stale fd watcher or assign_seat queue left over from a
-    // previous start()/stop() cycle where stop() may not have cleaned up
-    // (e.g. due to an earlier deadlock).  We only do this when start() actually
-    // created a fresh context (returned true) — when it returns false the
-    // platform is still running and removing its watchers would break dispatch.
-    if (self->assign_seat_queue)
+    // Clean up any stale watches from a previous start()/stop() cycle.
+    if (self->device_queue)
     {
-        self->dispatchable->remove_watch(self->assign_seat_queue);
-        self->assign_seat_queue.reset();
+        self->dispatchable->remove_watch(self->device_queue);
+        self->device_queue.reset();
+    }
+    if (self->udev_dispatchable)
+    {
+        self->dispatchable->remove_watch(self->udev_dispatchable);
+        self->udev_dispatchable.reset();
     }
     if (self->libinput_dispatch)
     {
@@ -228,23 +388,93 @@ void miers::Platform::start()
     }
 
     self->libinput_dispatch = std::make_shared<md::ReadableFd>(
-        Fd{IntOwnedFd{libinput_fd}},
+        mir::Fd{mir::IntOwnedFd{libinput_fd}},
         [this]() { self->platform_impl->process(); });
-    self->dispatchable->add_watch(self->libinput_dispatch);
 
-    // Phase 2 (deferred): assign the udev seat so that libinput opens input
-    // devices.  Opening each device requires a logind TakeDevice D-Bus call
-    // whose reply is processed by the GLib main loop.  We defer this work via
-    // an ActionQueue so it executes on the input thread *after*
-    // start_platforms() has returned — at which point the GLib main loop is
-    // no longer blocked and can process those replies.
-    self->assign_seat_queue = std::make_shared<md::ActionQueue>();
-    self->assign_seat_queue->enqueue(
-        [this]()
+    self->device_queue = std::make_shared<md::ActionQueue>();
+    self->running.store(true);
+    self->udev_context = std::make_unique<mu::Context>();
+
+    self->udev_dispatchable = std::make_shared<DispatchableUDevMonitor>(
+        *self->udev_context,
+        [this](mu::Monitor::EventType type, mu::Device const& device)
         {
-            self->platform_impl->assign_seat();
+            using namespace std::string_literals;
+            try
+            {
+                switch (type)
+                {
+                case mu::Monitor::ADDED:
+                {
+                    if (!device.devnode())
+                        break;
+
+                    // Re-fetch via syspath to work around umockdev missing properties.
+                    auto ctx = std::make_shared<mu::Context>();
+                    auto workaround_device = ctx->device_from_syspath(device.syspath());
+
+                    if (!workaround_device->devnode())
+                        break;
+
+                    // Libinput only processes "event" devices.
+                    if (strncmp(workaround_device->sysname(), "event", strlen_c("event")) != 0)
+                        break;
+
+                    auto const devnum = workaround_device->devnum();
+                    if (self->pending_devices.count(devnum) > 0 ||
+                        self->device_watchers.count(devnum) > 0)
+                        break; // already handled
+
+                    std::string devnode{workaround_device->devnode()};
+
+                    self->pending_devices.emplace(
+                        devnum,
+                        self->console->acquire_device(
+                            major(devnum),
+                            minor(devnum),
+                            std::make_unique<InputDeviceObserver>(
+                                devnode,
+                                devnum,
+                                self->bridge,
+                                self->device_queue,
+                                self->running,
+                                self->pending_devices,
+                                self->device_watchers,
+                                self->platform_impl)));
+                    break;
+                }
+                case mu::Monitor::REMOVED:
+                {
+                    auto const devnum = device.devnum();
+
+                    // If still pending (activated() never fired), just drop the future.
+                    self->pending_devices.erase(devnum);
+
+                    // If already active, remove from libinput.
+                    if (self->device_watchers.count(devnum) > 0)
+                    {
+                        std::string devnode{device.devnode() ? device.devnode() : ""};
+                        self->device_watchers.erase(devnum);
+                        if (!devnode.empty())
+                            self->platform_impl->path_remove_device(devnode);
+                    }
+                    break;
+                }
+                default:
+                    break;
+                }
+            }
+            catch (std::exception const&)
+            {
+                mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
+                    std::current_exception(),
+                    "Failed to handle UDev event for %s", device.syspath());
+            }
         });
-    self->dispatchable->add_watch(self->assign_seat_queue);
+
+    self->dispatchable->add_watch(self->libinput_dispatch);
+    self->dispatchable->add_watch(self->device_queue);
+    self->dispatchable->add_watch(self->udev_dispatchable);
 }
 
 void miers::Platform::continue_after_config()
@@ -259,21 +489,32 @@ void miers::Platform::pause_for_config()
 
 void miers::Platform::stop()
 {
-    if (self->assign_seat_queue)
+    self->running.store(false);
+
+    // Remove watches first so no further lambdas are dispatched from device_queue.
+    if (self->udev_dispatchable)
     {
-        self->dispatchable->remove_watch(self->assign_seat_queue);
-        self->assign_seat_queue.reset();
+        self->dispatchable->remove_watch(self->udev_dispatchable);
+        self->udev_dispatchable.reset();
+    }
+    if (self->device_queue)
+    {
+        self->dispatchable->remove_watch(self->device_queue);
+        self->device_queue.reset();
     }
     if (self->libinput_dispatch)
+    {
         self->dispatchable->remove_watch(self->libinput_dispatch);
-    self->libinput_dispatch.reset();
-    self->platform_impl->stop();
-}
+        self->libinput_dispatch.reset();
+    }
 
-std::unique_ptr<miers::DeviceObserverWithFd> miers::Platform::create_device_observer()
-{
-    return std::make_unique<DeviceObserverWrapper<LibinputDeviceObserver>>(
-        self->platform_impl->create_device_observer());
+    // Release Device handles.  The mir::Device destructor guarantees no further
+    // Observer callbacks will fire once destruction completes.
+    self->pending_devices.clear();
+    self->device_watchers.clear();
+    self->udev_context.reset();
+
+    self->platform_impl->stop();
 }
 
 std::shared_ptr<mi::InputDevice> miers::Platform::create_input_device(int device_id) const

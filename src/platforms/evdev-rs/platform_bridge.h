@@ -22,6 +22,8 @@
 #include <mir/input/event_builder.h>
 #include <mir/geometry/rectangle.h>
 #include <memory>
+#include <mutex>
+#include <unordered_map>
 #include <rust/cxx.h>
 
 namespace mir
@@ -33,21 +35,6 @@ namespace input
 namespace evdev_rs
 {
 class Platform;
-
-/// Wraps a #mir::Device so that it can be kept alive in rust.
-///
-/// The platform must maintain a reference to the #mir::Device
-/// or else the device will be destroyed.
-class DeviceWrapper
-{
-public:
-    DeviceWrapper(std::unique_ptr<Device> device, int fd);
-    int raw_fd() const;
-
-private:
-    std::unique_ptr<Device> device;
-    int fd;
-};
 
 struct PointerEventData
 {
@@ -114,14 +101,29 @@ class PlatformBridge
 {
 public:
     PlatformBridge(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
-    std::unique_ptr<DeviceWrapper> acquire_device(int major, int minor) const;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
     std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
 
+    /// Store a pre-acquired file descriptor for a device path.
+    ///
+    /// Called from the C++ Device::Observer::activated() callback (GLib main loop thread)
+    /// before enqueuing path_add_device() on the input dispatch thread.  The stored fd
+    /// is consumed by claim_pending_fd() inside open_restricted().
+    void store_pending_fd(std::string const& devnode, int fd);
+
+    /// Claim and remove the pre-acquired fd for a device path.
+    ///
+    /// Called from Rust's open_restricted() on the input dispatch thread.
+    /// Returns the raw fd, or -1 if no pending fd exists for the given devnode.
+    int claim_pending_fd(std::string const& devnode);
+
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;
+
+    std::mutex pending_fds_mutex;
+    std::unordered_map<std::string, int> pending_fds;
 };
 }
 }

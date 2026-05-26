@@ -33,23 +33,24 @@ miers::PlatformBridge::PlatformBridge(
     std::shared_ptr<mir::ConsoleServices> const& console)
     : platform(platform), console(console) {}
 
-std::unique_ptr<miers::DeviceWrapper> miers::PlatformBridge::acquire_device(int major, int minor) const
+void miers::PlatformBridge::store_pending_fd(std::string const& devnode, int fd)
 {
-    mir::log_info("Acquiring device: %d.%d", major, minor);
-    auto observer = platform->create_device_observer();
-    DeviceObserverWithFd* raw_observer = observer.get();
-    auto future = console->acquire_device(major, minor, std::move(observer));
-    future.wait();
-    if (auto const raw_fd = raw_observer->raw_fd(); !raw_fd)
-        throw std::runtime_error("Failed to acquire device");
-    else
-        return std::make_unique<DeviceWrapper>(future.get(), raw_fd.value());
+    std::lock_guard lock{pending_fds_mutex};
+    pending_fds[devnode] = fd;
+}
+
+int miers::PlatformBridge::claim_pending_fd(std::string const& devnode)
+{
+    std::lock_guard lock{pending_fds_mutex};
+    auto it = pending_fds.find(devnode);
+    if (it == pending_fds.end())
+        return -1;
+    int fd = it->second;
+    pending_fds.erase(it);
+    return fd;
 }
 
 std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const
-{
-    return platform->create_input_device(device_id);
-}
 
 std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridge::create_event_builder_wrapper(EventBuilder* event_builder) const
 {
@@ -59,17 +60,6 @@ std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridge::create_event_
 std::unique_ptr<miers::RectangleWrapper> miers::PlatformBridge::bounding_rectangle(InputSink const& input_sink) const
 {
     return std::make_unique<RectangleWrapper>(input_sink.bounding_rectangle());
-}
-
-miers::DeviceWrapper::DeviceWrapper(std::unique_ptr<mir::Device> device, int fd)
-    : device(std::move(device)),
-      fd(fd)
-{
-}
-
-int miers::DeviceWrapper::raw_fd() const
-{
-    return fd;
 }
 
 miers::EventBuilderWrapper::EventBuilderWrapper(EventBuilder* event_builder)

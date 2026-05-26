@@ -240,6 +240,9 @@ impl LibinputDeviceState {
 
 pub struct LibinputDeviceInfo {
     pub id: i32,
+    /// The device node path (e.g. `/dev/input/event0`), stored so that
+    /// `path_remove_device` can find this entry by devnode.
+    pub devnode: String,
     pub device: input::Device,
     pub input_device: cxx::SharedPtr<InputDevice>,
     pub input_sink: Option<InputSinkPtr>,
@@ -289,26 +292,6 @@ impl LibinputDeviceMetadata {
 
     pub fn capabilities(&self) -> u32 {
         self.capabilities
-    }
-}
-
-pub struct LibinputDeviceObserver {
-    fd: Option<i32>,
-}
-
-impl LibinputDeviceObserver {
-    pub fn new() -> Self {
-        LibinputDeviceObserver { fd: None }
-    }
-
-    pub fn activated(&mut self, fd: i32) {
-        self.fd = Some(fd);
-    }
-
-    pub fn suspended(&mut self) {}
-
-    pub fn removed(&mut self) {
-        self.fd = None;
     }
 }
 

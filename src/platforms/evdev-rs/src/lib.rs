@@ -28,7 +28,7 @@ mod ffi;
 mod libinput_interface;
 mod platform;
 
-use crate::device::{LibinputDevice, LibinputDeviceMetadata, LibinputDeviceObserver};
+use crate::device::{LibinputDevice, LibinputDeviceMetadata};
 use crate::platform::PlatformRs;
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
@@ -172,23 +172,18 @@ mod ffi_bridge {
 
     extern "Rust" {
         type PlatformRs;
-        type LibinputDeviceObserver;
         type LibinputDevice;
         type LibinputDeviceMetadata;
 
         fn start(self: &mut PlatformRs) -> bool;
-        fn assign_seat(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
         unsafe fn libinput_fd(self: &mut PlatformRs) -> i32;
         pub fn process(self: &mut PlatformRs);
-        fn create_device_observer(self: &PlatformRs) -> Box<LibinputDeviceObserver>;
+        fn path_add_device(self: &mut PlatformRs, devnode: &str);
+        fn path_remove_device(self: &mut PlatformRs, devnode: &str);
         fn create_input_device(self: &mut PlatformRs, device_id: i32) -> Box<LibinputDevice>;
-
-        fn activated(self: &mut LibinputDeviceObserver, fd: i32);
-        fn suspended(self: &mut LibinputDeviceObserver);
-        fn removed(self: &mut LibinputDeviceObserver);
 
         /// # Safety
         ///
@@ -228,7 +223,6 @@ mod ffi_bridge {
 
         pub type PlatformBridge;
         pub type InputReport;
-        pub type DeviceWrapper;
         pub type EventBuilderWrapper;
         pub type RectangleWrapper;
         // Map C++ KeyEventData to the Rust struct
@@ -255,18 +249,14 @@ mod ffi_bridge {
         #[namespace = ""]
         pub type MirEvent;
 
-        pub fn acquire_device(
-            self: &PlatformBridge,
-            major: i32,
-            minor: i32,
-        ) -> UniquePtr<DeviceWrapper>;
+        pub fn store_pending_fd(self: &PlatformBridge, devnode: &str, fd: i32);
+        pub fn claim_pending_fd(self: &PlatformBridge, devnode: &str) -> i32;
         pub fn bounding_rectangle(
             self: &PlatformBridge,
             sink: &InputSink,
         ) -> UniquePtr<RectangleWrapper>;
         pub fn create_input_device(self: &PlatformBridge, device_id: i32)
             -> SharedPtr<InputDevice>;
-        pub fn raw_fd(self: &DeviceWrapper) -> i32;
 
         // # Safety
         //

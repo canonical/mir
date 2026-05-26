@@ -126,8 +126,10 @@ fn handle_device_event(
 ) -> Option<thread::JoinHandle<()>> {
     match device_event {
         event::DeviceEvent::Added(_) => {
+            let devnode = format!("/dev/input/{}", libinput_device.sysname());
             known_devices.push(LibinputDeviceInfo {
                 id: *next_device_id,
+                devnode,
                 device: libinput_device,
                 input_device: bridge.create_input_device(*next_device_id),
                 input_sink: None,
@@ -738,59 +740,6 @@ fn handle_touch_frame(
     true
 }
 
-/// Dispatch libinput once after `udev_assign_seat()` and drain all pending events,
-/// splitting them into two groups:
-///
-/// - **Device events** (`DEVICE_ADDED` / `DEVICE_REMOVED`): handled immediately so that
-///   every device is inserted into `known_devices` before this function returns.
-///   Registration-thread `JoinHandle`s are collected and returned so the caller can
-///   join them (ensuring `event_builder` is set) before touching the deferred events.
-///
-/// - **Non-device input events** (keyboard, pointer, touch, …): returned as a `Vec` of
-///   deferred events.  The caller must join the registration handles *first*, then
-///   call `process_deferred_events()` to handle these events — at which point
-///   `event_builder` is guaranteed to be set and no events will be silently dropped.
-///
-/// `dispatch()` is called here because `libinput_udev_assign_seat()` does not signal
-/// the epoll fd for `DEVICE_ADDED` events; they only become accessible after calling
-/// `libinput_dispatch()`.  Any input events that were buffered in the kernel device fds
-/// while devices were being opened (e.g. a modifier key held during the logind
-/// `TakeDevice` round-trip) are also returned as deferred events rather than being
-/// processed in the same pass as `DEVICE_ADDED`, preventing the #4723 drop race.
-pub fn drain_initial_events(
-    state: &mut LibinputDeviceState,
-    device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
-    bridge: cxx::SharedPtr<crate::PlatformBridge>,
-) -> (Vec<thread::JoinHandle<()>>, Vec<input::Event>) {
-    let mut handles = Vec::new();
-    let mut deferred = Vec::new();
-
-    if state.libinput.dispatch().is_err() {
-        panic!("evdev-rs: libinput dispatch() failed in assign_seat()");
-    }
-
-    while let Some(event) = state.libinput.next() {
-        let libinput_device = event.device();
-        if let input::Event::Device(device_event) = event {
-            if let Some(handle) = handle_device_event(
-                &mut state.known_devices,
-                &mut state.next_device_id,
-                &device_registry,
-                &bridge,
-                device_event,
-                libinput_device,
-            ) {
-                handles.push(handle);
-            }
-        } else {
-            // Buffer input events for processing after registration threads complete.
-            deferred.push(event);
-        }
-    }
-
-    (handles, deferred)
-}
-
 /// Process a single non-Device libinput input event (Pointer, Keyboard, Touch, etc.).
 ///
 /// Device events (hotplug) must be handled separately by the caller — callers should
@@ -861,26 +810,6 @@ fn process_input_event(
         input::Event::Switch(_) => println!("TODO: Handle switch events"),
 
         _ => println!("TODO: Unhandled libinput event type"),
-    }
-}
-
-/// Process a batch of non-device input events that were collected by `drain_initial_events()`.
-///
-/// Must only be called **after** all registration-thread handles returned by
-/// `drain_initial_events()` have been joined, so that `event_builder` is guaranteed to
-/// be set for every device.
-pub fn process_deferred_events(
-    state: &mut LibinputDeviceState,
-    bridge: &cxx::SharedPtr<crate::PlatformBridge>,
-    events: Vec<input::Event>,
-    report: &crate::InputReport,
-) {
-    for event in events {
-        if let input::Event::Device(_) = event {
-            // Device events should never appear in the deferred list; this is a programming error.
-            continue;
-        }
-        process_input_event(state, bridge, event, report);
     }
 }
 

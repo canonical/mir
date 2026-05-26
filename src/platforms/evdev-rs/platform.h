@@ -29,12 +29,6 @@ class InputReport;
 
 namespace evdev_rs
 {
-class DeviceObserverWithFd : public mir::Device::Observer
-{
-public:
-    virtual std::optional<mir::Fd> raw_fd() const = 0;
-};
-
 class Platform : public input::Platform
 {
 public:
@@ -46,7 +40,6 @@ public:
     void stop() override;
     void pause_for_config() override;
     void continue_after_config() override;
-    std::unique_ptr<DeviceObserverWithFd> create_device_observer();
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
 
 private:
