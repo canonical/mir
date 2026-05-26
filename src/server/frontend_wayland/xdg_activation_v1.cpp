@@ -470,10 +470,10 @@ void mf::XdgActivationTokenV1::commit()
 {
     if (used)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::already_used,
-            "The activation token has already been used"));
+            "The activation token has already been used"};
         return;
     }
 

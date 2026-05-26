@@ -705,9 +705,9 @@ void mf::ExtImageCopyCaptureSessionV1::create_frame(
 {
     if (current_frame)
     {
-        BOOST_THROW_EXCEPTION(wayland::ProtocolError(
+        throw wayland::ProtocolError{
             resource, Error::duplicate_frame,
-            "A frame already exists for this session"));
+            "A frame already exists for this session"};
     }
     current_frame = wayland::make_weak(
         new ExtImageCopyCaptureFrameV1{new_resource, this});
@@ -726,9 +726,9 @@ void mf::ExtImageCopyCaptureFrameV1::attach_buffer(
 {
     if (capture_has_been_called)
     {
-        BOOST_THROW_EXCEPTION(wayland::ProtocolError(
+         throw wayland::ProtocolError{
             resource, Error::already_captured,
-            "Cannot attach buffer after capture"));
+            "Cannot attach buffer after capture"};
     }
 
     auto buf = wayland::Buffer::from(buffer);
@@ -750,9 +750,9 @@ void mf::ExtImageCopyCaptureFrameV1::damage_buffer(
 {
     if (x < 0 || y < 0 || width <= 0 || height <= 0)
     {
-        BOOST_THROW_EXCEPTION(wayland::ProtocolError(
+        throw wayland::ProtocolError{
             resource, Error::invalid_buffer_damage,
-            "invalid buffer damage coordinates"));
+            "invalid buffer damage coordinates"};
     }
 
     auto new_damage = geom::Rectangle{{x, y}, {width, height}};
@@ -770,15 +770,15 @@ void mf::ExtImageCopyCaptureFrameV1::capture()
 {
     if (capture_has_been_called)
     {
-        BOOST_THROW_EXCEPTION(wayland::ProtocolError(
+        throw wayland::ProtocolError{
             resource, Error::already_captured,
-            "capture already called"));
+            "capture already called"};
     }
     if (!target)
     {
-        BOOST_THROW_EXCEPTION(wayland::ProtocolError(
+        throw wayland::ProtocolError{
             resource, Error::no_buffer,
-            "no buffer attached"));
+            "no buffer attached"};
     }
     capture_has_been_called = true;
 
@@ -996,10 +996,10 @@ void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
 {
     if (cursor_image_session)
     {
-        BOOST_THROW_EXCEPTION(wayland::ProtocolError(
+        throw wayland::ProtocolError{
             resource, Error::duplicate_session,
             "An ext_image_copy_capture_session_v1 already exists for this "
-            "ext_image_copy_capture_cursor_session_v1"));
+            "ext_image_copy_capture_cursor_session_v1"};
     }
     auto backend_factory = [this](auto *session, [[maybe_unused]] bool overlay_cursor)
         {
