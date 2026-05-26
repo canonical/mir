@@ -82,6 +82,23 @@ static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, u
 #endif
 }
 
+static constexpr auto unpack_color(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    b = static_cast<unsigned char>((c >>  0) & 0xFF);
+    g = static_cast<unsigned char>((c >>  8) & 0xFF);
+    r = static_cast<unsigned char>((c >> 16) & 0xFF);
+    a = static_cast<unsigned char>((c >> 24) & 0xFF);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    b = static_cast<unsigned char>((c >> 24) & 0xFF);
+    g = static_cast<unsigned char>((c >> 16) & 0xFF);
+    r = static_cast<unsigned char>((c >>  8) & 0xFF);
+    a = static_cast<unsigned char>((c >>  0) & 0xFF);
+#else
+#error unsupported byte order
+#endif
+}
+
 uint32_t constexpr default_focused_background   = color(0x32, 0x32, 0x32);
 uint32_t constexpr default_unfocused_background = color(0x80, 0x80, 0x80);
 uint32_t constexpr default_focused_text         = color(0xFF, 0xFF, 0xFF);
@@ -606,8 +623,8 @@ void RendererStrategy::Text::Impl::render_glyph(
 
     geom::Displacement const glyph_offset = as_displacement(top_left);
 
-    unsigned char* const color_pixels = reinterpret_cast<unsigned char *>(&color);
-    unsigned char const color_alpha = color_pixels[3];
+    unsigned char color_pixels[3], color_alpha;
+    unpack_color(color, color_pixels[0], color_pixels[1], color_pixels[2], color_alpha);
 
     for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
     {
