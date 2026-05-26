@@ -67,7 +67,7 @@ impl PlatformRs {
     /// Start the input platform.
     ///
     /// Creates the libinput context using the path-based API so that device
-    /// acquisition (via `path_add_device`) is driven by the C++ udev monitor.
+    /// acquisition (via `path_add_device`) is driven by the `UdevMonitor`.
     /// This avoids `udev_assign_seat()`, which would call `open_restricted()`
     /// synchronously while the GLib main loop still needs to process the logind
     /// `TakeDevice` D-Bus replies.
@@ -116,9 +116,8 @@ impl PlatformRs {
 
     /// Add a device to the libinput context by path.
     ///
-    /// Called from C++ on the input dispatch thread after a device has been
-    /// acquired via `ConsoleServices::acquire_device()` and its fd stored in
-    /// the bridge's pending-fd map.  libinput will call `open_restricted()`,
+    /// Called internally after a device fd has been acquired and stored in
+    /// the bridge's pending-fd map. libinput will call `open_restricted()`,
     /// which retrieves the pre-acquired fd non-blockingly via `claim_pending_fd`.
     pub fn path_add_device(&mut self, devnode: &str) {
         let Some(state_arc) = self.state.as_mut() else {
@@ -137,8 +136,8 @@ impl PlatformRs {
 
     /// Remove a device from the libinput context by path.
     ///
-    /// Called from C++ on the input dispatch thread when a device is
-    /// suspended (VT switch) or removed (hotplug disconnect).
+    /// Called internally when a device is suspended (VT switch) or
+    /// removed (hotplug disconnect).
     pub fn path_remove_device(&mut self, devnode: &str) {
         let Some(state_arc) = self.state.as_mut() else {
             return;
@@ -283,8 +282,7 @@ impl PlatformRs {
 
         match self.state.as_mut().unwrap().try_lock() {
             Ok(mut state) => {
-                // Drop handles: runtime hotplug registration is fire-and-forget.
-                let _ = process_libinput_events(
+                process_libinput_events(
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),
@@ -296,7 +294,7 @@ impl PlatformRs {
     }
 
     /// Returns whether the platform is currently running.
-    /// Called from C++ to check if callbacks should be processed.
+    /// Queried from C++ (InputDeviceObserver) and internally.
     pub fn is_running(&self) -> bool {
         self.running.load(Ordering::Acquire)
     }
@@ -312,7 +310,7 @@ impl PlatformRs {
     }
 
     /// Process pending udev monitor events.
-    /// Called from C++ when the udev monitor fd becomes readable.
+    /// Invoked from C++ when the udev monitor fd becomes readable.
     pub fn process_udev_events(&mut self) {
         if !self.running.load(Ordering::Acquire) {
             return;
@@ -338,9 +336,8 @@ impl PlatformRs {
 
     /// Handle a udev event. Decides whether to acquire or release a device.
     ///
-    /// Called from C++ on the input dispatch thread when the udev monitor
-    /// fires. The C++ side extracts the raw event data and forwards it here
-    /// so that all decision-making logic lives in Rust.
+    /// Called internally by `process_udev_events()` (at runtime when the
+    /// udev fd is readable) and by `start()` (during initial enumeration).
     pub fn on_udev_event(
         &mut self,
         event_type: UdevEventType,
@@ -391,8 +388,9 @@ impl PlatformRs {
 
     /// Handle device activation (fd acquired from ConsoleServices).
     ///
-    /// Called from C++ (on the input dispatch thread via ActionQueue) after
-    /// `Device::Observer::activated()` has fired and the fd has been dup'd.
+    /// Invoked from C++ (on the input dispatch thread via ActionQueue)
+    /// after `Device::Observer::activated()` has fired and the fd has
+    /// been dup'd.
     pub fn on_device_activated(&mut self, devnode: &str, devnum: u64, fd: i32) {
         if !self.running.load(Ordering::Acquire) {
             return;
@@ -410,7 +408,7 @@ impl PlatformRs {
 
     /// Handle device suspension (e.g. VT switch).
     ///
-    /// Called from C++ (on the input dispatch thread via ActionQueue).
+    /// Invoked from C++ (on the input dispatch thread via ActionQueue).
     pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
         if !self.running.load(Ordering::Acquire) {
             return;
@@ -422,7 +420,7 @@ impl PlatformRs {
 
     /// Handle device removal (hotplug disconnect via observer).
     ///
-    /// Called from C++ (on the input dispatch thread via ActionQueue).
+    /// Invoked from C++ (on the input dispatch thread via ActionQueue).
     pub fn on_device_removed(&mut self, devnode: &str, devnum: u64) {
         if !self.running.load(Ordering::Acquire) {
             return;
