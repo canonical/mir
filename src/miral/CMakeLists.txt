@@ -21,6 +21,7 @@ add_library(miral-internal STATIC
     fd_manager.cpp                       fd_manager.h
     input_device_config.cpp              input_device_configuration_options.h input_device_config.h
     launch_app.cpp                       launch_app.h
+    live_config_overrides_list_builder.cpp    live_config_overrides_list_builder.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
@@ -36,6 +37,7 @@ add_library(miral-internal STATIC
                                          window_info_defaults.h
     window_specification_internal.cpp    window_specification_internal.h
     basic_store.cpp                      basic_store.h
+    live_config_ini_file_common.cpp      live_config_ini_file_common.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -149,7 +151,9 @@ add_library(miral-external OBJECT
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
     simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h
     live_config.cpp                     ${miral_include}/miral/live_config.h
+    live_config_overrides_list.cpp        ${miral_include}/miral/live_config_overrides_list.h
     live_config_ini_file.cpp            ${miral_include}/miral/live_config_ini_file.h
+    live_config_ini_file_with_overrides.cpp ${miral_include}/miral/live_config_ini_file_with_overrides.h
     hover_click.cpp                     ${miral_include}/miral/hover_click.h
     magnifier.cpp                       ${miral_include}/miral/magnifier.h
     bounce_keys.cpp                     ${miral_include}/miral/bounce_keys.h
