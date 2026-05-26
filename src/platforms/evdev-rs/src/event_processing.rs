@@ -813,26 +813,37 @@ fn process_input_event(
     }
 }
 
-/// Process all pending libinput events and return the `JoinHandle`s for any
-/// device-registration threads that were spawned for newly-added devices.
+/// Process all pending libinput events.
 ///
-/// For *runtime hotplug* events the caller should drop the handles (fire-and-forget).
+/// This function uses a two-phase approach to avoid dropping input events that
+/// arrive in the same dispatch cycle as DEVICE_ADDED:
+///
+/// 1. **First pass**: Drain all pending events from libinput.
+///    - DEVICE_ADDED/REMOVED events are handled immediately (spawning registration threads).
+///    - Non-device input events are buffered.
+///
+/// 2. **Wait**: Join all registration thread handles so that `event_builder` is set.
+///
+/// 3. **Second pass**: Process the buffered input events.
+///
+/// This prevents the race where a key held during device acquisition is dropped
+/// because `event_builder` wasn't set yet when the KEY event was processed.
+/// See: https://github.com/canonical/mir/pull/4780
 pub fn process_libinput_events(
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
     report: &crate::InputReport,
-) -> Vec<thread::JoinHandle<()>> {
-    let mut handles = Vec::new();
-
+) {
     if state.libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
-        return handles;
+        return;
     }
 
-    // Use .next() rather than `for event in &mut state.libinput` so that
-    // the borrow on state.libinput is released after each call and the loop
-    // body is free to borrow other fields of `state` via process_input_event.
+    let mut handles = Vec::new();
+    let mut deferred_events = Vec::new();
+
+    // First pass: handle device events immediately, buffer input events.
     while let Some(event) = state.libinput.next() {
         match event {
             input::Event::Device(device_event) => {
@@ -850,10 +861,19 @@ pub fn process_libinput_events(
             }
 
             other => {
-                process_input_event(state, &bridge, other, report);
+                // Buffer non-device events for processing after registration completes.
+                deferred_events.push(other);
             }
         }
     }
 
-    handles
+    // Wait for all device registrations to complete (sets event_builder).
+    for handle in handles {
+        let _ = handle.join();
+    }
+
+    // Second pass: process buffered input events now that event_builder is set.
+    for event in deferred_events {
+        process_input_event(state, &bridge, event, report);
+    }
 }
