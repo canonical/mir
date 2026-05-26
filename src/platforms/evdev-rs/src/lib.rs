@@ -27,6 +27,7 @@ mod event_processing;
 mod ffi;
 mod libinput_interface;
 mod platform;
+mod udev_monitor;
 
 use crate::device::{LibinputDevice, LibinputDeviceMetadata};
 use crate::platform::PlatformRs;
@@ -195,15 +196,11 @@ mod ffi_bridge {
         /// Returns whether the platform is currently running.
         fn is_running(self: &PlatformRs) -> bool;
 
-        /// Called from C++ when a udev event arrives. Rust decides whether
-        /// to acquire or release the device.
-        fn on_udev_event(
-            self: &mut PlatformRs,
-            event_type: UdevEventType,
-            devnode: &str,
-            devnum: u64,
-            sysname: &str,
-        );
+        /// Returns the udev monitor fd for C++ to wrap in a ReadableFd.
+        fn udev_monitor_fd(self: &PlatformRs) -> i32;
+
+        /// Process pending udev monitor events (called when fd is readable).
+        fn process_udev_events(self: &mut PlatformRs);
 
         /// Called from C++ when a device fd has been acquired (activated).
         fn on_device_activated(self: &mut PlatformRs, devnode: &str, devnum: u64, fd: i32);

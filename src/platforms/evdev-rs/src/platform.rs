@@ -17,6 +17,7 @@
 use crate::device::{LibinputDevice, LibinputDeviceState};
 use crate::event_processing::process_libinput_events;
 use crate::ffi_bridge::UdevEventType;
+use crate::udev_monitor::UdevMonitor;
 use cxx;
 use input;
 use std::collections::HashSet;
@@ -41,6 +42,9 @@ pub struct PlatformRs {
 
     /// Set of devnums we know about (pending or active), to deduplicate udev events.
     known_devnums: HashSet<u64>,
+
+    /// Rust-owned udev monitor for input device hotplug events.
+    udev_monitor: Option<UdevMonitor>,
 }
 
 impl PlatformRs {
@@ -56,6 +60,7 @@ impl PlatformRs {
             state: None,
             running: Arc::new(AtomicBool::new(false)),
             known_devnums: HashSet::new(),
+            udev_monitor: None,
         }
     }
 
@@ -94,6 +99,17 @@ impl PlatformRs {
 
         self.running.store(true, Ordering::Release);
         self.known_devnums.clear();
+
+        // Create the udev monitor. The closure handles initial device enumeration.
+        let mut initial_devices: Vec<(String, u64, String)> = Vec::new();
+        self.udev_monitor = UdevMonitor::new(|_event_type, devnode, devnum, sysname| {
+            initial_devices.push((devnode.to_string(), devnum, sysname.to_string()));
+        });
+
+        // Process the initially-enumerated devices through on_udev_event.
+        for (devnode, devnum, sysname) in initial_devices {
+            self.on_udev_event(UdevEventType::Added, &devnode, devnum, &sysname);
+        }
 
         true
     }
@@ -173,6 +189,7 @@ impl PlatformRs {
     pub fn stop(&mut self) {
         self.running.store(false, Ordering::Release);
         self.known_devnums.clear();
+        self.udev_monitor = None;
 
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
@@ -282,6 +299,41 @@ impl PlatformRs {
     /// Called from C++ to check if callbacks should be processed.
     pub fn is_running(&self) -> bool {
         self.running.load(Ordering::Acquire)
+    }
+
+    /// Returns the file descriptor for the udev monitor.
+    /// C++ wraps this in a `ReadableFd` dispatchable.
+    /// Returns -1 if the monitor is not available.
+    pub fn udev_monitor_fd(&self) -> i32 {
+        match &self.udev_monitor {
+            Some(monitor) => monitor.fd(),
+            None => -1,
+        }
+    }
+
+    /// Process pending udev monitor events.
+    /// Called from C++ when the udev monitor fd becomes readable.
+    pub fn process_udev_events(&mut self) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        // Take the monitor out temporarily to avoid borrow issues with self.
+        let Some(mut monitor) = self.udev_monitor.take() else {
+            return;
+        };
+
+        let mut events: Vec<(UdevEventType, String, u64, String)> = Vec::new();
+        monitor.process_events(|event_type, devnode, devnum, sysname| {
+            events.push((event_type, devnode.to_string(), devnum, sysname.to_string()));
+        });
+
+        // Put the monitor back before processing events (which need &mut self).
+        self.udev_monitor = Some(monitor);
+
+        for (event_type, devnode, devnum, sysname) in events {
+            self.on_udev_event(event_type, &devnode, devnum, &sysname);
+        }
     }
 
     /// Handle a udev event. Decides whether to acquire or release a device.

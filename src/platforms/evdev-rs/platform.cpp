@@ -29,7 +29,6 @@
 #include <mir/input/touchscreen_settings.h>
 #include <mir/input/input_device_info.h>
 #include <mir/dispatch/action_queue.h>
-#include <mir/udev/wrapper.h>
 #include <mir/log.h>
 
 #include <unistd.h>
@@ -37,62 +36,9 @@
 namespace mi = mir::input;
 namespace miers = mi::evdev_rs;
 namespace md = mir::dispatch;
-namespace mu = mir::udev;
 
 namespace
 {
-
-/// Dispatchable that monitors udev for input device events and forwards
-/// them to the Rust platform logic for decision-making.
-class DispatchableUDevMonitor : public md::Dispatchable
-{
-public:
-    DispatchableUDevMonitor(
-        mu::Context& context,
-        std::function<void(mu::Monitor::EventType, mu::Device const&)> on_event)
-        : monitor(context),
-          on_event{std::move(on_event)}
-    {
-        monitor.filter_by_subsystem("input");
-        monitor.enable();
-
-        auto fake_shared_context = std::shared_ptr<mu::Context>{&context, [](auto){}};
-        mu::Enumerator device_enumerator{fake_shared_context};
-
-        device_enumerator.match_subsystem("input");
-        device_enumerator.scan_devices();
-
-        for (auto const& device : device_enumerator)
-        {
-            if (device.initialised())
-            {
-                this->on_event(mu::Monitor::EventType::ADDED, device);
-            }
-        }
-    }
-
-    mir::Fd watch_fd() const override
-    {
-        return mir::Fd{mir::IntOwnedFd{monitor.fd()}};
-    }
-
-    bool dispatch(md::FdEvents events) override
-    {
-        if (events & md::FdEvent::error)
-            return false;
-        monitor.process_events(on_event);
-        return true;
-    }
-
-    md::FdEvents relevant_events() const override
-    {
-        return md::FdEvent::readable;
-    }
-
-private:
-    mu::Monitor monitor;
-    std::function<void(mu::Monitor::EventType, mu::Device const&)> const on_event;
-};
 
 /// Thin observer that forwards device lifecycle events to the Rust platform
 /// via an ActionQueue (ensuring they run on the input dispatch thread).
@@ -280,10 +226,9 @@ public:
     std::shared_ptr<PlatformBridge> bridge;
     rust::Box<PlatformRs> platform_impl;
     std::shared_ptr<md::ReadableFd> libinput_dispatch;
+    std::shared_ptr<md::ReadableFd> udev_dispatch;
     std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
     std::shared_ptr<md::ActionQueue> device_queue;
-    std::shared_ptr<DispatchableUDevMonitor> udev_dispatchable;
-    std::unique_ptr<mu::Context> udev_context;
 };
 
 miers::Platform::Platform(
@@ -310,10 +255,10 @@ void miers::Platform::start()
         self->dispatchable->remove_watch(self->device_queue);
         self->device_queue.reset();
     }
-    if (self->udev_dispatchable)
+    if (self->udev_dispatch)
     {
-        self->dispatchable->remove_watch(self->udev_dispatchable);
-        self->udev_dispatchable.reset();
+        self->dispatchable->remove_watch(self->udev_dispatch);
+        self->udev_dispatch.reset();
     }
     if (self->libinput_dispatch)
     {
@@ -334,58 +279,22 @@ void miers::Platform::start()
         [this]() { self->platform_impl->process(); });
 
     self->device_queue = std::make_shared<md::ActionQueue>();
-    self->udev_context = std::make_unique<mu::Context>();
 
-    self->udev_dispatchable = std::make_shared<DispatchableUDevMonitor>(
-        *self->udev_context,
-        [this](mu::Monitor::EventType type, mu::Device const& device)
-        {
-            try
-            {
-                // Re-fetch via syspath to work around umockdev missing properties.
-                auto ctx = std::make_shared<mu::Context>();
-                auto workaround_device = ctx->device_from_syspath(device.syspath());
+    auto const udev_fd = self->platform_impl->udev_monitor_fd();
+    if (udev_fd < 0)
+    {
+        mir::log_error("evdev-rs platform: failed to obtain udev monitor fd; resetting platform state");
+        self->platform_impl->stop();
+        return;
+    }
 
-                char const* devnode = workaround_device->devnode();
-                if (!devnode)
-                    return;
-
-                char const* sysname = workaround_device->sysname();
-                if (!sysname)
-                    return;
-
-                auto const devnum = static_cast<uint64_t>(workaround_device->devnum());
-
-                miers::UdevEventType event_type;
-                switch (type)
-                {
-                case mu::Monitor::ADDED:
-                    event_type = miers::UdevEventType::Added;
-                    break;
-                case mu::Monitor::REMOVED:
-                    event_type = miers::UdevEventType::Removed;
-                    break;
-                default:
-                    return;
-                }
-
-                self->platform_impl->on_udev_event(
-                    event_type,
-                    rust::Str(devnode, strlen(devnode)),
-                    devnum,
-                    rust::Str(sysname, strlen(sysname)));
-            }
-            catch (std::exception const&)
-            {
-                mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT,
-                    std::current_exception(),
-                    std::string{"Failed to handle UDev event for "} + device.syspath());
-            }
-        });
+    self->udev_dispatch = std::make_shared<md::ReadableFd>(
+        mir::Fd{mir::IntOwnedFd{udev_fd}},
+        [this]() { self->platform_impl->process_udev_events(); });
 
     self->dispatchable->add_watch(self->libinput_dispatch);
     self->dispatchable->add_watch(self->device_queue);
-    self->dispatchable->add_watch(self->udev_dispatchable);
+    self->dispatchable->add_watch(self->udev_dispatch);
 }
 
 void miers::Platform::continue_after_config()
@@ -403,10 +312,10 @@ void miers::Platform::stop()
     self->platform_impl->stop();
 
     // Remove watches so no further lambdas are dispatched.
-    if (self->udev_dispatchable)
+    if (self->udev_dispatch)
     {
-        self->dispatchable->remove_watch(self->udev_dispatchable);
-        self->udev_dispatchable.reset();
+        self->dispatchable->remove_watch(self->udev_dispatch);
+        self->udev_dispatch.reset();
     }
     if (self->device_queue)
     {
@@ -418,8 +327,6 @@ void miers::Platform::stop()
         self->dispatchable->remove_watch(self->libinput_dispatch);
         self->libinput_dispatch.reset();
     }
-
-    self->udev_context.reset();
 }
 
 std::unique_ptr<mir::Device::Observer> miers::Platform::create_device_observer(
