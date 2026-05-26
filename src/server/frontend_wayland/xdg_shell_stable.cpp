@@ -470,10 +470,10 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
 
         if (parent_toplevel == this)
         {
-            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_parent,
-                "A toplevel cannot be its own parent"));
+                "A toplevel cannot be its own parent"};
         }
 
         // Check that the parent is not a descendant of this toplevel
@@ -485,10 +485,10 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
             {
                 if (parent_surface.value() == this_surface.value())
                 {
-                    BOOST_THROW_EXCEPTION(mw::ProtocolError(
+                    throw mw::ProtocolError{
                         resource,
                         Error::invalid_parent,
-                        "Parent toplevel must not be a descendant of the child toplevel"));
+                        "Parent toplevel must not be a descendant of the child toplevel"};
                 }
                 auto const grandparent = parent_surface.value()->parent();
                 parent_surface = grandparent ? std::optional{grandparent} : std::nullopt;
