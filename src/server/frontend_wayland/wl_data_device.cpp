@@ -100,10 +100,10 @@ public:
     void finish() override
     {
         if (type != OfferType::dnd) {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_offer,
-                "finish is only valid for drag and drop offers");
+                "finish is only valid for drag and drop offers"};
         }
 
         source->dnd_finished();
@@ -133,10 +133,10 @@ public:
                 "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions);
         }
         if (type != OfferType::dnd) {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_offer,
-                "set_actions is only valid for drag and drop offers");
+                "set_actions is only valid for drag and drop offers"};
         }
 
         const auto action = source->offer_set_actions(dnd_actions, preferred_action);
