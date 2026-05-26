@@ -30,6 +30,8 @@
 #include <mir/graphics/platform.h>
 #include <mir/options/configuration.h>
 
+#include <cstdlib>
+
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -52,6 +54,22 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             if (providers.empty())
             {
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
+            }
+
+            if (auto pinned = find_pinned_rendering_platform())
+            {
+                if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
+                {
+                    mir::log_info("Pinning all compositing to provider: %s", getenv("MIR_PIN_COMPOSITING_TO"));
+                    providers = {gl_provider};
+                }
+                else
+                {
+                    mir::log_warning(
+                        "MIR_PIN_COMPOSITING_TO is set to '%s', but that rendering platform does not support GL "
+                        "compositing",
+                        getenv("MIR_PIN_COMPOSITING_TO"));
+                }
             }
 
             return wrap_display_buffer_compositor_factory(
