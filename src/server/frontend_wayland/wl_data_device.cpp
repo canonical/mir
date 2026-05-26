@@ -164,9 +164,9 @@ mf::WlDataDevice::Offer::Offer(OfferType type, WlDataDevice* device, std::shared
     source{source}
 {
     device->send_data_offer_event(resource);
-    for (auto const& type : source->mime_types())
+    for (auto const& mime_type : source->mime_types())
     {
-        send_offer_event(type);
+        send_offer_event(mime_type);
     }
 }
 
