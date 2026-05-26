@@ -138,6 +138,7 @@ fn handle_device_event(
                 pointer_x: 0.0,
                 pointer_y: 0.0,
                 touch_properties: HashMap::new(),
+                deferred_events: Vec::new(),
             });
 
             // The device registry may call back into the input device, but the input device
@@ -740,6 +741,52 @@ fn handle_touch_frame(
     true
 }
 
+/// Process a single non-Device libinput input event for a specific device.
+///
+/// This is called when we already have the device_info reference (e.g., for deferred events).
+fn process_input_event_for_device(
+    device_info: &mut LibinputDeviceInfo,
+    bridge: &cxx::SharedPtr<crate::PlatformBridge>,
+    event: input::Event,
+    report: &crate::InputReport,
+) {
+    // For deferred events, we don't have access to the scroll accumulators in state.
+    // This is acceptable because deferred events are processed very soon after DEVICE_ADDED,
+    // and scroll events arriving before registration are rare.
+    let mut scroll_state = ScrollState {
+        x_accum: 0.0,
+        y_accum: 0.0,
+        x_scroll_scale: 1.0,
+        y_scroll_scale: 1.0,
+    };
+
+    match event {
+        input::Event::Pointer(pointer_event) => {
+            handle_pointer_event(device_info, &mut scroll_state, bridge, pointer_event, report);
+        }
+
+        input::Event::Keyboard(keyboard_event) => {
+            handle_keyboard_event(device_info, keyboard_event, report);
+        }
+
+        input::Event::Touch(touch_event) => {
+            handle_touch_event(device_info, bridge, touch_event, report);
+        }
+
+        input::Event::Device(_) => {} // Should never happen for deferred events.
+
+        input::Event::Tablet(_) => println!("TODO: Handle tablet events"),
+
+        input::Event::TabletPad(_) => println!("TODO: Handle tablet pad events"),
+
+        input::Event::Gesture(_) => println!("TODO: Handle gesture events"),
+
+        input::Event::Switch(_) => println!("TODO: Handle switch events"),
+
+        _ => println!("TODO: Unhandled libinput event type"),
+    }
+}
+
 /// Process a single non-Device libinput input event (Pointer, Keyboard, Touch, etc.).
 ///
 /// Device events (hotplug) must be handled separately by the caller — callers should
@@ -815,19 +862,19 @@ fn process_input_event(
 
 /// Process all pending libinput events.
 ///
-/// This function uses a two-phase approach to avoid dropping input events that
-/// arrive in the same dispatch cycle as DEVICE_ADDED:
+/// This function uses a per-device deferred event approach to avoid dropping input
+/// events that arrive before device registration completes:
 ///
-/// 1. **First pass**: Drain all pending events from libinput.
+/// 1. **Process deferred events**: For devices where `event_builder` is now set,
+///    drain and process their `deferred_events` queue.
+///
+/// 2. **Dispatch libinput**: Drain all pending events from libinput.
 ///    - DEVICE_ADDED/REMOVED events are handled immediately (spawning registration threads).
-///    - Non-device input events are buffered.
-///
-/// 2. **Wait**: Join all registration thread handles so that `event_builder` is set.
-///
-/// 3. **Second pass**: Process the buffered input events.
+///    - Non-device input events: if `event_builder` is set, process immediately;
+///      otherwise, queue in the device's `deferred_events` for later processing.
 ///
 /// This prevents the race where a key held during device acquisition is dropped
-/// because `event_builder` wasn't set yet when the KEY event was processed.
+/// because `event_builder` wasn't set yet when the KEY event arrived.
 /// See: https://github.com/canonical/mir/pull/4780
 pub fn process_libinput_events(
     state: &mut LibinputDeviceState,
@@ -835,45 +882,55 @@ pub fn process_libinput_events(
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
     report: &crate::InputReport,
 ) {
+    // First, process any deferred events for devices that have completed registration.
+    // We check if event_builder is Some (set by start() after add_device() completes).
+    for device_info in state.known_devices.iter_mut() {
+        if device_info.event_builder.is_some() && !device_info.deferred_events.is_empty() {
+            let events = std::mem::take(&mut device_info.deferred_events);
+            for event in events {
+                process_input_event_for_device(device_info, &bridge, event, report);
+            }
+        }
+    }
+
     if state.libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
         return;
     }
 
-    let mut handles = Vec::new();
-    let mut deferred_events = Vec::new();
-
-    // First pass: handle device events immediately, buffer input events.
+    // Process newly arrived events.
     while let Some(event) = state.libinput.next() {
         match event {
             input::Event::Device(device_event) => {
                 let libinput_device = device_event.device();
-                if let Some(handle) = handle_device_event(
+                // Fire-and-forget: don't join the handle, let registration complete async.
+                let _ = handle_device_event(
                     &mut state.known_devices,
                     &mut state.next_device_id,
                     &device_registry,
                     &bridge,
                     device_event,
                     libinput_device,
-                ) {
-                    handles.push(handle);
-                }
+                );
             }
 
             other => {
-                // Buffer non-device events for processing after registration completes.
-                deferred_events.push(other);
+                let libinput_device = other.device();
+                let Some(device_info) = get_device_info_from_libinput_device(
+                    &mut state.known_devices,
+                    &libinput_device,
+                ) else {
+                    continue;
+                };
+
+                if device_info.event_builder.is_some() {
+                    // Device is registered, process immediately.
+                    process_input_event_for_device(device_info, &bridge, other, report);
+                } else {
+                    // Device not yet registered, defer the event.
+                    device_info.deferred_events.push(other);
+                }
             }
         }
-    }
-
-    // Wait for all device registrations to complete (sets event_builder).
-    for handle in handles {
-        let _ = handle.join();
-    }
-
-    // Second pass: process buffered input events now that event_builder is set.
-    for event in deferred_events {
-        process_input_event(state, &bridge, event, report);
     }
 }

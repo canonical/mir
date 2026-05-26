@@ -251,6 +251,10 @@ pub struct LibinputDeviceInfo {
     pub pointer_x: f32,
     pub pointer_y: f32,
     pub touch_properties: HashMap<u32, ContactData>,
+    /// Input events that arrived before device registration completed (before
+    /// `event_builder` was set). These are processed once `start()` is called.
+    /// See: https://github.com/canonical/mir/pull/4780
+    pub deferred_events: Vec<input::Event>,
 }
 
 #[derive(Default, Copy, Clone)]
