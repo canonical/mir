@@ -24,6 +24,10 @@
 #include "mir/geometry/forward.h"
 #include <mir_platforms_evdev_rs/src/lib.rs.h>
 
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/sysmacros.h>
+
 namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
 namespace geom = mir::geometry;
@@ -48,6 +52,54 @@ int32_t miers::PlatformBridge::claim_pending_fd(rust::Str devnode) const
     int fd = it->second;
     pending_fds.erase(it);
     return fd;
+}
+
+bool miers::PlatformBridge::acquire_device(uint64_t devnum, rust::Str devnode) const
+{
+    auto const dev = static_cast<dev_t>(devnum);
+    if (pending_devices.count(dev) > 0 || device_watchers.count(dev) > 0)
+        return false;
+
+    std::string devnode_str{devnode};
+
+    // The InputDeviceObserver forwards activated/suspended/removed callbacks
+    // to Rust via the Platform's device_queue (ActionQueue).
+    pending_devices.emplace(
+        dev,
+        console->acquire_device(
+            major(dev),
+            minor(dev),
+            platform->create_device_observer(devnode_str, devnum)));
+
+    return true;
+}
+
+void miers::PlatformBridge::activate_pending_device(uint64_t devnum) const
+{
+    auto const dev = static_cast<dev_t>(devnum);
+    auto pending_it = pending_devices.find(dev);
+    if (pending_it != pending_devices.end())
+    {
+        // .get() is non-blocking here because activated() already fired,
+        // meaning the future is resolved.
+        device_watchers.emplace(dev, pending_it->second.get());
+        pending_devices.erase(pending_it);
+    }
+}
+
+void miers::PlatformBridge::release_device(uint64_t devnum) const
+{
+    device_watchers.erase(static_cast<dev_t>(devnum));
+}
+
+void miers::PlatformBridge::release_pending_device(uint64_t devnum) const
+{
+    pending_devices.erase(static_cast<dev_t>(devnum));
+}
+
+bool miers::PlatformBridge::has_device(uint64_t devnum) const
+{
+    return device_watchers.count(static_cast<dev_t>(devnum)) > 0;
 }
 
 std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const

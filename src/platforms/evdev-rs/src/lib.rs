@@ -170,6 +170,13 @@ mod ffi_bridge {
         pub contacts: Vec<TouchContactData>,
     }
 
+    #[repr(i32)]
+    #[derive(Debug, Copy, Clone, PartialEq, Eq)]
+    pub enum UdevEventType {
+        Added = 0,
+        Removed = 1,
+    }
+
     extern "Rust" {
         type PlatformRs;
         type LibinputDevice;
@@ -184,6 +191,28 @@ mod ffi_bridge {
         fn path_add_device(self: &mut PlatformRs, devnode: &str);
         fn path_remove_device(self: &mut PlatformRs, devnode: &str);
         fn create_input_device(self: &mut PlatformRs, device_id: i32) -> Box<LibinputDevice>;
+
+        /// Returns whether the platform is currently running.
+        fn is_running(self: &PlatformRs) -> bool;
+
+        /// Called from C++ when a udev event arrives. Rust decides whether
+        /// to acquire or release the device.
+        fn on_udev_event(
+            self: &mut PlatformRs,
+            event_type: UdevEventType,
+            devnode: &str,
+            devnum: u64,
+            sysname: &str,
+        );
+
+        /// Called from C++ when a device fd has been acquired (activated).
+        fn on_device_activated(self: &mut PlatformRs, devnode: &str, devnum: u64, fd: i32);
+
+        /// Called from C++ when a device is suspended (e.g. VT switch).
+        fn on_device_suspended(self: &mut PlatformRs, devnode: &str, devnum: u64);
+
+        /// Called from C++ when a device is removed.
+        fn on_device_removed(self: &mut PlatformRs, devnode: &str, devnum: u64);
 
         /// # Safety
         ///
@@ -257,6 +286,22 @@ mod ffi_bridge {
         ) -> UniquePtr<RectangleWrapper>;
         pub fn create_input_device(self: &PlatformBridge, device_id: i32)
             -> SharedPtr<InputDevice>;
+
+        /// Request C++ to acquire a device via ConsoleServices.
+        /// Returns true if the acquisition was initiated, false if already pending/active.
+        pub fn acquire_device(self: &PlatformBridge, devnum: u64, devnode: &str) -> bool;
+
+        /// Transfer a pending device to the active set after activated() fired.
+        pub fn activate_pending_device(self: &PlatformBridge, devnum: u64);
+
+        /// Release an active device (remove from active watchers).
+        pub fn release_device(self: &PlatformBridge, devnum: u64);
+
+        /// Release a pending device (drop the future before activated() fires).
+        pub fn release_pending_device(self: &PlatformBridge, devnum: u64);
+
+        /// Check whether a device is already pending or active.
+        pub fn has_device(self: &PlatformBridge, devnum: u64) -> bool;
 
         // # Safety
         //

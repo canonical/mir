@@ -17,6 +17,7 @@
 #include <mir/console_services.h>
 #include <mir/input/platform.h>
 #include <memory>
+#include <string>
 
 namespace mir
 {
@@ -41,6 +42,10 @@ public:
     void pause_for_config() override;
     void continue_after_config() override;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
+
+    /// Create a Device::Observer that forwards lifecycle events to the Rust platform.
+    std::unique_ptr<mir::Device::Observer> create_device_observer(
+        std::string const& devnode, uint64_t devnum);
 
 private:
     class Self;

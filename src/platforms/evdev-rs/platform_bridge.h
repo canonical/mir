@@ -23,6 +23,7 @@
 #include <mir/geometry/rectangle.h>
 #include <memory>
 #include <mutex>
+#include <future>
 #include <unordered_map>
 #include <rust/cxx.h>
 
@@ -106,17 +107,27 @@ public:
     std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
 
     /// Store a pre-acquired file descriptor for a device path.
-    ///
-    /// Called from the C++ Device::Observer::activated() callback (GLib main loop thread)
-    /// before enqueuing path_add_device() on the input dispatch thread.  The stored fd
-    /// is consumed by claim_pending_fd() inside open_restricted().
     void store_pending_fd(rust::Str devnode, int32_t fd) const;
 
     /// Claim and remove the pre-acquired fd for a device path.
-    ///
-    /// Called from Rust's open_restricted() on the input dispatch thread.
-    /// Returns the raw fd, or -1 if no pending fd exists for the given devnode.
+    /// Returns the raw fd, or -1 if no pending fd exists.
     int32_t claim_pending_fd(rust::Str devnode) const;
+
+    /// Initiate device acquisition via ConsoleServices.
+    /// Returns true if acquisition was started, false if already tracked.
+    bool acquire_device(uint64_t devnum, rust::Str devnode) const;
+
+    /// Transfer a pending device to the active set (called after activated() fires).
+    void activate_pending_device(uint64_t devnum) const;
+
+    /// Release an active device handle.
+    void release_device(uint64_t devnum) const;
+
+    /// Release a pending device (drop the future before activated() fires).
+    void release_pending_device(uint64_t devnum) const;
+
+    /// Check whether a device is active (not pending).
+    bool has_device(uint64_t devnum) const;
 
 private:
     Platform* platform;
@@ -124,6 +135,9 @@ private:
 
     mutable std::mutex pending_fds_mutex;
     mutable std::unordered_map<std::string, int> pending_fds;
+
+    mutable std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>> pending_devices;
+    mutable std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;
 };
 }
 }

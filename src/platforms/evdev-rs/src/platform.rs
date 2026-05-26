@@ -16,9 +16,12 @@
 
 use crate::device::{LibinputDevice, LibinputDeviceState};
 use crate::event_processing::process_libinput_events;
+use crate::ffi_bridge::UdevEventType;
 use cxx;
 use input;
+use std::collections::HashSet;
 use std::os::fd::AsRawFd;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -32,6 +35,12 @@ pub struct PlatformRs {
     report: cxx::UniquePtr<crate::InputReport>,
 
     state: Option<Arc<Mutex<LibinputDeviceState>>>,
+
+    /// Whether the platform is currently running. Owned by Rust, queried by C++.
+    running: Arc<AtomicBool>,
+
+    /// Set of devnums we know about (pending or active), to deduplicate udev events.
+    known_devnums: HashSet<u64>,
 }
 
 impl PlatformRs {
@@ -45,6 +54,8 @@ impl PlatformRs {
             device_registry,
             report,
             state: None,
+            running: Arc::new(AtomicBool::new(false)),
+            known_devnums: HashSet::new(),
         }
     }
 
@@ -80,6 +91,9 @@ impl PlatformRs {
             x_scroll_scale: 1.0,
             y_scroll_scale: 1.0,
         })));
+
+        self.running.store(true, Ordering::Release);
+        self.known_devnums.clear();
 
         true
     }
@@ -157,6 +171,9 @@ impl PlatformRs {
     ///
     /// This method will signal the input thread to stop and wait for it to finish.
     pub fn stop(&mut self) {
+        self.running.store(false, Ordering::Release);
+        self.known_devnums.clear();
+
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
@@ -259,5 +276,108 @@ impl PlatformRs {
             }
             _ => {}
         }
+    }
+
+    /// Returns whether the platform is currently running.
+    /// Called from C++ to check if callbacks should be processed.
+    pub fn is_running(&self) -> bool {
+        self.running.load(Ordering::Acquire)
+    }
+
+    /// Handle a udev event. Decides whether to acquire or release a device.
+    ///
+    /// Called from C++ on the input dispatch thread when the udev monitor
+    /// fires. The C++ side extracts the raw event data and forwards it here
+    /// so that all decision-making logic lives in Rust.
+    pub fn on_udev_event(
+        &mut self,
+        event_type: UdevEventType,
+        devnode: &str,
+        devnum: u64,
+        sysname: &str,
+    ) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        match event_type {
+            UdevEventType::Added => {
+                // Only process "event" devices (what libinput expects).
+                if !sysname.starts_with("event") {
+                    return;
+                }
+
+                // Deduplicate: skip if already pending or active.
+                if self.known_devnums.contains(&devnum) {
+                    return;
+                }
+
+                // Ask C++ to initiate device acquisition via ConsoleServices.
+                if self.bridge.acquire_device(devnum, devnode) {
+                    self.known_devnums.insert(devnum);
+                }
+            }
+            UdevEventType::Removed => {
+                if !self.known_devnums.remove(&devnum) {
+                    return;
+                }
+
+                // Release the pending future if activated() never fired.
+                self.bridge.release_pending_device(devnum);
+
+                // If already active, remove from libinput and release.
+                if self.bridge.has_device(devnum) {
+                    if !devnode.is_empty() {
+                        self.path_remove_device(devnode);
+                    }
+                    self.bridge.release_device(devnum);
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// Handle device activation (fd acquired from ConsoleServices).
+    ///
+    /// Called from C++ (on the input dispatch thread via ActionQueue) after
+    /// `Device::Observer::activated()` has fired and the fd has been dup'd.
+    pub fn on_device_activated(&mut self, devnode: &str, devnum: u64, fd: i32) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        // Store the fd so that open_restricted() can claim it.
+        self.bridge.store_pending_fd(devnode, fd);
+
+        // Transfer the Device from pending to active in C++.
+        self.bridge.activate_pending_device(devnum);
+
+        // Tell libinput about the new device.
+        self.path_add_device(devnode);
+    }
+
+    /// Handle device suspension (e.g. VT switch).
+    ///
+    /// Called from C++ (on the input dispatch thread via ActionQueue).
+    pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        self.bridge.release_device(devnum);
+        self.path_remove_device(devnode);
+    }
+
+    /// Handle device removal (hotplug disconnect via observer).
+    ///
+    /// Called from C++ (on the input dispatch thread via ActionQueue).
+    pub fn on_device_removed(&mut self, devnode: &str, devnum: u64) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        self.known_devnums.remove(&devnum);
+        self.bridge.release_device(devnum);
+        self.path_remove_device(devnode);
     }
 }
