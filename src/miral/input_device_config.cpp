@@ -291,7 +291,7 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     mir::OptionType::boolean);
 
     // 25 rate and 600 delay are the default in Weston and Sway
-    server.add_configuration_option(key_repeat_rate_opt, "Number of milliseconds between generated key repeat events.", 25);
+    server.add_configuration_option(key_repeat_rate_opt, "Rate of repeating keys in characters per second.", 25);
     server.add_configuration_option(key_repeat_delay_opt, "Number of milliseconds to hold down a key before generating repeat events.", 600);
 
     server.add_init_callback(
