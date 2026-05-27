@@ -59,12 +59,12 @@ public:
 
     void activated(mir::Fd&& device_fd) override
     {
-        mir::log_debug("evdev-rs: observer activated() for %s (devnum=%lu, fd=%d)",
+        mir::log_info("evdev-rs: observer activated() for %s (devnum=%lu, fd=%d)",
                        devnode.c_str(), static_cast<unsigned long>(devnum), static_cast<int>(device_fd));
 
         if (!platform_impl->is_running())
         {
-            mir::log_debug("evdev-rs: activated() ignored — platform not running");
+            mir::log_info("evdev-rs: activated() ignored — platform not running");
             return;
         }
 
@@ -77,13 +77,13 @@ public:
             return;
         }
 
-        mir::log_debug("evdev-rs: enqueuing on_device_activated for %s (duped fd=%d)", devnode.c_str(), duped);
+        mir::log_info("evdev-rs: enqueuing on_device_activated for %s (duped fd=%d)", devnode.c_str(), duped);
         device_queue->enqueue(
             [devnode = devnode, devnum = devnum, fd = duped, &platform_impl = platform_impl]()
             {
                 if (!platform_impl->is_running())
                 {
-                    mir::log_debug("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", fd);
+                    mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", fd);
                     ::close(fd);
                     return;
                 }
@@ -93,12 +93,12 @@ public:
 
     void suspended() override
     {
-        mir::log_debug("evdev-rs: observer suspended() for %s (devnum=%lu)",
+        mir::log_info("evdev-rs: observer suspended() for %s (devnum=%lu)",
                        devnode.c_str(), static_cast<unsigned long>(devnum));
 
         if (!platform_impl->is_running())
         {
-            mir::log_debug("evdev-rs: suspended() ignored — platform not running");
+            mir::log_info("evdev-rs: suspended() ignored — platform not running");
             return;
         }
 
@@ -113,12 +113,12 @@ public:
 
     void removed() override
     {
-        mir::log_debug("evdev-rs: observer removed() for %s (devnum=%lu)",
+        mir::log_info("evdev-rs: observer removed() for %s (devnum=%lu)",
                        devnode.c_str(), static_cast<unsigned long>(devnum));
 
         if (!platform_impl->is_running())
         {
-            mir::log_debug("evdev-rs: removed() ignored — platform not running");
+            mir::log_info("evdev-rs: removed() ignored — platform not running");
             return;
         }
 
