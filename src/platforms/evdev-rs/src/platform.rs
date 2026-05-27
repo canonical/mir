@@ -447,7 +447,7 @@ impl PlatformRs {
     pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
         println!(
             "evdev-rs: on_device_suspended devnode={} devnum={}",
-            devnode, _devnum
+            devnode, devnum
         );
 
         if !self.running.load(Ordering::Acquire) {
