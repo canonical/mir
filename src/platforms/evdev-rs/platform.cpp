@@ -317,9 +317,9 @@ void miers::Platform::pause_for_config()
 
 void miers::Platform::stop()
 {
-    self->platform_impl->stop();
-
-    // Remove watches so no further lambdas are dispatched.
+    // Remove watches before stopping Rust, because stop() closes the libinput
+    // and udev fds. Calling remove_watch() after the fds are closed causes
+    // epoll_ctl(EPOLL_CTL_DEL) to return EBADF and throw.
     if (self->udev_dispatch)
     {
         self->dispatchable->remove_watch(self->udev_dispatch);
@@ -335,6 +335,8 @@ void miers::Platform::stop()
         self->dispatchable->remove_watch(self->libinput_dispatch);
         self->libinput_dispatch.reset();
     }
+
+    self->platform_impl->stop();
 }
 
 std::unique_ptr<mir::Device::Observer> miers::Platform::create_device_observer(
