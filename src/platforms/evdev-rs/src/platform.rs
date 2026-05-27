@@ -149,10 +149,16 @@ impl PlatformRs {
                     .iter()
                     .position(|d| d.devnode == devnode);
                 let Some(index) = index else {
-                    println!("evdev-rs: path_remove_device({}) — not in known_devices", devnode);
+                    println!(
+                        "evdev-rs: path_remove_device({}) — not in known_devices",
+                        devnode
+                    );
                     return;
                 };
-                println!("evdev-rs: path_remove_device({}) — removing from libinput", devnode);
+                println!(
+                    "evdev-rs: path_remove_device({}) — removing from libinput",
+                    devnode
+                );
                 let device_info = state.known_devices.swap_remove(index);
                 state.libinput.path_remove_device(device_info.device);
 
@@ -426,7 +432,10 @@ impl PlatformRs {
         self.bridge.activate_pending_device(devnum);
 
         // Tell libinput about the new device.
-        println!("evdev-rs: on_device_activated calling path_add_device({})", devnode);
+        println!(
+            "evdev-rs: on_device_activated calling path_add_device({})",
+            devnode
+        );
         self.path_add_device(devnode);
     }
 
@@ -447,7 +456,10 @@ impl PlatformRs {
             return;
         }
 
-        println!("evdev-rs: on_device_suspended calling path_remove_device({})", devnode);
+        println!(
+            "evdev-rs: on_device_suspended calling path_remove_device({})",
+            devnode
+        );
         self.path_remove_device(devnode);
     }
 
