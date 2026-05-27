@@ -118,6 +118,7 @@ fn get_bounding_rectangle(
 /// whether to join (blocking, for startup) or drop (fire-and-forget, for hotplug).
 fn handle_device_event(
     known_devices: &mut Vec<LibinputDeviceInfo>,
+    suspended_devices: &mut Vec<crate::device::SuspendedDeviceInfo>,
     next_device_id: &mut i32,
     device_registry: &cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
@@ -127,6 +128,33 @@ fn handle_device_event(
     match device_event {
         event::DeviceEvent::Added(_) => {
             let devnode = format!("/dev/input/{}", libinput_device.sysname());
+
+            // Check if this device was previously suspended. If so, reuse its
+            // existing InputDevice (and registry entry) rather than creating a
+            // new one and re-registering.
+            let suspended_index = suspended_devices
+                .iter()
+                .position(|s| s.devnode == devnode);
+
+            if let Some(idx) = suspended_index {
+                let suspended = suspended_devices.swap_remove(idx);
+                known_devices.push(LibinputDeviceInfo {
+                    id: suspended.id,
+                    devnode,
+                    device: libinput_device,
+                    input_device: suspended.input_device,
+                    input_sink: None,
+                    event_builder: None,
+                    button_state: 0,
+                    pointer_x: 0.0,
+                    pointer_y: 0.0,
+                    touch_properties: HashMap::new(),
+                    deferred_events: Vec::new(),
+                });
+                // No need to register — the device is still in the registry.
+                return None;
+            }
+
             known_devices.push(LibinputDeviceInfo {
                 id: *next_device_id,
                 devnode,
@@ -839,6 +867,7 @@ pub fn process_libinput_events(
                 // Fire-and-forget: don't join the handle, let registration complete async.
                 let _ = handle_device_event(
                     &mut state.known_devices,
+                    &mut state.suspended_devices,
                     &mut state.next_device_id,
                     &device_registry,
                     &bridge,

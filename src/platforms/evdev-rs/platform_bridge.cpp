@@ -102,6 +102,12 @@ bool miers::PlatformBridge::has_device(uint64_t devnum) const
     return device_watchers.count(static_cast<dev_t>(devnum)) > 0;
 }
 
+void miers::PlatformBridge::release_all_devices() const
+{
+    device_watchers.clear();
+    pending_devices.clear();
+}
+
 std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const
 {
     return platform->create_input_device(device_id);
