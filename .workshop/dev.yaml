@@ -1,0 +1,27 @@
+name: dev
+description: |
+  A development environment for Mir.
+  Provides a Ubuntu 26.04 base with VS Code Remote, GitHub Copilot, and the Mir project SDK.
+  Includes actions for configuring (cmake), building (build), and compiling with cache support (ccache).
+
+  Connect the `desktop` interface (`workshop connect dev/mir:desktop`) to run the built server with `workshop exec <executable>` displayed on the host.
+base: ubuntu@26.04
+sdks:
+- name: vscode-remote
+- name: copilot
+- name: project-mir
+actions:
+  cmake: |
+    set -xeu
+    cmake ~/build "$@"
+
+  build: |
+    set -xeu
+    cmake --build ~/build "$@"
+
+  test: |
+    set -xeu
+    cmake --build ~/build
+    VERBOSE=1 ARGS="-V" cmake --build ~/build --target ptest "$@"
+
+  ccache: ccache "$@"

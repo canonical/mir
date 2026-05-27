@@ -1,0 +1,16 @@
+set -xeu
+
+add-apt-repository --yes --enable-source --update ppa:mir-team/dev
+apt-get --yes --no-install-recommends install \
+  build-essential \
+  cargo \
+  ccache \
+  clang \
+  mold \
+  ninja-build
+apt-get --no-install-recommends build-dep mir
+
+cat <<'EOF' > /etc/profile.d/mir.sh
+export PATH="$HOME/build/bin:$PATH"
+export CCACHE_SLOPPINESS=include_file_ctime,include_file_mtime,modules,pch_defines,time_macros
+EOF
