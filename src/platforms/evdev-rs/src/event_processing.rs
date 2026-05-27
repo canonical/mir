@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState};
+use crate::device::{
+    ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState,
+};
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
@@ -408,7 +410,6 @@ fn handle_pointer_button(
         event_builder.pin_mut().pointer_event(&pointer_event),
     );
 }
-
 
 /// Handle all pointer event sub-types.
 ///
@@ -806,7 +807,13 @@ pub fn process_libinput_events(
         if device_info.event_builder.is_some() && !device_info.deferred_events.is_empty() {
             let events = std::mem::take(&mut device_info.deferred_events);
             for event in events {
-                process_input_event_for_device(device_info, &mut state.scroll_state, &bridge, event, report);
+                process_input_event_for_device(
+                    device_info,
+                    &mut state.scroll_state,
+                    &bridge,
+                    event,
+                    report,
+                );
             }
         }
     }
@@ -843,7 +850,13 @@ pub fn process_libinput_events(
 
                 if device_info.event_builder.is_some() {
                     // Device is registered, process immediately.
-                    process_input_event_for_device(device_info, &mut state.scroll_state, &bridge, other, report);
+                    process_input_event_for_device(
+                        device_info,
+                        &mut state.scroll_state,
+                        &bridge,
+                        other,
+                        report,
+                    );
                 } else {
                     // Device not yet registered, defer the event.
                     device_info.deferred_events.push(other);
