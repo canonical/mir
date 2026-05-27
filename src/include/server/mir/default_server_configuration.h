@@ -382,6 +382,10 @@ protected:
     // which leads to seg faults because those code paths cannot be found. For this
     // reason, we cache pointers to these objects AND make sure that they are destructed
     // after everything else.
+    //
+    // These platforms likely hold `Device`s allocated from `console_services`;
+    // ensure that console_services outlives those `Device`s.
+    std::shared_ptr<ConsoleServices> console_services;
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
     std::map<graphics::RenderingPlatform*, std::string> rendering_platform_names;
@@ -455,7 +459,6 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
-    std::shared_ptr<ConsoleServices> console_services;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
 
 private:
