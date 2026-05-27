@@ -132,9 +132,7 @@ fn handle_device_event(
             // Check if this device was previously suspended. If so, reuse its
             // existing InputDevice (and registry entry) rather than creating a
             // new one and re-registering.
-            let suspended_index = suspended_devices
-                .iter()
-                .position(|s| s.devnode == devnode);
+            let suspended_index = suspended_devices.iter().position(|s| s.devnode == devnode);
 
             if let Some(idx) = suspended_index {
                 let suspended = suspended_devices.swap_remove(idx);
