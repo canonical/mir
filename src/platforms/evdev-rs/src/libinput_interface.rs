@@ -44,10 +44,7 @@ impl input::LibinputInterface for LibinputInterfaceImpl {
         // (e.g. after a lid switch event). Use the backup fd.
         let backup_fd = self.bridge.claim_backup_fd(path_str);
         if backup_fd >= 0 {
-            println!(
-                "evdev-rs open_restricted: using backup fd for {}",
-                path_str
-            );
+            println!("evdev-rs open_restricted: using backup fd for {}", path_str);
             let owned = unsafe { io::OwnedFd::from_raw_fd(backup_fd) };
             return Ok(owned);
         }
