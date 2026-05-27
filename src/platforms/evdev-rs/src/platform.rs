@@ -125,6 +125,7 @@ impl PlatformRs {
         };
         match state_arc.lock() {
             Ok(mut state) => {
+                eprintln!("evdev-rs: libinput path_add_device({})", devnode);
                 state.libinput.path_add_device(devnode);
             }
             Err(_) => {
@@ -148,8 +149,10 @@ impl PlatformRs {
                     .iter()
                     .position(|d| d.devnode == devnode);
                 let Some(index) = index else {
+                    eprintln!("evdev-rs: path_remove_device({}) — not in known_devices", devnode);
                     return;
                 };
+                eprintln!("evdev-rs: path_remove_device({}) — removing from libinput", devnode);
                 let device_info = state.known_devices.swap_remove(index);
                 state.libinput.path_remove_device(device_info.device);
 
@@ -357,8 +360,17 @@ impl PlatformRs {
 
                 // Deduplicate: skip if already pending or active.
                 if self.known_devnums.contains(&devnum) {
+                    eprintln!(
+                        "evdev-rs: on_udev_event Added devnode={} devnum={} — already known, skipping",
+                        devnode, devnum
+                    );
                     return;
                 }
+
+                eprintln!(
+                    "evdev-rs: on_udev_event Added devnode={} devnum={} — acquiring",
+                    devnode, devnum
+                );
 
                 // Ask C++ to initiate device acquisition via ConsoleServices.
                 if self.bridge.acquire_device(devnum, devnode) {
@@ -366,7 +378,13 @@ impl PlatformRs {
                 }
             }
             UdevEventType::Removed => {
+                eprintln!(
+                    "evdev-rs: on_udev_event Removed devnode={} devnum={}",
+                    devnode, devnum
+                );
+
                 if !self.known_devnums.remove(&devnum) {
+                    eprintln!("evdev-rs: on_udev_event Removed — not in known_devnums, skipping");
                     return;
                 }
 
@@ -391,7 +409,13 @@ impl PlatformRs {
     /// after `Device::Observer::activated()` has fired and the fd has
     /// been dup'd.
     pub fn on_device_activated(&mut self, devnode: &str, devnum: u64, fd: i32) {
+        eprintln!(
+            "evdev-rs: on_device_activated devnode={} devnum={} fd={}",
+            devnode, devnum, fd
+        );
+
         if !self.running.load(Ordering::Acquire) {
+            eprintln!("evdev-rs: on_device_activated ignored — platform not running");
             return;
         }
 
@@ -402,6 +426,7 @@ impl PlatformRs {
         self.bridge.activate_pending_device(devnum);
 
         // Tell libinput about the new device.
+        eprintln!("evdev-rs: on_device_activated calling path_add_device({})", devnode);
         self.path_add_device(devnode);
     }
 
@@ -412,10 +437,17 @@ impl PlatformRs {
     /// alive so that `activated()` fires again when the session re-acquires
     /// the device (e.g. lid open, VT switch back).
     pub fn on_device_suspended(&mut self, devnode: &str, _devnum: u64) {
+        eprintln!(
+            "evdev-rs: on_device_suspended devnode={} devnum={}",
+            devnode, _devnum
+        );
+
         if !self.running.load(Ordering::Acquire) {
+            eprintln!("evdev-rs: on_device_suspended ignored — platform not running");
             return;
         }
 
+        eprintln!("evdev-rs: on_device_suspended calling path_remove_device({})", devnode);
         self.path_remove_device(devnode);
     }
 
@@ -423,7 +455,13 @@ impl PlatformRs {
     ///
     /// Invoked from C++ (on the input dispatch thread via ActionQueue).
     pub fn on_device_removed(&mut self, devnode: &str, devnum: u64) {
+        eprintln!(
+            "evdev-rs: on_device_removed devnode={} devnum={}",
+            devnode, devnum
+        );
+
         if !self.running.load(Ordering::Acquire) {
+            eprintln!("evdev-rs: on_device_removed ignored — platform not running");
             return;
         }
 
