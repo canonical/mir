@@ -444,13 +444,10 @@ impl PlatformRs {
     /// Handle device suspension (e.g. VT switch or lid close).
     ///
     /// Invoked from C++ (on the input dispatch thread via ActionQueue).
-    /// We only remove the device from libinput; the Device watcher is kept
-    /// alive so that `activated()` fires again when the session re-acquires
-    /// the device (e.g. lid open, VT switch back).
-    pub fn on_device_suspended(&mut self, devnode: &str, _devnum: u64) {
+    pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
         println!(
             "evdev-rs: on_device_suspended devnode={} devnum={}",
-            devnode, _devnum
+            devnode, devnum
         );
 
         if !self.running.load(Ordering::Acquire) {
@@ -462,6 +459,8 @@ impl PlatformRs {
             "evdev-rs: on_device_suspended calling path_remove_device({})",
             devnode
         );
+
+        self.bridge.release_device(devnum);
         self.path_remove_device(devnode);
     }
 
