@@ -108,6 +108,9 @@ public:
 
     virtual void request_client_surface_close() = 0;
     virtual std::shared_ptr<Surface> parent() const = 0;
+    /// Set the parent surface. Pass an empty weak_ptr to unset the parent.
+    /// Throws std::runtime_error if the new parent would create a cycle.
+    virtual void set_parent(std::weak_ptr<Surface> const& parent) = 0;
 
     // TODO a legacy of old interactions and needs removing
     virtual int configure(MirWindowAttrib attrib, int value) = 0;
