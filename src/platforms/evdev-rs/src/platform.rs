@@ -94,7 +94,6 @@ impl PlatformRs {
             scroll_axis_y_accum: 0.0,
             x_scroll_scale: 1.0,
             y_scroll_scale: 1.0,
-            suspended_devices: Vec::new(),
         })));
 
         self.running.store(true, Ordering::Release);
@@ -206,39 +205,21 @@ impl PlatformRs {
         //     (in LibinputDevice::start)
         let devices_to_remove: Vec<cxx::SharedPtr<crate::InputDevice>> = {
             match state_arc.lock() {
-                Ok(mut state_guard) => {
-                    let mut devices: Vec<_> = state_guard
-                        .known_devices
-                        .drain(..)
-                        .map(|info| info.input_device)
-                        .collect();
-                    // Also collect suspended devices — they are still registered
-                    // in the InputDeviceRegistry and must be removed on full stop.
-                    devices.extend(
-                        state_guard
-                            .suspended_devices
-                            .drain(..)
-                            .map(|info| info.input_device),
-                    );
-                    devices
-                }
+                Ok(mut state_guard) => state_guard
+                    .known_devices
+                    .drain(..)
+                    .map(|info| info.input_device)
+                    .collect(),
                 Err(poisoned) => {
                     // The mutex was poisoned by a previous panic, but we still drain
                     // known_devices from the inner state to avoid leaving them registered
                     // in the InputDeviceRegistry, which can lead to segfaults later.
                     let mut state_guard = poisoned.into_inner();
-                    let mut devices: Vec<_> = state_guard
+                    state_guard
                         .known_devices
                         .drain(..)
                         .map(|info| info.input_device)
-                        .collect();
-                    devices.extend(
-                        state_guard
-                            .suspended_devices
-                            .drain(..)
-                            .map(|info| info.input_device),
-                    );
-                    devices
+                        .collect()
                 }
             }
         };
@@ -280,7 +261,6 @@ impl PlatformRs {
                         scroll_axis_y_accum: 0.0,
                         x_scroll_scale: 1.0,
                         y_scroll_scale: 1.0,
-                        suspended_devices: Vec::new(),
                     })),
                     bridge: self.bridge.clone(),
                 });
@@ -425,49 +405,16 @@ impl PlatformRs {
         self.path_add_device(devnode);
     }
 
-    /// Handle device suspension (e.g. VT switch, system suspend).
+    /// Handle device suspension (e.g. VT switch).
     ///
     /// Invoked from C++ (on the input dispatch thread via ActionQueue).
-    /// Unlike removal, suspension keeps the Device watcher alive so that
-    /// logind's ResumeDevice signal will properly re-activate it. The
-    /// InputDeviceRegistry entry is also preserved to avoid a full
-    /// remove/add cycle on resume.
-    pub fn on_device_suspended(&mut self, devnode: &str, _devnum: u64) {
+    pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
         if !self.running.load(Ordering::Acquire) {
             return;
         }
 
-        // Remove from libinput only — keep the Device alive in device_watchers
-        // so that ResumeDevice signals are received, and keep the registry
-        // entry so we don't need to re-register on resume.
-        let Some(state_arc) = self.state.as_mut() else {
-            return;
-        };
-        match state_arc.lock() {
-            Ok(mut state) => {
-                let index = state
-                    .known_devices
-                    .iter()
-                    .position(|d| d.devnode == devnode);
-                let Some(index) = index else {
-                    return;
-                };
-                let device_info = state.known_devices.swap_remove(index);
-                state.libinput.path_remove_device(device_info.device);
-
-                // Preserve the device info for reuse on resume.
-                state.suspended_devices.push(
-                    crate::device::SuspendedDeviceInfo {
-                        id: device_info.id,
-                        devnode: device_info.devnode,
-                        input_device: device_info.input_device,
-                    },
-                );
-            }
-            Err(_) => {
-                eprintln!("PlatformRs::on_device_suspended: state mutex poisoned");
-            }
-        }
+        self.bridge.release_device(devnum);
+        self.path_remove_device(devnode);
     }
 
     /// Handle device removal (hotplug disconnect via observer).

@@ -222,14 +222,6 @@ impl LibinputDevice {
     }
 }
 
-/// Info preserved for a suspended device so it can be reused on resume
-/// without re-registering with the InputDeviceRegistry.
-pub struct SuspendedDeviceInfo {
-    pub id: i32,
-    pub devnode: String,
-    pub input_device: cxx::SharedPtr<InputDevice>,
-}
-
 pub struct LibinputDeviceState {
     pub libinput: input::Libinput,
     pub known_devices: Vec<LibinputDeviceInfo>,
@@ -238,10 +230,6 @@ pub struct LibinputDeviceState {
     pub scroll_axis_y_accum: f64,
     pub x_scroll_scale: f64,
     pub y_scroll_scale: f64,
-    /// Devices that have been suspended (e.g. VT switch, system suspend) but
-    /// not removed. These retain their InputDeviceRegistry registration so that
-    /// they can be re-activated without a full remove/add cycle.
-    pub suspended_devices: Vec<SuspendedDeviceInfo>,
 }
 
 impl LibinputDeviceState {

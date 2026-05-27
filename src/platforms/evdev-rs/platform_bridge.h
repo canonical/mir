@@ -129,11 +129,6 @@ public:
     /// Check whether a device is active (not pending).
     bool has_device(uint64_t devnum) const;
 
-    /// Release all device watchers and pending devices.
-    /// Called during platform stop to ensure stale Device objects don't
-    /// block re-acquisition on the next start() cycle.
-    void release_all_devices() const;
-
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;

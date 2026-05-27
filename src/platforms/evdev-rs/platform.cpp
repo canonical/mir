@@ -317,13 +317,6 @@ void miers::Platform::pause_for_config()
 
 void miers::Platform::stop()
 {
-    // Release all Device watchers and pending acquisitions first, mirroring
-    // what the C++ evdev platform does. This ensures that even if
-    // on_device_suspended callbacks were never dispatched (due to the
-    // device_queue being removed before they could run), stale Device objects
-    // won't block device re-acquisition on the next start() cycle.
-    self->bridge->release_all_devices();
-
     // Remove watches before stopping Rust, because stop() closes the libinput
     // and udev fds. Calling remove_watch() after the fds are closed causes
     // epoll_ctl(EPOLL_CTL_DEL) to return EBADF and throw.
