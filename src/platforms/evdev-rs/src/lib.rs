@@ -270,6 +270,8 @@ mod ffi_bridge {
 
         pub fn store_pending_fd(self: &PlatformBridge, devnode: &str, fd: i32);
         pub fn claim_pending_fd(self: &PlatformBridge, devnode: &str) -> i32;
+        pub fn claim_backup_fd(self: &PlatformBridge, devnode: &str) -> i32;
+        pub fn remove_backup_fd(self: &PlatformBridge, devnode: &str);
         pub fn bounding_rectangle(
             self: &PlatformBridge,
             sink: &InputSink,

@@ -113,6 +113,14 @@ public:
     /// Returns the raw fd, or -1 if no pending fd exists.
     int32_t claim_pending_fd(rust::Str devnode) const;
 
+    /// Claim a dup'd backup fd for a device path.
+    /// Used when libinput internally re-opens a device (e.g. after lid switch).
+    /// Returns a dup'd fd, or -1 if no backup exists.
+    int32_t claim_backup_fd(rust::Str devnode) const;
+
+    /// Remove the backup fd for a device (called on device removal).
+    void remove_backup_fd(rust::Str devnode) const;
+
     /// Initiate device acquisition via ConsoleServices.
     /// Returns true if acquisition was started, false if already tracked.
     bool acquire_device(uint64_t devnum, rust::Str devnode) const;
@@ -135,6 +143,7 @@ private:
 
     mutable std::mutex pending_fds_mutex;
     mutable std::unordered_map<std::string, int> pending_fds;
+    mutable std::unordered_map<std::string, int> backup_fds;
 
     mutable std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>> pending_devices;
     mutable std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;

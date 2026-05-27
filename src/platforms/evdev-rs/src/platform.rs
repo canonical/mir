@@ -404,6 +404,8 @@ impl PlatformRs {
                     }
                     self.bridge.release_device(devnum);
                 }
+
+                self.bridge.remove_backup_fd(devnode);
             }
             _ => {}
         }
@@ -479,6 +481,7 @@ impl PlatformRs {
 
         self.known_devnums.remove(&devnum);
         self.bridge.release_device(devnum);
+        self.bridge.remove_backup_fd(devnode);
         self.path_remove_device(devnode);
     }
 }
