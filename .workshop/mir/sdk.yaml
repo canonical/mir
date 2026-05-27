@@ -8,3 +8,7 @@ plugs:
   ccache:
     interface: mount
     workshop-target: /home/workshop/.cache/ccache
+slots:
+  doc:
+    interface: tunnel
+    endpoint: localhost:8000

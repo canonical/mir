@@ -7,7 +7,8 @@ apt-get --yes --no-install-recommends install \
   ccache \
   clang \
   mold \
-  ninja-build
+  ninja-build \
+  python3-venv
 apt-get --no-install-recommends build-dep mir
 
 cat <<'EOF' > /etc/profile.d/mir.sh
