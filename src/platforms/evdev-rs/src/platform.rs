@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{LibinputDevice, LibinputDeviceState};
+use crate::device::{LibinputDevice, LibinputDeviceState, ScrollState};
 use crate::event_processing::process_libinput_events;
 use crate::udev_monitor::{UdevEventType, UdevMonitor};
 use cxx;
@@ -90,10 +90,12 @@ impl PlatformRs {
             libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
-            scroll_axis_x_accum: 0.0,
-            scroll_axis_y_accum: 0.0,
-            x_scroll_scale: 1.0,
-            y_scroll_scale: 1.0,
+            scroll_state: ScrollState {
+                x_accum: 0.0,
+                y_accum: 0.0,
+                x_scroll_scale: 1.0,
+                y_scroll_scale: 1.0,
+            },
         })));
 
         self.running.store(true, Ordering::Release);
@@ -266,10 +268,12 @@ impl PlatformRs {
                         ),
                         known_devices: Vec::new(),
                         next_device_id: 0,
-                        scroll_axis_x_accum: 0.0,
-                        scroll_axis_y_accum: 0.0,
-                        x_scroll_scale: 1.0,
-                        y_scroll_scale: 1.0,
+                        scroll_state: ScrollState {
+                            x_accum: 0.0,
+                            y_accum: 0.0,
+                            x_scroll_scale: 1.0,
+                            y_scroll_scale: 1.0,
+                        },
                     })),
                     bridge: self.bridge.clone(),
                 });

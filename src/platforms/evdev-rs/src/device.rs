@@ -175,8 +175,8 @@ impl LibinputDevice {
             handedness: handedness,
             cursor_acceleration_bias: acceleration_bias,
             acceleration: acceleration,
-            horizontal_scroll_scale: guard.x_scroll_scale,
-            vertical_scroll_scale: guard.y_scroll_scale,
+            horizontal_scroll_scale: guard.scroll_state.x_scroll_scale,
+            vertical_scroll_scale: guard.scroll_state.y_scroll_scale,
             has_error: false,
         });
     }
@@ -217,19 +217,23 @@ impl LibinputDevice {
         let _ = device_info
             .device
             .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
-        guard.x_scroll_scale = settings.horizontal_scroll_scale;
-        guard.y_scroll_scale = settings.vertical_scroll_scale;
+        guard.scroll_state.x_scroll_scale = settings.horizontal_scroll_scale;
+        guard.scroll_state.y_scroll_scale = settings.vertical_scroll_scale;
     }
+}
+
+pub struct ScrollState {
+    pub x_accum: f64,
+    pub y_accum: f64,
+    pub x_scroll_scale: f64,
+    pub y_scroll_scale: f64,
 }
 
 pub struct LibinputDeviceState {
     pub libinput: input::Libinput,
     pub known_devices: Vec<LibinputDeviceInfo>,
     pub next_device_id: i32,
-    pub scroll_axis_x_accum: f64,
-    pub scroll_axis_y_accum: f64,
-    pub x_scroll_scale: f64,
-    pub y_scroll_scale: f64,
+    pub scroll_state: ScrollState,
 }
 
 impl LibinputDeviceState {

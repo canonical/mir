@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState};
+use crate::device::{ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState};
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
@@ -409,12 +409,6 @@ fn handle_pointer_button(
     );
 }
 
-struct ScrollState {
-    x_accum: f64,
-    y_accum: f64,
-    x_scroll_scale: f64,
-    y_scroll_scale: f64,
-}
 
 /// Handle all pointer event sub-types.
 ///
@@ -746,20 +740,11 @@ fn handle_touch_frame(
 /// This is called when we already have the device_info reference (e.g., for deferred events).
 fn process_input_event_for_device(
     device_info: &mut LibinputDeviceInfo,
+    mut scroll_state: &mut ScrollState,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     event: input::Event,
     report: &crate::InputReport,
 ) {
-    // For deferred events, we don't have access to the scroll accumulators in state.
-    // This is acceptable because deferred events are processed very soon after DEVICE_ADDED,
-    // and scroll events arriving before registration are rare.
-    let mut scroll_state = ScrollState {
-        x_accum: 0.0,
-        y_accum: 0.0,
-        x_scroll_scale: 1.0,
-        y_scroll_scale: 1.0,
-    };
-
     match event {
         input::Event::Pointer(pointer_event) => {
             handle_pointer_event(
@@ -821,7 +806,7 @@ pub fn process_libinput_events(
         if device_info.event_builder.is_some() && !device_info.deferred_events.is_empty() {
             let events = std::mem::take(&mut device_info.deferred_events);
             for event in events {
-                process_input_event_for_device(device_info, &bridge, event, report);
+                process_input_event_for_device(device_info, &mut state.scroll_state, &bridge, event, report);
             }
         }
     }
@@ -858,7 +843,7 @@ pub fn process_libinput_events(
 
                 if device_info.event_builder.is_some() {
                     // Device is registered, process immediately.
-                    process_input_event_for_device(device_info, &bridge, other, report);
+                    process_input_event_for_device(device_info, &mut state.scroll_state, &bridge, other, report);
                 } else {
                     // Device not yet registered, defer the event.
                     device_info.deferred_events.push(other);
