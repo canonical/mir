@@ -405,15 +405,17 @@ impl PlatformRs {
         self.path_add_device(devnode);
     }
 
-    /// Handle device suspension (e.g. VT switch).
+    /// Handle device suspension (e.g. VT switch or lid close).
     ///
     /// Invoked from C++ (on the input dispatch thread via ActionQueue).
-    pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
+    /// We only remove the device from libinput; the Device watcher is kept
+    /// alive so that `activated()` fires again when the session re-acquires
+    /// the device (e.g. lid open, VT switch back).
+    pub fn on_device_suspended(&mut self, devnode: &str, _devnum: u64) {
         if !self.running.load(Ordering::Acquire) {
             return;
         }
 
-        self.bridge.release_device(devnum);
         self.path_remove_device(devnode);
     }
 
