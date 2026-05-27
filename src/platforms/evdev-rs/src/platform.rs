@@ -456,13 +456,13 @@ impl PlatformRs {
                 state.libinput.path_remove_device(device_info.device);
 
                 // Preserve the device info for reuse on resume.
-                state
-                    .suspended_devices
-                    .push(crate::device::SuspendedDeviceInfo {
+                state.suspended_devices.push(
+                    crate::device::SuspendedDeviceInfo {
                         id: device_info.id,
                         devnode: device_info.devnode,
                         input_device: device_info.input_device,
-                    });
+                    },
+                );
             }
             Err(_) => {
                 eprintln!("PlatformRs::on_device_suspended: state mutex poisoned");
