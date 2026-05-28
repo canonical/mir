@@ -12,6 +12,7 @@ AllowShortBlocksOnASingleLine: Always
 AllowShortFunctionsOnASingleLine: All
 AllowShortLambdasOnASingleLine: All
 AllowShortNamespacesOnASingleLine: true
+# AllowShortRecordOnASingleLine: true  upcoming in clang-format 23
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakBeforeMultilineStrings: true
 BinPackArguments: false
