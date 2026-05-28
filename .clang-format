@@ -19,6 +19,7 @@ BinPackParameters: OnePerLine
 BreakAfterReturnType: None
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Custom
+BreakTemplateDeclarations: true
 BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
@@ -61,5 +62,6 @@ SeparateDefinitionBlocks: Leave
 SortIncludes:
   Enabled: false
 SpaceBeforeParens: ControlStatements
+SpaceAfterTemplateKeyword: false
 SpacesBeforeTrailingComments: 1
 TabWidth: 4
