@@ -360,6 +360,7 @@ protected:
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
+    std::shared_ptr<graphics::RenderingPlatform> find_pinned_rendering_platform();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
@@ -383,6 +384,7 @@ protected:
     // after everything else.
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+    std::map<graphics::RenderingPlatform*, std::string> rendering_platform_names;
     std::shared_ptr<input::InputManager>    input_manager;
 
     CachedPtr<frontend::Connector>   wayland_connector;
