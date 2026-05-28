@@ -61,7 +61,7 @@ static void appendenv(const char* varname, const char* append)
 int main(int argc, char** argv)
 {
     char invocation_path[1024] = "";
-    char path[1024], *dest = path, *dest_max = path+sizeof(path)-1;
+    char path[1024] = "", *dest = path, *dest_max = path+sizeof(path)-1;
     char *pivot = path;
     size_t pivot_max = 0;
     const char *src = argv[0];
