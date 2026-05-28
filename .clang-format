@@ -4,27 +4,24 @@ AccessModifierOffset: -4
 AlignAfterOpenBracket: AlwaysBreak
 AlignConsecutiveAssignments:
   PadOperators: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: Empty
 AlwaysBreakAfterDefinitionReturnType: None
-AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: true
 BinPackArguments: false
-BinPackParameters: false
+BinPackParameters: OnePerLine
+BreakAfterReturnType: None
 BreakBeforeBinaryOperators: None
 BreakBeforeBraces: Allman
 BreakBeforeTernaryOperators: false
-BreakConstructorInitializers: BeforeColon
-BreakInheritanceList: BeforeColon
 ColumnLimit: 120
 Cpp11BracedListStyle: true
-IndentCaseBlocks: false
 IndentWidth: 4
-KeepEmptyLinesAtTheStartOfBlocks: false
+KeepEmptyLines:
+  AtStartOfBlock: false
 PackConstructorInitializers: Never
 PenaltyReturnTypeOnItsOwnLine: 200
 PointerAlignment: Left
 QualifierAlignment: Right
 SpaceBeforeParens: ControlStatements
-Standard: Latest
 TabWidth: 4
-AllowShortLambdasOnASingleLine: Empty
-AllowShortFunctionsOnASingleLine: Empty
