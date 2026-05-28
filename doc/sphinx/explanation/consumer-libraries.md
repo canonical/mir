@@ -1,6 +1,6 @@
-# User libraries
+# Mir libraries for compositor authors
 
-These are the principle libraries *Mir* provides compositor authors.
+These are the principal libraries *Mir* provides compositor authors.
 
 These libraries will not break ABI or API between minor versions of Mir.
 We do not provide the same guarantees for other, internally used, libraries.

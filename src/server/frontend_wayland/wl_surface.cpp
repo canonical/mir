@@ -238,7 +238,11 @@ bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
     return std::any_of(
         children.begin(),
         children.end(),
-        [surface](auto const* child) { return child->get_surface() == surface; });
+        [surface](auto const* child)
+        {
+            WlSurface* child_surface = child->get_surface();
+            return child_surface == surface || child_surface->has_subsurface_with_surface(surface);
+        });
 }
 
 void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, SubsurfacePlacement placement)
