@@ -17,10 +17,10 @@
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
+#include <ctime>
 #include <cstdio>
 #include <exception>
 #include <format>
-#include <sstream>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <errno.h>
@@ -101,11 +101,8 @@ void security_log(
     std::string const& event,
     std::string const& description)
 {
-    auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-
-    std::stringstream ss;
-    ss << std::put_time(std::gmtime(&time_t), "%FT%TZ");
+    auto const now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+    auto const datetime = std::format("{:%FT%TZ}", now);
 
     auto message = std::format(
         "{{"
@@ -115,7 +112,7 @@ void security_log(
             "\"level\": \"{}\", "
             "\"description\": \"{}\" "
         "}}",
-        ss.str(),
+        datetime,
         program_invocation_short_name ? program_invocation_short_name : "<unknown>",
         event,
         (severity == logging::Severity::critical ? "CRITICAL" :
