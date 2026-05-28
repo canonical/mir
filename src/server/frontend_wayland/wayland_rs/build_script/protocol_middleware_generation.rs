@@ -129,12 +129,10 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         impl #interface_name_ext {
             pub fn post_error(&mut self, code: u32, message: &CxxString) {
                 use wayland_server::Resource;
-                if let Some(handle) = self.wrapped.handle().upgrade() {
-                    handle.post_error(
-                        self.wrapped.id(),
+                if self.wrapped.is_alive() {
+                    self.wrapped.post_error(
                         code,
-                        std::ffi::CString::new(message.to_string())
-                            .expect("Error message contained null byte"),
+                        message.to_string()
                     );
                 }
             }
