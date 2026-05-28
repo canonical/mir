@@ -1,6 +1,6 @@
 (contributing-explanation-index)=
 
-# Explanation
+# Contributing to Mir: explanations
 
 These pages provide additional detail about contributing to Mir.
 

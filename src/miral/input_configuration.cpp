@@ -353,6 +353,10 @@ public:
         config.mouse.merge(mouse());
         config.keyboard.merge(keyboard());
         config.touchpad.merge(touchpad());
+
+        mouse(config.mouse);
+        touchpad(config.touchpad);
+        keyboard(config.keyboard);
     }
 };
 

@@ -63,6 +63,21 @@ private:
         WlDataDeviceManager* const manager;
     };
 };
+
+inline auto validate_dnd_actions(uint32_t dnd_actions) -> bool {
+    return (dnd_actions & ~(
+        mir::wayland::DataDeviceManager::DndAction::none |
+        mir::wayland::DataDeviceManager::DndAction::copy |
+        mir::wayland::DataDeviceManager::DndAction::move |
+        mir::wayland::DataDeviceManager::DndAction::ask)) == 0;
+}
+
+inline auto validate_dnd_action(uint32_t dnd_action) -> bool {
+    return dnd_action == mir::wayland::DataDeviceManager::DndAction::none ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::copy ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::move ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::ask;
+}
 }
 }
 

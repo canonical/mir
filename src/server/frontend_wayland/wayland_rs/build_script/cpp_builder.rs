@@ -547,6 +547,7 @@ pub enum CppType {
     CppU32,
     CppF64,
     String,
+    Str,
     Object(String),
     Weak(String),
     Array,
@@ -563,6 +564,7 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
         CppType::String => "std::string".to_string(),
+        CppType::Str => "rust::Str".to_string(),
         CppType::Object(name) => {
             format!("std::shared_ptr<{}>", name)
         }
@@ -600,6 +602,7 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         }
         (CppType::String, true) => "rust::String".into(),
         (CppType::String, false) => "std::string const&".into(),
+        (CppType::Str, _) => "rust::Str".into(),
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
         (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
         (CppType::Bool, _) => "bool".to_string(),
@@ -614,6 +617,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
         CppType::CppU32 => quote! { u32 },
         CppType::CppF64 => quote! { f64 },
         CppType::String => quote! { &CxxString },
+        CppType::Str => quote! { &str },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             quote! { SharedPtr<#type_name> }
@@ -646,6 +650,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
                 quote! { &CxxString }
             }
         }
+        CppType::Str => quote! { &str },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             quote! { &SharedPtr<#type_name> }

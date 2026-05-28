@@ -55,7 +55,7 @@ public:
     DesktopFileManager(std::shared_ptr<DesktopFileCache> cache);
     ~DesktopFileManager() = default;
 
-    std::string resolve_app_id(const scene::Surface*);
+    std::string resolve_app_id(scene::Surface const&);
     static std::string parse_snap_security_profile_to_desktop_id(std::string const& contents);
 private:
     std::shared_ptr<DesktopFileCache> cache;

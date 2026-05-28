@@ -60,7 +60,7 @@ void kill(Application const& application, int sig);
 ///          if it lacks a name.
 auto name_of(Application const& application) -> std::string;
 
-/// Retrive the pid of the \p application.
+/// Retrieve the pid of the \p application.
 ///
 /// \param application The application
 /// \returns The pid of the application

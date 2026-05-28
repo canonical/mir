@@ -1,4 +1,4 @@
-# Explanation
+# Mir explanation guides
 
 These pages provide additional detail about a number of aspects related to using Mir.
 

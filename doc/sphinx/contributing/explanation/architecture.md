@@ -1,6 +1,6 @@
 (mir-architecture)=
 
-# Architecture
+# Mir architecture
 
 This document introduces the architecture of *Mir* at a high-level.
 

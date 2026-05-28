@@ -784,6 +784,70 @@ TEST_F(BasicSurfaceTest, stores_parent)
     EXPECT_EQ(child.parent(), parent);
 }
 
+TEST_F(BasicSurfaceTest, set_parent_changes_parent)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        nullptr,
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        std::weak_ptr<ms::Surface>{},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    EXPECT_EQ(child.parent(), nullptr);
+    child.set_parent(parent);
+    EXPECT_EQ(child.parent(), parent);
+    child.set_parent({});
+    EXPECT_EQ(child.parent(), nullptr);
+}
+
+TEST_F(BasicSurfaceTest, set_parent_detects_direct_cycle)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        nullptr,
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        parent,
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    // Setting child as its own parent
+    EXPECT_THROW(child.set_parent(mt::fake_shared(child)), std::runtime_error);
+    // Setting parent's parent to child would create a cycle
+    EXPECT_THROW(surface.set_parent(mt::fake_shared(child)), std::runtime_error);
+}
+
+TEST_F(BasicSurfaceTest, set_parent_detects_indirect_cycle)
+{
+    ms::BasicSurface grandchild{
+        nullptr,
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        std::weak_ptr<ms::Surface>{},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    auto parent = mt::fake_shared(surface);
+    auto child = mt::fake_shared(grandchild);
+
+    // surface -> grandchild (grandchild is child of surface)
+    grandchild.set_parent(parent);
+
+    // Setting surface's parent to grandchild creates a cycle: surface -> grandchild -> surface
+    EXPECT_THROW(surface.set_parent(child), std::runtime_error);
+}
+
 namespace
 {
 
