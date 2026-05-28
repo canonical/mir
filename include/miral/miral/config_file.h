@@ -23,7 +23,11 @@
 #include <istream>
 #include <functional>
 
-namespace miral { class MirRunner; class FdHandle; }
+namespace miral
+{
+class MirRunner;
+class FdHandle;
+}
 
 namespace miral
 {

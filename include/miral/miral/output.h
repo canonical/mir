@@ -25,7 +25,10 @@
 #include <memory>
 #include <optional>
 
-namespace mir { namespace graphics { struct DisplayConfigurationOutput; } }
+namespace mir
+{
+namespace graphics { struct DisplayConfigurationOutput; }
+}
 
 namespace miral
 {
@@ -45,7 +48,11 @@ class Output
 {
 public:
     /// Describes the physical size of the output in millimeters.
-    struct PhysicalSizeMM { int width; int height; };
+    struct PhysicalSizeMM
+    {
+        int width;
+        int height;
+    };
 
     /// Display connector types.
     enum class Type
@@ -73,7 +80,7 @@ public:
     /// Construct an output from its configuration.
     ///
     /// \param output the configuration for this output
-    explicit Output(const mir::graphics::DisplayConfigurationOutput &output);
+    explicit Output(mir::graphics::DisplayConfigurationOutput const& output);
     Output(Output const&);
     Output& operator=(Output const&);
     ~Output();
@@ -188,8 +195,7 @@ private:
 };
 
 bool operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs);
-inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
-{ return !(lhs == rhs); }
+inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs) { return !(lhs == rhs); }
 
 /// Checks if the provided outputs have the same display area.
 ///

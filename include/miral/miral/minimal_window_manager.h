@@ -44,14 +44,15 @@ public:
     /// The default drag modifier is mir_input_event_modifier_alt.
     /// \remark Since MirAL 5.2
     MinimalWindowManager(
-        WindowManagerTools const& tools, MirInputEventModifier pointer_drag_modifier, FocusStealing focus_stealing);
+        WindowManagerTools const& tools,
+        MirInputEventModifier pointer_drag_modifier,
+        FocusStealing focus_stealing);
 
     ~MinimalWindowManager();
 
     /// Honours the requested specification
-    auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& requested_specification) -> WindowSpecification override;
+    auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& requested_specification)
+        -> WindowSpecification override;
 
     /// If the window can have focus it is given focus
     void handle_window_ready(WindowInfo& window_info) override;
@@ -64,7 +65,9 @@ public:
 
     /// Honours the requested placement
     auto confirm_placement_on_display(
-        WindowInfo const& window_info, MirWindowState new_state, Rectangle const& new_placement) -> Rectangle override;
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle override;
 
     /// Handles Alt-Tab, Alt-Grave and Alt-F4
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
@@ -103,7 +106,8 @@ protected:
     WindowManagerTools tools;
 
     bool begin_pointer_move(WindowInfo const& window_info, MirInputEvent const* input_event);
-    bool begin_pointer_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
+    bool
+    begin_pointer_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
 
     bool begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event);
     bool begin_touch_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);

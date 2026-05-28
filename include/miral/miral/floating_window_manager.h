@@ -43,12 +43,14 @@ class FloatingWindowManager : public WindowManagementPolicy
 {
 public:
     explicit FloatingWindowManager(WindowManagerTools const& tools);
-    FloatingWindowManager(WindowManagerTools const& tools, FocusStealing focus_stealing, MirInputEventModifier pointer_drag_modifier);
+    FloatingWindowManager(
+        WindowManagerTools const& tools,
+        FocusStealing focus_stealing,
+        MirInputEventModifier pointer_drag_modifier);
     ~FloatingWindowManager() override;
 
-    auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& requested_specification) -> WindowSpecification override;
+    auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& requested_specification)
+        -> WindowSpecification override;
 
     /// Focuses the window if it can receive focus.
     ///
@@ -72,7 +74,9 @@ public:
     /// \param new_state the new state of the window
     /// \param new_placement the new rectangle of the window
     auto confirm_placement_on_display(
-        WindowInfo const& window_info, MirWindowState new_state, Rectangle const& new_placement) -> Rectangle override;
+        WindowInfo const& window_info,
+        MirWindowState new_state,
+        Rectangle const& new_placement) -> Rectangle override;
 
     /// Handles Alt-F4 to close the active window.
     ///
@@ -129,7 +133,8 @@ protected:
     WindowManagerTools tools;
 
     bool begin_pointer_move(WindowInfo const& window_info, MirInputEvent const* input_event);
-    bool begin_pointer_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
+    bool
+    begin_pointer_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);
 
     bool begin_touch_move(WindowInfo const& window_info, MirInputEvent const* input_event);
     bool begin_touch_resize(WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge);

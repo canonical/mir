@@ -37,7 +37,6 @@ class Output;
 class Zone;
 struct WindowInfo;
 
-
 /// An opaque workspace identifier.
 ///
 /// This symbol is purposefully opaque because it is only ever provided as a
@@ -89,9 +88,8 @@ public:
     /// @param app_info the application requesting a new window
     /// @param requested_specification the requested specification with a default position and size
     /// @returns the customized placement
-    virtual auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& requested_specification) -> WindowSpecification = 0;
+    virtual auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& requested_specification)
+        -> WindowSpecification = 0;
 
     /// Notification that the first buffer for this window has been posted.
     ///
@@ -248,7 +246,8 @@ public:
     /// \param input_event the input event causing the resize request
     /// \param edge the edge being resized
     /// \sa MirResizeEdge - edge resize options
-    virtual void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
+    virtual void
+    handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
 
     /// Notification that an output has been created.
     ///

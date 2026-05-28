@@ -58,14 +58,22 @@ public:
 
     void add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler) override;
     void add_ints_attribute(
-        Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler) override;
+        Key const& key,
+        std::string_view description,
+        std::span<int const> preset,
+        HandleInts handler) override;
     void add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler) override;
-    void add_float_attribute(
-        Key const& key, std::string_view description, float preset, HandleFloat handler) override;
+    void add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler) override;
     void add_floats_attribute(
-        Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler) override;
+        Key const& key,
+        std::string_view description,
+        std::span<float const> preset,
+        HandleFloats handler) override;
     void add_string_attribute(
-        Key const& key, std::string_view description, std::string_view preset, HandleString handler) override;
+        Key const& key,
+        std::string_view description,
+        std::string_view preset,
+        HandleString handler) override;
     void add_strings_attribute(
         Key const& key,
         std::string_view description,

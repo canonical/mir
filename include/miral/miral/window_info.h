@@ -131,7 +131,7 @@ struct WindowInfo
     /// The children of this window, if any.
     ///
     /// \returns the children of this window
-    auto children() const -> std::vector <Window> const&;
+    auto children() const -> std::vector<Window> const&;
 
     /// The minimum width of the window.
     ///
@@ -421,7 +421,7 @@ private:
 
 namespace std
 {
-template<> inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs) { lhs.swap(rhs); }
+template <> inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs) { lhs.swap(rhs); }
 }
 
 #endif //MIRAL_WINDOW_INFO_H

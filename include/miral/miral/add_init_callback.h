@@ -47,5 +47,4 @@ private:
 };
 }
 
-
 #endif //MIRAL_ADD_INIT_CALLBACK_H
