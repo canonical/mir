@@ -17,8 +17,8 @@
 #include <mir_test_framework/process.h>
 #include <mir/log.h>
 
-#include <errno.h>
-#include <signal.h>
+#include <cerrno>
+#include <csignal>
 #include <sys/wait.h>
 
 #include <boost/exception/errinfo_errno.hpp>

@@ -23,7 +23,7 @@
 #include <sstream>
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <errno.h>
+#include <cerrno>
 
 namespace mir {
 

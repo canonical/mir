@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_INPUT_TARGETER_H_
 #define MIR_SHELL_INPUT_TARGETER_H_
 
-#include <stddef.h>
+#include <cstddef>
 #include <memory>
 #include <vector>
 

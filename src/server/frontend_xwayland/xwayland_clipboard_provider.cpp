@@ -23,7 +23,7 @@
 #include <mir/dispatch/multiplexing_dispatchable.h>
 
 #include <xcb/xfixes.h>
-#include <string.h>
+#include <cstring>
 #include <fcntl.h>
 #include <unistd.h>
 

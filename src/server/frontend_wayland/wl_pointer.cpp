@@ -36,7 +36,7 @@
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>
-#include <string.h> // memcpy
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;

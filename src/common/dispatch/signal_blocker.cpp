@@ -17,7 +17,7 @@
 #include "signal_blocker.h"
 
 #include <system_error>
-#include <signal.h>
+#include <csignal>
 #include <boost/exception/all.hpp>
 
 mir::SignalBlocker::SignalBlocker()

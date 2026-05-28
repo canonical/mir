@@ -22,7 +22,7 @@
 #include <mir/dispatch/multiplexing_dispatchable.h>
 
 #include <xcb/xfixes.h>
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include <algorithm>
 #include <map>

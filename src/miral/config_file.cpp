@@ -23,7 +23,7 @@
 
 #include <boost/throw_exception.hpp>
 
-#include <limits.h>
+#include <climits>
 #include <sys/inotify.h>
 #include <unistd.h>
 

@@ -30,7 +30,7 @@
 #include <csignal>
 #include <unistd.h>
 #include <boost/throw_exception.hpp>
-#include <errno.h>
+#include <cerrno>
 
 namespace
 {

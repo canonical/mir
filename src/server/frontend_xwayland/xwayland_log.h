@@ -19,7 +19,7 @@
 #define MIR_FRONTEND_XWAYLAND_LOG_H
 
 #include <mir/log.h>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace mir
 {

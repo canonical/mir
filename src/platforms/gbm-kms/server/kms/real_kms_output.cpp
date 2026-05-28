@@ -22,7 +22,7 @@
 #include <mir/graphics/kms/kms_connector.h>
 #include <mir/fatal.h>
 #include <mir/log.h>
-#include <string.h> // strcmp
+#include <cstring>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>

@@ -18,8 +18,8 @@
 
 #include <mir_test_framework/executable_path.h>
 
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 #include <unistd.h>
 #include <cstring>
 #include <unordered_map>

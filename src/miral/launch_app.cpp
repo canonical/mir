@@ -22,7 +22,7 @@
 #include <string>
 #include <spawn.h>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 
 #include <cerrno>
 #include <cstdlib>

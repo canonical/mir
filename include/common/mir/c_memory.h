@@ -18,7 +18,7 @@
 #define MIR_C_MEMORY_H
 
 #include <memory>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace mir
 {

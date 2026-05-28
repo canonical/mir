@@ -30,7 +30,7 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <string.h>
+#include <cstring>
 
 using namespace std::literals;
 namespace wayland_runner = mir::client::wayland_runner;

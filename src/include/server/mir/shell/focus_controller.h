@@ -19,7 +19,7 @@
 
 #include <mir/geometry/forward.h>
 
-#include <stddef.h>
+#include <cstddef>
 #include <memory>
 #include <set>
 #include <vector>

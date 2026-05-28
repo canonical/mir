@@ -33,7 +33,7 @@
 #include <algorithm>
 #include <condition_variable>
 #include <cstring>
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace mgw = mir::graphics::wayland;

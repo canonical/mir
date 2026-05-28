@@ -23,7 +23,7 @@
 #include <mir/udev/wrapper.h>
 
 #include <boost/throw_exception.hpp>
-#include <stdlib.h>
+#include <cstdlib>
 #include <unordered_map>
 #include <libgen.h>
 #include <malloc.h>

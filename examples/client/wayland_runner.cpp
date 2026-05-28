@@ -17,8 +17,8 @@
 #include "wayland_runner.h"
 
 #include <poll.h>
-#include <signal.h>
-#include <stdio.h>
+#include <csignal>
+#include <cstdio>
 #include <sys/eventfd.h>
 
 #include <boost/throw_exception.hpp>

@@ -28,7 +28,7 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <span>
-#include <string.h> // strcmp
+#include <cstring>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>

@@ -21,7 +21,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
-#include <signal.h>
+#include <csignal>
 #include <system_error>
 #include <memory>
 #include <atomic>

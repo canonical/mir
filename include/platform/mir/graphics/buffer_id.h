@@ -19,7 +19,7 @@
 
 #include <mir/int_wrapper.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace mir
 {

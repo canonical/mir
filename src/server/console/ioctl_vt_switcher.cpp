@@ -19,7 +19,7 @@
 #include <mir/log.h>
 
 #include <sys/ioctl.h>
-#include <string.h>
+#include <cstring>
 #include <sys/vt.h>
 
 mir::console::IoctlVTSwitcher::IoctlVTSwitcher(mir::Fd vt_fd)

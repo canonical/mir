@@ -22,7 +22,7 @@
 #include <shared_mutex>
 
 #include <sys/epoll.h>
-#include <string.h>
+#include <cstring>
 #include <system_error>
 #include <algorithm>
 

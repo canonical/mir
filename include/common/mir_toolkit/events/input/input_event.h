@@ -20,7 +20,7 @@
 #include <mir_toolkit/events/event.h>
 #include <mir_toolkit/mir_input_device_types.h>
 
-#include <stdint.h>
+#include <cstdint>
 #include <stdbool.h>
 
 #include <mir_toolkit/events/input/touch_event.h>

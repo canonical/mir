@@ -18,7 +18,7 @@
 #ifndef MIR_TOOLKIT_MIR_INPUT_DEVICE_TYPES_H_
 #define MIR_TOOLKIT_MIR_INPUT_DEVICE_TYPES_H_
 
-#include <stdint.h>
+#include <cstdint>
 
 #ifdef __cplusplus
 extern "C" {
