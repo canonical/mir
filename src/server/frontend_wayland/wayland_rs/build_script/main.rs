@@ -205,8 +205,8 @@ fn generate_global_dispatch_impl(
         {
             fn bind(
                 _state: &mut Self,
-                _handle: &wayland_server::DisplayHandle,
-                _client: &wayland_server::Client,
+                handle: &wayland_server::DisplayHandle,
+                client: &wayland_server::Client,
                 resource: New<#namespace_name::#interface_name::#interface_struct_name>,
                 // The global data is an Arc<Mutex<...>> instead of just a UniquePtr because it
                 // has to be accessed mutability in order to call methods across the Rust -> C++
@@ -215,11 +215,12 @@ fn generate_global_dispatch_impl(
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
                 use crate::ffi;
+                let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
                 let mut guard = global_data.lock().unwrap();
 
                 // Methods on C++ classes must operate on Pin<&mut X> because those are the
                 // only ones that can cross the FFI boundary from Rust -> C++.
-                let global = (&mut *guard).pin_mut().#create_global_method();
+                let global = (&mut *guard).pin_mut().#create_global_method(wayland_client);
                 let arc = Arc::new(Mutex::new(global));
 
                 // The initialization strategy here requires a "double initialization". First,
@@ -590,7 +591,7 @@ fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
             use crate::protocols;
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
-            use crate::wayland_client::WaylandClientId;
+            use crate::wayland_client::{WaylandClient, WaylandClientId};
             use std::os::fd::{AsRawFd, RawFd};
             use std::sync::{Arc, LazyLock, Mutex, RwLock};
             use std::collections::HashMap;
@@ -642,6 +643,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder.add_header_include("<rust/cxx.h>");
     let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
     let mut class = CppClass::new("GlobalFactory");
+    namespace.add_forward_declaration_class("WaylandClient");
     protocols.iter().for_each(|protocol| {
         protocol
             .interfaces
@@ -652,7 +654,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
                 namespace.add_forward_declaration_class(&class_name);
 
-                let method = CppMethod::new(
+                let mut method = CppMethod::new(
                     format!("create_{}", global_interface.name),
                     Some(CppType::Object(class_name)),
                     true,
@@ -660,6 +662,11 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                     true,
                     true,
                 );
+                method.add_arg(CppArg::new(
+                    CppType::Box("WaylandClient".to_string()),
+                    "client",
+                    false,
+                ));
                 class.add_method(method);
             })
     });
@@ -770,6 +777,8 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
+    // WaylandClient is used in the protected constructor of every generated XxxImpl.
+    namespace.add_forward_declaration_class("WaylandClient");
 
     for protocol in protocols {
         for interface in &protocol.interfaces {
@@ -913,6 +922,19 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         "if (!instance_) { throw \"get_box() called before associate()\"; }\nreturn instance_.value();",
     );
     class.add_method(get_box_method);
+
+    // Add a protected constructor and member so that subclasses know which client
+    // they are serving and can interact with it as they please.
+    class.add_protected_constructor_arg(CppArg::new(
+        CppType::Box("WaylandClient".to_string()),
+        "client",
+        false,
+    ));
+    class.add_protected_member(CppArg::new(
+        CppType::Box("WaylandClient".to_string()),
+        "client",
+        false,
+    ));
 
     for method in methods {
         class.add_method(method);
