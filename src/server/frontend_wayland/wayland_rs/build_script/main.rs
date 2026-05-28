@@ -243,7 +243,7 @@ fn generate_global_dispatch_impl(
             }
 
             fn can_view(client: Client, global_data: &Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>) -> bool {
-                let interface_name = #interface_name_str.to_string();
+                let interface_name = #interface_name_str;
                 let client_id = Box::new(WaylandClientId::new(client.id()));
                 let mut guard = global_data.lock().unwrap();
                 (&mut *guard).pin_mut().can_view(interface_name, client_id)
@@ -673,7 +673,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
 
     let mut can_view_method =
         CppMethod::new("can_view", Some(CppType::Bool), true, false, true, true);
-    can_view_method.add_arg(CppArg::new(CppType::String, "interface_name", false));
+    can_view_method.add_arg(CppArg::new(CppType::Str, "interface_name", false));
     can_view_method.add_arg(CppArg::new(
         CppType::Box("WaylandClientId".to_string()),
         "client_id",

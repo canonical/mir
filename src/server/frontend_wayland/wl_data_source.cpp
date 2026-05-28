@@ -15,10 +15,12 @@
  */
 
 #include "wl_data_source.h"
+#include "wl_data_device_manager.h"
 
 #include <mir/executor.h>
 #include <mir/scene/clipboard.h>
 #include <mir/wayland/weak.h>
+#include <mir/wayland/protocol_error.h>
 
 #include <vector>
 
@@ -247,6 +249,13 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
 
 void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
+    if (!mf::validate_dnd_actions(dnd_actions))
+    {
+        throw mw::ProtocolError(
+            resource,
+            Error::invalid_action_mask,
+            "Invalid DnD actions 0x%x", dnd_actions);
+    }
     this->dnd_actions = dnd_actions;
 }
 
@@ -259,16 +268,16 @@ uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_
         preferred_action = DndAction::move;
     }
 
-    if (dnd_actions | DndAction::ask)
+    if (dnd_actions & DndAction::ask)
     {
-        preferred_action |= DndAction::move;
+        preferred_action = DndAction::move;
     }
 
-    auto const acceptable_options = this->dnd_actions | dnd_actions;
+    auto const acceptable_options = this->dnd_actions & dnd_actions;
 
     for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
     {
-        if (action | acceptable_options)
+        if (action & acceptable_options)
         {
             if (!dnd_action || dnd_action.value() != action)
             {
