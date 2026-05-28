@@ -19,8 +19,8 @@
 
 #include <mir_toolkit/events/enums.h>
 
-#include <cstddef>
-#include <cstdint>
+#include <stddef.h>
+#include <stdint.h>
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus

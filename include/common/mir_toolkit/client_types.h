@@ -22,7 +22,7 @@
 #include <mir_toolkit/events/event.h>
 #include <mir_toolkit/common.h>
 
-#include <cstddef>
+#include <stddef.h>
 
 #ifdef __cplusplus
 /**
