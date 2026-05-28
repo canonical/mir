@@ -17,6 +17,7 @@
 mod cpp_builder;
 mod ffi_generation;
 mod helpers;
+mod protocol_generator;
 mod protocol_middleware_generation;
 mod protocol_parser;
 mod wayland_server_generation;
@@ -37,6 +38,7 @@ use quote::{format_ident, quote};
 use std::{env, path::Path};
 use syn::Ident;
 
+use crate::protocol_generator::generate_protocols_rs;
 use crate::wayland_server_generation::generate_wayland_server_generated_rs;
 
 fn main() {
@@ -46,6 +48,7 @@ fn main() {
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=src/wayland_server_core.rs");
     println!("cargo:rerun-if-changed=build_script/ffi_generation.rs");
+    println!("cargo:rerun-if-changed=build_script/protocol_generator.rs");
     println!("cargo:rerun-if-changed=build_script/protocol_middleware_generation.rs");
     println!("cargo:rerun-if-changed=build_script/wayland_server_generation.rs");
 
@@ -77,107 +80,8 @@ fn main() {
 }
 
 fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
-    let generated_protocols = protocols.iter().map(|protocol| {
-        // We rely on the wayland_server crate for the core Wayland protocol.
-        if protocol.name == "wayland" {
-            return quote! {};
-        }
-
-        let struct_name = dash_to_snake_ident(&protocol.name);
-        let path = &protocol.path;
-
-        // Add use statements for other protocol dependencies.
-        let protocol_dependencies: std::collections::HashSet<String> = protocol
-            .dependencies
-            .iter()
-            .filter_map(|dependency| {
-                protocols
-                    .iter()
-                    .find(|dep_protocol| {
-                        dep_protocol.name != protocol.name
-                            && dep_protocol
-                                .interfaces
-                                .iter()
-                                .any(|iface| iface.name == *dependency)
-                    })
-                    .map(|dep_protocol| dep_protocol.name.clone())
-            })
-            .collect();
-
-        let mut server_code_use_statements = quote! {
-            use super::wayland_server;
-            use self::interfaces::*;
-        };
-
-        for dependency in &protocol_dependencies {
-            let dep_struct_name = dash_to_snake_ident(dependency);
-            if dep_struct_name != struct_name {
-                if dep_struct_name == "wayland" {
-                    server_code_use_statements = quote! {
-                        #server_code_use_statements
-                        use wayland_server::protocol::*;
-                    };
-                } else {
-                    server_code_use_statements = quote! {
-                        #server_code_use_statements
-                        use super::#dep_struct_name::*;
-                    };
-                }
-            }
-        }
-
-        let mut interface_code_use_statements: TokenStream = quote! {};
-        for dependency in &protocol_dependencies {
-            let dep_struct_name = dash_to_snake_ident(dependency);
-            if dep_struct_name != struct_name {
-                if dep_struct_name == "wayland" {
-                    interface_code_use_statements = quote! {
-                        #interface_code_use_statements
-                        use wayland_server::protocol::__interfaces::*;
-                    };
-                } else {
-                    // Note: #[allow(unused_imports)] is used here to suppress warnings in case some protocols
-                    // do not actually use any interfaces from their dependencies. This only happens in a
-                    // input-method-unstable-v2 because it uses the enums from text-input-unstable-v3 but not
-                    // the interface name or anything else.
-                    //
-                    // This is much simpler than piping the data through the protocol parser, so let's keep things
-                    // straightforward for now.
-                    interface_code_use_statements = quote! {
-                        #interface_code_use_statements
-
-                        #[allow(unused_imports)]
-                        use super::super::#dep_struct_name::interfaces::*;
-                    };
-                }
-            }
-        }
-
-        quote! {
-            pub mod #struct_name {
-
-                #server_code_use_statements
-
-                pub mod interfaces {
-                    #interface_code_use_statements
-                    wayland_scanner::generate_interfaces!(#path);
-                }
-
-                wayland_scanner::generate_server_code!(#path);
-            }
-        }
-    });
-
-    let generated_protocol_rs = quote! {
-        #[allow(dead_code, unused_imports)]
-        mod protocols {
-            use wayland_server;
-
-            #(#generated_protocols)*
-        }
-    };
-
-    write_generated_rust_file(generated_protocol_rs, "protocols.rs");
+    let tokens = generate_protocols_rs(protocols);
+    write_generated_rust_file(tokens, "protocols.rs");
 }
 
 /// Generate a GlobalDispatch implementation for a single interface.
