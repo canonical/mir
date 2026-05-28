@@ -17,8 +17,6 @@
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
-#include <ctime>
-#include <cstdio>
 #include <exception>
 #include <format>
 
@@ -101,7 +99,7 @@ void security_log(
     std::string const& event,
     std::string const& description)
 {
-    auto const now = std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now());
+    auto const now = std::chrono::system_clock::now();
     auto const datetime = std::format("{:%FT%TZ}", now);
 
     auto message = std::format(
