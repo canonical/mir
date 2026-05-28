@@ -92,7 +92,7 @@ public:
     ///                                                            and must not block.
     ///
     /// \param client_object an object describing the client connection
-    template <typename ClientObject>
+    template<typename ClientObject>
         requires requires(ClientObject& obj, struct ::wl_display* d, std::weak_ptr<mir::scene::Session> s) {
             obj(d);
             obj(s);
@@ -147,7 +147,7 @@ public:
     ///                                                            and must not block.
     ///
     /// \param client_object an object describing the client connection
-    template <typename ClientObject>
+    template<typename ClientObject>
         requires requires(ClientObject& obj, struct ::wl_display* d, std::weak_ptr<mir::scene::Session> s) {
             obj(d);
             obj(s);

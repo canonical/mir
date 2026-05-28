@@ -39,7 +39,7 @@ struct WindowManagerOption
     WindowManagementPolicyBuilder const build;
 };
 
-template <typename Policy, typename... Args>
+template<typename Policy, typename... Args>
     requires std::is_base_of_v<WindowManagementPolicy, Policy> &&
              std::is_constructible_v<Policy, WindowManagerTools const&, Args&...>
 inline auto add_window_manager_policy(std::string const& name, Args&... args) -> WindowManagerOption

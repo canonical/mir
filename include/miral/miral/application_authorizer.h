@@ -76,12 +76,12 @@ private:
     std::shared_ptr<Self> self;
 };
 
-template <typename Policy>
+template<typename Policy>
     requires std::is_base_of_v<ApplicationAuthorizer, Policy>
 class SetApplicationAuthorizer : public BasicSetApplicationAuthorizer
 {
 public:
-    template <typename... Args>
+    template<typename... Args>
         requires std::is_constructible_v<Policy, Args const&...>
     explicit SetApplicationAuthorizer(Args const&... args) :
         BasicSetApplicationAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }}

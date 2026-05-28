@@ -421,7 +421,9 @@ private:
 
 namespace std
 {
-template <> inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs) { lhs.swap(rhs); }
+template<>
+inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs)
+{ lhs.swap(rhs); }
 }
 
 #endif //MIRAL_WINDOW_INFO_H

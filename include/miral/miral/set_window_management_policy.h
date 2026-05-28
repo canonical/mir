@@ -41,7 +41,7 @@ private:
     std::function<std::unique_ptr<WindowManagementPolicy>(WindowManagerTools const& tools)> builder;
 };
 
-template <typename Policy, typename... Args>
+template<typename Policy, typename... Args>
     requires std::is_base_of_v<WindowManagementPolicy, Policy> &&
              std::is_constructible_v<Policy, WindowManagerTools const&, Args&...>
 auto set_window_management_policy(Args&... args) -> SetWindowManagementPolicy

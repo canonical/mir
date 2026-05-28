@@ -123,7 +123,8 @@ public:
 }
 
 /// \remark Since MirAL 5.8
-template <> struct std::formatter<miral::live_config::Key> : std::formatter<std::string>
+template<>
+struct std::formatter<miral::live_config::Key> : std::formatter<std::string>
 {
     auto format(miral::live_config::Key const& key, std::format_context& ctx) const -> std::format_context::iterator;
 };
