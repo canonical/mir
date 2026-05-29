@@ -55,7 +55,7 @@ KeepEmptyLines:
 PackConstructorInitializers: CurrentLine
 PenaltyBreakBeforeFirstCallParameter: 100
 PenaltyBreakOpenParenthesis: 100
-PenaltyReturnTypeOnItsOwnLine: 200
+PenaltyReturnTypeOnItsOwnLine: 500
 PointerAlignment: Left
 QualifierAlignment: Right
 ReflowComments: Never
