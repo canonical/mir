@@ -24,6 +24,7 @@
 
 mod device;
 mod event_processing;
+mod fd_store;
 mod ffi;
 mod libinput_interface;
 mod platform;
@@ -268,10 +269,6 @@ mod ffi_bridge {
         #[namespace = ""]
         pub type MirEvent;
 
-        pub fn store_pending_fd(self: &PlatformBridge, devnode: &str, fd: i32);
-        pub fn claim_pending_fd(self: &PlatformBridge, devnode: &str) -> i32;
-        pub fn claim_backup_fd(self: &PlatformBridge, devnode: &str) -> i32;
-        pub fn remove_backup_fd(self: &PlatformBridge, devnode: &str);
         pub fn bounding_rectangle(
             self: &PlatformBridge,
             sink: &InputSink,

@@ -14,15 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use cxx;
+use crate::fd_store::FdStore;
 use input;
 use libc;
 use std::os::fd::FromRawFd;
 use std::os::unix::io;
+use std::sync::{Arc, Mutex};
 
 pub struct LibinputInterfaceImpl {
-    /// The bridge used to claim pre-acquired file descriptors.
-    pub bridge: cxx::SharedPtr<crate::PlatformBridge>,
+    /// The fd store used to claim pre-acquired file descriptors.
+    pub fd_store: Arc<Mutex<FdStore>>,
 }
 
 impl input::LibinputInterface for LibinputInterfaceImpl {
@@ -33,16 +34,19 @@ impl input::LibinputInterface for LibinputInterfaceImpl {
     /// handling a lid switch event), falls back to a dup'd backup fd.
     fn open_restricted(&mut self, path: &std::path::Path, _flags: i32) -> Result<io::OwnedFd, i32> {
         let path_str = path.to_str().ok_or(-libc::EINVAL)?;
-        let raw_fd = self.bridge.claim_pending_fd(path_str);
+
+        let mut store = self.fd_store.lock().map_err(|_| -libc::ENOLCK)?;
+
+        let raw_fd = store.claim_pending(path_str);
         if raw_fd >= 0 {
-            // Safety: claim_pending_fd transferred ownership of this fd to us.
+            // Safety: claim_pending transferred ownership of this fd to us.
             let owned = unsafe { io::OwnedFd::from_raw_fd(raw_fd) };
             return Ok(owned);
         }
 
         // Fallback: libinput is re-opening a device it previously closed internally
         // (e.g. after a lid switch event). Use the backup fd.
-        let backup_fd = self.bridge.claim_backup_fd(path_str);
+        let backup_fd = store.claim_backup(path_str);
         if backup_fd >= 0 {
             println!("evdev-rs open_restricted: using backup fd for {}", path_str);
             let owned = unsafe { io::OwnedFd::from_raw_fd(backup_fd) };

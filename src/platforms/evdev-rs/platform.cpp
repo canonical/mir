@@ -200,7 +200,7 @@ void InputDeviceObserver::activated(mir::Fd&& device_fd)
         return;
     }
 
-    mir::log_info("evdev-rs: enqueuing on_device_activated for %s (duped fd=%d)", devnode.c_str(), duped);
+    mir::log_info("evdev-rs: enqueuing on_device_activated for %s", devnode.c_str());
     device_queue->enqueue(
         [devnode = devnode, devnum = devnum, device_fd = device_fd, &platform_impl = platform_impl]()
         {
@@ -215,7 +215,7 @@ void InputDeviceObserver::activated(mir::Fd&& device_fd)
 
             if (!platform_impl->is_running())
             {
-                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", fd);
+                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", duped);
                 ::close(duped);
                 return;
             }

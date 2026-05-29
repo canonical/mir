@@ -16,6 +16,7 @@
 
 use crate::device::{LibinputDevice, LibinputDeviceState, ScrollState};
 use crate::event_processing::process_libinput_events;
+use crate::fd_store::FdStore;
 use crate::udev_monitor::{UdevEventType, UdevMonitor};
 use cxx;
 use input;
@@ -44,6 +45,9 @@ pub struct PlatformRs {
 
     /// Rust-owned udev monitor for input device hotplug events.
     udev_monitor: Option<UdevMonitor>,
+
+    /// Manages pre-acquired and backup file descriptors for device nodes.
+    fd_store: Arc<Mutex<FdStore>>,
 }
 
 impl PlatformRs {
@@ -60,6 +64,7 @@ impl PlatformRs {
             running: Arc::new(AtomicBool::new(false)),
             known_devnums: HashSet::new(),
             udev_monitor: None,
+            fd_store: Arc::new(Mutex::new(FdStore::new())),
         }
     }
 
@@ -80,10 +85,9 @@ impl PlatformRs {
 
         println!("Starting the evdev-rs platform");
 
-        let bridge = self.bridge.clone();
         let libinput =
             input::Libinput::new_from_path(crate::libinput_interface::LibinputInterfaceImpl {
-                bridge: bridge.clone(),
+                fd_store: self.fd_store.clone(),
             });
 
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
@@ -263,7 +267,7 @@ impl PlatformRs {
                     state: Arc::new(Mutex::new(LibinputDeviceState {
                         libinput: input::Libinput::new_from_path(
                             crate::libinput_interface::LibinputInterfaceImpl {
-                                bridge: self.bridge.clone(),
+                                fd_store: self.fd_store.clone(),
                             },
                         ),
                         known_devices: Vec::new(),
@@ -409,7 +413,9 @@ impl PlatformRs {
                     self.bridge.release_device(devnum);
                 }
 
-                self.bridge.remove_backup_fd(devnode);
+                if let Ok(mut store) = self.fd_store.lock() {
+                    store.remove_backup(devnode);
+                }
             }
             _ => {}
         }
@@ -432,7 +438,13 @@ impl PlatformRs {
         }
 
         // Store the fd so that open_restricted() can claim it.
-        self.bridge.store_pending_fd(devnode, fd);
+        match self.fd_store.lock() {
+            Ok(mut store) => store.store_pending(devnode, fd),
+            Err(_) => {
+                println!("evdev-rs: on_device_activated: fd_store mutex poisoned");
+                return;
+            }
+        }
 
         // Transfer the Device from pending to active in C++.
         self.bridge.activate_pending_device(devnum);
@@ -484,7 +496,9 @@ impl PlatformRs {
 
         self.known_devnums.remove(&devnum);
         self.bridge.release_device(devnum);
-        self.bridge.remove_backup_fd(devnode);
+        if let Ok(mut store) = self.fd_store.lock() {
+            store.remove_backup(devnode);
+        }
         self.path_remove_device(devnode);
     }
 }

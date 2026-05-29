@@ -19,12 +19,10 @@
 
 #include "mir/console_services.h"
 #include "mir/log.h"
-#include "mir/fd.h"
 #include "mir/input/input_sink.h"
 #include "mir/geometry/forward.h"
 #include <mir_platforms_evdev_rs/src/lib.rs.h>
 
-#include <unistd.h>
 #include <sys/types.h>
 #include <sys/sysmacros.h>
 
@@ -36,64 +34,6 @@ miers::PlatformBridge::PlatformBridge(
     Platform* platform,
     std::shared_ptr<mir::ConsoleServices> const& console)
     : platform(platform), console(console) {}
-
-void miers::PlatformBridge::store_pending_fd(rust::Str devnode, int32_t fd) const
-{
-    std::lock_guard lock{pending_fds_mutex};
-    std::string key{devnode};
-    pending_fds[key] = fd;
-
-    // Keep a dup'd backup so libinput can re-open the device later
-    // (e.g. after handling a lid switch event internally).
-    int const backup = ::dup(fd);
-    if (backup >= 0)
-    {
-        // Close any previous backup for this device.
-        auto it = backup_fds.find(key);
-        if (it != backup_fds.end())
-        {
-            ::close(it->second);
-            it->second = backup;
-        }
-        else
-        {
-            backup_fds[key] = backup;
-        }
-    }
-}
-
-int32_t miers::PlatformBridge::claim_pending_fd(rust::Str devnode) const
-{
-    std::lock_guard lock{pending_fds_mutex};
-    auto it = pending_fds.find(std::string(devnode));
-    if (it == pending_fds.end())
-        return -1;
-    int fd = it->second;
-    pending_fds.erase(it);
-    return fd;
-}
-
-int32_t miers::PlatformBridge::claim_backup_fd(rust::Str devnode) const
-{
-    std::lock_guard lock{pending_fds_mutex};
-    auto it = backup_fds.find(std::string(devnode));
-    if (it == backup_fds.end())
-        return -1;
-    // Return a dup so the backup remains available for future re-opens.
-    int const duped = ::dup(it->second);
-    return duped;
-}
-
-void miers::PlatformBridge::remove_backup_fd(rust::Str devnode) const
-{
-    std::lock_guard lock{pending_fds_mutex};
-    auto it = backup_fds.find(std::string(devnode));
-    if (it != backup_fds.end())
-    {
-        ::close(it->second);
-        backup_fds.erase(it);
-    }
-}
 
 bool miers::PlatformBridge::acquire_device(uint64_t devnum, rust::Str devnode) const
 {

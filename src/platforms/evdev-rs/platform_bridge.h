@@ -22,7 +22,6 @@
 #include <mir/input/event_builder.h>
 #include <mir/geometry/rectangle.h>
 #include <memory>
-#include <mutex>
 #include <future>
 #include <unordered_map>
 #include <rust/cxx.h>
@@ -106,21 +105,6 @@ public:
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
     std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
 
-    /// Store a pre-acquired file descriptor for a device path.
-    void store_pending_fd(rust::Str devnode, int32_t fd) const;
-
-    /// Claim and remove the pre-acquired fd for a device path.
-    /// Returns the raw fd, or -1 if no pending fd exists.
-    int32_t claim_pending_fd(rust::Str devnode) const;
-
-    /// Claim a dup'd backup fd for a device path.
-    /// Used when libinput internally re-opens a device (e.g. after lid switch).
-    /// Returns a dup'd fd, or -1 if no backup exists.
-    int32_t claim_backup_fd(rust::Str devnode) const;
-
-    /// Remove the backup fd for a device (called on device removal).
-    void remove_backup_fd(rust::Str devnode) const;
-
     /// Initiate device acquisition via ConsoleServices.
     /// Returns true if acquisition was started, false if already tracked.
     bool acquire_device(uint64_t devnum, rust::Str devnode) const;
@@ -140,10 +124,6 @@ public:
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;
-
-    mutable std::mutex pending_fds_mutex;
-    mutable std::unordered_map<std::string, int> pending_fds;
-    mutable std::unordered_map<std::string, int> backup_fds;
 
     mutable std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>> pending_devices;
     mutable std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;
