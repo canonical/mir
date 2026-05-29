@@ -474,7 +474,6 @@ void mf::XdgActivationTokenV1::commit()
             resource,
             Error::already_used,
             "The activation token has already been used"};
-        return;
     }
 
     used = true;
