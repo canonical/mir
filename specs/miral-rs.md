@@ -77,7 +77,7 @@ impl From<WindowState> for u32 { /* ... */ }
 | `operator()(mir::Server&)` functors      | `trait ServerExtension` with `fn apply(&self, server: &mut Server)` |
 | `mir::optional_value<T>`                 | `Option<T>`                                                         |
 | `std::shared_ptr<Workspace>`             | `Arc<Workspace>` (or opaque handle)                                 |
-| `ConfigurationOption` (overloaded ctors)  | `ConfigurationOption` with `ConfigValue` sealed trait + methods     |
+| `ConfigurationOption` (overloaded ctors) | `ConfigurationOption` with `ConfigValue` sealed trait + methods     |
 | C-linkage Mir enums                      | bindgen + idiomatic Rust enum wrappers                              |
 | Callbacks (`std::function`)              | `Fn`/`FnMut` trait objects or closures                              |
 | `WindowInfo` (mutable reference)         | `&mut WindowInfo` with getter/setter methods                        |
