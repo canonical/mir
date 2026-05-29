@@ -20,8 +20,6 @@
 #include <mir/graphics/buffer.h>
 #include <boost/throw_exception.hpp>
 
-#include <cmath>
-
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
