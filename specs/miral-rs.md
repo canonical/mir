@@ -455,6 +455,1162 @@ public:
 
 1. **Configuration options**: Callback-based API with `FnMut(T) + Send + 'static`. Callbacks may fire multiple times as values change at runtime. `Send + 'static` is required because Mir may invoke callbacks on a server/init thread. A sealed `ConfigValue` trait restricts supported types to `i32`, `f64`, `String`, and `bool`. `OptionalConfigValue` further restricts optional variants to `i32`, `String`, and `bool` (matching C++ `mir::optional_value` support). Options are added via a dedicated `MirRunner::add_config_option()` method, not through the `ServerExtension` trait, because they own non-cloneable callback state.
 
+## Gap Analysis: miral-rs vs C++ miral
+
+This section catalogs the remaining gaps between the Rust `miral-rs` crate and the C++ `miral` public API, organized by category. For each gap, an idiomatic Rust API is proposed.
+
+### Legend
+
+- ✅ Fully covered
+- 🟡 Partially covered (specific gaps listed)
+- ❌ Completely missing
+
+---
+
+### 1. Application Info (🟡 Partial)
+
+**C++ header**: `application_info.h`
+
+**Currently exposed in Rust**: Only a thin wrapper; missing most accessors.
+
+**Missing methods**: `name()`, `application()`, `windows()`
+
+**Note**: `userdata()` is intentionally omitted per Design Decision #2 (external storage pattern).
+
+#### Proposed Rust API
+
+```rust
+/// Information about a connected application and its windows.
+pub struct ApplicationInfo { /* opaque FFI handle */ }
+
+impl ApplicationInfo {
+    /// The name of the application.
+    pub fn name(&self) -> &str;
+
+    /// The backing application handle.
+    pub fn application(&self) -> &Application;
+
+    /// All windows currently owned by this application.
+    pub fn windows(&self) -> &[Window];
+}
+```
+
+---
+
+### 2. Window (🟡 Partial)
+
+**C++ header**: `window.h`
+
+**Currently exposed**: `id()`, `top_left()`, `size()`, `is_valid()`
+
+**Missing**: `application()`, `resize()`, `move_to()`, `Ord` trait
+
+#### Proposed Rust API
+
+```rust
+impl Window {
+    /// The application that owns this window.
+    pub fn application(&self) -> Application;
+
+    /// Request the window to resize to the given size.
+    /// Use `WindowManagerTools::modify_window` for policy-driven resizing.
+    pub fn resize(&self, size: Size);
+
+    /// Request the window to move to the given position.
+    /// Use `WindowManagerTools::modify_window` for policy-driven moves.
+    pub fn move_to(&self, point: Point);
+}
+
+// Also derive Ord/PartialOrd for ordered collections:
+impl PartialOrd for Window { /* by internal id */ }
+impl Ord for Window { /* by internal id */ }
+```
+
+---
+
+### 3. WindowInfo (🟡 Partial — many getters missing)
+
+**C++ header**: `window_info.h`
+
+**Currently exposed**: `window()`, `name()`, `window_type()`, `state()`, `position()`, `size()`, `rectangle()`, `min_width/max_width/min_height/max_height`, `depth_layer`, `has_parent`, `can_be_active`, `is_visible`
+
+**Missing**: 20+ accessors and `constrain_resize`
+
+#### Proposed Rust API
+
+```rust
+impl WindowInfo {
+    // --- Already present (keep as-is) ---
+    pub fn window(&self) -> &Window;
+    pub fn name(&self) -> &str;
+    pub fn window_type(&self) -> WindowType;
+    pub fn state(&self) -> WindowState;
+    // ...
+
+    // --- New accessors ---
+
+    /// Whether this window type can morph to the given type.
+    pub fn can_morph_to(&self, new_type: WindowType) -> bool;
+
+    /// Whether this window type requires a parent.
+    pub fn must_have_parent(&self) -> bool;
+
+    /// Whether this window type must NOT have a parent.
+    pub fn must_not_have_parent(&self) -> bool;
+
+    /// Constrain a resize request to respect the window's size hints.
+    pub fn constrain_resize(&self, requested_pos: &mut Point, requested_size: &mut Size);
+
+    /// The rectangle to restore to when leaving maximized/fullscreen state.
+    pub fn restore_rect(&self) -> Rectangle;
+
+    /// The parent window, if any.
+    pub fn parent(&self) -> Option<Window>;
+
+    /// Child windows of this window.
+    pub fn children(&self) -> &[Window];
+
+    /// Size increment in X (for character-cell windows like terminals).
+    pub fn width_inc(&self) -> i32;
+
+    /// Size increment in Y.
+    pub fn height_inc(&self) -> i32;
+
+    /// Minimum aspect ratio (width/height).
+    pub fn min_aspect(&self) -> AspectRatio;
+
+    /// Maximum aspect ratio.
+    pub fn max_aspect(&self) -> AspectRatio;
+
+    /// The output this window is associated with, if any.
+    pub fn output_id(&self) -> Option<i32>;
+
+    /// The preferred orientation.
+    pub fn preferred_orientation(&self) -> OrientationMode;
+
+    /// Pointer confinement state.
+    pub fn confine_pointer(&self) -> PointerConfinementState;
+
+    /// Shell chrome type.
+    pub fn shell_chrome(&self) -> ShellChrome;
+
+    /// Edges this window is attached to (for attached/docked windows).
+    pub fn attached_edges(&self) -> PlacementGravity;
+
+    /// Exclusive zone rectangle that other windows should avoid.
+    pub fn exclusive_rect(&self) -> Option<Rectangle>;
+
+    /// Whether this window ignores exclusion zones.
+    pub fn ignore_exclusion_zones(&self) -> bool;
+
+    /// Clip area in world coordinates (Mir won't render outside this).
+    pub fn clip_area(&self) -> Option<Rectangle>;
+
+    /// Set the clip area.
+    pub fn set_clip_area(&mut self, area: Option<Rectangle>);
+
+    /// The desktop entry application ID.
+    pub fn application_id(&self) -> &str;
+
+    /// How this window gains/loses focus.
+    pub fn focus_mode(&self) -> FocusMode;
+
+    /// Whether visible when the session is locked.
+    pub fn visible_on_lock_screen(&self) -> bool;
+
+    /// Which edges are touching a tiling grid boundary.
+    pub fn tiled_edges(&self) -> TiledEdges;
+
+    /// Window opacity (0.0–1.0).
+    pub fn alpha(&self) -> f32;
+}
+
+/// Aspect ratio as a width:height pair.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct AspectRatio {
+    pub width: u32,
+    pub height: u32,
+}
+```
+
+---
+
+### 4. WindowSpecification (🟡 Partial — tiny subset exposed)
+
+**C++ header**: `window_specification.h`
+
+**Currently exposed**: `top_left`, `size`, `state`, `name`, `parent` + `with_*` builders
+
+**Missing**: ~25 additional optional fields
+
+#### Proposed Rust API
+
+The specification uses a builder pattern where each field is `Option<T>` — matching C++'s `mir::optional_value`. Only set fields modify the window.
+
+```rust
+/// Input reception mode for a window.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InputReceptionMode {
+    /// Normal input routing.
+    Normal,
+    /// Receives all input events.
+    ReceivesAllInput,
+}
+
+impl WindowSpecification {
+    // --- Already present (keep) ---
+    pub fn new() -> Self;
+    pub fn with_top_left(self, point: Point) -> Self;
+    pub fn with_size(self, size: Size) -> Self;
+    pub fn with_state(self, state: WindowState) -> Self;
+    pub fn with_name(self, name: impl Into<String>) -> Self;
+
+    // --- New builder methods ---
+    pub fn with_type(self, window_type: WindowType) -> Self;
+    pub fn with_output_id(self, id: i32) -> Self;
+    pub fn with_preferred_orientation(self, orientation: OrientationMode) -> Self;
+    pub fn with_aux_rect(self, rect: Rectangle) -> Self;
+    pub fn with_placement_hints(self, hints: PlacementHints) -> Self;
+    pub fn with_window_placement_gravity(self, gravity: PlacementGravity) -> Self;
+    pub fn with_aux_rect_placement_gravity(self, gravity: PlacementGravity) -> Self;
+    pub fn with_aux_rect_placement_offset(self, offset: Displacement) -> Self;
+    pub fn with_min_width(self, width: i32) -> Self;
+    pub fn with_min_height(self, height: i32) -> Self;
+    pub fn with_max_width(self, width: i32) -> Self;
+    pub fn with_max_height(self, height: i32) -> Self;
+    pub fn with_width_inc(self, inc: i32) -> Self;
+    pub fn with_height_inc(self, inc: i32) -> Self;
+    pub fn with_min_aspect(self, ratio: AspectRatio) -> Self;
+    pub fn with_max_aspect(self, ratio: AspectRatio) -> Self;
+    pub fn with_input_shape(self, shapes: Vec<Rectangle>) -> Self;
+    pub fn with_input_mode(self, mode: InputReceptionMode) -> Self;
+    pub fn with_shell_chrome(self, chrome: ShellChrome) -> Self;
+    pub fn with_confine_pointer(self, state: PointerConfinementState) -> Self;
+    pub fn with_depth_layer(self, layer: DepthLayer) -> Self;
+    pub fn with_attached_edges(self, edges: PlacementGravity) -> Self;
+    pub fn with_exclusive_rect(self, rect: Option<Rectangle>) -> Self;
+    pub fn with_ignore_exclusion_zones(self, ignore: bool) -> Self;
+    pub fn with_application_id(self, id: impl Into<String>) -> Self;
+    pub fn with_server_side_decorated(self, decorated: bool) -> Self;
+    pub fn with_focus_mode(self, mode: FocusMode) -> Self;
+    pub fn with_visible_on_lock_screen(self, visible: bool) -> Self;
+    pub fn with_tiled_edges(self, edges: TiledEdges) -> Self;
+    pub fn with_alpha(self, alpha: f32) -> Self;
+    pub fn with_parent_size(self, size: Size) -> Self;
+
+    // --- Read access (for inspecting specs received from clients) ---
+    pub fn top_left(&self) -> Option<Point>;
+    pub fn size(&self) -> Option<Size>;
+    pub fn name(&self) -> Option<&str>;
+    pub fn state(&self) -> Option<WindowState>;
+    pub fn window_type(&self) -> Option<WindowType>;
+    pub fn output_id(&self) -> Option<i32>;
+    pub fn depth_layer(&self) -> Option<DepthLayer>;
+    pub fn attached_edges(&self) -> Option<PlacementGravity>;
+    pub fn exclusive_rect(&self) -> Option<Option<Rectangle>>;
+    pub fn focus_mode(&self) -> Option<FocusMode>;
+    pub fn alpha(&self) -> Option<f32>;
+    // ... (getters for all fields)
+}
+```
+
+---
+
+### 5. WindowManagerTools (🟡 Partial — core subset only)
+
+**C++ header**: `window_manager_tools.h`
+
+**Currently exposed**: `raise_tree`, `select_active_window`, `modify_window`, `focus_next/prev_*`, `ask_client_to_close`, `drag_window`, `active_window`, `active_application_zone`, `active_output`, `count_applications`
+
+**Missing**: iteration, lookup, workspace ops, cursor, tree ordering
+
+#### Proposed Rust API
+
+```rust
+impl WindowManagerTools {
+    // --- Already present (keep) ---
+    pub fn raise_tree(&self, root: &Window);
+    pub fn select_active_window(&self, hint: &Window) -> Window;
+    pub fn modify_window(&self, window: &Window, modifications: &WindowSpecification);
+    pub fn ask_client_to_close(&self, window: &Window);
+    pub fn drag_window(&self, window: &Window, movement: Displacement);
+    pub fn active_window(&self) -> Window;
+    pub fn active_output(&self) -> Rectangle;
+    pub fn active_application_zone(&self) -> Zone;
+    pub fn focus_next_application(&self);
+    pub fn focus_prev_application(&self);
+    pub fn focus_next_within_application(&self);
+    pub fn focus_prev_within_application(&self);
+    pub fn count_applications(&self) -> u32;
+
+    // --- New methods ---
+
+    /// Execute a closure for each connected application.
+    pub fn for_each_application(&self, f: impl FnMut(&ApplicationInfo));
+
+    /// Find the first application matching a predicate.
+    pub fn find_application(&self, predicate: impl FnMut(&ApplicationInfo) -> bool) -> Option<Application>;
+
+    /// Get info about a window.
+    pub fn info_for(&self, window: &Window) -> &WindowInfo;
+
+    /// Get info about an application.
+    pub fn app_info_for(&self, app: &Application) -> &ApplicationInfo;
+
+    /// Drag the currently active window.
+    pub fn drag_active_window(&self, movement: Displacement);
+
+    /// Check if the given window can be selected/focused.
+    pub fn can_select_window(&self, window: &Window) -> bool;
+
+    /// Find the topmost window at a point.
+    pub fn window_at(&self, point: Point) -> Option<Window>;
+
+    /// Select the best window to represent an application for focusing.
+    pub fn window_to_select_application(&self, app: &Application) -> Option<Window>;
+
+    /// Swap the Z-order of two window trees.
+    pub fn swap_tree_order(&self, first: &Window, second: &Window);
+
+    /// Send a window tree to the back of the Z-order.
+    pub fn send_tree_to_back(&self, root: &Window);
+
+    /// Modify a window, referencing its info directly.
+    pub fn modify_window_info(&self, info: &mut WindowInfo, modifications: &WindowSpecification);
+
+    /// Set default position/size to reflect a state change.
+    pub fn place_and_size_for_state(&self, modifications: &mut WindowSpecification, info: &WindowInfo);
+
+    // --- Workspace operations ---
+
+    /// Create a new workspace.
+    pub fn create_workspace(&self) -> Workspace;
+
+    /// Add a window tree to a workspace.
+    pub fn add_tree_to_workspace(&self, window: &Window, workspace: &Workspace);
+
+    /// Remove a window tree from a workspace.
+    pub fn remove_tree_from_workspace(&self, window: &Window, workspace: &Workspace);
+
+    /// Move all windows from one workspace to another.
+    pub fn move_workspace_content(&self, to: &Workspace, from: &Workspace);
+
+    /// Iterate workspaces containing a window.
+    pub fn for_each_workspace_containing(&self, window: &Window, f: impl FnMut(&Workspace));
+
+    /// Iterate windows in a workspace.
+    pub fn for_each_window_in_workspace(&self, workspace: &Workspace, f: impl FnMut(&Window));
+
+    // --- Miscellaneous ---
+
+    /// Execute a closure while holding the model lock.
+    /// Use from threads NOT already in a policy callback.
+    pub fn invoke_under_lock(&self, f: impl FnOnce());
+
+    /// Move the cursor to a point (clamped to output area).
+    pub fn move_cursor_to(&self, point: PointF);
+}
+
+/// A floating-point position (for sub-pixel cursor movement).
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct PointF {
+    pub x: f32,
+    pub y: f32,
+}
+```
+
+---
+
+### 6. Output (🟡 Partial — only id/extents/name exposed)
+
+**C++ header**: `output.h`
+
+**Missing**: All hardware/display properties
+
+#### Proposed Rust API
+
+```rust
+/// Display connector type.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum OutputType {
+    Unknown,
+    Vga,
+    DviI,
+    DviD,
+    DviA,
+    Composite,
+    SVideo,
+    Lvds,
+    Component,
+    NinePinDin,
+    DisplayPort,
+    HdmiA,
+    HdmiB,
+    Tv,
+    Edp,
+    Virtual,
+    Dsi,
+    Dpi,
+}
+
+/// Physical dimensions in millimeters.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PhysicalSizeMM {
+    pub width: i32,
+    pub height: i32,
+}
+
+impl Output {
+    // --- Already present ---
+    pub fn id(&self) -> i32;
+    pub fn extents(&self) -> Rectangle;
+    pub fn name(&self) -> &str;
+
+    // --- New accessors ---
+    /// Connector type.
+    pub fn output_type(&self) -> OutputType;
+
+    /// Physical size of the display in mm.
+    pub fn physical_size_mm(&self) -> PhysicalSizeMM;
+
+    /// Whether the display is connected.
+    pub fn connected(&self) -> bool;
+
+    /// Whether the display is currently used in the configuration.
+    pub fn used(&self) -> bool;
+
+    /// Pixel format.
+    pub fn pixel_format(&self) -> PixelFormat;
+
+    /// Refresh rate in Hz.
+    pub fn refresh_rate(&self) -> f64;
+
+    /// Current power mode.
+    pub fn power_mode(&self) -> PowerMode;
+
+    /// Display orientation.
+    pub fn orientation(&self) -> Orientation;
+
+    /// HiDPI scale factor.
+    pub fn scale(&self) -> f32;
+
+    /// Physical form factor (monitor, phone, tablet, etc.).
+    pub fn form_factor(&self) -> FormFactor;
+
+    /// Whether this output has a valid configuration.
+    pub fn valid(&self) -> bool;
+
+    /// Whether this represents the same physical output as another.
+    pub fn is_same_output(&self, other: &Output) -> bool;
+
+    /// Logical group ID (for display walls); 0 if ungrouped.
+    pub fn logical_group_id(&self) -> i32;
+
+    /// Get a custom attribute by key.
+    pub fn attribute(&self, key: &str) -> Option<String>;
+
+    /// Get all custom attributes.
+    pub fn attributes(&self) -> HashMap<String, Option<String>>;
+}
+
+/// Check if two outputs have the same display area.
+pub fn equivalent_display_area(lhs: &Output, rhs: &Output) -> bool;
+```
+
+---
+
+### 7. Zone (🟡 Partial — only extents getter)
+
+**C++ header**: `zone.h`
+
+#### Proposed Rust API
+
+```rust
+impl Zone {
+    /// The area of this zone in global coordinates.
+    pub fn extents(&self) -> Rectangle;
+
+    /// Set the extents (does not change zone identity).
+    pub fn set_extents(&mut self, extents: Rectangle);
+
+    /// Unique zone identifier, stable across resizes/moves.
+    pub fn id(&self) -> i32;
+
+    /// Whether this is the same zone (by ID, regardless of extents).
+    pub fn is_same_zone(&self, other: &Zone) -> bool;
+}
+
+impl PartialEq for Zone {
+    /// Matches only if ID AND extents are both equal.
+    fn eq(&self, other: &Self) -> bool;
+}
+impl Eq for Zone {}
+```
+
+---
+
+### 8. Runner (🟡 Partial — builder exists but missing lifecycle methods)
+
+**C++ header**: `runner.h`
+
+**Currently exposed**: `new`, `add`, `add_config_option`, `add_window_management_policy`, `on_start`, `on_stop`, `run`
+
+**Missing**: signal handlers, fd handlers, exception handler, stop, socket queries
+
+#### Proposed Rust API
+
+```rust
+use std::os::unix::io::RawFd;
+
+/// Handle keeping an fd registered with the main loop.
+/// The fd is unregistered when this handle is dropped.
+pub struct FdHandle { /* opaque */ }
+
+impl MirRunner {
+    // --- Already present (keep) ---
+    pub fn new(args: impl IntoIterator<Item = String>) -> Self;
+    pub fn add(self, extension: impl ServerExtension) -> Self;
+    pub fn add_config_option(self, option: ConfigurationOption) -> Self;
+    pub fn add_window_management_policy<P: WindowManagementPolicy>(self) -> Self;
+    pub fn on_start(self, f: impl FnMut() + Send + 'static) -> Self;
+    pub fn on_stop(self, f: impl FnMut() + Send + 'static) -> Self;
+    pub fn run(self) -> Result<(), MirError>;
+
+    // --- New methods ---
+
+    /// Register a handler for Unix signals on the server main loop.
+    pub fn register_signal_handler(
+        &self,
+        signals: &[i32],
+        handler: impl FnMut(i32) + Send + 'static,
+    );
+
+    /// Register a file descriptor watch on the server main loop.
+    /// The handler fires when data is available to read.
+    /// Drop the returned `FdHandle` to unregister.
+    pub fn register_fd_handler(
+        &self,
+        fd: RawFd,
+        handler: impl FnMut(RawFd) + Send + 'static,
+    ) -> FdHandle;
+
+    /// Set a custom exception handler for errors during `run()`.
+    pub fn set_exception_handler(&self, handler: impl FnMut() + Send + 'static);
+
+    /// Tell the server to stop.
+    pub fn stop(&self);
+
+    /// Path to the config file.
+    pub fn config_file(&self) -> String;
+
+    /// Path to the display configuration file.
+    pub fn display_config_file(&self) -> String;
+
+    /// The Wayland display socket name (usable as `$WAYLAND_DISPLAY`).
+    /// Returns `None` if the server hasn't started yet.
+    pub fn wayland_display(&self) -> Option<String>;
+
+    /// The X11 display name (usable as `$DISPLAY`).
+    /// Returns `None` if X11 is not enabled or server hasn't started.
+    pub fn x11_display(&self) -> Option<String>;
+}
+```
+
+---
+
+### 9. WaylandExtensions (🟡 Partial — only enable/default)
+
+**C++ header**: `wayland_extensions.h`
+
+**Missing**: Protocol constants, builders, conditional enable, filters, querying supported/recommended sets, `application_for`/`window_for`
+
+#### Proposed Rust API
+
+```rust
+/// Well-known Wayland extension protocol names.
+pub mod protocols {
+    pub const LAYER_SHELL_V1: &str = "zwlr_layer_shell_v1";
+    pub const XDG_OUTPUT_MANAGER_V1: &str = "zxdg_output_manager_v1";
+    pub const FOREIGN_TOPLEVEL_MANAGER_V1: &str = "zwlr_foreign_toplevel_manager_v1";
+    pub const EXT_FOREIGN_TOPLEVEL_LIST_V1: &str = "ext_foreign_toplevel_list_v1";
+    pub const VIRTUAL_KEYBOARD_MANAGER_V1: &str = "zwp_virtual_keyboard_manager_v1";
+    pub const INPUT_METHOD_V1: &str = "zwp_input_method_v1";
+    pub const INPUT_PANEL_V1: &str = "zwp_input_panel_v1";
+    pub const INPUT_METHOD_MANAGER_V2: &str = "zwp_input_method_manager_v2";
+    pub const SCREENCOPY_MANAGER_V1: &str = "zwlr_screencopy_manager_v1";
+    pub const IMAGE_COPY_CAPTURE_MANAGER_V1: &str = "ext_image_copy_capture_manager_v1";
+    pub const OUTPUT_IMAGE_CAPTURE_SOURCE_MANAGER_V1: &str = "ext_output_image_capture_source_manager_v1";
+    pub const VIRTUAL_POINTER_MANAGER_V1: &str = "zwlr_virtual_pointer_manager_v1";
+    pub const SESSION_LOCK_MANAGER_V1: &str = "ext_session_lock_manager_v1";
+    pub const DATA_CONTROL_MANAGER_V1: &str = "ext_data_control_manager_v1";
+}
+
+/// Information provided to conditional-enable callbacks.
+pub struct EnableInfo {
+    app: Application,
+    name: String,
+    user_preference: Option<bool>,
+}
+
+impl EnableInfo {
+    /// The application requesting access.
+    pub fn app(&self) -> &Application;
+    /// The protocol name.
+    pub fn name(&self) -> &str;
+    /// User-configured preference (from CLI/env/config), if any.
+    pub fn user_preference(&self) -> Option<bool>;
+}
+
+impl WaylandExtensions {
+    // --- Already present ---
+    pub fn default() -> Self;
+    pub fn enable(self, name: impl Into<String>) -> Self;
+
+    // --- New methods ---
+
+    /// Disable an extension by default (user can still enable it via CLI).
+    pub fn disable(self, name: impl Into<String>) -> Self;
+
+    /// Enable an extension conditionally per-client.
+    /// The callback decides per-application whether to enable.
+    pub fn conditionally_enable(
+        self,
+        name: impl Into<String>,
+        callback: impl Fn(&EnableInfo) -> bool + Send + Sync + 'static,
+    ) -> Self;
+
+    /// The set of extensions Mir recommends (enabled by default).
+    pub fn recommended() -> HashSet<String>;
+
+    /// All extensions Mir supports (superset of recommended).
+    pub fn supported() -> HashSet<String>;
+
+    /// All supported extensions including custom-added ones.
+    pub fn all_supported(&self) -> HashSet<String>;
+
+    /// Add a custom extension, enabled by default.
+    pub fn add_extension(self, builder: ExtensionBuilder) -> Self;
+
+    /// Add a custom extension, disabled by default.
+    pub fn add_extension_disabled_by_default(self, builder: ExtensionBuilder) -> Self;
+}
+
+/// Builder for a custom Wayland protocol extension.
+pub struct ExtensionBuilder {
+    /// Protocol global name.
+    pub name: String,
+    /// Factory that creates the extension given a Wayland display context.
+    pub build: Box<dyn Fn(&WaylandContext) -> Box<dyn Any + Send> + Send + Sync>,
+}
+
+/// Context for building Wayland extensions (access to wl_display, main loop scheduling).
+pub struct WaylandContext { /* opaque */ }
+
+impl WaylandContext {
+    /// Run work on the Wayland main loop thread.
+    pub fn run_on_wayland_mainloop(&self, f: impl FnOnce() + Send + 'static);
+}
+
+// --- Free functions ---
+
+/// Get the application for a connected Wayland client (by raw wl_client pointer).
+/// Returns `None` if the client is not found.
+///
+/// # Safety
+/// The pointer must be a valid `wl_client`.
+pub unsafe fn application_for_wl_client(client: *mut wl_client) -> Option<Application>;
+
+/// Get the window for a Wayland surface resource.
+///
+/// # Safety
+/// The pointer must be a valid `wl_resource`.
+pub unsafe fn window_for_wl_resource(resource: *mut wl_resource) -> Option<Window>;
+```
+
+---
+
+### 10. WindowManagementPolicy trait (🟡 Partial — Advice enum needs workspace events)
+
+**C++ header**: `window_management_policy.h`
+
+**Currently designed**: All `handle_*` methods + `Advice` enum with lifecycle/output/zone events.
+
+**Missing from Advice enum**: workspace events, `FocusStealing` enum
+
+#### Proposed additions
+
+```rust
+/// Policy for handling focus stealing attempts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FocusStealing {
+    /// Prevent new windows from stealing focus.
+    Prevent,
+    /// Allow new windows to take focus.
+    Allow,
+}
+
+#[non_exhaustive]
+pub enum Advice<'a> {
+    // ... (existing variants from the spec) ...
+
+    // --- Workspace events (new) ---
+
+    /// Windows are being added to a workspace.
+    AddingToWorkspace {
+        workspace: &'a Workspace,
+        windows: &'a [Window],
+    },
+
+    /// Windows are being removed from a workspace.
+    RemovingFromWorkspace {
+        workspace: &'a Workspace,
+        windows: &'a [Window],
+    },
+}
+```
+
+---
+
+### 11. Completely Missing: Display Configuration (❌)
+
+**C++ header**: `display_configuration.h`
+
+A rich API for loading/selecting display layouts from YAML config files and custom attributes.
+
+#### Proposed Rust API
+
+```rust
+/// Loads display configuration from file and provides layout management.
+pub struct DisplayConfiguration { /* opaque */ }
+
+/// A node in the display configuration YAML tree.
+pub struct ConfigNode { /* opaque */ }
+
+/// Node type in the display configuration file.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ConfigNodeType {
+    Integer,
+    String,
+    Sequence,
+    Map,
+    Unknown,
+}
+
+impl ConfigNode {
+    pub fn node_type(&self) -> ConfigNodeType;
+    pub fn as_string(&self) -> &str;
+    pub fn as_int(&self) -> i32;
+    pub fn for_each(&self, f: impl FnMut(&ConfigNode));
+    pub fn has(&self, key: &str) -> bool;
+    pub fn get(&self, key: &str) -> Option<ConfigNode>;
+}
+
+impl DisplayConfiguration {
+    /// Create from a runner (reads config path from runner).
+    pub fn new(runner: &MirRunner) -> Self;
+
+    /// Create the `--display-layout` CLI option.
+    pub fn layout_option(&self) -> ConfigurationOption;
+
+    /// Select a named layout (falls back to "default" if not found).
+    pub fn select_layout(&self, layout: &str);
+
+    /// List available layout names.
+    pub fn list_layouts(&self) -> Vec<String>;
+
+    /// Enable a custom per-output attribute key in the config file.
+    pub fn add_output_attribute(&self, key: impl Into<String>);
+
+    /// Register a builder for custom layout data at a given key.
+    pub fn add_layout_userdata_builder(
+        &self,
+        key: impl Into<String>,
+        builder: impl Fn(&ConfigNode) -> Box<dyn Any + Send + Sync> + Send + Sync + 'static,
+    );
+
+    /// Retrieve previously-built custom layout data.
+    pub fn layout_userdata<T: Any + Send + Sync>(&self, key: &str) -> Option<&T>;
+}
+
+impl ServerExtension for DisplayConfiguration { /* ... */ }
+```
+
+---
+
+### 12. Completely Missing: IdleListener (❌)
+
+**C++ header**: `idle_listener.h`
+
+#### Proposed Rust API
+
+```rust
+/// Notifications for display idle/wake transitions.
+pub struct IdleListener { /* opaque */ }
+
+impl IdleListener {
+    pub fn new() -> Self;
+
+    /// Called when the display should dim.
+    pub fn on_dim(self, f: impl FnMut() + Send + 'static) -> Self;
+
+    /// Called when the display should turn off.
+    pub fn on_off(self, f: impl FnMut() + Send + 'static) -> Self;
+
+    /// Called when the display wakes from idle.
+    pub fn on_wake(self, f: impl FnMut() + Send + 'static) -> Self;
+}
+
+impl ServerExtension for IdleListener { /* ... */ }
+```
+
+---
+
+### 13. Completely Missing: SessionLockListener (❌)
+
+**C++ header**: `session_lock_listener.h`
+
+#### Proposed Rust API
+
+```rust
+/// Notifications for session lock/unlock events.
+pub struct SessionLockListener { /* opaque */ }
+
+impl SessionLockListener {
+    pub fn new(
+        on_lock: impl FnMut() + Send + 'static,
+        on_unlock: impl FnMut() + Send + 'static,
+    ) -> Self;
+}
+
+impl ServerExtension for SessionLockListener { /* ... */ }
+```
+
+---
+
+### 14. Completely Missing: InputConfiguration (❌)
+
+**C++ header**: `input_configuration.h`
+
+#### Proposed Rust API
+
+```rust
+/// Runtime input device configuration.
+pub struct InputConfiguration { /* opaque */ }
+
+impl InputConfiguration {
+    pub fn new() -> Self;
+
+    pub fn mouse(&self) -> MouseConfig;
+    pub fn set_mouse(&self, config: MouseConfig);
+    pub fn touchpad(&self) -> TouchpadConfig;
+    pub fn set_touchpad(&self, config: TouchpadConfig);
+    pub fn keyboard(&self) -> KeyboardConfig;
+    pub fn set_keyboard(&self, config: KeyboardConfig);
+}
+
+impl ServerExtension for InputConfiguration { /* ... */ }
+
+/// Mouse device configuration (all fields optional — unset means "don't change").
+#[derive(Debug, Clone, Default)]
+pub struct MouseConfig {
+    pub handedness: Option<PointerHandedness>,
+    pub acceleration: Option<PointerAcceleration>,
+    /// Clamped to [-1.0, 1.0].
+    pub acceleration_bias: Option<f64>,
+    pub vscroll_speed: Option<f64>,
+    pub hscroll_speed: Option<f64>,
+}
+
+/// Touchpad device configuration.
+#[derive(Debug, Clone, Default)]
+pub struct TouchpadConfig {
+    pub disable_while_typing: Option<bool>,
+    pub disable_with_external_mouse: Option<bool>,
+    pub acceleration: Option<PointerAcceleration>,
+    pub acceleration_bias: Option<f64>,
+    pub vscroll_speed: Option<f64>,
+    pub hscroll_speed: Option<f64>,
+    pub click_mode: Option<TouchpadClickMode>,
+    pub scroll_mode: Option<TouchpadScrollMode>,
+    pub tap_to_click: Option<bool>,
+    pub middle_mouse_button_emulation: Option<bool>,
+}
+
+/// Keyboard device configuration.
+#[derive(Debug, Clone, Default)]
+pub struct KeyboardConfig {
+    pub repeat_rate: Option<i32>,
+    pub repeat_delay: Option<i32>,
+}
+```
+
+---
+
+### 15. Completely Missing: ApplicationAuthorizer (❌)
+
+**C++ header**: `application_authorizer.h`
+
+#### Proposed Rust API
+
+```rust
+/// Credentials of a connecting application.
+#[derive(Debug, Clone)]
+pub struct ApplicationCredentials {
+    pub pid: u32,
+    pub uid: u32,
+    pub gid: u32,
+}
+
+/// Trait for authorizing application actions.
+///
+/// Implement to control which applications can perform privileged operations.
+pub trait ApplicationAuthorizer: Send + 'static {
+    fn connection_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+    fn configure_display_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+    fn set_base_display_configuration_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+    fn screencast_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+    fn prompt_session_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+    fn configure_input_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+    fn set_base_input_configuration_is_allowed(&self, creds: &ApplicationCredentials) -> bool { true }
+}
+
+impl MirRunner {
+    /// Set a custom application authorizer.
+    pub fn set_application_authorizer<A: ApplicationAuthorizer>(self, authorizer: A) -> Self;
+}
+```
+
+---
+
+### 16. Completely Missing: ApplicationSwitcher (❌)
+
+**C++ header**: `application_switcher.h`
+
+#### Proposed Rust API
+
+```rust
+/// A built-in Alt+Tab style application switcher (internal Wayland client).
+pub struct BasicApplicationSwitcher { /* opaque */ }
+
+/// Keyboard shortcut configuration for the application switcher.
+#[derive(Debug, Clone)]
+pub struct SwitcherKeybinds {
+    /// Modifier to hold (default: Alt).
+    pub primary_modifier: InputEventModifier,
+    /// Modifier to reverse direction (default: Shift).
+    pub reverse_modifier: InputEventModifier,
+    /// Key to cycle applications (default: Tab).
+    pub application_key: i32,
+    /// Key to cycle windows within an app (default: Grave/backtick).
+    pub window_key: i32,
+}
+
+impl Default for SwitcherKeybinds {
+    fn default() -> Self {
+        Self {
+            primary_modifier: InputEventModifier::ALT,
+            reverse_modifier: InputEventModifier::SHIFT,
+            application_key: KEY_TAB,
+            window_key: KEY_GRAVE,
+        }
+    }
+}
+
+impl BasicApplicationSwitcher {
+    pub fn new() -> Self;
+    pub fn with_keybinds(keybinds: SwitcherKeybinds) -> Self;
+}
+
+impl ServerExtension for BasicApplicationSwitcher { /* ... */ }
+```
+
+---
+
+### 17. Completely Missing: Accessibility Features (❌)
+
+**C++ headers**: `bounce_keys.h`, `hover_click.h`, `locate_pointer.h`, `magnifier.h`, `mousekeys_config.h`, `simulated_secondary_click.h`, `slow_keys.h`, `sticky_keys.h`
+
+These are all simple `ServerExtension` types with zero or minimal configuration.
+
+#### Proposed Rust API
+
+```rust
+/// Ignores rapid repeated key presses (accessibility).
+pub struct BounceKeys;
+impl BounceKeys { pub fn new() -> Self; }
+impl ServerExtension for BounceKeys {}
+
+/// Triggers a click after hovering (dwell click).
+pub struct HoverClick;
+impl HoverClick { pub fn new() -> Self; }
+impl ServerExtension for HoverClick {}
+
+/// Visual indicator showing pointer location.
+pub struct LocatePointer;
+impl LocatePointer { pub fn new() -> Self; }
+impl ServerExtension for LocatePointer {}
+
+/// Screen magnifier.
+pub struct Magnifier;
+impl Magnifier { pub fn new() -> Self; }
+impl ServerExtension for Magnifier {}
+
+/// Keyboard-driven pointer control.
+pub struct MouseKeysConfig;
+impl MouseKeysConfig { pub fn new() -> Self; }
+impl ServerExtension for MouseKeysConfig {}
+
+/// Simulates right-click via long-press.
+pub struct SimulatedSecondaryClick;
+impl SimulatedSecondaryClick { pub fn new() -> Self; }
+impl ServerExtension for SimulatedSecondaryClick {}
+
+/// Requires keys to be held for a minimum duration.
+pub struct SlowKeys;
+impl SlowKeys { pub fn new() -> Self; }
+impl ServerExtension for SlowKeys {}
+
+/// Makes modifier keys "sticky" (toggle rather than hold).
+pub struct StickyKeys;
+impl StickyKeys { pub fn new() -> Self; }
+impl ServerExtension for StickyKeys {}
+```
+
+---
+
+### 18. Completely Missing: Cursor Configuration (❌)
+
+**C++ headers**: `cursor_scale.h`, `cursor_theme.h`
+
+#### Proposed Rust API
+
+```rust
+/// Configure the cursor scale (for HiDPI).
+pub struct CursorScale;
+impl CursorScale { pub fn new() -> Self; }
+impl ServerExtension for CursorScale {}
+
+/// Configure the cursor theme.
+pub struct CursorTheme;
+impl CursorTheme {
+    pub fn new() -> Self;
+    /// Set a specific theme name.
+    pub fn with_theme(name: impl Into<String>) -> Self;
+}
+impl ServerExtension for CursorTheme {}
+```
+
+---
+
+### 19. Completely Missing: Event Filters (❌)
+
+**C++ headers**: `append_event_filter.h`, `prepend_event_filter.h`, `append_keyboard_event_filter.h`
+
+**Currently in runner**: `add_keyboard_event_filter` exists but general event filters are missing.
+
+#### Proposed Rust API
+
+```rust
+impl MirRunner {
+    /// Add an event filter that runs AFTER policy event handling.
+    /// Return `true` to consume the event.
+    pub fn append_event_filter(
+        self,
+        filter: impl FnMut(&InputEvent) -> bool + Send + 'static,
+    ) -> Self;
+
+    /// Add an event filter that runs BEFORE policy event handling.
+    /// Return `true` to consume the event.
+    pub fn prepend_event_filter(
+        self,
+        filter: impl FnMut(&InputEvent) -> bool + Send + 'static,
+    ) -> Self;
+}
+```
+
+---
+
+### 20. Completely Missing: Other Startup/Lifecycle APIs (❌)
+
+**C++ headers**: `add_init_callback.h`, `set_command_line_handler.h`, `set_terminator.h`, `toolkit_event.h`
+
+#### Proposed Rust API
+
+```rust
+impl MirRunner {
+    /// Add a callback invoked during server initialization.
+    /// Init callbacks run before start callbacks.
+    pub fn add_init_callback(self, f: impl FnOnce() + Send + 'static) -> Self;
+
+    /// Override the default command-line handler.
+    pub fn set_command_line_handler(
+        self,
+        handler: impl FnMut(&[String]) + Send + 'static,
+    ) -> Self;
+
+    /// Override the default server terminator.
+    pub fn set_terminator(
+        self,
+        handler: impl FnMut() + Send + 'static,
+    ) -> Self;
+}
+
+/// Inject a simulated toolkit event into the server.
+pub fn toolkit_event(tools: &WindowManagerTools, event: &InputEvent);
+```
+
+---
+
+### 21. Completely Missing: DisplayConfigurationOption (❌)
+
+**C++ header**: `display_configuration_option.h`
+
+A simple function enabling `--display-config` CLI options.
+
+#### Proposed Rust API
+
+```rust
+/// Enables the display configuration CLI options:
+/// `--display-config {clone,sidebyside,single,static=<filename>}`
+pub struct DisplayConfigurationOption;
+impl DisplayConfigurationOption { pub fn new() -> Self; }
+impl ServerExtension for DisplayConfigurationOption {}
+```
+
+---
+
+### 22. Intentionally Omitted
+
+The following C++ APIs are **not recommended** for the Rust binding:
+
+| Header | Reason |
+|--------|--------|
+| `lambda_as_function.h` | C++ utility; Rust closures cover this natively |
+| `canonical_window_manager.h` | Deprecated/legacy policy |
+| `floating_window_manager.h` | Example policy; users implement trait directly |
+| `minimal_window_manager.h` | Example policy; users implement trait directly |
+| `set_window_management_policy.h` | Replaced by `MirRunner::add_window_management_policy` |
+| `window_management_options.h` | Replaced by builder pattern on `MirRunner` |
+| `command_line_option.h` | Low-level; replaced by `ConfigurationOption` |
+| `live_config.h` / `live_config_ini_file.h` / `live_config_ini_file_with_overrides.h` / `live_config_overrides_list.h` | Internal live-config machinery; `ConfigurationOption` is the public-facing API |
+| `output_filter.h` | Niche; defer to future release |
+| `custom_renderer.h` | Advanced; requires GL context sharing across FFI; defer |
+| `wayland_tools.h` | Internal toolkit; not needed by compositor authors |
+
+---
+
+### Summary: Priority Order for Implementation
+
+| Priority | Category | Items |
+|----------|----------|-------|
+| **P0 — Critical** | Window management core | WindowInfo full accessors, WindowSpecification full fields, WindowManagerTools remaining methods |
+| **P1 — High** | App lifecycle | ApplicationInfo accessors, Output full accessors, Zone full API |
+| **P2 — Medium** | Configuration & extensions | WaylandExtensions (conditionally_enable, protocol constants), DisplayConfiguration, InputConfiguration, Runner lifecycle methods |
+| **P3 — Medium** | Events & auth | Event filters, ApplicationAuthorizer, FocusStealing |
+| **P4 — Lower** | Convenience | IdleListener, SessionLockListener, ApplicationSwitcher, Cursor config |
+| **P5 — Low** | Accessibility | All 8 accessibility features (simple ServerExtension wrappers) |
+
 ## Notes
 
 - The existing `evdev-rs` platform demonstrates the `cxx.rs` pattern in this codebase.

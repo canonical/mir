@@ -7,9 +7,12 @@ use std::sync::Arc;
 
 use crate::configuration::ConfigurationOption;
 use crate::extensions::ServerExtension;
+use crate::idle::IdleListener;
 use crate::keymap::Keymap;
+use crate::magnifier::Magnifier;
 use crate::policy::adapter::PolicyBridgeAdapter;
 use crate::policy::WindowManagementPolicy;
+use crate::session_lock::SessionLockListener;
 
 /// A handle to a running compositor that can be used to request shutdown.
 ///
@@ -94,6 +97,9 @@ pub struct MirRunner {
     policy_factory: Option<Box<dyn FnOnce() -> Box<dyn miral_sys::PolicyBridge> + Send>>,
     on_start: Option<Box<dyn FnOnce() + Send>>,
     on_stop: Option<Box<dyn FnOnce() + Send>>,
+    idle_listener: Option<IdleListener>,
+    session_lock_listener: Option<SessionLockListener>,
+    magnifier: Option<Magnifier>,
 }
 
 impl MirRunner {
@@ -109,6 +115,9 @@ impl MirRunner {
             policy_factory: None,
             on_start: None,
             on_stop: None,
+            idle_listener: None,
+            session_lock_listener: None,
+            magnifier: None,
         }
     }
 
@@ -139,6 +148,24 @@ impl MirRunner {
     /// ```
     pub fn add_config_option(mut self, option: ConfigurationOption) -> Self {
         self.config_options.push(option);
+        self
+    }
+
+    /// Configure idle state callbacks for the compositor.
+    pub fn idle_listener(mut self, listener: IdleListener) -> Self {
+        self.idle_listener = Some(listener);
+        self
+    }
+
+    /// Configure session lock and unlock callbacks for the compositor.
+    pub fn session_lock_listener(mut self, listener: SessionLockListener) -> Self {
+        self.session_lock_listener = Some(listener);
+        self
+    }
+
+    /// Configure the compositor magnifier.
+    pub fn magnifier(mut self, magnifier: Magnifier) -> Self {
+        self.magnifier = Some(magnifier);
         self
     }
 
@@ -177,38 +204,43 @@ impl MirRunner {
     /// Returns `Ok(())` on clean shutdown, or an error if the server
     /// failed to start or encountered a fatal error.
     pub fn run(self) -> Result<(), Box<dyn std::error::Error>> {
-        let policy_factory = self.policy_factory.ok_or(
+        let MirRunner {
+            args,
+            extensions,
+            config_options,
+            policy_factory,
+            on_start,
+            on_stop,
+            idle_listener,
+            session_lock_listener,
+            magnifier,
+        } = self;
+
+        let policy_factory = policy_factory.ok_or(
             "No window management policy set. Call add_window_management_policy() before run().",
         )?;
 
-        // Register the policy factory in the thread-local for C++ to call
         miral_sys::set_policy_factory(Box::new(policy_factory));
 
-        // Extract extension configuration
         let mut decoration_mode: i32 = 0;
         let mut keymap_layout = String::new();
         let mut x11_enabled = false;
         let mut external_launcher_enabled = false;
 
-        for ext in &self.extensions {
-            let name = ext.name();
-            match name {
+        for ext in &extensions {
+            match ext.name() {
                 "Decorations(PreferCSD)" => decoration_mode = 1,
                 "Decorations(PreferSSD)" => decoration_mode = 2,
                 "Decorations(AlwaysSSD)" => decoration_mode = 3,
                 "Decorations(AlwaysCSD)" => decoration_mode = 4,
-                "Keymap" => {
-                    // Downcast to get the layout
-                    // We use Any-based downcasting via the extension name + stored config
-                }
+                "Keymap" => {}
                 "X11Support" => x11_enabled = true,
                 "ExternalClientLauncher" => external_launcher_enabled = true,
-                _ => {} // WaylandExtensions and others handled by defaults
+                _ => {}
             }
         }
 
-        // For Keymap, we need the layout string. Use as_any() downcasting.
-        for ext in &self.extensions {
+        for ext in &extensions {
             if let Some(keymap) = ext.as_any().downcast_ref::<Keymap>() {
                 keymap_layout = if let Some(variant) = keymap.variant() {
                     format!("{}({})", keymap.layout(), variant)
@@ -218,38 +250,69 @@ impl MirRunner {
             }
         }
 
-        // Create the C++ MirRunner
-        let mut runner = miral_sys::ffi::miral_runner_new(&self.args);
+        let mut runner = miral_sys::ffi::miral_runner_new(&args);
 
         if external_launcher_enabled {
             miral_sys::ffi::miral_runner_enable_external_launcher(runner.pin_mut());
         }
 
-        // Create the runner handle (pointer to the C++ runner for stop())
+        if let Some(idle_listener) = idle_listener {
+            let IdleListener {
+                on_dim,
+                on_off,
+                on_wake,
+            } = idle_listener;
+            let has_idle_callbacks = on_dim.is_some() || on_off.is_some() || on_wake.is_some();
+
+            if let Some(callback) = on_dim {
+                miral_sys::set_on_idle_dim_callback(callback);
+            }
+            if let Some(callback) = on_off {
+                miral_sys::set_on_idle_off_callback(callback);
+            }
+            if let Some(callback) = on_wake {
+                miral_sys::set_on_idle_wake_callback(callback);
+            }
+            if has_idle_callbacks {
+                miral_sys::ffi::miral_runner_enable_idle_listener(runner.pin_mut());
+            }
+        }
+
+        if let Some(session_lock_listener) = session_lock_listener {
+            miral_sys::set_on_session_lock_callback(session_lock_listener.on_lock);
+            miral_sys::set_on_session_unlock_callback(session_lock_listener.on_unlock);
+            miral_sys::ffi::miral_runner_enable_session_lock_listener(runner.pin_mut());
+        }
+
+        if let Some(magnifier) = magnifier {
+            miral_sys::ffi::miral_runner_enable_magnifier(
+                runner.pin_mut(),
+                magnifier.magnification,
+                magnifier.capture_size.width,
+                magnifier.capture_size.height,
+                magnifier.enabled,
+            );
+        }
+
         let runner_ptr = {
             let pinned = runner.pin_mut();
-            // Safety: We need the raw pointer to call stop() later.
-            // The pointer is valid for the entire duration of run().
             unsafe { pinned.get_unchecked_mut() as *mut _ as u64 }
         };
         let runner_handle = RunnerHandle::new(runner_ptr);
 
-        // Register lifecycle callbacks
-        if let Some(on_start) = self.on_start {
+        if let Some(on_start) = on_start {
             miral_sys::set_on_start_callback(Box::new(on_start));
             miral_sys::ffi::miral_runner_register_start_callback(runner.pin_mut());
         }
-        if let Some(on_stop) = self.on_stop {
+        if let Some(on_stop) = on_stop {
             miral_sys::set_on_stop_callback(Box::new(on_stop));
             miral_sys::ffi::miral_runner_register_stop_callback(runner.pin_mut());
         }
 
-        // Store the handle for the stop callback to invalidate
         let handle_for_cleanup = runner_handle.clone();
 
-        // Register configuration option callbacks and build descriptors
         let mut config_descs = Vec::new();
-        for option in self.config_options {
+        for option in config_options {
             let callback_id = miral_sys::register_config_callback(option.callback);
             config_descs.push(miral_sys::ffi::ConfigOptionDesc {
                 name: option.name,
@@ -264,7 +327,6 @@ impl MirRunner {
             });
         }
 
-        // Run with full configuration
         let result = miral_sys::ffi::miral_runner_run_with_config(
             runner.pin_mut(),
             decoration_mode,
@@ -273,13 +335,12 @@ impl MirRunner {
             &config_descs,
         );
 
-        // Invalidate the runner handle after shutdown
         handle_for_cleanup
             .runner_ptr
             .store(0, std::sync::atomic::Ordering::Release);
 
-        // Clean up config callbacks after run completes
         miral_sys::clear_config_callbacks();
+        miral_sys::clear_runner_callbacks();
 
         if result != 0 {
             Err(format!("Server exited with code {}", result).into())

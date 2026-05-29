@@ -26,6 +26,9 @@
 #include <miral/keymap.h>
 #include <miral/x11_support.h>
 #include <miral/configuration_option.h>
+#include <miral/idle_listener.h>
+#include <miral/magnifier.h>
+#include <miral/session_lock_listener.h>
 
 #include <mir_toolkit/events/enums.h>
 #include <mir_toolkit/events/input/keyboard_event.h>
@@ -816,6 +819,32 @@ int32_t miral_runner_run_with_config(
         });
     }
 
+    if (runner.has_idle_listener)
+    {
+        miral::IdleListener idle_listener;
+        idle_listener
+            .on_dim([]() { rust_on_idle_dim_callback(); })
+            .on_off([]() { rust_on_idle_off_callback(); })
+            .on_wake([]() { rust_on_idle_wake_callback(); });
+        options.push_back(idle_listener);
+    }
+
+    if (runner.has_session_lock_listener)
+    {
+        options.push_back(miral::SessionLockListener{
+            []() { rust_on_session_lock_callback(); },
+            []() { rust_on_session_unlock_callback(); }});
+    }
+
+    if (runner.has_magnifier)
+    {
+        miral::Magnifier magnifier;
+        magnifier.enable(runner.magnifier_enabled)
+            .magnification(runner.magnifier_magnification)
+            .capture_size(mir::geometry::Size{runner.magnifier_width, runner.magnifier_height});
+        options.push_back(magnifier);
+    }
+
     // Convert vector to a single functor and run
     auto combined = [options = std::move(options)](mir::Server& server)
     {
@@ -834,6 +863,30 @@ void miral_runner_stop(MiralRunner& runner)
 void miral_runner_enable_external_launcher(MiralRunner& runner)
 {
     runner.has_external_launcher = true;
+}
+
+void miral_runner_enable_idle_listener(MiralRunner& runner)
+{
+    runner.has_idle_listener = true;
+}
+
+void miral_runner_enable_session_lock_listener(MiralRunner& runner)
+{
+    runner.has_session_lock_listener = true;
+}
+
+void miral_runner_enable_magnifier(
+    MiralRunner& runner,
+    float magnification,
+    int32_t width,
+    int32_t height,
+    bool enabled)
+{
+    runner.has_magnifier = true;
+    runner.magnifier_magnification = magnification;
+    runner.magnifier_width = width;
+    runner.magnifier_height = height;
+    runner.magnifier_enabled = enabled;
 }
 
 int32_t miral_launcher_launch(rust::Str command)

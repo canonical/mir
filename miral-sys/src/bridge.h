@@ -95,6 +95,13 @@ public:
     std::unique_ptr<miral::MirRunner> inner;
     miral::ExternalClientLauncher external_launcher;
     bool has_external_launcher = false;
+    bool has_idle_listener = false;
+    bool has_session_lock_listener = false;
+    bool has_magnifier = false;
+    float magnifier_magnification = 2.0f;
+    int magnifier_width = 400;
+    int magnifier_height = 300;
+    bool magnifier_enabled = true;
 
     MiralRunner(std::vector<std::string> args)
         : arg_strings(std::move(args))
@@ -126,6 +133,14 @@ void miral_runner_register_stop_callback(MiralRunner& runner);
 
 // External client launcher
 void miral_runner_enable_external_launcher(MiralRunner& runner);
+void miral_runner_enable_idle_listener(MiralRunner& runner);
+void miral_runner_enable_session_lock_listener(MiralRunner& runner);
+void miral_runner_enable_magnifier(
+    MiralRunner& runner,
+    float magnification,
+    int32_t width,
+    int32_t height,
+    bool enabled);
 int32_t miral_launcher_launch(rust::Str command);
 
 // Window info queries

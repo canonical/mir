@@ -282,6 +282,18 @@ pub mod ffi {
         /// Must be called before `miral_runner_run_with_config`. Causes the launcher to
         /// be registered with the server so `miral_launcher_launch` works after startup.
         fn miral_runner_enable_external_launcher(runner: Pin<&mut MiralRunner>);
+        /// Enable the idle listener for this runner.
+        fn miral_runner_enable_idle_listener(runner: Pin<&mut MiralRunner>);
+        /// Enable the session lock listener for this runner.
+        fn miral_runner_enable_session_lock_listener(runner: Pin<&mut MiralRunner>);
+        /// Enable the magnifier with the given settings.
+        fn miral_runner_enable_magnifier(
+            runner: Pin<&mut MiralRunner>,
+            magnification: f32,
+            width: i32,
+            height: i32,
+            enabled: bool,
+        );
 
         /// Launch an external client by command string.
         ///
@@ -535,6 +547,16 @@ pub mod ffi {
         fn rust_on_start_callback();
         /// Called from C++ when the server is stopping.
         fn rust_on_stop_callback();
+        /// Called from C++ when the display is about to dim.
+        fn rust_on_idle_dim_callback();
+        /// Called from C++ when the display is turned off.
+        fn rust_on_idle_off_callback();
+        /// Called from C++ when the display wakes up.
+        fn rust_on_idle_wake_callback();
+        /// Called from C++ when the session is locked.
+        fn rust_on_session_lock_callback();
+        /// Called from C++ when the session is unlocked.
+        fn rust_on_session_unlock_callback();
 
         // --- Configuration option callbacks (called from C++) ---
 
@@ -638,11 +660,17 @@ use std::cell::RefCell;
 
 type PolicyFactoryFn = Box<dyn FnOnce() -> Box<dyn PolicyBridge>>;
 type LifecycleCallback = Box<dyn FnOnce() + Send>;
+type RepeatingCallback = Box<dyn Fn() + Send>;
 
 thread_local! {
     static POLICY_FACTORY: RefCell<Option<PolicyFactoryFn>> = RefCell::new(None);
     static ON_START_CALLBACK: RefCell<Option<LifecycleCallback>> = RefCell::new(None);
     static ON_STOP_CALLBACK: RefCell<Option<LifecycleCallback>> = RefCell::new(None);
+    static ON_IDLE_DIM_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
+    static ON_IDLE_OFF_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
+    static ON_IDLE_WAKE_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
+    static ON_SESSION_LOCK_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
+    static ON_SESSION_UNLOCK_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
 }
 
 /// Set the policy factory that will be called when C++ creates the policy.
@@ -665,6 +693,52 @@ pub fn set_on_stop_callback(callback: LifecycleCallback) {
     ON_STOP_CALLBACK.with(|f| {
         *f.borrow_mut() = Some(callback);
     });
+}
+
+/// Set the callback for when the display is about to dim.
+pub fn set_on_idle_dim_callback(callback: RepeatingCallback) {
+    ON_IDLE_DIM_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Set the callback for when the display is turned off.
+pub fn set_on_idle_off_callback(callback: RepeatingCallback) {
+    ON_IDLE_OFF_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Set the callback for when the display wakes up.
+pub fn set_on_idle_wake_callback(callback: RepeatingCallback) {
+    ON_IDLE_WAKE_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Set the callback for when the session is locked.
+pub fn set_on_session_lock_callback(callback: RepeatingCallback) {
+    ON_SESSION_LOCK_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Set the callback for when the session is unlocked.
+pub fn set_on_session_unlock_callback(callback: RepeatingCallback) {
+    ON_SESSION_UNLOCK_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Clear all runner-scoped callbacks.
+pub fn clear_runner_callbacks() {
+    ON_START_CALLBACK.with(|f| *f.borrow_mut() = None);
+    ON_STOP_CALLBACK.with(|f| *f.borrow_mut() = None);
+    ON_IDLE_DIM_CALLBACK.with(|f| *f.borrow_mut() = None);
+    ON_IDLE_OFF_CALLBACK.with(|f| *f.borrow_mut() = None);
+    ON_IDLE_WAKE_CALLBACK.with(|f| *f.borrow_mut() = None);
+    ON_SESSION_LOCK_CALLBACK.with(|f| *f.borrow_mut() = None);
+    ON_SESSION_UNLOCK_CALLBACK.with(|f| *f.borrow_mut() = None);
 }
 
 // --- Functions called from C++ ---
@@ -899,6 +973,46 @@ fn rust_on_start_callback() {
 fn rust_on_stop_callback() {
     ON_STOP_CALLBACK.with(|f| {
         if let Some(callback) = f.borrow_mut().take() {
+            callback();
+        }
+    });
+}
+
+fn rust_on_idle_dim_callback() {
+    ON_IDLE_DIM_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow().as_ref() {
+            callback();
+        }
+    });
+}
+
+fn rust_on_idle_off_callback() {
+    ON_IDLE_OFF_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow().as_ref() {
+            callback();
+        }
+    });
+}
+
+fn rust_on_idle_wake_callback() {
+    ON_IDLE_WAKE_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow().as_ref() {
+            callback();
+        }
+    });
+}
+
+fn rust_on_session_lock_callback() {
+    ON_SESSION_LOCK_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow().as_ref() {
+            callback();
+        }
+    });
+}
+
+fn rust_on_session_unlock_callback() {
+    ON_SESSION_UNLOCK_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow().as_ref() {
             callback();
         }
     });
