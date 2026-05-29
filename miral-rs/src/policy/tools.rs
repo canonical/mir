@@ -142,8 +142,7 @@ impl WindowManagerTools {
     ///
     /// Returns a snapshot of the window's current properties.
     pub fn info_for(&self, window: &Window) -> WindowInfo {
-        let snapshot =
-            miral_sys::ffi::miral_tools_info_for_window_id(self.as_ref(), window.id());
+        let snapshot = miral_sys::ffi::miral_tools_info_for_window_id(self.as_ref(), window.id());
         WindowInfo::from_ffi(&snapshot, window.id())
     }
 

@@ -465,7 +465,7 @@ This section catalogs the remaining gaps between the Rust `miral-rs` crate and t
 - 🟡 Partially covered (specific gaps listed)
 - ❌ Completely missing
 
----
+______________________________________________________________________
 
 ### 1. Application Info (🟡 Partial)
 
@@ -495,7 +495,7 @@ impl ApplicationInfo {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 2. Window (🟡 Partial)
 
@@ -526,7 +526,7 @@ impl PartialOrd for Window { /* by internal id */ }
 impl Ord for Window { /* by internal id */ }
 ```
 
----
+______________________________________________________________________
 
 ### 3. WindowInfo (🟡 Partial — many getters missing)
 
@@ -633,7 +633,7 @@ pub struct AspectRatio {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 4. WindowSpecification (🟡 Partial — tiny subset exposed)
 
@@ -714,7 +714,7 @@ impl WindowSpecification {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 5. WindowManagerTools (🟡 Partial — core subset only)
 
@@ -819,7 +819,7 @@ pub struct PointF {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 6. Output (🟡 Partial — only id/extents/name exposed)
 
@@ -918,7 +918,7 @@ impl Output {
 pub fn equivalent_display_area(lhs: &Output, rhs: &Output) -> bool;
 ```
 
----
+______________________________________________________________________
 
 ### 7. Zone (🟡 Partial — only extents getter)
 
@@ -948,7 +948,7 @@ impl PartialEq for Zone {
 impl Eq for Zone {}
 ```
 
----
+______________________________________________________________________
 
 ### 8. Runner (🟡 Partial — builder exists but missing lifecycle methods)
 
@@ -1017,7 +1017,7 @@ impl MirRunner {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 9. WaylandExtensions (🟡 Partial — only enable/default)
 
@@ -1128,7 +1128,7 @@ pub unsafe fn application_for_wl_client(client: *mut wl_client) -> Option<Applic
 pub unsafe fn window_for_wl_resource(resource: *mut wl_resource) -> Option<Window>;
 ```
 
----
+______________________________________________________________________
 
 ### 10. WindowManagementPolicy trait (🟡 Partial — Advice enum needs workspace events)
 
@@ -1170,7 +1170,7 @@ pub enum Advice<'a> {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 11. Completely Missing: Display Configuration (❌)
 
@@ -1236,7 +1236,7 @@ impl DisplayConfiguration {
 impl ServerExtension for DisplayConfiguration { /* ... */ }
 ```
 
----
+______________________________________________________________________
 
 ### 12. Completely Missing: IdleListener (❌)
 
@@ -1264,7 +1264,7 @@ impl IdleListener {
 impl ServerExtension for IdleListener { /* ... */ }
 ```
 
----
+______________________________________________________________________
 
 ### 13. Completely Missing: SessionLockListener (❌)
 
@@ -1286,7 +1286,7 @@ impl SessionLockListener {
 impl ServerExtension for SessionLockListener { /* ... */ }
 ```
 
----
+______________________________________________________________________
 
 ### 14. Completely Missing: InputConfiguration (❌)
 
@@ -1345,7 +1345,7 @@ pub struct KeyboardConfig {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 15. Completely Missing: ApplicationAuthorizer (❌)
 
@@ -1381,7 +1381,7 @@ impl MirRunner {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 16. Completely Missing: ApplicationSwitcher (❌)
 
@@ -1425,7 +1425,7 @@ impl BasicApplicationSwitcher {
 impl ServerExtension for BasicApplicationSwitcher { /* ... */ }
 ```
 
----
+______________________________________________________________________
 
 ### 17. Completely Missing: Accessibility Features (❌)
 
@@ -1477,7 +1477,7 @@ impl StickyKeys { pub fn new() -> Self; }
 impl ServerExtension for StickyKeys {}
 ```
 
----
+______________________________________________________________________
 
 ### 18. Completely Missing: Cursor Configuration (❌)
 
@@ -1501,7 +1501,7 @@ impl CursorTheme {
 impl ServerExtension for CursorTheme {}
 ```
 
----
+______________________________________________________________________
 
 ### 19. Completely Missing: Event Filters (❌)
 
@@ -1529,7 +1529,7 @@ impl MirRunner {
 }
 ```
 
----
+______________________________________________________________________
 
 ### 20. Completely Missing: Other Startup/Lifecycle APIs (❌)
 
@@ -1560,7 +1560,7 @@ impl MirRunner {
 pub fn toolkit_event(tools: &WindowManagerTools, event: &InputEvent);
 ```
 
----
+______________________________________________________________________
 
 ### 21. Completely Missing: DisplayConfigurationOption (❌)
 
@@ -1578,38 +1578,38 @@ impl DisplayConfigurationOption { pub fn new() -> Self; }
 impl ServerExtension for DisplayConfigurationOption {}
 ```
 
----
+______________________________________________________________________
 
 ### 22. Intentionally Omitted
 
 The following C++ APIs are **not recommended** for the Rust binding:
 
-| Header | Reason |
-|--------|--------|
-| `lambda_as_function.h` | C++ utility; Rust closures cover this natively |
-| `canonical_window_manager.h` | Deprecated/legacy policy |
-| `floating_window_manager.h` | Example policy; users implement trait directly |
-| `minimal_window_manager.h` | Example policy; users implement trait directly |
-| `set_window_management_policy.h` | Replaced by `MirRunner::add_window_management_policy` |
-| `window_management_options.h` | Replaced by builder pattern on `MirRunner` |
-| `command_line_option.h` | Low-level; replaced by `ConfigurationOption` |
+| Header                                                                                                                | Reason                                                                         |
+| --------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `lambda_as_function.h`                                                                                                | C++ utility; Rust closures cover this natively                                 |
+| `canonical_window_manager.h`                                                                                          | Deprecated/legacy policy                                                       |
+| `floating_window_manager.h`                                                                                           | Example policy; users implement trait directly                                 |
+| `minimal_window_manager.h`                                                                                            | Example policy; users implement trait directly                                 |
+| `set_window_management_policy.h`                                                                                      | Replaced by `MirRunner::add_window_management_policy`                          |
+| `window_management_options.h`                                                                                         | Replaced by builder pattern on `MirRunner`                                     |
+| `command_line_option.h`                                                                                               | Low-level; replaced by `ConfigurationOption`                                   |
 | `live_config.h` / `live_config_ini_file.h` / `live_config_ini_file_with_overrides.h` / `live_config_overrides_list.h` | Internal live-config machinery; `ConfigurationOption` is the public-facing API |
-| `output_filter.h` | Niche; defer to future release |
-| `custom_renderer.h` | Advanced; requires GL context sharing across FFI; defer |
-| `wayland_tools.h` | Internal toolkit; not needed by compositor authors |
+| `output_filter.h`                                                                                                     | Niche; defer to future release                                                 |
+| `custom_renderer.h`                                                                                                   | Advanced; requires GL context sharing across FFI; defer                        |
+| `wayland_tools.h`                                                                                                     | Internal toolkit; not needed by compositor authors                             |
 
----
+______________________________________________________________________
 
 ### Summary: Priority Order for Implementation
 
-| Priority | Category | Items |
-|----------|----------|-------|
-| **P0 — Critical** | Window management core | WindowInfo full accessors, WindowSpecification full fields, WindowManagerTools remaining methods |
-| **P1 — High** | App lifecycle | ApplicationInfo accessors, Output full accessors, Zone full API |
-| **P2 — Medium** | Configuration & extensions | WaylandExtensions (conditionally_enable, protocol constants), DisplayConfiguration, InputConfiguration, Runner lifecycle methods |
-| **P3 — Medium** | Events & auth | Event filters, ApplicationAuthorizer, FocusStealing |
-| **P4 — Lower** | Convenience | IdleListener, SessionLockListener, ApplicationSwitcher, Cursor config |
-| **P5 — Low** | Accessibility | All 8 accessibility features (simple ServerExtension wrappers) |
+| Priority          | Category                   | Items                                                                                                                            |
+| ----------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **P0 — Critical** | Window management core     | WindowInfo full accessors, WindowSpecification full fields, WindowManagerTools remaining methods                                 |
+| **P1 — High**     | App lifecycle              | ApplicationInfo accessors, Output full accessors, Zone full API                                                                  |
+| **P2 — Medium**   | Configuration & extensions | WaylandExtensions (conditionally_enable, protocol constants), DisplayConfiguration, InputConfiguration, Runner lifecycle methods |
+| **P3 — Medium**   | Events & auth              | Event filters, ApplicationAuthorizer, FocusStealing                                                                              |
+| **P4 — Lower**    | Convenience                | IdleListener, SessionLockListener, ApplicationSwitcher, Cursor config                                                            |
+| **P5 — Low**      | Accessibility              | All 8 accessibility features (simple ServerExtension wrappers)                                                                   |
 
 ## Notes
 

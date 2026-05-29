@@ -263,8 +263,7 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
             .iter()
             .map(|&id| Window::from_ffi(id, Point::default(), Size::default()))
             .collect();
-        self.policy
-            .advise(Advice::AddingToWorkspace { windows });
+        self.policy.advise(Advice::AddingToWorkspace { windows });
     }
 
     fn advise_removing_from_workspace(&mut self, window_ids: &[u64]) {

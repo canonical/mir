@@ -42,8 +42,7 @@ impl WaylandExtensions {
     /// The `zwlr_layer_shell_v1` protocol for layer surfaces (panels, overlays).
     pub const LAYER_SHELL: &'static str = "zwlr_layer_shell_v1";
     /// The `zwlr_foreign_toplevel_management_v1` protocol for managing toplevels from other clients.
-    pub const FOREIGN_TOPLEVEL_MANAGEMENT: &'static str =
-        "zwlr_foreign_toplevel_management_v1";
+    pub const FOREIGN_TOPLEVEL_MANAGEMENT: &'static str = "zwlr_foreign_toplevel_management_v1";
     /// The `ext_foreign_toplevel_list_v1` protocol for listing toplevels.
     pub const FOREIGN_TOPLEVEL_LIST: &'static str = "ext_foreign_toplevel_list_v1";
     /// The `zwp_virtual_keyboard_manager_v1` protocol for virtual keyboards.
@@ -88,8 +87,7 @@ impl WaylandExtensions {
 
     /// Check whether an extension is enabled.
     pub fn is_enabled(&self, extension: &str) -> bool {
-        self.enabled.iter().any(|e| e == extension)
-            && !self.disabled.iter().any(|e| e == extension)
+        self.enabled.iter().any(|e| e == extension) && !self.disabled.iter().any(|e| e == extension)
     }
 
     /// Get the list of enabled extensions.

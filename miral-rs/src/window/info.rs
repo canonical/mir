@@ -2,8 +2,8 @@
 
 use crate::geometry::{Point, Rectangle, Size};
 use crate::window::{
-    AspectRatio, DepthLayer, FocusMode, OrientationMode, PlacementGravity,
-    PointerConfinementState, ShellChrome, TiledEdges, Window, WindowState, WindowType,
+    AspectRatio, DepthLayer, FocusMode, OrientationMode, PlacementGravity, PointerConfinementState,
+    ShellChrome, TiledEdges, Window, WindowState, WindowType,
 };
 
 /// Provides read-only information about a window.
