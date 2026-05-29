@@ -149,6 +149,48 @@ impl CppBuilder {
                     }
                 }
 
+                if !class.protected_constructor_args.is_empty()
+                    || !class.protected_members.is_empty()
+                {
+                    result.push_str("protected:\n");
+
+                    if !class.protected_constructor_args.is_empty() {
+                        let ctor_args_str: Vec<String> = class
+                            .protected_constructor_args
+                            .iter()
+                            .map(|arg| {
+                                format!(
+                                    "{} {}",
+                                    cpp_arg_type_to_cpp_source(&arg.cpp_type, true),
+                                    arg.name
+                                )
+                            })
+                            .collect();
+                        let initialiser_list: Vec<String> = class
+                            .protected_constructor_args
+                            .iter()
+                            .map(|arg| format!("{} ( std::move({}) )", arg.name, arg.name))
+                            .collect();
+                        result.push_str(&format!(
+                            "    {}({}) : {} {{}}\n",
+                            class.name,
+                            ctor_args_str.join(", "),
+                            initialiser_list.join(", ")
+                        ));
+                        result.push_str("\n");
+                    }
+
+                    for member in &class.protected_members {
+                        result.push_str(&format!(
+                            "    {} {};\n",
+                            cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            member.name
+                        ));
+                    }
+
+                    result.push_str("\n");
+                }
+
                 result.push_str("private:\n");
                 for member in &class.private_members {
                     if member.optional {
@@ -338,6 +380,8 @@ pub struct CppClass {
     pub name: String,
     pub methods: Vec<CppMethod>,
     pub enums: Vec<CppEnum>,
+    pub protected_constructor_args: Vec<CppArg>,
+    pub protected_members: Vec<CppArg>,
     pub private_members: Vec<CppArg>,
 }
 
@@ -347,6 +391,8 @@ impl CppClass {
             name: sanitize_identifier(&name.into()),
             methods: vec![],
             enums: vec![],
+            protected_constructor_args: vec![],
+            protected_members: vec![],
             private_members: vec![],
         }
     }
@@ -363,6 +409,20 @@ impl CppClass {
         self.enums
             .last_mut()
             .expect("enums cannot be empty after push")
+    }
+
+    pub fn add_protected_constructor_arg(&mut self, arg: CppArg) -> &mut CppArg {
+        self.protected_constructor_args.push(arg);
+        self.protected_constructor_args
+            .last_mut()
+            .expect("protected_constructor_args cannot be empty after push")
+    }
+
+    pub fn add_protected_member(&mut self, member: CppArg) -> &mut CppArg {
+        self.protected_members.push(member);
+        self.protected_members
+            .last_mut()
+            .expect("members cannot be empty after push")
     }
 
     pub fn add_private_member(&mut self, member: CppArg) -> &mut CppArg {
@@ -460,11 +520,13 @@ pub enum CppType {
     CppU32,
     CppF64,
     String,
+    Str,
     Object(String),
     Weak(String),
     Array,
     Fd,
     Box(String),
+    Bool,
 }
 
 /// Convert a CppType intended as a return value to its corresponding
@@ -475,6 +537,7 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::CppU32 => "uint32_t".to_string(),
         CppType::CppF64 => "double".to_string(),
         CppType::String => "std::string".to_string(),
+        CppType::Str => "rust::Str".to_string(),
         CppType::Object(name) => {
             format!("std::shared_ptr<{}>", name)
         }
@@ -486,6 +549,7 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
         CppType::Box(name) => {
             format!("rust::Box<{}> const&", name)
         }
+        CppType::Bool => "bool".to_string(),
     }
 }
 
@@ -511,8 +575,10 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         }
         (CppType::String, true) => "rust::String".into(),
         (CppType::String, false) => "std::string const&".into(),
+        (CppType::Str, _) => "rust::Str".into(),
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
         (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
+        (CppType::Bool, _) => "bool".to_string(),
     }
 }
 
@@ -524,6 +590,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
         CppType::CppU32 => quote! { u32 },
         CppType::CppF64 => quote! { f64 },
         CppType::String => quote! { &CxxString },
+        CppType::Str => quote! { &str },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             quote! { SharedPtr<#type_name> }
@@ -535,6 +602,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
             let type_name = format_ident!("{}", name);
             quote! { &Box<#type_name> }
         }
+        CppType::Bool => quote! { bool },
     }
 }
 
@@ -555,6 +623,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
                 quote! { &CxxString }
             }
         }
+        CppType::Str => quote! { &str },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             quote! { &SharedPtr<#type_name> }
@@ -576,6 +645,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
                 quote! { &Box<#type_name> }
             }
         }
+        CppType::Bool => quote! { bool },
     }
 }
 
