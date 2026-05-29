@@ -59,5 +59,8 @@ impl input::LibinputInterface for LibinputInterfaceImpl {
     /// Called by libinput when it is done with a device fd.
     ///
     /// The `OwnedFd` closes the file descriptor automatically when dropped.
-    fn close_restricted(&mut self, _fd: io::OwnedFd) {}
+    fn close_restricted(&mut self, fd: io::OwnedFd) {
+        // We handle FD externally, from UDev/the ConsoleProvider
+        std::mem::forget(fd);
+    }
 }

@@ -37,9 +37,6 @@ namespace mi = mir::input;
 namespace miers = mi::evdev_rs;
 namespace md = mir::dispatch;
 
-namespace
-{
-
 /// Thin observer that forwards device lifecycle events to the Rust platform
 /// via an ActionQueue (ensuring they run on the input dispatch thread).
 class InputDeviceObserver : public mir::Device::Observer
@@ -49,94 +46,27 @@ public:
         std::string devnode,
         uint64_t devnum,
         std::shared_ptr<md::ActionQueue> device_queue,
-        rust::Box<miers::PlatformRs>& platform_impl)
+        std::weak_ptr<miers::Platform::Self> platform_self)
         : devnode{std::move(devnode)},
           devnum{devnum},
           device_queue{std::move(device_queue)},
-          platform_impl{platform_impl}
+          platform_self{std::move(platform_self)}
     {
     }
 
-    void activated(mir::Fd&& device_fd) override
-    {
-        mir::log_info("evdev-rs: observer activated() for %s (devnum=%lu, fd=%d)",
-                       devnode.c_str(), static_cast<unsigned long>(devnum), static_cast<int>(device_fd));
-
-        if (!platform_impl->is_running())
-        {
-            mir::log_info("evdev-rs: activated() ignored — platform not running");
-            return;
-        }
-
-        // dup() so that mir::Fd's destructor closes the original without
-        // invalidating the fd we hand to libinput via open_restricted().
-        int const duped = ::dup(static_cast<int>(device_fd));
-        if (duped < 0)
-        {
-            mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
-            return;
-        }
-
-        mir::log_info("evdev-rs: enqueuing on_device_activated for %s (duped fd=%d)", devnode.c_str(), duped);
-        device_queue->enqueue(
-            [devnode = devnode, devnum = devnum, fd = duped, &platform_impl = platform_impl]()
-            {
-                if (!platform_impl->is_running())
-                {
-                    mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", fd);
-                    ::close(fd);
-                    return;
-                }
-                platform_impl->on_device_activated(devnode, devnum, fd);
-            });
-    }
-
-    void suspended() override
-    {
-        mir::log_info("evdev-rs: observer suspended() for %s (devnum=%lu)",
-                       devnode.c_str(), static_cast<unsigned long>(devnum));
-
-        if (!platform_impl->is_running())
-        {
-            mir::log_info("evdev-rs: suspended() ignored — platform not running");
-            return;
-        }
-
-        device_queue->enqueue(
-            [devnode = devnode, devnum = devnum, &platform_impl = platform_impl]()
-            {
-                if (!platform_impl->is_running())
-                    return;
-                platform_impl->on_device_suspended(devnode, devnum);
-            });
-    }
-
-    void removed() override
-    {
-        mir::log_info("evdev-rs: observer removed() for %s (devnum=%lu)",
-                       devnode.c_str(), static_cast<unsigned long>(devnum));
-
-        if (!platform_impl->is_running())
-        {
-            mir::log_info("evdev-rs: removed() ignored — platform not running");
-            return;
-        }
-
-        device_queue->enqueue(
-            [devnode = devnode, devnum = devnum, &platform_impl = platform_impl]()
-            {
-                if (!platform_impl->is_running())
-                    return;
-                platform_impl->on_device_removed(devnode, devnum);
-            });
-    }
+    void activated(mir::Fd&& device_fd) override;
+    void suspended() override;
+    void removed() override;
 
 private:
     std::string devnode;
     uint64_t devnum;
     std::shared_ptr<md::ActionQueue> device_queue;
-    rust::Box<miers::PlatformRs>& platform_impl;
+    std::weak_ptr<miers::Platform::Self> platform_self;
 };
+
+namespace
+{
 
 template <typename Impl>
 class InputDevice : public mi::InputDevice
@@ -244,12 +174,112 @@ public:
     }
 
     std::shared_ptr<PlatformBridge> bridge;
-    rust::Box<PlatformRs> platform_impl;
+    rust::Box<miers::PlatformRs> platform_impl;
     std::shared_ptr<md::ReadableFd> libinput_dispatch;
     std::shared_ptr<md::ReadableFd> udev_dispatch;
     std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
     std::shared_ptr<md::ActionQueue> device_queue;
 };
+
+void InputDeviceObserver::activated(mir::Fd&& device_fd)
+{
+    mir::log_info("evdev-rs: observer activated() for %s (devnum=%lu, fd=%d)",
+                   devnode.c_str(), static_cast<unsigned long>(devnum), static_cast<int>(device_fd));
+
+    auto const locked = platform_self.lock();
+    if (!locked)
+    {
+        mir::log_error("evdev-rs: activated() ignored — platform is not allocated");
+        return;
+    }
+
+    auto& platform_impl = locked->platform_impl;
+    if (!platform_impl->is_running())
+    {
+        mir::log_info("evdev-rs: activated() ignored — platform not running");
+        return;
+    }
+
+    // dup() so that mir::Fd's destructor closes the original without
+    // invalidating the fd we hand to libinput via open_restricted().
+    int const duped = ::dup(static_cast<int>(device_fd));
+    if (duped < 0)
+    {
+        mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
+        return;
+    }
+
+    mir::log_info("evdev-rs: enqueuing on_device_activated for %s (duped fd=%d)", devnode.c_str(), duped);
+    device_queue->enqueue(
+        [devnode = devnode, devnum = devnum, fd = duped, &platform_impl = platform_impl]()
+        {
+            if (!platform_impl->is_running())
+            {
+                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", fd);
+                ::close(fd);
+                return;
+            }
+            platform_impl->on_device_activated(devnode, devnum, fd);
+        });
+}
+
+void InputDeviceObserver::suspended()
+{
+    mir::log_info("evdev-rs: observer suspended() for %s (devnum=%lu)",
+                   devnode.c_str(), static_cast<unsigned long>(devnum));
+
+    auto const locked = platform_self.lock();
+    if (!locked)
+    {
+        mir::log_error("evdev-rs: suspended() ignored — platform is not allocated");
+        return;
+    }
+
+    auto& platform_impl = locked->platform_impl;
+
+    if (!platform_impl->is_running())
+    {
+        mir::log_info("evdev-rs: suspended() ignored — platform not running");
+        return;
+    }
+
+    device_queue->enqueue(
+        [devnode = devnode, devnum = devnum, &platform_impl = platform_impl]()
+        {
+            if (!platform_impl->is_running())
+                return;
+            platform_impl->on_device_suspended(devnode, devnum);
+        });
+}
+
+void InputDeviceObserver::removed()
+{
+    mir::log_info("evdev-rs: observer removed() for %s (devnum=%lu)",
+                   devnode.c_str(), static_cast<unsigned long>(devnum));
+
+    auto const locked = platform_self.lock();
+    if (!locked)
+    {
+        mir::log_error("evdev-rs: removed() ignored — platform is not allocated");
+        return;
+    }
+
+    auto& platform_impl = locked->platform_impl;
+
+    if (!platform_impl->is_running())
+    {
+        mir::log_info("evdev-rs: removed() ignored — platform not running");
+        return;
+    }
+
+    device_queue->enqueue(
+        [devnode = devnode, devnum = devnum, &platform_impl = platform_impl]()
+        {
+            if (!platform_impl->is_running())
+                return;
+            platform_impl->on_device_removed(devnode, devnum);
+        });
+}
 
 miers::Platform::Platform(
     std::shared_ptr<ConsoleServices> const& console,
@@ -363,7 +393,7 @@ std::unique_ptr<mir::Device::Observer> miers::Platform::create_device_observer(
     std::string const& devnode, uint64_t devnum)
 {
     return std::make_unique<InputDeviceObserver>(
-        devnode, devnum, self->device_queue, self->platform_impl);
+        devnode, devnum, self->device_queue, self);
 }
 
 std::shared_ptr<mi::InputDevice> miers::Platform::create_input_device(int device_id) const

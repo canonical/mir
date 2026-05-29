@@ -19,6 +19,8 @@
 #include <memory>
 #include <string>
 
+class InputDeviceObserver;
+
 namespace mir
 {
 class ConsoleServices;
@@ -50,6 +52,7 @@ public:
 private:
     class Self;
     std::shared_ptr<Self> self;
+    friend class ::InputDeviceObserver;
 };
 }
 }
