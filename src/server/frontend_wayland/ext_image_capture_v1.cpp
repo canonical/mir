@@ -726,7 +726,7 @@ void mf::ExtImageCopyCaptureFrameV1::attach_buffer(
 {
     if (capture_has_been_called)
     {
-         throw wayland::ProtocolError{
+        throw wayland::ProtocolError{
             resource, Error::already_captured,
             "Cannot attach buffer after capture"};
     }

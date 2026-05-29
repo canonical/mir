@@ -570,7 +570,7 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
         break;
 
     default:
-         throw mw::ProtocolError{
+        throw mw::ProtocolError{
             resource,
             Error::invalid_keyboard_interactivity,
             "Invalid keyboard interactivity %d",
