@@ -10,17 +10,7 @@ For build instructions, and a brief guide describing how to run the *Mir binarie
 
 ## Style guide
 
-There is a *coding style guide* in the guides subdirectory. To build it into an
-*html* file:
-
-```
-$ mkdir build
-$ cd build
-$ cmake ..
-$ make guides
-```
-
-(Or online, [here](https://canonical.com/mir/docs/latest/_static/cppguide)).
+See the *[style guide](./doc/sphinx/contributing/reference/cppguide.md)* for the C++ style used in Mir.
 
 ## Code structure
 
