@@ -817,6 +817,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     // Use ffi_fwd.h (generated alongside the protocol headers) instead of the
     // CXX-generated ffi.rs.h to avoid a circular include dependency:
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
+    builder.add_header_include("\"lifetime_tracker.h\"");
     builder.add_header_include("\"ffi_fwd.h\"");
     builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
@@ -852,6 +853,7 @@ fn write_cpp_source(builder: &CppBuilder) {
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let class_name = format_wayland_interface_to_cpp_class(&interface.name);
     let mut class = CppClass::new(class_name);
+    class.set_superclass("LifetimeTracker");
     let methods = interface
         .items
         .iter()
@@ -930,12 +932,13 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         "client",
         false,
     ));
-    class.add_protected_member(CppArg::new(
-        CppType::Box("WaylandClient".to_string()),
-        "client",
-        false,
-    ));
-
+    class
+        .add_public_member(CppArg::new(
+            CppType::Box("WaylandClient".to_string()),
+            "client",
+            false,
+        ))
+        .set_const();
     for method in methods {
         class.add_method(method);
     }
