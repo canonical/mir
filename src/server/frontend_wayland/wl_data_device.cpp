@@ -101,24 +101,24 @@ public:
     {
         if (!mf::validate_dnd_actions(dnd_actions))
         {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_action_mask,
-                "Invalid DnD actions 0x%x", dnd_actions);
+                "Invalid DnD actions 0x%x", dnd_actions};
         }
         if (!mf::validate_dnd_action(preferred_action))
         {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_action,
-                "Invalid DnD action 0x%x", preferred_action);
+                "Invalid DnD action 0x%x", preferred_action};
         }
         if (preferred_action != mw::DataDeviceManager::DndAction::none && (dnd_actions & preferred_action) == 0)
         {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_action,
-                "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions);
+                "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions};
         }
 
         const auto action = source->offer_set_actions(dnd_actions, preferred_action);
@@ -209,8 +209,7 @@ void mf::WlDataDevice::start_drag(
     // "The client must have an active implicit grab that matches the serial"
     if (!weak_surface || weak_surface.value().client != client || WlSurface::from(origin)->client != client)
     {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "The client must have an active implicit grab"));
+        throw mw::ProtocolError{resource, Error::role, "The client must have an active implicit grab"};
     }
 
     validate_pointer_event(client->event_for(serial));
@@ -239,15 +238,13 @@ void mf::WlDataDevice::validate_pointer_event(std::optional<std::shared_ptr<MirE
 {
     if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
     {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to an input event"));
+        throw mw::ProtocolError{this->resource, Error::role, "Serial does not correspond to an input event"};
     }
 
     auto const input_ev = mir_event_get_input_event(drag_event.value().get());
     if (mir_input_event_get_type(input_ev) != mir_input_event_type_pointer)
     {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to a pointer event"));
+        throw mw::ProtocolError{this->resource, Error::role, "Serial does not correspond to a pointer event"};
     }
 }
 

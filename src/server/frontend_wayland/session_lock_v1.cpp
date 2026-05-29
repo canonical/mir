@@ -246,10 +246,10 @@ void mf::SessionLockV1::destroy()
     }
     else
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_destroy,
-            "Destroy requested but session is still locked"));
+            "Destroy requested but session is still locked"};
     }
 }
 
@@ -257,10 +257,10 @@ void mf::SessionLockV1::unlock_and_destroy()
 {
     if (!manager.try_unlock(this))
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_unlock,
-            "Unlock requested but locked event was never sent"));
+            "Unlock requested but locked event was never sent"};
     }
     else
     {
