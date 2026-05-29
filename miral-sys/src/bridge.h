@@ -155,6 +155,20 @@ std::unique_ptr<MiralWindow> miral_tools_window_at(MiralTools const& tools, Poin
 Rectangle miral_tools_active_output(MiralTools const& tools);
 ZoneSnapshot miral_tools_active_application_zone(MiralTools const& tools);
 
+// New tools functions
+WindowInfoSnapshot miral_tools_info_for_window_id(MiralTools const& tools, uint64_t window_id);
+void miral_tools_swap_tree_order_by_id(MiralTools& tools, uint64_t window_id_a, uint64_t window_id_b);
+void miral_tools_send_tree_to_back_by_id(MiralTools& tools, uint64_t window_id);
+void miral_tools_drag_active_window(MiralTools& tools, Displacement movement);
+void miral_tools_move_cursor_to(MiralTools& tools, Point point);
+rust::Vec<uint64_t> miral_tools_all_window_ids(MiralTools const& tools);
+uint64_t miral_tools_window_id_at(MiralTools const& tools, Point point);
+Rectangle miral_tools_place_and_size_for_state(
+    MiralTools const& tools,
+    uint64_t window_id,
+    int32_t new_state,
+    Rectangle const& rect);
+
 // Window queries
 Point miral_window_top_left(MiralWindow const& window);
 Size miral_window_size(MiralWindow const& window);

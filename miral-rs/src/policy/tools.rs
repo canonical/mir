@@ -2,8 +2,9 @@
 
 use std::pin::Pin;
 
-use crate::geometry::{Point, Rectangle, Size};
-use crate::window::{Window, WindowSpecification};
+use crate::geometry::{Displacement, Point, Rectangle, Size};
+use crate::output::Zone;
+use crate::window::{Window, WindowInfo, WindowSpecification, WindowState};
 
 /// Provides actions that a policy can take to manage windows.
 ///
@@ -118,8 +119,13 @@ impl WindowManagerTools {
     }
 
     /// Drag a window by the given displacement.
-    pub fn drag_window(&self, window: &Window, movement: crate::geometry::Displacement) {
+    pub fn drag_window(&self, window: &Window, movement: Displacement) {
         miral_sys::ffi::miral_tools_drag_window_by_id(self.pin_mut(), window.id(), movement.into());
+    }
+
+    /// Drag the currently active window by the given displacement.
+    pub fn drag_active_window(&self, movement: Displacement) {
+        miral_sys::ffi::miral_tools_drag_active_window(self.pin_mut(), movement.into());
     }
 
     /// Get the active (focused) window, if any.
@@ -132,13 +138,22 @@ impl WindowManagerTools {
         }
     }
 
+    /// Get the info for a specific window.
+    ///
+    /// Returns a snapshot of the window's current properties.
+    pub fn info_for(&self, window: &Window) -> WindowInfo {
+        let snapshot =
+            miral_sys::ffi::miral_tools_info_for_window_id(self.as_ref(), window.id());
+        WindowInfo::from_ffi(&snapshot, window.id())
+    }
+
     /// Get the active application zone (the area available for tiling).
     ///
     /// The application zone is the output area minus any reserved space
     /// (e.g., panels, docks).
-    pub fn active_application_zone(&self) -> Rectangle {
-        let zone = miral_sys::ffi::miral_tools_active_application_zone(self.as_ref());
-        zone.extents.into()
+    pub fn active_application_zone(&self) -> Zone {
+        let snapshot = miral_sys::ffi::miral_tools_active_application_zone(self.as_ref());
+        Zone::from_ffi(&snapshot)
     }
 
     /// Get the rectangle of the active output.
@@ -150,6 +165,69 @@ impl WindowManagerTools {
     pub fn count_applications(&self) -> u32 {
         miral_sys::ffi::miral_tools_count_applications(self.as_ref())
     }
+
+    /// Swap two windows in the stacking order.
+    ///
+    /// After this call, `window_a` will be at `window_b`'s old stacking position
+    /// and vice versa.
+    pub fn swap_tree_order(&self, window_a: &Window, window_b: &Window) {
+        miral_sys::ffi::miral_tools_swap_tree_order_by_id(
+            self.pin_mut(),
+            window_a.id(),
+            window_b.id(),
+        );
+    }
+
+    /// Send a window tree to the back of the stacking order.
+    pub fn send_tree_to_back(&self, window: &Window) {
+        miral_sys::ffi::miral_tools_send_tree_to_back_by_id(self.pin_mut(), window.id());
+    }
+
+    /// Move the cursor to a specific point.
+    pub fn move_cursor_to(&self, point: Point) {
+        miral_sys::ffi::miral_tools_move_cursor_to(self.pin_mut(), point.into());
+    }
+
+    /// Find the window at a given point.
+    ///
+    /// Returns the topmost window under the point, or `None` if no window is there.
+    pub fn window_at(&self, point: Point) -> Option<Window> {
+        let id = miral_sys::ffi::miral_tools_window_id_at(self.as_ref(), point.into());
+        if id == 0 {
+            None
+        } else {
+            Some(Window::from_ffi(id, Point::default(), Size::default()))
+        }
+    }
+
+    /// Get all window IDs in the active workspace.
+    ///
+    /// Returns a list of all windows, which can be used for iteration.
+    pub fn all_windows(&self) -> Vec<Window> {
+        let ids = miral_sys::ffi::miral_tools_all_window_ids(self.as_ref());
+        ids.into_iter()
+            .map(|id| Window::from_ffi(id, Point::default(), Size::default()))
+            .collect()
+    }
+
+    /// Calculate the placement for a window given a new state.
+    ///
+    /// Returns the rectangle the window would occupy in the given state.
+    pub fn place_and_size_for_state(
+        &self,
+        window: &Window,
+        new_state: WindowState,
+        current_rect: Rectangle,
+    ) -> Rectangle {
+        let ffi_rect: miral_sys::ffi::Rectangle = current_rect.into();
+        miral_sys::ffi::miral_tools_place_and_size_for_state(
+            self.as_ref(),
+            window.id(),
+            new_state.to_raw(),
+            &ffi_rect,
+        )
+        .into()
+    }
 }
 
 // WindowManagerTools is not Clone (raw pointer semantics) but can be Debug
@@ -158,5 +236,11 @@ impl std::fmt::Debug for WindowManagerTools {
         f.debug_struct("WindowManagerTools")
             .field("raw", &self.raw)
             .finish()
+    }
+}
+
+impl Default for WindowManagerTools {
+    fn default() -> Self {
+        Self::uninit()
     }
 }

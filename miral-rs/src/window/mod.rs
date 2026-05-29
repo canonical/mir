@@ -11,5 +11,9 @@ mod window;
 
 pub use info::WindowInfo;
 pub use specification::WindowSpecification;
-pub use state::{WindowState, WindowType};
+pub use state::{
+    AspectRatio, DepthLayer, FocusMode, FocusStealing, InputReceptionMode, OrientationMode,
+    PlacementGravity, PlacementHints, PointerConfinementState, ResizeEdge, ShellChrome, TiledEdges,
+    WindowState, WindowType,
+};
 pub use window::Window;

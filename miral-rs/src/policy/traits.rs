@@ -119,6 +119,18 @@ pub enum Advice {
         /// The removed zone.
         zone: Zone,
     },
+
+    // --- Workspace lifecycle ---
+    /// Windows are being added to a workspace.
+    AddingToWorkspace {
+        /// The windows being added.
+        windows: Vec<Window>,
+    },
+    /// Windows are being removed from a workspace.
+    RemovingFromWorkspace {
+        /// The windows being removed.
+        windows: Vec<Window>,
+    },
 }
 
 /// The primary trait for implementing a window management policy.

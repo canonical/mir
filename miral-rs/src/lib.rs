@@ -25,12 +25,14 @@
 //! ```rust,no_run
 //! use miral::prelude::*;
 //!
+//! #[derive(Default)]
 //! struct MyPolicy {
 //!     tools: WindowManagerTools,
 //! }
 //!
 //! impl WindowManagementPolicy for MyPolicy {
 //!     fn tools(&self) -> &WindowManagerTools { &self.tools }
+//!     fn tools_mut(&mut self) -> &mut WindowManagerTools { &mut self.tools }
 //! }
 //!
 //! fn main() {
@@ -67,11 +69,15 @@ pub mod prelude {
     pub use crate::configuration::ConfigurationOption;
     pub use crate::decorations::Decorations;
     pub use crate::extensions::{ServerExtension, WaylandExtensions, X11Support};
-    pub use crate::geometry::{Displacement, Point, Rectangle, Size};
+    pub use crate::geometry::{Displacement, Point, PointF, Rectangle, Size};
     pub use crate::input::{InputEvent, KeyAction, KeyboardEvent, PointerEvent, TouchEvent};
     pub use crate::keymap::Keymap;
-    pub use crate::output::{Output, Zone};
+    pub use crate::output::{FormFactor, Orientation, Output, OutputType, PhysicalSizeMM, PowerMode, Zone};
     pub use crate::policy::{Advice, WindowManagementPolicy, WindowManagerTools};
-    pub use crate::runner::MirRunner;
-    pub use crate::window::{Window, WindowInfo, WindowSpecification, WindowState, WindowType};
+    pub use crate::runner::{MirRunner, RunnerHandle};
+    pub use crate::window::{
+        AspectRatio, DepthLayer, FocusMode, FocusStealing, InputReceptionMode, OrientationMode,
+        PlacementGravity, PlacementHints, PointerConfinementState, ResizeEdge, ShellChrome,
+        TiledEdges, Window, WindowInfo, WindowSpecification, WindowState, WindowType,
+    };
 }

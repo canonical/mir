@@ -115,6 +115,32 @@ pub mod ffi {
         can_be_active: bool,
         is_visible: bool,
         focus_mode: i32,
+        restore_rect: Rectangle,
+        width_inc: i32,
+        height_inc: i32,
+        min_aspect_width: i32,
+        min_aspect_height: i32,
+        max_aspect_width: i32,
+        max_aspect_height: i32,
+        has_output_id: bool,
+        output_id: i32,
+        preferred_orientation: i32,
+        confine_pointer: i32,
+        shell_chrome: i32,
+        attached_edges: u32,
+        has_exclusive_rect: bool,
+        has_exclusive_rect_value: bool,
+        exclusive_rect: Rectangle,
+        ignore_exclusion_zones: bool,
+        has_clip_area: bool,
+        clip_area: Rectangle,
+        application_id: String,
+        visible_on_lock_screen: bool,
+        tiled_edges: u32,
+        alpha: f32,
+        parent_id: u64,
+        must_have_parent: bool,
+        must_not_have_parent: bool,
     }
 
     /// Read-only snapshot of application information passed across FFI.
@@ -137,6 +163,9 @@ pub mod ffi {
         power_mode: i32,
         orientation: i32,
         form_factor: i32,
+        output_type: i32,
+        physical_width_mm: i32,
+        physical_height_mm: i32,
     }
 
     /// Read-only snapshot of zone information passed across FFI.
@@ -161,6 +190,28 @@ pub mod ffi {
         name: String,
         has_parent: bool,
         parent_id: u64,
+        has_min_width: bool,
+        min_width: i32,
+        has_min_height: bool,
+        min_height: i32,
+        has_max_width: bool,
+        max_width: i32,
+        has_max_height: bool,
+        max_height: i32,
+        has_depth_layer: bool,
+        depth_layer: i32,
+        has_focus_mode: bool,
+        focus_mode: i32,
+        has_shell_chrome: bool,
+        shell_chrome: i32,
+        has_preferred_orientation: bool,
+        preferred_orientation: i32,
+        has_confine_pointer: bool,
+        confine_pointer: i32,
+        has_attached_edges: bool,
+        attached_edges: u32,
+        has_visible_on_lock_screen: bool,
+        visible_on_lock_screen: bool,
     }
 
     /// Descriptor for a configuration option, passed from Rust to C++.
@@ -294,6 +345,32 @@ pub mod ffi {
         fn miral_tools_active_output(tools: &MiralTools) -> Rectangle;
         /// Get the active application zone.
         fn miral_tools_active_application_zone(tools: &MiralTools) -> ZoneSnapshot;
+        /// Get the info snapshot for a window by ID.
+        fn miral_tools_info_for_window_id(tools: &MiralTools, window_id: u64)
+            -> WindowInfoSnapshot;
+        /// Swap two windows in the stacking order by their IDs.
+        fn miral_tools_swap_tree_order_by_id(
+            tools: Pin<&mut MiralTools>,
+            window_id_a: u64,
+            window_id_b: u64,
+        );
+        /// Send a window tree to the back by ID.
+        fn miral_tools_send_tree_to_back_by_id(tools: Pin<&mut MiralTools>, window_id: u64);
+        /// Start a drag operation on the active window.
+        fn miral_tools_drag_active_window(tools: Pin<&mut MiralTools>, movement: Displacement);
+        /// Move the cursor to a specific point.
+        fn miral_tools_move_cursor_to(tools: Pin<&mut MiralTools>, point: Point);
+        /// Get all window IDs (collected into a vector).
+        fn miral_tools_all_window_ids(tools: &MiralTools) -> Vec<u64>;
+        /// Get the window ID at a given point (0 if none).
+        fn miral_tools_window_id_at(tools: &MiralTools, point: Point) -> u64;
+        /// Compute placement and size for a window state transition.
+        fn miral_tools_place_and_size_for_state(
+            tools: &MiralTools,
+            window_id: u64,
+            new_state: i32,
+            rect: &Rectangle,
+        ) -> Rectangle;
 
         // --- Window queries ---
 
@@ -445,6 +522,15 @@ pub mod ffi {
         );
         fn rust_policy_advise_zone_delete(holder: &mut RustPolicyHolder, zone: &ZoneSnapshot);
 
+        fn rust_policy_advise_adding_to_workspace(
+            holder: &mut RustPolicyHolder,
+            window_ids: &[u64],
+        );
+        fn rust_policy_advise_removing_from_workspace(
+            holder: &mut RustPolicyHolder,
+            window_ids: &[u64],
+        );
+
         /// Called from C++ when the server has started.
         fn rust_on_start_callback();
         /// Called from C++ when the server is stopping.
@@ -542,6 +628,8 @@ pub trait PolicyBridge: Send {
     fn advise_zone_create(&mut self, zone: &ffi::ZoneSnapshot);
     fn advise_zone_update(&mut self, updated: &ffi::ZoneSnapshot, original: &ffi::ZoneSnapshot);
     fn advise_zone_delete(&mut self, zone: &ffi::ZoneSnapshot);
+    fn advise_adding_to_workspace(&mut self, window_ids: &[u64]);
+    fn advise_removing_from_workspace(&mut self, window_ids: &[u64]);
 }
 
 // --- Thread-local policy factory ---
@@ -788,6 +876,14 @@ fn rust_policy_advise_zone_update(
 
 fn rust_policy_advise_zone_delete(holder: &mut RustPolicyHolder, zone: &ffi::ZoneSnapshot) {
     holder.policy.advise_zone_delete(zone);
+}
+
+fn rust_policy_advise_adding_to_workspace(holder: &mut RustPolicyHolder, window_ids: &[u64]) {
+    holder.policy.advise_adding_to_workspace(window_ids);
+}
+
+fn rust_policy_advise_removing_from_workspace(holder: &mut RustPolicyHolder, window_ids: &[u64]) {
+    holder.policy.advise_removing_from_workspace(window_ids);
 }
 
 // --- Lifecycle callbacks called from C++ ---

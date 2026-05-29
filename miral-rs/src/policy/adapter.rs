@@ -216,11 +216,7 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
     }
 
     fn advise_output_create(&mut self, output: &ffi::OutputSnapshot) {
-        let out = Output::new(
-            output.id as u32,
-            output.extents.into(),
-            output.name.to_string(),
-        );
+        let out = Output::from_ffi(output);
         self.policy.advise(Advice::OutputCreate { output: out });
     }
 
@@ -229,16 +225,8 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
         updated: &ffi::OutputSnapshot,
         original: &ffi::OutputSnapshot,
     ) {
-        let upd = Output::new(
-            updated.id as u32,
-            updated.extents.into(),
-            updated.name.to_string(),
-        );
-        let orig = Output::new(
-            original.id as u32,
-            original.extents.into(),
-            original.name.to_string(),
-        );
+        let upd = Output::from_ffi(updated);
+        let orig = Output::from_ffi(original);
         self.policy.advise(Advice::OutputUpdate {
             updated: upd,
             original: orig,
@@ -246,22 +234,18 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
     }
 
     fn advise_output_delete(&mut self, output: &ffi::OutputSnapshot) {
-        let out = Output::new(
-            output.id as u32,
-            output.extents.into(),
-            output.name.to_string(),
-        );
+        let out = Output::from_ffi(output);
         self.policy.advise(Advice::OutputDelete { output: out });
     }
 
     fn advise_zone_create(&mut self, zone: &ffi::ZoneSnapshot) {
-        let z = Zone::new(zone.extents.into());
+        let z = Zone::from_ffi(zone);
         self.policy.advise(Advice::ZoneCreate { zone: z });
     }
 
     fn advise_zone_update(&mut self, updated: &ffi::ZoneSnapshot, original: &ffi::ZoneSnapshot) {
-        let upd = Zone::new(updated.extents.into());
-        let orig = Zone::new(original.extents.into());
+        let upd = Zone::from_ffi(updated);
+        let orig = Zone::from_ffi(original);
         self.policy.advise(Advice::ZoneUpdate {
             updated: upd,
             original: orig,
@@ -269,7 +253,27 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
     }
 
     fn advise_zone_delete(&mut self, zone: &ffi::ZoneSnapshot) {
-        let z = Zone::new(zone.extents.into());
+        let z = Zone::from_ffi(zone);
         self.policy.advise(Advice::ZoneDelete { zone: z });
+    }
+
+    fn advise_adding_to_workspace(&mut self, window_ids: &[u64]) {
+        use crate::window::Window;
+        let windows: Vec<Window> = window_ids
+            .iter()
+            .map(|&id| Window::from_ffi(id, Point::default(), Size::default()))
+            .collect();
+        self.policy
+            .advise(Advice::AddingToWorkspace { windows });
+    }
+
+    fn advise_removing_from_workspace(&mut self, window_ids: &[u64]) {
+        use crate::window::Window;
+        let windows: Vec<Window> = window_ids
+            .iter()
+            .map(|&id| Window::from_ffi(id, Point::default(), Size::default()))
+            .collect();
+        self.policy
+            .advise(Advice::RemovingFromWorkspace { windows });
     }
 }

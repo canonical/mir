@@ -133,6 +133,24 @@ impl Sub for Displacement {
     }
 }
 
+/// A 2D point with floating-point coordinates (for sub-pixel precision).
+///
+/// Used for cursor positioning where sub-pixel accuracy is needed.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct PointF {
+    /// The x coordinate.
+    pub x: f32,
+    /// The y coordinate.
+    pub y: f32,
+}
+
+impl PointF {
+    /// Create a new floating-point point.
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+}
+
 // --- FFI conversions ---
 
 impl From<miral_sys::ffi::Point> for Point {

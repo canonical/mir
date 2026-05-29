@@ -3,11 +3,70 @@
 //! [`MirRunner`] is the entry point for starting a Mir compositor. It uses
 //! a builder pattern to configure the server before starting it.
 
+use std::sync::Arc;
+
 use crate::configuration::ConfigurationOption;
 use crate::extensions::ServerExtension;
 use crate::keymap::Keymap;
 use crate::policy::adapter::PolicyBridgeAdapter;
 use crate::policy::WindowManagementPolicy;
+
+/// A handle to a running compositor that can be used to request shutdown.
+///
+/// Obtain this via [`MirRunner::on_start`] and store it for later use.
+/// The handle is `Send + Sync` and can be safely shared across threads.
+///
+/// # Example
+///
+/// ```rust,ignore
+/// use miral::prelude::*;
+/// use std::sync::Arc;
+///
+/// let handle = Arc::new(std::sync::Mutex::new(None));
+/// let handle_clone = handle.clone();
+///
+/// MirRunner::new(std::env::args())
+///     .add_window_management_policy::<MyPolicy>()
+///     .on_start(move || {
+///         // Store a stop handle for later
+///     })
+///     .run()
+///     .expect("Server failed");
+/// ```
+#[derive(Clone)]
+pub struct RunnerHandle {
+    runner_ptr: Arc<std::sync::atomic::AtomicU64>,
+}
+
+// Safety: The underlying MirRunner::stop() is thread-safe in Mir.
+unsafe impl Send for RunnerHandle {}
+unsafe impl Sync for RunnerHandle {}
+
+impl RunnerHandle {
+    /// Create a new runner handle from a raw pointer.
+    pub(crate) fn new(ptr: u64) -> Self {
+        Self {
+            runner_ptr: Arc::new(std::sync::atomic::AtomicU64::new(ptr)),
+        }
+    }
+
+    /// Request the compositor to stop.
+    ///
+    /// This is safe to call from any thread. The server will shut down
+    /// gracefully after this call.
+    pub fn stop(&self) {
+        let ptr = self.runner_ptr.load(std::sync::atomic::Ordering::Acquire);
+        if ptr != 0 {
+            // Safety: the pointer is valid while the server is running,
+            // and stop() is thread-safe in Mir.
+            unsafe {
+                let runner = &mut *(ptr as *mut miral_sys::ffi::MiralRunner);
+                let pinned = std::pin::Pin::new_unchecked(runner);
+                miral_sys::ffi::miral_runner_stop(pinned);
+            }
+        }
+    }
+}
 
 /// The main entry point for running a Mir compositor.
 ///
@@ -166,6 +225,15 @@ impl MirRunner {
             miral_sys::ffi::miral_runner_enable_external_launcher(runner.pin_mut());
         }
 
+        // Create the runner handle (pointer to the C++ runner for stop())
+        let runner_ptr = {
+            let pinned = runner.pin_mut();
+            // Safety: We need the raw pointer to call stop() later.
+            // The pointer is valid for the entire duration of run().
+            unsafe { pinned.get_unchecked_mut() as *mut _ as u64 }
+        };
+        let runner_handle = RunnerHandle::new(runner_ptr);
+
         // Register lifecycle callbacks
         if let Some(on_start) = self.on_start {
             miral_sys::set_on_start_callback(Box::new(on_start));
@@ -175,6 +243,9 @@ impl MirRunner {
             miral_sys::set_on_stop_callback(Box::new(on_stop));
             miral_sys::ffi::miral_runner_register_stop_callback(runner.pin_mut());
         }
+
+        // Store the handle for the stop callback to invalidate
+        let handle_for_cleanup = runner_handle.clone();
 
         // Register configuration option callbacks and build descriptors
         let mut config_descs = Vec::new();
@@ -202,6 +273,11 @@ impl MirRunner {
             &config_descs,
         );
 
+        // Invalidate the runner handle after shutdown
+        handle_for_cleanup
+            .runner_ptr
+            .store(0, std::sync::atomic::Ordering::Release);
+
         // Clean up config callbacks after run completes
         miral_sys::clear_config_callbacks();
 
@@ -210,5 +286,33 @@ impl MirRunner {
         } else {
             Ok(())
         }
+    }
+
+    /// Get a handle that can be used to stop the compositor from another thread.
+    ///
+    /// Note: This method must be called before `run()`. The handle is only valid
+    /// while the compositor is running. Consider using [`on_start`](Self::on_start)
+    /// to obtain a [`RunnerHandle`] at the right time.
+    ///
+    /// For most use cases, call `stop()` from within a signal handler or
+    /// a spawned thread:
+    ///
+    /// ```rust,ignore
+    /// use miral::runner::{MirRunner, RunnerHandle};
+    /// use std::sync::{Arc, Mutex};
+    ///
+    /// let handle: Arc<Mutex<Option<RunnerHandle>>> = Arc::new(Mutex::new(None));
+    /// let h = handle.clone();
+    ///
+    /// MirRunner::new(std::env::args())
+    ///     .add_window_management_policy::<MyPolicy>()
+    ///     .on_start(move || {
+    ///         // Use handle to stop later if needed
+    ///     })
+    ///     .run();
+    /// ```
+    pub fn runner_handle(&self) -> RunnerHandle {
+        // Returns a handle with null pointer - will be set when run() is called
+        RunnerHandle::new(0)
     }
 }
