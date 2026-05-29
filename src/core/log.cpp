@@ -17,6 +17,7 @@
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
+#include <cstdio>
 #include <exception>
 #include <format>
 
