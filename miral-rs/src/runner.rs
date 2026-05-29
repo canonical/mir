@@ -3,6 +3,7 @@
 //! [`MirRunner`] is the entry point for starting a Mir compositor. It uses
 //! a builder pattern to configure the server before starting it.
 
+use crate::configuration::ConfigurationOption;
 use crate::extensions::ServerExtension;
 use crate::keymap::Keymap;
 use crate::policy::adapter::PolicyBridgeAdapter;
@@ -30,6 +31,7 @@ use crate::policy::WindowManagementPolicy;
 pub struct MirRunner {
     args: Vec<String>,
     extensions: Vec<Box<dyn ServerExtension>>,
+    config_options: Vec<ConfigurationOption>,
     policy_factory: Option<Box<dyn FnOnce() -> Box<dyn miral_sys::PolicyBridge> + Send>>,
     on_start: Option<Box<dyn FnOnce() + Send>>,
     on_stop: Option<Box<dyn FnOnce() + Send>>,
@@ -44,6 +46,7 @@ impl MirRunner {
         Self {
             args: args.into_iter().collect(),
             extensions: Vec::new(),
+            config_options: Vec::new(),
             policy_factory: None,
             on_start: None,
             on_stop: None,
@@ -54,6 +57,29 @@ impl MirRunner {
     /// [`Decorations`](crate::decorations::Decorations), [`Keymap`](crate::keymap::Keymap)).
     pub fn add(mut self, extension: impl ServerExtension) -> Self {
         self.extensions.push(Box::new(extension));
+        self
+    }
+
+    /// Add a configuration option.
+    ///
+    /// Configuration options are processed during server initialization (or before,
+    /// if [`pre_init`](ConfigurationOption::pre_init) was called). The callback fires
+    /// on every value change.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use miral::configuration::ConfigurationOption;
+    ///
+    /// runner.add_config_option(ConfigurationOption::new(
+    ///     "terminal-emulator",
+    ///     "Terminal emulator to use",
+    ///     "xterm".to_string(),
+    ///     |cmd| { println!("Terminal: {cmd}"); },
+    /// ))
+    /// ```
+    pub fn add_config_option(mut self, option: ConfigurationOption) -> Self {
+        self.config_options.push(option);
         self
     }
 
@@ -150,13 +176,34 @@ impl MirRunner {
             miral_sys::ffi::miral_runner_register_stop_callback(runner.pin_mut());
         }
 
+        // Register configuration option callbacks and build descriptors
+        let mut config_descs = Vec::new();
+        for option in self.config_options {
+            let callback_id = miral_sys::register_config_callback(option.callback);
+            config_descs.push(miral_sys::ffi::ConfigOptionDesc {
+                name: option.name,
+                description: option.description,
+                option_type: option.option_type,
+                default_int: option.default_int,
+                default_double: option.default_double,
+                default_string: option.default_string,
+                default_bool: option.default_bool,
+                callback_id,
+                pre_init: option.pre_init,
+            });
+        }
+
         // Run with full configuration
         let result = miral_sys::ffi::miral_runner_run_with_config(
             runner.pin_mut(),
             decoration_mode,
             &keymap_layout,
             x11_enabled,
+            &config_descs,
         );
+
+        // Clean up config callbacks after run completes
+        miral_sys::clear_config_callbacks();
 
         if result != 0 {
             Err(format!("Server exited with code {}", result).into())

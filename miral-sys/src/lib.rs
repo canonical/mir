@@ -161,6 +161,25 @@ pub mod ffi {
         name: String,
     }
 
+    /// Descriptor for a configuration option, passed from Rust to C++.
+    ///
+    /// The `option_type` field determines which callback variant is used:
+    ///   0 = int (with default), 1 = double (with default), 2 = string (with default),
+    ///   3 = bool (with default), 4 = flag (presence-only), 5 = optional int,
+    ///   6 = optional string, 7 = optional bool, 8 = multi-value string list
+    #[derive(Debug, Clone)]
+    struct ConfigOptionDesc {
+        name: String,
+        description: String,
+        option_type: i32,
+        default_int: i32,
+        default_double: f64,
+        default_string: String,
+        default_bool: bool,
+        callback_id: u32,
+        pre_init: bool,
+    }
+
     unsafe extern "C++" {
         include!("bridge.h");
 
@@ -190,11 +209,13 @@ pub mod ffi {
         /// decoration_mode: 0=none, 1=prefer_csd, 2=prefer_ssd, 3=always_ssd, 4=always_csd
         /// keymap_layout: XKB layout string (empty = no keymap configuration)
         /// x11_enabled: whether to enable X11 support
+        /// config_options: configuration option descriptors whose callbacks are in the global registry
         fn miral_runner_run_with_config(
             runner: Pin<&mut MiralRunner>,
             decoration_mode: i32,
             keymap_layout: &str,
             x11_enabled: bool,
+            config_options: &[ConfigOptionDesc],
         ) -> i32;
         /// Tell the server to stop.
         fn miral_runner_stop(runner: Pin<&mut MiralRunner>);
@@ -426,6 +447,27 @@ pub mod ffi {
         fn rust_on_start_callback();
         /// Called from C++ when the server is stopping.
         fn rust_on_stop_callback();
+
+        // --- Configuration option callbacks (called from C++) ---
+
+        /// Dispatch an int config option callback.
+        fn rust_config_callback_int(callback_id: u32, value: i32);
+        /// Dispatch a double config option callback.
+        fn rust_config_callback_double(callback_id: u32, value: f64);
+        /// Dispatch a string config option callback.
+        fn rust_config_callback_string(callback_id: u32, value: &str);
+        /// Dispatch a bool config option callback.
+        fn rust_config_callback_bool(callback_id: u32, value: bool);
+        /// Dispatch a flag config option callback.
+        fn rust_config_callback_flag(callback_id: u32, is_set: bool);
+        /// Dispatch an optional int config option callback.
+        fn rust_config_callback_optional_int(callback_id: u32, has_value: bool, value: i32);
+        /// Dispatch an optional string config option callback.
+        fn rust_config_callback_optional_string(callback_id: u32, has_value: bool, value: &str);
+        /// Dispatch an optional bool config option callback.
+        fn rust_config_callback_optional_bool(callback_id: u32, has_value: bool, value: bool);
+        /// Dispatch a multi-value string list config option callback.
+        fn rust_config_callback_multi(callback_id: u32, values: &[String]);
     }
 }
 
@@ -762,4 +804,120 @@ fn rust_on_stop_callback() {
             callback();
         }
     });
+}
+
+// --- Configuration option callback registry ---
+
+use std::sync::Mutex;
+
+/// Typed callback variants for configuration options.
+pub enum ConfigCallback {
+    /// Callback for an `i32` configuration option.
+    Int(Box<dyn FnMut(i32) + Send>),
+    /// Callback for an `f64` configuration option.
+    Double(Box<dyn FnMut(f64) + Send>),
+    /// Callback for a `String` configuration option.
+    Str(Box<dyn FnMut(String) + Send>),
+    /// Callback for a `bool` configuration option.
+    Bool(Box<dyn FnMut(bool) + Send>),
+    /// Callback for a presence-only flag option.
+    Flag(Box<dyn FnMut(bool) + Send>),
+    /// Callback for an optional `i32` configuration option.
+    OptionalInt(Box<dyn FnMut(Option<i32>) + Send>),
+    /// Callback for an optional `String` configuration option.
+    OptionalStr(Box<dyn FnMut(Option<String>) + Send>),
+    /// Callback for an optional `bool` configuration option.
+    OptionalBool(Box<dyn FnMut(Option<bool>) + Send>),
+    /// Callback for a multi-value string list configuration option.
+    Multi(Box<dyn FnMut(Vec<String>) + Send>),
+}
+
+static CONFIG_CALLBACKS: Mutex<Vec<ConfigCallback>> = Mutex::new(Vec::new());
+
+/// Register a config callback and return its ID.
+///
+/// Called by the `miral` crate when building `ConfigurationOption` values.
+/// The returned ID is stored in a `ConfigOptionDesc` and used by C++ to
+/// dispatch back into the correct Rust callback.
+pub fn register_config_callback(callback: ConfigCallback) -> u32 {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    let id = callbacks.len() as u32;
+    callbacks.push(callback);
+    id
+}
+
+/// Clear all registered config callbacks.
+///
+/// Called by the `miral` crate after `run()` completes to avoid leaking callbacks.
+pub fn clear_config_callbacks() {
+    CONFIG_CALLBACKS.lock().unwrap().clear();
+}
+
+// --- Config callback dispatch functions called from C++ ---
+
+fn rust_config_callback_int(callback_id: u32, value: i32) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::Int(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(value);
+    }
+}
+
+fn rust_config_callback_double(callback_id: u32, value: f64) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::Double(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(value);
+    }
+}
+
+fn rust_config_callback_string(callback_id: u32, value: &str) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::Str(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(value.to_string());
+    }
+}
+
+fn rust_config_callback_bool(callback_id: u32, value: bool) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::Bool(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(value);
+    }
+}
+
+fn rust_config_callback_flag(callback_id: u32, is_set: bool) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::Flag(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(is_set);
+    }
+}
+
+fn rust_config_callback_optional_int(callback_id: u32, has_value: bool, value: i32) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::OptionalInt(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(if has_value { Some(value) } else { None });
+    }
+}
+
+fn rust_config_callback_optional_string(callback_id: u32, has_value: bool, value: &str) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::OptionalStr(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(if has_value {
+            Some(value.to_string())
+        } else {
+            None
+        });
+    }
+}
+
+fn rust_config_callback_optional_bool(callback_id: u32, has_value: bool, value: bool) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::OptionalBool(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(if has_value { Some(value) } else { None });
+    }
+}
+
+fn rust_config_callback_multi(callback_id: u32, values: &[String]) {
+    let mut callbacks = CONFIG_CALLBACKS.lock().unwrap();
+    if let Some(ConfigCallback::Multi(cb)) = callbacks.get_mut(callback_id as usize) {
+        cb(values.to_vec());
+    }
 }

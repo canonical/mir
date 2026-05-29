@@ -25,6 +25,7 @@
 #include <miral/decorations.h>
 #include <miral/keymap.h>
 #include <miral/x11_support.h>
+#include <miral/configuration_option.h>
 
 #include <mir_toolkit/events/enums.h>
 #include <mir_toolkit/events/input/keyboard_event.h>
@@ -507,7 +508,8 @@ int32_t miral_runner_run_with_config(
     MiralRunner& runner,
     int32_t decoration_mode,
     rust::Str keymap_layout,
-    bool x11_enabled)
+    bool x11_enabled,
+    rust::Slice<const ConfigOptionDesc> config_options)
 {
     std::vector<std::function<void(mir::Server&)>> options;
 
@@ -551,6 +553,103 @@ int32_t miral_runner_run_with_config(
         options.push_back(x11);
     }
 
+    // Configuration options
+    for (auto const& desc : config_options)
+    {
+        std::string opt_name(desc.name.data(), desc.name.size());
+        std::string opt_desc(desc.description.data(), desc.description.size());
+        uint32_t cb_id = desc.callback_id;
+        bool is_pre_init = desc.pre_init;
+
+        miral::ConfigurationOption config_opt = [&]() -> miral::ConfigurationOption
+        {
+            switch (desc.option_type)
+            {
+            case 0: // int with default
+                return miral::ConfigurationOption{
+                    [cb_id](int value) { rust_config_callback_int(cb_id, value); },
+                    opt_name, opt_desc, static_cast<int>(desc.default_int)};
+            case 1: // double with default
+                return miral::ConfigurationOption{
+                    [cb_id](double value) { rust_config_callback_double(cb_id, value); },
+                    opt_name, opt_desc, desc.default_double};
+            case 2: // string with default
+            {
+                std::string default_str(desc.default_string.data(), desc.default_string.size());
+                return miral::ConfigurationOption{
+                    [cb_id](std::string const& value)
+                    {
+                        rust_config_callback_string(cb_id, rust::Str(value.data(), value.size()));
+                    },
+                    opt_name, opt_desc, default_str};
+            }
+            case 3: // bool with default
+                return miral::ConfigurationOption{
+                    [cb_id](bool value) { rust_config_callback_bool(cb_id, value); },
+                    opt_name, opt_desc, desc.default_bool};
+            case 4: // flag (presence-only)
+                return miral::ConfigurationOption{
+                    std::function<void(bool)>{
+                        [cb_id](bool is_set) { rust_config_callback_flag(cb_id, is_set); }},
+                    opt_name, opt_desc};
+            case 5: // optional int
+                return miral::ConfigurationOption{
+                    [cb_id](mir::optional_value<int> const& value)
+                    {
+                        rust_config_callback_optional_int(
+                            cb_id, value.is_set(),
+                            value.is_set() ? value.value() : 0);
+                    },
+                    opt_name, opt_desc};
+            case 6: // optional string
+                return miral::ConfigurationOption{
+                    [cb_id](mir::optional_value<std::string> const& value)
+                    {
+                        if (value.is_set())
+                        {
+                            auto const& str = value.value();
+                            rust_config_callback_optional_string(
+                                cb_id, true, rust::Str(str.data(), str.size()));
+                        }
+                        else
+                        {
+                            rust_config_callback_optional_string(cb_id, false, rust::Str("", 0));
+                        }
+                    },
+                    opt_name, opt_desc};
+            case 7: // optional bool
+                return miral::ConfigurationOption{
+                    [cb_id](mir::optional_value<bool> const& value)
+                    {
+                        rust_config_callback_optional_bool(
+                            cb_id, value.is_set(),
+                            value.is_set() ? value.value() : false);
+                    },
+                    opt_name, opt_desc};
+            case 8: // multi-value string list
+                return miral::ConfigurationOption{
+                    [cb_id](std::vector<std::string> const& values)
+                    {
+                        rust::Vec<rust::String> rust_values;
+                        for (auto const& v : values)
+                            rust_values.push_back(rust::String(v));
+                        rust_config_callback_multi(cb_id, {rust_values.data(), rust_values.size()});
+                    },
+                    opt_name, opt_desc};
+            default:
+                // Unknown type — create a no-op flag option as fallback
+                return miral::ConfigurationOption{
+                    std::function<void(bool)>{[](bool) {}},
+                    opt_name, opt_desc};
+            }
+        }();
+
+        if (is_pre_init)
+            options.push_back(pre_init(config_opt));
+        else
+            options.push_back(config_opt);
+    }
+
     // External client launcher
     if (runner.has_external_launcher)
     {
@@ -565,10 +664,7 @@ int32_t miral_runner_run_with_config(
         });
     }
 
-    // Convert vector to initializer_list-compatible call via range
-    // run_with takes initializer_list, but we can use the overload pattern
-    // Actually, MirRunner has no vector overload. We need to build the list differently.
-    // The simplest approach: use a lambda that chains all options.
+    // Convert vector to a single functor and run
     auto combined = [options = std::move(options)](mir::Server& server)
     {
         for (auto const& opt : options)

@@ -43,6 +43,7 @@ struct ApplicationInfoSnapshot;
 struct OutputSnapshot;
 struct ZoneSnapshot;
 struct WindowSpecData;
+struct ConfigOptionDesc;
 struct RustPolicyHolder;
 
 // Opaque C++ types exposed to Rust — wrapping the actual miral types
@@ -117,7 +118,8 @@ int32_t miral_runner_run_with_config(
     MiralRunner& runner,
     int32_t decoration_mode,
     rust::Str keymap_layout,
-    bool x11_enabled);
+    bool x11_enabled,
+    rust::Slice<const ConfigOptionDesc> config_options);
 void miral_runner_stop(MiralRunner& runner);
 void miral_runner_register_start_callback(MiralRunner& runner);
 void miral_runner_register_stop_callback(MiralRunner& runner);

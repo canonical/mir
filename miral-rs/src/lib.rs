@@ -46,6 +46,7 @@
 
 pub mod application;
 pub mod client;
+pub mod configuration;
 pub mod decorations;
 pub mod extensions;
 pub mod geometry;
@@ -63,6 +64,7 @@ pub mod workspace;
 pub mod prelude {
     pub use crate::application::{Application, ApplicationInfo};
     pub use crate::client::ExternalClientLauncher;
+    pub use crate::configuration::ConfigurationOption;
     pub use crate::decorations::Decorations;
     pub use crate::extensions::{ServerExtension, WaylandExtensions, X11Support};
     pub use crate::geometry::{Displacement, Point, Rectangle, Size};

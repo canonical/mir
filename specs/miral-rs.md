@@ -77,6 +77,7 @@ impl From<WindowState> for u32 { /* ... */ }
 | `operator()(mir::Server&)` functors      | `trait ServerExtension` with `fn apply(&self, server: &mut Server)` |
 | `mir::optional_value<T>`                 | `Option<T>`                                                         |
 | `std::shared_ptr<Workspace>`             | `Arc<Workspace>` (or opaque handle)                                 |
+| `ConfigurationOption` (overloaded ctors)  | `ConfigurationOption` with `ConfigValue` sealed trait + methods     |
 | C-linkage Mir enums                      | bindgen + idiomatic Rust enum wrappers                              |
 | Callbacks (`std::function`)              | `Fn`/`FnMut` trait objects or closures                              |
 | `WindowInfo` (mutable reference)         | `&mut WindowInfo` with getter/setter methods                        |
@@ -120,6 +121,7 @@ miral/
 │   │   ├── mod.rs
 │   │   ├── external.rs           // ExternalClientLauncher
 │   │   └── internal.rs           // InternalClientLauncher
+│   ├── configuration.rs          // ConfigurationOption, ConfigValue
 │   ├── geometry.rs               // Point, Size, Rectangle, Displacement
 │   ├── decorations.rs            // Decorations
 │   ├── keymap.rs                 // Keymap
@@ -267,6 +269,96 @@ pub enum Advice<'a> {
 }
 ```
 
+### ConfigurationOption
+
+Add user-defined configuration options to Mir's option handling. Options can come from
+the command line, environment variables, config files, or defaults. Callbacks fire on
+every value change, which may happen multiple times throughout the program's lifetime.
+
+#### Sealed Traits
+
+```rust
+mod private { pub trait Sealed {} }
+
+/// Types that can be used as configuration option values.
+pub trait ConfigValue: private::Sealed {}
+impl ConfigValue for i32 {}
+impl ConfigValue for f64 {}
+impl ConfigValue for String {}
+impl ConfigValue for bool {}
+
+/// Subset of `ConfigValue` that supports optional (no default).
+/// C++ `mir::optional_value` exists for int, string, and bool — but not double.
+pub trait OptionalConfigValue: ConfigValue {}
+impl OptionalConfigValue for i32 {}
+impl OptionalConfigValue for String {}
+impl OptionalConfigValue for bool {}
+```
+
+#### API
+
+```rust
+pub struct ConfigurationOption { /* ... */ }
+
+impl ConfigurationOption {
+    /// Required value with default. Callback fires on every change.
+    pub fn new<T: ConfigValue>(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        default: T,
+        callback: impl FnMut(T) + Send + 'static,
+    ) -> Self { /* ... */ }
+
+    /// Optional value (no default). Callback fires with `None` if unset.
+    pub fn optional<T: OptionalConfigValue>(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        callback: impl FnMut(Option<T>) + Send + 'static,
+    ) -> Self { /* ... */ }
+
+    /// Presence-only flag. Callback fires with `true` if the flag is present.
+    pub fn flag(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        callback: impl FnMut(bool) + Send + 'static,
+    ) -> Self { /* ... */ }
+
+    /// Multi-value string list.
+    pub fn multi(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        callback: impl FnMut(&[String]) + Send + 'static,
+    ) -> Self { /* ... */ }
+
+    /// Process this option before Mir initialization starts.
+    pub fn pre_init(self) -> Self { /* ... */ }
+}
+```
+
+#### FFI Strategy
+
+Configuration option callbacks cross the FFI boundary via a global `Mutex`-guarded
+callback registry. Each callback is stored as a typed enum variant indexed by `u32` ID:
+
+```rust
+enum ConfigCallback {
+    Int(Box<dyn FnMut(i32) + Send>),
+    Double(Box<dyn FnMut(f64) + Send>),
+    Str(Box<dyn FnMut(String) + Send>),
+    Bool(Box<dyn FnMut(bool) + Send>),
+    Flag(Box<dyn FnMut(bool) + Send>),
+    OptionalInt(Box<dyn FnMut(Option<i32>) + Send>),
+    OptionalStr(Box<dyn FnMut(Option<String>) + Send>),
+    OptionalBool(Box<dyn FnMut(Option<bool>) + Send>),
+    Multi(Box<dyn FnMut(Vec<String>) + Send>),
+}
+```
+
+A `ConfigOptionDesc` struct is passed across the CXX bridge containing option metadata
+(name, description, type tag, defaults, callback ID, pre_init flag). On the C++ side,
+`miral::ConfigurationOption` objects are created from these descriptors with callbacks
+that dispatch to Rust via exported `rust_config_callback_*` functions.
+
 ### Runner / Builder API
 
 ```rust
@@ -276,6 +368,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         .add(X11Support::new())
         .add(Decorations::prefer_csd())
         .add(Keymap::new("us"))
+        .add_config_option(ConfigurationOption::new(
+            "shell-terminal-emulator",
+            "Terminal emulator to use",
+            "xterm".to_string(),
+            |cmd| { /* handle new value */ },
+        ))
+        .add_config_option(ConfigurationOption::flag(
+            "focus-stealing-prevention",
+            "Prevent newly opened windows from taking focus",
+            |is_set| { /* handle change */ },
+        ).pre_init())
         .add_window_management_policy::<MyTilingPolicy>()
         .add_keyboard_event_filter(|event| { /* ... */ false })
         .on_start(|| println!("Server started"))
@@ -349,6 +452,8 @@ public:
 1. **Error handling**: FFI catches C++ exceptions → `Result<T, MirError>`.
 
 1. **Lifetime management**: `&'a WindowInfo` for borrowed references; `Window` is cheaply cloneable.
+
+1. **Configuration options**: Callback-based API with `FnMut(T) + Send + 'static`. Callbacks may fire multiple times as values change at runtime. `Send + 'static` is required because Mir may invoke callbacks on a server/init thread. A sealed `ConfigValue` trait restricts supported types to `i32`, `f64`, `String`, and `bool`. `OptionalConfigValue` further restricts optional variants to `i32`, `String`, and `bool` (matching C++ `mir::optional_value` support). Options are added via a dedicated `MirRunner::add_config_option()` method, not through the `ServerExtension` trait, because they own non-cloneable callback state.
 
 ## Notes
 
