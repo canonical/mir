@@ -246,8 +246,10 @@ public:
     /// \param input_event the input event causing the resize request
     /// \param edge the edge being resized
     /// \sa MirResizeEdge - edge resize options
-    virtual void
-    handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) = 0;
+    virtual void handle_request_resize(
+        WindowInfo& window_info,
+        MirInputEvent const* input_event,
+        MirResizeEdge edge) = 0;
 
     /// Notification that an output has been created.
     ///

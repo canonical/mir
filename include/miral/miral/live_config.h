@@ -93,8 +93,11 @@ public:
         std::span<int const> preset,
         HandleInts handler) = 0;
     virtual void add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler) = 0;
-    virtual void
-    add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler) = 0;
+    virtual void add_float_attribute(
+        Key const& key,
+        std::string_view description,
+        float preset,
+        HandleFloat handler) = 0;
     virtual void add_floats_attribute(
         Key const& key,
         std::string_view description,
