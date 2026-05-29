@@ -159,6 +159,8 @@ pub mod ffi {
         window_type: i32,
         has_name: bool,
         name: String,
+        has_parent: bool,
+        parent_id: u64,
     }
 
     /// Descriptor for a configuration option, passed from Rust to C++.

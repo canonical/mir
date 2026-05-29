@@ -140,6 +140,14 @@ public:
         MiralApplicationInfo app_wrap{app_info};
 
         // Convert requested spec to bridge format
+        auto has_parent = requested_specification.parent().is_set();
+        uint64_t parent_id = 0;
+        if (has_parent)
+        {
+            if (auto parent_surface = requested_specification.parent().value().lock())
+                parent_id = reinterpret_cast<uint64_t>(parent_surface.get());
+        }
+
         WindowSpecData spec_data{
             requested_specification.top_left().is_set(),
             requested_specification.top_left().is_set()
@@ -161,6 +169,8 @@ public:
             requested_specification.name().is_set()
                 ? rust::String(requested_specification.name().value())
                 : rust::String(""),
+            has_parent,
+            parent_id,
         };
 
         auto result = rust_policy_place_new_window(*holder_, app_wrap, spec_data);
@@ -175,6 +185,11 @@ public:
             out.state() = static_cast<MirWindowState>(result.state);
         if (result.has_type)
             out.type() = static_cast<MirWindowType>(result.window_type);
+        if (result.has_parent)
+        {
+            if (auto const* w = tools_->lookup_window(result.parent_id))
+                out.parent() = static_cast<std::shared_ptr<mir::scene::Surface>>(*w);
+        }
         return out;
     }
 
@@ -191,6 +206,14 @@ public:
     {
         tools_->register_window(window_info.window());
         MiralWindowInfo info_wrap{window_info};
+
+        auto mod_has_parent = modifications.parent().is_set();
+        uint64_t mod_parent_id = 0;
+        if (mod_has_parent)
+        {
+            if (auto parent_surface = modifications.parent().value().lock())
+                mod_parent_id = reinterpret_cast<uint64_t>(parent_surface.get());
+        }
 
         WindowSpecData spec_data{
             modifications.top_left().is_set(),
@@ -213,6 +236,8 @@ public:
             modifications.name().is_set()
                 ? rust::String(modifications.name().value())
                 : rust::String(""),
+            mod_has_parent,
+            mod_parent_id,
         };
 
         rust_policy_handle_modify_window(*holder_, info_wrap, spec_data);
@@ -842,6 +867,11 @@ void miral_tools_modify_window_by_id(MiralTools& tools, uint64_t window_id, Wind
         miral_spec.state() = static_cast<MirWindowState>(spec.state);
     if (spec.has_type)
         miral_spec.type() = static_cast<MirWindowType>(spec.window_type);
+    if (spec.has_parent)
+    {
+        if (auto const* parent_w = tools.lookup_window(spec.parent_id))
+            miral_spec.parent() = static_cast<std::shared_ptr<mir::scene::Surface>>(*parent_w);
+    }
 
     auto& info = tools.inner.info_for(*w);
     tools.inner.modify_window(info, miral_spec);
