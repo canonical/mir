@@ -1,7 +1,7 @@
 //! Window specification builder for creating or modifying windows.
 
 use crate::geometry::{Point, Size};
-use crate::window::WindowState;
+use crate::window::{Window, WindowState};
 
 /// A specification describing desired window properties.
 ///
@@ -15,6 +15,7 @@ pub struct WindowSpecification {
     pub(crate) size: Option<Size>,
     pub(crate) state: Option<WindowState>,
     pub(crate) name: Option<String>,
+    pub(crate) parent: Option<Window>,
 }
 
 impl WindowSpecification {
@@ -47,6 +48,14 @@ impl WindowSpecification {
         self
     }
 
+    /// Set the parent window.
+    ///
+    /// Child windows are positioned relative to their parent and move with it.
+    pub fn with_parent(mut self, parent: &Window) -> Self {
+        self.parent = Some(parent.clone());
+        self
+    }
+
     /// Get the requested top-left position, if set.
     pub fn top_left(&self) -> Option<Point> {
         self.top_left
@@ -65,6 +74,11 @@ impl WindowSpecification {
     /// Get the requested name, if set.
     pub fn name(&self) -> Option<&str> {
         self.name.as_deref()
+    }
+
+    /// Get the requested parent window, if set.
+    pub fn parent(&self) -> Option<&Window> {
+        self.parent.as_ref()
     }
 
     /// Convert from an FFI WindowSpecData.
@@ -90,6 +104,11 @@ impl WindowSpecification {
             } else {
                 None
             },
+            parent: if data.has_parent && data.parent_id != 0 {
+                Some(Window::from_ffi(data.parent_id, Point::default(), Size::default()))
+            } else {
+                None
+            },
         }
     }
 
@@ -106,6 +125,8 @@ impl WindowSpecification {
             window_type: 0,
             has_name: self.name.is_some(),
             name: self.name.clone().unwrap_or_default(),
+            has_parent: self.parent.is_some(),
+            parent_id: self.parent.as_ref().map(|w| w.id()).unwrap_or(0),
         }
     }
 }
