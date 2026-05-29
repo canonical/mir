@@ -1,3 +1,5 @@
+(release-notes)=
+
 # Mir release notes
 
 <!--
