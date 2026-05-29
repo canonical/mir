@@ -354,9 +354,9 @@ public:
         config.keyboard.merge(keyboard());
         config.touchpad.merge(touchpad());
 
-        mouse(config.mouse);
-        touchpad(config.touchpad);
-        keyboard(config.keyboard);
+        apply(config.mouse);
+        apply(config.touchpad);
+        apply(config.keyboard);
     }
 };
 
