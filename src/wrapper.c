@@ -19,6 +19,31 @@
 #include <stdio.h>
 #include <unistd.h>
 
+static int resolve_own_path(char const* argv0, char* resolved, size_t resolved_size)
+{
+    if (resolved_size == 0)
+        return -1;
+
+    ssize_t const read_count = readlink("/proc/self/exe", resolved, resolved_size - 1);
+
+    if (read_count > 0 && (size_t)read_count < resolved_size)
+    {
+        resolved[read_count] = '\0';
+        return 0;
+    }
+
+    if (argv0 == NULL || *argv0 == '\0')
+        return -1;
+
+    if (strchr(argv0, '/') != NULL)
+    {
+        snprintf(resolved, resolved_size, "%s", argv0);
+        return 0;
+    }
+
+    return -1;
+}
+
 static void appendenv(const char* varname, const char* append)
 {
     char buf[2048] = "";
@@ -35,19 +60,28 @@ static void appendenv(const char* varname, const char* append)
 
 int main(int argc, char** argv)
 {
-    char path[1024], *dest = path, *dest_max = path+sizeof(path)-1;
+    char invocation_path[1024] = "";
+    char path[1024] = "", *dest = path, *dest_max = path+sizeof(path)-1;
     char *pivot = path;
     size_t pivot_max = 0;
-    const char *src = argv[0], *name = argv[0];
+    const char *src = argv[0];
+    char const* const argv0_slash = argv[0] != NULL ? strrchr(argv[0], '/') : NULL;
+    char const* const argv0_name = argv0_slash != NULL ? argv0_slash + 1 : argv[0];
+    char const* const name = argv0_name;
 
     (void)argc;
+
+    if (resolve_own_path(argv[0], invocation_path, sizeof(invocation_path)) == 0)
+    {
+        src = invocation_path;
+    }
+
     while (*src && dest < dest_max)
     {
         *dest = *src;
         if (*dest == '/')
         {
             pivot = dest + 1;
-            name = src + 1;
         }
         ++src;
         ++dest;

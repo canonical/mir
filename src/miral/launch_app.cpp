@@ -57,13 +57,18 @@ Environment::Environment()
     }
 }
 
+auto env_string_has_name(std::string const& entry, std::string const& name) -> bool
+{
+    return strncmp(entry.c_str(), name.c_str(), name.size()) == 0 && entry[name.size()] == '=';
+}
+
 void Environment::setenv(std::string const& name, std::string const& value)
 {
     auto const entry = name + "=" + value;
 
     for (auto& e : env_strings)
     {
-        if (strncmp(e.c_str(), name.c_str(), name.size()) == 0)
+        if (env_string_has_name(e, name))
         {
             e = entry;
             return;
@@ -77,7 +82,7 @@ void Environment::unsetenv(std::string const& name)
 {
     for (auto it = env_strings.begin(); it != env_strings.end(); ++it)
     {
-        if (strncmp(it->c_str(), name.c_str(), name.size()) == 0)
+        if (env_string_has_name(*it, name))
         {
             env_strings.erase(it);
             return;

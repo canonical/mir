@@ -251,10 +251,10 @@ void mf::WlDataSource::set_actions(uint32_t dnd_actions)
 {
     if (!mf::validate_dnd_actions(dnd_actions))
     {
-        throw mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_action_mask,
-            "Invalid DnD actions 0x%x", dnd_actions);
+            "Invalid DnD actions 0x%x", dnd_actions};
     }
     this->dnd_actions = dnd_actions;
 }
