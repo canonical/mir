@@ -27,20 +27,20 @@ use std::os::fd::RawFd;
 /// separate backup mechanism. The fd is only released when the device is
 /// explicitly removed via `remove_pending`.
 pub struct FdStore {
-    pending_fds: HashMap<String, RawFd>,
+    fds: HashMap<String, RawFd>,
 }
 
 impl FdStore {
     pub fn new() -> Self {
         FdStore {
-            pending_fds: HashMap::new(),
+            fds: HashMap::new(),
         }
     }
 
     /// Store a pre-acquired file descriptor for a device path.
-    pub fn store_pending(&mut self, devnode: &str, fd: RawFd) {
+    pub fn store(&mut self, devnode: &str, fd: RawFd) {
         // Close any previous fd for this device before replacing it.
-        if let Some(old_fd) = self.pending_fds.insert(devnode.to_string(), fd) {
+        if let Some(old_fd) = self.fds.insert(devnode.to_string(), fd) {
             unsafe { libc::close(old_fd) };
         }
     }
@@ -48,16 +48,16 @@ impl FdStore {
     /// Return a dup'd fd for a device path without consuming the stored fd.
     /// Returns the dup'd fd, or -1 if no pending fd exists.
     /// The caller owns the returned fd and is responsible for closing it.
-    pub fn claim_pending(&self, devnode: &str) -> RawFd {
-        match self.pending_fds.get(devnode) {
+    pub fn claim(&self, devnode: &str) -> RawFd {
+        match self.fds.get(devnode) {
             Some(&fd) => unsafe { libc::dup(fd) },
             None => -1,
         }
     }
 
     /// Remove and close the stored fd for a device (called on device removal).
-    pub fn remove_pending(&mut self, devnode: &str) {
-        if let Some(fd) = self.pending_fds.remove(devnode) {
+    pub fn remove(&mut self, devnode: &str) {
+        if let Some(fd) = self.fds.remove(devnode) {
             unsafe { libc::close(fd) };
         }
     }
@@ -65,7 +65,7 @@ impl FdStore {
 
 impl Drop for FdStore {
     fn drop(&mut self) {
-        for (_, fd) in self.pending_fds.drain() {
+        for (_, fd) in self.fds.drain() {
             unsafe { libc::close(fd) };
         }
     }

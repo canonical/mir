@@ -414,7 +414,7 @@ impl PlatformRs {
                 }
 
                 if let Ok(mut store) = self.fd_store.lock() {
-                    store.remove_pending(devnode);
+                    store.remove(devnode);
                 }
             }
             _ => {}
@@ -439,7 +439,7 @@ impl PlatformRs {
 
         // Store the fd so that open_restricted() can claim it.
         match self.fd_store.lock() {
-            Ok(mut store) => store.store_pending(devnode, fd),
+            Ok(mut store) => store.store(devnode, fd),
             Err(_) => {
                 println!("evdev-rs: on_device_activated: fd_store mutex poisoned");
                 return;
@@ -497,7 +497,7 @@ impl PlatformRs {
         self.known_devnums.remove(&devnum);
         self.bridge.release_device(devnum);
         if let Ok(mut store) = self.fd_store.lock() {
-            store.remove_pending(devnode);
+            store.remove(devnode);
         }
         self.path_remove_device(devnode);
     }
