@@ -63,16 +63,41 @@ public:
     ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, Loader load_config);
 
     /// Loads the base configuration file together with any override (drop-in)
-    /// files from `<config-file>.d/` directories across all XDG config roots.
-    /// Files are sorted by basename and deduplicated following systemd
-    /// conventions: when multiple roots provide a file with the same basename,
-    /// only the highest-priority root's copy is used.
-    /// If the base file is not found, \p load_config is not invoked.
+    /// files from `<base-config-name>.d/` directories across all XDG config
+    /// roots.
+    ///
+    /// If the \p base_config is only a filename and not a path, finds the
+    /// highest-priority file with that name in `$XDG_CONFIG_HOME`,
+    /// `$HOME/.config`, and `$XDG_CONFIG_DIRS` respectively. Otherwise, the
+    /// base config is used as is.
+    ///
+    /// If the base config file is not found, \p load_config is not invoked.
+    ///
+    /// Override files are sorted lexicographically by basename. If multiple
+    /// roots provide an override drop-in file with the same basename, only the
+    /// highest-priority root's copy is used. Root priority follows the order
+    /// used in the base config search process: `$XDG_CONFIG_HOME` >
+    /// `$HOME/.config` > `$XDG_CONFIG_DIRS` (in order).
+    ///
+    /// Files can be added or removed at runtime in any of the aforementioned
+    /// configuration roots. In this case, priority is re-evaluated, and higher
+    /// priority base config or override files take precedence over lower
+    /// priority ones. If a higher priority file is removed, the next-highest
+    /// priority file is used instead.
+    ///
     /// \remark since MirAL 5.8
-    /// \param extension file extension (including the leading dot) used to filter override files.
+    /// \param base_config the base configuration file, either as a filename or
+    ///                    a path.
+    /// \param load_config callback used in the initial load and to signal a
+    ///                    change in one or more of the config files. The full
+    ///                    list of files unchanged, modified, added, and dropped
+    ///                    is passed through OverridesList.
+    /// \param extension file extension (including the leading dot) used to
+    ///                  filter override files.
+    /// \see miral::live_config::OverridesList
     ConfigFile(
         MirRunner& runner,
-        std::filesystem::path file,
+        std::filesystem::path base_config,
         Mode mode,
         OverrideLoader load_config,
         std::string_view extension);

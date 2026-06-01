@@ -165,8 +165,8 @@ miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader lo
 }
 
 miral::ConfigFile::ConfigFile(
-    MirRunner& runner, path file, Mode mode, OverrideLoader load_config, std::string_view extension) :
-    self{std::make_shared<Self>(runner, std::move(file), mode, std::move(load_config), extension)}
+    MirRunner& runner, path base_config, Mode mode, OverrideLoader load_config, std::string_view extension) :
+    self{std::make_shared<Self>(runner, std::move(base_config), mode, std::move(load_config), extension)}
 {
 }
 
