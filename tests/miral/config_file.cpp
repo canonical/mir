@@ -14,16 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/test_server.h>
 #include <miral/config_file.h>
-#include <miral/live_config_overrides_list.h>
 
-#include <wayland_wrapper.h>
+#include <miral/live_config_overrides_list.h>
+#include <miral/test_server.h>
+
 #include <gmock/gmock.h>
+
+#include <unistd.h>
 
 #include <format>
 #include <fstream>
-#include <unistd.h>
 
 using miral::ConfigFile;
 using namespace testing;

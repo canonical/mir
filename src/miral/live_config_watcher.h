@@ -24,9 +24,9 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
-#include <set>
 #include <vector>
 
 class inotify_event;

@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "miral/config_file.h"
+#include <miral/config_file.h>
+
+#include <mir/log.h>
+#include <miral/live_config_overrides_list.h>
+#include <miral/runner.h>
+
 #include "live_config_overrides_list_builder.h"
 #include "live_config_watcher.h"
 #include "override_watcher.h"
-
-#include "miral/live_config_overrides_list.h"
-
-#include <mir/log.h>
-#include <miral/runner.h>
 
 #include <sys/inotify.h>
 

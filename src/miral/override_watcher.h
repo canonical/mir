@@ -17,16 +17,16 @@
 #ifndef MIRAL_OVERRIDE_WATCHER_H
 #define MIRAL_OVERRIDE_WATCHER_H
 
-#include "live_config_watcher.h"
-
 #include <miral/config_file.h>
+
+#include "live_config_watcher.h"
 
 #include <filesystem>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
-#include <set>
 #include <vector>
 
 namespace miral::live_config { class OverridesListBuilder; class OverridesList; }

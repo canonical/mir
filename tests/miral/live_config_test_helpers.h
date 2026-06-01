@@ -17,7 +17,7 @@
 #ifndef MIRAL_LIVE_CONFIG_TEST_HELPERS_H
 #define MIRAL_LIVE_CONFIG_TEST_HELPERS_H
 
-#include "miral/live_config_overrides_list.h"
+#include <miral/live_config_overrides_list.h>
 
 #include <filesystem>
 #include <optional>

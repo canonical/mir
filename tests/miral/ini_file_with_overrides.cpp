@@ -16,13 +16,13 @@
 
 #include <miral/live_config_ini_file_with_overrides.h>
 #include <miral/live_config_overrides_list.h>
-#include <live_config_overrides_list_builder.h>
+
+#include "live_config_overrides_list_builder.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
-
 #include <optional>
 #include <sstream>
 #include <string>

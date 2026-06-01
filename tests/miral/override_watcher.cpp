@@ -15,6 +15,7 @@
  */
 
 #include "override_watcher.h"
+
 #include "live_config_test_helpers.h"
 
 #include <gmock/gmock.h>
@@ -22,8 +23,8 @@
 
 #include <cstring>
 #include <filesystem>
-#include <stdexcept>
 #include <fstream>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 namespace mlc = miral::live_config;

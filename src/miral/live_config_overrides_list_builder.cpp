@@ -15,7 +15,9 @@
  */
 
 #include "live_config_overrides_list_builder.h"
-#include "miral/live_config_overrides_list.h"
+
+#include <miral/live_config_overrides_list.h>
+
 #include <memory>
 
 namespace mlc = miral::live_config;

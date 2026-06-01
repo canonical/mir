@@ -20,9 +20,9 @@
 #include <mir/fd.h>
 
 #include <filesystem>
+#include <functional>
 #include <iosfwd>
 #include <string_view>
-#include <functional>
 
 namespace miral
 {

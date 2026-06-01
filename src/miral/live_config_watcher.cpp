@@ -15,16 +15,17 @@
  */
 
 #include "live_config_watcher.h"
-#include "miral/live_config_overrides_list.h"
 
 #include <mir/log.h>
+#include <miral/live_config_overrides_list.h>
 
 #include <boost/throw_exception.hpp>
+
 #include <sys/inotify.h>
 #include <unistd.h>
-#include <cstring>
 
 #include <array>
+#include <cstring>
 #include <format>
 #include <fstream>
 #include <ranges>

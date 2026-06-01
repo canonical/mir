@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "live_config_overrides_list_builder.h"
+#include <miral/live_config_overrides_list.h>
 
 #include <mir/log.h>
-#include <miral/live_config_overrides_list.h>
+
+#include "live_config_overrides_list_builder.h"
 
 namespace mlc = miral::live_config;
 
