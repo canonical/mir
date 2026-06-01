@@ -15,6 +15,7 @@
  */
 
 #include <mir_toolkit/mir_input_device_types.h>
+#include <miral/accessibility_test_server.h>
 #include <miral/test_server.h>
 #include <miral/input_configuration.h>
 
@@ -589,6 +590,29 @@ TEST_F(TestLiveInputConfigurationAtStartup, touchpad_live_config_is_applied_when
     start_server();
 
     EXPECT_THAT(input_config.touchpad().tap_to_click(), Eq(std::optional<bool>{true}));
+}
+
+struct TestLiveKeyboardInputConfigurationAtStartup : miral::TestAccessibilityManager
+{
+    mlc::BasicStore config_store;
+    miral::InputConfiguration input_config{config_store};
+};
+
+TEST_F(TestLiveKeyboardInputConfigurationAtStartup, keyboard_repeat_settings_are_applied_to_accessibility_manager_on_start)
+{
+    auto const config_path = std::filesystem::temp_directory_path() /
+        "mir-test-input-configuration-keyboard.settings";
+
+    config_store.do_transaction([&]
+    {
+        config_store.update_key({"keyboard", "repeat_rate"}, "25", config_path);
+        config_store.update_key({"keyboard", "repeat_delay"}, "400", config_path);
+    });
+
+    EXPECT_CALL(*accessibility_manager, repeat_rate_and_delay(std::optional<int>{25}, std::optional<int>{400}));
+
+    add_server_init(input_config);
+    start_server();
 }
 
 struct TestTouchpadMergeOneProperty : public TestInputConfiguration, testing::WithParamInterface<TouchpadProperty>

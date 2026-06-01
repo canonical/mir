@@ -37,7 +37,7 @@ Then run the release testing in [](how-to-test-mir-for-a-release).
 
 ### Prepare the release notes
 
-Edit [](release-notes) on the release branch to include crafted notes for relevant changes included in the release.
+Edit {ref}`release-notes` on the release branch to include crafted notes for relevant changes included in the release.
 You can use [the draft GitHub release](https://github.com/canonical/mir/releases/) as reference.
 
 ### Cherry-pick any needed changes
@@ -56,12 +56,12 @@ After it completes, verify:
 
 1. Tag `vX.Y.Z` exists on the release branch tip.
 1. The GitHub release is published (no longer draft).
-1. The release notes body on GitHub and in packaging matches the extracted section from [](release-notes).
+1. The release notes body on GitHub and in packaging matches the extracted section from {ref}`release-notes`.
 
 ### Merge the release branch into `main`
 
 Finally, manually merge and push the release branch into `main`,
-resolving conflicts to ensure the correct ordering and dates in [](release-notes), `debian/changelog` and `rpm/mir.spec`.
+resolving conflicts to ensure the correct ordering and dates in {ref}`release-notes`, `debian/changelog` and `rpm/mir.spec`.
 
 ## Versions before 2.26
 
@@ -69,7 +69,7 @@ Before these workflows were introduced, releases were performed manually.
 At a high level, the manual process mirrored what the workflows now automate:
 
 1. Create/update `release/X.Y` from the last patch release on the series.
-1. Update [](release-notes), `CMakeLists.txt`, `debian/changelog` and `rpm/mir.spec` to the target release.
+1. Update {ref}`release-notes`, `CMakeLists.txt`, `debian/changelog` and `rpm/mir.spec` to the target release.
 1. Commit any appropriate changes to the release branch and
    - push to the origin
    - or if it's an embargoed change:

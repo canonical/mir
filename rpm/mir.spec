@@ -27,7 +27,7 @@
 %global miral_sover 7
 %global mircommon_sover 12
 %global mircore_sover 2
-%global miroil_sover 8
+%global miroil_sover 9
 %global mirplatform_sover 34
 %global mirserver_sover 67
 %global mirwayland_sover 6
@@ -35,7 +35,7 @@
 %global mirplatforminput_sover 10
 
 Name:           mir
-Version:        2.27.0~dev
+Version:        2.28.0~dev
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -333,8 +333,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Thu Apr 16 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.27.0~dev-1
-- Begin development for 2.27.0 release
+* Mon Jun 01 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.28.0~dev-1
+- Begin development for 2.28.0 release
 
 * Thu Apr 16 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.26.0-1
 

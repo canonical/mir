@@ -1,6 +1,6 @@
 (configuring-how-to-index)=
 
-# Configuring Mir: how-to guides
+# How-to guides
 
 These how-to guides cover the key aspects of configuring Mir based compositors as an end-user.
 

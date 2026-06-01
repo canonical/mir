@@ -1,6 +1,6 @@
 (tutorial-index)=
 
-# Tutorials for building Wayland compositors with Mir
+# Tutorials
 
 These pages provide first-time introductions to key Mir aspects
 
