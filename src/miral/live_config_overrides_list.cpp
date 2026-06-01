@@ -20,6 +20,10 @@
 
 #include "live_config_overrides_list_builder.h"
 
+#include <boost/throw_exception.hpp>
+
+#include <stdexcept>
+
 namespace mlc = miral::live_config;
 
 mlc::OverridesList::OverridesList(std::unique_ptr<Context> ctx) :
@@ -41,8 +45,18 @@ void mlc::OverridesList::for_each(Loader unchanged, Loader fresh, Loader modifie
             continue;
         }
 
-        // Openers must not throw; they signal failure by returning nullptr.
-        auto stream = event.opener(event.path);
+        std::unique_ptr<std::istream> stream;
+        try
+        {
+            stream = event.opener(event.path);
+        }
+        catch (...)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error{
+                    std::format("Openers must not throw exceptions. Failed to open '{}'", event.path.string())});
+        }
+
         if (!stream || !*stream)
         {
             if (event.kind == Context::Kind::fresh)
