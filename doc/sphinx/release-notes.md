@@ -59,7 +59,7 @@
     - miral ABI unchanged at 7
     - mircommon ABI unchanged at 12
     - mircore ABI unchanged at 2
-    - miroil ABI unchanged at 8
+    - miroil ABI bumped to 9
     - mirplatform ABI unchanged at 34
     - mirserver ABI unchanged at 67
     - mirwayland ABI bumped to 6
