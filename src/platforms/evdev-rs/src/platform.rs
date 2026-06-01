@@ -414,7 +414,7 @@ impl PlatformRs {
                 }
 
                 if let Ok(mut store) = self.fd_store.lock() {
-                    store.remove_backup(devnode);
+                    store.remove_pending(devnode);
                 }
             }
             _ => {}
@@ -497,7 +497,7 @@ impl PlatformRs {
         self.known_devnums.remove(&devnum);
         self.bridge.release_device(devnum);
         if let Ok(mut store) = self.fd_store.lock() {
-            store.remove_backup(devnode);
+            store.remove_pending(devnode);
         }
         self.path_remove_device(devnode);
     }

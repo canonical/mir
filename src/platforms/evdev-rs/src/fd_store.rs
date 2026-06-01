@@ -17,64 +17,47 @@
 use std::collections::HashMap;
 use std::os::fd::RawFd;
 
-/// Manages pre-acquired and backup file descriptors for device nodes.
+/// Manages pre-acquired file descriptors for device nodes.
 ///
 /// When a device is activated via ConsoleServices, its fd is stored here
 /// so that libinput's `open_restricted` callback can claim it without
-/// blocking. A dup'd backup is kept so that libinput can re-open devices
-/// it has internally closed (e.g. after a lid switch event).
+/// blocking. The fd is never removed on claim — each `open_restricted`
+/// call receives a fresh `dup` — so libinput can re-open the device as
+/// many times as it likes (e.g. after a lid-switch event) without any
+/// separate backup mechanism. The fd is only released when the device is
+/// explicitly removed via `remove_pending`.
 pub struct FdStore {
     pending_fds: HashMap<String, RawFd>,
-    backup_fds: HashMap<String, RawFd>,
 }
 
 impl FdStore {
     pub fn new() -> Self {
         FdStore {
             pending_fds: HashMap::new(),
-            backup_fds: HashMap::new(),
         }
     }
 
     /// Store a pre-acquired file descriptor for a device path.
-    /// Also creates a dup'd backup for future re-opens.
     pub fn store_pending(&mut self, devnode: &str, fd: RawFd) {
-        self.pending_fds.insert(devnode.to_string(), fd);
-
-        // Keep a dup'd backup so libinput can re-open the device later
-        // (e.g. after handling a lid switch event internally).
-        let backup = unsafe { libc::dup(fd) };
-        if backup >= 0 {
-            // Close any previous backup for this device.
-            if let Some(old_backup) = self.backup_fds.insert(devnode.to_string(), backup) {
-                unsafe { libc::close(old_backup) };
-            }
+        // Close any previous fd for this device before replacing it.
+        if let Some(old_fd) = self.pending_fds.insert(devnode.to_string(), fd) {
+            unsafe { libc::close(old_fd) };
         }
     }
 
-    /// Claim and remove the pre-acquired fd for a device path.
-    /// Returns the raw fd, or -1 if no pending fd exists.
-    pub fn claim_pending(&mut self, devnode: &str) -> RawFd {
-        self.pending_fds.remove(devnode).unwrap_or(-1)
-    }
-
-    /// Claim a dup'd backup fd for a device path.
-    /// Used when libinput internally re-opens a device (e.g. after lid switch).
-    /// Returns a dup'd fd, or -1 if no backup exists.
-    pub fn claim_backup(&self, devnode: &str) -> RawFd {
-        match self.backup_fds.get(devnode) {
-            Some(&backup_fd) => {
-                // Return a dup so the backup remains available for future re-opens.
-                let duped = unsafe { libc::dup(backup_fd) };
-                duped
-            }
+    /// Return a dup'd fd for a device path without consuming the stored fd.
+    /// Returns the dup'd fd, or -1 if no pending fd exists.
+    /// The caller owns the returned fd and is responsible for closing it.
+    pub fn claim_pending(&self, devnode: &str) -> RawFd {
+        match self.pending_fds.get(devnode) {
+            Some(&fd) => unsafe { libc::dup(fd) },
             None => -1,
         }
     }
 
-    /// Remove the backup fd for a device (called on device removal).
-    pub fn remove_backup(&mut self, devnode: &str) {
-        if let Some(fd) = self.backup_fds.remove(devnode) {
+    /// Remove and close the stored fd for a device (called on device removal).
+    pub fn remove_pending(&mut self, devnode: &str) {
+        if let Some(fd) = self.pending_fds.remove(devnode) {
             unsafe { libc::close(fd) };
         }
     }
@@ -82,12 +65,8 @@ impl FdStore {
 
 impl Drop for FdStore {
     fn drop(&mut self) {
-        for (_, fd) in self.backup_fds.drain() {
+        for (_, fd) in self.pending_fds.drain() {
             unsafe { libc::close(fd) };
         }
-        // pending_fds are not closed here — ownership was transferred to the caller
-        // (libinput) when they were claimed via claim_pending. Any unclaimed pending
-        // fds represent a logic error but we don't close them because they may still
-        // be referenced by the ConsoleServices Device handle.
     }
 }
