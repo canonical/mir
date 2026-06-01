@@ -24,6 +24,8 @@ spread:
 symbols:
   - '.github/workflows/symbols-check.yml'
   - 'include/**/*.h'
+  - 'tools/symbols-map-generator/main.py'
+  - '**/symbols.map'
 
 tics:
   - '.github/workflows/tics.yml'
