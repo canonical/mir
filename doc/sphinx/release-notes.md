@@ -34,6 +34,22 @@
 
 -->
 
+## Mir 2.28.0~dev
+
+- New upstream release 2.28.0~dev
+
+  - ABI summary:
+
+    - miral ABI unchanged at 7
+    - mircommon ABI unchanged at 12
+    - mircore ABI unchanged at 2
+    - miroil ABI unchanged at 8
+    - mirplatform ABI unchanged at 34
+    - mirserver ABI unchanged at 67
+    - mirwayland ABI unchanged at 6
+    - mirplatformgraphics ABI unchanged at 23
+    - mirinputplatform ABI unchanged at 10
+
 ## Mir 2.27.0~dev
 
 - New upstream release 2.27.0
