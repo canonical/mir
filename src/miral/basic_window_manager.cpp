@@ -2410,66 +2410,37 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
     if (modifications.type().is_set())
     {
         auto const original_type = target_type;
-
         target_type = modifications.type().value();
 
-        switch (original_type)
-        {
-        case mir_window_type_normal:
-        case mir_window_type_utility:
-        case mir_window_type_dialog:
-        case mir_window_type_satellite:
-            switch (target_type)
-            {
-            case mir_window_type_normal:
-            case mir_window_type_utility:
-            case mir_window_type_dialog:
-            case mir_window_type_satellite:
-                break;
+        // Windows can morph between normal and satellite freely.
+        auto const is_normal_satellite_morph =
+            (original_type == mir_window_type_normal && target_type == mir_window_type_satellite) ||
+            (original_type == mir_window_type_satellite && target_type == mir_window_type_normal);
 
-            default:
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
-            }
-	    // Falls through.
+        // Freestyle windows can freely morph to any other type.
+        auto const is_freestyle_morph = original_type == mir_window_type_freestyle;
 
-        case mir_window_type_menu:
-            switch (target_type)
-            {
-            case mir_window_type_menu:
-            case mir_window_type_satellite:
-                break;
-
-            default:
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
-            }
-	    // Falls through.
-
-        case mir_window_type_gloss:
-        case mir_window_type_freestyle:
-        case mir_window_type_inputmethod:
-        case mir_window_type_tip:
-        case mir_window_type_decoration:
-            if (target_type != original_type)
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
-            break;
-
-        default:
-            break;
-        }
+        // Morphing to your own type is always allowed.
+        if (target_type != original_type && !is_normal_satellite_morph && !is_freestyle_morph)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
     }
+
+    auto const has_parent = modifications.parent().is_set()
+        ? !!modifications.parent().value().lock()
+        : !!window_info.parent();
 
     switch (target_type)
     {
     case mir_window_type_normal:
     case mir_window_type_utility:
-        if (modifications.parent().is_set() ? modifications.parent().value().lock() : window_info.parent())
+        if (has_parent)
             BOOST_THROW_EXCEPTION(std::runtime_error("Window type must not have a parent"));
         break;
 
     case mir_window_type_satellite:
     case mir_window_type_gloss:
     case mir_window_type_tip:
-        if (modifications.parent().is_set() ? !modifications.parent().value().lock() : !window_info.parent())
+        if (!has_parent)
             BOOST_THROW_EXCEPTION(std::runtime_error("Window type must have a parent"));
         break;
 

@@ -435,6 +435,8 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
           xdg_surface->xdg_shell.surface_registry),
       xdg_surface{xdg_surface}
 {
+    set_type(mir_window_type_normal);
+
     if (version_supports_wm_capabilities())
     {
         std::vector<uint32_t> capabilities{
@@ -467,10 +469,12 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
     if (parent && parent.value())
     {
         WindowWlSurfaceRole::set_parent(XdgToplevelStable::from(parent.value())->scene_surface());
+        set_type(mir_window_type_dialog);
     }
     else
     {
         WindowWlSurfaceRole::set_parent({});
+        set_type(mir_window_type_normal);
     }
 }
 
