@@ -24,25 +24,25 @@ namespace mlc = miral::live_config;
 
 auto mlc::OverridesListBuilder::push_unchanged(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&
 {
-    ctx->events.push_back({Context::Kind::unchanged, std::move(filepath), std::move(opener)});
+    ctx->events.emplace_back(Context::Kind::unchanged, std::move(filepath), std::move(opener));
     return *this;
 }
 
 auto mlc::OverridesListBuilder::push_new(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&
 {
-    ctx->events.push_back({Context::Kind::fresh, std::move(filepath), std::move(opener)});
+    ctx->events.emplace_back(Context::Kind::fresh, std::move(filepath), std::move(opener));
     return *this;
 }
 
 auto mlc::OverridesListBuilder::push_modified(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&
 {
-    ctx->events.push_back({Context::Kind::modified, std::move(filepath), std::move(opener)});
+    ctx->events.emplace_back(Context::Kind::modified, std::move(filepath), std::move(opener));
     return *this;
 }
 
 auto mlc::OverridesListBuilder::push_dropped(std::filesystem::path filepath) -> OverridesListBuilder&
 {
-    ctx->events.push_back({Context::Kind::dropped, std::move(filepath), {}});
+    ctx->events.emplace_back(Context::Kind::dropped, std::move(filepath), Opener{});
     return *this;
 }
 
