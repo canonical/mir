@@ -422,10 +422,11 @@ struct miral::WaylandExtensions::Self
             }
         }
         std::string const joiner = "\n - ";
-        return "Default extensions:" + joiner +
-            serialize_list({default_extensions.begin(), default_extensions.end()}, joiner) +
-            "\nAdditional supported extensions:" + joiner +
-            serialize_list(non_default_extensions, joiner);
+        auto description = "Default extensions:" + joiner +
+            serialize_list({default_extensions.begin(), default_extensions.end()}, joiner);
+        if (!non_default_extensions.empty())
+            description += "\nAdditional supported extensions:" + joiner + serialize_list(non_default_extensions, joiner);
+        return description;
     }
 
     std::set<std::string> const recommended_extensions;
