@@ -34,16 +34,8 @@ namespace live_config { struct OverridesList; }
 namespace miral
 {
 /**
- * Utility to locate and monitor a configuration file via the XDG Base Directory
- * Specification. Vis: ($XDG_CONFIG_HOME or $HOME/.config followed by
- * $XDG_CONFIG_DIRS). If, instead of a filename, a path is given, then the base
- * directories are not applied.
- *
- * If mode is `no_reloading`, then the file is loaded on startup and not reloaded
- *
- * If mode is `reload_on_change`, then the file is loaded on startup and either
- * the user-specific configuration file base ($XDG_CONFIG_HOME or $HOME/.config),
- * or the supplied path is monitored for changes.
+ * Utility to locate and monitor either a singular configuration file, or a base
+ * configuration file and its overrides.
  * \remark MirAL 5.1
  */
 class ConfigFile
@@ -51,15 +43,27 @@ class ConfigFile
 public:
     /// Loader functor is passed both the open stream and the actual path (for use in reporting problems)
     using Loader = std::function<void(std::istream& istream, std::filesystem::path const& path)>;
+    /// Provides access to OverridesList which allows access to the full list of
+    /// unchanged, modified, added, and dropped files.
     using OverrideLoader = std::move_only_function<void(live_config::OverridesList const&)>;
 
     /// Mode of reloading
+    ///
+    /// `no_reloading`: files are loaded on startup and not reloaded
+    ///
+    /// `reload_on_change`: files are loaded on startup and when either the
+    /// user-specific configuration file base ($XDG_CONFIG_HOME or
+    /// $HOME/.config), or the supplied path that is monitored for changes.
     enum class Mode
     {
         no_reloading,
         reload_on_change
     };
 
+    /// Utility to locate and monitor a configuration file via the XDG Base Directory
+    /// Specification. Vis: ($XDG_CONFIG_HOME or $HOME/.config followed by
+    /// $XDG_CONFIG_DIRS). If, instead of a filename, a path is given, then the base
+    /// directories are not applied.
     ConfigFile(MirRunner& runner, std::filesystem::path file, Mode mode, Loader load_config);
 
     /// Loads the base configuration file together with any override (drop-in)
