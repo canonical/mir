@@ -207,7 +207,7 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
         mir::fatal_error_abort("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
     }
     // The handler doesn't care about fancy context, we can just call it via raise()
-    raise(sig);
+    std::raise(sig);
     // We definitely can't continue, though, even if their handler tries.
     mir::fatal_error_abort("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
 }

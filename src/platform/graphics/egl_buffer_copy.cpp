@@ -342,7 +342,7 @@ private:
         state = std::make_shared<State>();
 
         // Check necessary EGL extensions
-        if (!strstr(reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS)), "GL_OES_EGL_image"))
+        if (!std::strstr(reinterpret_cast<char const*>(glGetString(GL_EXTENSIONS)), "GL_OES_EGL_image"))
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Missing required GL_OES_EGL_image extension"}));
         }

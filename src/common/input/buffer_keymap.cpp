@@ -36,7 +36,7 @@ auto mi::BufferKeymap::matches(Keymap const& other) const -> bool
     return keymap &&
         format == keymap->format &&
         buffer.size() == keymap->buffer.size() &&
-        memcmp(buffer.data(), keymap->buffer.data(), buffer.size()) == 0;
+        std::memcmp(buffer.data(), keymap->buffer.data(), buffer.size()) == 0;
 }
 
 auto mi::BufferKeymap::model() const -> std::string

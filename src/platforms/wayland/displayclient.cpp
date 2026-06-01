@@ -533,12 +533,12 @@ void mgw::DisplayClient::new_global(
     (void)version;
     DisplayClient* self = static_cast<decltype(self)>(data);
 
-    if (strcmp(interface, "wl_compositor") == 0)
+    if (std::strcmp(interface, "wl_compositor") == 0)
     {
         self->compositor =
             static_cast<decltype(self->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
-    else if (strcmp(interface, "wl_shm") == 0)
+    else if (std::strcmp(interface, "wl_shm") == 0)
     {
         self->shm = static_cast<decltype(self->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
@@ -546,13 +546,13 @@ void mgw::DisplayClient::new_global(
         // {arg} TODO needs fixing
         add_shm_listener(self, self->shm);
     }
-    else if (strcmp(interface, "wl_seat") == 0)
+    else if (std::strcmp(interface, "wl_seat") == 0)
     {
         if (version < 5) self->fake_pointer_frame = true;
         self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 6u)));
         add_seat_listener(self, self->seat);
     }
-    else if (strcmp(interface, "wl_output") == 0)
+    else if (std::strcmp(interface, "wl_output") == 0)
     {
         auto output =
             static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));
@@ -564,7 +564,7 @@ void mgw::DisplayClient::new_global(
                     output,
                     self)));
     }
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+    else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
         static xdg_wm_base_listener const shell_listener{
             [](void*, xdg_wm_base* shell, uint32_t serial){ xdg_wm_base_pong(shell, serial); },

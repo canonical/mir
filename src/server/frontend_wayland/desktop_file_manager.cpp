@@ -184,7 +184,7 @@ std::string mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id(st
         return "";
 
     // Get the contents after snap. and before the security annotation (denoted by a space)
-    auto const contents_start_index = strlen (snap_security_label_prefix);
+    auto const contents_start_index = std::strlen (snap_security_label_prefix);
     auto contents_end_index = contents.find_first_of(' ', contents_start_index);
     if (contents_end_index == std::string::npos)
         contents_end_index = contents.size();

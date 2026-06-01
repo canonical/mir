@@ -77,7 +77,7 @@ private:
           data{std::make_unique<std::byte[]>(mapping->len())},
           hotspot_{hotspot}
     {
-        ::memcpy(data.get(), mapping->data(), mapping->len());
+        std::memcpy(data.get(), mapping->data(), mapping->len());
     }
 
     geom::Size const size_;

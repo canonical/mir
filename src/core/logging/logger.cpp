@@ -86,7 +86,7 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
     va_list va;
     va_start(va, format);
     char message[bufsize];
-    vsnprintf(message, bufsize, format, va);
+    std::vsnprintf(message, bufsize, format, va);
     va_end(va);
 
     // Inefficient, but maintains API: Constructing a std::string for message/component.
