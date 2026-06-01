@@ -187,6 +187,41 @@ impl MirRunner {
         self
     }
 
+    /// Set the window management policy using a factory closure.
+    ///
+    /// This is similar to [`add_window_management_policy`](Self::add_window_management_policy)
+    /// but allows passing external state into the policy at construction time
+    /// by capturing it in the closure.
+    ///
+    /// # Example
+    ///
+    /// ```rust,ignore
+    /// use miral::prelude::*;
+    ///
+    /// let launcher = ExternalClientLauncher::new();
+    /// let launcher_for_policy = launcher.clone();
+    ///
+    /// MirRunner::new(std::env::args())
+    ///     .add(launcher)
+    ///     .add_window_management_policy_with(move || MyPolicy {
+    ///         launcher: launcher_for_policy,
+    ///         ..Default::default()
+    ///     })
+    ///     .run()
+    ///     .expect("Server failed");
+    /// ```
+    pub fn add_window_management_policy_with<P, F>(mut self, factory: F) -> Self
+    where
+        P: WindowManagementPolicy + 'static,
+        F: FnOnce() -> P + Send + 'static,
+    {
+        self.policy_factory = Some(Box::new(move || {
+            let policy = factory();
+            Box::new(PolicyBridgeAdapter::new(policy))
+        }));
+        self
+    }
+
     /// Set a callback to run when the server has started.
     pub fn on_start(mut self, f: impl FnOnce() + Send + 'static) -> Self {
         self.on_start = Some(Box::new(f));

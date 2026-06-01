@@ -180,12 +180,16 @@ impl WindowManagementPolicy for TilingPolicy {
 
 fn main() {
     let launcher = ExternalClientLauncher::new();
+    let launcher_for_policy = launcher.clone();
 
     let result = MirRunner::new(std::env::args())
         .add(Decorations::prefer_csd())
         .add(WaylandExtensions::default())
-        .add(launcher.clone())
-        .add_window_management_policy::<TilingPolicy>()
+        .add(launcher)
+        .add_window_management_policy_with(move || TilingPolicy {
+            launcher: launcher_for_policy,
+            ..Default::default()
+        })
         .on_start(|| println!("Tiling WM started"))
         .on_stop(|| println!("Tiling WM stopped"))
         .run();
