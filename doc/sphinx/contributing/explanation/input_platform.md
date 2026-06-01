@@ -1,6 +1,6 @@
 (mir-input-platform)=
 
-# Mir input platform APIs
+# Input platform APIs
 
 This document explains the input platform API. Developers may implement this
 API in order to define their own input platform. The Mir project ships with

@@ -6,7 +6,7 @@ myst:
 
 (exp-xdg-portals-support)=
 
-# XDG portal support in Mir
+# XDG portal support
 
 Mir does not have built-in support for XDG portals, but it is possible to use
 them with Mir-based compositors. This document provides an overview of how to

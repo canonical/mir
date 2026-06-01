@@ -255,6 +255,8 @@ linkcheck_ignore = [
     "https://example.com",
     # SourceForge domains often block linkcheck
     r"https://.*\.sourceforge\.(net|io)/.*",
+    # Khronos extension registry blocks some automated linkcheck requests.
+    r"https://registry\.khronos\.org/EGL/extensions/.*",
     "how-to/getting_involved_in_mir",
     "https://www.mail-archive.com",
     "https://manpages.ubuntu.com",

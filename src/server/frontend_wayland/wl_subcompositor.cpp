@@ -165,18 +165,18 @@ void mf::WlSubsurface::place_above(struct wl_resource* sibling)
 
     if (sibling_surface == surface)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::Subsurface::Error::bad_surface,
-            "wl_subsurface.place_above: sibling cannot be the subsurface itself"));
+            "wl_subsurface.place_above: sibling cannot be the subsurface itself"};
     }
 
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::Subsurface::Error::bad_surface,
-            "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"));
+            "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"};
     }
 
     parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
@@ -194,18 +194,18 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
 
     if (sibling_surface == surface)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::Subsurface::Error::bad_surface,
-            "wl_subsurface.place_below: sibling cannot be the subsurface itself"));
+            "wl_subsurface.place_below: sibling cannot be the subsurface itself"};
     }
 
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::Subsurface::Error::bad_surface,
-            "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"));
+            "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"};
     }
 
     parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::below);

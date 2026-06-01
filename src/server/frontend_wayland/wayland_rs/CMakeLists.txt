@@ -41,6 +41,7 @@ set(wayland_rs_generated_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_decoration_unstable_v1.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_output_unstable_v1.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_shell.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_shell_unstable_v6.cpp
 )
 
 set_source_files_properties(${wayland_rs_generated_sources} PROPERTIES GENERATED TRUE)
@@ -48,6 +49,7 @@ set_source_files_properties(${wayland_rs_generated_sources} PROPERTIES GENERATED
 target_sources(mirwayland_rs-cxxbridge
   PRIVATE
     ${wayland_rs_generated_sources}
+    ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/lifetime_tracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/protocol_error.cpp
 )
 

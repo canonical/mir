@@ -12,9 +12,12 @@ on:
     paths-ignore:
     - ".github/**"
     - "!.github/workflows/ppa-upload.yml"
+    - "*.md"
+    - "COPYING.*"
     - "doc/**"
     - "rpm/**"
     - "snap/**"
+    - "spread.yaml"
     - "spread/**"
 
 permissions: {}
