@@ -65,7 +65,7 @@ struct StaticGeometry
     MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
 };
 
-static constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
+constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return ((uint32_t)b <<  0) |
@@ -82,7 +82,7 @@ static constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char
 #endif
 }
 
-static constexpr auto unpack_pixel(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
+constexpr auto unpack_pixel(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     b = static_cast<unsigned char>((c >>  0) & 0xFF);
