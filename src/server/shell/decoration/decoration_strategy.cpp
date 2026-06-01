@@ -65,7 +65,7 @@ struct StaticGeometry
     MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
 };
 
-static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
+static constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return ((uint32_t)b <<  0) |
@@ -82,7 +82,7 @@ static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, u
 #endif
 }
 
-static constexpr auto unpack_color(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
+static constexpr auto unpack_pixel(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     b = static_cast<unsigned char>((c >>  0) & 0xFF);
@@ -99,15 +99,15 @@ static constexpr auto unpack_color(uint32_t c, unsigned char &r, unsigned char &
 #endif
 }
 
-uint32_t constexpr default_focused_background   = color(0x32, 0x32, 0x32);
-uint32_t constexpr default_unfocused_background = color(0x80, 0x80, 0x80);
-uint32_t constexpr default_focused_text         = color(0xFF, 0xFF, 0xFF);
-uint32_t constexpr default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
-uint32_t constexpr default_normal_button        = color(0x60, 0x60, 0x60);
-uint32_t constexpr default_active_button        = color(0xA0, 0xA0, 0xA0);
-uint32_t constexpr default_close_normal_button  = color(0xA0, 0x20, 0x20);
-uint32_t constexpr default_close_active_button  = color(0xC0, 0x60, 0x60);
-uint32_t constexpr default_button_icon          = color(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_focused_background   = pack_pixel(0x32, 0x32, 0x32);
+uint32_t constexpr default_unfocused_background = pack_pixel(0x80, 0x80, 0x80);
+uint32_t constexpr default_focused_text         = pack_pixel(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_unfocused_text       = pack_pixel(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_normal_button        = pack_pixel(0x60, 0x60, 0x60);
+uint32_t constexpr default_active_button        = pack_pixel(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_close_normal_button  = pack_pixel(0xA0, 0x20, 0x20);
+uint32_t constexpr default_close_active_button  = pack_pixel(0xC0, 0x60, 0x60);
+uint32_t constexpr default_button_icon          = pack_pixel(0xFF, 0xFF, 0xFF);
 
 inline auto area(geom::Size size) -> size_t
 {
@@ -624,7 +624,7 @@ void RendererStrategy::Text::Impl::render_glyph(
     geom::Displacement const glyph_offset = as_displacement(top_left);
 
     unsigned char color_pixels[3], color_alpha;
-    unpack_color(color, color_pixels[0], color_pixels[1], color_pixels[2], color_alpha);
+    unpack_pixel(color, color_pixels[0], color_pixels[1], color_pixels[2], color_alpha);
 
     for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
     {
