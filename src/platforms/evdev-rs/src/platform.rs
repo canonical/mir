@@ -21,7 +21,7 @@ use crate::udev_monitor::{UdevEventType, UdevMonitor};
 use cxx;
 use input;
 use std::collections::HashSet;
-use std::os::fd::AsRawFd;
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -417,7 +417,6 @@ impl PlatformRs {
                     store.remove(devnode);
                 }
             }
-            _ => {}
         }
     }
 
@@ -439,7 +438,7 @@ impl PlatformRs {
 
         // Store the fd so that open_restricted() can claim it.
         match self.fd_store.lock() {
-            Ok(mut store) => store.store(devnode, fd),
+            Ok(mut store) => store.store(devnode, unsafe { OwnedFd::from_raw_fd(fd) }),
             Err(_) => {
                 println!("evdev-rs: on_device_activated: fd_store mutex poisoned");
                 return;

@@ -15,7 +15,7 @@
  */
 
 use std::collections::HashMap;
-use std::os::fd::RawFd;
+use std::os::fd::OwnedFd;
 
 /// Manages pre-acquired file descriptors for device nodes.
 ///
@@ -25,9 +25,9 @@ use std::os::fd::RawFd;
 /// call receives a fresh `dup` — so libinput can re-open the device as
 /// many times as it likes (e.g. after a lid-switch event) without any
 /// separate backup mechanism. The fd is only released when the device is
-/// explicitly removed via `remove_pending`.
+/// explicitly removed via `remove`.
 pub struct FdStore {
-    fds: HashMap<String, RawFd>,
+    fds: HashMap<String, OwnedFd>,
 }
 
 impl FdStore {
@@ -38,35 +38,20 @@ impl FdStore {
     }
 
     /// Store a pre-acquired file descriptor for a device path.
-    pub fn store(&mut self, devnode: &str, fd: RawFd) {
-        // Close any previous fd for this device before replacing it.
-        if let Some(old_fd) = self.fds.insert(devnode.to_string(), fd) {
-            unsafe { libc::close(old_fd) };
-        }
+    /// Any previous fd for the same device is closed automatically.
+    pub fn store(&mut self, devnode: &str, fd: OwnedFd) {
+        self.fds.insert(devnode.to_string(), fd);
     }
 
     /// Return a dup'd fd for a device path without consuming the stored fd.
-    /// Returns the dup'd fd, or -1 if no pending fd exists.
+    /// Returns `None` if no fd is stored for this device.
     /// The caller owns the returned fd and is responsible for closing it.
-    pub fn claim(&self, devnode: &str) -> RawFd {
-        match self.fds.get(devnode) {
-            Some(&fd) => unsafe { libc::dup(fd) },
-            None => -1,
-        }
+    pub fn claim(&self, devnode: &str) -> Option<OwnedFd> {
+        self.fds.get(devnode)?.try_clone().ok()
     }
 
     /// Remove and close the stored fd for a device (called on device removal).
     pub fn remove(&mut self, devnode: &str) {
-        if let Some(fd) = self.fds.remove(devnode) {
-            unsafe { libc::close(fd) };
-        }
-    }
-}
-
-impl Drop for FdStore {
-    fn drop(&mut self) {
-        for (_, fd) in self.fds.drain() {
-            unsafe { libc::close(fd) };
-        }
+        self.fds.remove(devnode);
     }
 }

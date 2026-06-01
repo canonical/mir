@@ -17,7 +17,6 @@
 use crate::fd_store::FdStore;
 use input;
 use libc;
-use std::os::fd::FromRawFd;
 use std::os::unix::io;
 use std::sync::{Arc, Mutex};
 
@@ -29,42 +28,28 @@ pub struct LibinputInterfaceImpl {
 impl input::LibinputInterface for LibinputInterfaceImpl {
     /// Called by libinput to open a device.
     ///
-    /// First tries the pre-acquired fd (stored during `path_add_device` flow).
-    /// If that's not available (e.g. libinput internally re-opens a device after
-    /// handling a lid switch event), falls back to a dup'd backup fd.
+    /// Returns a dup of the pre-acquired fd stored during `path_add_device`.
+    /// The stored fd is never consumed, so libinput can re-open the device
+    /// any number of times (e.g. after a lid-switch event).
     fn open_restricted(&mut self, path: &std::path::Path, _flags: i32) -> Result<io::OwnedFd, i32> {
         let path_str = path.to_str().ok_or(-libc::EINVAL)?;
 
         let store = self.fd_store.lock().map_err(|_| -libc::ENOLCK)?;
 
-        let raw_fd = store.claim(path_str);
-        if raw_fd >= 0 {
-            // Safety: claim transferred ownership of this fd to us.
-            let owned = unsafe { io::OwnedFd::from_raw_fd(raw_fd) };
-            return Ok(owned);
-        }
-
-        // Fallback: libinput is re-opening a device it previously closed internally
-        // (e.g. after a lid switch event). Use the backup fd.
-        let backup_fd = store.claim(path_str);
-        if backup_fd >= 0 {
-            println!("evdev-rs open_restricted: using backup fd for {}", path_str);
-            let owned = unsafe { io::OwnedFd::from_raw_fd(backup_fd) };
-            return Ok(owned);
-        }
-
-        println!(
-            "evdev-rs open_restricted: no pre-acquired or backup fd for {}",
-            path_str
-        );
-        Err(-libc::ENOENT)
+        store.claim(path_str).ok_or_else(|| {
+            println!(
+                "evdev-rs open_restricted: no pre-acquired fd for {}",
+                path_str
+            );
+            -libc::ENOENT
+        })
     }
 
     /// Called by libinput when it is done with a device fd.
     ///
-    /// The `OwnedFd` closes the file descriptor automatically when dropped.
-    fn close_restricted(&mut self, fd: io::OwnedFd) {
-        // We handle FD externally, from UDev/the ConsoleProvider
-        std::mem::forget(fd);
+    /// Drops the `OwnedFd`, closing the dup that was handed to libinput.
+    /// The original fd remains in `FdStore` until the device is removed.
+    fn close_restricted(&mut self, _fd: io::OwnedFd) {
+        // OwnedFd closes the dup automatically on drop.
     }
 }
