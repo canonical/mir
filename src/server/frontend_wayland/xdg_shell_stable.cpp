@@ -479,8 +479,7 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
         // Check that the parent is not a descendant of this toplevel
         if (auto const this_surface = scene_surface())
         {
-            auto parent_surface = parent_toplevel->scene_surface();
-            while (parent_surface)
+            while (auto parent_surface = parent_toplevel->scene_surface())
             {
                 if (parent_surface.value() == this_surface.value())
                 {
