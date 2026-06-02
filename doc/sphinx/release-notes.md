@@ -36,7 +36,7 @@
 
 ## Mir 2.28.0~rc
 
-- New upstream release 2.28.0~dev
+- New upstream release 2.28.0
 
   - ABI summary:
 
@@ -46,25 +46,61 @@
     - miroil ABI unchanged at 8
     - mirplatform ABI unchanged at 34
     - mirserver ABI unchanged at 67
-    - mirwayland ABI unchanged at 6
-    - mirplatformgraphics ABI unchanged at 23
-    - mirinputplatform ABI unchanged at 10
-
-## Mir 2.27.0~dev
-
-- New upstream release 2.27.0
-
-  - ABI summary:
-
-    - miral ABI unchanged at 7
-    - mircommon ABI unchanged at 12
-    - mircore ABI unchanged at 2
-    - miroil ABI bumped to 9
-    - mirplatform ABI unchanged at 34
-    - mirserver ABI unchanged at 67
     - mirwayland ABI bumped to 6
     - mirplatformgraphics ABI unchanged at 23
     - mirinputplatform ABI unchanged at 10
+
+  - Enhancements:
+
+    - Implement org_kde_kwin_server_decoration by @tsimonq2 in https://github.com/canonical/mir/pull/4956
+    - Accept EGL_TEXTURE_EXTERNAL_WL by @Azkali in https://github.com/canonical/mir/pull/4888
+    - use std::format\* instead of snprintf in xwayland_spawner.cpp by @yotam-medini in https://github.com/canonical/mir/pull/4793
+    - Fixes TICS violations in wayland_connector.cpp by @DigraJatin in https://github.com/canonical/mir/pull/4804
+    - Eliminate tmpnam by @yotam-medini in https://github.com/canonical/mir/pull/4813
+    - Fix TICS violation of pointer arithmetic on polymorphic object, Use void\* as map key by @DigraJatin in https://github.com/canonical/mir/pull/4827
+    - Fix 'occured' -> 'occurred' typos in toolkit event headers and hover click by @SAY-5 in https://github.com/canonical/mir/pull/4861
+    - server: fix 'occured' -> 'occurred' in shm_backing.h doc comments by @SAY-5 in https://github.com/canonical/mir/pull/4854
+    - correct include paths pkgconfig by @sfalken in https://github.com/canonical/mir/pull/4907
+    - [wayland-rs] Generating implementations for Wayland events so that they can be sent from C++ to Rust to Wayland clients by @mattkae in https://github.com/canonical/mir/pull/4785
+    - [wayland-rs] Generating global registration methods for wayland-rs by @mattkae in https://github.com/canonical/mir/pull/4825
+    - [wayland-rs] Adding the ability to post an error on any object by @mattkae in https://github.com/canonical/mir/pull/4843
+    - [wayland-rs] Implement a C++ friendly Wayland client and WaylandServerNotificationHandler for receiving notifications about new clients (and beyond) by @mattkae in https://github.com/canonical/mir/pull/4848
+    - [live config] Re-implement array clearing in BasicStore and IniFile by @AlanGriffiths in https://github.com/canonical/mir/pull/4914
+    - [live config] Apply live configuration in `start_callback()` by @AlanGriffiths in https://github.com/canonical/mir/pull/4978
+    - [live config] Add tests for `IniFile` failure modes by @tarek-y-ismail in https://github.com/canonical/mir/pull/4847
+    - [graphics] Add `MIR_PIN_COMPOSITING_TO` to allow pinning a certain provider for display by @tarek-y-ismail in https://github.com/canonical/mir/pull/4958
+    - [acessibility] improve Ctrl+Shift+Numlock toggle shortcut by @deepakshirkem in https://github.com/canonical/mir/pull/4812
+    - Document XDG Portals support by @AlanGriffiths in https://github.com/canonical/mir/pull/4868
+    - Initial implementation of the new logging API by @RAOF in https://github.com/canonical/mir/pull/4895
+    - Add support for WLCS keyboard by @tarek-y-ismail in https://github.com/canonical/mir/pull/4716
+    - doc: add "Release a new Mir version" page by @Saviq in https://github.com/canonical/mir/pull/4906
+    - workshop: initial definiton by @Saviq in https://github.com/canonical/mir/pull/4965
+
+  - Bugs fixed:
+
+    - [evdev-input-rs] Fix input lockup after VT switch by @Copilot in https://github.com/canonical/mir/pull/4791
+    - [evdev] Fix FDs being removed by libinput by @muhammad23012009 in https://github.com/canonical/mir/pull/4853
+    - Fix copy-paste error with setting positioner constraint adjusment by @robert-ancell in https://github.com/canonical/mir/pull/4869
+    - graphics: fix leak in `DisplayInfo` by @Saviq in https://github.com/canonical/mir/pull/4877
+    - fix(console): restore previously active VT on LinuxVirtualTerminal teardown by @AristoChen in https://github.com/canonical/mir/pull/4842
+    - Fix boolean logic checking for DnD actions by @robert-ancell in https://github.com/canonical/mir/pull/4892
+    - fix-wrong-foreign-toplevel-logic by @AlanGriffiths in https://github.com/canonical/mir/pull/4957
+    - Apply live touchpad config at startup and correct disable-with-external-mouse mapping by @Copilot in https://github.com/canonical/mir/pull/4943
+    - Fix environment variables being overwritten when they match on prefix by @robert-ancell in https://github.com/canonical/mir/pull/4966
+    - Fix - #4552, gmtime is not thread safe by @DigraJatin in https://github.com/canonical/mir/pull/4972
+    - Upstream fixes to application switcher by @AlanGriffiths in https://github.com/canonical/mir/pull/4945
+
+  - New Contributors
+
+    - @muhammad23012009 made their first contribution in https://github.com/canonical/mir/pull/4853
+    - @deepakshirkem made their first contribution in https://github.com/canonical/mir/pull/4812
+    - @SAY-5 made their first contribution in https://github.com/canonical/mir/pull/4861
+    - @AristoChen made their first contribution in https://github.com/canonical/mir/pull/4842
+    - @tsimonq2 made their first contribution in https://github.com/canonical/mir/pull/4956
+
+## Mir 2.27.0~dev
+
+- We don't talk about 2.27.0.
 
 ## Mir 2.26.0
 
