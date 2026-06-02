@@ -120,10 +120,11 @@ impl WindowManagementPolicy for TilingPolicy {
 
     fn handle_modify_window(
         &mut self,
-        _window_info: &WindowInfo,
-        _modifications: &WindowSpecification,
+        window_info: &WindowInfo,
+        modifications: &WindowSpecification,
     ) {
-        // Ignore client resize/move requests — we control placement
+        self.tools()
+            .modify_window(window_info.window(), modifications);
     }
 
     fn handle_window_ready(&mut self, window_info: &WindowInfo) {
@@ -140,7 +141,6 @@ impl WindowManagementPolicy for TilingPolicy {
         if event.action == KeyAction::Down && event.modifiers.alt() && event.keysym == 0xff0d
         // XKB_KEY_Return
         {
-            println!("HERE");
             let _ = self.launcher.launch("konsole");
             return true;
         }
