@@ -835,9 +835,8 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let mut post_error_method = CppMethod::new("post_error", None, false, false, false, true);
     post_error_method.add_arg(CppArg::new(CppType::CppU32, "code", false));
     post_error_method.add_arg(CppArg::new(CppType::String, "message", false));
-    post_error_method.set_body(
-        "assert(instance_.has_value());\ninstance_.value()->post_error(code, message);",
-    );
+    post_error_method
+        .set_body("assert(instance_.has_value());\ninstance_.value()->post_error(code, message);");
     class.add_method(post_error_method);
 
     // Add a protected constructor and member so that subclasses know which client
