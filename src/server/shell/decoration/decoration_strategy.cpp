@@ -637,7 +637,7 @@ void RendererStrategy::Text::Impl::render_glyph(
 
     geom::Displacement const glyph_offset = as_displacement(top_left);
 
-    unsigned char color_red, color_green, color_blue, color_alpha;
+    unsigned char color_red = 0, color_green = 0, color_blue = 0, color_alpha = 0;
     unpack_pixel(color, color_red, color_green, color_blue, color_alpha);
 
     for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
