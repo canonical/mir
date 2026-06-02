@@ -50,6 +50,10 @@
     - mirplatformgraphics ABI unchanged at 23
     - mirinputplatform ABI unchanged at 10
 
+  - Enhancements:
+
+    - Now with 20% fewer bugs!
+
 ## Mir 2.26.0
 
 - New upstream release 2.26.0
