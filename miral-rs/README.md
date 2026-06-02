@@ -16,6 +16,12 @@ sudo apt install libmiral-dev
 
 See the [Mir build instructions](https://github.com/canonical/mir/blob/main/HACKING.md) for building from source.
 
+Afterwards, set your `LD_LIBRARY_PATH` to include the `miral` library's installation directory. For example:
+
+```bash
+export LD_LIBRARY_PATH=/usr/local/lib
+```
+
 ## Quick Start
 
 ```rust
