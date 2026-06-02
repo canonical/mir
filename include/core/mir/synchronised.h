@@ -18,6 +18,8 @@
 #define MIR_SYNCHRONISED_H_
 
 #include <mutex>
+#include <utility>
+#include <type_traits>
 
 namespace mir
 {
@@ -35,7 +37,7 @@ class Synchronised
 {
 public:
     Synchronised() = default;
-    Synchronised(T&& initial_value)
+    Synchronised(T&& initial_value) noexcept(std::is_nothrow_move_constructible_v<T>)
         : value{std::move(initial_value)}
     {
     }
