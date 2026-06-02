@@ -1,6 +1,7 @@
 .idea
 .project
 .cache
+.workshop.lock
 benchmarks/mir_perf_framework_setup.py
 debian/*.log
 include/server/mir/version.h

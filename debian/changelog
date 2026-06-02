@@ -1,8 +1,8 @@
-mir (2.27.0) UNRELEASED; urgency=medium
+mir (2.28.0) UNRELEASED; urgency=medium
 
   * Begin development for 2.27.0 release
 
- -- Mir CI Bot <mir-ci-bot@canonical.com>  Thu, 16 Apr 2026 14:45:00 +0000
+ -- Mir CI Bot <mir-ci-bot@canonical.com>  Mon, 01 Jun 2026 14:44:02 +0000
 
 mir (2.26.0-0ubuntu24.04) noble; urgency=medium
 

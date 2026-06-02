@@ -570,11 +570,11 @@ void mf::LayerSurfaceV1::set_keyboard_interactivity(uint32_t keyboard_interactiv
         break;
 
     default:
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_keyboard_interactivity,
             "Invalid keyboard interactivity %d",
-            keyboard_interactivity));
+            keyboard_interactivity};
     }
     msh::SurfaceSpecification spec;
     spec.focus_mode = current_focus_mode;
@@ -617,9 +617,9 @@ void mf::LayerSurfaceV1::ack_configure(uint32_t serial)
         // It might be zwlr_layer_surface_v1::error::invalid_surface_state but
         // that's not mentioned in the documentation or the wlroots source.
         // Update this when we know the correct error code.
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource, mw::generic_error_code,
-            "Could not find acked configure with serial %u", serial));
+            "Could not find acked configure with serial %u", serial};
     }
 
     auto const acked_configure_size = acked_event->second;
@@ -693,17 +693,17 @@ void mf::LayerSurfaceV1::handle_commit()
     bool const vert_stretched = anchors.committed().top && anchors.committed().bottom;
     if (!horiz_stretched && !width_set_by_client)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_size,
-            "Width may be unspecified only when surface is anchored to left and right edges"));
+            "Width may be unspecified only when surface is anchored to left and right edges"};
     }
     if (!vert_stretched && !height_set_by_client)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_size,
-            "Height may be unspecified only when surface is anchored to top and bottom edges"));
+            "Height may be unspecified only when surface is anchored to top and bottom edges"};
     }
 
     if (configure_on_next_commit)

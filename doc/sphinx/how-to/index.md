@@ -1,6 +1,6 @@
 (how-to-index)=
 
-# Mir how-to guides
+# How-to guides
 
 These guides cover the key aspects of developing a Wayland compositor with Mir.
 

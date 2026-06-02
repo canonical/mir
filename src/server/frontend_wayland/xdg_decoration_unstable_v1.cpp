@@ -140,8 +140,8 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
     if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
-        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
-            resource, Error::already_constructed, "Decoration already constructed for this toplevel"));
+        throw mir::wayland::ProtocolError{
+            resource, Error::already_constructed, "Decoration already constructed for this toplevel"};
     }
 
     decoration->add_destroy_listener(
@@ -166,8 +166,8 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
             {
                 mir::log_warning("Toplevel destroyed before attached decoration!");
                 // https://github.com/canonical/mir/issues/3452
-                /* BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError( */
-                /*     resource, Error::orphaned, "Toplevel destroyed before its attached decoration")); */
+                /* throw mir::wayland::ProtocolError{ */
+                /*     resource, Error::orphaned, "Toplevel destroyed before its attached decoration"}; */
             }
         });
 }

@@ -36,6 +36,7 @@ mir_generate_protocol_wrapper(mirwayland "zwlr_" wlr-virtual-pointer-unstable-v1
 mir_generate_protocol_wrapper(mirwayland "ext_" ext-session-lock-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "zmir_" mir-shell-unstable-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-decoration-unstable-v1.xml)
+mir_generate_protocol_wrapper(mirwayland "org_kde_kwin_" server-decoration.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" viewporter.xml)
 mir_generate_protocol_wrapper(mirwayland "wp_" fractional-scale-v1.xml)
 mir_generate_protocol_wrapper(mirwayland "z" xdg-activation-v1.xml)

@@ -8,7 +8,7 @@ Make server Wayland socket readable and writeable by all users. For debugging pu
 (global-composite-delay)=
 ### `composite-delay`
 
-Number of milliseconds to wait for new frames from clients before compositing. Higher values result in lower latency but risk causing frame skipping.
+Number of milliseconds to wait for new frames from clients before compositing. Higher values result in higher latency but risk causing frame skipping.
 
 Defaults to `0`.
 
@@ -110,14 +110,14 @@ Defaults to `off`.
 (global-key-repeat-delay)=
 ### `key-repeat-delay`
 
-Number of millisecond to hold down a key before generating repeat events.
+Number of milliseconds to hold down a key before generating repeat events.
 
 Defaults to `600`.
 
 (global-key-repeat-rate)=
 ### `key-repeat-rate`
 
-Number of milliseconds between generated key repeat events.
+Rate of repeating keys in characters per second.
 
 Defaults to `25`.
 
