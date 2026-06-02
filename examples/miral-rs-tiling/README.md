@@ -47,8 +47,7 @@ The compositor will start and tile any opened windows horizontally.
 
 ## Keybindings
 
-| Shortcut      | Action                  |
-|---------------|-------------------------|
-| `Alt+Enter`   | Launch terminal (konsole) |
-| `Alt+Q`       | Close focused window    |
-
+| Shortcut    | Action                    |
+| ----------- | ------------------------- |
+| `Alt+Enter` | Launch terminal (konsole) |
+| `Alt+Q`     | Close focused window      |
