@@ -477,19 +477,18 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
         }
 
         // Check that the parent is not a descendant of this toplevel
-        if (auto const this_surface = scene_surface())
+        if (scene_surface() && parent_toplevel->scene_surface())
         {
-            while (auto parent_surface = parent_toplevel->scene_surface())
+            auto const this_surface = scene_surface().value();
+            for (auto ancestor = parent_toplevel->scene_surface().value(); ancestor; ancestor = ancestor->parent())
             {
-                if (parent_surface.value() == this_surface.value())
+                if (ancestor == this_surface)
                 {
                     throw mw::ProtocolError{
                         resource,
                         Error::invalid_parent,
                         "Parent toplevel must not be a descendant of the child toplevel"};
                 }
-                auto const grandparent = parent_surface.value()->parent();
-                parent_surface = grandparent ? std::optional{grandparent} : std::nullopt;
             }
         }
 
