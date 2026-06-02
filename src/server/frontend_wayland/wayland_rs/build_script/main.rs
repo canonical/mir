@@ -36,8 +36,8 @@ use protocol_parser::{
 };
 use std::{env, path::Path};
 
-use crate::protocol_generator::generate_protocols_rs;
 use crate::dispatch_generator::generate_dispatch_rs;
+use crate::protocol_generator::generate_protocols_rs;
 use crate::wayland_server_generation::generate_wayland_server_generated_rs;
 
 fn main() {
