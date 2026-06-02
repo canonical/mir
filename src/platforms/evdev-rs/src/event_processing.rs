@@ -14,11 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState};
+use crate::device::{
+    InputDevicePtr, InputSinkPtr, LibinputDeviceHandle, LibinputDeviceInfo, LibinputDeviceState,
+};
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
-use input;
 use input::event;
 use input::event::keyboard;
 use input::event::keyboard::KeyboardEventTrait;
@@ -86,7 +87,7 @@ fn get_scroll_axis(value120: f64, value: f64, scale: f64, accum: &mut f64) -> Sc
 }
 
 fn get_device_info_from_libinput_device<'a>(
-    known_devices: &'a mut Vec<LibinputDeviceInfo>,
+    known_devices: &'a mut [LibinputDeviceInfo],
     libinput_device: &input::Device,
 ) -> Option<&'a mut LibinputDeviceInfo> {
     known_devices
@@ -128,8 +129,8 @@ fn handle_device_event(
         event::DeviceEvent::Added(_) => {
             known_devices.push(LibinputDeviceInfo {
                 id: *next_device_id,
-                device: libinput_device,
-                input_device: bridge.create_input_device(*next_device_id),
+                device: LibinputDeviceHandle(libinput_device),
+                input_device: InputDevicePtr(bridge.create_input_device(*next_device_id)),
                 input_sink: None,
                 event_builder: None,
                 button_state: 0,
@@ -159,12 +160,9 @@ fn handle_device_event(
         }
         event::DeviceEvent::Removed(removed_event) => {
             let dev = removed_event.device();
-            let Some(index) = known_devices
+            let index = known_devices
                 .iter()
-                .position(|x| x.device.as_raw() == dev.as_raw())
-            else {
-                return None;
-            };
+                .position(|x| x.device.as_raw() == dev.as_raw())?;
 
             // Remove from known_devices immediately (while holding the state lock), but
             // spawn a thread to call remove_device() on the registry.  Calling remove_device()
@@ -390,7 +388,7 @@ fn handle_pointer_button(
         button_event.time_usec(),
         EV_KEY,
         mir_button.repr as i32,
-        action.repr as i32,
+        action.repr,
     );
 
     let pointer_event = PointerEventData {
@@ -569,7 +567,7 @@ fn handle_keyboard_event(
         key_event.time_usec(),
         EV_KEY,
         key_event.key() as i32,
-        keyboard_action.repr as i32,
+        keyboard_action.repr,
     );
 
     let created = event_builder.pin_mut().key_event(&key_event_data);
@@ -602,10 +600,7 @@ fn handle_touch_event(
 
             // We make sure that we only notify of "down" touch events once. Everything
             // after that is considered a simple "change".
-            let data = device_info
-                .touch_properties
-                .entry(slot)
-                .or_insert(ContactData::default());
+            let data = device_info.touch_properties.entry(slot).or_default();
             data.action = if data.down_notified {
                 MirTouchAction::mir_touch_action_change
             } else {
@@ -626,10 +621,7 @@ fn handle_touch_event(
                 return false;
             }
 
-            let data = device_info
-                .touch_properties
-                .entry(slot)
-                .or_insert(ContactData::default());
+            let data = device_info.touch_properties.entry(slot).or_default();
             data.action = MirTouchAction::mir_touch_action_change;
 
             // Set coordinates. In normal operation, bounding rectangle should always be valid.
@@ -758,6 +750,7 @@ fn handle_touch_frame(
 /// `TakeDevice` round-trip) are also returned as deferred events rather than being
 /// processed in the same pass as `DEVICE_ADDED`, preventing the #4723 drop race.
 pub fn drain_initial_events(
+    libinput: &mut input::Libinput,
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
@@ -765,11 +758,11 @@ pub fn drain_initial_events(
     let mut handles = Vec::new();
     let mut deferred = Vec::new();
 
-    if state.libinput.dispatch().is_err() {
+    if libinput.dispatch().is_err() {
         panic!("evdev-rs: libinput dispatch() failed in assign_seat()");
     }
 
-    while let Some(event) = state.libinput.next() {
+    for event in libinput.by_ref() {
         let libinput_device = event.device();
         if let input::Event::Device(device_event) = event {
             if let Some(handle) = handle_device_event(
@@ -814,8 +807,8 @@ fn process_input_event(
             let mut scroll_state = ScrollState {
                 x_accum: state.scroll_axis_x_accum,
                 y_accum: state.scroll_axis_y_accum,
-                x_scroll_scale: state.x_scroll_scale as f64,
-                y_scroll_scale: state.y_scroll_scale as f64,
+                x_scroll_scale: state.x_scroll_scale,
+                y_scroll_scale: state.y_scroll_scale,
             };
 
             handle_pointer_event(
@@ -889,6 +882,7 @@ pub fn process_deferred_events(
 ///
 /// For *runtime hotplug* events the caller should drop the handles (fire-and-forget).
 pub fn process_libinput_events(
+    libinput: &mut input::Libinput,
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
@@ -896,15 +890,12 @@ pub fn process_libinput_events(
 ) -> Vec<thread::JoinHandle<()>> {
     let mut handles = Vec::new();
 
-    if state.libinput.dispatch().is_err() {
+    if libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
         return handles;
     }
 
-    // Use .next() rather than `for event in &mut state.libinput` so that
-    // the borrow on state.libinput is released after each call and the loop
-    // body is free to borrow other fields of `state` via process_input_event.
-    while let Some(event) = state.libinput.next() {
+    for event in libinput.by_ref() {
         match event {
             input::Event::Device(device_event) => {
                 let libinput_device = device_event.device();

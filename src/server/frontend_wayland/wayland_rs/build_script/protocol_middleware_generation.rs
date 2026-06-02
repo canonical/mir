@@ -19,7 +19,7 @@ use super::{
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
-pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+pub fn generate_wayland_interface_middleware(protocols: &[WaylandProtocol]) -> TokenStream {
     // First, generate the imports.
     let use_imports: Vec<TokenStream> = protocols
         .iter()

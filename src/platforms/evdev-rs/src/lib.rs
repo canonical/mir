@@ -268,9 +268,10 @@ mod ffi_bridge {
             -> SharedPtr<InputDevice>;
         pub fn raw_fd(self: &DeviceWrapper) -> i32;
 
-        // # Safety
-        //
-        // This is unsafe because it receives a raw C++ pointer as an argument.
+        /// # Safety
+        ///
+        /// This is unsafe because it receives a raw C++ pointer as an argument.
+        #[allow(clippy::missing_safety_doc)]
         pub unsafe fn create_event_builder_wrapper(
             self: &PlatformBridge,
             event_builder: *mut EventBuilder,
@@ -326,7 +327,7 @@ pub fn evdev_rs_create(
     device_registry: cxx::SharedPtr<InputDeviceRegistry>,
     report: cxx::UniquePtr<InputReport>,
 ) -> Box<PlatformRs> {
-    return Box::new(PlatformRs::new(bridge, device_registry, report));
+    Box::new(PlatformRs::new(bridge, device_registry, report))
 }
 
 // # Safety

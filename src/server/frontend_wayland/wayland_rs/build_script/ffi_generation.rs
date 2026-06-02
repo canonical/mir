@@ -19,7 +19,7 @@ use quote::{format_ident, quote};
 //
 // This includes Rust -> C++ with the help of the provided builders
 // and C++ -> Rust.
-pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>) -> TokenStream {
+pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> TokenStream {
     // First, generate the C++ -> Rust FFI code.
     let rust_tokens = protocols.iter().flat_map(generate_ffi_for_protocol);
 
@@ -27,7 +27,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
 
     // Next, generate the Rust -> C++ side.
     let cpp_tokens: Vec<TokenStream> = builders
-        .into_iter()
+        .iter()
         .flat_map(|builder: &CppBuilder| builder.to_rust_cpp_bindings())
         .collect();
 

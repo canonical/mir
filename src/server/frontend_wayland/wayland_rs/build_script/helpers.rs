@@ -24,7 +24,7 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
 pub fn write_generated_cpp_file(content: &str, out_dir: &str, filename: &str) {
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
-    fs::create_dir_all(&out_dir).unwrap();
+    fs::create_dir_all(out_dir).unwrap();
     fs::write(dest_path, content).unwrap();
 }
 
