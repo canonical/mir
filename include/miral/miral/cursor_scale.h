@@ -65,6 +65,7 @@ public:
     void scale_temporarily(float scale_multiplier, std::chrono::milliseconds duration) const;
 
     void operator()(mir::Server& server) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;

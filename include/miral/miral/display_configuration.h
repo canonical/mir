@@ -204,9 +204,8 @@ public:
     ///                at the key as a parameter and returns an arbitrary payload
     /// \remark Since MirAL 5.3
     /// \sa miral::DisplayConfiguration::Node - the node provided as a parameter to the builder
-    void layout_userdata_builder(
-        std::string const& key,
-        std::function<std::any(Node const& value)> const& builder) const;
+    void layout_userdata_builder(std::string const& key, std::function<std::any(Node const& value)> const& builder)
+        const;
 
     void operator()(mir::Server& server) const;
 

@@ -17,7 +17,6 @@
 #ifndef MIRAL_DECORATIONS_H
 #define MIRAL_DECORATIONS_H
 
-
 #include <memory>
 
 namespace mir { class Server; }

@@ -94,13 +94,13 @@ public:
         /// The application that is being given access to this extension
         auto app() const -> Application const&;
         /// The name of the extension/global, always the same as given to conditionally_enable()
-        auto name() const -> const char*;
+        auto name() const -> char const*;
         /// If the user has enabled or disabled this extension one of the wayland extension Mir options
         auto user_preference() const -> std::optional<bool>;
 
     private:
         friend WaylandExtensions;
-        EnableInfo(Application const& app, const char* name, std::optional<bool> user_preference);
+        EnableInfo(Application const& app, char const* name, std::optional<bool> user_preference);
         struct Self;
         std::unique_ptr<Self> const self;
     };
@@ -143,13 +143,13 @@ public:
     /// source of text input for other clients. Input methods are not required to display anything
     /// to use this extension, so malicious clients could use it to intercept keys events or take
     /// actions without user input.
-    static const char* const zwp_input_method_v1;
+    static char const* const zwp_input_method_v1;
 
     /// Allows clients to display a surface as an input panel surface. The input panel surface
     /// is shown when a text input is active and hidden otherwise. The panel itself can either
     /// be attached to the edge of the screen or set to float near the active input. This is
     /// often used in conjunction with zwp_input_method_v1.
-    static const char* const zwp_input_panel_v1;
+    static char const* const zwp_input_panel_v1;
 
     /// Allows clients (such as on-screen keyboards) to intercept physical key events and act as a
     /// source of text input for other clients. Input methods are not required to display anything
