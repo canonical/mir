@@ -126,9 +126,13 @@ impl WindowManagementPolicy for TilingPolicy {
         // Ignore client resize/move requests — we control placement
     }
 
+    fn handle_window_ready(&mut self, window_info: &WindowInfo) {
+        self.tools().select_active_window(window_info.window());
+    }
+
     fn handle_raise_window(&mut self, window_info: &WindowInfo) {
         // Allow raising but don't change tile layout
-        self.tools().raise_tree(window_info.window());
+        self.tools().select_active_window(window_info.window());
     }
 
     fn handle_keyboard_event(&mut self, event: &KeyboardEvent) -> bool {
@@ -149,6 +153,16 @@ impl WindowManagementPolicy for TilingPolicy {
             return true;
         }
 
+        false
+    }
+
+    fn handle_pointer_event(&mut self, event: &PointerEvent) -> bool {
+        if event.action == PointerAction::ButtonDown {
+            let point = Point::new(event.x as i32, event.y as i32);
+            if let Some(window) = self.tools().window_at(point) {
+                self.tools().select_active_window(&window);
+            }
+        }
         false
     }
 

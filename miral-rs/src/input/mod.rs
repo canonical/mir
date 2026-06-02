@@ -80,16 +80,21 @@ pub enum KeyAction {
     Up,
     /// A key is being held (repeat).
     Repeat,
+    /// A modifier-only state change (no physical key press/release).
+    Modifiers,
 }
 
 impl KeyAction {
-    /// Convert from raw C enum value.
-    pub(crate) fn from_raw(value: i32) -> Self {
+    /// Convert from raw C enum value (`MirKeyboardAction`).
+    ///
+    /// Returns `None` for unrecognised values.
+    pub(crate) fn from_raw(value: i32) -> Option<Self> {
         match value {
-            0 => Self::Up,
-            1 => Self::Down,
-            2 => Self::Repeat,
-            _ => Self::Down,
+            0 => Some(Self::Up),
+            1 => Some(Self::Down),
+            2 => Some(Self::Repeat),
+            3 => Some(Self::Modifiers),
+            _ => None,
         }
     }
 }
@@ -115,9 +120,9 @@ impl PointerAction {
         match value {
             0 => Self::ButtonUp,
             1 => Self::ButtonDown,
-            2 => Self::Motion,
-            3 => Self::Enter,
-            4 => Self::Leave,
+            2 => Self::Enter,
+            3 => Self::Leave,
+            4 => Self::Motion,
             _ => Self::Motion,
         }
     }
@@ -146,42 +151,76 @@ impl TouchAction {
     }
 }
 
-/// Keyboard modifier flags.
-///
-/// Represents which modifier keys are active during an input event.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct Modifiers {
-    raw: u32,
+bitflags::bitflags! {
+    /// Keyboard modifier flags.
+    ///
+    /// Represents which modifier keys are active during an input event.
+    /// Bit values match `MirInputEventModifier` from
+    /// `include/core/mir_toolkit/events/enums.h`.
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+    pub struct Modifiers: u32 {
+        /// No modifier (Mir uses bit 0 for "none").
+        const NONE        = 1 << 0;
+        /// Alt (either side).
+        const ALT         = 1 << 1;
+        /// Left Alt.
+        const ALT_LEFT    = 1 << 2;
+        /// Right Alt.
+        const ALT_RIGHT   = 1 << 3;
+        /// Shift (either side).
+        const SHIFT       = 1 << 4;
+        /// Left Shift.
+        const SHIFT_LEFT  = 1 << 5;
+        /// Right Shift.
+        const SHIFT_RIGHT = 1 << 6;
+        /// Sym.
+        const SYM         = 1 << 7;
+        /// Function.
+        const FUNCTION    = 1 << 8;
+        /// Control (either side).
+        const CTRL        = 1 << 9;
+        /// Left Control.
+        const CTRL_LEFT   = 1 << 10;
+        /// Right Control.
+        const CTRL_RIGHT  = 1 << 11;
+        /// Meta/Super (either side).
+        const META        = 1 << 12;
+        /// Left Meta/Super.
+        const META_LEFT   = 1 << 13;
+        /// Right Meta/Super.
+        const META_RIGHT  = 1 << 14;
+        /// Caps Lock.
+        const CAPS_LOCK   = 1 << 15;
+        /// Num Lock.
+        const NUM_LOCK    = 1 << 16;
+        /// Scroll Lock.
+        const SCROLL_LOCK = 1 << 17;
+    }
 }
 
 impl Modifiers {
     /// Create modifiers from raw bitfield.
     pub(crate) fn from_raw(raw: u32) -> Self {
-        Self { raw }
-    }
-
-    /// Whether no modifiers are active.
-    pub fn is_empty(&self) -> bool {
-        self.raw == 0
+        Self::from_bits_truncate(raw)
     }
 
     /// Whether Alt is held.
     pub fn alt(&self) -> bool {
-        self.raw & (1 << 2) != 0
+        self.intersects(Self::ALT)
     }
 
     /// Whether Shift is held.
     pub fn shift(&self) -> bool {
-        self.raw & (1 << 0) != 0
+        self.intersects(Self::SHIFT)
     }
 
     /// Whether Control is held.
     pub fn ctrl(&self) -> bool {
-        self.raw & (1 << 1) != 0
+        self.intersects(Self::CTRL)
     }
 
     /// Whether Super/Meta is held.
     pub fn meta(&self) -> bool {
-        self.raw & (1 << 3) != 0
+        self.intersects(Self::META)
     }
 }

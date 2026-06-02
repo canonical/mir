@@ -73,8 +73,11 @@ impl<P: WindowManagementPolicy> PolicyBridge for PolicyBridgeAdapter<P> {
     }
 
     fn handle_keyboard_event(&mut self, event: &ffi::KeyboardEventInfo) -> bool {
+        let Some(action) = KeyAction::from_raw(event.action) else {
+            return false;
+        };
         let kb_event = KeyboardEvent {
-            action: KeyAction::from_raw(event.action),
+            action,
             key_code: event.scan_code,
             keysym: event.keysym as u32,
             modifiers: Modifiers::from_raw(event.modifiers),

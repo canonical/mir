@@ -74,7 +74,9 @@ pub mod prelude {
     pub use crate::extensions::{ServerExtension, WaylandExtensions, X11Support};
     pub use crate::geometry::{Displacement, Point, PointF, Rectangle, Size};
     pub use crate::idle::IdleListener;
-    pub use crate::input::{InputEvent, KeyAction, KeyboardEvent, PointerEvent, TouchEvent};
+    pub use crate::input::{
+        InputEvent, KeyAction, KeyboardEvent, PointerAction, PointerEvent, TouchEvent,
+    };
     pub use crate::keymap::Keymap;
     pub use crate::magnifier::Magnifier;
     pub use crate::output::{
