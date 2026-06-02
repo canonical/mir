@@ -836,7 +836,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     post_error_method.add_arg(CppArg::new(CppType::CppU32, "code", false));
     post_error_method.add_arg(CppArg::new(CppType::String, "message", false));
     post_error_method.set_body(
-        "if (!instance_.has_value()) {\n    throw \"post_error() used before associate()\";\n}\ninstance_.value()->post_error(code, message);",
+        "assert(instance_.has_value());\ninstance_.value()->post_error(code, message);",
     );
     class.add_method(post_error_method);
 
