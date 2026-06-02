@@ -99,6 +99,20 @@ constexpr auto unpack_pixel(uint32_t c, unsigned char &r, unsigned char &g, unsi
 #endif
 }
 
+constexpr auto blend_pixel(uint32_t c, unsigned char r, unsigned char g, unsigned char b, unsigned char a) -> uint32_t
+{
+    unsigned char src_r = 0, src_g = 0, src_b = 0, src_a = 0;
+    unpack_pixel(c, src_r, src_g, src_b, src_a);
+    unsigned char out_r = (static_cast<int>(src_r) * (255 - a)) / 255 +
+        (static_cast<int>(r) * a) / 255;
+    unsigned char out_g = (static_cast<int>(src_g) * (255 - a)) / 255 +
+        (static_cast<int>(g) * a) / 255;
+    unsigned char out_b = (static_cast<int>(src_b) * (255 - a)) / 255 +
+        (static_cast<int>(b) * a) / 255;
+    unsigned char out_a = src_a;
+    return pack_pixel(out_r, out_g, out_b, out_a);
+}
+
 uint32_t constexpr default_focused_background   = pack_pixel(0x32, 0x32, 0x32);
 uint32_t constexpr default_unfocused_background = pack_pixel(0x80, 0x80, 0x80);
 uint32_t constexpr default_focused_text         = pack_pixel(0xFF, 0xFF, 0xFF);
@@ -623,8 +637,8 @@ void RendererStrategy::Text::Impl::render_glyph(
 
     geom::Displacement const glyph_offset = as_displacement(top_left);
 
-    unsigned char color_pixels[3], color_alpha;
-    unpack_pixel(color, color_pixels[0], color_pixels[1], color_pixels[2], color_alpha);
+    unsigned char color_red, color_green, color_blue, color_alpha;
+    unpack_pixel(color, color_red, color_green, color_blue, color_alpha);
 
     for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
     {
@@ -636,14 +650,8 @@ void RendererStrategy::Text::Impl::render_glyph(
         {
             geom::X const glyph_x = buffer_x - glyph_offset.dx;
             unsigned char const glyph_alpha = (static_cast<int>(glyph_row[glyph_x.as_int()]) * color_alpha) / 255;
-            unsigned char* const buffer_pixels = reinterpret_cast<unsigned char *>(buffer_row + buffer_x.as_int());
-            for (int i = 0; i < 3; i++)
-            {
-                // Blend color with the previous buffer color based on the glyph's alpha
-                buffer_pixels[i] =
-                    (static_cast<int>(buffer_pixels[i]) * (255 - glyph_alpha)) / 255 +
-                    (static_cast<int>(color_pixels[i]) * glyph_alpha) / 255;
-            }
+            buffer_row[buffer_x.as_int()] =
+                blend_pixel(buffer_row[buffer_x.as_int()], color_red, color_green, color_blue, glyph_alpha);
         }
     }
 }
