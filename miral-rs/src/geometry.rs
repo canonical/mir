@@ -34,12 +34,7 @@ mod sealed {
 ///
 /// This trait is sealed — external implementations are not allowed.
 pub trait Scalar:
-    sealed::Sealed
-    + Copy
-    + Default
-    + PartialOrd
-    + Add<Output = Self>
-    + Sub<Output = Self>
+    sealed::Sealed + Copy + Default + PartialOrd + Add<Output = Self> + Sub<Output = Self>
 {
 }
 
