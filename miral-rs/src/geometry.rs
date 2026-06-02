@@ -18,28 +18,62 @@
 //!
 //! These types represent positions, sizes, and regions in the compositor's
 //! coordinate space. All values are in logical pixels.
+//!
+//! The types are generic over a [`Scalar`] coordinate type. The default is
+//! `i32`; use the `*F` type aliases (e.g. [`PointF`]) for `f32` variants.
 
 use std::ops::{Add, Sub};
 
-/// A 2D point in logical pixel coordinates.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Point {
-    /// The x coordinate.
-    pub x: i32,
-    /// The y coordinate.
-    pub y: i32,
+mod sealed {
+    pub trait Sealed {}
+    impl Sealed for i32 {}
+    impl Sealed for f32 {}
 }
 
-impl Point {
+/// Numeric coordinate type. Implemented for `i32` and `f32`.
+///
+/// This trait is sealed — external implementations are not allowed.
+pub trait Scalar:
+    sealed::Sealed
+    + Copy
+    + Default
+    + PartialOrd
+    + Add<Output = Self>
+    + Sub<Output = Self>
+{
+}
+
+impl Scalar for i32 {}
+impl Scalar for f32 {}
+
+/// A 2D point in logical pixel coordinates.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Point<T: Scalar = i32> {
+    /// The x coordinate.
+    pub x: T,
+    /// The y coordinate.
+    pub y: T,
+}
+
+impl<T: Scalar> Point<T> {
     /// Create a new point.
-    pub fn new(x: i32, y: i32) -> Self {
+    pub fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 }
 
-impl Add<Displacement> for Point {
-    type Output = Point;
-    fn add(self, rhs: Displacement) -> Point {
+impl Eq for Point<i32> {}
+
+impl std::hash::Hash for Point<i32> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.x.hash(state);
+        self.y.hash(state);
+    }
+}
+
+impl<T: Scalar> Add<Displacement<T>> for Point<T> {
+    type Output = Point<T>;
+    fn add(self, rhs: Displacement<T>) -> Point<T> {
         Point {
             x: self.x + rhs.dx,
             y: self.y + rhs.dy,
@@ -47,9 +81,9 @@ impl Add<Displacement> for Point {
     }
 }
 
-impl Sub<Point> for Point {
-    type Output = Displacement;
-    fn sub(self, rhs: Point) -> Displacement {
+impl<T: Scalar> Sub<Point<T>> for Point<T> {
+    type Output = Displacement<T>;
+    fn sub(self, rhs: Point<T>) -> Displacement<T> {
         Displacement {
             dx: self.x - rhs.x,
             dy: self.y - rhs.y,
@@ -57,39 +91,54 @@ impl Sub<Point> for Point {
     }
 }
 
+/// Floating-point variant of [`Point`] for sub-pixel precision.
+pub type PointF = Point<f32>;
+
 /// A 2D size in logical pixels.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Size {
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Size<T: Scalar = i32> {
     /// The width in logical pixels.
-    pub width: i32,
+    pub width: T,
     /// The height in logical pixels.
-    pub height: i32,
+    pub height: T,
 }
 
-impl Size {
+impl<T: Scalar> Size<T> {
     /// Create a new size.
-    pub fn new(width: i32, height: i32) -> Self {
+    pub fn new(width: T, height: T) -> Self {
         Self { width, height }
     }
 }
 
-/// A rectangle defined by its top-left corner and size.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Rectangle {
-    /// The top-left corner of the rectangle.
-    pub top_left: Point,
-    /// The size of the rectangle.
-    pub size: Size,
+impl Eq for Size<i32> {}
+
+impl std::hash::Hash for Size<i32> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.width.hash(state);
+        self.height.hash(state);
+    }
 }
 
-impl Rectangle {
+/// Floating-point variant of [`Size`].
+pub type SizeF = Size<f32>;
+
+/// A rectangle defined by its top-left corner and size.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Rectangle<T: Scalar = i32> {
+    /// The top-left corner of the rectangle.
+    pub top_left: Point<T>,
+    /// The size of the rectangle.
+    pub size: Size<T>,
+}
+
+impl<T: Scalar> Rectangle<T> {
     /// Create a new rectangle.
-    pub fn new(top_left: Point, size: Size) -> Self {
+    pub fn new(top_left: Point<T>, size: Size<T>) -> Self {
         Self { top_left, size }
     }
 
     /// Check if a point is contained within this rectangle.
-    pub fn contains(&self, point: Point) -> bool {
+    pub fn contains(&self, point: Point<T>) -> bool {
         point.x >= self.top_left.x
             && point.x < self.top_left.x + self.size.width
             && point.y >= self.top_left.y
@@ -97,25 +146,46 @@ impl Rectangle {
     }
 }
 
-/// A 2D displacement vector in logical pixels.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
-pub struct Displacement {
-    /// The horizontal displacement.
-    pub dx: i32,
-    /// The vertical displacement.
-    pub dy: i32,
+impl Eq for Rectangle<i32> {}
+
+impl std::hash::Hash for Rectangle<i32> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.top_left.hash(state);
+        self.size.hash(state);
+    }
 }
 
-impl Displacement {
+/// Floating-point variant of [`Rectangle`].
+pub type RectangleF = Rectangle<f32>;
+
+/// A 2D displacement vector in logical pixels.
+#[derive(Debug, Clone, Copy, PartialEq, Default)]
+pub struct Displacement<T: Scalar = i32> {
+    /// The horizontal displacement.
+    pub dx: T,
+    /// The vertical displacement.
+    pub dy: T,
+}
+
+impl<T: Scalar> Displacement<T> {
     /// Create a new displacement.
-    pub fn new(dx: i32, dy: i32) -> Self {
+    pub fn new(dx: T, dy: T) -> Self {
         Self { dx, dy }
     }
 }
 
-impl Add for Displacement {
-    type Output = Displacement;
-    fn add(self, rhs: Displacement) -> Displacement {
+impl Eq for Displacement<i32> {}
+
+impl std::hash::Hash for Displacement<i32> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.dx.hash(state);
+        self.dy.hash(state);
+    }
+}
+
+impl<T: Scalar> Add for Displacement<T> {
+    type Output = Displacement<T>;
+    fn add(self, rhs: Displacement<T>) -> Displacement<T> {
         Displacement {
             dx: self.dx + rhs.dx,
             dy: self.dy + rhs.dy,
@@ -123,9 +193,9 @@ impl Add for Displacement {
     }
 }
 
-impl Sub for Displacement {
-    type Output = Displacement;
-    fn sub(self, rhs: Displacement) -> Displacement {
+impl<T: Scalar> Sub for Displacement<T> {
+    type Output = Displacement<T>;
+    fn sub(self, rhs: Displacement<T>) -> Displacement<T> {
         Displacement {
             dx: self.dx - rhs.dx,
             dy: self.dy - rhs.dy,
@@ -133,39 +203,24 @@ impl Sub for Displacement {
     }
 }
 
-/// A 2D point with floating-point coordinates (for sub-pixel precision).
-///
-/// Used for cursor positioning where sub-pixel accuracy is needed.
-#[derive(Debug, Clone, Copy, PartialEq, Default)]
-pub struct PointF {
-    /// The x coordinate.
-    pub x: f32,
-    /// The y coordinate.
-    pub y: f32,
-}
-
-impl PointF {
-    /// Create a new floating-point point.
-    pub fn new(x: f32, y: f32) -> Self {
-        Self { x, y }
-    }
-}
+/// Floating-point variant of [`Displacement`].
+pub type DisplacementF = Displacement<f32>;
 
 // --- FFI conversions ---
 
-impl From<miral_sys::ffi::Point> for Point {
+impl From<miral_sys::ffi::Point> for Point<i32> {
     fn from(p: miral_sys::ffi::Point) -> Self {
         Self { x: p.x, y: p.y }
     }
 }
 
-impl From<Point> for miral_sys::ffi::Point {
-    fn from(p: Point) -> Self {
+impl From<Point<i32>> for miral_sys::ffi::Point {
+    fn from(p: Point<i32>) -> Self {
         Self { x: p.x, y: p.y }
     }
 }
 
-impl From<miral_sys::ffi::Size> for Size {
+impl From<miral_sys::ffi::Size> for Size<i32> {
     fn from(s: miral_sys::ffi::Size) -> Self {
         Self {
             width: s.width,
@@ -174,8 +229,8 @@ impl From<miral_sys::ffi::Size> for Size {
     }
 }
 
-impl From<Size> for miral_sys::ffi::Size {
-    fn from(s: Size) -> Self {
+impl From<Size<i32>> for miral_sys::ffi::Size {
+    fn from(s: Size<i32>) -> Self {
         Self {
             width: s.width,
             height: s.height,
@@ -183,7 +238,7 @@ impl From<Size> for miral_sys::ffi::Size {
     }
 }
 
-impl From<miral_sys::ffi::Rectangle> for Rectangle {
+impl From<miral_sys::ffi::Rectangle> for Rectangle<i32> {
     fn from(r: miral_sys::ffi::Rectangle) -> Self {
         Self {
             top_left: r.top_left.into(),
@@ -192,8 +247,8 @@ impl From<miral_sys::ffi::Rectangle> for Rectangle {
     }
 }
 
-impl From<Rectangle> for miral_sys::ffi::Rectangle {
-    fn from(r: Rectangle) -> Self {
+impl From<Rectangle<i32>> for miral_sys::ffi::Rectangle {
+    fn from(r: Rectangle<i32>) -> Self {
         Self {
             top_left: r.top_left.into(),
             size: r.size.into(),
@@ -201,14 +256,14 @@ impl From<Rectangle> for miral_sys::ffi::Rectangle {
     }
 }
 
-impl From<miral_sys::ffi::Displacement> for Displacement {
+impl From<miral_sys::ffi::Displacement> for Displacement<i32> {
     fn from(d: miral_sys::ffi::Displacement) -> Self {
         Self { dx: d.dx, dy: d.dy }
     }
 }
 
-impl From<Displacement> for miral_sys::ffi::Displacement {
-    fn from(d: Displacement) -> Self {
+impl From<Displacement<i32>> for miral_sys::ffi::Displacement {
+    fn from(d: Displacement<i32>) -> Self {
         Self { dx: d.dx, dy: d.dy }
     }
 }
