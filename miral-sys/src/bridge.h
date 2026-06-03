@@ -137,6 +137,18 @@ void miral_runner_add_magnifier(
     int32_t width,
     int32_t height,
     bool enabled);
+void miral_runner_add_bounce_keys(MiralRunner& runner, bool enabled);
+void miral_runner_add_slow_keys(MiralRunner& runner, bool enabled);
+void miral_runner_add_sticky_keys(MiralRunner& runner, bool enabled);
+void miral_runner_add_mousekeys(MiralRunner& runner, bool enabled);
+void miral_runner_add_locate_pointer(MiralRunner& runner, bool enabled);
+void miral_runner_add_cursor_theme(MiralRunner& runner, rust::Str theme);
+void miral_runner_add_cursor_scale(MiralRunner& runner, float scale);
+void miral_runner_add_input_configuration(MiralRunner& runner);
+void miral_runner_add_display_configuration(MiralRunner& runner);
+void miral_runner_add_output_filter(MiralRunner& runner);
+void miral_runner_add_init_callback(MiralRunner& runner);
+void miral_runner_add_terminator(MiralRunner& runner);
 int32_t miral_launcher_launch(rust::Str command);
 
 // Window info queries

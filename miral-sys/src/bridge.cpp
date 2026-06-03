@@ -29,6 +29,18 @@
 #include <miral/idle_listener.h>
 #include <miral/magnifier.h>
 #include <miral/session_lock_listener.h>
+#include <miral/bounce_keys.h>
+#include <miral/slow_keys.h>
+#include <miral/sticky_keys.h>
+#include <miral/mousekeys_config.h>
+#include <miral/locate_pointer.h>
+#include <miral/cursor_theme.h>
+#include <miral/cursor_scale.h>
+#include <miral/input_configuration.h>
+#include <miral/display_configuration.h>
+#include <miral/output_filter.h>
+#include <miral/add_init_callback.h>
+#include <miral/set_terminator.h>
 
 #include <mir_toolkit/events/enums.h>
 #include <mir_toolkit/events/input/keyboard_event.h>
@@ -943,6 +955,72 @@ void miral_runner_add_magnifier(
         .magnification(magnification)
         .capture_size(mir::geometry::Size{width, height});
     runner.options.push_back(magnifier);
+}
+
+void miral_runner_add_bounce_keys(MiralRunner& runner, bool enabled)
+{
+    runner.options.push_back(
+        enabled ? miral::BounceKeys::enabled() : miral::BounceKeys::disabled());
+}
+
+void miral_runner_add_slow_keys(MiralRunner& runner, bool enabled)
+{
+    runner.options.push_back(
+        enabled ? miral::SlowKeys::enabled() : miral::SlowKeys::disabled());
+}
+
+void miral_runner_add_sticky_keys(MiralRunner& runner, bool enabled)
+{
+    runner.options.push_back(
+        enabled ? miral::StickyKeys::enabled() : miral::StickyKeys::disabled());
+}
+
+void miral_runner_add_mousekeys(MiralRunner& runner, bool enabled)
+{
+    runner.options.push_back(
+        enabled ? miral::MouseKeysConfig::enabled() : miral::MouseKeysConfig::disabled());
+}
+
+void miral_runner_add_locate_pointer(MiralRunner& runner, bool enabled)
+{
+    runner.options.push_back(
+        enabled ? miral::LocatePointer::enabled() : miral::LocatePointer::disabled());
+}
+
+void miral_runner_add_cursor_theme(MiralRunner& runner, rust::Str theme)
+{
+    runner.options.push_back(miral::CursorTheme{std::string(theme.data(), theme.size())});
+}
+
+void miral_runner_add_cursor_scale(MiralRunner& runner, float scale)
+{
+    runner.options.push_back(miral::CursorScale{scale});
+}
+
+void miral_runner_add_input_configuration(MiralRunner& runner)
+{
+    runner.options.push_back(miral::InputConfiguration{});
+}
+
+void miral_runner_add_display_configuration(MiralRunner& runner)
+{
+    runner.options.push_back(miral::DisplayConfiguration{*runner.inner});
+}
+
+void miral_runner_add_output_filter(MiralRunner& runner)
+{
+    runner.options.push_back(miral::OutputFilter{});
+}
+
+void miral_runner_add_init_callback(MiralRunner& runner)
+{
+    runner.options.push_back(miral::AddInitCallback{[]() { rust_on_init_callback(); }});
+}
+
+void miral_runner_add_terminator(MiralRunner& runner)
+{
+    runner.options.push_back(
+        miral::SetTerminator{[](int signal) { rust_on_terminator_callback(signal); }});
 }
 
 int32_t miral_launcher_launch(rust::Str command)

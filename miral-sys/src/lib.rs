@@ -337,6 +337,30 @@ pub mod ffi {
             height: i32,
             enabled: bool,
         );
+        /// Add bounce keys accessibility support.
+        fn miral_runner_add_bounce_keys(runner: Pin<&mut MiralRunner>, enabled: bool);
+        /// Add slow keys accessibility support.
+        fn miral_runner_add_slow_keys(runner: Pin<&mut MiralRunner>, enabled: bool);
+        /// Add sticky keys accessibility support.
+        fn miral_runner_add_sticky_keys(runner: Pin<&mut MiralRunner>, enabled: bool);
+        /// Add mouse keys accessibility support.
+        fn miral_runner_add_mousekeys(runner: Pin<&mut MiralRunner>, enabled: bool);
+        /// Add locate pointer accessibility support.
+        fn miral_runner_add_locate_pointer(runner: Pin<&mut MiralRunner>, enabled: bool);
+        /// Add a cursor theme to the runner.
+        fn miral_runner_add_cursor_theme(runner: Pin<&mut MiralRunner>, theme: &str);
+        /// Add a cursor scale to the runner.
+        fn miral_runner_add_cursor_scale(runner: Pin<&mut MiralRunner>, scale: f32);
+        /// Add input configuration support to the runner.
+        fn miral_runner_add_input_configuration(runner: Pin<&mut MiralRunner>);
+        /// Add display configuration support to the runner.
+        fn miral_runner_add_display_configuration(runner: Pin<&mut MiralRunner>);
+        /// Add output filter support to the runner.
+        fn miral_runner_add_output_filter(runner: Pin<&mut MiralRunner>);
+        /// Add an init callback to the runner.
+        fn miral_runner_add_init_callback(runner: Pin<&mut MiralRunner>);
+        /// Add a terminator callback to the runner.
+        fn miral_runner_add_terminator(runner: Pin<&mut MiralRunner>);
 
         /// Launch an external client by command string.
         ///
@@ -600,6 +624,10 @@ pub mod ffi {
         fn rust_on_session_lock_callback();
         /// Called from C++ when the session is unlocked.
         fn rust_on_session_unlock_callback();
+        /// Called from C++ when the init callback should run.
+        fn rust_on_init_callback();
+        /// Called from C++ when the terminator callback should run.
+        fn rust_on_terminator_callback(signal: i32);
 
         // --- Configuration option callbacks (called from C++) ---
 
@@ -704,6 +732,7 @@ use std::cell::RefCell;
 type PolicyFactoryFn = Box<dyn FnOnce() -> Box<dyn PolicyBridge>>;
 type LifecycleCallback = Box<dyn FnOnce() + Send>;
 type RepeatingCallback = Box<dyn Fn() + Send>;
+type SignalCallback = Box<dyn Fn(i32) + Send>;
 
 thread_local! {
     static POLICY_FACTORY: RefCell<Option<PolicyFactoryFn>> = RefCell::new(None);
@@ -714,6 +743,8 @@ thread_local! {
     static ON_IDLE_WAKE_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
     static ON_SESSION_LOCK_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
     static ON_SESSION_UNLOCK_CALLBACK: RefCell<Option<RepeatingCallback>> = RefCell::new(None);
+    static ON_INIT_CALLBACKS: RefCell<Vec<LifecycleCallback>> = RefCell::new(Vec::new());
+    static ON_TERMINATOR_CALLBACK: RefCell<Option<SignalCallback>> = RefCell::new(None);
 }
 
 /// Set the policy factory that will be called when C++ creates the policy.
@@ -769,6 +800,20 @@ pub fn set_on_session_lock_callback(callback: RepeatingCallback) {
 /// Set the callback for when the session is unlocked.
 pub fn set_on_session_unlock_callback(callback: RepeatingCallback) {
     ON_SESSION_UNLOCK_CALLBACK.with(|f| {
+        *f.borrow_mut() = Some(callback);
+    });
+}
+
+/// Set the callback for when the server init hook runs.
+pub fn set_on_init_callback(callback: LifecycleCallback) {
+    ON_INIT_CALLBACKS.with(|f| {
+        f.borrow_mut().push(callback);
+    });
+}
+
+/// Set the callback for termination requests.
+pub fn set_on_terminator_callback(callback: SignalCallback) {
+    ON_TERMINATOR_CALLBACK.with(|f| {
         *f.borrow_mut() = Some(callback);
     });
 }
@@ -1057,6 +1102,24 @@ fn rust_on_session_unlock_callback() {
     ON_SESSION_UNLOCK_CALLBACK.with(|f| {
         if let Some(callback) = f.borrow().as_ref() {
             callback();
+        }
+    });
+}
+
+fn rust_on_init_callback() {
+    ON_INIT_CALLBACKS.with(|f| {
+        let mut callbacks = f.borrow_mut();
+        if !callbacks.is_empty() {
+            let callback = callbacks.remove(0);
+            callback();
+        }
+    });
+}
+
+fn rust_on_terminator_callback(signal: i32) {
+    ON_TERMINATOR_CALLBACK.with(|f| {
+        if let Some(callback) = f.borrow().as_ref() {
+            callback(signal);
         }
     });
 }
