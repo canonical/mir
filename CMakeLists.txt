@@ -17,7 +17,7 @@ cmake_minimum_required(VERSION 3.28)
 cmake_policy(SET CMP0015 NEW)
 cmake_policy(SET CMP0022 NEW)
 if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.30")
-    cmake_policy(SET CMP0167 NEW)
+  cmake_policy(SET CMP0167 NEW)
 endif()
 
 set(CMAKE_GCOV gcov)
@@ -193,9 +193,9 @@ CMAKE_DEPENDENT_OPTION(
 
 CMAKE_DEPENDENT_OPTION(MIR_ENABLE_COVERAGE "Enable code coverage" OFF MIR_ENABLE_TESTS OFF)
 if(MIR_ENABLE_COVERAGE)
-    include(CodeCoverage)
-    append_coverage_compiler_flags()
-    setup_target_for_coverage_lcov(
+  include(CodeCoverage)
+  append_coverage_compiler_flags()
+  setup_target_for_coverage_lcov(
         NAME coverage-html
         EXECUTABLE ctest --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
         EXCLUDE "tests/*" "${CMAKE_BINARY_DIR}/*"
@@ -203,13 +203,13 @@ if(MIR_ENABLE_COVERAGE)
         GENHTML_ARGS --ignore-errors inconsistent --ignore-errors corrupt
     )
 
-    setup_target_for_coverage_gcovr_xml(
+  setup_target_for_coverage_gcovr_xml(
         NAME coverage-xml
         EXECUTABLE ctest --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
         EXCLUDE "tests/*" "${CMAKE_BINARY_DIR}/*"
     )
 
-    add_custom_target(coverage
+  add_custom_target(coverage
         DEPENDS coverage-html coverage-xml
     )
 endif()
@@ -235,16 +235,16 @@ foreach(platform IN LISTS MIR_PLATFORM)
     set(MIR_BUILD_PLATFORM_ATOMIC_KMS TRUE)
   endif()
   if (platform STREQUAL "x11")
-     set(MIR_BUILD_PLATFORM_X11 TRUE)
+    set(MIR_BUILD_PLATFORM_X11 TRUE)
   endif()
   if (platform STREQUAL "eglstream-kms")
-     if (NOT WAYLAND_EGLSTREAM_FOUND)
-        message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
-     endif()
-     set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
+    if (NOT WAYLAND_EGLSTREAM_FOUND)
+      message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
+    endif()
+    set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
   endif()
   if (platform STREQUAL "wayland")
-     set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
+    set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
   endif()
 endforeach(platform)
 
@@ -305,6 +305,11 @@ add_subdirectory(src/)
 
 add_subdirectory(examples/)
 add_subdirectory(cmake/)
+
+if (MIR_ENABLE_RUST)
+  add_subdirectory(miral-sys/)
+  add_subdirectory(miral-rs/)
+endif()
 
 if (MIR_ENABLE_TESTS)
   find_package(GtestGmock REQUIRED)
