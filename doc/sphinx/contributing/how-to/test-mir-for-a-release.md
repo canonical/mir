@@ -73,7 +73,8 @@ in which we need to test:
 <!-- rc-testing:start -->
 
 |                                | 24.04 | 25.10 |
-| ------------------------------ | ----- | ----- |
+|--------------------------------| ----- | ----- |
+| atomic-kms                     |       |       |
 | gbm-kms                        |       |       |
 | eglstream-kms                  |       |       |
 | eglstream-kms + gbm-kms hybrid |       |       |
