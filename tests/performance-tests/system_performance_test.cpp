@@ -72,7 +72,7 @@ int exec_cmd(char const* cmd)
         }
         ++c;
     }
-    argv[argc] = NULL;
+    argv[argc] = nullptr;
     return execv(argv[0], argv);
 }
 
@@ -80,7 +80,7 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
 {
     int pipefd[2];
     if (pipe(pipefd))
-        return NULL;
+        return nullptr;
 
     int const& pipe_out = pipefd[0];
     int const& pipe_in = pipefd[1];
@@ -90,7 +90,7 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
     {
         close(pipe_in);
         close(pipe_out);
-        return NULL;
+        return nullptr;
     }
     else if (pid == 0)
     {

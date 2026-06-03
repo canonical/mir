@@ -21,7 +21,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-mtd::MockEGL* global_mock_egl = NULL;
+mtd::MockEGL* global_mock_egl = nullptr;
 }
 
 
@@ -77,7 +77,7 @@ mtd::MockEGL::MockEGL()
       fake_visual_id(1)
 {
     using namespace testing;
-    assert(global_mock_egl == NULL && "Only one mock object per process is allowed");
+    assert(global_mock_egl == nullptr && "Only one mock object per process is allowed");
 
     global_mock_egl = this;
 
@@ -93,7 +93,7 @@ mtd::MockEGL::MockEGL()
     ON_CALL(*this, eglBindApi(EGL_OPENGL_ES_API))
     .WillByDefault(Return(EGL_TRUE));
 
-    ON_CALL(*this, eglGetConfigs(_,NULL, 0, _))
+    ON_CALL(*this, eglGetConfigs(_,nullptr, 0, _))
     .WillByDefault(DoAll(
                        SetArgPointee<3>(config_size),
                        Return(EGL_TRUE)));
@@ -218,7 +218,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
 
 mtd::MockEGL::~MockEGL()
 {
-    global_mock_egl = NULL;
+    global_mock_egl = nullptr;
 }
 
 #define CHECK_GLOBAL_MOCK(rettype)         \

@@ -238,7 +238,7 @@ struct ClientXdgShellV6Creator
         wl_display_roundtrip(display);
 
         wl_proxy* xdg_surface = wl_proxy_marshal_constructor(
-            shell, 2, &mir::wayland::zxdg_surface_v6_interface_data, NULL, surface.get());
+            shell, 2, &mir::wayland::zxdg_surface_v6_interface_data, nullptr, surface.get());
 
         (void)wl_proxy_marshal_constructor(
             xdg_surface, 1, &mir::wayland::zxdg_toplevel_v6_interface_data);

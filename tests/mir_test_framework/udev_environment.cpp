@@ -180,7 +180,7 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
     {
         if (S_ISREG(sb.st_mode) || S_ISLNK(sb.st_mode))
         {
-            if (!umockdev_testbed_load_ioctl(testbed, NULL, ioctls_filename.c_str(), &err))
+            if (!umockdev_testbed_load_ioctl(testbed, nullptr, ioctls_filename.c_str(), &err))
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load ioctl recording: ") +
                                                          err->message));
@@ -193,7 +193,7 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
     {
         if (S_ISREG(sb.st_mode) || S_ISLNK(sb.st_mode))
         {
-            if (!umockdev_testbed_load_script(testbed, NULL, script_filename.c_str(), &err))
+            if (!umockdev_testbed_load_script(testbed, nullptr, script_filename.c_str(), &err))
             {
                 BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load device recording: ") +
                                                          err->message));
@@ -220,7 +220,7 @@ void mtf::UdevEnvironment::load_device_ioctls(std::string const& name)
     auto ioctls_filename = recordings_path + "/" + name + ".ioctl";
 
     GError* err = nullptr;
-    if (!umockdev_testbed_load_ioctl(testbed, NULL, ioctls_filename.c_str(), &err))
+    if (!umockdev_testbed_load_ioctl(testbed, nullptr, ioctls_filename.c_str(), &err))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load ioctl recording: ") +
                                                  err->message));
@@ -232,7 +232,7 @@ void mtf::UdevEnvironment::load_device_evemu(std::string const& name)
     auto evemu_filename = recordings_path + "/" + name + ".evemu";
 
     GError* err = nullptr;
-    if (!umockdev_testbed_load_evemu_events(testbed, NULL, evemu_filename.c_str(), &err))
+    if (!umockdev_testbed_load_evemu_events(testbed, nullptr, evemu_filename.c_str(), &err))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load evemu recording: ") +
                                                  err->message));

@@ -275,7 +275,7 @@ mtd::MockDRM::MockDRM()
         })}
 {
     using namespace testing;
-    assert(global_mock == NULL && "Only one mock object per process is allowed");
+    assert(global_mock == nullptr && "Only one mock object per process is allowed");
 
     global_mock = this;
 

@@ -138,9 +138,9 @@ State::State()
     sig_handler_new.sa_flags = 0;
     sig_handler_new.sa_handler = signal_shutdown;
 
-    sigaction(SIGINT, &sig_handler_new, NULL);
-    sigaction(SIGTERM, &sig_handler_new, NULL);
-    sigaction(SIGHUP, &sig_handler_new, NULL);
+    sigaction(SIGINT, &sig_handler_new, nullptr);
+    sigaction(SIGTERM, &sig_handler_new, nullptr);
+    sigaction(SIGHUP, &sig_handler_new, nullptr);
 }
 
 void State::quit()

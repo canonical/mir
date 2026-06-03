@@ -126,7 +126,7 @@ inline void trace(char const* fmt, ...)
 int const pixel_size = 4;
 int const no_of_buffers = 2;
 
-auto const display = wl_display_connect(NULL);
+auto const display = wl_display_connect(nullptr);
 
 class window;
 class window_register
@@ -431,7 +431,7 @@ void globals::init()
 
     auto const registry = wl_display_get_registry(display);
 
-    wl_registry_add_listener(registry, &registry_listener, NULL);
+    wl_registry_add_listener(registry, &registry_listener, nullptr);
 
     wl_display_roundtrip(display);
 
@@ -468,7 +468,7 @@ void globals::init()
 
     if (fail) abort();
 
-    xdg_wm_base_add_listener(globals::wm_base, &shell_listener, NULL);
+    xdg_wm_base_add_listener(globals::wm_base, &shell_listener, nullptr);
 }
 
 // If building against newer Wayland protocol definitions we may miss trailing fields
@@ -517,7 +517,7 @@ void window::update_free_buffers(wl_buffer* buffer)
 
 void window::prepare_buffer(buffer& b)
 {
-    void* pool_data = NULL;
+    void* pool_data = nullptr;
     wl_shm_pool* shm_pool = make_shm_pool(globals::shm, width * height * pixel_size, &pool_data);
 
     b.buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, width * pixel_size, WL_SHM_FORMAT_ARGB8888);

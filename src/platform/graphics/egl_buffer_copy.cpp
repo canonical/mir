@@ -188,14 +188,14 @@ ShaderHandle compile_shader(GLenum type, GLchar const* src)
         BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
     }
 
-    glShaderSource(id, 1, &src, NULL);
+    glShaderSource(id, 1, &src, nullptr);
     glCompileShader(id);
     GLint ok;
     glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
     if (!ok)
     {
         GLchar log[1024] = "(No log info)";
-        glGetShaderInfoLog(id, sizeof log, NULL, log);
+        glGetShaderInfoLog(id, sizeof log, nullptr, log);
         glDeleteShader(id);
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
@@ -217,7 +217,7 @@ ProgramHandle link_shader(
     if (!ok)
     {
         GLchar log[1024];
-        glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+        glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
         log[sizeof log - 1] = '\0';
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
