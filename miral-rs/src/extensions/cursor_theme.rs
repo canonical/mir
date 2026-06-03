@@ -13,7 +13,9 @@ pub struct CursorTheme {
 impl CursorTheme {
     /// Create a cursor theme extension.
     pub fn new(theme: impl Into<String>) -> Self {
-        Self { theme: theme.into() }
+        Self {
+            theme: theme.into(),
+        }
     }
 
     /// Get the configured theme list.

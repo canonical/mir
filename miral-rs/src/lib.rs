@@ -66,10 +66,10 @@ pub mod prelude {
     pub use crate::client::ExternalClientLauncher;
     pub use crate::configuration::ConfigurationOption;
     pub use crate::extensions::{
-        AddInitCallback, BounceKeys, CursorScale, CursorTheme, Decorations,
-        DisplayConfiguration, IdleListener, InputConfiguration, Keymap, LocatePointer,
-        Magnifier, MouseKeysConfig, OutputFilter, ServerExtension, SessionLockListener,
-        SetTerminator, SlowKeys, StickyKeys, WaylandExtensions, X11Support,
+        AddInitCallback, BounceKeys, CursorScale, CursorTheme, Decorations, DisplayConfiguration,
+        IdleListener, InputConfiguration, Keymap, LocatePointer, Magnifier, MouseKeysConfig,
+        OutputFilter, ServerExtension, SessionLockListener, SetTerminator, SlowKeys, StickyKeys,
+        WaylandExtensions, X11Support,
     };
     pub use crate::geometry::{
         Displacement, DisplacementF, Point, PointF, Rectangle, RectangleF, Scalar, Size, SizeF,
