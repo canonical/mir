@@ -27,6 +27,7 @@
 #include <sys/inotify.h>
 #include <unistd.h>
 
+#include <cstdlib>
 #include <fstream>
 #include <optional>
 #include <string>
@@ -43,11 +44,11 @@ auto config_directory(path const& file) -> std::optional<path>
     {
         return file.parent_path();
     }
-    else if (auto config_home = getenv("XDG_CONFIG_HOME"))
+    else if (auto config_home = std::getenv("XDG_CONFIG_HOME"))
     {
         return config_home;
     }
-    else if (auto home = getenv("HOME"))
+    else if (auto home = std::getenv("HOME"))
     {
         return  path(home) / ".config";
     }
@@ -123,7 +124,7 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
         config_roots.push_back(directory.value());
     }
 
-    if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+    if (auto config_dirs = std::getenv("XDG_CONFIG_DIRS"))
     {
         std::istringstream config_stream{config_dirs};
         for (std::string config_root; getline(config_stream, config_root, ':');)

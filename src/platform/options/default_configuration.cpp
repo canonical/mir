@@ -25,6 +25,7 @@
 #include <mir/shared_library_prober.h>
 
 #include <algorithm>
+#include <cstring>
 #include <format>
 
 namespace mo = mir::options;
@@ -404,7 +405,7 @@ auto compare_library_names(std::shared_ptr<mir::SharedLibrary> const& lhs, std::
     auto const lhs_desc = lhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     auto const rhs_desc = rhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-    return strcmp(rhs_desc()->name, lhs_desc()->name) > 0;
+    return std::strcmp(rhs_desc()->name, lhs_desc()->name) > 0;
 }
 
 auto option_default_to_string(boost::shared_ptr<boost::program_options::option_description> const& desc) -> std::string

@@ -28,6 +28,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <cstdlib>
 
 #define MIR_LOG_COMPONENT "display"
 #include <mir/log.h>
@@ -77,7 +78,7 @@ mgx::X11Window::X11Window(mx::X11Resources* x11_resources,
     conn->change_property(win, x11_resources->WM_PROTOCOLS, XCB_ATOM_ATOM, 32, 1, &x11_resources->WM_DELETE_WINDOW);
 
     // Include hostname in title when X-forwarding
-    if (getenv("SSH_CONNECTION"))
+    if (std::getenv("SSH_CONNECTION"))
     {
         char buffer[128] = { '\0' };
         if (gethostname(buffer, sizeof buffer - 1) == 0)

@@ -35,6 +35,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <xf86drm.h>
+#include <cstring>
 #include <sstream>
 #include <variant>
 
@@ -370,7 +371,7 @@ auto probe_display_platform(
                            device_extensions);
             // TODO: This test is not strictly correct (will incorrectly match
             // EGL_EXT_device_drmish_but_not_drm)
-            if (strstr(device_extensions, "EGL_EXT_device_drm") != NULL)
+            if (std::strstr(device_extensions, "EGL_EXT_device_drm") != NULL)
             {
                 // Check we can acquire the device...
                 mir::Fd drm_fd;

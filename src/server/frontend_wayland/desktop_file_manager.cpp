@@ -23,6 +23,7 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <filesystem>
@@ -207,7 +208,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     {
         mir::log_info("Attempting to resolve desktop file via AppArmor for pid: %d", pid);
         std::string const label{label_cstr};
-        free(label_cstr);
+        std::free(label_cstr);
         // mode_cstr should NOT be freed, as it's from the same buffer as label_cstr
 
         auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(label);

@@ -26,6 +26,7 @@
 #include <mir/options/configuration.h>
 
 #include <algorithm>
+#include <cstring>
 #include <mutex>
 #include <set>
 #include <map>
@@ -177,7 +178,7 @@ struct miral::WaylandExtensions::Self
         std::set<std::string> extension;
         extensions += ':';
 
-        for (char const* start = extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
+        for (char const* start = extensions.c_str(); char const* end = std::strchr(start, ':'); start = end+1)
         {
             if (start != end)
                 extension.insert(std::string{start, end});

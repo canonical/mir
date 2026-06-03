@@ -26,6 +26,7 @@
 #include <mir/log.h>
 
 #include <xcb/xcb.h>
+#include <cstdlib>
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -106,7 +107,7 @@ public:
         {
             if (ptr)
             {
-                free(ptr);
+                std::free(ptr);
             }
         }
 

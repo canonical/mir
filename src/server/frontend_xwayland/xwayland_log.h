@@ -25,7 +25,7 @@ namespace mir
 {
 inline auto verbose_xwayland_logging_enabled() -> bool
 {
-    static bool const log_verbose = getenv("MIR_X11_VERBOSE_LOG");
+    static bool const log_verbose = std::getenv("MIR_X11_VERBOSE_LOG");
     return log_verbose;
 }
 } /* mir */

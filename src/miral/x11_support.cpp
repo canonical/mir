@@ -22,6 +22,7 @@
 #include <mir/main_loop.h>
 #include <mir/fd.h>
 #include <mir/fatal.h>
+#include <cstdlib>
 
 namespace mo = mir::options;
 
@@ -43,7 +44,7 @@ void miral::X11Support::operator()(mir::Server& server) const
         "Enable X11 support.", self->x11_enabled);
 
     auto const x11_scale_default = []() -> char const* {
-        if (auto const gdk_scale = getenv("GDK_SCALE"))
+        if (auto const gdk_scale = std::getenv("GDK_SCALE"))
         {
             return gdk_scale;
         }
