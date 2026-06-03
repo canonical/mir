@@ -264,10 +264,7 @@ impl MirRunner {
             });
         }
 
-        let result = miral_sys::ffi::miral_runner_run_with_config(
-            runner.pin_mut(),
-            &config_descs,
-        );
+        let result = miral_sys::ffi::miral_runner_run_with_config(runner.pin_mut(), &config_descs);
 
         handle_for_cleanup
             .runner_ptr

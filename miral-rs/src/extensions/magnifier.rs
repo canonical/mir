@@ -2,8 +2,8 @@
 
 use super::ServerExtension;
 
-use std::pin::Pin;
 use crate::geometry::Size;
+use std::pin::Pin;
 
 /// A screen magnifier that renders a magnified region at the cursor position.
 #[derive(Debug, Clone, Copy)]
