@@ -17,7 +17,7 @@
 #ifndef MIR_SIGNAL_BLOCKER_H_
 #define MIR_SIGNAL_BLOCKER_H_
 
-#include <csignal>
+#include <signal.h>
 
 namespace mir
 {
