@@ -24,7 +24,6 @@
 #include <boost/exception/errinfo_errno.hpp>
 
 #include <system_error>
-#include <cassert>
 #include <chrono>
 #include <ostream>
 #include <string>
