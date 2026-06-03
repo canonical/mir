@@ -39,12 +39,12 @@ class ExceptionThrowingPlatform : public mg::DisplayPlatform, public mg::Renderi
 {
 public:
     ExceptionThrowingPlatform()
-        : should_throw{parse_exception_request(getenv("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS"))}
+        : should_throw{parse_exception_request(std::getenv("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS"))}
     {
         if (should_throw.at(ExceptionLocation::at_constructor))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
 
-        std::unique_ptr<char, void(*)(void*)> library_path{strdup(mir::libname()), &free};
+        std::unique_ptr<char, void(*)(void*)> library_path{strdup(mir::libname()), &std::free};
         auto platform_path = dirname(library_path.get());
 
         mir::SharedLibrary stub_platform_library{std::string(platform_path) + "/graphics-dummy.so"};

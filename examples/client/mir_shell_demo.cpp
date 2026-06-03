@@ -30,6 +30,7 @@
 #include <list>
 #include <map>
 #include <memory>
+#include <cstdlib>
 #include <cstring>
 
 using namespace std::literals;
@@ -37,7 +38,7 @@ namespace wayland_runner = mir::client::wayland_runner;
 
 namespace
 {
-bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
+bool const tracing = std::getenv("MIR_SHELL_DEMO_TRACE");
 
 int32_t main_width = 400;
 int32_t main_height = 400;
