@@ -353,7 +353,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
         uint32_t* pixel = (uint32_t*)row;
         for (int i = 0; i < width; i++)
-            memcpy(pixel + i, pattern, sizeof pixel[i]);
+            std::memcpy(pixel + i, pattern, sizeof pixel[i]);
 
         row += stride;
     }

@@ -34,7 +34,7 @@ std::string mir_bin_dir()
     if (len < 0)
         len = 0;
     path[len] = '\0';
-    if (auto slash = strrchr(path, '/'))
+    if (auto slash = std::strrchr(path, '/'))
         *slash = '\0';
     return path;
 }

@@ -22,6 +22,7 @@
 #include <gmock/gmock.h>
 #include <memory>
 #include <stdexcept>
+#include <cstring>
 #include <libudev.h>
 #include <poll.h>
 #include <sys/sysmacros.h>
@@ -295,7 +296,7 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
     devices.scan_devices();
     for (auto& device : devices)
     {
-        const char *start = strstr(device.devpath(), "card");
+        const char *start = std::strstr(device.devpath(), "card");
         ASSERT_TRUE(start);
         int num;
         EXPECT_EQ(1, sscanf(start, "card%d", &num))

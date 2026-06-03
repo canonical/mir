@@ -145,7 +145,7 @@ TEST_F(TestLog, can_use_format_string)
     auto const a_float = 3.1415f;
     auto const a_stringish = "Merrily, merrily, merrily, merrily";
 
-    auto const message = std::format(fmt_string, now, a_float, a_stringish, strlen("Merrily"));
+    auto const message = std::format(fmt_string, now, a_float, a_stringish, std::strlen("Merrily"));
 
     EXPECT_CALL(*logger, log(severity, message, "input"));
 

@@ -21,6 +21,8 @@
 #include <mir/geometry/size.h>
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+#include <cstring>
 #include <stdexcept>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -237,7 +239,7 @@ mtd::MockDRM::MockDRM()
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
-            if (!strncmp(path, drm_prefix, strlen_c(drm_prefix)))
+            if (!std::strncmp(path, drm_prefix, strlen_c(drm_prefix)))
             {
                 // I don't think we need to be able to distinguish based on mode. ppc64el (at least) *does*
                 // call the 3-parameter open()
@@ -364,7 +366,7 @@ mtd::MockDRM::MockDRM()
                 }));
 
     ON_CALL(*this, drmFreeBusid(_))
-        .WillByDefault(WithArg<0>(Invoke([&](const char* busid) { free(const_cast<char*>(busid)); })));
+        .WillByDefault(WithArg<0>(Invoke([&](const char* busid) { std::free(const_cast<char*>(busid)); })));
 
     ON_CALL(*this, drmGetPrimaryDeviceNameFromFd(_))
         .WillByDefault(InvokeWithoutArgs([]() { return strdup("/dev/dri/card0"); }));
