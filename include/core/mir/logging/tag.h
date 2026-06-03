@@ -33,6 +33,8 @@ struct Tag;
  * with lifetime of the whole process. It should be called exactly once
  * for each desired tag and the reference it returns stored.
  *
+ * Valid tag names consist of lowercase ASCII ('a'-'z'), '_', or '-' characters.
+ *
  * For leaf tags — tags not used as a `parent` or which are only used in a single
  * translation unit, it is suggested that this be called at global scope
  * so that the tag is registered with the logging subsystem during

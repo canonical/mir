@@ -25,6 +25,7 @@
 #include <list>
 #include <iterator>
 #include <ranges>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
@@ -68,6 +69,19 @@ auto const& ensure_window_management_registered = ml::window_management();
 
 auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
 {
+    if (!std::ranges::all_of(
+        name,
+        [](auto elem) {
+            // Valid characters are 'a'-'z', '-' and '_'
+            return (('a' <= elem) && (elem <= 'z')) || (elem == '-') || (elem == '_');
+        }))
+    {
+        BOOST_THROW_EXCEPTION((
+            std::invalid_argument{
+                std::format("Tag name must consist of lowercase ASCII ('a'-'z'), '-', or '_' (found {})", name)}
+        ));
+    }
+
     auto locked_tags = known_tags.lock();
     locked_tags->emplace_back(std::string{name}, Severity::warning, &parent);
     return locked_tags->back();

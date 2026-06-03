@@ -158,8 +158,8 @@ TEST_F(CommandLineHandling, setting_parent_severity_sets_child_severities)
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
     auto const& parent = ml::create_tag(ml::base(), "parent");
-    auto const& child1 = ml::create_tag(parent, "child1");
-    auto const& child2 = ml::create_tag(parent, "child2");
+    auto const& child1 = ml::create_tag(parent, "dick");
+    auto const& child2 = ml::create_tag(parent, "jane");
 
     auto const logger = std::make_shared<testing::NiceMock<MockLogger>>();
     server.override_the_logger([logger]() { return logger; });
