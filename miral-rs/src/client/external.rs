@@ -2,6 +2,8 @@
 
 use crate::extensions::ServerExtension;
 
+use std::pin::Pin;
+
 /// Launch external client applications as separate processes.
 ///
 /// External clients connect to the compositor via the Wayland socket,
@@ -42,7 +44,7 @@ impl ServerExtension for ExternalClientLauncher {
         "ExternalClientLauncher"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    fn apply(self: Box<Self>, runner: Pin<&mut miral_sys::ffi::MiralRunner>) {
+        miral_sys::ffi::miral_runner_add_external_launcher(runner);
     }
 }

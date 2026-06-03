@@ -3,7 +3,9 @@
 //! Controls whether the compositor provides server-side decorations (SSD)
 //! or the client draws its own (CSD).
 
-use crate::extensions::ServerExtension;
+use super::ServerExtension;
+
+use std::pin::Pin;
 
 /// Controls the window decoration strategy.
 ///
@@ -79,7 +81,13 @@ impl ServerExtension for Decorations {
         }
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    fn apply(self: Box<Self>, runner: Pin<&mut miral_sys::ffi::MiralRunner>) {
+        let mode = match self.strategy {
+            Strategy::PreferCsd => 1,
+            Strategy::PreferSsd => 2,
+            Strategy::AlwaysSsd => 3,
+            Strategy::AlwaysCsd => 4,
+        };
+        miral_sys::ffi::miral_runner_add_decorations(runner, mode);
     }
 }

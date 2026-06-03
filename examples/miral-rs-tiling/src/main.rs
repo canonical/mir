@@ -202,6 +202,7 @@ fn main() {
         .add(Decorations::prefer_csd())
         .add(WaylandExtensions::default())
         .add(launcher)
+        .add(Magnifier::default())
         .add_window_management_policy_with(move || TilingPolicy {
             launcher: launcher_for_policy,
             ..Default::default()

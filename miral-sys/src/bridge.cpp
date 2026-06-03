@@ -742,13 +742,8 @@ int32_t miral_runner_run_with_rust_policy(MiralRunner& runner)
 
 int32_t miral_runner_run_with_config(
     MiralRunner& runner,
-    int32_t decoration_mode,
-    rust::Str keymap_layout,
-    bool x11_enabled,
     rust::Slice<const ConfigOptionDesc> config_options)
 {
-    std::vector<std::function<void(mir::Server&)>> options;
-
     // Policy (always added)
     auto policy_builder = miral::SetWindowManagementPolicy(
         [](miral::WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
@@ -758,36 +753,7 @@ int32_t miral_runner_run_with_config(
             rust_policy_set_tools(policy->holder(), reinterpret_cast<uint64_t>(&policy->miral_tools()));
             return policy;
         });
-    options.push_back(policy_builder);
-
-    // Decorations
-    if (decoration_mode > 0)
-    {
-        switch (decoration_mode)
-        {
-        case 1: options.push_back(miral::Decorations::prefer_csd()); break;
-        case 2: options.push_back(miral::Decorations::prefer_ssd()); break;
-        case 3: options.push_back(miral::Decorations::always_ssd()); break;
-        case 4: options.push_back(miral::Decorations::always_csd()); break;
-        default: options.push_back(miral::Decorations::prefer_csd()); break;
-        }
-    }
-
-    // Keymap
-    std::string keymap_str(keymap_layout.data(), keymap_layout.size());
-    if (!keymap_str.empty())
-    {
-        miral::Keymap keymap;
-        keymap.set_keymap(keymap_str);
-        options.push_back(keymap);
-    }
-
-    // X11 support
-    if (x11_enabled)
-    {
-        auto x11 = miral::X11Support{}.default_to_enabled();
-        options.push_back(x11);
-    }
+    runner.options.push_back(policy_builder);
 
     // Configuration options
     for (auto const& desc : config_options)
@@ -881,15 +847,15 @@ int32_t miral_runner_run_with_config(
         }();
 
         if (is_pre_init)
-            options.push_back(pre_init(config_opt));
+            runner.options.push_back(pre_init(config_opt));
         else
-            options.push_back(config_opt);
+            runner.options.push_back(config_opt);
     }
 
-    // External client launcher
+    // External client launcher (special — needs start/stop callbacks for the global pointer)
     if (runner.has_external_launcher)
     {
-        options.push_back(runner.external_launcher);
+        runner.options.push_back(runner.external_launcher);
         runner.inner->add_start_callback([&runner]()
         {
             g_active_launcher.store(&runner.external_launcher);
@@ -900,34 +866,8 @@ int32_t miral_runner_run_with_config(
         });
     }
 
-    if (runner.has_idle_listener)
-    {
-        miral::IdleListener idle_listener;
-        idle_listener
-            .on_dim([]() { rust_on_idle_dim_callback(); })
-            .on_off([]() { rust_on_idle_off_callback(); })
-            .on_wake([]() { rust_on_idle_wake_callback(); });
-        options.push_back(idle_listener);
-    }
-
-    if (runner.has_session_lock_listener)
-    {
-        options.push_back(miral::SessionLockListener{
-            []() { rust_on_session_lock_callback(); },
-            []() { rust_on_session_unlock_callback(); }});
-    }
-
-    if (runner.has_magnifier)
-    {
-        miral::Magnifier magnifier;
-        magnifier.enable(runner.magnifier_enabled)
-            .magnification(runner.magnifier_magnification)
-            .capture_size(mir::geometry::Size{runner.magnifier_width, runner.magnifier_height});
-        options.push_back(magnifier);
-    }
-
     // Convert vector to a single functor and run
-    auto combined = [options = std::move(options)](mir::Server& server)
+    auto combined = [options = std::move(runner.options)](mir::Server& server)
     {
         for (auto const& opt : options)
             opt(server);
@@ -941,33 +881,68 @@ void miral_runner_stop(MiralRunner& runner)
     runner.inner->stop();
 }
 
-void miral_runner_enable_external_launcher(MiralRunner& runner)
+void miral_runner_add_decorations(MiralRunner& runner, int32_t mode)
+{
+    switch (mode)
+    {
+    case 1: runner.options.push_back(miral::Decorations::prefer_csd()); break;
+    case 2: runner.options.push_back(miral::Decorations::prefer_ssd()); break;
+    case 3: runner.options.push_back(miral::Decorations::always_ssd()); break;
+    case 4: runner.options.push_back(miral::Decorations::always_csd()); break;
+    default: runner.options.push_back(miral::Decorations::prefer_csd()); break;
+    }
+}
+
+void miral_runner_add_keymap(MiralRunner& runner, rust::Str layout)
+{
+    std::string keymap_str(layout.data(), layout.size());
+    if (!keymap_str.empty())
+    {
+        miral::Keymap keymap;
+        keymap.set_keymap(keymap_str);
+        runner.options.push_back(keymap);
+    }
+}
+
+void miral_runner_add_x11_support(MiralRunner& runner)
+{
+    runner.options.push_back(miral::X11Support{}.default_to_enabled());
+}
+
+void miral_runner_add_external_launcher(MiralRunner& runner)
 {
     runner.has_external_launcher = true;
 }
 
-void miral_runner_enable_idle_listener(MiralRunner& runner)
+void miral_runner_add_idle_listener(MiralRunner& runner)
 {
-    runner.has_idle_listener = true;
+    miral::IdleListener idle_listener;
+    idle_listener
+        .on_dim([]() { rust_on_idle_dim_callback(); })
+        .on_off([]() { rust_on_idle_off_callback(); })
+        .on_wake([]() { rust_on_idle_wake_callback(); });
+    runner.options.push_back(idle_listener);
 }
 
-void miral_runner_enable_session_lock_listener(MiralRunner& runner)
+void miral_runner_add_session_lock_listener(MiralRunner& runner)
 {
-    runner.has_session_lock_listener = true;
+    runner.options.push_back(miral::SessionLockListener{
+        []() { rust_on_session_lock_callback(); },
+        []() { rust_on_session_unlock_callback(); }});
 }
 
-void miral_runner_enable_magnifier(
+void miral_runner_add_magnifier(
     MiralRunner& runner,
     float magnification,
     int32_t width,
     int32_t height,
     bool enabled)
 {
-    runner.has_magnifier = true;
-    runner.magnifier_magnification = magnification;
-    runner.magnifier_width = width;
-    runner.magnifier_height = height;
-    runner.magnifier_enabled = enabled;
+    miral::Magnifier magnifier;
+    magnifier.enable(enabled)
+        .magnification(magnification)
+        .capture_size(mir::geometry::Size{width, height});
+    runner.options.push_back(magnifier);
 }
 
 int32_t miral_launcher_launch(rust::Str command)

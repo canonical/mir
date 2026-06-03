@@ -2,6 +2,8 @@
 
 use super::ServerExtension;
 
+use std::pin::Pin;
+
 /// Configuration for Wayland protocol extensions.
 ///
 /// Controls which Wayland protocol extensions are enabled in the compositor.
@@ -93,7 +95,8 @@ impl ServerExtension for WaylandExtensions {
         "WaylandExtensions"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    fn apply(self: Box<Self>, _runner: Pin<&mut miral_sys::ffi::MiralRunner>) {
+        // TODO: Wire up wayland extension enable/disable to miral_sys
+        // when the FFI layer supports per-protocol configuration.
     }
 }

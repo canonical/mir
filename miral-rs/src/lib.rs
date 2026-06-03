@@ -49,17 +49,12 @@
 pub mod application;
 pub mod client;
 pub mod configuration;
-pub mod decorations;
 pub mod extensions;
 pub mod geometry;
-pub mod idle;
 pub mod input;
-pub mod keymap;
-pub mod magnifier;
 pub mod output;
 pub mod policy;
 pub mod runner;
-pub mod session_lock;
 pub mod window;
 pub mod workspace;
 
@@ -70,23 +65,21 @@ pub mod prelude {
     pub use crate::application::{Application, ApplicationInfo};
     pub use crate::client::ExternalClientLauncher;
     pub use crate::configuration::ConfigurationOption;
-    pub use crate::decorations::Decorations;
-    pub use crate::extensions::{ServerExtension, WaylandExtensions, X11Support};
+    pub use crate::extensions::{
+        Decorations, IdleListener, Keymap, Magnifier, ServerExtension, SessionLockListener,
+        WaylandExtensions, X11Support,
+    };
     pub use crate::geometry::{
         Displacement, DisplacementF, Point, PointF, Rectangle, RectangleF, Scalar, Size, SizeF,
     };
-    pub use crate::idle::IdleListener;
     pub use crate::input::{
         InputEvent, KeyAction, KeyboardEvent, PointerAction, PointerEvent, TouchEvent,
     };
-    pub use crate::keymap::Keymap;
-    pub use crate::magnifier::Magnifier;
     pub use crate::output::{
         FormFactor, Orientation, Output, OutputType, PhysicalSizeMM, PowerMode, Zone,
     };
     pub use crate::policy::{Advice, WindowManagementPolicy, WindowManagerTools};
     pub use crate::runner::{MirRunner, RunnerHandle};
-    pub use crate::session_lock::SessionLockListener;
     pub use crate::window::{
         AspectRatio, DepthLayer, FocusMode, FocusStealing, InputReceptionMode, OrientationMode,
         PlacementGravity, PlacementHints, PointerConfinementState, ResizeEdge, ShellChrome,

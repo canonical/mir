@@ -95,13 +95,9 @@ public:
     std::unique_ptr<miral::MirRunner> inner;
     miral::ExternalClientLauncher external_launcher;
     bool has_external_launcher = false;
-    bool has_idle_listener = false;
-    bool has_session_lock_listener = false;
-    bool has_magnifier = false;
-    float magnifier_magnification = 2.0f;
-    int magnifier_width = 400;
-    int magnifier_height = 300;
-    bool magnifier_enabled = true;
+
+    // Accumulated server options — each extension pushes its functor here
+    std::vector<std::function<void(mir::Server&)>> options;
 
     MiralRunner(std::vector<std::string> args)
         : arg_strings(std::move(args))
@@ -123,19 +119,19 @@ int32_t miral_runner_run(MiralRunner& runner);
 int32_t miral_runner_run_with_rust_policy(MiralRunner& runner);
 int32_t miral_runner_run_with_config(
     MiralRunner& runner,
-    int32_t decoration_mode,
-    rust::Str keymap_layout,
-    bool x11_enabled,
     rust::Slice<const ConfigOptionDesc> config_options);
 void miral_runner_stop(MiralRunner& runner);
 void miral_runner_register_start_callback(MiralRunner& runner);
 void miral_runner_register_stop_callback(MiralRunner& runner);
 
-// External client launcher
-void miral_runner_enable_external_launcher(MiralRunner& runner);
-void miral_runner_enable_idle_listener(MiralRunner& runner);
-void miral_runner_enable_session_lock_listener(MiralRunner& runner);
-void miral_runner_enable_magnifier(
+// Extension adders — each constructs a miral type and pushes it into runner.options
+void miral_runner_add_decorations(MiralRunner& runner, int32_t mode);
+void miral_runner_add_keymap(MiralRunner& runner, rust::Str layout);
+void miral_runner_add_x11_support(MiralRunner& runner);
+void miral_runner_add_external_launcher(MiralRunner& runner);
+void miral_runner_add_idle_listener(MiralRunner& runner);
+void miral_runner_add_session_lock_listener(MiralRunner& runner);
+void miral_runner_add_magnifier(
     MiralRunner& runner,
     float magnification,
     int32_t width,

@@ -7,13 +7,8 @@ use std::sync::Arc;
 
 use crate::configuration::ConfigurationOption;
 use crate::extensions::ServerExtension;
-use crate::idle::IdleListener;
-use crate::keymap::Keymap;
-use crate::magnifier::Magnifier;
 use crate::policy::adapter::PolicyBridgeAdapter;
 use crate::policy::WindowManagementPolicy;
-use crate::session_lock::SessionLockListener;
-
 /// A handle to a running compositor that can be used to request shutdown.
 ///
 /// Obtain this via [`MirRunner::on_start`] and store it for later use.
@@ -97,9 +92,6 @@ pub struct MirRunner {
     policy_factory: Option<Box<dyn FnOnce() -> Box<dyn miral_sys::PolicyBridge> + Send>>,
     on_start: Option<Box<dyn FnOnce() + Send>>,
     on_stop: Option<Box<dyn FnOnce() + Send>>,
-    idle_listener: Option<IdleListener>,
-    session_lock_listener: Option<SessionLockListener>,
-    magnifier: Option<Magnifier>,
 }
 
 impl MirRunner {
@@ -115,14 +107,11 @@ impl MirRunner {
             policy_factory: None,
             on_start: None,
             on_stop: None,
-            idle_listener: None,
-            session_lock_listener: None,
-            magnifier: None,
         }
     }
 
     /// Add a server extension (e.g., [`WaylandExtensions`](crate::extensions::WaylandExtensions),
-    /// [`Decorations`](crate::decorations::Decorations), [`Keymap`](crate::keymap::Keymap)).
+    /// [`Decorations`](crate::extensions::Decorations), [`Keymap`](crate::extensions::Keymap)).
     pub fn add(mut self, extension: impl ServerExtension) -> Self {
         self.extensions.push(Box::new(extension));
         self
@@ -148,24 +137,6 @@ impl MirRunner {
     /// ```
     pub fn add_config_option(mut self, option: ConfigurationOption) -> Self {
         self.config_options.push(option);
-        self
-    }
-
-    /// Configure idle state callbacks for the compositor.
-    pub fn idle_listener(mut self, listener: IdleListener) -> Self {
-        self.idle_listener = Some(listener);
-        self
-    }
-
-    /// Configure session lock and unlock callbacks for the compositor.
-    pub fn session_lock_listener(mut self, listener: SessionLockListener) -> Self {
-        self.session_lock_listener = Some(listener);
-        self
-    }
-
-    /// Configure the compositor magnifier.
-    pub fn magnifier(mut self, magnifier: Magnifier) -> Self {
-        self.magnifier = Some(magnifier);
         self
     }
 
@@ -246,9 +217,6 @@ impl MirRunner {
             policy_factory,
             on_start,
             on_stop,
-            idle_listener,
-            session_lock_listener,
-            magnifier,
         } = self;
 
         let policy_factory = policy_factory.ok_or(
@@ -257,76 +225,10 @@ impl MirRunner {
 
         miral_sys::set_policy_factory(Box::new(policy_factory));
 
-        let mut decoration_mode: i32 = 0;
-        let mut keymap_layout = String::new();
-        let mut x11_enabled = false;
-        let mut external_launcher_enabled = false;
-
-        for ext in &extensions {
-            match ext.name() {
-                "Decorations(PreferCSD)" => decoration_mode = 1,
-                "Decorations(PreferSSD)" => decoration_mode = 2,
-                "Decorations(AlwaysSSD)" => decoration_mode = 3,
-                "Decorations(AlwaysCSD)" => decoration_mode = 4,
-                "Keymap" => {}
-                "X11Support" => x11_enabled = true,
-                "ExternalClientLauncher" => external_launcher_enabled = true,
-                _ => {}
-            }
-        }
-
-        for ext in &extensions {
-            if let Some(keymap) = ext.as_any().downcast_ref::<Keymap>() {
-                keymap_layout = if let Some(variant) = keymap.variant() {
-                    format!("{}({})", keymap.layout(), variant)
-                } else {
-                    keymap.layout().to_string()
-                };
-            }
-        }
-
         let mut runner = miral_sys::ffi::miral_runner_new(&args);
 
-        if external_launcher_enabled {
-            miral_sys::ffi::miral_runner_enable_external_launcher(runner.pin_mut());
-        }
-
-        if let Some(idle_listener) = idle_listener {
-            let IdleListener {
-                on_dim,
-                on_off,
-                on_wake,
-            } = idle_listener;
-            let has_idle_callbacks = on_dim.is_some() || on_off.is_some() || on_wake.is_some();
-
-            if let Some(callback) = on_dim {
-                miral_sys::set_on_idle_dim_callback(callback);
-            }
-            if let Some(callback) = on_off {
-                miral_sys::set_on_idle_off_callback(callback);
-            }
-            if let Some(callback) = on_wake {
-                miral_sys::set_on_idle_wake_callback(callback);
-            }
-            if has_idle_callbacks {
-                miral_sys::ffi::miral_runner_enable_idle_listener(runner.pin_mut());
-            }
-        }
-
-        if let Some(session_lock_listener) = session_lock_listener {
-            miral_sys::set_on_session_lock_callback(session_lock_listener.on_lock);
-            miral_sys::set_on_session_unlock_callback(session_lock_listener.on_unlock);
-            miral_sys::ffi::miral_runner_enable_session_lock_listener(runner.pin_mut());
-        }
-
-        if let Some(magnifier) = magnifier {
-            miral_sys::ffi::miral_runner_enable_magnifier(
-                runner.pin_mut(),
-                magnifier.magnification,
-                magnifier.capture_size.width,
-                magnifier.capture_size.height,
-                magnifier.enabled,
-            );
+        for ext in extensions {
+            ext.apply(runner.pin_mut());
         }
 
         let runner_ptr = {
@@ -364,9 +266,6 @@ impl MirRunner {
 
         let result = miral_sys::ffi::miral_runner_run_with_config(
             runner.pin_mut(),
-            decoration_mode,
-            &keymap_layout,
-            x11_enabled,
             &config_descs,
         );
 

@@ -1,16 +1,16 @@
 //! Screen magnifier support.
-//!
-//! Configure this on [`MirRunner`](crate::runner::MirRunner) with
-//! [`MirRunner::magnifier`](crate::runner::MirRunner::magnifier).
 
+use super::ServerExtension;
+
+use std::pin::Pin;
 use crate::geometry::Size;
 
 /// A screen magnifier that renders a magnified region at the cursor position.
 #[derive(Debug, Clone, Copy)]
 pub struct Magnifier {
-    pub(crate) enabled: bool,
-    pub(crate) magnification: f32,
-    pub(crate) capture_size: Size,
+    enabled: bool,
+    magnification: f32,
+    capture_size: Size,
 }
 
 impl Magnifier {
@@ -45,5 +45,21 @@ impl Magnifier {
 impl Default for Magnifier {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl ServerExtension for Magnifier {
+    fn name(&self) -> &str {
+        "Magnifier"
+    }
+
+    fn apply(self: Box<Self>, runner: Pin<&mut miral_sys::ffi::MiralRunner>) {
+        miral_sys::ffi::miral_runner_add_magnifier(
+            runner,
+            self.magnification,
+            self.capture_size.width,
+            self.capture_size.height,
+            self.enabled,
+        );
     }
 }

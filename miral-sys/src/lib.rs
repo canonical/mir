@@ -303,15 +303,10 @@ pub mod ffi {
         fn miral_runner_run_with_rust_policy(runner: Pin<&mut MiralRunner>) -> i32;
         /// Run the server with a Rust policy and extensions configured.
         ///
-        /// decoration_mode: 0=none, 1=prefer_csd, 2=prefer_ssd, 3=always_ssd, 4=always_csd
-        /// keymap_layout: XKB layout string (empty = no keymap configuration)
-        /// x11_enabled: whether to enable X11 support
+        /// Extensions should be added via `miral_runner_add_*` before calling this.
         /// config_options: configuration option descriptors whose callbacks are in the global registry
         fn miral_runner_run_with_config(
             runner: Pin<&mut MiralRunner>,
-            decoration_mode: i32,
-            keymap_layout: &str,
-            x11_enabled: bool,
             config_options: &[ConfigOptionDesc],
         ) -> i32;
         /// Tell the server to stop.
@@ -321,17 +316,21 @@ pub mod ffi {
         /// Register a stop callback (will call rust_on_stop_callback when server stops).
         fn miral_runner_register_stop_callback(runner: Pin<&mut MiralRunner>);
 
-        /// Enable the external client launcher for this runner.
-        ///
-        /// Must be called before `miral_runner_run_with_config`. Causes the launcher to
-        /// be registered with the server so `miral_launcher_launch` works after startup.
-        fn miral_runner_enable_external_launcher(runner: Pin<&mut MiralRunner>);
-        /// Enable the idle listener for this runner.
-        fn miral_runner_enable_idle_listener(runner: Pin<&mut MiralRunner>);
-        /// Enable the session lock listener for this runner.
-        fn miral_runner_enable_session_lock_listener(runner: Pin<&mut MiralRunner>);
-        /// Enable the magnifier with the given settings.
-        fn miral_runner_enable_magnifier(
+        /// Add decoration preferences to the runner.
+        /// mode: 1=prefer_csd, 2=prefer_ssd, 3=always_ssd, 4=always_csd
+        fn miral_runner_add_decorations(runner: Pin<&mut MiralRunner>, mode: i32);
+        /// Add a keymap layout to the runner.
+        fn miral_runner_add_keymap(runner: Pin<&mut MiralRunner>, layout: &str);
+        /// Add X11/XWayland support to the runner.
+        fn miral_runner_add_x11_support(runner: Pin<&mut MiralRunner>);
+        /// Add the external client launcher to the runner.
+        fn miral_runner_add_external_launcher(runner: Pin<&mut MiralRunner>);
+        /// Add the idle listener to the runner (callbacks set via global registry).
+        fn miral_runner_add_idle_listener(runner: Pin<&mut MiralRunner>);
+        /// Add the session lock listener to the runner (callbacks set via global registry).
+        fn miral_runner_add_session_lock_listener(runner: Pin<&mut MiralRunner>);
+        /// Add a magnifier to the runner with given settings.
+        fn miral_runner_add_magnifier(
             runner: Pin<&mut MiralRunner>,
             magnification: f32,
             width: i32,

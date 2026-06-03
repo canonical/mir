@@ -1,6 +1,8 @@
 //! Keyboard layout (keymap) configuration.
 
-use crate::extensions::ServerExtension;
+use super::ServerExtension;
+
+use std::pin::Pin;
 
 /// Keyboard layout configuration.
 ///
@@ -10,7 +12,7 @@ use crate::extensions::ServerExtension;
 /// # Example
 ///
 /// ```rust
-/// use miral::keymap::Keymap;
+/// use miral::extensions::Keymap;
 ///
 /// // US English layout
 /// let us = Keymap::new("us");
@@ -57,7 +59,12 @@ impl ServerExtension for Keymap {
         "Keymap"
     }
 
-    fn as_any(&self) -> &dyn std::any::Any {
-        self
+    fn apply(self: Box<Self>, runner: Pin<&mut miral_sys::ffi::MiralRunner>) {
+        let layout = if let Some(variant) = &self.variant {
+            format!("{}({})", self.layout, variant)
+        } else {
+            self.layout.clone()
+        };
+        miral_sys::ffi::miral_runner_add_keymap(runner, &layout);
     }
 }
