@@ -72,7 +72,7 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 
     /* mode.clock is in KHz */
     double hz = (mode.clock * 100000LL /
-                 ((long)mode.htotal * (long)mode.vtotal)
+                 (static_cast<long>(mode.htotal) * static_cast<long>(mode.vtotal))
                 ) / 100.0;
 
     return hz;

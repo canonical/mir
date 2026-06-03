@@ -63,7 +63,7 @@ public:
     /// Retrieve the position of the top-left corner of the window frame
     ///
     /// \returns the top-left point of the frame of the window
-    auto top_left()     const -> mir::geometry::Point;
+    auto top_left() const -> mir::geometry::Point;
 
     /// Retrieve the size of the window frame.
     ///
@@ -71,12 +71,12 @@ public:
     /// decorations are included in the size.
     ///
     /// \returns the size of the window, including decorations
-    auto size()         const -> mir::geometry::Size;
+    auto size() const -> mir::geometry::Size;
 
     /// Retrieve the application that created this window.
     ///
     /// \returns the application
-    auto application()  const -> Application;
+    auto application() const -> Application;
 
     /// Checks whether the backing surface is valid or not.
     ///
@@ -108,7 +108,7 @@ public:
 
 private:
     struct Self;
-    std::shared_ptr <Self> self;
+    std::shared_ptr<Self> self;
 
     friend bool operator==(Window const& lhs, Window const& rhs);
     friend bool operator==(std::shared_ptr<mir::scene::Surface> const& lhs, Window const& rhs);

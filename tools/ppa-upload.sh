@@ -58,8 +58,10 @@ if [[ "${GIT_BRANCH}" =~ ${RELEASE_RE} ]]; then
     MIR_VERSION=${BASH_REMATCH[1]}
   else
     # determine the release candidate version string
-    if [[ "$( git describe --match="*-rc" )" =~ ^${VERSION_RE}-rc(?:-${SUFFIX_RE})? ]]; then
-      MIR_VERSION="${BASH_REMATCH[1]}~rc${BASH_REMATCH[5]}-${BASH_REMATCH[6]:-0}"
+    # Groups: VERSION_RE outer group=[1] VERSION_RE elements=[2..4], SUFFIX_RE
+    # outer optional group=[5], SUFFIX_RE elements=[6,7]
+    if [[ "$( git describe --match="*-rc" )" =~ ^${VERSION_RE}-rc(-${SUFFIX_RE})? ]]; then
+      MIR_VERSION="${BASH_REMATCH[1]}~rc${BASH_REMATCH[6]}-${BASH_REMATCH[7]:-0}"
     else
       echo "ERROR: could not parse git describe output" >&2
       exit 4

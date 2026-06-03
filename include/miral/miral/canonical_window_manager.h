@@ -23,15 +23,13 @@
 namespace miral
 {
 /// Widely accepted defaults for window management
-class CanonicalWindowManagerPolicy  : public WindowManagementPolicy
+class CanonicalWindowManagerPolicy : public WindowManagementPolicy
 {
 public:
 
     explicit CanonicalWindowManagerPolicy(WindowManagerTools const& tools);
 
-    virtual auto place_new_window(
-        ApplicationInfo const& app_info,
-        WindowSpecification const& request_parameters)
+    virtual auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& request_parameters)
         -> WindowSpecification override;
 
     /// Tries to focus on the newly ready window
