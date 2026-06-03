@@ -37,7 +37,7 @@ namespace detail
 struct TextInputStateSerialTag;
 }
 
-typedef IntWrapper<detail::TextInputStateSerialTag> TextInputStateSerial;
+using TextInputStateSerial = IntWrapper<detail::TextInputStateSerialTag>;
 
 enum class TextInputChangeCause
 {

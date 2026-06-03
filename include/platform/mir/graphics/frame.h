@@ -34,7 +34,7 @@ namespace mir { namespace graphics {
  */
 struct Frame
 {
-    typedef mir::time::PosixTimestamp Timestamp;
+    using Timestamp = mir::time::PosixTimestamp;
 
     int64_t msc = 0;   /**< Media Stream Counter */
     Timestamp ust;     /**< Unadjusted System Time */

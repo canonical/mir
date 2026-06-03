@@ -53,10 +53,10 @@ template<clockid_t clock_id>
 class PosixClock : public is_steady_specialisation<clock_id>
 {
 public:
-    typedef std::chrono::nanoseconds  duration;
-    typedef duration::rep rep;
-    typedef duration::period period;
-    typedef std::chrono::time_point<PosixClock, duration> time_point;
+    using duration = std::chrono::nanoseconds;
+    using rep = duration::rep;
+    using period = duration::period;
+    using time_point = std::chrono::time_point<PosixClock, duration>;
 
     static auto now() -> time_point
     {

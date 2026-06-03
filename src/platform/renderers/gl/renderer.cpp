@@ -823,10 +823,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     // if we fail to load the texture, we need to carry on (part of lp:1629275)
     try
     {
-        typedef struct  // Represents parameters of glBlendFuncSeparate()
+        struct BlendSeparate  // Represents parameters of glBlendFuncSeparate()
         {
             GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
-        } BlendSeparate;
+        };
 
         BlendSeparate client_blend;
 
