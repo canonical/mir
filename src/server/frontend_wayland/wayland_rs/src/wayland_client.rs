@@ -1,6 +1,7 @@
 use wayland_server::{backend::ClientId, Client, DisplayHandle};
 
 /// A C++ friendly wrapper around a wayland [Client] object.
+#[derive(Clone)]
 pub struct WaylandClient {
     client: Client,
     handle: DisplayHandle,
@@ -38,9 +39,19 @@ impl WaylandClient {
             .gid)
     }
 
+    /// Retrieve the [WaylandClientId] for this client.
+    pub fn id(&self) -> Box<WaylandClientId> {
+        Box::new(WaylandClientId::new(self.client.id()))
+    }
+
     /// Check if this client is wrapping the provided [WaylandClientId].
     pub fn equals(&self, id: &WaylandClientId) -> bool {
         self.client.id() == id.id
+    }
+
+    /// Clone this client into a new [Box].
+    pub fn clone_box(&self) -> Box<WaylandClient> {
+        Box::new(self.clone())
     }
 }
 

@@ -166,7 +166,7 @@ void WaylandApp::handle_new_global(
     if (strcmp(interface, "wl_compositor") == 0)
     {
         self->compositor_ = {
-            static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, 3)),
+            static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 4u))),
             wl_compositor_destroy};
         self->global_remove_handlers[id] = [self](){ self->compositor_ = {}; };
     }
@@ -186,12 +186,16 @@ void WaylandApp::handle_new_global(
             wl_seat_destroy};
         self->global_remove_handlers[id] = [self](){ self->seat_ = {}; };
     }
-    else if (strcmp(interface, "wl_shell") == 0)
+    else if (strcmp(interface, "xdg_wm_base") == 0)
     {
-        self->shell_ = {
-            static_cast<wl_shell*>(wl_registry_bind(registry, id, &wl_shell_interface, 1)),
-            wl_shell_destroy};
-        self->global_remove_handlers[id] = [self](){ self->shell_ = {}; };
+        self->xdg_wm_base_ = {
+            static_cast<::xdg_wm_base*>(wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u))),
+            xdg_wm_base_destroy};
+        static xdg_wm_base_listener const wm_base_listener{
+            [](void*, ::xdg_wm_base* shell, uint32_t serial){ xdg_wm_base_pong(shell, serial); },
+        };
+        xdg_wm_base_add_listener(self->xdg_wm_base_, &wm_base_listener, nullptr);
+        self->global_remove_handlers[id] = [self](){ self->xdg_wm_base_ = {}; };
     }
     else if (strcmp(interface, "wl_output") == 0)
     {

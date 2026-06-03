@@ -66,7 +66,11 @@ public:
     /// Describes the aspect ratio.
     ///
     /// Used by #WindowSpecification::min_aspect and #WindowSpecification::max_aspect.
-    struct AspectRatio { unsigned width; unsigned height; };
+    struct AspectRatio
+    {
+        unsigned width;
+        unsigned height;
+    };
 
     /// Construct a new window specification.
     WindowSpecification();

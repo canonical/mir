@@ -31,7 +31,6 @@
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/weak.h>
 
-#include <boost/throw_exception.hpp>
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
@@ -222,8 +221,7 @@ void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y
     if (x > x_extent || y > y_extent)
     {
         // FIXME: Specific error proposed in https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/143
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, mw::generic_error_code, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent));
+        throw mw::ProtocolError{resource, mw::generic_error_code, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent};
     }
 
     pending.timestamp = std::chrono::milliseconds{time};
@@ -255,8 +253,7 @@ void mf::VirtualPointerV1::button(uint32_t time, uint32_t button, uint32_t state
             break;
 
         default:
-            BOOST_THROW_EXCEPTION(
-                mw::ProtocolError(resource, mw::generic_error_code, "Invalid button state %d", state));
+            throw mw::ProtocolError{resource, mw::generic_error_code, "Invalid button state %d", state};
         }
     }
     else
@@ -280,8 +277,7 @@ void mf::VirtualPointerV1::axis(uint32_t time, uint32_t axis, double value)
         break;
 
     default:
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
+        throw mw::ProtocolError{resource, Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 
@@ -358,8 +354,7 @@ void mf::VirtualPointerV1::axis_source(uint32_t axis_source)
     case mw::Pointer::AxisSource::continuous: pending.axis_source = mir_pointer_axis_source_continuous; break;
     case mw::Pointer::AxisSource::wheel_tilt: pending.axis_source = mir_pointer_axis_source_wheel_tilt; break;
     default:
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::invalid_axis_source, "Unknown axis source %d", axis_source));
+        throw mw::ProtocolError{resource, Error::invalid_axis_source, "Unknown axis source %d", axis_source};
     }
 }
 
@@ -371,8 +366,7 @@ void mf::VirtualPointerV1::axis_stop(uint32_t time, uint32_t axis)
     case mw::Pointer::Axis::horizontal_scroll: pending.scroll_h.stop = true; break;
     case mw::Pointer::Axis::vertical_scroll: pending.scroll_v.stop = true; break;
     default:
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
+        throw mw::ProtocolError{resource, Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 
@@ -394,8 +388,7 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
         break;
 
     default:
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::invalid_axis, "Unknown axis %d", axis));
+        throw mw::ProtocolError{resource, Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 

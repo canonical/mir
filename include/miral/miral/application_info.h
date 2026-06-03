@@ -54,13 +54,13 @@ struct ApplicationInfo
     /// Return the backing #miral::Application for this info.
     ///
     /// \returns The backing application.
-    auto application()  const -> Application;
+    auto application() const -> Application;
 
     /// Return the list of #miral::Window instances that are associated with this
     /// #miral::Application.
     ///
     /// \returns The list of windows associated with the application.
-    auto windows() const -> std::vector <Window>&;
+    auto windows() const -> std::vector<Window>&;
 
     /// Return the user data set for this application.
     ///
