@@ -5,9 +5,9 @@
 
 pub mod decorations;
 pub mod idle;
+mod keymap;
 pub mod magnifier;
 pub mod session_lock;
-mod keymap;
 mod traits;
 mod wayland;
 mod x11;
