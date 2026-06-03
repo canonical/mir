@@ -22,7 +22,6 @@
 #include <format>
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <cerrno>
 
 namespace mir {
 
