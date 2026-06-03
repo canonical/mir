@@ -83,15 +83,248 @@ static mir::geometry::Size from_size(Size s)
     return mir::geometry::Size{s.width, s.height};
 }
 
+static Displacement to_displacement(mir::geometry::Displacement d)
+{
+    return Displacement{d.dx.as_int(), d.dy.as_int()};
+}
+
 static mir::geometry::Displacement from_displacement(Displacement d)
 {
     return mir::geometry::Displacement{d.dx, d.dy};
+}
+
+static mir::geometry::Rectangle from_rectangle(Rectangle r)
+{
+    return mir::geometry::Rectangle{from_point(r.top_left), from_size(r.size)};
+}
+
+/// Encode a vector of rectangles as "x,y,w,h|x,y,w,h|..."
+static rust::String encode_input_shape(std::vector<mir::geometry::Rectangle> const& rects)
+{
+    std::string result;
+    for (size_t i = 0; i < rects.size(); ++i)
+    {
+        if (i > 0) result += '|';
+        result += std::to_string(rects[i].top_left.x.as_int()) + ',' +
+                  std::to_string(rects[i].top_left.y.as_int()) + ',' +
+                  std::to_string(rects[i].size.width.as_int()) + ',' +
+                  std::to_string(rects[i].size.height.as_int());
+    }
+    return rust::String(result);
+}
+
+/// Decode "x,y,w,h|x,y,w,h|..." back to a vector of rectangles
+static std::vector<mir::geometry::Rectangle> decode_input_shape(rust::String const& encoded)
+{
+    std::vector<mir::geometry::Rectangle> rects;
+    std::string str(encoded.data(), encoded.size());
+    if (str.empty()) return rects;
+
+    size_t pos = 0;
+    while (pos < str.size())
+    {
+        int values[4] = {0, 0, 0, 0};
+        for (int i = 0; i < 4; ++i)
+        {
+            auto end = str.find_first_of(",|", pos);
+            if (end == std::string::npos) end = str.size();
+            values[i] = std::stoi(str.substr(pos, end - pos));
+            pos = end + 1;
+        }
+        rects.push_back(mir::geometry::Rectangle{
+            {values[0], values[1]},
+            {values[2], values[3]}});
+    }
+    return rects;
 }
 
 static uint64_t window_to_id(miral::Window const& window)
 {
     auto surface = static_cast<std::shared_ptr<mir::scene::Surface>>(window);
     return reinterpret_cast<uint64_t>(surface.get());
+}
+
+/// Serialize a miral::WindowSpecification to the FFI WindowSpecData struct.
+/// `parent_id` must be resolved by the caller since it requires the tools registry.
+static WindowSpecData spec_to_ffi(
+    miral::WindowSpecification const& spec,
+    bool has_parent,
+    uint64_t parent_id)
+{
+    return WindowSpecData{
+        spec.top_left().is_set(),
+        spec.top_left().is_set() ? to_point(spec.top_left().value()) : Point{0, 0},
+        spec.size().is_set(),
+        spec.size().is_set() ? to_size(spec.size().value()) : Size{0, 0},
+        spec.state().is_set(),
+        spec.state().is_set() ? static_cast<int32_t>(spec.state().value()) : 0,
+        spec.type().is_set(),
+        spec.type().is_set() ? static_cast<int32_t>(spec.type().value()) : 0,
+        spec.name().is_set(),
+        spec.name().is_set() ? rust::String(spec.name().value()) : rust::String(""),
+        has_parent,
+        parent_id,
+        spec.min_width().is_set(),
+        spec.min_width().is_set() ? spec.min_width().value().as_int() : 0,
+        spec.min_height().is_set(),
+        spec.min_height().is_set() ? spec.min_height().value().as_int() : 0,
+        spec.max_width().is_set(),
+        spec.max_width().is_set() ? spec.max_width().value().as_int() : 0,
+        spec.max_height().is_set(),
+        spec.max_height().is_set() ? spec.max_height().value().as_int() : 0,
+        spec.depth_layer().is_set(),
+        spec.depth_layer().is_set() ? static_cast<int32_t>(spec.depth_layer().value()) : 0,
+        spec.focus_mode().is_set(),
+        spec.focus_mode().is_set() ? static_cast<int32_t>(spec.focus_mode().value()) : 0,
+        spec.shell_chrome().is_set(),
+        spec.shell_chrome().is_set() ? static_cast<int32_t>(spec.shell_chrome().value()) : 0,
+        spec.preferred_orientation().is_set(),
+        spec.preferred_orientation().is_set()
+            ? static_cast<int32_t>(spec.preferred_orientation().value()) : 0,
+        spec.confine_pointer().is_set(),
+        spec.confine_pointer().is_set()
+            ? static_cast<int32_t>(spec.confine_pointer().value()) : 0,
+        spec.attached_edges().is_set(),
+        spec.attached_edges().is_set()
+            ? static_cast<uint32_t>(spec.attached_edges().value()) : 0u,
+        spec.visible_on_lock_screen().is_set(),
+        spec.visible_on_lock_screen().is_set() ? spec.visible_on_lock_screen().value() : false,
+        // --- New fields ---
+        spec.output_id().is_set(),
+        spec.output_id().is_set() ? spec.output_id().value() : 0,
+        spec.aux_rect().is_set(),
+        spec.aux_rect().is_set() ? to_rectangle(spec.aux_rect().value()) : Rectangle{{0, 0}, {0, 0}},
+        spec.placement_hints().is_set(),
+        spec.placement_hints().is_set() ? static_cast<uint32_t>(spec.placement_hints().value()) : 0u,
+        spec.window_placement_gravity().is_set(),
+        spec.window_placement_gravity().is_set()
+            ? static_cast<uint32_t>(spec.window_placement_gravity().value()) : 0u,
+        spec.aux_rect_placement_gravity().is_set(),
+        spec.aux_rect_placement_gravity().is_set()
+            ? static_cast<uint32_t>(spec.aux_rect_placement_gravity().value()) : 0u,
+        spec.aux_rect_placement_offset().is_set(),
+        spec.aux_rect_placement_offset().is_set()
+            ? to_displacement(spec.aux_rect_placement_offset().value()) : Displacement{0, 0},
+        spec.width_inc().is_set(),
+        spec.width_inc().is_set() ? spec.width_inc().value().as_int() : 0,
+        spec.height_inc().is_set(),
+        spec.height_inc().is_set() ? spec.height_inc().value().as_int() : 0,
+        spec.min_aspect().is_set(),
+        spec.min_aspect().is_set() ? spec.min_aspect().value().width : 0u,
+        spec.min_aspect().is_set() ? spec.min_aspect().value().height : 0u,
+        spec.max_aspect().is_set(),
+        spec.max_aspect().is_set() ? spec.max_aspect().value().width : 0u,
+        spec.max_aspect().is_set() ? spec.max_aspect().value().height : 0u,
+        spec.input_shape().is_set(),
+        spec.input_shape().is_set() ? encode_input_shape(spec.input_shape().value()) : rust::String(""),
+        spec.input_mode().is_set(),
+        spec.input_mode().is_set()
+            ? static_cast<int32_t>(spec.input_mode().value()) : 0,
+        spec.exclusive_rect().is_set(),
+        spec.exclusive_rect().is_set() && spec.exclusive_rect().value().is_set(),
+        (spec.exclusive_rect().is_set() && spec.exclusive_rect().value().is_set())
+            ? to_rectangle(spec.exclusive_rect().value().value()) : Rectangle{{0, 0}, {0, 0}},
+        spec.ignore_exclusion_zones().is_set(),
+        spec.ignore_exclusion_zones().is_set() ? spec.ignore_exclusion_zones().value() : false,
+        spec.application_id().is_set(),
+        spec.application_id().is_set() ? rust::String(spec.application_id().value()) : rust::String(""),
+        spec.server_side_decorated().is_set(),
+        spec.server_side_decorated().is_set() ? spec.server_side_decorated().value() : false,
+        spec.tiled_edges().is_set(),
+        spec.tiled_edges().is_set() ? static_cast<uint32_t>(spec.tiled_edges().value().value()) : 0u,
+        spec.alpha().is_set(),
+        spec.alpha().is_set() ? spec.alpha().value() : 0.0f,
+        spec.parent_size().is_set(),
+        spec.parent_size().is_set() ? to_size(spec.parent_size().value()) : Size{0, 0},
+    };
+}
+
+/// Deserialize a WindowSpecData back into a miral::WindowSpecification.
+/// Parent resolution requires the tools registry, passed separately.
+static void ffi_to_spec(
+    WindowSpecData const& data,
+    miral::WindowSpecification& out,
+    MiralTools* tools)
+{
+    if (data.has_top_left)
+        out.top_left() = from_point(data.top_left);
+    if (data.has_size)
+        out.size() = from_size(data.size);
+    if (data.has_state)
+        out.state() = static_cast<MirWindowState>(data.state);
+    if (data.has_type)
+        out.type() = static_cast<MirWindowType>(data.window_type);
+    if (data.has_parent && tools)
+    {
+        if (auto const* w = tools->lookup_window(data.parent_id))
+            out.parent() = static_cast<std::shared_ptr<mir::scene::Surface>>(*w);
+    }
+    if (data.has_min_width)
+        out.min_width() = mir::geometry::Width{data.min_width};
+    if (data.has_min_height)
+        out.min_height() = mir::geometry::Height{data.min_height};
+    if (data.has_max_width)
+        out.max_width() = mir::geometry::Width{data.max_width};
+    if (data.has_max_height)
+        out.max_height() = mir::geometry::Height{data.max_height};
+    if (data.has_depth_layer)
+        out.depth_layer() = static_cast<MirDepthLayer>(data.depth_layer);
+    if (data.has_focus_mode)
+        out.focus_mode() = static_cast<MirFocusMode>(data.focus_mode);
+    if (data.has_shell_chrome)
+        out.shell_chrome() = static_cast<MirShellChrome>(data.shell_chrome);
+    if (data.has_preferred_orientation)
+        out.preferred_orientation() = static_cast<MirOrientationMode>(data.preferred_orientation);
+    if (data.has_confine_pointer)
+        out.confine_pointer() = static_cast<MirPointerConfinementState>(data.confine_pointer);
+    if (data.has_attached_edges)
+        out.attached_edges() = static_cast<MirPlacementGravity>(data.attached_edges);
+    if (data.has_visible_on_lock_screen)
+        out.visible_on_lock_screen() = data.visible_on_lock_screen;
+    // --- New fields ---
+    if (data.has_output_id)
+        out.output_id() = data.output_id;
+    if (data.has_aux_rect)
+        out.aux_rect() = from_rectangle(data.aux_rect);
+    if (data.has_placement_hints)
+        out.placement_hints() = static_cast<MirPlacementHints>(data.placement_hints);
+    if (data.has_window_placement_gravity)
+        out.window_placement_gravity() = static_cast<MirPlacementGravity>(data.window_placement_gravity);
+    if (data.has_aux_rect_placement_gravity)
+        out.aux_rect_placement_gravity() = static_cast<MirPlacementGravity>(data.aux_rect_placement_gravity);
+    if (data.has_aux_rect_placement_offset)
+        out.aux_rect_placement_offset() = from_displacement(data.aux_rect_placement_offset);
+    if (data.has_width_inc)
+        out.width_inc() = mir::geometry::DeltaX{data.width_inc};
+    if (data.has_height_inc)
+        out.height_inc() = mir::geometry::DeltaY{data.height_inc};
+    if (data.has_min_aspect)
+        out.min_aspect() = miral::WindowSpecification::AspectRatio{data.min_aspect_width, data.min_aspect_height};
+    if (data.has_max_aspect)
+        out.max_aspect() = miral::WindowSpecification::AspectRatio{data.max_aspect_width, data.max_aspect_height};
+    if (data.has_input_shape)
+        out.input_shape() = decode_input_shape(data.input_shape);
+    if (data.has_input_mode)
+        out.input_mode() = static_cast<miral::WindowSpecification::InputReceptionMode>(data.input_mode);
+    if (data.has_exclusive_rect)
+    {
+        if (data.exclusive_rect_is_set)
+            out.exclusive_rect() = mir::optional_value<mir::geometry::Rectangle>{from_rectangle(data.exclusive_rect)};
+        else
+            out.exclusive_rect() = mir::optional_value<mir::geometry::Rectangle>{};
+    }
+    if (data.has_ignore_exclusion_zones)
+        out.ignore_exclusion_zones() = data.ignore_exclusion_zones;
+    if (data.has_application_id)
+        out.application_id() = std::string(data.application_id.data(), data.application_id.size());
+    if (data.has_server_side_decorated)
+        out.server_side_decorated() = data.server_side_decorated;
+    if (data.has_tiled_edges)
+        out.tiled_edges() = mir::Flags<MirTiledEdge>{static_cast<unsigned int>(data.tiled_edges)};
+    if (data.has_alpha)
+        out.alpha() = data.alpha;
+    if (data.has_parent_size)
+        out.parent_size() = from_size(data.parent_size);
 }
 
 // --- MiralTools window registry ---
@@ -142,7 +375,7 @@ public:
     {
         MiralApplicationInfo app_wrap{app_info};
 
-        // Convert requested spec to bridge format
+        // Resolve parent ID
         auto has_parent = requested_specification.parent().is_set();
         uint64_t parent_id = 0;
         if (has_parent)
@@ -151,114 +384,12 @@ public:
                 parent_id = reinterpret_cast<uint64_t>(parent_surface.get());
         }
 
-        WindowSpecData spec_data{
-            requested_specification.top_left().is_set(),
-            requested_specification.top_left().is_set()
-                ? to_point(requested_specification.top_left().value())
-                : Point{0, 0},
-            requested_specification.size().is_set(),
-            requested_specification.size().is_set()
-                ? to_size(requested_specification.size().value())
-                : Size{0, 0},
-            requested_specification.state().is_set(),
-            requested_specification.state().is_set()
-                ? static_cast<int32_t>(requested_specification.state().value())
-                : 0,
-            requested_specification.type().is_set(),
-            requested_specification.type().is_set()
-                ? static_cast<int32_t>(requested_specification.type().value())
-                : 0,
-            requested_specification.name().is_set(),
-            requested_specification.name().is_set()
-                ? rust::String(requested_specification.name().value())
-                : rust::String(""),
-            has_parent,
-            parent_id,
-            requested_specification.min_width().is_set(),
-            requested_specification.min_width().is_set()
-                ? requested_specification.min_width().value().as_int()
-                : 0,
-            requested_specification.min_height().is_set(),
-            requested_specification.min_height().is_set()
-                ? requested_specification.min_height().value().as_int()
-                : 0,
-            requested_specification.max_width().is_set(),
-            requested_specification.max_width().is_set()
-                ? requested_specification.max_width().value().as_int()
-                : 0,
-            requested_specification.max_height().is_set(),
-            requested_specification.max_height().is_set()
-                ? requested_specification.max_height().value().as_int()
-                : 0,
-            requested_specification.depth_layer().is_set(),
-            requested_specification.depth_layer().is_set()
-                ? static_cast<int32_t>(requested_specification.depth_layer().value())
-                : 0,
-            requested_specification.focus_mode().is_set(),
-            requested_specification.focus_mode().is_set()
-                ? static_cast<int32_t>(requested_specification.focus_mode().value())
-                : 0,
-            requested_specification.shell_chrome().is_set(),
-            requested_specification.shell_chrome().is_set()
-                ? static_cast<int32_t>(requested_specification.shell_chrome().value())
-                : 0,
-            requested_specification.preferred_orientation().is_set(),
-            requested_specification.preferred_orientation().is_set()
-                ? static_cast<int32_t>(requested_specification.preferred_orientation().value())
-                : 0,
-            requested_specification.confine_pointer().is_set(),
-            requested_specification.confine_pointer().is_set()
-                ? static_cast<int32_t>(requested_specification.confine_pointer().value())
-                : 0,
-            requested_specification.attached_edges().is_set(),
-            requested_specification.attached_edges().is_set()
-                ? static_cast<uint32_t>(requested_specification.attached_edges().value())
-                : 0u,
-            requested_specification.visible_on_lock_screen().is_set(),
-            requested_specification.visible_on_lock_screen().is_set()
-                ? requested_specification.visible_on_lock_screen().value()
-                : false,
-        };
-
+        auto spec_data = spec_to_ffi(requested_specification, has_parent, parent_id);
         auto result = rust_policy_place_new_window(*holder_, app_wrap, spec_data);
 
         // Convert result back to miral::WindowSpecification
         miral::WindowSpecification out{requested_specification};
-        if (result.has_top_left)
-            out.top_left() = from_point(result.top_left);
-        if (result.has_size)
-            out.size() = from_size(result.size);
-        if (result.has_state)
-            out.state() = static_cast<MirWindowState>(result.state);
-        if (result.has_type)
-            out.type() = static_cast<MirWindowType>(result.window_type);
-        if (result.has_parent)
-        {
-            if (auto const* w = tools_->lookup_window(result.parent_id))
-                out.parent() = static_cast<std::shared_ptr<mir::scene::Surface>>(*w);
-        }
-        if (result.has_min_width)
-            out.min_width() = mir::geometry::Width{result.min_width};
-        if (result.has_min_height)
-            out.min_height() = mir::geometry::Height{result.min_height};
-        if (result.has_max_width)
-            out.max_width() = mir::geometry::Width{result.max_width};
-        if (result.has_max_height)
-            out.max_height() = mir::geometry::Height{result.max_height};
-        if (result.has_depth_layer)
-            out.depth_layer() = static_cast<MirDepthLayer>(result.depth_layer);
-        if (result.has_focus_mode)
-            out.focus_mode() = static_cast<MirFocusMode>(result.focus_mode);
-        if (result.has_shell_chrome)
-            out.shell_chrome() = static_cast<MirShellChrome>(result.shell_chrome);
-        if (result.has_preferred_orientation)
-            out.preferred_orientation() = static_cast<MirOrientationMode>(result.preferred_orientation);
-        if (result.has_confine_pointer)
-            out.confine_pointer() = static_cast<MirPointerConfinementState>(result.confine_pointer);
-        if (result.has_attached_edges)
-            out.attached_edges() = static_cast<MirPlacementGravity>(result.attached_edges);
-        if (result.has_visible_on_lock_screen)
-            out.visible_on_lock_screen() = result.visible_on_lock_screen;
+        ffi_to_spec(result, out, tools_.get());
         return out;
     }
 
@@ -284,57 +415,7 @@ public:
                 mod_parent_id = reinterpret_cast<uint64_t>(parent_surface.get());
         }
 
-        WindowSpecData spec_data{
-            modifications.top_left().is_set(),
-            modifications.top_left().is_set()
-                ? to_point(modifications.top_left().value())
-                : Point{0, 0},
-            modifications.size().is_set(),
-            modifications.size().is_set()
-                ? to_size(modifications.size().value())
-                : Size{0, 0},
-            modifications.state().is_set(),
-            modifications.state().is_set()
-                ? static_cast<int32_t>(modifications.state().value())
-                : 0,
-            modifications.type().is_set(),
-            modifications.type().is_set()
-                ? static_cast<int32_t>(modifications.type().value())
-                : 0,
-            modifications.name().is_set(),
-            modifications.name().is_set()
-                ? rust::String(modifications.name().value())
-                : rust::String(""),
-            mod_has_parent,
-            mod_parent_id,
-            modifications.min_width().is_set(),
-            modifications.min_width().is_set() ? modifications.min_width().value().as_int() : 0,
-            modifications.min_height().is_set(),
-            modifications.min_height().is_set() ? modifications.min_height().value().as_int() : 0,
-            modifications.max_width().is_set(),
-            modifications.max_width().is_set() ? modifications.max_width().value().as_int() : 0,
-            modifications.max_height().is_set(),
-            modifications.max_height().is_set() ? modifications.max_height().value().as_int() : 0,
-            modifications.depth_layer().is_set(),
-            modifications.depth_layer().is_set() ? static_cast<int32_t>(modifications.depth_layer().value()) : 0,
-            modifications.focus_mode().is_set(),
-            modifications.focus_mode().is_set() ? static_cast<int32_t>(modifications.focus_mode().value()) : 0,
-            modifications.shell_chrome().is_set(),
-            modifications.shell_chrome().is_set() ? static_cast<int32_t>(modifications.shell_chrome().value()) : 0,
-            modifications.preferred_orientation().is_set(),
-            modifications.preferred_orientation().is_set()
-                ? static_cast<int32_t>(modifications.preferred_orientation().value())
-                : 0,
-            modifications.confine_pointer().is_set(),
-            modifications.confine_pointer().is_set()
-                ? static_cast<int32_t>(modifications.confine_pointer().value())
-                : 0,
-            modifications.attached_edges().is_set(),
-            modifications.attached_edges().is_set() ? static_cast<uint32_t>(modifications.attached_edges().value()) : 0u,
-            modifications.visible_on_lock_screen().is_set(),
-            modifications.visible_on_lock_screen().is_set() ? modifications.visible_on_lock_screen().value() : false,
-        };
-
+        auto spec_data = spec_to_ffi(modifications, mod_has_parent, mod_parent_id);
         rust_policy_handle_modify_window(*holder_, info_wrap, spec_data);
     }
 
@@ -1091,41 +1172,7 @@ void miral_tools_modify_window_by_id(MiralTools& tools, uint64_t window_id, Wind
         return;
 
     miral::WindowSpecification miral_spec;
-    if (spec.has_top_left)
-        miral_spec.top_left() = from_point(spec.top_left);
-    if (spec.has_size)
-        miral_spec.size() = from_size(spec.size);
-    if (spec.has_state)
-        miral_spec.state() = static_cast<MirWindowState>(spec.state);
-    if (spec.has_type)
-        miral_spec.type() = static_cast<MirWindowType>(spec.window_type);
-    if (spec.has_parent)
-    {
-        if (auto const* parent_w = tools.lookup_window(spec.parent_id))
-            miral_spec.parent() = static_cast<std::shared_ptr<mir::scene::Surface>>(*parent_w);
-    }
-    if (spec.has_min_width)
-        miral_spec.min_width() = mir::geometry::Width{spec.min_width};
-    if (spec.has_min_height)
-        miral_spec.min_height() = mir::geometry::Height{spec.min_height};
-    if (spec.has_max_width)
-        miral_spec.max_width() = mir::geometry::Width{spec.max_width};
-    if (spec.has_max_height)
-        miral_spec.max_height() = mir::geometry::Height{spec.max_height};
-    if (spec.has_depth_layer)
-        miral_spec.depth_layer() = static_cast<MirDepthLayer>(spec.depth_layer);
-    if (spec.has_focus_mode)
-        miral_spec.focus_mode() = static_cast<MirFocusMode>(spec.focus_mode);
-    if (spec.has_shell_chrome)
-        miral_spec.shell_chrome() = static_cast<MirShellChrome>(spec.shell_chrome);
-    if (spec.has_preferred_orientation)
-        miral_spec.preferred_orientation() = static_cast<MirOrientationMode>(spec.preferred_orientation);
-    if (spec.has_confine_pointer)
-        miral_spec.confine_pointer() = static_cast<MirPointerConfinementState>(spec.confine_pointer);
-    if (spec.has_attached_edges)
-        miral_spec.attached_edges() = static_cast<MirPlacementGravity>(spec.attached_edges);
-    if (spec.has_visible_on_lock_screen)
-        miral_spec.visible_on_lock_screen() = spec.visible_on_lock_screen;
+    ffi_to_spec(spec, miral_spec, &tools);
 
     auto& info = tools.inner.info_for(*w);
     tools.inner.modify_window(info, miral_spec);
