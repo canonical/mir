@@ -447,12 +447,18 @@ impl WindowSpecification {
                 None
             },
             min_aspect: if data.has_min_aspect {
-                Some(AspectRatio::new(data.min_aspect_width, data.min_aspect_height))
+                Some(AspectRatio::new(
+                    data.min_aspect_width,
+                    data.min_aspect_height,
+                ))
             } else {
                 None
             },
             max_aspect: if data.has_max_aspect {
-                Some(AspectRatio::new(data.max_aspect_width, data.max_aspect_height))
+                Some(AspectRatio::new(
+                    data.max_aspect_width,
+                    data.max_aspect_height,
+                ))
             } else {
                 None
             },
