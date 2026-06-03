@@ -149,7 +149,9 @@ impl WindowManagementPolicy for TilingPolicy {
         if event.action == KeyAction::Down && event.modifiers.alt() && event.keysym == 0x71
         // XKB_KEY_q
         {
-            // TODO: get active window and close it
+            if let Some(window) = self.tools().active_window() {
+                self.tools().ask_client_to_close(&window);
+            }
             return true;
         }
 
