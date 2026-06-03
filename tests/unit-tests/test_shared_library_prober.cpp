@@ -21,7 +21,6 @@
 #include <cstdlib>
 #include <cerrno>
 #include <unistd.h>
-#include <cstring>
 #include <unordered_map>
 
 #include <system_error>

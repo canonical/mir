@@ -34,7 +34,6 @@
 #include <mir/frontend/surface_stack.h>
 #include <mir/scene/null_observer.h>
 
-#include <cstring>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;

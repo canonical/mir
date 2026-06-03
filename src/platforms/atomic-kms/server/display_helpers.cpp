@@ -32,7 +32,6 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <boost/throw_exception.hpp>
 
-#include <cstring>
 #include <stdexcept>
 #include <xf86drm.h>
 #include <fcntl.h>

@@ -24,7 +24,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
-#include <cstring>
 #include <limits>
 #include <map>
 #include <sstream>

@@ -25,7 +25,6 @@
 
 #include "../handle_event_exception.h"
 
-#include <cstring>
 
 
 namespace ml = mir::logging;

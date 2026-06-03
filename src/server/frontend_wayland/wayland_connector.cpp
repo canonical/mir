@@ -57,7 +57,6 @@
 #include <functional>
 #include <type_traits>
 #include <cstdlib>
-#include <cstring>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;

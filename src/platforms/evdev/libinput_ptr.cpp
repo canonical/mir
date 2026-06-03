@@ -22,7 +22,6 @@
 
 #include <fcntl.h>
 #include <iostream>
-#include <cstring>
 
 namespace mie = mir::input::evdev;
 

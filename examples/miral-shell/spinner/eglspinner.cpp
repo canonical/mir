@@ -20,7 +20,6 @@
 #include "miregl.h"
 #include <cassert>
 #include <glib.h>
-#include <cstring>
 #include <GLES2/gl2.h>
 #include <mutex>
 
