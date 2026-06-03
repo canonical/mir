@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/logging/tag.h"
-#include "mir/options/program_option.h"
+#include <mir/logging/tag.h>
+#include <mir/options/program_option.h>
 #include <boost/program_options/detail/cmdline.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
