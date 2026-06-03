@@ -47,7 +47,10 @@ public:
 
     void operator()(mir::Server& server) const;
 
-    void for_each_binding(mir::wayland::Client* client, Output const& output, std::function<void(wl_resource* output)> const& callback) const;
+    void for_each_binding(
+        mir::wayland::Client* client,
+        Output const& output,
+        std::function<void(wl_resource* output)> const& callback) const;
 
 private:
     struct Self;

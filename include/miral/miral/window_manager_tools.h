@@ -84,8 +84,7 @@ public:
     ///
     /// \param predicate the predicate
     /// \returns an application, or a null application if none is found
-    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
-    -> Application;
+    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate) -> Application;
 
     /// Retrieve information about a \p session.
     ///
@@ -187,7 +186,7 @@ public:
     /// Returns the window of the given application that should be selected.
     ///
     /// \returns the window to select, or `std::nullopt` if none are found
-    auto window_to_select_application(const Application) const -> std::optional<Window>;
+    auto window_to_select_application(Application const) const -> std::optional<Window>;
 
     /// Check if the provided \p window can be selected.
     ///
@@ -279,7 +278,6 @@ public:
     void move_workspace_content_to_workspace(
         std::shared_ptr<Workspace> const& to_workspace,
         std::shared_ptr<Workspace> const& from_workspace);
-
 
     /// Invoke the \p callback for each workspace that contains the \p window.
     ///

@@ -74,6 +74,7 @@ struct MockSurface : public scene::BasicSurface
 
     MOCK_METHOD(void, request_client_surface_close, ());
     MOCK_METHOD(std::shared_ptr<scene::Surface>, parent, (), (const));
+    MOCK_METHOD(void, set_parent, (std::weak_ptr<scene::Surface> const&));
     MOCK_METHOD(int, configure, (MirWindowAttrib, int));
     MOCK_METHOD(void, register_interest, (std::weak_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD(void, unregister_interest, (scene::SurfaceObserver const&));

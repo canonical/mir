@@ -1,4 +1,4 @@
-# Mir reference
+# Reference
 
 These pages provide detailed reference to Mir APIs and other interfaces.
 

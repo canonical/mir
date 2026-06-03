@@ -65,7 +65,7 @@ struct StaticGeometry
     MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
 };
 
-static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
+constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
     return ((uint32_t)b <<  0) |
@@ -82,15 +82,46 @@ static constexpr auto color(unsigned char r, unsigned char g, unsigned char b, u
 #endif
 }
 
-uint32_t constexpr default_focused_background   = color(0x32, 0x32, 0x32);
-uint32_t constexpr default_unfocused_background = color(0x80, 0x80, 0x80);
-uint32_t constexpr default_focused_text         = color(0xFF, 0xFF, 0xFF);
-uint32_t constexpr default_unfocused_text       = color(0xA0, 0xA0, 0xA0);
-uint32_t constexpr default_normal_button        = color(0x60, 0x60, 0x60);
-uint32_t constexpr default_active_button        = color(0xA0, 0xA0, 0xA0);
-uint32_t constexpr default_close_normal_button  = color(0xA0, 0x20, 0x20);
-uint32_t constexpr default_close_active_button  = color(0xC0, 0x60, 0x60);
-uint32_t constexpr default_button_icon          = color(0xFF, 0xFF, 0xFF);
+constexpr auto unpack_pixel(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    b = static_cast<unsigned char>((c >>  0) & 0xFF);
+    g = static_cast<unsigned char>((c >>  8) & 0xFF);
+    r = static_cast<unsigned char>((c >> 16) & 0xFF);
+    a = static_cast<unsigned char>((c >> 24) & 0xFF);
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    b = static_cast<unsigned char>((c >> 24) & 0xFF);
+    g = static_cast<unsigned char>((c >> 16) & 0xFF);
+    r = static_cast<unsigned char>((c >>  8) & 0xFF);
+    a = static_cast<unsigned char>((c >>  0) & 0xFF);
+#else
+#error unsupported byte order
+#endif
+}
+
+constexpr auto blend_pixel(uint32_t c, unsigned char r, unsigned char g, unsigned char b, unsigned char a) -> uint32_t
+{
+    unsigned char src_r = 0, src_g = 0, src_b = 0, src_a = 0;
+    unpack_pixel(c, src_r, src_g, src_b, src_a);
+    unsigned char out_r = (static_cast<int>(src_r) * (255 - a)) / 255 +
+        (static_cast<int>(r) * a) / 255;
+    unsigned char out_g = (static_cast<int>(src_g) * (255 - a)) / 255 +
+        (static_cast<int>(g) * a) / 255;
+    unsigned char out_b = (static_cast<int>(src_b) * (255 - a)) / 255 +
+        (static_cast<int>(b) * a) / 255;
+    unsigned char out_a = src_a;
+    return pack_pixel(out_r, out_g, out_b, out_a);
+}
+
+uint32_t constexpr default_focused_background   = pack_pixel(0x32, 0x32, 0x32);
+uint32_t constexpr default_unfocused_background = pack_pixel(0x80, 0x80, 0x80);
+uint32_t constexpr default_focused_text         = pack_pixel(0xFF, 0xFF, 0xFF);
+uint32_t constexpr default_unfocused_text       = pack_pixel(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_normal_button        = pack_pixel(0x60, 0x60, 0x60);
+uint32_t constexpr default_active_button        = pack_pixel(0xA0, 0xA0, 0xA0);
+uint32_t constexpr default_close_normal_button  = pack_pixel(0xA0, 0x20, 0x20);
+uint32_t constexpr default_close_active_button  = pack_pixel(0xC0, 0x60, 0x60);
+uint32_t constexpr default_button_icon          = pack_pixel(0xFF, 0xFF, 0xFF);
 
 inline auto area(geom::Size size) -> size_t
 {
@@ -125,7 +156,7 @@ inline void render_close_icon(
 {
     for (geom::Y y = box.top(); y < box.bottom(); y += geom::DeltaY{1})
     {
-        float const height = (y - box.top()).as_int() / (float)box.size.height.as_int();
+        float const height = (y - box.top()).as_int() / static_cast<float>(box.size.height.as_int());
         geom::X const left_line_left = box.left() + as_delta(box.size.width * height);
         geom::X const right_line_left = box.right() - as_delta(box.size.width * height) - as_delta(line_width);
         render_row(data, buf_size, {left_line_left, y}, line_width, color);
@@ -606,8 +637,8 @@ void RendererStrategy::Text::Impl::render_glyph(
 
     geom::Displacement const glyph_offset = as_displacement(top_left);
 
-    unsigned char* const color_pixels = (unsigned char *)&color;
-    unsigned char const color_alpha = color_pixels[3];
+    unsigned char color_red = 0, color_green = 0, color_blue = 0, color_alpha = 0;
+    unpack_pixel(color, color_red, color_green, color_blue, color_alpha);
 
     for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
     {
@@ -618,15 +649,9 @@ void RendererStrategy::Text::Impl::render_glyph(
         for (geom::X buffer_x = buffer_left; buffer_x < buffer_right; buffer_x += geom::DeltaX{1})
         {
             geom::X const glyph_x = buffer_x - glyph_offset.dx;
-            unsigned char const glyph_alpha = ((int)glyph_row[glyph_x.as_int()] * color_alpha) / 255;
-            unsigned char* const buffer_pixels = (unsigned char *)(buffer_row + buffer_x.as_int());
-            for (int i = 0; i < 3; i++)
-            {
-                // Blend color with the previous buffer color based on the glyph's alpha
-                buffer_pixels[i] =
-                    ((int)buffer_pixels[i] * (255 - glyph_alpha)) / 255 +
-                    ((int)color_pixels[i] * glyph_alpha) / 255;
-            }
+            unsigned char const glyph_alpha = (static_cast<int>(glyph_row[glyph_x.as_int()]) * color_alpha) / 255;
+            buffer_row[buffer_x.as_int()] =
+                blend_pixel(buffer_row[buffer_x.as_int()], color_red, color_green, color_blue, glyph_alpha);
         }
     }
 }

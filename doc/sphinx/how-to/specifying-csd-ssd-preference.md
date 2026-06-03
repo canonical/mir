@@ -1,4 +1,4 @@
-# Specifying CSD/SSD preference in Mir compositors
+# Specifying client-/server-side decoration preference
 
 Clients can ask the compositor to use server or client side decorations, or request the compositor to choose for them. {class}`miral::Decorations` allows you to customize how the server deals with these requests.
 

@@ -9,26 +9,32 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_SERVER_EXAMPLE_DECORATION_H
-#define MIR_SERVER_EXAMPLE_DECORATION_H
+#ifndef MIR_EXAMPLE_XDG_SHELL_V6_H
+#define MIR_EXAMPLE_XDG_SHELL_V6_H
 
 #include <miral/wayland_extensions.h>
+#include <wayland-server-core.h>
+
+#include <functional>
+#include <vector>
+#include <memory>
 
 namespace mir
 {
 namespace examples
 {
-auto server_decoration_extension() -> miral::WaylandExtensions::Builder;
 
-using ServerDecorationCreateCallback = std::function<void(wl_client* client, wl_resource* surface)>;
+using XdgShellV6CreateCallback =
+    std::function<void(wl_client* client, wl_resource* surface)>;
 
-auto server_decoration_extension(ServerDecorationCreateCallback callback) -> miral::WaylandExtensions::Builder;
+auto xdg_shell_v6_extension() -> miral::WaylandExtensions::Builder;
+
+auto xdg_shell_v6_extension(XdgShellV6CreateCallback callback)
+    -> miral::WaylandExtensions::Builder;
+
 }
 }
 
-#endif //MIR_SERVER_EXAMPLE_DECORATION_H
+#endif

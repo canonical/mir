@@ -231,7 +231,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
 
         def add_symbol_str(s: str):
             if '<' in s or '>' in s:
-                s = f'"{s}"'
+                s = s.replace('<', '?').replace('>', '?').replace(',', '*')
             s += ';'
             if not s in HIDDEN_SYMBOLS:
                 result.add(s)

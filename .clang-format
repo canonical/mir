@@ -1,0 +1,68 @@
+---
+BasedOnStyle: GNU
+AccessModifierOffset: -4
+AlignAfterOpenBracket: AlwaysBreak
+AlignConsecutiveAssignments:
+  PadOperators: false
+AlignTrailingComments:
+  Kind: Always
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortBlocksOnASingleLine: Always
+AllowShortFunctionsOnASingleLine: All
+AllowShortLambdasOnASingleLine: All
+AllowShortNamespacesOnASingleLine: true
+# AllowShortRecordOnASingleLine: true  upcoming in clang-format 23
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakBeforeMultilineStrings: true
+BinPackArguments: false
+BinPackParameters: OnePerLine
+BreakAfterReturnType: None
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom
+BreakTemplateDeclarations: true
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: Always
+  AfterEnum: true
+  AfterExternBlock: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterObjCDeclaration: true
+  AfterStruct: true
+  AfterUnion: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: true
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: true
+  SplitEmptyNamespace: true
+BreakConstructorInitializers: AfterColon
+BreakBeforeTernaryOperators: false
+ColumnLimit: 120
+Cpp11BracedListStyle: true
+EmptyLineAfterAccessModifier: Leave
+EmptyLineBeforeAccessModifier: Always
+FixNamespaceComments: false
+IncludeBlocks: Preserve
+IndentAccessModifiers: false
+IndentWidth: 4
+KeepEmptyLines:
+  AtStartOfBlock: false
+PackConstructorInitializers: CurrentLine
+PenaltyBreakBeforeFirstCallParameter: 100
+PenaltyBreakOpenParenthesis: 100
+PenaltyReturnTypeOnItsOwnLine: 500
+PointerAlignment: Left
+QualifierAlignment: Right
+ReflowComments: Never
+SeparateDefinitionBlocks: Leave
+SortIncludes:
+  Enabled: false
+SpaceBeforeParens: ControlStatements
+SpaceAfterTemplateKeyword: false
+SpacesBeforeTrailingComments: 1
+TabWidth: 4

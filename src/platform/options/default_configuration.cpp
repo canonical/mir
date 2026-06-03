@@ -178,7 +178,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Configure shell reporting. [{off,log}]")
         (composite_delay_opt, po::value<int>()->default_value(0),
             "Number of milliseconds to wait for new frames from clients before compositing. "
-            "Higher values result in lower latency but risk causing frame skipping.")
+            "Higher values result in higher latency but risk causing frame skipping.")
         (touchspots_opt,
             "Enable visual feedback of touch events. "
             "Useful for screencasting.")

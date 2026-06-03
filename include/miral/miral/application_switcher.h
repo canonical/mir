@@ -23,10 +23,7 @@
 #include <wayland-client.h>
 #include <linux/input-event-codes.h>
 
-namespace mir
-{
-class Server;
-}
+namespace mir { class Server; }
 
 namespace miral
 {

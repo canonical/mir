@@ -1121,6 +1121,9 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
             auto& parent_info = info_for(window_info.parent());
             parent_info.add_child(window);
         }
+
+        std::shared_ptr<scene::Surface>(window)->set_parent(
+            std::shared_ptr<scene::Surface>(window_info.parent()));
     }
 
     if (modifications.name().is_set())
