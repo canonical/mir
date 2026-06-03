@@ -79,7 +79,8 @@ private:
     wayland::Weak<WlDataDevice> const device;
 };
 
-enum class OfferType {
+enum class OfferType
+{
     dnd,
     selection
 };
@@ -99,7 +100,8 @@ public:
 
     void finish() override
     {
-        if (type != OfferType::dnd) {
+        if (type != OfferType::dnd)
+        {
             throw mw::ProtocolError{
                 resource,
                 Error::invalid_offer,
@@ -132,7 +134,8 @@ public:
                 Error::invalid_action,
                 "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions);
         }
-        if (type != OfferType::dnd) {
+        if (type != OfferType::dnd)
+        {
             throw mw::ProtocolError{
                 resource,
                 Error::invalid_offer,
