@@ -47,7 +47,7 @@ struct Tag;
  */
 Tag const& create_tag(Tag const& parent, std::string_view name);
 
-Tag const& core();
+Tag const& base();
 Tag const& input();
 Tag const& wayland();
 Tag const& graphics();
