@@ -205,9 +205,10 @@ TEST_F(CommandLineHandling, subsequent_log_level_overrides_previous)
 
     std::string message = "hello";
     EXPECT_CALL(*logger, log(ml::Severity::debug, message, "test_tag")).Times(1);
+    EXPECT_CALL(*logger, log(_, _, "base")).Times(0);
 
     mir::log_debug({tag}, message);
-    mir::log_debug({ml::base()}, message);
+    mir::log_error({ml::base()}, message);
 
     // Replace Mir's logger so that we own the last references to our MockLogger
     // allowing it to be destroyed and verified after the test finishes.
