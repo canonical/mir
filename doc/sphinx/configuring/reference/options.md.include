@@ -135,12 +135,14 @@ This option can be specified multiple times, and filters are applied in the orde
 For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level
 except for graphics (and its children), which will be enabled at the debug level.
 
+Tags can be specified by their full heirarchy (e.g. “base/graphics”) or by their name (eg: “graphics”) if unambiguous.
+
 Possible tags to filter on are:
- - core
- - core/input
- - core/wayland
- - core/graphics
- - core/window-management
+ - base
+ - base/input
+ - base/wayland
+ - base/graphics
+ - base/window-management
 
 (global-mouse-cursor-acceleration)=
 ### `mouse-cursor-acceleration`

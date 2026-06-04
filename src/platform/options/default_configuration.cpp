@@ -280,6 +280,8 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level\n"
             "except for graphics (and its children), which will be enabled at the debug level.\n"
             "\n"
+            "Tags can be specified by their full heirarchy (e.g. “base/graphics”) or by their name (eg: “graphics”) if unambiguous.\n"
+            "\n"
             "Possible tags to filter on are:\n"
             + tags).c_str());
 
