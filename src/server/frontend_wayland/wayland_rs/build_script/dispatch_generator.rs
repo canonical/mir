@@ -100,6 +100,7 @@ fn generate_global_dispatch_impl(
         "{}",
         format_wayland_interface_to_rust_extension_struct(&interface.name)
     );
+    let wrapper_struct_name = format_ident!("{}Wrapper", snake_to_pascal(&interface.name));
     let create_global_method = format_ident!("create_{}", &interface.name);
     let interface_name_str = &interface.name;
     quote! {
@@ -118,31 +119,24 @@ fn generate_global_dispatch_impl(
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
                 use crate::ffi;
-                let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
-                let mut guard = global_data.lock().unwrap();
 
-                // Methods on C++ classes must operate on Pin<&mut X> because those are the
-                // only ones that can cross the FFI boundary from Rust -> C++.
-                let global = (&mut *guard).pin_mut().#create_global_method(wayland_client);
-                let arc = Arc::new(Mutex::new(global));
-
-                // The initialization strategy here requires a "double initialization". First,
-                // we associate the C++ implementation with the Rust data. Afterwards, we wrap
-                // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
-                // Finally, we associate this "extension" object with our C++ object.
-                let instance = data_init.init(resource, arc.clone());
+                // Step 1: Create a wrapper with no inner value and register it via data_init.
+                let wrapper = Arc::new(Mutex::new(#wrapper_struct_name { inner: None }));
+                let instance = data_init.init(resource, wrapper.clone());
                 register_resource(&instance);
                 let protocol_id = Resource::id(&instance).protocol_id();
+
+                // Step 2: Create the middleware object wrapping the wayland resource.
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
-                let mut guard = arc.lock().unwrap();
-                // SAFETY: `guard` is a `MutexGuard`, so we have exclusive access to the
-                // underlying C++ object for the duration of this call and cannot concurrently
-                // create any aliasing references to it. The pointee is owned by `UniquePtr`,
-                // so taking a pinned mutable reference here does not move it, and the pinned
-                // reference is used only for this immediate FFI call and does not escape.
-                unsafe {
-                    guard.pin_mut_unchecked().associate(boxed, protocol_id);
-                }
+
+                // Step 3: Call the C++ factory with client, middleware, and object_id
+                // so the C++ object is fully initialized from the start.
+                let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
+                let mut guard = global_data.lock().unwrap();
+                let global = (&mut *guard).pin_mut().#create_global_method(wayland_client, boxed, protocol_id);
+
+                // Step 4: Store the fully-initialized C++ object in the wrapper.
+                wrapper.lock().unwrap().inner = Some(global);
             }
 
             fn can_view(client: Client, global_data: &Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>) -> bool {
@@ -173,7 +167,8 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
     match arg.type_ {
         // The Wayland Rust crate will provide us with raw Wayland Rust objects.
         // C++ expects the shared_ptr data that backs these rust objects to be sent
-        // as parameters for objects.
+        // as parameters for objects. We lock the wrapper and clone the SharedPtr
+        // to avoid holding a mutex guard across the FFI boundary.
         WaylandArgType::Object => {
             let arg_type = format_ident!(
                 "{}",
@@ -181,18 +176,30 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
                     arg.interface.as_ref().expect("Object is missing interface"),
                 )
             );
+            let wrapper_type = format_ident!(
+                "{}Wrapper",
+                snake_to_pascal(arg.interface.as_ref().expect("Object is missing interface"))
+            );
             if arg.allow_null.unwrap_or(false) {
                 let has_arg_name = format_has_arg_ident(&arg.name);
                 Some(quote! {
                     let #has_arg_name = #arg_name.is_some();
-                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
-                        Some(o) => o.data().unwrap(),
-                        None => &cxx::SharedPtr::<ffi::#arg_type>::null()
+                    let #arg_name: cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
+                        Some(o) => {
+                            let guard = o.data::<Arc<Mutex<#wrapper_type>>>().unwrap().lock().unwrap();
+                            guard.inner.clone().unwrap_or_else(|| cxx::SharedPtr::null())
+                        }
+                        None => cxx::SharedPtr::<ffi::#arg_type>::null()
                     };
+                    let #arg_name = &#arg_name;
                 })
             } else {
                 Some(quote! {
-                    let #arg_name: &cxx::SharedPtr<ffi::#arg_type> = #arg_name.data().unwrap();
+                    let #arg_name: cxx::SharedPtr<ffi::#arg_type> = {
+                        let guard = #arg_name.data::<Arc<Mutex<#wrapper_type>>>().unwrap().lock().unwrap();
+                        guard.inner.clone().unwrap_or_else(|| cxx::SharedPtr::null())
+                    };
+                    let #arg_name = &#arg_name;
                 })
             }
         }
@@ -250,6 +257,15 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     .expect("NewId is missing interface")
             )
         );
+        let child_wrapper_struct_name = format_ident!(
+            "{}Wrapper",
+            snake_to_pascal(
+                new_id_arg
+                    .interface
+                    .as_ref()
+                    .expect("NewId is missing interface")
+            )
+        );
         let call_arg_names: Vec<TokenStream> = request
             .args
             .iter()
@@ -258,30 +274,25 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             .collect();
 
         quote! {
+            // Step 1: Create a wrapper with no inner value and register it via data_init.
+            let child_wrapper = Arc::new(Mutex::new(#child_wrapper_struct_name { inner: None }));
+            let instance = data_init.init(#new_id_name, child_wrapper.clone());
+            register_resource(&instance);
+            let protocol_id = Resource::id(&instance).protocol_id();
+
+            // Step 2: Create the middleware object wrapping the child resource.
+            let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
+
+            // Step 3: Call the parent's request method with the child middleware so the
+            // child C++ object is fully initialized from the start.
             let mut guard = data.lock().unwrap();
-            // SAFETY: The mutex guard provides the only mutable access to this child while
-            // the call is in progress, so this cannot introduce aliased mutable access across
-            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
-            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-            match unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+            let inner = guard.inner.as_mut().expect("Request dispatched on uninitialized resource");
+            // SAFETY: The mutex guard provides the only mutable access while the call is
+            // in progress. The pinned reference is used only for this FFI call.
+            match unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names, )* boxed, protocol_id) } {
                 Ok(child) => {
-                    let arc = Arc::new(Mutex::new(child));
-
-                    // The initialization strategy here mirrors the global bind flow: First,
-                    // we associate the C++ implementation with the Rust data. Afterwards, we wrap
-                    // the Rust resource in an "extension" object that ferries the data from C++ -> Rust.
-                    // Finally, we associate this "extension" object with our C++ object.
-                    let instance = data_init.init(#new_id_name, arc.clone());
-                    register_resource(&instance);
-                    let protocol_id = Resource::id(&instance).protocol_id();
-                    let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
-                    let mut guard = arc.lock().unwrap();
-
-                    // SAFETY: The mutex guard provides the only mutable access to this child while
-                    // the call is in progress, so this cannot introduce aliased mutable access across
-                    // FFI. The unchecked pin is used only for the duration of the `associate()` call,
-                    // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-                    unsafe { guard.pin_mut_unchecked().associate(boxed, protocol_id); };
+                    // Step 4: Store the fully-initialized child C++ object in the wrapper.
+                    child_wrapper.lock().unwrap().inner = Some(child);
                 }
                 Err(err) => {
                     let (object_id, code, message) = parse_post_error(err.what());
@@ -295,11 +306,10 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
-            // SAFETY: The mutex guard provides the only mutable access to this child while
-            // the call is in progress, so this cannot introduce aliased mutable access across
-            // FFI. The unchecked pin is used only for the duration of the `associate()` call,
-            // and the guarded value is not moved while that temporary `Pin<&mut _>` exists.
-            if let Err(err) = unsafe { (&mut *guard).pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+            let inner = guard.inner.as_mut().expect("Request dispatched on uninitialized resource");
+            // SAFETY: The mutex guard provides the only mutable access while the call is
+            // in progress. The pinned reference is used only for this FFI call.
+            if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
                 let (object_id, code, message) = parse_post_error(err.what());
                 post_protocol_error(resource, object_id, code, message);
             }
@@ -365,6 +375,7 @@ fn generate_dispatch_impl(
     let protocol_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
     let ext_struct_name =
         format_ident!("{}", format_wayland_interface_to_cpp_class(&interface.name));
+    let wrapper_struct_name = format_ident!("{}Wrapper", snake_to_pascal(&interface.name));
 
     let mut request_handler_arms =
         generate_request_handler_arms(interface, namespace_name, &interface_name);
@@ -426,7 +437,11 @@ fn generate_dispatch_impl(
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
 
-        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>>
+        struct #wrapper_struct_name {
+            inner: Option<cxx::SharedPtr<ffi::#ext_struct_name>>,
+        }
+
+        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<#wrapper_struct_name>>>
             for ServerState
         {
             fn request(
@@ -434,7 +449,7 @@ fn generate_dispatch_impl(
                 _client: &Client,
                 #resource_name: &#namespace_name::#interface_name::#protocol_struct_name,
                 request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
-                #data_name: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
+                #data_name: &Arc<Mutex<#wrapper_struct_name>>,
                 _dhandle: &DisplayHandle,
                 #data_init_name: &mut DataInit<'_, Self>,
             ) {
@@ -447,7 +462,7 @@ fn generate_dispatch_impl(
                 _state: &mut Self,
                 _client: ClientId,
                 resource: &#namespace_name::#interface_name::#protocol_struct_name,
-                _data: &Arc<Mutex<cxx::SharedPtr<ffi::#ext_struct_name>>>,
+                _data: &Arc<Mutex<#wrapper_struct_name>>,
             ) {
                 unregister_resource(resource);
             }

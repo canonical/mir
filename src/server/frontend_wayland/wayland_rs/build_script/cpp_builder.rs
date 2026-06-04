@@ -542,6 +542,7 @@ impl CppMethod {
     }
 }
 
+#[derive(Clone)]
 pub enum CppType {
     CppI32,
     CppU32,
@@ -787,6 +788,7 @@ pub fn sanitize_identifier(name: &str) -> String {
     }
 }
 
+#[derive(Clone)]
 pub struct CppArg {
     cpp_type: CppType,
     name: String,
