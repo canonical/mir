@@ -22,6 +22,8 @@
 #include <mir/input/event_builder.h>
 #include <mir/geometry/rectangle.h>
 #include <memory>
+#include <future>
+#include <unordered_map>
 #include <rust/cxx.h>
 
 namespace mir
@@ -33,21 +35,6 @@ namespace input
 namespace evdev_rs
 {
 class Platform;
-
-/// Wraps a #mir::Device so that it can be kept alive in rust.
-///
-/// The platform must maintain a reference to the #mir::Device
-/// or else the device will be destroyed.
-class DeviceWrapper
-{
-public:
-    DeviceWrapper(std::unique_ptr<Device> device, int fd);
-    int raw_fd() const;
-
-private:
-    std::unique_ptr<Device> device;
-    int fd;
-};
 
 struct PointerEventData
 {
@@ -114,14 +101,32 @@ class PlatformBridge
 {
 public:
     PlatformBridge(Platform* platform, std::shared_ptr<mir::ConsoleServices> const& console);
-    std::unique_ptr<DeviceWrapper> acquire_device(int major, int minor) const;
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
     std::unique_ptr<EventBuilderWrapper> create_event_builder_wrapper(EventBuilder* event_builder) const;
     std::unique_ptr<RectangleWrapper> bounding_rectangle(InputSink const&) const;
 
+    /// Initiate device acquisition via ConsoleServices.
+    /// Returns true if acquisition was started, false if already tracked.
+    bool acquire_device(uint64_t devnum, rust::Str devnode) const;
+
+    /// Transfer a pending device to the active set (called after activated() fires).
+    void activate_pending_device(uint64_t devnum) const;
+
+    /// Release an active device handle.
+    void release_device(uint64_t devnum) const;
+
+    /// Release a pending device (drop the future before activated() fires).
+    void release_pending_device(uint64_t devnum) const;
+
+    /// Check whether a device is active (not pending).
+    bool has_device(uint64_t devnum) const;
+
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;
+
+    mutable std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>> pending_devices;
+    mutable std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;
 };
 }
 }
