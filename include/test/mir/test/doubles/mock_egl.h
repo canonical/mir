@@ -111,8 +111,8 @@ public:
     // eglSwapBuffers to invoke EGLNativeSurface::swap_buffers_sync
     void provide_stub_platform_buffer_swapping();
 
-    typedef void (*generic_function_pointer_t)(void);
-    typedef void* AnyNativeType;
+    using generic_function_pointer_t = void (*)(void);
+    using AnyNativeType = void*;
 
     MOCK_METHOD(EGLDisplay, eglGetDisplay, (AnyNativeType));
     MOCK_METHOD(EGLBoolean, eglInitialize, (EGLDisplay,EGLint*,EGLint*));

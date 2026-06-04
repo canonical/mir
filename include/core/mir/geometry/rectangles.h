@@ -43,8 +43,8 @@ public:
     Rectangle bounding_rectangle() const;
     void confine(Point& point) const;
 
-    typedef std::vector<Rectangle>::const_iterator const_iterator;
-    typedef std::vector<Rectangle>::size_type size_type;
+    using const_iterator = std::vector<Rectangle>::const_iterator;
+    using size_type = std::vector<Rectangle>::size_type;
     const_iterator begin() const;
     const_iterator end() const;
     size_type size() const;

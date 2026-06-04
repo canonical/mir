@@ -119,8 +119,8 @@ namespace std
 template<>
 struct hash<mir::shell::PersistentSurfaceStore::Id>
 {
-    typedef mir::shell::PersistentSurfaceStore::Id argument_type;
-    typedef std::size_t result_type;
+    using argument_type = mir::shell::PersistentSurfaceStore::Id;
+    using result_type = std::size_t;
 
     result_type operator()(argument_type const& uuid) const;
 };
