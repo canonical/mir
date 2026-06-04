@@ -200,3 +200,20 @@ TEST_F(TestLog, attempt_to_set_severity_by_subpath_fails)
         std::out_of_range
     );
 }
+
+TEST_F(TestLog, can_set_severity_by_full_path_when_tag_name_is_the_same)
+{
+    auto const severity = mir::logging::Severity::informational;
+
+    auto const &parent_a = ml::create_tag(ml::graphics(), "atomic-kms");
+    auto const &parent_b = ml::create_tag(ml::graphics(), "gbm-kms");
+
+    ml::create_tag(parent_a, "bypass");
+    auto const& bypass_b = ml::create_tag(parent_b, "bypass");
+
+    ASSERT_FALSE(ml::logging_enabled_for(bypass_b, severity)) << "Test would spuriously pass";
+
+    ml::tag::set_severity(std::format("base/graphics/gbm-kms/bypass"), severity);
+
+    EXPECT_TRUE(ml::logging_enabled_for(bypass_b, severity));
+}

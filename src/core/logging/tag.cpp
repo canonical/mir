@@ -157,6 +157,30 @@ auto lookup_tag_by_basename(decltype(known_tags)::Locked const& tag_list, std::s
     BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Looking up nonexistent tag: {}", tag_name)}));
 }
 
+// Does the parent chain of `leaf` match the chain in `full_path`, ending at `base()`?
+auto parent_chain_matches(ml::Tag const& leaf, std::span<std::string_view> full_path) -> bool
+{
+    auto current_tag = &leaf;
+
+    // Drop the first tag (which must be "base"), then from the leaf backwards that each parent matches
+    for (auto const& tag_name : full_path | std::views::drop(1) | std::views::reverse)
+    {
+        if (current_tag->name != tag_name)
+        {
+            // The path doesn't match, so this candidate is not the tag we're looking for.
+            return false;
+        }
+        if (!current_tag->parent)
+        {
+            // This should be impossible, but it's cheap to *not* SIGSEGV here.
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Impossible tag chain: found a tag with no parent"}));
+        }
+        current_tag = current_tag->parent;
+    }
+
+    return current_tag == &ml::base(); // Ensure we ended at base()
+}
+
 auto lookup_tag_by_full_path(decltype(known_tags)::Locked const& tag_list, std::string_view full_path) -> ml::Tag&
 {
     std::vector<std::string_view> tag_names;
@@ -165,25 +189,14 @@ auto lookup_tag_by_full_path(decltype(known_tags)::Locked const& tag_list, std::
         full_path | std::views::split('/') | std::views::transform([](auto part) { return std::string_view(part); }),
         std::back_inserter(tag_names));
 
-    // Start with the leaf tag...
-    ml::Tag const* current_tag = &lookup_tag_by_basename(tag_list, tag_names.back());
-
-    // ...and then walk up the chain, checking that each parent has the expected name, until we reach the second tag (which should have base() as its parent)...
-    for (auto tag_name : tag_names | std::views::drop(1) | std::views::reverse | std::views::drop(1))
+    for (auto& candidate : *tag_list | std::views::filter([name = tag_names.back()](auto const& tag) { return tag.name == name; }))
     {
-        current_tag = current_tag->parent;
-        if (current_tag->name != tag_name)
+        if (parent_chain_matches(candidate, tag_names))
         {
-            BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Looking up nonexistent tag {} (from query {})", tag_name, full_path)}));
+            return candidate;
         }
     }
-    // ...finally, check the parent is base().
-    if (current_tag->parent != &ml::base())
-    {
-        BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Attempt to look up tag from partial path: {}", full_path)}));
-    }
-
-    return lookup_tag_by_basename(tag_list, tag_names.back());
+    BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Looking up nonexistent tag: {}", full_path)}));
 }
 
 auto lookup_tag(decltype(known_tags)::Locked const& tag_list, std::string_view request) -> ml::Tag&
