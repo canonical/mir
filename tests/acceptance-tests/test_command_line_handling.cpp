@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <sys/ucontext.h>
 
 using namespace testing;
 
@@ -209,6 +210,36 @@ TEST_F(CommandLineHandling, subsequent_log_level_overrides_previous)
 
     mir::log_debug({tag}, message);
     mir::log_error({ml::base()}, message);
+
+    // Replace Mir's logger so that we own the last references to our MockLogger
+    // allowing it to be destroyed and verified after the test finishes.
+    mir::logging::set_logger(std::make_shared<MockLogger>());
+}
+
+TEST_F(CommandLineHandling, can_set_log_level_by_full_path)
+{
+    using namespace testing;
+    char const* argv[] =
+     { "dummy-exe-name", "--log-level", "base/graphics=debug"};
+
+    int const argc = std::distance(std::begin(argv), std::end(argv));
+
+    auto const logger = std::make_shared<testing::NiceMock<MockLogger>>();
+    server.override_the_logger([logger]() { return logger; });
+    server.set_command_line(argc, argv);
+    server.apply_settings();
+
+    server.get_options();
+
+
+    std::string message = "hello";
+
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "graphics")).Times(1);
+    EXPECT_CALL(*logger, log(_, _, "wayland")).Times(0);
+
+    mir::log_debug({ml::graphics()}, message);
+    // Validate that our default log level does produce output at debug level.
+    mir::log_debug({ml::wayland()}, message);
 
     // Replace Mir's logger so that we own the last references to our MockLogger
     // allowing it to be destroyed and verified after the test finishes.

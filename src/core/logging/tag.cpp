@@ -145,7 +145,7 @@ auto ml::parse_severity(std::string_view severity_name) -> ml::Severity
 
 namespace
 {
-auto lookup_tag(decltype(known_tags)::Locked const& tag_list, std::string_view tag_name) -> ml::Tag&
+auto lookup_tag_by_basename(decltype(known_tags)::Locked const& tag_list, std::string_view tag_name) -> ml::Tag&
 {
     for (auto& tag : *tag_list)
     {
@@ -155,6 +155,47 @@ auto lookup_tag(decltype(known_tags)::Locked const& tag_list, std::string_view t
         }
     }
     BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Looking up nonexistent tag: {}", tag_name)}));
+}
+
+auto lookup_tag_by_full_path(decltype(known_tags)::Locked const& tag_list, std::string_view full_path) -> ml::Tag&
+{
+    std::vector<std::string_view> tag_names;
+
+    std::ranges::copy(
+        full_path | std::views::split('/') | std::views::transform([](auto part) { return std::string_view(part); }),
+        std::back_inserter(tag_names));
+
+    // Start with the leaf tag...
+    ml::Tag const* current_tag = &lookup_tag_by_basename(tag_list, tag_names.back());
+
+    // ...and then walk up the chain, checking that each parent has the expected name, until we reach the second tag (which should have base() as its parent)...
+    for (auto tag_name : tag_names | std::views::drop(1) | std::views::reverse | std::views::drop(1))
+    {
+        current_tag = current_tag->parent;
+        if (current_tag->name != tag_name)
+        {
+            BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Looking up nonexistent tag {} (from query {})", tag_name, full_path)}));
+        }
+    }
+    // ...finally, check the parent is base().
+    if (current_tag->parent != &ml::base())
+    {
+        BOOST_THROW_EXCEPTION((std::out_of_range{std::format("Attempt to look up tag from partial path: {}", full_path)}));
+    }
+
+    return lookup_tag_by_basename(tag_list, tag_names.back());
+}
+
+auto lookup_tag(decltype(known_tags)::Locked const& tag_list, std::string_view request) -> ml::Tag&
+{
+    if (request.contains('/'))
+    {
+        return lookup_tag_by_full_path(tag_list, request);
+    }
+    else
+    {
+        return lookup_tag_by_basename(tag_list, request);
+    }
 }
 
 template<typename Functor>
@@ -207,17 +248,10 @@ auto ml::tag::name(Tag const& tag) -> std::string_view
 
 void ml::tag::set_severity(std::string_view name, Severity sev)
 {
-    try
-    {
-        auto locked_tags = known_tags.lock();
-        auto& tag = lookup_tag(locked_tags, name);
-        tag.logging_severity = sev;
-        for_each_child(tag, locked_tags, [sev](ml::Tag& tag) { tag.logging_severity = sev; });
-    }
-    catch(std::exception const& err)
-    {
-        mir::log(ml::Severity::critical, {ml::base()}, "Failed to set tag severity to {}: {}", sev, err.what());
-    }
+    auto locked_tags = known_tags.lock();
+    auto& tag = lookup_tag(locked_tags, name);
+    tag.logging_severity = sev;
+    for_each_child(tag, locked_tags, [sev](ml::Tag& tag) { tag.logging_severity = sev; });
 }
 
 // GCC and Clang both ensure the switch is exhaustive.

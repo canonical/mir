@@ -24,6 +24,7 @@
 #include <boost/program_options.hpp>
 #include <chrono>
 #include <format>
+#include <stdexcept>
 #include <string_view>
 #include <cstring>
 
@@ -169,4 +170,33 @@ TEST_F(TestLog, can_use_format_string)
 
     ml::tag::set_severity(ml::tag::name(tag), severity);
     mir::log(severity, {tag}, message);
+}
+
+TEST_F(TestLog, can_set_severity_by_full_path)
+{
+    auto const severity = mir::logging::Severity::informational;
+
+    auto const &tag_a = ml::create_tag(ml::base(), "a");
+    auto const &tag_b = ml::create_tag(tag_a, "b");
+
+    ASSERT_FALSE(ml::logging_enabled_for(tag_b, severity)) << "Test would spuriously pass";
+
+    ml::tag::set_severity(std::format("{}/{}/{}", ml::tag::name(ml::base()), ml::tag::name(tag_a), ml::tag::name(tag_b)), severity);
+
+    EXPECT_TRUE(ml::logging_enabled_for(tag_b, severity));
+}
+
+TEST_F(TestLog, attempt_to_set_severity_by_subpath_fails)
+{
+    auto const severity = mir::logging::Severity::debug;
+
+    auto const &tag_a = ml::create_tag(ml::base(), "a");
+    auto const &tag_b = ml::create_tag(tag_a, "b");
+
+    ASSERT_FALSE(ml::logging_enabled_for(tag_b, severity)) << "Test would spuriously pass";
+
+    EXPECT_THROW(
+        ml::tag::set_severity(std::format("{}/{}", ml::tag::name(tag_a), ml::tag::name(tag_b)), severity);,
+        std::out_of_range
+    );
 }
