@@ -29,7 +29,7 @@ mtd::MockLibInput* global_libinput = nullptr;
 
 mtd::MockLibInput::MockLibInput()
 {
-    assert(global_libinput == NULL && "Only one mock object per process is allowed");
+    assert(global_libinput == nullptr && "Only one mock object per process is allowed");
     global_libinput = this;
 
     ON_CALL(*this, libinput_device_ref(_)).WillByDefault(ReturnArg<0>());

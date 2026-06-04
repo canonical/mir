@@ -497,7 +497,7 @@ mf::GDesktopFileCache::GDesktopFileCache(const std::shared_ptr<MainLoop> &main_l
 
     // Set up a watch on the data directories
     auto data_directories = g_get_system_data_dirs();
-    for (int i = 0; data_directories[i] != NULL; i++)
+    for (int i = 0; data_directories[i] != nullptr; i++)
     {
         auto application_directory = std::string(data_directories[i]) + "/applications";
         int config_path_wd = inotify_add_watch(
@@ -541,7 +541,7 @@ void mf::GDesktopFileCache::refresh_app_cache()
     std::map<std::string, std::shared_ptr<DesktopFile>> new_exec_to_app;
 
     GList* info;
-    for (info = app_infos.get(); info != NULL; info = info->next)
+    for (info = app_infos.get(); info != nullptr; info = info->next)
     {
         GAppInfo *app_info = static_cast<GAppInfo*>(info->data);
 
@@ -551,10 +551,10 @@ void mf::GDesktopFileCache::refresh_app_cache()
 
         // Note: This can be null possibly. The only instance I've seen of this
         // is XWayland on Ubuntu 23, but I am sure others exist
-        if (exec == NULL)
+        if (exec == nullptr)
         {
             const char* name = g_app_info_get_name(app_info);
-            if (name == NULL)
+            if (name == nullptr)
                 mir::log_warning("Cannot find app info for unknown application");
             else
                 mir::log_warning("Cannot find app info for app with name:" + std::string(name));
