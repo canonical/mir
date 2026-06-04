@@ -16,7 +16,6 @@
 
 #include <mir/shared_library.h>
 #include <compare>
-#include <cstddef>
 
 #ifdef MIR_DONT_USE_DLVSYM
 #include <mir/log.h>

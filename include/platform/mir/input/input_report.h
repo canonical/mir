@@ -18,7 +18,7 @@
 #ifndef MIR_INPUT_INPUT_REPORT_H_
 #define MIR_INPUT_INPUT_REPORT_H_
 
-#include <stdint.h>
+#include <cstdint>
 #include <chrono>
 
 namespace mir

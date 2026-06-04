@@ -18,9 +18,8 @@
 
 #include "eglapp.h"
 #include "miregl.h"
-#include <assert.h>
+#include <cassert>
 #include <glib.h>
-#include <string.h>
 #include <GLES2/gl2.h>
 #include <mutex>
 

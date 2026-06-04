@@ -60,7 +60,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             {
                 if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
                 {
-                    mir::log_info("Pinning all compositing to provider: %s", getenv("MIR_PIN_COMPOSITING_TO"));
+                    mir::log_info("Pinning all compositing to provider: %s", std::getenv("MIR_PIN_COMPOSITING_TO"));
                     providers = {gl_provider};
                 }
                 else
@@ -68,7 +68,7 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                     mir::log_warning(
                         "MIR_PIN_COMPOSITING_TO is set to '%s', but that rendering platform does not support GL "
                         "compositing",
-                        getenv("MIR_PIN_COMPOSITING_TO"));
+                        std::getenv("MIR_PIN_COMPOSITING_TO"));
                 }
             }
 

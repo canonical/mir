@@ -23,6 +23,7 @@
 #include <mir/anonymous_shm_file.h>
 
 #include <fcntl.h>
+#include <cstring>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -43,7 +44,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
+    if (std::strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }
@@ -108,8 +109,8 @@ private:
         std::stringstream expected_filename;
         expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
 
-        auto uevent = std::make_shared<mir::AnonymousShmFile>(strlen(sysfile_content));
-        ::memcpy(uevent->base_ptr(), sysfile_content, strlen(sysfile_content));
+        auto uevent = std::make_shared<mir::AnonymousShmFile>(std::strlen(sysfile_content));
+        std::memcpy(uevent->base_ptr(), sysfile_content, std::strlen(sysfile_content));
 
         expectations.emplace_back(
             mtf::add_open_handler(
@@ -235,7 +236,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_device_node_returns_exception
     auto error_on_device_open = mtf::add_open_handler(
         [device_path](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
-            if (!strcmp(device_path, path))
+            if (!std::strcmp(device_path, path))
             {
                 errno = ENODEV;
                 return {-1};
@@ -277,7 +278,7 @@ TEST_F(MinimalConsoleServicesTest, failure_to_open_sys_file_results_in_immediate
     auto error_on_device_open = mtf::add_open_handler(
         [](char const* path, int, std::optional<mode_t>) -> std::optional<int>
         {
-            if (!strncmp("/sys", path, mir::strlen_c("/sys")))
+            if (!std::strncmp("/sys", path, mir::strlen_c("/sys")))
             {
                 errno = EINVAL;
                 return {-1};
@@ -329,7 +330,7 @@ TEST_F(MinimalConsoleServicesTest, opens_input_devices_in_nonblocking_mode)
             int flags,
             std::optional<mode_t>) -> std::optional<int>
         {
-            if (strcmp(path, device_path))
+            if (std::strcmp(path, device_path))
             {
                 return std::nullopt;
             }
@@ -368,7 +369,7 @@ TEST_F(MinimalConsoleServicesTest, does_not_open_drm_devices_in_nonblocking_mode
             int flags,
             std::optional<mode_t>) -> std::optional<int>
         {
-            if (strcmp(path, device_path))
+            if (std::strcmp(path, device_path))
             {
                 return std::nullopt;
             }

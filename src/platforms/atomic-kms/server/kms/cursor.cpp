@@ -28,6 +28,7 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 
+#include <cstring>
 #include <stdexcept>
 #include <vector>
 
@@ -202,55 +203,55 @@ void mga::Cursor::pad_and_write_image_data_locked(
     case mir_orientation_normal:
         for (unsigned int y = 0; y < image_height; y++)
         {
-            memcpy(dest, src, 4*image_width);
-            memset(dest + 4*image_width, filler, rhs_padding);
+            std::memcpy(dest, src, 4*image_width);
+            std::memset(dest + 4*image_width, filler, rhs_padding);
             dest += buffer_stride;
             src += image_stride;
         }
 
-        memset(dest, 0, buffer_stride * (buffer_height - image_height));
+        std::memset(dest, 0, buffer_stride * (buffer_height - image_height));
         break;
 
     case mir_orientation_inverted:
         for (unsigned int row = 0; row != image_height; ++row)
         {
-            memset(dest+row*buffer_stride+4*image_width, filler, rhs_padding);
+            std::memset(dest+row*buffer_stride+4*image_width, filler, rhs_padding);
 
             for (unsigned int col = 0; col != image_width; ++col)
             {
-                memcpy(dest+row*buffer_stride+4*col, src + ((image_height-1)-row)*image_stride + 4*((image_width-1)-col), 4);
+                std::memcpy(dest+row*buffer_stride+4*col, src + ((image_height-1)-row)*image_stride + 4*((image_width-1)-col), 4);
             }
         }
 
-        memset(dest+image_height*buffer_stride, filler, buffer_stride * (buffer_height - image_height));
+        std::memset(dest+image_height*buffer_stride, filler, buffer_stride * (buffer_height - image_height));
         break;
 
     case mir_orientation_left:
         for (unsigned int row = 0; row != image_width; ++row)
         {
-            memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
+            std::memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
 
             for (unsigned int col = 0; col != image_height; ++col)
             {
-                memcpy(dest+row*buffer_stride+4*col, src + ((image_width-1)-row)*4 + image_stride*col, 4);
+                std::memcpy(dest+row*buffer_stride+4*col, src + ((image_width-1)-row)*4 + image_stride*col, 4);
             }
         }
 
-        memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
+        std::memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
         break;
 
     case mir_orientation_right:
         for (unsigned int row = 0; row != image_width; ++row)
         {
-            memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
+            std::memset(dest+row*buffer_stride+4*image_height, filler, rhs_padding);
 
             for (unsigned int col = 0; col != image_height; ++col)
             {
-                memcpy(dest+row*buffer_stride+4*col, src + row*4 + image_stride*((image_height-1)-col), 4);
+                std::memcpy(dest+row*buffer_stride+4*col, src + row*4 + image_stride*((image_height-1)-col), 4);
             }
         }
 
-        memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
+        std::memset(dest+image_width*buffer_stride, filler, buffer_stride * (buffer_height - image_width));
         break;
     }
 
@@ -270,7 +271,7 @@ void mga::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     buffer = std::make_shared<mgc::MemoryBackedShmBuffer>(
         size,
         mir_pixel_format_argb_8888);
-    memcpy(buffer->map_writeable()->data(), scaled_cursor_buf.data.get(), buf_size_bytes);
+    std::memcpy(buffer->map_writeable()->data(), scaled_cursor_buf.data.get(), buf_size_bytes);
 
     hotspot = current_cursor_image->hotspot() * current_scale;
     {

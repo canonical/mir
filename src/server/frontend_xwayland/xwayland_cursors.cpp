@@ -26,6 +26,8 @@
 #include <boost/throw_exception.hpp>
 
 #include <charconv>
+#include <cstdlib>
+#include <cstring>
 
 namespace mf = mir::frontend;
 
@@ -119,13 +121,13 @@ auto mf::XWaylandCursors::Loader::query_formats(std::shared_ptr<XCBConnection> c
 
 auto mf::XWaylandCursors::Loader::get_xcursor_size() -> int
 {
-    char const* size_env_var_string = getenv("XCURSOR_SIZE");
+    char const* size_env_var_string = std::getenv("XCURSOR_SIZE");
     int result = 0;
     if (size_env_var_string)
     {
         int parsed_value = 0;
         auto const [end, err] = std::from_chars(size_env_var_string,
-                                                size_env_var_string + strlen(size_env_var_string),
+                                                size_env_var_string + std::strlen(size_env_var_string),
                                                 parsed_value);
         if (err == std::errc{})
         {

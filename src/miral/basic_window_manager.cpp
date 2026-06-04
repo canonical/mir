@@ -34,6 +34,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 
 using namespace mir;
 using namespace mir::geometry;
@@ -2149,7 +2150,7 @@ auto constrain_to(mir::geometry::Rectangle const& rect, Point point) -> Point
 {
     // The LXQt panel items sets anchor rects outside their window geometry,
     // conditionally allow this as a workaround
-    if (getenv("MIR_ANCHOR_RECTANGLE_UNCONSTRAINED") != nullptr)
+    if (std::getenv("MIR_ANCHOR_RECTANGLE_UNCONSTRAINED") != nullptr)
     {
         return point;
     }

@@ -24,6 +24,7 @@
 
 #include <wayland-client.h>
 
+#include <cstring>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -199,7 +200,7 @@ std::vector<std::string> run_client_enumerator(mir::Server& server)
     char line[256];
     while (fgets(line, sizeof(line), stream))
     {
-        size_t const len = strlen(line);
+        size_t const len = std::strlen(line);
         interfaces.emplace_back(line, line + len - 1);
     }
     fclose(stream);
@@ -258,12 +259,12 @@ struct ClientXdgShellV6Creator
     {
         auto* self = static_cast<ClientXdgShellV6Creator*>(data);
 
-        if (strcmp(interface, wl_compositor_interface.name) == 0)
+        if (std::strcmp(interface, wl_compositor_interface.name) == 0)
         {
             self->compositor = static_cast<decltype(self->compositor)>(
                 wl_registry_bind(registry, id, &mir::wayland::wl_compositor_interface_data, version));
         }
-        else if (strcmp(interface, mir::wayland::zxdg_shell_v6_interface_data.name) == 0)
+        else if (std::strcmp(interface, mir::wayland::zxdg_shell_v6_interface_data.name) == 0)
         {
             self->shell = static_cast<decltype(self->shell)>(
                 wl_registry_bind(registry, id, &mir::wayland::zxdg_shell_v6_interface_data, version));

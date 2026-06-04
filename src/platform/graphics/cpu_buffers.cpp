@@ -146,7 +146,7 @@ auto mrs::alloc_buffer_with_content(
     if (mapping->stride() == src_stride)
     {
         // Happy case: Buffer is packed, like the cursor_image; we can just blit.
-        ::memcpy(mapping->data(), content, mapping->len());
+        std::memcpy(mapping->data(), content, mapping->len());
     }
     else
     {
@@ -154,7 +154,7 @@ auto mrs::alloc_buffer_with_content(
         auto const dest_stride = mapping->stride().as_uint32_t();
         for (auto y = 0u; y < size.height.as_uint32_t(); ++y)
         {
-            ::memcpy(
+            std::memcpy(
                 mapping->data() + (dest_stride * y),
                 content + (src_stride.as_uint32_t() * y),
                 src_stride.as_uint32_t());

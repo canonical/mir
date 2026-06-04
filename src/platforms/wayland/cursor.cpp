@@ -28,6 +28,7 @@
 #include <unistd.h>
 #include <sys/mman.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <system_error>
 
@@ -40,7 +41,7 @@ struct wl_shm_pool* make_shm_pool(struct wl_shm* shm, int size, void **data)
     // As we're a Wayland client, create the shm file like Wayland clients.
     // While using O_TMPFILE would be more elegant, this works with Snap-confined servers.
     static auto const template_filename =
-        std::string{getenv("XDG_RUNTIME_DIR")} + "/wayland-cursor-shared-XXXXXX";
+        std::string{std::getenv("XDG_RUNTIME_DIR")} + "/wayland-cursor-shared-XXXXXX";
 
     std::string filename = template_filename;
     mir::Fd const fd{mkostemp(filename.data(), O_CLOEXEC)};
@@ -100,7 +101,7 @@ void mpw::Cursor::show(std::shared_ptr<graphics::CursorImage> const& cursor_imag
         auto const hotspot_y = current_cursor_image->hotspot().dy.as_uint32_t() * current_scale;
         void* data_buffer;
         auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
-        memcpy(data_buffer, scaled_cursor_buf.data.get(), 4 * width * height);
+        std::memcpy(data_buffer, scaled_cursor_buf.data.get(), 4 * width * height);
         buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
         wl_surface_attach(surface, buffer, 0, 0);
         wl_surface_commit(surface);

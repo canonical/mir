@@ -35,6 +35,7 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 
+#include <cstring>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -710,7 +711,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
 
             while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
+                if (std::strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
                 {
                     return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
                 }

@@ -17,8 +17,8 @@
 #include "wayland_runner.h"
 
 #include <poll.h>
-#include <signal.h>
-#include <stdio.h>
+#include <csignal>
+#include <cstdio>
 #include <sys/eventfd.h>
 
 #include <boost/throw_exception.hpp>
@@ -96,7 +96,7 @@ void State::run(wl_display* display)
             switch (wl_display_dispatch_pending(display))
             {
             case -1:
-                fprintf(stderr, "Failed to dispatch Wayland events\n");
+                std::fprintf(stderr, "Failed to dispatch Wayland events\n");
                 abort();
             case 0:
                 break;
@@ -107,7 +107,7 @@ void State::run(wl_display* display)
 
         if (poll(fds, indices, -1) == -1)
         {
-            fprintf(stderr, "Failed to poll\n");
+            std::fprintf(stderr, "Failed to poll\n");
             wl_display_cancel_read(display);
             break;
         }
@@ -116,7 +116,7 @@ void State::run(wl_display* display)
         {
             if (wl_display_read_events(display))
             {
-                fprintf(stderr, "Failed to read Wayland events\n");
+                std::fprintf(stderr, "Failed to read Wayland events\n");
                 abort();
             }
         }

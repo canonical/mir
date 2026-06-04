@@ -36,7 +36,6 @@
 #include <linux/input.h>  // only used to get constants for input reports
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <cstring>
 #include <chrono>
 #include <sstream>
 #include <algorithm>
