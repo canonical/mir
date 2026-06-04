@@ -78,7 +78,8 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
-                let ext_name = format_wayland_interface_to_rust_extension_struct(&global_interface.name);
+                let ext_name =
+                    format_wayland_interface_to_rust_extension_struct(&global_interface.name);
                 namespace.add_forward_declaration_class(&class_name);
                 namespace.add_forward_declaration_struct(&snake_to_pascal(&ext_name));
 
@@ -250,12 +251,6 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         class.add_enum(enum_);
     }
 
-    // The middleware Box and object ID are passed as constructor arguments so that
-    // the C++ object is fully initialized from the start (no two-step associate).
-    // NOTE: These are declared as private members below but initialized via the constructor.
-    // The add_protected_constructor_arg calls are ordered to match member declaration order
-    // (public members before private members) to avoid -Wreorder warnings.
-
     // Declare the corresponding private members.
     class.add_private_member(CppArg::new(
         CppType::Box(snake_to_pascal(
@@ -300,8 +295,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let mut post_error_method = CppMethod::new("post_error", None, false, false, false, true);
     post_error_method.add_arg(CppArg::new(CppType::CppU32, "code", false));
     post_error_method.add_arg(CppArg::new(CppType::String, "message", false));
-    post_error_method
-        .set_body("instance_->post_error(code, message);");
+    post_error_method.set_body("instance_->post_error(code, message);");
     class.add_method(post_error_method);
 
     // Add a protected constructor and member so that subclasses know which client
