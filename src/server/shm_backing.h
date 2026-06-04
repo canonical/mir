@@ -18,6 +18,7 @@
 #include <mir/renderer/sw/pixel_source.h>
 
 #include <cstddef>
+#include <expected>
 #include <sys/mman.h>
 
 namespace mir
@@ -104,6 +105,11 @@ public:
     }
 };
 
+enum class ResizeError
+{
+    shrunk,
+};
+
 class ReadMappableRange
 {
 public:
@@ -135,8 +141,7 @@ public:
     virtual ~ReadOnlyPool() = default;
 
     virtual auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<ReadMappableRange> = 0;
-    virtual void resize(size_t new_size) = 0;
-    virtual size_t size() const = 0;
+    virtual auto resize(size_t new_size) -> std::expected<void, ResizeError> = 0;
 };
 
 class WriteOnlyPool
@@ -146,8 +151,7 @@ public:
     virtual ~WriteOnlyPool() = default;
 
     virtual auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<WriteMappableRange> = 0;
-    virtual void resize(size_t new_size) = 0;
-    virtual size_t size() const = 0;
+    virtual auto resize(size_t new_size) -> std::expected<void, ResizeError> = 0;
 };
 
 class ReadWritePool : public ReadOnlyPool, public WriteOnlyPool
@@ -157,8 +161,7 @@ public:
     virtual ~ReadWritePool() = default;
 
     virtual auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<RWMappableRange> = 0;
-    void resize(size_t new_size) override = 0;
-    size_t size() const override = 0;
+    auto resize(size_t new_size) -> std::expected<void, ResizeError> override = 0;
 };
 
 auto rw_pool_from_fd(mir::Fd backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>;

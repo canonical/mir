@@ -341,14 +341,20 @@ void mf::ShmPool::resize(int32_t new_size)
             wayland::Shm::Error::invalid_stride,
             "Invalid new size %d", new_size};
     }
-    if (static_cast<size_t>(new_size) < backing_store->size())
+
+    auto result = backing_store->resize(new_size);
+    if (!result)
     {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
-            "New size %d is smaller than the current size of the backing store", new_size};
+        switch(result.error())
+        {
+        case shm::ResizeError::shrunk:
+            throw wayland::ProtocolError{
+                resource,
+                wayland::Shm::Error::invalid_stride,
+                "New size %d is smaller than the current size of the backing store", new_size};
+            break;
+        }
     }
-    backing_store->resize(new_size);
 }
 
 mf::WlShm::WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor)
