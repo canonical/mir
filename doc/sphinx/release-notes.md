@@ -98,10 +98,6 @@
     - @AristoChen made their first contribution in https://github.com/canonical/mir/pull/4842
     - @tsimonq2 made their first contribution in https://github.com/canonical/mir/pull/4956
 
-## Mir 2.27.0~dev
-
-- We don't talk about 2.27.0.
-
 ## Mir 2.26.0
 
 - New upstream release 2.26.0
