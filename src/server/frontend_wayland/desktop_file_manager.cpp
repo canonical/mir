@@ -266,10 +266,10 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(int 
     g_autoptr(GKeyFile) key_file = g_key_file_new();
     g_autofree char * info_filename = g_strdup_printf ("/proc/%d/root/.flatpak-info", pid);
 
-    if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, NULL))
+    if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, nullptr))
         return nullptr;
 
-    char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", NULL);
+    char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", nullptr);
     if (!sandboxed_app_id)
         return nullptr;
 

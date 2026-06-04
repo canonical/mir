@@ -40,11 +40,11 @@ public:
 
 TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
 {
-    udev_environment.add_device("drm", "fakedev1", NULL, {}, {});
-    udev_environment.add_device("drm", "fakedev2", NULL, {}, {});
-    udev_environment.add_device("drm", "fakedev3", NULL, {}, {});
-    udev_environment.add_device("drm", "fakedev4", NULL, {}, {});
-    udev_environment.add_device("drm", "fakedev5", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedev1", nullptr, {}, {});
+    udev_environment.add_device("drm", "fakedev2", nullptr, {}, {});
+    udev_environment.add_device("drm", "fakedev3", nullptr, {}, {});
+    udev_environment.add_device("drm", "fakedev4", nullptr, {}, {});
+    udev_environment.add_device("drm", "fakedev5", nullptr, {}, {});
 
     auto ctx = std::make_shared<mir::udev::Context>();
     mir::udev::Enumerator enumerator(ctx);
@@ -64,11 +64,11 @@ TEST_F(UdevWrapperTest, IteratesOverCorrectNumberOfDevices)
 
 TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
 {
-    udev_environment.add_device("drm", "fakedrm1", NULL, {}, {});
-    udev_environment.add_device("scsi", "fakescsi1", NULL, {}, {});
-    udev_environment.add_device("drm", "fakedrm2", NULL, {}, {});
-    udev_environment.add_device("usb", "fakeusb1", NULL, {}, {});
-    udev_environment.add_device("usb", "fakeusb2", NULL, {}, {});
+    udev_environment.add_device("drm", "fakedrm1", nullptr, {}, {});
+    udev_environment.add_device("scsi", "fakescsi1", nullptr, {}, {});
+    udev_environment.add_device("drm", "fakedrm2", nullptr, {}, {});
+    udev_environment.add_device("usb", "fakeusb1", nullptr, {}, {});
+    udev_environment.add_device("usb", "fakeusb2", nullptr, {}, {});
 
     auto ctx = std::make_shared<mir::udev::Context>();
     mir::udev::Enumerator devices(ctx);
@@ -83,7 +83,7 @@ TEST_F(UdevWrapperTest, EnumeratorMatchSubsystemIncludesCorrectDevices)
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevType)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {}, {"DEVTYPE", "drm_minor"});
 
     mir::udev::Context ctx;
     auto dev = ctx.device_from_syspath(sysfs_path);
@@ -92,7 +92,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevType)
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {}, {});
 
     mir::udev::Context ctx;
     auto dev = ctx.device_from_syspath(sysfs_path);
@@ -101,7 +101,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevPath)
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {"DEVNAME", "/dev/dri/card0"});
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {}, {"DEVNAME", "/dev/dri/card0"});
 
     mir::udev::Context ctx;
     auto dev = ctx.device_from_syspath(sysfs_path);
@@ -111,7 +111,7 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectDevNode)
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectProperties)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {},
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {},
         {"AWESOME", "yes", "REALLY", "absolutely"});
 
     mir::udev::Context ctx;
@@ -119,13 +119,13 @@ TEST_F(UdevWrapperTest, UdevDeviceHasCorrectProperties)
 
     ASSERT_STREQ("yes", dev->property("AWESOME"));
     ASSERT_STREQ("absolutely", dev->property("REALLY"));
-    ASSERT_EQ(NULL, dev->property("SOMETHING_ELSE"));
+    ASSERT_EQ(nullptr, dev->property("SOMETHING_ELSE"));
 }
 
 TEST_F(UdevWrapperTest, UdevDeviceHasCorrectMajorMinorNumbers)
 {
     using namespace testing;
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {},
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {},
                                                   {"MAJOR", "22", "MINOR", "42"});
 
     mir::udev::Context ctx;
@@ -157,7 +157,7 @@ TEST_F(UdevWrapperTest, UdevCharDeviceFromDevnumWorks)
 
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {}, {});
 
     mir::udev::Context ctx;
     auto dev = ctx.device_from_syspath(sysfs_path);
@@ -167,7 +167,7 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsReflexive)
 
 TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {}, {});
 
     mir::udev::Context ctx;
     std::shared_ptr<mir::udev::Device> same_one = ctx.device_from_syspath(sysfs_path);
@@ -179,8 +179,8 @@ TEST_F(UdevWrapperTest, UdevDeviceComparisonIsSymmetric)
 
 TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
 {
-    auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
-    auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
+    auto path_one = udev_environment.add_device("drm", "card0", nullptr, {}, {});
+    auto path_two = udev_environment.add_device("drm", "card1", nullptr, {}, {});
 
     mir::udev::Context ctx;
     auto dev_one = ctx.device_from_syspath(path_one);
@@ -192,8 +192,8 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesCompareFalse)
 
 TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
 {
-    auto path_one = udev_environment.add_device("drm", "card0", NULL, {}, {});
-    auto path_two = udev_environment.add_device("drm", "card1", NULL, {}, {});
+    auto path_one = udev_environment.add_device("drm", "card0", nullptr, {}, {});
+    auto path_two = udev_environment.add_device("drm", "card1", nullptr, {}, {});
 
     mir::udev::Context ctx;
     auto dev_one = ctx.device_from_syspath(path_one);
@@ -205,7 +205,7 @@ TEST_F(UdevWrapperTest, UdevDeviceDifferentDevicesAreNotEqual)
 
 TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
 {
-    auto sysfs_path = udev_environment.add_device("drm", "card0", NULL, {}, {});
+    auto sysfs_path = udev_environment.add_device("drm", "card0", nullptr, {}, {});
 
     mir::udev::Context ctx;
     auto same_one = ctx.device_from_syspath(sysfs_path);
@@ -217,8 +217,8 @@ TEST_F(UdevWrapperTest, UdevDeviceSameDeviceIsNotNotEqual)
 
 TEST_F(UdevWrapperTest, EnumeratorMatchParentMatchesOnlyChildren)
 {
-    auto card0_syspath = udev_environment.add_device("drm", "card0", NULL, {}, {});
-    udev_environment.add_device("usb", "fakeusb", NULL, {}, {});
+    auto card0_syspath = udev_environment.add_device("drm", "card0", nullptr, {}, {});
+    udev_environment.add_device("usb", "fakeusb", nullptr, {}, {});
 
     udev_environment.add_device("drm", "card0-HDMI1", "/sys/devices/card0", {}, {});
     udev_environment.add_device("drm", "card0-VGA1", "/sys/devices/card0", {}, {});
@@ -283,10 +283,10 @@ TEST_F(UdevWrapperTest, EnumeratorEnumeratesEmptyList)
 
 TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
 {
-    auto drm_sysfspath = udev_environment.add_device("drm", "card0", NULL, {}, {});
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    auto drm_sysfspath = udev_environment.add_device("drm", "card0", nullptr, {}, {});
+    udev_environment.add_device("drm", "control64D", nullptr, {}, {});
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
+    udev_environment.add_device("drm", "card1", nullptr, {}, {});
 
     auto ctx = std::make_shared<mir::udev::Context>();
 
@@ -306,8 +306,8 @@ TEST_F(UdevWrapperTest, EnumeratorAddMatchSysnameIncludesCorrectDevices)
 
 TEST_F(UdevWrapperTest, MemberDereferenceWorks)
 {
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
+    udev_environment.add_device("drm", "control64D", nullptr, {}, {});
+    udev_environment.add_device("drm", "card1", nullptr, {}, {});
 
     mir::udev::Enumerator devices(std::make_shared<mir::udev::Context>());
 
@@ -325,7 +325,7 @@ TEST_F(UdevWrapperTest, UdevMonitorTriggersAfterEnabling)
 
     monitor.enable();
 
-    udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    udev_environment.add_device("drm", "control64D", nullptr, {}, {});
 
     monitor.process_events([&event_handler_called](mir::udev::Monitor::EventType,
                                                    mir::udev::Device const&) {event_handler_called = true;});
@@ -340,7 +340,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsRemoveEvent)
 
     monitor.enable();
 
-    auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    auto test_sysfspath = udev_environment.add_device("drm", "control64D", nullptr, {}, {});
     udev_environment.remove_device(test_sysfspath);
 
     monitor.process_events([&remove_event_received]
@@ -360,7 +360,7 @@ TEST_F(UdevWrapperTest, UdevMonitorSendsChangedEvent)
 
     monitor.enable();
 
-    auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    auto test_sysfspath = udev_environment.add_device("drm", "control64D", nullptr, {}, {});
     udev_environment.emit_device_changed(test_sysfspath);
 
     monitor.process_events([&changed_event_received]
@@ -382,7 +382,7 @@ TEST_F(UdevWrapperTest, UdevMonitorEventHasCorrectDeviceDetails)
 
     monitor.enable();
 
-    auto sysfs_path = udev_environment.add_device("drm", "control64D", NULL, {}, {});
+    auto sysfs_path = udev_environment.add_device("drm", "control64D", nullptr, {}, {});
     std::shared_ptr<mir::udev::Device> device = ctx.device_from_syspath(sysfs_path);
 
     monitor.process_events(
@@ -401,7 +401,7 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsReadableWhenEventsAvailable)
 
     monitor.enable();
 
-    udev_environment.add_device("drm", "card0", NULL, {}, {});
+    udev_environment.add_device("drm", "card0", nullptr, {}, {});
 
     pollfd fds{ .fd = monitor.fd(), .events = POLLIN, .revents = {} };
 
@@ -416,9 +416,9 @@ TEST_F(UdevWrapperTest, UdevMonitorFdIsUnreadableAfterProcessingEvents)
 
     monitor.enable();
 
-    udev_environment.add_device("drm", "card0", NULL, {}, {});
-    udev_environment.add_device("drm", "card1", NULL, {}, {});
-    udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
+    udev_environment.add_device("drm", "card0", nullptr, {}, {});
+    udev_environment.add_device("drm", "card1", nullptr, {}, {});
+    udev_environment.add_device("usb", "mightymouse", nullptr, {}, {});
 
     struct pollfd fds{ .fd = monitor.fd(), .events = POLLIN, .revents = {} };
 
@@ -441,10 +441,10 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersByPathAndType)
 
     monitor.enable();
 
-    auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto test_sysfspath = udev_environment.add_device("drm", "control64D", nullptr, {}, {"DEVTYPE", "drm_minor"});
     std::shared_ptr<mir::udev::Device> minor_device = ctx.device_from_syspath(test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
-    udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
+    udev_environment.add_device("usb", "mightymouse", nullptr, {}, {});
 
     monitor.process_events([&event_received, minor_device]
         (mir::udev::Monitor::EventType, mir::udev::Device const& dev)
@@ -468,10 +468,10 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersAreAdditive)
 
     monitor.enable();
 
-    auto drm_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto drm_sysfspath = udev_environment.add_device("drm", "control64D", nullptr, {}, {"DEVTYPE", "drm_minor"});
     std::shared_ptr<mir::udev::Device> drm_device = ctx.device_from_syspath(drm_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", drm_sysfspath.c_str(), {}, {});
-    auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", NULL, {}, {"DEVTYPE", "hid"});
+    auto usb_sysfspath = udev_environment.add_device("usb", "mightymouse", nullptr, {}, {"DEVTYPE", "hid"});
     std::shared_ptr<mir::udev::Device> usb_device = ctx.device_from_syspath(usb_sysfspath);
 
     monitor.process_events([&drm_event_recieved, drm_device, &usb_event_received, usb_device]
@@ -498,10 +498,10 @@ TEST_F(UdevWrapperTest, UdevMonitorFiltersApplyAfterEnable)
 
     monitor.filter_by_subsystem_and_type("drm", "drm_minor");
 
-    auto test_sysfspath = udev_environment.add_device("drm", "control64D", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto test_sysfspath = udev_environment.add_device("drm", "control64D", nullptr, {}, {"DEVTYPE", "drm_minor"});
     std::shared_ptr<mir::udev::Device> minor_device = ctx.device_from_syspath(test_sysfspath);
     udev_environment.add_device("drm", "card0-LVDS1", test_sysfspath.c_str(), {}, {});
-    udev_environment.add_device("usb", "mightymouse", NULL, {}, {});
+    udev_environment.add_device("usb", "mightymouse", nullptr, {}, {});
 
     monitor.process_events([&event_received, minor_device]
         (mir::udev::Monitor::EventType, mir::udev::Device const& dev)

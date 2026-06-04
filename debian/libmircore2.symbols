@@ -66,7 +66,7 @@ libmircore.so.2 libmircore2 #MINVER#
  (c++)"mir::logging::create_tag(mir::logging::Tag const&, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::window_management()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.27" 2.27.0
- (c++)"mir::logging::core()@MIR_CORE_2.27" 2.27.0
+ (c++)"mir::logging::base()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::input()@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::Logger::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.27" 2.27.0
  (c++)"mir::logging::wayland()@MIR_CORE_2.27" 2.27.0

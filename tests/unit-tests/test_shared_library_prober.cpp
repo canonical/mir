@@ -49,7 +49,7 @@ public:
         // Can't use std::string, as mkdtemp mutates its argument.
         auto tmp_name = std::unique_ptr<char[], std::function<void(char*)>>{strdup("/tmp/mir_empty_directory_XXXXXX"),
                                                                             [](char* data) {std::free(data);}};
-        if (mkdtemp(tmp_name.get()) == NULL)
+        if (mkdtemp(tmp_name.get()) == nullptr)
         {
             throw std::system_error{errno, std::system_category(), "Failed to create temporary directory"};
         }

@@ -80,7 +80,7 @@ private:
      * A Session can be associated a number of times with a single PromptSession, providing it has a different type
      * eg A Session can be both a helper and a provider for a PromptSession.
      */
-    typedef multi_index_container<
+    using PromptSessionParticipants = multi_index_container<
         Participant,
         indexed_by<
             ordered_non_unique<
@@ -103,10 +103,10 @@ private:
                     std::less<PromptSession*>>
             >
         >
-    > PromptSessionParticipants;
+    >;
 
-    typedef nth_index<PromptSessionParticipants,0>::type participant_by_prompt_session;
-    typedef nth_index<PromptSessionParticipants,1>::type participant_by_session;
+    using participant_by_prompt_session = nth_index<PromptSessionParticipants,0>::type;
+    using participant_by_session = nth_index<PromptSessionParticipants,1>::type;
 
     PromptSessionParticipants participant_map;
     participant_by_prompt_session& prompt_session_index;

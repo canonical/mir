@@ -255,14 +255,14 @@ private:
             BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
         }
 
-        glShaderSource(id, 1, &src, NULL);
+        glShaderSource(id, 1, &src, nullptr);
         glCompileShader(id);
         GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
             GLchar log[1024] = "(No log info)";
-            glGetShaderInfoLog(id, sizeof log, NULL, log);
+            glGetShaderInfoLog(id, sizeof log, nullptr, log);
             glDeleteShader(id);
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -284,7 +284,7 @@ private:
         if (!ok)
         {
             GLchar log[1024];
-            glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+            glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
             log[sizeof log - 1] = '\0';
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -431,14 +431,14 @@ private:
             BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
         }
 
-        glShaderSource(id, 1, &src, NULL);
+        glShaderSource(id, 1, &src, nullptr);
         glCompileShader(id);
         GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
             GLchar log[1024] = "(No log info)";
-            glGetShaderInfoLog(id, sizeof log, NULL, log);
+            glGetShaderInfoLog(id, sizeof log, nullptr, log);
             glDeleteShader(id);
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -486,7 +486,7 @@ private:
         if (!ok)
         {
             GLchar log[1024];
-            glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+            glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
             log[sizeof log - 1] = '\0';
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -509,7 +509,7 @@ private:
                      0,
                      GL_RGBA,
                      GL_UNSIGNED_BYTE,
-                     NULL);
+                     nullptr);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         return tex;
@@ -823,10 +823,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     // if we fail to load the texture, we need to carry on (part of lp:1629275)
     try
     {
-        typedef struct  // Represents parameters of glBlendFuncSeparate()
+        struct BlendSeparate  // Represents parameters of glBlendFuncSeparate()
         {
             GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
-        } BlendSeparate;
+        };
 
         BlendSeparate client_blend;
 

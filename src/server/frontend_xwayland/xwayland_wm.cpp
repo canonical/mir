@@ -55,7 +55,7 @@ auto create_wm_window(mf::XCBConnection const& connection) -> xcb_window_t
         0, 0, 10, 10, 0,
         XCB_WINDOW_CLASS_INPUT_OUTPUT,
         connection.screen()->root_visual,
-        0, NULL);
+        0, nullptr);
 
     connection.set_property<mf::XCBType::WINDOW>(wm_window, connection._NET_SUPPORTING_WM_CHECK, wm_window);
     connection.set_property<mf::XCBType::UTF8_STRING>(wm_window, connection._NET_WM_NAME, wm_name);
@@ -88,7 +88,7 @@ auto init_xfixes(mf::XCBConnection const& connection) -> xcb_query_extension_rep
     }
 
     xfixes_cookie = xcb_xfixes_query_version(connection, XCB_XFIXES_MAJOR_VERSION, XCB_XFIXES_MINOR_VERSION);
-    auto const xfixes_reply = mir::make_unique_cptr(xcb_xfixes_query_version_reply(connection, xfixes_cookie, NULL));
+    auto const xfixes_reply = mir::make_unique_cptr(xcb_xfixes_query_version_reply(connection, xfixes_cookie, nullptr));
 
     if (mir::verbose_xwayland_logging_enabled())
     {
