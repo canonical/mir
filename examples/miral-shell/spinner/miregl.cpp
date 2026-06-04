@@ -179,7 +179,7 @@ EGLSurface MirEglApp::create_eglsurface(wl_surface* surface, int width, int heig
     auto const eglsurface = eglCreateWindowSurface(
         egldisplay,
         eglconfig,
-        (EGLNativeWindowType)wl_egl_window_create(surface, width, height), NULL);
+        (EGLNativeWindowType)wl_egl_window_create(surface, width, height), nullptr);
 
     if (eglsurface == EGL_NO_SURFACE)
         throw std::runtime_error("eglCreateWindowSurface failed");

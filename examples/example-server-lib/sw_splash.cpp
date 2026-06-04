@@ -53,7 +53,7 @@ void draw_new_stuff(DrawContext* ctx)
         uint32_t* pixel = (uint32_t*)row;
 
         for (int i = 0; i < width; i++)
-            memcpy(pixel + i, ctx->pattern, sizeof pixel[i]);
+            std::memcpy(pixel + i, ctx->pattern, sizeof pixel[i]);
 
         row += stride;
     }

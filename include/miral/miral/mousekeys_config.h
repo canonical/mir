@@ -21,17 +21,11 @@
 
 #include <memory>
 
-namespace mir
-{
-class Server;
-}
+namespace mir { class Server; }
 
 namespace miral
 {
-namespace live_config
-{
-    class Store;
-}
+namespace live_config { class Store; }
 /// Enables configuring mousekeys at runtime.
 ///
 /// Mousekeys is an accessibility feature that allows users to control the
@@ -77,7 +71,8 @@ public:
 
     /// Enables or disables mousekeys depending on the passed parameter.
     [[deprecated(
-        "MouseKeysConfig::enabled(bool) is deprecated. Please use MouseKeysConfig::enable or MouseKeysConfig::disable")]]
+        "MouseKeysConfig::enabled(bool) is deprecated. Please use MouseKeysConfig::enable or "
+        "MouseKeysConfig::disable")]]
     void enabled(bool enabled) const;
 
     /// Enables mousekeys.

@@ -19,14 +19,14 @@
 
 #include <mir/int_wrapper.h>
 
-#include <stdint.h>
+#include <cstdint>
 
 namespace mir
 {
 namespace graphics
 {
 struct BufferIdTag;
-typedef IntWrapper<BufferIdTag, uint32_t> BufferID;
+using BufferID = IntWrapper<BufferIdTag, uint32_t>;
 }
 }
 #endif /* MIR_GRAPHICS_BUFFER_ID_H_ */

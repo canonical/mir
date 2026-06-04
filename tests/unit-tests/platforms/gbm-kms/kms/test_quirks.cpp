@@ -24,6 +24,7 @@
 #include <mir_test_framework/udev_environment.h>
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include <mir_test_framework/temporary_environment_value.h>
+#include <cstring>
 
 namespace mtf = mir_test_framework;
 namespace mgg = mir::graphics::gbm;
@@ -80,12 +81,12 @@ TEST_F(Quirks, skip_devnode_quirk_fires)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_TRUE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_FALSE(quirks.should_skip(device));
@@ -106,12 +107,12 @@ TEST_F(Quirks, skip_driver_quirk_fires)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_FALSE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_TRUE(quirks.should_skip(device));
@@ -132,13 +133,13 @@ TEST_F(Quirks, specifying_multiple_quirks_is_additive)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             // We have a quirk skipping /dev/dri/card0
             EXPECT_TRUE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             // We have a quirk skipping the “amdgpu” driver, which is the driver used for /dev/dri/card1
@@ -160,12 +161,12 @@ TEST_F(Quirks, allowing_a_driver_overrides_previous_skip)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_FALSE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             // The quirk skipping the “amdgpu” driver, should be overridden by the "allow"
@@ -187,12 +188,12 @@ TEST_F(Quirks, skipping_a_driver_overrides_previous_allow)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_FALSE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             // The quirk allowing the “amdgpu” driver, should be overridden by the "skip"
@@ -214,13 +215,13 @@ TEST_F(Quirks, allowing_a_devnode_overrides_previous_skip)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             // The quirk skipping "/dev/dri/card0", should be overridden by the "allow"
             EXPECT_FALSE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_FALSE(quirks.should_skip(device));
@@ -241,13 +242,13 @@ TEST_F(Quirks, skipping_a_devnode_overrides_previous_allow)
     bool seen_card[] = {false, false};
     for (auto const& device : *enumerator)
     {
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             // The quirk allowing "/dev/dri/card0", should be overridden by the "skip"
             EXPECT_TRUE(quirks.should_skip(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_FALSE(quirks.should_skip(device));
@@ -269,12 +270,12 @@ TEST_F(Quirks, default_requires_modesetting_support)
     for (auto const& device : *enumerator)
     {
         printf("Device: %s\n", device.devnode());
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_TRUE(quirks.require_modesetting_support(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_TRUE(quirks.require_modesetting_support(device));
@@ -296,12 +297,12 @@ TEST_F(Quirks, disable_kms_probe_selectively_disables_modesetting_support)
     for (auto const& device : *enumerator)
     {
         printf("Device: %s\n", device.devnode());
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_TRUE(quirks.require_modesetting_support(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_FALSE(quirks.require_modesetting_support(device));
@@ -325,12 +326,12 @@ TEST_F(Quirks, mesa_disable_modeset_probe_globally_disables_modesetting_support)
     for (auto const& device : *enumerator)
     {
         printf("Device: %s\n", device.devnode());
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_FALSE(quirks.require_modesetting_support(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_FALSE(quirks.require_modesetting_support(device));
@@ -354,12 +355,12 @@ TEST_F(Quirks, gbm_disable_modeset_probe_globally_disables_modesetting_support)
     for (auto const& device : *enumerator)
     {
         printf("Device: %s\n", device.devnode());
-        if (device.devnode() && strstr(device.devnode(), "card0"))
+        if (device.devnode() && std::strstr(device.devnode(), "card0"))
         {
             seen_card[0] = true;
             EXPECT_FALSE(quirks.require_modesetting_support(device));
         }
-        else if(device.devnode() && strstr(device.devnode(), "card1"))
+        else if(device.devnode() && std::strstr(device.devnode(), "card1"))
         {
             seen_card[1] = true;
             EXPECT_FALSE(quirks.require_modesetting_support(device));

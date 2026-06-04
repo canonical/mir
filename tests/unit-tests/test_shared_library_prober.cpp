@@ -18,10 +18,9 @@
 
 #include <mir_test_framework/executable_path.h>
 
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 #include <unistd.h>
-#include <cstring>
 #include <unordered_map>
 
 #include <system_error>
@@ -49,8 +48,8 @@ public:
     {
         // Can't use std::string, as mkdtemp mutates its argument.
         auto tmp_name = std::unique_ptr<char[], std::function<void(char*)>>{strdup("/tmp/mir_empty_directory_XXXXXX"),
-                                                                            [](char* data) {free(data);}};
-        if (mkdtemp(tmp_name.get()) == NULL)
+                                                                            [](char* data) {std::free(data);}};
+        if (mkdtemp(tmp_name.get()) == nullptr)
         {
             throw std::system_error{errno, std::system_category(), "Failed to create temporary directory"};
         }

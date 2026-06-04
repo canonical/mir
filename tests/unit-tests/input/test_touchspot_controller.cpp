@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;

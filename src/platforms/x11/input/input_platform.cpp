@@ -27,8 +27,8 @@
 #define MIR_LOG_COMPONENT "x11-input"
 #include <mir/log.h>
 
-#include <inttypes.h>
-#include <signal.h>
+#include <cinttypes>
+#include <csignal>
 #include <chrono>
 
 #include <xcb/xfixes.h>

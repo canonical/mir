@@ -159,11 +159,9 @@ public:
     /// \param description Description of the option
     template<typename Lambda>
         requires requires { &std::remove_reference_t<Lambda>::operator(); }
-    ConfigurationOption(
-            Lambda&& callback,
-            std::string const& option,
-            std::string const& description) :
-            ConfigurationOption(lambda_as_function(std::forward<Lambda>(callback)), option, description) {}
+    ConfigurationOption(Lambda&& callback, std::string const& option, std::string const& description) :
+        ConfigurationOption(lambda_as_function(std::forward<Lambda>(callback)), option, description)
+    {}
 
     void operator()(mir::Server& server) const;
 

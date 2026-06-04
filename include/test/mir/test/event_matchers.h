@@ -18,6 +18,7 @@
 #define MIR_TEST_CLIENT_EVENT_MATCHERS_H_
 
 #include <cmath>
+#include <cstring>
 
 #include <mir_toolkit/event.h>
 
@@ -369,7 +370,7 @@ MATCHER_P(KeyWithText, text, "")
         return false;
 
     auto const actual_text = mir_keyboard_event_key_text(kev);
-    if(strcmp(actual_text, text))
+    if (std::strcmp(actual_text, text))
     {
         *result_listener << "Expected event text (" << text << ") does not match actual text (" << actual_text << ")";
         return false;

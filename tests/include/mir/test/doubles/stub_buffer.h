@@ -23,7 +23,7 @@
 #include <mir/graphics/buffer_id.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <vector>
-#include <string.h>
+#include <cstring>
 
 namespace mir
 {

@@ -360,6 +360,7 @@ protected:
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
+    std::shared_ptr<graphics::RenderingPlatform> find_pinned_rendering_platform();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
@@ -381,8 +382,13 @@ protected:
     // which leads to seg faults because those code paths cannot be found. For this
     // reason, we cache pointers to these objects AND make sure that they are destructed
     // after everything else.
+    //
+    // These platforms likely hold `Device`s allocated from `console_services`;
+    // ensure that console_services outlives those `Device`s.
+    std::shared_ptr<ConsoleServices> console_services;
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+    std::map<graphics::RenderingPlatform*, std::string> rendering_platform_names;
     std::shared_ptr<input::InputManager>    input_manager;
 
     CachedPtr<frontend::Connector>   wayland_connector;
@@ -453,7 +459,6 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
-    std::shared_ptr<ConsoleServices> console_services;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
 
 private:

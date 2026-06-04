@@ -45,6 +45,7 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <linux/input-event-codes.h>
 
@@ -54,11 +55,11 @@ struct ConfigureDecorations
 {
     miral::Decorations const decorations{[]
         {
-            if (auto const strategy = getenv("MIRAL_SHELL_DECORATIONS"))
+            if (auto const strategy = std::getenv("MIRAL_SHELL_DECORATIONS"))
             {
-                if (strcmp(strategy, "always-ssd") == 0) return miral::Decorations::always_ssd();
-                if (strcmp(strategy, "prefer-ssd") == 0) return miral::Decorations::prefer_ssd();
-                if (strcmp(strategy, "always-csd") == 0) return miral::Decorations::always_csd();
+                if (std::strcmp(strategy, "always-ssd") == 0) return miral::Decorations::always_ssd();
+                if (std::strcmp(strategy, "prefer-ssd") == 0) return miral::Decorations::prefer_ssd();
+                if (std::strcmp(strategy, "always-csd") == 0) return miral::Decorations::always_csd();
             }
             return miral::Decorations::prefer_csd();
         }()};
@@ -124,7 +125,7 @@ int main(int argc, char const* argv[])
             };
         };
 
-    Keymap config_keymap = getenv("MIRAL_SHELL_SYSTEM_LOCALE1") ? Keymap::system_locale1() : Keymap{};
+    Keymap config_keymap = std::getenv("MIRAL_SHELL_SYSTEM_LOCALE1") ? Keymap::system_locale1() : Keymap{};
 
     auto run_startup_apps = [&](std::string const& apps)
     {

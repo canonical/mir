@@ -24,11 +24,13 @@
 
 mod device;
 mod event_processing;
+mod fd_store;
 mod ffi;
 mod libinput_interface;
 mod platform;
+mod udev_monitor;
 
-use crate::device::{LibinputDevice, LibinputDeviceMetadata, LibinputDeviceObserver};
+use crate::device::{LibinputDevice, LibinputDeviceMetadata};
 use crate::platform::PlatformRs;
 
 #[cxx::bridge(namespace = "mir::input::evdev_rs")]
@@ -172,23 +174,36 @@ mod ffi_bridge {
 
     extern "Rust" {
         type PlatformRs;
-        type LibinputDeviceObserver;
         type LibinputDevice;
         type LibinputDeviceMetadata;
 
         fn start(self: &mut PlatformRs) -> bool;
-        fn assign_seat(self: &mut PlatformRs);
         fn continue_after_config(self: &PlatformRs);
         fn pause_for_config(self: &PlatformRs);
         fn stop(self: &mut PlatformRs);
         unsafe fn libinput_fd(self: &mut PlatformRs) -> i32;
         pub fn process(self: &mut PlatformRs);
-        fn create_device_observer(self: &PlatformRs) -> Box<LibinputDeviceObserver>;
+        fn path_add_device(self: &mut PlatformRs, devnode: &str);
+        fn path_remove_device(self: &mut PlatformRs, devnode: &str);
         fn create_input_device(self: &mut PlatformRs, device_id: i32) -> Box<LibinputDevice>;
 
-        fn activated(self: &mut LibinputDeviceObserver, fd: i32);
-        fn suspended(self: &mut LibinputDeviceObserver);
-        fn removed(self: &mut LibinputDeviceObserver);
+        /// Returns whether the platform is currently running.
+        fn is_running(self: &PlatformRs) -> bool;
+
+        /// Returns the udev monitor fd for C++ to wrap in a ReadableFd.
+        fn udev_monitor_fd(self: &PlatformRs) -> i32;
+
+        /// Process pending udev monitor events (called when fd is readable).
+        fn process_udev_events(self: &mut PlatformRs);
+
+        /// Called from C++ when a device fd has been acquired (activated).
+        fn on_device_activated(self: &mut PlatformRs, devnode: &str, devnum: u64, fd: i32);
+
+        /// Called from C++ when a device is suspended (e.g. VT switch).
+        fn on_device_suspended(self: &mut PlatformRs, devnode: &str, devnum: u64);
+
+        /// Called from C++ when a device is removed.
+        fn on_device_removed(self: &mut PlatformRs, devnode: &str, devnum: u64);
 
         /// # Safety
         ///
@@ -228,7 +243,6 @@ mod ffi_bridge {
 
         pub type PlatformBridge;
         pub type InputReport;
-        pub type DeviceWrapper;
         pub type EventBuilderWrapper;
         pub type RectangleWrapper;
         // Map C++ KeyEventData to the Rust struct
@@ -255,18 +269,28 @@ mod ffi_bridge {
         #[namespace = ""]
         pub type MirEvent;
 
-        pub fn acquire_device(
-            self: &PlatformBridge,
-            major: i32,
-            minor: i32,
-        ) -> UniquePtr<DeviceWrapper>;
         pub fn bounding_rectangle(
             self: &PlatformBridge,
             sink: &InputSink,
         ) -> UniquePtr<RectangleWrapper>;
         pub fn create_input_device(self: &PlatformBridge, device_id: i32)
             -> SharedPtr<InputDevice>;
-        pub fn raw_fd(self: &DeviceWrapper) -> i32;
+
+        /// Request C++ to acquire a device via ConsoleServices.
+        /// Returns true if the acquisition was initiated, false if already pending/active.
+        pub fn acquire_device(self: &PlatformBridge, devnum: u64, devnode: &str) -> bool;
+
+        /// Transfer a pending device to the active set after activated() fired.
+        pub fn activate_pending_device(self: &PlatformBridge, devnum: u64);
+
+        /// Release an active device (remove from active watchers).
+        pub fn release_device(self: &PlatformBridge, devnum: u64);
+
+        /// Release a pending device (drop the future before activated() fires).
+        pub fn release_pending_device(self: &PlatformBridge, devnum: u64);
+
+        /// Check whether a device is already pending or active.
+        pub fn has_device(self: &PlatformBridge, devnum: u64) -> bool;
 
         // # Safety
         //

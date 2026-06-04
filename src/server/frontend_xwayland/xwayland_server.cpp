@@ -30,7 +30,7 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <cstring>
+#include <cstdlib>
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
@@ -88,7 +88,7 @@ void exec_xwayland(
         args.push_back(strdup(std::to_string(fd).c_str()));
     }
 
-    if (auto const xwayland_option = getenv("MIR_XWAYLAND_OPTION"))
+    if (auto const xwayland_option = std::getenv("MIR_XWAYLAND_OPTION"))
         args.push_back(xwayland_option);
 
     args.push_back(nullptr);

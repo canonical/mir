@@ -498,7 +498,7 @@ TEST_F(MesaDisplayConfigurationTest, reads_updated_subpixel_information)
     };
 
     auto display = create_display(create_platform());
-    auto const syspath = fake_devices.add_device("drm", "card2", NULL, {}, {"DEVTYPE", "drm_minor"});
+    auto const syspath = fake_devices.add_device("drm", "card2", nullptr, {}, {"DEVTYPE", "drm_minor"});
 
     for (auto& data : test_data)
     {
@@ -678,7 +678,7 @@ TEST_F(MesaDisplayConfigurationTest, returns_updated_configuration)
     auto const syspath = fake_devices.add_device(
         "drm",
         "card2",
-        NULL,
+        nullptr,
         {},
         {
             "DEVTYPE", "drm_minor",
@@ -858,7 +858,7 @@ TEST_F(MesaDisplayConfigurationTest, new_monitor_matches_hardware_state)
     auto const syspath = fake_devices.add_device(
         "drm",
         "card2",
-        NULL,
+        nullptr,
         {},
         {
             "DEVTYPE", "drm_minor",
@@ -966,7 +966,7 @@ TEST_F(MesaDisplayConfigurationTest, does_not_query_drm_unnecesarily)
     auto const syspath = fake_devices.add_device(
         "drm",
         "card2",
-        NULL,
+        nullptr,
         {},
         {
             "DEVTYPE", "drm_minor",

@@ -63,13 +63,13 @@ auto load_keymap(uint32_t format, mir::Fd fd, size_t size) -> std::shared_ptr<mi
         BOOST_THROW_EXCEPTION(std::runtime_error("invalid keymap format " + std::to_string(format)));
     }
 
-    void* const data = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    void* const data = mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (data == MAP_FAILED)
     {
         BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "failed to mmap keymap fd"));
     }
     std::vector<char> buffer(size);
-    memcpy(buffer.data(), data, size);
+    std::memcpy(buffer.data(), data, size);
     munmap(data, size);
 
     // Keymaps are null-terminated, BufferKeymap does not expect a null-terminated buffer

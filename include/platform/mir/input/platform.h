@@ -93,21 +93,21 @@ private:
     Platform& operator=(Platform const&) = delete;
 };
 
-typedef mir::UniqueModulePtr<Platform>(*CreatePlatform)(
+using CreatePlatform = mir::UniqueModulePtr<Platform>(*)(
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<ConsoleServices> const& console,
     std::shared_ptr<InputReport> const& report);
 
-typedef void(*AddPlatformOptions)(
+using AddPlatformOptions = void(*)(
     boost::program_options::options_description& config);
 
-typedef PlatformPriority(*ProbePlatform)(
+using ProbePlatform = PlatformPriority(*)(
     options::Option const& options,
     mir::ConsoleServices& console);
 
-typedef ModuleProperties const*(*DescribeModule)();
+using DescribeModule = ModuleProperties const*(*)();
 
 }
 }

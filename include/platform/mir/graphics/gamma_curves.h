@@ -25,7 +25,7 @@ namespace mir
 namespace graphics
 {
 
-typedef std::vector<uint16_t> GammaCurve;
+using GammaCurve = std::vector<uint16_t>;
 
 class GammaCurves
 {

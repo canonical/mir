@@ -22,7 +22,7 @@
 #include <string>
 #include <spawn.h>
 #include <unistd.h>
-#include <signal.h>
+#include <csignal>
 
 #include <cerrno>
 #include <cstdlib>
@@ -50,11 +50,16 @@ Environment::Environment()
     for (auto var = environ; *var; ++var)
     {
         auto const var_begin = *var;
-        if (strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) != 0)
+        if (std::strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) != 0)
         {
             env_strings.emplace_back(var_begin);
         }
     }
+}
+
+auto env_string_has_name(std::string const& entry, std::string const& name) -> bool
+{
+    return std::strncmp(entry.c_str(), name.c_str(), name.size()) == 0 && entry[name.size()] == '=';
 }
 
 void Environment::setenv(std::string const& name, std::string const& value)
@@ -63,7 +68,7 @@ void Environment::setenv(std::string const& name, std::string const& value)
 
     for (auto& e : env_strings)
     {
-        if (strncmp(e.c_str(), name.c_str(), name.size()) == 0)
+        if (env_string_has_name(e, name))
         {
             e = entry;
             return;
@@ -77,7 +82,7 @@ void Environment::unsetenv(std::string const& name)
 {
     for (auto it = env_strings.begin(); it != env_strings.end(); ++it)
     {
-        if (strncmp(it->c_str(), name.c_str(), name.size()) == 0)
+        if (env_string_has_name(*it, name))
         {
             env_strings.erase(it);
             return;
@@ -127,7 +132,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
     posix_spawnattr_t attr;
     if (auto const error = posix_spawnattr_init(&attr))
     {
-        mir::fatal_error_abort("Failed to init spawn attributes: %s", strerror(error));
+        mir::fatal_error_abort("Failed to init spawn attributes: %s", std::strerror(error));
     }
 
     // Unblock all signals in the child, preserving their existing dispositions
@@ -139,7 +144,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         if (result != 0)
         {
             posix_spawnattr_destroy(&attr);
-            mir::fatal_error_abort("%s: %s", what, strerror(result));
+            mir::fatal_error_abort("%s: %s", what, std::strerror(result));
         }
     };
 
@@ -163,14 +168,14 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     if (error != 0)
     {
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], strerror(error));
+        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], std::strerror(error));
         // Fork a placeholder child that immediately exits, so the caller can
         // safely call waitpid() on the returned pid (matching the old fork()+exec()
         // contract where a real pid was always returned, even on exec failure).
         // The child calls _exit() immediately, avoiding any non-async-signal-safe work.
         pid_t const placeholder = fork();
         if (placeholder < 0)
-            mir::fatal_error_abort("Failed to fork placeholder process: %s", strerror(errno));
+            mir::fatal_error_abort("Failed to fork placeholder process: %s", std::strerror(errno));
         if (placeholder == 0)
             _exit(EXIT_FAILURE);
         return placeholder;

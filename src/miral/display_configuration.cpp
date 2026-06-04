@@ -24,6 +24,7 @@
 #include <yaml-cpp/yaml.h>
 #include <boost/throw_exception.hpp>
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 
@@ -59,18 +60,18 @@ public:
     {
         std::string config_roots;
 
-        if (auto config_home = getenv("XDG_CONFIG_HOME"))
+        if (auto config_home = std::getenv("XDG_CONFIG_HOME"))
         {
             (config_roots = config_home) += ":";
             config_path(config_home);
         }
-        else if (auto home = getenv("HOME"))
+        else if (auto home = std::getenv("HOME"))
         {
             (config_roots = home) += "/.config:";
             config_path(home + "/.config"s);
         }
 
-        if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+        if (auto config_dirs = std::getenv("XDG_CONFIG_DIRS"))
             config_roots += config_dirs;
         else
             config_roots += "/etc/xdg";

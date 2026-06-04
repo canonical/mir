@@ -27,7 +27,7 @@ namespace scene
 class SceneReport
 {
 public:
-    typedef void* BasicSurfaceId;
+    using BasicSurfaceId = void*;
     virtual void surface_created(BasicSurfaceId id, std::string const& name) = 0;
     virtual void surface_added(BasicSurfaceId id, std::string const& name) = 0;
 

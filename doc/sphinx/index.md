@@ -1,4 +1,4 @@
-# Mir: A Wayland compositor library
+# Mir documentation
 
 Mir is a compositor library designed to operate across a variety of Linux-based
 devices, including traditional desktops, IoT and embedded systems.

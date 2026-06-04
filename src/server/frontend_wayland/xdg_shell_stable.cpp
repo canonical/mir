@@ -173,17 +173,17 @@ void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
 {
     if (!surface)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::generic_error_code,
-            "Tried to create toplevel after destroying surface"));
+            "Tried to create toplevel after destroying surface"};
     }
     if (window_role_)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::already_constructed,
-            "Tried to create toplevel on surface with existing role"));
+            "Tried to create toplevel on surface with existing role"};
     }
     auto toplevel = new XdgToplevelStable{new_toplevel, this, &surface.value()};
     window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel);
@@ -215,17 +215,17 @@ void mf::XdgSurfaceStable::get_popup(
 
     if (!surface)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::generic_error_code,
-            "Tried to create popup after destroying surface"));
+            "Tried to create popup after destroying surface"};
     }
     if (window_role_)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::already_constructed,
-            "Tried to create popup on surface with existing role"));
+            "Tried to create popup on surface with existing role"};
     }
 
     auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
@@ -236,10 +236,10 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
 {
     if (width <= 0 || height <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::generic_error_code,
-            "Invalid %s size %dx%d", interface_name, width, height));
+            "Invalid %s size %dx%d", interface_name, width, height};
     }
     if (window_role_)
     {
@@ -466,7 +466,32 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
 {
     if (parent && parent.value())
     {
-        WindowWlSurfaceRole::set_parent(XdgToplevelStable::from(parent.value())->scene_surface());
+        auto parent_toplevel = XdgToplevelStable::from(parent.value());
+
+        if (parent_toplevel == this)
+        {
+            throw mw::ProtocolError{
+                resource,
+                Error::invalid_parent,
+                "A toplevel cannot be its own parent"};
+        }
+
+        // Check that the parent is not a descendant of this toplevel
+        if (auto const this_surface = scene_surface().value_or(nullptr))
+        {
+            for (auto ancestor = parent_toplevel->scene_surface().value_or(nullptr); ancestor; ancestor = ancestor->parent())
+            {
+                if (ancestor == this_surface)
+                {
+                    throw mw::ProtocolError{
+                        resource,
+                        Error::invalid_parent,
+                        "Parent toplevel must not be a descendant of the child toplevel"};
+                }
+            }
+        }
+
+        WindowWlSurfaceRole::set_parent(parent_toplevel->scene_surface());
     }
     else
     {
@@ -538,10 +563,10 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
         break;
 
     default:
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_resize_edge,
-            "Invalid resize edge %d", edges));
+            "Invalid resize edge %d", edges};
     }
 
     initiate_interactive_resize(edge, serial);
@@ -551,10 +576,10 @@ void mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height)
 {
     if (width < 0 || height < 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_size,
-            "Invalid maximum size %dx%d", width, height));
+            "Invalid maximum size %dx%d", width, height};
     }
     WindowWlSurfaceRole::set_max_size(width, height);
 }
@@ -563,10 +588,10 @@ void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
 {
     if (width < 0 || height < 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_size,
-            "Invalid minimum size %dx%d", width, height));
+            "Invalid minimum size %dx%d", width, height};
     }
     WindowWlSurfaceRole::set_min_size(width, height);
 }
@@ -731,10 +756,10 @@ void mf::XdgPositionerStable::ensure_complete() const
 {
     if (!width || !height || !aux_rect)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::XdgWmBase::Error::invalid_positioner,
-            "Incomplete positioner"));
+            "Incomplete positioner"};
     }
 }
 
@@ -742,10 +767,10 @@ void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)
 {
     if (width <= 0 || height <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::XdgPositioner::Error::invalid_input,
-            "Invalid popup positioner size: %dx%d", width, height));
+            "Invalid popup positioner size: %dx%d", width, height};
     }
     this->width = geom::Width{width};
     this->height = geom::Height{height};
@@ -755,10 +780,10 @@ void mf::XdgPositionerStable::set_anchor_rect(int32_t x, int32_t y, int32_t widt
 {
     if (width < 0 || height < 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::XdgPositioner::Error::invalid_input,
-            "Invalid popup anchor rect size: %dx%d", width, height));
+            "Invalid popup anchor rect size: %dx%d", width, height};
     }
     aux_rect = geom::Rectangle{{x, y}, {width, height}};
 }
@@ -806,10 +831,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 mw::XdgPositioner::Error::invalid_input,
-                "Invalid anchor value %u", anchor));
+                "Invalid anchor value %u", anchor};
     }
 
     aux_rect_placement_gravity = placement;
@@ -858,10 +883,10 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
             break;
 
         default:
-            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 mw::XdgPositioner::Error::invalid_input,
-                "Invalid gravity value %d", gravity));
+                "Invalid gravity value %d", gravity};
     }
 
     surface_placement_gravity = placement;
@@ -912,10 +937,10 @@ void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t pare
 {
     if (parent_width <= 0 || parent_height <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_input,
-            "Invalid popup positioner parent size: %dx%d", parent_width, parent_height));
+            "Invalid popup positioner parent size: %dx%d", parent_width, parent_height};
     }
     parent_size = geom::Size{parent_width, parent_height};
 }

@@ -39,4 +39,4 @@ TEST(EglMock, demo)
     }                                                                  \
 
 EGL_MOCK_TEST(eglGetError, eglGetError(), eglGetError())
-EGL_MOCK_TEST(eglGetDisplay, eglGetDisplay(NULL), eglGetDisplay(NULL))
+EGL_MOCK_TEST(eglGetDisplay, eglGetDisplay(nullptr), eglGetDisplay(nullptr))

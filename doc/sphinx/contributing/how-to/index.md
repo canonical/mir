@@ -1,6 +1,6 @@
 (contributing-how-to-index)=
 
-# Contributing to Mir: how-to guides
+# How-to guides
 
 These how-to guides cover the key aspects of working on Mir.
 

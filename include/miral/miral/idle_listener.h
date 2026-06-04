@@ -25,7 +25,6 @@ namespace mir { class Server; }
 namespace miral
 {
 
-
 class IdleListener
 {
 public:
