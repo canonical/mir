@@ -93,7 +93,7 @@ MIR_CORE_2.27 {
     _ZN3mir7logging6Logger3logENS0_8SeverityESt16initializer_listIKSt17reference_wrapperIKNS0_3TagEEESt17basic_string_viewIcSt11char_traitsIcEE;
     extern "C++" {
       mir::logging::create_tag*;
-      mir::logging::core*;
+      mir::logging::base*;
       mir::logging::input*;
       mir::logging::wayland*;
       mir::logging::graphics*;
