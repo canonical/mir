@@ -13,7 +13,7 @@ use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::format_wayland_interface_to_rust_extension_struct;
 
 use super::helpers::snake_to_pascal;
-use super::{
+use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
 };
 use proc_macro2::TokenStream;
