@@ -72,16 +72,28 @@ in which we need to test:
 
 <!-- rc-testing:start -->
 
-|                                | 24.04 | 25.10 |
-| ------------------------------ | ----- | ----- |
-| gbm-kms                        |       |       |
-| eglstream-kms                  |       |       |
-| eglstream-kms + gbm-kms hybrid |       |       |
-| x11                            |       |       |
-| wayland                        |       |       |
-| virtual                        |       |       |
+|                                | 24.04 | 26.04 | 26.10 |
+| ------------------------------ | ----- | ----- | ----- |
+| atomic-kms                     |       |       |       |
+| gbm-kms                        |       |       |       |
+| eglstream-kms                  |       |       |       |
+| eglstream-kms + gbm-kms hybrid |       |       |       |
+| x11                            |       |       |       |
+| wayland                        |       |       |       |
+| virtual                        |       |       |       |
 
 <!-- rc-testing:end -->
+
+### Scripted "smoke test"
+
+The test script `mir-smoke-test-runner` will automatically test the platforms that are expected to work in the
+environment it is run in:
+
+- When run in a hosted environment it will test `virtual`, `wayland`, and `x11`
+- When run in without a host compositor it will test `atomic-kms`, `eglstream-kms`, `gbm-kms` and `virtual` platforms
+  (according to the hardware and drivers available).
+
+### Manual testing
 
 To check which display platform we've selected, we can run `miral-app`
 and grep for the platform string as follows:
