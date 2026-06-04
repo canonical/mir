@@ -342,8 +342,7 @@ void mf::ShmPool::resize(int32_t new_size)
             "Invalid new size %d", new_size};
     }
 
-    auto result = backing_store->resize(new_size);
-    if (!result)
+    if (auto result = backing_store->resize(new_size); !result)
     {
         switch(result.error())
         {
