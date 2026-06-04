@@ -29,6 +29,7 @@
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
+#include <expected>
 #include <limits>
 
 namespace mf = mir::frontend;
