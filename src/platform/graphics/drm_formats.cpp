@@ -20,6 +20,7 @@
 
 #include <cstdint>
 #include <drm_fourcc.h>
+#include <cstdlib>
 #include <stdexcept>
 #include <memory>
 #include <array>
@@ -581,7 +582,7 @@ auto mg::drm_modifier_to_string(uint64_t modifier) -> std::string
         {
             if (c_str)
             {
-                free (c_str);
+                std::free(c_str);
             }
         }
     };

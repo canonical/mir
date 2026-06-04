@@ -28,5 +28,4 @@ namespace miral
 void display_configuration_options(mir::Server& server);
 }
 
-
 #endif /* MIRAL_DISPLAY_CONFIGURATION_OPTIONS_H_ */

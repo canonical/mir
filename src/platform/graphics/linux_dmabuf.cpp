@@ -38,7 +38,6 @@
 
 #include <EGL/egl.h>
 #include <cstdint>
-#include <cstring>
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <sys/mman.h>

@@ -37,7 +37,6 @@
 #include <unordered_map>
 #include <algorithm>
 
-#include <string.h>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;

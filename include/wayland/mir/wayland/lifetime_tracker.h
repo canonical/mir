@@ -31,7 +31,7 @@ namespace detail
 struct DestroyListenerIdTag;
 }
 
-typedef IntWrapper<detail::DestroyListenerIdTag> DestroyListenerId;
+using DestroyListenerId = IntWrapper<detail::DestroyListenerIdTag>;
 
 /// The base class of any object that wants to provide a destroyed flag
 /// The destroyed flag is only created when needed and automatically set to true on destruction

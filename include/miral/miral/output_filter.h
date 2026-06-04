@@ -48,6 +48,7 @@ public:
     void filter(MirOutputFilter new_filter) const;
 
     void operator()(mir::Server& server) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;

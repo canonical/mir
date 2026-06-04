@@ -33,7 +33,7 @@
 #include <algorithm>
 #include <condition_variable>
 #include <cstring>
-#include <stdlib.h>
+#include <cstdlib>
 #include <stdexcept>
 
 namespace mgw = mir::graphics::wayland;
@@ -533,12 +533,12 @@ void mgw::DisplayClient::new_global(
     (void)version;
     DisplayClient* self = static_cast<decltype(self)>(data);
 
-    if (strcmp(interface, "wl_compositor") == 0)
+    if (std::strcmp(interface, "wl_compositor") == 0)
     {
         self->compositor =
             static_cast<decltype(self->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
-    else if (strcmp(interface, "wl_shm") == 0)
+    else if (std::strcmp(interface, "wl_shm") == 0)
     {
         self->shm = static_cast<decltype(self->shm)>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
@@ -546,13 +546,13 @@ void mgw::DisplayClient::new_global(
         // {arg} TODO needs fixing
         add_shm_listener(self, self->shm);
     }
-    else if (strcmp(interface, "wl_seat") == 0)
+    else if (std::strcmp(interface, "wl_seat") == 0)
     {
         if (version < 5) self->fake_pointer_frame = true;
         self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 6u)));
         add_seat_listener(self, self->seat);
     }
-    else if (strcmp(interface, "wl_output") == 0)
+    else if (std::strcmp(interface, "wl_output") == 0)
     {
         auto output =
             static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));
@@ -564,7 +564,7 @@ void mgw::DisplayClient::new_global(
                     output,
                     self)));
     }
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+    else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
         static xdg_wm_base_listener const shell_listener{
             [](void*, xdg_wm_base* shell, uint32_t serial){ xdg_wm_base_pong(shell, serial); },
@@ -601,7 +601,7 @@ void mgw::DisplayClient::keyboard_keymap(wl_keyboard* /*keyboard*/, uint32_t for
         BOOST_THROW_EXCEPTION(std::runtime_error("platform currently requires a keymap"));
     }
 
-    char* keymap_string = static_cast<decltype(keymap_string)>(mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0));
+    char* keymap_string = static_cast<decltype(keymap_string)>(mmap(nullptr, size, PROT_READ, MAP_PRIVATE, fd, 0));
     xkb_keymap_unref(keyboard_map_);
     keyboard_map_ = xkb_keymap_new_from_string(keyboard_context(), keymap_string, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
     munmap(keymap_string, size);

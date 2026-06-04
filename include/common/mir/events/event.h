@@ -20,7 +20,6 @@
 #include <mir_toolkit/event.h>
 #include <mir/events/event_builders.h>
 
-#include <cstring>
 
 struct MirEvent
 {

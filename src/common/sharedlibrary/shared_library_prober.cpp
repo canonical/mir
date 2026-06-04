@@ -20,6 +20,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <system_error>
+#include <cstdlib>
 #include <cstring>
 #include <algorithm>
 
@@ -38,13 +39,13 @@ namespace
 {
 bool greater_soname_version(std::filesystem::path const& lhs, std::filesystem::path const& rhs)
 {
-    auto lhbuf = strrchr(lhs.c_str(), '.');
-    auto rhbuf = strrchr(rhs.c_str(), '.');
+    auto lhbuf = std::strrchr(lhs.c_str(), '.');
+    auto rhbuf = std::strrchr(rhs.c_str(), '.');
 
     if (!rhbuf) return lhbuf;
     if (!lhbuf) return false;
 
-    return strtol(++lhbuf, 0, 0) > strtol(++rhbuf, 0, 0);
+    return std::strtol(++lhbuf, 0, 0) > std::strtol(++rhbuf, 0, 0);
 }
 }
 

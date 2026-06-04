@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <cstdlib>
 #include <system_error>
 
 namespace geom = mir::geometry;
@@ -40,7 +41,7 @@ static wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void **data)
             // Wayland based toolkits typically use $XDG_RUNTIME_DIR to open shm pools
             // so we try that before "/dev/shm". But confined snaps can't access "/dev/shm"
             // so we try "/tmp" if both of the above fail.
-            for (auto dir : {const_cast<const char*>(getenv("XDG_RUNTIME_DIR")), "/dev/shm", "/tmp" })
+            for (auto dir : {const_cast<const char*>(std::getenv("XDG_RUNTIME_DIR")), "/dev/shm", "/tmp" })
             {
                 if (dir)
                 {
@@ -80,7 +81,7 @@ static wl_shm_pool* make_shm_pool(wl_shm* shm, int size, void **data)
         BOOST_THROW_EXCEPTION((std::system_error{error, std::system_category(), "Failed to allocate shm buffer"}));
     }
 
-    if ((*data = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED)
+    if ((*data = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0)) == MAP_FAILED)
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to mmap buffer"}));
     }

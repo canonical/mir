@@ -33,9 +33,9 @@ class DisplayConfiguration;
 class Cursor;
 class EventHandlerRegister;
 
-typedef std::function<bool()> DisplayPauseHandler;
-typedef std::function<bool()> DisplayResumeHandler;
-typedef std::function<void()> DisplayConfigurationChangeHandler;
+using DisplayPauseHandler = std::function<bool()>;
+using DisplayResumeHandler = std::function<bool()>;
+using DisplayConfigurationChangeHandler = std::function<void()>;
 
 /**
  * DisplaySyncGroup represents a group of displays that need to be output

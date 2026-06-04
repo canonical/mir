@@ -39,7 +39,7 @@ class Renderable
 public:
     virtual ~Renderable() = default;
 
-    typedef void const* ID; // Mostly opaque, but zero is reserved as "invalid"
+    using ID = void const*; // Mostly opaque, but zero is reserved as "invalid"
 
     /**
      * Return a unique ID for the renderable, which may or may not be based
@@ -110,7 +110,7 @@ protected:
     Renderable& operator=(Renderable const&) = delete;
 };
 
-typedef std::vector<std::shared_ptr<Renderable>> RenderableList;
+using RenderableList = std::vector<std::shared_ptr<Renderable>>;
 
 }
 }

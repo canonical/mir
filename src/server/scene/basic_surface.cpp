@@ -207,11 +207,11 @@ ms::BasicSurface::BasicSurface(
             .cursor_image{cursor_image},
             .layers{layers},
             .confine_pointer_state = confinement_state,
+            .parent = parent,
         }
     },
     observers(std::make_shared<Multiplexer>()),
     report(report),
-    parent_(parent),
     display_config_registrar{display_config_registrar},
     display_config_monitor{std::make_shared<DisplayConfigurationEarlyListener>(this)},
     session_{session}
@@ -733,7 +733,23 @@ MirWindowVisibility ms::BasicSurface::set_visibility(MirWindowVisibility new_vis
 
 std::shared_ptr<ms::Surface> ms::BasicSurface::parent() const
 {
-    return parent_.lock();
+    return synchronised_state.lock()->parent.lock();
+}
+
+void ms::BasicSurface::set_parent(std::weak_ptr<Surface> const& new_parent)
+{
+    if (auto const parent_surface = new_parent.lock())
+    {
+        // Walk up the ancestor chain to detect cycles
+        for (auto ancestor = parent_surface; ancestor; ancestor = ancestor->parent())
+        {
+            if (ancestor.get() == this)
+            {
+                BOOST_THROW_EXCEPTION(std::runtime_error("setting parent would create a cycle"));
+            }
+        }
+    }
+    synchronised_state.lock()->parent = new_parent;
 }
 
 namespace
@@ -1218,7 +1234,7 @@ void mir::scene::BasicSurface::linearised_track_outputs()
             static size_t const max_thread_name_size = 16;
             char thread_name[max_thread_name_size];
             pthread_getname_np(pthread_self(), thread_name, sizeof thread_name);
-            return strcmp("Mir/Wayland", thread_name) == 0;
+            return std::strcmp("Mir/Wayland", thread_name) == 0;
         }();
 
     if (on_wayland_thread)

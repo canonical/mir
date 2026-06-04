@@ -169,10 +169,10 @@ void MirPositioner::set_size(int32_t width, int32_t height)
 {
     if (width <= 0 || height <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::MirPositionerV1::Error::invalid_input,
-            "Invalid popup positioner size: %dx%d", width, height));
+            "Invalid popup positioner size: %dx%d", width, height};
     }
     this->width = Width{width};
     this->height = Height{height};
@@ -182,10 +182,10 @@ void MirPositioner::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t
 {
     if (width < 0 || height < 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::MirPositionerV1::Error::invalid_input,
-            "Invalid popup anchor rect size: %dx%d", width, height));
+            "Invalid popup anchor rect size: %dx%d", width, height};
     }
     aux_rect = Rectangle{{x, y}, {width, height}};
 }
@@ -278,10 +278,10 @@ void MirPositioner::set_gravity(uint32_t gravity)
         break;
 
     default:
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::MirPositionerV1::Error::invalid_input,
-            "Invalid gravity value %d", gravity));
+            "Invalid gravity value %d", gravity};
     }
 
     surface_placement_gravity = placement;

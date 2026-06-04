@@ -35,7 +35,7 @@
 
 namespace mir
 {
-    typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr;
+    using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
 
 namespace events
 {

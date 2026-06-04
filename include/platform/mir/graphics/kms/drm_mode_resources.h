@@ -33,14 +33,14 @@ namespace graphics
 namespace kms
 {
 
-typedef std::unique_ptr<drmModeCrtc,std::function<void(drmModeCrtc*)>> DRMModeCrtcUPtr;
-typedef std::unique_ptr<drmModeEncoder,std::function<void(drmModeEncoder*)>> DRMModeEncoderUPtr;
-typedef std::unique_ptr<drmModeConnector,std::function<void(drmModeConnector*)>> DRMModeConnectorUPtr;
-typedef std::unique_ptr<drmModeRes,void(*)(drmModeRes*)> DRMModeResUPtr;
-typedef std::unique_ptr<drmModePlaneRes,void(*)(drmModePlaneRes*)> DRMModePlaneResUPtr;
-typedef std::unique_ptr<drmModePlane,std::function<void(drmModePlane*)>> DRMModePlaneUPtr;
-typedef std::unique_ptr<drmModeObjectProperties,void(*)(drmModeObjectProperties*)> DRMModeObjectPropsUPtr;
-typedef std::unique_ptr<drmModePropertyRes,void(*)(drmModePropertyPtr)> DRMModePropertyUPtr;
+using DRMModeCrtcUPtr = std::unique_ptr<drmModeCrtc,std::function<void(drmModeCrtc*)>>;
+using DRMModeEncoderUPtr = std::unique_ptr<drmModeEncoder,std::function<void(drmModeEncoder*)>>;
+using DRMModeConnectorUPtr = std::unique_ptr<drmModeConnector,std::function<void(drmModeConnector*)>>;
+using DRMModeResUPtr = std::unique_ptr<drmModeRes,void(*)(drmModeRes*)>;
+using DRMModePlaneResUPtr = std::unique_ptr<drmModePlaneRes,void(*)(drmModePlaneRes*)>;
+using DRMModePlaneUPtr = std::unique_ptr<drmModePlane,std::function<void(drmModePlane*)>>;
+using DRMModeObjectPropsUPtr = std::unique_ptr<drmModeObjectProperties,void(*)(drmModeObjectProperties*)>;
+using DRMModePropertyUPtr = std::unique_ptr<drmModePropertyRes,void(*)(drmModePropertyPtr)>;
 
 DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
 DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);

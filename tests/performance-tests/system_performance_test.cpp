@@ -34,7 +34,7 @@ std::string mir_bin_dir()
     if (len < 0)
         len = 0;
     path[len] = '\0';
-    if (auto slash = strrchr(path, '/'))
+    if (auto slash = std::strrchr(path, '/'))
         *slash = '\0';
     return path;
 }
@@ -72,7 +72,7 @@ int exec_cmd(char const* cmd)
         }
         ++c;
     }
-    argv[argc] = NULL;
+    argv[argc] = nullptr;
     return execv(argv[0], argv);
 }
 
@@ -80,7 +80,7 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
 {
     int pipefd[2];
     if (pipe(pipefd))
-        return NULL;
+        return nullptr;
 
     int const& pipe_out = pipefd[0];
     int const& pipe_in = pipefd[1];
@@ -90,7 +90,7 @@ FILE* popen_with_pid(char const* cmd, pid_t& pid)
     {
         close(pipe_in);
         close(pipe_out);
-        return NULL;
+        return nullptr;
     }
     else if (pid == 0)
     {
@@ -169,7 +169,7 @@ void SystemPerformanceTest::set_up_with(std::string const server_args)
 
     server_output = popen_with_pid(server_cmd.c_str(), server_pid);
     ASSERT_TRUE(server_output) << server_cmd;
-    ASSERT_TRUE(wait_for_file((getenv("XDG_RUNTIME_DIR") + ("/" + mir_sock)).c_str(), 10s)) << server_cmd;
+    ASSERT_TRUE(wait_for_file((std::getenv("XDG_RUNTIME_DIR") + ("/" + mir_sock)).c_str(), 10s)) << server_cmd;
 }
 
 void SystemPerformanceTest::TearDown()

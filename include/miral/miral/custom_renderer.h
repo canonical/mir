@@ -26,15 +26,9 @@ class Server;
 namespace graphics
 {
 class GLRenderingProvider;
-namespace gl
-{
-class OutputSurface;
+namespace gl { class OutputSurface; }
 }
-}
-namespace renderer
-{
-class Renderer;
-}
+namespace renderer { class Renderer; }
 }
 
 namespace miral
@@ -43,13 +37,13 @@ namespace miral
 class CustomRenderer
 {
 public:
-    using Builder = std::function<
-        std::unique_ptr<mir::renderer::Renderer>(
-        std::unique_ptr<mir::graphics::gl::OutputSurface>, std::shared_ptr<mir::graphics::GLRenderingProvider>)
-    >;
+    using Builder = std::function<std::unique_ptr<mir::renderer::Renderer>(
+        std::unique_ptr<mir::graphics::gl::OutputSurface>,
+        std::shared_ptr<mir::graphics::GLRenderingProvider>)>;
 
     explicit CustomRenderer(Builder&& renderer);
     void operator()(mir::Server& server) const;
+
 private:
     struct Self;
     std::shared_ptr<Self> self;

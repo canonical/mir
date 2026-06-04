@@ -26,7 +26,7 @@
 
 #include <poll.h>
 #include <system_error>
-#include <signal.h>
+#include <csignal>
 #include <boost/exception/all.hpp>
 #include <algorithm>
 #include <unordered_map>

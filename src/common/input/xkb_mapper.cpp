@@ -23,6 +23,7 @@
 
 #include <linux/input-event-codes.h>
 
+#include <cstdlib>
 #include <unordered_set>
 
 namespace mi = mir::input;
@@ -34,11 +35,11 @@ namespace
 
 char const* get_locale_from_environment()
 {
-    char const* loc = getenv("LC_ALL");
+    char const* loc = std::getenv("LC_ALL");
     if (!loc)
-        loc = getenv("LC_CTYPE");
+        loc = std::getenv("LC_CTYPE");
     if (!loc)
-        loc = getenv("LANG");
+        loc = std::getenv("LANG");
     if (!loc)
         loc = "C";
     return loc;

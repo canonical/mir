@@ -23,7 +23,8 @@
 #include <mir/udev/wrapper.h>
 
 #include <boost/throw_exception.hpp>
-#include <stdlib.h>
+#include <cstdlib>
+#include <cstring>
 #include <unordered_map>
 #include <libgen.h>
 #include <malloc.h>
@@ -39,12 +40,12 @@ class ExceptionThrowingPlatform : public mg::DisplayPlatform, public mg::Renderi
 {
 public:
     ExceptionThrowingPlatform()
-        : should_throw{parse_exception_request(getenv("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS"))}
+        : should_throw{parse_exception_request(std::getenv("MIR_TEST_FRAMEWORK_THROWING_PLATFORM_EXCEPTIONS"))}
     {
         if (should_throw.at(ExceptionLocation::at_constructor))
             BOOST_THROW_EXCEPTION(std::runtime_error("Exception during construction"));
 
-        std::unique_ptr<char, void(*)(void*)> library_path{strdup(mir::libname()), &free};
+        std::unique_ptr<char, void(*)(void*)> library_path{strdup(mir::libname()), &std::free};
         auto platform_path = dirname(library_path.get());
 
         mir::SharedLibrary stub_platform_library{std::string(platform_path) + "/graphics-dummy.so"};
@@ -109,15 +110,15 @@ private:
     {
         std::unordered_map<ExceptionLocation, bool, std::hash<uint32_t>> requested_exceptions;
         requested_exceptions[ExceptionLocation::at_constructor] =
-            static_cast<bool>(strstr(request, "constructor"));
+            static_cast<bool>(std::strstr(request, "constructor"));
         requested_exceptions[ExceptionLocation::at_create_buffer_allocator] =
-            static_cast<bool>(strstr(request, "create_buffer_allocator"));
+            static_cast<bool>(std::strstr(request, "create_buffer_allocator"));
         requested_exceptions[ExceptionLocation::at_create_display] =
-            static_cast<bool>(strstr(request, "create_display"));
+            static_cast<bool>(std::strstr(request, "create_display"));
         requested_exceptions[ExceptionLocation::at_make_ipc_operations] =
-            static_cast<bool>(strstr(request, "make_ipc_operations"));
+            static_cast<bool>(std::strstr(request, "make_ipc_operations"));
         requested_exceptions[ExceptionLocation::at_native_rendering_platform] =
-            static_cast<bool>(strstr(request, "native_rendering_platform"));
+            static_cast<bool>(std::strstr(request, "native_rendering_platform"));
 
         return requested_exceptions;
     };

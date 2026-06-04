@@ -37,7 +37,7 @@ namespace miral
 {
 using namespace mir::geometry;
 namespace detail { struct SessionsBufferStreamIdTag; }
-typedef mir::IntWrapper<detail::SessionsBufferStreamIdTag> BufferStreamId;
+using BufferStreamId = mir::IntWrapper<detail::SessionsBufferStreamIdTag>;
 
 /// The window specification class describes a request of changes to be made
 /// on a #miral::Window.
@@ -66,7 +66,11 @@ public:
     /// Describes the aspect ratio.
     ///
     /// Used by #WindowSpecification::min_aspect and #WindowSpecification::max_aspect.
-    struct AspectRatio { unsigned width; unsigned height; };
+    struct AspectRatio
+    {
+        unsigned width;
+        unsigned height;
+    };
 
     /// Construct a new window specification.
     WindowSpecification();

@@ -35,7 +35,7 @@
 /* Remove gcc asm aliasing so that our interposed symbols work as expected */
 #include <sys/cdefs.h>
 
-#include <stddef.h>
+#include <cstddef>
 extern "C"
 {
 extern int __REDIRECT_NTH (__ttyname_r_alias, (int __fd, char *__buf,

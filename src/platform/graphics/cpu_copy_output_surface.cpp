@@ -29,6 +29,7 @@
 
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/egl_helpers.h>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
@@ -88,7 +89,7 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     };
 
     auto egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (strstr(egl_extensions, "EGL_KHR_no_config_context") == nullptr)
+    if (std::strstr(egl_extensions, "EGL_KHR_no_config_context") == nullptr)
     {
         // We do not *strictly* need this, but it means I don't need to thread a GLConfig all the way through to here.
         BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation missing necessary EGL_KHR_no_config_context extension"}));

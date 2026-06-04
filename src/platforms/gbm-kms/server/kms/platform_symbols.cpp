@@ -41,6 +41,7 @@
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>
 #include "egl_helper.h"
+#include <cstring>
 #include <fcntl.h>
 #include <xf86drm.h>
 
@@ -145,12 +146,12 @@ auto probe_display_platform(
         mir::log_info("Unsupported: EGL platform does not support client extensions.");
         return {};
     }
-    if (strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
+    if (std::strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
     {
         // Doesn't support the Khronos-standardised GBM platform…
         mir::log_info("EGL platform does not support EGL_KHR_platform_gbm extension");
         // …maybe we support the old pre-standardised Mesa GBM platform?
-        if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
+        if (std::strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
         {
             mir::log_info(
                 "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
@@ -374,12 +375,12 @@ auto probe_rendering_platform(
         mir::log_info("Unsupported: EGL platform does not support client extensions.");
         return {};
     }
-    if (strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
+    if (std::strstr(client_extensions, "EGL_KHR_platform_gbm") == nullptr)
     {
         // Doesn't support the Khronos-standardised GBM platform…
         mir::log_info("EGL platform does not support EGL_KHR_platform_gbm extension");
         // …maybe we support the old pre-standardised Mesa GBM platform?
-        if (strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
+        if (std::strstr(client_extensions, "EGL_MESA_platform_gbm") == nullptr)
         {
             mir::log_info(
                 "Unsupported: EGL platform supports neither EGL_KHR_platform_gbm nor EGL_MESA_platform_gbm");
@@ -423,7 +424,7 @@ auto probe_rendering_platform(
             if (render_node)
             {
                 // We might already be probing a render node
-                if (strcmp(device_node, render_node.get()))
+                if (std::strcmp(device_node, render_node.get()))
                 {
                     // The render node of this device is not *this* device,
                     // so let's pass and let us open the render node later.
@@ -451,7 +452,7 @@ auto probe_rendering_platform(
 
                 // TODO: Probe for necessary EGL extensions (ie: at least one of WL_bind_display / dmabuf_import
 
-                if (strncmp(
+                if (std::strncmp(
                     "llvmpipe",
                     renderer_string,
                     mir::strlen_c("llvmpipe")) == 0)

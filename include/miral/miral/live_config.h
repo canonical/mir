@@ -49,8 +49,8 @@ public:
     auto operator==(Key const& that) const -> bool;
 
 private:
-   struct State;
-   std::shared_ptr<State> self;
+    struct State;
+    std::shared_ptr<State> self;
 };
 
 /// Interface for adding attributes to a live configuration store.
@@ -87,12 +87,32 @@ public:
     virtual void add_strings_attribute(Key const& key, std::string_view description, HandleStrings handler) = 0;
 
     virtual void add_int_attribute(Key const& key, std::string_view description, int preset, HandleInt handler) = 0;
-    virtual void add_ints_attribute(Key const& key, std::string_view description, std::span<int const> preset, HandleInts handler) = 0;
+    virtual void add_ints_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<int const> preset,
+        HandleInts handler) = 0;
     virtual void add_bool_attribute(Key const& key, std::string_view description, bool preset, HandleBool handler) = 0;
-    virtual void add_float_attribute(Key const& key, std::string_view description, float preset, HandleFloat handler) = 0;
-    virtual void add_floats_attribute(Key const& key, std::string_view description, std::span<float const> preset, HandleFloats handler) = 0;
-    virtual void add_string_attribute(Key const& key, std::string_view description, std::string_view preset, HandleString handler) = 0;
-    virtual void add_strings_attribute(Key const& key, std::string_view description, std::span<std::string const> preset, HandleStrings handler) = 0;
+    virtual void add_float_attribute(
+        Key const& key,
+        std::string_view description,
+        float preset,
+        HandleFloat handler) = 0;
+    virtual void add_floats_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<float const> preset,
+        HandleFloats handler) = 0;
+    virtual void add_string_attribute(
+        Key const& key,
+        std::string_view description,
+        std::string_view preset,
+        HandleString handler) = 0;
+    virtual void add_strings_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<std::string const> preset,
+        HandleStrings handler) = 0;
 
     /// Called following a set of related updates (e.g. a file reload) to allow
     /// multiple attributes to be updated transactionally
@@ -109,8 +129,7 @@ public:
 template<>
 struct std::formatter<miral::live_config::Key> : std::formatter<std::string>
 {
-    auto format(miral::live_config::Key const& key, std::format_context& ctx) const
-        -> std::format_context::iterator;
+    auto format(miral::live_config::Key const& key, std::format_context& ctx) const -> std::format_context::iterator;
 };
 
 #endif //MIRAL_LIVE_CONFIG_H

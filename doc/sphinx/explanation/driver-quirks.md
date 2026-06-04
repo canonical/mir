@@ -1,4 +1,4 @@
-# Graphics driver quirks in Mir
+# Graphics driver quirks
 
 The gbm-kms and atomic-kms graphics platform modules provide a
 `--driver-quirks` option that can control how the module behaves.

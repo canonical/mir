@@ -26,7 +26,6 @@
 #include <miral/runner.h>
 
 #include "yaml-cpp/yaml.h"
-#include <string.h>
 
 #include <sys/inotify.h>
 #include <unistd.h>

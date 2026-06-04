@@ -17,8 +17,6 @@
 #ifndef MIR_CORE_SHM_FILE_H_
 #define MIR_CORE_SHM_FILE_H_
 
-#include <cstddef>
-
 namespace mir
 {
 

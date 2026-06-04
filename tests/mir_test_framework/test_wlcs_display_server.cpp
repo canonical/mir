@@ -49,6 +49,7 @@
 #include <fcntl.h>
 #include <sys/eventfd.h>
 
+#include <cstring>
 #include <deque>
 #include <format>
 #include <optional>
@@ -465,7 +466,7 @@ public:
 
     std::weak_ptr<mir::scene::Surface> surface_for_resource(wl_resource* surface)
     {
-        if (strcmp(wl_resource_get_class(surface), "wl_surface") != 0)
+        if (std::strcmp(wl_resource_get_class(surface), "wl_surface") != 0)
         {
             BOOST_THROW_EXCEPTION((
                 std::logic_error{
@@ -538,12 +539,12 @@ private:
         resource_listener =
             wl_container_of(listener, resource_listener, resource_listener);
 
-        bool const is_surface = strcmp(wl_resource_get_class(resource), "wl_surface") == 0;
+        bool const is_surface = std::strcmp(wl_resource_get_class(resource), "wl_surface") == 0;
 
-        bool const is_window = strcmp(wl_resource_get_class(resource), "wl_shell_surface") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "zxdg_surface_v6") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "xdg_surface") == 0 ||
-                               strcmp(wl_resource_get_class(resource), "zwlr_layer_surface_v1") == 0;
+        bool const is_window = std::strcmp(wl_resource_get_class(resource), "wl_shell_surface") == 0 ||
+                               std::strcmp(wl_resource_get_class(resource), "zxdg_surface_v6") == 0 ||
+                               std::strcmp(wl_resource_get_class(resource), "xdg_surface") == 0 ||
+                               std::strcmp(wl_resource_get_class(resource), "zwlr_layer_surface_v1") == 0;
 
         if (is_surface)
         {

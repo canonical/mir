@@ -79,10 +79,16 @@ private:
     wayland::Weak<WlDataDevice> const device;
 };
 
+enum class OfferType
+{
+    dnd,
+    selection
+};
+
 class mf::WlDataDevice::Offer : public wayland::DataOffer
 {
 public:
-    Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source);
+    Offer(OfferType type, WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source);
 
     void accept(uint32_t /*serial*/, std::optional<std::string> const& mime_type) override
     {
@@ -94,6 +100,14 @@ public:
 
     void finish() override
     {
+        if (type != OfferType::dnd)
+        {
+            throw mw::ProtocolError{
+                resource,
+                Error::invalid_offer,
+                "finish is only valid for drag and drop offers"};
+        }
+
         source->dnd_finished();
     }
 
@@ -101,24 +115,31 @@ public:
     {
         if (!mf::validate_dnd_actions(dnd_actions))
         {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_action_mask,
-                "Invalid DnD actions 0x%x", dnd_actions);
+                "Invalid DnD actions 0x%x", dnd_actions};
         }
         if (!mf::validate_dnd_action(preferred_action))
         {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_action,
-                "Invalid DnD action 0x%x", preferred_action);
+                "Invalid DnD action 0x%x", preferred_action};
         }
         if (preferred_action != mw::DataDeviceManager::DndAction::none && (dnd_actions & preferred_action) == 0)
         {
-            throw mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 Error::invalid_action,
-                "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions);
+                "Preferred action 0x%x not in DnD actions 0x%x", preferred_action, dnd_actions};
+        }
+        if (type != OfferType::dnd)
+        {
+            throw mw::ProtocolError{
+                resource,
+                Error::invalid_offer,
+                "set_actions is only valid for drag and drop offers"};
         }
 
         const auto action = source->offer_set_actions(dnd_actions, preferred_action);
@@ -132,21 +153,23 @@ public:
 
 private:
     friend mf::WlDataDevice;
+    OfferType const type;
     wayland::Weak<WlDataDevice> const device;
     std::shared_ptr<ms::DataExchangeSource> const source;
     std::optional<std::string> accepted_mime_type;
     std::optional<uint32_t> dnd_action;
 };
 
-mf::WlDataDevice::Offer::Offer(WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source) :
+mf::WlDataDevice::Offer::Offer(OfferType type, WlDataDevice* device, std::shared_ptr<ms::DataExchangeSource> const& source) :
     mw::DataOffer(*device),
+    type{type},
     device{device},
     source{source}
 {
     device->send_data_offer_event(resource);
-    for (auto const& type : source->mime_types())
+    for (auto const& mime_type : source->mime_types())
     {
-        send_offer_event(type);
+        send_offer_event(mime_type);
     }
 }
 
@@ -209,8 +232,7 @@ void mf::WlDataDevice::start_drag(
     // "The client must have an active implicit grab that matches the serial"
     if (!weak_surface || weak_surface.value().client != client || WlSurface::from(origin)->client != client)
     {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(resource, Error::role, "The client must have an active implicit grab"));
+        throw mw::ProtocolError{resource, Error::role, "The client must have an active implicit grab"};
     }
 
     validate_pointer_event(client->event_for(serial));
@@ -239,15 +261,13 @@ void mf::WlDataDevice::validate_pointer_event(std::optional<std::shared_ptr<MirE
 {
     if (!drag_event || !drag_event.value() || mir_event_get_type(drag_event.value().get()) != mir_event_type_input)
     {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to an input event"));
+        throw mw::ProtocolError{this->resource, Error::role, "Serial does not correspond to an input event"};
     }
 
     auto const input_ev = mir_event_get_input_event(drag_event.value().get());
     if (mir_input_event_get_type(input_ev) != mir_input_event_type_pointer)
     {
-        BOOST_THROW_EXCEPTION(
-            mw::ProtocolError(this->resource, Error::role, "Serial does not correspond to a pointer event"));
+        throw mw::ProtocolError{this->resource, Error::role, "Serial does not correspond to a pointer event"};
     }
 }
 
@@ -264,7 +284,7 @@ void mf::WlDataDevice::paste_source_set(std::shared_ptr<ms::DataExchangeSource> 
     {
         if (!current_offer || current_offer.value().source != source)
         {
-            current_offer = wayland::make_weak(new Offer{this, source});
+            current_offer = wayland::make_weak(new Offer{OfferType::selection, this, source});
             send_selection_event(current_offer.value().resource);
         }
     }
@@ -380,7 +400,7 @@ void mf::WlDataDevice::make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene
 {
     if (source)
     {
-        current_offer = wayland::make_weak(new Offer{this, source});
+        current_offer = wayland::make_weak(new Offer{OfferType::dnd, this, source});
         current_offer.value().send_action_event_if_supported(mw::DataDeviceManager::DndAction::none);
         current_offer.value().send_source_actions_event_if_supported(source->actions());
     }
