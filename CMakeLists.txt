@@ -307,8 +307,8 @@ add_subdirectory(examples/)
 add_subdirectory(cmake/)
 
 if (MIR_ENABLE_RUST)
-  add_subdirectory(miral-sys/)
-  add_subdirectory(miral-rs/)
+  add_subdirectory(mir-rs-sys/)
+  add_subdirectory(mir-rs/)
 endif()
 
 if (MIR_ENABLE_TESTS)

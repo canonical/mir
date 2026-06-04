@@ -385,6 +385,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "68354c5c6bd36d73ff3feceb05efa59b6acb7626617f4962be322a825e61f79a"
 
 [[package]]
+name = "mir"
+version = "0.1.0"
+dependencies = [
+ "bitflags",
+ "mir-sys",
+]
+
+[[package]]
+name = "mir-rs-tiling"
+version = "0.1.0"
+dependencies = [
+ "mir",
+]
+
+[[package]]
+name = "mir-sys"
+version = "0.1.0"
+dependencies = [
+ "bindgen",
+ "cxx",
+ "cxx-build",
+ "pkg-config",
+]
+
+[[package]]
 name = "mir_platforms_evdev_rs"
 version = "0.1.0"
 dependencies = [
@@ -394,31 +419,6 @@ dependencies = [
  "libc",
  "nix",
  "udev",
-]
-
-[[package]]
-name = "miral"
-version = "0.1.0"
-dependencies = [
- "bitflags",
- "miral-sys",
-]
-
-[[package]]
-name = "miral-rs-tiling"
-version = "0.1.0"
-dependencies = [
- "miral",
-]
-
-[[package]]
-name = "miral-sys"
-version = "0.1.0"
-dependencies = [
- "bindgen",
- "cxx",
- "cxx-build",
- "pkg-config",
 ]
 
 [[package]]

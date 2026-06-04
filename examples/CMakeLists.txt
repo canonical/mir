@@ -9,5 +9,5 @@ add_subdirectory(mir-x11-kiosk)
 add_subdirectory(client)
 
 if (MIR_ENABLE_RUST)
-  add_subdirectory(miral-rs-tiling)
+  add_subdirectory(mir-rs-tiling)
 endif()
