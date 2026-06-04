@@ -48,16 +48,29 @@ pub fn snake_to_pascal(s: &str) -> String {
         .collect()
 }
 
+/// This removes the "wl_", "ext_", etc. prefix from the interface in order to
+/// more closely match the former C++ implementation and reduce
+/// migration cost.
+fn strip_wayland_interface_prefix(s: &str) -> &str {
+    if let Some(index) = s.find('_') {
+        &s[index + 1..]
+    } else {
+        s
+    }
+}
+
 /// Formats the Wayland interface name to the name of the class that
 /// provides its C++ implementation.
 pub fn format_wayland_interface_to_cpp_class(s: &str) -> String {
-    format!("{}Impl", snake_to_pascal(s))
+    let s = strip_wayland_interface_prefix(s);
+    format!("{}", snake_to_pascal(s))
 }
 
 /// Formats the Wayland interface name to the name of the struct that
 /// provides its Rust extension implementation.
 pub fn format_wayland_interface_to_rust_extension_struct(s: &str) -> String {
-    format!("{}Ext", snake_to_pascal(s))
+    let s = strip_wayland_interface_prefix(s);
+    format!("{}Middleware", snake_to_pascal(s))
 }
 
 pub fn format_has_arg(s: &str) -> String {
