@@ -90,7 +90,7 @@ The test script `mir-smoke-test-runner` will automatically test the platforms th
 environment it is run in:
 
 - When run in a hosted environment it will test `virtual`, `wayland`, and `x11`
-- When run in a unhosted environment it will test `atomic-kms`, `eglstream-kms`, `gbm-kms` and `virtual` platforms
+- When run in without a host compositor it will test `atomic-kms`, `eglstream-kms`, `gbm-kms` and `virtual` platforms
   (according to the hardware and drivers available).
 
 ### Manual testing
