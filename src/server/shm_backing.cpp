@@ -408,7 +408,7 @@ auto ShmBacking::resize(size_t new_size) -> std::expected<void, mir::shm::Resize
     // Backing store can only increase in size.
     if (*mapping && new_size < (*mapping)->size)
     {
-        return std::unexpected{mir::shm::ResizeError::shrunk};
+        return std::unexpected{mir::shm::ResizeError::invalid_size};
     }
 
     void* mapped_address = mmap(nullptr, new_size, prot, MAP_SHARED, backing_store, 0);

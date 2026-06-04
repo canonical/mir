@@ -107,7 +107,7 @@ public:
 
 enum class ResizeError
 {
-    shrunk,
+    invalid_size,
 };
 
 class ReadMappableRange

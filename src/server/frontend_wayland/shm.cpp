@@ -346,7 +346,7 @@ void mf::ShmPool::resize(int32_t new_size)
     {
         switch(result.error())
         {
-        case shm::ResizeError::shrunk:
+        case shm::ResizeError::invalid_size:
             throw wayland::ProtocolError{
                 resource,
                 wayland::Shm::Error::invalid_stride,
