@@ -72,15 +72,15 @@ in which we need to test:
 
 <!-- rc-testing:start -->
 
-|                                | 24.04 | 25.10 |
-| ------------------------------ | ----- | ----- |
-| atomic-kms                     |       |       |
-| gbm-kms                        |       |       |
-| eglstream-kms                  |       |       |
-| eglstream-kms + gbm-kms hybrid |       |       |
-| x11                            |       |       |
-| wayland                        |       |       |
-| virtual                        |       |       |
+|                                | 24.04 | 26.04 | 26.10 |
+| ------------------------------ | ----- | ----- | ----- |
+| atomic-kms                     |       |       |       |
+| gbm-kms                        |       |       |       |
+| eglstream-kms                  |       |       |       |
+| eglstream-kms + gbm-kms hybrid |       |       |       |
+| x11                            |       |       |       |
+| wayland                        |       |       |       |
+| virtual                        |       |       |       |
 
 <!-- rc-testing:end -->
 
@@ -90,7 +90,7 @@ The test script `mir-smoke-test-runner` will automatically test the platforms th
 environment it is run in:
 
 - When run in a hosted environment it will test `virtual`, `wayland`, and `x11`
-- When run in a native environment it will test `atomic-kms`, `eglstream-kms`, `gbm-kms` and `virtual` platforms
+- When run in a unhosted environment it will test `atomic-kms`, `eglstream-kms`, `gbm-kms` and `virtual` platforms
   (according to the hardware and drivers available).
 
 ### Manual testing
