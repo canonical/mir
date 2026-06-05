@@ -17,12 +17,11 @@
 #include <miral/live_config_overrides_list.h>
 
 #include <mir/log.h>
+#include <mir/fatal.h>
 
 #include "live_config_overrides_list_builder.h"
 
 #include <boost/throw_exception.hpp>
-
-#include <stdexcept>
 
 namespace mlc = miral::live_config;
 
@@ -50,11 +49,12 @@ void mlc::OverridesList::for_each(Loader unchanged, Loader fresh, Loader modifie
         {
             stream = event.opener(event.path);
         }
-        catch (...)
+        catch (std::exception const& e)
         {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error{
-                    std::format("Openers must not throw exceptions. Failed to open '{}'", event.path.string())});
+            mir::fatal_error(
+                "Openers must not throw exceptions. Failed to open '{}' with exception '{}'",
+                event.path.string().c_str(),
+                e.what());
         }
 
         if (!stream || !*stream)
