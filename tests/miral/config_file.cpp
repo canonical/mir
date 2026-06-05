@@ -62,19 +62,24 @@ public:
         }
     }
 
-    void notify_load()
+    void notify_load(std::function<void()> const& under_lock)
     {
         {
             std::lock_guard lock{mutex};
+            under_lock();
             pending_loads = false;
         }
 
         cv.notify_one();
     }
 
-    std::mutex mutex;
+    void notify_load()
+    {
+        notify_load([] {});
+    }
 
 private:
+    std::mutex mutex;
     std::condition_variable cv;
     bool pending_loads = false;
 };
@@ -631,8 +636,8 @@ struct OverrideConfigTestBase : PendingLoad, miral::TestServer
 
     void record_load(miral::live_config::OverridesList const& overrides)
     {
+        notify_load([&]
         {
-            std::lock_guard lock{PendingLoad::mutex};
             last_load_paths.clear();
             last_unchanged_paths.clear();
             last_fresh_paths.clear();
@@ -645,8 +650,7 @@ struct OverrideConfigTestBase : PendingLoad, miral::TestServer
                 [&](auto const& p)         { last_dropped_paths.push_back(p); });
             last_load_stream_count = last_load_paths.size();
             ++load_call_count;
-        }
-        notify_load();
+        });
     }
 
     void SetUp() override
