@@ -21,7 +21,6 @@
 
 #include <filesystem>
 #include <functional>
-#include <iosfwd>
 #include <string_view>
 
 namespace miral
