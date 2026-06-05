@@ -27,6 +27,7 @@
 #include <mir/scene/session.h>
 
 #include "ext_image_capture_v1.h"
+#include "ext_output_image_capture_source_v1.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "foreign_toplevel_list_v1.h"
 #include "idle_inhibit_v1.h"
