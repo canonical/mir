@@ -377,7 +377,12 @@ mf::WaylandConnector::WaylandConnector(
         input_trigger_registry,
         keyboard_state_tracker});
 
-    shm_global = std::make_unique<WlShm>(display.get(), executor);
+    std::vector<mg::DRMFormat> shm_formats;
+    for (auto const pixel_format : this->allocator->supported_pixel_formats())
+    {
+        shm_formats.push_back(mg::DRMFormat::from_mir_format(pixel_format));
+    }
+    shm_global = std::make_unique<WlShm>(display.get(), executor, std::move(shm_formats));
 
     viewporter = std::make_unique<WpViewporter>(display.get());
 

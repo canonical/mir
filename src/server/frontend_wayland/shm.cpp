@@ -29,6 +29,8 @@
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
+#include <algorithm>
+
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
@@ -217,10 +219,12 @@ auto mf::ShmBuffer::from(wl_resource* resource) -> ShmBuffer*
 mf::ShmPool::ShmPool(
     struct wl_resource* resource,
     std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats,
     Fd backing_store,
     int32_t claimed_size) :
     wayland::ShmPool(resource, Version<1>{}),
     wayland_executor{std::move(wayland_executor)},
+    supported_formats{std::move(supported_formats)},
     backing_store{shm::rw_pool_from_fd(std::move(backing_store), claimed_size)}
 {
 }
@@ -240,6 +244,22 @@ auto wl_shm_format_to_drm_format(uint32_t format) -> mg::DRMFormat
         return mg::DRMFormat{DRM_FORMAT_XRGB8888};
     default:
         return mg::DRMFormat{format};
+    }
+}
+
+auto drm_format_to_wl_shm_format(mg::DRMFormat format) -> uint32_t
+{
+    /* Inverse of wl_shm_format_to_drm_format(): the two default formats use the
+     * special-cased wl_shm codes, everything else matches its DRM fourcc.
+     */
+    switch (static_cast<uint32_t>(format))
+    {
+    case DRM_FORMAT_ARGB8888:
+        return mf::Shm::Format::argb8888;
+    case DRM_FORMAT_XRGB8888:
+        return mf::Shm::Format::xrgb8888;
+    default:
+        return static_cast<uint32_t>(format);
     }
 }
 }
@@ -278,8 +298,12 @@ void mf::ShmPool::create_buffer(
             stride, width};
     }
 
-    // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
-    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
+    auto const drm_format = wl_shm_format_to_drm_format(format);
+    auto const format_supported = std::any_of(
+        supported_formats->begin(),
+        supported_formats->end(),
+        [&](auto supported) { return static_cast<uint32_t>(supported) == static_cast<uint32_t>(drm_format); });
+    if (!format_supported)
     {
         throw wayland::ProtocolError{
             resource,
@@ -293,7 +317,7 @@ void mf::ShmPool::create_buffer(
         std::move(backing_range),
         geometry::Size{width, height},
         geometry::Stride{stride},
-        wl_shm_format_to_drm_format(format)
+        drm_format
     };
 }
 
@@ -302,25 +326,32 @@ void mf::ShmPool::resize(int32_t new_size)
     backing_store->resize(new_size);
 }
 
-mf::WlShm::WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor)
+mf::WlShm::WlShm(
+    wl_display* display,
+    std::shared_ptr<Executor> wayland_executor,
+    std::vector<mg::DRMFormat> supported_formats)
     : wayland::Shm::Global(display, Version<1>{}),
-      wayland_executor{std::move(wayland_executor)}
+      wayland_executor{std::move(wayland_executor)},
+      supported_formats{std::make_shared<std::vector<mg::DRMFormat> const>(std::move(supported_formats))}
 {
 }
 
 void mf::WlShm::bind(wl_resource* new_wl_shm)
 {
-    new Shm{new_wl_shm, wayland_executor};
+    new Shm{new_wl_shm, wayland_executor, supported_formats};
 }
 
-mf::Shm::Shm(wl_resource* resource, std::shared_ptr<Executor> wayland_executor)
+mf::Shm::Shm(
+    wl_resource* resource,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats)
     : wayland::Shm(resource, Version<1>{}),
-      wayland_executor{std::move(wayland_executor)}
+      wayland_executor{std::move(wayland_executor)},
+      supported_formats{std::move(supported_formats)}
 {
-    // TODO: send all the formats we support, beyond the mandatory ones.
-    for (auto format : { Format::argb8888, Format::xrgb8888 })
+    for (auto const& format : *this->supported_formats)
     {
-        send_format_event(format);
+        send_format_event(drm_format_to_wl_shm_format(format));
     }
 }
 
@@ -334,5 +365,5 @@ void mf::Shm::create_pool(wl_resource* id, Fd fd, int32_t size)
             "Invalid requested size"};
     }
 
-    new ShmPool{id, wayland_executor, fd, size};
+    new ShmPool{id, wayland_executor, supported_formats, fd, size};
 }
