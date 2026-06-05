@@ -30,6 +30,8 @@
 #include <wayland-server-protocol.h>
 
 #include <algorithm>
+#include <expected>
+#include <limits>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -271,21 +273,26 @@ void mf::ShmPool::create_buffer(
     int32_t stride,
     uint32_t format)
 {
-    auto const size = stride * height;
-    std::unique_ptr<shm::RWMappableRange> backing_range;
-    try
+    if (offset < 0)
     {
-        backing_range = backing_store->get_rw_range(offset, size);
-    }
-    catch (std::logic_error const&)
-    {
-        /* get_*_range throws a logic error when attempting to access outside the backing
-         * store. This should be translated into a ProtocolError.
-         */
         throw wayland::ProtocolError{
             resource,
             wayland::Shm::Error::invalid_stride,
-            "Attempt to create_buffer outside the range of the backing store"};
+            "Invalid SHM buffer offset %d", offset};
+    }
+    if (width <= 0 || height <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer size %dx%d", width, height};
+    }
+    if (stride <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer stride %d", stride};
     }
 
     auto const drm_format = wl_shm_format_to_drm_format(format);
@@ -309,15 +316,44 @@ void mf::ShmPool::create_buffer(
             wayland::Shm::Error::invalid_format,
             "Missing pixel-size information for SHM format requested"};
     }
-    auto const bytes_per_pixel = format_info->bytes_per_pixel();
+    auto const bytes_per_pixel = static_cast<geometry::Size::ValueType>(format_info->bytes_per_pixel());
 
-    if (static_cast<int64_t>(stride) < static_cast<int64_t>(width) * bytes_per_pixel)
+    auto const max_size = std::numeric_limits<geometry::Size::ValueType>::max();
+    auto const max_width = max_size / bytes_per_pixel;
+    auto const max_height = max_size / stride;
+    if (width > max_width || height > max_height)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Requested SHM buffer size %dx%d (stride %d) is too large", width, height, stride};
+    }
+
+    auto const min_stride = width * bytes_per_pixel;
+    if (stride < min_stride)
     {
         throw wayland::ProtocolError{
             resource,
             wayland::Shm::Error::invalid_stride,
             "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
             stride, width};
+    }
+
+    auto const size = stride * height;
+    std::unique_ptr<shm::RWMappableRange> backing_range;
+    try
+    {
+        backing_range = backing_store->get_rw_range(offset, size);
+    }
+    catch (std::logic_error const&)
+    {
+        /* get_*_range throws a logic error when attempting to access outside the backing
+         * store. This should be translated into a ProtocolError.
+         */
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Attempt to create_buffer outside the range of the backing store"};
     }
 
     new ShmBuffer{
@@ -332,7 +368,26 @@ void mf::ShmPool::create_buffer(
 
 void mf::ShmPool::resize(int32_t new_size)
 {
-    backing_store->resize(new_size);
+    if (new_size < 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid new size %d", new_size};
+    }
+
+    if (auto result = backing_store->resize(new_size); !result)
+    {
+        switch(result.error())
+        {
+        case shm::ResizeError::invalid_size:
+            throw wayland::ProtocolError{
+                resource,
+                wayland::Shm::Error::invalid_stride,
+                "New size %d is smaller than the current size of the backing store", new_size};
+            break;
+        }
+    }
 }
 
 mf::WlShm::WlShm(

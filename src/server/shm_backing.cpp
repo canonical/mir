@@ -257,7 +257,7 @@ public:
     auto get_range(size_t start, size_t len, std::shared_ptr<Parent> parent)
         -> std::unique_ptr<Mapping>;
 
-    void resize(size_t new_size);
+    auto resize(size_t new_size) -> std::expected<void, mir::shm::ResizeError>;
 
     template<typename T>
     auto lock_range(size_t start, size_t len)
@@ -401,8 +401,16 @@ auto ShmBacking::lock_range(size_t start, size_t len)
                 mapping->size_is_trustworthy ? nullptr : sigbus_handler->protect_access_to(start_addr, len)}};
 }
 
-void ShmBacking::resize(size_t new_size)
+auto ShmBacking::resize(size_t new_size) -> std::expected<void, mir::shm::ResizeError>
 {
+    auto mapping = current_mapping.lock();
+
+    // Backing store can only increase in size.
+    if (*mapping && new_size < (*mapping)->size)
+    {
+        return std::unexpected{mir::shm::ResizeError::invalid_size};
+    }
+
     void* mapped_address = mmap(nullptr, new_size, prot, MAP_SHARED, backing_store, 0);
     if (mapped_address == MAP_FAILED)
     {
@@ -412,10 +420,11 @@ void ShmBacking::resize(size_t new_size)
             "Failed to map client-provided SHM pool"}));
     }
 
-    *current_mapping.lock() = std::make_shared<CurrentMapping>(
+    *mapping = std::make_shared<CurrentMapping>(
         mapped_address,
         new_size,
         backing_size_is_guaranteed_at_least(this->backing_store, new_size));
+    return {};
 }
 
 class ROMappableRange : public mir::shm::ReadMappableRange
@@ -522,9 +531,9 @@ public:
         return backing_store.get_range<WOMappableRange>(start, len, shared_from_this());
     }
 
-    void resize(size_t new_size) override
+    auto resize(size_t new_size) -> std::expected<void, mir::shm::ResizeError> override
     {
-        backing_store.resize(new_size);
+        return backing_store.resize(new_size);
     }
 private:
     ShmBacking backing_store;
