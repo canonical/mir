@@ -34,7 +34,7 @@
 
 -->
 
-## Mir 2.28.0~rc
+## Mir 2.28.0
 
 - New upstream release 2.28.0
 
