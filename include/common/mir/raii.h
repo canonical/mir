@@ -49,7 +49,7 @@ private:
  */
 template <typename Creator, typename Deleter>
 inline auto paired_calls(Creator&& creator, Deleter&& deleter)
--> std::unique_ptr<typename std::remove_reference<decltype(*creator())>::type, Deleter>
+-> std::unique_ptr<std::remove_reference_t<decltype(*creator())>, Deleter>
 {
     return {creator(), deleter};
 }

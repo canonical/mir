@@ -49,7 +49,7 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
 
         ~Mapping()
         {
-            if (::munmap(const_cast<typename std::remove_const<T>::type *>(data_), len_) == -1)
+            if (::munmap(const_cast<std::remove_const_t<T> *>(data_), len_) == -1)
             {
                 // It's unclear how this could happen, but tell *someone* about it if it does!
                 log_error("Failed to unmap CPU buffer: %s (%i)", mir::errno_to_cstr(errno), errno);
