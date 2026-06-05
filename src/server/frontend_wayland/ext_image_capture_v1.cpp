@@ -23,7 +23,6 @@
 #include <mir/compositor/screen_shooter_factory.h>
 #include <mir/fatal.h>
 #include <mir/frontend/surface_stack.h>
-#include <mir/geometry/rectangles.h>
 #include <mir/graphics/cursor_image.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
@@ -31,14 +30,11 @@
 #include <mir/scene/scene_change_notification.h>
 #include <mir/time/clock.h>
 #include <mir/wayland/protocol_error.h>
-#include <mir/wayland/weak.h>
 #include "output_manager.h"
 #include "shm.h"
 #include "wayland_timespec.h"
 
 #include <cstring>
-#include <expected>
-#include <tuple>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
@@ -75,48 +71,6 @@ struct ExtImageCaptureV1Ctx
 };
 
 /* Image copy backends */
-class ExtImageCopyCaptureSessionV1;
-
-class ExtImageCopyBackend
-{
-public:
-    using CaptureResult = std::expected<std::tuple<time::Timestamp, geom::Rectangle>, uint32_t>;
-    using CaptureCallback = std::function<void(CaptureResult const&)>;
-
-    ExtImageCopyBackend(ExtImageCopyCaptureSessionV1* session, bool overlay_cursor);
-    virtual ~ExtImageCopyBackend() = default;
-
-    ExtImageCopyBackend(ExtImageCopyBackend const&) = delete;
-    ExtImageCopyBackend& operator=(ExtImageCopyBackend const&) = delete;
-
-    virtual bool has_damage();
-
-    // \pre has_damage() == true
-    virtual void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
-        geom::Rectangle const& frame_damage,
-        CaptureCallback const& callback) = 0;
-
-protected:
-    enum class DamageAmount
-    {
-        none,
-        partial,
-        full,
-    };
-
-    ExtImageCopyCaptureSessionV1* const session;
-    bool const overlay_cursor;
-
-    geom::Rectangle output_space_area;
-    geom::Rectangle output_space_damage;
-    DamageAmount damage_amount = DamageAmount::full;
-
-    void apply_damage(std::optional<geom::Rectangle> const& damage);
-};
-
-class ExtImageCopyCaptureCursorSessionV1;
-
 class ExtOutputImageCopyBackend
     : public ExtImageCopyBackend, public OutputConfigListener
 {
@@ -142,9 +96,6 @@ private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 };
 
-using ExtImageCopyBackendFactory = std::function<std::shared_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*,bool)>;
-using ExtImageCopyCursorMapPosition = std::function<std::optional<geom::Point>(float abs_x, float abs_y)>;
-
 /* Image capture sources */
 class ExtOutputImageCaptureSourceManagerV1Global
     : public wayland::OutputImageCaptureSourceManagerV1::Global
@@ -168,20 +119,6 @@ private:
     void create_source(wl_resource* new_resource, wl_resource* output) override;
 
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
-};
-
-class ExtImageCaptureSourceV1
-    : public wayland::ImageCaptureSourceV1
-{
-public:
-    ExtImageCaptureSourceV1(wl_resource* resource,
-                            ExtImageCopyBackendFactory const& backend_factory,
-                            ExtImageCopyCursorMapPosition const& cursor_map_position);
-
-    static ExtImageCaptureSourceV1* from_or_throw(wl_resource* resource);
-
-    ExtImageCopyBackendFactory const backend_factory;
-    ExtImageCopyCursorMapPosition const cursor_map_position;
 };
 
 
@@ -220,28 +157,6 @@ private:
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
     std::shared_ptr<time::Clock> const clock;
-};
-
-class ExtImageCopyCaptureFrameV1;
-
-class ExtImageCopyCaptureSessionV1
-    : public wayland::ImageCopyCaptureSessionV1
-{
-public:
-    ExtImageCopyCaptureSessionV1(wl_resource* resource, bool overlay_cursor, ExtImageCopyBackendFactory const& backend_factory);
-    ~ExtImageCopyCaptureSessionV1();
-
-    void set_buffer_constraints(geom::Size const& buffer_size);
-    void set_stopped();
-    void maybe_capture_frame();
-
-private:
-    void create_frame(wl_resource* new_resource) override;
-
-    bool stopped = false;
-    wayland::Weak<ExtImageCopyCaptureFrameV1> current_frame;
-
-    std::shared_ptr<ExtImageCopyBackend> backend;
 };
 
 class ExtImageCopyCaptureFrameV1
