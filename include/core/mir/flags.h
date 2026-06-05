@@ -35,7 +35,7 @@ namespace mir
 template<typename Enum>
 struct Flags
 {
-    using value_type = typename std::underlying_type<Enum>::type;
+    using value_type = std::underlying_type_t<Enum>;
 
     explicit constexpr Flags(value_type flag_value = 0) noexcept
         : flag_value{flag_value} {}
