@@ -89,7 +89,7 @@ public:
     /// priority ones. If a higher priority file is removed, the next-highest
     /// priority file is used instead.
     ///
-    /// \remark since MirAL 5.8
+    /// \remark since MirAL 5.9
     /// \param base_config the base configuration file, either as a filename or
     ///                    a path.
     /// \param load_config callback used in the initial load and to signal a

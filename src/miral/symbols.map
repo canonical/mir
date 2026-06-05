@@ -779,8 +779,6 @@ global:
 
 MIRAL_5.8 {
 global:
-  _ZN5miral10ConfigFileC1ERNS_9MirRunnerENSt10filesystem7__cxx114pathENS0_4ModeESt18move_only_functionIJFvRKNS_11live_config13OverridesListEEEESt17basic_string_viewIcSt11char_traitsIcEE;
-
   extern "C++" {
     miral::WindowSpecification::parent_size*;
     miral::live_config::OverridesList::?OverridesList*;
@@ -815,3 +813,8 @@ global:
     typeinfo?for?std::formatter?miral::live_config::Key*char?;
   };
 } MIRAL_5.7;
+
+MIRAL_5.9 {
+global:
+  _ZN5miral10ConfigFileC1ERNS_9MirRunnerENSt10filesystem7__cxx114pathENS0_4ModeESt18move_only_functionIJFvRKNS_11live_config13OverridesListEEEESt17basic_string_viewIcSt11char_traitsIcEE;
+} MIRAL_5.8;
