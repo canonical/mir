@@ -288,16 +288,6 @@ void mf::ShmPool::create_buffer(
             "Attempt to create_buffer outside the range of the backing store"};
     }
 
-    // TODO: Extend DRMFormat to include bytes-per-pixel info and drop this hardcoded "4"
-    if (stride < (width * 4))
-    {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
-            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
-            stride, width};
-    }
-
     auto const drm_format = wl_shm_format_to_drm_format(format);
     auto const format_supported = std::any_of(
         supported_formats->begin(),
@@ -309,6 +299,25 @@ void mf::ShmPool::create_buffer(
             resource,
             wayland::Shm::Error::invalid_format,
             "Invalid SHM format requested"};
+    }
+
+    auto const format_info = drm_format.info();
+    if (!format_info)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_format,
+            "Missing pixel-size information for SHM format requested"};
+    }
+    auto const bytes_per_pixel = format_info->bytes_per_pixel();
+
+    if (static_cast<int64_t>(stride) < static_cast<int64_t>(width) * bytes_per_pixel)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
+            stride, width};
     }
 
     new ShmBuffer{

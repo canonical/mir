@@ -12,6 +12,7 @@ MIR_PLATFORM_2.24 {
     mir::graphics::DMABufEGLProvider::as_texture*;
     mir::graphics::DRMFormat::DRMFormat*;
     mir::graphics::DRMFormat::Info::alpha_equivalent*;
+    mir::graphics::DRMFormat::Info::bytes_per_pixel*;
     mir::graphics::DRMFormat::Info::components*;
     mir::graphics::DRMFormat::Info::has_alpha*;
     mir::graphics::DRMFormat::Info::opaque_equivalent*;
