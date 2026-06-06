@@ -21,12 +21,12 @@
 #include <mir/scene/surface.h>
 #include "rendering_tracker.h"
 #include "surface_stack.h"
+#include "surface_scene_element.h"
 
 #include <boost/throw_exception.hpp>
 
 namespace ms = mir::scene;
 namespace mc = mir::compositor;
-namespace mg = mir::graphics;
 
 namespace mir::scene
 {
@@ -54,47 +54,6 @@ private:
     std::set<compositor::CompositorID> registered_compositors;
 
     Observers observers;
-};
-}
-
-namespace
-{
-
-class SurfaceSceneElement : public mc::SceneElement
-{
-public:
-    SurfaceSceneElement(
-        std::string name,
-        std::shared_ptr<mg::Renderable> const& renderable,
-        std::shared_ptr<ms::RenderingTracker> const& tracker,
-        mc::CompositorID id)
-        : renderable_{renderable},
-          tracker{tracker},
-          cid{id},
-          surface_name(name)
-    {
-    }
-
-    std::shared_ptr<mg::Renderable> renderable() const override
-    {
-        return renderable_;
-    }
-
-    void rendered() override
-    {
-        tracker->rendered_in(cid);
-    }
-
-    void occluded() override
-    {
-        tracker->occluded_in(cid);
-    }
-
-private:
-    std::shared_ptr<mg::Renderable> const renderable_;
-    std::shared_ptr<ms::RenderingTracker> const tracker;
-    mc::CompositorID cid;
-    std::string const surface_name;
 };
 }
 
