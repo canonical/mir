@@ -52,6 +52,7 @@ set(
   idle_inhibit_v1.cpp           idle_inhibit_v1.h
   wlr_screencopy_v1.cpp         wlr_screencopy_v1.h
   ext_image_capture_v1.cpp      ext_image_capture_v1.h
+  ext_foreign_toplevel_image_capture_source_v1.cpp ext_foreign_toplevel_image_capture_source_v1.h
   ext_output_image_capture_source_v1.cpp ext_output_image_capture_source_v1.h
   text_input_v1.cpp             text_input_v1.h
   primary_selection_v1.cpp      primary_selection_v1.h
