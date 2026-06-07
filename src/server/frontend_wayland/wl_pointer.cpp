@@ -33,6 +33,7 @@
 #include <mir/compositor/buffer_stream.h>
 #include <mir/events/pointer_event.h>
 #include <mir/wayland/client.h>
+#include <mir/wayland/protocol_error.h>
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>
@@ -477,6 +478,16 @@ void mf::WlPointer::set_cursor(
         cursor_hotspot = {hotspot_x, hotspot_y};
         if (!cursor->cursor_surface() || wl_surface != *cursor->cursor_surface())
         {
+            // The surface is becoming a cursor for the first time (for this pointer).
+            // Re-using the current cursor surface is allowed and handled above, but a
+            // surface with any other role must raise a protocol error.
+            if (wl_surface->has_role())
+            {
+                throw mw::ProtocolError{
+                    resource,
+                    Error::role,
+                    "Surface already has a role"};
+            }
             cursor.reset(); // clean up old cursor before creating new one
             cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot, commit_handler);
             if (surface_under_cursor)

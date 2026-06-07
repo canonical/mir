@@ -135,6 +135,10 @@ public:
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
+    /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
+    /// drag-and-drop icon, or a window role such as xdg_toplevel). Used to raise the
+    /// appropriate protocol error when a client tries to assign a second role.
+    bool has_role() const { return role != &null_role; }
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;

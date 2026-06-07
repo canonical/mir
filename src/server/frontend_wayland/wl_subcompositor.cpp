@@ -72,6 +72,13 @@ void mf::WlSubcompositorInstance::get_subsurface(
     }
     WlSurface* child_surface = WlSurface::from(surface);
     WlSurface* parent_surface = WlSurface::from(parent);
+    if (child_surface->has_role())
+    {
+        throw wayland::ProtocolError{
+            new_subsurface,
+            mw::Subcompositor::Error::bad_surface,
+            "Surface already has a role"};
+    }
     if (child_surface->has_subsurface_with_surface(parent_surface))
     {
         throw wayland::ProtocolError{

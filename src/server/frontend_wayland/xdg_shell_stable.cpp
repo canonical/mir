@@ -145,7 +145,15 @@ void mf::XdgShellStable::Instance::create_positioner(wl_resource* new_positioner
 
 void mf::XdgShellStable::Instance::get_xdg_surface(wl_resource* new_shell_surface, wl_resource* surface)
 {
-    new XdgSurfaceStable{new_shell_surface, WlSurface::from(surface), *shell};
+    auto* const wl_surface = WlSurface::from(surface);
+    if (wl_surface->has_role())
+    {
+        throw mw::ProtocolError{
+            resource,
+            mw::XdgWmBase::Error::role,
+            "Surface already has a role"};
+    }
+    new XdgSurfaceStable{new_shell_surface, wl_surface, *shell};
 }
 
 void mf::XdgShellStable::Instance::pong(uint32_t serial)

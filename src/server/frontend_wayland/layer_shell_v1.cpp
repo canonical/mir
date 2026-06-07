@@ -275,9 +275,18 @@ void mf::LayerShellV1::Instance::get_layer_surface(
             "Invalid layer %u", layer};
     }
 
+    auto* const wl_surface = WlSurface::from(surface);
+    if (wl_surface->has_role())
+    {
+        throw wayland::ProtocolError{
+            resource,
+            mw::LayerShellV1::Error::role,
+            "Surface already has a role"};
+    }
+
     new LayerSurfaceV1(
         new_layer_surface,
-        WlSurface::from(surface),
+        wl_surface,
         OutputManager::output_id_for(output),
         *shell,
         layer_shell_layer_to_mir_depth_layer(layer));
