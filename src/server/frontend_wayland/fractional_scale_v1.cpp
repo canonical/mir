@@ -20,6 +20,8 @@
 #include <mir/wayland/protocol_error.h>
 #include "wl_surface.h"
 
+#include <cmath>
+#include <cstdint>
 #include <memory>
 
 namespace mir
@@ -120,6 +122,8 @@ void mf::FractionalScaleV1::recompute_scale()
     if (max_element != surface_outputs.end())
     {
         auto const preferred_scale = max_element->second;
-        send_preferred_scale_event(120 * preferred_scale);
+        // The protocol encodes the scale as the numerator of a fraction with a
+        // denominator of 120, so round to the nearest integer numerator.
+        send_preferred_scale_event(static_cast<uint32_t>(std::lround(120 * preferred_scale)));
     }
 }
