@@ -408,13 +408,17 @@ void mf::WlSurface::frame(wl_resource* new_callback)
 
 void mf::WlSurface::set_opaque_region(std::optional<wl_resource*> const& region)
 {
-    pending.opaque_region = region.transform([](auto*r)
-        {
-            geom::Rectangles opaque_region;
-            for (auto const& subregion : WlRegion::from(r)->rectangle_vector())
-                opaque_region.add(subregion);
-            return opaque_region;
-        });
+    // A null region clears the opaque region (sets it to empty), per the spec.
+    // We always assign so that the pending state records the change; leaving it
+    // unset would mean "unchanged" and prevent a client from clearing a
+    // previously-set opaque region.
+    geom::Rectangles opaque_region;
+    if (region)
+    {
+        for (auto const& subregion : WlRegion::from(region.value())->rectangle_vector())
+            opaque_region.add(subregion);
+    }
+    pending.opaque_region = std::move(opaque_region);
 }
 
 void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
