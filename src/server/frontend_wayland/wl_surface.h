@@ -89,6 +89,9 @@ struct WlSurfaceState
     shell::SurfaceSpecification surface_spec;
     std::optional<float> scale;
     std::optional<geometry::Displacement> offset;
+    /// Accumulated buffer offset delta from wl_surface.offset. Moves the buffer
+    /// within surface-local space.
+    std::optional<geometry::Displacement> buffer_offset;
     std::optional<std::optional<std::vector<geometry::Rectangle>>> input_shape;
     std::optional<geometry::Rectangles> opaque_region;
     std::optional<MirOrientation> orientation;
@@ -228,6 +231,10 @@ private:
     // even if the parent surface is a synchronized subsurface (per Wayland spec)
     std::optional<std::list<WlSubsurface*>> pending_surface_order;
     geometry::Displacement offset_;
+    /// Position of the buffer's top-left within surface-local coordinates, as
+    /// accumulated from wl_surface.offset. Does not move the input region origin,
+    /// subsurfaces, or pointer coordinate mapping.
+    geometry::Displacement buffer_offset_;
     float scale{1};
     std::optional<geometry::Size> buffer_size_;
 

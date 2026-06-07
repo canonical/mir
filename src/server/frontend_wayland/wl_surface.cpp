@@ -89,6 +89,9 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
     if (source.offset)
         offset = source.offset;
 
+    if (source.buffer_offset)
+        buffer_offset = buffer_offset.value_or(geometry::Displacement{}) + source.buffer_offset.value();
+
     if (source.input_shape)
         input_shape = source.input_shape;
 
@@ -109,6 +112,7 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 bool mf::WlSurfaceState::surface_data_needs_refresh() const
 {
     return offset ||
+           buffer_offset ||
            input_shape ||
            surface_data_invalidated;
 }
@@ -165,7 +169,7 @@ auto mf::WlSurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*
         if (auto result = child->subsurface_at(point))
             return result;
     }
-    geom::Rectangle surface_rect = {geom::Point{}, buffer_size_.value_or(geom::Size{})};
+    geom::Rectangle surface_rect = {geom::Point{} + buffer_offset_, buffer_size_.value_or(geom::Size{})};
     for (auto& rect : input_shape.value_or(std::vector<geom::Rectangle>{surface_rect}))
     {
         if (intersection_of(rect, surface_rect).contains(point))
@@ -320,8 +324,12 @@ void mf::WlSurface::populate_surface_data(std::vector<shell::StreamSpecification
         c->populate_surface_data(buffer_streams, input_shape_accumulator, offset);
     }
 
-    buffer_streams.push_back(msh::StreamSpecification{stream, offset});
-    geom::Rectangle surface_rect = {geom::Point{} + offset, buffer_size_.value_or(geom::Size{})};
+    buffer_streams.push_back(msh::StreamSpecification{stream, offset + buffer_offset_});
+    // The buffer (and thus the default input region) is positioned at the
+    // accumulated buffer offset. Explicitly-set input regions are in surface-local
+    // coordinates and so are positioned at `offset`, but are still clipped to the
+    // buffer's extent.
+    geom::Rectangle surface_rect = {geom::Point{} + offset + buffer_offset_, buffer_size_.value_or(geom::Size{})};
     if (input_shape)
     {
         for (auto rect : input_shape.value())
@@ -436,6 +444,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 {
     if (state.offset)
         offset_ = state.offset.value();
+
+    if (state.buffer_offset)
+        buffer_offset_ = buffer_offset_ + state.buffer_offset.value();
 
     if (state.input_shape)
         input_shape = state.input_shape.value();
@@ -812,10 +823,10 @@ void mf::WlSurface::set_buffer_scale(int32_t scale)
 
 void mir::frontend::WlSurface::offset(int32_t x, int32_t y)
 {
-    if (x != 0 || y != 0)
-    {
-        mir::log_warning("Client requested unimplemented non-zero offset. Rendering will be incorrect.");
-    }
+    // The offset specifies the location of the new buffer's top-left corner
+    // relative to the current buffer's top-left corner, in surface-local
+    // coordinates, and is applied on the next commit.
+    pending.buffer_offset = geom::Displacement{x, y};
 }
 
 auto mf::WlSurface::confine_pointer_state() const -> MirPointerConfinementState
