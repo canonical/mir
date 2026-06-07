@@ -81,7 +81,12 @@ set(
 
 if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
   # These files use std::expected, which libstdc++ only supports with __cpp_concepts=202002L
-  set_source_files_properties(ext_image_capture_v1.cpp shm.cpp
+  set_source_files_properties(
+    ext_image_capture_v1.cpp
+    ext_foreign_toplevel_image_capture_source_v1.cpp
+    ext_output_image_capture_source_v1.cpp
+    shm.cpp
+    wayland_default_configuration.cpp
     PROPERTIES COMPILE_FLAGS -Wno-builtin-macro-redefined
     COMPILE_DEFINITIONS __cpp_concepts=202002L)
 endif()
