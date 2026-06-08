@@ -66,16 +66,16 @@ auto get_all_config_files(
     mlc::OverridesListBuilder config_streams;
     config_streams.push_new(resolved_base_config, mlc::open_file);
 
-    // Collect override files from all roots, deduplicating by basename.
+    // Collect override files from all roots, deduplicating by filename.
     // Higher-priority roots (earlier in config_roots, later in reverse iteration) shadow lower ones.
-    std::map<std::string, path> by_basename;
+    std::map<path, path> by_filename;
     for (auto const& root : config_roots | std::views::reverse)
     {
         for (auto const& override_file : mlc::collect_override_files(root / override_directory_name, extension))
-            by_basename.insert_or_assign(override_file.filename().string(), override_file);
+            by_filename.insert_or_assign(override_file.filename(), override_file);
     }
 
-    for (auto const& [_, file] : by_basename)
+    for (auto const& [_, file] : by_filename)
         config_streams.push_new(file, mlc::open_file);
 
     return config_streams.build();
