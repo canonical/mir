@@ -122,6 +122,10 @@ auto mlc::OverrideWatcher::WatchedRoot::has_base_watch() const -> bool
     return static_cast<bool>(base_dir_wd);
 }
 
+//  Wrapping the three parameters into separate structs would make the code
+//  more verbose for no benefit since this is called in only one place.
+//  Wrapping them into one struct just moves the problem to where the struct is
+//  constructed. This is fine for the time being.
 auto mlc::OverrideWatcher::WatchedRoot::classify_event(  // NOLINT(bugprone-easily-swappable-parameters)
     inotify_event const& event,
     std::string_view base_config_filename,
