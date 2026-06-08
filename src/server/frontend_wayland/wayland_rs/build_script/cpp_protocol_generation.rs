@@ -168,7 +168,7 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
-    // WaylandClient is used in the protected constructor of every generated XxxImpl.
+    // WaylandClient is used in the protected constructor of every generated C++ implementation.
     namespace.add_forward_declaration_class("WaylandClient");
 
     for protocol in protocols {
