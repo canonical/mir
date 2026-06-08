@@ -129,6 +129,11 @@ void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const
         // LEGACY(Clang) Replace with std::start_lifetime_as<inotify_event const> once Clang supports it (C++23, P2590).
         auto const& event = reinterpret_cast<inotify_event const&>(
             *remaining.data()); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+
+        // The kernel guarantees event.len is padded to maintain inotify_event
+        // alignment for subsequent events (see inotify(7): "The name field
+        // [...] is padded with null bytes to the next inotify_event structure
+        // boundary"), so all subsequent reinterpret_casts are safe.
         auto const event_size = sizeof(inotify_event) + event.len;
         if (remaining.size() < event_size)
             break;
