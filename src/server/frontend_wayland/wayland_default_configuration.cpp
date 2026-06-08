@@ -79,7 +79,7 @@ auto make_extension_builder(
     std::function<std::shared_ptr<typename T::Global>(mf::WaylandExtensions::Context const& ctx)> build)
 -> ExtensionBuilder
 {
-    static_assert(std::is_base_of<mw::Resource, T>::value, "make_extension_builder() not given a resource");
+    static_assert(std::is_base_of_v<mw::Resource, T>, "make_extension_builder() not given a resource");
     return ExtensionBuilder{T::interface_name, build};
 }
 

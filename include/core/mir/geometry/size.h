@@ -38,7 +38,7 @@ struct Displacement;
 template<typename T, typename U>
 concept is_exactly_representable = requires
 {
-    typename std::enable_if<std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits, U>::type;
+    typename std::enable_if_t<std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits, U>;
     requires std::floating_point<T>;
 };
 

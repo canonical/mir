@@ -19,6 +19,7 @@
 #include <mir/graphics/buffer_properties.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/scene/observer.h>
+#include <mir/scene/surface_scene.h>
 #include <mir/compositor/scene_element.h>
 #include "src/server/report/null_report_factory.h"
 #include <mir/scene/basic_surface.h>
@@ -1312,4 +1313,119 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
             SceneElementForStream(stub_buffer_stream2)));
 
     Mock::VerifyAndClearExpectations(&observer);
+}
+
+namespace
+{
+
+struct SingleSurfaceScene : public ::testing::Test
+{
+    void SetUp() override
+    {
+        capture_surface = std::make_shared<StubSurface>(capture_buffer_stream, executor);
+        hidden_surface = std::make_shared<StubSurface>(hidden_buffer_stream, executor);
+        hidden_surface->hide();
+    }
+
+    void TearDown() override
+    {
+        executor.execute();
+    }
+
+    std::shared_ptr<mc::BufferStream> capture_buffer_stream = std::make_shared<mtd::StubBufferStream>();
+    std::shared_ptr<mc::BufferStream> hidden_buffer_stream = std::make_shared<mtd::StubBufferStream>();
+
+    std::shared_ptr<ms::Surface> capture_surface;
+    std::shared_ptr<ms::Surface> hidden_surface;
+
+    mc::CompositorID const compositor_id{this};
+    mtd::ExplicitExecutor executor;
+    std::shared_ptr<mtd::FakeDisplayConfigurationObserverRegistrar> const display_config_registrar =
+        std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>();
+};
+
+}
+
+TEST_F(SingleSurfaceScene, scene_elements_for)
+{
+    auto const scene = ms::create_surface_scene(capture_surface);
+    EXPECT_THAT(
+        scene->scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(capture_buffer_stream)));
+}
+
+TEST_F(SingleSurfaceScene, scene_elements_for_hidden)
+{
+    auto const scene = ms::create_surface_scene(hidden_surface);
+    EXPECT_THAT(
+        scene->scene_elements_for(compositor_id),
+        ElementsAre(
+            SceneElementForStream(hidden_buffer_stream)));
+}
+
+TEST_F(SingleSurfaceScene, scene_observer_informed_of_existing_surface)
+{
+    MockSceneObserver observer;
+
+    EXPECT_CALL(observer, surface_exists(capture_surface)).Times(1);
+
+    auto const scene = ms::create_surface_scene(capture_surface);
+    scene->add_observer(mt::fake_shared(observer));
+}
+
+TEST_F(SingleSurfaceScene, exposes_rendered_surface)
+{
+    mc::CompositorID const compositor_id2{&compositor_id};
+
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
+    auto const scene = ms::create_surface_scene(mock_surface);
+
+    scene->register_compositor(compositor_id);
+    scene->register_compositor(compositor_id2);
+
+    auto const elements = scene->scene_elements_for(compositor_id);
+    ASSERT_THAT(elements.size(), Eq(1u));
+    auto const elements2 = scene->scene_elements_for(compositor_id2);
+    ASSERT_THAT(elements2.size(), Eq(1u));
+
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed));
+
+    elements.back()->occluded();
+    elements2.back()->rendered();
+}
+
+TEST_F(SingleSurfaceScene, occludes_surface_when_unregistering_all_compositors_that_rendered_it)
+{
+    mc::CompositorID const compositor_id2{&compositor_id};
+    mc::CompositorID const compositor_id3{&compositor_id2};
+
+    auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
+    auto const scene = ms::create_surface_scene(mock_surface);
+
+    scene->register_compositor(compositor_id);
+    scene->register_compositor(compositor_id2);
+    scene->register_compositor(compositor_id3);
+
+    auto const elements = scene->scene_elements_for(compositor_id);
+    ASSERT_THAT(elements.size(), Eq(1u));
+    auto const elements2 = scene->scene_elements_for(compositor_id2);
+    ASSERT_THAT(elements2.size(), Eq(1u));
+    auto const elements3 = scene->scene_elements_for(compositor_id3);
+    ASSERT_THAT(elements3.size(), Eq(1u));
+
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed))
+        .Times(2);
+
+    elements.back()->occluded();
+    elements2.back()->rendered();
+    elements3.back()->rendered();
+    executor.execute();
+
+    Mock::VerifyAndClearExpectations(mock_surface.get());
+
+    EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_occluded));
+
+    scene->unregister_compositor(compositor_id2);
+    scene->unregister_compositor(compositor_id3);
 }
