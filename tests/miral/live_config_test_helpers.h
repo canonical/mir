@@ -18,10 +18,9 @@
 #define MIRAL_LIVE_CONFIG_TEST_HELPERS_H
 
 #include <miral/live_config_overrides_list.h>
+#include <mir_test_framework/temporary_environment_value.h>
 
 #include <filesystem>
-#include <optional>
-#include <string>
 #include <vector>
 
 struct LoadRecord
@@ -56,32 +55,8 @@ inline auto record_paths(miral::live_config::OverridesList const& list) -> std::
 
 struct XdgEnvGuard
 {
-    XdgEnvGuard()
-    {
-        if (auto val = getenv("XDG_CONFIG_HOME"))
-            original_home = val;
-        if (auto val = getenv("XDG_CONFIG_DIRS"))
-            original_dirs = val;
-    }
-
-    ~XdgEnvGuard()
-    {
-        if (original_home)
-            setenv("XDG_CONFIG_HOME", original_home->c_str(), 1);
-        else
-            unsetenv("XDG_CONFIG_HOME");
-
-        if (original_dirs)
-            setenv("XDG_CONFIG_DIRS", original_dirs->c_str(), 1);
-        else
-            unsetenv("XDG_CONFIG_DIRS");
-    }
-
-    XdgEnvGuard(XdgEnvGuard const&) = delete;
-    XdgEnvGuard& operator=(XdgEnvGuard const&) = delete;
-
-    std::optional<std::string> original_home;
-    std::optional<std::string> original_dirs;
+    mir_test_framework::TemporaryEnvironmentValue home{"XDG_CONFIG_HOME", getenv("XDG_CONFIG_HOME")};
+    mir_test_framework::TemporaryEnvironmentValue dirs{"XDG_CONFIG_DIRS", getenv("XDG_CONFIG_DIRS")};
 };
 
 #endif
