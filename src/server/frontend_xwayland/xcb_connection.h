@@ -335,7 +335,7 @@ private:
     template<XCBType type>
     static inline constexpr uint8_t xcb_type_format()
     {
-        static_assert(!std::is_same<typename NativeXCBType<type>::type, void>::value, "Missing Native specialization");
+        static_assert(!std::is_same_v<typename NativeXCBType<type>::type, void>, "Missing Native specialization");
         auto const format = sizeof(typename NativeXCBType<type>::type) * 8;
         static_assert(format == 8 || format == 16 || format == 32, "Invalid format");
         return format;
@@ -345,9 +345,9 @@ private:
     static inline void validate_xcb_type()
     {
         // Accidentally sending a pointer instead of the actual data is an easy error to make
-        static_assert(!std::is_pointer<T>::value, "Data type should not be a pointer");
-        static_assert(!std::is_same<typename NativeXCBType<type>::type, void>::value, "Missing Native specialization");
-        static_assert(std::is_same<typename NativeXCBType<type>::type, T>::value, "Specified type does not match data type");
+        static_assert(!std::is_pointer_v<T>, "Data type should not be a pointer");
+        static_assert(!std::is_same_v<typename NativeXCBType<type>::type, void>, "Missing Native specialization");
+        static_assert(std::is_same_v<typename NativeXCBType<type>::type, T>, "Specified type does not match data type");
     }
 
     template<XCBType type, typename T>

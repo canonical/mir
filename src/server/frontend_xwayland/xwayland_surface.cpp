@@ -880,7 +880,7 @@ auto mf::XWaylandSurface::StateTracker::with_wm_state(WmState wm_state) const ->
 
     default:
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Invalid WM_STATE: " + std::to_string(static_cast<std::underlying_type<WmState>::type>(wm_state))));
+            "Invalid WM_STATE: " + std::to_string(static_cast<std::underlying_type_t<WmState>>(wm_state))));
     }
 }
 
@@ -1275,7 +1275,7 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
         {
             if (optional_prop)
             {
-                using ValueType = typename std::remove_reference<decltype(optional_prop.value())>::type;
+                using ValueType = std::remove_reference_t<decltype(optional_prop.value())>;
                 using UnderlyingType = typename ValueType::ValueType;
                 auto constexpr raw_max = std::numeric_limits<UnderlyingType>::max();
 

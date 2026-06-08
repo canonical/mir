@@ -68,13 +68,13 @@ struct Value
     using TagType = Tag;
 
     template <typename Q = T>
-    constexpr typename std::enable_if<std::is_integral<Q>::value, int>::type as_int() const
+    constexpr std::enable_if_t<std::is_integral_v<Q>, int> as_int() const
     {
         return this->value;
     }
 
     template <typename Q = T>
-    constexpr typename std::enable_if<std::is_integral<Q>::value, uint32_t>::type as_uint32_t() const
+    constexpr std::enable_if_t<std::is_integral_v<Q>, uint32_t> as_uint32_t() const
     {
         return this->value;
     }
@@ -134,7 +134,7 @@ struct Value
     {
     }
 
-    template<typename U, typename std::enable_if<std::is_scalar<U>::value, bool>::type = true>
+    template<typename U, std::enable_if_t<std::is_scalar_v<U>, bool> = true>
     explicit constexpr Value(U const& value) noexcept
         : value{static_cast<T>(value)}
     {
