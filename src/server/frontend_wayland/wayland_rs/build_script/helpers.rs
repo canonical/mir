@@ -48,30 +48,36 @@ pub fn snake_to_pascal(s: &str) -> String {
         .collect()
 }
 
-/// Some interfaces produce naming collisions after prefix stripping and must
-/// be kept intact. Currently known collisions:
-///   - `xdg_surface` vs `wl_surface` — both would strip to "surface"
-///   - `zwlr_foreign_toplevel_handle_v1` vs `ext_foreign_toplevel_handle_v1`
-///     — both would strip to "foreign_toplevel_handle_v1"
+/// Strips known Wayland protocol/vendor prefixes from an interface name to
+/// produce a type name matching existing C++ conventions.
 ///
-/// If a new protocol is added whose stripped name collides with an existing
-/// one, add it to this list so that the full name (with prefix) is used
-/// instead.
-const COLLISION_INTERFACES: &[&str] = &["xdg_surface", "zwlr_foreign_toplevel_handle_v1"];
-
-/// This removes the "wl_", "ext_", etc. prefix from the interface in order to
-/// more closely match the former C++ implementation and reduce
-/// migration cost.
+/// Only prefixes in [`KNOWN_PREFIXES`] are stripped. Interfaces with
+/// unrecognized prefixes (e.g., `xdg_`, `ext_`) keep their full name.
 fn strip_wayland_interface_prefix(s: &str) -> &str {
-    if COLLISION_INTERFACES.contains(&s) {
-        return s;
-    }
+    /// Known Wayland protocol/vendor prefixes and how many characters to strip.
+    /// Ordered longest-first to ensure correct greedy matching.
+    ///
+    /// The strip length may differ from the match length: for `zxdg_` we strip
+    /// only the `z` instability marker, preserving `xdg_` as part of the type
+    /// name (matching existing C++ types like `XdgOutputManagerV1`).
+    ///
+    /// Prefixes NOT listed here (e.g., `xdg_`, `ext_`) are intentionally kept
+    /// as part of the type name (e.g., `XdgActivationV1`, `ExtForeignToplevelListV1`).
+    const KNOWN_PREFIXES: &[(&str, usize)] = &[
+        ("org_kde_kwin_", "org_kde_kwin_".len()),
+        ("zwlr_", "zwlr_".len()),
+        ("zwp_", "zwp_".len()),
+        ("zxdg_", 1), // strip only the 'z' instability marker
+        ("wl_", "wl_".len()),
+        ("wp_", "wp_".len()),
+    ];
 
-    if let Some(index) = s.find('_') {
-        &s[index + 1..]
-    } else {
-        s
+    for &(prefix, strip_len) in KNOWN_PREFIXES {
+        if s.starts_with(prefix) {
+            return &s[strip_len..];
+        }
     }
+    s
 }
 
 /// Formats the Wayland interface name to the name of the class that
