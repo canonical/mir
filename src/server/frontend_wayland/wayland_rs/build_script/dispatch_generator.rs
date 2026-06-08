@@ -286,7 +286,9 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // Step 3: Call the parent's request method with the child middleware so the
             // child C++ object is fully initialized from the start.
             let mut guard = data.lock().unwrap();
-            let inner = guard.inner.as_mut().expect("Request dispatched on uninitialized resource");
+            let Some(inner) = guard.inner.as_mut() else {
+                return;
+            };
             // SAFETY: The mutex guard provides the only mutable access while the call is
             // in progress. The pinned reference is used only for this FFI call.
             match unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names, )* boxed, protocol_id) } {
@@ -306,7 +308,9 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             let mut guard = data.lock().unwrap();
-            let inner = guard.inner.as_mut().expect("Request dispatched on uninitialized resource");
+            let Some(inner) = guard.inner.as_mut() else {
+                return;
+            };
             // SAFETY: The mutex guard provides the only mutable access while the call is
             // in progress. The pinned reference is used only for this FFI call.
             if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
