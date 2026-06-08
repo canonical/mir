@@ -122,6 +122,13 @@ protected:
     /// The size the window will be after the next commit
     auto pending_size() const -> geometry::Size;
 
+    /// The min/max size the window will have after the next commit (the value requested this cycle if any,
+    /// otherwise the committed value). A zero min or "unlimited" max indicates no constraint.
+    /// @{
+    auto pending_min_size() const -> geometry::Size;
+    auto pending_max_size() const -> geometry::Size;
+    /// @}
+
     /// The size the window currently is (the committed size, or a reasonable default if it has never committed)
     auto current_size() const -> geometry::Size;
 
