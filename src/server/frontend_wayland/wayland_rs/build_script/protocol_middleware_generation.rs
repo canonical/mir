@@ -137,6 +137,11 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
                 }
             }
 
+            pub fn version(&self) -> u32 {
+                use wayland_server::Resource;
+                self.wrapped.version()
+            }
+
             #(#event_extensions)*
         }
     })

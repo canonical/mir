@@ -214,6 +214,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     builder.add_header_include("<memory>");
     builder.add_header_include("<optional>");
     builder.add_header_include("<cstdint>");
+    builder.add_header_include("<string>");
     builder.add_header_include("<rust/cxx.h>");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
@@ -232,7 +233,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
             if let crate::protocol_parser::InterfaceItem::Request(request) = item {
                 Some(wayland_request_to_cpp_method(request))
             } else if let crate::protocol_parser::InterfaceItem::Event(event) = item {
-                Some(vec![wayland_event_to_cpp_method(event)])
+                Some(wayland_event_to_cpp_methods(event))
             } else {
                 None
             }
@@ -515,15 +516,10 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     }
 }
 
-fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(
-        format!("send_{}_event", event.name),
-        None,
-        false,
-        false,
-        false,
-        true,
-    );
+fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
+    let since = event.since.unwrap_or(1);
+    let needs_version_guard = since > 1;
+
     let args = event.args.iter().map(wayland_arg_to_cpp_arg);
 
     let sanitized_args: Vec<String> = args
@@ -541,14 +537,64 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
         })
         .collect();
 
-    for arg in args {
-        cpp_method.add_arg(arg);
-    }
-
-    cpp_method.set_body(format!(
-        "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\ninstance_.value()->{}({});",
+    let send_call = format!(
+        "instance_.value()->{}({});",
         event.name,
         sanitized_args.join(", ")
-    ));
-    cpp_method
+    );
+
+    // Generate the `send_x_event` method
+    let send_body = if needs_version_guard {
+        format!(
+            "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\nif (instance_.value()->version() < {since}) {{\n    post_error(0, \"Tried to send {event_name} event to object with version \" + std::to_string(instance_.value()->version()) + \" (requires version {since})\");\n    return;\n}}\n{send_call}",
+            since = since,
+            event_name = event.name,
+            send_call = send_call,
+        )
+    } else {
+        format!(
+            "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\n{send_call}",
+            send_call = send_call,
+        )
+    };
+
+    let mut send_method = CppMethod::new(
+        format!("send_{}_event", event.name),
+        None,
+        false,
+        false,
+        false,
+        true,
+    );
+    for arg in args.clone() {
+        send_method.add_arg(arg);
+    }
+    send_method.set_body(send_body);
+
+    let mut methods = vec![send_method];
+
+    // Generate the `send_x_event_if_supported` method for versioned events
+    if needs_version_guard {
+        let if_supported_body = format!(
+            "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\nif (instance_.value()->version() < {since}) {{\n    return;\n}}\n{send_call}",
+            since = since,
+            send_call = send_call,
+        );
+
+        let mut if_supported_method = CppMethod::new(
+            format!("send_{}_event_if_supported", event.name),
+            None,
+            false,
+            false,
+            false,
+            true,
+        );
+        for arg in args {
+            if_supported_method.add_arg(arg);
+        }
+        if_supported_method.set_body(if_supported_body);
+        methods.push(if_supported_method);
+    }
+
+    methods
 }
