@@ -77,6 +77,17 @@ target_link_libraries(miral-test-internal
     ${GMOCK_LIBRARIES}
 )
 
+
+
+# Urgh, gtest false-positives on this warning
+check_cxx_compiler_flag(-Wno-error=no-stringop-overflow MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
+if (MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
+    set_target_properties(miral-test-internal
+      PROPERTIES
+        LINK_FLAGS "-Wno-error=stringop-overflow"
+    )
+endif()
+
 find_program(XWAYLAND_EXECUTABLE Xwayland REQUIRED)
 
 mir_add_wrapped_executable(miral-test NOINSTALL

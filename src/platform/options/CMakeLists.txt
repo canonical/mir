@@ -13,6 +13,8 @@ add_library(miroptions OBJECT
 target_include_directories(miroptions
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/platform
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include
 )
 
 target_link_libraries(miroptions
