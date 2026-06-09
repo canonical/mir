@@ -585,16 +585,13 @@ fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
     // Generate the `send_x_event` method
     let send_body = if needs_version_guard {
         format!(
-            "if (!instance_) {{\n    throw \"Wayland event sender used before associate()\";\n}}\nif (instance_->version() < {since}) {{\n    post_error(0, \"Tried to send {event_name} event to object with version \" + std::to_string(instance_->version()) + \" (requires version {since})\");\n    return;\n}}\n{send_call}",
+            "if (instance_->version() < {since}) {{\n    post_error(0, \"Tried to send {event_name} event to object with version \" + std::to_string(instance_->version()) + \" (requires version {since})\");\n    return;\n}}\n{send_call}",
             since = since,
             event_name = event.name,
             send_call = send_call,
         )
     } else {
-        format!(
-            "if (!instance_) {{\n    throw \"Wayland event sender used before associate()\";\n}}\n{send_call}",
-            send_call = send_call,
-        )
+        send_call.clone()
     };
 
     let mut send_method = CppMethod::new(
@@ -615,7 +612,7 @@ fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
     // Generate the `send_x_event_if_supported` method for versioned events
     if needs_version_guard {
         let if_supported_body = format!(
-            "if (!instance_) {{\n    throw \"Wayland event sender used before associate()\";\n}}\nif (instance_->version() < {since}) {{\n    return;\n}}\n{send_call}",
+            "if (instance_->version() < {since}) {{\n    return;\n}}\n{send_call}",
             since = since,
             send_call = send_call,
         );
