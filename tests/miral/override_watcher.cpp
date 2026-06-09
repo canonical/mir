@@ -231,6 +231,26 @@ TEST_F(TestOverrideWatcher, simultaneously_written_new_files_are_both_classified
     EXPECT_THAT(rec.dropped, testing::IsEmpty());
 }
 
+// Override files are emitted using a version-aware (natural) ordering, so a
+// numeric prefix sorts by value rather than by raw byte order. Under plain byte
+// order "10-..." would incorrectly sort before "2-...".
+TEST_F(TestOverrideWatcher, override_files_are_emitted_in_version_order)
+{
+    write_override_file("1-a.conf");
+    write_override_file("2-b.conf");
+    write_override_file("10-c.conf");
+    auto watcher = make_watcher(); // known = {1-a.conf, 2-b.conf, 10-c.conf}
+
+    auto result = watcher->apply_events(SummaryBuilder{}.base_changed(base_config));
+    ASSERT_TRUE(result.has_value());
+    auto const rec = record(*result);
+
+    EXPECT_THAT(
+        rec.unchanged,
+        testing::ElementsAre(
+            override_dir / "1-a.conf", override_dir / "2-b.conf", override_dir / "10-c.conf"));
+}
+
 TEST_F(TestOverrideWatcher, override_dir_created_with_file_triggers_reload)
 {
     auto watcher = make_watcher(); // no override dir, known = {}

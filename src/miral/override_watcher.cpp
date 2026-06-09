@@ -21,6 +21,7 @@
 #include <miral/runner.h>
 
 #include "live_config_overrides_list_builder.h"
+#include "version_compare.h"
 
 #include <limits.h>
 #include <sys/inotify.h>
@@ -42,6 +43,7 @@ using path = fs::path;
 
 namespace
 {
+using EventsByBasename = mlc::ByBasename<mlc::OverrideFileEvent>;
 auto watch_override_directory(
     mir::Fd const& inotify_fd, path const& config_root, std::string const& override_directory_name)
     -> mlc::InotifyWatch
@@ -75,7 +77,7 @@ auto classify_override_file(bool in_current, bool in_known, bool in_written) -> 
 // A dropped file from a higher-priority root unshadows any lower-priority file with the same
 // basename (promoting it to fresh). For all other statuses, the highest-priority event wins.
 void merge_events_by_basename(
-    std::map<std::string, mlc::OverrideFileEvent>& by_basename,
+    EventsByBasename& by_basename,
     std::vector<mlc::OverrideFileEvent>& root_events)
 {
     for (auto& event : root_events)
@@ -359,7 +361,7 @@ auto mlc::OverrideWatcher::apply_events(BatchSummary const& summary) -> std::opt
         // For files sharing a basename, only keep the highest-priority active file.
         // If a higher-priority file is dropped, any lower-priority file with the same
         // basename becomes visible (unshadowed).
-        std::map<std::string, OverrideFileEvent> by_basename;
+        EventsByBasename by_basename;
         bool override_state_changed = false;
 
         for (auto& root : watched_roots)

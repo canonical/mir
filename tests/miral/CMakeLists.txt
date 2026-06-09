@@ -62,6 +62,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     basic_store.cpp
     ini_file_with_overrides.cpp
     override_watcher.cpp
+    version_compare.cpp
     ${MIRAL_TEST_SOURCES}
 )
 

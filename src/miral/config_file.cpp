@@ -23,13 +23,13 @@
 #include "live_config_overrides_list_builder.h"
 #include "live_config_watcher.h"
 #include "override_watcher.h"
+#include "version_compare.h"
 
 #include <sys/inotify.h>
 
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <map>
 #include <optional>
 #include <ranges>
 #include <string>
@@ -68,11 +68,11 @@ auto get_all_config_files(
 
     // Collect override files from all roots, deduplicating by filename.
     // Higher-priority roots (earlier in config_roots, later in reverse iteration) shadow lower ones.
-    std::map<path, path> by_filename;
+    mlc::ByBasename<path> by_filename;
     for (auto const& root : config_roots | std::views::reverse)
     {
         for (auto const& override_file : mlc::collect_override_files(root / override_directory_name, extension))
-            by_filename.insert_or_assign(override_file.filename(), override_file);
+            by_filename.insert_or_assign(override_file.filename().string(), override_file);
     }
 
     for (auto const& [_, file] : by_filename)

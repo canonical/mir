@@ -849,6 +849,29 @@ TEST_F(TestOverrideConfigFile, override_loader_sorts_override_files_lexicographi
     EXPECT_THAT(last_load_paths[3].filename(), Eq("30-third.conf"));
 }
 
+// Override files are ordered using a version-aware (natural) comparison so that
+// numeric prefixes sort by value rather than by raw byte order. Under plain
+// byte order "10-..." would incorrectly sort before "2-...".
+TEST_F(TestOverrideConfigFile, override_loader_sorts_override_files_in_version_order)
+{
+    write_base_config();
+    write_override_file("10-third.conf");
+    write_override_file("2-second.conf");
+    write_override_file("1-first.conf");
+
+    start_config(ConfigFile::Mode::no_reloading);
+
+    wait_for_load();
+    ASSERT_THAT(last_load_paths.size(), Eq(4u));
+    EXPECT_THAT(
+        last_load_paths,
+        ElementsAre(
+            base_config_path(),
+            override_dir() / "1-first.conf",
+            override_dir() / "2-second.conf",
+            override_dir() / "10-third.conf"));
+}
+
 TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_rewritten)
 {
     write_base_config();

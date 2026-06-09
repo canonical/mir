@@ -39,7 +39,8 @@ add_library(miral-internal STATIC
     window_specification_internal.cpp    window_specification_internal.h
     basic_store.cpp                      basic_store.h
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
-    live_config_watcher.cpp              live_config_watcher.h
+    live_config_watcher.cpp               live_config_watcher.h
+    version_compare.cpp                   version_compare.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
