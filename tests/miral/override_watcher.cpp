@@ -28,6 +28,8 @@
 #include <fstream>
 #include <stdexcept>
 
+using namespace testing;
+
 namespace fs = std::filesystem;
 namespace mlc = miral::live_config;
 namespace mtf = mir_test_framework;
@@ -53,7 +55,7 @@ auto make_watcher_common(fs::path config) -> std::shared_ptr<mlc::OverrideWatche
     return std::make_shared<mlc::OverrideWatcher>(std::move(config), [](auto const&) {}, ".conf");
 }
 
-struct TestOverrideWatcher : testing::Test
+struct TestOverrideWatcher : Test
 {
     fs::path const tmp_dir = make_tmp("test-override-watcher-home");
     fs::path const dummy_system_dir = make_tmp("test-override-watcher-sys");
@@ -134,10 +136,10 @@ TEST_F(TestOverrideWatcher, base_config_change_marks_base_as_modified_and_known_
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(base_config));
+    EXPECT_THAT(rec.unchanged, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.fresh, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, new_override_file_is_classified_as_fresh)
@@ -151,10 +153,10 @@ TEST_F(TestOverrideWatcher, new_override_file_is_classified_as_fresh)
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "20-second.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config, override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "20-second.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config, override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.modified, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, fresh_file_becomes_modified_on_subsequent_write)
@@ -172,10 +174,10 @@ TEST_F(TestOverrideWatcher, fresh_file_becomes_modified_on_subsequent_write)
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(override_dir / "20-second.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config, override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(override_dir / "20-second.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config, override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.fresh, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, existing_override_file_change_is_classified_as_modified)
@@ -189,10 +191,10 @@ TEST_F(TestOverrideWatcher, existing_override_file_change_is_classified_as_modif
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config, override_dir / "20-second.conf"));
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config, override_dir / "20-second.conf"));
+    EXPECT_THAT(rec.fresh, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, deleted_override_file_is_classified_as_dropped)
@@ -207,10 +209,10 @@ TEST_F(TestOverrideWatcher, deleted_override_file_is_classified_as_dropped)
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config, override_dir / "20-second.conf"));
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
+    EXPECT_THAT(rec.dropped, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config, override_dir / "20-second.conf"));
+    EXPECT_THAT(rec.fresh, IsEmpty());
+    EXPECT_THAT(rec.modified, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, simultaneously_written_new_files_are_both_classified_as_fresh)
@@ -225,10 +227,10 @@ TEST_F(TestOverrideWatcher, simultaneously_written_new_files_are_both_classified
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "10-first.conf", override_dir / "20-second.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "10-first.conf", override_dir / "20-second.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config));
+    EXPECT_THAT(rec.modified, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 // Override files are emitted using a version-aware (natural) ordering, so a
@@ -247,7 +249,7 @@ TEST_F(TestOverrideWatcher, override_files_are_emitted_in_version_order)
 
     EXPECT_THAT(
         rec.unchanged,
-        testing::ElementsAre(
+        ElementsAre(
             override_dir / "1-a.conf", override_dir / "2-b.conf", override_dir / "10-c.conf"));
 }
 
@@ -260,10 +262,10 @@ TEST_F(TestOverrideWatcher, override_dir_created_with_file_triggers_reload)
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config));
+    EXPECT_THAT(rec.modified, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, empty_override_dir_created_produces_no_reload)
@@ -284,10 +286,10 @@ TEST_F(TestOverrideWatcher, override_dir_removed_with_known_files_triggers_reloa
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
+    EXPECT_THAT(rec.dropped, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config));
+    EXPECT_THAT(rec.modified, IsEmpty());
+    EXPECT_THAT(rec.fresh, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, override_dir_recreated_with_different_files_drops_old_and_adds_new)
@@ -301,10 +303,10 @@ TEST_F(TestOverrideWatcher, override_dir_recreated_with_different_files_drops_ol
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "20-second.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
+    EXPECT_THAT(rec.dropped, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "20-second.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config));
+    EXPECT_THAT(rec.modified, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, override_dir_recreated_with_same_files_treats_them_as_fresh)
@@ -318,10 +320,10 @@ TEST_F(TestOverrideWatcher, override_dir_recreated_with_same_files_treats_them_a
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(base_config));
+    EXPECT_THAT(rec.dropped, IsEmpty());
+    EXPECT_THAT(rec.modified, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, base_and_override_dir_created_emits_modified_and_fresh)
@@ -333,10 +335,10 @@ TEST_F(TestOverrideWatcher, base_and_override_dir_created_emits_modified_and_fre
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(base_config));
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, base_and_override_dir_removed_emits_modified_and_dropped)
@@ -349,10 +351,10 @@ TEST_F(TestOverrideWatcher, base_and_override_dir_removed_emits_modified_and_dro
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::IsEmpty());
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(base_config));
+    EXPECT_THAT(rec.dropped, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, IsEmpty());
+    EXPECT_THAT(rec.fresh, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, base_and_new_override_file_emits_modified_and_fresh)
@@ -366,10 +368,10 @@ TEST_F(TestOverrideWatcher, base_and_new_override_file_emits_modified_and_fresh)
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(base_config));
+    EXPECT_THAT(rec.fresh, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, base_and_modified_override_emits_both_as_modified)
@@ -383,10 +385,10 @@ TEST_F(TestOverrideWatcher, base_and_modified_override_emits_both_as_modified)
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(base_config, override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::IsEmpty());
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(base_config, override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, IsEmpty());
+    EXPECT_THAT(rec.fresh, IsEmpty());
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, base_and_deleted_override_emits_modified_and_dropped)
@@ -400,10 +402,10 @@ TEST_F(TestOverrideWatcher, base_and_deleted_override_emits_modified_and_dropped
     ASSERT_TRUE(result.has_value());
     auto const rec = record(*result);
 
-    EXPECT_THAT(rec.modified, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(override_dir / "10-first.conf"));
-    EXPECT_THAT(rec.unchanged, testing::IsEmpty());
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
+    EXPECT_THAT(rec.modified, ElementsAre(base_config));
+    EXPECT_THAT(rec.dropped, ElementsAre(override_dir / "10-first.conf"));
+    EXPECT_THAT(rec.unchanged, IsEmpty());
+    EXPECT_THAT(rec.fresh, IsEmpty());
 }
 
 TEST_F(TestOverrideWatcher, base_config_deletion_with_no_fallback_produces_no_reload)
@@ -427,7 +429,7 @@ TEST_F(TestOverrideWatcher, base_config_deletion_with_no_fallback_and_known_over
 
 namespace
 {
-struct TestMultiRootOverrideWatcher : testing::Test
+struct TestMultiRootOverrideWatcher : Test
 {
     fs::path const user_dir = make_tmp("test-multi-root-user");
     fs::path const system_dir = make_tmp("test-multi-root-system");
@@ -479,7 +481,7 @@ TEST_F(TestMultiRootOverrideWatcher, base_change_includes_system_overrides)
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(paths, Contains(system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, base_change_includes_overrides_from_both_roots)
@@ -492,8 +494,8 @@ TEST_F(TestMultiRootOverrideWatcher, base_change_includes_overrides_from_both_ro
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::Contains(system_override_dir / "10-system.conf"));
-    EXPECT_THAT(paths, testing::Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(paths, Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(paths, Contains(user_override_dir / "20-user.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, files_from_different_roots_sorted_by_basename)
@@ -505,7 +507,7 @@ TEST_F(TestMultiRootOverrideWatcher, files_from_different_roots_sorted_by_basena
     auto result = watcher->apply_events(SummaryBuilder{}.base_changed(base_config));
     ASSERT_TRUE(result.has_value());
 
-    EXPECT_THAT(record_paths(*result), testing::ElementsAre(
+    EXPECT_THAT(record_paths(*result), ElementsAre(
         base_config,
         user_override_dir / "10-user.conf",
         system_override_dir / "50-system.conf"));
@@ -520,7 +522,7 @@ TEST_F(TestMultiRootOverrideWatcher, same_basename_user_file_shadows_system_file
     auto result = watcher->apply_events(SummaryBuilder{}.base_changed(base_config));
     ASSERT_TRUE(result.has_value());
 
-    EXPECT_THAT(record_paths(*result), testing::ElementsAre(
+    EXPECT_THAT(record_paths(*result), ElementsAre(
         base_config,
         user_override_dir / "10-shared.conf"));
 }
@@ -534,7 +536,7 @@ TEST_F(TestMultiRootOverrideWatcher, within_same_root_files_are_sorted_lexicogra
     auto result = watcher->apply_events(SummaryBuilder{}.base_changed(base_config));
     ASSERT_TRUE(result.has_value());
 
-    EXPECT_THAT(record_paths(*result), testing::ElementsAre(
+    EXPECT_THAT(record_paths(*result), ElementsAre(
         base_config,
         system_override_dir / "10-alpha.conf",
         system_override_dir / "20-beta.conf"));
@@ -552,8 +554,8 @@ TEST_F(TestMultiRootOverrideWatcher, dropping_user_file_unshadows_system_file)
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(system_override_dir / "10-shared.conf"));
-    EXPECT_THAT(rec.dropped, testing::IsEmpty());
+    EXPECT_THAT(rec.fresh, ElementsAre(system_override_dir / "10-shared.conf"));
+    EXPECT_THAT(rec.dropped, IsEmpty());
 }
 
 TEST_F(TestMultiRootOverrideWatcher, dropping_only_file_for_basename_emits_drop)
@@ -567,8 +569,8 @@ TEST_F(TestMultiRootOverrideWatcher, dropping_only_file_for_basename_emits_drop)
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(user_override_dir / "10-only.conf"));
-    EXPECT_THAT(rec.fresh, testing::IsEmpty());
+    EXPECT_THAT(rec.dropped, ElementsAre(user_override_dir / "10-only.conf"));
+    EXPECT_THAT(rec.fresh, IsEmpty());
 }
 
 TEST_F(TestMultiRootOverrideWatcher, system_override_dir_created_triggers_reload)
@@ -580,7 +582,7 @@ TEST_F(TestMultiRootOverrideWatcher, system_override_dir_created_triggers_reload
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.fresh, testing::Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.fresh, Contains(system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, system_override_file_change_triggers_reload)
@@ -594,7 +596,7 @@ TEST_F(TestMultiRootOverrideWatcher, system_override_file_change_triggers_reload
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.modified, testing::Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.modified, Contains(system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, new_system_override_file_classified_as_fresh)
@@ -608,8 +610,8 @@ TEST_F(TestMultiRootOverrideWatcher, new_system_override_file_classified_as_fres
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.fresh, testing::Contains(system_override_dir / "20-new.conf"));
-    EXPECT_THAT(rec.unchanged, testing::Contains(system_override_dir / "10-existing.conf"));
+    EXPECT_THAT(rec.fresh, Contains(system_override_dir / "20-new.conf"));
+    EXPECT_THAT(rec.unchanged, Contains(system_override_dir / "10-existing.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, deleted_system_override_file_classified_as_dropped)
@@ -624,8 +626,8 @@ TEST_F(TestMultiRootOverrideWatcher, deleted_system_override_file_classified_as_
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.dropped, testing::Contains(system_override_dir / "10-system.conf"));
-    EXPECT_THAT(rec.unchanged, testing::Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(rec.dropped, Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.unchanged, Contains(user_override_dir / "20-user.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, registers_when_home_dir_missing)
@@ -644,7 +646,7 @@ TEST_F(TestMultiRootOverrideWatcher, registers_when_home_dir_missing)
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(paths, Contains(system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, shadowed_base_config_change_does_not_trigger_reload)
@@ -666,7 +668,7 @@ TEST_F(TestMultiRootOverrideWatcher, active_base_config_change_triggers_reload_a
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.modified, testing::Contains(base_config));
+    EXPECT_THAT(rec.modified, Contains(base_config));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, duplicate_xdg_config_home_in_config_dirs_does_not_duplicate_overrides)
@@ -681,7 +683,7 @@ TEST_F(TestMultiRootOverrideWatcher, duplicate_xdg_config_home_in_config_dirs_do
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::ElementsAre(base_config, user_override_dir / "10-user.conf"));
+    EXPECT_THAT(paths, ElementsAre(base_config, user_override_dir / "10-user.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, duplicate_paths_within_xdg_config_dirs_does_not_duplicate_overrides)
@@ -696,7 +698,7 @@ TEST_F(TestMultiRootOverrideWatcher, duplicate_paths_within_xdg_config_dirs_does
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::ElementsAre(base_config, system_override_dir / "10-system.conf"));
+    EXPECT_THAT(paths, ElementsAre(base_config, system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, override_dirs_created_in_both_roots_simultaneously_are_both_processed)
@@ -709,8 +711,8 @@ TEST_F(TestMultiRootOverrideWatcher, override_dirs_created_in_both_roots_simulta
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.fresh, testing::Contains(system_override_dir / "10-system.conf"));
-    EXPECT_THAT(rec.fresh, testing::Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(rec.fresh, Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.fresh, Contains(user_override_dir / "20-user.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, override_dir_created_in_one_root_and_removed_in_another_are_both_processed)
@@ -724,8 +726,8 @@ TEST_F(TestMultiRootOverrideWatcher, override_dir_created_in_one_root_and_remove
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(user_override_dir / "20-user.conf"));
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.fresh, ElementsAre(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(rec.dropped, ElementsAre(system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, deleting_user_base_config_falls_back_to_system_base_config)
@@ -739,10 +741,10 @@ TEST_F(TestMultiRootOverrideWatcher, deleting_user_base_config_falls_back_to_sys
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(system_dir / "test.conf"));
-    EXPECT_THAT(rec.unchanged, testing::ElementsAre(system_override_dir / "10-system.conf"));
-    EXPECT_THAT(rec.modified, testing::IsEmpty());
+    EXPECT_THAT(rec.dropped, ElementsAre(base_config));
+    EXPECT_THAT(rec.fresh, ElementsAre(system_dir / "test.conf"));
+    EXPECT_THAT(rec.unchanged, ElementsAre(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.modified, IsEmpty());
 }
 
 TEST_F(TestMultiRootOverrideWatcher, deleting_user_base_config_keeps_user_overrides_active_with_system_fallback)
@@ -757,10 +759,10 @@ TEST_F(TestMultiRootOverrideWatcher, deleting_user_base_config_keeps_user_overri
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.dropped, testing::ElementsAre(base_config));
-    EXPECT_THAT(rec.fresh, testing::ElementsAre(system_dir / "test.conf"));
-    EXPECT_THAT(rec.unchanged, testing::Contains(system_override_dir / "10-system.conf"));
-    EXPECT_THAT(rec.unchanged, testing::Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(rec.dropped, ElementsAre(base_config));
+    EXPECT_THAT(rec.fresh, ElementsAre(system_dir / "test.conf"));
+    EXPECT_THAT(rec.unchanged, Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.unchanged, Contains(user_override_dir / "20-user.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, dir_event_on_one_root_and_file_change_on_another_are_both_processed)
@@ -777,8 +779,8 @@ TEST_F(TestMultiRootOverrideWatcher, dir_event_on_one_root_and_file_change_on_an
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.fresh, testing::Contains(user_override_dir / "20-user.conf"));
-    EXPECT_THAT(rec.modified, testing::Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.fresh, Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(rec.modified, Contains(system_override_dir / "10-system.conf"));
 }
 
 TEST_F(TestMultiRootOverrideWatcher, file_change_on_one_root_and_dir_removed_on_another_are_both_processed)
@@ -796,13 +798,13 @@ TEST_F(TestMultiRootOverrideWatcher, file_change_on_one_root_and_dir_removed_on_
     ASSERT_TRUE(result.has_value());
 
     auto const rec = record(*result);
-    EXPECT_THAT(rec.dropped, testing::Contains(system_override_dir / "10-system.conf"));
-    EXPECT_THAT(rec.modified, testing::Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(rec.dropped, Contains(system_override_dir / "10-system.conf"));
+    EXPECT_THAT(rec.modified, Contains(user_override_dir / "20-user.conf"));
 }
 
 namespace
 {
-struct TestThreeRootOverrideWatcher : testing::Test
+struct TestThreeRootOverrideWatcher : Test
 {
 
     fs::path const user_dir = make_tmp("test-3root-user");
@@ -857,9 +859,9 @@ TEST_F(TestThreeRootOverrideWatcher, overrides_from_all_three_roots_are_picked_u
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::Contains(system_b_override_dir / "10-lowest.conf"));
-    EXPECT_THAT(paths, testing::Contains(system_a_override_dir / "20-middle.conf"));
-    EXPECT_THAT(paths, testing::Contains(user_override_dir / "30-highest.conf"));
+    EXPECT_THAT(paths, Contains(system_b_override_dir / "10-lowest.conf"));
+    EXPECT_THAT(paths, Contains(system_a_override_dir / "20-middle.conf"));
+    EXPECT_THAT(paths, Contains(user_override_dir / "30-highest.conf"));
 }
 
 TEST_F(TestThreeRootOverrideWatcher, distinct_basenames_sorted_lexicographically_across_all_roots)
@@ -872,7 +874,7 @@ TEST_F(TestThreeRootOverrideWatcher, distinct_basenames_sorted_lexicographically
     auto result = watcher->apply_events(SummaryBuilder{}.base_changed(user_dir / "test.conf"));
     ASSERT_TRUE(result.has_value());
 
-    EXPECT_THAT(record_paths(*result), testing::ElementsAre(
+    EXPECT_THAT(record_paths(*result), ElementsAre(
         user_dir / "test.conf",
         system_a_override_dir / "10-a.conf",
         user_override_dir / "20-user.conf",
@@ -889,7 +891,7 @@ TEST_F(TestThreeRootOverrideWatcher, same_basename_highest_priority_shadows_all_
     auto result = watcher->apply_events(SummaryBuilder{}.base_changed(user_dir / "test.conf"));
     ASSERT_TRUE(result.has_value());
 
-    EXPECT_THAT(record_paths(*result), testing::ElementsAre(
+    EXPECT_THAT(record_paths(*result), ElementsAre(
         user_dir / "test.conf",
         user_override_dir / "10-shared.conf"));
 }
@@ -907,9 +909,9 @@ TEST_F(TestThreeRootOverrideWatcher, change_in_lowest_priority_root_triggers_rel
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::Contains(system_b_override_dir / "10-b.conf"));
-    EXPECT_THAT(paths, testing::Contains(system_a_override_dir / "20-a.conf"));
-    EXPECT_THAT(paths, testing::Contains(user_override_dir / "30-user.conf"));
+    EXPECT_THAT(paths, Contains(system_b_override_dir / "10-b.conf"));
+    EXPECT_THAT(paths, Contains(system_a_override_dir / "20-a.conf"));
+    EXPECT_THAT(paths, Contains(user_override_dir / "30-user.conf"));
 }
 
 TEST_F(TestThreeRootOverrideWatcher, missing_middle_root_override_dir_does_not_break_others)
@@ -922,7 +924,7 @@ TEST_F(TestThreeRootOverrideWatcher, missing_middle_root_override_dir_does_not_b
     ASSERT_TRUE(result.has_value());
 
     auto const paths = record_paths(*result);
-    EXPECT_THAT(paths, testing::Contains(system_b_override_dir / "10-b.conf"));
-    EXPECT_THAT(paths, testing::Contains(user_override_dir / "20-user.conf"));
-    EXPECT_THAT(paths, testing::Not(testing::Contains(testing::HasSubstr("sys-a"))));
+    EXPECT_THAT(paths, Contains(system_b_override_dir / "10-b.conf"));
+    EXPECT_THAT(paths, Contains(user_override_dir / "20-user.conf"));
+    EXPECT_THAT(paths, Not(Contains(HasSubstr("sys-a"))));
 }
