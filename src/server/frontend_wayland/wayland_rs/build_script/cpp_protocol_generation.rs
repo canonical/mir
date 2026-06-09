@@ -576,11 +576,7 @@ fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
         })
         .collect();
 
-    let send_call = format!(
-        "instance_->{}({});",
-        event.name,
-        sanitized_args.join(", ")
-    );
+    let send_call = format!("instance_->{}({});", event.name, sanitized_args.join(", "));
 
     // Generate the `send_x_event` method
     let send_body = if needs_version_guard {
