@@ -100,8 +100,8 @@ public:
         /// Returns true if this root claims the event (populates summary), false otherwise.
         auto classify_event(
             inotify_event const& event,
-            std::string_view base_config_filename,
-            std::string_view override_dir_name,
+            std::filesystem::path const& base_config_filename,
+            std::filesystem::path const& override_dir_name,
             std::string_view extension,
             BatchSummary& summary) const -> bool;
 
@@ -135,8 +135,8 @@ private:
     OverrideLoader override_loader;
 
     std::string const extension;
-    std::string const base_config_filename;
-    std::string const override_directory_name;
+    std::filesystem::path const base_config_filename;
+    std::filesystem::path const override_directory_name;
 
     // Roots ordered by priority: index 0 = lowest priority (last system dir),
     // last index = highest priority (user dir / XDG_CONFIG_HOME)

@@ -122,14 +122,10 @@ auto mlc::OverrideWatcher::WatchedRoot::has_base_watch() const -> bool
     return static_cast<bool>(base_dir_wd);
 }
 
-//  Wrapping the three parameters into separate structs would make the code
-//  more verbose for no benefit since this is called in only one place.
-//  Wrapping them into one struct just moves the problem to where the struct is
-//  constructed. This is fine for the time being.
-auto mlc::OverrideWatcher::WatchedRoot::classify_event(  // NOLINT(bugprone-easily-swappable-parameters)
+auto mlc::OverrideWatcher::WatchedRoot::classify_event(
     inotify_event const& event,
-    std::string_view base_config_filename,
-    std::string_view override_dir_name,
+    path const& base_config_filename,
+    path const& override_dir_name,
     std::string_view extension,
     BatchSummary& summary) const -> bool
 {
@@ -263,8 +259,8 @@ auto mlc::OverrideWatcher::WatchedRoot::collect_all_unchanged() const -> std::ve
 mlc::OverrideWatcher::OverrideWatcher(path base_config, OverrideLoader load_config, std::string_view ext) :
     override_loader{std::move(load_config)},
     extension{std::move(ext)},
-    base_config_filename{base_config.filename().string()},
-    override_directory_name{base_config_filename + ".d"}
+    base_config_filename{base_config.filename()},
+    override_directory_name{base_config_filename.string() + ".d"}
 {
     auto const config_roots = mlc::get_config_roots(base_config);
 
