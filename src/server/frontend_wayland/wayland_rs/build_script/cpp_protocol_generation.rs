@@ -299,6 +299,15 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     post_error_method.set_body("instance_->post_error(code, message);");
     class.add_method(post_error_method);
 
+    // Add a destroy_and_delete method for server-initiated resource destruction.
+    // This is the equivalent of wl_resource_destroy() in the old C API: it destroys the
+    // underlying Wayland resource, which triggers the Dispatch::destroyed() callback,
+    // unregisters the resource, and ultimately drops the C++ object.
+    let mut destroy_and_delete_method =
+        CppMethod::new("destroy_and_delete", None, false, false, false, true);
+    destroy_and_delete_method.set_body("instance_->destroy_and_delete();");
+    class.add_method(destroy_and_delete_method);
+
     // Add a protected constructor and member so that subclasses know which client
     // they are serving and can interact with it as they please.
     class.add_protected_constructor_arg(CppArg::new(

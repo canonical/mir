@@ -142,6 +142,15 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
                 self.wrapped.version()
             }
 
+            pub fn destroy_and_delete(&self) {
+                use wayland_server::Resource;
+                if let Some(handle) = self.wrapped.handle().upgrade() {
+                    let _ = handle.destroy_object::<crate::wayland_server_core::ServerState>(
+                        &self.wrapped.id()
+                    );
+                }
+            }
+
             #(#event_extensions)*
         }
     })
