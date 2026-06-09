@@ -129,7 +129,7 @@ Valid severities are: critical, error, warning, informational, debug (“warn”
 Must be specified in the form “tag=severity”
 
 Tags are hierarchical. Setting a tag&apos;s severity implicitly sets the severity of all its children.
-The root of the tag hierarchy is “core”, so --log-level=core=debug will enable all tags at debug level.
+The root of the tag hierarchy is “base”, so --log-level=base=debug will enable all tags at debug level.
 
 This option can be specified multiple times, and filters are applied in the order they are encountered.
 For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level
