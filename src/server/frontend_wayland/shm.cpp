@@ -308,7 +308,7 @@ void mf::ShmPool::create_buffer(
     auto const format_supported = std::any_of(
         supported_formats->begin(),
         supported_formats->end(),
-        [&](auto supported) { return static_cast<uint32_t>(supported) == static_cast<uint32_t>(drm_format); });
+        [&drm_format](auto supported) { return supported == drm_format; });
     if (!format_supported)
     {
         throw wayland::ProtocolError{
