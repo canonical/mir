@@ -128,7 +128,7 @@ Minimum severity of a log message required for it to be printed.
 Valid severities are: critical, error, warning, informational, debug (“warn” and “info” can be used as short forms of “warning” and “informational”)
 Must be specified in the form “tag=severity”
 
-Tags are heirarchical. Setting a tag&apos;s severity implicitly sets the severity of all its children.
+Tags are hierarchical. Setting a tag&apos;s severity implicitly sets the severity of all its children.
 The root of the tag hierarchy is “core”, so --log-level=core=debug will enable all tags at debug level.
 
 This option can be specified multiple times, and filters are applied in the order they are encountered.
