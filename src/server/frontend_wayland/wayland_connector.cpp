@@ -56,7 +56,7 @@
 
 #include <functional>
 #include <type_traits>
-#include <cstring>
+#include <cstdlib>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -377,7 +377,12 @@ mf::WaylandConnector::WaylandConnector(
         input_trigger_registry,
         keyboard_state_tracker});
 
-    shm_global = std::make_unique<WlShm>(display.get(), executor);
+    std::vector<mg::DRMFormat> shm_formats;
+    for (auto const pixel_format : this->allocator->supported_pixel_formats())
+    {
+        shm_formats.push_back(mg::DRMFormat::from_mir_format(pixel_format));
+    }
+    shm_global = std::make_unique<WlShm>(display.get(), executor, std::move(shm_formats));
 
     viewporter = std::make_unique<WpViewporter>(display.get());
 
@@ -399,7 +404,7 @@ mf::WaylandConnector::WaylandConnector(
 
     char const* wayland_display = nullptr;
 
-    if (auto const display_name = getenv("WAYLAND_DISPLAY"))
+    if (auto const display_name = std::getenv("WAYLAND_DISPLAY"))
     {
         if (wl_display_add_socket(display.get(), display_name) != 0)
         {
@@ -419,7 +424,7 @@ mf::WaylandConnector::WaylandConnector(
     {
         if (arw_socket)
         {
-            chmod((std::string{getenv("XDG_RUNTIME_DIR")} + "/" + wayland_display).c_str(),
+            chmod((std::string{std::getenv("XDG_RUNTIME_DIR")} + "/" + wayland_display).c_str(),
                   S_IRUSR|S_IWUSR| S_IRGRP|S_IWGRP | S_IROTH|S_IWOTH);
         };
 

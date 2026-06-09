@@ -19,10 +19,12 @@
 
 #include "mir/console_services.h"
 #include "mir/log.h"
-#include "mir/fd.h"
 #include "mir/input/input_sink.h"
 #include "mir/geometry/forward.h"
 #include <mir_platforms_evdev_rs/src/lib.rs.h>
+
+#include <sys/types.h>
+#include <sys/sysmacros.h>
 
 namespace mi = mir::input;
 namespace miers = mir::input::evdev_rs;
@@ -33,17 +35,52 @@ miers::PlatformBridge::PlatformBridge(
     std::shared_ptr<mir::ConsoleServices> const& console)
     : platform(platform), console(console) {}
 
-std::unique_ptr<miers::DeviceWrapper> miers::PlatformBridge::acquire_device(int major, int minor) const
+bool miers::PlatformBridge::acquire_device(uint64_t devnum, rust::Str devnode) const
 {
-    mir::log_info("Acquiring device: %d.%d", major, minor);
-    auto observer = platform->create_device_observer();
-    DeviceObserverWithFd* raw_observer = observer.get();
-    auto future = console->acquire_device(major, minor, std::move(observer));
-    future.wait();
-    if (auto const raw_fd = raw_observer->raw_fd(); !raw_fd)
-        throw std::runtime_error("Failed to acquire device");
-    else
-        return std::make_unique<DeviceWrapper>(future.get(), raw_fd.value());
+    auto const dev = static_cast<dev_t>(devnum);
+    if (pending_devices.count(dev) > 0 || device_watchers.count(dev) > 0)
+        return false;
+
+    std::string devnode_str{devnode};
+
+    // The InputDeviceObserver forwards activated/suspended/removed callbacks
+    // to Rust via the Platform's device_queue (ActionQueue).
+    pending_devices.emplace(
+        dev,
+        console->acquire_device(
+            major(dev),
+            minor(dev),
+            platform->create_device_observer(devnode_str, devnum)));
+
+    return true;
+}
+
+void miers::PlatformBridge::activate_pending_device(uint64_t devnum) const
+{
+    auto const dev = static_cast<dev_t>(devnum);
+    auto pending_it = pending_devices.find(dev);
+    if (pending_it != pending_devices.end())
+    {
+        // .get() is non-blocking here because activated() already fired,
+        // meaning the future is resolved.
+        device_watchers.emplace(dev, pending_it->second.get());
+        pending_devices.erase(pending_it);
+    }
+}
+
+void miers::PlatformBridge::release_device(uint64_t devnum) const
+{
+    device_watchers.erase(static_cast<dev_t>(devnum));
+}
+
+void miers::PlatformBridge::release_pending_device(uint64_t devnum) const
+{
+    pending_devices.erase(static_cast<dev_t>(devnum));
+}
+
+bool miers::PlatformBridge::has_device(uint64_t devnum) const
+{
+    return device_watchers.count(static_cast<dev_t>(devnum)) > 0;
 }
 
 std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const
@@ -59,17 +96,6 @@ std::unique_ptr<miers::EventBuilderWrapper> miers::PlatformBridge::create_event_
 std::unique_ptr<miers::RectangleWrapper> miers::PlatformBridge::bounding_rectangle(InputSink const& input_sink) const
 {
     return std::make_unique<RectangleWrapper>(input_sink.bounding_rectangle());
-}
-
-miers::DeviceWrapper::DeviceWrapper(std::unique_ptr<mir::Device> device, int fd)
-    : device(std::move(device)),
-      fd(fd)
-{
-}
-
-int miers::DeviceWrapper::raw_fd() const
-{
-    return fd;
 }
 
 miers::EventBuilderWrapper::EventBuilderWrapper(EventBuilder* event_builder)

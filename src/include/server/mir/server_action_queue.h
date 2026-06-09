@@ -22,7 +22,7 @@
 namespace mir
 {
 
-typedef std::function<void()> ServerAction;
+using ServerAction = std::function<void()>;
 
 class ServerActionQueue
 {

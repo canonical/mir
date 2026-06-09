@@ -25,7 +25,6 @@
 #include <boost/throw_exception.hpp>
 
 #include <atomic>
-#include <cstring>
 #include <deque>
 #include <functional>
 #include <mutex>

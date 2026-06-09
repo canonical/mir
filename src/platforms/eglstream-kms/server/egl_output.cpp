@@ -183,7 +183,7 @@ void mgek::EGLOutput::reset()
     {
         auto prop = drmModeGetProperty(drm_fd, connector->props[i]);
         if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
-            if (!strcmp(prop->name, "DPMS"))
+            if (!std::strcmp(prop->name, "DPMS"))
             {
                 dpms_enum_id = connector->props[i];
                 drmModeFreeProperty(prop);

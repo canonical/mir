@@ -18,11 +18,11 @@
 #define MIR_C_MEMORY_H
 
 #include <memory>
-#include <stdlib.h>
+#include <cstdlib>
 
 namespace mir
 {
-struct DeleteCPtr { template<typename T> void operator()(T* p) { ::free(p); }};
+struct DeleteCPtr { template<typename T> void operator()(T* p) { std::free(p); }};
 
 template<typename T> using UniqueCPtr = std::unique_ptr<T, DeleteCPtr>;
 template<typename T> auto make_unique_cptr(T* p) { return UniqueCPtr<T>{p}; }

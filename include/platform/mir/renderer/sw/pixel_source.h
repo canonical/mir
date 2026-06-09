@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_SW_PIXEL_SOURCE_H_
 #define MIR_RENDERER_SW_PIXEL_SOURCE_H_
 
-#include <stddef.h>
+#include <cstddef>
 #include <functional>
 #include <memory>
 

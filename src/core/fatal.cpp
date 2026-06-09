@@ -32,9 +32,9 @@ void mir::fatal_error_abort(char const* reason, ...)
     // minimizing the potential for heap operations between the error location
     // and the abort().
     va_start(args, reason);
-    fprintf(stderr, "Mir fatal error: ");
-    vfprintf(stderr, reason, args);
-    fprintf(stderr, "\n");
+    std::fprintf(stderr, "Mir fatal error: ");
+    std::vfprintf(stderr, reason, args);
+    std::fprintf(stderr, "\n");
     va_end(args);
 
     std::abort();
@@ -46,7 +46,7 @@ void mir::fatal_error_except(char const* reason, ...)
     va_list args;
 
     va_start(args, reason);
-    vsnprintf(buffer, sizeof buffer, reason, args);
+    std::vsnprintf(buffer, sizeof buffer, reason, args);
     va_end(args);
 
     BOOST_THROW_EXCEPTION(std::runtime_error(buffer));

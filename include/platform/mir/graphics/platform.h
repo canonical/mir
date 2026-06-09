@@ -631,34 +631,34 @@ struct SupportedDevice
     std::any platform_data;
 };
 
-typedef mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*CreateDisplayPlatform)(
+using CreateDisplayPlatform = mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*)(
     mir::graphics::SupportedDevice const& device,
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
-typedef mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*CreateRenderPlatform)(
+using CreateRenderPlatform = mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*)(
     mir::graphics::SupportedDevice const& device,
     std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& platforms,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
-typedef void(*AddPlatformOptions)(
+using AddPlatformOptions = void(*)(
     boost::program_options::options_description& config);
 
-typedef std::vector<mir::graphics::SupportedDevice>(*PlatformProbe)(
+using PlatformProbe = std::vector<mir::graphics::SupportedDevice>(*)(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::Option const& options);
 
-typedef std::vector<mir::graphics::SupportedDevice>(*RenderProbe)(
+using RenderProbe = std::vector<mir::graphics::SupportedDevice>(*)(
     std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::Option const&);
 
-typedef mir::ModuleProperties const*(*DescribeModule)();
+using DescribeModule = mir::ModuleProperties const*(*)();
 }
 }
 

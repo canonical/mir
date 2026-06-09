@@ -30,18 +30,18 @@ auto mg::has_egl_client_extension(char const* extension) -> bool
 auto mg::has_egl_extension(EGLDisplay dpy, char const* extension) -> bool
 {
     auto const extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    auto found_substring = strstr(extensions, extension);
+    auto found_substring = std::strstr(extensions, extension);
     while (found_substring)
     {
         // Check that we haven't found a prefix of our extension name
-        auto end_of_match = found_substring + strlen(extension);
+        auto end_of_match = found_substring + std::strlen(extension);
         // It's a match if it terminates with the end of the extension string, or with a space
         if (*end_of_match == '\0' || *end_of_match == ' ')
         {
             return true;
         }
 
-        found_substring = strstr(end_of_match, extension);
+        found_substring = std::strstr(end_of_match, extension);
     }
     return false;
 }
@@ -83,7 +83,7 @@ mg::EGLExtensions::BaseExtensions::BaseExtensions(EGLDisplay dpy) :
         reinterpret_cast<PFNGLEGLIMAGETARGETTEXTURE2DOESPROC>(eglGetProcAddress("glEGLImageTargetTexture2DOES"))}
 {
     auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (!egl_extensions || !strstr(egl_extensions, "EGL_KHR_image_base") || !eglCreateImageKHR || !eglDestroyImageKHR)
+    if (!egl_extensions || !std::strstr(egl_extensions, "EGL_KHR_image_base") || !eglCreateImageKHR || !eglDestroyImageKHR)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_KHR_image_base"));
     }
@@ -106,7 +106,7 @@ mg::EGLExtensions::WaylandExtensions::WaylandExtensions(EGLDisplay dpy) :
     }
 {
     auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (!egl_extensions || !strstr(egl_extensions, "EGL_WL_bind_wayland_display"))
+    if (!egl_extensions || !std::strstr(egl_extensions, "EGL_WL_bind_wayland_display"))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_WL_bind_wayland_display"));
     }
@@ -127,7 +127,7 @@ mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions(EGLDisplay
     }
 {
     auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (!egl_extensions || !strstr(egl_extensions, "EGL_NV_stream_attrib"))
+    if (!egl_extensions || !std::strstr(egl_extensions, "EGL_NV_stream_attrib"))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_NV_stream_attrib"));
     }
@@ -149,7 +149,7 @@ mg::EGLExtensions::PlatformBaseEXT::PlatformBaseEXT()
 {
     auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     if (!client_extensions ||
-        !strstr(client_extensions, "EGL_EXT_platform_base") ||
+        !std::strstr(client_extensions, "EGL_EXT_platform_base") ||
         !eglGetPlatformDisplay ||
         !eglCreatePlatformWindowSurface)
     {
@@ -170,7 +170,7 @@ mg::EGLExtensions::DebugKHR::DebugKHR()
 {
     auto const* client_extensions = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     if (!client_extensions ||
-        !strstr(client_extensions, "EGL_KHR_debug") ||
+        !std::strstr(client_extensions, "EGL_KHR_debug") ||
         !eglDebugMessageControlKHR ||
         !eglLabelObjectKHR ||
         !eglQueryDebugKHR)
@@ -220,7 +220,7 @@ mg::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers(
 {
     auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
     if (!egl_extensions ||
-        !strstr(egl_extensions, "EGL_EXT_image_dma_buf_import_modifiers"))
+        !std::strstr(egl_extensions, "EGL_EXT_image_dma_buf_import_modifiers"))
     {
         BOOST_THROW_EXCEPTION((
             std::runtime_error{"EGL_EXT_image_dma_buf_import_modifiers not supported"}));
@@ -235,7 +235,7 @@ mg::EGLExtensions::MESADmaBufExport::MESADmaBufExport(EGLDisplay dpy)
           reinterpret_cast<PFNEGLEXPORTDMABUFIMAGEQUERYMESAPROC>(
               eglGetProcAddress("eglExportDMABUFImageQueryMESA"))}
     {
-        if (!strstr(eglQueryString(dpy, EGL_EXTENSIONS), "EGL_MESA_image_dma_buf_export"))
+        if (!std::strstr(eglQueryString(dpy, EGL_EXTENSIONS), "EGL_MESA_image_dma_buf_export"))
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Missing required EGL_MESA_image_dma_buf_export extension"}));
         }
@@ -264,7 +264,7 @@ mg::EGLExtensions::DeviceQuery::DeviceQuery()
           reinterpret_cast<PFNEGLQUERYDISPLAYATTRIBEXTPROC>(
               eglGetProcAddress("eglQueryDisplayAttribEXT"))}
 {
-    if (!strstr(eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS), "EGL_EXT_device_query"))
+    if (!std::strstr(eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS), "EGL_EXT_device_query"))
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Missing required EGL_EXT_device_query extension"}));
     }

@@ -59,9 +59,9 @@ TEST_F(TestLog, log_calls_logger)
     auto const severity = mir::logging::Severity::informational;
     auto const message = "test message";
 
-    EXPECT_CALL(*logger, log(severity, message, "core"));
+    EXPECT_CALL(*logger, log(severity, message, "base"));
 
-    mir::log(severity, {ml::core()}, message);
+    mir::log(severity, {ml::base()}, message);
 }
 
 TEST_F(TestLog, log_calls_logger_with_colon_separated_component_for_multiple_tags)
@@ -82,10 +82,10 @@ TEST_F(TestLog, log_debug_works)
     auto const value = "Twice";
     auto const message = std::format(fmt_string, value);
 
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "core")).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "base")).Times(2);
 
-    mir::log_debug({ml::core()}, message);
-    mir::log_debug({ml::core()}, fmt_string, value);
+    mir::log_debug({ml::base()}, message);
+    mir::log_debug({ml::base()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_info_works)
@@ -94,10 +94,10 @@ TEST_F(TestLog, log_info_works)
     auto const value = 18;
     auto const message = std::format(fmt_string, value);
 
-    EXPECT_CALL(*logger, log(ml::Severity::informational, message, "core")).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message, "base")).Times(2);
 
-    mir::log_info({ml::core()}, message);
-    mir::log_info({ml::core()}, fmt_string, value);
+    mir::log_info({ml::base()}, message);
+    mir::log_info({ml::base()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_warning_works)
@@ -106,10 +106,10 @@ TEST_F(TestLog, log_warning_works)
     auto const value = 23.22222222;
     auto const message = std::format(fmt_string, value);
 
-    EXPECT_CALL(*logger, log(ml::Severity::warning, message, "core")).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message, "base")).Times(2);
 
-    mir::log_warning({ml::core()}, message);
-    mir::log_warning({ml::core()}, fmt_string, value);
+    mir::log_warning({ml::base()}, message);
+    mir::log_warning({ml::base()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_error_works)
@@ -118,10 +118,10 @@ TEST_F(TestLog, log_error_works)
     auto const value = 100;
     auto const message = std::format(fmt_string, value);
 
-    EXPECT_CALL(*logger, log(ml::Severity::error, message, "core")).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::error, message, "base")).Times(2);
 
-    mir::log_error({ml::core()}, message);
-    mir::log_error({ml::core()}, fmt_string, value);
+    mir::log_error({ml::base()}, message);
+    mir::log_error({ml::base()}, fmt_string, value);
 }
 
 TEST_F(TestLog, log_critical_works)
@@ -130,10 +130,10 @@ TEST_F(TestLog, log_critical_works)
     auto const value = "ENOCAKE";
     auto const message = std::format(fmt_string, value);
 
-    EXPECT_CALL(*logger, log(ml::Severity::critical, message, "core")).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::critical, message, "base")).Times(2);
 
-    mir::log_critical({ml::core()}, message);
-    mir::log_critical({ml::core()}, fmt_string, value);
+    mir::log_critical({ml::base()}, message);
+    mir::log_critical({ml::base()}, fmt_string, value);
 }
 
 TEST_F(TestLog, can_use_format_string)
@@ -145,7 +145,7 @@ TEST_F(TestLog, can_use_format_string)
     auto const a_float = 3.1415f;
     auto const a_stringish = "Merrily, merrily, merrily, merrily";
 
-    auto const message = std::format(fmt_string, now, a_float, a_stringish, strlen("Merrily"));
+    auto const message = std::format(fmt_string, now, a_float, a_stringish, std::strlen("Merrily"));
 
     EXPECT_CALL(*logger, log(severity, message, "input"));
 

@@ -23,6 +23,7 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <filesystem>
@@ -184,7 +185,7 @@ std::string mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id(st
         return "";
 
     // Get the contents after snap. and before the security annotation (denoted by a space)
-    auto const contents_start_index = strlen (snap_security_label_prefix);
+    auto const contents_start_index = std::strlen (snap_security_label_prefix);
     auto contents_end_index = contents.find_first_of(' ', contents_start_index);
     if (contents_end_index == std::string::npos)
         contents_end_index = contents.size();
@@ -207,7 +208,7 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid
     {
         mir::log_info("Attempting to resolve desktop file via AppArmor for pid: %d", pid);
         std::string const label{label_cstr};
-        free(label_cstr);
+        std::free(label_cstr);
         // mode_cstr should NOT be freed, as it's from the same buffer as label_cstr
 
         auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(label);
@@ -265,10 +266,10 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(int 
     g_autoptr(GKeyFile) key_file = g_key_file_new();
     g_autofree char * info_filename = g_strdup_printf ("/proc/%d/root/.flatpak-info", pid);
 
-    if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, NULL))
+    if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, nullptr))
         return nullptr;
 
-    char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", NULL);
+    char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", nullptr);
     if (!sandboxed_app_id)
         return nullptr;
 

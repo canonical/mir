@@ -31,44 +31,42 @@
 #include <mir/dispatch/action_queue.h>
 #include <mir/log.h>
 
+#include <unistd.h>
+
 namespace mi = mir::input;
 namespace miers = mi::evdev_rs;
 namespace md = mir::dispatch;
 
-namespace
-{
-template <typename Impl>
-class DeviceObserverWrapper : public miers::DeviceObserverWithFd
+/// Thin observer that forwards device lifecycle events to the Rust platform
+/// via an ActionQueue (ensuring they run on the input dispatch thread).
+class InputDeviceObserver : public mir::Device::Observer
 {
 public:
-    explicit DeviceObserverWrapper(rust::Box<Impl>&& box)
-        : box(std::move(box)) {}
-
-    void activated(mir::Fd&& device_fd) override
+    InputDeviceObserver(
+        std::string devnode,
+        uint64_t devnum,
+        std::shared_ptr<md::ActionQueue> device_queue,
+        std::weak_ptr<miers::Platform::Self> platform_self)
+        : devnode{std::move(devnode)},
+          devnum{devnum},
+          device_queue{std::move(device_queue)},
+          platform_self{std::move(platform_self)}
     {
-        fd = std::move(device_fd);
-        box->activated(fd.value());
     }
 
-    void suspended() override
-    {
-        box->suspended();
-    }
-
-    void removed() override
-    {
-        box->removed();
-    }
-
-    std::optional<mir::Fd> raw_fd() const override
-    {
-        return fd;
-    }
+    void activated(mir::Fd&& device_fd) override;
+    void suspended() override;
+    void removed() override;
 
 private:
-    rust::Box<Impl> box;
-    std::optional<mir::Fd> fd;
+    std::string devnode;
+    uint64_t devnum;
+    std::shared_ptr<md::ActionQueue> device_queue;
+    std::weak_ptr<miers::Platform::Self> platform_self;
 };
+
+namespace
+{
 
 template <typename Impl>
 class InputDevice : public mi::InputDevice
@@ -156,27 +154,132 @@ public:
 private:
     rust::Box<Impl> impl;
 };
-}
+
+} // namespace
 
 class miers::Platform::Self
 {
 public:
-    Self(Platform* platform, std::shared_ptr<ConsoleServices> const& console,
-        std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
-        std::shared_ptr<mi::InputReport> const& report)
-        : platform_impl(evdev_rs_create(
-            std::make_shared<PlatformBridge>(platform, console),
-            input_device_registry,
-            std::make_unique<miers::InputReport>(report))),
-          dispatchable{std::make_shared<md::MultiplexingDispatchable>()} {}
+    Self(Platform* platform,
+         std::shared_ptr<ConsoleServices> const& console,
+         std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
+         std::shared_ptr<mi::InputReport> const& report)
+        : bridge{std::make_shared<PlatformBridge>(platform, console)},
+          platform_impl{evdev_rs_create(
+              bridge,
+              input_device_registry,
+              std::make_unique<miers::InputReport>(report))},
+          dispatchable{std::make_shared<md::MultiplexingDispatchable>()}
+    {
+    }
 
-    rust::Box<PlatformRs> platform_impl;
+    std::shared_ptr<PlatformBridge> bridge;
+    rust::Box<miers::PlatformRs> platform_impl;
     std::shared_ptr<md::ReadableFd> libinput_dispatch;
+    std::shared_ptr<md::ReadableFd> udev_dispatch;
     std::shared_ptr<md::MultiplexingDispatchable> dispatchable;
-    /// One-shot queue used to defer udev_assign_seat() until after
-    /// start_platforms() returns and the GLib main loop is free.
-    std::shared_ptr<md::ActionQueue> assign_seat_queue;
+    std::shared_ptr<md::ActionQueue> device_queue;
 };
+
+void InputDeviceObserver::activated(mir::Fd&& device_fd)
+{
+    mir::log_info("evdev-rs: observer activated() for %s (devnum=%lu, fd=%d)",
+                   devnode.c_str(), static_cast<unsigned long>(devnum), static_cast<int>(device_fd));
+
+    auto const locked = platform_self.lock();
+    if (!locked)
+    {
+        mir::log_error("evdev-rs: activated() ignored — platform is not allocated");
+        return;
+    }
+
+    auto& platform_impl = locked->platform_impl;
+    if (!platform_impl->is_running())
+    {
+        mir::log_info("evdev-rs: activated() ignored — platform not running");
+        return;
+    }
+
+    mir::log_info("evdev-rs: enqueuing on_device_activated for %s", devnode.c_str());
+    device_queue->enqueue(
+        [devnode = devnode, devnum = devnum, device_fd = device_fd, &platform_impl = platform_impl]()
+        {
+            // dup() so that mir::Fd's destructor closes the original without
+            // invalidating the fd we hand to libinput via open_restricted().
+            int const duped = ::dup(static_cast<int>(device_fd));
+            if (duped < 0)
+            {
+                mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
+                return;
+            }
+
+            if (!platform_impl->is_running())
+            {
+                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", duped);
+                ::close(duped);
+                return;
+            }
+            platform_impl->on_device_activated(devnode, devnum, duped);
+        });
+}
+
+void InputDeviceObserver::suspended()
+{
+    mir::log_info("evdev-rs: observer suspended() for %s (devnum=%lu)",
+                   devnode.c_str(), static_cast<unsigned long>(devnum));
+
+    auto const locked = platform_self.lock();
+    if (!locked)
+    {
+        mir::log_error("evdev-rs: suspended() ignored — platform is not allocated");
+        return;
+    }
+
+    auto& platform_impl = locked->platform_impl;
+
+    if (!platform_impl->is_running())
+    {
+        mir::log_info("evdev-rs: suspended() ignored — platform not running");
+        return;
+    }
+
+    device_queue->enqueue(
+        [devnode = devnode, devnum = devnum, &platform_impl = platform_impl]()
+        {
+            if (!platform_impl->is_running())
+                return;
+            platform_impl->on_device_suspended(devnode, devnum);
+        });
+}
+
+void InputDeviceObserver::removed()
+{
+    mir::log_info("evdev-rs: observer removed() for %s (devnum=%lu)",
+                   devnode.c_str(), static_cast<unsigned long>(devnum));
+
+    auto const locked = platform_self.lock();
+    if (!locked)
+    {
+        mir::log_error("evdev-rs: removed() ignored — platform is not allocated");
+        return;
+    }
+
+    auto& platform_impl = locked->platform_impl;
+
+    if (!platform_impl->is_running())
+    {
+        mir::log_info("evdev-rs: removed() ignored — platform not running");
+        return;
+    }
+
+    device_queue->enqueue(
+        [devnode = devnode, devnum = devnum, &platform_impl = platform_impl]()
+        {
+            if (!platform_impl->is_running())
+                return;
+            platform_impl->on_device_removed(devnode, devnum);
+        });
+}
 
 miers::Platform::Platform(
     std::shared_ptr<ConsoleServices> const& console,
@@ -193,25 +296,16 @@ std::shared_ptr<mir::dispatch::Dispatchable> miers::Platform::dispatchable()
 
 void miers::Platform::start()
 {
-    // Phase 1 (non-blocking): create the libinput context without assigning a
-    // seat.  This returns quickly so that start_platforms() can return and the
-    // GLib main loop thread is no longer blocked.
-    // Returns false if already started (e.g. stop() was not called before
-    // this start()); in that case skip the rest of start() to avoid tearing down the
-    // active watches or re-assigning the udev seat on an already-assigned
-    // libinput context.
-    if (!self->platform_impl->start())
-        return;
-
-    // Remove any stale fd watcher or assign_seat queue left over from a
-    // previous start()/stop() cycle where stop() may not have cleaned up
-    // (e.g. due to an earlier deadlock).  We only do this when start() actually
-    // created a fresh context (returned true) — when it returns false the
-    // platform is still running and removing its watchers would break dispatch.
-    if (self->assign_seat_queue)
+    // Clean up any stale watches from a previous start()/stop() cycle.
+    if (self->device_queue)
     {
-        self->dispatchable->remove_watch(self->assign_seat_queue);
-        self->assign_seat_queue.reset();
+        self->dispatchable->remove_watch(self->device_queue);
+        self->device_queue.reset();
+    }
+    if (self->udev_dispatch)
+    {
+        self->dispatchable->remove_watch(self->udev_dispatch);
+        self->udev_dispatch.reset();
     }
     if (self->libinput_dispatch)
     {
@@ -219,32 +313,46 @@ void miers::Platform::start()
         self->libinput_dispatch.reset();
     }
 
+    // Create the device_queue before start() because Rust's start()
+    // enumerates existing udev devices, which triggers acquire_device()
+    // and may fire activated() synchronously — needing the queue.
+    self->device_queue = std::make_shared<md::ActionQueue>();
+
+    if (!self->platform_impl->start())
+    {
+        self->device_queue.reset();
+        return;
+    }
+
     auto const libinput_fd = self->platform_impl->libinput_fd();
     if (libinput_fd < 0)
     {
         mir::log_error("evdev-rs platform: failed to obtain libinput fd after start(); resetting platform state");
         self->platform_impl->stop();
+        self->device_queue.reset();
         return;
     }
 
     self->libinput_dispatch = std::make_shared<md::ReadableFd>(
-        Fd{IntOwnedFd{libinput_fd}},
+        mir::Fd{mir::IntOwnedFd{libinput_fd}},
         [this]() { self->platform_impl->process(); });
-    self->dispatchable->add_watch(self->libinput_dispatch);
 
-    // Phase 2 (deferred): assign the udev seat so that libinput opens input
-    // devices.  Opening each device requires a logind TakeDevice D-Bus call
-    // whose reply is processed by the GLib main loop.  We defer this work via
-    // an ActionQueue so it executes on the input thread *after*
-    // start_platforms() has returned — at which point the GLib main loop is
-    // no longer blocked and can process those replies.
-    self->assign_seat_queue = std::make_shared<md::ActionQueue>();
-    self->assign_seat_queue->enqueue(
-        [this]()
-        {
-            self->platform_impl->assign_seat();
-        });
-    self->dispatchable->add_watch(self->assign_seat_queue);
+    auto const udev_fd = self->platform_impl->udev_monitor_fd();
+    if (udev_fd < 0)
+    {
+        mir::log_error("evdev-rs platform: failed to obtain udev monitor fd; resetting platform state");
+        self->platform_impl->stop();
+        self->device_queue.reset();
+        return;
+    }
+
+    self->udev_dispatch = std::make_shared<md::ReadableFd>(
+        mir::Fd{mir::IntOwnedFd{udev_fd}},
+        [this]() { self->platform_impl->process_udev_events(); });
+
+    self->dispatchable->add_watch(self->libinput_dispatch);
+    self->dispatchable->add_watch(self->device_queue);
+    self->dispatchable->add_watch(self->udev_dispatch);
 }
 
 void miers::Platform::continue_after_config()
@@ -259,21 +367,33 @@ void miers::Platform::pause_for_config()
 
 void miers::Platform::stop()
 {
-    if (self->assign_seat_queue)
+    // Remove watches before stopping Rust, because stop() closes the libinput
+    // and udev fds. Calling remove_watch() after the fds are closed causes
+    // epoll_ctl(EPOLL_CTL_DEL) to return EBADF and throw.
+    if (self->udev_dispatch)
     {
-        self->dispatchable->remove_watch(self->assign_seat_queue);
-        self->assign_seat_queue.reset();
+        self->dispatchable->remove_watch(self->udev_dispatch);
+        self->udev_dispatch.reset();
+    }
+    if (self->device_queue)
+    {
+        self->dispatchable->remove_watch(self->device_queue);
+        self->device_queue.reset();
     }
     if (self->libinput_dispatch)
+    {
         self->dispatchable->remove_watch(self->libinput_dispatch);
-    self->libinput_dispatch.reset();
+        self->libinput_dispatch.reset();
+    }
+
     self->platform_impl->stop();
 }
 
-std::unique_ptr<miers::DeviceObserverWithFd> miers::Platform::create_device_observer()
+std::unique_ptr<mir::Device::Observer> miers::Platform::create_device_observer(
+    std::string const& devnode, uint64_t devnum)
 {
-    return std::make_unique<DeviceObserverWrapper<LibinputDeviceObserver>>(
-        self->platform_impl->create_device_observer());
+    return std::make_unique<InputDeviceObserver>(
+        devnode, devnum, self->device_queue, self);
 }
 
 std::shared_ptr<mi::InputDevice> miers::Platform::create_input_device(int device_id) const

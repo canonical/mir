@@ -119,7 +119,7 @@ inline void sleep_until(PosixTimestamp const& t)
     struct timespec ts;
     ts.tv_sec = ns / 1000000000LL;
     ts.tv_nsec = ns % 1000000000LL;
-    while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, NULL)) {}
+    while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, nullptr)) {}
 }
 
 }} // namespace mir::time

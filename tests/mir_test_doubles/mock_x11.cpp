@@ -17,7 +17,6 @@
 #include <mir/test/doubles/mock_x11.h>
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 

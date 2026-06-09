@@ -25,6 +25,7 @@
 #include "minimal_console_services.h"
 #include "linux_virtual_terminal.h"
 #include "logind_console_services.h"
+#include <cstdlib>
 
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -159,7 +160,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                 }
                 try
                 {
-                    if (getenv("DISPLAY"))
+                    if (std::getenv("DISPLAY"))
                     {
                         mir::log_debug("Not trying logind: \"DISPLAY\" is set and X need not have claimed the VT");
                     }

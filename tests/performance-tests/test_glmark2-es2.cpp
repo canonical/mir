@@ -198,7 +198,7 @@ struct HostedGLMark2Wayland : GLMark2Wayland
 
     void SetUp() override
     {
-        auto const socket = getenv("XDG_RUNTIME_DIR") + std::string("/") + host_socket;
+        auto const socket = std::getenv("XDG_RUNTIME_DIR") + std::string("/") + host_socket;
         auto wait_for_host = [host = socket.c_str()] { return access(host, R_OK | W_OK) == 0; };
         EXPECT_TRUE(spin_wait_for_condition_or_timeout(wait_for_host, 10s));
 

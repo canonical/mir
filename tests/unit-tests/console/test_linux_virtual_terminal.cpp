@@ -32,6 +32,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <cstring>
 #include <stdexcept>
 
 #include <linux/vt.h>
@@ -923,8 +924,8 @@ void set_expectations_for_uevent_probe(
     std::stringstream expected_filename;
     expected_filename << "/sys/dev/char/" << major << ":" << minor << "/uevent";
 
-    auto uevent = std::make_shared<mir::AnonymousShmFile>(strlen(content));
-    ::memcpy(uevent->base_ptr(), content, strlen(content));
+    auto uevent = std::make_shared<mir::AnonymousShmFile>(std::strlen(content));
+    std::memcpy(uevent->base_ptr(), content, std::strlen(content));
 
     EXPECT_CALL(fops, open(StrEq(expected_filename.str()), FlagsSet(O_RDONLY, O_CLOEXEC)))
         .WillRepeatedly(InvokeWithoutArgs(
@@ -937,7 +938,7 @@ std::string uevent_content_for_device(
 {
     std::stringstream content;
 
-    if (strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
+    if (std::strncmp(device_name, "/dev/", mir::strlen_c("/dev/")) != 0)
     {
         throw std::logic_error{"device_name is expected to be the fully-qualified /dev/foo path"};
     }

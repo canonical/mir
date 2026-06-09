@@ -36,7 +36,7 @@
 
 #include <linux/input-event-codes.h>
 #include <boost/throw_exception.hpp>
-#include <string.h> // memcpy
+#include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -77,7 +77,7 @@ private:
           data{std::make_unique<std::byte[]>(mapping->len())},
           hotspot_{hotspot}
     {
-        ::memcpy(data.get(), mapping->data(), mapping->len());
+        std::memcpy(data.get(), mapping->data(), mapping->len());
     }
 
     geom::Size const size_;

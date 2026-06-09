@@ -34,6 +34,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
+#include <cstdlib>
 
 using namespace mir;
 using namespace mir::geometry;
@@ -1164,16 +1165,20 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
         }
     }
 
-    if (modifications.size().is_set() || modifications.top_left().is_set() ||
-        modifications.min_width().is_set() || modifications.min_height().is_set() ||
-        modifications.max_width().is_set() || modifications.max_height().is_set() ||
-        modifications.width_inc().is_set() || modifications.height_inc().is_set())
+    bool const constrain_resize = modifications.size().is_set() ||
+                                  modifications.min_width().is_set() || modifications.min_height().is_set() ||
+                                  modifications.max_width().is_set() || modifications.max_height().is_set() ||
+                                  modifications.width_inc().is_set() || modifications.height_inc().is_set();
+
+    if (modifications.top_left().is_set() || constrain_resize)
     {
         Point new_pos = modifications.top_left().is_set() ? modifications.top_left().value() : window.top_left();
         Size new_size = modifications.size().is_set() ? modifications.size().value() : window.size();
 
         // The new size constraints have already been applied to window_info and constrain_resize() will use them
-        window_info.constrain_resize(new_pos, new_size);
+        if (constrain_resize)
+            window_info.constrain_resize(new_pos, new_size);
+
         place_and_size(window_info, new_pos, new_size);
     }
 
@@ -2145,7 +2150,7 @@ auto constrain_to(mir::geometry::Rectangle const& rect, Point point) -> Point
 {
     // The LXQt panel items sets anchor rects outside their window geometry,
     // conditionally allow this as a workaround
-    if (getenv("MIR_ANCHOR_RECTANGLE_UNCONSTRAINED") != nullptr)
+    if (std::getenv("MIR_ANCHOR_RECTANGLE_UNCONSTRAINED") != nullptr)
     {
         return point;
     }

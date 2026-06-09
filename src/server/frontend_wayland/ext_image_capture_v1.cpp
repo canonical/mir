@@ -939,14 +939,14 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
         auto const cursor_data = static_cast<char const*>(cursor_image->as_argb_8888());
         if (dest_stride == cursor_stride)
         {
-            memcpy(mapping->data(), cursor_data, mapping->len());
+            std::memcpy(mapping->data(), cursor_data, mapping->len());
         }
         else
         {
             // strides don't match: copy data in rows
             for (size_t y = 0u; y < cursor_size.height.as_uint32_t(); ++y)
             {
-                memcpy(mapping->data() + (dest_stride.as_uint32_t() * y),
+                std::memcpy(mapping->data() + (dest_stride.as_uint32_t() * y),
                        cursor_data + (cursor_stride.as_uint32_t() * y),
                        cursor_stride.as_uint32_t());
             }
@@ -955,7 +955,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
     else
     {
         // No cursor set: send a transparent cursor
-        memset(mapping->data(), 0, mapping->len());
+        std::memset(mapping->data(), 0, mapping->len());
     }
 
     // The hotspot event on the cursor_session must be sent before the

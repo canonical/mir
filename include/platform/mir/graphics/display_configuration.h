@@ -44,9 +44,9 @@ struct GraphicsConfOutputIdTag;
 struct GraphicsConfLogicalGroupId;
 }
 
-typedef IntWrapper<detail::GraphicsConfCardIdTag> DisplayConfigurationCardId;
-typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId;
-typedef IntWrapper<detail::GraphicsConfLogicalGroupId> DisplayConfigurationLogicalGroupId;
+using DisplayConfigurationCardId = IntWrapper<detail::GraphicsConfCardIdTag>;
+using DisplayConfigurationOutputId = IntWrapper<detail::GraphicsConfOutputIdTag>;
+using DisplayConfigurationLogicalGroupId = IntWrapper<detail::GraphicsConfLogicalGroupId>;
 
 /**
  * Configuration information for a display card.

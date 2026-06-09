@@ -41,7 +41,7 @@ struct ml::Tag
     Tag const* parent;
 };
 
-mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "core", nullptr}}}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
+mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "base", nullptr}}}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
 
 auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
 {
@@ -50,7 +50,7 @@ auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
     return locked_tags->back();
 }
 
-auto ml::core() -> Tag const&
+auto ml::base() -> Tag const&
 {
     static Tag const& core = known_tags.lock()->front();
     return core;
@@ -58,25 +58,25 @@ auto ml::core() -> Tag const&
 
 auto ml::input() -> Tag const&
 {
-    static Tag const& input = create_tag(core(), "input");
+    static Tag const& input = create_tag(base(), "input");
     return input;
 }
 
 auto ml::wayland() -> Tag const&
 {
-    static Tag const& wayland = create_tag(core(), "wayland");
+    static Tag const& wayland = create_tag(base(), "wayland");
     return wayland;
 }
 
 auto ml::graphics() -> Tag const&
 {
-    static Tag const& graphics = create_tag(core(), "graphics");
+    static Tag const& graphics = create_tag(base(), "graphics");
     return graphics;
 }
 
 auto ml::window_management() -> Tag const&
 {
-    static Tag const& window_management = create_tag(core(), "window-management");
+    static Tag const& window_management = create_tag(base(), "window-management");
     return window_management;
 }
 
@@ -86,7 +86,7 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
     va_list va;
     va_start(va, format);
     char message[bufsize];
-    vsnprintf(message, bufsize, format, va);
+    std::vsnprintf(message, bufsize, format, va);
     va_end(va);
 
     // Inefficient, but maintains API: Constructing a std::string for message/component.

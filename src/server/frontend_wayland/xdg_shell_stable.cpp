@@ -238,7 +238,7 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
     {
         throw mw::ProtocolError{
             resource,
-            mw::generic_error_code,
+            Error::invalid_size,
             "Invalid %s size %dx%d", interface_name, width, height};
     }
     if (window_role_)

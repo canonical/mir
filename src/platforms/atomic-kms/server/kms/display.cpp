@@ -33,6 +33,8 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <gbm.h>
+#include <cstdlib>
+#include <cstring>
 #include <memory>
 #include <system_error>
 #include <xf86drm.h>
@@ -471,7 +473,7 @@ auto mga::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
         {
             if (str)
             {
-                free(str);
+                std::free(str);
             }
         }
     };
@@ -481,14 +483,14 @@ auto mga::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
 
     if (primary_node)
     {
-        if (strcmp(primary_node.get(), render_device.devnode()) == 0)
+        if (std::strcmp(primary_node.get(), render_device.devnode()) == 0)
         {
             return true;
         }
     }
     if (render_node)
     {
-        if (strcmp(render_node.get(), render_device.devnode()) == 0)
+        if (std::strcmp(render_node.get(), render_device.devnode()) == 0)
         {
             return true;
         }

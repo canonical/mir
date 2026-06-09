@@ -29,6 +29,10 @@
 #include <boost/throw_exception.hpp>
 #include <wayland-server-protocol.h>
 
+#include <algorithm>
+#include <expected>
+#include <limits>
+
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
@@ -217,10 +221,12 @@ auto mf::ShmBuffer::from(wl_resource* resource) -> ShmBuffer*
 mf::ShmPool::ShmPool(
     struct wl_resource* resource,
     std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats,
     Fd backing_store,
     int32_t claimed_size) :
     wayland::ShmPool(resource, Version<1>{}),
     wayland_executor{std::move(wayland_executor)},
+    supported_formats{std::move(supported_formats)},
     backing_store{shm::rw_pool_from_fd(std::move(backing_store), claimed_size)}
 {
 }
@@ -242,6 +248,22 @@ auto wl_shm_format_to_drm_format(uint32_t format) -> mg::DRMFormat
         return mg::DRMFormat{format};
     }
 }
+
+auto drm_format_to_wl_shm_format(mg::DRMFormat format) -> uint32_t
+{
+    /* Inverse of wl_shm_format_to_drm_format(): the two default formats use the
+     * special-cased wl_shm codes, everything else matches its DRM fourcc.
+     */
+    switch (static_cast<uint32_t>(format))
+    {
+    case DRM_FORMAT_ARGB8888:
+        return mf::Shm::Format::argb8888;
+    case DRM_FORMAT_XRGB8888:
+        return mf::Shm::Format::xrgb8888;
+    default:
+        return static_cast<uint32_t>(format);
+    }
+}
 }
 
 void mf::ShmPool::create_buffer(
@@ -251,6 +273,73 @@ void mf::ShmPool::create_buffer(
     int32_t stride,
     uint32_t format)
 {
+    if (offset < 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer offset %d", offset};
+    }
+    if (width <= 0 || height <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer size %dx%d", width, height};
+    }
+    if (stride <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid SHM buffer stride %d", stride};
+    }
+
+    auto const drm_format = wl_shm_format_to_drm_format(format);
+    auto const format_supported = std::any_of(
+        supported_formats->begin(),
+        supported_formats->end(),
+        [&drm_format](auto supported) { return supported == drm_format; });
+    if (!format_supported)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_format,
+            "Invalid SHM format %u", format};
+    }
+
+    auto const format_info = drm_format.info();
+    if (!format_info)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_format,
+            "Missing pixel-size information for SHM format requested"};
+    }
+    // Casting to stop the below calculations being unsigned and then comparing against signed width/height.
+    auto const bytes_per_pixel = static_cast<geometry::Size::ValueType>(format_info->bytes_per_pixel());
+
+    auto const max_size = std::numeric_limits<geometry::Size::ValueType>::max();
+    auto const max_width = max_size / bytes_per_pixel;
+    auto const max_height = max_size / stride;
+    if (width > max_width || height > max_height)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Requested SHM buffer size %dx%d (stride %d) is too large", width, height, stride};
+    }
+
+    auto const min_stride = width * bytes_per_pixel;
+    if (stride < min_stride)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
+            stride, width};
+    }
+
     auto const size = stride * height;
     std::unique_ptr<shm::RWMappableRange> backing_range;
     try
@@ -268,59 +357,66 @@ void mf::ShmPool::create_buffer(
             "Attempt to create_buffer outside the range of the backing store"};
     }
 
-    // TODO: Extend DRMFormat to include bytes-per-pixel info and drop this hardcoded "4"
-    if (stride < (width * 4))
-    {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_stride,
-            "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
-            stride, width};
-    }
-
-    // TODO: Pull supported formats out of RenderingPlatform to support more than the required formats
-    if (format != wayland::Shm::Format::argb8888 && format != wayland::Shm::Format::xrgb8888)
-    {
-        throw wayland::ProtocolError{
-            resource,
-            wayland::Shm::Error::invalid_format,
-            "Invalid SHM format requested"};
-    }
-
     new ShmBuffer{
         id,
         wayland_executor,
         std::move(backing_range),
         geometry::Size{width, height},
         geometry::Stride{stride},
-        wl_shm_format_to_drm_format(format)
+        drm_format
     };
 }
 
 void mf::ShmPool::resize(int32_t new_size)
 {
-    backing_store->resize(new_size);
+    if (new_size < 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_stride,
+            "Invalid new size %d", new_size};
+    }
+
+    if (auto result = backing_store->resize(new_size); !result)
+    {
+        switch(result.error())
+        {
+        case shm::ResizeError::invalid_size:
+            throw wayland::ProtocolError{
+                resource,
+                wayland::Shm::Error::invalid_stride,
+                "New size %d is smaller than the current size of the backing store", new_size};
+            break;
+        }
+    }
 }
 
-mf::WlShm::WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor)
+mf::WlShm::WlShm(
+    wl_display* display,
+    std::shared_ptr<Executor> wayland_executor,
+    std::vector<mg::DRMFormat> supported_formats)
     : wayland::Shm::Global(display, Version<1>{}),
-      wayland_executor{std::move(wayland_executor)}
+      wayland_executor{std::move(wayland_executor)},
+      supported_formats{std::make_shared<std::vector<mg::DRMFormat> const>(std::move(supported_formats))}
 {
 }
 
 void mf::WlShm::bind(wl_resource* new_wl_shm)
 {
-    new Shm{new_wl_shm, wayland_executor};
+    new Shm{new_wl_shm, wayland_executor, supported_formats};
 }
 
-mf::Shm::Shm(wl_resource* resource, std::shared_ptr<Executor> wayland_executor)
+mf::Shm::Shm(
+    wl_resource* resource,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats)
     : wayland::Shm(resource, Version<1>{}),
-      wayland_executor{std::move(wayland_executor)}
+      wayland_executor{std::move(wayland_executor)},
+      supported_formats{std::move(supported_formats)}
 {
-    // TODO: send all the formats we support, beyond the mandatory ones.
-    for (auto format : { Format::argb8888, Format::xrgb8888 })
+    for (auto const& format : *this->supported_formats)
     {
-        send_format_event(format);
+        send_format_event(drm_format_to_wl_shm_format(format));
     }
 }
 
@@ -334,5 +430,5 @@ void mf::Shm::create_pool(wl_resource* id, Fd fd, int32_t size)
             "Invalid requested size"};
     }
 
-    new ShmPool{id, wayland_executor, fd, size};
+    new ShmPool{id, wayland_executor, supported_formats, fd, size};
 }

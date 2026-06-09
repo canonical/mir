@@ -17,7 +17,7 @@
 #define MIR_GRAPHICS_GBM_GBM_FORMAT_CONVERSIONS_H_
 
 #include <mir_toolkit/common.h>
-#include <stdint.h>
+#include <cstdint>
 #include <limits>
 
 namespace mir

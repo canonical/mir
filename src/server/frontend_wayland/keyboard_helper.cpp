@@ -22,6 +22,7 @@
 #include <mir/input/seat.h>
 #include <mir/fatal.h>
 
+#include <cstdlib>
 #include <cstring> // memcpy
 #include <unordered_set>
 
@@ -142,12 +143,12 @@ void mf::KeyboardHelper::set_keymap(std::shared_ptr<mi::Keymap> const& new_keyma
     std::unique_ptr<char, void(*)(void*)> buffer{xkb_keymap_get_as_string(
         compiled_keymap.get(),
         XKB_KEYMAP_FORMAT_TEXT_V1),
-        free};
+        std::free};
     // so the null terminator is included
-    auto length = strlen(buffer.get()) + 1;
+    auto length = std::strlen(buffer.get()) + 1;
 
     mir::AnonymousShmFile shm_buffer{length};
-    memcpy(shm_buffer.base_ptr(), buffer.get(), length);
+    std::memcpy(shm_buffer.base_ptr(), buffer.get(), length);
 
     callbacks->send_keymap_xkb_v1(Fd{IntOwnedFd{shm_buffer.fd()}}, length);
 }

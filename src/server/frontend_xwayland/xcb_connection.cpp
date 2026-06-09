@@ -649,5 +649,5 @@ auto mf::XCBConnection::xcb_type_atom(XCBType type) const -> xcb_atom_t
 
     BOOST_THROW_EXCEPTION(std::runtime_error(
         "Invalid XCB type " +
-        std::to_string(static_cast<std::underlying_type<XCBType>::type>(type))));
+        std::to_string(static_cast<std::underlying_type_t<XCBType>>(type))));
 }

@@ -22,7 +22,6 @@
 #include <format>
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <errno.h>
 
 namespace mir {
 
@@ -31,7 +30,7 @@ void logv(logging::Severity sev, char const* component,
 {
     char message[1024];
     int max = sizeof(message) - 1;
-    int len = vsnprintf(message, max, fmt, va);
+    int len = std::vsnprintf(message, max, fmt, va);
     if (len > max)
         len = max;
     message[len] = '\0';

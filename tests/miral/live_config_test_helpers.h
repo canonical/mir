@@ -18,6 +18,7 @@
 #define MIRAL_LIVE_CONFIG_TEST_HELPERS_H
 
 #include <miral/live_config_overrides_list.h>
+#include <mir_test_framework/temporary_environment_value.h>
 
 #include <filesystem>
 #include <vector>
@@ -51,5 +52,16 @@ inline auto record_paths(miral::live_config::OverridesList const& list) -> std::
         [&](std::filesystem::path const& p) { all_paths.push_back(p); });
     return all_paths;
 }
+
+struct XdgEnvGuard
+{
+    XdgEnvGuard(std::filesystem::path const& home, std::filesystem::path const& system) :
+        home{"XDG_CONFIG_HOME", home.string().c_str()},
+        dirs{"XDG_CONFIG_DIRS", system.string().c_str()}
+    {}
+
+    mir_test_framework::TemporaryEnvironmentValue const home;
+    mir_test_framework::TemporaryEnvironmentValue const dirs;
+};
 
 #endif

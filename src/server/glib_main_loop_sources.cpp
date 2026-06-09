@@ -25,7 +25,6 @@
 #include <sstream>
 
 #include <csignal>
-#include <cstring>
 #include <unistd.h>
 #include <fcntl.h>
 
