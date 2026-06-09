@@ -817,4 +817,9 @@ global:
 MIRAL_5.9 {
 global:
   _ZN5miral10ConfigFileC1ERNS_9MirRunnerENSt10filesystem7__cxx114pathENS0_4ModeESt18move_only_functionIJFvRKNS_11live_config13OverridesListEEEESt17basic_string_viewIcSt11char_traitsIcEE;
+
+  extern "C++" {
+    "miral::live_config::OverridesList::OverridesList(miral::live_config::OverridesList&&)";
+    "miral::live_config::OverridesList::operator=(miral::live_config::OverridesList&&)";
+  };
 } MIRAL_5.8;
