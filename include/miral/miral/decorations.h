@@ -58,6 +58,7 @@ private:
 
 struct CustomDecorations
 {
+    CustomDecorations();
     static auto strategy(std::shared_ptr<DecorationStrategy> custom) -> CustomDecorations;
 
     void operator()(mir::Server& server) const;
