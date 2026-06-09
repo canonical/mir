@@ -117,6 +117,16 @@ void mlc::Watcher::register_handler(miral::MirRunner& runner)
 
 void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const&)> const& callback) const
 {
+    // std::array is standard-layout, so its address equals its first data member's
+    // address (no padding at the beginning). data() returns addressof(front()),
+    // which is that same address. Therefore, alignas(inotify_event) guarantees
+    // buffer.data() is aligned to alignof(inotify_event).
+    // References from the C++ standard (https://eel.is/c++draft):
+    // - [array.overview]/2: std::array is an aggregate (and thus standard-layout)
+    // - [class.mem.general]/31: a standard-layout object's address equals its
+    //   first non-static data member's address (note 11: no padding at beginning)
+    // - [array.members]/2: data() == addressof(front()) for non-empty arrays
+    // - [sequence.reqmts]/73: front() returns *begin() (the first element)
     alignas(inotify_event) std::array<std::byte, sizeof(inotify_event) + NAME_MAX + 1> buffer;
 
     auto const readsize = read(inotify_fd, buffer.data(), buffer.size());
