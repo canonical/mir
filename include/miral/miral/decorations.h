@@ -14,12 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_DECORATIONS_H
-#define MIRAL_DECORATIONS_H
+#ifndef MIRAL_DECORATIONS_H_
+#define MIRAL_DECORATIONS_H_
 
+#include <miral/decoration_strategy.h>
 #include <memory>
-
-namespace mir { class Server; }
 
 namespace miral
 {
@@ -56,6 +55,20 @@ private:
 
     std::shared_ptr<Self> self;
 };
+
+struct CustomDecorations
+{
+    static auto strategy(std::shared_ptr<DecorationStrategy> custom) -> CustomDecorations;
+
+    void operator()(mir::Server& server) const;
+
+private:
+    struct Self;
+    std::shared_ptr<Self> self;
+
+    explicit CustomDecorations(std::shared_ptr<Self> self);
+};
+
 }
 
-#endif // MIRAL_DECORATIONS_H
+#endif  // MIRAL_DECORATIONS_H_

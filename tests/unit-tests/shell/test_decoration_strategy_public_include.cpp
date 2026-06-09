@@ -57,7 +57,9 @@ struct MinimalStrategy : miral::DecorationStrategy
 };
 
 // Basic MinimalDecorationStrategy test skeleton (instantiates via CustomDecorations::strategy).
-struct MinimalDecorationStrategy : MinimalStrategy {};
+struct MinimalDecorationStrategy : MinimalStrategy {
+    auto titlebar_height() const -> geom::Height override { return geom::Height{42}; }
+};
 
 // Records set_buffer_allocator and exercises create_software_buffer post-set (no fatal).
 struct RecordingStrategy : miral::DecorationStrategy
@@ -118,6 +120,8 @@ TEST(DecorationStrategyPublic, custom_decorations_construction_succeeds)
 {
     auto const strategy = std::make_shared<MinimalDecorationStrategy>();
     auto const custom = miral::CustomDecorations::strategy(strategy);
+    EXPECT_EQ(geom::Height{42}, strategy->titlebar_height());
+    strategy->render_title_text(nullptr, {}, "", {}, {}, 0); // exercises default render_title_text path + internal Text::instance() w/o crash
     // Construction of MirRunner + passing the custom (as would be in run_with({...})) is fine.
     int argc = 1;
     char const* argv[] = {"test"};
@@ -148,4 +152,14 @@ TEST(DecorationStrategyPublic, render_title_text_is_called_on_custom_strategy)
     (void)custom;
     base->render_title_text(nullptr, {}, "", {}, {}, 0);
     EXPECT_TRUE(rec->render_title_text_called);
+}
+
+// Exercise title text through custom strategy that does not override it (uses default
+// which calls the internal free render_title_text + FT impl or fallback). Checks no crash.
+TEST(DecorationStrategyPublic, render_title_text_default_on_custom_strategy)
+{
+    auto const s = std::make_shared<MinimalDecorationStrategy>();
+    auto const custom = miral::CustomDecorations::strategy(s);
+    (void)custom;
+    s->render_title_text(nullptr, {}, "hi", {}, {}, 0); // no crash
 }
