@@ -314,7 +314,7 @@ void mf::ShmPool::create_buffer(
         throw wayland::ProtocolError{
             resource,
             wayland::Shm::Error::invalid_format,
-            "Invalid SHM format requested"};
+            "Invalid SHM format %u", format};
     }
     auto const pixel_size = 4; // All supported formats are 4 bytes per pixel
 
