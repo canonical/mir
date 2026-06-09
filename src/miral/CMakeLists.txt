@@ -38,6 +38,7 @@ add_library(miral-internal STATIC
                                          window_info_defaults.h
     window_specification_internal.cpp    window_specification_internal.h
     basic_store.cpp                      basic_store.h
+    decoration_strategy_adapter.cpp      decoration_strategy_adapter.h
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
     live_config_watcher.cpp               live_config_watcher.h
     version_compare.cpp                   version_compare.h

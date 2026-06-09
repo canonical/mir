@@ -197,6 +197,8 @@ struct RendererStrategy : public msd::RendererStrategy
     auto render_right_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
     auto render_bottom_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>> override;
 
+    class Impl;  // forward for private impl used by get_text_renderer and member (must be public nested for get_ func in anon ns to name it)
+
 private:
     using Pixel = msd::Pixel;
 
@@ -213,29 +215,7 @@ private:
     Theme const unfocused_theme;
     Theme const* current_theme;
 
-    class Text
-    {
-    public:
-        static auto instance() -> std::shared_ptr<Text>;
-
-        virtual ~Text() = default;
-
-        virtual void render(
-            Pixel* buf,
-            geom::Size buf_size,
-            std::string const& text,
-            geom::Point top_left,
-            geom::Height height_pixels,
-            Pixel color) = 0;
-
-    private:
-        class Impl;
-        class Null;
-
-        static std::mutex static_mutex;
-        static std::weak_ptr<Text> singleton;
-    };
-    std::shared_ptr<Text> const text;
+    std::shared_ptr<Impl> const text_renderer;
 
     // Info needed to render a button icon
     struct Icon
@@ -407,7 +387,8 @@ auto msd::DecorationStrategy::default_decoration_strategy(
     return std::make_shared<::DecorationStrategy>(allocator);
 }
 
-class RendererStrategy::Text::Impl : public Text
+// Private Impl for title text (FT). Not exposed via any Text interface anymore.
+class RendererStrategy::Impl
 {
 public:
     Impl();
@@ -419,7 +400,7 @@ public:
         std::string const& text,
         geom::Point top_left,
         geom::Height height_pixels,
-        Pixel color) override;
+        Pixel color);
 
 private:
     std::mutex mutex;
@@ -434,38 +415,21 @@ private:
     static auto utf8_to_utf32(std::string const& text) -> std::u32string;
 };
 
-class RendererStrategy::Text::Null : public Text
+// Local singleton for the renderer (with fallback to no-op on FT failure)
+std::shared_ptr<RendererStrategy::Impl> get_text_renderer()
 {
-public:
-    void render(Pixel*, geom::Size, std::string const&, geom::Point, geom::Height, Pixel) override {}
-
-private:
-};
-
-std::mutex RendererStrategy::Text::static_mutex;
-std::weak_ptr<RendererStrategy::Text> RendererStrategy::Text::singleton;
-
-auto RendererStrategy::Text::instance() -> std::shared_ptr<Text>
-{
-    std::lock_guard lock{static_mutex};
-    auto shared = singleton.lock();
-    if (!shared)
-    {
-        try
-        {
-            shared = std::make_shared<Impl>();
-        }
-        catch (std::runtime_error const& error)
-        {
+    static std::shared_ptr<RendererStrategy::Impl> r = []() -> std::shared_ptr<RendererStrategy::Impl> {
+        try {
+            return std::make_shared<RendererStrategy::Impl>();
+        } catch (std::runtime_error const& error) {
             mir::log_warning("%s", error.what());
-            shared = std::make_shared<Null>();
+            return nullptr;
         }
-        singleton = shared;
-    }
-    return shared;
+    }();
+    return r;
 }
 
-RendererStrategy::Text::Impl::Impl()
+RendererStrategy::Impl::Impl()
 {
     if (auto const error = FT_Init_FreeType(&library))
         BOOST_THROW_EXCEPTION(
@@ -482,7 +446,7 @@ RendererStrategy::Text::Impl::Impl()
     }
 }
 
-RendererStrategy::Text::Impl::~Impl()
+RendererStrategy::Impl::~Impl()
 {
     if (auto const error = FT_Done_Face(face))
         mir::log_warning("Failed to uninitialize font face with error %d", error);
@@ -493,7 +457,7 @@ RendererStrategy::Text::Impl::~Impl()
     library = nullptr;
 }
 
-void RendererStrategy::Text::Impl::render(
+void RendererStrategy::Impl::render(
     Pixel* buf,
     geom::Size buf_size,
     std::string const& text,
@@ -544,7 +508,7 @@ void RendererStrategy::Text::Impl::render(
     }
 }
 
-void RendererStrategy::Text::Impl::set_char_size(geom::Height height)
+void RendererStrategy::Impl::set_char_size(geom::Height height)
 {
     if (auto const error = FT_Set_Pixel_Sizes(face, 0, height.as_int()))
         BOOST_THROW_EXCEPTION(std::runtime_error("Setting char size failed with error " + std::to_string(error)));
@@ -564,7 +528,7 @@ auto freetype_error_to_string(FT_Error error) -> char const*
 }
 }
 
-void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
+void RendererStrategy::Impl::rasterize_glyph(char32_t glyph)
 {
     auto const glyph_index = FT_Get_Char_Index(face, glyph);
 
@@ -584,7 +548,7 @@ void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
     }
 }
 
-void RendererStrategy::Text::Impl::render_glyph(
+void RendererStrategy::Impl::render_glyph(
     Pixel* buf,
     geom::Size buf_size,
     FT_Bitmap const* glyph,
@@ -618,7 +582,7 @@ void RendererStrategy::Text::Impl::render_glyph(
     }
 }
 
-auto RendererStrategy::Text::Impl::font_path() -> std::string
+auto RendererStrategy::Impl::font_path() -> std::string
 {
     auto const path = mir::default_font();
     if (path.empty())
@@ -628,31 +592,51 @@ auto RendererStrategy::Text::Impl::font_path() -> std::string
     return path;
 }
 
-auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
+auto RendererStrategy::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
 {
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-#pragma GCC diagnostic pop
+    std::u32string result;
+    result.reserve(text.size());
 
-    std::u32string utf32_text;
-    try
+    for (size_t i = 0; i < text.size(); )
     {
-        utf32_text = converter.from_bytes(text);
-    }
-    catch (std::range_error const& e)
-    {
-        mir::log_warning("Window title %s is not valid UTF-8", text.c_str());
-        // fall back to ASCII
-        for (char const c : text)
+        unsigned char c = static_cast<unsigned char>(text[i]);
+
+        if (c < 0x80)
         {
-            if (isprint(c))
-                utf32_text += c;
-            else
-                utf32_text += 0xFFFD; // REPLACEMENT CHARACTER (�)
+            result.push_back(static_cast<char32_t>(c));
+            ++i;
+        }
+        else if ((c & 0xE0) == 0xC0 && i + 1 < text.size())
+        {
+            char32_t cp = ((c & 0x1F) << 6) | (static_cast<unsigned char>(text[i + 1]) & 0x3F);
+            result.push_back(cp);
+            i += 2;
+        }
+        else if ((c & 0xF0) == 0xE0 && i + 2 < text.size())
+        {
+            char32_t cp = ((c & 0x0F) << 12)
+                        | ((static_cast<unsigned char>(text[i + 1]) & 0x3F) << 6)
+                        | (static_cast<unsigned char>(text[i + 2]) & 0x3F);
+            result.push_back(cp);
+            i += 3;
+        }
+        else if ((c & 0xF8) == 0xF0 && i + 3 < text.size())
+        {
+            char32_t cp = ((c & 0x07) << 18)
+                        | ((static_cast<unsigned char>(text[i + 1]) & 0x3F) << 12)
+                        | ((static_cast<unsigned char>(text[i + 2]) & 0x3F) << 6)
+                        | (static_cast<unsigned char>(text[i + 3]) & 0x3F);
+            result.push_back(cp);
+            i += 4;
+        }
+        else
+        {
+            // Invalid UTF-8 sequence, skip byte
+            ++i;
         }
     }
-    return utf32_text;
+
+    return result;
 }
 
 RendererStrategy::RendererStrategy(
@@ -662,7 +646,7 @@ RendererStrategy::RendererStrategy(
     focused_theme{default_focused_background, default_focused_text},
     unfocused_theme{default_unfocused_background, default_unfocused_text},
     current_theme{nullptr},
-    text{Text::instance()},
+    text_renderer{get_text_renderer()},
     button_icons{
         {msd::Button::close,
          {default_close_normal_button, default_close_active_button, default_button_icon, render_close_icon}},
@@ -836,15 +820,16 @@ void RendererStrategy::redraw_titlebar_background(geom::Size const scaled_titleb
 
 void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_size)
 {
-    text->render(
-        titlebar_pixels.get(),
-        scaled_titlebar_size,
-        name,
-        geom::Point{
-            static_geometry->title_font_top_left.x.as_value() * scale,
-            static_geometry->title_font_top_left.y.as_value() * scale},
-        static_geometry->title_font_height * scale,
-        current_theme->text_color);
+    if (text_renderer)
+        text_renderer->render(
+            titlebar_pixels.get(),
+            scaled_titlebar_size,
+            name,
+            geom::Point{
+                static_geometry->title_font_top_left.x.as_value() * scale,
+                static_geometry->title_font_top_left.y.as_value() * scale},
+            static_geometry->title_font_height * scale,
+            current_theme->text_color);
 }
 
 void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_size)
@@ -970,3 +955,18 @@ auto DecorationStrategy::button_placement(unsigned n, WindowState const& ws) con
                 as_delta(geometry->button_width);
     return geom::Rectangle{{x, titlebar.top()}, {geometry->button_width, titlebar.size.height}};
 }
+
+void msd::render_title_text(
+    msd::Pixel* buf,
+    geom::Size buf_size,
+    std::string const& text,
+    geom::Point top_left,
+    geom::Height height_pixels,
+    msd::Pixel color)
+{
+    if (auto r = get_text_renderer())
+        r->render(buf, buf_size, text, top_left, height_pixels, color);
+}
+
+// The old Text::instance and msd forwarding removed; free func above is the entry point.
+

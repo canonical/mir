@@ -56,11 +56,7 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_decoration_renderer_strategy*;
     vtable?for?mir::shell::decoration::DecorationStrategy;
     vtable?for?mir::shell::decoration::RendererStrategy;
-    mir::shell::decoration::RendererStrategy::Text::?Text*;
-    mir::shell::decoration::RendererStrategy::Text::Text*;
-    mir::shell::decoration::RendererStrategy::Text::instance*;
-    typeinfo?for?mir::shell::decoration::RendererStrategy::Text;
-    vtable?for?mir::shell::decoration::RendererStrategy::Text;
+    mir::shell::decoration::render_title_text*;
     mir::DefaultServerConfiguration::the_default_cursor_image*;
     mir::DefaultServerConfiguration::the_default_input_device_hub*;
     mir::DefaultServerConfiguration::the_display*;

@@ -26,6 +26,7 @@
 #include <memory>
 #include <optional>
 #include <vector>
+#include <filesystem>
 
 namespace mir::scene { class Surface; }
 namespace mir::graphics
@@ -135,6 +136,18 @@ public:
     virtual auto render_right_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
     virtual auto render_bottom_border() -> std::optional<std::shared_ptr<graphics::Buffer>> = 0;
 };
+
+/// Internal free function used to render title text using Mir's FreeType-backed renderer.
+/// This is the bridging mechanism for `miral::DecorationStrategy::render_title_text` default impl
+/// and internal decoration title rendering. It is **not** a general public extension point
+/// and is subject to change.
+void render_title_text(
+    Pixel* buf,
+    geometry::Size buf_size,
+    std::string const& text,
+    geometry::Point top_left,
+    geometry::Height height_pixels,
+    Pixel color);
 
 /// Customization point for decorations
 class DecorationStrategy
