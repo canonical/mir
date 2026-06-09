@@ -16,6 +16,8 @@
 
 #include "override_watcher.h"
 
+#include <mir_test_framework/temporary_environment_value.h>
+
 #include "live_config_test_helpers.h"
 
 #include <gmock/gmock.h>
@@ -28,6 +30,7 @@
 
 namespace fs = std::filesystem;
 namespace mlc = miral::live_config;
+namespace mtf = mir_test_framework;
 using FileChange = mlc::OverrideWatcher::FileChange;
 using OverrideDirEvent = mlc::OverrideWatcher::OverrideDirEvent;
 using BatchSummary = mlc::OverrideWatcher::BatchSummary;
@@ -52,23 +55,17 @@ auto make_watcher_common(fs::path config) -> std::shared_ptr<mlc::OverrideWatche
 
 struct TestOverrideWatcher : testing::Test
 {
-    XdgEnvGuard xdg_guard;
-    fs::path tmp_dir;
-    fs::path dummy_system_dir;
-    fs::path base_config;
-    fs::path override_dir;
+    fs::path const tmp_dir = make_tmp("test-override-watcher-home");
+    fs::path const dummy_system_dir = make_tmp("test-override-watcher-sys");
+    fs::path const base_config = tmp_dir / "test.conf";
+    fs::path const override_dir = tmp_dir / "test.conf.d";
+
+    mtf::TemporaryEnvironmentValue const xdg_config_home{"XDG_CONFIG_HOME", tmp_dir.string().c_str()};
+    mtf::TemporaryEnvironmentValue const xdg_config_dirs{"XDG_CONFIG_DIRS", dummy_system_dir.string().c_str()};
 
     void SetUp() override
     {
-        tmp_dir = make_tmp("test-override-watcher-home");
-        dummy_system_dir = make_tmp("test-override-watcher-sys");
-
-        base_config = tmp_dir / "test.conf";
-        override_dir = tmp_dir / "test.conf.d";
         std::ofstream{base_config} << "base";
-
-        setenv("XDG_CONFIG_HOME", tmp_dir.c_str(), 1);
-        setenv("XDG_CONFIG_DIRS", dummy_system_dir.c_str(), 1);
     }
 
     void TearDown() override
@@ -412,26 +409,18 @@ namespace
 {
 struct TestMultiRootOverrideWatcher : testing::Test
 {
-    XdgEnvGuard xdg_guard;
-    fs::path user_dir;
-    fs::path system_dir;
-    fs::path base_config;
-    fs::path user_override_dir;
-    fs::path system_override_dir;
+    fs::path const user_dir = make_tmp("test-multi-root-user");
+    fs::path const system_dir = make_tmp("test-multi-root-system");
+    fs::path const base_config = user_dir / "test.conf";
+    fs::path const user_override_dir = user_dir / "test.conf.d";
+    fs::path const system_override_dir = system_dir / "test.conf.d";
+
+    mtf::TemporaryEnvironmentValue const xdg_config_home{"XDG_CONFIG_HOME", user_dir.string().c_str()};
+    mtf::TemporaryEnvironmentValue const xdg_config_dirs{"XDG_CONFIG_DIRS", system_dir.string().c_str()};
 
     void SetUp() override
     {
-        user_dir = make_tmp("test-multi-root-user");
-        system_dir = make_tmp("test-multi-root-system");
-
-        base_config = user_dir / "test.conf";
-        user_override_dir = user_dir / "test.conf.d";
-        system_override_dir = system_dir / "test.conf.d";
-
         std::ofstream{base_config} << "base";
-
-        setenv("XDG_CONFIG_HOME", user_dir.c_str(), 1);
-        setenv("XDG_CONFIG_DIRS", system_dir.c_str(), 1);
     }
 
     void TearDown() override
@@ -795,31 +784,25 @@ namespace
 {
 struct TestThreeRootOverrideWatcher : testing::Test
 {
-    XdgEnvGuard xdg_guard;
-    fs::path user_dir;
-    fs::path system_dir_a;  // higher priority system dir (listed first in XDG_CONFIG_DIRS)
-    fs::path system_dir_b;  // lower priority system dir (listed second)
-    fs::path user_override_dir;
-    fs::path system_a_override_dir;
-    fs::path system_b_override_dir;
+
+    fs::path const user_dir = make_tmp("test-3root-user");
+    // higher priority system dir (listed first in XDG_CONFIG_DIRS)
+    fs::path const system_dir_a = make_tmp("test-3root-sys-a");
+    // lower priority system dir (listed second)
+    fs::path const system_dir_b = make_tmp("test-3root-sys-b");
+    fs::path const user_override_dir = user_dir / "test.conf.d";
+    fs::path const system_a_override_dir = system_dir_a / "test.conf.d";
+    fs::path const system_b_override_dir = system_dir_b / "test.conf.d";
+
+    mtf::TemporaryEnvironmentValue const xdg_config_home{"XDG_CONFIG_HOME", user_dir.string().c_str()};
+    mtf::TemporaryEnvironmentValue const xdg_config_dirs{
+        "XDG_CONFIG_DIRS",
+        (system_dir_a.string() + ":" + system_dir_b.string()).c_str(),
+    };
 
     void SetUp() override
     {
-        user_dir = make_tmp("test-3root-user");
-        system_dir_a = make_tmp("test-3root-sys-a");
-        system_dir_b = make_tmp("test-3root-sys-b");
-
-        user_override_dir = user_dir / "test.conf.d";
-        system_a_override_dir = system_dir_a / "test.conf.d";
-        system_b_override_dir = system_dir_b / "test.conf.d";
-
-        // Base config lives in user dir
         std::ofstream{user_dir / "test.conf"} << "base";
-
-        setenv("XDG_CONFIG_HOME", user_dir.c_str(), 1);
-        // Colon-separated: system_dir_a has higher priority than system_dir_b
-        auto dirs = system_dir_a.string() + ":" + system_dir_b.string();
-        setenv("XDG_CONFIG_DIRS", dirs.c_str(), 1);
     }
 
     void TearDown() override
