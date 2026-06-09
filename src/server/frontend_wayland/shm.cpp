@@ -441,7 +441,7 @@ void mf::Shm::create_pool(wl_resource* id, Fd fd, int32_t size)
         throw wayland::ProtocolError{
             resource,
             wayland::Shm::Error::invalid_fd,
-            "Failed to map client-provided SHM pool file descriptor: %s",
+            "%s",
             err.what()};
     }
 }
