@@ -53,4 +53,4 @@ repos:
   rev: dd18dad857d6133e90bbe478f4f2f22ec0030269  # frozen: v22.1.5
   hooks:
   - id: clang-format
-    files: ^include/miral/.*\.h$
+    files: ^include/(?!platform/mir/graphics/egl_extensions\.h).*\.h$
