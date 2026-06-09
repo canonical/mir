@@ -16,7 +16,7 @@
 
 #include "basic_manager.h"
 #include "decoration.h"
-#include "decoration_strategy.h"
+#include <mir/shell/decoration/decoration_strategy.h>
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>

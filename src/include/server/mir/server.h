@@ -88,6 +88,8 @@ class MainLoop;
 class ServerStatusListener;
 class DecorationStrategy;
 
+namespace shell { namespace decoration { class DecorationStrategy; } }
+
 enum class OptionType
 {
     null,
@@ -511,8 +513,23 @@ public:
         std::function<bool(std::shared_ptr<scene::Session> const&, char const*)> const& policy);
 /** @} */
 
+    /// The policy/negotiation strategy that decides whether a given client
+    /// should use server-side or client-side decorations.
+    ///
+    /// This is used by the xdg-decoration-unstable-v1 protocol handler and
+    /// by miral::Decorations to honour client preferences and shell policy.
     auto the_decoration_strategy() const -> std::shared_ptr<DecorationStrategy>;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy);
+
+    /// The rendering strategy that supplies actual decoration geometry and
+    /// pixel buffers when server-side decorations are active.
+    ///
+    /// This is the primary extension point for custom SSD themes,
+    /// KDecoration3-style plugins, toolkit-driven out-of-process decorators,
+    /// or any other code that wants to control titlebar/button layout,
+    /// shadows, or rendering.
+    auto the_decoration_renderer_strategy() const -> std::shared_ptr<shell::decoration::DecorationStrategy>;
+    void set_the_decoration_renderer_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy);
 
     auto the_buffer_allocator() const -> std::shared_ptr<graphics::GraphicBufferAllocator>;
 

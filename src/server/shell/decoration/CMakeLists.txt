@@ -9,7 +9,7 @@ set(
   basic_decoration.h    basic_decoration.cpp
   window.h              window.cpp
   input.h               input.cpp
-  decoration_strategy.h decoration_strategy.cpp
+  decoration_strategy.cpp
 )
 
 add_library(

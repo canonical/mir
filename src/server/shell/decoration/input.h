@@ -17,7 +17,7 @@
 #ifndef MIR_SHELL_DECORATION_INPUT_H_
 #define MIR_SHELL_DECORATION_INPUT_H_
 
-#include "decoration_strategy.h"
+#include <mir/shell/decoration/decoration_strategy.h>
 #include <mir/geometry/rectangle.h>
 #include <mir_toolkit/common.h>
 
@@ -32,14 +32,8 @@ struct MirEvent;
 
 namespace mir
 {
-namespace scene
-{
-class Surface;
-}
-namespace input
-{
-class CursorImages;
-}
+namespace scene { class Surface; }
+namespace input { class CursorImages; }
 namespace shell
 {
 class Shell;
@@ -47,7 +41,8 @@ namespace decoration
 {
 class WindowState;
 class BasicDecoration;
-template<typename T> class ThreadsafeAccess;
+template<typename T>
+class ThreadsafeAccess;
 
 /// Manages the observer that listens to user input
 class InputManager
@@ -94,18 +89,12 @@ private:
 
     struct Widget
     {
-        Widget(Button::Function button)
-            : button{button}
-        {
-        }
+        Widget(Button::Function button) : button{button} {}
 
-        Widget(MirResizeEdge resize_edge)
-            : resize_edge{resize_edge}
-        {
-        }
+        Widget(MirResizeEdge resize_edge) : resize_edge{resize_edge} {}
 
         geometry::Rectangle rect;
-        Button::State state{Button::Up};
+        Button::State state{Button::up};
         std::optional<Button::Function> const button;
         // mir_resize_edge_none is used to mean the widget moves the window
         std::optional<MirResizeEdge> const resize_edge;
@@ -114,12 +103,7 @@ private:
     /// Pointer or touchpoint
     struct Device
     {
-        Device(geometry::Point location, bool pressed)
-            : location{location},
-              pressed{pressed}
-
-        {
-        }
+        Device(geometry::Point location, bool pressed) : location{location}, pressed{pressed} {}
 
         geometry::Point location;
         bool pressed;
