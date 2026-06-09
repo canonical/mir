@@ -70,11 +70,11 @@
 
     - Implement org_kde_kwin_server_decoration [#4956](https://github.com/canonical/mir/pull/4956) (thanks @tsimonq2!)
     - Accept EGL_TEXTURE_EXTERNAL_WL [#4888](https://github.com/canonical/mir/pull/4888) (thanks @Azkali!)
-    - use std::format\* instead of snprintf in xwayland_spawner.cpp [#4793](https://github.com/canonical/mir/pull/4793) (thanks @yotam-medini!)
+    - use std::format\* instead of C string formatting in xwayland_spawner.cpp [#4793](https://github.com/canonical/mir/pull/4793) (thanks @yotam-medini!)
     - Fixes TICS violations in wayland_connector.cpp [#4804](https://github.com/canonical/mir/pull/4804) (thanks @DigraJatin!)
-    - Eliminate tmpnam [#4813](https://github.com/canonical/mir/pull/4813) (thanks @yotam-medini!)
+    - Eliminate use of insecure temporary filename APIs [#4813](https://github.com/canonical/mir/pull/4813) (thanks @yotam-medini!)
     - Fix TICS violation of pointer arithmetic on polymorphic object, Use void\* as map key [#4827](https://github.com/canonical/mir/pull/4827) (thanks @DigraJatin!)
-    - correct include paths pkgconfig [#4907](https://github.com/canonical/mir/pull/4907) (thanks @sfalken!)
+    - correct include paths for pkg-config [#4907](https://github.com/canonical/mir/pull/4907) (thanks @sfalken!)
     - improve Ctrl+Shift+Numlock toggle shortcut [#4812](https://github.com/canonical/mir/pull/4812) (thanks @deepakshirkem!)
     - [wayland-rs] Generating implementations for Wayland events so that they can be sent from C++ to Rust to Wayland clients [#4785](https://github.com/canonical/mir/pull/4785)
     - [wayland-rs] Generating global registration methods for wayland-rs [#4825](https://github.com/canonical/mir/pull/4825)
@@ -86,26 +86,26 @@
     - [graphics] Add `MIR_PIN_COMPOSITING_TO` to allow pinning a certain provider for display [#4958](https://github.com/canonical/mir/pull/4958)
     - Initial implementation of the new logging API [#4895](https://github.com/canonical/mir/pull/4895)
     - Add support for WLCS keyboard [#4716](https://github.com/canonical/mir/pull/4716)
-    - workshop: initial definiton [#4965](https://github.com/canonical/mir/pull/4965)
+    - workshop: initial definition [#4965](https://github.com/canonical/mir/pull/4965)
 
   - Bugs fixed:
 
-    - [evdev] Fix FDs being removed by libinput [#4853](https://github.com/canonical/mir/pull/4853) (thanks @muhammad23012009!)
-    - fix(console): restore previously active VT on LinuxVirtualTerminal teardown [#4842](https://github.com/canonical/mir/pull/4842) (thanks @AristoChen!)
-    - Fix - #4552, gmtime is not thread safe [#4972](https://github.com/canonical/mir/pull/4972) (thanks @DigraJatin!)
+    - [evdev] Fix file descriptors being removed by libinput [#4853](https://github.com/canonical/mir/pull/4853) (thanks @muhammad23012009!)
+    - fix(console): restore previously active VT on LinuxVirtualTerminal cleanup [#4842](https://github.com/canonical/mir/pull/4842) (thanks @AristoChen!)
+    - Fix - #4552, UTC time conversion was not thread safe [#4972](https://github.com/canonical/mir/pull/4972) (thanks @DigraJatin!)
     - [evdev-input-rs] Fix input lockup after VT switch [#4791](https://github.com/canonical/mir/pull/4791)
-    - Fix copy-paste error with setting positioner constraint adjusment [#4869](https://github.com/canonical/mir/pull/4869)
+    - Fix copy-paste error with setting positioner constraint adjustment [#4869](https://github.com/canonical/mir/pull/4869)
     - graphics: fix leak in `DisplayInfo` [#4877](https://github.com/canonical/mir/pull/4877)
     - Fix boolean logic checking for DnD actions [#4892](https://github.com/canonical/mir/pull/4892)
     - fix-wrong-foreign-toplevel-logic [#4957](https://github.com/canonical/mir/pull/4957)
-    - Apply live touchpad config at startup and correct disable-with-external-mouse mapping [#4943](https://github.com/canonical/mir/pull/4943)
+    - Apply live touch pad config at startup and correct disable-with-external-mouse mapping [#4943](https://github.com/canonical/mir/pull/4943)
     - Fix environment variables being overwritten when they match on prefix [#4966](https://github.com/canonical/mir/pull/4966)
     - Upstream fixes to application switcher [#4945](https://github.com/canonical/mir/pull/4945)
 
   - Documentation:
 
-    - server: fix 'occured' -> 'occurred' in shm_backing.h doc comments [#4854](https://github.com/canonical/mir/pull/4854) (thanks @SAY-5!)
-    - Fix 'occured' -> 'occurred' typos in toolkit event headers and hover click [#4861](https://github.com/canonical/mir/pull/4861) (thanks @SAY-5!)
+    - server: fix misspelling of occurred in shm_backing.h doc comments [#4854](https://github.com/canonical/mir/pull/4854) (thanks @SAY-5!)
+    - Fix misspelling of occurred in toolkit event headers and hover click [#4861](https://github.com/canonical/mir/pull/4861) (thanks @SAY-5!)
     - Document XDG Portals support [#4868](https://github.com/canonical/mir/pull/4868)
     - doc: add "Release a new Mir version" page [#4906](https://github.com/canonical/mir/pull/4906)
 

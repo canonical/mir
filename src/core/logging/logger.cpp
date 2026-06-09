@@ -18,6 +18,13 @@
 
 #include <mir/synchronised.h>
 #include <mir/logging/dumb_console_logger.h>
+#include <mir/logging/logger.h>
+#include <boost/throw_exception.hpp>
+#include <mir/logging/logger.h>
+
+#include <mir/logging/tag.h>
+#include <mir/synchronised.h>
+#include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
 
 #include <iostream>
@@ -30,55 +37,10 @@
 #include <iterator>
 #include <ranges>
 #include <stdexcept>
+#include <string>
 #include <string_view>
-#include <list>
 
 namespace ml = mir::logging;
-
-struct ml::Tag
-{
-    std::string const name;
-    Tag const* parent;
-};
-
-mir::Synchronised<std::list<ml::Tag>> known_tags{std::list<ml::Tag>{ml::Tag { "base", nullptr}}}; //TICS !cppcoreguidelines-avoid-non-const-global-variables - This is the list of tags, shared within this module
-
-auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
-{
-    auto locked_tags = known_tags.lock();
-    locked_tags->emplace_back(ml::Tag {std::string{name}, &parent});
-    return locked_tags->back();
-}
-
-auto ml::base() -> Tag const&
-{
-    static Tag const& core = known_tags.lock()->front();
-    return core;
-}
-
-auto ml::input() -> Tag const&
-{
-    static Tag const& input = create_tag(base(), "input");
-    return input;
-}
-
-auto ml::wayland() -> Tag const&
-{
-    static Tag const& wayland = create_tag(base(), "wayland");
-    return wayland;
-}
-
-auto ml::graphics() -> Tag const&
-{
-    static Tag const& graphics = create_tag(base(), "graphics");
-    return graphics;
-}
-
-auto ml::window_management() -> Tag const&
-{
-    static Tag const& window_management = create_tag(base(), "window-management");
-    return window_management;
-}
 
 void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
 {
@@ -99,12 +61,18 @@ void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
     // TODO: Remove the log(Severity, std::string, std::string) interface and replace
     // with this one.
 
-
-    std::string component;
-    std::ranges::copy(
-        tags | std::views::transform([](Tag const& tag) { return tag.name; }) | std::views::join_with(':'),
-        std::back_inserter(component));
-    log(severity, std::string{message}, component);
+    for (auto const& tag: tags)
+    {
+        if (logging_enabled_for(tag, severity))
+        {
+            std::string component;
+            std::ranges::copy(
+                tags | std::views::transform([](Tag const& tag) { return tag::name(tag); }) | std::views::join_with(':'),
+                std::back_inserter(component));
+            log(severity, std::string{message}, component);
+            return;
+        }
+    }
 }
 
 namespace
@@ -178,6 +146,7 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
         mir::fatal_error_abort("Cannot format log message: %s", e.what());
     }
 }
+
 
 namespace mir
 {
