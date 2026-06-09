@@ -274,7 +274,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Must be specified in the form “tag=severity”\n"
             "\n"
             "Tags are heirarchical. Setting a tag's severity implicitly sets the severity of all its children.\n"
-            "The root of the tag hierarchy is “core”, so --log-level=core=debug will enable all tags at debug level.\n"
+            "The root of the tag hierarchy is “base”, so --log-level=base=debug will enable all tags at debug level.\n"
             "\n"
             "This option can be specified multiple times, and filters are applied in the order they are encountered.\n"
             "For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level\n"
