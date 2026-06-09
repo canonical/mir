@@ -70,6 +70,7 @@ auto list_known_tags() -> std::vector<std::string>;
 namespace tag
 {
 auto name(Tag const& tag) -> std::string_view;
+auto name(Tag&& tag) -> std::string_view = delete; // A string_view onto a temporary would be bad
 
 void set_severity(std::string_view name, Severity severity);
 }
