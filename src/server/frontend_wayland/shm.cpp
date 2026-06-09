@@ -316,6 +316,7 @@ void mf::ShmPool::create_buffer(
             wayland::Shm::Error::invalid_format,
             "Missing pixel-size information for SHM format requested"};
     }
+    // Casting to stop the below calculations being unsigned and then comparing against signed width/height.
     auto const bytes_per_pixel = static_cast<geometry::Size::ValueType>(format_info->bytes_per_pixel());
 
     auto const max_size = std::numeric_limits<geometry::Size::ValueType>::max();
