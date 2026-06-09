@@ -17,6 +17,7 @@
 #include "ext_foreign_toplevel_image_capture_source_v1.h"
 
 #include <mir/executor.h>
+#include <mir/fatal.h>
 #include <mir/compositor/screen_shooter.h>
 #include <mir/compositor/screen_shooter_factory.h>
 #include <mir/frontend/surface_stack.h>
@@ -27,7 +28,6 @@
 #include <mir/scene/surface_scene.h>
 #include "ext_image_capture_v1.h"
 #include "foreign_toplevel_list_v1.h"
-#include "mir/scene/null_observer.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -116,20 +116,17 @@ public:
 
     void surface_removed(std::shared_ptr<ms::Surface> const& surface) override
     {
-        backend->ctx->wayland_executor->spawn(
-            [weak_observer = weak_from_this(), weak_surface = std::weak_ptr<ms::Surface>(surface)]()
-            {
-                if (auto const observer = weak_observer.lock())
+        if (surface == backend->surface.lock())
+        {
+            backend->ctx->wayland_executor->spawn(
+                [weak_observer = weak_from_this()]()
                 {
-                    if (auto const surface = weak_surface.lock())
+                    if (auto const observer = weak_observer.lock())
                     {
-                        if (surface == observer->backend->surface.lock())
-                        {
-                            observer->backend->surface_removed();
-                        }
+                        observer->backend->surface_removed();
                     }
-                }
-            });
+                });
+        }
     }
 
 private:

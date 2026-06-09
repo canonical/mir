@@ -17,6 +17,7 @@
 #include "ext_output_image_capture_source_v1.h"
 
 #include <mir/executor.h>
+#include <mir/fatal.h>
 #include <mir/compositor/screen_shooter.h>
 #include <mir/compositor/screen_shooter_factory.h>
 #include <mir/frontend/surface_stack.h>
