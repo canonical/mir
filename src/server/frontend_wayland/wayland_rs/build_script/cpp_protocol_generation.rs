@@ -421,21 +421,6 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
         })
         .collect();
 
-    let delegation_args: Vec<String> = args
-        .clone()
-        .flat_map(|arg| {
-            let call_arg = match arg.cpp_type() {
-                CppType::Object(_) => format!("wrapped_{}", arg.name()),
-                _ => arg.name().to_string(),
-            };
-            if let Some(has_name) = arg.has_name() {
-                vec![call_arg, has_name]
-            } else {
-                vec![call_arg]
-            }
-        })
-        .collect();
-
     let has_retval = retval.is_some();
 
     // If the method creates a child object (has NewId), we need to pass the child's
@@ -471,7 +456,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
         true,
         true,
     );
-    for arg in args {
+    for arg in args.clone() {
         cpp_method.add_arg(arg);
     }
     for arg in new_id_ext_args.clone() {
@@ -488,7 +473,21 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     if !wayland_weak_transformers.is_empty() {
         // Build the body: wrap shared_ptrs in Weak, then delegate to the virtual overload
         let return_prefix = if has_retval { "return " } else { "" };
-        let mut all_delegation_args = delegation_args;
+        let mut all_delegation_args: Vec<String> = args
+            .clone()
+            .flat_map(|arg| {
+                let call_arg = match arg.cpp_type() {
+                    CppType::Object(_) => format!("wrapped_{}", arg.name()),
+                    _ => arg.name().to_string(),
+                };
+                if let Some(has_name) = arg.has_name() {
+                    vec![call_arg, has_name]
+                } else {
+                    vec![call_arg]
+                }
+            })
+            .collect();
+
         // Forward child_instance and child_object_id to the virtual method
         for arg in &new_id_ext_args {
             all_delegation_args.push(format!("std::move({})", arg.name()));
