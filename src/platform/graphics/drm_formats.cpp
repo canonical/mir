@@ -75,7 +75,7 @@ struct mg::DRMFormat::FormatInfo
     std::optional<uint32_t> opaque_equivalent;
     std::optional<uint32_t> alpha_equivalent;
     std::optional<Info::RGBComponentInfo> components;
-    uint32_t bytes_per_pixel;
+    size_t bytes_per_pixel;
 };
 
 namespace
@@ -506,7 +506,7 @@ bool mg::DRMFormat::Info::has_alpha() const
     return info->has_alpha;
 }
 
-auto mg::DRMFormat::Info::bytes_per_pixel() const -> uint32_t
+auto mg::DRMFormat::Info::bytes_per_pixel() const -> size_t
 {
     return info->bytes_per_pixel;
 }

@@ -50,7 +50,7 @@ public:
          * \note This includes any padding (for example, XRGB8888 reports 4
          *       even though only 24 of its bits carry colour information).
          */
-        auto bytes_per_pixel() const -> uint32_t;
+        auto bytes_per_pixel() const -> size_t;
 
         auto components() const -> std::optional<RGBComponentInfo> const&;
     private:
