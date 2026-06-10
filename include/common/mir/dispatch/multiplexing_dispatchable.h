@@ -36,12 +36,12 @@ namespace dispatch
  */
 enum class DispatchReentrancy
 {
-    sequential,     /**< The dispatch function is guaranteed not to be called
-                     *   while a thread is currently running it.
-                     */
-    reentrant       /**< The dispatch function may be called on multiple threads
-                     *   simultaneously
-                     */
+    sequential, /**< The dispatch function is guaranteed not to be called
+                 *   while a thread is currently running it.
+                 */
+    reentrant   /**< The dispatch function may be called on multiple threads
+                 *   simultaneously
+                 */
 };
 
 /**
