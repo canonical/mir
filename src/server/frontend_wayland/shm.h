@@ -19,6 +19,7 @@
 #include "wayland_wrapper.h"
 #include <mir/graphics/drm_formats.h>
 
+#include <vector>
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <sys/stat.h>
@@ -76,6 +77,7 @@ private:
     ShmPool(
         struct wl_resource* resource,
         std::shared_ptr<Executor> wayland_executor,
+        std::shared_ptr<std::vector<graphics::DRMFormat> const> supported_formats,
         Fd backing_store,
         int32_t claimed_size);
 
@@ -89,6 +91,7 @@ private:
     void resize(int32_t new_size) override;
 
     std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<std::vector<graphics::DRMFormat> const> const supported_formats;
     std::shared_ptr<shm::ReadWritePool> const backing_store;
 };
 
@@ -97,21 +100,29 @@ class Shm : public wayland::Shm
 public:
 private:
     friend class WlShm;
-    Shm(struct wl_resource* resource, std::shared_ptr<Executor> wayland_executor);
+    Shm(
+        struct wl_resource* resource,
+        std::shared_ptr<Executor> wayland_executor,
+        std::shared_ptr<std::vector<graphics::DRMFormat> const> supported_formats);
 
     void create_pool(struct wl_resource* id, Fd fd, int32_t size) override;
 
     std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<std::vector<graphics::DRMFormat> const> const supported_formats;
 };
 
 class WlShm : public wayland::Shm::Global
 {
 public:
-    WlShm(wl_display* display, std::shared_ptr<Executor> wayland_executor);
+    WlShm(
+        wl_display* display,
+        std::shared_ptr<Executor> wayland_executor,
+        std::vector<graphics::DRMFormat> supported_formats);
 
 private:
     void bind(wl_resource* new_wl_shm) override;
 
     std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<std::vector<graphics::DRMFormat> const> const supported_formats;
 };
 }

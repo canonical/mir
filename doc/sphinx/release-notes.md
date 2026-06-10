@@ -50,9 +50,9 @@
     - mirplatformgraphics ABI unchanged at 23
     - mirinputplatform ABI unchanged at 10
 
-## Mir 2.28.0~dev
+## Mir 2.28.0
 
-- New upstream release 2.28.0~dev
+- New upstream release 2.28.0
 
   - ABI summary:
 
@@ -62,25 +62,60 @@
     - miroil ABI unchanged at 8
     - mirplatform ABI unchanged at 34
     - mirserver ABI unchanged at 67
-    - mirwayland ABI unchanged at 6
-    - mirplatformgraphics ABI unchanged at 23
-    - mirinputplatform ABI unchanged at 10
-
-## Mir 2.27.0~dev
-
-- New upstream release 2.27.0
-
-  - ABI summary:
-
-    - miral ABI unchanged at 7
-    - mircommon ABI unchanged at 12
-    - mircore ABI unchanged at 2
-    - miroil ABI bumped to 9
-    - mirplatform ABI unchanged at 34
-    - mirserver ABI unchanged at 67
     - mirwayland ABI bumped to 6
     - mirplatformgraphics ABI unchanged at 23
     - mirinputplatform ABI unchanged at 10
+
+  - Enhancements:
+
+    - Implement org_kde_kwin_server_decoration [#4956](https://github.com/canonical/mir/pull/4956) (thanks @tsimonq2!)
+    - Accept EGL_TEXTURE_EXTERNAL_WL [#4888](https://github.com/canonical/mir/pull/4888) (thanks @Azkali!)
+    - use std::format\* instead of C string formatting in xwayland_spawner.cpp [#4793](https://github.com/canonical/mir/pull/4793) (thanks @yotam-medini!)
+    - Fixes TICS violations in wayland_connector.cpp [#4804](https://github.com/canonical/mir/pull/4804) (thanks @DigraJatin!)
+    - Eliminate use of insecure temporary filename APIs [#4813](https://github.com/canonical/mir/pull/4813) (thanks @yotam-medini!)
+    - Fix TICS violation of pointer arithmetic on polymorphic object, Use void\* as map key [#4827](https://github.com/canonical/mir/pull/4827) (thanks @DigraJatin!)
+    - correct include paths for pkg-config [#4907](https://github.com/canonical/mir/pull/4907) (thanks @sfalken!)
+    - improve Ctrl+Shift+Numlock toggle shortcut [#4812](https://github.com/canonical/mir/pull/4812) (thanks @deepakshirkem!)
+    - [wayland-rs] Generating implementations for Wayland events so that they can be sent from C++ to Rust to Wayland clients [#4785](https://github.com/canonical/mir/pull/4785)
+    - [wayland-rs] Generating global registration methods for wayland-rs [#4825](https://github.com/canonical/mir/pull/4825)
+    - [wayland-rs] Adding the ability to post an error on any object [#4843](https://github.com/canonical/mir/pull/4843)
+    - [wayland-rs] Implement a C++ friendly Wayland client and WaylandServerNotificationHandler for receiving notifications about new clients (and beyond) [#4848](https://github.com/canonical/mir/pull/4848)
+    - [live config] Re-implement array clearing in BasicStore and IniFile [#4914](https://github.com/canonical/mir/pull/4914)
+    - [live config] Apply live configuration in `start_callback()` [#4978](https://github.com/canonical/mir/pull/4978)
+    - [live config] Add tests for `IniFile` failure modes [#4847](https://github.com/canonical/mir/pull/4847)
+    - [graphics] Add `MIR_PIN_COMPOSITING_TO` to allow pinning a certain provider for display [#4958](https://github.com/canonical/mir/pull/4958)
+    - Initial implementation of the new logging API [#4895](https://github.com/canonical/mir/pull/4895)
+    - Add support for WLCS keyboard [#4716](https://github.com/canonical/mir/pull/4716)
+    - workshop: initial definition [#4965](https://github.com/canonical/mir/pull/4965)
+
+  - Bugs fixed:
+
+    - [evdev] Fix file descriptors being removed by libinput [#4853](https://github.com/canonical/mir/pull/4853) (thanks @muhammad23012009!)
+    - fix(console): restore previously active VT on LinuxVirtualTerminal cleanup [#4842](https://github.com/canonical/mir/pull/4842) (thanks @AristoChen!)
+    - Fix - #4552, UTC time conversion was not thread safe [#4972](https://github.com/canonical/mir/pull/4972) (thanks @DigraJatin!)
+    - [evdev-input-rs] Fix input lockup after VT switch [#4791](https://github.com/canonical/mir/pull/4791)
+    - Fix copy-paste error with setting positioner constraint adjustment [#4869](https://github.com/canonical/mir/pull/4869)
+    - graphics: fix leak in `DisplayInfo` [#4877](https://github.com/canonical/mir/pull/4877)
+    - Fix boolean logic checking for DnD actions [#4892](https://github.com/canonical/mir/pull/4892)
+    - fix-wrong-foreign-toplevel-logic [#4957](https://github.com/canonical/mir/pull/4957)
+    - Apply live touch pad config at startup and correct disable-with-external-mouse mapping [#4943](https://github.com/canonical/mir/pull/4943)
+    - Fix environment variables being overwritten when they match on prefix [#4966](https://github.com/canonical/mir/pull/4966)
+    - Upstream fixes to application switcher [#4945](https://github.com/canonical/mir/pull/4945)
+
+  - Documentation:
+
+    - server: fix misspelling of occurred in shm_backing.h doc comments [#4854](https://github.com/canonical/mir/pull/4854) (thanks @SAY-5!)
+    - Fix misspelling of occurred in toolkit event headers and hover click [#4861](https://github.com/canonical/mir/pull/4861) (thanks @SAY-5!)
+    - Document XDG Portals support [#4868](https://github.com/canonical/mir/pull/4868)
+    - doc: add "Release a new Mir version" page [#4906](https://github.com/canonical/mir/pull/4906)
+
+  - New Contributors
+
+    - @muhammad23012009 made their first contribution in https://github.com/canonical/mir/pull/4853
+    - @deepakshirkem made their first contribution in https://github.com/canonical/mir/pull/4812
+    - @SAY-5 made their first contribution in https://github.com/canonical/mir/pull/4861
+    - @AristoChen made their first contribution in https://github.com/canonical/mir/pull/4842
+    - @tsimonq2 made their first contribution in https://github.com/canonical/mir/pull/4956
 
 ## Mir 2.26.0
 

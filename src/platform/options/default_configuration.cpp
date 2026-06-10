@@ -20,13 +20,17 @@
 #include <mir/constexpr_utils.h>
 #include <mir/graphics/platform.h>
 #include <mir/logging/null_shared_library_prober_report.h>
+#include <mir/log.h>
 #include <mir/options/program_option.h>
 #include <mir/shared_library.h>
 #include <mir/shared_library_prober.h>
+#include <mir/logging/logger.h>
+#include <mir/logging/tag.h>
 
 #include <algorithm>
 #include <cstring>
 #include <format>
+#include <ranges>
 
 namespace mo = mir::options;
 
@@ -70,7 +74,6 @@ char const* const mo::auto_console = "auto";
 
 char const* const mo::vt_option_name = "vt";
 char const* const mo::vt_switching_option_name = "vt-switching";
-
 
 namespace
 {
@@ -129,6 +132,45 @@ std::string description_text(char const* program, std::string const& config_file
         "($XDG_CONFIG_HOME or $HOME/.config followed by $XDG_CONFIG_DIRS)\n\n";
 
     return result + "user options";
+}
+
+auto split_assignment(std::string_view config_value)
+    -> std::pair<std::string_view, std::string_view>
+{
+    auto equals_pos = config_value.find('=');
+    if (equals_pos == config_value.npos)
+    {
+      BOOST_THROW_EXCEPTION((std::runtime_error{
+          std::format("Failed to parse log-level: {}", config_value)}));
+    }
+
+    auto const key = config_value.substr(0, equals_pos);
+    auto const value = config_value.substr(equals_pos + 1);
+
+    if (key.empty() || value.empty())
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            std::format("Failed to parse log-level: {}", config_value)}));
+    }
+    return std::make_pair(key, value);
+}
+
+void update_tag_filtering(std::vector<std::string> const& tag_filters)
+{
+    namespace ml = mir::logging;
+    for (auto const& filter : tag_filters)
+    {
+        try
+        {
+            auto [tag_name, severity_name] = split_assignment(filter);
+            auto severity = ml::parse_severity(severity_name);
+            ml::tag::set_severity(tag_name, severity);
+        }
+        catch (std::exception const& err)
+        {
+            mir::log(ml::Severity::warning, {ml::base()}, "Failed to parse log-level argument: {}", err.what());
+        }
+    }
 }
 }
 
@@ -218,7 +260,32 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Enable VT switching on Ctrl+Alt+F*. "
             "Only used when `--console-provider=vt|logind`.");
 
-        add_platform_options();
+    std::string tags;
+    std::ranges::copy(
+        mir::logging::list_known_tags() | std::views::transform([](std::string const& tag) { return " - " + tag; }) | std::views::join_with('\n'),
+        std::back_inserter(tags)
+    );
+
+    add_options()
+        ("log-level",
+            po::value<std::vector<std::string>>()->notifier(update_tag_filtering),
+            ("Minimum severity of a log message required for it to be printed.\n"
+            "Valid severities are: critical, error, warning, informational, debug (“warn” and “info” can be used as short forms of “warning” and “informational”)\n"
+            "Must be specified in the form “tag=severity”\n"
+            "\n"
+            "Tags are hierarchical. Setting a tag's severity implicitly sets the severity of all its children.\n"
+            "The root of the tag hierarchy is “base”, so --log-level=base=debug will enable all tags at debug level.\n"
+            "\n"
+            "This option can be specified multiple times, and filters are applied in the order they are encountered.\n"
+            "For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level\n"
+            "except for graphics (and its children), which will be enabled at the debug level.\n"
+            "\n"
+            "Tags can be specified by their full heirarchy (e.g. “base/graphics”) or by their name (eg: “graphics”) if unambiguous.\n"
+            "\n"
+            "Possible tags to filter on are:\n"
+            + tags).c_str());
+
+    add_platform_options();
 }
 
 namespace
