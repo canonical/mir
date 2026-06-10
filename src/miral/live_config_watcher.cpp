@@ -127,7 +127,8 @@ void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const
     //   first non-static data member's address (note 11: no padding at beginning)
     // - [array.members]/2: data() == addressof(front()) for non-empty arrays
     // - [sequence.reqmts]/73: front() returns *begin() (the first element)
-    alignas(inotify_event) std::array<std::byte, sizeof(inotify_event) + NAME_MAX + 1> buffer = {};
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-member-init) buffer is immediately read into.
+    alignas(inotify_event) std::array<std::byte, sizeof(inotify_event) + NAME_MAX + 1> buffer;
 
     auto const readsize = read(inotify_fd, buffer.data(), buffer.size());
     if (readsize < static_cast<ssize_t>(sizeof(inotify_event)))
