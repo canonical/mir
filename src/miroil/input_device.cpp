@@ -33,10 +33,7 @@ miroil::InputDevice::InputDevice() = default;
 
 miroil::InputDevice::~InputDevice() = default;
 
-bool miroil::InputDevice::operator==(InputDevice const& other)
-{
-    return device == other.device;
-}
+bool miroil::InputDevice::operator==(InputDevice const& other) const = default;
 
 void miroil::InputDevice::apply_keymap(std::string const& layout, std::string const& variant)
 {

@@ -18,12 +18,6 @@
 
 namespace msh = mir::shell;
 
-auto msh::operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rhs) -> bool
-{
-    return
-        lhs.width == rhs.width &&
-        lhs.height == rhs.height;
-}
 
 auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool
 {
