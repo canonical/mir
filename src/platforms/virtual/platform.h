@@ -36,10 +36,7 @@ struct VirtualOutputConfig
     {
     }
 
-    bool operator==(VirtualOutputConfig const& output) const
-    {
-        return sizes == output.sizes;
-    }
+    bool operator==(VirtualOutputConfig const& output) const = default;
     std::vector<geometry::Size> sizes;
 };
 

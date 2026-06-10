@@ -52,6 +52,8 @@ struct PosixTimestamp
         clock_gettime(clock_id, &ts);
         return PosixTimestamp(clock_id, ts);
     }
+
+    bool operator==(PosixTimestamp const&) const = default;
 };
 
 inline void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
@@ -59,9 +61,6 @@ inline void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
     if (a.clock_id != b.clock_id)
         throw std::logic_error("Can't compare different time domains");
 }
-
-inline bool operator==(PosixTimestamp const& a, PosixTimestamp const& b)
-{ return a.clock_id == b.clock_id && a.nanoseconds == b.nanoseconds; }
 
 inline PosixTimestamp operator-(PosixTimestamp const& a, std::chrono::nanoseconds b)
 { return PosixTimestamp(a.clock_id, a.nanoseconds - b); }

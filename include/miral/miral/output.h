@@ -52,6 +52,8 @@ public:
     {
         int width;
         int height;
+
+        bool operator==(PhysicalSizeMM const&) const = default;
     };
 
     /// Display connector types.
@@ -193,8 +195,6 @@ public:
 private:
     std::shared_ptr<mir::graphics::DisplayConfigurationOutput> self;
 };
-
-bool operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs);
 
 /// Checks if the provided outputs have the same display area.
 ///

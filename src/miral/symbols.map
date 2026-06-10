@@ -272,6 +272,7 @@ global:
     miral::MouseKeysConfig::set_max_speed*;
     miral::Output::?Output*;
     miral::Output::Output*;
+    miral::Output::PhysicalSizeMM::operator*;
     miral::Output::attribute*;
     miral::Output::attributes_map*;
     miral::Output::connected*;
@@ -485,6 +486,7 @@ global:
     miral::WindowManagerTools::window_at*;
     miral::WindowManagerTools::window_to_select_application*;
     miral::WindowSpecification::?WindowSpecification*;
+    miral::WindowSpecification::AspectRatio::operator*;
     miral::WindowSpecification::WindowSpecification*;
     miral::WindowSpecification::alpha*;
     miral::WindowSpecification::application_id*;

@@ -73,12 +73,7 @@ struct TouchContactV2
         orientation{contact.orientation}
     {}
 
-    auto operator==(TouchContactV2 const& rhs) const -> bool
-    {
-        return touch_id == rhs.touch_id && action == rhs.action && tooltype == rhs.tooltype &&
-               position == rhs.position && pressure == rhs.pressure && touch_major == rhs.touch_major &&
-               touch_minor == rhs.touch_minor && orientation == rhs.orientation;
-    }
+    auto operator==(TouchContactV2 const& rhs) const -> bool = default;
 
     MirTouchId touch_id;
     MirTouchAction action;

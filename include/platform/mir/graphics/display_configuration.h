@@ -55,6 +55,8 @@ struct DisplayConfigurationCard
 {
     DisplayConfigurationCardId id;
     size_t max_simultaneous_outputs;
+
+    bool operator==(DisplayConfigurationCard const&) const = default;
 };
 
 /**
@@ -89,6 +91,8 @@ struct DisplayConfigurationMode
 {
     geometry::Size size;
     double vrefresh_hz;
+
+    bool operator==(DisplayConfigurationMode const&) const = default;
 };
 
 /**
@@ -220,10 +224,8 @@ struct UserDisplayConfigurationOutput
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
-bool operator==(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);
-bool operator==(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationOutput const& val);
 bool operator==(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);

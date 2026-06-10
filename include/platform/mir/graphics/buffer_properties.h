@@ -56,10 +56,9 @@ struct BufferProperties
     geometry::Size size;
     MirPixelFormat format;
     BufferUsage usage;
-};
 
-inline bool operator==(BufferProperties const& lhs, BufferProperties const& rhs)
-{ return lhs.size == rhs.size && lhs.format == rhs.format && lhs.usage == rhs.usage; }
+    bool operator==(BufferProperties const&) const = default;
+};
 
 }
 }

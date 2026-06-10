@@ -52,11 +52,7 @@ struct ScrollAxisV1
         stop{stop}
     {}
 
-    auto operator==(ScrollAxisV1 const& other) const -> bool
-    {
-        return precise == other.precise && discrete == other.discrete && value120 == other.value120 &&
-               stop == other.stop;
-    }
+    auto operator==(ScrollAxisV1 const& other) const -> bool = default;
 
     mir::geometry::generic::Value<float, Tag> precise;
     mir::geometry::generic::Value<int, Tag> discrete;
