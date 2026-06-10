@@ -55,10 +55,11 @@ void miral::register_log_filtering_config(live_config::Store &config_store)
         "Minimum severity level for a log message with a given tag to be emitted, in the form tag=severity",
         [](live_config::Key const& /*key*/, std::optional<std::span<std::string const>> value)
         {
+            // Restore the default state before applying any new configuration
+            mir::logging::tag::set_severity("base", mir::logging::Severity::warning);
+
             if (value.has_value())
             {
-                // Restore the default state before applying the new configuration
-                mir::logging::tag::set_severity("base", mir::logging::Severity::warning);
 
                 for (auto const& filter : *value)
                 {
