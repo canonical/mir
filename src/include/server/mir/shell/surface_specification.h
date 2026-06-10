@@ -121,7 +121,6 @@ struct SurfaceSpecification
     optional_value<float> alpha;
 };
 bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
-bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 }
 }
 

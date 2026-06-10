@@ -71,7 +71,6 @@ public:
     void set_touchscreen_config(MirTouchscreenConfig const& conf);
 
     bool operator==(MirInputDevice const& rhs) const;
-    bool operator!=(MirInputDevice const& rhs) const;
 
 private:
     struct Implementation;
@@ -100,7 +99,6 @@ public:
     void for_each(std::function<void(MirInputDevice const&)> const& visitor) const;
     void for_each(std::function<void(MirInputDevice&)> const& visitor);
     bool operator==(MirInputConfig const& rhs) const;
-    bool operator!=(MirInputConfig const& rhs) const;
     using value_type = MirInputDevice;
 
 private:

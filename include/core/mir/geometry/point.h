@@ -50,7 +50,6 @@ struct Point
     {}
 
     friend bool operator==(Point const& lhs, Point const& rhs) = default;
-    friend bool operator!=(Point const& lhs, Point const& rhs) = default;
 
     X<T> x;
     Y<T> y;

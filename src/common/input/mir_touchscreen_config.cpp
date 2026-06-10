@@ -81,11 +81,6 @@ bool MirTouchscreenConfig::operator==(MirTouchscreenConfig const& other) const
         impl->mapping_mode == other.impl->mapping_mode;
 }
 
-bool MirTouchscreenConfig::operator!=(MirTouchscreenConfig const& other) const
-{
-    return !(*this == other);
-}
-
 std::ostream& operator<<(std::ostream& out, MirTouchscreenConfig const& conf)
 {
     return out << " mode:" << conf.mapping_mode() << " outputid:" << conf.output_id();

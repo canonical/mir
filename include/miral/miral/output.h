@@ -195,7 +195,6 @@ private:
 };
 
 bool operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs);
-inline bool operator!=(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs) { return !(lhs == rhs); }
 
 /// Checks if the provided outputs have the same display area.
 ///

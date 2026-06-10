@@ -61,8 +61,6 @@ struct BufferProperties
 inline bool operator==(BufferProperties const& lhs, BufferProperties const& rhs)
 { return lhs.size == rhs.size && lhs.format == rhs.format && lhs.usage == rhs.usage; }
 
-inline bool operator!=(BufferProperties const& lhs, BufferProperties const& rhs) { return !(lhs == rhs); }
-
 }
 }
 #endif // MIR_GRAPHICS_BUFFER_PROPERTIES_H_

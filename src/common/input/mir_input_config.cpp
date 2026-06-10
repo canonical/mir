@@ -193,11 +193,6 @@ bool MirInputDevice::operator==(MirInputDevice const& rhs) const
         impl->touchscreen == rhs.impl->touchscreen;
 }
 
-bool MirInputDevice::operator!=(MirInputDevice const& rhs) const
-{
-    return !(*this == rhs);
-}
-
 MirInputConfig::MirInputConfig()
     : impl(std::make_unique<Implementation>())
 {
@@ -278,11 +273,6 @@ bool MirInputConfig::operator==(MirInputConfig const& rhs) const
 {
     // FIXME assumes fixed ordering
     return impl->devices == rhs.impl->devices;
-}
-
-bool MirInputConfig::operator!=(MirInputConfig const& rhs) const
-{
-    return !(*this == rhs);
 }
 
 std::ostream& operator<<(std::ostream& out, MirInputDevice const& rhs)

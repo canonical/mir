@@ -49,8 +49,6 @@ public:
         }
     }
 
-    auto operator!=(Weak<T> const& other) const -> bool { return !(*this == other); }
-
     auto is(T const& other) const -> bool
     {
         if (*this)

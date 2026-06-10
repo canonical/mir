@@ -48,7 +48,6 @@ struct MirTouchscreenConfig
     void mapping_mode(MirTouchscreenMappingMode);
 
     bool operator==(MirTouchscreenConfig const& other) const;
-    bool operator!=(MirTouchscreenConfig const& other) const;
 
 private:
     struct Implementation;

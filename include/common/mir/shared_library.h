@@ -54,7 +54,6 @@ public:
     public:
         auto operator<=>(Handle const& rhs) const -> std::strong_ordering;
         auto operator==(Handle const& rhs) const -> bool = default;
-        auto operator!=(Handle const& rhs) const -> bool = default;
 
         struct HandleHash
         {

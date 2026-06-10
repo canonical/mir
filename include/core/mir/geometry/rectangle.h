@@ -84,7 +84,6 @@ struct Rectangle
     Y<T> bottom() const { return bottom_right().y; }
 
     friend bool operator==(Rectangle const& lhs, Rectangle const& rhs) = default;
-    friend bool operator!=(Rectangle const& lhs, Rectangle const& rhs) = default;
 
     Point<T> top_left;
     Size<T> size;

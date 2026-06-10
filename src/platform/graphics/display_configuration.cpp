@@ -157,23 +157,11 @@ bool mg::operator==(mg::DisplayConfigurationCard const& val1,
            (val1.max_simultaneous_outputs == val2.max_simultaneous_outputs);
 }
 
-bool mg::operator!=(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return !(val1 == val2);
-}
-
 bool mg::operator==(mg::DisplayConfigurationMode const& val1,
                     mg::DisplayConfigurationMode const& val2)
 {
     return (val1.size == val2.size) &&
            (val1.vrefresh_hz == val2.vrefresh_hz);
-}
-
-bool mg::operator!=(mg::DisplayConfigurationMode const& val1,
-                    mg::DisplayConfigurationMode const& val2)
-{
-    return !(val1 == val2);
 }
 
 bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
@@ -203,12 +191,6 @@ bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
     return equal;
 }
 
-bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
-                    mg::DisplayConfigurationOutput const& val2)
-{
-    return !(val1 == val2);
-}
-
 bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
 {
     std::vector<DisplayConfigurationCard> lhs_cards;
@@ -222,11 +204,6 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
     rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(output); });
 
     return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
-}
-
-bool mg::operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
-{
-    return !(lhs == rhs);
 }
 
 namespace

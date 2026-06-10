@@ -50,7 +50,6 @@ public:
     size_type size() const;
 
     bool operator==(Rectangles const& rect) const;
-    bool operator!=(Rectangles const& rect) const;
 
 private:
     std::vector<Rectangle> rectangles;

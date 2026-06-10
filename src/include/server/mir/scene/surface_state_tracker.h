@@ -94,7 +94,6 @@ private:
 
 /// Returns if all states are equal
 auto operator==(SurfaceStateTracker const& lhs, SurfaceStateTracker const& rhs) -> bool;
-inline auto operator!=(SurfaceStateTracker const& lhs, SurfaceStateTracker const& rhs) -> bool { return !(lhs == rhs); }
 }
 }
 

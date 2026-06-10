@@ -132,11 +132,6 @@ bool MirPointerConfig::operator==(MirPointerConfig const& rhs) const
            vertical_scroll_scale() == rhs.vertical_scroll_scale();
 }
 
-bool MirPointerConfig::operator!=(MirPointerConfig const& rhs) const
-{
-    return !(*this == rhs);
-}
-
 std::ostream& operator<<(std::ostream& out, MirPointerConfig const& rhs)
 {
     return out << " handedness:" << rhs.handedness()

@@ -180,11 +180,6 @@ bool MirTouchpadConfig::operator==(MirTouchpadConfig const& rhs) const
         impl->disable_while_typing == rhs.impl->disable_while_typing;
 }
 
-bool MirTouchpadConfig::operator!=(MirTouchpadConfig const& rhs) const
-{
-    return !(*this == rhs);
-}
-
 std::ostream& operator<<(std::ostream& out, MirTouchpadConfig const& conf)
 {
     return out << "click-mode:" << conf.click_mode()

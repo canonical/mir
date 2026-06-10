@@ -221,15 +221,12 @@ struct UserDisplayConfigurationOutput
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
 bool operator==(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
-bool operator!=(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);
 bool operator==(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
-bool operator!=(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationOutput const& val);
 bool operator==(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
-bool operator!=(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
 
 /**
  * Interface to a configuration of display cards and outputs.
@@ -254,7 +251,6 @@ protected:
 };
 
 bool operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs);
-bool operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfiguration const& val);
 

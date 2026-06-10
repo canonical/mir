@@ -20,7 +20,6 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"mir::geometry::Rectangles::clear()@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::confine(mir::geometry::generic::Point<int>&) const@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::end() const@MIR_CORE_2.29" 2.29.0
- (c++)"mir::geometry::Rectangles::operator!=(mir::geometry::Rectangles const&) const@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::operator==(mir::geometry::Rectangles const&) const@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::remove(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::size() const@MIR_CORE_2.29" 2.29.0

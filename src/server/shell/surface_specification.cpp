@@ -219,10 +219,3 @@ bool msh::operator==(
         lhs.alpha == rhs.alpha &&
         lhs.parent_size == rhs.parent_size;
 }
-
-bool msh::operator!=(
-    const msh::SurfaceSpecification& lhs,
-    const msh::SurfaceSpecification& rhs)
-{
-    return !(lhs == rhs);
-}
