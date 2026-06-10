@@ -21,10 +21,7 @@
 
 namespace miral
 {
-namespace live_config
-{
-class Store;
-}
+namespace live_config { class Store; }
 
 /// Hook up log filtering configuration to a `live_config::Store`
 ///
@@ -33,6 +30,5 @@ class Store;
 /// \remark Since MirAL 5.8
 void register_log_filtering_config(live_config::Store& config_store);
 }
-
 
 #endif // MIRAL_LOGGING_CONFIG_H_
