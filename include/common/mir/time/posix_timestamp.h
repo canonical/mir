@@ -21,7 +21,8 @@
 #include <ctime>
 #include <stdexcept>
 
-namespace mir { namespace time {
+namespace mir::time
+{
 
 /*
  * We need absolute precision here so sadly can't use high-level C++ clocks...
@@ -122,6 +123,6 @@ inline void sleep_until(PosixTimestamp const& t)
     while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, nullptr)) {}
 }
 
-}} // namespace mir::time
+} // namespace mir::time
 
 #endif // MIR_TIME_POSIX_TIMESTAMP_H_
