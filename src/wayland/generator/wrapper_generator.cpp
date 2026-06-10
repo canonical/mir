@@ -20,6 +20,7 @@
 
 #include <libxml++/libxml++.h>
 #include <iostream>
+#include <set>
 
 Emitter comment_header(std::string const& input_file_path)
 {
@@ -53,17 +54,23 @@ Emitter header_includes()
     };
 }
 
-Emitter impl_includes(std::string const& protocol_name)
+Emitter impl_includes(std::string const& protocol_name, bool include_core_protocol)
 {
-    return Lines{
+    std::vector<Emitter> includes{
         {"#include \"", protocol_name, "_wrapper.h\""},
         empty_line,
         "#include <boost/exception/diagnostic_information.hpp>",
         "#include <wayland-server-core.h>",
-        empty_line,
-        "#include <mir/wayland/protocol_error.h>",
-        "#include <mir/wayland/client.h>",
     };
+    if (include_core_protocol)
+    {
+        // Needed for the libwayland wl_display/wl_registry interfaces aliased below.
+        includes.push_back("#include <wayland-server-protocol.h>");
+    }
+    includes.push_back(empty_line);
+    includes.push_back("#include <mir/wayland/protocol_error.h>");
+    includes.push_back("#include <mir/wayland/client.h>");
+    return Lines{includes};
 }
 
 Emitter include_guard_bottom(std::string const& macro)
@@ -116,7 +123,10 @@ Emitter header_file(std::string input_file_path, std::vector<Interface> const& i
     };
 }
 
-Emitter source_file(std::string input_file_path, std::vector<Interface> const& interfaces)
+Emitter source_file(
+    std::string input_file_path,
+    std::vector<Interface> const& interfaces,
+    std::set<std::string> const& core_interfaces_in_file)
 {
     std::vector<Emitter> interface_emitters, wl_interface_init_emitters;
     std::set<std::string> fwd_declare_interfaces;
@@ -130,7 +140,25 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
     std::vector<Emitter> fwd_declare_interface_emitters;
     for (auto const& interface_name : fwd_declare_interfaces)
     {
-        fwd_declare_interface_emitters.push_back({"extern struct wl_interface const ", interface_name, "_interface_data;"});
+        // wl_display and wl_registry are not wrapped by the generator; their interface-data
+        // objects are defined (aliased from libwayland) below rather than forward-declared.
+        if (core_interfaces_in_file.find(interface_name) == core_interfaces_in_file.end())
+            fwd_declare_interface_emitters.push_back({"extern struct wl_interface const ", interface_name, "_interface_data;"});
+    }
+
+    // Define interface-data objects for the libwayland core interfaces (wl_display, wl_registry)
+    // present in this protocol. The generator does not wrap these interfaces, so it aliases the
+    // wl_interface objects libwayland already provides. A value copy is sufficient because
+    // libwayland's argument type checking compares interfaces by name. The extern declaration
+    // gives the definition external linkage (a namespace-scope const otherwise has internal
+    // linkage) so other protocol wrappers in the library can reference it.
+    std::vector<Emitter> core_interface_def_emitters;
+    for (auto const& interface_name : core_interfaces_in_file)
+    {
+        core_interface_def_emitters.push_back(
+            {"extern struct wl_interface const ", interface_name, "_interface_data;"});
+        core_interface_def_emitters.push_back(
+            {"struct wl_interface const ", interface_name, "_interface_data = ::", interface_name, "_interface;"});
     }
 
     std::string protocol_name = file_name_from_path(input_file_path);
@@ -140,13 +168,14 @@ Emitter source_file(std::string input_file_path, std::vector<Interface> const& i
     return Lines{
         comment_header(input_file_path),
         empty_line,
-        impl_includes(protocol_name),
+        impl_includes(protocol_name, !core_interfaces_in_file.empty()),
         empty_line,
         "namespace mir",
         "{",
         "namespace wayland",
         "{",
         Lines{fwd_declare_interface_emitters},
+        Lines{core_interface_def_emitters},
         "}",
         "}",
         empty_line,
@@ -256,15 +285,20 @@ int main(int argc, char** argv)
         }
     }
 
+    std::set<std::string> const libwayland_core_interfaces{"wl_display", "wl_registry"};
+    std::set<std::string> core_interfaces_in_file;
     std::vector<Interface> interfaces;
     for (auto top_level : root_node->get_children("interface"))
     {
         auto interface = dynamic_cast<xmlpp::Element*>(top_level);
+        std::string const interface_name = interface->get_attribute_value("name");
 
-        if (interface->get_attribute_value("name") == "wl_display" ||
-            interface->get_attribute_value("name") == "wl_registry")
+        if (libwayland_core_interfaces.find(interface_name) != libwayland_core_interfaces.end())
         {
-            // These are special, and don't need binding.
+            // These are special, and don't need binding. libwayland provides their
+            // wl_interface definitions, which are aliased in the generated source when
+            // referenced as an argument type.
+            core_interfaces_in_file.insert(interface_name);
             continue;
         }
         interfaces.emplace_back(
@@ -278,7 +312,7 @@ int main(int argc, char** argv)
     if (header_mode)
         emitter = header_file(input_file_path, interfaces);
     else
-        emitter = source_file(input_file_path, interfaces);
+        emitter = source_file(input_file_path, interfaces, core_interfaces_in_file);
 
     emitter.emit({std::cout});
 }
