@@ -20,7 +20,7 @@ use crate::cpp_builder::{
 };
 use crate::helpers::{
     format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
-    snake_to_pascal,
+    is_core_interface, request_references_core_object, snake_to_pascal,
 };
 use crate::protocol_parser::{
     WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -210,6 +210,11 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         namespace.add_class(class);
     }
     for interface in &protocol.dependencies {
+        // Core interfaces (wl_display/wl_registry) have no generated C++ class, so they
+        // must not be forward-declared as one.
+        if is_core_interface(interface) {
+            continue;
+        }
         let class_name = format_wayland_interface_to_cpp_class(interface);
         namespace.add_forward_declaration_class(&class_name);
     }
@@ -238,6 +243,12 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         .iter()
         .filter_map(|item| {
             if let crate::protocol_parser::InterfaceItem::Request(request) = item {
+                // Requests that take a core interface (wl_display/wl_registry) object
+                // argument have no C++ counterpart and are handled entirely on the Rust
+                // side (see the dispatch generator), so no C++ method is generated.
+                if request_references_core_object(request) {
+                    return None;
+                }
                 Some(wayland_request_to_cpp_method(request))
             } else if let crate::protocol_parser::InterfaceItem::Event(event) = item {
                 Some(vec![wayland_event_to_cpp_method(event)])

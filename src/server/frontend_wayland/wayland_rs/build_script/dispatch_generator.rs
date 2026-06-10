@@ -17,7 +17,8 @@
 use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::{
     dash_to_snake_ident, format_has_arg_ident, format_wayland_interface_to_cpp_class,
-    format_wayland_interface_to_rust_extension_struct, generate_namespace, snake_to_pascal,
+    format_wayland_interface_to_rust_extension_struct, generate_namespace, is_core_interface,
+    request_references_core_object, snake_to_pascal,
 };
 use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandInterface, WaylandProtocol, WaylandRequest,
@@ -220,6 +221,40 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
     }
 }
 
+/// Generate the body of a request handler arm for a request that takes a core
+/// interface (wl_display/wl_registry) object argument.
+///
+/// These objects are owned by the `wayland_server` crate and have no C++ wrapper,
+/// so the request cannot be forwarded across the FFI boundary. The only such request
+/// in the core protocol is `wl_fixes.destroy_registry`, whose effect is to destroy the
+/// referenced object; we honour that by destroying it directly through the backend.
+fn generate_core_object_request_body(request: &WaylandRequest) -> TokenStream {
+    let destructions: Vec<TokenStream> = request
+        .args
+        .iter()
+        .filter(|arg| {
+            arg.type_ == WaylandArgType::Object
+                && arg
+                    .interface
+                    .as_deref()
+                    .map(is_core_interface)
+                    .unwrap_or(false)
+        })
+        .map(|arg| {
+            let arg_name = format_ident!("{}", arg.name);
+            quote! {
+                let _ = _dhandle
+                    .backend_handle()
+                    .destroy_object::<ServerState>(&Resource::id(&#arg_name));
+            }
+        })
+        .collect();
+
+    quote! {
+        #(#destructions)*
+    }
+}
+
 /// Generate the body of a request handler arm.
 ///
 /// Requests come in two distinct forms:
@@ -344,6 +379,17 @@ fn generate_request_handler_arms(
                     quote! { #arg_name }
                 })
                 .collect();
+
+            // Requests referencing a core interface (wl_display/wl_registry) object are
+            // handled entirely on the Rust side rather than forwarded to C++.
+            if request_references_core_object(request) {
+                let body = generate_core_object_request_body(request);
+                return Some(quote! {
+                    #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
+                        #body
+                    }
+                });
+            }
 
             let transformed_args: Vec<TokenStream> = request
                 .args
