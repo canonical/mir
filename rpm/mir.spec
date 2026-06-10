@@ -24,15 +24,15 @@
 %bcond check 1
 
 # Track various library soversions
-%global miral_sover 7
-%global mircommon_sover 12
-%global mircore_sover 2
-%global miroil_sover 9
-%global mirplatform_sover 34
-%global mirserver_sover 67
-%global mirwayland_sover 6
-%global mirplatformgraphics_sover 23
-%global mirplatforminput_sover 10
+%global miral_sover 8
+%global mircommon_sover 13
+%global mircore_sover 3
+%global miroil_sover 10
+%global mirplatform_sover 35
+%global mirserver_sover 68
+%global mirwayland_sover 7
+%global mirplatformgraphics_sover 24
+%global mirplatforminput_sover 11
 
 Name:           mir
 Version:        2.29.0~dev
