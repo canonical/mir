@@ -127,7 +127,7 @@ void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const
     //   first non-static data member's address (note 11: no padding at beginning)
     // - [array.members]/2: data() == addressof(front()) for non-empty arrays
     // - [sequence.reqmts]/73: front() returns *begin() (the first element)
-    alignas(inotify_event) std::array<std::byte, sizeof(inotify_event) + NAME_MAX + 1> buffer;
+    alignas(inotify_event) std::array<std::byte, sizeof(inotify_event) + NAME_MAX + 1> buffer = {};
 
     auto const readsize = read(inotify_fd, buffer.data(), buffer.size());
     if (readsize < static_cast<ssize_t>(sizeof(inotify_event)))
@@ -137,8 +137,8 @@ void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const
     while (remaining.size() >= sizeof(inotify_event))
     {
         // LEGACY(Clang) Replace with std::start_lifetime_as<inotify_event const> once Clang supports it (C++23, P2590).
-        auto const& event = reinterpret_cast<inotify_event const&>(
-            *remaining.data()); // NOLINT(cppcoreguidelines-pro-type-reinterpret-cast)
+        // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+        auto const& event = reinterpret_cast<inotify_event const&>(*remaining.data());
 
         // The kernel guarantees event.len is padded to maintain inotify_event
         // alignment for subsequent events (see inotify(7): "The name field
