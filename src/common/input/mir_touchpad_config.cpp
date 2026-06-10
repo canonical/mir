@@ -16,6 +16,7 @@
 
 #include <mir/input/mir_touchpad_config.h>
 #include <ostream>
+#include <tuple>
 
 struct MirTouchpadConfig::Implementation
 {
@@ -170,14 +171,12 @@ void MirTouchpadConfig::disable_while_typing(bool enabled)
 
 bool MirTouchpadConfig::operator==(MirTouchpadConfig const& rhs) const
 {
-    return
-        impl->click_mode == rhs.impl->click_mode &&
-        impl->scroll_mode == rhs.impl->scroll_mode &&
-        impl->button_down_scroll_button == rhs.impl->button_down_scroll_button &&
-        impl->tap_to_click == rhs.impl->tap_to_click &&
-        impl->middle_mouse_button_emulation == rhs.impl->middle_mouse_button_emulation &&
-        impl->disable_with_external_mouse == rhs.impl->disable_with_external_mouse &&
-        impl->disable_while_typing == rhs.impl->disable_while_typing;
+    return std::tie(impl->click_mode, impl->scroll_mode, impl->button_down_scroll_button,
+                    impl->tap_to_click, impl->middle_mouse_button_emulation,
+                    impl->disable_with_external_mouse, impl->disable_while_typing) ==
+           std::tie(rhs.impl->click_mode, rhs.impl->scroll_mode, rhs.impl->button_down_scroll_button,
+                    rhs.impl->tap_to_click, rhs.impl->middle_mouse_button_emulation,
+                    rhs.impl->disable_with_external_mouse, rhs.impl->disable_while_typing);
 }
 
 std::ostream& operator<<(std::ostream& out, MirTouchpadConfig const& conf)

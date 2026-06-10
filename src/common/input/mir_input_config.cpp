@@ -24,6 +24,7 @@
 #include <mir/optional_value.h>
 #include <algorithm>
 #include <ostream>
+#include <tuple>
 
 namespace mi = mir::input;
 
@@ -184,13 +185,10 @@ void MirInputDevice::set_pointer_config(MirPointerConfig const& conf)
 
 bool MirInputDevice::operator==(MirInputDevice const& rhs) const
 {
-    return impl->id == rhs.impl->id &&
-        impl->name == rhs.impl->name &&
-        impl->caps == rhs.impl->caps &&
-        impl->pointer == rhs.impl->pointer &&
-        impl->keyboard == rhs.impl->keyboard &&
-        impl->touchpad == rhs.impl->touchpad &&
-        impl->touchscreen == rhs.impl->touchscreen;
+    return std::tie(impl->id, impl->name, impl->caps,
+                    impl->pointer, impl->keyboard, impl->touchpad, impl->touchscreen) ==
+           std::tie(rhs.impl->id, rhs.impl->name, rhs.impl->caps,
+                    rhs.impl->pointer, rhs.impl->keyboard, rhs.impl->touchpad, rhs.impl->touchscreen);
 }
 
 MirInputConfig::MirInputConfig()
