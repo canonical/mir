@@ -33,6 +33,8 @@
 #include <mir/shell/shell.h>
 #include <mir/wayland/weak.h>
 
+#include <limits.h>
+
 #include <algorithm>
 #include <mutex>
 #include <map>

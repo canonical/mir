@@ -18,9 +18,11 @@
 
 #include <mir/log.h>
 #include <miral/live_config_overrides_list.h>
+#include <miral/runner.h>
 
 #include <boost/throw_exception.hpp>
 
+#include <limits.h>
 #include <sys/inotify.h>
 #include <unistd.h>
 
