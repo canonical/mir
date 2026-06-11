@@ -33,7 +33,7 @@ auto split_assignment(std::string_view config_value)
     if (equals_pos == config_value.npos)
     {
       BOOST_THROW_EXCEPTION((std::runtime_error{
-          std::format("Failed to parse log-level: {}", config_value)}));
+          std::format("Failed to parse {} as key=value pair", config_value)}));
     }
 
     auto const key = config_value.substr(0, equals_pos);
@@ -42,7 +42,7 @@ auto split_assignment(std::string_view config_value)
     if (key.empty() || value.empty())
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{
-            std::format("Failed to parse log-level: {}", config_value)}));
+            std::format("Failed to parse {} as key=value pair", config_value)}));
     }
     return std::make_pair(key, value);
 }
