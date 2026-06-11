@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <expected>
 #include <sys/mman.h>
+#include <system_error>
 
 namespace mir
 {
@@ -108,6 +109,13 @@ public:
 enum class ResizeError
 {
     invalid_size,
+};
+
+/// Thrown when the client-provided backing file descriptor cannot be mmap()ed
+class MmapError : public std::system_error
+{
+public:
+    using std::system_error::system_error;
 };
 
 class ReadMappableRange
