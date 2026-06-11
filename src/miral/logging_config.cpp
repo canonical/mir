@@ -51,7 +51,7 @@ auto split_assignment(std::string_view config_value)
 void miral::register_log_filtering_config(live_config::Store &config_store)
 {
     config_store.add_strings_attribute(
-        {"log-level"},
+        {"log_level"},
         "Minimum severity level for a log message with a given tag to be emitted, in the form tag=severity",
         [](live_config::Key const& /*key*/, std::optional<std::span<std::string const>> value)
         {
