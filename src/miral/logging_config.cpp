@@ -16,7 +16,7 @@
 
 #include <miral/logging_config.h>
 #include <miral/live_config.h>
-#include <mir/logging/tag.h>
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 #include <format>
@@ -53,7 +53,7 @@ void miral::register_log_filtering_config(live_config::Store &config_store)
     config_store.add_strings_attribute(
         {"log_level"},
         "Minimum severity level for a log message with a given tag to be emitted, in the form tag=severity",
-        [](live_config::Key const& /*key*/, std::optional<std::span<std::string const>> value)
+        [](live_config::Key const& key, std::optional<std::span<std::string const>> value)
         {
             // Restore the default state before applying any new configuration
             mir::logging::tag::set_severity("base", mir::logging::Severity::warning);
@@ -63,9 +63,16 @@ void miral::register_log_filtering_config(live_config::Store &config_store)
 
                 for (auto const& filter : *value)
                 {
-                    auto const [tag_name, severity_name] = split_assignment(filter);
-                    auto const severity = mir::logging::parse_severity(severity_name);
-                    mir::logging::tag::set_severity(tag_name, severity);
+                    try
+                    {
+                        auto const [tag_name, severity_name] = split_assignment(filter);
+                        auto const severity = mir::logging::parse_severity(severity_name);
+                        mir::logging::tag::set_severity(tag_name, severity);
+                    }
+                    catch (std::exception const& err)
+                    {
+                        mir::log_warning({mir::logging::base()}, "Failed to apply part of config {}: {}", key, err.what());
+                    }
                 }
             }
         }
