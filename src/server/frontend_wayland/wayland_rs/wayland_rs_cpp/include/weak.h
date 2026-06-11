@@ -61,11 +61,6 @@ public:
         return !ptr_.owner_before(other.ptr_) && !other.ptr_.owner_before(ptr_);
     }
 
-    auto operator!=(Weak<T> const& other) const -> bool
-    {
-        return !(*this == other);
-    }
-
     auto operator=(Weak<T> const&) -> Weak<T>& = default;
 
 private:

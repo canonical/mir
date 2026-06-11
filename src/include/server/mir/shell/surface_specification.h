@@ -41,8 +41,13 @@ class BufferStream;
 
 namespace shell
 {
-struct SurfaceAspectRatio { unsigned width; unsigned height; };
-auto operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rhs) -> bool;
+struct SurfaceAspectRatio
+{
+    unsigned width;
+    unsigned height;
+
+    bool operator==(SurfaceAspectRatio const&) const = default;
+};
 
 struct StreamSpecification
 {
@@ -121,7 +126,6 @@ struct SurfaceSpecification
     optional_value<float> alpha;
 };
 bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
-bool operator!=(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 }
 }
 

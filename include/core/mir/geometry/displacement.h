@@ -68,7 +68,6 @@ struct Displacement
     }
 
     friend bool operator==(Displacement const& lhs, Displacement const& rhs) = default;
-    friend bool operator!=(Displacement const& lhs, Displacement const& rhs) = default;
 
     DeltaX<T> dx;
     DeltaY<T> dy;

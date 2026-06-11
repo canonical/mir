@@ -72,7 +72,6 @@ public:
         iterator operator++(int);
 
         bool operator==(iterator const& rhs) const;
-        bool operator!=(iterator const& rhs) const;
 
         DRMUPtr& operator*() const;
         DRMUPtr* operator->() const;

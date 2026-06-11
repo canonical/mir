@@ -84,7 +84,6 @@ struct MirTouchpadConfig
     void disable_while_typing(bool);
 
     bool operator==(MirTouchpadConfig const& rhs) const;
-    bool operator!=(MirTouchpadConfig const& rhs) const;
 
 private:
     struct Implementation;

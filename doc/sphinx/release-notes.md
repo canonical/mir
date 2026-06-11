@@ -40,15 +40,15 @@
 
   - ABI summary:
 
-    - miral ABI unchanged at 7
-    - mircommon ABI unchanged at 12
-    - mircore ABI unchanged at 2
-    - miroil ABI unchanged at 8
-    - mirplatform ABI unchanged at 34
-    - mirserver ABI unchanged at 67
-    - mirwayland ABI unchanged at 6
-    - mirplatformgraphics ABI unchanged at 23
-    - mirinputplatform ABI unchanged at 10
+    - miral ABI bumped to 8
+    - mircommon ABI bumped to 13
+    - mircore ABI bumped to 3
+    - miroil ABI bumped to 10
+    - mirplatform ABI bumped to 35
+    - mirserver ABI bumped to 68
+    - mirwayland ABI bumped to 7
+    - mirplatformgraphics ABI bumped to 24
+    - mirinputplatform ABI bumped to 11
 
 ## Mir 2.28.0
 

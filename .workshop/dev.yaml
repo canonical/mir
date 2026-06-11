@@ -25,6 +25,22 @@ actions:
     set -xeu
     cmake --build ~/build "$@"
 
+  package: |
+    set -xeu
+    cd $HOME
+    rsync --archive --delete --filter='P build-*' --progress /project/ project/
+    cd project
+    cat <<EOF > debian/opts.mk
+      OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_C_COMPILER_LAUNCHER=ccache
+      OVERRIDE_CONFIGURE_OPTIONS += -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+    EOF
+    DEB_BUILD_OPTIONS="nocheck nostrip parallel=$(nproc) ${DEB_BUILD_OPTIONS:-}" \
+      dpkg-buildpackage \
+        --no-pre-clean \
+        --unsigned-changes \
+        --unsigned-source \
+        "$@"
+
   test: |
     set -xeu
     cmake --build ~/build

@@ -79,24 +79,12 @@ inline bool operator==(optional_value<T> const& lhs, optional_value<T> const& rh
 { return lhs.is_set() == rhs.is_set() && (!lhs.is_set() || lhs.value() == rhs.value()); }
 
 template<typename T>
-inline bool operator!=(optional_value<T> const& lhs, optional_value<T> const& rhs)
-{ return !(lhs == rhs); }
-
-template<typename T>
 inline bool operator==(optional_value<T> const& lhs, T const& rhs)
 { return lhs.is_set() && (lhs.value() == rhs); }
 
 template<typename T>
-inline bool operator!=(optional_value<T> const& lhs, T const& rhs)
-{ return !(lhs == rhs); }
-
-template<typename T>
 inline bool operator==(T const& lhs, optional_value<T> const& rhs)
 { return rhs == lhs; }
-
-template<typename T>
-inline bool operator!=(T const& lhs, optional_value<T> const& rhs)
-{ return rhs != lhs; }
 }
 
 #endif /* MIR_OPTIONAL_VALUE_H_ */

@@ -66,7 +66,6 @@ struct Size
     {}
 
     friend bool operator==(Size const& lhs, Size const& rhs) = default;
-    friend bool operator!=(Size const& lhs, Size const& rhs) = default;
 
     Width<T> width;
     Height<T> height;

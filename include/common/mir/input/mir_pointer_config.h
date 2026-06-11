@@ -71,7 +71,6 @@ struct MirPointerConfig
     void vertical_scroll_scale(double);
 
     bool operator==(MirPointerConfig const& rhs) const;
-    bool operator!=(MirPointerConfig const& rhs) const;
 
 private:
     struct Implementation;

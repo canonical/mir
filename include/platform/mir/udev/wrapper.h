@@ -84,7 +84,6 @@ protected:
 };
 
 bool operator==(Device const& lhs, Device const& rhs);
-bool operator!=(Device const& lhs, Device const& rhs);
 
 class Enumerator
 {
@@ -114,7 +113,6 @@ public:
         iterator operator++(int);
 
         bool operator==(iterator const& rhs) const;
-        bool operator!=(iterator const& rhs) const;
 
         Device const& operator*() const;
         Device const* operator->() const;

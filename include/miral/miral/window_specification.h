@@ -70,6 +70,7 @@ public:
     {
         unsigned width;
         unsigned height;
+        bool operator==(AspectRatio const&) const = default;
     };
 
     /// Construct a new window specification.
