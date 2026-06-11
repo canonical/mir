@@ -676,6 +676,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::pid_of(std::shared_ptr<mir::scene::Session> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::pre_init(miral::ConfigurationOption const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::register_log_filtering_config(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::socket_fd_of(std::shared_ptr<mir::scene::Session> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::toolkit::mir_event_get_input_event(MirEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::toolkit::mir_event_get_type(MirEvent const*)@MIRAL_6.0" 6.0.0
