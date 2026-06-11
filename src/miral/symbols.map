@@ -580,6 +580,7 @@ global:
     miral::operator*;
     miral::pid_of*;
     miral::pre_init*;
+    miral::register_log_filtering_config*;
     miral::socket_fd_of*;
     miral::toolkit::mir_event_get_input_event*;
     miral::toolkit::mir_event_get_type*;
