@@ -218,7 +218,7 @@ auto mgg::BufferAllocator::shared_egl_context() -> EGLContext
 auto mgg::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
     std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};
-    if (auto dmabuf_texture = dmabuf_provider->as_texture(native_buffer))
+    if (auto dmabuf_texture = dmabuf_provider->as_texture(buffer))
     {
         return dmabuf_texture;
     }
