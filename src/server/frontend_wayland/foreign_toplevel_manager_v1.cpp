@@ -34,6 +34,7 @@
 #include <mir/wayland/weak.h>
 
 #include <limits.h>
+#include <unistd.h>
 
 #include <algorithm>
 #include <mutex>
