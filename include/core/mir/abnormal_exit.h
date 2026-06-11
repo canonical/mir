@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_ABNORMAL_EXIT_H_
 #define MIR_ABNORMAL_EXIT_H_
 
@@ -26,22 +25,15 @@ namespace mir
 class AbnormalExit : public std::runtime_error
 {
 public:
-    AbnormalExit(std::string const& what) :
-        std::runtime_error(what)
-    {
-    }
+    AbnormalExit(std::string const& what) : std::runtime_error(what) {}
 };
 
 /// Indicates Mir should exit with the given output (such as help text) printed to stdout
 class ExitWithOutput : public AbnormalExit
 {
 public:
-    ExitWithOutput(std::string const& what) :
-        AbnormalExit(what)
-    {
-    }
+    ExitWithOutput(std::string const& what) : AbnormalExit(what) {}
 };
 }
-
 
 #endif /* MIR_ABNORMAL_EXIT_H_ */

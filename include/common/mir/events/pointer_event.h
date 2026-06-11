@@ -27,16 +27,17 @@ typedef struct MirBlob MirBlob;
 struct MirPointerEvent : MirInputEvent
 {
     MirPointerEvent();
-    MirPointerEvent(MirInputDeviceId dev,
-                    std::chrono::nanoseconds et,
-                    MirInputEventModifiers mods,
-                    MirPointerAction action,
-                    MirPointerButtons buttons,
-                    std::optional<mir::geometry::PointF> position,
-                    mir::geometry::DisplacementF motion,
-                    MirPointerAxisSource axis_source,
-                    mir::events::ScrollAxisH h_scroll,
-                    mir::events::ScrollAxisV v_scroll);
+    MirPointerEvent(
+        MirInputDeviceId dev,
+        std::chrono::nanoseconds et,
+        MirInputEventModifiers mods,
+        MirPointerAction action,
+        MirPointerButtons buttons,
+        std::optional<mir::geometry::PointF> position,
+        mir::geometry::DisplacementF motion,
+        MirPointerAxisSource axis_source,
+        mir::events::ScrollAxisH h_scroll,
+        mir::events::ScrollAxisV v_scroll);
 
     auto clone() const -> MirPointerEvent* override;
 

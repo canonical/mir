@@ -48,8 +48,8 @@ class DisplayConfigurationStorage
 public:
     virtual ~DisplayConfigurationStorage() = default;
 
-    virtual void save(const DisplayId&, const DisplayConfigurationOptions&) = 0;
-    virtual bool load(const DisplayId&, DisplayConfigurationOptions&) const = 0;
+    virtual void save(DisplayId const&, DisplayConfigurationOptions const&) = 0;
+    virtual bool load(DisplayId const&, DisplayConfigurationOptions&) const = 0;
 };
 
 } // namespace miroil

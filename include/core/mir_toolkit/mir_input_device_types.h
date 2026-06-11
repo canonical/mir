@@ -21,7 +21,8 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 typedef int64_t MirInputDeviceId;
@@ -59,9 +60,9 @@ typedef enum MirPointerAcceleration
  */
 typedef enum MirTouchpadClickMode
 {
-    mir_touchpad_click_mode_none          = 0,
+    mir_touchpad_click_mode_none = 0,
     mir_touchpad_click_mode_area_to_click = 1 << 0,
-    mir_touchpad_click_mode_finger_count  = 1 << 1
+    mir_touchpad_click_mode_finger_count = 1 << 1
 } MirTouchpadClickMode;
 [[deprecated("UNUSED since Mir 2.18")]] typedef unsigned int MirTouchpadClickModes;
 
@@ -78,9 +79,9 @@ typedef enum MirTouchpadClickMode
  */
 typedef enum MirTouchpadScrollMode
 {
-    mir_touchpad_scroll_mode_none               = 0,
-    mir_touchpad_scroll_mode_two_finger_scroll  = 1 << 0,
-    mir_touchpad_scroll_mode_edge_scroll        = 1 << 1,
+    mir_touchpad_scroll_mode_none = 0,
+    mir_touchpad_scroll_mode_two_finger_scroll = 1 << 0,
+    mir_touchpad_scroll_mode_edge_scroll = 1 << 1,
     mir_touchpad_scroll_mode_button_down_scroll = 1 << 2
 } MirTouchpadScrollMode;
 [[deprecated("UNUSED since Mir 2.18")]] typedef unsigned int MirTouchpadScrollModes;
@@ -105,7 +106,6 @@ typedef enum MirTouchscreenMappingMode
      */
     mir_touchscreen_mapping_mode_to_display_wall
 } MirTouchscreenMappingMode;
-
 
 #ifdef __cplusplus
 }

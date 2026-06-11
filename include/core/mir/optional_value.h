@@ -50,10 +50,7 @@ public:
         return value_;
     }
 
-    T value_or(T default_) const
-    {
-        return is_set() ? value() : default_;
-    }
+    T value_or(T default_) const { return is_set() ? value() : default_; }
 
     T&& consume()
     {
@@ -62,10 +59,7 @@ public:
         return std::move(value_);
     }
 
-    operator bool() const
-    {
-        return is_set();
-    }
+    operator bool() const { return is_set(); }
 
 private:
     void die_if_unset() const
@@ -80,43 +74,29 @@ private:
     bool is_set_{false};
 };
 
+template<typename T>
+inline bool operator==(optional_value<T> const& lhs, optional_value<T> const& rhs)
+{ return lhs.is_set() == rhs.is_set() && (!lhs.is_set() || lhs.value() == rhs.value()); }
 
 template<typename T>
-inline bool operator == (optional_value<T> const& lhs, optional_value<T> const& rhs)
-{
-    return lhs.is_set() == rhs.is_set() &&
-           (!lhs.is_set() || lhs.value() == rhs.value());
-}
+inline bool operator!=(optional_value<T> const& lhs, optional_value<T> const& rhs)
+{ return !(lhs == rhs); }
 
 template<typename T>
-inline bool operator != (optional_value<T> const& lhs, optional_value<T> const& rhs)
-{
-    return !(lhs == rhs);
-}
+inline bool operator==(optional_value<T> const& lhs, T const& rhs)
+{ return lhs.is_set() && (lhs.value() == rhs); }
 
 template<typename T>
-inline bool operator == (optional_value<T> const& lhs, T const& rhs)
-{
-    return lhs.is_set() && (lhs.value() == rhs);
-}
+inline bool operator!=(optional_value<T> const& lhs, T const& rhs)
+{ return !(lhs == rhs); }
 
 template<typename T>
-inline bool operator != (optional_value<T> const& lhs, T const& rhs)
-{
-    return !(lhs == rhs);
-}
+inline bool operator==(T const& lhs, optional_value<T> const& rhs)
+{ return rhs == lhs; }
 
 template<typename T>
-inline bool operator == (T const& lhs, optional_value<T> const& rhs)
-{
-    return rhs == lhs;
-}
-
-template<typename T>
-inline bool operator != (T const& lhs, optional_value<T> const& rhs)
-{
-    return rhs != lhs;
-}
+inline bool operator!=(T const& lhs, optional_value<T> const& rhs)
+{ return rhs != lhs; }
 }
 
 #endif /* MIR_OPTIONAL_VALUE_H_ */

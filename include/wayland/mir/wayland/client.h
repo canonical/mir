@@ -29,10 +29,7 @@ class MirEvent;
 
 namespace mir
 {
-namespace scene
-{
-class Session;
-}
+namespace scene { class Session; }
 
 namespace wayland
 {

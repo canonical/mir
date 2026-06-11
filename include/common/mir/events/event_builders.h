@@ -35,7 +35,7 @@
 
 namespace mir
 {
-    using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
+using EventUPtr = std::unique_ptr<MirEvent, void (*)(MirEvent*)>;
 
 namespace events
 {
@@ -83,7 +83,7 @@ EventUPtr make_touch_event(
     MirInputEventModifiers modifiers);
 
 void add_touch(
-    MirEvent &event,
+    MirEvent& event,
     MirTouchId touch_id,
     MirTouchAction action,
     MirTouchTooltype tooltype,

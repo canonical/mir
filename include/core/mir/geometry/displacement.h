@@ -44,31 +44,31 @@ struct Displacement
     Displacement& operator=(Displacement const&) = default;
 
     template<typename U>
-    explicit constexpr Displacement(Displacement<U> const& other) noexcept
-        : dx{DeltaX<T>{other.dx}},
-          dy{DeltaY<T>{other.dy}}
-    {
-    }
+    explicit constexpr Displacement(Displacement<U> const& other) noexcept :
+        dx{DeltaX<T>{other.dx}},
+        dy{DeltaY<T>{other.dy}}
+    {}
 
     template<typename DeltaXType, typename DeltaYType>
-    constexpr Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy} {}
+    constexpr Displacement(DeltaXType&& dx, DeltaYType&& dy) : dx{dx}, dy{dy}
+    {}
 
-    template <typename Q = T>
+    template<typename Q = T>
     constexpr std::enable_if_t<std::is_integral_v<Q>, long long> length_squared() const
     {
         long long x = dx.as_value(), y = dy.as_value();
         return x * x + y * y;
     }
 
-    template <typename Q = T>
+    template<typename Q = T>
     constexpr std::enable_if_t<!std::is_integral_v<Q>, T> length_squared() const
     {
         T x = dx.as_value(), y = dy.as_value();
         return x * x + y * y;
     }
 
-    friend bool operator== (Displacement const& lhs, Displacement const& rhs) = default;
-    friend bool operator!= (Displacement const& lhs, Displacement const& rhs) = default;
+    friend bool operator==(Displacement const& lhs, Displacement const& rhs) = default;
+    friend bool operator!=(Displacement const& lhs, Displacement const& rhs) = default;
 
     DeltaX<T> dx;
     DeltaY<T> dy;
@@ -83,99 +83,67 @@ std::ostream& operator<<(std::ostream& out, Displacement<T> const& value)
 
 template<typename T>
 inline constexpr Displacement<T> operator+(Displacement<T> const& lhs, Displacement<T> const& rhs)
-{
-    return Displacement<T>{lhs.dx + rhs.dx, lhs.dy + rhs.dy};
-}
+{ return Displacement<T>{lhs.dx + rhs.dx, lhs.dy + rhs.dy}; }
 
 template<typename T>
 inline constexpr Displacement<T> operator-(Displacement<T> const& lhs, Displacement<T> const& rhs)
-{
-    return Displacement<T>{lhs.dx - rhs.dx, lhs.dy - rhs.dy};
-}
+{ return Displacement<T>{lhs.dx - rhs.dx, lhs.dy - rhs.dy}; }
 
 template<typename T>
 inline constexpr Displacement<T> operator-(Displacement<T> const& rhs)
-{
-    return Displacement<T>{-rhs.dx, -rhs.dy};
-}
+{ return Displacement<T>{-rhs.dx, -rhs.dy}; }
 
 template<typename T>
 inline constexpr Point<T> operator+(Point<T> const& lhs, Displacement<T> const& rhs)
-{
-    return Point<T>{lhs.x + rhs.dx, lhs.y + rhs.dy};
-}
+{ return Point<T>{lhs.x + rhs.dx, lhs.y + rhs.dy}; }
 
 template<typename T>
 inline constexpr Point<T> operator+(Displacement<T> const& lhs, Point<T> const& rhs)
-{
-    return Point<T>{rhs.x + lhs.dx, rhs.y + lhs.dy};
-}
+{ return Point<T>{rhs.x + lhs.dx, rhs.y + lhs.dy}; }
 
 template<typename T>
 inline constexpr Point<T> operator-(Point<T> const& lhs, Displacement<T> const& rhs)
-{
-    return Point<T>{lhs.x - rhs.dx, lhs.y - rhs.dy};
-}
+{ return Point<T>{lhs.x - rhs.dx, lhs.y - rhs.dy}; }
 
 template<typename T>
 inline constexpr Displacement<T> operator-(Point<T> const& lhs, Point<T> const& rhs)
-{
-    return Displacement<T>{lhs.x - rhs.x, lhs.y - rhs.y};
-}
+{ return Displacement<T>{lhs.x - rhs.x, lhs.y - rhs.y}; }
 
 template<typename T>
 inline constexpr Point<T>& operator+=(Point<T>& lhs, Displacement<T> const& rhs)
-{
-    return lhs = lhs + rhs;
-}
+{ return lhs = lhs + rhs; }
 
 template<typename T>
 inline constexpr Point<T>& operator-=(Point<T>& lhs, Displacement<T> const& rhs)
-{
-    return lhs = lhs - rhs;
-}
+{ return lhs = lhs - rhs; }
 
 template<typename T>
 inline bool operator<(Displacement<T> const& lhs, Displacement<T> const& rhs)
-{
-    return lhs.length_squared() < rhs.length_squared();
-}
+{ return lhs.length_squared() < rhs.length_squared(); }
 
 template<typename T, typename Scalar>
 inline constexpr Displacement<T> operator*(Scalar scale, Displacement<T> const& disp)
-{
-    return Displacement<T>{scale*disp.dx, scale*disp.dy};
-}
+{ return Displacement<T>{scale * disp.dx, scale * disp.dy}; }
 
 template<typename T, typename Scalar>
 inline constexpr Displacement<T> operator*(Displacement<T> const& disp, Scalar scale)
-{
-    return scale*disp;
-}
+{ return scale * disp; }
 
 template<typename T>
 inline constexpr Displacement<T> as_displacement(Size<T> const& size)
-{
-    return Displacement<T>{size.width.as_value(), size.height.as_value()};
-}
+{ return Displacement<T>{size.width.as_value(), size.height.as_value()}; }
 
 template<typename T>
 inline constexpr Size<T> as_size(Displacement<T> const& disp)
-{
-    return Size<T>{disp.dx.as_value(), disp.dy.as_value()};
-}
+{ return Size<T>{disp.dx.as_value(), disp.dy.as_value()}; }
 
 template<typename T>
 inline constexpr Displacement<T> as_displacement(Point<T> const& point)
-{
-    return Displacement<T>{point.x.as_value(), point.y.as_value()};
-}
+{ return Displacement<T>{point.x.as_value(), point.y.as_value()}; }
 
 template<typename T>
 inline constexpr Point<T> as_point(Displacement<T> const& disp)
-{
-    return Point<T>{disp.dx.as_value(), disp.dy.as_value()};
-}
+{ return Point<T>{disp.dx.as_value(), disp.dy.as_value()}; }
 }
 }
 }

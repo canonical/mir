@@ -25,12 +25,17 @@ namespace mir
 /// Utilities for exception safe use of paired function calls
 namespace raii
 {
-template <typename Creator, typename Deleter>
+template<typename Creator, typename Deleter>
 struct PairedCalls
 {
     PairedCalls(Creator&& creator, Deleter&& deleter) : deleter(std::move(deleter)), owner(true) { creator(); }
     PairedCalls(PairedCalls&& that) : deleter(that.deleter), owner(that.owner) { that.owner = false; }
-    ~PairedCalls()  { if (owner) deleter(); }
+    ~PairedCalls()
+    {
+        if (owner)
+            deleter();
+    }
+
 private:
     PairedCalls(PairedCalls const& that) = delete;
     PairedCalls& operator=(PairedCalls const& that) = delete;
@@ -47,22 +52,16 @@ private:
  * \param creator called to initialize the returned object
  * \param deleter called to finalize the returned object
  */
-template <typename Creator, typename Deleter>
+template<typename Creator, typename Deleter>
 inline auto paired_calls(Creator&& creator, Deleter&& deleter)
--> std::unique_ptr<std::remove_reference_t<decltype(*creator())>, Deleter>
-{
-    return {creator(), deleter};
-}
+    -> std::unique_ptr<std::remove_reference_t<decltype(*creator())>, Deleter>
+{ return {creator(), deleter}; }
 
 ///\overload
-template <typename Creator, typename Deleter>
-inline auto paired_calls(Creator&& creator, Deleter&& deleter)
--> typename std::enable_if<
-    std::is_void<decltype(creator())>::value,
-    PairedCalls<Creator, Deleter>>::type
-{
-    return {std::move(creator), std::move(deleter)};
-}
+template<typename Creator, typename Deleter>
+inline auto paired_calls(Creator&& creator, Deleter&& deleter) ->
+    typename std::enable_if<std::is_void<decltype(creator())>::value, PairedCalls<Creator, Deleter>>::type
+{ return {std::move(creator), std::move(deleter)}; }
 
 /**
  * Creates an RAII object from an owning pointer and deleter.
@@ -71,12 +70,9 @@ inline auto paired_calls(Creator&& creator, Deleter&& deleter)
  * \param owned   the object to take ownership of
  * \param deleter called to finalize the owned object
  */
-template <typename Owned, typename Deleter>
-inline auto deleter_for(Owned* owned, Deleter&& deleter)
--> std::unique_ptr<Owned, Deleter>
-{
-    return {owned, deleter};
-}
+template<typename Owned, typename Deleter>
+inline auto deleter_for(Owned* owned, Deleter&& deleter) -> std::unique_ptr<Owned, Deleter>
+{ return {owned, deleter}; }
 }
 }
 

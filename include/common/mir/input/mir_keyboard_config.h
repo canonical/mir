@@ -41,6 +41,7 @@ struct MirKeyboardConfig
 
     bool operator==(MirKeyboardConfig const& rhs) const;
     bool operator!=(MirKeyboardConfig const& rhs) const;
+
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;

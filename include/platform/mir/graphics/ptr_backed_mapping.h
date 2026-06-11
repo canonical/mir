@@ -30,45 +30,24 @@ template<typename T>
 class PtrBackedMapping : public renderer::software::Mapping<T>
 {
 public:
-    PtrBackedMapping(
-        T* ptr,
-        MirPixelFormat format,
-        geometry::Size size,
-        geometry::Stride stride)
-        : ptr{ptr},
-          format_{format},
-          size_{size},
-          stride_{stride}
-    {
-    }
+    PtrBackedMapping(T* ptr, MirPixelFormat format, geometry::Size size, geometry::Stride stride) :
+        ptr{ptr},
+        format_{format},
+        size_{size},
+        stride_{stride}
+    {}
 
-    auto data() const -> T* override
-    {
-        return ptr;
-    }
+    auto data() const -> T* override { return ptr; }
 
     auto len() const -> size_t override
-    {
-        return
-            size().height.as_uint32_t() *
-            stride().as_uint32_t() *
-            MIR_BYTES_PER_PIXEL(format());
-    }
+    { return size().height.as_uint32_t() * stride().as_uint32_t() * MIR_BYTES_PER_PIXEL(format()); }
 
-    auto size() const -> geometry::Size override
-    {
-        return size_;
-    }
+    auto size() const -> geometry::Size override { return size_; }
 
-    auto stride() const -> geometry::Stride override
-    {
-        return stride_;
-    }
+    auto stride() const -> geometry::Stride override { return stride_; }
 
-    auto format() const -> MirPixelFormat override
-    {
-        return format_;
-    }
+    auto format() const -> MirPixelFormat override { return format_; }
+
 private:
     T* const ptr;
     MirPixelFormat const format_;

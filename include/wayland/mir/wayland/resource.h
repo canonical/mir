@@ -28,8 +28,7 @@ namespace wayland
 {
 class Client;
 
-class Resource
-    : public virtual LifetimeTracker
+class Resource : public virtual LifetimeTracker
 {
 private:
     std::shared_ptr<Client> const owned_client;

@@ -28,8 +28,7 @@ namespace input
 struct TouchscreenSettings
 {
     TouchscreenSettings() {}
-    TouchscreenSettings(uint32_t output_id, MirTouchscreenMappingMode mode)
-        : output_id{output_id}, mapping_mode{mode}
+    TouchscreenSettings(uint32_t output_id, MirTouchscreenMappingMode mode) : output_id{output_id}, mapping_mode{mode}
     {}
 
     /**
@@ -45,9 +44,7 @@ struct TouchscreenSettings
 };
 
 inline bool operator==(TouchscreenSettings const& lhs, TouchscreenSettings const& rhs)
-{
-    return lhs.output_id == rhs.output_id && lhs.mapping_mode == rhs.mapping_mode;
-}
+{ return lhs.output_id == rhs.output_id && lhs.mapping_mode == rhs.mapping_mode; }
 }
 }
 

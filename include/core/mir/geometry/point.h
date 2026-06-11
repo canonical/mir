@@ -42,41 +42,59 @@ struct Point
     Point& operator=(Point const&) = default;
 
     template<typename U>
-    explicit constexpr Point(Point<U> const& other) noexcept
-        : x{X<T>{other.x}},
-          y{Y<T>{other.y}}
-    {
-    }
+    explicit constexpr Point(Point<U> const& other) noexcept : x{X<T>{other.x}}, y{Y<T>{other.y}}
+    {}
 
     template<typename XType, typename YType>
-    constexpr Point(XType&& x, YType&& y) : x(x), y(y) {}
+    constexpr Point(XType&& x, YType&& y) : x(x), y(y)
+    {}
 
-    friend bool operator== (Point const& lhs, Point const& rhs) = default;
-    friend bool operator!= (Point const& lhs, Point const& rhs) = default;
+    friend bool operator==(Point const& lhs, Point const& rhs) = default;
+    friend bool operator!=(Point const& lhs, Point const& rhs) = default;
 
     X<T> x;
     Y<T> y;
 };
 
 template<typename T>
-inline constexpr Point<T> operator+(Point<T> lhs, DeltaX<T> rhs) { return{lhs.x + rhs, lhs.y}; }
+inline constexpr Point<T> operator+(Point<T> lhs, DeltaX<T> rhs)
+{ return {lhs.x + rhs, lhs.y}; }
 template<typename T>
-inline constexpr Point<T> operator+(Point<T> lhs, DeltaY<T> rhs) { return{lhs.x, lhs.y + rhs}; }
+inline constexpr Point<T> operator+(Point<T> lhs, DeltaY<T> rhs)
+{ return {lhs.x, lhs.y + rhs}; }
 
 template<typename T>
-inline constexpr Point<T> operator-(Point<T> lhs, DeltaX<T> rhs) { return{lhs.x - rhs, lhs.y}; }
+inline constexpr Point<T> operator-(Point<T> lhs, DeltaX<T> rhs)
+{ return {lhs.x - rhs, lhs.y}; }
 template<typename T>
-inline constexpr Point<T> operator-(Point<T> lhs, DeltaY<T> rhs) { return{lhs.x, lhs.y - rhs}; }
+inline constexpr Point<T> operator-(Point<T> lhs, DeltaY<T> rhs)
+{ return {lhs.x, lhs.y - rhs}; }
 
 template<typename T>
-inline Point<T>& operator+=(Point<T>& lhs, DeltaX<T> rhs) { lhs.x += rhs; return lhs; }
+inline Point<T>& operator+=(Point<T>& lhs, DeltaX<T> rhs)
+{
+    lhs.x += rhs;
+    return lhs;
+}
 template<typename T>
-inline Point<T>& operator+=(Point<T>& lhs, DeltaY<T> rhs) { lhs.y += rhs; return lhs; }
+inline Point<T>& operator+=(Point<T>& lhs, DeltaY<T> rhs)
+{
+    lhs.y += rhs;
+    return lhs;
+}
 
 template<typename T>
-inline Point<T>& operator-=(Point<T>& lhs, DeltaX<T> rhs) { lhs.x -= rhs; return lhs; }
+inline Point<T>& operator-=(Point<T>& lhs, DeltaX<T> rhs)
+{
+    lhs.x -= rhs;
+    return lhs;
+}
 template<typename T>
-inline Point<T>& operator-=(Point<T>& lhs, DeltaY<T> rhs) { lhs.y -= rhs; return lhs; }
+inline Point<T>& operator-=(Point<T>& lhs, DeltaY<T> rhs)
+{
+    lhs.y -= rhs;
+    return lhs;
+}
 
 template<typename T>
 std::ostream& operator<<(std::ostream& out, Point<T> const& value)

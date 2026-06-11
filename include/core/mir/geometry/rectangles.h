@@ -56,7 +56,6 @@ private:
     std::vector<Rectangle> rectangles;
 };
 
-
 std::ostream& operator<<(std::ostream& out, Rectangles const& value);
 
 }
