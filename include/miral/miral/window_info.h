@@ -77,12 +77,6 @@ struct WindowInfo
     /// \returns `true` if the window is visible, otherwise `false`.
     bool is_visible() const;
 
-    /// \deprecated Obsolete: Window::size() includes decorations
-    /// @{
-    [[deprecated("Obsolete: Window::size() includes decorations")]]
-    static bool needs_titlebar(MirWindowType type);
-    /// @}
-
     void constrain_resize(mir::geometry::Point& requested_pos, mir::geometry::Size& requested_size) const;
 
     /// The #miral::Window that backs this instance
