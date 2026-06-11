@@ -21,8 +21,14 @@
 #include <mir_toolkit/mir_input_device_types.h>
 #include <vector>
 
-namespace mir { namespace scene { class SurfaceObserver; } }
-namespace mir { namespace scene { class Surface; } }
+namespace mir
+{
+namespace scene { class SurfaceObserver; }
+}
+namespace mir
+{
+namespace scene { class Surface; }
+}
 
 struct MirEvent;
 struct MirInputEvent;
@@ -43,15 +49,23 @@ public:
     virtual void content_resized_to(mir::scene::Surface const* surf, mir::geometry::Size const& content_size) = 0;
     virtual void moved_to(mir::scene::Surface const* surf, mir::geometry::Point const& top_left) = 0;
     virtual void hidden_set_to(mir::scene::Surface const* surf, bool hide) = 0;
-    virtual void frame_posted(mir::scene::Surface const* surf, int frames_available, mir::geometry::Size const& size) = 0;
+    virtual void frame_posted(
+        mir::scene::Surface const* surf,
+        int frames_available,
+        mir::geometry::Size const& size) = 0;
     virtual void alpha_set_to(mir::scene::Surface const* surf, float alpha) = 0;
     virtual void orientation_set_to(mir::scene::Surface const* surf, MirOrientation orientation) = 0;
     virtual void mirror_mode_set_to(mir::scene::Surface const* surf, MirMirrorMode mirror_mode) = 0;
     virtual void transformation_set_to(mir::scene::Surface const* surf, glm::mat4 const& t) = 0;
     virtual void cursor_image_set_to(mir::scene::Surface const* surf, mir::graphics::CursorImage const& image) = 0;
     virtual void client_surface_close_requested(mir::scene::Surface const* surf) = 0;
-    virtual void keymap_changed(mir::scene::Surface const* surf, MirInputDeviceId id, std::string const& model,
-                                std::string const& layout, std::string const& variant, std::string const& options) = 0;
+    virtual void keymap_changed(
+        mir::scene::Surface const* surf,
+        MirInputDeviceId id,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options) = 0;
     virtual void renamed(mir::scene::Surface const* surf, char const* name) = 0;
     virtual void cursor_image_removed(mir::scene::Surface const* surf) = 0;
     virtual void placed_relative(mir::scene::Surface const* surf, mir::geometry::Rectangle const& placement) = 0;

@@ -143,8 +143,7 @@ protected:
      * \return      A pointer to an implementation of the DisplayAllocator-derived
      *              interface that corresponds to the most-derived type of tag_type.
      */
-    virtual auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
-        -> DisplayAllocator* = 0;
+    virtual auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* = 0;
 
     DisplaySink() = default;
     DisplaySink(DisplaySink const& c) = delete;

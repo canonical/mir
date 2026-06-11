@@ -20,7 +20,7 @@
 #include <functional>
 
 typedef struct MirPromptSession MirPromptSession;
-typedef void (*MirClientFdCallback)(MirPromptSession *prompt_session, size_t count, int const* fds, void* context);
+typedef void (*MirClientFdCallback)(MirPromptSession* prompt_session, size_t count, int const* fds, void* context);
 
 namespace miroil
 {
@@ -28,9 +28,9 @@ namespace miroil
 class MirPromptSession
 {
 public:
-    MirPromptSession(::MirPromptSession * promptSession);
+    MirPromptSession(::MirPromptSession* promptSession);
     MirPromptSession(MirPromptSession const& src);
-    MirPromptSession(MirPromptSession && src);
+    MirPromptSession(MirPromptSession&& src);
     ~MirPromptSession();
 
     auto operator=(MirPromptSession const& src) -> MirPromptSession&;
@@ -38,9 +38,9 @@ public:
 
     bool operator==(MirPromptSession const& other);
 
-    bool new_fds_for_prompt_providers(unsigned int no_of_fds, MirClientFdCallback callback, void * context);
+    bool new_fds_for_prompt_providers(unsigned int no_of_fds, MirClientFdCallback callback, void* context);
 
-    ::MirPromptSession * prompt_session;
+    ::MirPromptSession* prompt_session;
 };
 
 }

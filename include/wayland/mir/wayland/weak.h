@@ -30,17 +30,9 @@ template<typename T>
 class Weak
 {
 public:
-    Weak()
-        : resource{nullptr},
-          destroyed_flag{nullptr}
-    {
-    }
+    Weak() : resource{nullptr}, destroyed_flag{nullptr} {}
 
-    explicit Weak(T* resource)
-        : resource{resource},
-          destroyed_flag{resource ? resource->destroyed_flag() : nullptr}
-    {
-    }
+    explicit Weak(T* resource) : resource{resource}, destroyed_flag{resource ? resource->destroyed_flag() : nullptr} {}
 
     Weak(Weak<T> const&) = default;
     auto operator=(Weak<T> const&) -> Weak<T>& = default;
@@ -57,10 +49,7 @@ public:
         }
     }
 
-    auto operator!=(Weak<T> const& other) const -> bool
-    {
-        return !(*this == other);
-    }
+    auto operator!=(Weak<T> const& other) const -> bool { return !(*this == other); }
 
     auto is(T const& other) const -> bool
     {
@@ -74,19 +63,16 @@ public:
         }
     }
 
-    operator bool() const
-    {
-        return resource && !*destroyed_flag;
-    }
+    operator bool() const { return resource && !*destroyed_flag; }
 
     auto value() const -> T&
     {
         if (!*this)
         {
-            BOOST_THROW_EXCEPTION(std::logic_error(
-                std::string{"Attempted access of "} +
-                (resource ? "destroyed" : "null") +
-                " wayland::Weak<" + typeid(T).name() + ">"));
+            BOOST_THROW_EXCEPTION(
+                std::logic_error(
+                    std::string{"Attempted access of "} + (resource ? "destroyed" : "null") + " wayland::Weak<" +
+                    typeid(T).name() + ">"));
         }
         return *resource;
     }
@@ -100,15 +86,11 @@ private:
 
 template<typename T>
 auto make_weak(T* resource) -> Weak<T>
-{
-    return Weak<T>{resource};
-}
+{ return Weak<T>{resource}; }
 
 template<typename T>
 auto as_nullable_ptr(Weak<T> const& weak) -> T*
-{
-    return weak ? &weak.value() : nullptr;
-}
+{ return weak ? &weak.value() : nullptr; }
 }
 }
 

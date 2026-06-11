@@ -21,10 +21,7 @@
 
 namespace mir
 {
-namespace logging
-{
-class Logger;
-}
+namespace logging { class Logger; }
 namespace graphics
 {
 /**

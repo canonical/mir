@@ -20,7 +20,10 @@
 #include <mir/time/posix_timestamp.h>
 #include <cstdint>
 
-namespace mir { namespace graphics {
+namespace mir
+{
+namespace graphics
+{
 
 /**
  * Frame is a unique identifier for a frame displayed on an output.
@@ -36,10 +39,11 @@ struct Frame
 {
     using Timestamp = mir::time::PosixTimestamp;
 
-    int64_t msc = 0;   /**< Media Stream Counter */
-    Timestamp ust;     /**< Unadjusted System Time */
+    int64_t msc = 0; /**< Media Stream Counter */
+    Timestamp ust;   /**< Unadjusted System Time */
 };
 
-}} // namespace mir::graphics
+}
+} // namespace mir::graphics
 
 #endif // MIR_GRAPHICS_FRAME_H_

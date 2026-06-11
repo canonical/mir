@@ -31,9 +31,8 @@
 
 #include <gmock/gmock.h>
 
-
-void PrintTo(MirEvent const& event, std::ostream *os);
-void PrintTo(MirEvent const* event, std::ostream *os);
+void PrintTo(MirEvent const& event, std::ostream* os);
+void PrintTo(MirEvent const* event, std::ostream* os);
 
 auto get_enum_value(MirEventType event) -> char const*;
 auto get_enum_value(MirInputEventType event) -> char const*;
@@ -49,17 +48,14 @@ auto get_enum_value(MirPointerAxisSource source) -> char const*;
 
 /// Takes in two enums with get_enum_value() implemented and determines if they are the same.
 /// If false, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto inline enums_match(
-    T const& expected,
-    T const& actual,
-    testing::MatchResultListener* result_listener)
--> bool
+template<typename T>
+auto inline enums_match(T const& expected, T const& actual, testing::MatchResultListener* result_listener) -> bool
 {
     auto type_name = boost::typeindex::type_id<T>().pretty_name();
     if (expected != actual)
     {
-        *result_listener << "Expected " << type_name << " (" << get_enum_value(expected)
-        << ") does not match actual (" << get_enum_value(actual) << ")";
+        *result_listener << "Expected " << type_name << " (" << get_enum_value(expected) << ") does not match actual ("
+                         << get_enum_value(actual) << ")";
 
         return false;
     }
@@ -71,8 +67,7 @@ template<typename T> auto inline enums_match(
 auto inline touch_ids_match(
     MirTouchId const& expected,
     MirTouchId const& actual,
-    testing::MatchResultListener* result_listener)
--> bool
+    testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
@@ -85,11 +80,8 @@ auto inline touch_ids_match(
 
 /// Takes in a Mir*EventModifiers and an int bitmask and determines if they are the same.
 /// If not, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto inline modifiers_match(
-    T const& expected,
-    int actual,
-    testing::MatchResultListener* result_listener)
--> bool
+template<typename T>
+auto inline modifiers_match(T const& expected, int actual, testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
@@ -101,11 +93,8 @@ template<typename T> auto inline modifiers_match(
 }
 
 /// If false, the discrepancy is logged to the MatchResultListener.
-auto inline keysyms_match(
-    xkb_keysym_t expected,
-    xkb_keysym_t actual,
-    testing::MatchResultListener* result_listener)
--> bool
+auto inline keysyms_match(xkb_keysym_t expected, xkb_keysym_t actual, testing::MatchResultListener* result_listener)
+    -> bool
 {
     if (expected != actual)
     {
@@ -117,11 +106,7 @@ auto inline keysyms_match(
 }
 
 /// If false, the discrepancy is logged to the MatchResultListener.
-auto inline scan_codes_match(
-        int expected,
-        int actual,
-        testing::MatchResultListener* result_listener)
--> bool
+auto inline scan_codes_match(int expected, int actual, testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
@@ -136,13 +121,12 @@ auto inline scan_codes_match(
 auto inline buttons_states_match(
     MirPointerButtons expected,
     MirPointerButtons actual,
-    testing::MatchResultListener* result_listener)
--> bool
+    testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
-        *result_listener << "Expected buttons state (0x" << std::hex << expected
-        << ") does not match actual (0x" << std::hex << actual << ")";
+        *result_listener << "Expected buttons state (0x" << std::hex << expected << ") does not match actual (0x"
+                         << std::hex << actual << ")";
         return false;
     }
 
@@ -151,19 +135,14 @@ auto inline buttons_states_match(
 
 /// NOTE: This is for MirPointerButton, not the similarly named MirPointerButtons.
 /// If false, the discrepancy is logged to the MatchResultListener.f
-auto inline button_states_match(
-    bool expected,
-    bool actual,
-    testing::MatchResultListener* result_listener)
--> bool
+auto inline button_states_match(bool expected, bool actual, testing::MatchResultListener* result_listener) -> bool
 {
-
     auto expected_state = expected ? "up" : "down";
     auto actual_state = actual ? "up" : "down";
     if (expected != actual)
     {
-        *result_listener << "Expected button state (" << expected_state
-        << ") does not match actual (" << actual_state << ")";
+        *result_listener << "Expected button state (" << expected_state << ") does not match actual (" << actual_state
+                         << ")";
         return false;
     }
 
@@ -174,17 +153,13 @@ template<typename T, typename S>
 bool button_states_match(T, S, testing::MatchResultListener* result_listener) = delete;
 
 /// If false, the discrepancy is logged to the MatchResultListener.
-template<typename T, typename U, typename V> auto inline axis_values_match(
-    T expected,
-    U actual,
-    V axis,
-    testing::MatchResultListener* result_listener)
--> bool
+template<typename T, typename U, typename V>
+auto inline axis_values_match(T expected, U actual, V axis, testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
-        *result_listener << "Expected " << get_enum_value(axis) << " value ("
-        << expected << ") does not match actual (" << actual << ")";
+        *result_listener << "Expected " << get_enum_value(axis) << " value (" << expected << ") does not match actual ("
+                         << actual << ")";
         return false;
     }
 
@@ -192,18 +167,19 @@ template<typename T, typename U, typename V> auto inline axis_values_match(
 }
 
 /// If false, the discrepancy is logged to the MatchResultListener.
-template<typename T> auto inline axis_value_within_threshold(
+template<typename T>
+auto inline axis_value_within_threshold(
     float expected_deviation,
     float actual_deviation,
     float threshold,
     T axis_type,
-    testing::MatchResultListener* result_listener)
--> bool
+    testing::MatchResultListener* result_listener) -> bool
 {
     if (std::abs(actual_deviation - expected_deviation) > threshold)
     {
         *result_listener << get_enum_value(axis_type) << " actual deviation (" << actual_deviation
-        << ") is not within threshold (" << threshold << ") of expected (" << expected_deviation << (")");
+                         << ") is not within threshold (" << threshold << ") of expected (" << expected_deviation
+                         << (")");
         return false;
     }
 
@@ -214,8 +190,7 @@ template<typename T> auto inline axis_value_within_threshold(
 auto inline touch_counts_match(
     unsigned int expected,
     unsigned int actual,
-    testing::MatchResultListener* result_listener)
--> bool
+    testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
@@ -228,10 +203,8 @@ auto inline touch_counts_match(
 
 /// Checks if a Mir*Event is a nullptr.
 /// If true, this is logged to the MatchResultListener.
-template<typename T> auto inline event_is_nullptr(
-    T const* event,
-    testing::MatchResultListener* result_listener)
--> bool
+template<typename T>
+auto inline event_is_nullptr(T const* event, testing::MatchResultListener* result_listener) -> bool
 {
     if (event == nullptr)
     {
@@ -250,25 +223,13 @@ namespace test
  * Pointer and reference adaptors for MirEvent inside gmock matchers.
  * \{
  */
-inline MirEvent const* to_address(MirEvent const* event)
-{
-    return event;
-}
+inline MirEvent const* to_address(MirEvent const* event) { return event; }
 
-inline MirEvent const* to_address(MirEvent const& event)
-{
-    return &event;
-}
+inline MirEvent const* to_address(MirEvent const& event) { return &event; }
 
-inline MirEvent const* to_address(std::shared_ptr<MirEvent const> const& event)
-{
-    return event.get();
-}
+inline MirEvent const* to_address(std::shared_ptr<MirEvent const> const& event) { return event.get(); }
 
-inline MirEvent const* to_address(std::reference_wrapper<MirEvent> const& event)
-{
-    return &event.get();
-}
+inline MirEvent const* to_address(std::reference_wrapper<MirEvent> const& event) { return &event.get(); }
 
 inline MirKeyboardEvent const* maybe_key_event(MirEvent const* event)
 {
@@ -345,7 +306,7 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(!modifiers_match(modifiers, mir_keyboard_event_modifiers(kev), result_listener))
+    if (!modifiers_match(modifiers, mir_keyboard_event_modifiers(kev), result_listener))
         return false;
 
     return true;
@@ -357,7 +318,7 @@ MATCHER_P(KeyOfSymbol, keysym, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(!keysyms_match(static_cast<xkb_keysym_t>(keysym), mir_keyboard_event_keysym(kev), result_listener))
+    if (!keysyms_match(static_cast<xkb_keysym_t>(keysym), mir_keyboard_event_keysym(kev), result_listener))
         return false;
 
     return true;
@@ -385,7 +346,7 @@ MATCHER_P(KeyOfScanCode, code, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if(!scan_codes_match(code, mir_keyboard_event_scan_code(kev), result_listener))
+    if (!scan_codes_match(code, mir_keyboard_event_scan_code(kev), result_listener))
         return false;
 
     return true;
@@ -413,16 +374,19 @@ MATCHER_P(MirKeyboardEventMatches, event, "")
         return false;
 
     return enums_match(mir_keyboard_event_action(expected), mir_keyboard_event_action(actual), result_listener) &&
-        keysyms_match(mir_keyboard_event_keysym(expected), mir_keyboard_event_keysym(actual), result_listener) &&
-        scan_codes_match(mir_keyboard_event_scan_code(expected), mir_keyboard_event_scan_code(actual), result_listener) &&
-        modifiers_match(mir_keyboard_event_modifiers(expected), mir_keyboard_event_modifiers(actual), result_listener);
+           keysyms_match(mir_keyboard_event_keysym(expected), mir_keyboard_event_keysym(actual), result_listener) &&
+           scan_codes_match(
+               mir_keyboard_event_scan_code(expected), mir_keyboard_event_scan_code(actual), result_listener) &&
+           modifiers_match(
+               mir_keyboard_event_modifiers(expected), mir_keyboard_event_modifiers(actual), result_listener);
 }
 
 MATCHER_P(MirTouchEventMatches, event, "")
 {
     auto expected_touch_event = maybe_touch_event(to_address(event));
     auto actual_touch_event = maybe_touch_event(to_address(arg));
-    if (event_is_nullptr(expected_touch_event, result_listener) || event_is_nullptr(actual_touch_event, result_listener))
+    if (event_is_nullptr(expected_touch_event, result_listener) ||
+        event_is_nullptr(actual_touch_event, result_listener))
         return false;
 
     auto const expected_touch_count = mir_touch_event_point_count(expected_touch_event);
@@ -485,9 +449,15 @@ MATCHER(PointerLeaveEvent, "")
 }
 
 inline bool button_event_matches(
-    MirPointerEvent const* pev, testing::MatchResultListener* result_listener,
-    float x, float y, MirPointerAction action, MirPointerButtons button_state,
-    bool check_action = true, bool check_buttons = true, bool check_axes = true)
+    MirPointerEvent const* pev,
+    testing::MatchResultListener* result_listener,
+    float x,
+    float y,
+    MirPointerAction action,
+    MirPointerButtons button_state,
+    bool check_action = true,
+    bool check_buttons = true,
+    bool check_axes = true)
 {
     if (event_is_nullptr(pev, result_listener))
         return false;
@@ -727,13 +697,11 @@ MATCHER_P2(PointerEventWithDiff, expect_dx, expect_dy, "")
         return false;
 
     auto const error = 0.00001f;
-    auto const actual_dx = mir_pointer_event_axis_value(pev,
-                                                mir_pointer_axis_relative_x);
+    auto const actual_dx = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x);
     if (!axis_value_within_threshold(expect_dx, actual_dx, error, mir_pointer_axis_relative_x, result_listener))
         return false;
 
-    auto const actual_dy = mir_pointer_event_axis_value(pev,
-                                                mir_pointer_axis_relative_y);
+    auto const actual_dy = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y);
     if (!axis_value_within_threshold(expect_dy, actual_dy, error, mir_pointer_axis_relative_y, result_listener))
         return false;
 
@@ -749,13 +717,11 @@ MATCHER_P2(PointerEnterEventWithDiff, expect_dx, expect_dy, "")
     if (!enums_match(mir_pointer_action_enter, mir_pointer_event_action(pev), result_listener))
         return false;
     auto const error = 0.00001f;
-    auto const actual_dx = mir_pointer_event_axis_value(pev,
-                                                mir_pointer_axis_relative_x);
+    auto const actual_dx = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_x);
     if (!axis_value_within_threshold(expect_dx, actual_dx, error, mir_pointer_axis_relative_x, result_listener))
         return false;
 
-    auto const actual_dy = mir_pointer_event_axis_value(pev,
-                                                mir_pointer_axis_relative_y);
+    auto const actual_dy = mir_pointer_event_axis_value(pev, mir_pointer_axis_relative_y);
     if (!axis_value_within_threshold(expect_dy, actual_dy, error, mir_pointer_axis_relative_y, result_listener))
         return false;
 
@@ -785,7 +751,8 @@ MATCHER_P4(TouchEventInDirection, x0, y0, x1, y1, "")
     // Return true if both vectors are roughly the same direction (within
     // 90 degrees).
     auto const threshold = 0.0f;
-    if (dot_product > 0.0f) {
+    if (dot_product > 0.0f)
+    {
         *result_listener << "Dot product (" << dot_product << ") is greater than threshold (" << threshold << ")";
         return false;
     }
@@ -833,7 +800,8 @@ MATCHER_P2(WindowEvent, attrib, value, "")
     auto const actual_window_attrib_value = mir_window_event_get_attribute_value(surface_ev);
     if (actual_window_attrib_value != value)
     {
-        *result_listener << "Actual window attribute value (" << actual_window_attrib_value << ") doesn't match expected (" << value << ")";
+        *result_listener << "Actual window attribute value (" << actual_window_attrib_value
+                         << ") doesn't match expected (" << value << ")";
         return false;
     }
 
@@ -850,7 +818,8 @@ MATCHER_P(OrientationEvent, direction, "")
     auto const actual_direction = mir_orientation_event_get_direction(oev);
     if (actual_direction != direction)
     {
-        *result_listener << "Actual direction (" << actual_direction << ") does not match expected (" << direction << ")";
+        *result_listener << "Actual direction (" << actual_direction << ") does not match expected (" << direction
+                         << ")";
         return false;
     }
 
@@ -866,7 +835,8 @@ MATCHER_P(InputDeviceIdMatches, device_id, "")
     auto const actual_device_id = mir_input_event_get_device_id(input_event);
     if (device_id != actual_device_id)
     {
-        *result_listener << "Actual device id (" << actual_device_id << ") does not match expected (" << device_id << ")";
+        *result_listener << "Actual device id (" << actual_device_id << ") does not match expected (" << device_id
+                         << ")";
     }
 
     return true;
@@ -888,8 +858,7 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
         return false;
 
     auto device_state = mir_event_get_input_device_state_event(as_address);
-    for (size_t index = 0, count = mir_input_device_state_event_device_count(device_state);
-         index != count; ++index)
+    for (size_t index = 0, count = mir_input_device_state_event_device_count(device_state); index != count; ++index)
     {
         auto key_count = mir_input_device_state_event_device_pressed_keys_count(device_state, index);
         auto it_keys = begin(keys);
@@ -901,8 +870,7 @@ MATCHER_P(DeviceStateWithPressedKeys, keys, "")
         std::vector<uint32_t> pressed_keys;
         for (uint32_t i = 0; i < key_count; i++)
         {
-            pressed_keys.push_back(
-                mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
+            pressed_keys.push_back(mir_input_device_state_event_device_pressed_keys_for_index(device_state, index, i));
         }
 
         if (!std::equal(it_keys, end_keys, std::begin(pressed_keys)))
@@ -923,7 +891,7 @@ MATCHER_P2(DeviceStateWithPosition, x, y, "")
     auto const actual_x = mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_x);
     auto const actual_y = mir_input_device_state_event_pointer_axis(device_state, mir_pointer_axis_y);
     return axis_value_within_threshold(x, actual_x, 0.0f, mir_pointer_axis_x, result_listener) &&
-        axis_value_within_threshold(y, actual_y, 0.0f, mir_pointer_axis_y, result_listener);
+           axis_value_within_threshold(y, actual_y, 0.0f, mir_pointer_axis_y, result_listener);
 }
 
 MATCHER_P(RectanglesMatches, rectangles, "")

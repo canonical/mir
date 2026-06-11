@@ -92,6 +92,7 @@ public:
      * \param [in] fd   File descriptor of watch to remove.
      */
     void remove_watch(Fd const& fd);
+
 private:
     PosixRWMutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;

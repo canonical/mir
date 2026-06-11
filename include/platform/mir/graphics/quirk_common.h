@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_GRAPHICS_COMMON_QUIRK_COMMON_H_
 #define MIR_GRAPHICS_COMMON_QUIRK_COMMON_H_
 

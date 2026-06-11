@@ -25,10 +25,7 @@
 
 namespace mir
 {
-namespace input
-{
-class InputDevice;
-}
+namespace input { class InputDevice; }
 }
 
 namespace mir_test_framework
@@ -40,16 +37,16 @@ public:
     FakeInputDevice() = default;
     virtual ~FakeInputDevice() = default;
 
-
     virtual void emit_device_removal() = 0;
     virtual void emit_runtime_error() = 0;
     virtual void emit_event(mir::input::synthesis::KeyParameters const& key) = 0;
     virtual void emit_event(mir::input::synthesis::ButtonParameters const& button) = 0;
     virtual void emit_event(mir::input::synthesis::MotionParameters const& motion) = 0;
     virtual void emit_event(mir::input::synthesis::TouchParameters const& touch) = 0;
-    virtual void emit_touch_sequence(std::function<mir::input::synthesis::TouchParameters(int)> const& generate_parameters,
-                                     int count,
-                                     std::chrono::duration<double> delay) = 0;
+    virtual void emit_touch_sequence(
+        std::function<mir::input::synthesis::TouchParameters(int)> const& generate_parameters,
+        int count,
+        std::chrono::duration<double> delay) = 0;
     virtual void emit_key_state(std::vector<uint32_t> const& scan_codes) = 0;
     virtual void on_new_configuration_do(std::function<void(mir::input::InputDevice const& device)> callback) = 0;
 

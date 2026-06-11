@@ -37,25 +37,17 @@ struct Flags
 {
     using value_type = std::underlying_type_t<Enum>;
 
-    explicit constexpr Flags(value_type flag_value = 0) noexcept
-        : flag_value{flag_value} {}
-    constexpr Flags(Enum flag_value) noexcept
-        : flag_value{static_cast<value_type>(flag_value)} {}
+    explicit constexpr Flags(value_type flag_value = 0) noexcept : flag_value{flag_value} {}
+    constexpr Flags(Enum flag_value) noexcept : flag_value{static_cast<value_type>(flag_value)} {}
 
     constexpr Flags<Enum> operator|(Flags<Enum> other) const noexcept
-    {
-        return Flags<Enum>(flag_value|other.flag_value);
-    }
+    { return Flags<Enum>(flag_value | other.flag_value); }
 
     constexpr Flags<Enum> operator&(Flags<Enum> other) const noexcept
-    {
-        return Flags<Enum>(flag_value & other.flag_value);
-    }
+    { return Flags<Enum>(flag_value & other.flag_value); }
 
     constexpr Flags<Enum> operator^(Flags<Enum> other) const noexcept
-    {
-        return Flags<Enum>(flag_value ^ other.flag_value);
-    }
+    { return Flags<Enum>(flag_value ^ other.flag_value); }
 
     // those mutating operators could be trated as constexpr with c++14
     Flags<Enum>& operator|=(Flags<Enum> other) noexcept
@@ -76,20 +68,11 @@ struct Flags
         return *this;
     }
 
-    constexpr bool operator==(Flags<Enum> other) const noexcept
-    {
-        return flag_value == other.flag_value;
-    }
+    constexpr bool operator==(Flags<Enum> other) const noexcept { return flag_value == other.flag_value; }
 
-    constexpr bool operator!=(Flags<Enum> other) const noexcept
-    {
-        return flag_value != other.flag_value;
-    }
+    constexpr bool operator!=(Flags<Enum> other) const noexcept { return flag_value != other.flag_value; }
 
-    constexpr value_type value() const noexcept
-    {
-        return flag_value;
-    }
+    constexpr value_type value() const noexcept { return flag_value; }
 
 private:
     value_type flag_value;
@@ -97,68 +80,50 @@ private:
 
 template<typename Enum>
 constexpr Flags<Enum> operator|(Flags<Enum> flags, Enum e) noexcept
-{
-    return Flags<Enum>(flags.value() | static_cast<decltype(flags.value())>(e));
-}
+{ return Flags<Enum>(flags.value() | static_cast<decltype(flags.value())>(e)); }
 
 template<typename Enum>
 constexpr Flags<Enum> operator|(Enum e, Flags<Enum> flags) noexcept
-{
-    return Flags<Enum>(flags.value() | static_cast<decltype(flags.value())>(e));
-}
+{ return Flags<Enum>(flags.value() | static_cast<decltype(flags.value())>(e)); }
 
 template<typename Enum>
 constexpr Enum operator&(Enum e, Flags<Enum> flags) noexcept
-{
-    return static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e));
-}
+{ return static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e)); }
 
 template<typename Enum>
 constexpr Enum operator&(Flags<Enum> flags, Enum e) noexcept
-{
-    return static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e));
-}
+{ return static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e)); }
 
 template<typename Enum>
 constexpr bool operator==(Flags<Enum> flags, Enum e) noexcept
-{
-    return e == static_cast<Enum>(flags.value());
-}
+{ return e == static_cast<Enum>(flags.value()); }
 
 template<typename Enum>
 constexpr bool operator==(Enum e, Flags<Enum> flags) noexcept
-{
-    return e == static_cast<Enum>(flags.value());
-}
+{ return e == static_cast<Enum>(flags.value()); }
 
 template<typename Enum>
 constexpr bool contains(Flags<Enum> flags, Enum e) noexcept
-{
-    return e == static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e));
-}
+{ return e == static_cast<Enum>(flags.value() & static_cast<decltype(flags.value())>(e)); }
 
 }
 
 template<typename Enum>
-constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
-operator|(Enum lhs, Enum rhs) noexcept
-{
-    return mir::Flags<Enum>(lhs) | mir::Flags<Enum>(rhs);
-}
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))> operator|(
+    Enum lhs,
+    Enum rhs) noexcept
+{ return mir::Flags<Enum>(lhs) | mir::Flags<Enum>(rhs); }
 
 template<typename Enum>
-constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
-operator&(Enum lhs, Enum rhs) noexcept
-{
-    return mir::Flags<Enum>(lhs) & mir::Flags<Enum>(rhs);
-}
-
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))> operator&(
+    Enum lhs,
+    Enum rhs) noexcept
+{ return mir::Flags<Enum>(lhs) & mir::Flags<Enum>(rhs); }
 
 template<typename Enum>
-constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))>
-operator^(Enum lhs, Enum rhs) noexcept
-{
-    return mir::Flags<Enum>(lhs) ^ mir::Flags<Enum>(rhs);
-}
+constexpr mir::Flags<decltype(mir_enable_enum_bit_operators(static_cast<Enum>(0)))> operator^(
+    Enum lhs,
+    Enum rhs) noexcept
+{ return mir::Flags<Enum>(lhs) ^ mir::Flags<Enum>(rhs); }
 
 #endif

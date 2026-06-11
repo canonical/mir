@@ -20,20 +20,31 @@
 #include <functional>
 
 namespace mir { class Server; }
-namespace mir { namespace graphics { class Display; class GLRenderingProvider; } }
-namespace mir { namespace compositor { class DisplayListener; } }
+namespace mir
+{
+namespace graphics
+{
+class Display;
+class GLRenderingProvider;
+}
+}
+namespace mir
+{
+namespace compositor { class DisplayListener; }
+}
 
 namespace miroil
 {
-    class Compositor;
+class Compositor;
 
 // Configure the server for using the Qt compositor
 class SetCompositor
 {
-    using InitFunction = std::function<void(const std::shared_ptr<mir::graphics::Display>& display,
-                       const std::vector<std::shared_ptr<mir::graphics::GLRenderingProvider>> gl_providers,
-                       const std::shared_ptr<Compositor> & compositor,
-                       const std::shared_ptr<mir::compositor::DisplayListener>& displayListener)>;
+    using InitFunction = std::function<void(
+        std::shared_ptr<mir::graphics::Display> const& display,
+        std::vector<std::shared_ptr<mir::graphics::GLRenderingProvider>> const gl_providers,
+        std::shared_ptr<Compositor> const& compositor,
+        std::shared_ptr<mir::compositor::DisplayListener> const& displayListener)>;
 
     using ConstructorFunction = std::function<std::shared_ptr<Compositor>()>;
 
@@ -46,8 +57,8 @@ private:
     struct CompositorImpl;
 
     std::weak_ptr<CompositorImpl> compositor_impl;
-    ConstructorFunction           constructor_function;
-    InitFunction                  init_function;
+    ConstructorFunction constructor_function;
+    InitFunction init_function;
 };
 
 }

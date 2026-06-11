@@ -20,7 +20,6 @@
 #include <mir_toolkit/event.h>
 #include <mir/events/event_builders.h>
 
-
 struct MirEvent
 {
     virtual auto clone() const -> MirEvent* = 0;

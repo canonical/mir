@@ -29,44 +29,36 @@ namespace events
 template<typename Tag>
 struct ScrollAxisV1
 {
-    ScrollAxisV1()
-        : stop{false}
-    {
-    }
+    ScrollAxisV1() : stop{false} {}
 
     ScrollAxisV1(
         mir::geometry::generic::Value<float, Tag> precise,
         mir::geometry::generic::Value<int, Tag> discrete,
         mir::geometry::generic::Value<int, Tag> value120,
-        bool stop)
-        : precise{precise},
-          discrete{discrete},
-          value120{value120},
-          stop{stop}
-    {
-    }
+        bool stop) :
+        precise{precise},
+        discrete{discrete},
+        value120{value120},
+        stop{stop}
+    {}
 
     ScrollAxisV1(
         mir::geometry::generic::Value<float, Tag> precise,
         mir::geometry::generic::Value<int, Tag> discrete,
-        bool stop)
-        : precise{precise},
-          discrete{discrete},
-          value120{discrete * 120},
-          stop{stop}
+        bool stop) :
+        precise{precise},
+        discrete{discrete},
+        value120{discrete * 120},
+        stop{stop}
+    {}
+
+    auto operator==(ScrollAxisV1 const& other) const -> bool
     {
+        return precise == other.precise && discrete == other.discrete && value120 == other.value120 &&
+               stop == other.stop;
     }
 
-    auto operator==(ScrollAxisV1 const& other) const -> bool {
-        return precise  == other.precise &&
-               discrete == other.discrete &&
-               value120 == other.value120 &&
-               stop     == other.stop;
-    }
-
-    auto operator!=(ScrollAxisV1 const& other) const -> bool {
-        return !(*this == other);
-    }
+    auto operator!=(ScrollAxisV1 const& other) const -> bool { return !(*this == other); }
 
     mir::geometry::generic::Value<float, Tag> precise;
     mir::geometry::generic::Value<int, Tag> discrete;

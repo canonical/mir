@@ -39,9 +39,7 @@ public:
 
     template<typename FunctionPtr>
     FunctionPtr load_function(std::string const& function_name) const
-    {
-        return load_function<FunctionPtr>(function_name.c_str());
-    }
+    { return load_function<FunctionPtr>(function_name.c_str()); }
 
     template<typename FunctionPtr>
     FunctionPtr load_function(std::string const& function_name, std::string const& version) const
@@ -60,11 +58,9 @@ public:
 
         struct HandleHash
         {
-            std::size_t operator()(const Handle& h) const noexcept
-            {
-                return std::hash<void*>{}(h.handle);
-            }
+            std::size_t operator()(Handle const& h) const noexcept { return std::hash<void*>{}(h.handle); }
         };
+
     private:
         friend class SharedLibrary;
 
@@ -73,6 +69,7 @@ public:
     };
 
     auto get_handle() const -> Handle;
+
 private:
     void* const so;
     void* load_symbol(char const* function_name) const;

@@ -26,10 +26,9 @@ namespace mir
 namespace events
 {
 /// A function that takes and returns a global and optional local position
-using MapPositionFunc = std::function<
-    std::pair<geometry::PointF, std::optional<geometry::PointF>>(
-        geometry::PointF global,
-        std::optional<geometry::PointF> local)>;
+using MapPositionFunc = std::function<std::pair<geometry::PointF, std::optional<geometry::PointF>>(
+    geometry::PointF global,
+    std::optional<geometry::PointF> local)>;
 
 /// Calls the given function for all positions in the event (could be multiple in the case of touch events) and updates
 /// the local and global positions based on the returned values.

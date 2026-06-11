@@ -40,7 +40,9 @@ namespace gl
 class Renderer : public renderer::Renderer
 {
 public:
-    Renderer(std::shared_ptr<graphics::GLRenderingProvider> gl_interface, std::unique_ptr<graphics::gl::OutputSurface> output);
+    Renderer(
+        std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
+        std::unique_ptr<graphics::gl::OutputSurface> output);
     virtual ~Renderer();
 
     // These are called with a valid GL context:
@@ -73,6 +75,7 @@ public:
 
         Program(GLuint program_id);
     };
+
 private:
     class OutputFilter;
     std::unique_ptr<OutputFilter> output_surface;
@@ -94,8 +97,7 @@ protected:
      *       the only OpenGL-specific class in the display server, and
      *       tessellation is very much OpenGL-specific.
      */
-    virtual void tessellate(std::vector<mir::gl::Primitive>& primitives,
-                            graphics::Renderable const& renderable) const;
+    virtual void tessellate(std::vector<mir::gl::Primitive>& primitives, graphics::Renderable const& renderable) const;
 
     GLfloat clear_color[4];
 

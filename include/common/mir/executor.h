@@ -53,7 +53,7 @@ protected:
 /**
  * An executor which never blocks the spawn() method on work completing.
  */
-class NonBlockingExecutor: public Executor
+class NonBlockingExecutor : public Executor
 {
 };
 
@@ -77,6 +77,7 @@ public:
      * Wait for all current work to finish and terminate all worker threads
      */
     static void quiesce();
+
 protected:
     ThreadPoolExecutor() = default;
 };

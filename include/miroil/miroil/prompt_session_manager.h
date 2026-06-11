@@ -21,9 +21,17 @@
 
 #include <memory>
 
-namespace mir { namespace scene { class PromptSessionManager; class PromptSession;} }
+namespace mir
+{
+namespace scene
+{
+class PromptSessionManager;
+class PromptSession;
+}
+}
 
-namespace miroil {
+namespace miroil
+{
 
 class PromptSessionManager
 {

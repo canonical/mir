@@ -24,7 +24,8 @@
 #include <mir_toolkit/common.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 typedef struct MirWindowEvent MirWindowEvent;
@@ -52,7 +53,8 @@ typedef struct MirEvent MirEvent;
 #include <mir_toolkit/events/input_device_state_event.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 /**
  * Retrieves the type of a MirEvent. Now preferred over direct access to ev->type.

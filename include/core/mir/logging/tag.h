@@ -79,9 +79,7 @@ void set_severity(std::string_view name, Severity severity);
 template<>
 struct std::formatter<mir::logging::Severity> : std::formatter<std::string>
 {
-    auto format(mir::logging::Severity sev, std::format_context& ctx) const
-        -> std::format_context::iterator;
+    auto format(mir::logging::Severity sev, std::format_context& ctx) const -> std::format_context::iterator;
 };
-
 
 #endif // MIR_LOGGING_TAG_H_

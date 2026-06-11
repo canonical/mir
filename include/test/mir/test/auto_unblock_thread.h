@@ -37,15 +37,11 @@ class AutoJoinThread
 public:
     AutoJoinThread() = default;
     template<typename Callable, typename... Args>
-    explicit AutoJoinThread(Callable&& f,
-        Args&&... args)
-        : thread{std::forward<Callable>(f), std::forward<Args>(args)...}
+    explicit AutoJoinThread(Callable&& f, Args&&... args) :
+        thread{std::forward<Callable>(f), std::forward<Args>(args)...}
     {}
 
-    ~AutoJoinThread()
-    {
-        stop();
-    }
+    ~AutoJoinThread() { stop(); }
 
     void stop()
     {
@@ -53,10 +49,7 @@ public:
             thread.join();
     }
 
-    std::thread::native_handle_type native_handle()
-    {
-        return thread.native_handle();
-    }
+    std::thread::native_handle_type native_handle() { return thread.native_handle(); }
 
     AutoJoinThread(AutoJoinThread&& t) = default;
     AutoJoinThread& operator=(AutoJoinThread&& t) = default;
@@ -71,17 +64,12 @@ public:
     AutoUnblockThread() = default;
 
     template<typename Callable, typename... Args>
-    explicit AutoUnblockThread(std::function<void(void)> const& unblock,
-        Callable&& f,
-        Args&&... args)
-        : AutoJoinThread{std::forward<Callable>(f), std::forward<Args>(args)...},
-          unblock{unblock}
+    explicit AutoUnblockThread(std::function<void(void)> const& unblock, Callable&& f, Args&&... args) :
+        AutoJoinThread{std::forward<Callable>(f), std::forward<Args>(args)...},
+        unblock{unblock}
     {}
 
-    ~AutoUnblockThread()
-    {
-        stop();
-    }
+    ~AutoUnblockThread() { stop(); }
 
     AutoUnblockThread(AutoUnblockThread&& t) = default;
     AutoUnblockThread& operator=(AutoUnblockThread&& t) = default;

@@ -59,7 +59,7 @@ public:
     virtual char const* devtype() const = 0;
     virtual char const* devpath() const = 0;
     virtual char const* devnode() const = 0;
-    virtual char const* property(char const *name) const = 0;
+    virtual char const* property(char const* name) const = 0;
     virtual dev_t devnum() const = 0;
     virtual char const* sysname() const = 0;
     virtual bool initialised() const = 0;
@@ -78,6 +78,7 @@ public:
      * \return A copy of this Device
      */
     virtual auto clone() const -> std::unique_ptr<Device> = 0;
+
 protected:
     Device() = default;
 };
@@ -117,11 +118,12 @@ public:
 
         Device const& operator*() const;
         Device const* operator->() const;
+
     private:
         friend class Enumerator;
 
-        iterator ();
-        iterator (std::shared_ptr<Context> const& ctx, udev_list_entry* entry);
+        iterator();
+        iterator(std::shared_ptr<Context> const& ctx, udev_list_entry* entry);
 
         void increment(udev_list_entry* start_from);
 
@@ -143,13 +145,14 @@ private:
 class Monitor
 {
 public:
-    enum EventType {
+    enum EventType
+    {
         ADDED,
         REMOVED,
         CHANGED,
     };
 
-    Monitor(const Context& ctx);
+    Monitor(Context const& ctx);
     ~Monitor() noexcept;
 
     Monitor(Monitor const&) = delete;
