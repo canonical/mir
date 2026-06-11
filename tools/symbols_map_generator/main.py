@@ -67,6 +67,7 @@ HIDDEN_SYMBOLS = {
     "miral::MouseKeysConfig::disabled*;",
     "miral::MouseKeysConfig::enable*;",
     "miral::MouseKeysConfig::enabled*;",
+    "miral::ConfigFile::ConfigFile*;",
 }
 
 class HeaderDirectory(TypedDict):

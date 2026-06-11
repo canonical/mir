@@ -16,13 +16,13 @@
 
 #include <miral/live_config_ini_file_with_overrides.h>
 #include <miral/live_config_overrides_list.h>
-#include <live_config_overrides_list_builder.h>
+
+#include "live_config_overrides_list_builder.h"
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <filesystem>
-
 #include <optional>
 #include <sstream>
 #include <string>
@@ -54,8 +54,7 @@ struct IniFileWithOverridesTest : Test
         mlc::OverridesListBuilder changes;
         for (auto const& [contents, path] : contents_and_paths)
             changes.push_modified(
-                path,
-                [s = contents]{ return std::make_unique<std::istringstream>(s); });
+                path, [s = contents](auto const&) { return std::make_unique<std::istringstream>(s); });
 
         config_store.load(changes.build());
     }

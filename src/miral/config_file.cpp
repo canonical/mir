@@ -16,75 +16,89 @@
 
 #include <miral/config_file.h>
 
+#include <mir/log.h>
+#include <miral/live_config_overrides_list.h>
 #include <miral/runner.h>
 
-#define MIR_LOG_COMPONENT "ReloadingConfigFile"
-#include <mir/log.h>
+#include "live_config_overrides_list_builder.h"
+#include "live_config_watcher.h"
+#include "override_watcher.h"
+#include "version_compare.h"
 
-#include <boost/throw_exception.hpp>
-
-#include <climits>
 #include <sys/inotify.h>
-#include <unistd.h>
 
-#include <cstdlib>
+#include <algorithm>
+#include <filesystem>
 #include <fstream>
 #include <optional>
+#include <ranges>
 #include <string>
-#include <sstream>
-#include <vector>
 
-using namespace std::filesystem;
+namespace fs = std::filesystem;
+namespace mlc = miral::live_config;
+using path = fs::path;
 
 namespace
 {
-auto config_directory(path const& file) -> std::optional<path>
+auto find_config_file(std::vector<path> const& config_roots, path const& filename) -> std::optional<path>
 {
-    if (file.has_parent_path())
-    {
-        return file.parent_path();
-    }
-    else if (auto config_home = std::getenv("XDG_CONFIG_HOME"))
-    {
-        return config_home;
-    }
-    else if (auto home = std::getenv("HOME"))
-    {
-        return  path(home) / ".config";
-    }
+    auto const it = std::ranges::find_if(
+        config_roots,
+        [&filename](path const& config_root)
+        {
+            std::error_code ec; // Don't care about the specific error. Likely "file not found"
+            return fs::exists(config_root / filename, ec);
+        });
+
+    if (it != config_roots.end())
+        return *it / filename;
     else
-    {
         return std::nullopt;
-    }
 }
 
-auto watch_descriptor(mir::Fd const& inotify_fd, std::optional<path> const& path) -> std::optional<int>
+auto get_all_config_files(
+    std::vector<path> const& config_roots,
+    path const& resolved_base_config,
+    std::string_view extension) -> mlc::OverridesList
 {
-    if (!path.has_value())
-        return std::nullopt;
+    auto const override_directory_name = resolved_base_config.filename().string() + ".d";
 
-    if (inotify_fd < 0)
-        BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to initialize inotify_fd"}));
+    mlc::OverridesListBuilder config_streams;
+    config_streams.push_new(resolved_base_config, mlc::open_file);
 
-    return inotify_add_watch(inotify_fd, path.value().c_str(), IN_CLOSE_WRITE | IN_CREATE | IN_MOVED_TO);
+    // Collect override files from all roots, deduplicating by filename.
+    // Higher-priority roots (earlier in config_roots, later in reverse iteration) shadow lower ones.
+    mlc::ByBasename<path> by_filename;
+    for (auto const& root : config_roots | std::views::reverse)
+    {
+        for (auto const& override_file : mlc::collect_override_files(root / override_directory_name, extension))
+            by_filename.insert_or_assign(override_file.filename().string(), override_file);
+    }
+
+    for (auto const& [_, file] : by_filename)
+        config_streams.push_new(file, mlc::open_file);
+
+    return config_streams.build();
 }
 
-class Watcher : public std::enable_shared_from_this<Watcher>
+class SingleFileWatcher : public mlc::Watcher
 {
 public:
     using Loader = miral::ConfigFile::Loader;
-    Watcher(path file, miral::ConfigFile::Loader load_config);
+    SingleFileWatcher(path file, miral::ConfigFile::Loader load_config);
+    void handler(int) override;
 
-    mir::Fd const inotify_fd;
+protected:
+    bool should_register() const override
+    {
+        return static_cast<bool>(directory_watch_descriptor);
+    }
+
+private:
     Loader const load_config;
     path const filename;
     std::optional<path> const directory;
-    std::optional<int> const directory_watch_descriptor;
-
-    void register_handler(miral::MirRunner& runner);
-    void handler(int) const;
-
-    std::unique_ptr<miral::FdHandle> fd_handle;
+    mlc::InotifyWatch const directory_watch_descriptor;
 };
 }
 
@@ -92,61 +106,20 @@ class miral::ConfigFile::Self
 {
 public:
     Self(MirRunner& runner, path file, Mode mode, Loader load_config);
+    Self(MirRunner& runner, path file, Mode mode, OverrideLoader load_config, std::string_view extension);
 
 private:
-    std::shared_ptr<Watcher> watcher;
+    std::shared_ptr<mlc::Watcher> watcher;
 };
-
-Watcher::Watcher(path file, miral::ConfigFile::Loader load_config) :
-    inotify_fd{inotify_init1(IN_CLOEXEC)},
-    load_config{load_config},
-    filename{file.filename()},
-    directory{config_directory(file)},
-    directory_watch_descriptor{watch_descriptor(inotify_fd, directory)}
-{
-    if (directory_watch_descriptor.has_value())
-    {
-        mir::log_debug("Monitoring %s for configuration changes", (directory.value()/filename).c_str());
-    }
-}
 
 miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader load_config)
 {
-    auto const filename{file.filename()};
-    auto const directory{config_directory(file)};
-
-    // With C++26 we should be able to use the optional directory as a range to
-    // initialize config_roots.  Until then, we'll just do it the long way...
-    std::vector<path> config_roots;
-
-    if (directory)
+    auto const config_roots = mlc::get_config_roots(file);
+    if (auto const config_file = find_config_file(config_roots, file.filename()))
     {
-        config_roots.push_back(directory.value());
-    }
-
-    if (auto config_dirs = std::getenv("XDG_CONFIG_DIRS"))
-    {
-        std::istringstream config_stream{config_dirs};
-        for (std::string config_root; getline(config_stream, config_root, ':');)
-        {
-            config_roots.push_back(config_root);
-        }
-    }
-    else
-    {
-        config_roots.push_back("/etc/xdg");
-    }
-
-    /* Read config file */
-    for (auto const& config_root : config_roots)
-    {
-        auto filepath = config_root / filename;
-        if (std::ifstream config_file{filepath})
-        {
-            load_config(config_file, filepath);
-            mir::log_debug("Loaded %s", filepath.c_str());
-            break;
-        }
+        std::ifstream config_stream{config_file.value()};
+        load_config(config_stream, *config_file);
+        mir::log_debug("Loaded %s", config_file->c_str());
     }
 
     switch (mode)
@@ -155,7 +128,32 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
         break;
 
     case Mode::reload_on_change:
-        watcher = std::make_shared<Watcher>(file, std::move(load_config));
+        watcher = std::make_shared<SingleFileWatcher>(file, std::move(load_config));
+        watcher->register_handler(runner);
+        break;
+    }
+}
+
+miral::ConfigFile::Self::Self(
+    MirRunner& runner, path file, Mode mode, OverrideLoader load_multi_configs, std::string_view extension)
+{
+    auto const config_roots = mlc::get_config_roots(file);
+    if (auto const config_file = find_config_file(config_roots, file.filename()))
+    {
+        auto config_files = get_all_config_files(config_roots, *config_file, extension);
+        load_multi_configs(config_files);
+
+        mir::log_debug("Loaded [%s]", collect_paths(config_files).c_str());
+    }
+
+    switch (mode)
+    {
+    case Mode::no_reloading:
+        break;
+
+    case Mode::reload_on_change:
+        watcher =
+            std::make_shared<mlc::OverrideWatcher>(std::move(file), std::move(load_multi_configs), extension);
         watcher->register_handler(runner);
         break;
     }
@@ -166,68 +164,56 @@ miral::ConfigFile::ConfigFile(MirRunner& runner, path file, Mode mode, Loader lo
 {
 }
 
+miral::ConfigFile::ConfigFile(
+    MirRunner& runner, path base_config, Mode mode, OverrideLoader load_config, std::string_view extension) :
+    self{std::make_shared<Self>(runner, std::move(base_config), mode, std::move(load_config), extension)}
+{
+}
+
 miral::ConfigFile::~ConfigFile() = default;
 
-void Watcher::register_handler(miral::MirRunner& runner)
+SingleFileWatcher::SingleFileWatcher(path file, miral::ConfigFile::Loader load_config) :
+    load_config{load_config},
+    filename{file.filename()},
+    directory{mlc::config_directory(file)},
+    directory_watch_descriptor{directory ? mlc::InotifyWatch{inotify_fd, *directory} : mlc::InotifyWatch{}}
 {
     if (directory_watch_descriptor)
     {
-        auto const weak_this = weak_from_this();
-        fd_handle = runner.register_fd_handler(inotify_fd, [weak_this] (int fd)
-        {
-            if (auto const strong_this = weak_this.lock())
-            {
-                strong_this->handler(fd);
-            }
-            else
-            {
-                mir::log_debug("Watcher has been removed, but handler invoked");
-            }
-        });
+        mir::log_debug("Monitoring %s for configuration changes", (directory.value() / filename).c_str());
     }
 }
 
-void Watcher::handler(int) const
+void SingleFileWatcher::handler(int)
 {
-    static size_t const sizeof_inotify_event = sizeof(inotify_event);
-
-    alignas(inotify_event) char buffer[sizeof(inotify_event) + NAME_MAX + 1];
-
-    auto const readsize = read(inotify_fd, buffer, sizeof(buffer));
-    if (readsize < static_cast<ssize_t>(sizeof_inotify_event))
-    {
-        return;
-    }
-
-    auto raw_buffer = buffer;
-    while (raw_buffer != buffer + readsize)
-    {
-        // This is safe because inotify_magic.buffer is aligned and event.len includes padding for alignment
-        auto const& event = reinterpret_cast<inotify_event&>(*raw_buffer);
-        if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO) && event.wd == directory_watch_descriptor.value())
-            try
-            {
-                if (event.name == filename)
+    for_each_inotify_event(
+        [this](inotify_event const& event)
+        {
+            if (event.mask & (IN_CLOSE_WRITE | IN_MOVED_TO) && event.wd == directory_watch_descriptor.value())
+                try
                 {
-                    auto const& file = directory.value() / filename;
+                    if (event.name == filename)
+                    {
+                        auto const& file = directory.value() / filename;
 
-                    if (std::ifstream config_file{file})
-                    {
-                        load_config(config_file, file);
-                        mir::log_debug("(Re)loaded %s", file.c_str());
-                    }
-                    else
-                    {
-                        mir::log_debug("Failed to open %s", file.c_str());
+                        if (std::ifstream config_file{file})
+                        {
+                            load_config(config_file, file);
+                            mir::log_debug("(Re)loaded %s", file.c_str());
+                        }
+                        else
+                        {
+                            mir::log_debug("Failed to open %s", file.c_str());
+                        }
                     }
                 }
-            }
-        catch (...)
-        {
-            mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
-                     "Failed to reload configuration");
-        }
-
-        raw_buffer += sizeof_inotify_event+event.len;
-    }
+                catch (...)
+                {
+                    mir::log(
+                        mir::logging::Severity::warning,
+                        MIR_LOG_COMPONENT,
+                        std::current_exception(),
+                        "Failed to reload configuration");
+                }
+        });
 }
