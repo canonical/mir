@@ -246,7 +246,7 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
     {
         throw mw::ProtocolError{
             resource,
-            mw::generic_error_code,
+            Error::invalid_size,
             "Invalid %s size %dx%d", interface_name, width, height};
     }
     if (window_role_)
@@ -602,6 +602,24 @@ void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
             "Invalid minimum size %dx%d", width, height};
     }
     WindowWlSurfaceRole::set_min_size(width, height);
+}
+
+void mf::XdgToplevelStable::handle_commit()
+{
+    auto const min_size = pending_min_size();
+    auto const max_size = pending_max_size();
+
+    // A zero max dimension means "no limit" (stored as the maximum possible size) and a zero min means
+    // "no minimum", so this comparison only triggers when the client has set genuinely conflicting constraints.
+    if (max_size.width < min_size.width || max_size.height < min_size.height)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_size,
+            "Maximum size %dx%d is smaller than minimum size %dx%d",
+            max_size.width.as_int(), max_size.height.as_int(),
+            min_size.width.as_int(), min_size.height.as_int()};
+    }
 }
 
 void mf::XdgToplevelStable::set_maximized()

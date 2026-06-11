@@ -78,7 +78,10 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
+                let ext_name =
+                    format_wayland_interface_to_rust_extension_struct(&global_interface.name);
                 namespace.add_forward_declaration_class(&class_name);
+                namespace.add_forward_declaration_struct(&snake_to_pascal(&ext_name));
 
                 let mut method = CppMethod::new(
                     format!("create_{}", global_interface.name),
@@ -93,6 +96,12 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
                     "client",
                     false,
                 ));
+                method.add_arg(CppArg::new(
+                    CppType::Box(snake_to_pascal(&ext_name)),
+                    "instance",
+                    false,
+                ));
+                method.add_arg(CppArg::new(CppType::CppU32, "object_id", false));
                 class.add_method(method);
             })
     });
@@ -168,7 +177,7 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
-    // WaylandClient is used in the protected constructor of every generated XxxImpl.
+    // WaylandClient is used in the protected constructor of every generated C++ implementation.
     namespace.add_forward_declaration_class("WaylandClient");
 
     for protocol in protocols {
@@ -212,8 +221,8 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     builder.add_header_include("\"ffi_fwd.h\"");
     builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
-    builder.add_header_include("<optional>");
     builder.add_header_include("<cstdint>");
+    builder.add_header_include("<string>");
     builder.add_header_include("<rust/cxx.h>");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
@@ -232,7 +241,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
             if let crate::protocol_parser::InterfaceItem::Request(request) = item {
                 Some(wayland_request_to_cpp_method(request))
             } else if let crate::protocol_parser::InterfaceItem::Event(event) = item {
-                Some(vec![wayland_event_to_cpp_method(event)])
+                Some(wayland_event_to_cpp_methods(event))
             } else {
                 None
             }
@@ -243,27 +252,14 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         class.add_enum(enum_);
     }
 
-    // Add the method that associates the boxed rust interface with the C++ class.
-    let mut associate_method = CppMethod::new("associate", None, true, false, true, true);
-    associate_method.add_arg(CppArg::new(
-        CppType::Box(snake_to_pascal(
-            &format_wayland_interface_to_rust_extension_struct(&interface.name),
-        )),
-        "instance",
-        false,
-    ));
-    associate_method.add_arg(CppArg::new(CppType::CppU32, "object_id", false));
-    associate_method.set_body("object_id_ = object_id;\ninstance_ = std::move(instance);");
-    class.add_method(associate_method);
+    // Declare the corresponding private members.
     class.add_private_member(CppArg::new(
         CppType::Box(snake_to_pascal(
             &format_wayland_interface_to_rust_extension_struct(&interface.name),
         )),
         "instance_",
-        true,
+        false,
     ));
-
-    // Add a private member for the object ID of the associated resource.
     class.add_private_member(CppArg::new(CppType::CppU32, "object_id_", false));
 
     // Add a public accessor for the object ID so that C++ implementations
@@ -279,7 +275,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     object_id_method.set_body("return object_id_;");
     class.add_method(object_id_method);
 
-    // Add the "get_box" method that will return the boxes rust interface. This is used
+    // Add the "get_box" method that will return the boxed rust interface. This is used
     // when sending a Box from C++ to Rust.
     let mut get_box_method = CppMethod::new(
         "get_box",
@@ -291,9 +287,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         true,
         true,
     );
-    get_box_method.set_body(
-        "if (!instance_) { throw \"get_box() called before associate()\"; }\nreturn instance_.value();",
-    );
+    get_box_method.set_body("return instance_;");
     class.add_method(get_box_method);
 
     // Add a post_error method that posts a protocol error to the client for this resource.
@@ -302,8 +296,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let mut post_error_method = CppMethod::new("post_error", None, false, false, false, true);
     post_error_method.add_arg(CppArg::new(CppType::CppU32, "code", false));
     post_error_method.add_arg(CppArg::new(CppType::String, "message", false));
-    post_error_method
-        .set_body("assert(instance_.has_value());\ninstance_.value()->post_error(code, message);");
+    post_error_method.set_body("instance_->post_error(code, message);");
     class.add_method(post_error_method);
 
     // Add a protected constructor and member so that subclasses know which client
@@ -313,6 +306,16 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         "client",
         false,
     ));
+    // Add instance_ and object_id_ constructor args after client to match declaration order
+    // (public members are declared before private members in the generated header).
+    class.add_protected_constructor_arg(CppArg::new(
+        CppType::Box(snake_to_pascal(
+            &format_wayland_interface_to_rust_extension_struct(&interface.name),
+        )),
+        "instance_",
+        false,
+    ));
+    class.add_protected_constructor_arg(CppArg::new(CppType::CppU32, "object_id_", false));
     class
         .add_public_member(CppArg::new(
             CppType::Box("WaylandClient".to_string()),
@@ -419,22 +422,33 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
         })
         .collect();
 
-    let delegation_args: Vec<String> = args
-        .clone()
-        .flat_map(|arg| {
-            let call_arg = match arg.cpp_type() {
-                CppType::Object(_) => format!("wrapped_{}", arg.name()),
-                _ => arg.name().to_string(),
-            };
-            if let Some(has_name) = arg.has_name() {
-                vec![call_arg, has_name]
-            } else {
-                vec![call_arg]
-            }
-        })
-        .collect();
-
     let has_retval = retval.is_some();
+
+    // If the method creates a child object (has NewId), we need to pass the child's
+    // middleware Box and object_id so the child is fully initialized at construction.
+    let new_id_ext_args: Vec<CppArg> = if let Some(new_id_arg) = method
+        .args
+        .iter()
+        .find(|arg| arg.type_ == WaylandArgType::NewId)
+    {
+        let ext_name = format_wayland_interface_to_rust_extension_struct(
+            new_id_arg
+                .interface
+                .as_ref()
+                .expect("NewId is missing interface"),
+        );
+        vec![
+            CppArg::new(
+                CppType::Box(snake_to_pascal(&ext_name)),
+                "child_instance",
+                false,
+            ),
+            CppArg::new(CppType::CppU32, "child_object_id", false),
+        ]
+    } else {
+        vec![]
+    };
+
     let mut cpp_method = CppMethod::new(
         method.name.as_str(),
         retval,
@@ -443,7 +457,10 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
         true,
         true,
     );
-    for arg in args {
+    for arg in args.clone() {
+        cpp_method.add_arg(arg);
+    }
+    for arg in new_id_ext_args.clone() {
         cpp_method.add_arg(arg);
     }
 
@@ -457,11 +474,30 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     if !wayland_weak_transformers.is_empty() {
         // Build the body: wrap shared_ptrs in Weak, then delegate to the virtual overload
         let return_prefix = if has_retval { "return " } else { "" };
+        let mut all_delegation_args: Vec<String> = args
+            .clone()
+            .flat_map(|arg| {
+                let call_arg = match arg.cpp_type() {
+                    CppType::Object(_) => format!("wrapped_{}", arg.name()),
+                    _ => arg.name().to_string(),
+                };
+                if let Some(has_name) = arg.has_name() {
+                    vec![call_arg, has_name]
+                } else {
+                    vec![call_arg]
+                }
+            })
+            .collect();
+
+        // Forward child_instance and child_object_id to the virtual method
+        for arg in &new_id_ext_args {
+            all_delegation_args.push(format!("std::move({})", arg.name()));
+        }
         let delegation_call = format!(
             "{}{}({});",
             return_prefix,
             sanitize_identifier(&method.name),
-            delegation_args.join(", ")
+            all_delegation_args.join(", ")
         );
         let mut body_lines = wayland_weak_transformers;
         body_lines.push(delegation_call);
@@ -508,6 +544,10 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
                 }
             }
         }
+        // Add the child middleware args to the virtual method too
+        for arg in new_id_ext_args {
+            virtual_method.add_arg(arg);
+        }
 
         vec![cpp_method, virtual_method]
     } else {
@@ -515,15 +555,10 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     }
 }
 
-fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
-    let mut cpp_method = CppMethod::new(
-        format!("send_{}_event", event.name),
-        None,
-        false,
-        false,
-        false,
-        true,
-    );
+fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
+    let since = event.since.unwrap_or(1);
+    let needs_version_guard = since > 1;
+
     let args = event.args.iter().map(wayland_arg_to_cpp_arg);
 
     let sanitized_args: Vec<String> = args
@@ -541,14 +576,57 @@ fn wayland_event_to_cpp_method(event: &WaylandEvent) -> CppMethod {
         })
         .collect();
 
-    for arg in args {
-        cpp_method.add_arg(arg);
+    let send_call = format!("instance_->{}({});", event.name, sanitized_args.join(", "));
+
+    // Generate the `send_x_event` method
+    let send_body = if needs_version_guard {
+        format!(
+            "if (instance_->version() < {since}) {{\n    post_error(0, \"Tried to send {event_name} event to object with version \" + std::to_string(instance_->version()) + \" (requires version {since})\");\n    return;\n}}\n{send_call}",
+            since = since,
+            event_name = event.name,
+            send_call = send_call,
+        )
+    } else {
+        send_call.clone()
+    };
+
+    let mut send_method = CppMethod::new(
+        format!("send_{}_event", event.name),
+        None,
+        false,
+        false,
+        false,
+        true,
+    );
+    for arg in args.clone() {
+        send_method.add_arg(arg);
+    }
+    send_method.set_body(send_body);
+
+    let mut methods = vec![send_method];
+
+    // Generate the `send_x_event_if_supported` method for versioned events
+    if needs_version_guard {
+        let if_supported_body = format!(
+            "if (instance_->version() < {since}) {{\n    return;\n}}\n{send_call}",
+            since = since,
+            send_call = send_call,
+        );
+
+        let mut if_supported_method = CppMethod::new(
+            format!("send_{}_event_if_supported", event.name),
+            None,
+            false,
+            false,
+            false,
+            true,
+        );
+        for arg in args {
+            if_supported_method.add_arg(arg);
+        }
+        if_supported_method.set_body(if_supported_body);
+        methods.push(if_supported_method);
     }
 
-    cpp_method.set_body(format!(
-        "if (!instance_.has_value()) {{\n    throw \"Wayland event sender used before associate()\";\n}}\ninstance_.value()->{}({});",
-        event.name,
-        sanitized_args.join(", ")
-    ));
-    cpp_method
+    methods
 }
