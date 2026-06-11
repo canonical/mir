@@ -109,6 +109,7 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
     quote! {
         fn post_error(self: &mut #interface_name_ext, code: u32, message: &CxxString);
         fn version(self: &#interface_name_ext) -> u32;
+        fn destroy_and_delete(self: &#interface_name_ext);
         #(#events)*
     }
 }
