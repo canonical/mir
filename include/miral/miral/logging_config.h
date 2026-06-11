@@ -17,8 +17,6 @@
 #ifndef MIRAL_LOGGING_CONFIG_H_
 #define MIRAL_LOGGING_CONFIG_H_
 
-#include <memory>
-
 namespace miral
 {
 namespace live_config { class Store; }
@@ -27,7 +25,7 @@ namespace live_config { class Store; }
 ///
 /// This is a convenience function that registers a log filtering
 /// option on the live config store and monitors it for changes.
-/// \remark Since MirAL 5.8
+/// \remark Since MirAL 6.0
 void register_log_filtering_config(live_config::Store& config_store);
 }
 
