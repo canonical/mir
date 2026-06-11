@@ -152,40 +152,6 @@ MirInputDeviceStateEvent const* mir_event_get_input_device_state_event(MirEvent 
  */
 MirWindowPlacementEvent const* mir_event_get_window_placement_event(MirEvent const* event);
 
-/*
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * _________________________
- *< Don't use mir_event_ref >
- * -------------------------
- *       \   ^__^
- *        \  (oo)\_______
- *           (__)\       )\/\
- *                ||----w |
- *                ||     ||
- * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- * NOTICE: mir_event_ref and mir_event_unref are implemented in terms of copy
- * until such time that direct MirEvent access is deprecated. This means you
- * must use the return value as your new reference.
- */
-
-/**
- * Reference this MirEvent and return a pointer to the
- * newly referenced instance
- *
- * \param[in] event The event to reference
- * \return          The event pointer to now use
- */
-[[deprecated("Not meaningful: legacy of mirclient API")]]
-MirEvent const* mir_event_ref(MirEvent const* event) __attribute__((warn_unused_result));
-
-/**
- * Release a reference to a MirEvent.
- *
- * \param[in] event The event to un-reference
- */
-[[deprecated("Not meaningful: legacy of mirclient API")]]
-void mir_event_unref(MirEvent const* event);
-
 #ifdef __cplusplus
 }
 #endif

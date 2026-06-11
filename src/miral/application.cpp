@@ -48,8 +48,3 @@ auto miral::socket_fd_of(Application const& application) -> int
 {
     return application->socket_fd();
 }
-
-void miral::apply_lifecycle_state_to(Application const& /*application*/, MirLifecycleState /*state*/)
-{
-    mir::log_warning("Use of unimplemented function: miral::apply_lifecycle_state_to()");
-}
