@@ -14,8 +14,6 @@ global:
   mir_event_get_input_event;
   mir_event_get_type;
   mir_event_get_window_event;
-  mir_event_ref;
-  mir_event_unref;
   mir_horizontal_resize_cursor_name;
   mir_hsplit_resize_cursor_name;
   mir_input_device_state_event_device_count;
