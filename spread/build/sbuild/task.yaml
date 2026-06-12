@@ -23,7 +23,7 @@ execute: |
         debhelper \
         dh-python \
         lsb-invalid-mta \
-        qemu-user-static \
+        qemu-user-binfmt \
         sbuild \
         schroot \
         ubuntu-dev-tools
