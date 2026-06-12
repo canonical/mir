@@ -47,7 +47,7 @@ jobs:
 
         TASKS+=(
           "lxd:...:debian_sid"
-          "lxd:...:fedora_43"
+          "lxd:...:fedora_44"
           "lxd:...:fedora_clang"
           "lxd:...:fedora_rawhide"
           "lxd:...:spread/ubuntu:asan"
@@ -61,11 +61,8 @@ jobs:
           "lxd:...:ubuntu_armhf"
           "lxd:...:ubuntu_devel"
           "lxd:...:ubuntu_proposed"
-          "lxd:...:ubuntu_questing"
           "lxd:...:ubuntu_resolute"
-          "lxd:alpine-3.21:...:amd64"
-          "lxd:alpine-3.22:...:amd64"
-          "lxd:alpine-3.23:...:amd64"
+          "lxd:alpine-3.24:...:amd64"
           "lxd:alpine-edge:...:amd64"
         )
 
@@ -116,7 +113,7 @@ jobs:
           sources_list: |
             Types: deb
             URIs: http://azure.archive.ubuntu.com/ubuntu/
-            Suites: noble noble-updates noble-security
+            Suites: resolute resolute-updates resolute-security
             Components: main universe
         EOF
 
