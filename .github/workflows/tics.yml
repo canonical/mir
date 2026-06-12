@@ -125,6 +125,7 @@ jobs:
           glmark2-es2 \
           glmark2-es2-wayland \
           lcov \
+          llvm \
           libclang-rt-dev \
           mesa-utils \
           ninja-build \
@@ -135,6 +136,13 @@ jobs:
         sudo --preserve-env apt-get build-dep --yes ./
 
         echo "PATH=/usr/lib/rust-1.82/bin:${PATH}" >> "$GITHUB_ENV"
+
+        mkdir --parents ~/.local/bin
+        cat <<'EOF' > ~/.local/bin/gcov
+        #!/bin/sh
+        exec llvm-cov gcov "$@"
+        EOF
+        chmod +x ~/.local/bin/gcov
 
     - name: Configure
       run: >
