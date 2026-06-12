@@ -44,6 +44,9 @@ struct MirInputEvent : MirEvent
     MirTouchEvent* to_touch();
     MirTouchEvent const* to_touch() const;
 
+    MirSwitchEvent* to_switch();
+    MirSwitchEvent const* to_switch() const;
+
 protected:
     MirInputEvent(
         MirInputEventType input_type,

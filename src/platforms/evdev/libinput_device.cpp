@@ -186,6 +186,12 @@ void mie::LibInputDevice::process_event(libinput_event* event)
                 }
             }
             break;
+        case LIBINPUT_EVENT_SWITCH_TOGGLE:
+            if (auto input = convert_switch_event(libinput_event_get_switch_event(event)))
+            {
+                sink->handle_input(std::move(input));
+            }
+            break;
         default:
             break;
         }
@@ -365,6 +371,22 @@ mir::EventUPtr mie::LibInputDevice::convert_touch_frame(libinput_event_touch* to
     return builder->touch_event(time, contacts);
 }
 
+mir::EventUPtr mie::LibInputDevice::convert_switch_event(libinput_event_switch* switch_event)
+{
+    auto const libinput_switch_type = libinput_event_switch_get_switch(switch_event);
+    auto const libinput_switch_state = libinput_event_switch_get_switch_state(switch_event);
+
+    switch (libinput_switch_type)
+    {
+        case LIBINPUT_SWITCH_TABLET_MODE:
+            return builder->switch_event(
+                mir_switch_action_tablet_mode,
+                libinput_switch_state == LIBINPUT_SWITCH_STATE_ON ? mir_switch_state_on : mir_switch_state_off);
+        default:
+            return {nullptr, [](auto){}};
+    }
+}
+
 void mie::LibInputDevice::handle_touch_down(libinput_event_touch* touch)
 {
     MirTouchId const id = libinput_event_touch_get_slot(touch);
@@ -448,6 +470,7 @@ void mie::LibInputDevice::update_device_info()
         Mapping{"ID_INPUT_JOYSTICK", mi::DeviceCapability::joystick},
         Mapping{"ID_INPUT_KEY", mi::DeviceCapability::keyboard},
         Mapping{"ID_INPUT_KEYBOARD", mi::DeviceCapability::alpha_numeric},
+        Mapping{"ID_INPUT_SWITCH", mi::DeviceCapability::switch_},
     };
 
     auto const u_dev = mir::raii::deleter_for(libinput_device_get_udev_device(dev), &udev_device_unref);

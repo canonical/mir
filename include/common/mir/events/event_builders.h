@@ -187,6 +187,11 @@ EventUPtr make_touch_event(
     MirInputEventModifiers modifiers,
     std::vector<TouchContact> const& contacts);
 
+EventUPtr make_switch_event(
+    MirInputDeviceId device_id,
+    MirSwitchAction action,
+    MirSwitchState state);
+
 EventUPtr clone_event(MirEvent const& event);
 void set_window_id(MirEvent& event, int window_id);
 
