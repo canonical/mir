@@ -15,14 +15,12 @@ global:
     "miral::Keymap::Keymap()";
     "miral::Keymap::Keymap(miral::Keymap const&)";
     "miral::Keymap::Keymap(miral::live_config::Store&)";
-    "miral::MouseKeysConfig::MouseKeysConfig(bool)";
     "miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)";
     "miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<miral::MouseKeysConfig::Self>)";
     "miral::MouseKeysConfig::disable() const";
     "miral::MouseKeysConfig::disabled()";
     "miral::MouseKeysConfig::enable() const";
     "miral::MouseKeysConfig::enabled()";
-    "miral::MouseKeysConfig::enabled(bool) const";
     "miral::OutputFilter::OutputFilter()";
     "miral::OutputFilter::OutputFilter(MirOutputFilter)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
@@ -409,7 +407,6 @@ global:
     miral::WindowInfo::must_have_parent*;
     miral::WindowInfo::must_not_have_parent*;
     miral::WindowInfo::name*;
-    miral::WindowInfo::needs_titlebar*;
     miral::WindowInfo::operator*;
     miral::WindowInfo::output_id*;
     miral::WindowInfo::parent*;
@@ -469,9 +466,7 @@ global:
     miral::WindowManagerTools::for_each_application*;
     miral::WindowManagerTools::for_each_window_in_workspace*;
     miral::WindowManagerTools::for_each_workspace_containing*;
-    miral::WindowManagerTools::id_for_window*;
     miral::WindowManagerTools::info_for*;
-    miral::WindowManagerTools::info_for_window_id*;
     miral::WindowManagerTools::invoke_under_lock*;
     miral::WindowManagerTools::modify_window*;
     miral::WindowManagerTools::move_cursor_to*;
@@ -538,7 +533,6 @@ global:
     miral::Zone::is_same_zone*;
     miral::Zone::operator*;
     miral::application_for*;
-    miral::apply_lifecycle_state_to*;
     miral::display_configuration_options*;
     miral::equivalent_display_area*;
     miral::kill*;
