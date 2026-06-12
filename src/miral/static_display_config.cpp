@@ -27,6 +27,7 @@
 
 #include "yaml-cpp/yaml.h"
 
+#include <limits.h>
 #include <sys/inotify.h>
 #include <unistd.h>
 

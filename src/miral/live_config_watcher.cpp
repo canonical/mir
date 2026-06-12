@@ -21,6 +21,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <limits.h>
 #include <sys/inotify.h>
 #include <unistd.h>
 
