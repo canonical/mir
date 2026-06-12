@@ -118,7 +118,7 @@ jobs:
         EOF
 
         sudo apt-get update
-        sudo apt-get install --yes binfmt-support qemu-user-static
+        sudo apt-get install --yes binfmt-support qemu-user-binfmt
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> "$GITHUB_ENV"
 
     - name: Check out code

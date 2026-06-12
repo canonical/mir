@@ -25,7 +25,7 @@ execute: |
         dh-python \
         fakeroot \
         nullmailer \
-        qemu-user-static \
+        qemu-user-binfmt \
         sbuild \
         schroot \
         ubuntu-dev-tools
