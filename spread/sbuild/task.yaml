@@ -41,7 +41,12 @@ execute: |
     EOF
     apparmor_parser -r /etc/apparmor.d/sbuild
 
+    # trick mk-sbuild into making the chroot for us
+    addgroup --system sbuild
     adduser $USER sbuild
+    mkdir --parents /var/lib/sbuild/build
+    chown --recursive :sbuild /var/lib/sbuild
+    chmod --recursive g+w /var/lib/sbuild
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
 
@@ -50,7 +55,7 @@ execute: |
     MKSBUILD_OPTS=(
       mk-sbuild
       --distro ${DISTRO}
-      --debootstrap-include=ccache
+      --debootstrap-include=ccache,passwd
       ${RELEASE}
     )
 
@@ -60,6 +65,8 @@ execute: |
     fi
 
     SBUILD_OPTS=(
+      --chroot-mode schroot
+      --no-clean-source
       --jobs=$(nproc)
       --verbose
       --dist=${RELEASE}
