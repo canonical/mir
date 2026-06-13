@@ -187,8 +187,12 @@ void mf::ExtForeignToplevelImageCopyBackend::surface_resized()
     if (auto const locked = surface.lock())
     {
         auto const window_size = locked->window_size();
-        session->set_buffer_constraints(window_size);
+        if (window_size == output_space_area.size)
+        {
+            return;
+        }
 
+        session->set_buffer_constraints(window_size);
         output_space_area = {{}, window_size};
         apply_damage(std::nullopt);
     }
