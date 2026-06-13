@@ -290,6 +290,10 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
     {
         pending_toplevel_size = geometry::Size{host_scale*width, host_scale*height};
     }
+    else if (!dcout.modes.empty())
+    {
+        pending_toplevel_size = dcout.modes[dcout.current_mode_index].size;
+    }
 }
 
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
