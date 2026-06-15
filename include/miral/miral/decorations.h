@@ -72,4 +72,4 @@ private:
 
 }
 
-#endif  // MIRAL_DECORATIONS_H_
+#endif // MIRAL_DECORATIONS_H_

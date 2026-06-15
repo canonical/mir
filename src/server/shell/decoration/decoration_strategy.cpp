@@ -969,4 +969,3 @@ void msd::render_title_text(
 }
 
 // The old Text::instance and msd forwarding removed; free func above is the entry point.
-

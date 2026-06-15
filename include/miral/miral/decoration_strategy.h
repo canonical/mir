@@ -28,8 +28,10 @@
 #include <string>
 #include <vector>
 
-namespace mir {
-namespace graphics {
+namespace mir
+{
+namespace graphics
+{
 class Buffer;
 class GraphicBufferAllocator;
 }
@@ -51,25 +53,19 @@ namespace miral
 constexpr uint32_t pack_color(uint8_t alpha, uint8_t red, uint8_t green, uint8_t blue)
 {
 #if __BYTE_ORDER == __LITTLE_ENDIAN
-    return (uint32_t(blue)  <<  0) |
-           (uint32_t(green) <<  8) |
-           (uint32_t(red)   << 16) |
-           (uint32_t(alpha) << 24);
+    return (uint32_t(blue) << 0) | (uint32_t(green) << 8) | (uint32_t(red) << 16) | (uint32_t(alpha) << 24);
 #elif __BYTE_ORDER == __BIG_ENDIAN
-    return (uint32_t(blue)  << 24) |
-           (uint32_t(green) << 16) |
-           (uint32_t(red)   <<  8) |
-           (uint32_t(alpha) <<  0);
+    return (uint32_t(blue) << 24) | (uint32_t(green) << 16) | (uint32_t(red) << 8) | (uint32_t(alpha) << 0);
 #else
-#   error "MirAL decorations require a known byte order"
+  #error "MirAL decorations require a known byte order"
 #endif
 }
 
 enum class BorderType
 {
-    full,       ///< Full titlebar and border (for restored windows)
-    titlebar,   ///< Titlebar only (for maximized windows)
-    none,       ///< No decorations (for fullscreen windows or popups)
+    full,     ///< Full titlebar and border (for restored windows)
+    titlebar, ///< Titlebar only (for maximized windows)
+    none,     ///< No decorations (for fullscreen windows or popups)
 };
 
 struct Button
@@ -83,9 +79,9 @@ struct Button
 
     enum class State
     {
-        up,         ///< The user is not interacting with this button
-        hovered,    ///< The user is hovering over this button
-        down,       ///< The user is currently pressing this button
+        up,      ///< The user is not interacting with this button
+        hovered, ///< The user is hovering over this button
+        down,    ///< The user is currently pressing this button
     };
 
     Function function;
@@ -104,7 +100,7 @@ struct WindowState
     MirWindowFocusState focused_state;
     mir::geometry::Size window_size;
     BorderType border_type;
-    mir::geometry::Height titlebar_height_;  // supports titlebar_height() accessor
+    mir::geometry::Height titlebar_height_; // supports titlebar_height() accessor
     mir::geometry::Width side_border_width;
     mir::geometry::Height bottom_border_height;
     float scale;
@@ -136,8 +132,9 @@ public:
     virtual ~DecorationStrategy() = default;
 
     virtual auto compute_size_with_decorations(
-        mir::geometry::Size content_size, MirWindowType type, MirWindowState state) const
-        -> mir::geometry::Size = 0;
+        mir::geometry::Size content_size,
+        MirWindowType type,
+        MirWindowState state) const -> mir::geometry::Size = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> mir::geometry::Rectangle = 0;
     virtual void update_state(WindowState const& ws, InputState const& input) = 0;
 
@@ -153,7 +150,7 @@ public:
     // *internal* decoration geometry used for rendering and input (distinct from the
     // client-visible size returned by compute_size_with_decorations()).
     virtual auto titlebar_height() const -> mir::geometry::Height { return mir::geometry::Height{24}; }
-    virtual auto side_border_width() const -> mir::geometry::Width  { return mir::geometry::Width{4}; }
+    virtual auto side_border_width() const -> mir::geometry::Width { return mir::geometry::Width{4}; }
     virtual auto bottom_border_height() const -> mir::geometry::Height { return mir::geometry::Height{4}; }
 
     // Has a default implementation (delegates to Mir’s existing FreeType renderer)
@@ -168,11 +165,9 @@ public:
     virtual void set_buffer_allocator(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator);
 
 protected:
-    auto create_software_buffer(mir::geometry::Size size)
-        -> std::shared_ptr<mir::graphics::Buffer>;
+    auto create_software_buffer(mir::geometry::Size size) -> std::shared_ptr<mir::graphics::Buffer>;
 
-    auto map_software_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer)
-        -> SoftwareBufferMapping;
+    auto map_software_buffer(std::shared_ptr<mir::graphics::Buffer> const& buffer) -> SoftwareBufferMapping;
 
 private:
     std::weak_ptr<mir::graphics::GraphicBufferAllocator> allocator;
@@ -180,4 +175,4 @@ private:
 
 }
 
-#endif  // MIRAL_DECORATION_STRATEGY_H_
+#endif // MIRAL_DECORATION_STRATEGY_H_
