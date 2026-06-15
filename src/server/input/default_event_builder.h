@@ -44,10 +44,6 @@ public:
         xkb_keysym_t keysym,
         int scan_code) override;
 
-    EventUPtr touch_event(
-        std::optional<Timestamp> source_timestamp,
-        std::vector<events::TouchContactV1> const& contacts) override;
-
     EventUPtr pointer_event(
         std::optional<Timestamp> source_timestamp,
         MirPointerAction action,

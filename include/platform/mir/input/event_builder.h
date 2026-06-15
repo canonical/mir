@@ -59,11 +59,6 @@ public:
         float relative_x_value,
         float relative_y_value) = 0;
 
-    [[deprecated("use the newest version of touch_event() instead")]]
-    virtual EventUPtr touch_event(
-        std::optional<Timestamp> timestamp,
-        std::vector<mir::events::TouchContactV1> const& contacts) = 0;
-
     virtual EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
         MirPointerAction action,

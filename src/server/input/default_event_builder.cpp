@@ -83,15 +83,6 @@ mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
 
 mir::EventUPtr mi::DefaultEventBuilder::touch_event(
     std::optional<Timestamp> source_timestamp,
-    std::vector<events::TouchContactV1> const& contacts)
-{
-    return touch_event(
-        source_timestamp,
-        std::vector<events::TouchContactV2>{begin(contacts), end(contacts)});
-}
-
-mir::EventUPtr mi::DefaultEventBuilder::touch_event(
-    std::optional<Timestamp> source_timestamp,
     std::vector<events::TouchContactV2> const& contacts)
 {
     auto const timestamp = calibrate_timestamp(source_timestamp);
