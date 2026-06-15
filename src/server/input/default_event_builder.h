@@ -44,14 +44,6 @@ public:
         xkb_keysym_t keysym,
         int scan_code) override;
 
-    EventUPtr pointer_event(
-        std::optional<Timestamp> source_timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x, float y,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) override;
-
     // Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be
     // needed for each ScrollAxis struct version.
     EventUPtr pointer_event(
