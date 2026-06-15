@@ -39,3 +39,8 @@ MirAL also has other strategies: {func}`miral::Decorations::prefer_csd`,
 {func}`miral::Decorations::always_ssd`, and
 {func}`miral::Decorations::always_csd`. Try playing around with different
 strategies and seeing how they behave differently.
+
+For custom SSD rendering, button layouts, theming, and drawing (beyond just
+preference selection), implement {class}`miral::DecorationStrategy` as described
+in the "Custom server-side decorations" section of
+{ref}`ref-introducing-the-miral-api`.
