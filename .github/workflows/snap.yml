@@ -65,6 +65,10 @@ jobs:
         git config --global --add safe.directory "$(pwd)"
         sed -i "s@version: testing@version: $(git describe)@" snap/snapcraft.yaml
 
+    - name: Strip git tags to speed up Launchpad remote build indexing
+      if: matrix.architecture != 'amd64'
+      run: git tag -l | xargs -r git tag -d
+
     - name: Build and publish the snap
       uses: canonical/actions/build-snap@78e8dd5f693653767f2c60c4a6a421a1ebed35af # release @ 2025.06.05
       with:
