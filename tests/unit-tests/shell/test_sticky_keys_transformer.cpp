@@ -123,11 +123,13 @@ TEST_P(TestStickyKeysTransformerWithModifiers, up_events_are_dispatched_followin
 
     // Action: "Click" a mouse button
     auto const mouse_down_event = event_builder.pointer_event(
-        std::nullopt, mir_pointer_action_button_down, mir_pointer_button_primary, 0, 0, 0, 0);
+        std::nullopt, mir_pointer_action_button_down, mir_pointer_button_primary, std::nullopt, {},
+        mir_pointer_axis_source_none, {}, {});
     transformer.transform_input_event(dispatch, &event_builder, *mouse_down_event.get());
 
     auto const mouse_up_event = event_builder.pointer_event(
-        std::nullopt, mir_pointer_action_button_up, mir_pointer_button_primary, 0, 0, 0, 0);
+    std::nullopt, mir_pointer_action_button_up, mir_pointer_button_primary, std::nullopt, {},
+        mir_pointer_axis_source_none, {}, {});
     transformer.transform_input_event(dispatch, &event_builder, *mouse_up_event.get());
 }
 

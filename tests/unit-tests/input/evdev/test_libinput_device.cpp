@@ -129,52 +129,6 @@ struct MockEventBuilder : mi::EventBuilder
         MirPointerAction,
         MirPointerButtons,
         float, float,
-        float, float) override
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
-    }
-
-    mir::EventUPtr pointer_event(
-        std::optional<Timestamp>,
-        MirPointerAction,
-        MirPointerButtons,
-        float, float,
-        float, float,
-        float, float) override
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
-    }
-
-    mir::EventUPtr pointer_axis_event(
-        MirPointerAxisSource,
-        std::optional<Timestamp>,
-        MirPointerAction,
-        MirPointerButtons,
-        float, float,
-        float, float,
-        float, float) override
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
-    }
-
-    mir::EventUPtr pointer_axis_with_stop_event(
-        MirPointerAxisSource,
-        std::optional<Timestamp>,
-        MirPointerAction,
-        MirPointerButtons,
-        float, float,
-        float, float,
-        bool, bool,
-        float, float) override
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error("deprecated event builder method called"));
-    }
-
-    mir::EventUPtr pointer_axis_discrete_scroll_event(
-        MirPointerAxisSource,
-        std::optional<Timestamp>,
-        MirPointerAction,
-        MirPointerButtons,
         float, float,
         float, float) override
     {

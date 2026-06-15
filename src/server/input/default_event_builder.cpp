@@ -47,22 +47,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     std::optional<Timestamp> source_timestamp,
     MirPointerAction action,
     MirPointerButtons buttons_pressed,
-    float hscroll_value, float vscroll_value,
-    float relative_x_value, float relative_y_value)
-{
-    const float x_axis_value = 0;
-    const float y_axis_value = 0;
-    auto const timestamp = calibrate_timestamp(source_timestamp);
-    return me::make_pointer_event(
-        device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis_value,
-        y_axis_value,
-        hscroll_value, vscroll_value, relative_x_value, relative_y_value);
-}
-
-mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
-    std::optional<Timestamp> source_timestamp,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
     float x_axis, float y_axis,
     float hscroll_value, float vscroll_value,
     float relative_x_value, float relative_y_value)
@@ -71,48 +55,6 @@ mir::EventUPtr mi::DefaultEventBuilder::pointer_event(
     return me::make_pointer_event(
         device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis, y_axis,
         hscroll_value, vscroll_value, relative_x_value, relative_y_value);
-}
-
-mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_event(
-    MirPointerAxisSource axis_source,
-    std::optional<Timestamp> source_timestamp,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float x_axis, float y_axis,
-    float hscroll_value, float vscroll_value,
-    float relative_x_value, float relative_y_value)
-{
-    auto const timestamp = calibrate_timestamp(source_timestamp);
-    return me::make_pointer_axis_event(
-        axis_source, device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
-        y_axis, hscroll_value, vscroll_value, relative_x_value, relative_y_value);
-}
-
-mir::EventUPtr mi::DefaultEventBuilder::pointer_axis_with_stop_event(
-    MirPointerAxisSource axis_source,
-    std::optional<Timestamp> source_timestamp,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float x_axis, float y_axis,
-    float hscroll_value, float vscroll_value,
-    bool hscroll_stop, bool vscroll_stop,
-    float relative_x_value, float relative_y_value)
-{
-    auto const timestamp = calibrate_timestamp(source_timestamp);
-    return me::make_pointer_axis_with_stop_event(
-        axis_source, device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed, x_axis,
-        y_axis, hscroll_value, vscroll_value, hscroll_stop, vscroll_stop, relative_x_value, relative_y_value);
-}
-
-mir::EventUPtr mir::input::DefaultEventBuilder::pointer_axis_discrete_scroll_event(
-    MirPointerAxisSource axis_source, std::optional<Timestamp> source_timestamp, MirPointerAction action,
-    MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
-    float vscroll_discrete)
-{
-    auto const timestamp = calibrate_timestamp(source_timestamp);
-    return me::make_pointer_axis_discrete_scroll_event(
-        axis_source, device_id, timestamp, mir_input_event_modifier_none, action, buttons_pressed,
-        hscroll_value, vscroll_value, hscroll_discrete, vscroll_discrete);
 }
 
 mir::EventUPtr mir::input::DefaultEventBuilder::pointer_event(
