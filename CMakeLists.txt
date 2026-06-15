@@ -306,11 +306,6 @@ add_subdirectory(src/)
 add_subdirectory(examples/)
 add_subdirectory(cmake/)
 
-if (MIR_ENABLE_RUST)
-  add_subdirectory(mir-rs-sys/)
-  add_subdirectory(mir-rs/)
-endif()
-
 if (MIR_ENABLE_TESTS)
   find_package(GtestGmock REQUIRED)
   pkg_check_modules(LIBEVDEV REQUIRED IMPORTED_TARGET libevdev)
