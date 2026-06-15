@@ -15,7 +15,7 @@
 include(RustLibrary)
 
 add_rust_cxx_library(mir_sys
-  CRATE mir-rs-sys
+  CRATE mir-sys
   DEPENDS Cargo.toml build.rs src/lib.rs src/bridge.cpp src/bridge.h
   LIBRARIES miral mircommon mircore
   INCLUDES
