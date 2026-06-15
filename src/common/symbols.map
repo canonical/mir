@@ -14,8 +14,6 @@ global:
   mir_event_get_input_event;
   mir_event_get_type;
   mir_event_get_window_event;
-  mir_event_ref;
-  mir_event_unref;
   mir_horizontal_resize_cursor_name;
   mir_hsplit_resize_cursor_name;
   mir_input_device_state_event_device_count;
@@ -415,7 +413,6 @@ global:
     mir::events::make_pointer_axis_with_stop_event*;
     mir::events::make_pointer_event*;
     mir::events::make_prompt_session_state_event*;
-    mir::events::make_start_drag_and_drop_event*;
     mir::events::make_surface_orientation_event*;
     mir::events::make_touch_event*;
     mir::events::make_window_close_event*;
@@ -424,13 +421,10 @@ global:
     mir::events::make_window_placement_event*;
     mir::events::make_window_resize_event*;
     mir::events::map_positions*;
-    mir::events::scale_positions*;
     mir::events::set_button_state*;
     mir::events::set_cursor_position*;
-    mir::events::set_drag_and_drop_handle*;
     mir::events::set_modifier*;
     mir::events::set_window_id*;
-    mir::events::transform_positions*;
     mir::fd_reception_error::fd_reception_error*;
     mir::graphics::NativeBuffer::?NativeBuffer*;
     mir::graphics::NativeBuffer::NativeBuffer*;

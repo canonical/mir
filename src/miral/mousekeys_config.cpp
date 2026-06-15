@@ -107,11 +107,6 @@ struct miral::MouseKeysConfig::Self
     mir::Synchronised<State> state;
 };
 
-miral::MouseKeysConfig::MouseKeysConfig(bool enabled_by_default) :
-    self{std::make_shared<miral::MouseKeysConfig::Self>(enabled_by_default)}
-{
-}
-
 miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<Self> self) :
     self{std::move(self)}
 {
@@ -212,15 +207,6 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
                 current_value_or_default(s->max_speed_x, defaults::max_speed_x),
                 current_value_or_default(s->max_speed_y, defaults::max_speed_y));
         });
-}
-
-void miral::MouseKeysConfig::enabled(bool enabled) const
-{
-    if (auto const accessibility_manager = self->accessibility_manager.lock())
-        accessibility_manager->mousekeys_enabled(enabled);
-    else
-        self->state.lock()->enabled = enabled;
-
 }
 
 void miral::MouseKeysConfig::enable() const

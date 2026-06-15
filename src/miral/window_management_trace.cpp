@@ -484,29 +484,6 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-auto miral::WindowManagementTrace::info_for_window_id(std::string const& id) const -> WindowInfo&
-try {
-    log_input();
-    auto& result = wrapped.info_for_window_id(id);
-    mir::log_info("%s id=%s -> %s", __func__, id.c_str(), dump_of(result).c_str());
-    trace_count++;
-    return result;
-}
-MIRAL_TRACE_EXCEPTION
-
-auto miral::WindowManagementTrace::id_for_window(Window const& window) const -> std::string
-try {
-    log_input();
-    auto result = wrapped.id_for_window(window);
-    mir::log_info("%s window=%s -> %s", __func__, dump_of(window).c_str(), result.c_str());
-    trace_count++;
-    return result;
-}
-MIRAL_TRACE_EXCEPTION
-#pragma GCC diagnostic pop
-
 void miral::WindowManagementTrace::place_and_size_for_state(
     WindowSpecification& modifications, WindowInfo const& window_info) const
 try {
