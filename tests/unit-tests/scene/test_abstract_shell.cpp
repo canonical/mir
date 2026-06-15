@@ -381,24 +381,6 @@ TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
     shell.destroy_surface(session, surface);
 }
 
-TEST_F(AbstractShell, add_display_adds_display_to_window_manager)
-{
-    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
-
-    EXPECT_CALL(*wm, add_display(arbitrary_area));
-
-    shell.add_display(arbitrary_area);
-}
-
-TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
-{
-    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
-
-    EXPECT_CALL(*wm, remove_display(arbitrary_area));
-
-    shell.remove_display(arbitrary_area);
-}
-
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
     MirKeyboardAction const action{mir_keyboard_action_down};

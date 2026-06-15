@@ -82,5 +82,4 @@ TEST_F(DisplayConfiguration, given_fullscreen_windows_reconfiguring_displays_doe
         display_area.top_left + Displacement{as_delta(display_width), 0}, display_area.size};
 
     notify_configuration_applied(create_fake_display_configuration({display_area}));
-    basic_window_manager.remove_display(new_display);
 }

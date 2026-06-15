@@ -142,31 +142,6 @@ void msh::SystemCompositorWindowManager::remove_surface(
     output_map.erase(surface);
 }
 
-void msh::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
-{
-    std::lock_guard lock{mutex};
-
-    for (auto const& so : output_map)
-    {
-        if (auto surface = so.first.lock())
-        {
-            auto const output_id = so.second;
-
-            mir::geometry::Rectangle rect{surface->top_left(), surface->window_size()};
-
-            if (display_layout->place_in_output(output_id, rect))
-            {
-                surface->move_to(rect.top_left);
-                surface->resize(rect.size);
-            }
-        }
-    }
-}
-
-void msh::SystemCompositorWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
-{
-}
-
 bool msh::SystemCompositorWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;

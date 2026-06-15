@@ -361,19 +361,6 @@ void miral::BasicWindowManager::erase(miral::WindowInfo const& info)
     window_info.erase(info.window());
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-void miral::BasicWindowManager::add_display(geometry::Rectangle const& /*area*/)
-{
-    // OBSOLETE
-}
-#pragma GCC diagnostic pop
-
-void miral::BasicWindowManager::remove_display(geometry::Rectangle const& /*area*/)
-{
-    // OBSOLETE
-}
-
 bool miral::BasicWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     Locker lock{this};

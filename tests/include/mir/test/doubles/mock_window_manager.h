@@ -50,9 +50,6 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD(void, modify_surface, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&), (override));
     MOCK_METHOD(void, remove_surface, (std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&), (override));
 
-    MOCK_METHOD(void, add_display, (geometry::Rectangle const&), (override));
-    MOCK_METHOD(void, remove_display, (geometry::Rectangle const&), (override));
-
     MOCK_METHOD(bool, handle_keyboard_event, (MirKeyboardEvent const*), (override));
     MOCK_METHOD(bool, handle_touch_event, (MirTouchEvent const*), (override));
     MOCK_METHOD(bool, handle_pointer_event, (MirPointerEvent const*), (override));
