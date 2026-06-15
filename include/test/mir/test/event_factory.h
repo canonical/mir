@@ -31,7 +31,8 @@ namespace synthesis
 
 enum class EventAction
 {
-    Down, Up
+    Down,
+    Up
 };
 
 class KeyParameters

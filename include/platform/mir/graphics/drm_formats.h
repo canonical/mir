@@ -53,6 +53,7 @@ public:
         auto bytes_per_pixel() const -> size_t;
 
         auto components() const -> std::optional<RGBComponentInfo> const&;
+
     private:
         friend class DRMFormat;
         Info(FormatInfo const* info);
@@ -60,10 +61,7 @@ public:
         FormatInfo const* info;
     };
 
-    constexpr explicit DRMFormat(uint32_t fourcc_format)
-        : fourcc{fourcc_format}
-    {
-    }
+    constexpr explicit DRMFormat(uint32_t fourcc_format) : fourcc{fourcc_format} {}
 
     auto name() const -> char const*;
 

@@ -22,10 +22,18 @@
 
 namespace mir
 {
-struct DeleteCPtr { template<typename T> void operator()(T* p) { std::free(p); }};
+struct DeleteCPtr
+{
+    template<typename T>
+    void operator()(T* p)
+    { std::free(p); }
+};
 
-template<typename T> using UniqueCPtr = std::unique_ptr<T, DeleteCPtr>;
-template<typename T> auto make_unique_cptr(T* p) { return UniqueCPtr<T>{p}; }
+template<typename T>
+using UniqueCPtr = std::unique_ptr<T, DeleteCPtr>;
+template<typename T>
+auto make_unique_cptr(T* p)
+{ return UniqueCPtr<T>{p}; }
 }
 
-#endif  // MIR_C_MEMORY_H
+#endif // MIR_C_MEMORY_H

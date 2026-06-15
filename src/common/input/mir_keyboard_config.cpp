@@ -78,11 +78,6 @@ bool MirKeyboardConfig::operator==(MirKeyboardConfig const& rhs) const
     return impl->device_keymap->matches(*rhs.device_keymap());
 }
 
-bool MirKeyboardConfig::operator!=(MirKeyboardConfig const& rhs) const
-{
-    return !(*this == rhs);
-}
-
 std::ostream& operator<<(std::ostream& out, MirKeyboardConfig const& keyboard)
 {
     return out << keyboard.device_keymap()->model() << " config";

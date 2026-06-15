@@ -22,10 +22,7 @@
 
 namespace mir
 {
-namespace dispatch
-{
-class Dispatchable;
-}
+namespace dispatch { class Dispatchable; }
 namespace input
 {
 class InputSink;
@@ -64,6 +61,7 @@ public:
 
     virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const = 0;
     virtual void apply_settings(TouchscreenSettings const&) = 0;
+
 protected:
     InputDevice(InputDevice const&) = delete;
     InputDevice& operator=(InputDevice const&) = delete;

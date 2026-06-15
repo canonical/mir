@@ -117,11 +117,6 @@ auto dump_of(miral::Application const& application) -> std::string
 
 auto dump_of(std::vector<miral::Window> const& windows) -> std::string;
 
-inline auto operator!=(miral::WindowInfo::AspectRatio const& lhs, miral::WindowInfo::AspectRatio const& rhs)
-{
-    return lhs.width != rhs.width || lhs.height != rhs.height;
-}
-
 auto dump_of(miral::WindowInfo const& info) -> std::string
 {
     using namespace mir::geometry;

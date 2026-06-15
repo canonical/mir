@@ -24,10 +24,7 @@ namespace mir
 {
 class Fd;
 
-namespace graphics
-{
-class EventHandlerRegister;
-}
+namespace graphics { class EventHandlerRegister; }
 
 /**
  * Fully-opaque handle to a device.
@@ -146,7 +143,8 @@ public:
      *          implementation determines that no further events can be generated.
      */
     virtual std::future<std::unique_ptr<Device>> acquire_device(
-        int major, int minor,
+        int major,
+        int minor,
         std::unique_ptr<Device::Observer> observer) = 0;
 
 protected:

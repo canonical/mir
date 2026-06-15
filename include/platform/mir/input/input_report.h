@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_INPUT_INPUT_REPORT_H_
 #define MIR_INPUT_INPUT_REPORT_H_
 

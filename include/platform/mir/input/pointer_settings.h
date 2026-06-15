@@ -52,7 +52,6 @@ struct PointerSettings
     double vertical_scroll_scale{1.0};
 
     bool operator==(PointerSettings const& rhs) const = default;
-    bool operator!=(PointerSettings const& rhs) const = default;
 };
 }
 }

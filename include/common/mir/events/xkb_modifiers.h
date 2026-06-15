@@ -29,15 +29,8 @@ struct MirXkbModifiers
 
 inline auto operator==(MirXkbModifiers const& lhs, MirXkbModifiers const& rhs) -> bool
 {
-    return lhs.depressed == rhs.depressed &&
-           lhs.latched == rhs.latched &&
-           lhs.locked == rhs.locked &&
+    return lhs.depressed == rhs.depressed && lhs.latched == rhs.latched && lhs.locked == rhs.locked &&
            lhs.effective_layout == rhs.effective_layout;
-}
-
-inline auto operator!=(MirXkbModifiers const& lhs, MirXkbModifiers const& rhs) -> bool
-{
-    return !(lhs == rhs);
 }
 
 #endif /* MIR_COMMON_XKB_MODIFIERS_H_ */

@@ -30,10 +30,7 @@ class Executor;
 
 namespace renderer
 {
-namespace gl
-{
-class Context;
-}
+namespace gl { class Context; }
 }
 
 namespace graphics
@@ -41,10 +38,7 @@ namespace graphics
 class Buffer;
 class EGLExtensions;
 
-namespace common
-{
-class EGLContextExecutor;
-}
+namespace common { class EGLContextExecutor; }
 
 namespace wayland
 {
@@ -62,5 +56,4 @@ auto buffer_from_resource(
 }
 }
 
-
-#endif  // MIR_PLATFORM_EGL_WAYLAND_ALLOCATOR_H_
+#endif // MIR_PLATFORM_EGL_WAYLAND_ALLOCATOR_H_

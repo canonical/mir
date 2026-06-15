@@ -26,23 +26,24 @@
 struct MirTouchpadConfig
 {
     MirTouchpadConfig();
-    MirTouchpadConfig(MirTouchpadConfig && other);
+    MirTouchpadConfig(MirTouchpadConfig&& other);
     MirTouchpadConfig(MirTouchpadConfig const& other);
     MirTouchpadConfig& operator=(MirTouchpadConfig const& other);
     ~MirTouchpadConfig();
-    MirTouchpadConfig(MirTouchpadClickMode click_mode,
-                          MirTouchpadScrollMode scroll_mode,
-                          int button_down_scroll_button,
-                          bool tap_to_click,
-                          bool disable_while_typing,
-                          bool disable_with_external_mouse,
-                          bool middle_mouse_button_emulation);
+    MirTouchpadConfig(
+        MirTouchpadClickMode click_mode,
+        MirTouchpadScrollMode scroll_mode,
+        int button_down_scroll_button,
+        bool tap_to_click,
+        bool disable_while_typing,
+        bool disable_with_external_mouse,
+        bool middle_mouse_button_emulation);
 
     /*!
      * The click mode defines when the touchpad generates software emulated button events.
      */
     MirTouchpadClickMode click_mode() const;
-    void click_mode(MirTouchpadClickMode mode) ;
+    void click_mode(MirTouchpadClickMode mode);
     /*!
      * The scroll mode defines when the touchpad generates scroll events instead of pointer motion events.
      */
@@ -83,7 +84,7 @@ struct MirTouchpadConfig
     void disable_while_typing(bool);
 
     bool operator==(MirTouchpadConfig const& rhs) const;
-    bool operator!=(MirTouchpadConfig const& rhs) const;
+
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;

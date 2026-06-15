@@ -37,8 +37,7 @@ namespace generic
 /// This may lose precision in the case of integer<->float
 /// conversions, but will not lose range.
 template<typename From, typename To>
-concept ConversionWithinBounds = requires
-{
+concept ConversionWithinBounds = requires {
     // To can store the minimum value representible in From, and...
     requires std::numeric_limits<To>::lowest() <= std::numeric_limits<From>::lowest();
     // To can store the maximum value representible in From.
@@ -50,8 +49,7 @@ concept ConversionWithinBounds = requires
 /// That is, a conversion from From to To and back to From is an
 /// identity transform.
 template<typename From, typename To>
-concept ConversionIsLossless = requires
-{
+concept ConversionIsLossless = requires {
     // To has at least as many digits of precision as From, and...
     requires std::numeric_limits<To>::digits >= std::numeric_limits<From>::digits;
     // To's representable range is at least as large as From's
@@ -67,17 +65,13 @@ struct Value
     using ValueType = T;
     using TagType = Tag;
 
-    template <typename Q = T>
+    template<typename Q = T>
     constexpr std::enable_if_t<std::is_integral_v<Q>, int> as_int() const
-    {
-        return this->value;
-    }
+    { return this->value; }
 
-    template <typename Q = T>
+    template<typename Q = T>
     constexpr std::enable_if_t<std::is_integral_v<Q>, uint32_t> as_uint32_t() const
-    {
-        return this->value;
-    }
+    { return this->value; }
 
     /// Losslessly extract the underlying value
     ///
@@ -91,29 +85,21 @@ struct Value
     /// as int32_t can contain negative values not representable
     /// in uint64_t, and float does not have sufficient precision
     /// to exactly represent any int32_t value.
-    template <typename Q>
+    template<typename Q>
         requires ConversionIsLossless<T, Q>
     constexpr Q as() const
-    {
-        return this->value;
-    }
+    { return this->value; }
 
     /// Convert to a different type, possibly losing precision but not range
     ///
     /// The round_to<Q> accessor will exist for any numeric type Q
     /// that have enough range to represent any valid ValueType.
-    template <typename Q>
+    template<typename Q>
         requires ConversionWithinBounds<T, Q>
     constexpr Q round_to() const
-    {
-        return static_cast<Q>(this->value);
-    }
+    { return static_cast<Q>(this->value); }
 
-
-    constexpr T as_value() const noexcept
-    {
-        return value;
-    }
+    constexpr T as_value() const noexcept { return value; }
 
     constexpr Value() noexcept : value{} {}
 
@@ -123,24 +109,17 @@ struct Value
         return *this;
     }
 
-    constexpr Value(Value const& that) noexcept
-        : value{that.value}
-    {
-    }
+    constexpr Value(Value const& that) noexcept : value{that.value} {}
 
     template<typename U>
-    explicit constexpr Value(Value<U, Tag> const& value) noexcept
-        : value{static_cast<T>(value.as_value())}
-    {
-    }
+    explicit constexpr Value(Value<U, Tag> const& value) noexcept : value{static_cast<T>(value.as_value())}
+    {}
 
     template<typename U, std::enable_if_t<std::is_scalar_v<U>, bool> = true>
-    explicit constexpr Value(U const& value) noexcept
-        : value{static_cast<T>(value)}
-    {
-    }
+    explicit constexpr Value(U const& value) noexcept : value{static_cast<T>(value)}
+    {}
 
-    friend auto operator <=> (Value const& lhs, Value const& rhs) = default;
+    friend auto operator<=>(Value const& lhs, Value const& rhs) = default;
 
 protected:
     T value;
@@ -155,144 +134,204 @@ std::ostream& operator<<(std::ostream& out, Value<T, Tag> const& value)
 
 // Adding deltas is fine
 template<typename T>
-inline constexpr DeltaX<T> operator+(DeltaX<T> lhs, DeltaX<T> rhs){ return DeltaX<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr DeltaX<T> operator+(DeltaX<T> lhs, DeltaX<T> rhs)
+{ return DeltaX<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaY<T> operator+(DeltaY<T> lhs, DeltaY<T> rhs) { return DeltaY<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr DeltaY<T> operator+(DeltaY<T> lhs, DeltaY<T> rhs)
+{ return DeltaY<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaX<T> operator-(DeltaX<T> lhs, DeltaX<T> rhs) { return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr DeltaX<T> operator-(DeltaX<T> lhs, DeltaX<T> rhs)
+{ return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaY<T> operator-(DeltaY<T> lhs, DeltaY<T> rhs) { return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr DeltaY<T> operator-(DeltaY<T> lhs, DeltaY<T> rhs)
+{ return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaX<T> operator-(DeltaX<T> rhs) { return DeltaX<T>(-rhs.as_value()); }
+inline constexpr DeltaX<T> operator-(DeltaX<T> rhs)
+{ return DeltaX<T>(-rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaY<T> operator-(DeltaY<T> rhs) { return DeltaY<T>(-rhs.as_value()); }
+inline constexpr DeltaY<T> operator-(DeltaY<T> rhs)
+{ return DeltaY<T>(-rhs.as_value()); }
 template<typename T>
-inline DeltaX<T>& operator+=(DeltaX<T>& lhs, DeltaX<T> rhs) { return lhs = lhs + rhs; }
+inline DeltaX<T>& operator+=(DeltaX<T>& lhs, DeltaX<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline DeltaY<T>& operator+=(DeltaY<T>& lhs, DeltaY<T> rhs) { return lhs = lhs + rhs; }
+inline DeltaY<T>& operator+=(DeltaY<T>& lhs, DeltaY<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline DeltaX<T>& operator-=(DeltaX<T>& lhs, DeltaX<T> rhs) { return lhs = lhs - rhs; }
+inline DeltaX<T>& operator-=(DeltaX<T>& lhs, DeltaX<T> rhs)
+{ return lhs = lhs - rhs; }
 template<typename T>
-inline DeltaY<T>& operator-=(DeltaY<T>& lhs, DeltaY<T> rhs) { return lhs = lhs - rhs; }
+inline DeltaY<T>& operator-=(DeltaY<T>& lhs, DeltaY<T> rhs)
+{ return lhs = lhs - rhs; }
 
 // Adding deltas to co-ordinates is fine
 template<typename T>
-inline constexpr X<T> operator+(X<T> lhs, DeltaX<T> rhs) { return X<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr X<T> operator+(X<T> lhs, DeltaX<T> rhs)
+{ return X<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr Y<T> operator+(Y<T> lhs, DeltaY<T> rhs) { return Y<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr Y<T> operator+(Y<T> lhs, DeltaY<T> rhs)
+{ return Y<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr X<T> operator-(X<T> lhs, DeltaX<T> rhs) { return X<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr X<T> operator-(X<T> lhs, DeltaX<T> rhs)
+{ return X<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline constexpr Y<T> operator-(Y<T> lhs, DeltaY<T> rhs) { return Y<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr Y<T> operator-(Y<T> lhs, DeltaY<T> rhs)
+{ return Y<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline X<T>& operator+=(X<T>& lhs, DeltaX<T> rhs) { return lhs = lhs + rhs; }
+inline X<T>& operator+=(X<T>& lhs, DeltaX<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline Y<T>& operator+=(Y<T>& lhs, DeltaY<T> rhs) { return lhs = lhs + rhs; }
+inline Y<T>& operator+=(Y<T>& lhs, DeltaY<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline X<T>& operator-=(X<T>& lhs, DeltaX<T> rhs) { return lhs = lhs - rhs; }
+inline X<T>& operator-=(X<T>& lhs, DeltaX<T> rhs)
+{ return lhs = lhs - rhs; }
 template<typename T>
-inline Y<T>& operator-=(Y<T>& lhs, DeltaY<T> rhs) { return lhs = lhs - rhs; }
+inline Y<T>& operator-=(Y<T>& lhs, DeltaY<T> rhs)
+{ return lhs = lhs - rhs; }
 
 // Adding deltas to generic::Width and generic::Height is fine
 template<typename T>
-inline constexpr Width<T> operator+(Width<T> lhs, DeltaX<T> rhs) { return Width<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr Width<T> operator+(Width<T> lhs, DeltaX<T> rhs)
+{ return Width<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr Height<T> operator+(Height<T> lhs, DeltaY<T> rhs) { return Height<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr Height<T> operator+(Height<T> lhs, DeltaY<T> rhs)
+{ return Height<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr Width<T> operator-(Width<T> lhs, DeltaX<T> rhs) { return Width<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr Width<T> operator-(Width<T> lhs, DeltaX<T> rhs)
+{ return Width<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline constexpr Height<T> operator-(Height<T> lhs, DeltaY<T> rhs) { return Height<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr Height<T> operator-(Height<T> lhs, DeltaY<T> rhs)
+{ return Height<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline Width<T>& operator+=(Width<T>& lhs, DeltaX<T> rhs) { return lhs = lhs + rhs; }
+inline Width<T>& operator+=(Width<T>& lhs, DeltaX<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline Height<T>& operator+=(Height<T>& lhs, DeltaY<T> rhs) { return lhs = lhs + rhs; }
+inline Height<T>& operator+=(Height<T>& lhs, DeltaY<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline Width<T>& operator-=(Width<T>& lhs, DeltaX<T> rhs) { return lhs = lhs - rhs; }
+inline Width<T>& operator-=(Width<T>& lhs, DeltaX<T> rhs)
+{ return lhs = lhs - rhs; }
 template<typename T>
-inline Height<T>& operator-=(Height<T>& lhs, DeltaY<T> rhs) { return lhs = lhs - rhs; }
+inline Height<T>& operator-=(Height<T>& lhs, DeltaY<T> rhs)
+{ return lhs = lhs - rhs; }
 
 // Adding Widths and Heights is fine
 template<typename T>
-inline constexpr Width<T> operator+(Width<T> lhs, Width<T> rhs) { return Width<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr Width<T> operator+(Width<T> lhs, Width<T> rhs)
+{ return Width<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline constexpr Height<T> operator+(Height<T> lhs, Height<T> rhs) { return Height<T>(lhs.as_value() + rhs.as_value()); }
+inline constexpr Height<T> operator+(Height<T> lhs, Height<T> rhs)
+{ return Height<T>(lhs.as_value() + rhs.as_value()); }
 template<typename T>
-inline Width<T>& operator+=(Width<T>& lhs, Width<T> rhs) { return lhs = lhs + rhs; }
+inline Width<T>& operator+=(Width<T>& lhs, Width<T> rhs)
+{ return lhs = lhs + rhs; }
 template<typename T>
-inline Height<T>& operator+=(Height<T>& lhs, Height<T> rhs) { return lhs = lhs + rhs; }
+inline Height<T>& operator+=(Height<T>& lhs, Height<T> rhs)
+{ return lhs = lhs + rhs; }
 
 // Subtracting coordinates is fine
 template<typename T>
-inline constexpr DeltaX<T> operator-(X<T> lhs, X<T> rhs) { return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr DeltaX<T> operator-(X<T> lhs, X<T> rhs)
+{ return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaY<T> operator-(Y<T> lhs, Y<T> rhs) { return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr DeltaY<T> operator-(Y<T> lhs, Y<T> rhs)
+{ return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
 
 //Subtracting Width<T> and Height<T> is fine
 template<typename T>
-inline constexpr DeltaX<T> operator-(Width<T> lhs, Width<T> rhs) { return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr DeltaX<T> operator-(Width<T> lhs, Width<T> rhs)
+{ return DeltaX<T>(lhs.as_value() - rhs.as_value()); }
 template<typename T>
-inline constexpr DeltaY<T> operator-(Height<T> lhs, Height<T> rhs) { return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
+inline constexpr DeltaY<T> operator-(Height<T> lhs, Height<T> rhs)
+{ return DeltaY<T>(lhs.as_value() - rhs.as_value()); }
 
 // Multiplying by a scalar value is fine
 template<typename T, typename Scalar>
-inline constexpr Width<T> operator*(Scalar scale, Width<T> const& w) { return Width<T>{scale*w.as_value()}; }
+inline constexpr Width<T> operator*(Scalar scale, Width<T> const& w)
+{ return Width<T>{scale * w.as_value()}; }
 template<typename T, typename Scalar>
-inline constexpr Height<T> operator*(Scalar scale, Height<T> const& h) { return Height<T>{scale*h.as_value()}; }
+inline constexpr Height<T> operator*(Scalar scale, Height<T> const& h)
+{ return Height<T>{scale * h.as_value()}; }
 template<typename T, typename Scalar>
-inline constexpr DeltaX<T> operator*(Scalar scale, DeltaX<T> const& dx) { return DeltaX<T>{scale*dx.as_value()}; }
+inline constexpr DeltaX<T> operator*(Scalar scale, DeltaX<T> const& dx)
+{ return DeltaX<T>{scale * dx.as_value()}; }
 template<typename T, typename Scalar>
-inline constexpr DeltaY<T> operator*(Scalar scale, DeltaY<T> const& dy) { return DeltaY<T>{scale*dy.as_value()}; }
+inline constexpr DeltaY<T> operator*(Scalar scale, DeltaY<T> const& dy)
+{ return DeltaY<T>{scale * dy.as_value()}; }
 template<typename T, typename Scalar>
-inline constexpr Width<T> operator*(Width<T> const& w, Scalar scale) { return scale*w; }
+inline constexpr Width<T> operator*(Width<T> const& w, Scalar scale)
+{ return scale * w; }
 template<typename T, typename Scalar>
-inline constexpr Height<T> operator*(Height<T> const& h, Scalar scale) { return scale*h; }
+inline constexpr Height<T> operator*(Height<T> const& h, Scalar scale)
+{ return scale * h; }
 template<typename T, typename Scalar>
-inline constexpr DeltaX<T> operator*(DeltaX<T> const& dx, Scalar scale) { return scale*dx; }
+inline constexpr DeltaX<T> operator*(DeltaX<T> const& dx, Scalar scale)
+{ return scale * dx; }
 template<typename T, typename Scalar>
-inline constexpr DeltaY<T> operator*(DeltaY<T> const& dy, Scalar scale) { return scale*dy; }
+inline constexpr DeltaY<T> operator*(DeltaY<T> const& dy, Scalar scale)
+{ return scale * dy; }
 
 // Dividing by a scaler value is fine
 template<typename T, typename Scalar>
-inline constexpr Width<T> operator/(Width<T> const& w, Scalar scale) { return Width<T>{w.as_value() / scale}; }
+inline constexpr Width<T> operator/(Width<T> const& w, Scalar scale)
+{ return Width<T>{w.as_value() / scale}; }
 template<typename T, typename Scalar>
-inline constexpr Height<T> operator/(Height<T> const& h, Scalar scale) { return Height<T>{h.as_value() / scale}; }
+inline constexpr Height<T> operator/(Height<T> const& h, Scalar scale)
+{ return Height<T>{h.as_value() / scale}; }
 template<typename T, typename Scalar>
-inline constexpr DeltaX<T> operator/(DeltaX<T> const& dx, Scalar scale) { return DeltaX<T>{dx.as_value() / scale}; }
+inline constexpr DeltaX<T> operator/(DeltaX<T> const& dx, Scalar scale)
+{ return DeltaX<T>{dx.as_value() / scale}; }
 template<typename T, typename Scalar>
-inline constexpr DeltaY<T> operator/(DeltaY<T> const& dy, Scalar scale) { return DeltaY<T>{dy.as_value() / scale}; }
+inline constexpr DeltaY<T> operator/(DeltaY<T> const& dy, Scalar scale)
+{ return DeltaY<T>{dy.as_value() / scale}; }
 
 // Can divide a coördinate by a distance to get a scalar
 template<typename T, typename U>
-inline constexpr auto operator/(X<T> const& x, Width<U> const& width) { return x.as_value() / width.as_value(); }
+inline constexpr auto operator/(X<T> const& x, Width<U> const& width)
+{ return x.as_value() / width.as_value(); }
 template<typename T, typename U>
-inline constexpr auto operator/(Y<T> const& y, Height<U> const& height) { return y.as_value() / height.as_value(); }
+inline constexpr auto operator/(Y<T> const& y, Height<U> const& height)
+{ return y.as_value() / height.as_value(); }
 } // namespace
 
 // Converting between types is fine, as long as they are along the same axis
 template<typename T>
-inline constexpr generic::Width<T> as_width(generic::DeltaX<T> const& dx) { return generic::Width<T>{dx.as_value()}; }
+inline constexpr generic::Width<T> as_width(generic::DeltaX<T> const& dx)
+{ return generic::Width<T>{dx.as_value()}; }
 template<typename T>
-inline constexpr generic::Height<T> as_height(generic::DeltaY<T> const& dy) { return generic::Height<T>{dy.as_value()}; }
+inline constexpr generic::Height<T> as_height(generic::DeltaY<T> const& dy)
+{ return generic::Height<T>{dy.as_value()}; }
 template<typename T>
-inline constexpr generic::X<T> as_x(generic::DeltaX<T> const& dx) { return generic::X<T>{dx.as_value()}; }
+inline constexpr generic::X<T> as_x(generic::DeltaX<T> const& dx)
+{ return generic::X<T>{dx.as_value()}; }
 template<typename T>
-inline constexpr generic::Y<T> as_y(generic::DeltaY<T> const& dy) { return generic::Y<T>{dy.as_value()}; }
+inline constexpr generic::Y<T> as_y(generic::DeltaY<T> const& dy)
+{ return generic::Y<T>{dy.as_value()}; }
 template<typename T>
-inline constexpr generic::DeltaX<T> as_delta(generic::X<T> const& x) { return generic::DeltaX<T>{x.as_value()}; }
+inline constexpr generic::DeltaX<T> as_delta(generic::X<T> const& x)
+{ return generic::DeltaX<T>{x.as_value()}; }
 template<typename T>
-inline constexpr generic::DeltaY<T> as_delta(generic::Y<T> const& y) { return generic::DeltaY<T>{y.as_value()}; }
+inline constexpr generic::DeltaY<T> as_delta(generic::Y<T> const& y)
+{ return generic::DeltaY<T>{y.as_value()}; }
 template<typename T>
-inline constexpr generic::X<T> as_x(generic::Width<T> const& w) { return generic::X<T>{w.as_value()}; }
+inline constexpr generic::X<T> as_x(generic::Width<T> const& w)
+{ return generic::X<T>{w.as_value()}; }
 template<typename T>
-inline constexpr generic::Y<T> as_y(generic::Height<T> const& h) { return generic::Y<T>{h.as_value()}; }
+inline constexpr generic::Y<T> as_y(generic::Height<T> const& h)
+{ return generic::Y<T>{h.as_value()}; }
 template<typename T>
-inline constexpr generic::Width<T> as_width(generic::X<T> const& x) { return generic::Width<T>{x.as_value()}; }
+inline constexpr generic::Width<T> as_width(generic::X<T> const& x)
+{ return generic::Width<T>{x.as_value()}; }
 template<typename T>
-inline constexpr generic::Height<T> as_height(generic::Y<T> const& y) { return generic::Height<T>{y.as_value()}; }
+inline constexpr generic::Height<T> as_height(generic::Y<T> const& y)
+{ return generic::Height<T>{y.as_value()}; }
 template<typename T>
-inline constexpr generic::DeltaX<T> as_delta(generic::Width<T> const& w) { return generic::DeltaX<T>{w.as_value()}; }
+inline constexpr generic::DeltaX<T> as_delta(generic::Width<T> const& w)
+{ return generic::DeltaX<T>{w.as_value()}; }
 template<typename T>
-inline constexpr generic::DeltaY<T> as_delta(generic::Height<T> const& h) { return generic::DeltaY<T>{h.as_value()}; }
+inline constexpr generic::DeltaY<T> as_delta(generic::Height<T> const& h)
+{ return generic::DeltaY<T>{h.as_value()}; }
 } // namespace geometry
 } // namespace mir
 

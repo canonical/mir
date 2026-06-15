@@ -414,7 +414,7 @@ auto ShmBacking::resize(size_t new_size) -> std::expected<void, mir::shm::Resize
     void* mapped_address = mmap(nullptr, new_size, prot, MAP_SHARED, backing_store, 0);
     if (mapped_address == MAP_FAILED)
     {
-        BOOST_THROW_EXCEPTION((std::system_error{
+        BOOST_THROW_EXCEPTION((mir::shm::MmapError{
             errno,
             std::system_category(),
             "Failed to map client-provided SHM pool"}));

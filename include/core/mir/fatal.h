@@ -57,14 +57,9 @@ class FatalErrorStrategy
 public:
     explicit FatalErrorStrategy(void (*fatal_error_handler)(char const* reason, ...)) :
         old_fatal_error_handler(fatal_error)
-    {
-        fatal_error = fatal_error_handler;
-    }
+    { fatal_error = fatal_error_handler; }
 
-    ~FatalErrorStrategy()
-    {
-        fatal_error = old_fatal_error_handler;
-    }
+    ~FatalErrorStrategy() { fatal_error = old_fatal_error_handler; }
 
 private:
     void (*old_fatal_error_handler)(char const* reason, ...);

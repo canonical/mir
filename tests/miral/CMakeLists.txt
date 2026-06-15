@@ -61,6 +61,8 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_locate_pointer.cpp
     basic_store.cpp
     ini_file_with_overrides.cpp
+    override_watcher.cpp
+    version_compare.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
@@ -80,7 +82,7 @@ target_link_libraries(miral-test-internal
 
 
 # Urgh, gtest false-positives on this warning
-check_cxx_compiler_flag(-Wno-error=no-stringop-overflow MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
+check_cxx_compiler_flag(-Wno-error=stringop-overflow MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
 if (MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
     set_target_properties(miral-test-internal
       PROPERTIES

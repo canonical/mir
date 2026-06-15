@@ -21,8 +21,9 @@
 
 #include <memory>
 
-namespace mir {
-    namespace compositor { class DisplayListener; }
+namespace mir
+{
+namespace compositor { class DisplayListener; }
 }
 
 namespace miroil

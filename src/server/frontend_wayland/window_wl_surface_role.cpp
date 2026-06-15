@@ -294,6 +294,32 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
     return size;
 }
 
+auto mf::WindowWlSurfaceRole::pending_min_size() const -> geom::Size
+{
+    auto result = committed_min_size;
+    if (pending_changes)
+    {
+        if (pending_changes->min_width)
+            result.width = pending_changes->min_width.value();
+        if (pending_changes->min_height)
+            result.height = pending_changes->min_height.value();
+    }
+    return result;
+}
+
+auto mf::WindowWlSurfaceRole::pending_max_size() const -> geom::Size
+{
+    auto result = committed_max_size;
+    if (pending_changes)
+    {
+        if (pending_changes->max_width)
+            result.width = pending_changes->max_width.value();
+        if (pending_changes->max_height)
+            result.height = pending_changes->max_height.value();
+    }
+    return result;
+}
+
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size
 {
     if (surface)

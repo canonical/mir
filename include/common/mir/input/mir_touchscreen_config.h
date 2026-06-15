@@ -27,7 +27,7 @@ struct MirTouchscreenConfig
     MirTouchscreenConfig();
     ~MirTouchscreenConfig();
     MirTouchscreenConfig(MirTouchscreenConfig const&);
-    MirTouchscreenConfig(MirTouchscreenConfig &&);
+    MirTouchscreenConfig(MirTouchscreenConfig&&);
     MirTouchscreenConfig& operator=(MirTouchscreenConfig const&);
     MirTouchscreenConfig(uint32_t output_id, MirTouchscreenMappingMode mode);
 
@@ -48,7 +48,7 @@ struct MirTouchscreenConfig
     void mapping_mode(MirTouchscreenMappingMode);
 
     bool operator==(MirTouchscreenConfig const& other) const;
-    bool operator!=(MirTouchscreenConfig const& other) const;
+
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;

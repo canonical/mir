@@ -430,5 +430,18 @@ void mf::Shm::create_pool(wl_resource* id, Fd fd, int32_t size)
             "Invalid requested size"};
     }
 
-    new ShmPool{id, wayland_executor, supported_formats, fd, size};
+    try
+    {
+        new ShmPool{id, wayland_executor, supported_formats, fd, size};
+    }
+    catch (shm::MmapError const& err)
+    {
+        // The pool is backed by mmap()ing the client-provided file descriptor. Per the wl_shm spec a
+        // failure to mmap the file descriptor must be reported with the invalid_fd error.
+        throw wayland::ProtocolError{
+            resource,
+            wayland::Shm::Error::invalid_fd,
+            "%s",
+            err.what()};
+    }
 }

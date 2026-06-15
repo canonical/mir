@@ -22,9 +22,11 @@
 
 #include <gtest/gtest.h>
 
-
 namespace mir { class SharedLibrary; }
-namespace mir { namespace graphics { class Display; }}
+namespace mir
+{
+namespace graphics { class Display; }
+}
 
 namespace mir_test_framework
 {
@@ -39,7 +41,6 @@ class HeadlessTest : public ::testing::Test, public AsyncServerRunner
 public:
     HeadlessTest();
     ~HeadlessTest() noexcept;
-
 
     void preset_display(std::unique_ptr<mir::graphics::Display> display);
 

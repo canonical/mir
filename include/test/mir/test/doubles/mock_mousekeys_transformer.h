@@ -23,14 +23,18 @@
 
 namespace mir::test::doubles
 {
-class MockMouseKeysTransformer: public mir::shell::MouseKeysTransformer
+class MockMouseKeysTransformer : public mir::shell::MouseKeysTransformer
 {
 public:
     MockMouseKeysTransformer() = default;
     MOCK_METHOD(void, keymap, (mir::input::MouseKeysKeymap const& new_keymap), (override));
     MOCK_METHOD(void, acceleration_factors, (double constant, double linear, double quadratic), (override));
     MOCK_METHOD(void, max_speed, (double x_axis, double y_axis), (override));
-    MOCK_METHOD(bool, transform_input_event, (EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&), (override));
+    MOCK_METHOD(
+        bool,
+        transform_input_event,
+        (EventDispatcher const&, mir::input::EventBuilder*, MirEvent const&),
+        (override));
 };
 }
 #endif // MIR_TEST_DOUBLES_MOCK_MOUSEKEYS_TRANSFORMER_H

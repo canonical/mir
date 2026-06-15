@@ -31,10 +31,12 @@ struct Vertex
 
 struct Primitive
 {
-    enum {max_vertices = 4};
+    enum
+    {
+        max_vertices = 4
+    };
 
-    Primitive()
-        : type(GL_TRIANGLE_FAN), nvertices(4)
+    Primitive() : type(GL_TRIANGLE_FAN), nvertices(4)
     {
         // Default is a quad. Just need to assign vertices[] and tex_id.
     }

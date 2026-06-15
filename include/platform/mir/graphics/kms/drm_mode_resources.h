@@ -33,14 +33,14 @@ namespace graphics
 namespace kms
 {
 
-using DRMModeCrtcUPtr = std::unique_ptr<drmModeCrtc,std::function<void(drmModeCrtc*)>>;
-using DRMModeEncoderUPtr = std::unique_ptr<drmModeEncoder,std::function<void(drmModeEncoder*)>>;
-using DRMModeConnectorUPtr = std::unique_ptr<drmModeConnector,std::function<void(drmModeConnector*)>>;
-using DRMModeResUPtr = std::unique_ptr<drmModeRes,void(*)(drmModeRes*)>;
-using DRMModePlaneResUPtr = std::unique_ptr<drmModePlaneRes,void(*)(drmModePlaneRes*)>;
-using DRMModePlaneUPtr = std::unique_ptr<drmModePlane,std::function<void(drmModePlane*)>>;
-using DRMModeObjectPropsUPtr = std::unique_ptr<drmModeObjectProperties,void(*)(drmModeObjectProperties*)>;
-using DRMModePropertyUPtr = std::unique_ptr<drmModePropertyRes,void(*)(drmModePropertyPtr)>;
+using DRMModeCrtcUPtr = std::unique_ptr<drmModeCrtc, std::function<void(drmModeCrtc*)>>;
+using DRMModeEncoderUPtr = std::unique_ptr<drmModeEncoder, std::function<void(drmModeEncoder*)>>;
+using DRMModeConnectorUPtr = std::unique_ptr<drmModeConnector, std::function<void(drmModeConnector*)>>;
+using DRMModeResUPtr = std::unique_ptr<drmModeRes, void (*)(drmModeRes*)>;
+using DRMModePlaneResUPtr = std::unique_ptr<drmModePlaneRes, void (*)(drmModePlaneRes*)>;
+using DRMModePlaneUPtr = std::unique_ptr<drmModePlane, std::function<void(drmModePlane*)>>;
+using DRMModeObjectPropsUPtr = std::unique_ptr<drmModeObjectProperties, void (*)(drmModeObjectProperties*)>;
+using DRMModePropertyUPtr = std::unique_ptr<drmModePropertyRes, void (*)(drmModePropertyPtr)>;
 
 DRMModeConnectorUPtr get_connector(int drm_fd, uint32_t id);
 DRMModeEncoderUPtr get_encoder(int drm_fd, uint32_t id);
@@ -52,7 +52,7 @@ class PlaneResources;
 
 namespace detail
 {
-template<typename DRMUPtr, DRMUPtr(*)(int, uint32_t)>
+template<typename DRMUPtr, DRMUPtr (*)(int, uint32_t)>
 class ObjectCollection
 {
 public:
@@ -72,7 +72,6 @@ public:
         iterator operator++(int);
 
         bool operator==(iterator const& rhs) const;
-        bool operator!=(iterator const& rhs) const;
 
         DRMUPtr& operator*() const;
         DRMUPtr* operator->() const;
@@ -88,6 +87,7 @@ public:
 
     iterator begin();
     iterator end();
+
 private:
     friend class mir::graphics::kms::DRMModeResources;
     friend class mir::graphics::kms::PlaneResources;
@@ -124,6 +124,7 @@ public:
      * The ID of the DRM object these properties relate to
     */
     uint32_t parent_id() const;
+
 private:
     uint32_t const parent_id_;
     std::unordered_map<std::string, Prop> const properties_table;
@@ -135,6 +136,7 @@ public:
     explicit PlaneResources(int drm_fd);
 
     detail::ObjectCollection<DRMModePlaneUPtr, &get_plane> planes() const;
+
 private:
     int const drm_fd;
     DRMModePlaneResUPtr const resources;

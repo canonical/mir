@@ -18,10 +18,17 @@
 #define MIROIL_PROMPT_SESSION_LISTENER_H
 #include <memory>
 
-namespace mir { namespace scene { class PromptSession; } }
-namespace mir { namespace scene { class Session; } }
+namespace mir
+{
+namespace scene { class PromptSession; }
+}
+namespace mir
+{
+namespace scene { class Session; }
+}
 
-namespace miroil {
+namespace miroil
+{
 
 class PromptSessionListener
 {
@@ -34,10 +41,12 @@ public:
     virtual void stopping(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) = 0;
     virtual void suspending(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) = 0;
     virtual void resuming(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) = 0;
-    virtual void prompt_provider_added(mir::scene::PromptSession const& prompt_session,
-                               std::shared_ptr<mir::scene::Session> const& prompt_provider) = 0;
-    virtual void prompt_provider_removed(mir::scene::PromptSession const& prompt_session,
-                                 std::shared_ptr<mir::scene::Session> const& prompt_provider) = 0;
+    virtual void prompt_provider_added(
+        mir::scene::PromptSession const& prompt_session,
+        std::shared_ptr<mir::scene::Session> const& prompt_provider) = 0;
+    virtual void prompt_provider_removed(
+        mir::scene::PromptSession const& prompt_session,
+        std::shared_ptr<mir::scene::Session> const& prompt_provider) = 0;
 
 protected:
     PromptSessionListener() = default;

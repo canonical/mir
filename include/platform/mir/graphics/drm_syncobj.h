@@ -32,6 +32,7 @@ public:
     void signal(uint64_t point);
 
     auto to_eventfd(uint64_t point) const -> Fd;
+
 private:
     Fd const drm_fd;
     uint32_t const handle;

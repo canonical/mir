@@ -41,7 +41,6 @@ bool valid_pixel_format(MirPixelFormat format);
  * \}
  */
 
-
 }
 }
 

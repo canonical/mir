@@ -90,10 +90,9 @@ public:
      */
     virtual MirMirrorMode mirror_mode() const = 0;
 
-    virtual bool shaped() const = 0;  // meaning the pixel format has alpha
+    virtual bool shaped() const = 0; // meaning the pixel format has alpha
 
-    virtual auto surface_if_any() const
-        -> std::optional<mir::scene::Surface const*> = 0;
+    virtual auto surface_if_any() const -> std::optional<mir::scene::Surface const*> = 0;
 
     /*
      * Opaque region of the potentially transparent surface in absolute

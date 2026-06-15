@@ -18,7 +18,8 @@
 #define MIR_TOOLKIT_TOUCH_EVENT_H_
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**
@@ -75,9 +76,7 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, size_t touch_i
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
  *  \return                 Tooltype used for the touch at index
  */
-MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
-    size_t touch_index);
-
+MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, size_t touch_index);
 
 /**
  * Retrieve the axis value for a given axis on an indexed touch.
@@ -87,8 +86,7 @@ MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event,
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_touch_event_axis_value(MirTouchEvent const* event,
-    size_t touch_index, MirTouchAxis axis);
+float mir_touch_event_axis_value(MirTouchEvent const* event, size_t touch_index, MirTouchAxis axis);
 
 /**
  * Retrieve the corresponding input event.

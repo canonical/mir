@@ -27,7 +27,7 @@ struct WlcsKeyboard;
 namespace mir
 {
 class Executor;
-namespace test  { class Signal; }
+namespace test { class Signal; }
 }
 
 namespace miral
@@ -51,6 +51,7 @@ struct TestWlcsDisplayServer : TestDisplayServer, public WlcsDisplayServer
     std::shared_ptr<mir::test::Signal> expect_event_with_time(std::chrono::nanoseconds event_time);
 
     struct FakePointer;
+
 private:
     class InputEventListener;
     class ResourceMapper;

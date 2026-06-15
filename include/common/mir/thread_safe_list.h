@@ -65,8 +65,7 @@ private:
 };
 
 template<class Element>
-void ThreadSafeList<Element>::for_each(
-    std::function<void(Element const& element)> const& f)
+void ThreadSafeList<Element>::for_each(std::function<void(Element const& element)> const& f)
 {
     ListItem* current_item = &head;
 
@@ -75,7 +74,8 @@ void ThreadSafeList<Element>::for_each(
         RecursiveReadLock lock{current_item->mutex};
 
         // We need to take a copy in case we recursively remove during call
-        if (auto const copy_of_element = current_item->element) f(copy_of_element);
+        if (auto const copy_of_element = current_item->element)
+            f(copy_of_element);
 
         current_item = current_item->next;
     }
@@ -92,7 +92,8 @@ void ThreadSafeList<Element>::add(Element const& element)
         // the same time mutually blocking the other's upgrade to write lock.
         {
             RecursiveReadLock lock{current_item->mutex};
-            if (current_item->element) continue;
+            if (current_item->element)
+                continue;
         }
 
         RecursiveWriteLock lock{current_item->mutex};
@@ -102,18 +103,16 @@ void ThreadSafeList<Element>::add(Element const& element)
             current_item->element = element;
             return;
         }
-    }
-    while (current_item->next && (current_item = current_item->next));
+    } while (current_item->next && (current_item = current_item->next));
 
     // No empty Items so append a new one
     auto new_item = new ListItem;
     new_item->element = element;
 
-    for (ListItem* expected{nullptr};
-        !current_item->next.compare_exchange_weak(expected, new_item);
-        expected = nullptr)
+    for (ListItem* expected{nullptr}; !current_item->next.compare_exchange_weak(expected, new_item); expected = nullptr)
     {
-        if (expected) current_item = expected;
+        if (expected)
+            current_item = expected;
     }
 }
 
@@ -126,7 +125,8 @@ void ThreadSafeList<Element>::remove(Element const& element)
     {
         {
             RecursiveReadLock lock{current_item->mutex};
-            if (current_item->element != element) continue;
+            if (current_item->element != element)
+                continue;
         }
 
         RecursiveWriteLock lock{current_item->mutex};
@@ -136,8 +136,7 @@ void ThreadSafeList<Element>::remove(Element const& element)
             current_item->element = Element{};
             return;
         }
-    }
-    while ((current_item = current_item->next));
+    } while ((current_item = current_item->next));
 }
 
 template<class Element>
@@ -150,7 +149,8 @@ unsigned int ThreadSafeList<Element>::remove_all(Element const& element)
     {
         {
             RecursiveReadLock lock{current_item->mutex};
-            if (current_item->element != element) continue;
+            if (current_item->element != element)
+                continue;
         }
 
         RecursiveWriteLock lock{current_item->mutex};
@@ -160,8 +160,7 @@ unsigned int ThreadSafeList<Element>::remove_all(Element const& element)
             current_item->element = Element{};
             ++removed;
         }
-    }
-    while ((current_item = current_item->next));
+    } while ((current_item = current_item->next));
 
     return removed;
 }
@@ -175,8 +174,7 @@ void ThreadSafeList<Element>::clear()
     {
         RecursiveWriteLock lock{current_item->mutex};
         current_item->element = Element{};
-    }
-    while ((current_item = current_item->next));
+    } while ((current_item = current_item->next));
 }
 
 }

@@ -109,6 +109,7 @@ public:
     ///         GPU Digital Rights Management path.
     /// \throws A std::system_error if mapping fails for a system-specific reason (eg: `mmap` failure)
     virtual auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
+
 protected:
     Buffer() = default;
 };
