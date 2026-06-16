@@ -204,14 +204,9 @@ auto mg::modules_for_device(
                      * We want at most one of these
                      */
 
-                    // This could be more elegant with std::optional<>::transform(), but not C++23 for me!
-                    auto const current_best_support = [&best_nested]() {
-                        if (best_nested)
-                        {
-                            return best_nested->first.support_level;
-                        }
-                        return mg::probe::unsupported;
-                    }();
+                    auto const current_best_support = best_nested
+                        .transform([](auto const& candidate) { return candidate.first.support_level; })
+                        .value_or(mg::probe::unsupported);
                     if (device.support_level > current_best_support)
                     {
                         best_nested = std::make_pair(std::move(device), module);
