@@ -360,7 +360,7 @@ def _parse_single_header(file_path: str, parse_args: list[str]) -> set[str]:
 def process_directory(directory: Path, search_dirs: list[str]) -> set[str]:
     files = list(directory.rglob('*.h'))
 
-    args = ['-std=c++23', '-x', 'c++-header']
+    args = ['-std=c++26', '-x', 'c++-header']
     for dir in search_dirs:
         args.append(f"-I{dir}")
 

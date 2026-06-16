@@ -1,6 +1,6 @@
 # Mir Copilot Instructions
 
-Mir is a Wayland compositor library written in C++23 (with some Rust components). It provides a
+Mir is a Wayland compositor library written in C++26 (with some Rust components). It provides a
 stable ABI layer (MirAL) for building shells, plus graphics/input hardware abstraction and window
 management.
 
