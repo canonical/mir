@@ -15,8 +15,12 @@
  */
 
 #include "wayland_rs/src/ffi.rs.h"
+#include "wayland_executor.h"
+#include <mir/executor.h>
 #include <wayland-client.h>
+#include <chrono>
 #include <iostream>
+#include <memory>
 #include <thread>
 #include <rust/cxx.h>
 
@@ -46,13 +50,19 @@ public:
 };
 }
 
-void run_server(rust::Box<mir::wayland_rs::WaylandServer>& server)
+void run_server(
+    rust::Box<mir::wayland_rs::WaylandServer>& server,
+    std::unique_ptr<mir::wayland_rs::WaylandExecutor> executor)
 {
     try
     {
         // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
         //  as that task is involved.
-        server->run(wayland_socket, nullptr, std::make_unique<WaylandServerNotificationHandler>());
+        server->run(
+            wayland_socket,
+            nullptr,
+            std::make_unique<WaylandServerNotificationHandler>(),
+            std::move(executor));
     }
     catch (rust::Error const& error)
     {
@@ -81,13 +91,34 @@ int main()
     std::cout << "The program is successful if the following happens:" << std::endl;
     std::cout << "    1) The Wayland server gracefully starts on wayland-98." << std::endl;
     std::cout << "    2) The client connects to the server." << std::endl;
-    std::cout << "    3) The server stops." << std::endl;
-    std::cout << "    4) We exit with exit code 0." << std::endl << std::endl;
+    std::cout << "    3) Work scheduled via the executor runs on the event loop." << std::endl;
+    std::cout << "    4) The server stops." << std::endl;
+    std::cout << "    5) We exit with exit code 0." << std::endl << std::endl;
 
     auto server = mir::wayland_rs::create_wayland_server();
-    std::thread server_thread([&] { run_server(server); });
+
+    // The executor lets us schedule arbitrary work onto the server's event loop.
+    // Ownership is handed to the server (via run), but it remains valid for the
+    // server's lifetime, so we keep a non-owning reference to spawn work with.
+    auto executor = std::make_unique<mir::wayland_rs::WaylandExecutor>(*server);
+    mir::Executor& work_executor = *executor;
+
+    std::thread server_thread(
+        [&server, executor = std::move(executor)]() mutable
+        {
+            run_server(server, std::move(executor));
+        });
 
     run_client();
+
+    // Queue several functions from this (non event-loop) thread. They are run,
+    // in order, on the event-loop thread.
+    work_executor.spawn([] { std::cout << "    Scheduled work 1 ran on the event loop." << std::endl; });
+    work_executor.spawn([] { std::cout << "    Scheduled work 2 ran on the event loop." << std::endl; });
+    work_executor.spawn([] { std::cout << "    Scheduled work 3 ran on the event loop." << std::endl; });
+
+    // Give the event loop a moment to run the scheduled work before stopping.
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     server->stop();
     server_thread.join();

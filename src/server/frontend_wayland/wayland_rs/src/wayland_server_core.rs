@@ -14,8 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler};
+use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler, WorkCallback};
 use crate::wayland_client::{WaylandClient, WaylandClientId};
+use calloop::channel::{channel, Event as ChannelEvent, Sender};
 use calloop::ping::Ping;
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use cxx::UniquePtr;
@@ -28,9 +29,16 @@ use wayland_server::{
     Display, DisplayHandle, ListeningSocket,
 };
 
+/// A function queued to run on the server's event loop thread.
+///
+/// The function is given mutable access to the [`ServerState`] so that it can
+/// interact with the running server (e.g. to call back into C++).
+type ScheduledFn = Box<dyn FnOnce(&mut ServerState) + Send>;
+
 /// The wayland server.
 pub struct WaylandServer {
     stop_signal: Mutex<Option<Ping>>,
+    task_sender: Mutex<Option<Sender<ScheduledFn>>>,
 }
 
 impl WaylandServer {
@@ -38,6 +46,7 @@ impl WaylandServer {
     pub fn new() -> Self {
         WaylandServer {
             stop_signal: Mutex::new(None),
+            task_sender: Mutex::new(None),
         }
     }
 
@@ -52,6 +61,7 @@ impl WaylandServer {
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
         notification_handler: UniquePtr<WaylandServerNotificationHandler>,
+        work_callback: UniquePtr<WorkCallback>,
     ) -> Result<(), Box<dyn error::Error>> {
         let display = Display::<ServerState>::new()?;
         let mut event_loop: EventLoop<'_, ServerState> = EventLoop::try_new()?;
@@ -61,6 +71,7 @@ impl WaylandServer {
             handle: display.handle(),
             stop_requested: false,
             notification_handler,
+            work_callback,
             disconnect_rx,
         };
 
@@ -139,6 +150,24 @@ impl WaylandServer {
             })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
+        // Add a queue so that arbitrary functions can be scheduled (from any
+        // thread) to run on the event loop thread. Functions are executed in
+        // the order they were queued.
+        let (task_sender, task_channel) = channel::<ScheduledFn>();
+
+        *self
+            .task_sender
+            .lock()
+            .expect("No recovery from lock poisioning") = Some(task_sender);
+
+        loop_handle
+            .insert_source(task_channel, |event, _, state: &mut ServerState| {
+                if let ChannelEvent::Msg(task) = event {
+                    task(state);
+                }
+            })
+            .map_err(|_| "Failed to insert task queue into event loop")?;
+
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
 
         // TODO: Don't spin continuously
@@ -179,6 +208,41 @@ impl WaylandServer {
             signal.ping();
         }
     }
+
+    /// Schedule a function to be executed on the event loop thread.
+    ///
+    /// The function is queued and will run on the thread driving `run`, in the
+    /// order it was scheduled relative to other scheduled functions. This may
+    /// be called from any thread. Any number of functions may be queued.
+    ///
+    /// Returns `true` if the function was queued, or `false` if the server is
+    /// not currently running (i.e. `run` has not been called, or the event
+    /// loop has already torn down its task queue).
+    fn schedule(&self, task: ScheduledFn) -> bool {
+        match self
+            .task_sender
+            .lock()
+            .expect("No way to recover from lock poisioning")
+            .as_ref()
+        {
+            Some(sender) => sender.send(task).is_ok(),
+            None => false,
+        }
+    }
+
+    /// Schedule a unit of C++ work to be run on the event loop thread.
+    ///
+    /// The work itself is owned by the C++ side and identified by `work_id`.
+    /// When the event loop processes the queued task it calls back into C++
+    /// via `WorkCallback::execute(work_id)`, on the event-loop thread.
+    ///
+    /// This may be called from any thread, and any number of units of work may
+    /// be queued; they are run in the order they were scheduled.
+    pub fn schedule_work(&mut self, work_id: u32) {
+        self.schedule(Box::new(move |state: &mut ServerState| {
+            state.work_callback.pin_mut().execute(work_id);
+        }));
+    }
 }
 
 /// Create a new wayland server.
@@ -191,6 +255,7 @@ pub struct ServerState {
     pub handle: DisplayHandle,
     stop_requested: bool,
     notification_handler: UniquePtr<WaylandServerNotificationHandler>,
+    work_callback: UniquePtr<WorkCallback>,
     disconnect_rx: mpsc::Receiver<(ClientId, DisconnectReason)>,
 }
 

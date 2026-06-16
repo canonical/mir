@@ -42,12 +42,14 @@ pub struct CppProtocolGenerationOutput {
 /// - A `CppBuilder` per protocol (containing abstract classes per-interface)
 /// - A global factory builder
 /// - A wayland server notification handler builder
+/// - A work callback builder
 /// - An FFI forward-declaration builder
 pub fn generate_cpp_protocol_builders(
     protocols: &Vec<WaylandProtocol>,
 ) -> CppProtocolGenerationOutput {
     let global_builder = create_global_factory(protocols);
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
+    let work_callback_builder = create_work_callback();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
     let mut builders: Vec<CppBuilder> = protocols
@@ -56,6 +58,7 @@ pub fn generate_cpp_protocol_builders(
         .collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
+    builders.push(work_callback_builder);
 
     CppProtocolGenerationOutput {
         ffi_fwd_builder,
@@ -157,7 +160,28 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
     builder
 }
 
-/// Create a lightweight header containing forward declarations for every Rust opaque
+/// Create the `WorkCallback` interface.
+///
+/// This is the Rust -> C++ callback used to run a unit of work that was
+/// scheduled onto the Wayland event loop. The work itself lives on the C++
+/// side (a `std::function`) and is keyed by an integer id; Rust calls
+/// `execute(work_id)` on the event-loop thread to run it.
+fn create_work_callback() -> CppBuilder {
+    let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_WORK_CALLBACK", "work_callback");
+    builder.add_header_include("<cstdint>");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("WorkCallback");
+
+    let mut execute_method = CppMethod::new("execute", None, true, false, true, true);
+    execute_method.add_arg(CppArg::new(CppType::CppU32, "work_id", false));
+    class.add_method(execute_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
 /// type used as `rust::Box<T>` in the protocol headers.
 ///
 /// Protocol headers include this header instead of the CXX-generated ffi.rs.h,
