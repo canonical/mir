@@ -227,7 +227,14 @@ TEST_F(LiveConfigIniFile, an_ints_value_is_handled)
 TEST_F(LiveConfigIniFile, an_ints_preset_is_handled)
 {
     mlc::Key const my_key{"foo"};
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wbraced-scalar-init"
+#endif
     ini_file.add_ints_attribute(an_ints_key, "ints", {{42}}, [this](auto... args) { ints_handler(args...); });
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
     ini_file.add_ints_attribute(my_key, "more ints", {{42, 64}}, [this](auto... args) { ints_handler(args...); });
 
     EXPECT_CALL(*this, ints_handler(an_ints_key, Optional(ElementsAre(1, 2))));
@@ -250,7 +257,14 @@ TEST_F(LiveConfigIniFile, a_floats_value_is_handled)
 TEST_F(LiveConfigIniFile, a_floats_preset_is_handled)
 {
     mlc::Key const my_key{"foo"};
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wbraced-scalar-init"
+#endif
     ini_file.add_floats_attribute(a_floats_key, "floats", {{42}}, [this](auto... args) { floats_handler(args...); });
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
     ini_file.add_floats_attribute(my_key, "more floats", {{42, 64}}, [this](auto... args) { floats_handler(args...); });
 
     EXPECT_CALL(*this, floats_handler(a_floats_key, Optional(ElementsAre(1, 2))));
