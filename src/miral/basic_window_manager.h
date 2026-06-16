@@ -95,11 +95,6 @@ public:
         std::shared_ptr<mir::scene::Session> const& session,
         std::weak_ptr<mir::scene::Surface> const& surface) override;
 
-    [[deprecated("Mir doesn't reliably call this: it is ignored. Use add_display_for_testing() instead")]]
-    void add_display(mir::geometry::Rectangle const& area) override;
-
-    void remove_display(mir::geometry::Rectangle const& area) override;
-
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
     bool handle_touch_event(MirTouchEvent const* event) override;

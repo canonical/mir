@@ -57,10 +57,6 @@ public:
         std::shared_ptr<scene::Session> const& session,
         std::weak_ptr<scene::Surface> const& surface) = 0;
 
-    virtual void add_display(geometry::Rectangle const& area) = 0;
-
-    virtual void remove_display(geometry::Rectangle const& area) = 0;
-
     virtual bool handle_keyboard_event(MirKeyboardEvent const* event) = 0;
 
     virtual bool handle_touch_event(MirTouchEvent const* event) = 0;
