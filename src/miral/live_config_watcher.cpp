@@ -139,9 +139,9 @@ void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const
     auto remaining = std::span{buffer}.first(static_cast<std::size_t>(readsize));
     while (remaining.size() >= sizeof(inotify_event))
     {
-    // TODO: Replace with std::start_lifetime_as<inotify_event const> once libstdc++ ships P2590 (C++26).
+    // TODO: Revisit const-qualified start_lifetime_as once toolchains stop rejecting it in some builds.
     #if defined(__cpp_lib_start_lifetime_as) && (__cpp_lib_start_lifetime_as >= 202207L)
-        auto const& event = *std::start_lifetime_as<inotify_event const>(remaining.data());
+        auto const& event = *std::start_lifetime_as<inotify_event>(remaining.data());
     #else
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         auto const& event = reinterpret_cast<inotify_event const&>(*remaining.data());
