@@ -47,14 +47,16 @@ jobs:
       - name: Install dependencies
         run: |
           sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
-          sudo apt-get install --yes libclang1-18 python3-clang-18
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-18/lib/libclang-18.so.1" >> "$GITHUB_ENV"
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-18/lib" >> "$GITHUB_ENV"
+          sudo apt-get install --yes clang-20 libclang1-20 python3-clang-20
+          # shellcheck disable=SC2012
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=$( ls /usr/lib/llvm-??/lib/libclang*.so.1 | tail -n1 )" >> "$GITHUB_ENV"
+          # shellcheck disable=SC2012
+          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=$( ls -d /usr/lib/llvm-??/lib | tail -n1 )" >> "$GITHUB_ENV"
           sudo apt-get build-dep ./
 
       - name: Configure
         run: >
-          cmake -B build ${{ github.workspace }}
+          cmake -B build -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 ${{ github.workspace }}
 
       - name: Check symbols
         run: |
