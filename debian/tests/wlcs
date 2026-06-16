@@ -24,10 +24,10 @@ done
 
 # Add extra failures from the autopkgtest infrastructure
 #
-# BufferTest.test_truncated_shm_file requries libwayland to be able to handle SIGSEGV from a signal
+# ShmTest.truncated_shm_file_is_an_error requries libwayland to be able to handle SIGSEGV from a signal
 # handler and continue.
 # This fails under some qemu targets and LXD.
-FILTER=${FILTER:-}${FILTER:+:}"BadBufferTest.test_truncated_shm_file"
+FILTER=${FILTER:-}${FILTER:+:}"ShmTest.truncated_shm_file_is_an_error"
 
 # These tests are incorrect (a correct implementation will fail them)
 # Fixed in next WLCS, with a different name so these exclusions should be safe
