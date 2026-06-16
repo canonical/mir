@@ -387,6 +387,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_data_control_manager_v1@MIRAL_6.0" 6.0.0
+ (c++)"miral::WaylandExtensions::ext_foreign_toplevel_image_capture_source_manager_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_foreign_toplevel_list_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_image_copy_capture_manager_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_output_image_capture_source_manager_v1@MIRAL_6.0" 6.0.0

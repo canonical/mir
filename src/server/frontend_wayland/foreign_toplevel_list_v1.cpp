@@ -536,9 +536,9 @@ auto mf::ExtForeignToplevelHandleV1::from_or_throw(
     return *handle;
 }
 
-auto mf::ExtForeignToplevelHandleV1::surface() const -> std::shared_ptr<ms::Surface>
+auto mf::ExtForeignToplevelHandleV1::surface() const -> std::weak_ptr<ms::Surface>
 {
-    return weak_surface.lock();
+    return weak_surface;
 }
 
 void mf::ExtForeignToplevelHandleV1::should_close()
