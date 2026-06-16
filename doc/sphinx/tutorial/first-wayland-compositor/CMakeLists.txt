@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(demo-mir-compositor)
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 
 include(FindPkgConfig)
 pkg_check_modules(MIRAL miral REQUIRED IMPORTED_TARGET)

@@ -333,7 +333,7 @@ def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[
 
     files = directory.rglob('*.h')
 
-    args = ['-std=c++23', '-x', 'c++-header']
+    args = ['-std=c++26', '-x', 'c++-header']
     for dir in search_dirs:
         args.append(f"-I{dir}")
 

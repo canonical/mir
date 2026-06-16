@@ -4,7 +4,7 @@ This document provides essential knowledge for working with the Mir codebase, in
 
 ## Overview
 
-Mir is a Wayland compositor library written in C++23 with some Rust components. It provides a stable ABI layer (mirAL) for building shells, handling graphics/input hardware abstraction, and window management.
+Mir is a Wayland compositor library written in C++26 with some Rust components. It provides a stable ABI layer (mirAL) for building shells, handling graphics/input hardware abstraction, and window management.
 
 ## Architecture
 
@@ -109,7 +109,7 @@ Use these standard aliases in `.cpp` files for brevity:
 
 ### C++ Features
 
-- **Use C++23 features** where appropriate
+- **Use C++26 features** where appropriate
 - **Constructors**: Use `explicit` for single-argument constructors
 - **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`)
 - **Null pointers**: Use `nullptr` instead of `NULL` or `0`

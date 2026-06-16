@@ -65,22 +65,22 @@ has changes. Such changes will need to be moved to a new stanza manually.
 Before we can update the symbols of Mir's libraries, we'll want to set
 up our environment so that the our tools can work correctly.
 
-To do this, you will first want to install **clang-19**. Note that it is
+To do this, you will first want to install **clang**. Note that it is
 very important that you have the most recent version of clang, as that
 works the best.
 
 ```sh
-sudo apt install clang-19
+sudo apt install clang
 ```
 
 Afterwards, you will want to set the following environment variables to point
 at the path of `libclang.so` and `libclang.so`'s `lib` directory. Note that
-these paths are likely to be the same on most Ubuntu 24.04 setups, but may
+these paths are likely to be the same on most Ubuntu 26.04 setups, but may
 vary on other distros:
 
 ```sh
-export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1
-export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib
+export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=$( ls /usr/lib/llvm-*/lib/libclang*.so.1 | tail -n1 )
+export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=$( ls -d /usr/lib/llvm-*/lib | tail -n1 )
 ```
 
 It is recommended that you put those `export ...` commands in your `.bashrc`
