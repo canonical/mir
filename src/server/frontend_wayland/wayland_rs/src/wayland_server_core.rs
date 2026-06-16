@@ -142,7 +142,7 @@ impl WaylandServer {
         *self
             .stop_signal
             .lock()
-            .expect("No recovery from lock poisioning") = Some(pinger);
+            .expect("No recovery from lock poisoning") = Some(pinger);
 
         loop_handle
             .insert_source(ping_source, |_, _, server: &mut ServerState| {
@@ -158,7 +158,7 @@ impl WaylandServer {
         *self
             .task_sender
             .lock()
-            .expect("No recovery from lock poisioning") = Some(task_sender);
+            .expect("No recovery from lock poisoning") = Some(task_sender);
 
         loop_handle
             .insert_source(task_channel, |event, _, state: &mut ServerState| {
@@ -202,7 +202,7 @@ impl WaylandServer {
         if let Some(signal) = self
             .stop_signal
             .lock()
-            .expect("No way to recover from lock poisioning")
+            .expect("No way to recover from lock poisoning")
             .as_ref()
         {
             signal.ping();
@@ -222,7 +222,7 @@ impl WaylandServer {
         match self
             .task_sender
             .lock()
-            .expect("No way to recover from lock poisioning")
+            .expect("No way to recover from lock poisoning")
             .as_ref()
         {
             Some(sender) => sender.send(task).is_ok(),
@@ -238,10 +238,16 @@ impl WaylandServer {
     ///
     /// This may be called from any thread, and any number of units of work may
     /// be queued; they are run in the order they were scheduled.
-    pub fn schedule_work(&mut self, work_id: u32) {
-        self.schedule(Box::new(move |state: &mut ServerState| {
+    pub fn schedule_work(&self, work_id: u32) {
+        let queued = self.schedule(Box::new(move |state: &mut ServerState| {
             state.work_callback.pin_mut().execute(work_id);
         }));
+        if !queued {
+            log::warn!(
+                "Dropped scheduled work {} because the Wayland server task queue is not running",
+                work_id
+            );
+        }
     }
 }
 
