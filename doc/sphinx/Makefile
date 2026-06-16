@@ -111,8 +111,9 @@ linkcheck: install
 
 linkcheck-with-dependencies: install
 	sudo add-apt-repository --yes ppa:mir-team/dev
+	sudo apt-get --yes install clang-20
 	sudo apt-get --yes build-dep $(PROJECT_ROOT)
-	. $(DOCS_VENV); cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 "$(PROJECT_ROOT)" -B "$(PROJECT_ROOT)"
+	. $(DOCS_VENV); cmake -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 "$(PROJECT_ROOT)" -B "$(PROJECT_ROOT)"
 	@$(MAKE) linkcheck
 
 pa11y: pa11y-install html
