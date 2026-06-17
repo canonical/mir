@@ -131,13 +131,6 @@ mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
 )
 
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
-  # test_shm_backing.cpp uses std::expected (via shm_backing.h), which libstdc++ only supports with __cpp_concepts=202002L
-  set_source_files_properties(test_shm_backing.cpp
-    PROPERTIES COMPILE_FLAGS -Wno-builtin-macro-redefined
-    COMPILE_DEFINITIONS __cpp_concepts=202002L)
-endif()
-
 set_property(
   SOURCE test_udev_wrapper.cpp test_glib_main_loop.cpp
   SOURCE console/test_logind_console_services.cpp
