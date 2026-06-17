@@ -1,4 +1,4 @@
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="demo_server")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="demo_server")
 
 add_library(exampleserverconfig STATIC
   server_example_input_event_filter.cpp

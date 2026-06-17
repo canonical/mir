@@ -41,7 +41,7 @@ set_target_properties(
 )
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
-add_compile_definitions(register=)
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Dregister=>)
 
 if(CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
   set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)

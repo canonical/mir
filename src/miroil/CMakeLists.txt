@@ -8,7 +8,7 @@ set(MIROIL_VERSION ${MIROIL_VERSION_MAJOR}.${MIROIL_VERSION_MINOR}.${MIROIL_VERS
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miroil_include ${PROJECT_SOURCE_DIR}/include/miroil)
 
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIONS=0)
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miroil" MIROIL_ENABLE_DEPRECATIONS=0)
 
 add_library(miroil SHARED
     compositor.cpp ${miroil_include}/miroil/compositor.h

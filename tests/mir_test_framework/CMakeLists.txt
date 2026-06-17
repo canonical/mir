@@ -77,7 +77,7 @@ set_property(
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
-add_compile_definitions(register=)
+add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:register=>)
 
 add_library(mir-protected-test-framework OBJECT
 
