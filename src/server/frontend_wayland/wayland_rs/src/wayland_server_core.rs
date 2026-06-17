@@ -16,7 +16,6 @@
 
 use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler, WorkCallback};
 use crate::wayland_client::{WaylandClient, WaylandClientId};
-use calloop::channel::{channel, Event as ChannelEvent, Sender};
 use calloop::ping::Ping;
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
 use cxx::UniquePtr;
@@ -29,16 +28,10 @@ use wayland_server::{
     Display, DisplayHandle, ListeningSocket,
 };
 
-/// A function queued to run on the server's event loop thread.
-///
-/// The function is given mutable access to the [`ServerState`] so that it can
-/// interact with the running server (e.g. to call back into C++).
-type ScheduledFn = Box<dyn FnOnce(&mut ServerState) + Send>;
-
 /// The wayland server.
 pub struct WaylandServer {
     stop_signal: Mutex<Option<Ping>>,
-    task_sender: Mutex<Option<Sender<ScheduledFn>>>,
+    work_signal: Mutex<Option<Ping>>,
 }
 
 impl WaylandServer {
@@ -46,7 +39,7 @@ impl WaylandServer {
     pub fn new() -> Self {
         WaylandServer {
             stop_signal: Mutex::new(None),
-            task_sender: Mutex::new(None),
+            work_signal: Mutex::new(None),
         }
     }
 
@@ -150,27 +143,31 @@ impl WaylandServer {
             })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
-        // Add a queue so that arbitrary functions can be scheduled (from any
-        // thread) to run on the event loop thread. Functions are executed in
-        // the order they were queued.
-        let (task_sender, task_channel) = channel::<ScheduledFn>();
+        // Add a work signal so that C++ can ask (from any thread) for its
+        // pending work to be drained on the event loop thread. The ping
+        // coalesces multiple requests into a single wake; when it fires we ask
+        // the C++ side to run all the work it currently has queued.
+        let (work_pinger, work_ping_source) = calloop::ping::make_ping()?;
 
         *self
-            .task_sender
+            .work_signal
             .lock()
-            .expect("No recovery from lock poisoning") = Some(task_sender);
+            .expect("No recovery from lock poisoning") = Some(work_pinger);
 
         loop_handle
-            .insert_source(task_channel, |event, _, state: &mut ServerState| {
-                if let ChannelEvent::Msg(task) = event {
-                    task(state);
-                }
+            .insert_source(work_ping_source, |_, _, state: &mut ServerState| {
+                state.work_callback.pin_mut().execute();
             })
-            .map_err(|_| "Failed to insert task queue into event loop")?;
+            .map_err(|_| "Failed to insert work signal into event loop")?;
 
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
 
-        // TODO: Don't spin continuously
+        // Drain any work the C++ side queued before the work signal was ready.
+        // Such a signal would have been dropped (the queue is owned by C++ and
+        // outlives `run`), so run that work now that the loop is starting. Work
+        // queued from here on raises its own signal and is handled by the loop.
+        state.work_callback.pin_mut().execute();
+
         while !state.stop_requested {
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
@@ -209,44 +206,34 @@ impl WaylandServer {
         }
     }
 
-    /// Schedule a function to be executed on the event loop thread.
+    /// Signal the event loop to drain any work the C++ side has queued.
     ///
-    /// The function is queued and will run on the thread driving `run`, in the
-    /// order it was scheduled relative to other scheduled functions. This may
-    /// be called from any thread. Any number of functions may be queued.
+    /// The work itself is owned by the C++ side. When the event loop processes
+    /// this signal it calls back into C++ via `WorkCallback::execute()`, on the
+    /// event-loop thread, which runs all of the C++ work currently pending.
     ///
-    /// Returns `true` if the function was queued, or `false` if the server is
-    /// not currently running (i.e. `run` has not been called, or the event
-    /// loop has already torn down its task queue).
-    fn schedule(&self, task: ScheduledFn) -> bool {
+    /// This may be called from any thread. Signals coalesce, so the C++ side
+    /// need only call this while it has no signal already outstanding.
+    ///
+    /// Returns `true` if the signal was delivered, or `false` if the server is
+    /// not currently running (i.e. `run` has not been called yet) and the
+    /// signal was dropped. The caller is responsible for re-signalling later in
+    /// the latter case.
+    pub fn schedule_work(&self) -> bool {
         match self
-            .task_sender
+            .work_signal
             .lock()
             .expect("No way to recover from lock poisoning")
             .as_ref()
         {
-            Some(sender) => sender.send(task).is_ok(),
-            None => false,
-        }
-    }
-
-    /// Schedule a unit of C++ work to be run on the event loop thread.
-    ///
-    /// The work itself is owned by the C++ side and identified by `work_id`.
-    /// When the event loop processes the queued task it calls back into C++
-    /// via `WorkCallback::execute(work_id)`, on the event-loop thread.
-    ///
-    /// This may be called from any thread, and any number of units of work may
-    /// be queued; they are run in the order they were scheduled.
-    pub fn schedule_work(&self, work_id: u32) {
-        let queued = self.schedule(Box::new(move |state: &mut ServerState| {
-            state.work_callback.pin_mut().execute(work_id);
-        }));
-        if !queued {
-            log::warn!(
-                "Dropped scheduled work {} because the Wayland server task queue is not running",
-                work_id
-            );
+            Some(pinger) => {
+                pinger.ping();
+                true
+            }
+            None => {
+                log::warn!("Dropped scheduled work because the Wayland server is not running");
+                false
+            }
         }
     }
 }

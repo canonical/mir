@@ -162,20 +162,18 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
 
 /// Create the `WorkCallback` interface.
 ///
-/// This is the Rust -> C++ callback used to run a unit of work that was
+/// This is the Rust -> C++ callback used to drain the units of work that were
 /// scheduled onto the Wayland event loop. The work itself lives on the C++
-/// side (a `std::function`) and is keyed by an integer id; Rust calls
-/// `execute(work_id)` on the event-loop thread to run it.
+/// side (a queue of `std::function`s); Rust calls `execute()` on the
+/// event-loop thread to run whatever C++ work is currently pending.
 fn create_work_callback() -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_WORK_CALLBACK", "work_callback");
-    builder.add_header_include("<cstdint>");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
     let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
     let mut class = CppClass::new("WorkCallback");
 
-    let mut execute_method = CppMethod::new("execute", None, true, false, true, true);
-    execute_method.add_arg(CppArg::new(CppType::CppU32, "work_id", false));
+    let execute_method = CppMethod::new("execute", None, true, false, true, true);
     class.add_method(execute_method);
 
     namespace.add_class(class);

@@ -21,10 +21,9 @@
 
 #include <mir/executor.h>
 
-#include <cstdint>
 #include <functional>
 #include <mutex>
-#include <unordered_map>
+#include <vector>
 
 namespace mir
 {
@@ -34,13 +33,16 @@ struct WaylandServer;
 
 /// An Executor that runs work on the Wayland server's event loop.
 ///
-/// Because C++ functions cannot be ferried across the C++/Rust boundary, each
-/// unit of work is stored on the C++ side and identified by an integer id. The
-/// id is handed to the running event loop via `WaylandServer::schedule_work`;
-/// Rust later calls back into `execute` on the event-loop thread to run it.
+/// Because C++ functions cannot be ferried across the C++/Rust boundary, work
+/// is held in a queue on the C++ side. `spawn` appends work and, when no signal
+/// is already outstanding, asks the running event loop to drain it via
+/// `WaylandServer::schedule_work`. Rust later calls back into `execute` on the
+/// event-loop thread, which drains and runs all pending work.
 ///
-/// `spawn` may be called from any thread. Scheduled work is run in the order it
-/// was spawned. The server must be running for spawned work to be executed.
+/// `spawn` may be called from any thread. Queued work is run in the order it
+/// was spawned. The server must be running for queued work to be executed; a
+/// signal raised before the server is running is dropped, so `spawn` re-signals
+/// until one is delivered.
 class WaylandExecutor : public mir::Executor, public WorkCallback
 {
 public:
@@ -49,15 +51,15 @@ public:
     /// Schedule work to be run on the Wayland event loop thread.
     void spawn(std::function<void()>&& work) override;
 
-    /// Run a previously scheduled unit of work. Called from Rust on the
-    /// event-loop thread.
-    auto execute(std::uint32_t work_id) -> void override;
+    /// Run all currently queued work. Called from Rust on the event-loop
+    /// thread.
+    auto execute() -> void override;
 
 private:
     WaylandServer& server;
     std::mutex mutex;
-    std::uint32_t next_id{0};
-    std::unordered_map<std::uint32_t, std::function<void()>> pending_work;
+    bool signal_pending{false};
+    std::vector<std::function<void()>> pending_work;
 };
 
 }

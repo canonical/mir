@@ -27,30 +27,42 @@ mrs::WaylandExecutor::WaylandExecutor(mrs::WaylandServer& server)
 
 void mrs::WaylandExecutor::spawn(std::function<void()>&& work)
 {
-    std::uint32_t work_id;
+    bool need_signal;
     {
         std::lock_guard<std::mutex> lock{mutex};
-        work_id = next_id++;
-        pending_work.emplace(work_id, std::move(work));
+        pending_work.push_back(std::move(work));
+
+        // Only raise a signal if one is not already outstanding; any work
+        // appended while a signal is pending (or a drain is in progress) is
+        // picked up by that drain, so one signal per batch suffices.
+        need_signal = !signal_pending;
+        if (need_signal)
+            signal_pending = true;
     }
 
-    server.schedule_work(work_id);
-}
-
-auto mrs::WaylandExecutor::execute(std::uint32_t work_id) -> void
-{
-    std::function<void()> work;
+    // If the signal was dropped because the server is not yet running, clear
+    // the flag so that the next spawn re-signals rather than stranding the
+    // queue.
+    if (need_signal && !server.schedule_work())
     {
         std::lock_guard<std::mutex> lock{mutex};
-        auto const it = pending_work.find(work_id);
-        if (it == pending_work.end())
-            return;
+        signal_pending = false;
+    }
+}
 
-        work = std::move(it->second);
-        pending_work.erase(it);
+auto mrs::WaylandExecutor::execute() -> void
+{
+    std::vector<std::function<void()>> work;
+    {
+        std::lock_guard<std::mutex> lock{mutex};
+        work.swap(pending_work);
+        signal_pending = false;
     }
 
     // Run the work outside the lock so that it may itself schedule more work.
-    if (work)
-        work();
+    for (auto& task : work)
+    {
+        if (task)
+            task();
+    }
 }

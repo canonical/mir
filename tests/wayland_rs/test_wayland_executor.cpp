@@ -21,16 +21,16 @@
 
 #include <gtest/gtest.h>
 
-#include <atomic>
-#include <chrono>
 #include <condition_variable>
 #include <cstdlib>
+#include <filesystem>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <system_error>
 #include <thread>
 #include <unistd.h>
 #include <vector>
@@ -50,20 +50,16 @@ public:
     void client_removed(rust::Box<mrs::WaylandClientId>) override {}
 };
 
-/// Ensure XDG_RUNTIME_DIR points at a usable directory, as the Wayland server
-/// binds its listening socket there. Returns the directory in use.
-auto ensure_xdg_runtime_dir() -> std::string
+/// Create a fresh, private temporary directory for use as XDG_RUNTIME_DIR (the
+/// Wayland server binds its listening socket there). Returns its path.
+auto make_temp_runtime_dir() -> std::string
 {
-    if (auto const existing = ::getenv("XDG_RUNTIME_DIR"))
-        return existing;
-
     char template_path[] = "/tmp/mir-wayland-rs-test-XXXXXX";
     auto const dir = ::mkdtemp(template_path);
     if (!dir)
         throw std::runtime_error{"Failed to create temporary XDG_RUNTIME_DIR"};
 
     ::chmod(dir, 0700);
-    ::setenv("XDG_RUNTIME_DIR", dir, 1);
     return dir;
 }
 
@@ -72,7 +68,13 @@ class WaylandExecutorTest : public testing::Test
 public:
     void SetUp() override
     {
-        ensure_xdg_runtime_dir();
+        // Always run against a private temporary XDG_RUNTIME_DIR so the test
+        // never pollutes (or collides with) a real runtime directory. It is
+        // removed again in TearDown.
+        runtime_dir = make_temp_runtime_dir();
+        if (auto const existing = ::getenv("XDG_RUNTIME_DIR"))
+            previous_xdg_runtime_dir = existing;
+        ::setenv("XDG_RUNTIME_DIR", runtime_dir.c_str(), 1);
 
         server.emplace(mrs::create_wayland_server());
         auto executor_owned = std::make_unique<mrs::WaylandExecutor>(**server);
@@ -90,8 +92,6 @@ public:
                     std::make_unique<StubNotificationHandler>(),
                     std::move(handler));
             }};
-
-        ASSERT_TRUE(wait_until_ready(5s)) << "Wayland server did not become ready in time";
     }
 
     void TearDown() override
@@ -100,32 +100,23 @@ public:
             (*server)->stop();
         if (server_thread.joinable())
             server_thread.join();
-    }
 
-    /// Spawn probe work repeatedly until one is actually executed, indicating
-    /// the server's event loop is running and its work queue is wired up.
-    ///
-    /// Work spawned before the queue exists is silently dropped, so this retries
-    /// rather than relying on a single probe.
-    auto wait_until_ready(std::chrono::milliseconds timeout) -> bool
-    {
-        auto const deadline = std::chrono::steady_clock::now() + timeout;
-        while (std::chrono::steady_clock::now() < deadline)
+        // Restore the previous environment and remove the temporary directory
+        // (along with the socket the server bound inside it).
+        if (previous_xdg_runtime_dir)
+            ::setenv("XDG_RUNTIME_DIR", previous_xdg_runtime_dir->c_str(), 1);
+        else
+            ::unsetenv("XDG_RUNTIME_DIR");
+
+        if (!runtime_dir.empty())
         {
-            auto ran = std::make_shared<std::atomic<bool>>(false);
-            executor->spawn([ran] { ran->store(true); });
-
-            auto const probe_deadline = std::chrono::steady_clock::now() + 50ms;
-            while (std::chrono::steady_clock::now() < probe_deadline)
-            {
-                if (ran->load())
-                    return true;
-                std::this_thread::sleep_for(2ms);
-            }
+            std::error_code ec;
+            std::filesystem::remove_all(runtime_dir, ec);
         }
-        return false;
     }
 
+    std::string runtime_dir;
+    std::optional<std::string> previous_xdg_runtime_dir;
     std::optional<rust::Box<mrs::WaylandServer>> server;
     mir::Executor* executor{nullptr};
     std::thread server_thread;
