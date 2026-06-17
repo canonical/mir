@@ -66,27 +66,32 @@ set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Wall -pedantic -Wextra -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
+find_package(Threads REQUIRED)
 
+add_compile_options(
+    -g -Wall -pedantic -Wextra -fPIC
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-strict-aliasing>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+)
+add_link_options(-Wl,--as-needed)
 
 set(MIR_FATAL_COMPILE_WARNINGS ON CACHE BOOL "Should compiler warnings fail the build")
 if(MIR_FATAL_COMPILE_WARNINGS)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+  add_compile_options(-Werror)
   # Disable maybe-uninitialized errors on GCC when optimisation is enabled
   # They are notorious for false-positives
   # Also, disable array-bounds errors, they are likewise significantly
   # false-positivey
   # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
   if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=maybe-uninitialized>
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=array-bounds>)
   endif()
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>)
   endif()
 endif()
 
@@ -94,7 +99,7 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
 
 if(HAS_W_MISMATCHED_TAGS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-mismatched-tags>)
 endif()
 
 check_cxx_compiler_flag(-Werror=braced-scalar-init HAS_W_BRACED_SCALAR_INIT)
@@ -109,25 +114,19 @@ endif()
 # GCC 7.1.
 check_cxx_compiler_flag(-Wpsabi HAS_W_PSABI)
 if(HAS_W_PSABI)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi>)
 endif()
 
 set(MIR_USE_LD ld CACHE STRING "Linker to use")
 set_property(CACHE MIR_USE_LD PROPERTY STRINGS "ld;gold;lld;mold")
 if(MIR_USE_LD MATCHES "gold")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+  add_link_options(-fuse-ld=gold)
 endif()
 if(MIR_USE_LD MATCHES "lld")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+  add_link_options(-fuse-ld=lld)
 endif()
 if(MIR_USE_LD MATCHES "mold")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=mold")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=mold")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=mold")
+  add_link_options(-fuse-ld=mold)
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
