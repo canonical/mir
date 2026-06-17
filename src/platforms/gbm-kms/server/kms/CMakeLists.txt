@@ -1,12 +1,3 @@
-include_directories(
-    ${server_common_include_dirs}
-    ..
-)
-
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}/../
-)
-
 add_compile_definitions(
   __GBM__
   MIR_LOG_COMPONENT_FALLBACK="gbm-kms"
@@ -35,6 +26,14 @@ add_library(
   quirks.h
 )
 
+target_include_directories(
+  mirplatformgraphicsgbmkmsobjects
+  PRIVATE
+    ${server_common_include_dirs}
+    ..
+    ${CMAKE_CURRENT_BINARY_DIR}/../
+)
+
 target_link_libraries(
   mirplatformgraphicsgbmkmsobjects
 
@@ -50,6 +49,12 @@ set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 add_library(mirplatformgraphicsgbmkms MODULE
   platform_symbols.cpp
+)
+
+target_include_directories(
+  mirplatformgraphicsgbmkms
+  PRIVATE
+    ..
 )
 
 target_link_libraries(

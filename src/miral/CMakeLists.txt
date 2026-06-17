@@ -1,7 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/server
-)
-
 set(MIRAL_ABI 8)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
@@ -183,7 +179,9 @@ if(HAS_W_NO_ATTRIBUTE_ALIAS)
 endif()
 
 target_include_directories(miral-internal
-    PRIVATE "${miral_include}"
+    PRIVATE
+        "${miral_include}"
+        ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-internal
@@ -197,10 +195,12 @@ target_link_libraries(miral-internal
 
 target_include_directories(miral-external
     PUBLIC  "${miral_include}"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_include_directories(miral
     PUBLIC  "${miral_include}"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-external
@@ -208,7 +208,6 @@ target_link_libraries(miral-external
         mircore
         PkgConfig::XKBCOMMON
     PRIVATE
-        miral-internal
         mirserver
         protocols
         PkgConfig::FREETYPE

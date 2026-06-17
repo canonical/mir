@@ -4,6 +4,13 @@ mir_add_wrapped_executable(mir_unit_tests_eglstream-kms NOINSTALL
   ${EGLSTREAM_KMS_UNIT_TEST_SOURCES}
 )
 
+target_include_directories(
+  mir_unit_tests_eglstream-kms
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 target_link_libraries(
   mir_unit_tests_eglstream-kms
 
