@@ -4,6 +4,30 @@ use super::ServerExtension;
 
 use std::pin::Pin;
 
+#[cfg(test)]
+use std::sync::Mutex;
+
+#[cfg(test)]
+static WAYLAND_EXTENSIONS_APPLY_CALL: Mutex<Option<(Vec<String>, Vec<String>)>> = Mutex::new(None);
+
+#[cfg(not(test))]
+fn apply_wayland_extensions(
+    runner: Pin<&mut mir_sys::ffi::MiralRunner>,
+    enabled: &[String],
+    disabled: &[String],
+) {
+    mir_sys::ffi::miral_runner_add_wayland_extensions(runner, enabled, disabled);
+}
+
+#[cfg(test)]
+fn apply_wayland_extensions(
+    _runner: Pin<&mut mir_sys::ffi::MiralRunner>,
+    enabled: &[String],
+    disabled: &[String],
+) {
+    *WAYLAND_EXTENSIONS_APPLY_CALL.lock().unwrap() = Some((enabled.to_vec(), disabled.to_vec()));
+}
+
 /// Configuration for Wayland protocol extensions.
 ///
 /// Controls which Wayland protocol extensions are enabled in the compositor.
@@ -96,6 +120,32 @@ impl ServerExtension for WaylandExtensions {
     }
 
     fn apply(self: Box<Self>, runner: Pin<&mut mir_sys::ffi::MiralRunner>) {
-        mir_sys::ffi::miral_runner_add_wayland_extensions(runner, &self.enabled, &self.disabled);
+        apply_wayland_extensions(runner, &self.enabled, &self.disabled);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn apply_forwards_enabled_and_disabled_extensions() {
+        *WAYLAND_EXTENSIONS_APPLY_CALL.lock().unwrap() = None;
+
+        let mut runner = mir_sys::ffi::miral_runner_new(&["mir-test".to_string()]);
+        Box::new(
+            WaylandExtensions::default()
+                .enable(WaylandExtensions::LAYER_SHELL)
+                .disable(WaylandExtensions::SCREENCOPY),
+        )
+        .apply(runner.pin_mut());
+
+        let call = WAYLAND_EXTENSIONS_APPLY_CALL
+            .lock()
+            .unwrap()
+            .clone()
+            .expect("expected WaylandExtensions::apply() to be called once");
+        assert_eq!(call.0, vec![WaylandExtensions::LAYER_SHELL.to_string()]);
+        assert_eq!(call.1, vec![WaylandExtensions::SCREENCOPY.to_string()]);
     }
 }
