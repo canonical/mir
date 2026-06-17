@@ -1,17 +1,13 @@
-include_directories(
-  ${GMOCK_INCLUDE_DIR}
-  ${GTEST_INCLUDE_DIR}
-)
-
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
   test_minimal_window_manager.cpp
   test_floating_window_manager.cpp)
 
-target_compile_options(mir_window_management_tests PRIVATE -flto)
 target_link_options(mir_window_management_tests PRIVATE -flto)
 
 target_include_directories(mir_window_management_tests
   PRIVATE
+  ${GMOCK_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR}
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/server

@@ -8,11 +8,6 @@ elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-pedantic>)
 endif()
 
-include_directories(
-    ${GMOCK_INCLUDE_DIR}
-    ${GTEST_INCLUDE_DIR}
-)
-
 if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
 endif()
@@ -65,7 +60,11 @@ set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/common")
 
 target_include_directories(miral-test-internal
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/miral ${PROJECT_SOURCE_DIR}/tests/include)
+    PRIVATE
+        ${GMOCK_INCLUDE_DIR}
+        ${GTEST_INCLUDE_DIR}
+        ${PROJECT_SOURCE_DIR}/src/miral
+        ${PROJECT_SOURCE_DIR}/tests/include)
 
 target_link_libraries(miral-test-internal
     miral-internal

@@ -24,13 +24,6 @@ if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
   add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
 endif()
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-
-  ${PROJECT_SOURCE_DIR}/src/include/server
-  ${CMAKE_BINARY_DIR}/src/server/console
-)
-
 add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)
 set_target_properties(
@@ -110,7 +103,7 @@ add_subdirectory(shell/)
 add_subdirectory(wayland/)
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)
-  set_source_files_properties (
+  set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/test_threaded_dispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/test_basic_connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compositor/test_multi_threaded_compositor.cpp
@@ -125,11 +118,17 @@ if (NOT HAVE_PTHREAD_GETNAME_NP)
   message(WARNING "pthread_getname_np() not supported: Disabling test_thread_pool_executor.cpp tests that rely on it")
 endif()
 
-link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
 mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
 )
+
+target_include_directories(mir_unit_tests PRIVATE
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${CMAKE_BINARY_DIR}/src/server/console
+)
+
+target_link_directories(mir_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 set_property(
   SOURCE test_udev_wrapper.cpp test_glib_main_loop.cpp
@@ -191,6 +190,14 @@ target_link_libraries(
 mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
 )
+
+target_include_directories(mir_umock_unit_tests PRIVATE
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${CMAKE_BINARY_DIR}/src/server/console
+)
+
+target_link_directories(mir_umock_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 string(REGEX MATCH "^[0-9]*\.[0-9]*" UMOCKDEV_VERSION_MINOR ${UMOCKDEV_VERSION})
 set_source_files_properties(${UMOCK_UNIT_TEST_SOURCES} PROPERTIES COMPILE_DEFINITIONS UMOCKDEV_VERSION=${UMOCKDEV_VERSION_MINOR})

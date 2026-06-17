@@ -42,10 +42,6 @@ png2header(
   spinner_logo
 )
 
-include_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 add_library(miral-spinner STATIC
   eglapp.cpp
   eglapp.h
@@ -73,4 +69,5 @@ target_link_libraries(miral-spinner
 
 target_include_directories(miral-spinner
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 )

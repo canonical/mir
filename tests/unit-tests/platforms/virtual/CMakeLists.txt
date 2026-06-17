@@ -9,6 +9,13 @@ set_property(
 
 add_dependencies(mir_unit_tests_virtual GMock)
 
+target_include_directories(
+  mir_unit_tests_virtual
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 set_target_properties(
   mir_unit_tests_virtual
   PROPERTIES

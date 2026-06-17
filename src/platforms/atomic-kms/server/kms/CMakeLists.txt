@@ -1,12 +1,3 @@
-include_directories(
-    ${server_common_include_dirs}
-    ..
-)
-
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}/../
-)
-
 add_compile_definitions(
   __GBM__
 )
@@ -32,6 +23,14 @@ add_library(
   quirks.h
 )
 
+target_include_directories(
+  mirplatformgraphicsatomickmsobjects
+  PRIVATE
+    ${server_common_include_dirs}
+    ..
+    ${CMAKE_CURRENT_BINARY_DIR}/../
+)
+
 target_link_libraries(
   mirplatformgraphicsatomickmsobjects
 
@@ -47,6 +46,12 @@ set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 add_library(mirplatformgraphicsatomickms MODULE
   platform_symbols.cpp
+)
+
+target_include_directories(
+  mirplatformgraphicsatomickms
+  PRIVATE
+    ..
 )
 
 target_link_libraries(
