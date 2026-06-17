@@ -230,8 +230,8 @@ set_target_properties(miral
 )
 
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
-    MIR_USE_LD EQUAL "ld"      AND  # lld on 22.04 generates slightly different symbols (but we don't care)
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND  # clang generates slightly different symbols (but we don't care)
+    MIR_USE_LD EQUAL "ld"                AND  # lld on 22.04 generates slightly different symbols (but we don't care)
     MIR_DPKG_GENSYMBOLS)
 
     set(MIR_CHECK_MIRAL_SYMBOLS_DEFAULT ALL)
