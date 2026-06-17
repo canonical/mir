@@ -41,7 +41,7 @@ set_target_properties(
 )
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
+add_compile_definitions(register=)
 
 if(CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
   set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
@@ -245,8 +245,12 @@ add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/shared-librarie
 
 set_target_properties(loadable_test_dso PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
-  COMPILE_FLAGS "-Wno-pedantic"
   OUTPUT_NAME this-arch
+)
+set_source_files_properties(
+  ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c
+  PROPERTIES
+    COMPILE_OPTIONS "-Wno-pedantic;-Wno-error=pedantic"
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)

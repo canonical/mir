@@ -19,7 +19,7 @@ pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
 pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overlength-strings")
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-overlength-strings>)
 
 
 function(png2header png header varname)

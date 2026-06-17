@@ -92,8 +92,8 @@ if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_ATOMIC_KMS)
 endif()
 
 # We don't want LTO objects in a published archive (libmir-test-assist.a)
-string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+add_compile_options(-fno-lto)
+add_link_options(-fno-lto)
 
 add_library(mir-public-test-doubles OBJECT
   nested_mock_egl.cpp
