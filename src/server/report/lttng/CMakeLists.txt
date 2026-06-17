@@ -9,13 +9,13 @@ add_compile_options(
 
 # lttng relies on a gcc extension to support backward-compatible code, So...
 check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-gnu-zero-variadic-macro-arguments>)
 endif()
 
 # lttng-ust uses urcu headers which contain code blocks inside expressions
 # this is a gnu extension.
-if("${CMAKE_CXX_COMPILER}" MATCHES "clang")
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-gnu-statement-expression>)
 else()
   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-pedantic>)
