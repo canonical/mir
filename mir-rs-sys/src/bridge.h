@@ -128,6 +128,10 @@ void miral_runner_register_stop_callback(MiralRunner& runner);
 void miral_runner_add_decorations(MiralRunner& runner, int32_t mode);
 void miral_runner_add_keymap(MiralRunner& runner, rust::Str layout);
 void miral_runner_add_x11_support(MiralRunner& runner);
+void miral_runner_add_wayland_extensions(
+    MiralRunner& runner,
+    rust::Slice<const rust::String> enabled,
+    rust::Slice<const rust::String> disabled);
 void miral_runner_add_external_launcher(MiralRunner& runner);
 void miral_runner_add_idle_listener(MiralRunner& runner);
 void miral_runner_add_session_lock_listener(MiralRunner& runner);

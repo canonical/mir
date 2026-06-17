@@ -323,6 +323,12 @@ pub mod ffi {
         fn miral_runner_add_keymap(runner: Pin<&mut MiralRunner>, layout: &str);
         /// Add X11/XWayland support to the runner.
         fn miral_runner_add_x11_support(runner: Pin<&mut MiralRunner>);
+        /// Add Wayland extension defaults to the runner.
+        fn miral_runner_add_wayland_extensions(
+            runner: Pin<&mut MiralRunner>,
+            enabled: &[String],
+            disabled: &[String],
+        );
         /// Add the external client launcher to the runner.
         fn miral_runner_add_external_launcher(runner: Pin<&mut MiralRunner>);
         /// Add the idle listener to the runner (callbacks set via global registry).

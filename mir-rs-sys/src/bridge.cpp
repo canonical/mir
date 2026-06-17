@@ -25,6 +25,7 @@
 #include <miral/decorations.h>
 #include <miral/keymap.h>
 #include <miral/x11_support.h>
+#include <miral/wayland_extensions.h>
 #include <miral/configuration_option.h>
 #include <miral/idle_listener.h>
 #include <miral/magnifier.h>
@@ -919,6 +920,22 @@ void miral_runner_add_keymap(MiralRunner& runner, rust::Str layout)
 void miral_runner_add_x11_support(MiralRunner& runner)
 {
     runner.options.push_back(miral::X11Support{}.default_to_enabled());
+}
+
+void miral_runner_add_wayland_extensions(
+    MiralRunner& runner,
+    rust::Slice<const rust::String> enabled,
+    rust::Slice<const rust::String> disabled)
+{
+    miral::WaylandExtensions wayland_extensions;
+
+    for (auto const& extension : enabled)
+        wayland_extensions.enable(std::string(extension));
+
+    for (auto const& extension : disabled)
+        wayland_extensions.disable(std::string(extension));
+
+    runner.options.push_back(wayland_extensions);
 }
 
 void miral_runner_add_external_launcher(MiralRunner& runner)

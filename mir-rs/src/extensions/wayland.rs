@@ -95,8 +95,11 @@ impl ServerExtension for WaylandExtensions {
         "WaylandExtensions"
     }
 
-    fn apply(self: Box<Self>, _runner: Pin<&mut mir_sys::ffi::MiralRunner>) {
-        // TODO: Wire up wayland extension enable/disable to mir_sys
-        // when the FFI layer supports per-protocol configuration.
+    fn apply(self: Box<Self>, runner: Pin<&mut mir_sys::ffi::MiralRunner>) {
+        mir_sys::ffi::miral_runner_add_wayland_extensions(
+            runner,
+            &self.enabled,
+            &self.disabled,
+        );
     }
 }
