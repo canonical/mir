@@ -196,15 +196,13 @@ impl WindowManagementPolicy for TilingPolicy {
         }
 
         // Alt+Enter: launch terminal
-        if event.keysym == XKB_KEY_RETURN
-        {
+        if event.keysym == XKB_KEY_RETURN {
             let _ = self.launcher.launch("konsole");
             return true;
         }
 
         // Alt+Q: close focused window
-        if event.keysym == XKB_KEY_Q
-        {
+        if event.keysym == XKB_KEY_Q {
             if let Some(window) = self.tools().active_window() {
                 self.tools().ask_client_to_close(&window);
             }
