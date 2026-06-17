@@ -128,7 +128,7 @@ TEST_F(TestLog, log_warning_works)
 
 TEST_F(TestLog, log_error_works)
 {
-    constexpr std::string_view fmt_string = "Terrain warning: {}m";
+    constexpr std::string_view const fmt_string = "Terrain warning: {}m";
     auto const value = 100;
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
@@ -142,7 +142,7 @@ TEST_F(TestLog, log_error_works)
 
 TEST_F(TestLog, log_critical_works)
 {
-    constexpr std::string_view fmt_string = "Critical error: {}";
+    constexpr std::string_view const fmt_string = "Critical error: {}";
     auto const value = "ENOCAKE";
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
@@ -158,7 +158,7 @@ TEST_F(TestLog, can_use_format_string)
 {
     auto const severity = mir::logging::Severity::informational;
     auto const& tag = ml::input();
-    constexpr std::string_view fmt_string = "now: {}, then: {:10.5f}, again: {:.{}}";
+    constexpr std::string_view const fmt_string = "now: {}, then: {:10.5f}, again: {:.{}}";
 
     auto const now = std::chrono::system_clock::now();
     auto const a_float = 3.1415f;
