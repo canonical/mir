@@ -332,8 +332,7 @@ private:
         std::shared_ptr<ShmBufferSIGBUSHandler::AccessProtector> const access_guard;
     };
 
-    // Really we only need std::atomic<std::shared_ptr<>>, but 20.04!
-    mir::Synchronised<std::shared_ptr<CurrentMapping const>> current_mapping;
+    std::atomic<std::shared_ptr<CurrentMapping const>> current_mapping;
     mir::Fd const backing_store;
     int const prot;
 };
@@ -374,7 +373,7 @@ template<typename Range, typename Parent>
 auto ShmBacking::get_range(size_t start, size_t len, std::shared_ptr<Parent> parent)
     -> std::unique_ptr<Range>
 {
-    auto mapping = *current_mapping.lock();
+    auto mapping = current_mapping.load();
     // This slightly weird comparison is to avoid integer overflow
     if ((start > mapping->size) ||
         (mapping->size - start < len))
@@ -390,7 +389,7 @@ template<typename T>
 auto ShmBacking::lock_range(size_t start, size_t len)
     -> std::unique_ptr<mir::shm::Mapping<T>>
 {
-    auto mapping = *current_mapping.lock();
+    auto mapping = current_mapping.load();
 
     auto start_addr = static_cast<char*>(mapping->mapped_address) + start;
     return
@@ -403,10 +402,10 @@ auto ShmBacking::lock_range(size_t start, size_t len)
 
 auto ShmBacking::resize(size_t new_size) -> std::expected<void, mir::shm::ResizeError>
 {
-    auto mapping = current_mapping.lock();
+    auto mapping = current_mapping.load();
 
     // Backing store can only increase in size.
-    if (*mapping && new_size < (*mapping)->size)
+    if (mapping && new_size < mapping->size)
     {
         return std::unexpected{mir::shm::ResizeError::invalid_size};
     }
@@ -420,10 +419,10 @@ auto ShmBacking::resize(size_t new_size) -> std::expected<void, mir::shm::Resize
             "Failed to map client-provided SHM pool"}));
     }
 
-    *mapping = std::make_shared<CurrentMapping>(
+    current_mapping.store(std::make_shared<CurrentMapping>(
         mapped_address,
         new_size,
-        backing_size_is_guaranteed_at_least(this->backing_store, new_size));
+        backing_size_is_guaranteed_at_least(this->backing_store, new_size)));
     return {};
 }
 
