@@ -97,6 +97,11 @@ if(HAS_W_MISMATCHED_TAGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
 endif()
 
+check_cxx_compiler_flag(-Werror=braced-scalar-init HAS_W_BRACED_SCALAR_INIT)
+if(HAS_W_BRACED_SCALAR_INIT)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=braced-scalar-init>)
+endif()
+
 # GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
 # (among others) generating this warning.
 #
