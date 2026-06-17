@@ -96,10 +96,6 @@ impl ServerExtension for WaylandExtensions {
     }
 
     fn apply(self: Box<Self>, runner: Pin<&mut mir_sys::ffi::MiralRunner>) {
-        mir_sys::ffi::miral_runner_add_wayland_extensions(
-            runner,
-            &self.enabled,
-            &self.disabled,
-        );
+        mir_sys::ffi::miral_runner_add_wayland_extensions(runner, &self.enabled, &self.disabled);
     }
 }
