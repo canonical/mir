@@ -67,6 +67,7 @@ namespace mir_sys
 namespace
 {
     std::atomic<miral::ExternalClientLauncher*> g_active_launcher{nullptr};
+    std::atomic<miral::Magnifier*> g_active_magnifier{nullptr};
 }
 
 // --- Helper conversions ---
@@ -879,6 +880,18 @@ int32_t miral_runner_run_with_config(
         });
     }
 
+    if (runner.has_magnifier)
+    {
+        runner.inner->add_start_callback([&runner]()
+        {
+            g_active_magnifier.store(&runner.magnifier);
+        });
+        runner.inner->add_stop_callback([]()
+        {
+            g_active_magnifier.store(nullptr);
+        });
+    }
+
     // Convert vector to a single functor and run
     auto combined = [options = std::move(runner.options)](mir::Server& server)
     {
@@ -967,11 +980,11 @@ void miral_runner_add_magnifier(
     int32_t height,
     bool enabled)
 {
-    miral::Magnifier magnifier;
-    magnifier.enable(enabled)
+    runner.magnifier.enable(enabled)
         .magnification(magnification)
         .capture_size(mir::geometry::Size{width, height});
-    runner.options.push_back(magnifier);
+    runner.has_magnifier = true;
+    runner.options.push_back(runner.magnifier);
 }
 
 void miral_runner_add_bounce_keys(MiralRunner& runner, bool enabled)
@@ -1047,6 +1060,30 @@ int32_t miral_launcher_launch(rust::Str command)
         return -1;
     return static_cast<int32_t>(
         launcher->launch(std::string(command.data(), command.size())));
+}
+
+void miral_magnifier_set_enabled(bool enabled)
+{
+    auto* magnifier = g_active_magnifier.load();
+    if (!magnifier)
+        return;
+    magnifier->enable(enabled);
+}
+
+void miral_magnifier_set_magnification(float magnification)
+{
+    auto* magnifier = g_active_magnifier.load();
+    if (!magnifier)
+        return;
+    magnifier->magnification(magnification);
+}
+
+void miral_magnifier_set_capture_size(int32_t width, int32_t height)
+{
+    auto* magnifier = g_active_magnifier.load();
+    if (!magnifier)
+        return;
+    magnifier->capture_size(mir::geometry::Size{width, height});
 }
 
 void miral_runner_register_start_callback(MiralRunner& runner)

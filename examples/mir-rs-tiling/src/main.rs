@@ -28,6 +28,57 @@
 use mir::prelude::*;
 use std::collections::HashMap;
 
+const XKB_KEY_RETURN: u32 = 0xff0d;
+const XKB_KEY_Q: u32 = 0x71;
+const XKB_KEY_M: u32 = 0x6d;
+const XKB_KEY_EQUAL: u32 = 0x3d;
+const XKB_KEY_MINUS: u32 = 0x2d;
+
+/// Runtime magnifier controller similar to Miriway's helper class.
+#[derive(Debug, Clone, Copy)]
+struct TilingMagnifier {
+    magnifier: Magnifier,
+    enabled: bool,
+    magnification: f32,
+    capture_size: Size,
+}
+
+impl TilingMagnifier {
+    fn new(magnifier: Magnifier, enabled: bool, magnification: f32, capture_size: Size) -> Self {
+        Self {
+            magnifier,
+            enabled,
+            magnification,
+            capture_size,
+        }
+    }
+
+    fn toggle(&mut self) {
+        self.enabled = !self.enabled;
+        self.magnifier.set_enabled(self.enabled);
+    }
+
+    fn set_magnification(&mut self, value: f32) {
+        self.magnification = value.clamp(1.0, 8.0);
+        self.magnifier.set_magnification(self.magnification);
+    }
+
+    fn change_magnification(&mut self, delta: f32) {
+        self.set_magnification(self.magnification + delta);
+    }
+
+    fn set_capture_size(&mut self, size: Size) {
+        self.capture_size = Size::new(size.width.max(64), size.height.max(64));
+        self.magnifier.set_capture_size(self.capture_size);
+    }
+
+    fn scale_capture_size(&mut self, factor: f32) {
+        let width = (self.capture_size.width as f32 * factor) as i32;
+        let height = (self.capture_size.height as f32 * factor) as i32;
+        self.set_capture_size(Size::new(width, height));
+    }
+}
+
 /// Per-application tile data stored externally in the policy struct.
 #[derive(Debug, Clone)]
 struct TileInfo {
@@ -49,6 +100,8 @@ struct TilingPolicy {
     app_order: Vec<u64>,
     /// Launcher for spawning external client applications.
     launcher: ExternalClientLauncher,
+    /// Runtime controls for the screen magnifier.
+    magnifier: TilingMagnifier,
 }
 
 impl TilingPolicy {
@@ -83,6 +136,7 @@ impl Default for TilingPolicy {
             tiles: HashMap::new(),
             app_order: Vec::new(),
             launcher: ExternalClientLauncher::default(),
+            magnifier: TilingMagnifier::new(Magnifier::default(), true, 2.0, Size::new(400, 300)),
         }
     }
 }
@@ -137,21 +191,51 @@ impl WindowManagementPolicy for TilingPolicy {
     }
 
     fn handle_keyboard_event(&mut self, event: &KeyboardEvent) -> bool {
-        // Super+Enter: launch miral-terminal
-        if event.action == KeyAction::Down && event.modifiers.alt() && event.keysym == 0xff0d
-        // XKB_KEY_Return
+        if event.action != KeyAction::Down || !event.modifiers.alt() {
+            return false;
+        }
+
+        // Alt+Enter: launch terminal
+        if event.keysym == XKB_KEY_RETURN
         {
             let _ = self.launcher.launch("konsole");
             return true;
         }
 
-        // Super+Q: close focused window
-        if event.action == KeyAction::Down && event.modifiers.alt() && event.keysym == 0x71
-        // XKB_KEY_q
+        // Alt+Q: close focused window
+        if event.keysym == XKB_KEY_Q
         {
             if let Some(window) = self.tools().active_window() {
                 self.tools().ask_client_to_close(&window);
             }
+            return true;
+        }
+
+        // Alt+M: toggle magnifier
+        if event.keysym == XKB_KEY_M {
+            self.magnifier.toggle();
+            return true;
+        }
+
+        // Alt+Shift+= / Alt+Shift+-: resize capture area
+        if event.modifiers.shift() && event.keysym == XKB_KEY_EQUAL {
+            self.magnifier.scale_capture_size(1.1);
+            return true;
+        }
+
+        if event.modifiers.shift() && event.keysym == XKB_KEY_MINUS {
+            self.magnifier.scale_capture_size(0.9);
+            return true;
+        }
+
+        // Alt+= / Alt+-: zoom magnifier in/out
+        if event.keysym == XKB_KEY_EQUAL {
+            self.magnifier.change_magnification(0.2);
+            return true;
+        }
+
+        if event.keysym == XKB_KEY_MINUS {
+            self.magnifier.change_magnification(-0.2);
             return true;
         }
 
@@ -197,14 +281,20 @@ impl WindowManagementPolicy for TilingPolicy {
 fn main() {
     let launcher = ExternalClientLauncher::new();
     let launcher_for_policy = launcher.clone();
+    let magnifier = Magnifier::default()
+        .enabled(false)
+        .magnification(1.5)
+        .capture_size(Size::new(150, 150));
+    let magnifier_for_policy = magnifier;
 
     let result = MirRunner::new(std::env::args())
         .add(Decorations::prefer_csd())
-        .add(WaylandExtensions::default())
+        .add(WaylandExtensions::default().enable(WaylandExtensions::LAYER_SHELL))
         .add(launcher)
-        .add(Magnifier::default())
+        .add(magnifier)
         .add_window_management_policy_with(move || TilingPolicy {
             launcher: launcher_for_policy,
+            magnifier: TilingMagnifier::new(magnifier_for_policy, false, 1.5, Size::new(150, 150)),
             ..Default::default()
         })
         .on_start(|| println!("Tiling WM started"))

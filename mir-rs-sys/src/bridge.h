@@ -26,6 +26,7 @@
 #include <miral/application_info.h>
 #include <miral/window_manager_tools.h>
 #include <miral/external_client.h>
+#include <miral/magnifier.h>
 
 namespace mir_sys
 {
@@ -95,6 +96,8 @@ public:
     std::unique_ptr<miral::MirRunner> inner;
     miral::ExternalClientLauncher external_launcher;
     bool has_external_launcher = false;
+    miral::Magnifier magnifier;
+    bool has_magnifier = false;
 
     // Accumulated server options — each extension pushes its functor here
     std::vector<std::function<void(mir::Server&)>> options;
@@ -154,6 +157,9 @@ void miral_runner_add_output_filter(MiralRunner& runner);
 void miral_runner_add_init_callback(MiralRunner& runner);
 void miral_runner_add_terminator(MiralRunner& runner);
 int32_t miral_launcher_launch(rust::Str command);
+void miral_magnifier_set_enabled(bool enabled);
+void miral_magnifier_set_magnification(float magnification);
+void miral_magnifier_set_capture_size(int32_t width, int32_t height);
 
 // Window info queries
 WindowInfoSnapshot miral_window_info_snapshot(MiralWindowInfo const& info);

@@ -374,6 +374,13 @@ pub mod ffi {
         /// Only valid after the server has started with the launcher enabled.
         fn miral_launcher_launch(command: &str) -> i32;
 
+        /// Update the active magnifier enabled state.
+        fn miral_magnifier_set_enabled(enabled: bool);
+        /// Update the active magnifier zoom factor.
+        fn miral_magnifier_set_magnification(magnification: f32);
+        /// Update the active magnifier capture size.
+        fn miral_magnifier_set_capture_size(width: i32, height: i32);
+
         // --- Window info queries ---
 
         /// Get a snapshot of window information.

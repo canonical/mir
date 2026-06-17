@@ -40,6 +40,33 @@ impl Magnifier {
         self.capture_size = size;
         self
     }
+
+    /// Update whether the magnifier is enabled at runtime.
+    ///
+    /// # Precondition
+    ///
+    /// The server must have started with this extension registered via `.add()`.
+    pub fn set_enabled(&self, enabled: bool) {
+        mir_sys::ffi::miral_magnifier_set_enabled(enabled);
+    }
+
+    /// Update the magnification level at runtime.
+    ///
+    /// # Precondition
+    ///
+    /// The server must have started with this extension registered via `.add()`.
+    pub fn set_magnification(&self, magnification: f32) {
+        mir_sys::ffi::miral_magnifier_set_magnification(magnification);
+    }
+
+    /// Update the capture size at runtime.
+    ///
+    /// # Precondition
+    ///
+    /// The server must have started with this extension registered via `.add()`.
+    pub fn set_capture_size(&self, size: Size) {
+        mir_sys::ffi::miral_magnifier_set_capture_size(size.width, size.height);
+    }
 }
 
 impl Default for Magnifier {
