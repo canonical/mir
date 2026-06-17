@@ -151,14 +151,6 @@ void miral::SystemCompositorWindowManager::remove_surface(
     output_map.erase(surface);
 }
 
-void miral::SystemCompositorWindowManager::add_display(mir::geometry::Rectangle const& /*area*/)
-{
-}
-
-void miral::SystemCompositorWindowManager::remove_display(mir::geometry::Rectangle const& /*area*/)
-{
-}
-
 bool miral::SystemCompositorWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     static unsigned int const shift_states =

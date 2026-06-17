@@ -95,20 +95,17 @@ jobs:
         # and evicting those we care for - from `main`
         echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
 
-    - name: CCache
-      if: ${{ github.event_name == 'push' }}
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+    # CCache is only _saved_ on push/workflow_dispatch, to run a complete build for TiCS analysis (QServer runs)
+    # For PRs and merge groups, on the other hand, we want quicker runs that won't affect cache (QClient runs)
+    - name: Restore CCache
+      if: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: &ccache_with
         key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
         restore-keys: |
           ccache-coverage-
         path: ${{ env.CCACHE_DIR }}
-
-    - name: Restore CCache
-      if: ${{ github.event_name != 'push' }}
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-      with: *ccache_with
 
     - name: Ensure ccache size
       run: |
@@ -128,6 +125,7 @@ jobs:
           glmark2-es2 \
           glmark2-es2-wayland \
           lcov \
+          llvm \
           libclang-rt-dev \
           mesa-utils \
           ninja-build \
@@ -139,12 +137,21 @@ jobs:
 
         echo "PATH=/usr/lib/rust-1.82/bin:${PATH}" >> "$GITHUB_ENV"
 
+        mkdir --parents ~/.local/bin
+        cat <<'EOF' > ~/.local/bin/gcov
+        #!/bin/sh
+        exec llvm-cov gcov "$@"
+        EOF
+        chmod +x ~/.local/bin/gcov
+
     - name: Configure
       run: >
         cmake
         -DCMAKE_BUILD_TYPE=Debug
         -DMIR_ENABLE_COVERAGE=ON
         -DMIR_RUN_PERFORMANCE_TESTS=OFF
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         -GNinja
@@ -156,6 +163,11 @@ jobs:
 
     - name: Clear CCache stats
       run: ccache --show-stats --zero-stats
+
+    - name: Store CCache
+      if: ${{ !contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      with: *ccache_with
 
     - name: Measure coverage
       timeout-minutes: 45
