@@ -36,7 +36,7 @@ struct WaylandServer;
 /// Because C++ functions cannot be ferried across the C++/Rust boundary, work
 /// is held in a queue on the C++ side. `spawn` appends work and, when no signal
 /// is already outstanding, asks the running event loop to drain it via
-/// `WaylandServer::schedule_work`. Rust later calls back into `execute` on the
+/// `WaylandServer::drain_queue`. Rust later calls back into `execute` on the
 /// event-loop thread, which drains and runs all pending work.
 ///
 /// `spawn` may be called from any thread. Queued work is run in the order it

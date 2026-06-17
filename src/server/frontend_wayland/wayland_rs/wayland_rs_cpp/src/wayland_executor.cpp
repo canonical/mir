@@ -43,7 +43,7 @@ void mrs::WaylandExecutor::spawn(std::function<void()>&& work)
     // If the signal was dropped because the server is not yet running, clear
     // the flag so that the next spawn re-signals rather than stranding the
     // queue.
-    if (need_signal && !server.schedule_work())
+    if (need_signal && !server.drain_queue())
     {
         std::lock_guard<std::mutex> lock{mutex};
         signal_pending = false;

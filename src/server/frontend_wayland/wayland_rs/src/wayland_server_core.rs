@@ -219,7 +219,7 @@ impl WaylandServer {
     /// not currently running (i.e. `run` has not been called yet) and the
     /// signal was dropped. The caller is responsible for re-signalling later in
     /// the latter case.
-    pub fn schedule_work(&self) -> bool {
+    pub fn drain_queue(&self) -> bool {
         match self
             .work_signal
             .lock()
@@ -230,10 +230,7 @@ impl WaylandServer {
                 pinger.ping();
                 true
             }
-            None => {
-                log::warn!("Dropped scheduled work because the Wayland server is not running");
-                false
-            }
+            None => false,
         }
     }
 }
