@@ -208,6 +208,7 @@ target_link_libraries(miral-external
         mircore
         PkgConfig::XKBCOMMON
     PRIVATE
+        miral-internal
         mirserver
         protocols
         PkgConfig::FREETYPE
@@ -217,8 +218,6 @@ target_link_libraries(miral
     PUBLIC
         miral-external
         PkgConfig::XKBCOMMON
-    PRIVATE
-        miral-internal
 )
 
 set_target_properties(miral
