@@ -7,13 +7,12 @@ version: 2
 
 # Set the version of Python and other tools you might need
 build:
-  os: ubuntu-24.04
+  os: ubuntu-26.04
   tools:
-    python: "3.11"
+    python: "latest"
   # https://github.com/readthedocs/readthedocs.org/issues/9599
   apt_packages:
   - cargo
-  - clang-20
   - cmake
   - doxygen
   - graphviz
@@ -52,7 +51,7 @@ build:
         exit 183;
       fi
     post_install:
-    - cmake -DBUILD_DOXYGEN=YES -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 -DCMAKE_C_COMPILER=clang-20 -DCMAKE_CXX_COMPILER=clang++-20 .
+    - cmake -DBUILD_DOXYGEN=YES -DMIR_ENABLE_TESTS=NO -DMIR_PLATFORM=x11 .
     - cmake --build . --target doxygen
 
 # Build documentation in the docs/ directory with Sphinx

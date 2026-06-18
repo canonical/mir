@@ -113,14 +113,6 @@ execute: |
 
     # Build the schroot, if it doesn't already exist
     [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ] || sg sbuild -c "${MKSBUILD_OPTS[*]}"
-
-    # TODO: drop once we move from 24.04 on the host
-    # Newer guest releases may register a different qemu-binfmt interpreter path than older hosts.
-    mkdir --parents /var/lib/schroot/chroots/${SCHROOT_NAME}/usr/libexec/qemu-binfmt
-    for q in /var/lib/schroot/chroots/${SCHROOT_NAME}/usr/bin/qemu-*; do
-      ln --verbose --symbolic --force "../../bin/qemu-${q##*-}" "/var/lib/schroot/chroots/${SCHROOT_NAME}/usr/libexec/qemu-binfmt/${q##*-}-binfmt-P"
-    done
-
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
     # use ccache
