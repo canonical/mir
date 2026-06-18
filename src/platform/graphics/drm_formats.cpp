@@ -24,7 +24,7 @@
 #include <stdexcept>
 #include <memory>
 #include <array>
-#include <flat_set>
+#include <unordered_set>
 #include <boost/throw_exception.hpp>
 
 #include <mir/log.h>
@@ -528,7 +528,8 @@ auto mg::DRMFormat::info() const -> std::optional<Info const>
         return Info(info);
     }
 
-    static Synchronised<std::flat_set<decltype(fourcc)>> unknown_formats_guard;
+    // Actually, we probably want `std::flat_set`, but no libstdc++ support yet.
+    static Synchronised<std::unordered_set<decltype(fourcc)>> unknown_formats_guard;
     auto unknown_formats = unknown_formats_guard.lock();
     if (!unknown_formats->contains(fourcc))
     {
