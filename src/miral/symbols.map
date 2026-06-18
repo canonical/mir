@@ -11,7 +11,7 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
-    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    "miral::InputConfiguration::InputConfiguration()";
     "miral::Keymap::Keymap()";
     "miral::Keymap::Keymap(miral::Keymap const&)";
     "miral::Keymap::Keymap(miral::live_config::Store&)";
