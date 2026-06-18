@@ -36,8 +36,7 @@ void mrs::WaylandExecutor::spawn(std::function<void()>&& work)
         // appended while a signal is pending (or a drain is in progress) is
         // picked up by that drain, so one signal per batch suffices.
         need_signal = !signal_pending;
-        if (need_signal)
-            signal_pending = true;
+        signal_pending = true;
     }
 
     // If the signal was dropped because the server is not yet running, clear
@@ -62,7 +61,6 @@ auto mrs::WaylandExecutor::execute() -> void
     // Run the work outside the lock so that it may itself schedule more work.
     for (auto& task : work)
     {
-        if (task)
-            task();
+        task();
     }
 }

@@ -18,6 +18,7 @@
 #include "wayland_executor.h"
 
 #include <mir/executor.h>
+#include <mir_test_framework/temporary_environment_value.h>
 
 #include <gtest/gtest.h>
 
@@ -36,6 +37,7 @@
 #include <vector>
 
 namespace mrs = mir::wayland_rs;
+namespace mtf = mir_test_framework;
 
 using namespace std::chrono_literals;
 
@@ -72,9 +74,7 @@ public:
         // never pollutes (or collides with) a real runtime directory. It is
         // removed again in TearDown.
         runtime_dir = make_temp_runtime_dir();
-        if (auto const existing = ::getenv("XDG_RUNTIME_DIR"))
-            previous_xdg_runtime_dir = existing;
-        ::setenv("XDG_RUNTIME_DIR", runtime_dir.c_str(), 1);
+        xdg_runtime_dir.emplace("XDG_RUNTIME_DIR", runtime_dir.c_str());
 
         server.emplace(mrs::create_wayland_server());
         auto executor_owned = std::make_unique<mrs::WaylandExecutor>(**server);
@@ -103,10 +103,7 @@ public:
 
         // Restore the previous environment and remove the temporary directory
         // (along with the socket the server bound inside it).
-        if (previous_xdg_runtime_dir)
-            ::setenv("XDG_RUNTIME_DIR", previous_xdg_runtime_dir->c_str(), 1);
-        else
-            ::unsetenv("XDG_RUNTIME_DIR");
+        xdg_runtime_dir.reset();
 
         if (!runtime_dir.empty())
         {
@@ -116,7 +113,7 @@ public:
     }
 
     std::string runtime_dir;
-    std::optional<std::string> previous_xdg_runtime_dir;
+    std::optional<mtf::TemporaryEnvironmentValue> xdg_runtime_dir;
     std::optional<rust::Box<mrs::WaylandServer>> server;
     mir::Executor* executor{nullptr};
     std::thread server_thread;

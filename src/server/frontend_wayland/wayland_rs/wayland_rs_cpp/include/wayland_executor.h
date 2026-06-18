@@ -53,7 +53,7 @@ public:
 
     /// Run all currently queued work. Called from Rust on the event-loop
     /// thread.
-    auto execute() -> void override;
+    void execute() override;
 
 private:
     WaylandServer& server;

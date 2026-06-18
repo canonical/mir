@@ -130,15 +130,15 @@ impl WaylandServer {
         )?;
 
         // Add stop_signal to wake and terminate the loop.
-        let (pinger, ping_source) = calloop::ping::make_ping()?;
+        let (stop_pinger, stop_ping_source) = calloop::ping::make_ping()?;
 
         *self
             .stop_signal
             .lock()
-            .expect("No recovery from lock poisoning") = Some(pinger);
+            .expect("No recovery from lock poisoning") = Some(stop_pinger);
 
         loop_handle
-            .insert_source(ping_source, |_, _, server: &mut ServerState| {
+            .insert_source(stop_ping_source, |_, _, server: &mut ServerState| {
                 server.stop_requested = true;
             })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
