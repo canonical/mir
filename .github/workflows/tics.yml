@@ -151,6 +151,7 @@ jobs:
         cmake
         -DCMAKE_BUILD_TYPE=Debug
         -DMIR_ENABLE_COVERAGE=ON
+        -DMIR_USE_PRECOMPILED_HEADERS=OFF
         -DMIR_RUN_PERFORMANCE_TESTS=OFF
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_CXX_COMPILER=clang++
