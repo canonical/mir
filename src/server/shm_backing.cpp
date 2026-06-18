@@ -25,6 +25,7 @@
 #include <system_error>
 #include <memory>
 #include <atomic>
+#include <format>
 #include <boost/throw_exception.hpp>
 
 namespace
@@ -366,7 +367,21 @@ ShmBacking::ShmBacking(mir::Fd backing_store, size_t claimed_size, int prot)
       backing_store{std::move(backing_store)},
       prot{prot}
 {
-    resize(claimed_size);
+    if (auto result = resize(claimed_size); !result)
+    {
+        switch (result.error())
+        {
+        // This *should* be impossible — `invalid_size` is only returned if the resize would
+        // shrink the current mapping, and we don't *have* a current mapping — but throw
+        // here anyway, just in case we expand what `invalid_size` means (for example, to make
+        // 0 an invalid size).
+        case mir::shm::ResizeError::invalid_size:
+            BOOST_THROW_EXCEPTION((
+                std::runtime_error{
+                    std::format("Invalid size {} for ShmBacking", claimed_size)}
+            ));
+        }
+    }
 }
 
 template<typename Range, typename Parent>

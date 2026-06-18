@@ -149,16 +149,6 @@ void MirTouchpadConfig::disable_with_external_mouse(bool enabled)
     impl->disable_with_external_mouse = enabled;
 }
 
-bool MirTouchpadConfig::disable_with_mouse() const
-{
-    return impl->disable_with_external_mouse;
-}
-
-void MirTouchpadConfig::disable_with_mouse(bool enabled)
-{
-    impl->disable_with_external_mouse = enabled;
-}
-
 bool MirTouchpadConfig::disable_while_typing() const
 {
     return impl->disable_while_typing;
