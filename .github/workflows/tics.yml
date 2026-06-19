@@ -116,7 +116,7 @@ jobs:
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
         sudo --preserve-env apt-get install --yes --no-install-recommends \
-          cargo-1.82 \
+          cargo-1.91 \
           clang \
           clang-tools \
           dmz-cursor-theme \
@@ -130,12 +130,14 @@ jobs:
           mesa-utils \
           ninja-build \
           pylint \
-          rustc-1.82 \
+          rust-1.91-clippy \
           xwayland
 
         sudo --preserve-env apt-get build-dep --yes ./
 
-        echo "PATH=/usr/lib/rust-1.82/bin:${PATH}" >> "$GITHUB_ENV"
+        echo "PATH=/usr/lib/rust-1.91/bin:${PATH}" >> "$GITHUB_ENV"
+
+        cargo-1.91 install cargo-files
 
         mkdir --parents ~/.local/bin
         cat <<'EOF' > ~/.local/bin/gcov
@@ -149,6 +151,7 @@ jobs:
         cmake
         -DCMAKE_BUILD_TYPE=Debug
         -DMIR_ENABLE_COVERAGE=ON
+        -DMIR_USE_PRECOMPILED_HEADERS=OFF
         -DMIR_RUN_PERFORMANCE_TESTS=OFF
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_CXX_COMPILER=clang++
