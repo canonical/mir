@@ -60,7 +60,7 @@ from `cmake/MirCommon.cmake` to register tests — not raw `add_test()`.
 
 ## Flaky test guidelines
 
-Intermittent test failures are tracked in [issue #4507](https://github.com/canonical/mir/issues/4507).
+Intermittent test failures are tracked in GitHub issues (search for "flaky" in open issues).
 When writing or fixing tests:
 
 - Use `ASSERT_*` only for preconditions and assumptions — if the assertion fails, the rest of the test is meaningless (e.g., a wait that must succeed before subsequent checks). Use `EXPECT_*` for everything else.

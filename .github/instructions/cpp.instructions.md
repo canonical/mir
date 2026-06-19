@@ -90,8 +90,8 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Auto keyword**: Use `auto` for complex types and iterators when it improves readability, as well as new-style function declarations with `auto`
 - **Optional values**: Use `std::optional<T>` for values that may or may not be present; use `std::nullopt` to represent absence
 - **Enum classes**: Prefer `enum class` over plain `enum` for type safety
-- **Time types**: Use `std::chrono::nanoseconds` for timestamps and `std::chrono::milliseconds` for durations
-- **Noexcept**: Mark destructors and move operations as `noexcept` where appropriate
+- **Time types**: Use `mir::time::Timestamp` for timestamps and `mir::time::Duration` for durations (from `mir/time/types.h`)
+- **Noexcept**: Mark move operations as `noexcept`. Avoid on destructors — they are usually implicitly `noexcept`, and explicitly marking one `noexcept` when it is not will cause `std::terminate()`
 
 ## Classes
 
@@ -124,6 +124,7 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Keep functions small**: Prefer functions under 40 lines
 - **Avoid global state**: Minimize use of global variables
 - **Forward declarations**: Prefer forward declarations over `#include` in headers whenever a type is only used by pointer or reference; only include the full definition in the `.cpp`. For stream types, prefer `<iosfwd>` over `<ostream>` or `<iostream>` in headers.
+- **Public API changes**: When adding, removing, or changing symbols in public headers, update the corresponding `symbols.map` and Debian symbols file — see the ABI & symbols instructions for the procedure.
 - **Inline functions**: Only for small functions (≤10 lines)
 - **Preprocessor macros**: Avoid when possible; prefer inline functions, enums, and const variables
 - **Streams**: Use only for logging, prefer `printf`-style for other I/O
