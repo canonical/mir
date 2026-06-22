@@ -51,9 +51,9 @@ public:
     }
 };
 
-/// Prints when the descriptor it watches becomes readable. The event loop uses
-/// level-triggered notifications, so `ready()` drains the pending byte to avoid
-/// being woken continuously.
+/// Prints when the descriptor it watches becomes readable. The registration is
+/// one-shot, so this fires at most once; it reads the pending byte purely to
+/// consume it.
 class FdReadyCallback : public mir::wayland_rs::FdReadyCallback
 {
 public:

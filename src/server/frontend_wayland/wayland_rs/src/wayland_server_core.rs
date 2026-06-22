@@ -187,7 +187,7 @@ impl WaylandServer {
         let fd_listener_queue = self.pending_fd_listeners.clone();
         loop_handle
             .insert_source(fd_listener_ping_source, move |_, _, _: &mut ServerState| {
-                drain_pending_fd_listeners(&fd_listener_loop_handle, &fd_listener_queue);
+                WaylandServer::drain_pending_fd_listeners(&fd_listener_loop_handle, &fd_listener_queue);
             })
             .map_err(|_| "Failed to insert fd listener signal into event loop")?;
 
@@ -202,7 +202,7 @@ impl WaylandServer {
         // Likewise, register any fd listeners queued before the fd-listener
         // signal was ready; their signal would have been dropped. Registrations
         // queued from here on raise their own signal and are handled by the loop.
-        drain_pending_fd_listeners(&loop_handle, &self.pending_fd_listeners);
+        Self::drain_pending_fd_listeners(&loop_handle, &self.pending_fd_listeners);
 
         while !state.stop_requested {
             // 1. Dispatch events
@@ -272,11 +272,15 @@ impl WaylandServer {
 
     /// Register interest in a file descriptor becoming ready for reading.
     ///
-    /// When `fd` becomes readable the event loop calls back into C++ via
-    /// `FdReadyCallback::ready()`, on the event-loop thread. The descriptor is
-    /// only borrowed; ownership (and closing) remains the responsibility of the
-    /// C++ caller, which must keep it valid for as long as the listener is
-    /// registered.
+    /// This is a **one-shot** registration: when `fd` first becomes readable the
+    /// event loop calls back into C++ via `FdReadyCallback::ready()`, on the
+    /// event-loop thread, and then stops watching the descriptor (the listener
+    /// is dropped). To be notified again, register the descriptor afresh from
+    /// within (or after) `ready()`.
+    ///
+    /// The descriptor is only borrowed; ownership (and closing) remains the
+    /// responsibility of the C++ caller, which must keep it valid until the
+    /// notification fires (or the registration is otherwise dropped).
     ///
     /// This may be called from any thread, and either before or while the
     /// server is running. Registrations queued before the server starts are
@@ -304,11 +308,54 @@ impl WaylandServer {
             signal.ping();
         }
     }
+
+    /// Insert a one-shot source into `handle` that invokes `listener` the first
+    /// time `fd` becomes readable, then removes itself from the loop.
+    ///
+    /// The descriptor is borrowed for the lifetime of the registration; calloop
+    /// never closes it.
+    fn register_fd_ready_source<'l, S>(
+        handle: &LoopHandle<'l, S>,
+        fd: RawFd,
+        mut listener: Box<dyn FdReadyListener>,
+    ) -> Result<RegistrationToken, Box<dyn error::Error>> {
+        // SAFETY: The fd is owned by the C++ caller, which is responsible for
+        // keeping it valid until the notification fires. `FdWrapper` only
+        // borrows the descriptor.
+        let source = Generic::new(unsafe { FdWrapper::new(fd) }, Interest::READ, Mode::Level);
+        handle
+            .insert_source(source, move |_, _, _: &mut S| {
+                listener.ready();
+                // One-shot: stop watching the descriptor after the first
+                // notification. This drops the source (and the listener).
+                Ok(PostAction::Remove)
+            })
+            .map_err(|_| "Failed to insert fd ready source into event loop".into())
+    }
+
+    /// Drain `queue` of pending fd registrations, inserting a source for each
+    /// into `handle`. Runs on the event-loop thread.
+    fn drain_pending_fd_listeners<'l, S>(
+        handle: &LoopHandle<'l, S>,
+        queue: &Arc<Mutex<Vec<PendingFdListener>>>,
+    ) {
+        let pending: Vec<PendingFdListener> = {
+            let mut queue = queue.lock().expect("No recovery from lock poisoning");
+            std::mem::take(&mut *queue)
+        };
+
+        for (fd, listener) in pending {
+            if let Err(e) = Self::register_fd_ready_source(handle, fd, listener) {
+                log::error!("Failed to register fd ready listener: {}", e);
+            }
+        }
+    }
 }
 
 /// Notified when a registered file descriptor becomes ready for reading.
 pub trait FdReadyListener: Send {
-    /// Called on the event-loop thread when the descriptor is readable.
+    /// Called on the event-loop thread the first time the descriptor is
+    /// readable. The registration is one-shot, so this fires at most once.
     fn ready(&mut self);
 }
 
@@ -326,46 +373,6 @@ impl FdReadyListener for CxxFdReadyListener {
     fn ready(&mut self) {
         if let Some(callback) = self.0.as_mut() {
             callback.ready();
-        }
-    }
-}
-
-/// Insert a source into `handle` that invokes `listener` whenever `fd` is
-/// readable.
-///
-/// The descriptor is borrowed for the lifetime of the registration; calloop
-/// never closes it.
-fn register_fd_ready_source<'l, S>(
-    handle: &LoopHandle<'l, S>,
-    fd: RawFd,
-    mut listener: Box<dyn FdReadyListener>,
-) -> Result<RegistrationToken, Box<dyn error::Error>> {
-    // SAFETY: The fd is owned by the C++ caller, which is responsible for
-    // keeping it valid for as long as the listener is registered. `FdWrapper`
-    // only borrows the descriptor.
-    let source = Generic::new(unsafe { FdWrapper::new(fd) }, Interest::READ, Mode::Level);
-    handle
-        .insert_source(source, move |_, _, _: &mut S| {
-            listener.ready();
-            Ok(PostAction::Continue)
-        })
-        .map_err(|_| "Failed to insert fd ready source into event loop".into())
-}
-
-/// Drain `queue` of pending fd registrations, inserting a source for each into
-/// `handle`. Runs on the event-loop thread.
-fn drain_pending_fd_listeners<'l, S>(
-    handle: &LoopHandle<'l, S>,
-    queue: &Arc<Mutex<Vec<PendingFdListener>>>,
-) {
-    let pending: Vec<PendingFdListener> = {
-        let mut queue = queue.lock().expect("No recovery from lock poisoning");
-        std::mem::take(&mut *queue)
-    };
-
-    for (fd, listener) in pending {
-        if let Err(e) = register_fd_ready_source(handle, fd, listener) {
-            log::error!("Failed to register fd ready listener: {}", e);
         }
     }
 }

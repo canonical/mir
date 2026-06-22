@@ -53,10 +53,9 @@ public:
 };
 
 /// An `FdReadyCallback` that counts how often it is notified and signals a
-/// condition variable so a test can wait for the notification. It drains the
-/// watched descriptor on each notification because the event loop is
-/// level-triggered (an undrained descriptor would be reported ready
-/// repeatedly).
+/// condition variable so a test can wait for the notification. The registration
+/// is one-shot, so it expects to be notified at most once; it drains the
+/// watched descriptor purely to consume the pending byte.
 class CountingFdReadyCallback : public mrs::FdReadyCallback
 {
 public:
@@ -201,7 +200,7 @@ TEST_F(FdReadyListenerTest, does_not_notify_when_fd_not_written)
         << "Listener was notified despite the fd never becoming readable";
 }
 
-TEST_F(FdReadyListenerTest, notifies_again_after_subsequent_write)
+TEST_F(FdReadyListenerTest, only_notifies_once_for_a_one_shot_registration)
 {
     std::mutex mutex;
     std::condition_variable cv;
@@ -218,10 +217,12 @@ TEST_F(FdReadyListenerTest, notifies_again_after_subsequent_write)
             << "Listener was not notified on the first write";
     }
 
+    // The registration is one-shot: the descriptor is no longer watched, so a
+    // second write must not produce a further notification.
     write_byte();
     {
         std::unique_lock<std::mutex> lock{mutex};
-        ASSERT_TRUE(cv.wait_for(lock, 5s, [&] { return count >= 2; }))
-            << "Listener was not notified on the second write";
+        EXPECT_FALSE(cv.wait_for(lock, 500ms, [&] { return count >= 2; }))
+            << "Listener was notified again after the one-shot registration fired";
     }
 }

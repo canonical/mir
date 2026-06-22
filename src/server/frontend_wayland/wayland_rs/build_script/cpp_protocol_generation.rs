@@ -188,8 +188,9 @@ fn create_work_callback() -> CppBuilder {
 ///
 /// This is the Rust -> C++ callback used to notify C++ that a file descriptor
 /// it registered (via `WaylandServer::register_fd_ready_listener`) has become
-/// readable. Rust calls `ready()` on the event-loop thread whenever the
-/// descriptor is ready for reading.
+/// readable. The registration is one-shot: Rust calls `ready()` on the
+/// event-loop thread the first time the descriptor is ready for reading, then
+/// stops watching it.
 fn create_fd_ready_callback() -> CppBuilder {
     let mut builder: CppBuilder =
         CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
