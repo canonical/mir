@@ -178,6 +178,59 @@ class SymbolsMapGeneratorGoldenTest(unittest.TestCase):
             },
         )
 
+    def test_access_levels(self):
+        # Private members are never emitted.  Protected members ARE emitted
+        # (they are part of the ABI), despite the "private and protected"
+        # wording of the traverse_ast comment.  This pins current behaviour so a
+        # refactor of the access check does not silently change it.
+        self.assertEqual(
+            self._symbols_for("access.h"),
+            {
+                "mir::AccessLevels::public_method*;",
+                "mir::AccessLevels::protected_method*;",
+                "typeinfo?for?mir::AccessLevels;",
+            },
+        )
+
+    def test_scopes_enums_inline_and_vars(self):
+        # Nested namespaces produce a "::"-joined prefix.  Enums (scoped or
+        # unscoped) emit no symbols.  An inline (in-header) function is skipped
+        # while a declared-only function and an extern variable are emitted.
+        self.assertEqual(
+            self._symbols_for("scopes.h"),
+            {
+                "mir::nested::declared_free_function*;",
+                "mir::nested::extern_variable*;",
+            },
+        )
+
+    def test_template_instantiation_mangling(self):
+        # Explicit instantiations carry template arguments in the symbol name.
+        # '<' and '>' are mangled to '?' and ',' to '*'.
+        self.assertEqual(
+            self._symbols_for("template_instantiation.h"),
+            {
+                "typeinfo?for?mir::Single?int?;",
+                "typeinfo?for?mir::Couple?int*char?;",
+            },
+        )
+
+    def test_hidden_symbols_are_filtered(self):
+        # Symbols present in HIDDEN_SYMBOLS are dropped from the output, while
+        # their siblings are kept.  HIDDEN_SYMBOLS is patched to a known value so
+        # the test does not depend on the (evolving) real contents of the set.
+        generator = self.generator
+        original = generator.HIDDEN_SYMBOLS
+        try:
+            generator.HIDDEN_SYMBOLS = {"mir::Plain::do_thing*;"}
+            symbols = self._symbols_for("plain.h")
+        finally:
+            generator.HIDDEN_SYMBOLS = original
+
+        self.assertNotIn("mir::Plain::do_thing*;", symbols)
+        # A sibling that is not hidden is still emitted.
+        self.assertIn("mir::Plain::value*;", symbols)
+
     def test_inheritance_symbols(self):
         # Golden set for inheritance.h reflecting the CORRECT behaviour: a class
         # that inherits a vtable from a polymorphic base must get its own
@@ -233,14 +286,15 @@ class SymbolsMapGeneratorGoldenTest(unittest.TestCase):
             )
 
     def test_process_directory_unions_all_headers(self):
-        # process_directory should return the union of every header's symbols.
-        # This exercises the public entry point (and, on branches that
+        # process_directory should return the union of every fixture header's
+        # symbols.  This exercises the public entry point (and, on branches that
         # parallelise it, the worker plumbing) and guards against regressions in
-        # how per-file results are combined.
+        # how per-file results are combined.  Expected is derived from the same
+        # per-file extraction so new fixtures are picked up automatically.
         combined = self.generator.process_directory(FIXTURES, [])
         expected = set()
-        for header in ("plain.h", "polymorphic.h", "templates.h", "inheritance.h"):
-            expected |= self._symbols_for(header)
+        for header in sorted(FIXTURES.glob("*.h")):
+            expected |= self._symbols_for(header.name)
         self.assertEqual(combined, expected)
 
 
@@ -276,6 +330,75 @@ class ReadSymbolsFromFileTest(unittest.TestCase):
         self.assertTrue(by_name["some_c_symbol;"].is_c_symbol)
         for s in symbols:
             self.assertEqual(s.version, "5.0")
+
+    def test_internal_stanza_is_classified_as_internal(self):
+        import io
+
+        content = (
+            'MIRAL_5.0 {\n'
+            'global:\n'
+            '  extern "C++" {\n'
+            '    mir::Foo::bar*;\n'
+            '  };\n'
+            '};\n'
+            'MIRAL_INTERNAL_5.0 {\n'
+            'global:\n'
+            '  extern "C++" {\n'
+            '    mir::Internal::secret*;\n'
+            '  };\n'
+            '};\n'
+        )
+        by_name = {
+            s.name: s
+            for s in self.generator.read_symbols_from_file(io.StringIO(content), "miral")
+        }
+        self.assertEqual(by_name["mir::Foo::bar*;"].version, "5.0")
+        self.assertFalse(by_name["mir::Foo::bar*;"].is_internal())
+        self.assertEqual(by_name["mir::Internal::secret*;"].version, "INTERNAL_5.0")
+        self.assertTrue(by_name["mir::Internal::secret*;"].is_internal())
+
+
+class PureHelperTest(unittest.TestCase):
+    """Tests for the version/diff helpers that need no libclang."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.generator = _load_generator()
+
+    def test_get_version_from_library_version_str(self):
+        fn = self.generator.get_version_from_library_version_str
+        self.assertEqual(fn("MIR_SERVER_INTERNAL_5.0.0"), "5.0.0")
+        self.assertEqual(fn("MIRAL_5.0"), "5.0")
+
+    def test_get_major_version_from_str(self):
+        fn = self.generator.get_major_version_from_str
+        self.assertEqual(fn("5.0.0"), 5)
+        self.assertEqual(fn("12.3"), 12)
+
+    def test_symbol_is_internal_classification(self):
+        Symbol = self.generator.Symbol
+        self.assertTrue(Symbol("x;", "INTERNAL_5.0", False).is_internal())
+        self.assertFalse(Symbol("x;", "5.0", False).is_internal())
+
+    def test_get_added_symbols_returns_only_genuinely_new_names(self):
+        # added = new symbols whose name does not already appear in the previous
+        # set, sorted.  Names already present are dropped regardless of the
+        # internal/external flag.
+        Symbol = self.generator.Symbol
+        previous = [
+            Symbol("a;", "MIRAL_5.0", False),
+            Symbol("b;", "MIRAL_5.0", False),
+        ]
+        new = {"a;", "c;", "d;"}
+        self.assertEqual(
+            self.generator.get_added_symbols(previous, new, False),
+            ["c;", "d;"],
+        )
+
+    def test_get_added_symbols_empty_when_nothing_new(self):
+        Symbol = self.generator.Symbol
+        previous = [Symbol("a;", "MIRAL_5.0", False)]
+        self.assertEqual(self.generator.get_added_symbols(previous, {"a;"}, False), [])
 
 
 if __name__ == "__main__":
