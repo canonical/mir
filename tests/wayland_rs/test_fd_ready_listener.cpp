@@ -109,8 +109,11 @@ TEST_F(FdReadyListenerTest, notifies_when_fd_becomes_readable)
     write_byte();
 
     std::unique_lock<std::mutex> lock{mutex};
-    ASSERT_TRUE(cv.wait_for(lock, 5s, [&] { return count > 0; }))
+    ASSERT_TRUE(cv.wait_for(lock, 5s, [&] { return count >= 1; }))
         << "Listener was not notified when the fd became readable";
+
+    // The registration is one-shot, so it must fire exactly once.
+    EXPECT_EQ(count, 1);
 }
 
 TEST_F(FdReadyListenerTest, does_not_notify_when_fd_not_written)
@@ -125,8 +128,9 @@ TEST_F(FdReadyListenerTest, does_not_notify_when_fd_not_written)
 
     // Never write to the pipe; the listener must not fire.
     std::unique_lock<std::mutex> lock{mutex};
-    EXPECT_FALSE(cv.wait_for(lock, 500ms, [&] { return count > 0; }))
+    EXPECT_FALSE(cv.wait_for(lock, 500ms, [&] { return count >= 1; }))
         << "Listener was notified despite the fd never becoming readable";
+    EXPECT_EQ(count, 0);
 }
 
 TEST_F(FdReadyListenerTest, only_notifies_once_for_a_one_shot_registration)
@@ -144,6 +148,7 @@ TEST_F(FdReadyListenerTest, only_notifies_once_for_a_one_shot_registration)
         std::unique_lock<std::mutex> lock{mutex};
         ASSERT_TRUE(cv.wait_for(lock, 5s, [&] { return count >= 1; }))
             << "Listener was not notified on the first write";
+        EXPECT_EQ(count, 1);
     }
 
     // The registration is one-shot: the descriptor is no longer watched, so a
@@ -153,5 +158,6 @@ TEST_F(FdReadyListenerTest, only_notifies_once_for_a_one_shot_registration)
         std::unique_lock<std::mutex> lock{mutex};
         EXPECT_FALSE(cv.wait_for(lock, 500ms, [&] { return count >= 2; }))
             << "Listener was notified again after the one-shot registration fired";
+        EXPECT_EQ(count, 1);
     }
 }
