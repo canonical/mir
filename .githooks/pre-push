@@ -68,9 +68,9 @@ else
     run_map_check() {
         local lib=$1
         echo -e "${YELLOW}Checking ${lib} symbols map...${NC}"
-        if ! cmake --build build --target "check-${lib}-symbols-map"; then
+        if ! cmake --build build --target "check-${lib}-symbols-map" -j$(nproc); then
             echo -e "${RED}✗ ${lib} symbols map out of date; regenerating...${NC}"
-            cmake --build build --target "generate-${lib}-symbols-map" || true
+            cmake --build build --target "generate-${lib}-symbols-map" -j$(nproc) || true
             RET=1
         fi
     }
@@ -84,8 +84,8 @@ else
     # symbols to debian/*.symbols. We detect that mutation below and abort.
     if [ "$dpkg_available" = true ]; then
         echo -e "${YELLOW}Checking Debian symbols...${NC}"
-        cmake --build build --target regenerate-miral-debian-symbols || RET=1
-        cmake --build build --target check-miroil-symbols || RET=1
+        cmake --build build --target regenerate-miral-debian-symbols -j$(nproc) || RET=1
+        cmake --build build --target check-miroil-symbols -j$(nproc) || RET=1
     else
         echo -e "${YELLOW}dpkg-gensymbols not found. Skipping Debian symbols checks.${NC}"
     fi
