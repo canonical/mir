@@ -28,13 +28,13 @@ git config core.hooksPath .githooks && pre-commit install --install-hooks
 - End-of-file fixers
 - Large file detection
 - Security scanning (zizmor, actionlint)
-- Markdown formatting (mdformat)
+- Markdown formatting (mdformat) and linting (pymarkdown)
+- C++ formatting (clang-format)
 - Rust formatting (cargo-fmt)
 
 **Pre-push hook** (run at `git push` time):
 
-- ABI symbol checks (verifies `check-miral-symbols-map`, etc.)
-- Optional code review (Claude Haiku 4.5)
+- ABI symbol checks, run only when public API headers under `include/` were modified
 
 ### Running Hooks Manually
 
@@ -76,36 +76,22 @@ git push --no-verify
 MIR_SKIP_SYMBOL_CHECK=true git push
 ```
 
-**Skip code review only:**
-
-```bash
-MIR_SKIP_CODE_REVIEW=true git push
-```
-
-### Code Review Setup (Optional)
-
-The pre-push hook can automatically review code using Claude Haiku 4.5. To enable it, install the GitHub Copilot CLI:
-
-```bash
-snap install copilot-cli
-copilot auth login
-```
-
-After authentication, code review will run automatically before push. To test it:
-
-```bash
-./.githooks/pre-push
-```
-
-**Disable code review:**
-
-```bash
-MIR_SKIP_CODE_REVIEW=true git push
-```
+### Troubleshooting
 
 **Build directory missing for symbol checks:**
 
 Symbol checks will automatically configure CMake if the build directory is missing.
+
+**Symbol files were updated by the hook:**
+
+When public API headers change, the hook regenerates the affected symbol maps and
+`debian/*.symbols` files to match, then rejects the push so you can review and commit
+those updates. Inspect the changes, commit them, and push again.
+
+**Debian symbols checks skipped:**
+
+The `debian/*.symbols` checks require `dpkg-gensymbols` (Debian based distros). On other
+systems they are skipped automatically; CI still runs them.
 
 **Symbol check failures:**
 

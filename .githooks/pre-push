@@ -1,11 +1,10 @@
 #!/bin/bash
 # Pre-push hook for Mir project
-# Runs symbol checks (if public API headers were modified) and optionally code review before allowing a push
+# Runs ABI symbol checks (only if public API headers were modified) before allowing a push.
 # Can be bypassed with: git push --no-verify
 #
 # Environment variables:
-#   MIR_SKIP_SYMBOL_CHECK=true         Skip symbol checks
-#   MIR_SKIP_CODE_REVIEW=true          Skip code review (default: false)
+#   MIR_SKIP_SYMBOL_CHECK=true   Skip symbol checks
 
 set -e
 
@@ -15,20 +14,33 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Check if public API headers were modified
-public_api_modified=false
+# Debian symbol checks require dpkg-gensymbols; check once, at the very top.
+if command -v dpkg-gensymbols &> /dev/null; then
+    dpkg_available=true
+else
+    dpkg_available=false
+fi
+
+# Determine the compare base (the branch's upstream tracking ref).
 REMOTE="${1:-origin}"
 BRANCH="${2:-$(git rev-parse --abbrev-ref HEAD)}"
 TRACKING_BRANCH=$(git rev-parse --abbrev-ref --symbolic-full-name @{u} 2>/dev/null || echo "$REMOTE/$BRANCH")
 
+# Check if any public API headers (include/) were modified relative to the tracking branch.
+public_api_modified=false
 if git rev-parse --verify "$TRACKING_BRANCH" &> /dev/null; then
-    # Check if any files in include/ directory (public API headers) were modified
     if git diff --name-only "$TRACKING_BRANCH"...HEAD | grep -q '^include/'; then
         public_api_modified=true
     fi
 fi
 
-# Check if symbol check is disabled
+# Paths that the symbol-check targets may regenerate. Used to detect auto-fixes.
+SYMBOL_PATHSPECS=('*symbols.map' 'debian/*.symbols')
+
+symbol_files_signature() {
+    git diff HEAD -- "${SYMBOL_PATHSPECS[@]}" | git hash-object --stdin
+}
+
 if [ "${MIR_SKIP_SYMBOL_CHECK}" = "true" ]; then
     echo -e "${YELLOW}Skipping symbol checks (MIR_SKIP_SYMBOL_CHECK=true)${NC}"
 elif [ "$public_api_modified" = false ]; then
@@ -37,7 +49,7 @@ else
     echo -e "${YELLOW}Public API headers modified. Running symbol check before push...${NC}"
     echo
 
-    # Check if build directory exists
+    # Configure CMake if no build directory exists yet.
     if [ ! -d "build" ]; then
         echo -e "${YELLOW}Build directory not found. Configuring CMake...${NC}"
         cmake -B build . || {
@@ -48,60 +60,58 @@ else
         echo
     fi
 
-    # Run symbol map checks
-    echo -e "${YELLOW}Checking symbol maps...${NC}"
     RET=0
+    signature_before=$(symbol_files_signature)
 
-    cmake --build build --target check-miral-symbols-map 2>/dev/null || {
-        RET=$?
-        echo -e "${RED}✗ miral symbols map check failed${NC}"
+    # Symbol-map checks only diff; when one fails we regenerate the map (the fix),
+    # then abort below so the updated map can be reviewed and committed.
+    run_map_check() {
+        local lib=$1
+        echo -e "${YELLOW}Checking ${lib} symbols map...${NC}"
+        if ! cmake --build build --target "check-${lib}-symbols-map"; then
+            echo -e "${RED}✗ ${lib} symbols map out of date; regenerating...${NC}"
+            cmake --build build --target "generate-${lib}-symbols-map" || true
+            RET=1
+        fi
     }
 
-    cmake --build build --target check-miroil-symbols-map 2>/dev/null || {
-        RET=$?
-        echo -e "${RED}✗ miroil symbols map check failed${NC}"
-    }
+    run_map_check miral
+    run_map_check miroil
+    run_map_check mirserver
+    run_map_check mircommon
 
-    cmake --build build --target check-mirserver-symbols-map 2>/dev/null || {
-        RET=$?
-        echo -e "${RED}✗ mirserver symbols map check failed${NC}"
-    }
-
-    cmake --build build --target check-mircommon-symbols-map 2>/dev/null || {
-        RET=$?
-        echo -e "${RED}✗ mircommon symbols map check failed${NC}"
-    }
-
-    # Run Debian symbols checks (only available when dpkg-gensymbols is present)
-    echo -e "${YELLOW}Checking Debian symbols...${NC}"
-
-    cmake --build build --target regenerate-miral-debian-symbols 2>/dev/null || {
-        RET=$?
-        echo -e "${RED}✗ miral Debian symbols check failed${NC}"
-    }
-
-    cmake --build build --target check-miroil-symbols 2>/dev/null || {
-        RET=$?
-        echo -e "${RED}✗ miroil Debian symbols check failed${NC}"
-    }
+    # Debian symbol checks self-heal: running the target appends any missing
+    # symbols to debian/*.symbols. We detect that mutation below and abort.
+    if [ "$dpkg_available" = true ]; then
+        echo -e "${YELLOW}Checking Debian symbols...${NC}"
+        cmake --build build --target regenerate-miral-debian-symbols || RET=1
+        cmake --build build --target check-miroil-symbols || RET=1
+    else
+        echo -e "${YELLOW}dpkg-gensymbols not found. Skipping Debian symbols checks.${NC}"
+    fi
 
     echo
 
-    if [ $RET -ne 0 ]; then
-        echo -e "${RED}Symbol check failed. Push rejected.${NC}"
+    signature_after=$(symbol_files_signature)
+    tree_modified=false
+    if [ "$signature_before" != "$signature_after" ]; then
+        tree_modified=true
+    fi
+
+    if [ "$RET" -ne 0 ] || [ "$tree_modified" = true ]; then
+        if [ "$tree_modified" = true ]; then
+            echo -e "${RED}Symbol files were updated to match your changes. Push rejected.${NC}"
+            echo
+            echo -e "${YELLOW}Review and commit the regenerated symbol files, then push again:${NC}"
+            git --no-pager diff --stat -- "${SYMBOL_PATHSPECS[@]}"
+        else
+            echo -e "${RED}Symbol check failed. Push rejected.${NC}"
+        fi
         echo
         echo -e "${YELLOW}Options:${NC}"
-        echo "  1. Fix the symbol issues and try again"
+        echo "  1. Review/commit the updated symbol files (or fix the issue) and push again"
         echo "  2. Bypass this check: ${YELLOW}git push --no-verify${NC}"
         echo "  3. Skip symbol check: ${YELLOW}MIR_SKIP_SYMBOL_CHECK=true git push${NC}"
-        echo
-        echo -e "${YELLOW}For detailed output, run:${NC}"
-        echo "  cmake --build build --target check-miral-symbols-map"
-        echo "  cmake --build build --target check-miroil-symbols-map"
-        echo "  cmake --build build --target check-mirserver-symbols-map"
-        echo "  cmake --build build --target check-mircommon-symbols-map"
-        echo "  cmake --build build --target regenerate-miral-debian-symbols"
-        echo "  cmake --build build --target check-miroil-symbols"
         echo
         exit 1
     fi
@@ -110,48 +120,4 @@ else
 fi
 
 echo
-
-# Run code review if enabled
-if command -v copilot &> /dev/null && [ "${MIR_SKIP_CODE_REVIEW:-false}" != "true" ]; then
-
-    # Verify the tracking branch exists
-    if git rev-parse --verify "$TRACKING_BRANCH" &> /dev/null; then
-        echo -e "${YELLOW}Running code review...${NC}"
-        echo
-
-        DIFF=$(git diff "$TRACKING_BRANCH"...HEAD)
-
-        if [ -z "$DIFF" ]; then
-            echo -e "${YELLOW}No changes to review (empty diff).${NC}"
-        else
-            FULL_PROMPT="You are an expert code reviewer for the Mir project. Review the following diff and provide:
-
-1. **Critical Issues**: Security, memory safety, ABI stability concerns, or bugs
-2. **Code Quality**: Style guide compliance (per .github/copilot-instructions.md), naming conventions, readability
-3. **Architecture**: Design patterns, component separation, interface design
-4. **Testing**: Suggestions for test coverage
-
-Be concise but thorough. Focus on actionable feedback. Reference the Mir coding standards when applicable.
-
-Format your response with clear sections and use markdown.
-
-DIFF:
-$DIFF"
-
-            if ! copilot --model claude-haiku-4.5 -p "$FULL_PROMPT"; then
-                echo -e "${RED}Error: Failed to get code review${NC}"
-                exit 1
-            fi
-
-            echo
-            read -p "Continue with push? (y/n) " -n 1 -r
-            echo
-            if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-                echo -e "${YELLOW}Push cancelled.${NC}"
-                exit 1
-            fi
-        fi
-    fi
-fi
-
 echo -e "${GREEN}✓ Pre-push checks completed!${NC}"
