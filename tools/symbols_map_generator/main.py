@@ -187,10 +187,20 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
 
 def is_function_inline(node: clang.cindex.CursorKind):
     # This method assumes that the node is a FUNCTION_DECL.
-    # There is no explicit way to check if a function is inlined
-    # but seeing that if it is a FUNCTION_DECL and it has
-    # a definition is good enough.
-    return node.is_definition()
+    # Use libclang's dedicated query rather than node.is_definition(): the
+    # latter is only a proxy for "inline" and, crucially, reports False once
+    # PARSE_SKIP_FUNCTION_BODIES is in effect (the body it would key off is
+    # skipped), which would wrongly emit symbols for inline free functions.
+    # clang_Cursor_isFunctionInlined answers the question directly and is
+    # stable regardless of whether function bodies were parsed.
+    #
+    # Also skip functions with internal linkage (static storage class): they
+    # are never exported from the shared library regardless of whether they
+    # are defined inline.  StorageClass is a declaration-level property and
+    # is equally stable under PARSE_SKIP_FUNCTION_BODIES.
+    if node.storage_class == clang.cindex.StorageClass.STATIC:
+        return True
+    return bool(clang.cindex.conf.lib.clang_Cursor_isFunctionInlined(node))
 
 
 def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
@@ -337,14 +347,17 @@ def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[
     for dir in search_dirs:
         args.append(f"-I{dir}")
 
+    # PARSE_SKIP_FUNCTION_BODIES tells libclang not to parse the bodies of
+    # functions or methods.  We only need declarations (names, types,
+    # virtual-ness) to extract symbols, so this is always safe here and
+    # significantly reduces parse time for headers with non-trivial inline
+    # definitions.
+    parse_options = clang.cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES
+
     for file in files:
         _logger.debug(f"Processing header file: {file.as_posix()}")
-        file_args = args.copy()
         idx = clang.cindex.Index.create()
-        tu = idx.parse(
-            file.as_posix(),
-            args=file_args,
-            options=0)
+        tu = idx.parse(file.as_posix(), args=args, options=parse_options)
         root = tu.cursor
         list(traverse_ast(root, file.as_posix(), result))
 
