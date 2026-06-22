@@ -555,6 +555,10 @@ pub enum CppType {
     Fd,
     Box(String),
     Bool,
+    /// A nullable argument exposed on the public C++ surface as `std::optional`.
+    /// This type never crosses the FFI boundary; the boundary uses the
+    /// `(value, has_value)` representation instead.
+    Optional(Box<CppType>),
 }
 
 /// Convert a CppType intended as a return value to its corresponding
@@ -578,6 +582,9 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
             format!("rust::Box<{}> const&", name)
         }
         CppType::Bool => "bool".to_string(),
+        CppType::Optional(inner) => {
+            format!("std::optional<{}>", cpp_return_type_to_cpp_source(inner))
+        }
     }
 }
 
@@ -607,6 +614,32 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
         (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
         (CppType::Bool, _) => "bool".to_string(),
+        (CppType::Optional(inner), o) => {
+            format!("std::optional<{}> const&", cpp_bare_type_to_cpp_source(inner, o))
+        }
+    }
+}
+
+/// Convert a CppType to its bare (unqualified, non-reference) C++ source type,
+/// e.g. for use as the inner type of a `std::optional<...>`.
+fn cpp_bare_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -> String {
+    match (cpp_type, originates_from_rust) {
+        (CppType::CppI32, _) => "int32_t".into(),
+        (CppType::CppU32, _) => "uint32_t".into(),
+        (CppType::CppF64, _) => "double".into(),
+        (CppType::Fd, _) => "int32_t".into(),
+        (CppType::Object(name), _) => format!("std::shared_ptr<{}>", name),
+        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}>", name),
+        (CppType::Box(name), _) => format!("rust::Box<{}>", name),
+        (CppType::String, true) => "rust::String".into(),
+        (CppType::String, false) => "std::string".into(),
+        (CppType::Str, _) => "rust::Str".into(),
+        (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
+        (CppType::Array, false) => "std::vector<uint8_t>".into(),
+        (CppType::Bool, _) => "bool".into(),
+        (CppType::Optional(inner), o) => {
+            format!("std::optional<{}>", cpp_bare_type_to_cpp_source(inner, o))
+        }
     }
 }
 
@@ -631,6 +664,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
             quote! { &Box<#type_name> }
         }
         CppType::Bool => quote! { bool },
+        CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }
 
@@ -674,6 +708,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
             }
         }
         CppType::Bool => quote! { bool },
+        CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }
 
