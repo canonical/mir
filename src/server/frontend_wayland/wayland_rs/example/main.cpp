@@ -54,10 +54,10 @@ public:
 /// Prints when the descriptor it watches becomes readable. The registration is
 /// one-shot, so this fires at most once; it reads the pending byte purely to
 /// consume it.
-class FdReadyCallback : public mir::wayland_rs::FdReadyCallback
+class ExampleFdReadyCallback : public mir::wayland_rs::FdReadyCallback
 {
 public:
-    explicit FdReadyCallback(int fd)
+    explicit ExampleFdReadyCallback(int fd)
         : fd{fd}
     {
     }
@@ -141,7 +141,7 @@ int main()
     auto const read_fd = fds[0];
     auto const write_fd = fds[1];
 
-    server->register_fd_ready_listener(read_fd, std::make_unique<FdReadyCallback>(read_fd));
+    server->register_fd_ready_listener(read_fd, std::make_unique<ExampleFdReadyCallback>(read_fd));
 
     std::thread server_thread(
         [&server, executor = std::move(executor)]() mutable

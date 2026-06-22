@@ -322,6 +322,10 @@ impl WaylandServer {
         fd: RawFd,
         mut listener: Box<dyn FdReadyListener>,
     ) -> Result<RegistrationToken, Box<dyn error::Error>> {
+        if fd < 0 {
+            return Err("Invalid file descriptor".into());
+        }
+
         // SAFETY: The fd is owned by the C++ caller, which is responsible for
         // keeping it valid until the notification fires. `FdWrapper` only
         // borrows the descriptor.
