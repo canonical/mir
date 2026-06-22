@@ -20,7 +20,7 @@ import os
 import argparse
 import concurrent.futures
 from pathlib import Path
-from typing import TypedDict, Optional
+from typing import TypedDict
 from collections import OrderedDict
 import bisect
 
@@ -186,7 +186,7 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
     return result
 
 
-def is_function_inline(node: clang.cindex.CursorKind):
+def is_function_inline(node: clang.cindex.Cursor):
     # This method assumes that the node is a FUNCTION_DECL.
     # Use libclang's dedicated query rather than node.is_definition(): the
     # latter is only a proxy for "inline" and, crucially, reports False once
@@ -357,7 +357,7 @@ def _parse_single_header(file_path: str, parse_args: list[str]) -> set[str]:
     return result
 
 
-def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[str]:
+def process_directory(directory: Path, search_dirs: list[str]) -> set[str]:
     files = list(directory.rglob('*.h'))
 
     args = ['-std=c++23', '-x', 'c++-header']
