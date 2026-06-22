@@ -37,7 +37,6 @@ Run with::
     python3 -m unittest discover -s tools/symbols_map_generator/tests
 """
 
-import importlib.util
 import os
 import sys
 import unittest
@@ -73,13 +72,23 @@ def _configure_libclang():
 
 
 def _load_generator():
-    """Import the generator's main.py as a module under a synthetic name."""
-    spec = importlib.util.spec_from_file_location(
-        "symbols_map_generator_main", TOOL_DIR / "main.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    """Import the generator's main.py as an importable on-disk module.
+
+    The tool's directory is placed on sys.path and the module imported by its
+    real name ("main").  Loading it as a genuinely importable module (rather
+    than via spec_from_file_location under a synthetic name) is what allows
+    ProcessPoolExecutor workers to re-import the module-level worker function
+    used by process_directory.  This matters on Python start methods other than
+    ``fork`` (e.g. ``forkserver``/``spawn``, the default on Python 3.14+), where
+    each worker is a fresh interpreter that imports the module by name instead
+    of inheriting it from the parent.
+    """
+    tool_dir = str(TOOL_DIR)
+    if tool_dir not in sys.path:
+        sys.path.insert(0, tool_dir)
+    import main  # noqa: PLC0415 — the tool's main.py, importable via TOOL_DIR
+
+    return main
 
 
 def _try_import_clang():
