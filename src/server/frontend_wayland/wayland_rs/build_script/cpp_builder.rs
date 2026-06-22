@@ -615,7 +615,10 @@ fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) ->
         (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
         (CppType::Bool, _) => "bool".to_string(),
         (CppType::Optional(inner), o) => {
-            format!("std::optional<{}> const&", cpp_bare_type_to_cpp_source(inner, o))
+            format!(
+                "std::optional<{}> const&",
+                cpp_bare_type_to_cpp_source(inner, o)
+            )
         }
     }
 }

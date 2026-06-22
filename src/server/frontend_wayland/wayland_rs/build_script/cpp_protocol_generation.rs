@@ -478,18 +478,12 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     // 2. Make the FFI-facing handler non-virtual and delegate to the virtual method,
     //    performing the Weak-wrapping and optional-packaging in between.
     let needs_split = !is_destructor
-        && cpp_args.iter().any(|arg| {
-            matches!(arg.cpp_type(), CppType::Object(_)) || arg.has_name().is_some()
-        });
+        && cpp_args
+            .iter()
+            .any(|arg| matches!(arg.cpp_type(), CppType::Object(_)) || arg.has_name().is_some());
 
-    let mut cpp_method = CppMethod::new(
-        method.name.as_str(),
-        retval,
-        !needs_split,
-        true,
-        true,
-        true,
-    );
+    let mut cpp_method =
+        CppMethod::new(method.name.as_str(), retval, !needs_split, true, true, true);
     for arg in &cpp_args {
         cpp_method.add_arg(arg.clone());
     }
@@ -681,7 +675,9 @@ fn event_ffi_call_expressions(arg: &CppArg) -> Vec<String> {
     match (arg.cpp_type(), arg.has_name()) {
         // A nullable object is forwarded as a raw pointer to its middleware box (or null).
         (CppType::Object(_), Some(_)) => {
-            vec![format!("{name}.has_value() ? &(*{name})->get_box() : nullptr")]
+            vec![format!(
+                "{name}.has_value() ? &(*{name})->get_box() : nullptr"
+            )]
         }
         (CppType::Object(_), None) => vec![format!("{name}->get_box()")],
         // A nullable non-object is forwarded as a `(value, has_value)` pair.
@@ -689,10 +685,7 @@ fn event_ffi_call_expressions(arg: &CppArg) -> Vec<String> {
             let empty = match other {
                 CppType::String => "std::string{}".to_string(),
                 CppType::Array => "std::vector<uint8_t>{}".to_string(),
-                _ => format!(
-                    "std::remove_cvref_t<decltype(*{name})>{{}}",
-                    name = name
-                ),
+                _ => format!("std::remove_cvref_t<decltype(*{name})>{{}}", name = name),
             };
             vec![
                 format!("{name}.has_value() ? *{name} : {empty}"),
