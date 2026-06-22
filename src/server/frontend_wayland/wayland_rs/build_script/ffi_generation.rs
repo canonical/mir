@@ -46,6 +46,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
                 fn stop(self: &WaylandServer);
                 fn drain_queue(self: &mut WaylandServer) -> bool;
+                fn register_fd_ready_listener(self: &WaylandServer, fd: i32, callback: UniquePtr<FdReadyCallback>);
 
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;
