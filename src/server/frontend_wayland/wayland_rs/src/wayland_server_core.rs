@@ -187,7 +187,10 @@ impl WaylandServer {
         let fd_listener_queue = self.pending_fd_listeners.clone();
         loop_handle
             .insert_source(fd_listener_ping_source, move |_, _, _: &mut ServerState| {
-                WaylandServer::drain_pending_fd_listeners(&fd_listener_loop_handle, &fd_listener_queue);
+                WaylandServer::drain_pending_fd_listeners(
+                    &fd_listener_loop_handle,
+                    &fd_listener_queue,
+                );
             })
             .map_err(|_| "Failed to insert fd listener signal into event loop")?;
 
