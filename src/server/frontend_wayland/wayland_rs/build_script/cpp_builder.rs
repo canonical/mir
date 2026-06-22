@@ -564,27 +564,13 @@ pub enum CppType {
 /// Convert a CppType intended as a return value to its corresponding
 /// C++ source code string in the function signature.
 fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
+    // Return types always use the standard-library spelling (never the cxx.rs
+    // wrapper), so `originates_from_rust` is `false`. The only reference-qualified
+    // return type is `rust::Box`, which is returned by `const&`.
+    let bare = cpp_bare_type_to_cpp_source(cpp_type, false);
     match cpp_type {
-        CppType::CppI32 => "int32_t".to_string(),
-        CppType::CppU32 => "uint32_t".to_string(),
-        CppType::CppF64 => "double".to_string(),
-        CppType::String => "std::string".to_string(),
-        CppType::Str => "rust::Str".to_string(),
-        CppType::Object(name) => {
-            format!("std::shared_ptr<{}>", name)
-        }
-        CppType::Weak(name) => {
-            format!("wayland_rs::Weak<{}>", name)
-        }
-        CppType::Array => "std::vector<uint8_t>".to_string(),
-        CppType::Fd => "int32_t".to_string(),
-        CppType::Box(name) => {
-            format!("rust::Box<{}> const&", name)
-        }
-        CppType::Bool => "bool".to_string(),
-        CppType::Optional(inner) => {
-            format!("std::optional<{}>", cpp_return_type_to_cpp_source(inner))
-        }
+        CppType::Box(_) => format!("{} const&", bare),
+        _ => bare,
     }
 }
 
@@ -594,37 +580,29 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
 /// If the method is called from Rust, we will use the cxx.rs C++ wrapper
 /// for the type instead of the standard library type.
 fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -> String {
-    match (cpp_type, originates_from_rust) {
-        (CppType::CppI32, _) => "int32_t".into(),
-        (CppType::CppU32, _) => "uint32_t".into(),
-        (CppType::CppF64, _) => "double".into(),
-        (CppType::Fd, _) => "int32_t".into(),
-        (CppType::Object(name), _) => format!("std::shared_ptr<{}> const&", name),
-        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}> const&", name),
-        (CppType::Box(name), _) => {
-            if originates_from_rust {
-                format!("rust::Box<{}>", name)
-            } else {
-                format!("rust::Box<{}> const&", name)
-            }
-        }
-        (CppType::String, true) => "rust::String".into(),
-        (CppType::String, false) => "std::string const&".into(),
-        (CppType::Str, _) => "rust::Str".into(),
-        (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
-        (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
-        (CppType::Bool, _) => "bool".to_string(),
-        (CppType::Optional(inner), o) => {
-            format!(
-                "std::optional<{}> const&",
-                cpp_bare_type_to_cpp_source(inner, o)
-            )
-        }
+    let bare = cpp_bare_type_to_cpp_source(cpp_type, originates_from_rust);
+    if cpp_type_passed_by_const_ref(cpp_type, originates_from_rust) {
+        format!("{} const&", bare)
+    } else {
+        bare
+    }
+}
+
+/// Whether an argument of this type is passed by `const&` (rather than by value)
+/// in C++ method signatures. The cxx.rs wrapper types (`rust::String`,
+/// `rust::Vec`, `rust::Box`) are passed by value when crossing from Rust.
+fn cpp_type_passed_by_const_ref(cpp_type: &CppType, originates_from_rust: bool) -> bool {
+    match cpp_type {
+        CppType::Object(_) | CppType::Weak(_) | CppType::Optional(_) => true,
+        CppType::Box(_) | CppType::String | CppType::Array => !originates_from_rust,
+        _ => false,
     }
 }
 
 /// Convert a CppType to its bare (unqualified, non-reference) C++ source type,
-/// e.g. for use as the inner type of a `std::optional<...>`.
+/// e.g. for use as the inner type of a `std::optional<...>`. This is the single
+/// canonical type renderer; `cpp_arg_type_to_cpp_source` and
+/// `cpp_return_type_to_cpp_source` build on it by adding reference qualifiers.
 fn cpp_bare_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -> String {
     match (cpp_type, originates_from_rust) {
         (CppType::CppI32, _) => "int32_t".into(),
