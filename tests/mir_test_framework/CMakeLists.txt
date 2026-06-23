@@ -29,6 +29,7 @@ add_library(mir-public-test-framework OBJECT
   headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   main.cpp
+  null_logger.cpp
   passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h
   process.cpp
   server_runner.cpp

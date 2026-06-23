@@ -179,13 +179,15 @@ if(HAS_W_NO_ATTRIBUTE_ALIAS)
 endif()
 
 target_include_directories(miral-internal
-    PRIVATE
+    PUBLIC
         "${miral_include}"
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE
         ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-internal
-    PRIVATE
+    PUBLIC
         mirserver
         PkgConfig::WAYLAND_CLIENT
         PkgConfig::YAML

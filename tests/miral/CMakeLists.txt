@@ -61,16 +61,12 @@ set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
 
 target_include_directories(miral-test-internal
     PRIVATE
-        ${GMOCK_INCLUDE_DIR}
-        ${GTEST_INCLUDE_DIR}
-        ${PROJECT_SOURCE_DIR}/src/miral
         ${PROJECT_SOURCE_DIR}/tests/include)
 
 target_link_libraries(miral-test-internal
+    mir-test-doubles-static
     miral-internal
-    mir-test-assist
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARIES}
+    miral-external
 )
 
 
