@@ -55,15 +55,6 @@
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
 
-/*
- * Just enough polyfill for RPi's EGL headers...
- */
-#ifndef EGL_KHR_stream
-#define EGL_KHR_stream 1
-typedef khronos_uint64_t EGLuint64KHR;
-typedef void* EGLStreamKHR;
-#endif
-
 #ifndef EGL_VERSION_1_5
 #ifndef EGLAttribPolyfil
 #define EGLAttribPolyfil
@@ -104,36 +95,6 @@ typedef EGLint (EGLAPIENTRYP PFNEGLDEBUGMESSAGECONTROLKHRPROC) (EGLDEBUGPROCKHR 
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYDEBUGKHRPROC) (EGLint attribute, EGLAttrib *value);
 typedef EGLint (EGLAPIENTRYP PFNEGLLABELOBJECTKHRPROC) (EGLDisplay display, EGLenum objectType, EGLObjectKHR object, EGLLabelKHR label);
 #endif
-
-/*
- * FIXME: Remove both EGL_EXT_stream_acquire_mode and
- *        EGL_NV_output_drm_flip_event definitions below once both extensions
- *        get published by Khronos and incorportated into Khronos' header files
- */
-#ifndef EGL_NV_stream_attrib
-#define EGL_NV_stream_attrib 1
-#ifdef EGL_EGLEXT_PROTOTYPES
-EGLAPI EGLStreamKHR EGLAPIENTRY eglCreateStreamAttribNV(EGLDisplay dpy, const EGLAttrib *attrib_list);
-EGLAPI EGLBoolean EGLAPIENTRY eglSetStreamAttribNV(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib value);
-EGLAPI EGLBoolean EGLAPIENTRY eglQueryStreamAttribNV(EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib *value);
-EGLAPI EGLBoolean EGLAPIENTRY eglStreamConsumerAcquireAttribNV(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
-EGLAPI EGLBoolean EGLAPIENTRY eglStreamConsumerReleaseAttribNV(EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
-#endif
-typedef EGLStreamKHR (EGLAPIENTRYP PFNEGLCREATESTREAMATTRIBNVPROC) (EGLDisplay dpy, const EGLAttrib *attrib_list);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLSETSTREAMATTRIBNVPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib value);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLQUERYSTREAMATTRIBNVPROC) (EGLDisplay dpy, EGLStreamKHR stream, EGLenum attribute, EGLAttrib *value);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC) (EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMCONSUMERRELEASEATTRIBNVPROC) (EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
-#endif /* EGL_NV_stream_attrib */
-
-#ifndef EGL_EXT_stream_acquire_mode
-#define EGL_EXT_stream_acquire_mode 1
-#define EGL_CONSUMER_AUTO_ACQUIRE_EXT         0x332B
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLSTREAMCONSUMERACQUIREATTRIBEXTPROC) (EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
-#ifdef EGL_EGLEXT_PROTOTYPES
-EGLAPI EGLBoolean EGLAPIENTRY eglStreamConsumerAcquireAttribEXT (EGLDisplay dpy, EGLStreamKHR stream, const EGLAttrib *attrib_list);
-#endif
-#endif /* EGL_EXT_stream_acquire_mode */
 
 /*
  * More polyfill for the RPi's EGL headers...
@@ -271,14 +232,6 @@ struct EGLExtensions
         PFNEGLQUERYWAYLANDBUFFERWL const eglQueryWaylandBufferWL;
     };
     LazyDisplayExtensions<WaylandExtensions> const wayland;
-
-    struct NVStreamAttribExtensions
-    {
-        NVStreamAttribExtensions(EGLDisplay dpy);
-
-        PFNEGLCREATESTREAMATTRIBNVPROC const eglCreateStreamAttribNV;
-        PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC const eglStreamConsumerAcquireAttribNV;
-    };
 
     struct PlatformBaseEXT
     {

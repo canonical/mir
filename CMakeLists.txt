@@ -154,26 +154,13 @@ find_package(Boost 1.70.0 COMPONENTS program_options iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 
-pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream IMPORTED_TARGET)
-
-# Set the default platforms based on availability of NVIDIA libraries
-if (WAYLAND_EGLSTREAM_FOUND)
-  set(
-    MIR_PLATFORM
-    gbm-kms;atomic-kms;x11;eglstream-kms;wayland
-    CACHE
-    STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
-  )
-else()
-  set(
-    MIR_PLATFORM
-    gbm-kms;atomic-kms;x11;wayland
-    CACHE
-    STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
-  )
-endif()
+set(
+  MIR_PLATFORM
+  gbm-kms;atomic-kms;x11;wayland
+  CACHE
+  STRING
+  "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', or 'wayland')"
+)
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
@@ -242,12 +229,6 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "x11")
      set(MIR_BUILD_PLATFORM_X11 TRUE)
-  endif()
-  if (platform STREQUAL "eglstream-kms")
-     if (NOT WAYLAND_EGLSTREAM_FOUND)
-        message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
-     endif()
-     set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
   endif()
   if (platform STREQUAL "wayland")
      set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
