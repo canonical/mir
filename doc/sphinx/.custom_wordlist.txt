@@ -66,8 +66,6 @@ DSOs
 EGL
 EGL_WL_bind_wayland_display
 eglinfo
-eglstream
-EGLStreams
 egmde
 enablement
 EndToEnd

@@ -76,8 +76,6 @@ in which we need to test:
 | ------------------------------ | ----- | ----- | ----- |
 | atomic-kms                     |       |       |       |
 | gbm-kms                        |       |       |       |
-| eglstream-kms                  |       |       |       |
-| eglstream-kms + gbm-kms hybrid |       |       |       |
 | x11                            |       |       |       |
 | wayland                        |       |       |       |
 | virtual                        |       |       |       |
@@ -90,7 +88,7 @@ The test script `mir-smoke-test-runner` will automatically test the platforms th
 environment it is run in:
 
 - When run in a hosted environment it will test `virtual`, `wayland`, and `x11`
-- When run in without a host compositor it will test `atomic-kms`, `eglstream-kms`, `gbm-kms` and `virtual` platforms
+- When run in without a host compositor it will test `atomic-kms`, `gbm-kms` and `virtual` platforms
   (according to the hardware and drivers available).
 
 ### Manual testing
@@ -109,8 +107,8 @@ you should encounter one of the following scenarios for each output:
    then `mir:gbm-kms` is selected
 
 1. When you have an Nvidia card connected to an output _and_ the system
-   is using Nvidia's proprietary drivers, then `mir:eglstream-kms`
-   is selected
+   is using Nvidia's proprietary drivers, then `mir:atomic-kms` is
+   selected
 
 1. When you are running the compositor hosted in a session that supports X11,
    then `mir:x11` is selected
@@ -242,7 +240,7 @@ The following describes how to select each console provider:
    - This requires running from a logged-in VT where `logind` can provide DRM :woke-ignore:`master`
    - So, first switch to vt4 and sign in
    - This can be used by
-     - the "hardware" platforms: `gbm-kms`, `eglstream-kms`, and `atomic-kms`; and,
+     - the "hardware" platforms: `gbm-kms` and `atomic-kms`; and,
      - the `virtual` platform
 
 1. **minimal**:
