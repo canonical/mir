@@ -1,6 +1,6 @@
 # mir
 
-Idiomatic Rust API for building Wayland compositors with the [Mir](https://github.com/canonical/mir) display server.
+Idiomatic Rust API for building Wayland compositors with [Mir](https://github.com/canonical/mir).
 
 ## System Requirements
 
@@ -24,7 +24,7 @@ export LD_LIBRARY_PATH=/usr/local/lib
 
 ## Architecture
 
-This crate provides a safe, idiomatic Rust layer on top of the battle-tested miral C++ library:
+This crate provides a safe, idiomatic Rust layer on top of the `miral` C++ library:
 
 ```
 ┌─────────────────────────────────────────────┐
