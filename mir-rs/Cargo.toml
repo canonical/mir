@@ -1,0 +1,13 @@
+[package]
+name = "mir"
+description = "Idiomatic Rust API for building Wayland compositors with the Mir display server"
+license = "GPL-2.0-or-later"
+repository = "https://github.com/canonical/mir"
+readme = "README.md"
+keywords = ["mir", "wayland", "compositor", "window-manager"]
+categories = ["gui", "os"]
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+mir-sys = { path = "../mir-rs-sys" }

@@ -40,6 +40,16 @@ This contains unit, integration and acceptance tests written using *gtest/gmock*
 largely depend upon the public interfaces of components - but tests of units within
 a component will include headers from within the source tree.
 
+The Rust crates (`mir-rs-sys`, `mir-rs`) are tested with `cargo test`. When *Mir* is
+configured with `MIR_ENABLE_RUST=ON` (the default) and `MIR_ENABLE_TESTS=ON`, their
+tests are registered as the `mir-rs-cargo-tests` CTest and run as part of the normal
+test suite (`ctest`/`ptest`), so they are exercised in CI alongside the C++ tests. To
+run just these tests against an existing build:
+
+```
+$ ctest --test-dir build -R mir-rs-cargo-tests --output-on-failure
+```
+
 ## Error handling strategy
 
 If a function cannot meet its post-conditions it throws an exception and meets

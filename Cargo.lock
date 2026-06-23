@@ -299,6 +299,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
+name = "mir"
+version = "0.0.0"
+dependencies = [
+ "mir-sys",
+]
+
+[[package]]
+name = "mir-sys"
+version = "0.1.0"
+dependencies = [
+ "pkg-config",
+]
+
+[[package]]
 name = "mir_platforms_evdev_rs"
 version = "0.1.0"
 dependencies = [

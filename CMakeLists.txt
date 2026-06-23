@@ -331,6 +331,15 @@ if (MIR_ENABLE_TESTS)
     mir_add_test(NAME package-abis
       COMMAND /bin/sh -c "cd ${PROJECT_SOURCE_DIR} && tools/update_package_abis.sh --check --verbose")
   endif ()
+
+  if (MIR_ENABLE_RUST)
+    include(RustTest)
+    if (CARGO_EXECUTABLE)
+      mir_add_cargo_test(NAME mir-rs-cargo-tests CRATES mir-sys mir)
+    else()
+      message(STATUS "cargo not found: skipping mir-rs/mir-rs-sys cargo tests")
+    endif()
+  endif()
 endif ()
 
 add_custom_target(ptest
