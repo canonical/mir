@@ -16,22 +16,17 @@
  *
  */
 
-#ifndef MIR_FRONTEND_XWAYLAND_WM_SHELL_H
-#define MIR_FRONTEND_XWAYLAND_WM_SHELL_H
+#ifndef MIR_FRONTEND_XWAYLAND_WM_SHELL_H_
+#define MIR_FRONTEND_XWAYLAND_WM_SHELL_H_
 
+#include <mir/decoration_strategy.h>
 #include <memory>
 
 namespace mir
 {
 class Executor;
-namespace shell
-{
-class Shell;
-}
-namespace scene
-{
-class Clipboard;
-}
+namespace shell { class Shell; }
+namespace scene { class Clipboard; }
 namespace frontend
 {
 class OutputManager;
@@ -52,16 +47,17 @@ public:
         std::shared_ptr<scene::Clipboard> const& clipboard,
         WlSeat& seat,
         std::shared_ptr<SurfaceStack> const& surface_stack,
-        std::shared_ptr<SurfaceRegistry> const& surface_registry)
-        : wayland_executor{wayland_executor},
-          shell{shell},
-          session_authorizer{session_authorizer},
-          clipboard{clipboard},
-          seat{seat},
-          surface_stack{surface_stack},
-          surface_registry{surface_registry}
-    {
-    }
+        std::shared_ptr<SurfaceRegistry> const& surface_registry,
+        std::shared_ptr<DecorationStrategy> const& decoration_strategy) :
+        wayland_executor{wayland_executor},
+        shell{shell},
+        session_authorizer{session_authorizer},
+        clipboard{clipboard},
+        seat{seat},
+        surface_stack{surface_stack},
+        surface_registry{surface_registry},
+        decoration_strategy{decoration_strategy}
+    {}
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
@@ -70,9 +66,10 @@ public:
     WlSeat& seat;
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
+    std::shared_ptr<DecorationStrategy> const decoration_strategy;
 };
 
 } /* frontend*/
 } /* mir */
 
-#endif // MIR_FRONTEND_XWAYLAND_WM_SHELL_H
+#endif // MIR_FRONTEND_XWAYLAND_WM_SHELL_H_

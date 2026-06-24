@@ -76,6 +76,8 @@ class EmergencyCleanup;
 class ConsoleServices;
 class DecorationStrategy;
 
+namespace shell { namespace decoration { class DecorationStrategy; } }
+
 class ServerConfiguration
 {
 public:
@@ -128,6 +130,10 @@ public:
 
     virtual auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> = 0;
     virtual void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) = 0;
+
+    /// The rendering strategy (see mir::Server::the_decoration_renderer_strategy).
+    virtual auto the_decoration_renderer_strategy() -> std::shared_ptr<shell::decoration::DecorationStrategy> = 0;
+    virtual void set_the_decoration_renderer_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy) = 0;
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() = default;

@@ -87,6 +87,18 @@ Most of the remaining MirAL components are designed to be passed into
 - Controlling the available Wayland extension protocols: {class}`miral::WaylandExtensions`; and,
 - Selecting server-side or client-side decorations: {class}`miral::Decorations`.
 
+### Custom server-side decorations
+
+See `examples/miral-custom-decorations/miral-custom-decorations.cpp` for a complete usage example.
+
+#### Limitations
+
+- Metric methods (`titlebar_height()`, `side_border_width()`, `bottom_border_height()`) have overridable defaults (24/4/4). Overriding controls *internal* decoration geometry used for rendering and input (distinct from the client-visible size returned by `compute_size_with_decorations()`).
+- Rendering/layout methods (`compute_size_with_decorations()`, `button_placement()`, `update_state()`, `render_titlebar()`, `render_*_border*`, `buffer_format()`, `resize_corner_input_size()`) are pure virtual — implement the ones you use. No general partial/default rendering in v1.
+- `render_title_text()` has a default implementation (it delegates to Mir’s existing FreeType renderer) while the other rendering methods are pure virtual.
+- Only software buffers are supported for custom decoration rendering.
+- The set of button functions is currently closed (`close`, `maximize`, `minimize`).
+
 ## Further reading
 
 You can explore the full API in the - [API reference](/api/library_root)

@@ -17,7 +17,7 @@
 #include "window.h"
 #include "threadsafe_access.h"
 #include "basic_decoration.h"
-#include "decoration_strategy.h"
+#include <mir/shell/decoration/decoration_strategy.h>
 
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
@@ -51,63 +51,45 @@ msd::WindowState::Self::Self(
     geometry::Height fixed_titlebar_height,
     geometry::Width fixed_side_border_width,
     geometry::Height fixed_bottom_border_height,
-    float scale)
-    : fixed_titlebar_height(fixed_titlebar_height),
-      fixed_side_border_width(fixed_side_border_width),
-      fixed_bottom_border_height(fixed_bottom_border_height),
-      window_size{surface->window_size()},
-      border_type{border_type_for(surface->type(), surface->state())},
-      focus_state{surface->focus_state()},
-      window_name{surface->name()},
-      scale{scale}
-{
-}
+    float scale) :
+    fixed_titlebar_height(fixed_titlebar_height),
+    fixed_side_border_width(fixed_side_border_width),
+    fixed_bottom_border_height(fixed_bottom_border_height),
+    window_size{surface->window_size()},
+    border_type{border_type_for(surface->type(), surface->state())},
+    focus_state{surface->focus_state()},
+    window_name{surface->name()},
+    scale{scale}
+{}
 
 msd::WindowState::WindowState(
     std::shared_ptr<scene::Surface> const& surface,
     geometry::Height fixed_titlebar_height,
     geometry::Width fixed_side_border_width,
     geometry::Height fixed_bottom_border_height,
-    float scale)
-    : self{std::make_unique<Self>(
-        surface,
-        fixed_titlebar_height,
-        fixed_side_border_width,
-        fixed_bottom_border_height,
-        scale)}
-{
-}
+    float scale) :
+    self{std::make_unique<
+        Self>(surface, fixed_titlebar_height, fixed_side_border_width, fixed_bottom_border_height, scale)}
+{}
 
 mir::shell::decoration::WindowState::~WindowState() = default;
 
-auto msd::WindowState::window_size() const -> geom::Size
-{
-    return self->window_size;
-}
+auto msd::WindowState::window_size() const -> geom::Size { return self->window_size; }
 
-auto msd::WindowState::border_type() const -> BorderType
-{
-    return self->border_type;
-}
+auto msd::WindowState::border_type() const -> BorderType { return self->border_type; }
 
-auto msd::WindowState::focused_state() const -> MirWindowFocusState
-{
-    return self->focus_state;
-}
+auto msd::WindowState::focused_state() const -> MirWindowFocusState { return self->focus_state; }
 
-auto msd::WindowState::window_name() const -> std::string
-{
-    return self->window_name;
-}
+auto msd::WindowState::window_name() const -> std::string { return self->window_name; }
 
 auto msd::WindowState::titlebar_width() const -> geom::Width
 {
     switch (self->border_type)
     {
-    case BorderType::Full:
-    case BorderType::Titlebar:
+    case BorderType::full:
+    case BorderType::titlebar:
         return window_size().width;
-    case BorderType::None:
+    case BorderType::none:
         return {};
     }
 
@@ -119,10 +101,10 @@ auto msd::WindowState::titlebar_height() const -> geom::Height
 {
     switch (self->border_type)
     {
-    case BorderType::Full:
-    case BorderType::Titlebar:
+    case BorderType::full:
+    case BorderType::titlebar:
         return self->fixed_titlebar_height;
-    case BorderType::None:
+    case BorderType::none:
         return {};
     }
 
@@ -134,10 +116,10 @@ auto msd::WindowState::side_border_width() const -> geom::Width
 {
     switch (self->border_type)
     {
-    case BorderType::Full:
+    case BorderType::full:
         return self->fixed_side_border_width;
-    case BorderType::Titlebar:
-    case BorderType::None:
+    case BorderType::titlebar:
+    case BorderType::none:
         return {};
     }
 
@@ -149,10 +131,10 @@ auto msd::WindowState::side_border_height() const -> geom::Height
 {
     switch (self->border_type)
     {
-    case BorderType::Full:
+    case BorderType::full:
         return window_size().height - as_delta(titlebar_height()) - as_delta(bottom_border_height());
-    case BorderType::Titlebar:
-    case BorderType::None:
+    case BorderType::titlebar:
+    case BorderType::none:
         return {};
     }
 
@@ -160,19 +142,16 @@ auto msd::WindowState::side_border_height() const -> geom::Height
     return {};
 }
 
-auto msd::WindowState::bottom_border_width() const -> geom::Width
-{
-    return titlebar_width();
-}
+auto msd::WindowState::bottom_border_width() const -> geom::Width { return titlebar_width(); }
 
 auto msd::WindowState::bottom_border_height() const -> geom::Height
 {
     switch (self->border_type)
     {
-    case BorderType::Full:
+    case BorderType::full:
         return self->fixed_bottom_border_height;
-    case BorderType::Titlebar:
-    case BorderType::None:
+    case BorderType::titlebar:
+    case BorderType::none:
         return {};
     }
 
@@ -182,16 +161,12 @@ auto msd::WindowState::bottom_border_height() const -> geom::Height
 
 auto msd::WindowState::titlebar_rect() const -> geom::Rectangle
 {
-    return {
-        geom::Point{},
-        {titlebar_width(), titlebar_height()}};
+    return {geom::Point{}, {titlebar_width(), titlebar_height()}};
 }
 
 auto msd::WindowState::left_border_rect() const -> geom::Rectangle
 {
-    return {
-        {geom::X{}, as_y(titlebar_height())},
-        {side_border_width(), side_border_height()}};
+    return {{geom::X{}, as_y(titlebar_height())}, {side_border_width(), side_border_height()}};
 }
 
 auto msd::WindowState::right_border_rect() const -> geom::Rectangle
@@ -208,25 +183,18 @@ auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
         {bottom_border_width(), bottom_border_height()}};
 }
 
-auto msd::WindowState::scale() const -> float
-{
-    return self->scale;
-}
+auto msd::WindowState::scale() const -> float { return self->scale; }
 
-class msd::WindowSurfaceObserverManager::Observer
-    : public ms::NullSurfaceObserver
+class msd::WindowSurfaceObserverManager::Observer : public ms::NullSurfaceObserver
 {
 public:
-    Observer(std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-        : decoration{decoration}
-    {
-    }
+    Observer(std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration) : decoration{decoration} {}
 
     /// Overrides from NullSurfaceObserver
     /// @{
     void attrib_changed(ms::Surface const*, MirWindowAttrib attrib, int /*value*/) override
     {
-        switch(attrib)
+        switch (attrib)
         {
         case mir_window_attrib_type:
         case mir_window_attrib_state:
@@ -242,24 +210,15 @@ public:
         }
     }
 
-    void window_resized_to(ms::Surface const*, geom::Size const& /*window_size*/) override
-    {
-        update();
-    }
+    void window_resized_to(ms::Surface const*, geom::Size const& /*window_size*/) override { update(); }
 
-    void renamed(ms::Surface const*, std::string const& /*name*/) override
-    {
-        update();
-    }
+    void renamed(ms::Surface const*, std::string const& /*name*/) override { update(); }
     /// @}
 
 private:
     void update()
     {
-        decoration->spawn([](auto decoration)
-            {
-                decoration->window_state_updated();
-            });
+        decoration->spawn([](auto decoration) { decoration->window_state_updated(); });
     }
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const decoration;
@@ -267,14 +226,11 @@ private:
 
 msd::WindowSurfaceObserverManager::WindowSurfaceObserverManager(
     std::shared_ptr<scene::Surface> const& window_surface,
-    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration)
-    : surface_{window_surface},
-      observer{std::make_shared<Observer>(decoration)}
+    std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const& decoration) :
+    surface_{window_surface},
+    observer{std::make_shared<Observer>(decoration)}
 {
     surface_->register_interest(observer);
 }
 
-msd::WindowSurfaceObserverManager::~WindowSurfaceObserverManager()
-{
-    surface_->unregister_interest(*observer);
-}
+msd::WindowSurfaceObserverManager::~WindowSurfaceObserverManager() { surface_->unregister_interest(*observer); }

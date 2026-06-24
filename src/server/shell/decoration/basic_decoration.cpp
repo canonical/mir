@@ -47,27 +47,16 @@ template<typename OBJ>
 struct PropertyComparison
 {
     template<typename RET>
-    PropertyComparison(RET(OBJ::*getter)() const)
-        : comp{[=](OBJ const* a, OBJ const* b)
-              {
-                  return (a->*getter)() == (b->*getter)();
-              }}
-    {
-    }
+    PropertyComparison(RET (OBJ::*getter)() const) :
+        comp{[=](OBJ const* a, OBJ const* b) { return (a->*getter)() == (b->*getter)(); }}
+    {}
 
     template<typename TYPE>
-    PropertyComparison(TYPE (OBJ::*member))
-        : comp{[=](OBJ const* a, OBJ const* b)
-        {
-            return (a->*member) == (b->*member);
-        }}
-    {
-    }
+    PropertyComparison(TYPE(OBJ::* member)) :
+        comp{[=](OBJ const* a, OBJ const* b) { return (a->*member) == (b->*member); }}
+    {}
 
-    auto operator()(OBJ const* a, OBJ const* b) const -> bool
-    {
-        return comp(a, b);
-    }
+    auto operator()(OBJ const* a, OBJ const* b) const -> bool { return comp(a, b); }
 
     std::function<bool(OBJ const* a, OBJ const* b)> const comp;
 };
@@ -75,11 +64,7 @@ struct PropertyComparison
 template<typename OBJ>
 struct ObjUpdated
 {
-    ObjUpdated(OBJ const* old, OBJ const* current)
-        : old{old},
-          current{current}
-    {
-    }
+    ObjUpdated(OBJ const* old, OBJ const* current) : old{old}, current{current} {}
 
     auto operator()(std::initializer_list<PropertyComparison<OBJ>> comparisons) -> bool
     {
@@ -119,15 +104,16 @@ private:
     MirPixelFormat const buffer_format;
 };
 
-msd::BasicDecoration::BufferStreams::BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format)
-    : session{session},
-      titlebar{create_buffer_stream()},
-      left_border{create_buffer_stream()},
-      right_border{create_buffer_stream()},
-      bottom_border{create_buffer_stream()},
-      buffer_format{buffer_format}
-{
-}
+msd::BasicDecoration::BufferStreams::BufferStreams(
+    std::shared_ptr<scene::Session> const& session,
+    MirPixelFormat buffer_format) :
+    session{session},
+    titlebar{create_buffer_stream()},
+    left_border{create_buffer_stream()},
+    right_border{create_buffer_stream()},
+    bottom_border{create_buffer_stream()},
+    buffer_format{buffer_format}
+{}
 
 msd::BasicDecoration::BufferStreams::~BufferStreams()
 {
@@ -142,26 +128,21 @@ msd::BasicDecoration::BasicDecoration(
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<input::CursorImages> const& cursor_images,
     std::shared_ptr<ms::Surface> const& window_surface,
-    std::shared_ptr<DecorationStrategy> decoration_strategy)
-    : threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
-      decoration_strategy{decoration_strategy},
-      renderer_strategy{decoration_strategy->render_strategy()},
-      shell{shell},
-      cursor_images{cursor_images},
-      session{window_surface->session().lock()},
-      buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},
-      window_surface{window_surface},
-      decoration_surface{create_surface()},
-      window_state{decoration_strategy->new_window_state(window_surface, scale)},
-      window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(
-          window_surface,
-          threadsafe_self)},
-      input_manager{std::make_unique<InputManager>(
-          decoration_strategy,
-          decoration_surface,
-          *window_state,
-          threadsafe_self)},
-      input_state{input_manager->state()}
+    std::shared_ptr<DecorationStrategy> decoration_strategy) :
+    threadsafe_self{std::make_shared<ThreadsafeAccess<BasicDecoration>>(executor)},
+    decoration_strategy{decoration_strategy},
+    renderer_strategy{decoration_strategy->render_strategy()},
+    shell{shell},
+    cursor_images{cursor_images},
+    session{window_surface->session().lock()},
+    buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},
+    window_surface{window_surface},
+    decoration_surface{create_surface()},
+    window_state{decoration_strategy->new_window_state(window_surface, scale)},
+    window_surface_observer_manager{std::make_unique<WindowSurfaceObserverManager>(window_surface, threadsafe_self)},
+    input_manager{
+        std::make_unique<InputManager>(decoration_strategy, decoration_surface, *window_state, threadsafe_self)},
+    input_state{input_manager->state()}
 {
     if (!session)
     {
@@ -177,10 +158,8 @@ msd::BasicDecoration::BasicDecoration(
 
 auto msd::BasicDecoration::BufferStreams::create_buffer_stream() -> std::shared_ptr<mc::BufferStream>
 {
-    auto const stream = session->create_buffer_stream(mg::BufferProperties{
-        geom::Size{1, 1},
-        buffer_format,
-        mg::BufferUsage::software});
+    auto const stream =
+        session->create_buffer_stream(mg::BufferProperties{geom::Size{1, 1}, buffer_format, mg::BufferUsage::software});
     return stream;
 }
 
@@ -188,11 +167,7 @@ msd::BasicDecoration::~BasicDecoration()
 {
     threadsafe_self->invalidate();
     shell->destroy_surface(session, decoration_surface);
-    window_surface->set_window_margins(
-        geom::DeltaY{},
-        geom::DeltaX{},
-        geom::DeltaY{},
-        geom::DeltaX{});
+    window_surface->set_window_margins(geom::DeltaY{}, geom::DeltaX{}, geom::DeltaY{}, geom::DeltaX{});
 }
 
 void msd::BasicDecoration::window_state_updated()
@@ -245,10 +220,7 @@ void msd::BasicDecoration::request_minimize()
     shell->modify_surface(session, window_surface, spec);
 }
 
-void msd::BasicDecoration::request_close()
-{
-    window_surface->request_client_surface_close();
-}
+void msd::BasicDecoration::request_close() { window_surface->request_client_surface_close(); }
 
 void msd::BasicDecoration::set_cursor(std::string const& cursor_image_name)
 {
@@ -278,12 +250,10 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
     params.placement_hints = MirPlacementHints(0);
     // Will be replaced by initial update
     params.streams = {{
-        session->create_buffer_stream(mg::BufferProperties{
-            geom::Size{1, 1},
-            decoration_strategy->buffer_format(),
-            mg::BufferUsage::software}),
+        session->create_buffer_stream(
+            mg::BufferProperties{geom::Size{1, 1}, decoration_strategy->buffer_format(), mg::BufferUsage::software}),
         {},
-        }};
+    }};
     return shell->create_surface(session, params, nullptr, nullptr);
 }
 
@@ -294,10 +264,8 @@ void msd::BasicDecoration::update(
     ObjUpdated<WindowState> window_updated{previous_window_state.value_or(nullptr), window_state.get()};
     ObjUpdated<InputState> input_updated{previous_input_state.value_or(nullptr), input_state.get()};
 
-    if (window_updated({
-            &WindowState::titlebar_height,
-            &WindowState::side_border_width,
-            &WindowState::bottom_border_height}))
+    if (window_updated(
+            {&WindowState::titlebar_height, &WindowState::side_border_width, &WindowState::bottom_border_height}))
     {
         window_surface->set_window_margins(
             as_delta(window_state->titlebar_height()),
@@ -308,45 +276,45 @@ void msd::BasicDecoration::update(
 
     msh::SurfaceSpecification spec;
 
-    if (window_updated({
-            &WindowState::window_size}))
+    if (window_updated({&WindowState::window_size}))
     {
-        if (window_state->window_size().width.as_value()) spec.width = window_state->window_size().width;
-        if (window_state->window_size().height.as_value()) spec.height = window_state->window_size().height;
+        if (window_state->window_size().width.as_value())
+            spec.width = window_state->window_size().width;
+        if (window_state->window_size().height.as_value())
+            spec.height = window_state->window_size().height;
     }
 
-    if (input_updated({
-            &InputState::input_shape}))
+    if (input_updated({&InputState::input_shape}))
     {
         spec.input_shape = input_state->input_shape;
     }
 
-    if (window_updated({
-            &WindowState::border_type,
-            &WindowState::titlebar_rect,
-            &WindowState::left_border_rect,
-            &WindowState::right_border_rect,
-            &WindowState::bottom_border_rect}))
+    if (window_updated(
+            {&WindowState::border_type,
+             &WindowState::titlebar_rect,
+             &WindowState::left_border_rect,
+             &WindowState::right_border_rect,
+             &WindowState::bottom_border_rect}))
     {
         spec.streams = std::vector<StreamSpecification>{};
         auto const emplace = [&](std::shared_ptr<mc::BufferStream> stream, geom::Rectangle rect)
-            {
-                if (rect.size.width > geom::Width{} && rect.size.height > geom::Height{})
-                    spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
-            };
+        {
+            if (rect.size.width > geom::Width{} && rect.size.height > geom::Height{})
+                spec.streams.value().emplace_back(StreamSpecification{stream, as_displacement(rect.top_left)});
+        };
 
         switch (window_state->border_type())
         {
-        case BorderType::Full:
+        case BorderType::full:
             emplace(buffer_streams->titlebar, window_state->titlebar_rect());
             emplace(buffer_streams->left_border, window_state->left_border_rect());
             emplace(buffer_streams->right_border, window_state->right_border_rect());
             emplace(buffer_streams->bottom_border, window_state->bottom_border_rect());
             break;
-        case BorderType::Titlebar:
+        case BorderType::titlebar:
             emplace(buffer_streams->titlebar, window_state->titlebar_rect());
             break;
-        case BorderType::None:
+        case BorderType::none:
             break;
         };
     }
@@ -356,60 +324,48 @@ void msd::BasicDecoration::update(
         shell->modify_surface(session, decoration_surface, spec);
     }
 
-    if (window_updated({
-            &WindowState::focused_state,
-            &WindowState::window_name,
-            &WindowState::titlebar_rect,
-            &WindowState::left_border_rect,
-            &WindowState::right_border_rect,
-            &WindowState::bottom_border_rect,
-            &WindowState::scale}) ||
-        input_updated({
-            &InputState::buttons}))
+    if (window_updated(
+            {&WindowState::focused_state,
+             &WindowState::window_name,
+             &WindowState::titlebar_rect,
+             &WindowState::left_border_rect,
+             &WindowState::right_border_rect,
+             &WindowState::bottom_border_rect,
+             &WindowState::scale}) ||
+        input_updated({&InputState::buttons}))
     {
         renderer_strategy->update_state(*window_state, *input_state);
     }
 
-    std::vector<std::pair<
-        std::shared_ptr<mc::BufferStream>,
-        std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
+    std::vector<std::pair<std::shared_ptr<mc::BufferStream>, std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
 
-    if (window_updated({
-            &WindowState::focused_state,
-            &WindowState::side_border_width,
-            &WindowState::side_border_height,
-            &WindowState::scale}))
+    if (window_updated(
+            {&WindowState::focused_state,
+             &WindowState::side_border_width,
+             &WindowState::side_border_height,
+             &WindowState::scale}))
     {
-        new_buffers.emplace_back(
-            buffer_streams->left_border,
-            renderer_strategy->render_left_border());
-        new_buffers.emplace_back(
-            buffer_streams->right_border,
-            renderer_strategy->render_right_border());
+        new_buffers.emplace_back(buffer_streams->left_border, renderer_strategy->render_left_border());
+        new_buffers.emplace_back(buffer_streams->right_border, renderer_strategy->render_right_border());
     }
 
-    if (window_updated({
-            &WindowState::focused_state,
-            &WindowState::bottom_border_width,
-            &WindowState::bottom_border_height,
-            &WindowState::scale}))
+    if (window_updated(
+            {&WindowState::focused_state,
+             &WindowState::bottom_border_width,
+             &WindowState::bottom_border_height,
+             &WindowState::scale}))
     {
-        new_buffers.emplace_back(
-            buffer_streams->bottom_border,
-            renderer_strategy->render_bottom_border());
+        new_buffers.emplace_back(buffer_streams->bottom_border, renderer_strategy->render_bottom_border());
     }
 
-    if (window_updated({
-            &WindowState::focused_state,
-            &WindowState::window_name,
-            &WindowState::titlebar_rect,
-            &WindowState::scale}) ||
-        input_updated({
-            &InputState::buttons}))
+    if (window_updated(
+            {&WindowState::focused_state,
+             &WindowState::window_name,
+             &WindowState::titlebar_rect,
+             &WindowState::scale}) ||
+        input_updated({&InputState::buttons}))
     {
-        new_buffers.emplace_back(
-            buffer_streams->titlebar,
-            renderer_strategy->render_titlebar());
+        new_buffers.emplace_back(buffer_streams->titlebar, renderer_strategy->render_titlebar());
     }
 
     float inv_scale = 1.0f / window_state->scale();

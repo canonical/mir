@@ -44,17 +44,19 @@ namespace mf = mir::frontend;
 
 auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 {
-    return shell([this]
+    return shell(
+        [this]
         {
-            auto const result = wrap_shell(std::make_shared<msh::AbstractShell>(
-                the_input_targeter(),
-                the_surface_stack(),
-                the_session_coordinator(),
-                the_prompt_session_manager(),
-                the_shell_report(),
-                the_window_manager_builder(),
-                the_seat(),
-                the_decoration_manager()));
+            auto const result = wrap_shell(
+                std::make_shared<msh::AbstractShell>(
+                    the_input_targeter(),
+                    the_surface_stack(),
+                    the_session_coordinator(),
+                    the_prompt_session_manager(),
+                    the_shell_report(),
+                    the_window_manager_builder(),
+                    the_seat(),
+                    the_decoration_manager()));
 
             the_composite_event_filter()->prepend(result);
             the_decoration_manager()->init(result);
@@ -66,19 +68,23 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
 auto mir::DefaultServerConfiguration::the_window_manager_builder() -> shell::WindowManagerBuilder
 {
     return [this](msh::FocusController* focus_controller)
-        { return std::make_shared<msh::DefaultWindowManager>(
-            focus_controller,
-            the_shell_display_layout(),
-            the_session_coordinator()); };
+    {
+        return std::make_shared<msh::DefaultWindowManager>(
+            focus_controller, the_shell_display_layout(), the_session_coordinator());
+    };
 }
 
 auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_ptr<msd::Manager>
 {
     return decoration_manager(
-        [this]()->std::shared_ptr<msd::Manager>
+        [this]() -> std::shared_ptr<msd::Manager>
         {
+            auto const custom = the_decoration_renderer_strategy();
+            // Shutdown lifetime: custom path now uses weak_ptr for allocator in
+            // DecorationStrategy (see public header + adapter) to avoid holding
+            // platform resources (EGL etc) past dtor.
             return std::make_shared<msd::BasicManager>(
-                msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
+                custom ? custom : msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
                 *the_display_configuration_observer_registrar(),
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
@@ -88,23 +94,21 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                     std::shared_ptr<scene::Surface> const& surface) -> std::unique_ptr<msd::Decoration>
                 {
                     return std::make_unique<msd::BasicDecoration>(
-                        shell,
-                        executor,
-                        cursor_images,
-                        surface,
-                        decoration_strategy);
+                        shell, executor, cursor_images, surface, decoration_strategy);
                 });
         });
 }
 
-auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>
+auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped)
+    -> std::shared_ptr<msh::Shell>
 {
     return wrapped;
 }
 
 auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh::IdleHandler>
 {
-    return idle_handler([this]()
+    return idle_handler(
+        [this]()
         {
             auto const idle_handler = std::make_shared<msh::BasicIdleHandler>(
                 the_idle_hub(),
@@ -118,11 +122,8 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
             if (idle_timeout_seconds < 0)
             {
                 throw mir::AbnormalExit(
-                    "Invalid " +
-                    std::string{options::idle_timeout_opt} +
-                    " value " +
-                    std::to_string(idle_timeout_seconds) +
-                    ", must be > 0");
+                    "Invalid " + std::string{options::idle_timeout_opt} + " value " +
+                    std::to_string(idle_timeout_seconds) + ", must be > 0");
             }
             else if (idle_timeout_seconds == 0)
             {
@@ -137,11 +138,8 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
             if (idle_timeout_when_locked < 0)
             {
                 throw mir::AbnormalExit(
-                    "Invalid " +
-                    std::string{options::idle_timeout_when_locked_opt} +
-                    " value " +
-                    std::to_string(idle_timeout_when_locked) +
-                    ", must be > 0");
+                    "Invalid " + std::string{options::idle_timeout_when_locked_opt} + " value " +
+                    std::to_string(idle_timeout_when_locked) + ", must be > 0");
             }
             if (idle_timeout_when_locked == 0)
             {
@@ -158,35 +156,19 @@ auto mir::DefaultServerConfiguration::the_idle_handler() -> std::shared_ptr<msh:
 
 auto mir::DefaultServerConfiguration::the_token_authority() -> std::shared_ptr<msh::TokenAuthority>
 {
-    return token_authority([this]()
-        {
-            return std::make_shared<msh::TokenAuthority>(the_main_loop());
-        });
+    return token_authority([this]() { return std::make_shared<msh::TokenAuthority>(the_main_loop()); });
 }
 
-std::shared_ptr<msh::PersistentSurfaceStore>
-mir::DefaultServerConfiguration::the_persistent_surface_store()
+std::shared_ptr<msh::PersistentSurfaceStore> mir::DefaultServerConfiguration::the_persistent_surface_store()
 {
-    return persistent_surface_store([]()
-    {
-        return std::make_shared<msh::DefaultPersistentSurfaceStore>();
-    });
+    return persistent_surface_store([]() { return std::make_shared<msh::DefaultPersistentSurfaceStore>(); });
 }
 
-std::shared_ptr<msh::FocusController>
-mir::DefaultServerConfiguration::the_focus_controller()
-{
-    return the_shell();
-}
+std::shared_ptr<msh::FocusController> mir::DefaultServerConfiguration::the_focus_controller() { return the_shell(); }
 
-std::shared_ptr<msh::DisplayLayout>
-mir::DefaultServerConfiguration::the_shell_display_layout()
+std::shared_ptr<msh::DisplayLayout> mir::DefaultServerConfiguration::the_shell_display_layout()
 {
-    return shell_display_layout(
-        [this]()
-        {
-            return std::make_shared<msh::GraphicsDisplayLayout>(the_display());
-        });
+    return shell_display_layout([this]() { return std::make_shared<msh::GraphicsDisplayLayout>(the_display()); });
 }
 
 auto mir::DefaultServerConfiguration::the_accessibility_manager() -> std::shared_ptr<shell::AccessibilityManager>

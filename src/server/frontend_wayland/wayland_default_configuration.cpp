@@ -314,7 +314,8 @@ ExtensionBuilder const xwayland_builder {
                 ctx.main_clipboard,
                 *ctx.seat,
                 ctx.surface_stack,
-                ctx.surface_registry);
+                ctx.surface_registry,
+                ctx.decoration_strategy);
         }
 };
 

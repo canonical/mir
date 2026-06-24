@@ -10,6 +10,8 @@ These guides cover the key aspects of developing a Wayland compositor with Mir.
 - [How to specify start up applications](how-to-specify-startup-apps.md)
 - [How to handle user input](how-to-handle-keyboard-input.md)
 - [Specifying CSD/SSD Preference](specifying-csd-ssd-preference.md)
+- Custom server-side decorations (see "Custom server-side decorations" in
+  [Introducing the MirAL API](../reference/introducing_the_miral_api.md))
 
 ```{toctree}
 ---
