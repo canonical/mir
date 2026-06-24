@@ -14,9 +14,6 @@ ADD_LIBRARY(
   null_observer.cpp
   scene_change_notification.cpp
   surface_change_notification.cpp
-  prompt_session_container.cpp
-  prompt_session_impl.cpp
-  prompt_session_manager_impl.cpp
   rendering_tracker.cpp
   output_properties_cache.cpp
   basic_clipboard.cpp

@@ -130,13 +130,6 @@ typedef enum MirOutputType
     mir_output_type_dpi = 17,         /* DRM_MODE_CONNECTOR_DPI         */
 } MirOutputType;
 
-typedef enum MirPromptSessionState
-{
-    mir_prompt_session_state_stopped = 0,
-    mir_prompt_session_state_started,
-    mir_prompt_session_state_suspended
-} MirPromptSessionState;
-
 /**
  * 32-bit pixel formats (8888):
  * The order of components in the enum matches the order of the components
