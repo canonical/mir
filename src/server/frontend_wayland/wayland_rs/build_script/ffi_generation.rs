@@ -11,7 +11,9 @@ use crate::cpp_builder::{sanitize_identifier, CppBuilder};
 use crate::helpers::format_wayland_interface_to_rust_extension_struct;
 
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
-use crate::protocol_parser::{InterfaceItem, WaylandEvent, WaylandInterface, WaylandProtocol};
+use crate::protocol_parser::{
+    InterfaceItem, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
+};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -115,6 +117,15 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
     }
 }
 
+/// An event carries a raw pointer across the FFI boundary (and therefore must be declared
+/// `unsafe fn`) when it has a nullable object argument.
+fn event_uses_raw_pointer(event: &WaylandEvent) -> bool {
+    event.args.iter().any(|arg| {
+        arg.allow_null.unwrap_or(false)
+            && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::NewId)
+    })
+}
+
 fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) -> TokenStream {
     let interface_name = format_ident!(
         "{}",
@@ -131,7 +142,13 @@ fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) ->
         })
         .collect();
 
-    quote! {
-        fn #event_name(self: &mut #interface_name, #(#args),*);
+    if event_uses_raw_pointer(event) {
+        quote! {
+            unsafe fn #event_name(self: &mut #interface_name, #(#args),*);
+        }
+    } else {
+        quote! {
+            fn #event_name(self: &mut #interface_name, #(#args),*);
+        }
     }
 }
