@@ -65,7 +65,7 @@ public:
 
     virtual void close_session(std::shared_ptr<scene::Session> const& session) = 0;
 
-virtual auto create_surface(
+    virtual auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         SurfaceSpecification const& params,
         std::shared_ptr<scene::SurfaceObserver> const& observer,
