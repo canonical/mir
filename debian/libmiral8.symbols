@@ -301,6 +301,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::MouseKeysConfig::set_max_speed(double, double) const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::Output(mir::graphics::DisplayConfigurationOutput const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::Output(miral::Output const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::Output::PhysicalSizeMM::operator==(miral::Output::PhysicalSizeMM const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::attributes_map[abi:cxx11]() const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::connected() const@MIRAL_6.0" 6.0.0
@@ -387,6 +388,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_data_control_manager_v1@MIRAL_6.0" 6.0.0
+ (c++)"miral::WaylandExtensions::ext_foreign_toplevel_image_capture_source_manager_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_foreign_toplevel_list_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_image_copy_capture_manager_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_output_image_capture_source_manager_v1@MIRAL_6.0" 6.0.0

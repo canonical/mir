@@ -176,6 +176,13 @@ public:
     /// \remark Since MirAL 5.6
     static char const* const ext_output_image_capture_source_manager_v1;
 
+    /// Allows clients to create an image capture source representing
+    /// a toplevel window. This extension is only useful in
+    /// conjunction with ext_image_copy_capture_manager_v1 and
+    /// ext_foreign_toplevel_list_v1.
+    /// \remark Since MirAL 6.0
+    static char const* const ext_foreign_toplevel_image_capture_source_manager_v1;
+
     /// Allows clients to act as a virtual pointer, useful for remote control and automation.
     /// Clients are not required to display anything to send pointer events using this extension,
     /// so malicious clients could use it to take actions without user input.

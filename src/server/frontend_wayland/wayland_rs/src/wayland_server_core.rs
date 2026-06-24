@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler};
+use crate::ffi::{GlobalFactory, WaylandServerNotificationHandler, WorkCallback};
 use crate::wayland_client::{WaylandClient, WaylandClientId};
 use calloop::ping::Ping;
 use calloop::{generic::Generic, EventLoop, Interest, Mode, PostAction};
@@ -31,6 +31,7 @@ use wayland_server::{
 /// The wayland server.
 pub struct WaylandServer {
     stop_signal: Mutex<Option<Ping>>,
+    work_signal: Mutex<Option<Ping>>,
 }
 
 impl WaylandServer {
@@ -38,6 +39,7 @@ impl WaylandServer {
     pub fn new() -> Self {
         WaylandServer {
             stop_signal: Mutex::new(None),
+            work_signal: Mutex::new(None),
         }
     }
 
@@ -52,6 +54,7 @@ impl WaylandServer {
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
         notification_handler: UniquePtr<WaylandServerNotificationHandler>,
+        work_callback: UniquePtr<WorkCallback>,
     ) -> Result<(), Box<dyn error::Error>> {
         let display = Display::<ServerState>::new()?;
         let mut event_loop: EventLoop<'_, ServerState> = EventLoop::try_new()?;
@@ -61,6 +64,7 @@ impl WaylandServer {
             handle: display.handle(),
             stop_requested: false,
             notification_handler,
+            work_callback,
             disconnect_rx,
         };
 
@@ -126,22 +130,44 @@ impl WaylandServer {
         )?;
 
         // Add stop_signal to wake and terminate the loop.
-        let (pinger, ping_source) = calloop::ping::make_ping()?;
+        let (stop_pinger, stop_ping_source) = calloop::ping::make_ping()?;
 
         *self
             .stop_signal
             .lock()
-            .expect("No recovery from lock poisioning") = Some(pinger);
+            .expect("No recovery from lock poisoning") = Some(stop_pinger);
 
         loop_handle
-            .insert_source(ping_source, |_, _, server: &mut ServerState| {
+            .insert_source(stop_ping_source, |_, _, server: &mut ServerState| {
                 server.stop_requested = true;
             })
             .map_err(|_| "Failed to insert stop eventfd into event loop")?;
 
+        // Add a work signal so that C++ can ask (from any thread) for its
+        // pending work to be drained on the event loop thread. The ping
+        // coalesces multiple requests into a single wake; when it fires we ask
+        // the C++ side to run all the work it currently has queued.
+        let (work_pinger, work_ping_source) = calloop::ping::make_ping()?;
+
+        *self
+            .work_signal
+            .lock()
+            .expect("No recovery from lock poisoning") = Some(work_pinger);
+
+        loop_handle
+            .insert_source(work_ping_source, |_, _, state: &mut ServerState| {
+                state.work_callback.pin_mut().execute();
+            })
+            .map_err(|_| "Failed to insert work signal into event loop")?;
+
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
 
-        // TODO: Don't spin continuously
+        // Drain any work the C++ side queued before the work signal was ready.
+        // Such a signal would have been dropped (the queue is owned by C++ and
+        // outlives `run`), so run that work now that the loop is starting. Work
+        // queued from here on raises its own signal and is handled by the loop.
+        state.work_callback.pin_mut().execute();
+
         while !state.stop_requested {
             // 1. Dispatch events
             // The event loop borrows `server` temporarily to run the callbacks
@@ -173,10 +199,38 @@ impl WaylandServer {
         if let Some(signal) = self
             .stop_signal
             .lock()
-            .expect("No way to recover from lock poisioning")
+            .expect("No way to recover from lock poisoning")
             .as_ref()
         {
             signal.ping();
+        }
+    }
+
+    /// Signal the event loop to drain any work the C++ side has queued.
+    ///
+    /// The work itself is owned by the C++ side. When the event loop processes
+    /// this signal it calls back into C++ via `WorkCallback::execute()`, on the
+    /// event-loop thread, which runs all of the C++ work currently pending.
+    ///
+    /// This may be called from any thread. Signals coalesce, so the C++ side
+    /// need only call this while it has no signal already outstanding.
+    ///
+    /// Returns `true` if the signal was delivered, or `false` if the server is
+    /// not currently running (i.e. `run` has not been called yet) and the
+    /// signal was dropped. The caller is responsible for re-signalling later in
+    /// the latter case.
+    pub fn drain_queue(&self) -> bool {
+        match self
+            .work_signal
+            .lock()
+            .expect("No way to recover from lock poisoning")
+            .as_ref()
+        {
+            Some(pinger) => {
+                pinger.ping();
+                true
+            }
+            None => false,
         }
     }
 }
@@ -191,6 +245,7 @@ pub struct ServerState {
     pub handle: DisplayHandle,
     stop_requested: bool,
     notification_handler: UniquePtr<WaylandServerNotificationHandler>,
+    work_callback: UniquePtr<WorkCallback>,
     disconnect_rx: mpsc::Receiver<(ClientId, DisconnectReason)>,
 }
 

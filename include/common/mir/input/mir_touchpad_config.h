@@ -74,8 +74,6 @@ struct MirTouchpadConfig
      */
     bool disable_with_external_mouse() const;
     void disable_with_external_mouse(bool enabled);
-    [[deprecated("Use disable_with_external_mouse() instead (since Mir 2.18)")]] bool disable_with_mouse() const;
-    [[deprecated("Use disable_with_external_mouse() instead (since Mir 2.18)")]] void disable_with_mouse(bool);
 
     /*!
      * When disable-with-mouse is enabled the touchpad will stop to emit user input events when the user starts to use a keyboard and a short period after.

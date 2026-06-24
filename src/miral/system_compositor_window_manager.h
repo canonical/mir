@@ -99,10 +99,6 @@ private:
         std::shared_ptr<mir::scene::Session> const& session,
         std::weak_ptr<mir::scene::Surface> const& surface) override;
 
-    void add_display(mir::geometry::Rectangle const& area) override;
-
-    void remove_display(mir::geometry::Rectangle const& area) override;
-
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
     bool handle_touch_event(MirTouchEvent const* event) override;

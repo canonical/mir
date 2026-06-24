@@ -11,7 +11,7 @@ global:
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
-    "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
+    "miral::InputConfiguration::InputConfiguration()";
     "miral::Keymap::Keymap()";
     "miral::Keymap::Keymap(miral::Keymap const&)";
     "miral::Keymap::Keymap(miral::live_config::Store&)";
@@ -352,6 +352,7 @@ global:
     miral::WaylandExtensions::disable*;
     miral::WaylandExtensions::enable*;
     miral::WaylandExtensions::ext_data_control_manager_v1*;
+    miral::WaylandExtensions::ext_foreign_toplevel_image_capture_source_manager_v1*;
     miral::WaylandExtensions::ext_foreign_toplevel_list_v1*;
     miral::WaylandExtensions::ext_image_copy_capture_manager_v1*;
     miral::WaylandExtensions::ext_output_image_capture_source_manager_v1*;
