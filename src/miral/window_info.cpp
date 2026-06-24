@@ -405,7 +405,7 @@ auto miral::WindowInfo::max_aspect() const -> AspectRatio
 
 bool miral::WindowInfo::has_output_id() const
 {
-    return self->output_id.is_set();
+    return self->output_id.has_value();
 }
 
 auto miral::WindowInfo::output_id() const -> int
@@ -448,7 +448,7 @@ auto miral::WindowInfo::attached_edges() const -> MirPlacementGravity
     return self->attached_edges;
 }
 
-auto miral::WindowInfo::exclusive_rect() const -> mir::optional_value<mir::geometry::Rectangle>
+auto miral::WindowInfo::exclusive_rect() const -> std::optional<mir::geometry::Rectangle>
 {
     return self->exclusive_rect;
 }
@@ -458,17 +458,17 @@ auto miral::WindowInfo::ignore_exclusion_zones() const -> bool
     return self->ignore_exclusion_zones;
 }
 
-auto miral::WindowInfo::clip_area() const -> mir::optional_value<mir::geometry::Rectangle>
+auto miral::WindowInfo::clip_area() const -> std::optional<mir::geometry::Rectangle>
 {
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
 
     if (surface->clip_area())
-        return mir::optional_value<mir::geometry::Rectangle>(surface->clip_area().value());
+        return std::optional<mir::geometry::Rectangle>(surface->clip_area().value());
     else
-        return mir::optional_value<mir::geometry::Rectangle>();
+        return std::optional<mir::geometry::Rectangle>();
 }
 
-void miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle> const& area)
+void miral::WindowInfo::clip_area(std::optional<mir::geometry::Rectangle> const& area)
 {
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
 

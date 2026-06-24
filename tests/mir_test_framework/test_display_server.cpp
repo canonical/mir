@@ -26,6 +26,7 @@
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>
 
+#include <mir/fatal.h>
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>

@@ -76,6 +76,19 @@ struct BracedItemStream
         return *this;
     }
 
+    template<typename Type>
+    auto append(char const* name, std::optional<Type> const& item) const -> BracedItemStream const&
+    {
+        if (!first_field) out << ", ";
+        out << name << '=';
+        if (item)
+            out << *item;
+        else
+            out << "<null>";
+        first_field = false;
+        return *this;
+    }
+
     auto append(char const* name, MirOrientationMode item) const -> BracedItemStream const&
     {
         auto const flags = out.flags();
@@ -149,6 +162,7 @@ auto dump_of(miral::WindowInfo const& info) -> std::string
         APPEND(preferred_orientation);
         APPEND(confine_pointer);
 
+
 #define APPEND_IF_SET(field) if (info.has_##field()) bout.append(#field, info.field());
         APPEND_IF_SET(output_id);
 #undef  APPEND_IF_SET
@@ -165,7 +179,7 @@ auto dump_of(miral::WindowSpecification const& specification) -> std::string
     {
         BracedItemStream bout{out};
 
-#define APPEND_IF_SET(field) if (specification.field().is_set()) bout.append(#field, specification.field().value());
+#define APPEND_IF_SET(field) if (specification.field().has_value()) bout.append(#field, specification.field().value());
         APPEND_IF_SET(name);
         APPEND_IF_SET(type);
         APPEND_IF_SET(top_left);
@@ -186,7 +200,7 @@ auto dump_of(miral::WindowSpecification const& specification) -> std::string
         APPEND_IF_SET(height_inc);
         APPEND_IF_SET(min_aspect);
         APPEND_IF_SET(max_aspect);
-        if (specification.parent().is_set())
+        if (specification.parent().has_value())
             if (auto const& parent = specification.parent().value().lock())
                 bout.append("parent", parent->name());
 //        APPEND_IF_SET(input_shape);

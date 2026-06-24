@@ -18,7 +18,7 @@
 #include "platform_bridge.h"
 #include "input_report.h"
 
-#include <mir/optional_value.h>
+#include <optional>
 #include <mir/dispatch/dispatchable.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/readable_fd.h>
@@ -97,16 +97,16 @@ public:
         };
     }
 
-    mir::optional_value<mi::PointerSettings> get_pointer_settings() const override
+    std::optional<mi::PointerSettings> get_pointer_settings() const override
     {
         auto pointer_settings = impl->get_pointer_settings();
         if (!pointer_settings->is_set)
-            return mir::optional_value<mi::PointerSettings>{};
+            return std::optional<mi::PointerSettings>{};
 
         if (pointer_settings->has_error)
         {
             mir::log_warning("Unable to get pointer settings for the input device.");
-            return mir::optional_value<mi::PointerSettings>{};
+            return std::optional<mi::PointerSettings>{};
         }
 
         mi::PointerSettings result;
@@ -129,10 +129,10 @@ public:
         impl->set_pointer_settings(pointer_settings_c);
     }
 
-    mir::optional_value<mi::TouchpadSettings> get_touchpad_settings() const override
+    std::optional<mi::TouchpadSettings> get_touchpad_settings() const override
     {
         // TODO(mattkae): Handle touch gestures and settings
-        return mir::optional_value<mi::TouchpadSettings>{};
+        return std::optional<mi::TouchpadSettings>{};
     }
 
     void apply_settings(mi::TouchpadSettings const&) override
@@ -140,10 +140,10 @@ public:
         // TODO(mattkae): Handle touch gestures and settings
     }
 
-    mir::optional_value<mi::TouchscreenSettings> get_touchscreen_settings() const override
+    std::optional<mi::TouchscreenSettings> get_touchscreen_settings() const override
     {
         // TODO(mattkae): Handle touch gestures and settings
-        return mir::optional_value<mi::TouchscreenSettings>{};
+        return std::optional<mi::TouchscreenSettings>{};
     }
 
     void apply_settings(mi::TouchscreenSettings const&) override

@@ -17,6 +17,7 @@
 #include "application_selector.h"
 #include <miral/application_info.h>
 #include <miral/application.h>
+#include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/scene/session.h>
 

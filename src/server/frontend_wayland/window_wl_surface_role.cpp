@@ -49,12 +49,12 @@ geom::Size const max_possible_size{
 /// Clears pending if it holds a value different than cache
 /// sets cache to pending and leaves pending alone if it holds a different value
 template<typename T>
-inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache)
+inline void clear_pending_if_unchanged(std::optional<T>& pending, T& cache)
 {
     if (pending)
     {
         if (pending.value() == cache)
-            pending.consume();
+            pending.reset();
         else
             cache = pending.value();
     }
@@ -141,9 +141,9 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
 
 void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const& new_spec)
 {
-    if (new_spec.width.is_set())
+    if (new_spec.width.has_value())
         pending_explicit_width = new_spec.width.value();
-    if (new_spec.height.is_set())
+    if (new_spec.height.has_value())
         pending_explicit_height = new_spec.height.value();
 
     spec().update_from(new_spec);
@@ -208,7 +208,7 @@ void mf::WindowWlSurfaceRole::set_parent(std::optional<std::shared_ptr<scene::Su
     }
     else if (mods.parent)
     {
-        mods.parent.consume();
+        mods.parent.reset();
     }
 }
 
