@@ -30,7 +30,7 @@ function(add_rust_cxx_library target)
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
     COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
-    DEPENDS ${arg_DEPENDS}
+    DEPENDS ${arg_CXX_BRIDGE_SOURCE_FILE} ${arg_DEPENDS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Building Rust crate ${arg_CRATE}")
 
