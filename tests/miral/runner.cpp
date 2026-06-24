@@ -71,14 +71,14 @@ TEST_F(Runner, wayland_socket_is_returned_by_default)
 {
     miral::TestServer::SetUp();
 
-    miral::TestServer::invoke_runner([](auto& runner){ EXPECT_TRUE(runner.wayland_display().is_set()); });
+    miral::TestServer::invoke_runner([](auto& runner){ EXPECT_TRUE(runner.wayland_display().has_value()); });
 }
 
 TEST_F(Runner, x11_socket_is_not_returned_by_default)
 {
     miral::TestServer::SetUp();
 
-    miral::TestServer::invoke_runner([](auto& runner){ EXPECT_FALSE(runner.x11_display().is_set()); });
+    miral::TestServer::invoke_runner([](auto& runner){ EXPECT_FALSE(runner.x11_display().has_value()); });
 }
 
 TEST_F(Runner, register_signal_handler_before_setup_invokes_callback_after_setup)
@@ -160,7 +160,7 @@ TEST_F(Runner, register_fd_handler_does_not_invoke_callback_when_fd_not_written_
 //
 //    miral::TestServer::invoke_runner([](auto& runner)
 //    {
-//        EXPECT_TRUE(runner.x11_display().is_set());
+//        EXPECT_TRUE(runner.x11_display().has_value());
 //        EXPECT_THAT(runner.x11_display().value(), Eq(":666"));
 //    });
 //}

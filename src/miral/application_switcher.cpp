@@ -19,6 +19,7 @@
 #include "wayland_shm.h"
 #include "wlr-foreign-toplevel-management-unstable-v1.h"
 #include <mir/default_font.h>
+#include <mir/fatal.h>
 
 #include <cerrno>
 #include <memory>

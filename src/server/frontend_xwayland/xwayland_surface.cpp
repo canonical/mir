@@ -1212,31 +1212,31 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
 
     if (spec && scene_surface)
     {
-        if (spec.value()->application_id.is_set() &&
+        if (spec.value()->application_id.has_value() &&
             spec.value()->application_id.value() == scene_surface->application_id())
-            spec.value()->application_id.consume();
+            spec.value()->application_id.reset();
 
-        if (spec.value()->name.is_set() &&
+        if (spec.value()->name.has_value() &&
             spec.value()->name.value() == scene_surface->name())
-            spec.value()->name.consume();
+            spec.value()->name.reset();
 
-        if (spec.value()->parent.is_set() &&
+        if (spec.value()->parent.has_value() &&
             spec.value()->parent.value().lock() == scene_surface->parent())
-            spec.value()->parent.consume();
+            spec.value()->parent.reset();
 
-        if (spec.value()->type.is_set() &&
+        if (spec.value()->type.has_value() &&
             spec.value()->type.value() == scene_surface->type())
-            spec.value()->type.consume();
+            spec.value()->type.reset();
 
-        if (spec.value()->top_left.is_set() &&
+        if (spec.value()->top_left.has_value() &&
             spec.value()->top_left.value() == scene_surface->top_left())
-            spec.value()->top_left.consume();
+            spec.value()->top_left.reset();
 
-        if (spec.value()->width.is_set() && spec.value()->width.value() == scene_surface->content_size().width &&
-            spec.value()->height.is_set() && spec.value()->height.value() == scene_surface->content_size().height)
+        if (spec.value()->width.has_value() && spec.value()->width.value() == scene_surface->content_size().width &&
+            spec.value()->height.has_value() && spec.value()->height.value() == scene_surface->content_size().height)
         {
-            spec.value()->width.consume();
-            spec.value()->height.consume();
+            spec.value()->width.reset();
+            spec.value()->height.reset();
         }
 
         if (!spec.value()->is_empty())
@@ -1263,7 +1263,7 @@ void mf::XWaylandSurface::prep_surface_spec(ProofOfMutexLock const&, msh::Surfac
             mods.placement_hints = MirPlacementHints{};
             mods.surface_placement_gravity = mir_placement_gravity_northwest;
             mods.aux_rect_placement_gravity = mir_placement_gravity_northwest;
-            mods.top_left.consume();
+            mods.top_left.reset();
         }
         else
         {

@@ -127,7 +127,7 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
     out << "\tform factor: " << as_string(val.form_factor) << std::endl;
 
     out << "\tcustom logical size: ";
-    if (val.custom_logical_size.is_set())
+    if (val.custom_logical_size.has_value())
     {
         auto const& size = val.custom_logical_size.value();
         out << size.width.as_int() << "x" << size.height.as_int();
@@ -249,7 +249,7 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
 
 mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 {
-    return custom_logical_size.is_set() ?
+    return custom_logical_size.has_value() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left, scale);
 }
@@ -272,7 +272,7 @@ bool mg::DisplayConfigurationOutput::valid() const
     if (used && current_mode_index >= modes.size())
         return false;
 
-    if (custom_logical_size.is_set())
+    if (custom_logical_size.has_value())
     {
         auto const& logical_size = custom_logical_size.value();
         if (!logical_size.width.as_int() || !logical_size.height.as_int())
@@ -326,7 +326,7 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
 
 mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
 {
-    return custom_logical_size.is_set() ?
+    return custom_logical_size.has_value() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left, scale);
 }

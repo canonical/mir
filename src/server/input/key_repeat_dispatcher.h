@@ -19,7 +19,7 @@
 
 #include <mir/input/input_dispatcher.h>
 #include <mir/input/input_device_observer.h>
-#include <mir/optional_value.h>
+#include <optional>
 
 #include <memory>
 #include <chrono>
@@ -64,7 +64,7 @@ private:
     std::chrono::milliseconds const repeat_timeout;
     std::chrono::milliseconds const repeat_delay;
     bool const disable_repeat_on_touchscreen;
-    optional_value<MirInputDeviceId> touch_button_device;
+    std::optional<MirInputDeviceId> touch_button_device;
 
     struct KeyboardState
     {

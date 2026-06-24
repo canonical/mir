@@ -17,7 +17,7 @@
 #ifndef MIRAL_LAUNCH_APP_H
 #define MIRAL_LAUNCH_APP_H
 
-#include <mir/optional_value.h>
+#include <optional>
 
 #include <sys/types.h>
 

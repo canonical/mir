@@ -19,6 +19,7 @@
 #include "wayland_rs/src/ffi.rs.h"
 #endif
 
+#include <mir/fatal.h>
 #include <mir/shell/token_authority.h>
 #include <mir/graphics/platform.h>
 #include <mir/input/cursor_observer_multiplexer.h>

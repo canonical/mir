@@ -19,6 +19,7 @@
 #include <miral/command_line_option.h>
 #include "static_display_config.h"
 
+#include <mir/fatal.h>
 #include <mir/server.h>
 
 #include <yaml-cpp/yaml.h>

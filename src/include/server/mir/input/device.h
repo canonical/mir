@@ -19,7 +19,7 @@
 
 #include <mir/input/device_capability.h>
 #include <mir_toolkit/event.h>
-#include <mir/optional_value.h>
+#include <optional>
 
 #include <memory>
 
@@ -43,16 +43,16 @@ public:
     virtual std::string name() const = 0;
     virtual std::string unique_id() const = 0;
 
-    virtual mir::optional_value<MirPointerConfig> pointer_configuration() const = 0;
+    virtual std::optional<MirPointerConfig> pointer_configuration() const = 0;
     virtual void apply_pointer_configuration(MirPointerConfig const&) = 0;
 
-    virtual mir::optional_value<MirTouchpadConfig> touchpad_configuration() const = 0;
+    virtual std::optional<MirTouchpadConfig> touchpad_configuration() const = 0;
     virtual void apply_touchpad_configuration(MirTouchpadConfig const&) = 0;
 
-    virtual optional_value<MirKeyboardConfig> keyboard_configuration() const = 0;
+    virtual std::optional<MirKeyboardConfig> keyboard_configuration() const = 0;
     virtual void apply_keyboard_configuration(MirKeyboardConfig const&) = 0;
 
-    virtual optional_value<MirTouchscreenConfig> touchscreen_configuration() const = 0;
+    virtual std::optional<MirTouchscreenConfig> touchscreen_configuration() const = 0;
     virtual void apply_touchscreen_configuration(MirTouchscreenConfig const&) = 0;
 private:
     Device(Device const&) = delete;

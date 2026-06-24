@@ -21,7 +21,7 @@
 #include <mir/geometry/point.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/geometry/size.h>
-#include <mir/optional_value.h>
+#include <optional>
 #include <mir_toolkit/event.h>
 #include <mir/events/xkb_modifiers.h>
 
@@ -108,7 +108,7 @@ private:
         std::vector<uint32_t> scan_codes;
 
         MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_output};
-        mir::optional_value<uint32_t> output_id;
+        std::optional<uint32_t> output_id;
     };
 
     // Libinput's acceleration curve means the cursor moves by non-integer

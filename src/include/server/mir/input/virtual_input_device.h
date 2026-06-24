@@ -40,11 +40,11 @@ private:
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     auto get_device_info() -> InputDeviceInfo override { return info; }
-    auto get_pointer_settings() const -> optional_value<PointerSettings> override;
+    auto get_pointer_settings() const -> std::optional<PointerSettings> override;
     void apply_settings(PointerSettings const&) override {};
-    auto get_touchpad_settings() const -> optional_value<TouchpadSettings> override;
+    auto get_touchpad_settings() const -> std::optional<TouchpadSettings> override;
     void apply_settings(TouchpadSettings const&) override {};
-    auto get_touchscreen_settings() const -> optional_value<TouchscreenSettings> override;
+    auto get_touchscreen_settings() const -> std::optional<TouchscreenSettings> override;
     void apply_settings(TouchscreenSettings const&) override {};
 
     InputDeviceInfo const info;
