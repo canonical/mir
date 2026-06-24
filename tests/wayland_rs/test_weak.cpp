@@ -45,14 +45,37 @@ class Concrete : public Base
 public:
     explicit Concrete(int id) : id{id} {}
 
-    // The backwards-compatible recovery method, replacing the legacy from(wl_resource*).
-    MIR_WAYLANDRS_DECLARE_FROM(Concrete, Base)
-
     int const id;
 };
 
 /// A second, unrelated concrete type used to verify failed downcasts.
 class OtherConcrete : public Base
+{
+};
+
+/// Mirrors the `from<Self>` template that the wayland_rs generator now emits on every generated
+/// base class. Kept in sync with cpp_protocol_generation.rs::wayland_interface_to_cpp_class.
+class GeneratedBase : public mrs::LifetimeTracker
+{
+public:
+    virtual ~GeneratedBase() = default;
+
+    template<typename Self>
+    static auto from(::mir::wayland_rs::Weak<GeneratedBase> const& weak) -> Self*
+    {
+        return ::mir::wayland_rs::as_nullable_ptr(
+            ::mir::wayland_rs::weak_cast<Self>(weak));
+    }
+};
+
+class GeneratedConcrete : public GeneratedBase
+{
+public:
+    explicit GeneratedConcrete(int id) : id{id} {}
+    int const id;
+};
+
+class OtherGeneratedConcrete : public GeneratedBase
 {
 };
 }
@@ -170,29 +193,31 @@ TEST(WaylandRsWeak, downcast_of_expired_weak_yields_empty_weak)
     EXPECT_FALSE(mrs::weak_cast<Concrete>(base_weak));
 }
 
-TEST(WaylandRsWeak, from_macro_recovers_concrete_pointer)
-{
-    Concrete object{55};
-    auto const base_weak = mrs::make_weak<Base>(&object);
+// The following mirror the generator-emitted `from<Self>` template (see GeneratedBase above).
 
-    auto* const recovered = Concrete::from(base_weak);
-    ASSERT_THAT(recovered, Eq(&object));
-    EXPECT_THAT(recovered->id, Eq(55));
+TEST(WaylandRsWeak, generated_from_recovers_concrete_pointer)
+{
+    GeneratedConcrete object{77};
+    auto const base_weak = mrs::make_weak<GeneratedBase>(&object);
+
+    // Both the direct and inherited (via the concrete) spellings must work.
+    EXPECT_THAT(GeneratedBase::from<GeneratedConcrete>(base_weak), Eq(&object));
+    EXPECT_THAT(GeneratedConcrete::from<GeneratedConcrete>(base_weak), Eq(&object));
 }
 
-TEST(WaylandRsWeak, from_macro_returns_nullptr_for_wrong_type)
+TEST(WaylandRsWeak, generated_from_returns_nullptr_for_wrong_type)
 {
-    OtherConcrete object;
-    auto const base_weak = mrs::make_weak<Base>(&object);
+    OtherGeneratedConcrete object;
+    auto const base_weak = mrs::make_weak<GeneratedBase>(&object);
 
-    EXPECT_THAT(Concrete::from(base_weak), Eq(nullptr));
+    EXPECT_THAT(GeneratedBase::from<GeneratedConcrete>(base_weak), Eq(nullptr));
 }
 
-TEST(WaylandRsWeak, from_macro_returns_nullptr_for_expired_weak)
+TEST(WaylandRsWeak, generated_from_returns_nullptr_for_expired_weak)
 {
-    auto object = std::make_unique<Concrete>(8);
-    auto const base_weak = mrs::make_weak<Base>(object.get());
+    auto object = std::make_unique<GeneratedConcrete>(9);
+    auto const base_weak = mrs::make_weak<GeneratedBase>(object.get());
     object.reset();
 
-    EXPECT_THAT(Concrete::from(base_weak), Eq(nullptr));
+    EXPECT_THAT(GeneratedBase::from<GeneratedConcrete>(base_weak), Eq(nullptr));
 }

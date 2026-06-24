@@ -139,18 +139,4 @@ auto weak_cast(Weak<T> const& weak) -> Weak<U>
 }
 }
 
-/// Declares a backwards-compatible `static Derived* from(Weak<Base> const&)` recovery method on a
-/// concrete Wayland implementation, mirroring the legacy `Concrete::from(wl_resource*)` ergonomics.
-/// Returns the concrete pointer, or nullptr if the Weak is null/expired or does not refer to a
-/// Derived. Built on weak_cast<>/as_nullable_ptr.
-///
-/// Usage (inside the class body of Derived):
-///     MIR_WAYLANDRS_DECLARE_FROM(WlSurfaceImpl, Surface)
-#define MIR_WAYLANDRS_DECLARE_FROM(Derived, Base)                              \
-    static auto from(::mir::wayland_rs::Weak<Base> const& weak) -> Derived*    \
-    {                                                                          \
-        return ::mir::wayland_rs::as_nullable_ptr(                             \
-            ::mir::wayland_rs::weak_cast<Derived>(weak));                      \
-    }
-
 #endif  // MIR_WAYLANDRS_WEAK
