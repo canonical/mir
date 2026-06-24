@@ -66,7 +66,11 @@ if (WLCS_VERSION VERSION_LESS_EQUAL "1.8.1")
 endif ()
 
 if (MIR_SIGBUS_HANDLER_ENVIRONMENT_BROKEN OR WLCS_BAD_BUFFER_TEST_BAD)
-  list(APPEND EXPECTED_FAILURES ShmTest.truncated_shm_file_is_an_error)
+  if (WLCS_VERSION VERSION_LESS_EQUAL "1.8.1")
+    list(APPEND EXPECTED_FAILURES BadBufferTest.test_truncated_shm_file)
+  else ()
+    list(APPEND EXPECTED_FAILURES ShmTest.truncated_shm_file_is_an_error)
+  endif ()
 endif ()
 
 set(BROKEN_TESTS
