@@ -31,7 +31,7 @@ typedef enum
     mir_event_type_motion [[deprecated("UNUSED since Mir 0.26")]],
     mir_event_type_window,
     mir_event_type_resize,
-    mir_event_type_prompt_session_state_change,
+    mir_event_type_prompt_session_state_change [[deprecated("UNUSED since Mir 2.29")]],
     mir_event_type_orientation,
     mir_event_type_close_window,
     /* Type for new style input event will be returned from mir_event_get_type

@@ -41,8 +41,6 @@ namespace events
 {
 // Surface orientation change event
 EventUPtr make_surface_orientation_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
-// Prompt session state change event
-EventUPtr make_prompt_session_state_event(MirPromptSessionState state);
 // Surface resize event
 EventUPtr make_window_resize_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Window configure event

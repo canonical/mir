@@ -35,7 +35,6 @@
 #include <mir/input/input_manager.h>
 #include <mir/time/steady_clock.h>
 #include <mir/geometry/rectangles.h>
-#include <mir/scene/null_prompt_session_listener.h>
 #include "default_emergency_cleanup.h"
 #include <mir/graphics/platform.h>
 #include <mir/console_services.h>
@@ -107,16 +106,6 @@ mir::DefaultServerConfiguration::the_session_listener()
         });
 }
 
-std::shared_ptr<ms::PromptSessionListener>
-mir::DefaultServerConfiguration::the_prompt_session_listener()
-{
-    return prompt_session_listener(
-        []
-        {
-            return std::make_shared<ms::NullPromptSessionListener>();
-        });
-}
-
 std::shared_ptr<mf::SessionAuthorizer>
 mir::DefaultServerConfiguration::the_session_authorizer()
 {
@@ -138,11 +127,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         }
 
         bool screencast_is_allowed(mf::SessionCredentials const& /* creds */) override
-        {
-            return true;
-        }
-
-        bool prompt_session_is_allowed(mf::SessionCredentials const& /* creds */) override
         {
             return true;
         }

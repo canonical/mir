@@ -42,8 +42,6 @@ class WlSurface;
 }
 namespace scene
 {
-class PromptSession;
-class PromptSessionCreationParameters;
 class Surface;
 class SurfaceObserver;
 }
@@ -66,16 +64,6 @@ public:
         std::string const& name) -> std::shared_ptr<scene::Session> = 0;
 
     virtual void close_session(std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual std::shared_ptr<scene::PromptSession> start_prompt_session_for(
-        std::shared_ptr<scene::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) = 0;
-
-    virtual void add_prompt_provider_for(
-        std::shared_ptr<scene::PromptSession> const& prompt_session,
-        std::shared_ptr<scene::Session> const& session) = 0;
-
-    virtual void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) = 0;
 
     virtual auto create_surface(
         std::shared_ptr<scene::Session> const& session,

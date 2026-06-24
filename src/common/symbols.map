@@ -236,10 +236,6 @@ global:
     MirPointerEvent::vscroll*;
     MirPointerEvent::x*;
     MirPointerEvent::y*;
-    MirPromptSessionEvent::MirPromptSessionEvent*;
-    MirPromptSessionEvent::clone*;
-    MirPromptSessionEvent::new_state*;
-    MirPromptSessionEvent::set_new_state*;
     MirResizeEvent::MirResizeEvent*;
     MirResizeEvent::clone*;
     MirResizeEvent::height*;
@@ -512,7 +508,6 @@ global:
     non-virtual?thunk?to?MirKeyboardResyncEvent::clone*;
     non-virtual?thunk?to?MirOrientationEvent::clone*;
     non-virtual?thunk?to?MirPointerEvent::clone*;
-    non-virtual?thunk?to?MirPromptSessionEvent::clone*;
     non-virtual?thunk?to?MirResizeEvent::clone*;
     non-virtual?thunk?to?MirTouchEvent::clone*;
     non-virtual?thunk?to?MirWindowEvent::clone*;
@@ -579,7 +574,6 @@ global:
     typeinfo?for?MirOrientationEvent;
     typeinfo?for?MirPointerConfig;
     typeinfo?for?MirPointerEvent;
-    typeinfo?for?MirPromptSessionEvent;
     typeinfo?for?MirResizeEvent;
     typeinfo?for?MirTouchEvent;
     typeinfo?for?MirTouchpadConfig;
@@ -638,7 +632,6 @@ global:
     vtable?for?MirKeyboardResyncEvent;
     vtable?for?MirOrientationEvent;
     vtable?for?MirPointerEvent;
-    vtable?for?MirPromptSessionEvent;
     vtable?for?MirResizeEvent;
     vtable?for?MirTouchEvent;
     vtable?for?MirWindowEvent;

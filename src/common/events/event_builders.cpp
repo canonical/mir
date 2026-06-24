@@ -57,15 +57,6 @@ mir::EventUPtr mev::make_surface_orientation_event(mf::SurfaceId const& surface_
     return make_uptr_event(e);
 }
 
-mir::EventUPtr mev::make_prompt_session_state_event(MirPromptSessionState state)
-{
-    auto e = new_event<MirPromptSessionEvent>();
-
-    e->set_new_state(state);
-
-    return make_uptr_event(e);
-}
-
 mir::EventUPtr mev::make_window_resize_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
     auto e = new_event<MirResizeEvent>();

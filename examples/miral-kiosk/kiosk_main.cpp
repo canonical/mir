@@ -57,11 +57,6 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
         return true;
     }
 
-    virtual bool prompt_session_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
-    {
-        return false;
-    }
-
     bool configure_input_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
     {
         return false;
