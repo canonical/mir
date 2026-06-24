@@ -677,13 +677,11 @@ void msh::AbstractShell::add_grabbing_popup(std::shared_ptr<scene::Surface> cons
 void msh::AbstractShell::add_display(geometry::Rectangle const& area)
 {
     report->adding_display(area);
-    window_manager->add_display(area);
 }
 
 void msh::AbstractShell::remove_display(geometry::Rectangle const& area)
 {
     report->removing_display(area);
-    window_manager->remove_display(area);
 }
 
 bool msh::AbstractShell::handle(MirEvent const& event)

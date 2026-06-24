@@ -44,9 +44,6 @@ namespace miral
 ///     about the application
 using Application = std::shared_ptr<mir::scene::Session>;
 
-[[deprecated("Not meaningful: legacy of mirclient API")]]
-void apply_lifecycle_state_to(Application const& application, MirLifecycleState state);
-
 /// Kills the \p application with the signal provided by \p sig.
 ///
 /// \param application The application to kill

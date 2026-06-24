@@ -5,12 +5,10 @@ kill-timeout: 45m
 backends:
     lxd:
         systems:
-            - alpine-3.21
-            - alpine-3.22
-            - alpine-3.23
+            - alpine-3.24
             - alpine-edge
-            - ubuntu-24.04
-            - fedora-43
+            - ubuntu-26.04
+            - fedora-44
 
 environment:
     ARCH: amd64
@@ -18,15 +16,14 @@ environment:
     ARCH/ubuntu_armhf: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
-    RELEASE: noble
-    RELEASE/ubuntu: noble
-    RELEASE/ubuntu_questing: questing
+    RELEASE: resolute
+    RELEASE/ubuntu: resolute
     RELEASE/ubuntu_resolute: resolute
     RELEASE/ubuntu_devel: stonking
     RELEASE/debian_sid: sid
-    RELEASE/fedora_43: 43
+    RELEASE/fedora_44: 44
     RELEASE/fedora_rawhide: rawhide
-    RELEASE/fedora_clang: 43
+    RELEASE/fedora_clang: 44
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0

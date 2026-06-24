@@ -29,6 +29,10 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -66,6 +70,10 @@ public:
 private:
     mw::Weak<WindowWlSurfaceRole> window_role_;
     mw::Weak<WlSurface> const surface;
+    /// Serials of configure events sent on this xdg_surface that have not yet been
+    /// consumed by an ack_configure, in the order they were sent. Acking a serial
+    /// consumes it and every serial sent before it.
+    std::vector<uint32_t> unacked_configure_serials;
 
 public:
     XdgShellStable const& xdg_shell;
@@ -251,13 +259,22 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
 
 void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 {
-    (void)serial;
-    // TODO
+    auto const it = std::find(unacked_configure_serials.begin(), unacked_configure_serials.end(), serial);
+    if (it == unacked_configure_serials.end())
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_serial,
+            "ack_configure with serial %u that was never sent or has already been acked", serial};
+    }
+    // Acking a serial consumes it and every configure serial sent before it.
+    unacked_configure_serials.erase(unacked_configure_serials.begin(), std::next(it));
 }
 
 void mf::XdgSurfaceStable::send_configure()
 {
     auto const serial = client->next_serial(nullptr);
+    unacked_configure_serials.push_back(serial);
     send_configure_event(serial);
 }
 

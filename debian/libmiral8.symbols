@@ -289,20 +289,19 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::MirRunner::wayland_display[abi:cxx11]() const@MIRAL_6.0" 6.0.0
  (c++)"miral::MirRunner::x11_display[abi:cxx11]() const@MIRAL_6.0" 6.0.0
  (c++)"miral::MirRunner::~MirRunner()@MIRAL_6.0" 6.0.0
- (c++)"miral::MouseKeysConfig::MouseKeysConfig(bool)@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::MouseKeysConfig(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::MouseKeysConfig(std::shared_ptr<miral::MouseKeysConfig::Self>)@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::disable() const@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::disabled()@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::enable() const@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::enabled()@MIRAL_6.0" 6.0.0
- (c++)"miral::MouseKeysConfig::enabled(bool) const@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::set_acceleration_factors(double, double, double) const@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::set_keymap(mir::input::MouseKeysKeymap const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::MouseKeysConfig::set_max_speed(double, double) const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::Output(mir::graphics::DisplayConfigurationOutput const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::Output(miral::Output const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::Output::PhysicalSizeMM::operator==(miral::Output::PhysicalSizeMM const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::attribute(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::attributes_map[abi:cxx11]() const@MIRAL_6.0" 6.0.0
  (c++)"miral::Output::connected() const@MIRAL_6.0" 6.0.0
@@ -389,6 +388,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WaylandExtensions::disable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::enable(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_data_control_manager_v1@MIRAL_6.0" 6.0.0
+ (c++)"miral::WaylandExtensions::ext_foreign_toplevel_image_capture_source_manager_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_foreign_toplevel_list_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_image_copy_capture_manager_v1@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::ext_output_image_capture_source_manager_v1@MIRAL_6.0" 6.0.0
@@ -453,7 +453,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::must_have_parent() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::must_not_have_parent() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::name[abi:cxx11]() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowInfo::needs_titlebar(MirWindowType)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::operator=(miral::WindowInfo const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::output_id() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::parent() const@MIRAL_6.0" 6.0.0
@@ -511,11 +510,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowManagerTools::for_each_application(std::function<void (miral::ApplicationInfo&)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::for_each_window_in_workspace(std::shared_ptr<miral::Workspace> const&, std::function<void (miral::Window const&)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::for_each_workspace_containing(miral::Window const&, std::function<void (std::shared_ptr<miral::Workspace> const&)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagerTools::id_for_window[abi:cxx11](miral::Window const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::info_for(miral::Window const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::info_for(std::weak_ptr<mir::scene::Session> const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::info_for(std::weak_ptr<mir::scene::Surface> const&) const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagerTools::info_for_window_id(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::invoke_under_lock(std::function<void ()> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::modify_window(miral::Window const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
@@ -628,7 +625,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::Zone::~Zone()@MIRAL_6.0" 6.0.0
  (c++)"miral::application_for(wl_client*)@MIRAL_6.0" 6.0.0
  (c++)"miral::application_for(wl_resource*)@MIRAL_6.0" 6.0.0
- (c++)"miral::apply_lifecycle_state_to(std::shared_ptr<mir::scene::Session> const&, MirLifecycleState)@MIRAL_6.0" 6.0.0
  (c++)"miral::display_configuration_options(mir::Server&)@MIRAL_6.0" 6.0.0
  (c++)"miral::equivalent_display_area(miral::Output const&, miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::kill(std::shared_ptr<mir::scene::Session> const&, int)@MIRAL_6.0" 6.0.0

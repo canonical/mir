@@ -43,8 +43,9 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
             extern "Rust" {
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
-                fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>) -> Result<()>;
-                fn stop(self: &mut WaylandServer);
+                fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
+                fn stop(self: &WaylandServer);
+                fn drain_queue(self: &mut WaylandServer) -> bool;
 
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;
