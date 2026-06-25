@@ -311,7 +311,6 @@ Depends: mir-platform-graphics-gbm-kms24,
          ${shlibs:Depends},
 Breaks: mir-platform-graphics-eglstream-kms24 (<< 2.29.0)
 Replaces: mir-platform-graphics-eglstream-kms24 (<< 2.29.0)
-Provides: mir-platform-graphics-eglstream-kms24
 Description: Display server for Ubuntu - platform library for Atomic KMS
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -449,8 +448,6 @@ Breaks: mir-platform-graphics-eglstream-kms (<< 2.29.0),
         mir-graphics-drivers-nvidia (<< 2.29.0)
 Replaces: mir-platform-graphics-eglstream-kms (<< 2.29.0),
           mir-graphics-drivers-nvidia (<< 2.29.0)
-Provides: mir-platform-graphics-eglstream-kms,
-          mir-graphics-drivers-nvidia
 Description: Display server for Ubuntu - gbm-kms driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
