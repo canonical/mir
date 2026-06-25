@@ -25,7 +25,7 @@ use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
-use std::os::fd::RawFd;
+use std::os::fd::{AsRawFd, RawFd};
 use std::sync::{mpsc, Arc, Mutex};
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
@@ -102,6 +102,7 @@ impl WaylandServer {
                                 // spoken to on a single thread.
                                 let _ = disconnect_tx.send((client_id, reason));
                             }),
+                            socket_fd: stream.as_raw_fd(),
                         };
                         match state.handle.insert_client(stream, Arc::new(client_state)) {
                             Err(e) => log::error!("Failed to add client: {}", e),
@@ -399,8 +400,16 @@ pub struct ServerState {
 }
 
 /// The state of a wayland client.
-struct ClientState {
+pub struct ClientState {
     on_disconnect: Box<dyn Fn(ClientId, DisconnectReason) + Send + Sync>,
+    socket_fd: std::os::fd::RawFd,
+}
+
+impl ClientState {
+    /// Retrieve the socket file descriptor for this client's connection.
+    pub fn fd(&self) -> i32 {
+        self.socket_fd
+    }
 }
 
 impl ClientData for ClientState {

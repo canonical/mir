@@ -20,7 +20,6 @@ add_library(mirevents OBJECT
   keyboard_resync_event.cpp
   touch_event.cpp
   pointer_event.cpp
-  prompt_session_event.cpp
   window_event.cpp
   input_event.cpp
   input_device_state_event.cpp

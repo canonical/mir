@@ -20,7 +20,6 @@
 #include <mir/events/keyboard_event.h>
 #include <mir/events/touch_event.h>
 #include <mir/events/orientation_event.h>
-#include <mir/events/prompt_session_event.h>
 #include <mir/events/resize_event.h>
 #include <mir/events/window_event.h>
 #include <mir/events/window_output_event.h>
@@ -68,16 +67,6 @@ MirResizeEvent* MirEvent::to_resize()
 MirResizeEvent const* MirEvent::to_resize() const
 {
     return static_cast<MirResizeEvent const*>(this);
-}
-
-MirPromptSessionEvent* MirEvent::to_prompt_session()
-{
-    return static_cast<MirPromptSessionEvent*>(this);
-}
-
-MirPromptSessionEvent const* MirEvent::to_prompt_session() const
-{
-    return static_cast<MirPromptSessionEvent const*>(this);
 }
 
 MirOrientationEvent* MirEvent::to_orientation()

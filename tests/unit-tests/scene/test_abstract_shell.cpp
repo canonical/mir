@@ -34,7 +34,6 @@
 #include <mir/test/doubles/mock_surface.h>
 #include <mir/test/doubles/stub_surface.h>
 #include <mir/test/doubles/null_event_sink.h>
-#include <mir/test/doubles/null_prompt_session_manager.h>
 #include <mir/test/doubles/stub_input_targeter.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_display.h>
@@ -162,7 +161,6 @@ struct AbstractShell : Test
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
-        std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
         mt::fake_shared(seat),

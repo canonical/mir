@@ -50,11 +50,6 @@ struct SessionAuthorizerAdapter : mf::SessionAuthorizer
         return app_auth->screencast_is_allowed(creds);
     }
 
-    virtual bool prompt_session_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->prompt_session_is_allowed(creds);
-    }
-
     bool configure_input_is_allowed(mf::SessionCredentials const& creds) override
     {
         return app_auth->configure_input_is_allowed(creds);
