@@ -203,14 +203,15 @@ if(MIR_ENABLE_COVERAGE)
         NAME coverage-html
         EXECUTABLE ctest --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
         EXCLUDE "tests/*" "${CMAKE_BINARY_DIR}/*"
-        LCOV_ARGS --ignore-errors inconsistent --ignore-errors mismatch --ignore-errors unused
+        LCOV_ARGS --ignore-errors inconsistent --ignore-errors mismatch --ignore-errors unused --ignore-errors format
           --exclude "*/examples/*"
           --exclude "*/src/server/console/logind-*"
           --exclude "*/*.tp.h"
           --substitute "s@${CMAKE_SOURCE_DIR}/((?:src/platform/graphics|src/wayland|tests/miral)/[^/]+_wrapper.(?:cpp|h))$@/${CMAKE_BINARY_DIR}/$1@"
           --substitute "s@${CMAKE_SOURCE_DIR}/target@${CMAKE_BINARY_DIR}/target@"
           --substitute "s@${CMAKE_SOURCE_DIR}/miral-generated@${CMAKE_BINARY_DIR}/miral-generated@"
-        GENHTML_ARGS --ignore-errors inconsistent --ignore-errors corrupt
+        GENHTML_ARGS --ignore-errors inconsistent --ignore-errors corrupt --ignore-errors category
+          --exclude "*/src/platform/graphics/drm-formats*"
     )
 
     setup_target_for_coverage_gcovr_xml(
