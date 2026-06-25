@@ -142,7 +142,7 @@ def has_vtable(node: clang.cindex.Cursor):
         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
             continue
 
-        class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+        class_or_struct_node = child.get_definition()
         if class_or_struct_node is None:
             continue
 
@@ -166,7 +166,7 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
         if clang.cindex.conf.lib.clang_isVirtualBase(child):
             result = True
         else:
-            class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+            class_or_struct_node = child.get_definition()
             if class_or_struct_node is None:
                 continue
 
@@ -286,7 +286,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
                             continue
 
-                        class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+                        class_or_struct_node = child.get_definition()
                         if class_or_struct_node is None:
                             continue
 
