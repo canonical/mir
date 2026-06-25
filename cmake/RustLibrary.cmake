@@ -26,11 +26,18 @@ function(add_rust_cxx_library target)
   set(cxxbridge_header "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.h")
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
   set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
+  set(cxx_bridge_source_dep "${arg_CXX_BRIDGE_SOURCE_FILE}")
+  if(NOT IS_ABSOLUTE "${cxx_bridge_source_dep}")
+    set(cxx_bridge_source_dep "${CMAKE_CURRENT_SOURCE_DIR}/${cxx_bridge_source_dep}")
+  endif()
+  if(NOT EXISTS "${cxx_bridge_source_dep}")
+    unset(cxx_bridge_source_dep)
+  endif()
 
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
     COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
-    DEPENDS ${arg_CXX_BRIDGE_SOURCE_FILE} ${arg_DEPENDS}
+    DEPENDS ${cxx_bridge_source_dep} ${arg_DEPENDS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Building Rust crate ${arg_CRATE}")
 
