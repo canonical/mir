@@ -17,7 +17,6 @@ add_library(mircore SHARED
     report_exception.cpp ${PROJECT_SOURCE_DIR}/include/core/mir/report_exception.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fd.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/rectangle.h
