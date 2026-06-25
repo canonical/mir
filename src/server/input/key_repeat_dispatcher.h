@@ -19,11 +19,11 @@
 
 #include <mir/input/input_dispatcher.h>
 #include <mir/input/input_device_observer.h>
-#include <optional>
 
-#include <memory>
 #include <chrono>
+#include <memory>
 #include <mutex>
+#include <optional>
 #include <unordered_map>
 
 namespace mir

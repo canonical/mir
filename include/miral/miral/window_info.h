@@ -21,8 +21,9 @@
 #include <miral/window_specification.h>
 
 #include <mir/geometry/rectangles.h>
-#include <optional>
 #include <mir/flags.h>
+
+#include <optional>
 
 namespace miral
 {

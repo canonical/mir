@@ -18,7 +18,6 @@
 #define MIR_SHELL_SURFACE_SPECIFICATION_H_
 
 #include <mir/flags.h>
-#include <optional>
 #include <mir_toolkit/common.h>
 #include <mir/frontend/surface_id.h>
 #include <mir/geometry/point.h>
@@ -26,8 +25,9 @@
 #include <mir/graphics/buffer_properties.h>
 #include <mir/graphics/display_configuration.h>
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 
 namespace mir
 {

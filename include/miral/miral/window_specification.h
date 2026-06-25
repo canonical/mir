@@ -21,11 +21,11 @@
 
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/rectangles.h>
-#include <optional>
 #include <mir/int_wrapper.h>
 #include <mir/flags.h>
 
 #include <memory>
+#include <optional>
 
 namespace mir
 {

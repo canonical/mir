@@ -22,7 +22,6 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/geometry/point.h>
 #include <mir/graphics/gamma_curves.h>
-#include <optional>
 #include <mir_toolkit/common.h>
 
 #include <glm/glm.hpp>

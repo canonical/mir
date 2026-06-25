@@ -21,14 +21,14 @@
 #include <mir/geometry/point.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/geometry/size.h>
-#include <optional>
 #include <mir_toolkit/event.h>
 #include <mir/events/xkb_modifiers.h>
 
 #include <atomic>
-#include <unordered_map>
+#include <optional>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
 namespace mir
 {

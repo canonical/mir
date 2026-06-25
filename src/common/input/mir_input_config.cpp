@@ -21,8 +21,8 @@
 #include <mir/input/mir_pointer_config.h>
 #include <mir/input/mir_touchscreen_config.h>
 
-#include <optional>
 #include <algorithm>
+#include <optional>
 #include <ostream>
 #include <tuple>
 

@@ -18,7 +18,6 @@
 #include "platform_bridge.h"
 #include "input_report.h"
 
-#include <optional>
 #include <mir/dispatch/dispatchable.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/readable_fd.h>
@@ -32,6 +31,7 @@
 #include <mir/log.h>
 
 #include <unistd.h>
+#include <optional>
 
 namespace mi = mir::input;
 namespace miers = mi::evdev_rs;
@@ -132,7 +132,7 @@ public:
     std::optional<mi::TouchpadSettings> get_touchpad_settings() const override
     {
         // TODO(mattkae): Handle touch gestures and settings
-        return std::optional<mi::TouchpadSettings>{};
+        return std::nullopt;
     }
 
     void apply_settings(mi::TouchpadSettings const&) override
@@ -143,7 +143,7 @@ public:
     std::optional<mi::TouchscreenSettings> get_touchscreen_settings() const override
     {
         // TODO(mattkae): Handle touch gestures and settings
-        return std::optional<mi::TouchscreenSettings>{};
+        return std::nullopt;
     }
 
     void apply_settings(mi::TouchscreenSettings const&) override

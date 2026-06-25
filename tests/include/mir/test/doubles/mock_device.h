@@ -23,10 +23,10 @@
 #include <mir/input/mir_keyboard_config.h>
 #include <mir/input/mir_touchpad_config.h>
 #include <mir/input/mir_touchscreen_config.h>
-#include <optional>
 
 #include <gmock/gmock.h>
 
+#include <optional>
 #include <string>
 
 namespace mir
