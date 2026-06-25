@@ -52,8 +52,8 @@ class Context:
 class Run:
     def __init__(self, args, cwd=None, stdin=None):
         assert isinstance(args, list)
-        assert isinstance(cwd, str) or cwd == None
-        assert isinstance(stdin, str) or stdin == None
+        assert isinstance(cwd, str) or cwd is None
+        assert isinstance(stdin, str) or stdin is None
         self.args = args
         # print('Running `' + ' '.join(self.args) + '`')
         p = subprocess.Popen(
@@ -63,10 +63,10 @@ class Run:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE
             )
-        stdin = bytes(stdin, 'utf-8') if stdin != None else None
+        stdin = bytes(stdin, 'utf-8') if stdin is not None else None
         stdout, stderr = p.communicate(stdin)
-        self.stdout = stdout.decode('utf-8') if stdout != None else ''
-        self.stderr = stderr.decode('utf-8') if stderr != None else ''
+        self.stdout = stdout.decode('utf-8') if stdout is not None else ''
+        self.stderr = stderr.decode('utf-8') if stderr is not None else ''
         self.returncode = p.returncode
 
     def success(self):
@@ -142,7 +142,7 @@ def check_symbols(context):
         return None
     else:
         symbols_to_add = new_lines_from_unfiltered(result.stdout)
-        if symbols_to_add != None:
+        if symbols_to_add is not None:
             return symbols_to_add
         else:
             result.assert_success() # Something's not right. This will fail with a useful error
@@ -159,7 +159,7 @@ if __name__ == '__main__':
     context = Context(sys.argv[1:])
     context.validate()
     symbols_to_add = check_symbols(context)
-    if symbols_to_add != None:
+    if symbols_to_add is not None:
         print('Adding symbols to ' + context.deb_symbols_path + ':\n' + ''.join(symbols_to_add))
         append_to_symbols_file(symbols_to_add, context)
         print('Debian symbols added')
