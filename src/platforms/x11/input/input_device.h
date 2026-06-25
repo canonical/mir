@@ -22,7 +22,6 @@
 #include <mir_toolkit/event.h>
 #include <mir/geometry/point.h>
 #include <mir/geometry/displacement.h>
-#include <optional>
 
 #include <chrono>
 #include <optional>
