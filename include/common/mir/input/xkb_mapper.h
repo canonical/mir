@@ -19,7 +19,6 @@
 
 #include <mir/input/key_mapper.h>
 #include <mir/input/keymap.h>
-#include <optional>
 #include <mir/events/xkb_modifiers.h>
 
 #include <xkbcommon/xkbcommon.h>

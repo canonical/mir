@@ -22,7 +22,6 @@
 #include <mir/input/keymap.h>
 #include <mir/input/keyboard_leds.h>
 #include <mir/input/xkb_mapper.h>
-#include <optional>
 #include <mir/events/xkb_modifiers.h>
 #include <mir/observer_multiplexer.h>
 

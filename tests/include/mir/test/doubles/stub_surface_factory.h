@@ -40,8 +40,8 @@ public:
         using namespace testing;
         auto surface = std::make_shared<NiceMock<MockSurface>>();
         ON_CALL(*surface, size()).WillByDefault(Return(geometry::Size{
-            params.width.has_value() ? params.width.value() : geometry::Width{1},
-            params.height.has_value() ? params.height.value() : geometry::Height{1}}));
+            params.width.value_or(geometry::Width{1}),
+            params.height.value_or(geometry::Height{1})}));
         return surface;;
     }
 };

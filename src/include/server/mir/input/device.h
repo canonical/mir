@@ -19,9 +19,9 @@
 
 #include <mir/input/device_capability.h>
 #include <mir_toolkit/event.h>
-#include <optional>
 
 #include <memory>
+#include <optional>
 
 class MirPointerConfig;
 class MirTouchpadConfig;

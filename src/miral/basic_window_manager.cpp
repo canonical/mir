@@ -230,7 +230,7 @@ void miral::BasicWindowManager::modify_surface(
     place_and_size_for_state(mods, info);
     if (!mods.state() && info.state() == mir_window_state_fullscreen)
     {
-        if (mods.size().has_value()) mods.size().reset();
+        mods.size().reset();
     }
     policy->handle_modify_window(info, mods);
 }

@@ -17,11 +17,11 @@
 #ifndef MIRAL_CONFIGURATION_OPTION_H
 #define MIRAL_CONFIGURATION_OPTION_H
 
-#include <optional>
 #include <miral/lambda_as_function.h>
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 

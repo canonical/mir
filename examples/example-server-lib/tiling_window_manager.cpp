@@ -126,8 +126,9 @@ auto TilingWindowManagerPolicy::place_new_window(
             }
             else
             {
-                parameters.state() = parameters.state().has_value() ?
-                                     transform_set_state(parameters.state().value()) : mir_window_state_restored;
+                parameters.state() = parameters.state()
+                    .transform([this](auto v) { return transform_set_state(v); })
+                    .value_or(mir_window_state_restored);
 
                 auto top_level_windows = count_if(begin(app_info.windows()), end(app_info.windows()), [this]
                     (Window const& window){ return !tools.info_for(window).parent(); });
@@ -173,17 +174,11 @@ void TilingWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
 namespace
 {
 template<typename ValueType>
-void reset(std::optional<ValueType>& option)
-{
-    if (option.has_value()) option.reset();
-}
-
-template<typename ValueType>
 void set_if_needed(std::optional<ValueType>& pending, ValueType const& current, ValueType const& correct)
 {
     if (current == correct)
     {
-        reset(pending);
+        pending.reset();
     }
     else
     {
@@ -211,7 +206,7 @@ void TilingWindowManagerPolicy::handle_modify_window(
 
     constrain_size_and_place(mods, window, tile);
 
-    reset(mods.output_id());
+    mods.output_id().reset();
 
     tools.modify_window(window_info, mods);
 }
@@ -227,7 +222,7 @@ void TilingWindowManagerPolicy::constrain_size_and_place(
     set_if_needed(mods.max_width(), info.max_width(), Width{std::numeric_limits<int>::max()});
     set_if_needed(mods.max_height(), info.max_height(), Height{std::numeric_limits<int>::max()});
 
-    if ((mods.state().has_value() ? mods.state().value() : info.state()) == mir_window_state_maximized)
+    if (mods.state().value_or(info.state()) == mir_window_state_maximized)
     {
         mods.top_left() = tile.top_left;
         mods.size() = tile.size;
@@ -250,8 +245,8 @@ void TilingWindowManagerPolicy::constrain_size_and_place(
         mods.top_left() = Point{x, y};
     }
 
-    auto top_left = mods.top_left().has_value() ? mods.top_left().value() : window.top_left();
-    auto bottom_right = top_left + as_displacement(mods.size().has_value() ? mods.size().value() : window.size());
+    auto top_left = mods.top_left().value_or(window.top_left());
+    auto bottom_right = top_left + as_displacement(mods.size().value_or(window.size()));
     auto overhang = bottom_right - tile.bottom_right();
 
     if (overhang.dx > DeltaX{0}) top_left = top_left - overhang.dx;
@@ -260,7 +255,7 @@ void TilingWindowManagerPolicy::constrain_size_and_place(
     if (top_left != window.top_left())
         mods.top_left() = top_left;
     else
-        reset(mods.top_left());
+        mods.top_left().reset();
 }
 
 auto TilingWindowManagerPolicy::transform_set_state(MirWindowState value)
@@ -676,8 +671,8 @@ auto TilingWindowManagerPolicy::confirm_inherited_move(miral::WindowInfo const& 
     WindowSpecification mods;
     mods.top_left() = window.top_left() + movement;
     constrain_size_and_place(mods, window, tile_for(window_info));
-    auto pos  = mods.top_left().has_value() ? mods.top_left().value() : window.top_left();
-    auto size = mods.size().has_value()     ? mods.size().value()     : window.size();
+    auto pos  = mods.top_left().value_or(window.top_left());
+    auto size = mods.size().value_or(window.size());
     return {pos, size};
 }
 

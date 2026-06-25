@@ -137,8 +137,8 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
         (!specification.parent().has_value() || !specification.parent().value().lock()))
     {
         specification.state() = mir_window_state_maximized;
-        specification.top_left() = std::optional<Point>{}; // Ignore requested position (if any) when we maximize
-        specification.size() = std::optional<Size>{}; // Ignore requested size (if any) when we maximize
+        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we maximize
+        specification.size() = std::nullopt; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, WindowInfo{});
 
         if (!request.state().has_value() || request.state().value() != mir_window_state_restored)
@@ -156,8 +156,8 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
         !window_info.parent())
     {
         specification.state() = mir_window_state_maximized;
-        specification.top_left() = std::optional<Point>{}; // Ignore requested position (if any) when we maximize
-        specification.size() = std::optional<Size>{}; // Ignore requested size (if any) when we maximize
+        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we maximize
+        specification.size() = std::nullopt; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, window_info);
 
         if (!modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)

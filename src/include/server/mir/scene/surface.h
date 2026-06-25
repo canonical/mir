@@ -22,12 +22,12 @@
 #include <mir/frontend/surface.h>
 #include <mir/compositor/compositor_id.h>
 #include <mir/flags.h>
-#include <optional>
 #include <mir/observer_registrar.h>
 #include "surface_state_tracker.h"
 
-#include <vector>
 #include <list>
+#include <optional>
+#include <vector>
 
 namespace mir
 {

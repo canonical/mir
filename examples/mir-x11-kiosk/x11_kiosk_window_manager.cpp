@@ -77,8 +77,8 @@ auto X11KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_in
         (!specification.parent().has_value() || !specification.parent().value().lock()))
     {
         specification.state() = mir_window_state_fullscreen;
-        specification.size() = std::optional<Size>{}; // Ignore requested size (if any) when we fullscreen
-        specification.top_left() = std::optional<Point>{}; // Ignore requested position (if any) when we fullscreen
+        specification.size() = std::nullopt; // Ignore requested size (if any) when we fullscreen
+        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we fullscreen
         tools.place_and_size_for_state(specification, WindowInfo{});
 
         if (!request.state().has_value() || request.state().value() != mir_window_state_restored)
@@ -109,8 +109,8 @@ void X11KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
         if (window_info.is_visible() || !modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)
         {
             specification.state() = mir_window_state_fullscreen;
-            specification.size() = std::optional<Size>{}; // Ignore requested size (if any) when we fullscreen
-            specification.top_left() = std::optional<Point>{}; // Ignore requested position (if any) when we fullscreen
+            specification.size() = std::nullopt; // Ignore requested size (if any) when we fullscreen
+            specification.top_left() = std::nullopt; // Ignore requested position (if any) when we fullscreen
             tools.place_and_size_for_state(specification, window_info);
 
             if (!modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)

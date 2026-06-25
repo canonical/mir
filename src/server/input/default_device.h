@@ -24,11 +24,11 @@
 #include <mir/input/touchpad_settings.h>
 #include <mir/input/touchscreen_settings.h>
 #include <mir/input/mir_keyboard_config.h>
-#include <optional>
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <mutex>
+#include <optional>
 
 namespace mir
 {

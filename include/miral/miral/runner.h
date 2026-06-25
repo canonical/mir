@@ -17,12 +17,12 @@
 #ifndef MIRAL_RUNNER_H
 #define MIRAL_RUNNER_H
 
-#include <optional>
 #include <mir/fd.h>
 
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <optional>
 
 namespace mir { class Server; }
 

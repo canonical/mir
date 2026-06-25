@@ -360,8 +360,7 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                 modifications.state() = mir_window_state_vertmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
 
-                auto const new_width =
-                    (modifications.size().has_value() ? modifications.size().value() : active_window.size()).width;
+                auto const new_width = modifications.size().value_or(active_window.size()).width;
 
                 modifications.top_left() = active_zone.top_right() - Displacement{as_delta(new_width), 0};
                 break;
@@ -377,8 +376,7 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                 modifications.state() = mir_window_state_horizmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
                 modifications.top_left() =
-                    active_zone.bottom_right() - as_displacement(
-                    modifications.size().has_value() ? modifications.size().value() : active_window.size());
+                    active_zone.bottom_right() - as_displacement(modifications.size().value_or(active_window.size()));
                 break;
 
             default:

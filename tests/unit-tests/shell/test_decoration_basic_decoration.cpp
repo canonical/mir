@@ -120,9 +120,11 @@ struct MockShell
         // consume all the properties we expect, and error at the end if anything is left over
 
         if (spec.width.has_value() && spec.height.has_value())
+        {
             surface->resize({spec.width.value(), spec.height.value()});
-        if (spec.width.has_value()) spec.width.reset();
-        if (spec.height.has_value()) spec.height.reset();
+            spec.width.reset();
+            spec.height.reset();
+        }
 
         if (spec.input_shape.has_value())
         {
@@ -130,9 +132,9 @@ struct MockShell
             spec.input_shape.reset();
         }
 
-        if (spec.streams.has_value()) spec.streams.reset();
-        if (spec.cursor_image.has_value()) spec.cursor_image.reset();
-        if (spec.state.has_value()) spec.state.reset();
+        spec.streams.reset();
+        spec.cursor_image.reset();
+        spec.state.reset();
 
         EXPECT_TRUE(spec.is_empty()) << "State not cleared in MockShell::modify_surface()";
 
