@@ -201,6 +201,8 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     namespace.add_forward_declaration_class("WaylandServer");
     // WaylandClient is used in the protected constructor of every generated C++ implementation.
     namespace.add_forward_declaration_class("WaylandClient");
+    // WaylandClientId is used by the Client interface (client.h) and registry.
+    namespace.add_forward_declaration_class("WaylandClientId");
 
     for protocol in protocols {
         for interface in &protocol.interfaces {
@@ -241,6 +243,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_header_include("\"lifetime_tracker.h\"");
     builder.add_header_include("\"ffi_fwd.h\"");
+    builder.add_header_include("\"client.h\"");
     builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
     builder.add_header_include("<cstdint>");
@@ -332,9 +335,11 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_method(destroy_and_delete_method);
 
     // Add a protected constructor and member so that subclasses know which client
-    // they are serving and can interact with it as they please.
+    // they are serving and can interact with it as they please. The client is the
+    // hand-written `mir::wayland_rs::Client` interface (wrapping the raw Rust
+    // `WaylandClient`), resolved from the registry on the C++ side.
     class.add_protected_constructor_arg(CppArg::new(
-        CppType::Box("WaylandClient".to_string()),
+        CppType::SharedPtr("Client".to_string()),
         "client",
         false,
     ));
@@ -350,7 +355,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_protected_constructor_arg(CppArg::new(CppType::CppU32, "object_id_", false));
     class
         .add_public_member(CppArg::new(
-            CppType::Box("WaylandClient".to_string()),
+            CppType::SharedPtr("Client".to_string()),
             "client",
             false,
         ))

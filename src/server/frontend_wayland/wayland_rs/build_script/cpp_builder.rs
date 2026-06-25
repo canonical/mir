@@ -555,6 +555,10 @@ pub enum CppType {
     Fd,
     Box(String),
     Bool,
+    /// A `std::shared_ptr<T>` to a hand-written C++ type (e.g. the `Client`
+    /// interface). This type never crosses the FFI boundary; it is only used on
+    /// the public C++ surface of generated classes.
+    SharedPtr(String),
     /// A nullable argument exposed on the public C++ surface as `std::optional`.
     /// This type never crosses the FFI boundary; the boundary uses the
     /// `(value, has_value)` representation instead.
@@ -612,6 +616,7 @@ fn cpp_bare_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -
         (CppType::Object(name), _) => format!("std::shared_ptr<{}>", name),
         (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}>", name),
         (CppType::Box(name), _) => format!("rust::Box<{}>", name),
+        (CppType::SharedPtr(name), _) => format!("std::shared_ptr<{}>", name),
         (CppType::String, true) => "rust::String".into(),
         (CppType::String, false) => "std::string".into(),
         (CppType::Str, _) => "rust::Str".into(),
@@ -645,6 +650,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
             quote! { &Box<#type_name> }
         }
         CppType::Bool => quote! { bool },
+        CppType::SharedPtr(_) => unreachable!("SharedPtr type should not generate Rust code"),
         CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }
@@ -689,6 +695,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
             }
         }
         CppType::Bool => quote! { bool },
+        CppType::SharedPtr(_) => unreachable!("SharedPtr type should not generate Rust code"),
         CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }

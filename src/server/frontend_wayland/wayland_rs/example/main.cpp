@@ -16,6 +16,7 @@
 
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_executor.h"
+#include "wayland_client_registry.h"
 #include <mir/executor.h>
 #include <wayland-client.h>
 #include <chrono>
@@ -31,6 +32,11 @@ namespace
 class WaylandServerNotificationHandler : public mir::wayland_rs::WaylandServerNotificationHandler
 {
 public:
+    explicit WaylandServerNotificationHandler(mir::wayland_rs::WaylandClientRegistry& registry) :
+        registry{registry}
+    {
+    }
+
     auto client_added(rust::Box<mir::wayland_rs::WaylandClient> wayland_client) -> void override
     {
         try
@@ -41,12 +47,23 @@ public:
         {
             std::cerr << "Failed to get client pid: " << error.what() << std::endl;
         }
+
+        // TODO: build a concrete mir::wayland_rs::Client wrapping `wayland_client`
+        //  (e.g. opening a shell session) and register it so it can be resolved when
+        //  this client's Wayland objects are created:
+        //      registry.add_client(std::make_shared<MyClient>(std::move(wayland_client)));
+        //  Creating that concrete Client is deferred work.
+        (void)registry;
     }
 
-    auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId>) -> void override
+    auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId> client_id) -> void override
     {
         std::cout << "Client disconnected." << std::endl;
+        registry.remove_client(client_id);
     }
+
+private:
+    mir::wayland_rs::WaylandClientRegistry& registry;
 };
 }
 
@@ -56,12 +73,17 @@ void run_server(
 {
     try
     {
+        // The registry owns the Client objects. The notification handler populates it as
+        // clients connect/disconnect, and a real GlobalFactory would resolve a client's
+        // raw box to its shared Client (via registry.from(...)) when creating objects.
+        static mir::wayland_rs::WaylandClientRegistry registry;
+
         // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
         //  as that task is involved.
         server->run(
             wayland_socket,
             nullptr,
-            std::make_unique<WaylandServerNotificationHandler>(),
+            std::make_unique<WaylandServerNotificationHandler>(registry),
             std::move(executor));
     }
     catch (rust::Error const& error)
