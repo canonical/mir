@@ -77,6 +77,10 @@ impl WaylandClient {
         let error = ProtocolError {
             code,
             object_id,
+            // Not part of the Wayland wire protocol (wl_display.error only sends
+            // object_id, code, and message), so an empty string is sufficient here.
+            // It is only used for local debug logging and cannot be derived from
+            // object_id alone, so we leave it empty rather than plumb it from C++.
             object_interface: String::new(),
             message: message.to_string(),
         };
