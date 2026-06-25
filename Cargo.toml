@@ -2,8 +2,8 @@
 members = [
   "src/platforms/evdev-rs",
   "src/server/frontend_wayland/wayland_rs",
-  "mir-rs-sys",
-  "mir-rs",
+  "crates/mir-rs-sys",
+  "crates/mir-rs",
 ]
 resolver = "2"
 
