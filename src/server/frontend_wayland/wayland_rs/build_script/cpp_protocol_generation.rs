@@ -42,12 +42,14 @@ pub struct CppProtocolGenerationOutput {
 /// - A `CppBuilder` per protocol (containing abstract classes per-interface)
 /// - A global factory builder
 /// - A wayland server notification handler builder
+/// - A work callback builder
 /// - An FFI forward-declaration builder
 pub fn generate_cpp_protocol_builders(
     protocols: &Vec<WaylandProtocol>,
 ) -> CppProtocolGenerationOutput {
     let global_builder = create_global_factory(protocols);
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
+    let work_callback_builder = create_work_callback();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
     let mut builders: Vec<CppBuilder> = protocols
@@ -56,6 +58,7 @@ pub fn generate_cpp_protocol_builders(
         .collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
+    builders.push(work_callback_builder);
 
     CppProtocolGenerationOutput {
         ffi_fwd_builder,
@@ -157,7 +160,26 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
     builder
 }
 
-/// Create a lightweight header containing forward declarations for every Rust opaque
+/// Create the `WorkCallback` interface.
+///
+/// This is the Rust -> C++ callback used to drain the units of work that were
+/// scheduled onto the Wayland event loop. The work itself lives on the C++
+/// side (a queue of `std::function`s); Rust calls `execute()` on the
+/// event-loop thread to run whatever C++ work is currently pending.
+fn create_work_callback() -> CppBuilder {
+    let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_WORK_CALLBACK", "work_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("WorkCallback");
+
+    let execute_method = CppMethod::new("execute", None, true, false, true, true);
+    class.add_method(execute_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
 /// type used as `rust::Box<T>` in the protocol headers.
 ///
 /// Protocol headers include this header instead of the CXX-generated ffi.rs.h,
@@ -223,6 +245,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     builder.add_header_include("<memory>");
     builder.add_header_include("<cstdint>");
     builder.add_header_include("<string>");
+    builder.add_header_include("<optional>");
     builder.add_header_include("<rust/cxx.h>");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
@@ -298,6 +321,15 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     post_error_method.add_arg(CppArg::new(CppType::String, "message", false));
     post_error_method.set_body("instance_->post_error(code, message);");
     class.add_method(post_error_method);
+
+    // Add a destroy_and_delete method for server-initiated resource destruction.
+    // This is the equivalent of wl_resource_destroy() in the old C API: it destroys the
+    // underlying Wayland resource, which triggers the Dispatch::destroyed() callback,
+    // unregisters the resource, and allows the C++ object to be dropped once all shared owners release it.
+    let mut destroy_and_delete_method =
+        CppMethod::new("destroy_and_delete", None, false, false, false, true);
+    destroy_and_delete_method.set_body("instance_->destroy_and_delete();");
+    class.add_method(destroy_and_delete_method);
 
     // Add a protected constructor and member so that subclasses know which client
     // they are serving and can interact with it as they please.
@@ -392,34 +424,11 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
         None => None,
     };
 
-    let args = method
+    let cpp_args: Vec<CppArg> = method
         .args
         .iter()
         .filter(|arg| arg.type_ != WaylandArgType::NewId)
-        .map(wayland_arg_to_cpp_arg);
-
-    // If a C++ argument is being sent from Rust to C++ as a shared_ptr, we do NOT want
-    // to encourage the protocol implementer to hold a shared reference to the object, as
-    // that muddies up the lifetimes significantly. Only the Rust Wayland frontend should
-    // have access to the lifetime. However, it is important for the protocol business logic
-    // to be able to interact with other protocol implementations. Hence, we wrap the shared_ptr
-    // in our own "Weak" construct.
-    //
-    // If this is the case, we need to do the following:
-    // 1. Generate a different virtual method that is NOT called from Rust which will handle
-    //    the logic using the weak value.
-    // 2. Make the original handler NOT be virtual, as the overridable logic will be delegated
-    //    to the new method from #1.
-    let wayland_weak_transformers: Vec<String> = args
-        .clone()
-        .flat_map(|arg| match arg.cpp_type() {
-            CppType::Object(type_name) => Some(format!(
-                "auto const wrapped_{name} = wayland_rs::Weak<{type_name}>({name});",
-                name = arg.name(),
-                type_name = type_name
-            )),
-            _ => None,
-        })
+        .map(wayland_arg_to_cpp_arg)
         .collect();
 
     let has_retval = retval.is_some();
@@ -449,109 +458,130 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
         vec![]
     };
 
-    let mut cpp_method = CppMethod::new(
-        method.name.as_str(),
-        retval,
-        wayland_weak_transformers.is_empty(),
-        true,
-        true,
-        true,
-    );
-    for arg in args.clone() {
-        cpp_method.add_arg(arg);
+    let is_destructor = method
+        .type_
+        .as_deref()
+        .map(|type_| type_ == "destructor")
+        .unwrap_or(false);
+
+    // A C++ argument sent from Rust as a shared_ptr (an Object) must not be handed to the
+    // protocol implementer directly: only the Rust Wayland frontend should own its lifetime.
+    // Instead we wrap it in a "Weak" construct so the implementer can still interact with
+    // other protocol implementations without muddying lifetimes.
+    //
+    // Additionally, nullable (`allow_null`) arguments arrive as a `(value, has_value)` pair,
+    // since `std::optional` cannot cross the FFI boundary. We do not want that boolean to
+    // leak into the public API, so we present such arguments as `std::optional<...>`.
+    //
+    // In either case the public surface differs from the FFI surface, so we:
+    // 1. Generate a virtual method (overridden by implementers) using Weak/optional args.
+    // 2. Make the FFI-facing handler non-virtual and delegate to the virtual method,
+    //    performing the Weak-wrapping and optional-packaging in between.
+    let needs_split = !is_destructor
+        && cpp_args
+            .iter()
+            .any(|arg| matches!(arg.cpp_type(), CppType::Object(_)) || arg.has_name().is_some());
+
+    let mut cpp_method =
+        CppMethod::new(method.name.as_str(), retval, !needs_split, true, true, true);
+    for arg in &cpp_args {
+        cpp_method.add_arg(arg.clone());
     }
     for arg in new_id_ext_args.clone() {
         cpp_method.add_arg(arg);
     }
 
-    if let Some(type_) = &method.type_ {
-        if type_ == "destructor" {
-            assert!(wayland_weak_transformers.is_empty());
-            cpp_method.set_body("");
-        }
+    if is_destructor {
+        cpp_method.set_body("");
     }
 
-    if !wayland_weak_transformers.is_empty() {
-        // Build the body: wrap shared_ptrs in Weak, then delegate to the virtual overload
-        let return_prefix = if has_retval { "return " } else { "" };
-        let mut all_delegation_args: Vec<String> = args
-            .clone()
-            .flat_map(|arg| {
-                let call_arg = match arg.cpp_type() {
-                    CppType::Object(_) => format!("wrapped_{}", arg.name()),
-                    _ => arg.name().to_string(),
-                };
-                if let Some(has_name) = arg.has_name() {
-                    vec![call_arg, has_name]
-                } else {
-                    vec![call_arg]
-                }
-            })
-            .collect();
+    if !needs_split {
+        return vec![cpp_method];
+    }
 
-        // Forward child_instance and child_object_id to the virtual method
-        for arg in &new_id_ext_args {
-            all_delegation_args.push(format!("std::move({})", arg.name()));
-        }
-        let delegation_call = format!(
-            "{}{}({});",
-            return_prefix,
-            sanitize_identifier(&method.name),
-            all_delegation_args.join(", ")
-        );
-        let mut body_lines = wayland_weak_transformers;
-        body_lines.push(delegation_call);
-        cpp_method.set_body(body_lines.join("\n"));
+    // Build the FFI-facing body: package each argument into its public form, then delegate
+    // to the virtual overload.
+    let return_prefix = if has_retval { "return " } else { "" };
+    let mut all_delegation_args: Vec<String> = cpp_args
+        .iter()
+        .map(|arg| delegation_argument_expression(arg))
+        .collect();
 
-        // Generate the virtual method that protocol implementers override.
-        // This method uses Weak args instead of shared_ptr args.
-        let virtual_retval = method
-            .args
-            .iter()
-            .find(|arg| arg.type_ == WaylandArgType::NewId)
-            .map(|new_id_arg| {
-                CppType::Object(format_wayland_interface_to_cpp_class(
-                    new_id_arg
-                        .interface
-                        .as_ref()
-                        .expect("NewId is missing interface"),
-                ))
-            });
-        let mut virtual_method = CppMethod::new(
-            method.name.as_str(),
-            virtual_retval,
-            true,
-            true,
-            true,
-            false,
-        );
-        for wayland_arg in method
-            .args
-            .iter()
-            .filter(|arg| arg.type_ != WaylandArgType::NewId)
-        {
-            let cpp_arg = wayland_arg_to_cpp_arg(wayland_arg);
-            match cpp_arg.cpp_type() {
-                CppType::Object(type_name) => {
-                    virtual_method.add_arg(CppArg::new(
-                        CppType::Weak(type_name.clone()),
-                        wayland_arg.name.as_str(),
-                        wayland_arg.allow_null.unwrap_or(false),
-                    ));
-                }
-                _ => {
-                    virtual_method.add_arg(cpp_arg);
-                }
-            }
-        }
-        // Add the child middleware args to the virtual method too
-        for arg in new_id_ext_args {
-            virtual_method.add_arg(arg);
-        }
+    // Forward child_instance and child_object_id to the virtual method
+    for arg in &new_id_ext_args {
+        all_delegation_args.push(format!("std::move({})", arg.name()));
+    }
+    let delegation_call = format!(
+        "{}{}({});",
+        return_prefix,
+        sanitize_identifier(&method.name),
+        all_delegation_args.join(", ")
+    );
+    cpp_method.set_body(delegation_call);
 
-        vec![cpp_method, virtual_method]
+    // Generate the virtual method that protocol implementers override.
+    // This method uses Weak args instead of shared_ptr args, and std::optional for
+    // nullable args.
+    let virtual_retval = method
+        .args
+        .iter()
+        .find(|arg| arg.type_ == WaylandArgType::NewId)
+        .map(|new_id_arg| {
+            CppType::Object(format_wayland_interface_to_cpp_class(
+                new_id_arg
+                    .interface
+                    .as_ref()
+                    .expect("NewId is missing interface"),
+            ))
+        });
+    let mut virtual_method = CppMethod::new(
+        method.name.as_str(),
+        virtual_retval,
+        true,
+        true,
+        true,
+        false,
+    );
+    for arg in &cpp_args {
+        virtual_method.add_arg(public_argument(arg));
+    }
+    // Add the child middleware args to the virtual method too
+    for arg in new_id_ext_args {
+        virtual_method.add_arg(arg);
+    }
+
+    vec![cpp_method, virtual_method]
+}
+
+/// Returns the public-facing `CppArg` for a request argument: Object args become `Weak`,
+/// and nullable args are wrapped in `std::optional`, dropping the `has_X` boolean.
+fn public_argument(arg: &CppArg) -> CppArg {
+    let public_type = match arg.cpp_type() {
+        CppType::Object(type_name) => CppType::Weak(type_name.clone()),
+        other => other.clone(),
+    };
+    if arg.has_name().is_some() {
+        CppArg::new(CppType::Optional(Box::new(public_type)), arg.name(), false)
     } else {
-        vec![cpp_method]
+        CppArg::new(public_type, arg.name(), false)
+    }
+}
+
+/// Builds the expression used to forward an argument from the FFI-facing handler to the
+/// virtual method that protocol implementers override.
+fn delegation_argument_expression(arg: &CppArg) -> String {
+    let name = arg.name();
+    match (arg.cpp_type(), arg.has_name()) {
+        (CppType::Object(type_name), Some(has_name)) => format!(
+            "{has_name} ? std::make_optional(wayland_rs::Weak<{type_name}>({name})) : std::nullopt"
+        ),
+        (CppType::Object(type_name), None) => {
+            format!("wayland_rs::Weak<{type_name}>({name})")
+        }
+        (_, Some(has_name)) => {
+            format!("{has_name} ? std::make_optional(std::move({name})) : std::nullopt")
+        }
+        (_, None) => name.to_string(),
     }
 }
 
@@ -559,24 +589,17 @@ fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
     let since = event.since.unwrap_or(1);
     let needs_version_guard = since > 1;
 
-    let args = event.args.iter().map(wayland_arg_to_cpp_arg);
+    let cpp_args: Vec<CppArg> = event.args.iter().map(wayland_arg_to_cpp_arg).collect();
 
-    let sanitized_args: Vec<String> = args
-        .clone()
-        .flat_map(|arg| {
-            let arg_name = match arg.cpp_type() {
-                CppType::Object(_) => format!("{}->get_box()", sanitize_identifier(&arg.name())),
-                _ => sanitize_identifier(&arg.name()),
-            };
-            if let Some(has_name) = arg.has_name() {
-                vec![arg_name, has_name]
-            } else {
-                vec![arg_name]
-            }
-        })
+    // Build the arguments forwarded across the FFI boundary to the Rust middleware. Nullable
+    // values are unpacked here from their public `std::optional` form into the
+    // `(value, has_value)` (or raw-pointer, for objects) representation the FFI expects.
+    let ffi_call_args: Vec<String> = cpp_args
+        .iter()
+        .flat_map(event_ffi_call_expressions)
         .collect();
 
-    let send_call = format!("instance_->{}({});", event.name, sanitized_args.join(", "));
+    let send_call = format!("instance_->{}({});", event.name, ffi_call_args.join(", "));
 
     // Generate the `send_x_event` method
     let send_body = if needs_version_guard {
@@ -596,10 +619,10 @@ fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
         false,
         false,
         false,
-        true,
+        false,
     );
-    for arg in args.clone() {
-        send_method.add_arg(arg);
+    for arg in &cpp_args {
+        send_method.add_arg(event_public_argument(arg));
     }
     send_method.set_body(send_body);
 
@@ -619,14 +642,56 @@ fn wayland_event_to_cpp_methods(event: &WaylandEvent) -> Vec<CppMethod> {
             false,
             false,
             false,
-            true,
+            false,
         );
-        for arg in args {
-            if_supported_method.add_arg(arg);
+        for arg in &cpp_args {
+            if_supported_method.add_arg(event_public_argument(arg));
         }
         if_supported_method.set_body(if_supported_body);
         methods.push(if_supported_method);
     }
 
     methods
+}
+
+/// Returns the public-facing `CppArg` for an event argument: nullable arguments are wrapped
+/// in `std::optional`, dropping the `has_X` boolean.
+fn event_public_argument(arg: &CppArg) -> CppArg {
+    if arg.has_name().is_some() {
+        CppArg::new(
+            CppType::Optional(Box::new(arg.cpp_type().clone())),
+            arg.name(),
+            false,
+        )
+    } else {
+        arg.clone()
+    }
+}
+
+/// Builds the expression(s) used to forward an event argument from the public
+/// `send_x_event` method to the underlying Rust middleware call.
+fn event_ffi_call_expressions(arg: &CppArg) -> Vec<String> {
+    let name = arg.name();
+    match (arg.cpp_type(), arg.has_name()) {
+        // A nullable object is forwarded as a raw pointer to its middleware box (or null).
+        (CppType::Object(_), Some(_)) => {
+            vec![format!(
+                "{name}.has_value() ? &(*{name})->get_box() : nullptr"
+            )]
+        }
+        (CppType::Object(_), None) => vec![format!("{name}->get_box()")],
+        // A nullable non-object is forwarded as a `(value, has_value)` pair.
+        (other, Some(_)) => {
+            let empty = match other {
+                CppType::String => "std::string{}".to_string(),
+                CppType::Array => "std::vector<uint8_t>{}".to_string(),
+                _ => format!("std::remove_cvref_t<decltype(*{name})>{{}}", name = name),
+            };
+            vec![
+                format!("{name}.has_value() ? *{name} : {empty}"),
+                format!("{name}.has_value()"),
+            ]
+        }
+        (_, None) => vec![name.to_string()],
+    }
 }

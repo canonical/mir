@@ -30,10 +30,7 @@ namespace mir
 {
 namespace renderer
 {
-namespace gl
-{
-class Context;
-}
+namespace gl { class Context; }
 }
 
 namespace graphics
@@ -50,6 +47,7 @@ public:
      * Run a run a function on a thread with a current EGL context
      */
     void spawn(std::function<void()>&& functor) override;
+
 private:
     static void process_loop(EGLContextExecutor* const me);
 

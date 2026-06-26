@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.24 {
+MIR_PLATFORM_2.29 {
  global:
   extern "C++" {
     mir::gl::tessellate_renderable_into_rectangle*;

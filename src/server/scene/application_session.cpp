@@ -250,23 +250,6 @@ void ms::ApplicationSession::show()
     }
 }
 
-void ms::ApplicationSession::start_prompt_session()
-{
-}
-
-void ms::ApplicationSession::stop_prompt_session()
-{
-}
-
-void ms::ApplicationSession::suspend_prompt_session()
-{
-}
-
-void ms::ApplicationSession::resume_prompt_session()
-{
-    start_prompt_session();
-}
-
 auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& /*props*/)
     -> std::shared_ptr<compositor::BufferStream>
 {

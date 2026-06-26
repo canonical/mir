@@ -2,7 +2,7 @@ include_directories(
   ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
-set(MIRAL_ABI 7)
+set(MIRAL_ABI 8)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
 
@@ -22,6 +22,7 @@ add_library(miral-internal STATIC
     input_device_config.cpp              input_device_configuration_options.h input_device_config.h
     launch_app.cpp                       launch_app.h
     live_config_overrides_list_builder.cpp    live_config_overrides_list_builder.h
+    override_watcher.cpp                 override_watcher.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
@@ -38,6 +39,8 @@ add_library(miral-internal STATIC
     window_specification_internal.cpp    window_specification_internal.h
     basic_store.cpp                      basic_store.h
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
+    live_config_watcher.cpp               live_config_watcher.h
+    version_compare.cpp                   version_compare.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -160,6 +163,7 @@ add_library(miral-external OBJECT
     slow_keys.cpp                       ${miral_include}/miral/slow_keys.h
     sticky_keys.cpp                     ${miral_include}/miral/sticky_keys.h
     locate_pointer.cpp                  ${miral_include}/miral/locate_pointer.h
+    logging_config.cpp                  ${miral_include}/miral/logging_config.h
 )
 
 add_library(miral SHARED

@@ -31,10 +31,7 @@ namespace mir
 class EmergencyCleanupRegistry;
 class ConsoleServices;
 
-namespace dispatch
-{
-class Dispatchable;
-}
+namespace dispatch { class Dispatchable; }
 
 namespace input
 {
@@ -93,21 +90,18 @@ private:
     Platform& operator=(Platform const&) = delete;
 };
 
-using CreatePlatform = mir::UniqueModulePtr<Platform>(*)(
+using CreatePlatform = mir::UniqueModulePtr<Platform> (*)(
     options::Option const& options,
     std::shared_ptr<EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<InputDeviceRegistry> const& input_device_registry,
     std::shared_ptr<ConsoleServices> const& console,
     std::shared_ptr<InputReport> const& report);
 
-using AddPlatformOptions = void(*)(
-    boost::program_options::options_description& config);
+using AddPlatformOptions = void (*)(boost::program_options::options_description& config);
 
-using ProbePlatform = PlatformPriority(*)(
-    options::Option const& options,
-    mir::ConsoleServices& console);
+using ProbePlatform = PlatformPriority (*)(options::Option const& options, mir::ConsoleServices& console);
 
-using DescribeModule = ModuleProperties const*(*)();
+using DescribeModule = ModuleProperties const* (*)();
 
 }
 }
@@ -115,10 +109,10 @@ using DescribeModule = ModuleProperties const*(*)();
 extern "C"
 {
 #if defined(__clang__)
-#pragma clang diagnostic push
-// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
-// (We don't want a warning for doing this intentionally.)
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+  #pragma clang diagnostic push
+  // These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+  // (We don't want a warning for doing this intentionally.)
+  #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
 
 /**
@@ -161,9 +155,7 @@ void add_input_platform_options(boost::program_options::options_description& con
  *
  * \ingroup platform_enablement
  */
-mir::input::PlatformPriority probe_input_platform(
-    mir::options::Option const& options,
-    mir::ConsoleServices& console);
+mir::input::PlatformPriority probe_input_platform(mir::options::Option const& options, mir::ConsoleServices& console);
 
 /**
  * describe_input_module should return a description of the input platform.
@@ -175,7 +167,7 @@ mir::input::PlatformPriority probe_input_platform(
 mir::ModuleProperties const* describe_input_module();
 
 #if defined(__clang__)
-#pragma clang diagnostic pop
+  #pragma clang diagnostic pop
 #endif
 }
 #endif // MIR_INPUT_PLATFORM_H_

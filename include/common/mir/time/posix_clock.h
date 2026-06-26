@@ -58,10 +58,7 @@ public:
     using period = duration::period;
     using time_point = std::chrono::time_point<PosixClock, duration>;
 
-    static auto now() -> time_point
-    {
-        return time_point{clock_gettime_checked(clock_id)};
-    }
+    static auto now() -> time_point { return time_point{clock_gettime_checked(clock_id)}; }
 };
 }
 

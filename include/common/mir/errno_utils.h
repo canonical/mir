@@ -21,7 +21,7 @@ namespace mir
 {
 // Thread-safe errno to char* conversion. Returns a buffer that remains valid
 // until the next call to this function in the same thread.
-auto errno_to_cstr(int err) noexcept -> const char*;
+auto errno_to_cstr(int err) noexcept -> char const*;
 
 } // namespace mir
 

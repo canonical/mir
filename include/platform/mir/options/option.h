@@ -51,5 +51,4 @@ protected:
 }
 }
 
-
 #endif /* MIR_OPTIONS_OPTION_H_ */

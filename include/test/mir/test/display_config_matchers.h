@@ -22,15 +22,10 @@
 #include <memory>
 #include <gmock/gmock.h>
 
-
-
 namespace mir
 {
 
-namespace graphics
-{
-class DisplayConfiguration;
-}
+namespace graphics { class DisplayConfiguration; }
 
 namespace test
 {
@@ -45,10 +40,7 @@ bool compare_display_configurations(
     std::shared_ptr<graphics::DisplayConfiguration const> const& display_config1,
     graphics::DisplayConfiguration const& display_config2);
 
-MATCHER_P(DisplayConfigMatches, config, "")
-{
-    return compare_display_configurations(result_listener, arg, config);
-}
+MATCHER_P(DisplayConfigMatches, config, "") { return compare_display_configurations(result_listener, arg, config); }
 
 }
 }

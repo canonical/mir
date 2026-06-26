@@ -40,7 +40,7 @@ struct MirKeyboardConfig
     auto device_keymap() const -> std::shared_ptr<mir::input::Keymap> const&;
 
     bool operator==(MirKeyboardConfig const& rhs) const;
-    bool operator!=(MirKeyboardConfig const& rhs) const;
+
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;

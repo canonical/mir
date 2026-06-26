@@ -30,8 +30,12 @@ struct Edid
     uint16_t product_code{0};
     uint32_t serial_number{0};
 
-    struct PhysicalSizeMM { int width; int height; };
-    PhysicalSizeMM size{0,0};
+    struct PhysicalSizeMM
+    {
+        int width;
+        int height;
+    };
+    PhysicalSizeMM size{0, 0};
 };
 
 }

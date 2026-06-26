@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_REPORT_EXCEPTION_H_
 #define MIR_REPORT_EXCEPTION_H_
 
@@ -37,7 +36,5 @@ void report_exception(std::ostream& stream);
  */
 void report_exception();
 }
-
-
 
 #endif /* MIR_REPORT_EXCEPTION_H_ */

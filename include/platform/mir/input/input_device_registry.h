@@ -34,10 +34,10 @@ public:
 
     virtual auto add_device(std::shared_ptr<InputDevice> const& device) -> std::weak_ptr<Device> = 0;
     virtual void remove_device(std::shared_ptr<InputDevice> const& device) = 0;
+
 protected:
     InputDeviceRegistry(InputDeviceRegistry const&) = delete;
     InputDeviceRegistry& operator=(InputDeviceRegistry const&) = delete;
-
 };
 
 }

@@ -28,8 +28,7 @@ namespace input
 struct TouchscreenSettings
 {
     TouchscreenSettings() {}
-    TouchscreenSettings(uint32_t output_id, MirTouchscreenMappingMode mode)
-        : output_id{output_id}, mapping_mode{mode}
+    TouchscreenSettings(uint32_t output_id, MirTouchscreenMappingMode mode) : output_id{output_id}, mapping_mode{mode}
     {}
 
     /**
@@ -42,12 +41,9 @@ struct TouchscreenSettings
      * Selects the mapping mode.
      */
     MirTouchscreenMappingMode mapping_mode{mir_touchscreen_mapping_mode_to_display_wall};
-};
 
-inline bool operator==(TouchscreenSettings const& lhs, TouchscreenSettings const& rhs)
-{
-    return lhs.output_id == rhs.output_id && lhs.mapping_mode == rhs.mapping_mode;
-}
+    bool operator==(TouchscreenSettings const&) const = default;
+};
 }
 }
 

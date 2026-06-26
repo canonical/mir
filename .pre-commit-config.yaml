@@ -41,7 +41,7 @@ repos:
   hooks:
   - id: pymarkdown
     args:
-    - --config=doc/sphinx/.sphinx/.pymarkdown.json
+    - --config=doc/sphinx/_dev/.pymarkdown.json
     - fix
 
 - repo: https://github.com/AndrejOrsula/pre-commit-cargo
@@ -53,4 +53,4 @@ repos:
   rev: dd18dad857d6133e90bbe478f4f2f22ec0030269  # frozen: v22.1.5
   hooks:
   - id: clang-format
-    files: ^include/miral/.*\.h$
+    files: ^include/(?!platform/mir/graphics/egl_extensions\.h).*\.h$

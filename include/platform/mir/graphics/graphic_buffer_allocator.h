@@ -30,10 +30,7 @@ namespace mir
 {
 class Executor;
 
-namespace renderer::software
-{
-class RWMappable;
-}
+namespace renderer::software { class RWMappable; }
 
 namespace graphics
 {
@@ -93,8 +90,8 @@ public:
 
 protected:
     GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    GraphicBufferAllocator(GraphicBufferAllocator const&) = delete;
+    GraphicBufferAllocator& operator=(GraphicBufferAllocator const&) = delete;
 };
 
 }

@@ -151,10 +151,6 @@ bool mu::operator==(mu::Device const& lhs, mu::Device const& rhs)
     return std::strcmp(lhs.devpath(), rhs.devpath()) == 0;
 }
 
-bool mu::operator!=(mu::Device const& lhs, mu::Device const& rhs)
-{
-    return !(lhs == rhs);
-}
 
 
 
@@ -213,11 +209,6 @@ mu::Enumerator::iterator mu::Enumerator::iterator::operator++(int)
 bool mu::Enumerator::iterator::operator==(mu::Enumerator::iterator const& rhs) const
 {
     return this->entry == rhs.entry;
-}
-
-bool mu::Enumerator::iterator::operator!=(mu::Enumerator::iterator const& rhs) const
-{
-    return !(*this == rhs);
 }
 
 mu::Device const& mu::Enumerator::iterator::operator*() const

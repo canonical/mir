@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_GRAPHICS_CURSOR_H_
 #define MIR_GRAPHICS_CURSOR_H_
 
@@ -43,6 +42,7 @@ public:
     virtual auto renderable() -> std::shared_ptr<Renderable> = 0;
 
     virtual auto needs_compositing() const -> bool = 0;
+
 protected:
     Cursor() = default;
     virtual ~Cursor() = default;
@@ -51,6 +51,5 @@ protected:
 };
 }
 }
-
 
 #endif /* MIR_GRAPHICS_CURSOR_H_ */

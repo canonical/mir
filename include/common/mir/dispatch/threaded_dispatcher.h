@@ -37,15 +37,17 @@ class ThreadedDispatcher
 {
 public:
     ThreadedDispatcher(std::string const& name, std::shared_ptr<Dispatchable> const& dispatchee);
-    ThreadedDispatcher(std::string const& name,
-                       std::shared_ptr<Dispatchable> const& dispatchee,
-                       std::function<void()> const& exception_handler);
+    ThreadedDispatcher(
+        std::string const& name,
+        std::shared_ptr<Dispatchable> const& dispatchee,
+        std::function<void()> const& exception_handler);
     ~ThreadedDispatcher() noexcept;
 
     void add_thread();
     void remove_thread();
 
     class ThreadShutdownRequestHandler;
+
 private:
 
     std::string const name_base;
@@ -61,6 +63,5 @@ private:
 
 }
 }
-
 
 #endif // MIR_DISPATCH_SIMPLE_DISPATCH_THREAD_H_

@@ -24,15 +24,9 @@ namespace mir
 namespace test
 {
 
-MATCHER_P(RectTopLeftEq, expected_top_left, "")
-{
-    return arg.top_left == expected_top_left;
-}
+MATCHER_P(RectTopLeftEq, expected_top_left, "") { return arg.top_left == expected_top_left; }
 
-MATCHER_P(RectSizeEq, expected_size, "")
-{
-    return arg.size == expected_size;
-}
+MATCHER_P(RectSizeEq, expected_size, "") { return arg.size == expected_size; }
 
 }
 }

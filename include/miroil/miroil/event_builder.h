@@ -28,7 +28,7 @@
 struct MirEvent;
 struct MirInputEvent;
 
-namespace mir { typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr; }
+namespace mir { typedef std::unique_ptr<MirEvent, void (*)(MirEvent*)> EventUPtr; }
 
 namespace miroil
 {
@@ -44,12 +44,13 @@ namespace miroil
     such as relative axis movement for pointer devices.
 */
 
-class EventBuilder {
-
+class EventBuilder
+{
 public:
-    class EventInfo {
+    class EventInfo
+    {
     public:
-        void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);
+        void store(MirInputEvent const* mirInputEvent, ulong qtTimestamp);
 
         ulong timestamp;
         MirInputDeviceId device_id;
@@ -62,31 +63,52 @@ public:
     virtual ~EventBuilder();
 
     // add Touch event
-    void add_touch(MirEvent &event, MirTouchId touch_id, MirTouchAction action,
-        MirTouchTooltype tooltype, float x_axis_value, float y_axis_value,
-        float pressure_value, float touch_major_value, float touch_minor_value, float size_value);
+    void add_touch(
+        MirEvent& event,
+        MirTouchId touch_id,
+        MirTouchAction action,
+        MirTouchTooltype tooltype,
+        float x_axis_value,
+        float y_axis_value,
+        float pressure_value,
+        float touch_major_value,
+        float touch_minor_value,
+        float size_value);
 
     // Key event
-    mir::EventUPtr make_key_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-        MirKeyboardAction action, xkb_keysym_t keysym, int scan_code, MirInputEventModifiers modifiers);
+    mir::EventUPtr make_key_event(
+        MirInputDeviceId device_id,
+        std::chrono::nanoseconds timestamp,
+        MirKeyboardAction action,
+        xkb_keysym_t keysym,
+        int scan_code,
+        MirInputEventModifiers modifiers);
 
     // Touch event
-    mir::EventUPtr make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
+    mir::EventUPtr make_touch_event(
+        MirInputDeviceId device_id,
+        std::chrono::nanoseconds timestamp,
         MirInputEventModifiers modifiers);
 
     // Pointer event
-    mir::EventUPtr make_pointer_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
-        MirInputEventModifiers modifiers, MirPointerAction action,
+    mir::EventUPtr make_pointer_event(
+        MirInputDeviceId device_id,
+        std::chrono::nanoseconds timestamp,
+        MirInputEventModifiers modifiers,
+        MirPointerAction action,
         MirPointerButtons buttons_pressed,
-        float x_axis_value, float y_axis_value,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value);
+        float x_axis_value,
+        float y_axis_value,
+        float hscroll_value,
+        float vscroll_value,
+        float relative_x_value,
+        float relative_y_value);
 
-    EventInfo * find_info(ulong qtTimestamp);
+    EventInfo* find_info(ulong qtTimestamp);
 
     /* Stores information that cannot be carried by QInputEvents so that it can be fully
        reconstructed later given the same qtTimestamp */
-    void store(const MirInputEvent *mirInputEvent, ulong qtTimestamp);
+    void store(MirInputEvent const* mirInputEvent, ulong qtTimestamp);
 
 private:
     /*

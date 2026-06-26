@@ -112,6 +112,9 @@ endif(MIR_BUILD_WINDOW_MANAGEMENT_TESTS)
 
 if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
+  if (MIR_ENABLE_RUST)
+    add_subdirectory(wayland_rs/)
+  endif (MIR_ENABLE_RUST)
 endif (MIR_BUILD_UNIT_TESTS)
 
 if (MIR_BUILD_PLATFORM_TEST_HARNESS)

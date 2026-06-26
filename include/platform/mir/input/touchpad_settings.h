@@ -30,7 +30,6 @@ struct TouchpadSettings
     TouchpadSettings() {}
 
     bool operator==(TouchpadSettings const& rhs) const = default;
-    bool operator!=(TouchpadSettings const& rhs) const = default;
 
     MirTouchpadClickMode click_mode{mir_touchpad_click_mode_finger_count};
     MirTouchpadScrollMode scroll_mode{mir_touchpad_scroll_mode_two_finger_scroll};

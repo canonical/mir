@@ -15,44 +15,34 @@
  */
 
 #include "live_config_overrides_list_builder.h"
-#include "miral/live_config_overrides_list.h"
+
+#include <miral/live_config_overrides_list.h>
+
 #include <memory>
 
 namespace mlc = miral::live_config;
 
-mlc::OverridesList::Context::Event::Event(
-    Kind kind, std::filesystem::path path, std::function<std::unique_ptr<std::istream>()> stream_factory) :
-    kind{kind},
-    path{path},
-    file_opener{[path, stream_factory = std::move(stream_factory)](auto& callback)
-                { callback(path, *stream_factory()); }}
+auto mlc::OverridesListBuilder::push_unchanged(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&
 {
-}
-
-auto mlc::OverridesListBuilder::push_unchanged(
-    std::filesystem::path filepath, std::function<std::unique_ptr<std::istream>()> stream) -> OverridesListBuilder&
-{
-    ctx->events.emplace_back(Context::Kind::unchanged, filepath, stream);
+    ctx->events.emplace_back(Context::Kind::unchanged, std::move(filepath), std::move(opener));
     return *this;
 }
 
-auto mlc::OverridesListBuilder::push_new(
-    std::filesystem::path filepath, std::function<std::unique_ptr<std::istream>()> stream) -> OverridesListBuilder&
+auto mlc::OverridesListBuilder::push_new(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&
 {
-    ctx->events.emplace_back(Context::Kind::fresh, filepath, stream);
+    ctx->events.emplace_back(Context::Kind::fresh, std::move(filepath), std::move(opener));
     return *this;
 }
 
-auto mlc::OverridesListBuilder::push_modified(
-    std::filesystem::path filepath, std::function<std::unique_ptr<std::istream>()> stream) -> OverridesListBuilder&
+auto mlc::OverridesListBuilder::push_modified(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&
 {
-    ctx->events.emplace_back(Context::Kind::modified, filepath, stream);
+    ctx->events.emplace_back(Context::Kind::modified, std::move(filepath), std::move(opener));
     return *this;
 }
 
 auto mlc::OverridesListBuilder::push_dropped(std::filesystem::path filepath) -> OverridesListBuilder&
 {
-    ctx->events.push_back({Context::Kind::dropped, std::move(filepath), {}});
+    ctx->events.emplace_back(Context::Kind::dropped, std::move(filepath), Opener{});
     return *this;
 }
 

@@ -35,9 +35,7 @@ namespace logging
 class Logger
 {
 public:
-    virtual void log(Severity severity,
-                     const std::string& message,
-                     const std::string& component) = 0;
+    virtual void log(Severity severity, std::string const& message, std::string const& component) = 0;
 
     /*
      * Those playing at home may wonder why we're saying the 4th argument is the format string,
@@ -47,7 +45,7 @@ public:
      * 'this' first parameter of C++!
      */
     virtual void log(char const* component, Severity severity, char const* format, ...)
-         __attribute__ ((format (printf, 4, 5)));
+        __attribute__((format(printf, 4, 5)));
 
     /*
      * Cruft removal: when we're sure we've got the right API/ABI, we should
@@ -58,19 +56,17 @@ public:
 
     template<typename... Args>
     void log(Severity severity, Tags tags, std::format_string<Args...> fmt, Args&&... args)
-    {
-        log(severity, tags, std::format(fmt, std::forward<Args>(args)...));
-    }
+    { log(severity, tags, std::format(fmt, std::forward<Args>(args)...)); }
 
 protected:
 
     Logger() {}
     virtual ~Logger() = default;
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
+    Logger(Logger const&) = delete;
+    Logger& operator=(Logger const&) = delete;
 };
 
-void log(Severity severity, const std::string& message, const std::string& component);
+void log(Severity severity, std::string const& message, std::string const& component);
 void log(Severity severity, Tags tags, std::string_view message);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);

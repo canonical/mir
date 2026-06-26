@@ -21,7 +21,8 @@
 #include <ctime>
 #include <stdexcept>
 
-namespace mir { namespace time {
+namespace mir::time
+{
 
 /*
  * We need absolute precision here so sadly can't use high-level C++ clocks...
@@ -38,12 +39,12 @@ struct PosixTimestamp
     clockid_t clock_id;
     std::chrono::nanoseconds nanoseconds;
 
-    PosixTimestamp()
-        : clock_id{CLOCK_MONOTONIC}, nanoseconds{0} {}
-    PosixTimestamp(clockid_t clk, std::chrono::nanoseconds ns)
-        : clock_id{clk}, nanoseconds{ns} {}
-    PosixTimestamp(clockid_t clk, struct timespec const& ts)
-        : clock_id{clk}, nanoseconds{ts.tv_sec*1000000000LL + ts.tv_nsec} {}
+    PosixTimestamp() : clock_id{CLOCK_MONOTONIC}, nanoseconds{0} {}
+    PosixTimestamp(clockid_t clk, std::chrono::nanoseconds ns) : clock_id{clk}, nanoseconds{ns} {}
+    PosixTimestamp(clockid_t clk, struct timespec const& ts) :
+        clock_id{clk},
+        nanoseconds{ts.tv_sec * 1000000000LL + ts.tv_nsec}
+    {}
 
     static PosixTimestamp now(clockid_t clock_id)
     {
@@ -51,6 +52,8 @@ struct PosixTimestamp
         clock_gettime(clock_id, &ts);
         return PosixTimestamp(clock_id, ts);
     }
+
+    bool operator==(PosixTimestamp const&) const = default;
 };
 
 inline void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
@@ -59,35 +62,20 @@ inline void assert_same_clock(PosixTimestamp const& a, PosixTimestamp const& b)
         throw std::logic_error("Can't compare different time domains");
 }
 
-inline bool operator==(PosixTimestamp const& a, PosixTimestamp const& b)
-{
-    return a.clock_id == b.clock_id && a.nanoseconds == b.nanoseconds;
-}
+inline PosixTimestamp operator-(PosixTimestamp const& a, std::chrono::nanoseconds b)
+{ return PosixTimestamp(a.clock_id, a.nanoseconds - b); }
 
-inline PosixTimestamp operator-(PosixTimestamp const& a,
-                                std::chrono::nanoseconds b)
-{
-    return PosixTimestamp(a.clock_id, a.nanoseconds - b);
-}
-
-inline std::chrono::nanoseconds operator-(PosixTimestamp const& a,
-                                          PosixTimestamp const& b)
+inline std::chrono::nanoseconds operator-(PosixTimestamp const& a, PosixTimestamp const& b)
 {
     assert_same_clock(a, b);
     return a.nanoseconds - b.nanoseconds;
 }
 
-inline PosixTimestamp operator+(PosixTimestamp const& a,
-                                std::chrono::nanoseconds b)
-{
-    return PosixTimestamp(a.clock_id, a.nanoseconds + b);
-}
+inline PosixTimestamp operator+(PosixTimestamp const& a, std::chrono::nanoseconds b)
+{ return PosixTimestamp(a.clock_id, a.nanoseconds + b); }
 
-inline std::chrono::nanoseconds operator%(PosixTimestamp const& a,
-                                          std::chrono::nanoseconds b)
-{
-    return std::chrono::nanoseconds(a.nanoseconds.count() % b.count());
-}
+inline std::chrono::nanoseconds operator%(PosixTimestamp const& a, std::chrono::nanoseconds b)
+{ return std::chrono::nanoseconds(a.nanoseconds.count() % b.count()); }
 
 inline bool operator>(PosixTimestamp const& a, PosixTimestamp const& b)
 {
@@ -122,6 +110,6 @@ inline void sleep_until(PosixTimestamp const& t)
     while (EINTR == clock_nanosleep(t.clock_id, TIMER_ABSTIME, &ts, nullptr)) {}
 }
 
-}} // namespace mir::time
+} // namespace mir::time
 
 #endif // MIR_TIME_POSIX_TIMESTAMP_H_

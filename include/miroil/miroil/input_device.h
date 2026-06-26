@@ -19,7 +19,10 @@
 #include <memory>
 #include <string>
 
-namespace mir { namespace input { class Device; } }
+namespace mir
+{
+namespace input { class Device; }
+}
 
 namespace miroil
 {

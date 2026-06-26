@@ -39,10 +39,6 @@ namespace live_config { class Store; }
 class MouseKeysConfig
 {
 public:
-    [[deprecated(
-        "MouseKeysConfig(bool) is deprecated. Please use MouseKeysConfig::enabled or MouseKeysConfig::disabled")]]
-    explicit MouseKeysConfig(bool enabled_by_default);
-
     /// Creates a `MouseKeysConfig` instance that's enabled by default.
     /// \remark Since MirAL 5.5
     auto static enabled() -> MouseKeysConfig;
@@ -68,12 +64,6 @@ public:
     explicit MouseKeysConfig(live_config::Store& config_store);
 
     void operator()(mir::Server& server) const;
-
-    /// Enables or disables mousekeys depending on the passed parameter.
-    [[deprecated(
-        "MouseKeysConfig::enabled(bool) is deprecated. Please use MouseKeysConfig::enable or "
-        "MouseKeysConfig::disable")]]
-    void enabled(bool enabled) const;
 
     /// Enables mousekeys.
     /// When already enabled, further calls have no effect.

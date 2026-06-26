@@ -45,10 +45,11 @@ struct MirInputEvent : MirEvent
     MirTouchEvent const* to_touch() const;
 
 protected:
-    MirInputEvent(MirInputEventType input_type,
-                  MirInputDeviceId dev,
-                  std::chrono::nanoseconds et,
-                  MirInputEventModifiers mods);
+    MirInputEvent(
+        MirInputEventType input_type,
+        MirInputDeviceId dev,
+        std::chrono::nanoseconds et,
+        MirInputEventModifiers mods);
 
     MirInputEvent(MirInputEventType input_type);
     MirInputEvent(MirInputEvent const& event) = default;

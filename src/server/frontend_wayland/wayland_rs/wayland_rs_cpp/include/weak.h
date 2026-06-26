@@ -18,8 +18,6 @@
 #define MIR_WAYLANDRS_WEAK
 
 #include <memory>
-#include <stdexcept>
-#include <utility>
 #include <boost/throw_exception.hpp>
 
 namespace mir
@@ -30,6 +28,8 @@ template<typename T>
 class Weak
 {
 public:
+    Weak() = default;
+
     explicit Weak(std::shared_ptr<T> const& ptr)
         : ptr_{ptr}
     {
@@ -37,12 +37,16 @@ public:
 
     Weak(Weak const& weak) = default;
 
-    template<typename F>
-    decltype(auto) with_value(F&& f) const
+    T& value() const
     {
-        if (auto locked = ptr_.lock())
-            return std::forward<F>(f)(*locked);
-        BOOST_THROW_EXCEPTION(std::logic_error{"Accessing expired wayland_rs::Weak"});
+        if (ptr_.expired())
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error(
+                    std::string{"Attempted access of null wayland_rs::Weak<"} +
+                    typeid(T).name() + ">"));
+        }
+        return *ptr_.lock();
     }
 
     operator bool() const
@@ -59,11 +63,6 @@ public:
     auto operator==(Weak<T> const& other) const -> bool
     {
         return !ptr_.owner_before(other.ptr_) && !other.ptr_.owner_before(ptr_);
-    }
-
-    auto operator!=(Weak<T> const& other) const -> bool
-    {
-        return !(*this == other);
     }
 
     auto operator=(Weak<T> const&) -> Weak<T>& = default;

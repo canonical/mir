@@ -19,9 +19,6 @@
 
 #include <string>
 
-namespace mir
-{
-void set_thread_name(std::string const& name);
-}
+namespace mir { void set_thread_name(std::string const& name); }
 
 #endif /* MIR_THREAD_NAME_H_ */
