@@ -21,8 +21,6 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/shell/window_manager.h>
-#include <mir/scene/prompt_session.h>
-#include <mir/scene/prompt_session_manager.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/scene/session_coordinator.h>
 #include <mir/scene/session.h>
@@ -157,7 +155,6 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder,
     std::shared_ptr<mi::Seat> const& seat,
@@ -165,7 +162,6 @@ msh::AbstractShell::AbstractShell(
     input_targeter(input_targeter),
     surface_stack(surface_stack),
     session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
     seat(seat),
     report(report),
@@ -198,7 +194,6 @@ void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
     report->closing_session(*session);
-    prompt_session_manager->remove_session(session);
 
     // TODO revisit this when reworking the AbstractShell/WindowManager interactions
     // this is an ugly kludge to extract the list of surfaces owned by the session
@@ -376,30 +371,6 @@ void msh::AbstractShell::destroy_surface(
     report->destroying_surface(*session, *surface);
     decoration_manager->undecorate(surface);
     window_manager->remove_surface(session, surface);
-}
-
-std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
-    std::shared_ptr<ms::Session> const& session,
-    scene::PromptSessionCreationParameters const& params)
-{
-    auto const result = prompt_session_manager->start_prompt_session_for(session, params);
-    report->started_prompt_session(*result, *session);
-    return result;
-}
-
-void msh::AbstractShell::add_prompt_provider_for(
-    std::shared_ptr<ms::PromptSession> const& prompt_session,
-    std::shared_ptr<ms::Session> const& session)
-{
-    prompt_session_manager->add_prompt_provider(prompt_session, session);
-    report->added_prompt_provider(*prompt_session, *session);
-}
-
-void msh::AbstractShell::stop_prompt_session(
-    std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    report->stopping_prompt_session(*prompt_session);
-    prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
 void msh::AbstractShell::raise_surface(

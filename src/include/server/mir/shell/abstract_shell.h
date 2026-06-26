@@ -32,7 +32,6 @@ class Seat;
 namespace scene
 {
 class SessionCoordinator;
-class PromptSessionManager;
 }
 namespace shell
 {
@@ -53,7 +52,6 @@ public:
         std::shared_ptr<InputTargeter> const& input_targeter,
         std::shared_ptr<SurfaceStack> const& surface_stack,
         std::shared_ptr<scene::SessionCoordinator> const& session_coordinator,
-        std::shared_ptr<scene::PromptSessionManager> const& prompt_session_manager,
         std::shared_ptr<ShellReport> const& report,
         WindowManagerBuilder const& wm_builder,
         std::shared_ptr<input::Seat> const& seat,
@@ -101,17 +99,7 @@ public:
         MirInputEvent const* event,
         MirResizeEdge edge) override;
 
-    std::shared_ptr<scene::PromptSession> start_prompt_session_for(
-        std::shared_ptr<scene::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) override;
-
-    void add_prompt_provider_for(
-        std::shared_ptr<scene::PromptSession> const& prompt_session,
-        std::shared_ptr<scene::Session> const& session) override;
-
-    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
-
-/** @name these come from FocusController
+    /** @name these come from FocusController
  * Focus changes are notified to the derived class via the private setting_focus_to()
  * functions.
  * \note I think the FocusController interface is unnecessary as:
@@ -149,7 +137,6 @@ protected:
     std::shared_ptr<InputTargeter> const input_targeter;
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
-    std::shared_ptr<scene::PromptSessionManager> const prompt_session_manager;
     std::shared_ptr<WindowManager> const window_manager;
     std::shared_ptr<input::Seat> const seat;
 

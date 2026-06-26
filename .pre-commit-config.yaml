@@ -41,7 +41,7 @@ repos:
   hooks:
   - id: pymarkdown
     args:
-    - --config=doc/sphinx/.sphinx/.pymarkdown.json
+    - --config=doc/sphinx/_dev/.pymarkdown.json
     - fix
 
 - repo: https://github.com/AndrejOrsula/pre-commit-cargo

@@ -67,25 +67,6 @@ void msh::ShellWrapper::set_focus_to(
     wrapped->set_focus_to(focus_session, focus_surface);
 }
 
-std::shared_ptr<ms::PromptSession> msh::ShellWrapper::start_prompt_session_for(
-    std::shared_ptr<ms::Session> const& session,
-    scene::PromptSessionCreationParameters const& params)
-{
-    return wrapped->start_prompt_session_for(session, params);
-}
-
-void msh::ShellWrapper::add_prompt_provider_for(
-    std::shared_ptr<ms::PromptSession> const& prompt_session,
-    std::shared_ptr<ms::Session> const& session)
-{
-    wrapped->add_prompt_provider_for(prompt_session, session);
-}
-
-void msh::ShellWrapper::stop_prompt_session(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    wrapped->stop_prompt_session(prompt_session);
-}
-
 auto msh::ShellWrapper::create_surface(
     std::shared_ptr<ms::Session> const& session,
     SurfaceSpecification const& params,

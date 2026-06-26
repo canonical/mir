@@ -30,7 +30,6 @@ extern "C"
 
 typedef struct MirWindowEvent MirWindowEvent;
 typedef struct MirResizeEvent MirResizeEvent;
-typedef struct MirPromptSessionEvent MirPromptSessionEvent;
 typedef struct MirOrientationEvent MirOrientationEvent;
 typedef struct MirCloseWindowEvent MirCloseWindowEvent;
 typedef struct MirInputEvent MirInputEvent;
@@ -48,7 +47,6 @@ typedef struct MirEvent MirEvent;
 #include <mir_toolkit/events/resize_event.h>
 #include <mir_toolkit/events/window_event.h>
 #include <mir_toolkit/events/orientation_event.h>
-#include <mir_toolkit/events/prompt_session_event.h>
 #include <mir_toolkit/events/window_output_event.h>
 #include <mir_toolkit/events/input_device_state_event.h>
 
@@ -95,16 +93,6 @@ MirWindowEvent const* mir_event_get_window_event(MirEvent const* event);
  * \return           The associated MirResizeEvent
  */
 MirResizeEvent const* mir_event_get_resize_event(MirEvent const* event);
-
-/**
- * Retrieve the MirPromptSessionEvent associated with a MirEvent of
- * type mir_event_type_prompt_session_state_change. See <mir_toolkits/events/prompt_session_event.h>
- * for accessors.
- *
- * \param [in] event The event
- * \return           The associated MirPromptSessionEvent
- */
-MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* event);
 
 /**
  * Retrieve the MirOrientationEvent associated with a MirEvent of

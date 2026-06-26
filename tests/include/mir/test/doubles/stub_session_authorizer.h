@@ -45,10 +45,7 @@ class StubSessionAuthorizer : public frontend::SessionAuthorizer
     {
         return true;
     }
-    bool prompt_session_is_allowed(mir::frontend::SessionCredentials const&) override
-    {
-        return true;
-    }
+
     bool configure_input_is_allowed(mir::frontend::SessionCredentials const&) override
     {
         return true;

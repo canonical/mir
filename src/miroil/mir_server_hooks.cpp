@@ -21,7 +21,6 @@
 // mir
 #include <mir/server.h>
 #include <mir/graphics/cursor.h>
-#include <mir/scene/prompt_session_listener.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/cursor_images.h>
@@ -34,25 +33,6 @@ namespace ms = mir::scene;
 
 namespace
 {
-struct PromptSessionListenerImpl : mir::scene::PromptSessionListener
-{
-    PromptSessionListenerImpl(std::shared_ptr<miroil::PromptSessionListener> const& listener) : listener(listener) {};
-    ~PromptSessionListenerImpl();
-
-    void starting(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
-    void stopping(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
-    void suspending(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
-    void resuming(std::shared_ptr<mir::scene::PromptSession> const& prompt_session) override;
-
-    void prompt_provider_added(mir::scene::PromptSession const& prompt_session,
-                               std::shared_ptr<mir::scene::Session> const& prompt_provider) override;
-    void prompt_provider_removed(mir::scene::PromptSession const& prompt_session,
-                                 std::shared_ptr<mir::scene::Session> const& prompt_provider) override;
-
-private:
-    std::shared_ptr<miroil::PromptSessionListener> const listener;
-};
-
 struct MirInputDeviceObserverImpl : mir::input::InputDeviceObserver
 {
 public:
@@ -112,11 +92,8 @@ auto MirCursorImages::image(const std::string &cursor_name, const mir::geometry:
 
 struct miroil::MirServerHooks::Self
 {
-    std::shared_ptr<miroil::PromptSessionListener> prompt_session_listener;
-    std::weak_ptr<PromptSessionListenerImpl> prompt_session_listener_impl;
     std::weak_ptr<mir::graphics::Display> mir_display;
     std::weak_ptr<mir::shell::DisplayConfigurationController> mir_display_configuration_controller;
-    std::weak_ptr<mir::scene::PromptSessionManager> mir_prompt_session_manager;
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
     CreateNamedCursor create_cursor;
 };
@@ -138,37 +115,12 @@ void miroil::MirServerHooks::operator()(mir::Server& server)
     server.wrap_cursor([&](std::shared_ptr<mg::Cursor> const& wrapped)
         { return std::make_shared<HiddenCursorWrapper>(wrapped); });
 
-    if (self->prompt_session_listener) {
-        server.override_the_prompt_session_listener([this]
-        {
-            auto const result = std::make_shared<PromptSessionListenerImpl>(self->prompt_session_listener);
-            self->prompt_session_listener_impl = result;
-            return result;
-        });
-    }
-
     server.add_init_callback([this, &server]
         {
             self->mir_display = server.the_display();
             self->mir_display_configuration_controller = server.the_display_configuration_controller();
-            self->mir_prompt_session_manager = server.the_prompt_session_manager();
             self->input_device_hub = server.the_input_device_hub();
         });
-}
-
-auto miroil::MirServerHooks::the_prompt_session_listener() const
--> miroil::PromptSessionListener*
-{
-    return self->prompt_session_listener.get();
-}
-
-auto miroil::MirServerHooks::the_prompt_session_manager() const
--> std::shared_ptr<mir::scene::PromptSessionManager>
-{
-    if (auto result = self->mir_prompt_session_manager.lock())
-        return result;
-
-    throw std::logic_error("No prompt session manager available. Server not running?");
 }
 
 auto miroil::MirServerHooks::the_mir_display() const
@@ -202,45 +154,6 @@ void miroil::MirServerHooks::create_input_device_observer(std::shared_ptr<miroil
     }
 
     throw std::logic_error("No input device hub available. Server not running?");
-}
-
-void miroil::MirServerHooks::create_prompt_session_listener(std::shared_ptr<miroil::PromptSessionListener> listener)
-{
-    self->prompt_session_listener = listener;
-}
-
-PromptSessionListenerImpl::~PromptSessionListenerImpl() = default;
-
-void PromptSessionListenerImpl::starting(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    listener->starting(prompt_session);
-}
-
-void PromptSessionListenerImpl::stopping(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    listener->stopping(prompt_session);
-}
-
-void PromptSessionListenerImpl::suspending(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    listener->suspending(prompt_session);
-}
-
-void PromptSessionListenerImpl::resuming(std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    listener->resuming(prompt_session);
-}
-
-void PromptSessionListenerImpl::prompt_provider_added(ms::PromptSession const& prompt_session,
-                                                      std::shared_ptr<ms::Session> const& prompt_provider)
-{
-    listener->prompt_provider_added(prompt_session, prompt_provider);
-}
-
-void PromptSessionListenerImpl::prompt_provider_removed(ms::PromptSession const& prompt_session,
-                                                        std::shared_ptr<ms::Session> const& prompt_provider)
-{
-    listener->prompt_provider_removed(prompt_session, prompt_provider);
 }
 
 void MirInputDeviceObserverImpl::device_added(const std::shared_ptr<mir::input::Device> &device)
