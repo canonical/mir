@@ -43,6 +43,7 @@ pub struct CppProtocolGenerationOutput {
 /// - A global factory builder
 /// - A wayland server notification handler builder
 /// - A work callback builder
+/// - An fd-ready callback builder
 /// - An FFI forward-declaration builder
 pub fn generate_cpp_protocol_builders(
     protocols: &Vec<WaylandProtocol>,
@@ -50,6 +51,7 @@ pub fn generate_cpp_protocol_builders(
     let global_builder = create_global_factory(protocols);
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
     let work_callback_builder = create_work_callback();
+    let fd_ready_callback_builder = create_fd_ready_callback();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
     let mut builders: Vec<CppBuilder> = protocols
@@ -59,6 +61,7 @@ pub fn generate_cpp_protocol_builders(
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
     builders.push(work_callback_builder);
+    builders.push(fd_ready_callback_builder);
 
     CppProtocolGenerationOutput {
         ffi_fwd_builder,
@@ -175,6 +178,29 @@ fn create_work_callback() -> CppBuilder {
 
     let execute_method = CppMethod::new("execute", None, true, false, true, true);
     class.add_method(execute_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
+/// Create the `FdReadyCallback` interface.
+///
+/// This is the Rust -> C++ callback used to notify C++ that a file descriptor
+/// it registered (via `WaylandServer::register_fd_ready_listener`) has become
+/// readable. The registration is one-shot: Rust calls `ready()` on the
+/// event-loop thread the first time the descriptor is ready for reading, then
+/// stops watching it.
+fn create_fd_ready_callback() -> CppBuilder {
+    let mut builder: CppBuilder =
+        CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("FdReadyCallback");
+
+    let ready_method = CppMethod::new("ready", None, true, false, true, true);
+    class.add_method(ready_method);
 
     namespace.add_class(class);
     builder.add_namespace(namespace);
