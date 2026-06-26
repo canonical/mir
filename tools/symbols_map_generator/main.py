@@ -419,10 +419,11 @@ def get_added_symbols(previous_symbols: list[Symbol], new_symbols: Optional[set[
     return added_symbols
 
 
-def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool):
+def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool) -> bool:
     """
     Prints the diff between the previous symbols and the new symbols.
     When new_symbols is None (no headers directory was provided), no diff is performed.
+    Returns True if any symbols were added or deleted, False otherwise.
     """
     if new_symbols is None:
         print("")
