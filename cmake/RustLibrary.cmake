@@ -25,7 +25,11 @@ function(add_rust_cxx_library target)
   set(cxxbridge_include_dir "${rust_target_dir}/$ENV{DEB_HOST_RUST_TYPE}/cxxbridge")
   set(cxxbridge_header "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.h")
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
-  set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
+
+  # Cargo normalises hyphens to underscores in the static library file name,
+  # so derive the staticlib name from a normalised form of the crate name.
+  string(REPLACE "-" "_" crate_lib_name "${arg_CRATE}")
+  set(crate_staticlib "${rust_binary_dir}/lib${crate_lib_name}.a")
 
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}

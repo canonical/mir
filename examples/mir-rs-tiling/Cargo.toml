@@ -1,0 +1,9 @@
+[package]
+name = "mir-rs-tiling"
+version = "0.1.0"
+edition = "2021"
+publish = false
+description = "Minimal tiling window manager example using the mir Rust API"
+
+[dependencies]
+mir = { path = "../../mir-rs" }
