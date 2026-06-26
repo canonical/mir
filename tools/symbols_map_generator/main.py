@@ -410,7 +410,7 @@ def read_symbols_from_file(f: argparse.FileType, library_name: str) -> list[Symb
 def get_added_symbols(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool) -> list[str]:
     added_symbols: set[str] = new_symbols.copy()
     for symbol in previous_symbols:
-        if (symbol.name in added_symbols) or (is_internal != symbol.is_internal and symbol.name in added_symbols):
+        if symbol.is_internal() == is_internal and symbol.name in added_symbols:
             added_symbols.remove(symbol.name)
     added_symbols = list(added_symbols)
     added_symbols.sort()
@@ -432,7 +432,10 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
     # Deleted symbols
     deleted_symbols = set()
     for symbol in previous_symbols:
-        if is_internal == symbol.is_internal and not symbol.name in new_symbols:
+        if (is_internal == symbol.is_internal()
+                and not symbol.is_c_symbol
+                and not symbol.name.startswith('"')
+                and symbol.name not in new_symbols):
             deleted_symbols.add(symbol.name)
     deleted_symbols = deleted_symbols - new_symbols
     deleted_symbols = list(deleted_symbols)
