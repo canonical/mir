@@ -10,7 +10,9 @@
 //! use crate::cpp_builder::CppBuilder;
 
 use crate::cpp_builder::sanitize_identifier;
-use crate::helpers::format_wayland_interface_to_rust_extension_struct;
+use crate::helpers::{
+    format_wayland_interface_to_rust_extension_struct, referenced_core_interfaces,
+};
 
 use super::helpers::snake_to_pascal;
 use crate::protocol_parser::{
@@ -35,6 +37,15 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     // to copy the data.
     let extensions = protocols.iter().flat_map(generate_extensions_for_protocol);
 
+    // Generate a minimal middleware for each libwayland core interface that is referenced as
+    // an object argument (e.g. `wl_registry`, used by `wl_fixes.destroy_registry`). These core
+    // interfaces have no generated C++ class, but the requests referencing them are still
+    // forwarded to C++; the middleware gives the C++ implementation a handle it can act on.
+    let core_extensions = referenced_core_interfaces(protocols)
+        .iter()
+        .map(|name| generate_core_interface_middleware(name))
+        .collect::<Vec<_>>();
+
     quote! {
         #[allow(dead_code, unused_imports)]
         mod middleware {
@@ -45,6 +56,42 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
             #(#use_imports)*
 
             #(#extensions)*
+
+            #(#core_extensions)*
+        }
+    }
+}
+
+/// Generate a minimal middleware for a libwayland core interface (e.g. `wl_registry`).
+///
+/// Unlike the wrapped interfaces, core interfaces have no generated C++ class. They only need
+/// to be ferried to C++ so that the C++ implementation of a request such as
+/// `wl_fixes.destroy_registry` can destroy them. We therefore expose just `destroy_and_delete`,
+/// mirroring the equivalent method on the regular interface middleware.
+fn generate_core_interface_middleware(interface_name: &str) -> TokenStream {
+    let interface_name_ext = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(interface_name)
+    );
+    let module = format_ident!("{}", interface_name);
+    let pascal = format_ident!("{}", snake_to_pascal(interface_name));
+
+    quote! {
+        pub struct #interface_name_ext {
+            pub wrapped: wayland_server::protocol::#module::#pascal
+        }
+
+        impl #interface_name_ext {
+            pub fn destroy_and_delete(&self) {
+                use wayland_server::Resource;
+                if self.wrapped.is_alive() {
+                    if let Some(handle) = self.wrapped.handle().upgrade() {
+                        let _ = handle.destroy_object::<crate::wayland_server_core::ServerState>(
+                            &self.wrapped.id(),
+                        );
+                    }
+                }
+            }
         }
     }
 }

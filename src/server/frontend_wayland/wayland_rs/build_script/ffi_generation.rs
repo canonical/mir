@@ -8,7 +8,9 @@
 //! These requests are sent from C++.
 
 use crate::cpp_builder::{sanitize_identifier, CppBuilder};
-use crate::helpers::format_wayland_interface_to_rust_extension_struct;
+use crate::helpers::{
+    format_wayland_interface_to_rust_extension_struct, referenced_core_interfaces,
+};
 
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
 use crate::protocol_parser::{
@@ -26,6 +28,19 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
     let rust_tokens = protocols.iter().flat_map(generate_ffi_for_protocol);
 
     let rust_types = protocols.iter().flat_map(generate_rust_types);
+
+    // Expose the minimal middleware generated for libwayland core interfaces (e.g.
+    // `wl_registry`) so that requests referencing them can be forwarded to C++.
+    let core_rust_types: Vec<TokenStream> = referenced_core_interfaces(protocols)
+        .iter()
+        .map(|name| {
+            let ext = format_ident!("{}", format_wayland_interface_to_rust_extension_struct(name));
+            quote! {
+                type #ext;
+                fn destroy_and_delete(self: &#ext);
+            }
+        })
+        .collect();
 
     // Next, generate the Rust -> C++ side.
     let cpp_tokens: Vec<TokenStream> = builders
@@ -63,6 +78,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn equals(self: &WaylandClientId, id: &Box<WaylandClientId>) -> bool;
 
                 #(#rust_types)*
+                #(#core_rust_types)*
                 #(#rust_tokens)*
             }
 

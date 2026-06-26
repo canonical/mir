@@ -45,6 +45,7 @@ fn main() {
     println!("cargo:rerun-if-changed=build_script/ffi_generation.rs");
     println!("cargo:rerun-if-changed=build_script/cpp_protocol_generation.rs");
     println!("cargo:rerun-if-changed=build_script/dispatch_generator.rs");
+    println!("cargo:rerun-if-changed=build_script/helpers.rs");
     println!("cargo:rerun-if-changed=build_script/protocol_generator.rs");
     println!("cargo:rerun-if-changed=build_script/protocol_middleware_generation.rs");
     println!("cargo:rerun-if-changed=build_script/wayland_server_generation.rs");

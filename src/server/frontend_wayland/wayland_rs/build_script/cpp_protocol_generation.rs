@@ -20,7 +20,8 @@ use crate::cpp_builder::{
 };
 use crate::helpers::{
     format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
-    is_core_interface, request_references_core_object, snake_to_pascal,
+    is_core_interface, referenced_core_interfaces, request_core_object_args,
+    request_references_core_object, snake_to_pascal,
 };
 use crate::protocol_parser::{
     WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -213,6 +214,15 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
         }
     }
 
+    // Forward-declare the minimal middleware generated for libwayland core interfaces (e.g.
+    // `wl_registry`), which are passed to C++ as `rust::Box<...Middleware>` by requests such as
+    // `wl_fixes.destroy_registry`.
+    for name in referenced_core_interfaces(protocols) {
+        namespace.add_forward_declaration_struct(
+            &format_wayland_interface_to_rust_extension_struct(&name),
+        );
+    }
+
     builder.add_namespace(namespace);
     builder
 }
@@ -267,12 +277,6 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
         .iter()
         .filter_map(|item| {
             if let crate::protocol_parser::InterfaceItem::Request(request) = item {
-                // Requests that take a core interface (wl_display/wl_registry) object
-                // argument have no C++ counterpart and are handled entirely on the Rust
-                // side (see the dispatch generator), so no C++ method is generated.
-                if request_references_core_object(request) {
-                    return None;
-                }
                 Some(wayland_request_to_cpp_method(request))
             } else if let crate::protocol_parser::InterfaceItem::Event(event) = item {
                 Some(wayland_event_to_cpp_methods(event))
@@ -402,9 +406,18 @@ fn wayland_arg_to_cpp_arg(arg: &WaylandArg) -> CppArg {
         WaylandArgType::Uint => CppType::CppU32,
         WaylandArgType::Fixed => CppType::CppF64,
         WaylandArgType::String => CppType::String,
-        WaylandArgType::Object => CppType::Object(format_wayland_interface_to_cpp_class(
-            arg.interface.as_ref().expect("Object is missing interface"),
-        )),
+        WaylandArgType::Object => {
+            let interface = arg.interface.as_ref().expect("Object is missing interface");
+            // Core interfaces (wl_display/wl_registry) have no generated C++ class, so they
+            // cannot be passed as a shared_ptr wrapper. Instead they are ferried as their
+            // minimal middleware Box (see generate_core_interface_middleware), which the C++
+            // implementation can act on directly.
+            if is_core_interface(interface) {
+                CppType::Box(format_wayland_interface_to_rust_extension_struct(interface))
+            } else {
+                CppType::Object(format_wayland_interface_to_cpp_class(interface))
+            }
+        }
         WaylandArgType::Array => CppType::Array,
         WaylandArgType::Fd => CppType::Fd,
         WaylandArgType::NewId => CppType::Box(format_wayland_interface_to_rust_extension_struct(
@@ -504,6 +517,22 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
 
     if is_destructor {
         cpp_method.set_body("");
+    }
+
+    // Requests that reference a libwayland core interface object (e.g.
+    // `wl_fixes.destroy_registry`) are forwarded to C++ like any other request, but their
+    // implementation is generated here rather than overridden by a protocol implementer: the
+    // core object has no C++ class, so the only meaningful action is to destroy it through its
+    // middleware. We therefore emit a concrete method body that does exactly that. (The Box
+    // argument is neither an Object nor nullable, so `needs_split` is always false here.)
+    if request_references_core_object(method) {
+        let body = request_core_object_args(method)
+            .iter()
+            .map(|arg| format!("{}->destroy_and_delete();", sanitize_identifier(&arg.name)))
+            .collect::<Vec<_>>()
+            .join("\n    ");
+        cpp_method.set_body(body);
+        return vec![cpp_method];
     }
 
     if !needs_split {
