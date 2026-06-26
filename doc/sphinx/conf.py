@@ -28,9 +28,17 @@ from pathlib import Path
 project = "Mir"
 
 try:
-    release = subprocess.check_output(
-        ["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8"
+    branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], encoding="utf-8"
     ).strip()
+    if branch.startswith("release/"):
+        release = subprocess.check_output(
+            ["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8"
+        ).strip()
+    else:
+        release = subprocess.check_output(
+            ["git", "describe", "--tags", "--match=*-dev", "--abbrev=0"], encoding="utf-8"
+        ).strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
         match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read())
