@@ -427,7 +427,7 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[se
     """
     if new_symbols is None:
         print("")
-        print("  \033[1mNo symbol changes! ❤️\033[0m")
+        print("  \033[1mDiff skipped (no headers directory provided)\033[0m")
         return False
 
     added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
@@ -449,7 +449,6 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[se
                 and not symbol.name.startswith('"')
                 and symbol.name not in new_symbols):
             deleted_symbols.add(symbol.name)
-    deleted_symbols = deleted_symbols - new_symbols
     deleted_symbols = list(deleted_symbols)
     deleted_symbols.sort()
 
