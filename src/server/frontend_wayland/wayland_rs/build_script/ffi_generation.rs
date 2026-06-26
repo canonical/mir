@@ -34,7 +34,10 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
     let core_rust_types: Vec<TokenStream> = referenced_core_interfaces(protocols)
         .iter()
         .map(|name| {
-            let ext = format_ident!("{}", format_wayland_interface_to_rust_extension_struct(name));
+            let ext = format_ident!(
+                "{}",
+                format_wayland_interface_to_rust_extension_struct(name)
+            );
             quote! {
                 type #ext;
                 fn destroy_and_delete(self: &#ext);
