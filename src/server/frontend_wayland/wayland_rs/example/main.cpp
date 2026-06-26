@@ -103,7 +103,9 @@ void run_server(
         // The registry owns the Client objects. The notification handler populates it as
         // clients connect/disconnect, and a real GlobalFactory would resolve a client's
         // raw box to its shared Client (via registry.from(...)) when creating objects.
-        static mir::wayland_rs::WaylandClientRegistry registry;
+        // `run` blocks until the server stops, so this local outlives the handler the
+        // server owns.
+        mir::wayland_rs::WaylandClientRegistry registry;
 
         // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
         //  as that task is involved.
