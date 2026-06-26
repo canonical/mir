@@ -15,11 +15,9 @@
  */
 
 #include "wayland_rs/src/ffi.rs.h"
+#include "wayland_rs_server_test.h"
 #include "wayland_client_registry.h"
-#include "wayland_executor.h"
 #include "client.h"
-
-#include <mir_test_framework/temporary_environment_value.h>
 
 #include <gtest/gtest.h>
 
@@ -27,21 +25,15 @@
 
 #include <chrono>
 #include <condition_variable>
-#include <cstdlib>
-#include <filesystem>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <stdexcept>
-#include <string>
-#include <sys/stat.h>
-#include <system_error>
 #include <thread>
-#include <unistd.h>
 #include <vector>
 
 namespace mrs = mir::wayland_rs;
-namespace mtf = mir_test_framework;
 
 using namespace std::chrono_literals;
 
@@ -101,38 +93,14 @@ private:
     std::vector<rust::Box<mrs::WaylandClient>> clients;
 };
 
-auto make_temp_runtime_dir() -> std::string
-{
-    char template_path[] = "/tmp/mir-wayland-rs-test-XXXXXX";
-    auto const dir = ::mkdtemp(template_path);
-    if (!dir)
-        throw std::runtime_error{"Failed to create temporary XDG_RUNTIME_DIR"};
-
-    ::chmod(dir, 0700);
-    return dir;
-}
-
-class WaylandClientRegistryTest : public testing::Test
+class WaylandClientRegistryTest : public mrs::test::RunningWaylandServerTest
 {
 public:
-    void SetUp() override
+    auto make_notification_handler() -> std::unique_ptr<mrs::WaylandServerNotificationHandler> override
     {
-        runtime_dir = make_temp_runtime_dir();
-        xdg_runtime_dir.emplace("XDG_RUNTIME_DIR", runtime_dir.c_str());
-
-        server.emplace(mrs::create_wayland_server());
-        auto executor = std::make_unique<mrs::WaylandExecutor>(**server);
-
         auto handler_owned = std::make_unique<CapturingNotificationHandler>();
         handler = handler_owned.get();
-
-        socket = "mir-wayland-rs-test-" + std::to_string(::getpid());
-
-        server_thread = std::thread{
-            [this, executor = std::move(executor), handler = std::move(handler_owned)]() mutable
-            {
-                (*server)->run(socket, nullptr, std::move(handler), std::move(executor));
-            }};
+        return handler_owned;
     }
 
     void TearDown() override
@@ -140,18 +108,7 @@ public:
         for (auto* display : displays)
             wl_display_disconnect(display);
 
-        if (server)
-            (*server)->stop();
-        if (server_thread.joinable())
-            server_thread.join();
-
-        xdg_runtime_dir.reset();
-
-        if (!runtime_dir.empty())
-        {
-            std::error_code ec;
-            std::filesystem::remove_all(runtime_dir, ec);
-        }
+        RunningWaylandServerTest::TearDown();
     }
 
     /// Connect a fresh real Wayland client and return the raw box the server saw
@@ -178,13 +135,8 @@ public:
         return handler->wait_for_client(index);
     }
 
-    std::string runtime_dir;
-    std::optional<mtf::TemporaryEnvironmentValue> xdg_runtime_dir;
-    std::optional<rust::Box<mrs::WaylandServer>> server;
     CapturingNotificationHandler* handler{nullptr};
-    std::string socket;
     std::vector<wl_display*> displays;
-    std::thread server_thread;
 };
 }
 
