@@ -17,6 +17,7 @@
 import logging
 import sys
 import os
+import subprocess
 import argparse
 import concurrent.futures
 from pathlib import Path
@@ -78,7 +79,6 @@ class HeaderDirectory(TypedDict):
 
 class LibraryInfo(TypedDict):
     header_directories: list[HeaderDirectory]
-    map_file: str
 
 def get_version_from_library_version_str(version: str) -> str:
     """
@@ -221,6 +221,23 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
     return get_namespace_str(node.semantic_parent) + [spelling]
 
 
+def count_overloads_in_parent(node: clang.cindex.Cursor) -> int:
+    """Return the number of non-private, non-pure-virtual siblings with the same
+    spelling and kind as *node*.  A value greater than 1 means the function is
+    overloaded in its enclosing class.
+    """
+    parent = node.semantic_parent
+    if parent is None:
+        return 1
+    return sum(
+        1 for child in parent.get_children()
+        if child.spelling == node.spelling
+        and child.kind == node.kind
+        and not child.is_pure_virtual_method()
+        and child.access_specifier != clang.cindex.AccessSpecifier.PRIVATE
+    )
+
+
 def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
     # Ignore private and protected variables
     if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
@@ -259,7 +276,27 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         else:
             def add_internal(s: str):
                 add_symbol_str(f"{s}*")
-            add_internal(namespace_str)
+            # For overloaded constructors, emit the mangled symbol instead of a
+            # wildcard glob.  Two reasons:
+            #   1. A wildcard exports all overloads under the same version even
+            #      when individual overloads were introduced in later versions.
+            #   2. Quoted demangled names differ between ld and lld for types
+            #      with nested template args (e.g. std::function<...>).
+            # If the wildcard form is still in HIDDEN_SYMBOLS (e.g. for
+            # experimental classes), we respect that and emit nothing.
+            if (node.kind == clang.cindex.CursorKind.CONSTRUCTOR
+                    and count_overloads_in_parent(node) > 1):
+                wildcard = f"{namespace_str}*;"
+                if wildcard not in HIDDEN_SYMBOLS:
+                    mangled = node.mangled_name
+                    if mangled:
+                        _logger.debug(
+                            f"Emitting mangled symbol {mangled} "
+                            "for overloaded constructor"
+                        )
+                        add_symbol_str(mangled)
+            else:
+                add_internal(namespace_str)
 
             # Check if we're marked virtual
             is_virtual = False
@@ -407,14 +444,89 @@ def read_symbols_from_file(f: argparse.FileType, library_name: str) -> list[Symb
     return retval
 
 
+def demangle_symbol(mangled: str) -> Optional[str]:
+    """Demangle a C++ mangled symbol via c++filt.
+
+    Returns the demangled string, or None if *mangled* is not a mangled symbol
+    or if demangling fails.
+    """
+    sym = mangled.rstrip(';')
+    if not (sym.startswith('_Z') or sym.startswith('__Z')):
+        return None
+    try:
+        result = subprocess.run(['c++filt', sym],
+                                capture_output=True, text=True, check=True)
+        demangled = result.stdout.strip()
+        # c++filt echoes the input unchanged when it cannot demangle
+        return demangled if demangled != sym else None
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+
+def is_symbol_covered_by_previous(new_sym: str,
+                                   previous_symbols: list[Symbol]) -> bool:
+    """Return True when *new_sym* is already represented in *previous_symbols*.
+
+    Handles three forms of equivalence:
+
+    1. Exact string match.
+    2. C1/C2 constructor variant – the compiler may emit C1 while the file
+       stores C2 (or vice versa); both name the same function for classes
+       without virtual bases.
+    3. Demangled equivalence – the mangled symbol demangles to the same string
+       as an existing quoted entry, or falls under an existing wildcard glob.
+    """
+    # 1. Exact match
+    if any(s.name == new_sym for s in previous_symbols):
+        return True
+
+    sym = new_sym.rstrip(';')
+    if not (sym.startswith('_Z') or sym.startswith('__Z')):
+        return False
+
+    # 2. C1 / C2 variant
+    if 'C1E' in sym:
+        alt = sym.replace('C1E', 'C2E', 1) + ';'
+        if any(s.name == alt for s in previous_symbols):
+            return True
+    elif 'C2E' in sym:
+        alt = sym.replace('C2E', 'C1E', 1) + ';'
+        if any(s.name == alt for s in previous_symbols):
+            return True
+
+    # 3. Demangled equivalence
+    demangled = demangle_symbol(new_sym)
+    if demangled is None:
+        return False
+
+    for entry in previous_symbols:
+        name = entry.name
+        # Quoted symbol: '"miral::Foo::Foo(params)";'
+        if name.startswith('"') and name.endswith('";'):
+            if name[1:-2] == demangled:        # strip leading '"' and '";'
+                return True
+        # Wildcard glob: 'miral::Foo::Foo*;'
+        elif name.endswith('*;'):
+            if demangled.startswith(name[:-2]):  # strip '*;'
+                return True
+
+    return False
+
+
 def get_added_symbols(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool) -> list[str]:
     added_symbols: set[str] = new_symbols.copy()
     for symbol in previous_symbols:
         if (symbol.name in added_symbols) or (is_internal != symbol.is_internal and symbol.name in added_symbols):
             added_symbols.remove(symbol.name)
-    added_symbols = list(added_symbols)
-    added_symbols.sort()
-    return added_symbols
+    # A generated mangled symbol may already be represented in the file as a
+    # quoted or wildcard entry.  Remove those to avoid creating a duplicate in
+    # a different notation.
+    covered = {sym for sym in added_symbols
+               if is_symbol_covered_by_previous(sym, previous_symbols)}
+    added_symbols -= covered
+    result = list(added_symbols)
+    result.sort()
+    return result
 
 
 def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool):
@@ -643,7 +755,12 @@ def main():
                     "c": [],
                     "c++": []
                 }
-            bisect.insort(data_to_output[next_version]["c++"], symbol)
+            # Mangled symbols belong in the global: section; everything else
+            # goes in the extern "C++" block.
+            if symbol.startswith('_Z') or symbol.startswith('__Z'):
+                bisect.insort(data_to_output[next_version]["c"], symbol)
+            else:
+                bisect.insort(data_to_output[next_version]["c++"], symbol)
 
         # Add the internal symbols
         for symbol in new_internal_symbols:
@@ -652,7 +769,10 @@ def main():
                     "c": [],
                     "c++": []
                 }
-            bisect.insort(data_to_output[next_internal_version]["c++"], symbol)
+            if symbol.startswith('_Z') or symbol.startswith('__Z'):
+                bisect.insort(data_to_output[next_internal_version]["c"], symbol)
+            else:
+                bisect.insort(data_to_output[next_internal_version]["c++"], symbol)
 
         # Finally, output them to the file
         f = args.symbols_map_path
