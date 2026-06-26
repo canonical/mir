@@ -255,8 +255,24 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let class_name = format_wayland_interface_to_cpp_class(&interface.name);
-    let mut class = CppClass::new(class_name);
+    let mut class = CppClass::new(class_name.clone());
     class.set_superclass("LifetimeTracker");
+
+    // Backwards-compatible recovery helper, replacing the legacy `Concrete::from(wl_resource*)`.
+    // The generator only knows this abstract base, not the hand-written concrete subclass, so the
+    // method is templated on the caller's concrete type `Self`. It downcasts the weak's referent
+    // (preserving the destroyed-flag) and returns a `Self*`, or nullptr if the weak is
+    // null/expired or does not refer to a `Self`. Usage: `Surface::from<WlSurfaceImpl>(weak)`.
+    class.add_raw_public_decl(format!(
+        "    template<typename Self>\n\
+         \x20   static auto from(::mir::wayland_rs::Weak<{class_name}> const& weak) -> Self*\n\
+         \x20   {{\n\
+         \x20       return ::mir::wayland_rs::as_nullable_ptr(\n\
+         \x20           ::mir::wayland_rs::weak_cast<Self>(weak));\n\
+         \x20   }}",
+        class_name = class_name
+    ));
+
     let methods = interface
         .items
         .iter()
