@@ -41,7 +41,7 @@ pub struct WaylandServer {
     stop_signal: Mutex<Option<Ping>>,
     work_signal: Mutex<Option<Ping>>,
     fd_listener_signal: Mutex<Option<Ping>>,
-    pending_fd_listeners: Arc<Mutex<Vec<PendingFdListener>>>,
+    pending_fd_listeners: Mutex<Vec<PendingFdListener>>,
 }
 
 impl WaylandServer {
@@ -51,7 +51,7 @@ impl WaylandServer {
             stop_signal: Mutex::new(None),
             work_signal: Mutex::new(None),
             fd_listener_signal: Mutex::new(None),
-            pending_fd_listeners: Arc::new(Mutex::new(Vec::new())),
+            pending_fd_listeners: Mutex::new(Vec::new()),
         }
     }
 
@@ -185,12 +185,12 @@ impl WaylandServer {
             .expect("No recovery from lock poisoning") = Some(fd_listener_pinger);
 
         let fd_listener_loop_handle = loop_handle.clone();
-        let fd_listener_queue = self.pending_fd_listeners.clone();
+        let fd_listener_queue = &self.pending_fd_listeners;
         loop_handle
             .insert_source(fd_listener_ping_source, move |_, _, _: &mut ServerState| {
                 WaylandServer::drain_pending_fd_listeners(
                     &fd_listener_loop_handle,
-                    &fd_listener_queue,
+                    fd_listener_queue,
                 );
             })
             .map_err(|_| "Failed to insert fd listener signal into event loop")?;
@@ -345,7 +345,7 @@ impl WaylandServer {
     /// into `handle`. Runs on the event-loop thread.
     fn drain_pending_fd_listeners<'l, S>(
         handle: &LoopHandle<'l, S>,
-        queue: &Arc<Mutex<Vec<PendingFdListener>>>,
+        queue: &Mutex<Vec<PendingFdListener>>,
     ) {
         let pending: Vec<PendingFdListener> = {
             let mut queue = queue.lock().expect("No recovery from lock poisoning");

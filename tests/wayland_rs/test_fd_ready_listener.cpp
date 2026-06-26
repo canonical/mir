@@ -16,12 +16,12 @@
 
 #include "wayland_rs_server_test.h"
 
+#include <mir/test/signal.h>
+
 #include <gtest/gtest.h>
 
-#include <condition_variable>
 #include <fcntl.h>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <unistd.h>
 
@@ -31,15 +31,15 @@ using namespace std::chrono_literals;
 
 namespace
 {
-/// An `FdReadyCallback` that counts how often it is notified and signals a
-/// condition variable so a test can wait for the notification. The registration
-/// is one-shot, so it expects to be notified at most once; it drains the
-/// watched descriptor purely to consume the pending byte.
-class CountingFdReadyCallback : public mrs::FdReadyCallback
+/// An `FdReadyCallback` that raises a signal when it is notified so a test can
+/// wait for the notification. The registration is one-shot, so it expects to be
+/// notified at most once; it drains the watched descriptor purely to consume the
+/// pending byte.
+class SignallingFdReadyCallback : public mrs::FdReadyCallback
 {
 public:
-    CountingFdReadyCallback(int fd, std::mutex& mutex, std::condition_variable& cv, int& count)
-        : fd{fd}, mutex{mutex}, cv{cv}, count{count}
+    SignallingFdReadyCallback(int fd, mir::test::Signal& signal)
+        : fd{fd}, signal{signal}
     {
     }
 
@@ -50,16 +50,12 @@ public:
         {
         }
 
-        std::lock_guard<std::mutex> lock{mutex};
-        ++count;
-        cv.notify_one();
+        signal.raise();
     }
 
 private:
     int const fd;
-    std::mutex& mutex;
-    std::condition_variable& cv;
-    int& count;
+    mir::test::Signal& signal;
 };
 
 class FdReadyListenerTest : public mrs::test::RunningWaylandServerTest
@@ -98,66 +94,47 @@ public:
 
 TEST_F(FdReadyListenerTest, notifies_when_fd_becomes_readable)
 {
-    std::mutex mutex;
-    std::condition_variable cv;
-    int count{0};
+    mir::test::Signal ready;
 
     (*server)->register_fd_ready_listener(
         read_fd(),
-        std::make_unique<CountingFdReadyCallback>(read_fd(), mutex, cv, count));
+        std::make_unique<SignallingFdReadyCallback>(read_fd(), ready));
 
     write_byte();
 
-    std::unique_lock<std::mutex> lock{mutex};
-    ASSERT_TRUE(cv.wait_for(lock, 5s, [&] { return count >= 1; }))
+    EXPECT_TRUE(ready.wait_for(5s))
         << "Listener was not notified when the fd became readable";
-
-    // The registration is one-shot, so it must fire exactly once.
-    EXPECT_EQ(count, 1);
 }
 
 TEST_F(FdReadyListenerTest, does_not_notify_when_fd_not_written)
 {
-    std::mutex mutex;
-    std::condition_variable cv;
-    int count{0};
+    mir::test::Signal ready;
 
     (*server)->register_fd_ready_listener(
         read_fd(),
-        std::make_unique<CountingFdReadyCallback>(read_fd(), mutex, cv, count));
+        std::make_unique<SignallingFdReadyCallback>(read_fd(), ready));
 
     // Never write to the pipe; the listener must not fire.
-    std::unique_lock<std::mutex> lock{mutex};
-    EXPECT_FALSE(cv.wait_for(lock, 500ms, [&] { return count >= 1; }))
+    EXPECT_FALSE(ready.wait_for(500ms))
         << "Listener was notified despite the fd never becoming readable";
-    EXPECT_EQ(count, 0);
 }
 
 TEST_F(FdReadyListenerTest, only_notifies_once_for_a_one_shot_registration)
 {
-    std::mutex mutex;
-    std::condition_variable cv;
-    int count{0};
+    mir::test::Signal ready;
 
     (*server)->register_fd_ready_listener(
         read_fd(),
-        std::make_unique<CountingFdReadyCallback>(read_fd(), mutex, cv, count));
+        std::make_unique<SignallingFdReadyCallback>(read_fd(), ready));
 
     write_byte();
-    {
-        std::unique_lock<std::mutex> lock{mutex};
-        ASSERT_TRUE(cv.wait_for(lock, 5s, [&] { return count >= 1; }))
-            << "Listener was not notified on the first write";
-        EXPECT_EQ(count, 1);
-    }
+    ASSERT_TRUE(ready.wait_for(5s))
+        << "Listener was not notified on the first write";
 
     // The registration is one-shot: the descriptor is no longer watched, so a
     // second write must not produce a further notification.
+    ready.reset();
     write_byte();
-    {
-        std::unique_lock<std::mutex> lock{mutex};
-        EXPECT_FALSE(cv.wait_for(lock, 500ms, [&] { return count >= 2; }))
-            << "Listener was notified again after the one-shot registration fired";
-        EXPECT_EQ(count, 1);
-    }
+    EXPECT_FALSE(ready.wait_for(500ms))
+        << "Listener was notified again after the one-shot registration fired";
 }
