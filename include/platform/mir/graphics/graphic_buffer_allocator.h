@@ -61,7 +61,7 @@ public:
      * Initialise the BufferAllocator for this Wayland display
      *
      * This should do whatever setup is required for client buffer submission. For example,
-     * calling eglBindWaylandDisplayWL.
+     * initialising linux-dmabuf import support.
      *
      * \param display [in]          The Wayland display to initialise on
      * \param wayland_executor [in] An Executor that spawns tasks on the event loop of display.
@@ -72,7 +72,7 @@ public:
      * Deinitialise the BufferAllocator for this Wayland display
      *
      * This should do whatever is required to clean up before the Wayland loop is stopped. For
-     * example, calling eglUnbindWaylandDisplayWL.
+     * example, tearing down linux-dmabuf import support.
      *
      * \param display [in] The Wayland display to unbind from
      */

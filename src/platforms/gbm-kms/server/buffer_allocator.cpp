@@ -30,7 +30,6 @@
 #include <mir/raii.h>
 #include <mir/graphics/display.h>
 #include <mir/renderer/gl/context.h>
-#include <mir/graphics/egl_wayland_allocator.h>
 #include <mir/executor.h>
 #include <mir/renderer/gl/gl_surface.h>
 #include <mir/graphics/display_sink.h>
@@ -70,7 +69,6 @@ mgg::BufferAllocator::BufferAllocator(
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider)
     : ctx{std::move(context)},
       egl_delegate{std::move(egl_delegate)},
-      egl_extensions(std::make_shared<mg::EGLExtensions>()),
       dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
@@ -125,20 +123,6 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     try
     {
-        mg::wayland::bind_display(dpy, display, *egl_extensions);
-        egl_display_bound = true;
-    }
-    catch (...)
-    {
-        log(
-            logging::Severity::warning,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Failed to bind EGL Display to Wayland display, falling back to software buffers");
-    }
-
-    try
-    {
         if (dmabuf_provider)
         {
             mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
@@ -160,17 +144,12 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     this->wayland_executor = std::move(wayland_executor);
 }
 
-void mgg::BufferAllocator::unbind_display(wl_display* display)
+void mgg::BufferAllocator::unbind_display(wl_display* /*display*/)
 {
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
 
-    if (egl_display_bound)
-    {
-        mg::wayland::unbind_display(dpy, display, *egl_extensions);
-    }
     dmabuf_extension.reset();
 }
 
@@ -183,20 +162,20 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
-    if (auto dmabuf = dmabuf_extension->buffer_from_resource(
-        buffer,
-        std::function<void()>{on_consumed},
-        std::function<void()>{on_release},
-        egl_delegate))
+    if (dmabuf_extension)
     {
-        return dmabuf;
+        if (auto dmabuf = dmabuf_extension->buffer_from_resource(
+            buffer,
+            std::move(on_consumed),
+            std::move(on_release),
+            egl_delegate))
+        {
+            return dmabuf;
+        }
     }
-    return mg::wayland::buffer_from_resource(
-        buffer,
-        std::move(on_consumed),
-        std::move(on_release),
-        *egl_extensions,
-        egl_delegate);
+
+    BOOST_THROW_EXCEPTION(std::runtime_error(
+        "Failed to import client buffer: not a linux-dmabuf buffer"));
 }
 
 auto mgg::BufferAllocator::buffer_from_shm(

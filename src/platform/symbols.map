@@ -45,7 +45,6 @@ MIR_PLATFORM_2.29 {
     mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
     mir::graphics::EGLExtensions::PlatformBaseEXT*;
-    mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
     mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
     mir::graphics::EGLSurfaceStore::EGLSurfaceStore*;
@@ -97,9 +96,6 @@ MIR_PLATFORM_2.29 {
     mir::graphics::scale_cursor_image*;
     mir::graphics::tessellate_renderable_into_rectangle*;
     mir::graphics::valid_pixel_format*;
-    mir::graphics::wayland::bind_display*;
-    mir::graphics::wayland::buffer_from_resource*;
-    mir::graphics::wayland::unbind_display*;
     mir::options::Configuration::?Configuration*;
     mir::options::Configuration::Configuration*;
     mir::options::Configuration::operator*;
