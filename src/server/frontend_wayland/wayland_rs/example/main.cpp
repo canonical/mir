@@ -18,6 +18,7 @@
 #include "wayland_executor.h"
 #include <mir/executor.h>
 #include <wayland-client.h>
+#include <array>
 #include <chrono>
 #include <fcntl.h>
 #include <iostream>
@@ -64,7 +65,7 @@ public:
 
     auto ready() -> void override
     {
-        char buffer;
+        char buffer{};
         while (::read(fd, &buffer, sizeof(buffer)) > 0)
         {
         }
@@ -72,7 +73,7 @@ public:
     }
 
 private:
-    int const fd;
+    int fd;
 };
 }
 
@@ -132,8 +133,8 @@ int main()
 
     // A pipe whose read end we ask the server to watch. Writing to the write end
     // makes the read end readable, which the server reports via FdReadyCallback.
-    int fds[2];
-    if (::pipe2(fds, O_NONBLOCK) != 0)
+    std::array<int, 2> fds{};
+    if (::pipe2(fds.data(), O_NONBLOCK) != 0)
     {
         std::cerr << "Failed to create pipe." << std::endl;
         return 1;
