@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 
 #include <gtest/gtest.h>
 
 using namespace miral;
 using namespace testing;
 
-TEST(CommandLineOption, can_take_lambdas)
+TEST(ConfigurationOption, can_take_lambdas)
 {
     // ambiguous between all four possible 3-parameter overloads
     auto bool_flag = miral::ConfigurationOption(
@@ -41,7 +41,7 @@ TEST(CommandLineOption, can_take_lambdas)
         [](mir::optional_value<std::string> const& /*value*/) {}, "optional-string", "Set an optional string flag");
 }
 
-TEST(CommandLineOption, can_take_repeated_strings)
+TEST(ConfigurationOption, can_take_repeated_strings)
 {
     auto foo = miral::ConfigurationOption(
         [](std::vector<std::string> const&) {}, "option", "can be repeated");

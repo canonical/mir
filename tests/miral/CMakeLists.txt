@@ -28,7 +28,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     render_scene_into_surface.cpp
     mru_window_list.cpp
     active_outputs.cpp
-    command_line_option.cpp
+    configuration_option.cpp
     select_active_window.cpp
     popup_window_placement.cpp
     window_placement_anchors_to_parent.cpp

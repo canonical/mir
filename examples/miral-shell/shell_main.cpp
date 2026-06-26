@@ -28,7 +28,7 @@
 #include <miral/window_management_options.h>
 #include <miral/append_keyboard_event_filter.h>
 #include <miral/internal_client.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/decorations.h>
 #include <miral/keymap.h>

@@ -20,7 +20,7 @@
 #include <miral/application_authorizer.h>
 #include <miral/display_configuration.h>
 #include <miral/external_client.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/keymap.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/internal_client.h>
