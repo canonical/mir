@@ -20,10 +20,6 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
   add_compile_definitions(MIR_BUILD_PLATFORM_WAYLAND)
 endif()
 
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-endif()
-
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
