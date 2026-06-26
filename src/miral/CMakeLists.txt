@@ -139,7 +139,6 @@ add_library(miral-external OBJECT
     runner.cpp                          ${miral_include}/miral/runner.h
     session_lock_listener.cpp           ${miral_include}/miral/session_lock_listener.h
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
-    set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
     toolkit_event.cpp                   ${miral_include}/miral/toolkit_event.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h

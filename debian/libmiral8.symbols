@@ -336,9 +336,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::SetTerminator(std::function<void (int)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::~SetTerminator()@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_6.0" 6.0.0
