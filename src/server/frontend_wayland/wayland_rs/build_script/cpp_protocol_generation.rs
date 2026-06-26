@@ -43,6 +43,7 @@ pub struct CppProtocolGenerationOutput {
 /// - A global factory builder
 /// - A wayland server notification handler builder
 /// - A work callback builder
+/// - An fd-ready callback builder
 /// - An FFI forward-declaration builder
 pub fn generate_cpp_protocol_builders(
     protocols: &Vec<WaylandProtocol>,
@@ -50,6 +51,7 @@ pub fn generate_cpp_protocol_builders(
     let global_builder = create_global_factory(protocols);
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
     let work_callback_builder = create_work_callback();
+    let fd_ready_callback_builder = create_fd_ready_callback();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
     let mut builders: Vec<CppBuilder> = protocols
@@ -59,6 +61,7 @@ pub fn generate_cpp_protocol_builders(
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
     builders.push(work_callback_builder);
+    builders.push(fd_ready_callback_builder);
 
     CppProtocolGenerationOutput {
         ffi_fwd_builder,
@@ -180,6 +183,29 @@ fn create_work_callback() -> CppBuilder {
     builder.add_namespace(namespace);
     builder
 }
+
+/// Create the `FdReadyCallback` interface.
+///
+/// This is the Rust -> C++ callback used to notify C++ that a file descriptor
+/// it registered (via `WaylandServer::register_fd_ready_listener`) has become
+/// readable. The registration is one-shot: Rust calls `ready()` on the
+/// event-loop thread the first time the descriptor is ready for reading, then
+/// stops watching it.
+fn create_fd_ready_callback() -> CppBuilder {
+    let mut builder: CppBuilder =
+        CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("FdReadyCallback");
+
+    let ready_method = CppMethod::new("ready", None, true, false, true, true);
+    class.add_method(ready_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
 /// type used as `rust::Box<T>` in the protocol headers.
 ///
 /// Protocol headers include this header instead of the CXX-generated ffi.rs.h,
@@ -258,8 +284,24 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let class_name = format_wayland_interface_to_cpp_class(&interface.name);
-    let mut class = CppClass::new(class_name);
+    let mut class = CppClass::new(class_name.clone());
     class.set_superclass("LifetimeTracker");
+
+    // Backwards-compatible recovery helper, replacing the legacy `Concrete::from(wl_resource*)`.
+    // The generator only knows this abstract base, not the hand-written concrete subclass, so the
+    // method is templated on the caller's concrete type `Self`. It downcasts the weak's referent
+    // (preserving the destroyed-flag) and returns a `Self*`, or nullptr if the weak is
+    // null/expired or does not refer to a `Self`. Usage: `Surface::from<WlSurfaceImpl>(weak)`.
+    class.add_raw_public_decl(format!(
+        "    template<typename Self>\n\
+         \x20   static auto from(::mir::wayland_rs::Weak<{class_name}> const& weak) -> Self*\n\
+         \x20   {{\n\
+         \x20       return ::mir::wayland_rs::as_nullable_ptr(\n\
+         \x20           ::mir::wayland_rs::weak_cast<Self>(weak));\n\
+         \x20   }}",
+        class_name = class_name
+    ));
+
     let methods = interface
         .items
         .iter()

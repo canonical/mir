@@ -129,6 +129,15 @@ impl CppBuilder {
                 // Virtual destructor
                 result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
 
+                // Verbatim header-only public declarations (e.g. static templated helpers).
+                for decl in &class.raw_public_decls {
+                    result.push_str(decl);
+                    result.push('\n');
+                }
+                if !class.raw_public_decls.is_empty() {
+                    result.push('\n');
+                }
+
                 // Generate methods
                 for method in &class.methods {
                     let args_str = Self::build_arg_str_for_cpp(method);
@@ -404,6 +413,10 @@ pub struct CppClass {
     pub protected_constructor_args: Vec<CppArg>,
     pub protected_members: Vec<CppArg>,
     pub private_members: Vec<CppArg>,
+    /// Verbatim header-only declarations emitted in the `public:` section. Unlike `CppMethod`,
+    /// these are never emitted to the .cpp source or the generated Rust/cxx bindings, so they are
+    /// suitable for header-only helpers such as static templated methods.
+    pub raw_public_decls: Vec<String>,
 }
 
 impl CppClass {
@@ -417,11 +430,17 @@ impl CppClass {
             protected_constructor_args: vec![],
             protected_members: vec![],
             private_members: vec![],
+            raw_public_decls: vec![],
         }
     }
 
     pub fn set_superclass(&mut self, name: impl Into<String>) {
         self.superclass = Some(name.into());
+    }
+
+    /// Add a verbatim declaration to the class's `public:` section (header only).
+    pub fn add_raw_public_decl(&mut self, decl: impl Into<String>) {
+        self.raw_public_decls.push(decl.into());
     }
 
     pub fn add_method(&mut self, method: CppMethod) -> &mut CppMethod {
