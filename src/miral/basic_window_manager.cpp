@@ -881,7 +881,16 @@ auto miral::BasicWindowManager::window_at(geometry::Point cursor) const
 -> Window
 {
     auto surface_at = focus_controller->surface_at(cursor);
-    return surface_at ? info_for(surface_at).window() : Window{};
+    if (!surface_at)
+        return Window{};
+
+    // surface_at() returns any hit-testable scene surface, including internal
+    // compositor surfaces that are not managed windows.  surface_known() guards
+    // against the window_info lookup throwing for unregistered surfaces.
+    if (!surface_known(surface_at, "window_at"))
+        return Window{};
+
+    return info_for(surface_at).window();
 }
 
 auto miral::BasicWindowManager::active_output() -> geometry::Rectangle const
@@ -1747,7 +1756,7 @@ void miral::BasicWindowManager::drag_window(miral::Window const& window, Displac
 
 auto miral::BasicWindowManager::surface_known(
     std::weak_ptr<scene::Surface> const& surface,
-    std::string const& action) -> bool
+    std::string const& action) const -> bool
 {
     if (window_info.find(surface) != window_info.end())
     {
