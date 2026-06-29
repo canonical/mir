@@ -24,6 +24,7 @@ add_library(miral-internal STATIC
     live_config_overrides_list_builder.cpp    live_config_overrides_list_builder.h
     override_watcher.cpp                 override_watcher.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
+    software_buffer_stream.cpp           software_buffer_stream.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
     static_display_config.cpp            static_display_config.h
