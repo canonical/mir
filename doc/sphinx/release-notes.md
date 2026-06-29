@@ -1,6 +1,6 @@
 (release-notes)=
 
-# Release Notes
+# Release notes
 
 <!--
 
