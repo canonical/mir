@@ -247,6 +247,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::Magnifier::Magnifier()@MIRAL_6.0" 6.0.0
  (c++)"miral::Magnifier::Magnifier(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Magnifier::capture_size(mir::geometry::generic::Size<int> const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::Magnifier::decouple(bool)@MIRAL_6.0" 6.0.0
  (c++)"miral::Magnifier::enable(bool)@MIRAL_6.0" 6.0.0
  (c++)"miral::Magnifier::magnification(float)@MIRAL_6.0" 6.0.0
  (c++)"miral::Magnifier::operator()(mir::Server&)@MIRAL_6.0" 6.0.0

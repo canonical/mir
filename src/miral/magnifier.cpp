@@ -89,12 +89,24 @@ public:
     {
         std::lock_guard lock(mutex);
         default_enabled = enable;
-        if (auto const surf = surface.lock())
+        auto const surf = surface.lock();
+        if (!surf)
+            return;
+
+        if (enable)
         {
-            if (enable)
-                surf->show();
-            else
-                surf->hide();
+            if (decoupled)
+            {
+                // Place surface at last known cursor position when enabling in decoupled mode.
+                auto const top_left = surface_top_left_from_cursor(surf->window_size(), cursor_pos);
+                surf->move_to(top_left);
+                render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
+            }
+            surf->show();
+        }
+        else
+        {
+            surf->hide();
         }
     }
 
@@ -109,13 +121,33 @@ public:
     void set_capture_size(geom::Size const& size)
     {
         std::lock_guard lock(mutex);
-        auto const capture_position = Observer::cursor_position_to_capture_position(size, cursor_pos);
+        auto const surf = surface.lock();
+        auto const capture_position = surf ? surf->top_left() : surface_top_left_from_cursor(size, cursor_pos);
         render_scene_into_surface.capture_area({ capture_position, size });
     }
 
     geom::Size current_size() const
     {
         return render_scene_into_surface.capture_area().size;
+    }
+
+    void set_decoupled(bool new_decoupled)
+    {
+        std::lock_guard lock(mutex);
+        if (decoupled == new_decoupled)
+            return;
+
+        decoupled = new_decoupled;
+        if (new_decoupled)
+        {
+            // Re-couple: snap surface back to current cursor position.
+            if (auto const surf = surface.lock(); surf && default_enabled)
+            {
+                auto const top_left = surface_top_left_from_cursor(surf->window_size(), cursor_pos);
+                surf->move_to(top_left);
+                render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
+            }
+        }
     }
 
 private:
@@ -128,13 +160,16 @@ private:
         {
             std::lock_guard lock(self->mutex);
             self->cursor_pos = geom::Point{abs_x, abs_y};
+
+            // In decoupled mode the surface stays put; only update when coupled.
+            if (self->decoupled)
+                return;
+
             auto const surf = self->surface.lock();
             if (!surf)
                 return;
 
-            auto const capture_position = cursor_position_to_capture_position(
-                surf->window_size(),
-                self->cursor_pos);
+            auto const capture_position = surface_top_left_from_cursor(surf->window_size(), self->cursor_pos);
             surf->move_to(capture_position);
             self->render_scene_into_surface.capture_area(
                 geom::Rectangle{capture_position, surf->window_size()});
@@ -144,19 +179,18 @@ private:
         void pointer_unusable() override {}
         void image_set_to(std::shared_ptr<mg::CursorImage>) override {}
 
-        static geom::Point cursor_position_to_capture_position(
-            geom::Size const& window_size,
-            geom::Point const& cursor_pos)
-        {
-            return geom::Point{
-                cursor_pos.x.as_value() - window_size.width.as_value() / 2,
-                cursor_pos.y.as_value() - window_size.height.as_value() / 2
-            };
-        }
-
     private:
         Self* self;
     };
+
+    static geom::Point surface_top_left_from_cursor(
+        geom::Size const& window_size,
+        geom::Point const& cursor_pos)
+    {
+        return geom::Point{
+            cursor_pos.x.as_int() - window_size.width.as_int() / 2,
+            cursor_pos.y.as_int() - window_size.height.as_int() / 2};
+    }
 
     friend Observer;
 
@@ -166,8 +200,9 @@ private:
     std::shared_ptr<Observer> observer;
     std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
-    float magnification = default_magnification;
-    bool default_enabled = false;
+    float magnification{default_magnification};
+    bool default_enabled{false};
+    bool decoupled{false};
 };
 
 miral::Magnifier::Magnifier()
@@ -270,6 +305,12 @@ miral::Magnifier& miral::Magnifier::magnification(float magnification)
 miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size)
 {
     self->set_capture_size(size);
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::decouple(bool decoupled)
+{
+    self->set_decoupled(decoupled);
     return *this;
 }
 
