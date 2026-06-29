@@ -113,11 +113,6 @@ struct MockEventBuilder : mi::EventBuilder
 
     MOCK_METHOD(mir::EventUPtr, key_event, (std::optional<Timestamp>, MirKeyboardAction, xkb_keysym_t, int));
 
-    mir::EventUPtr touch_event(std::optional<Timestamp>, std::vector<mir::events::TouchContactV1> const&)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error{"Deprecated touch_event() called"});
-    }
-
     MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::TouchContactV2> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
