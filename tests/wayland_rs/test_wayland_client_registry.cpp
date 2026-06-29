@@ -218,3 +218,22 @@ TEST_F(WaylandClientRegistryTest, remove_client_leaves_other_clients_intact)
     EXPECT_EQ(registry.from(id_a), nullptr);
     EXPECT_EQ(registry.from(id_b), client_b);
 }
+
+TEST_F(WaylandClientRegistryTest, add_client_replaces_existing_client_with_same_id)
+{
+    mrs::WaylandClientRegistry registry;
+
+    auto raw = connect_client(0);
+    auto const id = raw->id();
+    auto const first = std::make_shared<FakeClient>(raw->clone_box());
+    auto const second = std::make_shared<FakeClient>(std::move(raw));
+
+    registry.add_client(first);
+    registry.add_client(second);
+
+    EXPECT_EQ(registry.from(id), second);
+
+    // The duplicate was replaced, not appended: removing once clears the client.
+    registry.remove_client(id);
+    EXPECT_EQ(registry.from(id), nullptr);
+}

@@ -52,11 +52,11 @@ public:
         }
 
         // TODO: build a concrete mir::wayland_rs::Client wrapping `wayland_client`
-        //  (e.g. opening a shell session) and register it so it can be resolved when
-        //  this client's Wayland objects are created:
+        //  (e.g. opening a shell session) and register it with `registry` so it can
+        //  be resolved when this client's Wayland objects are created:
         //      registry.add_client(std::make_shared<MyClient>(std::move(wayland_client)));
-        //  Creating that concrete Client is deferred work.
-        (void)registry;
+        //  Creating that concrete Client is deferred work, so for now the connected
+        //  client is not added to the registry.
     }
 
     auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId> client_id) -> void override

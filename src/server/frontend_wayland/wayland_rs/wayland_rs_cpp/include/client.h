@@ -34,19 +34,19 @@ namespace wayland_rs
 /// The raw Rust client handle that arrives over the FFI boundary.
 using RawWlClient = rust::Box<WaylandClient>;
 
-/// An opaque, comparable identity for a [RawWlClient]. Unlike [RawWlClient] this
-/// can outlive the connection and is used to resolve/remove a [Client].
+/// An opaque, comparable identity for a `RawWlClient`. Unlike `RawWlClient` this
+/// can outlive the connection and is used to resolve/remove a `Client`.
 using RawWlClientId = rust::Box<WaylandClientId>;
 
 /// A C++ interface wrapping a connected Wayland client (the Rust
-/// [WaylandClient]). Every generated Wayland object holds a
+/// `WaylandClient`). Every generated Wayland object holds a
 /// `std::shared_ptr<Client>` so that it — and any user-written derived class —
 /// can interact with the client it serves without touching the raw FFI type.
 ///
 /// This is the analogue of `mir::wayland::Client`, but built on the wayland_rs
 /// (Rust) backend rather than libwayland's `wl_client`. It is abstract:
 /// concrete subclasses supply the session/serial state and are created
-/// elsewhere (e.g. by the frontend), then stored in a [WaylandClientRegistry].
+/// elsewhere (e.g. by the frontend), then stored in a `WaylandClientRegistry`.
 class Client
 {
 public:
