@@ -49,6 +49,13 @@ public:
     Magnifier& magnification(float magnification);
     Magnifier& capture_size(mir::geometry::Size const& size);
 
+    /// When \p decoupled is true, the magnifier surface is no longer tied to
+    /// the cursor position and can instead be dragged freely with the pointer
+    /// or a single touch contact.  When false (the default), the surface
+    /// follows the cursor as before.
+    /// \remark Since MirAL 6.0
+    Magnifier& decouple(bool decoupled);
+
     void operator()(mir::Server& server);
 
 private:

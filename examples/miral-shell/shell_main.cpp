@@ -284,6 +284,24 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    // Ctrl+Alt+M: toggle between cursor-follow mode and decoupled (draggable) mode
+    auto decouple_magnifier_filter = [magnifier=magnifier, decoupled=false](MirKeyboardEvent const* key_event) mutable {
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
+            return false;
+
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        if ((modifiers & mir_input_event_modifier_ctrl) &&
+            (modifiers & mir_input_event_modifier_alt) &&
+            mir_keyboard_event_keysym(key_event) == XKB_KEY_m)
+        {
+            decoupled = !decoupled;
+            magnifier.decouple(decoupled);
+            return true;
+        }
+
+        return false;
+    };
+
     StickyKeys sticky_keys = StickyKeys::disabled();
     auto const sticky_keys_filter = [sticky_keys=sticky_keys, sticky_keys_enabled=false](MirKeyboardEvent const* key_event) mutable
     {
@@ -388,6 +406,7 @@ int main(int argc, char const* argv[])
             sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
+            AppendKeyboardEventFilter{decouple_magnifier_filter},
             AppendKeyboardEventFilter{sticky_keys_filter},
             cursor_scale,
             locate_pointer,
