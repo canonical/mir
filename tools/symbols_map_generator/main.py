@@ -52,13 +52,6 @@ HIDDEN_SYMBOLS = {
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
 
-    "miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;",
-    "miral::SimulatedSecondaryClick::disable*;",
-    "miral::SimulatedSecondaryClick::disabled*;",
-    "miral::SimulatedSecondaryClick::displacement_threshold*;",
-    "miral::SimulatedSecondaryClick::enable*;",
-    "miral::SimulatedSecondaryClick::enabled*;",
-    "miral::SimulatedSecondaryClick::operator*;",
     "mir::input::Transformer::?Transformer*;",
     "non-virtual?thunk?to?mir::input::Transformer::?Transformer*;",
     "typeinfo?for?mir::input::Transformer;",
@@ -68,7 +61,6 @@ HIDDEN_SYMBOLS = {
     "miral::MouseKeysConfig::disabled*;",
     "miral::MouseKeysConfig::enable*;",
     "miral::MouseKeysConfig::enabled*;",
-    "miral::ConfigFile::ConfigFile*;",
 }
 
 class HeaderDirectory(TypedDict):
