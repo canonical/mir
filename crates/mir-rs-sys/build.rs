@@ -15,30 +15,22 @@
  */
 
 fn main() {
-    let miral = pkg_config::Config::new()
-        .atleast_version("5.8")
-        .probe("miral")
-        .expect(
-            "\n\n\
-            ERROR: Could not find the miral C++ library.\n\
-            \n\
-            The mir-sys crate requires the system-installed miral library (5.8 or later).\n\
-            \n\
-            On Ubuntu/Debian:\n\
-            \n\
-            sudo apt install libmiral-dev\n\
-            \n\
-            For other systems, see: https://github.com/canonical/mir/blob/main/HACKING.md\n\
-            \n",
-        );
-
-    // Link against miral and its dependencies
-    for lib in &miral.libs {
-        println!("cargo:rustc-link-lib={}", lib);
-    }
-    for path in &miral.link_paths {
-        println!("cargo:rustc-link-search=native={}", path.display());
-    }
+    // System dependencies (miral and its transitive libraries) are declared
+    // in the `[package.metadata.system-deps]` section of Cargo.toml. `probe()`
+    // resolves them via pkg-config and emits the relevant cargo link directives.
+    system_deps::Config::new().probe().expect(
+        "\n\n\
+        ERROR: Could not find the miral C++ library.\n\
+        \n\
+        The mir-sys crate requires the system-installed miral library (5.8 or later).\n\
+        \n\
+        On Ubuntu/Debian:\n\
+        \n\
+        sudo apt install libmiral-dev\n\
+        \n\
+        For other systems, see: https://github.com/canonical/mir/blob/main/HACKING.md\n\
+        \n",
+    );
 
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-changed=src/bridge.cpp");

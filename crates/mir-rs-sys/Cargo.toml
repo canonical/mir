@@ -2,7 +2,7 @@
 name = "mir-sys"
 version = "0.1.0"
 description = "Low-level FFI bindings to the Mir compositor's miral C++ library"
-license = "GPL-2.0-or-later"
+license = "GPL-2.0-only OR GPL-3.0-only"
 repository = "https://github.com/canonical/mir"
 readme = "README.md"
 keywords = ["mir", "wayland", "compositor", "ffi", "bindings"]
@@ -12,7 +12,10 @@ edition.workspace = true
 rust-version.workspace = true
 
 [lib]
-crate-type = ["staticlib", "rlib"]
+crate-type = ["rlib"]
+
+[package.metadata.system-deps]
+miral = "5.8"
 
 [build-dependencies]
-pkg-config = "0.3"
+system-deps = "7"
