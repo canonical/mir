@@ -40,6 +40,7 @@
 #include <miral/simulated_secondary_click.h>
 #include <miral/hover_click.h>
 #include <miral/sticky_keys.h>
+#include <miral/touch_emulator.h>
 #include <miral/magnifier.h>
 #include <miral/cursor_scale.h>
 
@@ -411,6 +412,7 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
+            TouchEmulator{},
             BasicApplicationSwitcher{}
         });
 }

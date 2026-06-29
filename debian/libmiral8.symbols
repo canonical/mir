@@ -377,6 +377,8 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::StickyKeys::on_modifier_clicked(std::function<void (int)>&&)@MIRAL_6.0" 6.0.0
  (c++)"miral::StickyKeys::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
  (c++)"miral::StickyKeys::should_disable_if_two_keys_are_pressed_together(bool)@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::TouchEmulator()@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::app() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::name() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::user_preference() const@MIRAL_6.0" 6.0.0

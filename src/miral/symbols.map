@@ -340,6 +340,8 @@ global:
     miral::StickyKeys::on_modifier_clicked*;
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
+    miral::TouchEmulator::TouchEmulator*;
+    miral::TouchEmulator::operator*;
     miral::WaylandExtensions::?WaylandExtensions*;
     miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::EnableInfo::app*;

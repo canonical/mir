@@ -160,6 +160,7 @@ add_library(miral-external OBJECT
     live_config_ini_file_with_overrides.cpp ${miral_include}/miral/live_config_ini_file_with_overrides.h
     hover_click.cpp                     ${miral_include}/miral/hover_click.h
     magnifier.cpp                       ${miral_include}/miral/magnifier.h
+    touch_emulator.cpp                  ${miral_include}/miral/touch_emulator.h
     bounce_keys.cpp                     ${miral_include}/miral/bounce_keys.h
     slow_keys.cpp                       ${miral_include}/miral/slow_keys.h
     sticky_keys.cpp                     ${miral_include}/miral/sticky_keys.h
