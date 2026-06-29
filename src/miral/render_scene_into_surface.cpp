@@ -122,6 +122,11 @@ public:
         overlay_cursor = next_overlay_cursor;
     }
 
+    mc::CompositorID screen_shooter_id() const
+    {
+        return screen_shooter->id();
+    }
+
 private:
     std::mutex mutable mutex;
     std::shared_ptr<mc::Scene> const scene;
@@ -197,8 +202,14 @@ public:
             on_surface_ready(surface);
     }
 
+    mc::CompositorID capture_compositor_id() const
+    {
+        std::lock_guard lock{mutex};
+        return surface ? surface->screen_shooter_id() : nullptr;
+    }
+
 private:
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::function<void(std::shared_ptr<mir::scene::Surface> const&)> on_surface_ready{[](auto const&){}};
     geom::Rectangle initial_capture_area;
     bool initial_overlay_cursor = false;
@@ -228,6 +239,11 @@ miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::overlay_cursor(boo
 {
     self->set_overlay_cursor(overlay_cursor);
     return *this;
+}
+
+auto miral::RenderSceneIntoSurface::capture_compositor_id() const -> mir::compositor::CompositorID
+{
+    return self->capture_compositor_id();
 }
 
 miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::on_surface_ready(
