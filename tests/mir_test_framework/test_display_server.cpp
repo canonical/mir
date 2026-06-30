@@ -75,8 +75,8 @@ auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools co
 
 void miral::TestDisplayServer::start_server()
 {
-    mir::test::AutoJoinThread t([this]
-         {
+    std::jthread t([this]
+        {
             SetWindowManagementPolicy wm_policy{
                 [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
                 {

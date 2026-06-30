@@ -32,16 +32,14 @@ namespace mir
 namespace test
 {
 
-using AutoJoinThread = std::jthread;
-
-class AutoUnblockThread : public AutoJoinThread
+class AutoUnblockThread : public std::jthread
 {
 public:
     AutoUnblockThread() = default;
 
     template<typename Callable, typename... Args>
     explicit AutoUnblockThread(std::function<void(void)> const& unblock, Callable&& f, Args&&... args) :
-        AutoJoinThread{std::forward<Callable>(f), std::forward<Args>(args)...},
+        std::jthread{std::forward<Callable>(f), std::forward<Args>(args)...},
         unblock{unblock}
     {}
 

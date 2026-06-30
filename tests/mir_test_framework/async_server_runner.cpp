@@ -98,7 +98,7 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
 
 void mtf::AsyncServerRunner::start_server()
 {
-    mt::AutoJoinThread t([this]
+    std::jthread t([this]
         {
             try
             {
