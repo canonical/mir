@@ -1860,7 +1860,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     if (!parameters.state().has_value())
         parameters.state() = mir_window_state_restored;
 
-    auto const proposed_size = parameters.size().value_or({640, 480});
+    auto const proposed_size = parameters.size().value_or(Size{640, 480});
 
     std::shared_ptr<DisplayArea> display_area;
     if (parameters.output_id().has_value())
