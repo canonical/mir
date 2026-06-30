@@ -18,7 +18,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     render_scene_into_surface.cpp
     mru_window_list.cpp
     active_outputs.cpp
-    command_line_option.cpp
+    configuration_option.cpp
     select_active_window.cpp
     popup_window_placement.cpp
     window_placement_anchors_to_parent.cpp
@@ -70,15 +70,6 @@ target_link_libraries(miral-test-internal
 )
 
 
-
-# Urgh, gtest false-positives on this warning
-check_cxx_compiler_flag(-Wno-error=stringop-overflow MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
-if (MIRAL_LINK_WITH_NO_STRINGOP_OVERFLOW)
-    set_target_properties(miral-test-internal
-      PROPERTIES
-        LINK_FLAGS "-Wno-error=stringop-overflow"
-    )
-endif()
 
 find_program(XWAYLAND_EXECUTABLE Xwayland REQUIRED)
 

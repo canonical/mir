@@ -18,7 +18,7 @@
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include <miral/test_display_server.h>
 
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/floating_window_manager.h>
 #include <miral/set_window_management_policy.h>
 

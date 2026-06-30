@@ -20,9 +20,12 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
   add_compile_definitions(MIR_BUILD_PLATFORM_WAYLAND)
 endif()
 
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-endif()
+include_directories(
+  ${CMAKE_SOURCE_DIR}
+
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${CMAKE_BINARY_DIR}/src/server/console
+)
 
 add_library(example SHARED library_example.cpp)
 target_link_libraries(example mircommon)

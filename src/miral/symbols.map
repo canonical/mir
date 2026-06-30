@@ -92,7 +92,6 @@ global:
     miral::CursorTheme::?CursorTheme*;
     miral::CursorTheme::CursorTheme*;
     miral::CursorTheme::operator*;
-    miral::CustomRenderer::?CustomRenderer*;
     miral::CustomRenderer::CustomRenderer*;
     miral::CustomRenderer::operator*;
     miral::Decorations::Decorations*;
@@ -167,7 +166,6 @@ global:
     miral::InputConfiguration::?InputConfiguration*;
     miral::InputConfiguration::Keyboard::?Keyboard*;
     miral::InputConfiguration::Keyboard::Keyboard*;
-    miral::InputConfiguration::Keyboard::config_changed*;
     miral::InputConfiguration::Keyboard::merge*;
     miral::InputConfiguration::Keyboard::operator*;
     miral::InputConfiguration::Keyboard::repeat_delay*;
@@ -182,7 +180,6 @@ global:
     miral::InputConfiguration::Mouse::hscroll_speed*;
     miral::InputConfiguration::Mouse::merge*;
     miral::InputConfiguration::Mouse::operator*;
-    miral::InputConfiguration::Mouse::scale*;
     miral::InputConfiguration::Mouse::vscroll_speed*;
     miral::InputConfiguration::Touchpad::?Touchpad*;
     miral::InputConfiguration::Touchpad::Touchpad*;
@@ -301,9 +298,6 @@ global:
     miral::SetCommandLineHandler::?SetCommandLineHandler*;
     miral::SetCommandLineHandler::SetCommandLineHandler*;
     miral::SetCommandLineHandler::operator*;
-    miral::SetTerminator::?SetTerminator*;
-    miral::SetTerminator::SetTerminator*;
-    miral::SetTerminator::operator*;
     miral::SetWindowManagementPolicy::?SetWindowManagementPolicy*;
     miral::SetWindowManagementPolicy::SetWindowManagementPolicy*;
     miral::SetWindowManagementPolicy::operator*;
@@ -731,7 +725,6 @@ global:
     typeinfo?for?miral::PrependEventFilter;
     typeinfo?for?miral::SessionLockListener;
     typeinfo?for?miral::SetCommandLineHandler;
-    typeinfo?for?miral::SetTerminator;
     typeinfo?for?miral::SetWindowManagementPolicy;
     typeinfo?for?miral::SimulatedSecondaryClick;
     typeinfo?for?miral::SlowKeys;

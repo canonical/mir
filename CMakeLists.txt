@@ -80,18 +80,22 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   add_compile_options(-Werror)
   # Disable maybe-uninitialized errors on GCC when optimisation is enabled
   # They are notorious for false-positives
-  # Also, disable array-bounds errors, they are likewise significantly
-  # false-positivey
+  # Also, disable array-bounds and stringop-overflow errors, they are likewise
+  # significantly false-positivey
   # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
   if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C>:-Wno-error=maybe-uninitialized>
-        $<$<COMPILE_LANGUAGE:C>:-Wno-error=array-bounds>)
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=array-bounds>
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
+    )
   endif()
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>
-        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>)
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
+    )
   endif()
 endif()
 
@@ -158,26 +162,13 @@ find_package(Boost 1.70.0 COMPONENTS program_options iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 
-pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream IMPORTED_TARGET)
-
-# Set the default platforms based on availability of NVIDIA libraries
-if (WAYLAND_EGLSTREAM_FOUND)
-  set(
-    MIR_PLATFORM
-    gbm-kms;atomic-kms;x11;eglstream-kms;wayland
-    CACHE
-    STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
-  )
-else()
-  set(
-    MIR_PLATFORM
-    gbm-kms;atomic-kms;x11;wayland
-    CACHE
-    STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
-  )
-endif()
+set(
+  MIR_PLATFORM
+  gbm-kms;atomic-kms;x11;wayland
+  CACHE
+  STRING
+  "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', or 'wayland')"
+)
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
@@ -247,12 +238,6 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
   if (platform STREQUAL "x11")
      set(MIR_BUILD_PLATFORM_X11 TRUE)
-  endif()
-  if (platform STREQUAL "eglstream-kms")
-     if (NOT WAYLAND_EGLSTREAM_FOUND)
-        message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
-     endif()
-     set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
   endif()
   if (platform STREQUAL "wayland")
      set(MIR_BUILD_PLATFORM_WAYLAND TRUE)

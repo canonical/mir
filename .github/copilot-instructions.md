@@ -26,7 +26,7 @@ files:
 - **include/**: Public API headers with minimal implementation details. Interfaces here should not expose platform-specific types.
 - **src/**: Implementation organized by component. Internal headers stay within their component directory.
 - **miral/** (Mir Abstraction Layer): ABI-stable layer in `include/miral/miral/` providing shell-building APIs like `MirRunner`, `WindowManagementPolicy`, window managers, and accessibility features.
-- **Platform backends**: `src/platforms/{gbm-kms,atomic-kms,x11,wayland,eglstream-kms,virtual}` — hardware abstraction layers for different graphics/input systems.
+- **Platform backends**: `src/platforms/{gbm-kms,atomic-kms,x11,wayland,virtual}` - hardware abstraction layers for different graphics/input systems.
 - **Input platforms**: `evdev` (C++), `evdev-rs` (Rust with CXX bindings)
 
 ### Key components
