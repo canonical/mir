@@ -1,7 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/server
-)
-
 set(MIRAL_ABI 8)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
@@ -181,11 +177,15 @@ if(HAS_W_NO_ATTRIBUTE_ALIAS)
 endif()
 
 target_include_directories(miral-internal
-    PRIVATE "${miral_include}"
+    PUBLIC
+        "${miral_include}"
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-internal
-    PRIVATE
+    PUBLIC
         mirserver
         PkgConfig::WAYLAND_CLIENT
         PkgConfig::YAML
@@ -195,10 +195,12 @@ target_link_libraries(miral-internal
 
 target_include_directories(miral-external
     PUBLIC  "${miral_include}"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_include_directories(miral
     PUBLIC  "${miral_include}"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-external
@@ -216,8 +218,6 @@ target_link_libraries(miral
     PUBLIC
         miral-external
         PkgConfig::XKBCOMMON
-    PRIVATE
-        miral-internal
 )
 
 set_target_properties(miral
@@ -228,10 +228,7 @@ set_target_properties(miral
 )
 
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
-    MIR_USE_LD EQUAL "ld"      AND  # lld on 22.04 generates slightly different symbols (but we don't care)
-    MIR_DPKG_GENSYMBOLS)
-
+if (MIR_DPKG_GENSYMBOLS)
     set(MIR_CHECK_MIRAL_SYMBOLS_DEFAULT ALL)
 endif()
 

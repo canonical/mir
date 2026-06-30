@@ -61,7 +61,8 @@ jobs:
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
 
-    runs-on: [self-hosted, reactive, amd64, 2xlarge-tiobe, noble]
+    # TODO: replace with tiobe-labeled image when available
+    runs-on: [self-hosted, amd64, xlarge, resolute]
 
     permissions:
       checks: write
@@ -116,9 +117,8 @@ jobs:
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
         sudo --preserve-env apt-get install --yes --no-install-recommends \
-          cargo-1.91 \
+          cargo \
           clang \
-          clang-tools \
           dmz-cursor-theme \
           flake8 \
           gcovr \
@@ -130,14 +130,12 @@ jobs:
           mesa-utils \
           ninja-build \
           pylint \
-          rust-1.91-clippy \
+          rust-clippy \
           xwayland
 
         sudo --preserve-env apt-get build-dep --yes ./
 
-        echo "PATH=/usr/lib/rust-1.91/bin:${PATH}" >> "$GITHUB_ENV"
-
-        cargo-1.91 install cargo-files
+        cargo install cargo-files
 
         mkdir --parents ~/.local/bin
         cat <<'EOF' > ~/.local/bin/gcov

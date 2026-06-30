@@ -27,7 +27,7 @@ import bisect
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
-library_not_found_error_msg: str = """\
+LIBRARY_NOT_FOUND_ERROR_MSG: str = """\
     Please install libclang-19-dev and python3-clang-19.
     Also, ensure that the required environment variables are set correctly. (e.g.)
         export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1
@@ -352,7 +352,7 @@ def _parse_single_header(file_path: str, parse_args: list[str]) -> set[str]:
 def process_directory(directory: Path, search_dirs: list[str]) -> set[str]:
     files = list(directory.rglob('*.h'))
 
-    args = ['-std=c++23', '-x', 'c++-header']
+    args = ['-std=c++26', '-x', 'c++-header']
     for dir in search_dirs:
         args.append(f"-I{dir}")
 
@@ -710,5 +710,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        _logger.exception(library_not_found_error_msg)
+        _logger.exception(LIBRARY_NOT_FOUND_ERROR_MSG)
         sys.exit(1)

@@ -1,8 +1,5 @@
 set(MIRCORE_ABI 3)
 
-# We don't need libmircore to have an unused dependency on libpthread
-string (REPLACE " -pthread " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 add_library(mircore SHARED
     anonymous_shm_file.cpp
     fatal.cpp

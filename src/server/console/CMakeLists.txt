@@ -1,7 +1,3 @@
-include_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}
-)
-
 add_library(
   mirconsole OBJECT
 
@@ -34,6 +30,7 @@ target_include_directories(mirconsole
     ${PROJECT_SOURCE_DIR}/include/server
   PRIVATE
     ${PROJECT_SOURCE_DIR}/src/include/server
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_link_libraries(mirconsole

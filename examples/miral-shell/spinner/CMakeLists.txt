@@ -19,7 +19,7 @@ pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
 pkg_check_modules(WAYLAND_CLIENT REQUIRED IMPORTED_TARGET wayland-client)
 pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-overlength-strings")
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-overlength-strings>)
 
 
 function(png2header png header varname)
@@ -40,10 +40,6 @@ png2header(
   ${CMAKE_CURRENT_SOURCE_DIR}/spinner-logo.png
   ${CMAKE_CURRENT_BINARY_DIR}/spinner_logo.h
   spinner_logo
-)
-
-include_directories(
-  ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 add_library(miral-spinner STATIC
@@ -73,4 +69,5 @@ target_link_libraries(miral-spinner
 
 target_include_directories(miral-spinner
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}
+  PRIVATE ${CMAKE_CURRENT_BINARY_DIR}
 )

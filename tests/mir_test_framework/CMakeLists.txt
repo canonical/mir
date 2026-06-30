@@ -7,8 +7,8 @@ add_compile_definitions(
     )
 
 # We don't want LTO objects in a published archive (libmir-test-assist.a)
-string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+add_compile_options(-fno-lto)
+add_link_options(-fno-lto)
 
 add_library(mir-stub-input-platform OBJECT
   stub_input_platform.cpp
@@ -29,6 +29,7 @@ add_library(mir-public-test-framework OBJECT
   headless_display_buffer_compositor_factory.cpp
   headless_test.cpp
   main.cpp
+  null_logger.cpp
   passthrough_tracker.cpp       ${PROJECT_SOURCE_DIR}/include/test/mir_test_framework/passthrough_tracker.h
   process.cpp
   server_runner.cpp
@@ -77,7 +78,7 @@ set_property(
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
 # Umockdev uses glib, which uses the deprecated "register" storage qualifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
+add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:register=>)
 
 add_library(mir-protected-test-framework OBJECT
 
@@ -214,6 +215,8 @@ add_custom_command(TARGET mir-test-framework-static POST_BUILD
   COMMENT "Copying testing cursor themes to build dir..."
 )
 
-string (REPLACE " -Wl,--no-undefined" " " CMAKE_SHARED_LINKER_FLAGS ${CMAKE_SHARED_LINKER_FLAGS})
+target_link_options(mirplatforminputstub PRIVATE -Wl,--allow-shlib-undefined)
+target_link_options(mirplatformgraphicsstub PRIVATE -Wl,--allow-shlib-undefined)
+target_link_options(mirplatformgraphicsthrow PRIVATE -Wl,--allow-shlib-undefined)
 
 add_subdirectory(udev-recordings/)
