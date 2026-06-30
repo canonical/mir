@@ -20,6 +20,7 @@
 #include "forward.h"
 #include "dimensions.h"
 #include "point.h"
+#include <format>
 #include <ostream>
 
 namespace mir
@@ -145,6 +146,19 @@ inline constexpr Point<T> as_point(Displacement<T> const& disp)
 { return Point<T>{disp.dx.as_value(), disp.dy.as_value()}; }
 }
 }
+}
+
+namespace std
+{
+template<typename T>
+struct formatter<mir::geometry::generic::Displacement<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+    auto format(mir::geometry::generic::Displacement<T> const& value, std::format_context& ctx) const
+        -> std::format_context::iterator
+    { return std::format_to(ctx.out(), "({}, {})", value.dx, value.dy); }
+};
 }
 
 #endif // MIR_GEOMETRY_DISPLACEMENT_H_

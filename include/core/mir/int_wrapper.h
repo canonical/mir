@@ -17,6 +17,7 @@
 #ifndef MIR_INT_WRAPPER_H_
 #define MIR_INT_WRAPPER_H_
 
+#include <format>
 #include <iosfwd>
 
 namespace mir
@@ -51,6 +52,14 @@ struct hash<::mir::IntWrapper<Tag, ValueType>>
 {
     std::hash<int> self;
     constexpr std::size_t operator()(::mir::IntWrapper<Tag, ValueType> const& id) const { return self(id.as_value()); }
+};
+
+template<typename Tag, typename ValueType>
+struct formatter<::mir::IntWrapper<Tag, ValueType>> : formatter<ValueType>
+{
+    auto format(::mir::IntWrapper<Tag, ValueType> const& value, std::format_context& ctx) const
+        -> std::format_context::iterator
+    { return formatter<ValueType>::format(value.as_value(), ctx); }
 };
 }
 

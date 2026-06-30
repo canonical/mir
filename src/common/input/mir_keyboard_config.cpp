@@ -17,6 +17,7 @@
 #include <mir/input/mir_keyboard_config.h>
 #include <mir/input/parameter_keymap.h>
 
+#include <format>
 #include <ostream>
 
 namespace mi = mir::input;
@@ -81,4 +82,10 @@ bool MirKeyboardConfig::operator==(MirKeyboardConfig const& rhs) const
 std::ostream& operator<<(std::ostream& out, MirKeyboardConfig const& keyboard)
 {
     return out << keyboard.device_keymap()->model() << " config";
+}
+
+auto std::formatter<MirKeyboardConfig>::format(MirKeyboardConfig const& keyboard, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    return std::format_to(ctx.out(), "{} config", keyboard.device_keymap()->model());
 }

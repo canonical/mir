@@ -20,6 +20,7 @@
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/mir_input_device_types.h>
 
+#include <format>
 #include <memory>
 #include <iosfwd>
 
@@ -89,5 +90,11 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, MirTouchpadConfig const& conf);
+
+template<>
+struct std::formatter<MirTouchpadConfig> : std::formatter<std::string>
+{
+    auto format(MirTouchpadConfig const& conf, std::format_context& ctx) const -> std::format_context::iterator;
+};
 
 #endif

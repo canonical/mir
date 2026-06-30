@@ -314,3 +314,29 @@ std::ostream& operator<<(std::ostream& out, MirInputConfig const& rhs)
         });
     return out << "}";
 }
+
+auto std::formatter<MirInputDevice>::format(MirInputDevice const& device, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    auto out = std::format_to(ctx.out(), "{} {} {}", device.id(), device.name(), device.unique_id());
+    if (device.has_pointer_config())
+        out = std::format_to(out, " pointer:({})", device.pointer_config());
+    if (device.has_touchpad_config())
+        out = std::format_to(out, " touchpad:({})", device.touchpad_config());
+    if (device.has_touchscreen_config())
+        out = std::format_to(out, " touchscreen:({})", device.touchscreen_config());
+    if (device.has_keyboard_config())
+        out = std::format_to(out, " keyboard:({})", device.keyboard_config());
+    return out;
+}
+
+auto std::formatter<MirInputConfig>::format(MirInputConfig const& config, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    auto out = std::format_to(ctx.out(), "MirInputConfig{{");
+    config.for_each([&out](MirInputDevice const& device)
+        {
+            out = std::format_to(out, "[{}]", device);
+        });
+    return std::format_to(out, "}}");
+}

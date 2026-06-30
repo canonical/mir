@@ -19,6 +19,7 @@
 
 #include <mir_toolkit/event.h>
 
+#include <format>
 #include <ostream>
 
 namespace mir
@@ -48,5 +49,125 @@ std::ostream& operator<<(std::ostream& out, MirWindowOutputEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirEvent const& event);
 
 }
+
+template<>
+struct std::formatter<MirInputEventModifier> : std::formatter<std::string>
+{
+    auto format(MirInputEventModifier modifier, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirKeyboardAction> : std::formatter<std::string>
+{
+    auto format(MirKeyboardAction action, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirTouchAction> : std::formatter<std::string>
+{
+    auto format(MirTouchAction action, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirTouchTooltype> : std::formatter<std::string>
+{
+    auto format(MirTouchTooltype tool, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirPointerAction> : std::formatter<std::string>
+{
+    auto format(MirPointerAction action, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirOrientation> : std::formatter<std::string>
+{
+    auto format(MirOrientation orientation, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowAttrib> : std::formatter<std::string>
+{
+    auto format(MirWindowAttrib attribute, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowFocusState> : std::formatter<std::string>
+{
+    auto format(MirWindowFocusState state, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowVisibility> : std::formatter<std::string>
+{
+    auto format(MirWindowVisibility state, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowType> : std::formatter<std::string>
+{
+    auto format(MirWindowType type, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowState> : std::formatter<std::string>
+{
+    auto format(MirWindowState state, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirResizeEvent> : std::formatter<std::string>
+{
+    auto format(MirResizeEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirOrientationEvent> : std::formatter<std::string>
+{
+    auto format(MirOrientationEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirInputEvent> : std::formatter<std::string>
+{
+    auto format(MirInputEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirCloseWindowEvent> : std::formatter<std::string>
+{
+    auto format(MirCloseWindowEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowEvent> : std::formatter<std::string>
+{
+    auto format(MirWindowEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirInputDeviceStateEvent> : std::formatter<std::string>
+{
+    auto format(MirInputDeviceStateEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowPlacementEvent> : std::formatter<std::string>
+{
+    auto format(MirWindowPlacementEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirWindowOutputEvent> : std::formatter<std::string>
+{
+    auto format(MirWindowOutputEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirEvent> : std::formatter<std::string>
+{
+    auto format(MirEvent const& event, std::format_context& ctx) const -> std::format_context::iterator;
+};
 
 #endif

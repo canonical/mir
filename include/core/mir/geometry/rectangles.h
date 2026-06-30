@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <initializer_list>
+#include <format>
 
 namespace mir
 {
@@ -59,5 +60,12 @@ std::ostream& operator<<(std::ostream& out, Rectangles const& value);
 
 }
 }
+
+template<>
+struct std::formatter<mir::geometry::Rectangles> : std::formatter<std::string>
+{
+    auto format(mir::geometry::Rectangles const& rectangles, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
 
 #endif /* MIR_GEOMETRY_RECTANGLES_H_ */

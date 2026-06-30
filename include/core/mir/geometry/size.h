@@ -19,6 +19,7 @@
 
 #include "forward.h"
 #include "dimensions.h"
+#include <format>
 #include <ostream>
 #include <limits>
 #include <concepts>
@@ -99,6 +100,19 @@ inline constexpr Point<T> as_point(Size<T> const& size)
 { return Point<T>{size.width.as_value(), size.height.as_value()}; }
 }
 }
+}
+
+namespace std
+{
+template<typename T>
+struct formatter<mir::geometry::generic::Size<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+    auto format(mir::geometry::generic::Size<T> const& value, std::format_context& ctx) const
+        -> std::format_context::iterator
+    { return std::format_to(ctx.out(), "({}, {})", value.width, value.height); }
+};
 }
 
 #endif // MIR_GEOMETRY_SIZE_H_

@@ -18,6 +18,7 @@
 #include <mir/geometry/displacement.h>
 #include <algorithm>
 #include <compare>
+#include <format>
 #include <limits>
 #include <ostream>
 
@@ -195,4 +196,13 @@ std::ostream& geom::operator<<(std::ostream& out, Rectangles const& value)
         out << rect << ", ";
     out << ']';
     return out;
+}
+
+auto std::formatter<mir::geometry::Rectangles>::format(mir::geometry::Rectangles const& rectangles, std::format_context& ctx) const
+    -> std::format_context::iterator
+{
+    auto out = std::format_to(ctx.out(), "[");
+    for (auto const& rect : rectangles)
+        out = std::format_to(out, "{}, ", rect);
+    return std::format_to(out, "]");
 }
