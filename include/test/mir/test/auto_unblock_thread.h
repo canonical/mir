@@ -32,31 +32,7 @@ namespace mir
 namespace test
 {
 
-class AutoJoinThread
-{
-public:
-    AutoJoinThread() = default;
-    template<typename Callable, typename... Args>
-    explicit AutoJoinThread(Callable&& f, Args&&... args) :
-        thread{std::forward<Callable>(f), std::forward<Args>(args)...}
-    {}
-
-    ~AutoJoinThread() { stop(); }
-
-    void stop()
-    {
-        if (thread.joinable())
-            thread.join();
-    }
-
-    std::thread::native_handle_type native_handle() { return thread.native_handle(); }
-
-    AutoJoinThread(AutoJoinThread&& t) = default;
-    AutoJoinThread& operator=(AutoJoinThread&& t) = default;
-
-private:
-    std::thread thread;
-};
+using AutoJoinThread = std::jthread;
 
 class AutoUnblockThread : public AutoJoinThread
 {
@@ -78,7 +54,8 @@ public:
     {
         if (unblock)
             unblock();
-        AutoJoinThread::stop();
+        if (joinable())
+            join();
     }
 
 private:
