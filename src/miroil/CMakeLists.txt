@@ -57,18 +57,24 @@ set_target_properties(miroil
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MIR_ARCH)
 
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
-    MIR_USE_LD STREQUAL "ld"   AND  # lld on 22.04 generates slightly different symbols (but we don't care)
-    MIR_ARCH MATCHES 64        AND  # On 32bit platforms int64_t presents as `long long` (but we've `long`)
-    MIR_DPKG_GENSYMBOLS)            # Using dpkg-gensymbols only makes sense on Debian based distros
-
-    if (MIR_DPKG_GENSYMBOLS)
-        add_custom_target(check-miroil-symbols ALL
-            DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            VERBATIM)
+# The Debian symbols check only requires dpkg-gensymbols (Debian based distros).
+# It is auto-run as part of the build (ALL) only under conditions known to produce
+# stable symbols, to avoid spurious diffs:
+#   - clang generates slightly different symbols (but we don't care)
+#   - lld on 22.04 generates slightly different symbols (but we don't care)
+#   - On 32bit platforms int64_t presents as `long long` (but we've `long`)
+# Outside those conditions the target still exists so it can be invoked explicitly
+# (e.g. by the pre-push hook).
+if (MIR_DPKG_GENSYMBOLS)
+    if (CMAKE_COMPILER_IS_GNUCXX AND MIR_USE_LD STREQUAL "ld" AND MIR_ARCH MATCHES 64)
+        set(MIR_CHECK_MIROIL_SYMBOLS_DEFAULT ALL)
     endif()
+
+    add_custom_target(check-miroil-symbols ${MIR_CHECK_MIROIL_SYMBOLS_DEFAULT}
+        DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        VERBATIM)
 endif()
 
 configure_file(
