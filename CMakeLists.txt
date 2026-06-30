@@ -79,14 +79,14 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
   # Disable maybe-uninitialized errors on GCC when optimisation is enabled
   # They are notorious for false-positives
-  # Also, disable array-bounds errors, they are likewise significantly
-  # false-positivey
+  # Also, disable array-bounds and stringop-overflow errors, they are likewise
+  # significantly false-positivey
   # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
   if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds -Wno-error=stringop-overflow")
   endif()
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds -Wno-error=stringop-overflow")
   endif()
 endif()
 
