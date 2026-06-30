@@ -122,9 +122,10 @@ void mir::frontend::XdgWmDialogV1::get_xdg_dialog(wl_resource* id, wl_resource* 
 
     auto* dialog = new XdgDialogV1{id};
     dialog->add_destroy_listener(
-        [toplevels_with_dialogs = this->toplevels_with_dialogs, toplevel]()
+        [toplevels_with_dialogs = this->toplevels_with_dialogs, toplevel, wtl = mir::wayland::Weak{tl}]()
         {
-            toplevels_with_dialogs->unregister_toplevel(toplevel);
+            if (wtl)
+                toplevels_with_dialogs->unregister_toplevel(toplevel);
         });
 
     tl->add_destroy_listener(
