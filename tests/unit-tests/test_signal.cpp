@@ -17,8 +17,10 @@
 #include <mir/signal.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <atomic>
 #include <thread>
 #include <latch>
+#include <vector>
 
 TEST(Signal, waits_until_raised)
 {
