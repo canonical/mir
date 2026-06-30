@@ -665,6 +665,9 @@ global:
     vtable?for?mir::time::Clock;
     vtable?for?mir::time::PosixTimestamp;
     vtable?for?mir::time::SteadyClock;
+    "std::formatter<MirPointerConfig, char>::format(MirPointerConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+    "std::formatter<MirTouchpadConfig, char>::format(MirTouchpadConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+    "std::formatter<MirTouchscreenConfig, char>::format(MirTouchscreenConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
   };
 local: *;
 };

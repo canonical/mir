@@ -22,6 +22,7 @@
 #include "size.h"
 #include "displacement.h"
 
+#include <format>
 #include <ostream>
 
 namespace mir
@@ -111,6 +112,19 @@ std::ostream& operator<<(std::ostream& out, Rectangle<T> const& value)
 }
 }
 }
+}
+
+namespace std
+{
+template<typename T>
+struct formatter<mir::geometry::generic::Rectangle<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+    auto format(mir::geometry::generic::Rectangle<T> const& value, std::format_context& ctx) const
+        -> std::format_context::iterator
+    { return std::format_to(ctx.out(), "({}, {})", value.top_left, value.size); }
+};
 }
 
 #endif // MIR_GEOMETRY_RECTANGLE_H_

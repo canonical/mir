@@ -15,6 +15,7 @@
  */
 
 #include <mir/input/mir_pointer_config.h>
+#include <format>
 #include <ostream>
 #include <tuple>
 
@@ -140,4 +141,46 @@ std::ostream& operator<<(std::ostream& out, MirPointerConfig const& rhs)
         << " acceleration_bias:" << rhs.cursor_acceleration_bias()
         << " horizontal_scroll_scale:" << rhs.horizontal_scroll_scale()
         << " vertical_scroll_scale:" << rhs.vertical_scroll_scale();
+}
+
+namespace
+{
+char const* as_string(MirPointerHandedness handedness)
+{
+    switch (handedness)
+    {
+    case mir_pointer_handedness_right:
+        return "right";
+    case mir_pointer_handedness_left:
+        return "left";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+char const* as_string(MirPointerAcceleration acceleration)
+{
+    switch (acceleration)
+    {
+    case mir_pointer_acceleration_none:
+        return "none";
+    case mir_pointer_acceleration_adaptive:
+        return "adaptive";
+    default:
+        return "UNKNOWN";
+    }
+}
+}
+
+auto std::formatter<MirPointerConfig>::format(MirPointerConfig const& rhs, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    return std::format_to(
+        ctx.out(),
+        " handedness:{} acceleration:{} acceleration_bias:{} horizontal_scroll_scale:{} vertical_scroll_scale:{}",
+        as_string(rhs.handedness()),
+        as_string(rhs.acceleration()),
+        rhs.cursor_acceleration_bias(),
+        rhs.horizontal_scroll_scale(),
+        rhs.vertical_scroll_scale());
 }

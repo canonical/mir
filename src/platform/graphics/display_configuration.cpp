@@ -25,6 +25,7 @@ extern "C"
 }
 
 #include <cstdlib>
+#include <format>
 #include <ostream>
 #include <algorithm>
 #include <tuple>
@@ -91,6 +92,23 @@ char const* as_string(MirFormFactor form_factor)
         return "phone";
     case mir_form_factor_tablet:
         return "tablet";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+char const* as_string(MirOrientation orientation)
+{
+    switch (orientation)
+    {
+    case mir_orientation_right:
+        return "right";
+    case mir_orientation_inverted:
+        return "inverted";
+    case mir_orientation_left:
+        return "left";
+    case mir_orientation_normal:
+        return "normal";
     default:
         return "UNKNOWN";
     }
@@ -329,4 +347,77 @@ mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
     return custom_logical_size.has_value() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left, scale);
+}
+
+auto std::formatter<mir::graphics::DisplayConfigurationCard>::format(
+    mir::graphics::DisplayConfigurationCard const& card,
+    std::format_context& ctx) const -> std::format_context::iterator
+{
+    return std::format_to(ctx.out(), "{{ id: {} max_simultaneous_outputs: {} }}\n", card.id, card.max_simultaneous_outputs);
+}
+
+auto std::formatter<mir::graphics::DisplayConfigurationMode>::format(
+    mir::graphics::DisplayConfigurationMode const& mode,
+    std::format_context& ctx) const -> std::format_context::iterator
+{
+    return std::format_to(ctx.out(), "{}x{}@{:.1f}", mode.size.width, mode.size.height, mode.vrefresh_hz);
+}
+
+auto std::formatter<mir::graphics::DisplayConfigurationOutput>::format(
+    mir::graphics::DisplayConfigurationOutput const& output,
+    std::format_context& ctx) const -> std::format_context::iterator
+{
+    auto out = std::format_to(
+        ctx.out(),
+        "{{\n\tid: {}\n\tcard_id: {}\n\tlogical_group_id: {}\n\ttype: {}\n\tmodes: [ ",
+        output.id,
+        output.card_id,
+        output.logical_group_id,
+        mir::output_type_name(static_cast<unsigned>(output.type)));
+
+    for (size_t i = 0; i < output.modes.size(); ++i)
+    {
+        out = std::format_to(out, "{}", output.modes[i]);
+        if (i != output.modes.size() - 1)
+            out = std::format_to(out, ", ");
+    }
+
+    out = std::format_to(out, "]\n\tpreferred_mode: {}\n\tphysical_size_mm: {}x{}\n\tconnected: {}\n\tused: {}\n\ttop_left: {}\n\tcurrent_mode: {} (",
+        output.preferred_mode_index,
+        output.physical_size_mm.width,
+        output.physical_size_mm.height,
+        output.connected ? "true" : "false",
+        output.used ? "true" : "false",
+        output.top_left,
+        output.current_mode_index);
+
+    if (output.current_mode_index < output.modes.size())
+        out = std::format_to(out, "{}", output.modes[output.current_mode_index]);
+    else
+        out = std::format_to(out, "none");
+
+    out = std::format_to(out, ")\n\tscale: {}\n\tform factor: {}\n\tcustom logical size: ", output.scale, as_string(output.form_factor));
+    if (output.custom_logical_size)
+    {
+        auto const& size = output.custom_logical_size.value();
+        out = std::format_to(out, "{}x{}", size.width.as_int(), size.height.as_int());
+    }
+    else
+    {
+        out = std::format_to(out, "not set");
+    }
+
+    return std::format_to(out, "\n\torientation: {}\n}}\n", as_string(output.orientation));
+}
+
+auto std::formatter<mir::graphics::DisplayConfiguration>::format(
+    mir::graphics::DisplayConfiguration const& config,
+    std::format_context& ctx) const -> std::format_context::iterator
+{
+    auto out = ctx.out();
+    config.for_each_output([&out](mir::graphics::DisplayConfigurationOutput const& output)
+        {
+            out = std::format_to(out, "{}\n", output);
+        });
+    return out;
 }
