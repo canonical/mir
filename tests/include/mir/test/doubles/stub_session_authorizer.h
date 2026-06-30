@@ -33,32 +33,10 @@ class StubSessionAuthorizer : public frontend::SessionAuthorizer
     {
         return true;
     }
-    bool configure_display_is_allowed(mir::frontend::SessionCredentials const&) override
-    {
-        return true;
-    }
-    bool set_base_display_configuration_is_allowed(mir::frontend::SessionCredentials const&) override
-    {
-        return true;
-    }
-    bool screencast_is_allowed(mir::frontend::SessionCredentials const&) override
-    {
-        return true;
-    }
-
-    bool configure_input_is_allowed(mir::frontend::SessionCredentials const&) override
-    {
-        return true;
-    }
-    bool set_base_input_configuration_is_allowed(mir::frontend::SessionCredentials const&) override
-    {
-        return true;
-    }
 };
 
 struct MockSessionAuthorizer : StubSessionAuthorizer
 {
-    MOCK_METHOD(bool, screencast_is_allowed, (frontend::SessionCredentials const&), (override));
 };
 
 }

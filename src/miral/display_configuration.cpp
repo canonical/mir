@@ -16,7 +16,7 @@
 
 #include <miral/display_configuration.h>
 #include <miral/runner.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include "static_display_config.h"
 
 #include <mir/server.h>

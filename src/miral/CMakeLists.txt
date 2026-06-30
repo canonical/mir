@@ -115,7 +115,6 @@ add_library(miral-external OBJECT
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
     config_file.cpp                     ${miral_include}/miral/config_file.h
     configuration_option.cpp            ${miral_include}/miral/configuration_option.h
-    ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     custom_renderer.cpp                 ${miral_include}/miral/custom_renderer.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
@@ -140,7 +139,6 @@ add_library(miral-external OBJECT
     runner.cpp                          ${miral_include}/miral/runner.h
     session_lock_listener.cpp           ${miral_include}/miral/session_lock_listener.h
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
-    set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
     toolkit_event.cpp                   ${miral_include}/miral/toolkit_event.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h

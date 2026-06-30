@@ -298,9 +298,6 @@ global:
     miral::SetCommandLineHandler::?SetCommandLineHandler*;
     miral::SetCommandLineHandler::SetCommandLineHandler*;
     miral::SetCommandLineHandler::operator*;
-    miral::SetTerminator::?SetTerminator*;
-    miral::SetTerminator::SetTerminator*;
-    miral::SetTerminator::operator*;
     miral::SetWindowManagementPolicy::?SetWindowManagementPolicy*;
     miral::SetWindowManagementPolicy::SetWindowManagementPolicy*;
     miral::SetWindowManagementPolicy::operator*;
@@ -728,7 +725,6 @@ global:
     typeinfo?for?miral::PrependEventFilter;
     typeinfo?for?miral::SessionLockListener;
     typeinfo?for?miral::SetCommandLineHandler;
-    typeinfo?for?miral::SetTerminator;
     typeinfo?for?miral::SetWindowManagementPolicy;
     typeinfo?for?miral::SimulatedSecondaryClick;
     typeinfo?for?miral::SlowKeys;

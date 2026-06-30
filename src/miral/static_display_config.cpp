@@ -21,7 +21,7 @@
 #include <mir/main_loop.h>
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/server.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/display_configuration.h>
 #include <miral/runner.h>
 

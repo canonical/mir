@@ -20,7 +20,7 @@
 #include <miral/application_authorizer.h>
 #include <miral/display_configuration.h>
 #include <miral/external_client.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/keymap.h>
 #include <miral/set_window_management_policy.h>
 #include <miral/internal_client.h>
@@ -40,31 +40,6 @@ struct KioskAuthorizer : miral::ApplicationAuthorizer
         // Allow internal applications and (optionally) only ones that start "immediately"
         // (For the sake of an example "immediately" means while the spash is running)
         return getpid() == creds.pid() || !startup_only || splash->session();
-    }
-
-    virtual bool configure_display_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
-    {
-        return false;
-    }
-
-    virtual bool set_base_display_configuration_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
-    {
-        return false;
-    }
-
-    virtual bool screencast_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
-    {
-        return true;
-    }
-
-    bool configure_input_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
-    {
-        return false;
-    }
-
-    bool set_base_input_configuration_is_allowed(miral::ApplicationCredentials const& /*creds*/) override
-    {
-        return false;
     }
 
     static std::atomic<bool> startup_only;
