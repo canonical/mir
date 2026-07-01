@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.24 {
+MIR_PLATFORM_2.29 {
  global:
   extern "C++" {
     mir::gl::tessellate_renderable_into_rectangle*;
@@ -12,6 +12,7 @@ MIR_PLATFORM_2.24 {
     mir::graphics::DMABufEGLProvider::as_texture*;
     mir::graphics::DRMFormat::DRMFormat*;
     mir::graphics::DRMFormat::Info::alpha_equivalent*;
+    mir::graphics::DRMFormat::Info::bytes_per_pixel*;
     mir::graphics::DRMFormat::Info::components*;
     mir::graphics::DRMFormat::Info::has_alpha*;
     mir::graphics::DRMFormat::Info::opaque_equivalent*;
@@ -43,7 +44,6 @@ MIR_PLATFORM_2.24 {
     mir::graphics::EGLExtensions::DeviceQuery::DeviceQuery*;
     mir::graphics::EGLExtensions::EGLExtensions*;
     mir::graphics::EGLExtensions::EXTImageDmaBufImportModifiers::EXTImageDmaBufImportModifiers*;
-    mir::graphics::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions*;
     mir::graphics::EGLExtensions::PlatformBaseEXT*;
     mir::graphics::EGLExtensions::WaylandExtensions::WaylandExtensions*;
     mir::graphics::EGLSurfaceStore::?EGLSurfaceStore*;

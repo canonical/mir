@@ -51,22 +51,6 @@ void mtd::StubSession::show()
 {
 }
 
-void mtd::StubSession::start_prompt_session()
-{
-}
-
-void mtd::StubSession::stop_prompt_session()
-{
-}
-
-void mtd::StubSession::suspend_prompt_session()
-{
-}
-
-void mtd::StubSession::resume_prompt_session()
-{
-}
-
 auto mtd::StubSession::create_surface(
     std::shared_ptr<Session> const& /*session*/,
     mir::shell::SurfaceSpecification const& /*params*/,

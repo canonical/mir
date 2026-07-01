@@ -1,4 +1,4 @@
-set(MIROIL_ABI 9)
+set(MIROIL_ABI 10)
 set(MIROIL_VERSION_MAJOR ${MIROIL_ABI})
 set(MIROIL_VERSION_MINOR 0)
 set(MIROIL_VERSION_PATCH 0)
@@ -8,7 +8,7 @@ set(MIROIL_VERSION ${MIROIL_VERSION_MAJOR}.${MIROIL_VERSION_MINOR}.${MIROIL_VERS
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miroil_include ${PROJECT_SOURCE_DIR}/include/miroil)
 
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="miroil" -DMIROIL_ENABLE_DEPRECATIONS=0)
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="miroil" MIROIL_ENABLE_DEPRECATIONS=0)
 
 add_library(miroil SHARED
     compositor.cpp ${miroil_include}/miroil/compositor.h
@@ -22,10 +22,7 @@ add_library(miroil SHARED
     input_device.cpp ${miroil_include}/miroil/input_device.h
     input_device_observer.cpp ${miroil_include}/miroil/input_device_observer.h
     mir_server_hooks.cpp ${miroil_include}/miroil/mir_server_hooks.h
-    mir_prompt_session.cpp ${miroil_include}/miroil/mir_prompt_session.h
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h
-    prompt_session_listener.cpp ${miroil_include}/miroil/prompt_session_listener.h
-    prompt_session_manager.cpp ${miroil_include}/miroil/prompt_session_manager.h
     set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
     surface.cpp ${miroil_include}/miroil/surface.h
     ${miroil_include}/miroil/display_configuration_storage.h
@@ -60,18 +57,14 @@ set_target_properties(miroil
 execute_process(COMMAND uname -m OUTPUT_VARIABLE MIR_ARCH)
 
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
-    MIR_USE_LD STREQUAL "ld"   AND  # lld on 22.04 generates slightly different symbols (but we don't care)
-    MIR_ARCH MATCHES 64        AND  # On 32bit platforms int64_t presents as `long long` (but we've `long`)
-    MIR_DPKG_GENSYMBOLS)            # Using dpkg-gensymbols only makes sense on Debian based distros
+if (MIR_ARCH MATCHES 64  AND  # On 32bit platforms int64_t presents as `long long` (but we've `long`)
+    MIR_DPKG_GENSYMBOLS)      # Using dpkg-gensymbols only makes sense on Debian based distros
 
-    if (MIR_DPKG_GENSYMBOLS)
-        add_custom_target(check-miroil-symbols ALL
-            DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-            COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            VERBATIM)
-    endif()
+    add_custom_target(check-miroil-symbols ALL
+        DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
+        WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
+        VERBATIM)
 endif()
 
 configure_file(

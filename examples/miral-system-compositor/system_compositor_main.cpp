@@ -15,7 +15,7 @@
  */
 
 #include <miral/append_keyboard_event_filter.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/display_configuration_option.h>
 #include <miral/runner.h>
 #include <miral/toolkit_event.h>

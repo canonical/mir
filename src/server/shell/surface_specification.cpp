@@ -14,22 +14,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <tuple>
+
 #include <mir/shell/surface_specification.h>
 
 namespace msh = mir::shell;
 
-auto msh::operator==(SurfaceAspectRatio const& lhs, SurfaceAspectRatio const& rhs) -> bool
-{
-    return
-        lhs.width == rhs.width &&
-        lhs.height == rhs.height;
-}
-
 auto msh::operator==(StreamSpecification const& lhs, StreamSpecification const& rhs) -> bool
 {
-    return
-        lhs.stream.lock() == rhs.stream.lock() &&
-        lhs.displacement == rhs.displacement;
+    return std::make_tuple(lhs.stream.lock(), lhs.displacement) ==
+           std::make_tuple(rhs.stream.lock(), rhs.displacement);
 }
 
 bool msh::SurfaceSpecification::is_empty() const
@@ -170,59 +164,37 @@ bool msh::operator==(
     const msh::SurfaceSpecification& lhs,
     const msh::SurfaceSpecification& rhs)
 {
-    return
-        lhs.name == rhs.name &&
-        lhs.width == rhs.width &&
-        lhs.height == rhs.height &&
-        lhs.top_left == rhs.top_left &&
-        lhs.buffer_usage == rhs.buffer_usage &&
-        lhs.pixel_format == rhs.pixel_format &&
-        lhs.output_id == rhs.output_id &&
-        lhs.state == rhs.state &&
-        lhs.type == rhs.type &&
-        lhs.preferred_orientation == rhs.preferred_orientation &&
-        lhs.parent_id == rhs.parent_id &&
-        lhs.aux_rect == rhs.aux_rect &&
-        lhs.edge_attachment == rhs.edge_attachment &&
-        lhs.placement_hints == rhs.placement_hints &&
-        lhs.surface_placement_gravity == rhs.surface_placement_gravity &&
-        lhs.aux_rect_placement_gravity == rhs.aux_rect_placement_gravity &&
-        lhs.aux_rect_placement_offset_x == rhs.aux_rect_placement_offset_x &&
-        lhs.aux_rect_placement_offset_y == rhs.aux_rect_placement_offset_y &&
-        (   // parent check passes if neither have a parent, or if they both have parents and they're equal
-            (!lhs.parent && !rhs.parent) ||
-            (lhs.parent && rhs.parent && lhs.parent.value().lock() == rhs.parent.value().lock())
-        ) &&
-        lhs.min_width == rhs.min_width &&
-        lhs.min_height == rhs.min_height &&
-        lhs.max_width == rhs.max_width &&
-        lhs.max_height == rhs.max_height &&
-        lhs.width_inc == rhs.width_inc &&
-        lhs.height_inc == rhs.height_inc &&
-        lhs.min_aspect == rhs.min_aspect &&
-        lhs.max_aspect == rhs.max_aspect &&
-        lhs.input_shape == rhs.input_shape &&
-        lhs.input_mode == rhs.input_mode &&
-        lhs.shell_chrome == rhs.shell_chrome &&
-        lhs.streams == rhs.streams &&
-        lhs.confine_pointer == rhs.confine_pointer &&
-        lhs.cursor_image == rhs.cursor_image &&
-        lhs.depth_layer == rhs.depth_layer &&
-        lhs.attached_edges == rhs.attached_edges &&
-        lhs.exclusive_rect == rhs.exclusive_rect &&
-        lhs.ignore_exclusion_zones == rhs.ignore_exclusion_zones &&
-        lhs.application_id == rhs.application_id &&
-        lhs.server_side_decorated == rhs.server_side_decorated &&
-        lhs.focus_mode == rhs.focus_mode &&
-        lhs.visible_on_lock_screen == rhs.visible_on_lock_screen &&
-        lhs.tiled_edges == rhs.tiled_edges &&
-        lhs.alpha == rhs.alpha &&
-        lhs.parent_size == rhs.parent_size;
-}
+    auto const parents_equal =
+        (!lhs.parent && !rhs.parent) ||
+        (lhs.parent && rhs.parent && lhs.parent.value().lock() == rhs.parent.value().lock());
 
-bool msh::operator!=(
-    const msh::SurfaceSpecification& lhs,
-    const msh::SurfaceSpecification& rhs)
-{
-    return !(lhs == rhs);
+    return parents_equal &&
+        std::tie(lhs.name, lhs.width, lhs.height, lhs.top_left,
+                 lhs.buffer_usage, lhs.pixel_format, lhs.output_id,
+                 lhs.state, lhs.type, lhs.preferred_orientation,
+                 lhs.parent_id, lhs.aux_rect, lhs.edge_attachment,
+                 lhs.placement_hints, lhs.surface_placement_gravity,
+                 lhs.aux_rect_placement_gravity,
+                 lhs.aux_rect_placement_offset_x, lhs.aux_rect_placement_offset_y,
+                 lhs.min_width, lhs.min_height, lhs.max_width, lhs.max_height,
+                 lhs.width_inc, lhs.height_inc, lhs.min_aspect, lhs.max_aspect,
+                 lhs.input_shape, lhs.input_mode, lhs.shell_chrome, lhs.streams,
+                 lhs.confine_pointer, lhs.cursor_image, lhs.depth_layer,
+                 lhs.attached_edges, lhs.exclusive_rect, lhs.ignore_exclusion_zones,
+                 lhs.application_id, lhs.server_side_decorated, lhs.focus_mode,
+                 lhs.visible_on_lock_screen, lhs.tiled_edges, lhs.alpha, lhs.parent_size) ==
+        std::tie(rhs.name, rhs.width, rhs.height, rhs.top_left,
+                 rhs.buffer_usage, rhs.pixel_format, rhs.output_id,
+                 rhs.state, rhs.type, rhs.preferred_orientation,
+                 rhs.parent_id, rhs.aux_rect, rhs.edge_attachment,
+                 rhs.placement_hints, rhs.surface_placement_gravity,
+                 rhs.aux_rect_placement_gravity,
+                 rhs.aux_rect_placement_offset_x, rhs.aux_rect_placement_offset_y,
+                 rhs.min_width, rhs.min_height, rhs.max_width, rhs.max_height,
+                 rhs.width_inc, rhs.height_inc, rhs.min_aspect, rhs.max_aspect,
+                 rhs.input_shape, rhs.input_mode, rhs.shell_chrome, rhs.streams,
+                 rhs.confine_pointer, rhs.cursor_image, rhs.depth_layer,
+                 rhs.attached_edges, rhs.exclusive_rect, rhs.ignore_exclusion_zones,
+                 rhs.application_id, rhs.server_side_decorated, rhs.focus_mode,
+                 rhs.visible_on_lock_screen, rhs.tiled_edges, rhs.alpha, rhs.parent_size);
 }

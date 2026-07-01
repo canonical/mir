@@ -137,6 +137,22 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
                 }
             }
 
+            pub fn version(&self) -> u32 {
+                use wayland_server::Resource;
+                self.wrapped.version()
+            }
+
+            pub fn destroy_and_delete(&self) {
+                use wayland_server::Resource;
+                if self.wrapped.is_alive() {
+                    if let Some(handle) = self.wrapped.handle().upgrade() {
+                        let _ = handle.destroy_object::<crate::wayland_server_core::ServerState>(
+                            &self.wrapped.id(),
+                        );
+                    }
+                }
+            }
+
             #(#event_extensions)*
         }
     })
@@ -175,23 +191,33 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
 
 pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
     let name = sanitize_identifier(&arg.name);
+    let nullable = arg.allow_null.unwrap_or(false);
+    let is_object = matches!(arg.type_, WaylandArgType::Object | WaylandArgType::NewId);
     let mut arg_str = match arg.type_ {
         WaylandArgType::Int => format!("{}: {}", name, "i32"),
         WaylandArgType::Uint => format!("{}: {}", name, "u32"),
         WaylandArgType::Fixed => format!("{}: {}", name, "f64"),
         WaylandArgType::String => format!("{}: {}", name, "&CxxString"),
-        WaylandArgType::Object | WaylandArgType::NewId => format!(
-            "{}: &Box<{}>",
-            name,
-            format_wayland_interface_to_rust_extension_struct(
-                arg.interface.as_ref().expect("Object is missing interface")
-            )
-        ),
+        WaylandArgType::Object | WaylandArgType::NewId => {
+            let ext = format_wayland_interface_to_rust_extension_struct(
+                arg.interface.as_ref().expect("Object is missing interface"),
+            );
+            // A nullable object is passed as a raw pointer so that absence can be
+            // represented by null. Neither `std::optional` nor `Option<&Box<_>>` can
+            // cross the cxx FFI boundary, but a raw pointer can.
+            if nullable {
+                format!("{}: *const Box<{}>", name, ext)
+            } else {
+                format!("{}: &Box<{}>", name, ext)
+            }
+        }
         WaylandArgType::Array => format!("{}: {}", name, "&CxxVector<u8>"),
         WaylandArgType::Fd => format!("{}: {}", name, "i32"),
     };
 
-    if arg.allow_null.unwrap_or(false) {
+    // Nullable non-object arguments are still ferried as a `(value, has_value)` pair,
+    // since their value type can always be sent across the boundary.
+    if nullable && !is_object {
         arg_str.push_str(&format!(", has_{}: bool", arg.name));
     }
 
@@ -201,7 +227,7 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
 fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> String {
     let name = sanitize_identifier(&arg.name);
     let mut param = match arg.type_ {
-        WaylandArgType::Int | WaylandArgType::Uint | WaylandArgType::Fixed => name,
+        WaylandArgType::Int | WaylandArgType::Uint | WaylandArgType::Fixed => name.clone(),
         WaylandArgType::String => format!("{}.to_string()", name),
         WaylandArgType::Object | WaylandArgType::NewId => format!("&{}.wrapped", name),
         WaylandArgType::Array => format!("{}.iter().cloned().collect()", name),
@@ -223,7 +249,14 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> Stri
     }
 
     if arg.allow_null.unwrap_or(false) {
-        param = format!("if has_{} {{ Some({}) }} else {{ None }}", arg.name, param);
+        param = match arg.type_ {
+            // The nullable object arrives as a raw pointer; dereference it to recover the
+            // `Option<&wrapped>` the underlying Wayland method expects.
+            WaylandArgType::Object | WaylandArgType::NewId => {
+                format!("unsafe {{ {name}.as_ref() }}.map(|__opt| &__opt.wrapped)")
+            }
+            _ => format!("if has_{} {{ Some({}) }} else {{ None }}", arg.name, param),
+        };
     }
 
     param

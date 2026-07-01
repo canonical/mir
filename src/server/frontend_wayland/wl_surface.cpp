@@ -376,6 +376,16 @@ void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x,
 {
     if (x != 0 || y != 0)
     {
+        if (wl_resource_get_version(resource) >= 5)
+        {
+            throw wayland::ProtocolError{
+                resource,
+                Error::invalid_offset,
+                "Non-zero offset (%d, %d) given to wl_surface.attach, but since version 5 "
+                "the offset must be set with wl_surface.offset instead",
+                x, y};
+        }
+
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 

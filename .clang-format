@@ -49,9 +49,12 @@ EmptyLineBeforeAccessModifier: Always
 FixNamespaceComments: false
 IncludeBlocks: Preserve
 IndentAccessModifiers: false
+IndentExternBlock: NoIndent
+IndentPPDirectives: BeforeHash
 IndentWidth: 4
 KeepEmptyLines:
   AtStartOfBlock: false
+PPIndentWidth: 2
 PackConstructorInitializers: CurrentLine
 PenaltyBreakBeforeFirstCallParameter: 100
 PenaltyBreakOpenParenthesis: 100

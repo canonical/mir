@@ -27,6 +27,7 @@ extern "C"
 #include <cstdlib>
 #include <ostream>
 #include <algorithm>
+#include <tuple>
 
 namespace mg = mir::graphics;
 
@@ -150,63 +151,17 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfiguration const& 
     return out;
 }
 
-bool mg::operator==(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return (val1.id == val2.id) &&
-           (val1.max_simultaneous_outputs == val2.max_simultaneous_outputs);
-}
-
-bool mg::operator!=(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return !(val1 == val2);
-}
-
-bool mg::operator==(mg::DisplayConfigurationMode const& val1,
-                    mg::DisplayConfigurationMode const& val2)
-{
-    return (val1.size == val2.size) &&
-           (val1.vrefresh_hz == val2.vrefresh_hz);
-}
-
-bool mg::operator!=(mg::DisplayConfigurationMode const& val1,
-                    mg::DisplayConfigurationMode const& val2)
-{
-    return !(val1 == val2);
-}
-
 bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
-    bool equal{(val1.id == val2.id) &&
-               (val1.card_id == val2.card_id) &&
-               (val1.logical_group_id == val2.logical_group_id) &&
-               (val1.type == val2.type) &&
-               (val1.physical_size_mm == val2.physical_size_mm) &&
-               (val1.preferred_mode_index == val2.preferred_mode_index) &&
-               (val1.connected == val2.connected) &&
-               (val1.used == val2.used) &&
-               (val1.top_left == val2.top_left) &&
-               (val1.orientation == val2.orientation) &&
-               (val1.current_mode_index == val2.current_mode_index) &&
-               (val1.modes.size() == val2.modes.size()) &&
-               (val1.custom_logical_size == val2.custom_logical_size) &&
-               (val1.scale == val2.scale) &&
-               (val1.form_factor == val2.form_factor)};
-
-    for (auto i = begin(val1.modes), j = begin(val2.modes); i != end(val1.modes) && equal; ++i, ++j)
-    {
-        equal = *i == *j;
-    }
-
-    return equal;
-}
-
-bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
-                    mg::DisplayConfigurationOutput const& val2)
-{
-    return !(val1 == val2);
+    return std::tie(val1.id, val1.card_id, val1.logical_group_id, val1.type,
+                    val1.physical_size_mm, val1.preferred_mode_index, val1.connected,
+                    val1.used, val1.top_left, val1.orientation, val1.current_mode_index,
+                    val1.modes, val1.custom_logical_size, val1.scale, val1.form_factor) ==
+           std::tie(val2.id, val2.card_id, val2.logical_group_id, val2.type,
+                    val2.physical_size_mm, val2.preferred_mode_index, val2.connected,
+                    val2.used, val2.top_left, val2.orientation, val2.current_mode_index,
+                    val2.modes, val2.custom_logical_size, val2.scale, val2.form_factor);
 }
 
 bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
@@ -222,11 +177,6 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
     rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(output); });
 
     return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
-}
-
-bool mg::operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
-{
-    return !(lhs == rhs);
 }
 
 namespace

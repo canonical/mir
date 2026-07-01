@@ -46,6 +46,7 @@ public:
         std::function<void(unsigned int, std::chrono::milliseconds)> on_flip) override;
 
     void cancel_flip_events(KMSCrtcId id) override;
+
 private:
     void event_loop() noexcept;
 

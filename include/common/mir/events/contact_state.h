@@ -35,20 +35,9 @@ struct ContactState
     float touch_major;
     float touch_minor;
     float orientation;
-};
 
-inline bool operator==(ContactState const& lhs, ContactState const & rhs)
-{
-    return lhs.touch_id == rhs.touch_id &&
-        lhs.action == rhs.action &&
-        lhs.tooltype == rhs.tooltype &&
-        lhs.x == rhs.x &&
-        lhs.y == rhs.y &&
-        lhs.pressure == rhs.pressure &&
-        lhs.touch_major == rhs.touch_major &&
-        lhs.touch_minor == rhs.touch_minor &&
-        lhs.orientation == rhs.orientation;
-}
+    bool operator==(ContactState const&) const = default;
+};
 
 }
 }

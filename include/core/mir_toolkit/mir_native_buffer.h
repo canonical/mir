@@ -17,7 +17,10 @@
 #ifndef MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 #define MIR_CLIENT_MIR_NATIVE_BUFFER_H_
 
-enum { mir_buffer_package_max = 30 };
+enum
+{
+    mir_buffer_package_max = 30
+};
 
 typedef enum
 {
@@ -32,14 +35,14 @@ typedef struct MirBufferPackage
 
     int data[mir_buffer_package_max];
 
-    int width;  /* These must come after data[] to keep ABI compatibility */
+    int width; /* These must come after data[] to keep ABI compatibility */
     int height;
 
     int fd[mir_buffer_package_max];
 
-    int unused0;  /* Retain ABI compatibility (avoid rebuilding Mesa) */
+    int unused0; /* Retain ABI compatibility (avoid rebuilding Mesa) */
 
-    unsigned int flags;  /* MirBufferFlag's */
+    unsigned int flags; /* MirBufferFlag's */
     int stride;
     int age; /**< Number of frames submitted by the client since the client has rendered to this buffer. */
              /**< This has the same semantics as the EGL_EXT_buffer_age extension */

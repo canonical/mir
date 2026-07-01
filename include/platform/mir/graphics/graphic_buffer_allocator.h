@@ -30,10 +30,7 @@ namespace mir
 {
 class Executor;
 
-namespace renderer::software
-{
-class RWMappable;
-}
+namespace renderer::software { class RWMappable; }
 
 namespace graphics
 {
@@ -56,7 +53,7 @@ public:
 
     /**
      * allocates a 'software' (cpu-accessible) buffer
-     * note: gbm-kms and eglstreams use ShmBuffer, android uses ANW with software usage bits.
+     * note: gbm-kms uses ShmBuffer, android uses ANW with software usage bits.
      */
     virtual std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat) = 0;
 
@@ -93,8 +90,8 @@ public:
 
 protected:
     GraphicBufferAllocator() = default;
-    GraphicBufferAllocator(const GraphicBufferAllocator&) = delete;
-    GraphicBufferAllocator& operator=(const GraphicBufferAllocator&) = delete;
+    GraphicBufferAllocator(GraphicBufferAllocator const&) = delete;
+    GraphicBufferAllocator& operator=(GraphicBufferAllocator const&) = delete;
 };
 
 }

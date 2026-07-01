@@ -28,7 +28,7 @@
 namespace mir
 {
 
-using EventUPtr = std::unique_ptr<MirEvent, void(*)(MirEvent*)>;
+using EventUPtr = std::unique_ptr<MirEvent, void (*)(MirEvent*)>;
 
 namespace input
 {
@@ -46,58 +46,6 @@ public:
         MirKeyboardAction action,
         xkb_keysym_t keysym,
         int scan_code) = 0;
-
-    [[deprecated("use the pointer_event() that includes all properties instead")]]
-    virtual EventUPtr pointer_event(
-        std::optional<Timestamp> timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) = 0;
-
-    [[deprecated("use the pointer_event() that includes all properties instead")]]
-    virtual EventUPtr pointer_event(
-        std::optional<Timestamp> timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x_position, float y_position,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) = 0;
-
-    [[deprecated("use the pointer_event() that includes all properties instead")]]
-    virtual EventUPtr pointer_axis_event(
-        MirPointerAxisSource axis_source,
-        std::optional<Timestamp> timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x_position, float y_position,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) = 0;
-
-    [[deprecated("use the pointer_event() that includes all properties instead")]]
-    virtual EventUPtr pointer_axis_discrete_scroll_event(
-        MirPointerAxisSource axis_source,
-        std::optional<Timestamp> timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float hscroll_value, float vscroll_value,
-        float hscroll_discrete, float vscroll_discrete) = 0;
-
-    [[deprecated("use the newest version of touch_event() instead")]]
-    virtual EventUPtr touch_event(
-        std::optional<Timestamp> timestamp,
-        std::vector<mir::events::TouchContactV1> const& contacts) = 0;
-
-    [[deprecated("use the pointer_event() that includes all properties instead")]]
-    virtual EventUPtr pointer_axis_with_stop_event(
-        MirPointerAxisSource axis_source,
-        std::optional<Timestamp> timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x_position, float y_position,
-        float hscroll_value, float vscroll_value,
-        bool hscroll_stop, bool vscroll_stop,
-        float relative_x_value, float relative_y_value) = 0;
 
     virtual EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,

@@ -45,9 +45,12 @@ private:
 class EGLSurfaceStore
 {
 public:
-    enum AllowNoSurface { DisallowNoSurface, AllowNoSurface };
-    EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface,
-                    enum AllowNoSurface allow_no_surface);
+    enum AllowNoSurface
+    {
+        DisallowNoSurface,
+        AllowNoSurface
+    };
+    EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface, enum AllowNoSurface allow_no_surface);
     EGLSurfaceStore(EGLDisplay egl_display, EGLSurface egl_surface);
     EGLSurfaceStore(EGLSurfaceStore&&);
 

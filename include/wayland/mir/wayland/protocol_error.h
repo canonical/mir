@@ -41,12 +41,13 @@ uint32_t const generic_error_code = -1;
 class ProtocolError : public std::runtime_error
 {
 public:
-    [[gnu::format (printf, 4, 5)]]  // Format attribute counts the hidden this parameter
+    [[gnu::format(printf, 4, 5)]] // Format attribute counts the hidden this parameter
     ProtocolError(wl_resource* source, uint32_t code, char const* fmt, ...);
 
     auto message() const -> char const*;
     auto resource() const -> wl_resource*;
     auto code() const -> uint32_t;
+
 private:
     std::string error_message;
     wl_resource* const source;

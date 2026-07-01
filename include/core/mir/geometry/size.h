@@ -36,8 +36,7 @@ template<typename T>
 struct Displacement;
 
 template<typename T, typename U>
-concept is_exactly_representable = requires
-{
+concept is_exactly_representable = requires {
     typename std::enable_if_t<std::numeric_limits<T>::digits >= std::numeric_limits<U>::digits, U>;
     requires std::floating_point<T>;
 };
@@ -53,24 +52,20 @@ struct Size
 
     template<typename U>
         requires is_exactly_representable<T, U>
-    constexpr Size(Size<U> const& other) noexcept
-        : width{Width<T>{other.width}},
-          height{Height<T>{other.height}}
-    {
-    }
+    constexpr Size(Size<U> const& other) noexcept : width{Width<T>{other.width}}, height{Height<T>{other.height}}
+    {}
 
     template<typename U>
-    explicit constexpr Size(Size<U> const& other) noexcept
-        : width{Width<T>{other.width}},
-          height{Height<T>{other.height}}
-    {
-    }
+    explicit constexpr Size(Size<U> const& other) noexcept :
+        width{Width<T>{other.width}},
+        height{Height<T>{other.height}}
+    {}
 
     template<typename WidthType, typename HeightType>
-    constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height) {}
+    constexpr Size(WidthType&& width, HeightType&& height) noexcept : width(width), height(height)
+    {}
 
-    friend bool operator== (Size const& lhs, Size const& rhs) = default;
-    friend bool operator!= (Size const& lhs, Size const& rhs) = default;
+    friend bool operator==(Size const& lhs, Size const& rhs) = default;
 
     Width<T> width;
     Height<T> height;
@@ -85,33 +80,23 @@ std::ostream& operator<<(std::ostream& out, Size<T> const& value)
 
 template<typename T, typename Scalar>
 inline constexpr Size<T> operator*(Scalar scale, Size<T> const& size)
-{
-    return Size<T>{scale*size.width, scale*size.height};
-}
+{ return Size<T>{scale * size.width, scale * size.height}; }
 
 template<typename T, typename Scalar>
 inline constexpr Size<T> operator*(Size<T> const& size, Scalar scale)
-{
-    return scale*size;
-}
+{ return scale * size; }
 
 template<typename T, typename Scalar>
 inline constexpr Size<T> operator/(Size<T> const& size, Scalar scale)
-{
-    return Size<T>{size.width / scale, size.height / scale};
-}
+{ return Size<T>{size.width / scale, size.height / scale}; }
 
 template<typename T>
 inline constexpr Size<T> as_size(Point<T> const& point)
-{
-    return Size<T>{point.x.as_value(), point.y.as_value()};
-}
+{ return Size<T>{point.x.as_value(), point.y.as_value()}; }
 
 template<typename T>
 inline constexpr Point<T> as_point(Size<T> const& size)
-{
-    return Point<T>{size.width.as_value(), size.height.as_value()};
-}
+{ return Point<T>{size.width.as_value(), size.height.as_value()}; }
 }
 }
 }

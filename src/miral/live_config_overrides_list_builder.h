@@ -25,13 +25,13 @@ struct OverridesList::Context
 {
     enum class Kind { unchanged, fresh, modified, dropped };
 
+    using Opener = std::function<std::unique_ptr<std::istream>(std::filesystem::path const&)>;
+
     struct Event
     {
-        Event(Kind kind, std::filesystem::path path, std::function<std::unique_ptr<std::istream>()> stream_factory);
-
-        Kind const kind;
-        std::filesystem::path const path;
-        std::function<void(OverridesList::Loader &)> const file_opener;
+        Kind kind;
+        std::filesystem::path path;
+        Opener opener;
     };
 
     std::vector<Event> events;
@@ -40,18 +40,11 @@ struct OverridesList::Context
 class OverridesListBuilder
 {
 public:
-    auto push_unchanged(
-        std::filesystem::path filepath,
-        std::function<std::unique_ptr<std::istream>()> stream) -> OverridesListBuilder&;
+    using Opener = OverridesList::Context::Opener;
 
-    auto push_new(
-        std::filesystem::path filepath,
-        std::function<std::unique_ptr<std::istream>()> stream) -> OverridesListBuilder&;
-
-    auto push_modified(
-        std::filesystem::path filepath,
-        std::function<std::unique_ptr<std::istream>()> stream) -> OverridesListBuilder&;
-
+    auto push_unchanged(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&;
+    auto push_new(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&;
+    auto push_modified(std::filesystem::path filepath, Opener opener) -> OverridesListBuilder&;
     auto push_dropped(std::filesystem::path filepath) -> OverridesListBuilder&;
 
     auto build() -> OverridesList;

@@ -19,13 +19,11 @@ execute: |
         --yes \
         --no-install-recommends \
         autopkgtest \
-        binfmt-support \
         debootstrap \
         debhelper \
         dh-python \
         fakeroot \
         nullmailer \
-        qemu-user-static \
         sbuild \
         schroot \
         ubuntu-dev-tools
@@ -41,7 +39,12 @@ execute: |
     EOF
     apparmor_parser -r /etc/apparmor.d/sbuild
 
+    # trick mk-sbuild into making the chroot for us
+    addgroup --system sbuild
     adduser $USER sbuild
+    mkdir --parents /var/lib/sbuild/build
+    chown --recursive :sbuild /var/lib/sbuild
+    chmod --recursive g+w /var/lib/sbuild
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
 
@@ -50,7 +53,7 @@ execute: |
     MKSBUILD_OPTS=(
       mk-sbuild
       --distro ${DISTRO}
-      --debootstrap-include=ccache
+      --debootstrap-include=ccache,passwd,qemu-user
       ${RELEASE}
     )
 
@@ -60,6 +63,8 @@ execute: |
     fi
 
     SBUILD_OPTS=(
+      --chroot-mode schroot
+      --no-clean-source
       --jobs=$(nproc)
       --verbose
       --dist=${RELEASE}
@@ -108,7 +113,6 @@ execute: |
 
     # Build the schroot, if it doesn't already exist
     [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ] || sg sbuild -c "${MKSBUILD_OPTS[*]}"
-
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
     # use ccache

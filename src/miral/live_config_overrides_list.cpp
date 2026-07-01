@@ -14,10 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "live_config_overrides_list_builder.h"
+#include <miral/live_config_overrides_list.h>
 
 #include <mir/log.h>
-#include <miral/live_config_overrides_list.h>
+#include <mir/fatal.h>
+
+#include "live_config_overrides_list_builder.h"
+
+#include <boost/throw_exception.hpp>
 
 namespace mlc = miral::live_config;
 
@@ -26,55 +30,51 @@ mlc::OverridesList::OverridesList(std::unique_ptr<Context> ctx) :
 {
 }
 
+mlc::OverridesList& mlc::OverridesList::operator=(OverridesList&&) noexcept = default;
+mlc::OverridesList::OverridesList(OverridesList&&) noexcept = default;
 mlc::OverridesList::~OverridesList() = default;
 
 void mlc::OverridesList::for_each(Loader unchanged, Loader fresh, Loader modified, Dropped dropped) const
 {
-    auto const callback_or_drop = [&](auto& event, auto& callback)
+    for (auto const& event : ctx->events)
     {
+        if (event.kind == Context::Kind::dropped)
+        {
+            dropped(event.path);
+            continue;
+        }
+
         std::unique_ptr<std::istream> stream;
         try
         {
-            event.file_opener(callback);
+            stream = event.opener(event.path);
         }
         catch (std::exception const& e)
         {
-            mir::log_warning("Error opening file %s: %s. Treating as a drop.", event.path.c_str(), e.what());
-            dropped(event.path);
-            return;
+            mir::fatal_error(
+                "Openers must not throw exceptions. Failed to open '{}' with exception '{}'",
+                event.path.string().c_str(),
+                e.what());
         }
-    };
 
-    for (auto const& event : ctx->events)
-    {
+        if (!stream || !*stream)
+        {
+            if (event.kind == Context::Kind::fresh)
+                mir::log_warning("Failed to open new file %s. Skipping.", event.path.c_str());
+            else
+            {
+                mir::log_warning("Failed to open file %s. Treating as a drop.", event.path.c_str());
+                dropped(event.path);
+            }
+            continue;
+        }
+
         switch (event.kind)
         {
-        case OverridesList::Context::Kind::unchanged:
-            {
-                callback_or_drop(event, unchanged);
-                break;
-            }
-        case OverridesList::Context::Kind::fresh:
-            {
-                try
-                {
-                    event.file_opener(fresh);
-                }
-                catch (std::exception const& e)
-                {
-                    mir::log_warning("Error opening file %s: %s. Skipping.", event.path.c_str(), e.what());
-                }
-
-                break;
-            }
-        case OverridesList::Context::Kind::modified:
-            {
-                callback_or_drop(event, modified);
-                break;
-            }
-        case OverridesList::Context::Kind::dropped:
-            dropped(event.path);
-            break;
+        case Context::Kind::unchanged: unchanged(event.path, *stream); break;
+        case Context::Kind::fresh:     fresh(event.path, *stream);     break;
+        case Context::Kind::modified:  modified(event.path, *stream);  break;
+        case Context::Kind::dropped:   break;
         }
     }
 }

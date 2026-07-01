@@ -17,9 +17,9 @@
 #ifndef MIR_LOGGING_LOGGER_H_
 #define MIR_LOGGING_LOGGER_H_
 
+#include <mir/logging/tag.h>
+
 #include <format>
-#include <functional>
-#include <initializer_list>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -30,48 +30,12 @@ namespace mir
 {
 namespace logging
 {
-struct Tag;
-/**
- * Create a tag for use in logging
- *
- * This creates a new tag and registers it with the logging subsystem,
- * with lifetime of the whole process. It should be called exactly once
- * for each desired tag and the reference it returns stored.
- *
- * For leaf tags — tags not used as a `parent` or which are only used in a single
- * translation unit, it is suggested that this be called at global scope
- * so that the tag is registered with the logging subsystem during
- * server initialisation. Eg:
- *
- * `static Tag const& bypass = mir::logging::create_tag(logging::graphics(), "bypass");`
- */
-Tag const& create_tag(Tag const& parent, std::string_view name);
-
-Tag const& base();
-Tag const& input();
-Tag const& wayland();
-Tag const& graphics();
-Tag const& window_management();
-
-using Tags = std::initializer_list<std::reference_wrapper<Tag const> const>;
-
-enum class Severity
-{
-    critical = 0,
-    error = 1,
-    warning = 2,
-    informational = 3,
-    debug = 4
-};
-
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
 {
 public:
-    virtual void log(Severity severity,
-                     const std::string& message,
-                     const std::string& component) = 0;
+    virtual void log(Severity severity, std::string const& message, std::string const& component) = 0;
 
     /*
      * Those playing at home may wonder why we're saying the 4th argument is the format string,
@@ -81,7 +45,7 @@ public:
      * 'this' first parameter of C++!
      */
     virtual void log(char const* component, Severity severity, char const* format, ...)
-         __attribute__ ((format (printf, 4, 5)));
+        __attribute__((format(printf, 4, 5)));
 
     /*
      * Cruft removal: when we're sure we've got the right API/ABI, we should
@@ -92,18 +56,17 @@ public:
 
     template<typename... Args>
     void log(Severity severity, Tags tags, std::format_string<Args...> fmt, Args&&... args)
-    {
-        log(severity, tags, std::format(fmt, std::forward<Args>(args)...));
-    }
+    { log(severity, tags, std::format(fmt, std::forward<Args>(args)...)); }
 
 protected:
+
     Logger() {}
     virtual ~Logger() = default;
-    Logger(const Logger&) = delete;
-    Logger& operator=(const Logger&) = delete;
+    Logger(Logger const&) = delete;
+    Logger& operator=(Logger const&) = delete;
 };
 
-void log(Severity severity, const std::string& message, const std::string& component);
+void log(Severity severity, std::string const& message, std::string const& component);
 void log(Severity severity, Tags tags, std::string_view message);
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string const& message, std::string const& component);

@@ -22,13 +22,13 @@ namespace miroil
 
 class Compositor
 {
-    public:
+public:
     virtual ~Compositor();
 
     Compositor& operator=(Compositor const&) = delete;
 
     virtual void start() = 0;
-    virtual void stop()  = 0;
+    virtual void stop() = 0;
 
 protected:
     Compositor() = default;

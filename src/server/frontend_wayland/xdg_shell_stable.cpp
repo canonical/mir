@@ -29,6 +29,10 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -66,6 +70,10 @@ public:
 private:
     mw::Weak<WindowWlSurfaceRole> window_role_;
     mw::Weak<WlSurface> const surface;
+    /// Serials of configure events sent on this xdg_surface that have not yet been
+    /// consumed by an ack_configure, in the order they were sent. Acking a serial
+    /// consumes it and every serial sent before it.
+    std::vector<uint32_t> unacked_configure_serials;
 
 public:
     XdgShellStable const& xdg_shell;
@@ -238,7 +246,7 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
     {
         throw mw::ProtocolError{
             resource,
-            mw::generic_error_code,
+            Error::invalid_size,
             "Invalid %s size %dx%d", interface_name, width, height};
     }
     if (window_role_)
@@ -251,13 +259,22 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
 
 void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 {
-    (void)serial;
-    // TODO
+    auto const it = std::find(unacked_configure_serials.begin(), unacked_configure_serials.end(), serial);
+    if (it == unacked_configure_serials.end())
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_serial,
+            "ack_configure with serial %u that was never sent or has already been acked", serial};
+    }
+    // Acking a serial consumes it and every configure serial sent before it.
+    unacked_configure_serials.erase(unacked_configure_serials.begin(), std::next(it));
 }
 
 void mf::XdgSurfaceStable::send_configure()
 {
     auto const serial = client->next_serial(nullptr);
+    unacked_configure_serials.push_back(serial);
     send_configure_event(serial);
 }
 
@@ -594,6 +611,24 @@ void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
             "Invalid minimum size %dx%d", width, height};
     }
     WindowWlSurfaceRole::set_min_size(width, height);
+}
+
+void mf::XdgToplevelStable::handle_commit()
+{
+    auto const min_size = pending_min_size();
+    auto const max_size = pending_max_size();
+
+    // A zero max dimension means "no limit" (stored as the maximum possible size) and a zero min means
+    // "no minimum", so this comparison only triggers when the client has set genuinely conflicting constraints.
+    if (max_size.width < min_size.width || max_size.height < min_size.height)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_size,
+            "Maximum size %dx%d is smaller than minimum size %dx%d",
+            max_size.width.as_int(), max_size.height.as_int(),
+            min_size.width.as_int(), min_size.height.as_int()};
+    }
 }
 
 void mf::XdgToplevelStable::set_maximized()

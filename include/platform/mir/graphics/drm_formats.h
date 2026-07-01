@@ -44,7 +44,16 @@ public:
 
         bool has_alpha() const;
 
+        /**
+         * The number of bytes occupied by a single pixel of this format.
+         *
+         * \note This includes any padding (for example, XRGB8888 reports 4
+         *       even though only 24 of its bits carry colour information).
+         */
+        auto bytes_per_pixel() const -> size_t;
+
         auto components() const -> std::optional<RGBComponentInfo> const&;
+
     private:
         friend class DRMFormat;
         Info(FormatInfo const* info);
@@ -52,10 +61,7 @@ public:
         FormatInfo const* info;
     };
 
-    constexpr explicit DRMFormat(uint32_t fourcc_format)
-        : fourcc{fourcc_format}
-    {
-    }
+    constexpr explicit DRMFormat(uint32_t fourcc_format) : fourcc{fourcc_format} {}
 
     auto name() const -> char const*;
 

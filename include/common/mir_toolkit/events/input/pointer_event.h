@@ -20,7 +20,8 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**
@@ -60,8 +61,7 @@ MirPointerAction mir_pointer_event_action(MirPointerEvent const* event);
  *
  * \return                   Whether the given button is depressed
  */
-bool mir_pointer_event_button_state(MirPointerEvent const* event,
-    MirPointerButton button);
+bool mir_pointer_event_button_state(MirPointerEvent const* event, MirPointerButton button);
 
 /**
  * Retreive the pointer button state as a masked set of values.
@@ -79,8 +79,7 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_pointer_event_axis_value(MirPointerEvent const* event,
-    MirPointerAxis axis);
+float mir_pointer_event_axis_value(MirPointerEvent const* event, MirPointerAxis axis);
 
 /**
  * Retrieve if this is a stop event for the given scroll axis. When scroll
@@ -92,8 +91,7 @@ float mir_pointer_event_axis_value(MirPointerEvent const* event,
  *  \param [in] axis        The axis to check
  *  \return                 If this is an axis stop event for the given axis
  */
-bool mir_pointer_event_axis_stop(MirPointerEvent const* event,
-    MirPointerAxis axis);
+bool mir_pointer_event_axis_stop(MirPointerEvent const* event, MirPointerAxis axis);
 
 /**
  * Retrieve the corresponding input event.

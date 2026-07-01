@@ -16,6 +16,7 @@
 
 #include <mir/input/mir_touchscreen_config.h>
 #include <ostream>
+#include <tuple>
 
 struct MirTouchscreenConfig::Implementation
 {
@@ -77,13 +78,8 @@ void MirTouchscreenConfig::mapping_mode(MirTouchscreenMappingMode mode)
 
 bool MirTouchscreenConfig::operator==(MirTouchscreenConfig const& other) const
 {
-    return impl->output_id == other.impl->output_id &&
-        impl->mapping_mode == other.impl->mapping_mode;
-}
-
-bool MirTouchscreenConfig::operator!=(MirTouchscreenConfig const& other) const
-{
-    return !(*this == other);
+    return std::tie(impl->output_id, impl->mapping_mode) ==
+           std::tie(other.impl->output_id, other.impl->mapping_mode);
 }
 
 std::ostream& operator<<(std::ostream& out, MirTouchscreenConfig const& conf)

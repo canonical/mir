@@ -39,6 +39,8 @@ class OverridesList
 public:
     /// \pre The context must not be null
     explicit OverridesList(std::unique_ptr<Context> ctx);
+    OverridesList(OverridesList&&) noexcept;
+    OverridesList& operator=(OverridesList&&) noexcept;
 
     /// Callback type for file-content events (unchanged, moved/new, or modified).
     using Loader = std::move_only_function<void(std::filesystem::path const&, std::istream&)>;

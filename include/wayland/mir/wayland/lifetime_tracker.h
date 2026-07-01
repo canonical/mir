@@ -26,10 +26,7 @@ namespace mir
 {
 namespace wayland
 {
-namespace detail
-{
-struct DestroyListenerIdTag;
-}
+namespace detail { struct DestroyListenerIdTag; }
 
 using DestroyListenerId = IntWrapper<detail::DestroyListenerIdTag>;
 

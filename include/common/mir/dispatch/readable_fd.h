@@ -35,6 +35,7 @@ public:
 
     bool dispatch(FdEvents events) override;
     FdEvents relevant_events() const override;
+
 private:
     mir::Fd fd;
     std::function<void()> readable;

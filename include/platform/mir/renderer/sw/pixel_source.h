@@ -28,10 +28,7 @@
 
 namespace mir
 {
-namespace graphics
-{
-class GraphicBufferAllocator;
-}
+namespace graphics { class GraphicBufferAllocator; }
 namespace renderer
 {
 namespace software
@@ -97,8 +94,7 @@ public:
 /**
  * A buffer that can be mapped into CPU-accessible memory for both reading and writing.
  */
-class RWMappable :
-    public WriteMappable
+class RWMappable : public WriteMappable
 {
 public:
     ~RWMappable() override = default;
@@ -151,8 +147,7 @@ public:
     virtual geometry::Size size() const = 0;
 };
 
-auto as_write_mappable(
-    std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<WriteMappable>;
+auto as_write_mappable(std::shared_ptr<graphics::Buffer> const& buffer) -> std::shared_ptr<WriteMappable>;
 
 auto alloc_buffer_with_content(
     graphics::GraphicBufferAllocator& allocator,

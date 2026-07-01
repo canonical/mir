@@ -23,10 +23,7 @@ namespace detail { char const* libname_impl(void* libname); }
 
 namespace
 {
-inline char const* libname()
-{
-    return detail::libname_impl(reinterpret_cast<void*>(&libname));
-}
+inline char const* libname() { return detail::libname_impl(reinterpret_cast<void*>(&libname)); }
 }
 }
 

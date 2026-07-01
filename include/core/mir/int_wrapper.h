@@ -21,7 +21,7 @@
 
 namespace mir
 {
-template<typename Tag, typename ValueType=int>
+template<typename Tag, typename ValueType = int>
 class IntWrapper
 {
 public:
@@ -29,13 +29,14 @@ public:
 
     explicit constexpr IntWrapper(ValueType value) : value(value) {}
     ValueType constexpr as_value() const { return value; }
-    friend auto operator <=> (IntWrapper const& lhs, IntWrapper const& rhs) = default;
+    friend auto operator<=>(IntWrapper const& lhs, IntWrapper const& rhs) = default;
+
 private:
     ValueType value;
 };
 
 template<typename Tag, typename ValueType>
-std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& value)
+std::ostream& operator<<(std::ostream& out, IntWrapper<Tag, ValueType> const& value)
 {
     out << value.as_value();
     return out;
@@ -46,13 +47,10 @@ std::ostream& operator<<(std::ostream& out, IntWrapper<Tag,ValueType> const& val
 namespace std
 {
 template<typename Tag, typename ValueType>
-struct hash< ::mir::IntWrapper<Tag,ValueType> >
+struct hash<::mir::IntWrapper<Tag, ValueType>>
 {
     std::hash<int> self;
-    constexpr std::size_t operator()(::mir::IntWrapper<Tag,ValueType> const& id) const
-    {
-        return self(id.as_value());
-    }
+    constexpr std::size_t operator()(::mir::IntWrapper<Tag, ValueType> const& id) const { return self(id.as_value()); }
 };
 }
 

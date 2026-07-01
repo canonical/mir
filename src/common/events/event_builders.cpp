@@ -57,15 +57,6 @@ mir::EventUPtr mev::make_surface_orientation_event(mf::SurfaceId const& surface_
     return make_uptr_event(e);
 }
 
-mir::EventUPtr mev::make_prompt_session_state_event(MirPromptSessionState state)
-{
-    auto e = new_event<MirPromptSessionEvent>();
-
-    e->set_new_state(state);
-
-    return make_uptr_event(e);
-}
-
 mir::EventUPtr mev::make_window_resize_event(mf::SurfaceId const& surface_id, geom::Size const& size)
 {
     auto e = new_event<MirResizeEvent>();
@@ -86,19 +77,6 @@ mir::EventUPtr mev::make_window_configure_event(mf::SurfaceId const& surface_id,
     e->set_value(value);
 
     return make_uptr_event(e);
-}
-
-auto mev::make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& /*handle*/)
-    -> EventUPtr
-{
-    auto e = new_event<MirWindowEvent>();
-
-    e->set_id(surface_id.as_value());
-    e->set_attrib(mir_window_attribs);
-    e->set_value(0);
-
-    return make_uptr_event(e);
-
 }
 
 mir::EventUPtr mev::make_window_close_event(mf::SurfaceId const& surface_id)
@@ -283,75 +261,6 @@ mir::EventUPtr mev::make_pointer_event(
         {geom::DeltaYF{vscroll_value}, {}, false});
 }
 
-mir::EventUPtr mir::events::make_pointer_axis_event(
-    MirPointerAxisSource axis_source,
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float x_axis_value,
-    float y_axis_value,
-    float hscroll_value,
-    float vscroll_value,
-    float relative_x_value,
-    float relative_y_value)
-{
-    return make_pointer_event(
-        device_id, timestamp, modifiers, action, buttons_pressed,
-        geom::PointF{x_axis_value, y_axis_value},
-        geom::DisplacementF{relative_x_value, relative_y_value},
-        axis_source,
-        {geom::DeltaXF{hscroll_value}, {}, false},
-        {geom::DeltaYF{vscroll_value}, {}, false});
-}
-
-mir::EventUPtr mir::events::make_pointer_axis_with_stop_event(
-    MirPointerAxisSource axis_source,
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float x_axis_value,
-    float y_axis_value,
-    float hscroll_value,
-    float vscroll_value,
-    bool hscroll_stop,
-    bool vscroll_stop,
-    float relative_x_value,
-    float relative_y_value)
-{
-    return make_pointer_event(
-        device_id, timestamp, modifiers, action, buttons_pressed,
-        geom::PointF{x_axis_value, y_axis_value},
-        geom::DisplacementF{relative_x_value, relative_y_value},
-        axis_source,
-        {geom::DeltaXF{hscroll_value}, {}, hscroll_stop},
-        {geom::DeltaYF{vscroll_value}, {}, vscroll_stop});
-}
-
-mir::EventUPtr mir::events::make_pointer_axis_discrete_scroll_event(
-    MirPointerAxisSource axis_source,
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float hscroll_value,
-    float vscroll_value,
-    float hscroll_discrete,
-    float vscroll_discrete)
-{
-    return make_pointer_event(
-        device_id, timestamp, modifiers, action, buttons_pressed,
-        std::nullopt,
-        geom::DisplacementF{},
-        axis_source,
-        {geom::DeltaXF{hscroll_value}, geom::DeltaX{hscroll_discrete}, false},
-        {geom::DeltaYF{vscroll_value}, geom::DeltaY{vscroll_discrete}, false});
-}
-
 mir::EventUPtr mev::make_input_configure_event(
     std::chrono::nanoseconds timestamp,
     MirPointerButtons pointer_buttons,
@@ -374,54 +283,6 @@ mir::EventUPtr mev::make_input_configure_event(
 mir::EventUPtr mev::clone_event(MirEvent const& event)
 {
     return make_uptr_event(event.clone());
-}
-
-void mev::transform_positions(MirEvent& event, mir::geometry::Displacement const& movement)
-{
-    if (event.type() == mir_event_type_input)
-    {
-        auto const input_type = event.to_input()->input_type();
-        if (input_type == mir_input_event_type_pointer)
-        {
-            auto pev = event.to_input()->to_pointer();
-            if (auto const position = pev->position())
-            {
-                pev->set_position(position.value() - geom::DisplacementF{movement});
-            }
-        }
-        else if (input_type == mir_input_event_type_touch)
-        {
-            auto tev = event.to_input()->to_touch();
-            for (unsigned i = 0; i < tev->pointer_count(); i++)
-            {
-                tev->set_position(i, tev->position(i) - geom::DisplacementF{movement});
-            }
-        }
-    }
-}
-
-void mev::scale_positions(MirEvent& event, float scale)
-{
-    if (event.type() == mir_event_type_input)
-    {
-        auto const input_type = event.to_input()->input_type();
-        if (input_type == mir_input_event_type_pointer)
-        {
-            auto pev = event.to_input()->to_pointer();
-            if (auto const position = pev->position())
-            {
-                pev->set_position(as_point(as_displacement(position.value()) * scale));
-            }
-        }
-        else if (input_type == mir_input_event_type_touch)
-        {
-            auto tev = event.to_input()->to_touch();
-            for (unsigned i = 0; i < tev->pointer_count(); i++)
-            {
-                tev->set_position(i, as_point(as_displacement(tev->position(i)) * scale));
-            }
-        }
-    }
 }
 
 mir::EventUPtr mev::make_touch_event(
@@ -478,8 +339,4 @@ void mev::set_window_id(MirEvent& event, int window_id)
     default:
         BOOST_THROW_EXCEPTION(std::invalid_argument("Event has no window id."));
     }
-}
-
-void mev::set_drag_and_drop_handle(MirEvent& /*event*/, std::vector<uint8_t> const& /*handle*/)
-{
 }

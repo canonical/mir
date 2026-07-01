@@ -27,27 +27,30 @@ namespace mir
 namespace input
 {
 
-class ParameterKeymap
-    : public Keymap
+class ParameterKeymap : public Keymap
 {
 public:
     static auto constexpr default_model{"pc105+inet"};
     static auto constexpr default_layout{"us"};
 
     ParameterKeymap() = default;
-    ParameterKeymap(std::string&& model, std::string&& layout, std::string&& variant, std::string&& options)
-        : model_{model}, layout{layout}, variant{variant}, options{options}
-    {
-    }
+    ParameterKeymap(std::string&& model, std::string&& layout, std::string&& variant, std::string&& options) :
+        model_{model},
+        layout{layout},
+        variant{variant},
+        options{options}
+    {}
 
     ParameterKeymap(
         std::string const& model,
         std::string const& layout,
         std::string const& variant,
-        std::string const& options)
-        : model_{model}, layout{layout}, variant{variant}, options{options}
-    {
-    }
+        std::string const& options) :
+        model_{model},
+        layout{layout},
+        variant{variant},
+        options{options}
+    {}
 
     auto matches(Keymap const& other) const -> bool override;
     auto model() const -> std::string override;

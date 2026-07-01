@@ -30,10 +30,7 @@ ACTION_P(ReturnFalseAndWakeUp, signal)
     signal->raise();
     return false;
 }
-ACTION_P(WakeUp, signal)
-{
-    signal->raise();
-}
+ACTION_P(WakeUp, signal) { signal->raise(); }
 ACTION_P2(WakeUpWhenZero, signal, atomic_int)
 {
     if (atomic_int->fetch_sub(1) == 1)
@@ -43,6 +40,5 @@ ACTION_P2(WakeUpWhenZero, signal, atomic_int)
 }
 }
 }
-
 
 #endif //MIR_TEST_SIGNAL_ACTIONS_H_

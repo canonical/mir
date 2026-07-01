@@ -34,7 +34,6 @@
 #include <mir/test/doubles/mock_surface.h>
 #include <mir/test/doubles/stub_surface.h>
 #include <mir/test/doubles/null_event_sink.h>
-#include <mir/test/doubles/null_prompt_session_manager.h>
 #include <mir/test/doubles/stub_input_targeter.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_display.h>
@@ -162,7 +161,6 @@ struct AbstractShell : Test
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
-        std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
         mt::fake_shared(seat),
@@ -379,24 +377,6 @@ TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
     EXPECT_CALL(*wm, remove_surface(session, WeakPtrTo(surface)));
 
     shell.destroy_surface(session, surface);
-}
-
-TEST_F(AbstractShell, add_display_adds_display_to_window_manager)
-{
-    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
-
-    EXPECT_CALL(*wm, add_display(arbitrary_area));
-
-    shell.add_display(arbitrary_area);
-}
-
-TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
-{
-    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
-
-    EXPECT_CALL(*wm, remove_display(arbitrary_area));
-
-    shell.remove_display(arbitrary_area);
 }
 
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)

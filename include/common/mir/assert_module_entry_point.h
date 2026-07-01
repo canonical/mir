@@ -23,10 +23,7 @@ namespace mir
 {
 template<typename ReferenceTypename, typename EntryPoint>
 void assert_entry_point_signature(EntryPoint)
-{
-    static_assert(std::is_same_v<EntryPoint, ReferenceTypename>,
-                  "Signature of platform entry point does not match.");
-}
+{ static_assert(std::is_same_v<EntryPoint, ReferenceTypename>, "Signature of platform entry point does not match."); }
 }
 
 #endif

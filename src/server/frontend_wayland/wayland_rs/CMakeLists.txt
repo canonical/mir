@@ -5,6 +5,7 @@ add_rust_cxx_library(mirwayland_rs
   INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/include
+    ${PROJECT_SOURCE_DIR}/include/common
 )
 
 set(wayland_rs_generated_sources
@@ -51,6 +52,7 @@ target_sources(mirwayland_rs-cxxbridge
     ${wayland_rs_generated_sources}
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/lifetime_tracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/protocol_error.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/wayland_executor.cpp
 )
 
 add_executable(

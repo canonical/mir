@@ -251,23 +251,6 @@ void miral::WindowInfo::constrain_resize(Point& requested_pos, Size& requested_s
     requested_size = new_size;
 }
 
-bool miral::WindowInfo::needs_titlebar(MirWindowType type)
-{
-    switch (type)
-    {
-    case mir_window_type_freestyle:
-    case mir_window_type_menu:
-    case mir_window_type_inputmethod:
-    case mir_window_type_gloss:
-    case mir_window_type_tip:
-    case mir_window_type_decoration:
-        // No decorations for these surface types
-        return false;
-    default:
-        return true;
-    }
-}
-
 auto miral::WindowInfo::type() const -> MirWindowType
 {
     return self->type;

@@ -27,7 +27,6 @@
 #include <mir/events/window_placement_event.h>
 
 #include <mir_toolkit/events/resize_event.h>
-#include <mir_toolkit/events/prompt_session_event.h>
 #include <mir_toolkit/events/orientation_event.h>
 #include <mir_toolkit/events/input_device_state_event.h>
 
@@ -71,8 +70,6 @@ char const* mir::event_type_to_c_str(MirEventType t)
         return "mir_event_type_window";
     case mir_event_type_resize:
         return "mir_event_type_resize";
-    case mir_event_type_prompt_session_state_change:
-        return "mir_event_type_prompt_session_state_change";
     case mir_event_type_orientation:
         return "mir_event_type_orientation";
     case mir_event_type_close_window:
@@ -94,6 +91,8 @@ char const* mir::event_type_to_c_str(MirEventType t)
         return "mir_event_type_motion";
     case mir_event_type_input_configuration:
         return "mir_event_type_input_configuration";
+    case mir_event_type_prompt_session_state_change:
+        return "mir_event_type_prompt_session_state_change";
 #pragma GCC diagnostic pop
     }
 }
@@ -136,13 +135,6 @@ MirResizeEvent const* mir_event_get_resize_event(MirEvent const* ev) MIR_HANDLE_
     expect_event_type(ev, mir_event_type_resize);
 
     return ev->to_resize();
-})
-
-MirPromptSessionEvent const* mir_event_get_prompt_session_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_prompt_session_state_change);
-
-    return ev->to_prompt_session();
 })
 
 MirOrientationEvent const* mir_event_get_orientation_event(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
@@ -195,14 +187,6 @@ int mir_resize_event_get_height(MirResizeEvent const* ev) MIR_HANDLE_EVENT_EXCEP
 {
     expect_event_type(ev, mir_event_type_resize);
     return ev->height();
-})
-
-/* Prompt session event accessors */
-
-MirPromptSessionState mir_prompt_session_event_get_state(MirPromptSessionEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    expect_event_type(ev, mir_event_type_prompt_session_state_change);
-    return ev->new_state();
 })
 
 /* Orientation event accessors */
@@ -314,15 +298,3 @@ MirRectangle mir_window_placement_get_relative_position(MirWindowPlacementEvent 
 {
     return event->placement();
 })
-
-// TODO: Until we opaquify the MirEvent structure and add
-// a ref count ref is implemented as copy.
-MirEvent const* mir_event_ref(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
-{
-    return ev->clone();
-})
-
-void mir_event_unref(MirEvent const* ev)
-{
-    delete ev;
-}

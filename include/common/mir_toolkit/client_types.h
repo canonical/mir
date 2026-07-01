@@ -29,7 +29,8 @@
  * \defgroup mir_toolkit MIR graphics tools API
  * @{
  */
-extern "C" {
+extern "C"
+{
 #endif
 
 /* Display server connection API */
@@ -74,7 +75,8 @@ typedef enum MirErrorDomain
 /**
  * Errors from the \ref mir_error_domain_display_configuration \ref MirErrorDomain
  */
-typedef enum MirDisplayConfigurationError {
+typedef enum MirDisplayConfigurationError
+{
     /**
      * Client is not permitted to change global display configuration
      */
@@ -90,27 +92,28 @@ typedef enum MirDisplayConfigurationError {
     /**
      * Display configuration was attempted but was rejected by the hardware
      */
-     mir_display_configuration_error_rejected_by_hardware
+    mir_display_configuration_error_rejected_by_hardware
 } MirDisplayConfigurationError;
 
 /**
  * Errors from the \ref mir_error_domain_input_configuration \ref MirErrorDomain
  */
-typedef enum MirInputConfigurationError {
+typedef enum MirInputConfigurationError
+{
     /**
      * Input configuration was attempted but was rejected by driver
      */
-     mir_input_configuration_error_rejected_by_driver,
+    mir_input_configuration_error_rejected_by_driver,
 
     /**
      * Client is not permitted to change global input configuration
     */
-     mir_input_configuration_error_base_configuration_unauthorized,
+    mir_input_configuration_error_base_configuration_unauthorized,
 
     /**
      * Client is not permitted to change its input configuration
      */
-     mir_input_configuration_error_unauthorized,
+    mir_input_configuration_error_unauthorized,
 } MirInputConfigurationError;
 
 #ifdef __cplusplus

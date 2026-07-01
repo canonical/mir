@@ -14,15 +14,13 @@ ADD_LIBRARY(
   null_observer.cpp
   scene_change_notification.cpp
   surface_change_notification.cpp
-  prompt_session_container.cpp
-  prompt_session_impl.cpp
-  prompt_session_manager_impl.cpp
   rendering_tracker.cpp
   output_properties_cache.cpp
   basic_clipboard.cpp
   surface_state_tracker.cpp
   basic_text_input_hub.cpp
   basic_idle_hub.cpp
+  single_surface_scene.cpp
   ${CMAKE_SOURCE_DIR}/src/include/server/mir/scene/surface_observer.h
 )
 

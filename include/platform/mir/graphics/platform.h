@@ -35,18 +35,9 @@ namespace mir
 class EmergencyCleanupRegistry;
 class ConsoleServices;
 
-namespace frontend
-{
-class Surface;
-}
-namespace options
-{
-class Option;
-}
-namespace renderer::software
-{
-class WriteMappable;
-}
+namespace frontend { class Surface; }
+namespace options { class Option; }
+namespace renderer::software { class WriteMappable; }
 
 namespace udev
 {
@@ -69,7 +60,7 @@ class GLConfig;
 
 namespace probe
 {
-    /**
+/**
      * A measure of how well a platform supports a device
      *
      * \note This is compared as an integer; best + 1 is a valid Result that
@@ -77,18 +68,18 @@ namespace probe
      *       Platform modules distributed with Mir will never use a priority higher
      *       than best.
      */
-    using Result = uint32_t;
-    Result const unsupported = 0;    /**< Unable to function at all on this device */
-    Result const dummy = 1;          /**< Used only for dummy or stub platforms.
+using Result = uint32_t;
+Result const unsupported = 0; /**< Unable to function at all on this device */
+Result const dummy = 1;       /**< Used only for dummy or stub platforms.
                                       */
-    Result const supported = 128;    /**< Capable of providing a functionality on this device;
+Result const supported = 128; /**< Capable of providing a functionality on this device;
                                       *   possibly with degraded performance or features.
                                       */
-    Result const nested = 192;       /**< Capable of providing fully-featured functionality on this device;
+Result const nested = 192;    /**< Capable of providing fully-featured functionality on this device;
                                       *   running nested under some other display server rather than with
                                       *   exclusive hardware access.
                                       */
-    Result const best = 256;         /**< Capable of providing the best features and performance this device
+Result const best = 256;      /**< Capable of providing the best features and performance this device
                                       *   is capable of.
                                       */
 }
@@ -148,21 +139,18 @@ public:
          * \return  A handle to a directly submittable buffer, or nullptr if this buffer
                     is not pasable as-is to the display hardware.
          */
-        virtual auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer)
-            -> std::unique_ptr<Framebuffer> = 0;
+        virtual auto buffer_to_framebuffer(std::shared_ptr<Buffer> buffer) -> std::unique_ptr<Framebuffer> = 0;
     };
 
     /**
      * Check how well this Renderer can support a particular display sink
      */
-    virtual auto suitability_for_display(DisplaySink& sink)
-        -> probe::Result = 0;
+    virtual auto suitability_for_display(DisplaySink& sink) -> probe::Result = 0;
 
     /**
      * Check how well this Renderer can support a particular BufferAllocator
      */
-    virtual auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target)
-        -> probe::Result = 0;
+    virtual auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result = 0;
 
     /**
      * Create a FramebufferProvider associated with the given DisplaySink
@@ -173,8 +161,7 @@ public:
      *           In particular, [sink.set_next_image(fb)](DisplaySink::set_next_image()) is
      *           guaranteed to succeed if *fb* has been acquired via this FramebufferProvider.
      */
-    virtual auto make_framebuffer_provider(DisplaySink& sink)
-        -> std::unique_ptr<FramebufferProvider> = 0;
+    virtual auto make_framebuffer_provider(DisplaySink& sink) -> std::unique_ptr<FramebufferProvider> = 0;
 };
 
 namespace gl
@@ -211,15 +198,10 @@ public:
      * \param [in] sink    The DisplaySink associated with this surface
      * \param [in] config  The config values that will be used for the EGL context
      */
-    virtual auto surface_for_sink(
-        DisplaySink& sink,
-        GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
+    virtual auto surface_for_sink(DisplaySink& sink, GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> = 0;
 };
 
-namespace drm
-{
-class Syncobj;
-}
+namespace drm { class Syncobj; }
 
 /**
  * Provides integration with DRM sync objects
@@ -298,9 +280,8 @@ public:
             {
                 return requested;
             }
-            BOOST_THROW_EXCEPTION((
-                std::logic_error{
-                    "Implementation error! Platform returned object that does not support requested interface"}));
+            BOOST_THROW_EXCEPTION((std::logic_error{
+                "Implementation error! Platform returned object that does not support requested interface"}));
         }
         return nullptr;
     }
@@ -323,8 +304,8 @@ protected:
      *                      interface that corresponds to the most-derived type of tag_type
      *          On failure: std::shared_ptr<RenderingProvider>{nullptr}
      */
-    virtual auto maybe_create_provider(
-        RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> = 0;
+    virtual auto maybe_create_provider(RenderingProvider::Tag const& type_tag)
+        -> std::shared_ptr<RenderingProvider> = 0;
 };
 
 class DisplayProvider
@@ -339,7 +320,6 @@ public:
 
     virtual ~DisplayProvider() = default;
 };
-
 
 class DisplayAllocator
 {
@@ -386,9 +366,7 @@ public:
     {
     };
 
-    class MappableFB :
-        public Framebuffer,
-        public mir::renderer::software::WriteMappable
+    class MappableFB : public Framebuffer, public mir::renderer::software::WriteMappable
     {
     public:
         MappableFB() = default;
@@ -397,11 +375,9 @@ public:
         using renderer::software::WriteMappable::size;
     };
 
-    virtual auto supported_formats() const
-        -> std::vector<DRMFormat> = 0;
+    virtual auto supported_formats() const -> std::vector<DRMFormat> = 0;
 
-    virtual auto alloc_fb(DRMFormat format)
-        -> std::unique_ptr<MappableFB> = 0;
+    virtual auto alloc_fb(DRMFormat format) -> std::unique_ptr<MappableFB> = 0;
 
     virtual auto output_size() const -> geometry::Size = 0;
 };
@@ -483,33 +459,7 @@ public:
     {
     };
 
-    virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer)
-        -> std::unique_ptr<Framebuffer> = 0;
-};
-
-#ifndef EGLStreamKHR
-typedef void* EGLStreamKHR;
-#endif
-
-class EGLStreamDisplayProvider : public DisplayProvider
-{
-public:
-    class Tag : public DisplayProvider::Tag
-    {
-    };
-
-    virtual auto get_egl_display() const -> EGLDisplay = 0;
-};
-
-class EGLStreamDisplayAllocator : public DisplayAllocator
-{
-public:
-    class Tag : public DisplayAllocator::Tag
-    {
-    };
-
-    virtual auto claim_stream() -> EGLStreamKHR = 0;
-    virtual auto output_size() const -> geometry::Size = 0;
+    virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> = 0;
 };
 
 class GenericEGLDisplayProvider : public DisplayProvider
@@ -537,7 +487,8 @@ public:
         virtual auto clone_handle() -> std::unique_ptr<EGLFramebuffer> = 0;
     };
 
-    virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context) -> std::unique_ptr<EGLFramebuffer> = 0;
+    virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
+        -> std::unique_ptr<EGLFramebuffer> = 0;
 };
 
 class DisplayPlatform
@@ -601,8 +552,7 @@ protected:
      * \return      A pointer to an implementation of the DisplayProvider-derived
      *              interface that corresponds to the most-derived type of tag_type.
      */
-    virtual auto maybe_create_provider(DisplayProvider::Tag const& type_tag)
-        -> std::shared_ptr<DisplayProvider> = 0;
+    virtual auto maybe_create_provider(DisplayProvider::Tag const& type_tag) -> std::shared_ptr<DisplayProvider> = 0;
 };
 
 struct SupportedDevice
@@ -620,7 +570,7 @@ struct SupportedDevice
      *          particular hardware.
      */
     std::unique_ptr<udev::Device> device;
-    probe::Result support_level;     /**< How well the platform can support this device */
+    probe::Result support_level; /**< How well the platform can support this device */
 
     /**
      * Platform-private data from probing
@@ -631,44 +581,43 @@ struct SupportedDevice
     std::any platform_data;
 };
 
-using CreateDisplayPlatform = mir::UniqueModulePtr<mir::graphics::DisplayPlatform>(*)(
+using CreateDisplayPlatform = mir::UniqueModulePtr<mir::graphics::DisplayPlatform> (*)(
     mir::graphics::SupportedDevice const& device,
     std::shared_ptr<mir::options::Option> const& options,
     std::shared_ptr<mir::EmergencyCleanupRegistry> const& emergency_cleanup_registry,
     std::shared_ptr<mir::ConsoleServices> const& console,
     std::shared_ptr<mir::graphics::DisplayReport> const& report);
 
-using CreateRenderPlatform = mir::UniqueModulePtr<mir::graphics::RenderingPlatform>(*)(
+using CreateRenderPlatform = mir::UniqueModulePtr<mir::graphics::RenderingPlatform> (*)(
     mir::graphics::SupportedDevice const& device,
     std::vector<std::shared_ptr<mir::graphics::DisplayPlatform>> const& platforms,
     mir::options::Option const& options,
     mir::EmergencyCleanupRegistry& emergency_cleanup_registry);
 
-using AddPlatformOptions = void(*)(
-    boost::program_options::options_description& config);
+using AddPlatformOptions = void (*)(boost::program_options::options_description& config);
 
-using PlatformProbe = std::vector<mir::graphics::SupportedDevice>(*)(
+using PlatformProbe = std::vector<mir::graphics::SupportedDevice> (*)(
     std::shared_ptr<mir::ConsoleServices> const&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::Option const& options);
 
-using RenderProbe = std::vector<mir::graphics::SupportedDevice>(*)(
+using RenderProbe = std::vector<mir::graphics::SupportedDevice> (*)(
     std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const&,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mir::options::Option const&);
 
-using DescribeModule = mir::ModuleProperties const*(*)();
+using DescribeModule = mir::ModuleProperties const* (*)();
 }
 }
 
 extern "C"
 {
 #if defined(__clang__)
-#pragma clang diagnostic push
-// These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
-// (We don't want a warning for doing this intentionally.)
-#pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
+  #pragma clang diagnostic push
+  // These functions are given "C" linkage to avoid name-mangling, not for C compatibility.
+  // (We don't want a warning for doing this intentionally.)
+  #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 #endif
 
 /**
@@ -707,9 +656,7 @@ mir::UniqueModulePtr<mir::graphics::RenderingPlatform> create_rendering_platform
  *
  * \ingroup platform_enablement
  */
-void add_graphics_platform_options(
-    boost::program_options::options_description& config);
-
+void add_graphics_platform_options(boost::program_options::options_description& config);
 
 auto probe_display_platform(
     std::shared_ptr<mir::ConsoleServices> const& console,
@@ -725,7 +672,7 @@ auto probe_rendering_platform(
 mir::ModuleProperties const* describe_graphics_module();
 
 #if defined(__clang__)
-#pragma clang diagnostic pop
+  #pragma clang diagnostic pop
 #endif
 }
 

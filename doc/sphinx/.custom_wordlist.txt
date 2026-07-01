@@ -66,8 +66,6 @@ DSOs
 EGL
 EGL_WL_bind_wayland_display
 eglinfo
-eglstream
-EGLStreams
 egmde
 enablement
 EndToEnd
@@ -233,6 +231,7 @@ subprocess
 swaybg
 swaylock
 sys
+systemd
 testflinger
 Testflinger
 TilingWindowManagerPolicy
@@ -278,6 +277,7 @@ WL
 wlcs
 WLCS
 wlr
+wmenu
 wofi
 workspaces
 X11

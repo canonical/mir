@@ -361,19 +361,6 @@ void miral::BasicWindowManager::erase(miral::WindowInfo const& info)
     window_info.erase(info.window());
 }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-void miral::BasicWindowManager::add_display(geometry::Rectangle const& /*area*/)
-{
-    // OBSOLETE
-}
-#pragma GCC diagnostic pop
-
-void miral::BasicWindowManager::remove_display(geometry::Rectangle const& /*area*/)
-{
-    // OBSOLETE
-}
-
 bool miral::BasicWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     Locker lock{this};
@@ -1247,24 +1234,6 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
     if (modifications.alpha().is_set())
         std::shared_ptr<scene::Surface>(window)->set_alpha(modifications.alpha().value());
-}
-
-auto miral::BasicWindowManager::info_for_window_id(std::string const& id) const -> WindowInfo&
-{
-    auto surface = persistent_surface_store->surface_for_id(mir::shell::PersistentSurfaceStore::Id{id});
-
-    if (!surface)
-        BOOST_THROW_EXCEPTION(std::runtime_error{"No surface matching ID"});
-
-    return info_for(surface);
-}
-
-auto miral::BasicWindowManager::id_for_window(Window const& window) const -> std::string
-{
-    if (!window)
-        BOOST_THROW_EXCEPTION(std::runtime_error{"Null Window has no Persistent ID"});
-
-    return persistent_surface_store->id_for_surface(window).serialize_to_string();
 }
 
 void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size)

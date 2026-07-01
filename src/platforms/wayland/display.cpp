@@ -25,6 +25,7 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/log.h>
 #include <mir/renderer/gl/context.h>
+#include <mir/signal_blocker.h>
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/throw_exception.hpp>
@@ -195,6 +196,8 @@ void mir::graphics::wayland::Display::keyboard_key(wl_keyboard*, uint32_t, uint3
 void mir::graphics::wayland::Display::run()
 try
 {
+    mir::SignalBlocker blocker;
+
     enum FdIndices {
         display_fd = 0,
         flush,

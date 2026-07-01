@@ -47,7 +47,7 @@ jobs:
 
         TASKS+=(
           "lxd:...:debian_sid"
-          "lxd:...:fedora_43"
+          "lxd:...:fedora_44"
           "lxd:...:fedora_clang"
           "lxd:...:fedora_rawhide"
           "lxd:...:spread/ubuntu:asan"
@@ -61,11 +61,8 @@ jobs:
           "lxd:...:ubuntu_armhf"
           "lxd:...:ubuntu_devel"
           "lxd:...:ubuntu_proposed"
-          "lxd:...:ubuntu_questing"
           "lxd:...:ubuntu_resolute"
-          "lxd:alpine-3.21:...:amd64"
-          "lxd:alpine-3.22:...:amd64"
-          "lxd:alpine-3.23:...:amd64"
+          "lxd:alpine-3.24:...:amd64"
           "lxd:alpine-edge:...:amd64"
         )
 
@@ -78,7 +75,7 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.GetMatrix.outputs.matrix) }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     permissions:
       contents: read
@@ -116,12 +113,12 @@ jobs:
           sources_list: |
             Types: deb
             URIs: http://azure.archive.ubuntu.com/ubuntu/
-            Suites: noble noble-updates noble-security
+            Suites: resolute resolute-updates resolute-security
             Components: main universe
         EOF
 
         sudo apt-get update
-        sudo apt-get install --yes binfmt-support qemu-user-static
+        sudo apt-get install --yes binfmt-support qemu-user-binfmt
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> "$GITHUB_ENV"
 
     - name: Check out code

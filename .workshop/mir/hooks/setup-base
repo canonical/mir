@@ -8,7 +8,9 @@ apt-get --yes --no-install-recommends install \
   clang \
   mold \
   ninja-build \
-  python3-venv
+  python3-venv \
+  ripgrep \
+  yq
 apt-get --no-install-recommends build-dep mir
 
 cat <<'EOF' > /etc/profile.d/mir.sh

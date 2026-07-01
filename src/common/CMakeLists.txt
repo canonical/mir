@@ -10,7 +10,7 @@ add_subdirectory(time)
 add_subdirectory(dispatch)
 
 # TODO we need a place to manage ABI and related versioning but use this as placeholder
-set(MIRCOMMON_ABI 12)
+set(MIRCOMMON_ABI 13)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 
 add_library(mircommon SHARED
@@ -41,6 +41,7 @@ target_include_directories(mircommon
 
 target_link_libraries(mircommon
   PUBLIC
+    Threads::Threads
     mircommondispatch
     mircommoninput
     mirsharedlogging

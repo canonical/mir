@@ -20,7 +20,6 @@
 #include <mir_toolkit/event.h>
 #include <mir/events/event_builders.h>
 
-
 struct MirEvent
 {
     virtual auto clone() const -> MirEvent* = 0;
@@ -36,9 +35,6 @@ struct MirEvent
 
     MirResizeEvent* to_resize();
     MirResizeEvent const* to_resize() const;
-
-    MirPromptSessionEvent* to_prompt_session();
-    MirPromptSessionEvent const* to_prompt_session() const;
 
     MirOrientationEvent* to_orientation();
     MirOrientationEvent const* to_orientation() const;

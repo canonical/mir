@@ -27,13 +27,27 @@ namespace geometry
 /// only used as template parameters, are never instantiated and should only require forward declarations, but some
 /// compiler versions seem to fail if they aren't given real declarations.
 /// @{
-struct WidthTag{};
-struct HeightTag{};
-struct XTag{};
-struct YTag{};
-struct DeltaXTag{};
-struct DeltaYTag{};
-struct StrideTag{};
+struct WidthTag
+{
+};
+struct HeightTag
+{
+};
+struct XTag
+{
+};
+struct YTag
+{
+};
+struct DeltaXTag
+{
+};
+struct DeltaYTag
+{
+};
+struct StrideTag
+{
+};
 /// @}
 
 namespace generic
@@ -53,12 +67,18 @@ struct Displacement;
 template<typename T>
 struct Rectangle;
 
-template<typename T> using Width = Value<T, WidthTag>;
-template<typename T> using Height = Value<T, HeightTag>;
-template<typename T> using X = Value<T, XTag>;
-template<typename T> using Y = Value<T, YTag>;
-template<typename T> using DeltaX = Value<T, DeltaXTag>;
-template<typename T> using DeltaY = Value<T, DeltaYTag>;
+template<typename T>
+using Width = Value<T, WidthTag>;
+template<typename T>
+using Height = Value<T, HeightTag>;
+template<typename T>
+using X = Value<T, XTag>;
+template<typename T>
+using Y = Value<T, YTag>;
+template<typename T>
+using DeltaX = Value<T, DeltaXTag>;
+template<typename T>
+using DeltaY = Value<T, DeltaYTag>;
 }
 
 using Width = generic::Width<int>;
