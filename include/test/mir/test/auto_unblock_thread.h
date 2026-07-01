@@ -24,10 +24,10 @@
 #ifndef MIR_TEST_AUTO_UNBLOCK_THREAD_H_
 #define MIR_TEST_AUTO_UNBLOCK_THREAD_H_
 
-#include <thread>
-#include <stop_token>
 #include <functional>
 #include <memory>
+#include <stop_token>
+#include <thread>
 
 namespace mir
 {
