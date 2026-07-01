@@ -25,22 +25,23 @@
 #define MIR_TEST_AUTO_UNBLOCK_THREAD_H_
 
 #include <thread>
+#include <stop_token>
 #include <functional>
+#include <memory>
 
 namespace mir
 {
 namespace test
 {
-
-class AutoUnblockThread : public std::jthread
+class AutoUnblockThread
 {
 public:
     AutoUnblockThread() = default;
 
     template<typename Callable, typename... Args>
-    explicit AutoUnblockThread(std::function<void(void)> const& unblock, Callable&& f, Args&&... args) :
-        std::jthread{std::forward<Callable>(f), std::forward<Args>(args)...},
-        unblock{unblock}
+    explicit AutoUnblockThread(std::function<void(void)> unblock, Callable&& f, Args&&... args) :
+        jthread{std::forward<Callable>(f), std::forward<Args>(args)...},
+        unblock_on_stop{std::make_unique<UnblockCallback>(jthread.get_stop_token(), std::move(unblock))}
     {}
 
     ~AutoUnblockThread() { stop(); }
@@ -50,14 +51,16 @@ public:
 
     void stop()
     {
-        if (unblock)
-            unblock();
-        if (joinable())
-            join();
+        jthread.request_stop();
+        if (jthread.joinable())
+            jthread.join();
     }
 
 private:
-    std::function<void(void)> unblock;
+    using UnblockCallback = std::stop_callback<std::function<void(void)>>;
+
+    std::jthread jthread;
+    std::unique_ptr<UnblockCallback> unblock_on_stop;
 };
 
 }
