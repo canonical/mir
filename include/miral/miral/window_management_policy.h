@@ -68,7 +68,7 @@ enum class FocusStealing
 ///
 /// \sa miral::add_window_manager_policy - provides a way to add a window management policy to the server
 /// \sa miral::WindowManagerOptions - provides a way to add and control multiple window management policies for the server
-/// \sa miral::MinimalWindowManager - an implementation of the WindowManagementPolicy that serves as a strong
+/// \sa miral::FloatingWindowManager - an implementation of the WindowManagementPolicy that serves as a strong
 ///                                   foundation for a floating window manager
 /// \sa miral::WindowManagerTools - tools provided to the policy via miral::add_window_manager_policy
 class WindowManagementPolicy

@@ -21,7 +21,7 @@ to pass the external client launcher and our configuration option to
  #include <miral/runner.h>
 +#include <miral/configuration_option.h>
 +#include <miral/external_client.h>
- #include <miral/minimal_window_manager.h>
+ #include <miral/floating_window_manager.h>
  #include <miral/set_window_management_policy.h>
 
 @@ -9,8 +10,22 @@ int main(int argc, char const* argv[])
@@ -40,8 +40,8 @@ to pass the external client launcher and our configuration option to
 +
      return runner.run_with(
          {
--            set_window_management_policy<MinimalWindowManager>()
-+            set_window_management_policy<MinimalWindowManager>(),
+-            set_window_management_policy<FloatingWindowManager>()
++            set_window_management_policy<FloatingWindowManager>(),
 +            external_client_launcher,
 +            miral::ConfigurationOption{run_startup_apps, "startup-app", "App to run at startup (can be specified multiple times)"},
          });
