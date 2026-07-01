@@ -225,8 +225,14 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
-    // WaylandClient is used in the protected constructor of every generated C++ implementation.
+    // WaylandClient is the raw Rust client passed across the FFI boundary, e.g. to
+    // the GlobalFactory `create_*` methods and the notification handler's
+    // `client_added`. (The generated classes' protected constructor now takes a
+    // `std::shared_ptr<Client>`, resolved from the registry, rather than a raw
+    // WaylandClient.)
     namespace.add_forward_declaration_class("WaylandClient");
+    // WaylandClientId is used by the Client interface (client.h) and registry.
+    namespace.add_forward_declaration_class("WaylandClientId");
 
     for protocol in protocols {
         for interface in &protocol.interfaces {
@@ -267,6 +273,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_header_include("\"lifetime_tracker.h\"");
     builder.add_header_include("\"ffi_fwd.h\"");
+    builder.add_header_include("\"client.h\"");
     builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
     builder.add_header_include("<cstdint>");
@@ -374,9 +381,11 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_method(destroy_and_delete_method);
 
     // Add a protected constructor and member so that subclasses know which client
-    // they are serving and can interact with it as they please.
+    // they are serving and can interact with it as they please. The client is the
+    // hand-written `mir::wayland_rs::Client` interface (wrapping the raw Rust
+    // `WaylandClient`), resolved from the registry on the C++ side.
     class.add_protected_constructor_arg(CppArg::new(
-        CppType::Box("WaylandClient".to_string()),
+        CppType::SharedPtr("Client".to_string()),
         "client",
         false,
     ));
@@ -392,7 +401,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_protected_constructor_arg(CppArg::new(CppType::CppU32, "object_id_", false));
     class
         .add_public_member(CppArg::new(
-            CppType::Box("WaylandClient".to_string()),
+            CppType::SharedPtr("Client".to_string()),
             "client",
             false,
         ))

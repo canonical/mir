@@ -83,17 +83,26 @@ public:
         executor = executor_owned.get();
 
         // A socket name unique to this process so parallel test runs do not collide.
-        auto const socket = "mir-wayland-rs-test-" + std::to_string(::getpid());
+        socket = "mir-wayland-rs-test-" + std::to_string(::getpid());
 
         server_thread = std::thread{
-            [this, socket, handler = std::move(executor_owned)]() mutable
+            [this,
+             notification_handler = make_notification_handler(),
+             handler = std::move(executor_owned)]() mutable
             {
                 (*server)->run(
                     socket,
                     nullptr,
-                    std::make_unique<StubNotificationHandler>(),
+                    std::move(notification_handler),
                     std::move(handler));
             }};
+    }
+
+    /// The notification handler the server is run with. Override to observe
+    /// client lifecycle events; defaults to a handler that ignores everything.
+    virtual auto make_notification_handler() -> std::unique_ptr<WaylandServerNotificationHandler>
+    {
+        return std::make_unique<StubNotificationHandler>();
     }
 
     void TearDown() override
@@ -118,6 +127,7 @@ public:
     std::optional<mir_test_framework::TemporaryEnvironmentValue> xdg_runtime_dir;
     std::optional<rust::Box<WaylandServer>> server;
     mir::Executor* executor{nullptr};
+    std::string socket;
     std::thread server_thread;
 };
 }

@@ -16,6 +16,8 @@
 
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_executor.h"
+#include "wayland_client_registry.h"
+#include "client.h"
 #include <mir/executor.h>
 #include <wayland-client.h>
 #include <array>
@@ -31,9 +33,68 @@ auto const wayland_socket = "wayland-98";
 
 namespace
 {
+/// A minimal concrete `Client` for the example. It wraps the raw Rust
+/// `WaylandClient` so the `WaylandClientRegistry` can resolve/remove it by id.
+///
+/// A real frontend would back these methods with an actual Mir session and
+/// serial bookkeeping; here they are stubbed since the example only exercises
+/// registration and removal.
+class ExampleClient : public mir::wayland_rs::Client
+{
+public:
+    explicit ExampleClient(mir::wayland_rs::RawWlClient client) :
+        client{std::move(client)}
+    {
+    }
+
+    auto raw_client() const -> mir::wayland_rs::RawWlClient const& override
+    {
+        return client;
+    }
+
+    auto is_being_destroyed() const -> bool override
+    {
+        return false;
+    }
+
+    auto client_session() const -> std::shared_ptr<mir::scene::Session> override
+    {
+        return nullptr;
+    }
+
+    auto next_serial(std::shared_ptr<MirEvent const>) -> uint32_t override
+    {
+        return 0;
+    }
+
+    auto event_for(uint32_t) -> std::optional<std::shared_ptr<MirEvent const>> override
+    {
+        return std::nullopt;
+    }
+
+    void set_output_geometry_scale(float scale) override
+    {
+        geometry_scale = scale;
+    }
+
+    auto output_geometry_scale() -> float override
+    {
+        return geometry_scale;
+    }
+
+private:
+    mir::wayland_rs::RawWlClient client;
+    float geometry_scale{1.0f};
+};
+
 class WaylandServerNotificationHandler : public mir::wayland_rs::WaylandServerNotificationHandler
 {
 public:
+    explicit WaylandServerNotificationHandler(mir::wayland_rs::WaylandClientRegistry& registry) :
+        registry{registry}
+    {
+    }
+
     auto client_added(rust::Box<mir::wayland_rs::WaylandClient> wayland_client) -> void override
     {
         try
@@ -44,12 +105,18 @@ public:
         {
             std::cerr << "Failed to get client pid: " << error.what() << std::endl;
         }
+
+        registry.add_client(std::make_shared<ExampleClient>(std::move(wayland_client)));
     }
 
-    auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId>) -> void override
+    auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId> client_id) -> void override
     {
         std::cout << "Client disconnected." << std::endl;
+        registry.remove_client(client_id);
     }
+
+private:
+    mir::wayland_rs::WaylandClientRegistry& registry;
 };
 
 /// Prints when the descriptor it watches becomes readable. The registration is
@@ -83,12 +150,19 @@ void run_server(
 {
     try
     {
+        // The registry owns the Client objects. The notification handler populates it as
+        // clients connect/disconnect, and a real GlobalFactory would resolve a client's
+        // raw box to its shared Client (via registry.from(...)) when creating objects.
+        // `run` blocks until the server stops, so this local outlives the handler the
+        // server owns.
+        mir::wayland_rs::WaylandClientRegistry registry;
+
         // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
         //  as that task is involved.
         server->run(
             wayland_socket,
             nullptr,
-            std::make_unique<WaylandServerNotificationHandler>(),
+            std::make_unique<WaylandServerNotificationHandler>(registry),
             std::move(executor));
     }
     catch (rust::Error const& error)
