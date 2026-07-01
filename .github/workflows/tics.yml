@@ -86,33 +86,6 @@ jobs:
         fetch-depth: 0
         persist-credentials: false
 
-    - name: Set up CCache
-      id: setup-ccache
-      run: |
-        sudo apt-get --yes install ccache
-        mkdir --parents "${CCACHE_DIR}"
-
-        # Find the merge base to avoid populating the cache with short lived cache entries
-        # and evicting those we care for - from `main`
-        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
-
-    # CCache is only _saved_ on push/workflow_dispatch, to run a complete build for TiCS analysis (QServer runs)
-    # For PRs and merge groups, on the other hand, we want quicker runs that won't affect cache (QClient runs)
-    - name: Restore CCache
-      if: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-      with: &ccache_with
-        key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
-        # if exact match isn't found, use the most recent entry for the task
-        restore-keys: |
-          ccache-coverage-
-        path: ${{ env.CCACHE_DIR }}
-
-    - name: Ensure ccache size
-      run: |
-        # a full build yielded 180M cache
-        echo "max_size = 250M" > "${CCACHE_DIR}/ccache.conf"
-
     - name: Install dependencies
       run: |
         sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
@@ -143,6 +116,33 @@ jobs:
         exec llvm-cov gcov "$@"
         EOF
         chmod +x ~/.local/bin/gcov
+
+    - name: Set up CCache
+      id: setup-ccache
+      run: |
+        sudo apt-get --yes install ccache
+        mkdir --parents "${CCACHE_DIR}"
+
+        # Find the merge base to avoid populating the cache with short lived cache entries
+        # and evicting those we care for - from `main`
+        echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
+
+    # CCache is only _saved_ on push/workflow_dispatch, to run a complete build for TiCS analysis (QServer runs)
+    # For PRs and merge groups, on the other hand, we want quicker runs that won't affect cache (QClient runs)
+    - name: Restore CCache
+      if: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      with: &ccache_with
+        key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
+        # if exact match isn't found, use the most recent entry for the task
+        restore-keys: |
+          ccache-coverage-
+        path: ${{ env.CCACHE_DIR }}
+
+    - name: Ensure ccache size
+      run: |
+        # a full build yielded 180M cache
+        echo "max_size = 250M" > "${CCACHE_DIR}/ccache.conf"
 
     - name: Configure
       run: >
