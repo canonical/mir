@@ -78,7 +78,15 @@ void mf::WlRegion::subtract(int32_t x, int32_t y, int32_t width, int32_t height)
         auto const ry1 = rect.top().as_int();
         auto const ry2 = rect.bottom().as_int();
 
-        // The portion of the hole that actually intersects this rectangle.
+        // The portion of the hole that actually intersects this rectangle:
+        //  rx1      hx1     hx2     rx2
+        //   +---------+-------+-------+  ry1
+        //   |         |       |       |
+        //   |         +-------+       |  hy1
+        //   |         | (hole)|       |
+        //   |         +-------+       |  hy2
+        //   |         |       |       |
+        //   +---------+-------+-------+  ry2
         auto const hx1 = std::max(rx1, hole.left().as_int());
         auto const hx2 = std::min(rx2, hole.right().as_int());
         auto const hy1 = std::max(ry1, hole.top().as_int());
