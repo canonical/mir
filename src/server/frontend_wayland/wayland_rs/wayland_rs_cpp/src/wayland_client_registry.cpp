@@ -24,10 +24,7 @@ namespace mwr = mir::wayland_rs;
 void mwr::WaylandClientRegistry::add_client(std::shared_ptr<Client> const& client)
 {
     auto const& id = client->raw_client()->id();
-    std::erase_if(clients, [&](std::shared_ptr<Client> const& existing)
-        {
-            return id->equals(existing->raw_client()->id());
-        });
+    remove_client(id);
     clients.push_back(client);
 }
 
@@ -46,9 +43,8 @@ auto mwr::WaylandClientRegistry::from(RawWlClient const& client) const -> std::s
 
 auto mwr::WaylandClientRegistry::from(RawWlClientId const& id) const -> std::shared_ptr<Client>
 {
-    auto const it = std::find_if(
-        clients.begin(),
-        clients.end(),
+    auto const it = std::ranges::find_if(
+        clients,
         [&](std::shared_ptr<Client> const& client)
         {
             return id->equals(client->raw_client()->id());

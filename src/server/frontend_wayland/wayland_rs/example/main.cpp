@@ -17,6 +17,7 @@
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_executor.h"
 #include "wayland_client_registry.h"
+#include "client.h"
 #include <mir/executor.h>
 #include <wayland-client.h>
 #include <array>
@@ -32,6 +33,60 @@ auto const wayland_socket = "wayland-98";
 
 namespace
 {
+/// A minimal concrete `Client` for the example. It wraps the raw Rust
+/// `WaylandClient` so the `WaylandClientRegistry` can resolve/remove it by id.
+///
+/// A real frontend would back these methods with an actual Mir session and
+/// serial bookkeeping; here they are stubbed since the example only exercises
+/// registration and removal.
+class ExampleClient : public mir::wayland_rs::Client
+{
+public:
+    explicit ExampleClient(mir::wayland_rs::RawWlClient client) :
+        client{std::move(client)}
+    {
+    }
+
+    auto raw_client() const -> mir::wayland_rs::RawWlClient const& override
+    {
+        return client;
+    }
+
+    auto is_being_destroyed() const -> bool override
+    {
+        return false;
+    }
+
+    auto client_session() const -> std::shared_ptr<mir::scene::Session> override
+    {
+        return nullptr;
+    }
+
+    auto next_serial(std::shared_ptr<MirEvent const>) -> uint32_t override
+    {
+        return 0;
+    }
+
+    auto event_for(uint32_t) -> std::optional<std::shared_ptr<MirEvent const>> override
+    {
+        return std::nullopt;
+    }
+
+    void set_output_geometry_scale(float scale) override
+    {
+        geometry_scale = scale;
+    }
+
+    auto output_geometry_scale() -> float override
+    {
+        return geometry_scale;
+    }
+
+private:
+    mir::wayland_rs::RawWlClient client;
+    float geometry_scale{1.0f};
+};
+
 class WaylandServerNotificationHandler : public mir::wayland_rs::WaylandServerNotificationHandler
 {
 public:
@@ -51,12 +106,7 @@ public:
             std::cerr << "Failed to get client pid: " << error.what() << std::endl;
         }
 
-        // TODO: build a concrete mir::wayland_rs::Client wrapping `wayland_client`
-        //  (e.g. opening a shell session) and register it with `registry` so it can
-        //  be resolved when this client's Wayland objects are created:
-        //      registry.add_client(std::make_shared<MyClient>(std::move(wayland_client)));
-        //  Creating that concrete Client is deferred work, so for now the connected
-        //  client is not added to the registry.
+        registry.add_client(std::make_shared<ExampleClient>(std::move(wayland_client)));
     }
 
     auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId> client_id) -> void override
