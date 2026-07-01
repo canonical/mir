@@ -1212,36 +1212,37 @@ void mf::XWaylandSurface::apply_any_mods_to_scene_surface()
 
     if (spec && scene_surface)
     {
-        if (spec.value()->application_id.has_value() &&
-            spec.value()->application_id.value() == scene_surface->application_id())
-            spec.value()->application_id.reset();
+        auto& mods = *spec.value();
+        if (mods.application_id.has_value() &&
+            mods.application_id.value() == scene_surface->application_id())
+            mods.application_id.reset();
 
-        if (spec.value()->name.has_value() &&
-            spec.value()->name.value() == scene_surface->name())
-            spec.value()->name.reset();
+        if (mods.name.has_value() &&
+            mods.name.value() == scene_surface->name())
+            mods.name.reset();
 
-        if (spec.value()->parent.has_value() &&
-            spec.value()->parent.value().lock() == scene_surface->parent())
-            spec.value()->parent.reset();
+        if (mods.parent.has_value() &&
+            mods.parent.value().lock() == scene_surface->parent())
+            mods.parent.reset();
 
-        if (spec.value()->type.has_value() &&
-            spec.value()->type.value() == scene_surface->type())
-            spec.value()->type.reset();
+        if (mods.type.has_value() &&
+            mods.type.value() == scene_surface->type())
+            mods.type.reset();
 
-        if (spec.value()->top_left.has_value() &&
-            spec.value()->top_left.value() == scene_surface->top_left())
-            spec.value()->top_left.reset();
+        if (mods.top_left.has_value() &&
+            mods.top_left.value() == scene_surface->top_left())
+            mods.top_left.reset();
 
-        if (spec.value()->width.has_value() && spec.value()->width.value() == scene_surface->content_size().width &&
-            spec.value()->height.has_value() && spec.value()->height.value() == scene_surface->content_size().height)
+        if (mods.width.has_value() && mods.width.value() == scene_surface->content_size().width &&
+            mods.height.has_value() && mods.height.value() == scene_surface->content_size().height)
         {
-            spec.value()->width.reset();
-            spec.value()->height.reset();
+            mods.width.reset();
+            mods.height.reset();
         }
 
-        if (!spec.value()->is_empty())
+        if (!mods.is_empty())
         {
-            shell->modify_surface(scene_surface->session().lock(), scene_surface, *spec.value());
+            shell->modify_surface(scene_surface->session().lock(), scene_surface, mods);
         }
     }
 }

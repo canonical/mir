@@ -296,28 +296,29 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
 
 auto mf::WindowWlSurfaceRole::pending_min_size() const -> geom::Size
 {
-    auto result = committed_min_size;
     if (pending_changes)
     {
-        if (pending_changes->min_width)
-            result.width = pending_changes->min_width.value();
-        if (pending_changes->min_height)
-            result.height = pending_changes->min_height.value();
+        return {
+            pending_changes->min_width.value_or(committed_min_size.width),
+            pending_changes->min_height.value_or(committed_min_size.height)};
     }
-    return result;
+    else
+    {
+        return committed_min_size;
+    }
 }
 
 auto mf::WindowWlSurfaceRole::pending_max_size() const -> geom::Size
 {
-    auto result = committed_max_size;
     if (pending_changes)
     {
-        if (pending_changes->max_width)
-            result.width = pending_changes->max_width.value();
-        if (pending_changes->max_height)
-            result.height = pending_changes->max_height.value();
+        return {pending_changes->max_width.value_or(committed_max_size.width),
+                pending_changes->max_height.value_or(committed_max_size.height)};
     }
-    return result;
+    else
+    {
+        return committed_max_size;
+    }
 }
 
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size

@@ -68,7 +68,7 @@ void ApplicationSelector::select(miral::Window const& window)
         if (restore_state && restore_state != info.state())
         {
             WindowSpecification spec;
-            spec.state() = restore_state.value();
+            spec.state() = restore_state;
             tools.modify_window(selected, spec);
             restore_state.reset();
         }

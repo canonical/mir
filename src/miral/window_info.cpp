@@ -462,20 +462,14 @@ auto miral::WindowInfo::clip_area() const -> std::optional<mir::geometry::Rectan
 {
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
 
-    if (surface->clip_area())
-        return std::optional<mir::geometry::Rectangle>(surface->clip_area().value());
-    else
-        return std::optional<mir::geometry::Rectangle>();
+    return surface->clip_area();
 }
 
 void miral::WindowInfo::clip_area(std::optional<mir::geometry::Rectangle> const& area)
 {
     std::shared_ptr<mir::scene::Surface> const surface = self->window;
 
-    if (area)
-        surface->set_clip_area(std::optional<mir::geometry::Rectangle>(area.value()));
-    else
-        surface->set_clip_area(std::optional<mir::geometry::Rectangle>());
+    surface->set_clip_area(area);
 }
 
 auto miral::WindowInfo::application_id() const -> std::string

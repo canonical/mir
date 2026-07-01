@@ -77,13 +77,13 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     ignore_exclusion_zones{params.ignore_exclusion_zones().value_or(false)}
 {
     if (params.output_id().has_value())
-        output_id = params.output_id().value();
+        output_id = params.output_id();
 
-    if (params.exclusive_rect().has_value())
-        exclusive_rect = params.exclusive_rect().value();
+    if (auto tmp= params.exclusive_rect())
+        exclusive_rect = tmp.value();
 
-    if (params.userdata().has_value())
-        userdata = params.userdata().value();
+    if (auto tmp = params.userdata())
+        userdata = tmp.value();
 
     std::shared_ptr<mir::scene::Surface> const surface{window};
     surface->set_min_width(params.min_width().value_or(miral::default_min_width));
