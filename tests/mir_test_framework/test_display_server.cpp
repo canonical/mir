@@ -75,8 +75,8 @@ auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools co
 
 void miral::TestDisplayServer::start_server()
 {
-    mir::test::AutoJoinThread t([this]
-         {
+    std::jthread t([this]
+        {
             SetWindowManagementPolicy wm_policy{
                 [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
                 {
@@ -175,7 +175,8 @@ void miral::TestDisplayServer::stop_server()
     if (server_running)
         BOOST_THROW_EXCEPTION(std::logic_error{"Failed to stop server"});
 
-    server_thread.stop();
+    if (server_thread.joinable())
+        server_thread.join();
 }
 
 void miral::TestDisplayServer::invoke_tools(std::function<void(WindowManagerTools& tools)> const& f)
