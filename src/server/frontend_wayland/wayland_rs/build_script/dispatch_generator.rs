@@ -17,7 +17,8 @@
 use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::{
     dash_to_snake_ident, format_has_arg_ident, format_wayland_interface_to_cpp_class,
-    format_wayland_interface_to_rust_extension_struct, generate_namespace, snake_to_pascal,
+    format_wayland_interface_to_rust_extension_struct, generate_namespace, is_core_interface,
+    snake_to_pascal,
 };
 use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandInterface, WaylandProtocol, WaylandRequest,
@@ -170,6 +171,19 @@ fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
         // as parameters for objects. We lock the wrapper and clone the SharedPtr
         // to avoid holding a mutex guard across the FFI boundary.
         WaylandArgType::Object => {
+            let interface = arg.interface.as_ref().expect("Object is missing interface");
+            // Core interfaces (wl_display/wl_registry) have no C++ wrapper. Rather than handling
+            // them on the Rust side, ferry them to C++ wrapped in their minimal middleware Box so
+            // the C++ implementation (e.g. of wl_fixes.destroy_registry) owns the behaviour.
+            if is_core_interface(interface) {
+                let ext_type = format_ident!(
+                    "{}",
+                    format_wayland_interface_to_rust_extension_struct(interface)
+                );
+                return Some(quote! {
+                    let #arg_name = Box::new(crate::middleware::#ext_type { wrapped: #arg_name });
+                });
+            }
             let arg_type = format_ident!(
                 "{}",
                 format_wayland_interface_to_cpp_class(
