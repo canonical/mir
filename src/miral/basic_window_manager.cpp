@@ -2369,15 +2369,19 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
 
     parameters.size().transform([&](auto const& s) { return size = s; });
 
-    auto const hints = parameters.placement_hints().value();
-    auto const gravity = parameters.window_placement_gravity().value();
+    auto const hints = parameters.placement_hints().value_or({});
+    auto const gravity = parameters.window_placement_gravity().value_or({});
 
     auto offset = parameters.aux_rect_placement_offset().value_or(Displacement{});
 
-    std::vector<MirPlacementGravity> anchor_gravity{parameters.aux_rect_placement_gravity().value()};
+    auto const rect_gravity = parameters.aux_rect_placement_gravity().value_or({});
+    std::vector<MirPlacementGravity> anchor_gravity{rect_gravity};
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     if (hints & mir_placement_hints_antipodes)
-        anchor_gravity.push_back(antipodes(parameters.aux_rect_placement_gravity().value()));
+        anchor_gravity.push_back(antipodes(rect_gravity));
+#pragma GCC diagnostic pop
 
     return child_placement_strategy(size, gravity, anchor_rect, anchor_gravity, offset, hints, parent, placement_bounds);
 }

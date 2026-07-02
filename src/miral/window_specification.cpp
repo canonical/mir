@@ -81,7 +81,10 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
         case mir_edge_attachment_any:
             window_placement_gravity = mir_placement_gravity_northwest;
             aux_rect_placement_gravity = mir_placement_gravity_northeast;
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
             placement_hints = MirPlacementHints(mir_placement_hints_flip_any | mir_placement_hints_antipodes);
+#pragma GCC diagnostic pop
             break;
         }
     }
