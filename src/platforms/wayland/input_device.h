@@ -55,15 +55,15 @@ protected:
 
     InputDeviceInfo get_device_info() override;
 
-    optional_value<PointerSettings> get_pointer_settings() const override;
+    std::optional<PointerSettings> get_pointer_settings() const override;
 
     void apply_settings(PointerSettings const& settings) override;
 
-    optional_value<TouchpadSettings> get_touchpad_settings() const override;
+    std::optional<TouchpadSettings> get_touchpad_settings() const override;
 
     void apply_settings(TouchpadSettings const& settings) override;
 
-    virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
+    virtual std::optional<TouchscreenSettings> get_touchscreen_settings() const override;
 
     virtual void apply_settings(TouchscreenSettings const&) override;
 

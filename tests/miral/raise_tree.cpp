@@ -59,7 +59,7 @@ struct RaiseTree : mt::TestWindowManagerTools
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 
         creation_parameters.type = mir_window_type_normal;
-        creation_parameters.parent.consume();
+        creation_parameters.parent.reset();
         creation_parameters.set_size(display_area.size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
 

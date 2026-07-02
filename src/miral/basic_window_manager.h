@@ -282,7 +282,7 @@ private:
 
     auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
     auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
-        -> mir::optional_value<Rectangle>;
+        -> std::optional<Rectangle>;
 
     void move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement);
     void set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer);

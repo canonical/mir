@@ -15,6 +15,7 @@
  */
 
 #include <mir/display_server.h>
+#include <mir/fatal.h>
 #include <mir/server_configuration.h>
 #include <mir/main_loop.h>
 #include <mir/server_status_listener.h>

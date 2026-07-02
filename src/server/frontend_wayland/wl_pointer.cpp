@@ -21,6 +21,7 @@
 #include "wl_seat.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
 
+#include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/frontend/wayland.h>

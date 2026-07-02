@@ -489,7 +489,7 @@ libinput_device* mie::LibInputDevice::device() const
 
 mi::OutputInfo mie::LibInputDevice::get_output_info() const
 {
-    if (touchscreen.is_set() && touchscreen.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
+    if (touchscreen.has_value() && touchscreen.value().mapping_mode == mir_touchscreen_mapping_mode_to_output)
     {
         return sink->output_info(touchscreen.value().output_id);
     }
@@ -509,7 +509,7 @@ bool mie::LibInputDevice::is_output_active() const
     if (!sink)
         return false;
 
-    if (touchscreen.is_set())
+    if (touchscreen.has_value())
     {
         auto const& touchscreen_config = touchscreen.value();
         if (touchscreen_config.mapping_mode == mir_touchscreen_mapping_mode_to_output)
@@ -521,7 +521,7 @@ bool mie::LibInputDevice::is_output_active() const
     return true;
 }
 
-mir::optional_value<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
+std::optional<mi::PointerSettings> mie::LibInputDevice::get_pointer_settings() const
 {
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return {};
@@ -559,7 +559,7 @@ void mie::LibInputDevice::apply_settings(mir::input::PointerSettings const& sett
     libinput_device_config_accel_set_profile(dev, accel_profile);
 }
 
-mir::optional_value<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const
+std::optional<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings() const
 {
     if (!contains(info.capabilities, mi::DeviceCapability::touchpad))
         return {};
@@ -697,7 +697,7 @@ void mie::LibInputDevice::apply_settings(mi::TouchpadSettings const& settings)
                                                                  LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED);
 }
 
-mir::optional_value<mi::TouchscreenSettings> mie::LibInputDevice::get_touchscreen_settings() const
+std::optional<mi::TouchscreenSettings> mie::LibInputDevice::get_touchscreen_settings() const
 {
     return touchscreen;
 }

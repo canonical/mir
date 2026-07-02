@@ -119,15 +119,22 @@ struct MockShell
 
         // consume all the properties we expect, and error at the end if anything is left over
 
-        if (spec.width.is_set() && spec.height.is_set())
-            surface->resize({spec.width.consume(), spec.height.consume()});
+        if (spec.width.has_value() && spec.height.has_value())
+        {
+            surface->resize({spec.width.value(), spec.height.value()});
+            spec.width.reset();
+            spec.height.reset();
+        }
 
-        if (spec.input_shape.is_set())
-            surface->set_input_region(spec.input_shape.consume());
+        if (spec.input_shape.has_value())
+        {
+            surface->set_input_region(spec.input_shape.value());
+            spec.input_shape.reset();
+        }
 
-        if (spec.streams.is_set()) spec.streams.consume();
-        if (spec.cursor_image.is_set()) spec.cursor_image.consume();
-        if (spec.state.is_set()) spec.state.consume();
+        spec.streams.reset();
+        spec.cursor_image.reset();
+        spec.state.reset();
 
         EXPECT_TRUE(spec.is_empty()) << "State not cleared in MockShell::modify_surface()";
 
@@ -311,7 +318,7 @@ TEST_F(DecorationBasicDecoration, can_be_created)
 
 TEST_F(DecorationBasicDecoration, decoration_window_creation_params)
 {
-    ASSERT_TRUE(creation_params.parent.is_set());
+    ASSERT_TRUE(creation_params.parent.has_value());
     EXPECT_THAT(creation_params.parent.value().lock(), Eq(mt::fake_shared(window_surface)));
     EXPECT_THAT(creation_params.width, Eq(window_surface.window_size().width));
     EXPECT_THAT(creation_params.height, Eq(window_surface.window_size().height));
@@ -358,8 +365,8 @@ TEST_F(DecorationBasicDecoration, decoration_resized_on_window_resize)
         .WillOnce(SaveArg<1>(&spec));
     window_surface.resize(new_size);
     executor.execute();
-    ASSERT_TRUE(spec.width.is_set());
-    ASSERT_TRUE(spec.height.is_set());
+    ASSERT_TRUE(spec.width.has_value());
+    ASSERT_TRUE(spec.height.has_value());
     EXPECT_THAT(spec.width.value(), Eq(new_size.width));
     EXPECT_THAT(spec.height.value(), Eq(new_size.height));
 }
@@ -409,7 +416,7 @@ TEST_F(DecorationBasicDecoration, four_decoration_streams_when_restored)
         .WillOnce(SaveArg<1>(&spec));
     window_surface.configure(mir_window_attrib_state, mir_window_state_restored);
     executor.execute();
-    ASSERT_TRUE(spec.streams.is_set());
+    ASSERT_TRUE(spec.streams.has_value());
     EXPECT_THAT(spec.streams.value().size(), Eq(4)); // Titlebar and left, right and bottom borders
 }
 
@@ -452,7 +459,7 @@ TEST_F(DecorationBasicDecoration, one_decoration_stream_when_maximized)
         .WillOnce(SaveArg<1>(&spec));
     window_surface.configure(mir_window_attrib_state, mir_window_state_maximized);
     executor.execute();
-    ASSERT_TRUE(spec.streams.is_set());
+    ASSERT_TRUE(spec.streams.has_value());
     EXPECT_THAT(spec.streams.value().size(), Eq(1)); // Titlebar only
 }
 
@@ -493,7 +500,7 @@ TEST_F(DecorationBasicDecoration, zero_decoration_streams_when_fullscreen)
         .WillOnce(SaveArg<1>(&spec));
     window_surface.configure(mir_window_attrib_state, mir_window_state_fullscreen);
     executor.execute();
-    ASSERT_TRUE(spec.streams.is_set());
+    ASSERT_TRUE(spec.streams.has_value());
     EXPECT_THAT(spec.streams.value().size(), Eq(0)); // No decorations
 }
 
@@ -591,7 +598,7 @@ TEST_F(DecorationBasicDecoration, maximizes_on_maximize_click)
     decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, click_point));
     decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point));
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point));
-    ASSERT_TRUE(spec.state.is_set());
+    ASSERT_TRUE(spec.state.has_value());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_maximized));
 }
 
@@ -608,7 +615,7 @@ TEST_F(DecorationBasicDecoration, restores_on_maximize_click_while_maximized)
     decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, click_point));
     decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point));
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point));
-    ASSERT_TRUE(spec.state.is_set());
+    ASSERT_TRUE(spec.state.has_value());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_restored));
 }
 
@@ -624,7 +631,7 @@ TEST_F(DecorationBasicDecoration, minimizes_on_minimize_click)
     decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, click_point));
     decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point));
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point));
-    ASSERT_TRUE(spec.state.is_set());
+    ASSERT_TRUE(spec.state.has_value());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_minimized));
 }
 
@@ -642,7 +649,7 @@ TEST_F(DecorationBasicDecoration, maximizes_on_titlebar_double_click)
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
     decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 90ms));
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
-    ASSERT_TRUE(spec.state.is_set());
+    ASSERT_TRUE(spec.state.has_value());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_maximized));
 }
 
@@ -662,7 +669,7 @@ TEST_F(DecorationBasicDecoration, restores_on_titlebar_double_click_while_maximi
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
     decoration_event(pointer_event(mir_pointer_action_button_down, mir_pointer_button_primary, click_point, t += 90ms));
     decoration_event(pointer_event(mir_pointer_action_button_up, (MirPointerButtons)0, click_point, t += 9ms));
-    ASSERT_TRUE(spec.state.is_set());
+    ASSERT_TRUE(spec.state.has_value());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_restored));
 }
 
@@ -680,7 +687,7 @@ TEST_F(DecorationBasicDecoration, maximizes_on_titlebar_double_tap)
     decoration_event(touch_event(touch_id, mir_touch_action_up, tap_point, t += 9ms));
     decoration_event(touch_event(touch_id, mir_touch_action_down, tap_point, t += 90ms));
     decoration_event(touch_event(touch_id, mir_touch_action_up, tap_point, t += 9ms));
-    ASSERT_TRUE(spec.state.is_set());
+    ASSERT_TRUE(spec.state.has_value());
     EXPECT_THAT(spec.state.value(), Eq(mir_window_state_maximized));
 }
 
@@ -738,7 +745,7 @@ TEST_P(ResizeBasicDecoration, sets_cursor)
         .Times(1)
         .WillOnce(SaveArg<1>(&spec));
     decoration_event(pointer_event(mir_pointer_action_enter, (MirPointerButtons)0, start_point));
-    EXPECT_TRUE(spec.cursor_image.is_set());
+    EXPECT_TRUE(spec.cursor_image.has_value());
 }
 
 INSTANTIATE_TEST_SUITE_P(ResizeBasicDecorationInsideCorners, ResizeBasicDecoration, Values(
