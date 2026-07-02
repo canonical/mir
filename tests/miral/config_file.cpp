@@ -38,8 +38,8 @@ std::filesystem::path const config_file = "test_reloading_config_file.config";
 class PendingLoad
 {
 public:
-    static constexpr auto expected_load_timeout = std::chrono::seconds{2};
-    static constexpr auto short_load_timeout = std::chrono::milliseconds{100};
+    static constexpr auto expected_load_timeout = std::chrono::milliseconds{200};
+    static constexpr auto short_load_timeout = std::chrono::milliseconds{10};
 
     void mark_pending()
     {
@@ -61,13 +61,6 @@ public:
 
         if (cv.wait_for(lock, short_load_timeout, [this] { return !pending_loads; }))
             FAIL() << "wait_for_unexpected_load() observed an unexpected load" << std::endl;
-    }
-
-    void wait_for_possible_load()
-    {
-        std::unique_lock lock{mutex};
-
-        cv.wait_for(lock, short_load_timeout, [this] { return !pending_loads; });
     }
 
     void notify_load(std::function<void()> const& under_lock)
