@@ -179,7 +179,7 @@ auto dump_of(miral::WindowSpecification const& specification) -> std::string
     {
         BracedItemStream bout{out};
 
-#define APPEND_IF_SET(field) if (specification.field().has_value()) bout.append(#field, specification.field().value());
+#define APPEND_IF_SET(field) if (auto& tmp = specification.field(); tmp.has_value()) bout.append(#field, tmp.value());
         APPEND_IF_SET(name);
         APPEND_IF_SET(type);
         APPEND_IF_SET(top_left);
