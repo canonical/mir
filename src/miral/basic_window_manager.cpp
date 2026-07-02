@@ -636,7 +636,8 @@ auto miral::BasicWindowManager::active_display_area() const -> std::shared_ptr<D
     return std::make_shared<DisplayArea>(Rectangle{{0, 0}, {100, 100}});
 }
 
-auto miral::BasicWindowManager::display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>
+auto miral::BasicWindowManager::display_area_for_output_id(int output_id) const -> std::optional<std::shared_ptr<
+    DisplayArea>>
 {
     for (auto const& area : display_areas)
     {
@@ -649,7 +650,7 @@ auto miral::BasicWindowManager::display_area_for_output_id(int output_id) const 
         }
     }
 
-    return {};
+    return std::nullopt;
 }
 
 auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>
@@ -660,7 +661,7 @@ auto miral::BasicWindowManager::display_area_for(WindowInfo const& info) const -
     {
         if (auto const area = display_area_for_output_id(info.output_id()))
         {
-            return area;
+            return area.value();
         }
     }
 
@@ -1361,7 +1362,7 @@ void miral::BasicWindowManager::place_and_size_for_state(
             {
                 if (auto const result = display_area_for_output_id(modifications.output_id().value()))
                 {
-                    return result;
+                    return result.value();
                 }
             }
 
@@ -1862,15 +1863,11 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
 
     auto const proposed_size = parameters.size().value_or({640, 480});
 
-    std::shared_ptr<DisplayArea> display_area;
-    if (parameters.output_id().has_value())
-    {
-        display_area = display_area_for_output_id(parameters.output_id().value());
-    }
-    if (!display_area)
-    {
-        display_area = active_display_area();
-    }
+    std::shared_ptr<DisplayArea> display_area =
+        parameters.output_id().transform([this](auto output_id)
+        {
+            return display_area_for_output_id(output_id).value_or(active_display_area());
+        }).value_or(active_display_area());
 
     auto const application_zone = parameters.ignore_exclusion_zones().value_or(false)
         ? display_area->area
@@ -1879,9 +1876,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     bool positioned = false;
 
     std::shared_ptr<scene::Surface> parent_scene_surface =
-        parameters.parent().has_value() ?
-        parameters.parent().value().lock() :
-        nullptr;
+        parameters.parent().transform([](auto& wp) { return wp.lock(); }).value_or(nullptr);
 
     if (parent_scene_surface)
     {
@@ -1913,7 +1908,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             //      o Otherwise, it should be cascaded vertically (but not horizontally)
             //        relative to its parent, unless, this would cause at least part of
             //        it to extend into shell space.
-            auto const parent = info_for(parameters.parent().value()).window();
+            auto const parent = info_for(parent_scene_surface).window();
             auto const parent_top_left = parent.top_left();
             auto const centred = parent_top_left
                                  + 0.5*(as_displacement(parent.size()) - as_displacement(proposed_size))
@@ -1940,7 +1935,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
                        + 0.5*(as_displacement(application_zone.size) - as_displacement(proposed_size))
                        - (as_delta(application_zone.size.height) - as_delta(proposed_size.height)) / 6;
 
-        switch (parameters.state().value())
+        switch (parameters.state().value_or(mir_window_state_restored))
         {
         case mir_window_state_fullscreen:
             parameters.top_left() = display_area->area.top_left;
@@ -1969,7 +1964,9 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
                 auto size = proposed_size;
                 auto top_left = display_area->area.top_left;
 
-                place_attached(top_left, size, parameters.attached_edges().value(), application_zone);
+                // parameters.attached_edges() should be set, but we can't prove it locally nor report usefully
+                auto const placement_gravity = parameters.attached_edges().value_or(mir_placement_gravity_center);
+                place_attached(top_left, size, placement_gravity, application_zone);
 
                 parameters.top_left() = top_left;
                 parameters.size() = size;
