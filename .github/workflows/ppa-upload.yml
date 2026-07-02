@@ -57,8 +57,6 @@ jobs:
       fail-fast: true
       matrix:
         release:
-        - "24.04"
-        - "25.10"
         - "26.04"
         - "devel"
 
