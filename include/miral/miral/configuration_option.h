@@ -17,11 +17,11 @@
 #ifndef MIRAL_CONFIGURATION_OPTION_H
 #define MIRAL_CONFIGURATION_OPTION_H
 
-#include <mir/optional_value.h>
 #include <miral/lambda_as_function.h>
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
 #include <type_traits>
 
@@ -107,7 +107,7 @@ public:
     /// \param option Name of the option
     /// \param description Description of the option
     ConfigurationOption(
-        std::function<void(mir::optional_value<int> const& value)> callback,
+        std::function<void(std::optional<int> const& value)> callback,
         std::string const& option,
         std::string const& description);
 
@@ -117,7 +117,7 @@ public:
     /// \param option Name of the option
     /// \param description Description of the option
     ConfigurationOption(
-        std::function<void(mir::optional_value<std::string> const& value)> callback,
+        std::function<void(std::optional<std::string> const& value)> callback,
         std::string const& option,
         std::string const& description);
 
@@ -127,7 +127,7 @@ public:
     /// \param option Name of the option
     /// \param description Description of the option
     ConfigurationOption(
-        std::function<void(mir::optional_value<bool> const& value)> callback,
+        std::function<void(std::optional<bool> const& value)> callback,
         std::string const& option,
         std::string const& description);
 

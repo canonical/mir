@@ -360,8 +360,7 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                 modifications.state() = mir_window_state_vertmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
 
-                auto const new_width =
-                    (modifications.size().is_set() ? modifications.size().value() : active_window.size()).width;
+                auto const new_width = modifications.size().value_or(active_window.size()).width;
 
                 modifications.top_left() = active_zone.top_right() - Displacement{as_delta(new_width), 0};
                 break;
@@ -377,8 +376,7 @@ bool FloatingWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* 
                 modifications.state() = mir_window_state_horizmaximized;
                 tools.place_and_size_for_state(modifications, window_info);
                 modifications.top_left() =
-                    active_zone.bottom_right() - as_displacement(
-                    modifications.size().is_set() ? modifications.size().value() : active_window.size());
+                    active_zone.bottom_right() - as_displacement(modifications.size().value_or(active_window.size()));
                 break;
 
             default:
@@ -600,8 +598,11 @@ void FloatingWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
 
     auto& pdata = policy_data_for(window_info);
 
-    if (pdata.in_hidden_workspace && mods.state().is_set())
-        pdata.old_state = mods.state().consume();
+    if (pdata.in_hidden_workspace && mods.state().has_value())
+    {
+        pdata.old_state = std::move(mods.state().value());
+        mods.state().reset();
+    }
 
     FloatingWindowManager::handle_modify_window(window_info, mods);
 }

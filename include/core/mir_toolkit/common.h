@@ -295,7 +295,7 @@ typedef enum MirPlacementHints
     mir_placement_hints_resize_y = 1 << 5,
 
     /// allow flipping aux_anchor to opposite corner
-    mir_placement_hints_antipodes = 1 << 6,
+    mir_placement_hints_antipodes [[deprecated("UNUSED since Mir 2.0")]] = 1 << 6,
 
     /// allow flipping anchors on both axes
     mir_placement_hints_flip_any = mir_placement_hints_flip_x | mir_placement_hints_flip_y,

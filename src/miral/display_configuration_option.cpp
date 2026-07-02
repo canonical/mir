@@ -18,6 +18,7 @@
 #include "static_display_config.h"
 
 #include <mir/constexpr_utils.h>
+#include <mir/fatal.h>
 #include <mir/graphics/default_display_configuration_policy.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/options/option.h>

@@ -445,11 +445,7 @@ auto mf::LayerSurfaceV1::inform_window_role_of_pending_placement()
     shell::SurfaceSpecification spec;
 
     spec.attached_edges = get_placement_gravity();
-
-    auto const exclusive_rect = get_exclusive_rect();
-    spec.exclusive_rect = exclusive_rect ?
-        mir::optional_value<geom::Rectangle>(exclusive_rect.value()) :
-        mir::optional_value<geom::Rectangle>();
+    spec.exclusive_rect = get_exclusive_rect();
 
     // Per the spec: https://wayland.app/protocols/wlr-layer-shell-unstable-v1#zwlr_layer_surface_v1:request:set_exclusive_zone
     // If the zone is -1, it indicates that the surface will not be moved to respect the exclusion zones of other

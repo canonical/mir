@@ -25,39 +25,39 @@ void copy_if_set(Dest& dest, std::weak_ptr<Source> const& source)
 }
 
 template<typename Dest, typename Source>
-void copy_if_set(mir::optional_value<Dest>& dest, mir::optional_value<Source> const& source)
+void copy_if_set(std::optional<Dest>& dest, std::optional<Source> const& source)
 {
-    if (source.is_set()) dest = source;
+    if (source.has_value()) dest = source;
 }
 
 template<typename Source>
-void copy_if_set(mir::optional_value<mir::graphics::BufferUsage>& dest, mir::optional_value<Source> const& source)
+void copy_if_set(std::optional<mir::graphics::BufferUsage>& dest, std::optional<Source> const& source)
 {
-    if (source.is_set()) dest = static_cast<mir::graphics::BufferUsage>(source.value());
-}
-
-template<typename Source>
-void copy_if_set(
-    mir::optional_value<mir::graphics::DisplayConfigurationOutputId>& dest,
-    mir::optional_value<Source> const& source)
-{
-    if (source.is_set()) dest = static_cast<mir::graphics::DisplayConfigurationOutputId>(source.value());
+    if (source.has_value()) dest = static_cast<mir::graphics::BufferUsage>(source.value());
 }
 
 template<typename Source>
 void copy_if_set(
-    mir::optional_value<mir::input::InputReceptionMode>& dest,
-    mir::optional_value<Source> const& source)
+    std::optional<mir::graphics::DisplayConfigurationOutputId>& dest,
+    std::optional<Source> const& source)
 {
-    if (source.is_set()) dest = static_cast<mir::input::InputReceptionMode>(source.value());
+    if (source.has_value()) dest = static_cast<mir::graphics::DisplayConfigurationOutputId>(source.value());
 }
 
 template<typename Source>
 void copy_if_set(
-    mir::optional_value<mir::shell::SurfaceAspectRatio>& dest,
-    mir::optional_value<Source> const& source)
+    std::optional<mir::input::InputReceptionMode>& dest,
+    std::optional<Source> const& source)
 {
-    if (source.is_set()) dest = mir::shell::SurfaceAspectRatio{source.value().width, source.value().height};
+    if (source.has_value()) dest = static_cast<mir::input::InputReceptionMode>(source.value());
+}
+
+template<typename Source>
+void copy_if_set(
+    std::optional<mir::shell::SurfaceAspectRatio>& dest,
+    std::optional<Source> const& source)
+{
+    if (source.has_value()) dest = mir::shell::SurfaceAspectRatio{source.value().width, source.value().height};
 }
 
 }
@@ -103,12 +103,12 @@ auto miral::make_surface_spec(WindowSpecification const& miral_spec) -> mir::she
     copy_if_set(result.alpha, spec.opacity);
     copy_if_set(result.parent_size, spec.parent_size);
 
-    if (spec.size.is_set())
+    if (spec.size.has_value())
     {
         result.set_size(spec.size.value());
     }
 
-    if (spec.aux_rect_placement_offset.is_set())
+    if (spec.aux_rect_placement_offset.has_value())
     {
         auto const offset = spec.aux_rect_placement_offset.value();
         result.aux_rect_placement_offset_x = offset.dx.as_int();
