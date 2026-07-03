@@ -54,10 +54,7 @@ pub fn generate_cpp_protocol_builders(
     let fd_ready_callback_builder = create_fd_ready_callback();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
-    let mut builders: Vec<CppBuilder> = protocols
-        .iter()
-        .map(|protocol| create_cpp_builder(protocol))
-        .collect();
+    let mut builders: Vec<CppBuilder> = protocols.iter().map(create_cpp_builder).collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
     builders.push(work_callback_builder);
@@ -252,7 +249,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .map(|interface| wayland_interface_to_cpp_class(interface));
+        .map(wayland_interface_to_cpp_class);
 
     for class in classes {
         namespace.add_class(class);
@@ -546,7 +543,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     let return_prefix = if has_retval { "return " } else { "" };
     let mut all_delegation_args: Vec<String> = cpp_args
         .iter()
-        .map(|arg| delegation_argument_expression(arg))
+        .map(delegation_argument_expression)
         .collect();
 
     // Forward child_instance and child_object_id to the virtual method

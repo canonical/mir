@@ -14,13 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{
-    ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState,
-};
+use crate::device::{InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState};
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
-use input;
 use input::event;
 use input::event::keyboard;
 use input::event::keyboard::KeyboardEventTrait;
@@ -395,7 +392,7 @@ fn handle_pointer_button(
         button_event.time_usec(),
         EV_KEY,
         mir_button.repr as i32,
-        action.repr as i32,
+        action.repr,
     );
 
     let pointer_event = PointerEventData {
@@ -567,7 +564,7 @@ fn handle_keyboard_event(
         key_event.time_usec(),
         EV_KEY,
         key_event.key() as i32,
-        keyboard_action.repr as i32,
+        keyboard_action.repr,
     );
 
     let created = event_builder.pin_mut().key_event(&key_event_data);
@@ -600,10 +597,7 @@ fn handle_touch_event(
 
             // We make sure that we only notify of "down" touch events once. Everything
             // after that is considered a simple "change".
-            let data = device_info
-                .touch_properties
-                .entry(slot)
-                .or_insert(ContactData::default());
+            let data = device_info.touch_properties.entry(slot).or_default();
             data.action = if data.down_notified {
                 MirTouchAction::mir_touch_action_change
             } else {
@@ -624,10 +618,7 @@ fn handle_touch_event(
                 return false;
             }
 
-            let data = device_info
-                .touch_properties
-                .entry(slot)
-                .or_insert(ContactData::default());
+            let data = device_info.touch_properties.entry(slot).or_default();
             data.action = MirTouchAction::mir_touch_action_change;
 
             // Set coordinates. In normal operation, bounding rectangle should always be valid.
@@ -741,20 +732,14 @@ fn handle_touch_frame(
 /// This is called when we already have the device_info reference (e.g., for deferred events).
 fn process_input_event_for_device(
     device_info: &mut LibinputDeviceInfo,
-    mut scroll_state: &mut ScrollState,
+    scroll_state: &mut ScrollState,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     event: input::Event,
     report: &crate::InputReport,
 ) {
     match event {
         input::Event::Pointer(pointer_event) => {
-            handle_pointer_event(
-                device_info,
-                &mut scroll_state,
-                bridge,
-                pointer_event,
-                report,
-            );
+            handle_pointer_event(device_info, scroll_state, bridge, pointer_event, report);
         }
 
         input::Event::Keyboard(keyboard_event) => {
@@ -824,7 +809,7 @@ pub fn process_libinput_events(
     }
 
     // Process newly arrived events.
-    while let Some(event) = state.libinput.next() {
+    for event in state.libinput.by_ref() {
         match event {
             input::Event::Device(device_event) => {
                 let libinput_device = device_event.device();
