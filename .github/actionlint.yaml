@@ -1,6 +1,3 @@
 self-hosted-runner:
   labels:
-    - ubuntu-26.04
-    - amd64
-    - xlarge
-    - resolute
+    - self-hosted-linux-amd64-resolute-large-tiobe
