@@ -252,6 +252,27 @@ public:
             .overlay_cursor(false);
     }
 
+    /// Creates a handle indicator surface, adds it to the surface stack and
+    /// gives it the default cursor image.
+    auto create_handle_indicator(
+        mir::Server& server,
+        HandleKind kind,
+        geom::Rectangle const& rect,
+        mc::CompositorID capture_id) -> std::shared_ptr<DragHandleIndicator>
+    {
+        auto indicator = std::make_shared<DragHandleIndicator>(
+            rect,
+            kind,
+            capture_id,
+            server.the_buffer_allocator(),
+            server.the_scene_report(),
+            server.the_display_configuration_observer_registrar());
+
+        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+        indicator->set_cursor_image(server.the_default_cursor_image());
+        return indicator;
+    }
+
     void init(mir::Server& server)
     {
         render_scene_into_surface.on_surface_ready([this](auto const& surf)
@@ -280,36 +301,15 @@ public:
             display_config_observer = std::make_shared<DisplayConfigObserver>(this);
             server.the_display_configuration_observer_registrar()->register_interest(display_config_observer);
 
-            // Create the drag handle indicator.
+            // Create the handle indicators.
             geom::Rectangle const handle_rect{
                 {0, 0},
                 {geom::Width{drag_handle_diameter}, geom::Height{drag_handle_diameter}}};
 
             auto const capture_id = render_scene_into_surface.capture_compositor_id();
-            drag_handle_indicator = std::make_shared<DragHandleIndicator>(
-                handle_rect,
-                HandleKind::drag,
-                capture_id,
-                server.the_buffer_allocator(),
-                server.the_scene_report(),
-                server.the_display_configuration_observer_registrar());
-
-            server.the_surface_stack()->add_surface(
-                drag_handle_indicator, mi::InputReceptionMode::normal);
-            drag_handle_indicator->set_cursor_image(server.the_default_cursor_image());
-            handle_surface_stack = server.the_surface_stack();
-
-            resize_handle_indicator = std::make_shared<DragHandleIndicator>(
-                handle_rect,
-                HandleKind::resize,
-                capture_id,
-                server.the_buffer_allocator(),
-                server.the_scene_report(),
-                server.the_display_configuration_observer_registrar());
-
-            server.the_surface_stack()->add_surface(
-                resize_handle_indicator, mi::InputReceptionMode::normal);
-            resize_handle_indicator->set_cursor_image(server.the_default_cursor_image());
+            drag_handle_indicator   = create_handle_indicator(server, HandleKind::drag, handle_rect, capture_id);
+            resize_handle_indicator = create_handle_indicator(server, HandleKind::resize, handle_rect, capture_id);
+            handle_surface_stack    = server.the_surface_stack();
         });
 
         server.add_stop_callback([&]
