@@ -1221,9 +1221,15 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         [this](live_config::Key const&, std::optional<bool> val)
         {
             if (val.has_value())
-            {
                 enable(*val);
-            }
+        });
+    config_store.add_bool_attribute(
+        {"magnifier", "decouple"},
+        "Whether the magnifier is decoupled from the cursor position",
+        [this](live_config::Key const&, std::optional<bool> val)
+        {
+            if (val.has_value())
+                decouple(*val);
         });
     config_store.add_float_attribute(
         {"magnifier", "magnification"},
