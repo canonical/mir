@@ -765,6 +765,23 @@ private:
             cursor_pos.y.as_int() - window_size.height.as_int() / 2};
     }
 
+    /// Pixel-space bounds of the magnified visual surface.
+    struct VisualBounds { int x, y, w, h; };
+
+    /// Returns the pixel-space top-left and size of the visual magnifier surface
+    /// given its logical capture rectangle and magnification factor.
+    VisualBounds compute_visual_bounds(
+        geom::Point const& logical_top_left,
+        geom::Size const& logical_size,
+        float mag) const
+    {
+        int const w = mag * logical_size.width.as_int();
+        int const h = mag * logical_size.height.as_int();
+        int const x = logical_top_left.x.as_int() - (mag - 1.0f) / 2.0f * logical_size.width.as_int();
+        int const y = logical_top_left.y.as_int() - (mag - 1.0f) / 2.0f * logical_size.height.as_int();
+        return {x, y, w, h};
+    }
+
     /// Computes the position of the circular drag handle indicator.
     ///
     /// The handle is placed at the visual bottom-right corner of the magnifier.
@@ -773,12 +790,7 @@ private:
         geom::Size const& logical_size,
         float mag) const
     {
-        int const vis_w = mag * logical_size.width.as_int();
-        int const vis_h = mag * logical_size.height.as_int();
-
-        // Visual top-left of the magnifier.
-        int const vis_x = logical_top_left.x.as_int() - (mag - 1.0f) / 2.0f * logical_size.width.as_int();
-        int const vis_y = logical_top_left.y.as_int() - (mag - 1.0f) / 2.0f * logical_size.height.as_int();
+        auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
         int hx = vis_x + vis_w - drag_handle_diameter;
         int hy = vis_y + vis_h - drag_handle_diameter;
@@ -794,9 +806,7 @@ private:
         geom::Size const& logical_size,
         float mag) const
     {
-        // Visual top-left of the magnifier.
-        int const vis_x = logical_top_left.x.as_int() - (mag - 1.0f) / 2.0f * logical_size.width.as_int();
-        int const vis_y = logical_top_left.y.as_int() - (mag - 1.0f) / 2.0f * logical_size.height.as_int();
+        auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
         // Default: circle centred on the top-left corner of the visual magnifier,
         // so it sits half outside the content area.
