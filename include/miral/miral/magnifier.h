@@ -27,8 +27,8 @@ namespace miral
 namespace live_config { class Store; }
 
 /// Renders a magnified region of the scene at the cursor position.
-/// By default, the magnifier will magnify a 400x300 region below
-/// the cursor by a 2x magnitude.
+/// By default, the magnifier will magnify a 150x150 region centred on
+/// the cursor by a 1.5x magnitude.
 /// \remark Since MirAL 5.5
 class Magnifier
 {
@@ -43,6 +43,8 @@ public:
     ///     region that will be magnified.
     ///     - {magnifier, capture_size, height}: The height of the rectangular
     ///     region that will be magnified.
+    ///     - {magnifier, decouple}: Whether the magnifier is decoupled from
+    ///     the cursor position.
     explicit Magnifier(live_config::Store& config_store);
 
     Magnifier& enable(bool enabled);
