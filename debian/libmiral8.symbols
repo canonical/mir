@@ -752,3 +752,41 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<int const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
+ (c++)"miral::CustomDecorations::CustomDecorations(std::shared_ptr<miral::DecorationStrategy>)@MIRAL_6.0" 6.0.0
+ (c++)"miral::CustomDecorations::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::create_mapping(mir::geometry::Size, MirPixelFormat)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::Mapping::~Mapping()@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationSurface::DecorationSurface(miral::DecorationSurface&&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationSurface::operator=(miral::DecorationSurface&&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationSurface::~DecorationSurface()@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::Mapping::data()@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::Mapping::stride() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::Mapping::size() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::Mapping::format() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationBuffers::Mapping::pixels32()@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::?InputState*@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::InputState()@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::InputState(miral::DecorationStrategy::InputState const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::InputState(miral::DecorationStrategy::InputState&&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::build(std::vector<miral::DecorationStrategy::Button, std::allocator<miral::DecorationStrategy::Button> >)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::buttons() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::operator=(miral::DecorationStrategy::InputState const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::InputState::operator=(miral::DecorationStrategy::InputState&&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::?WindowState*@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::WindowState()@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::WindowState(miral::DecorationStrategy::WindowState const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::WindowState(miral::DecorationStrategy::WindowState&&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::border_type() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::bottom_border_height() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::build(unsigned long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, MirWindowFocusState, mir::geometry::Size, miral::DecorationStrategy::BorderType, mir::geometry::Height, mir::geometry::Width, mir::geometry::Height, float)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::window_id() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::focused_state() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::operator=(miral::DecorationStrategy::WindowState const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::operator=(miral::DecorationStrategy::WindowState&&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::scale() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::side_border_width() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::titlebar_height() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::titlebar_width() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::window_name[abi:cxx11]() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::WindowState::window_size() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::DecorationStrategy::render_title_text(unsigned int*, mir::geometry::Size, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, mir::geometry::Point, mir::geometry::Height, unsigned int)@MIRAL_6.0" 6.0.0
