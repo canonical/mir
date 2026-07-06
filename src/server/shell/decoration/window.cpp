@@ -17,14 +17,21 @@
 #include "window.h"
 #include "threadsafe_access.h"
 #include "basic_decoration.h"
-#include "decoration_strategy.h"
+#include <mir/shell/decoration/decoration_strategy.h>
 
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
 
+#include <atomic>
+
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
+
+namespace
+{
+std::atomic<uint64_t> next_decoration_window_id{1};
+}
 
 class msd::WindowState::Self
 {
@@ -44,6 +51,7 @@ public:
     MirWindowFocusState const focus_state;
     std::string const window_name;
     float const scale;
+    uint64_t const window_id;
 };
 
 msd::WindowState::Self::Self(
@@ -59,7 +67,8 @@ msd::WindowState::Self::Self(
       border_type{border_type_for(surface->type(), surface->state())},
       focus_state{surface->focus_state()},
       window_name{surface->name()},
-      scale{scale}
+      scale{scale},
+      window_id{next_decoration_window_id++}
 {
 }
 
@@ -211,6 +220,11 @@ auto msd::WindowState::bottom_border_rect() const -> geom::Rectangle
 auto msd::WindowState::scale() const -> float
 {
     return self->scale;
+}
+
+auto msd::WindowState::window_id() const -> uint64_t
+{
+    return self->window_id;
 }
 
 class msd::WindowSurfaceObserverManager::Observer
