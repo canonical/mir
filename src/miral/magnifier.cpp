@@ -655,7 +655,7 @@ private:
             float const mag = self->magnification;
 
             // Determine which corner the handle is currently at
-            auto const resize_pos        = self->compute_resize_handle_position(tl, sz, mag);
+            auto const [resize_pos, _]   = self->compute_resize_handle_position(tl, sz, mag);
             auto const [left, top]       = self->determine_resize_corner(resize_pos, tl, sz);
 
             // The pinned corner is diagonally opposite the active handle corner
@@ -789,7 +789,9 @@ private:
     ///   - Right edge clip  → flip to bottom-left
     ///   - Bottom edge clip → flip to top-right
     ///   - Both             → flip to top-left
-    geom::Point compute_handle_position(
+    /// Returns the drag handle position and whether it had to flip off its
+    /// native (bottom-right) corner to stay on-screen.
+    std::pair<geom::Point, bool> compute_handle_position(
         geom::Point const& logical_top_left,
         geom::Size const& logical_size,
         float mag) const
@@ -813,13 +815,21 @@ private:
         int const screen_bottom = screen_bounds.top_left.y.as_int()
             + screen_bounds.size.height.as_int();
 
+        bool did_flip = false;
+
         // Flip x-axis: centre on left corner instead.
         if (hx + drag_handle_diameter > screen_right)
+        {
             hx = vis_x - drag_handle_diameter / 2;
+            did_flip = true;
+        }
 
         // Flip y-axis: centre on top corner instead.
         if (hy + drag_handle_diameter > screen_bottom)
+        {
             hy = vis_y - drag_handle_diameter / 2;
+            did_flip = true;
+        }
 
         hx = std::clamp(hx, screen_bounds.top_left.x.as_int(),
                         screen_bounds.top_left.x.as_int()
@@ -828,7 +838,7 @@ private:
                         screen_bounds.top_left.y.as_int()
                         + screen_bounds.size.height.as_int() - drag_handle_diameter);
 
-        return geom::Point{hx, hy};
+        return {geom::Point{hx, hy}, did_flip};
     }
 
     /// Computes the position of the circular resize handle indicator.
@@ -838,7 +848,7 @@ private:
     ///   - Left edge clip → flip to top-right
     ///   - Top edge clip  → flip to bottom-left
     ///   - Both           → flip to bottom-right
-    geom::Point compute_resize_handle_position(
+    std::pair<geom::Point, bool> compute_resize_handle_position(
         geom::Point const& logical_top_left,
         geom::Size const& logical_size,
         float mag) const
@@ -860,25 +870,47 @@ private:
         int const screen_left = screen_bounds.top_left.x.as_int();
         int const screen_top  = screen_bounds.top_left.y.as_int();
 
+        bool did_flip = false;
+
         // Flip x-axis: centre on right corner instead.
         if (hx < screen_left)
+        {
             hx = vis_x + vis_w - drag_handle_diameter / 2;
+            did_flip = true;
+        }
 
         // Flip y-axis: centre on bottom corner instead.
         if (hy < screen_top)
+        {
             hy = vis_y + vis_h - drag_handle_diameter / 2;
+            did_flip = true;
+        }
 
         hx = std::clamp(hx, screen_left,
                         screen_left + screen_bounds.size.width.as_int() - drag_handle_diameter);
         hy = std::clamp(hy, screen_top,
                         screen_top + screen_bounds.size.height.as_int() - drag_handle_diameter);
 
-        return geom::Point{hx, hy};
+        return {geom::Point{hx, hy}, did_flip};
     }
 
-    /// If the two handles overlap, push the drag handle diagonally inward toward
-    /// the screen centre so both remain accessible.  The resize handle keeps its position.
-    void separate_if_overlapping(geom::Point& drag_pos, geom::Point& resize_pos) const
+    /// If the two handles overlap, keep the *resident* handle (the one still at
+    /// its native corner) fixed and stack the *visitor* handle (the one that had
+    /// to flip to the shared corner) one diameter beyond it, diagonally away from
+    /// the magnifier surface. If the diagonal target would leave the screen it
+    /// falls back to a single away-axis, and only stacks inward as a last resort.
+    ///
+    /// `visual_centre` is the centre of the visual magnifier bounds (== the
+    /// logical capture centre); it fixes the away direction radially from the
+    /// surface (not from the screen centre, which caused perpendicular pushes).
+    /// `drag_flipped`/`resize_flipped` report whether each handle left its native
+    /// corner; the flipped one is the visitor.
+    void separate_if_overlapping(
+        geom::Point& drag_pos,
+        geom::Point& resize_pos,
+        geom::Point const& visual_centre,
+        bool drag_flipped,
+        bool resize_flipped) const
     {
         int const dx = drag_pos.x.as_int() - resize_pos.x.as_int();
         int const dy = drag_pos.y.as_int() - resize_pos.y.as_int();
@@ -886,10 +918,11 @@ private:
         if (dx * dx + dy * dy >= drag_handle_diameter * drag_handle_diameter)
             return;
 
-        int const screen_cx = screen_bounds.top_left.x.as_int()
-            + screen_bounds.size.width.as_int() / 2;
-        int const screen_cy = screen_bounds.top_left.y.as_int()
-            + screen_bounds.size.height.as_int() / 2;
+        // The visitor is the handle that flipped onto the shared corner; the
+        // resident stays put. If both or neither flipped, move the drag handle.
+        bool const move_drag = drag_flipped || !resize_flipped;
+        geom::Point& visitor  = move_drag ? drag_pos : resize_pos;
+        geom::Point const resident = move_drag ? resize_pos : drag_pos;
 
         auto const clamp_on_screen = [this](int x, int y)
         {
@@ -904,6 +937,16 @@ private:
                                + screen_bounds.size.height.as_int() - drag_handle_diameter)};
         };
 
+        auto const on_screen = [this](geom::Point const& p)
+        {
+            return p.x.as_int() >= screen_bounds.top_left.x.as_int()
+                && p.y.as_int() >= screen_bounds.top_left.y.as_int()
+                && p.x.as_int() + drag_handle_diameter
+                       <= screen_bounds.top_left.x.as_int() + screen_bounds.size.width.as_int()
+                && p.y.as_int() + drag_handle_diameter
+                       <= screen_bounds.top_left.y.as_int() + screen_bounds.size.height.as_int();
+        };
+
         auto const overlaps = [](geom::Point const& a, geom::Point const& b)
         {
             int const ox = a.x.as_int() - b.x.as_int();
@@ -911,24 +954,32 @@ private:
             return ox * ox + oy * oy < drag_handle_diameter * drag_handle_diameter;
         };
 
-        // Prefer pushing the drag handle outward (away from the screen centre,
-        // deeper into the corner margin) so it stays clear of the magnified
-        // content. If the corner leaves no room (outward clamps back into an
-        // overlap) fall back to pushing inward.
-        int const out_x = (resize_pos.x.as_int() < screen_cx) ? -drag_handle_diameter : drag_handle_diameter;
-        int const out_y = (resize_pos.y.as_int() < screen_cy) ? -drag_handle_diameter : drag_handle_diameter;
+        // Direction away from the surface centre, based on where the resident sits.
+        int const res_cx = resident.x.as_int() + drag_handle_diameter / 2;
+        int const res_cy = resident.y.as_int() + drag_handle_diameter / 2;
+        int const away_x = (res_cx < visual_centre.x.as_int()) ? -drag_handle_diameter : drag_handle_diameter;
+        int const away_y = (res_cy < visual_centre.y.as_int()) ? -drag_handle_diameter : drag_handle_diameter;
 
-        auto const outward = clamp_on_screen(
-            resize_pos.x.as_int() + out_x, resize_pos.y.as_int() + out_y);
+        // Preferred: stack the visitor one diameter beyond the resident, diagonally
+        // away from the surface (into the same corner the resident points to).
+        geom::Point const diagonal{resident.x.as_int() + away_x, resident.y.as_int() + away_y};
+        geom::Point const along_x {resident.x.as_int() + away_x, resident.y.as_int()};
+        geom::Point const along_y {resident.x.as_int(),          resident.y.as_int() + away_y};
 
-        if (!overlaps(outward, resize_pos))
+        if (on_screen(diagonal))
+            visitor = diagonal;
+        else if (on_screen(along_x))
+            visitor = along_x;
+        else if (on_screen(along_y))
+            visitor = along_y;
+        else
         {
-            drag_pos = outward;
-            return;
+            // No away-direction fits; stack inward along whichever axis stays clear.
+            geom::Point const back_x = clamp_on_screen(resident.x.as_int() - away_x, resident.y.as_int());
+            visitor = overlaps(back_x, resident)
+                ? clamp_on_screen(resident.x.as_int(), resident.y.as_int() - away_y)
+                : back_x;
         }
-
-        drag_pos = clamp_on_screen(
-            resize_pos.x.as_int() - out_x, resize_pos.y.as_int() - out_y);
     }
 
     std::pair<geom::Point, geom::Point> compute_both_handle_positions(
@@ -936,9 +987,17 @@ private:
         geom::Size const& logical_size,
         float mag) const
     {
-        auto drag_pos   = compute_handle_position(logical_top_left, logical_size, mag);
-        auto resize_pos = compute_resize_handle_position(logical_top_left, logical_size, mag);
-        separate_if_overlapping(drag_pos, resize_pos);
+        auto const [drag_raw, drag_flipped]     = compute_handle_position(logical_top_left, logical_size, mag);
+        auto const [resize_raw, resize_flipped] = compute_resize_handle_position(logical_top_left, logical_size, mag);
+        auto drag_pos   = drag_raw;
+        auto resize_pos = resize_raw;
+
+        // Visual centre == logical capture centre (the magnifier is concentric).
+        geom::Point const visual_centre{
+            logical_top_left.x.as_int() + logical_size.width.as_int() / 2,
+            logical_top_left.y.as_int() + logical_size.height.as_int() / 2};
+
+        separate_if_overlapping(drag_pos, resize_pos, visual_centre, drag_flipped, resize_flipped);
 
         if (resize_handle_indicator)
         {
