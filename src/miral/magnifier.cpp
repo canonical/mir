@@ -65,7 +65,7 @@ auto const default_magnification = 1.5f;
 /// Diameter in pixels of the circular drag handle shown at the corner of the magnifier.
 auto const drag_handle_diameter = 48;
 
-enum class HandleKind { drag, resize };
+enum class HandleKind { drag, resize, zoom_in, zoom_out };
 
 class DragHandleIndicator : public ms::BasicSurface
 {
@@ -106,10 +106,19 @@ public:
             return {};
 
         auto buffer = pool.claim();
-        if (kind == HandleKind::drag)
+        switch (kind)
+        {
+        case HandleKind::drag:
             fill_drag_buffer(*buffer);
-        else
+            break;
+        case HandleKind::resize:
             fill_resize_buffer(*buffer, resize_corner_left, resize_corner_top);
+            break;
+        case HandleKind::zoom_in:
+        case HandleKind::zoom_out:
+            fill_zoom_buffer(*buffer, kind == HandleKind::zoom_in);
+            break;
+        }
         auto const sz = window_size();
         get_streams().begin()->stream->submit_buffer(buffer, sz, geom::RectangleD{{0, 0}, sz});
         return BasicSurface::generate_renderables(id);
@@ -232,6 +241,56 @@ private:
         for (int t = 0; t < thickness; ++t)
             for (int i = 1; i <= arm_len; ++i)
                 set_pixel(corner_x + t * dx_dir, corner_y + dy_dir * i, 210, 230);
+    }
+
+    static void fill_zoom_buffer(mg::Buffer& buffer, bool zoom_in)
+    {
+        auto const writable = mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}));
+        auto const mapping  = writable->map_writeable();
+        auto* const pixels  = reinterpret_cast<uint8_t*>(mapping->data());
+        int const stride    = mapping->stride().as_int();
+        int const w         = buffer.size().width.as_int();
+        int const h         = buffer.size().height.as_int();
+
+        auto const set_pixel = [&](int x, int y, uint8_t grey, uint8_t alpha)
+        {
+            if (x < 0 || x >= w || y < 0 || y >= h) return;
+            uint8_t* p = pixels + y * stride + x * 4;
+            p[0] = grey; p[1] = grey; p[2] = grey; p[3] = alpha;
+        };
+
+        // Start fully transparent.
+        for (int y = 0; y < h; ++y)
+            for (int x = 0; x < w; ++x)
+                set_pixel(x, y, 0, 0);
+
+        // Draw a filled circle with a semi-transparent dark background.
+        float const cx   = (w - 1) / 2.0f;
+        float const cy   = (h - 1) / 2.0f;
+        float const r    = std::min(cx, cy);
+        float const r_sq = r * r;
+        for (int y = 0; y < h; ++y)
+            for (int x = 0; x < w; ++x)
+            {
+                float const dx = x - cx, dy = y - cy;
+                if (dx * dx + dy * dy <= r_sq)
+                    set_pixel(x, y, 40, 200);
+            }
+
+        // Draw + (zoom in) or – (zoom out) symbol.
+        int const bar_thickness = std::max(2, w / 12);
+        int const bar_len       = w * 5 / 8;
+
+        // Horizontal bar (both + and -)
+        for (int y = (h - bar_thickness) / 2; y < (h + bar_thickness) / 2; ++y)
+            for (int x = (w - bar_len) / 2; x < (w + bar_len) / 2; ++x)
+                set_pixel(x, y, 210, 230);
+
+        // Vertical bar (zoom in only)
+        if (zoom_in)
+            for (int y = (h - bar_len) / 2; y < (h + bar_len) / 2; ++y)
+                for (int x = (w - bar_thickness) / 2; x < (w + bar_thickness) / 2; ++x)
+                    set_pixel(x, y, 210, 230);
     }
 
     HandleKind kind{HandleKind::drag};
