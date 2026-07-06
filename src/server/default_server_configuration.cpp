@@ -15,6 +15,7 @@
  */
 
 #include <mir/default_server_configuration.h>
+#include <mir/shell/decoration/decoration_strategy.h>
 #include <mir/fatal.h>
 #include <mir/options/default_configuration.h>
 #include <mir/glib_main_loop.h>
@@ -207,4 +208,16 @@ auto mir::DefaultServerConfiguration::the_decoration_strategy() -> std::shared_p
 void mir::DefaultServerConfiguration::set_the_decoration_strategy(std::shared_ptr<mir::DecorationStrategy> strategy)
 {
     decoration_strategy = strategy;
+}
+
+auto mir::DefaultServerConfiguration::the_decoration_renderer_strategy()
+    -> std::shared_ptr<mir::shell::decoration::DecorationStrategy>
+{
+    return decoration_renderer_strategy;
+}
+
+void mir::DefaultServerConfiguration::set_the_decoration_renderer_strategy(
+    std::shared_ptr<mir::shell::decoration::DecorationStrategy> strategy)
+{
+    decoration_renderer_strategy = std::move(strategy);
 }
