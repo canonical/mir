@@ -24,7 +24,6 @@
 #include <miral/live_config.h>
 #include <mir/log.h>
 #include <mir/server.h>
-#include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/input/cursor_observer.h>
@@ -63,11 +62,14 @@ auto const default_magnification = 1.5f;
 /// Diameter in pixels of the circular drag handle shown at the corner of the magnifier.
 auto const drag_handle_diameter = 48;
 
+enum class HandleKind { drag, resize };
+
 class DragHandleIndicator : public ms::BasicSurface
 {
 public:
     DragHandleIndicator(
         geom::Rectangle const& initial_rect,
+        HandleKind kind,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<ms::SceneReport> const& scene_report,
         std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>> const& display_config_registrar) :
@@ -85,7 +87,15 @@ public:
             1}
     {
         auto buffer = pool.claim();
-        fill_grip_buffer(*buffer);
+        switch (kind)
+        {
+        case HandleKind::drag:
+            fill_drag_buffer(*buffer);
+            break;
+        case HandleKind::resize:
+            fill_resize_buffer(*buffer);
+            break;
+        }
         auto const sz = window_size();
         get_streams().begin()->stream->submit_buffer(buffer, sz, geom::RectangleD{{0, 0}, sz});
 
@@ -95,7 +105,7 @@ public:
     }
 
 private:
-    static void fill_grip_buffer(mg::Buffer& buffer)
+    static void fill_drag_buffer(mg::Buffer& buffer)
     {
         auto const writable = mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}));
         auto const mapping  = writable->map_writeable();
@@ -188,6 +198,58 @@ private:
                     set_pixel(x, y, 210, 230);
     }
 
+    static void fill_resize_buffer(mg::Buffer& buffer)
+    {
+        auto const writable = mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}));
+        auto const mapping  = writable->map_writeable();
+        auto* const pixels  = reinterpret_cast<uint8_t*>(mapping->data());
+        int const stride    = mapping->stride().as_int();
+        int const w         = buffer.size().width.as_int();
+        int const h         = buffer.size().height.as_int();
+
+        auto const set_pixel = [&](int x, int y, uint8_t grey, uint8_t alpha)
+        {
+            if (x < 0 || x >= w || y < 0 || y >= h) return;
+            uint8_t* p = pixels + y * stride + x * 4;
+            p[0] = grey; p[1] = grey; p[2] = grey; p[3] = alpha;
+        };
+
+        // Start fully transparent.
+        for (int y = 0; y < h; ++y)
+            for (int x = 0; x < w; ++x)
+                set_pixel(x, y, 0, 0);
+
+        // Draw a filled circle with a semi-transparent dark background.
+        float const cx_f  = (w - 1) / 2.0f;
+        float const cy_f  = (h - 1) / 2.0f;
+        float const r     = std::min(cx_f, cy_f);
+        float const r_sq  = r * r;
+        for (int y = 0; y < h; ++y)
+            for (int x = 0; x < w; ++x)
+            {
+                float const dx = x - cx_f, dy = y - cy_f;
+                if (dx * dx + dy * dy <= r_sq)
+                    set_pixel(x, y, 40, 200);
+            }
+
+        // Corner bracket: two 2-px arms meeting at the top-left corner, which is
+        // where the resize handle always sits within the magnifier surface.
+        static int constexpr arm_len   = 12;
+        static int constexpr thickness = 2;
+        int const corner_x = w / 4 ;
+        int const corner_y = h / 4;
+
+        // Horizontal arm
+        for (int t = 0; t < thickness; ++t)
+            for (int i = 0; i <= arm_len; ++i)
+                set_pixel(corner_x + i, corner_y + t, 210, 230);
+
+        // Vertical arm (skip corner pixel to avoid double-draw)
+        for (int t = 0; t < thickness; ++t)
+            for (int i = 1; i <= arm_len; ++i)
+                set_pixel(corner_x + t, corner_y + i, 210, 230);
+    }
+
     SoftwareBufferPool mutable pool;
 };
 }
@@ -200,6 +262,25 @@ public:
         render_scene_into_surface
             .capture_area(geom::Rectangle{{300, 300}, geom::Size(default_capture_width, default_capture_height)})
             .overlay_cursor(false);
+    }
+
+    /// Creates a handle indicator surface, adds it to the surface stack and
+    /// gives it the default cursor image.
+    auto create_handle_indicator(
+        mir::Server& server,
+        HandleKind kind,
+        geom::Rectangle const& rect) -> std::shared_ptr<DragHandleIndicator>
+    {
+        auto indicator = std::make_shared<DragHandleIndicator>(
+            rect,
+            kind,
+            server.the_buffer_allocator(),
+            server.the_scene_report(),
+            server.the_display_configuration_observer_registrar());
+
+        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+        indicator->set_cursor_image(server.the_default_cursor_image());
+        return indicator;
     }
 
     void init(mir::Server& server)
@@ -232,27 +313,28 @@ public:
                 {0, 0},
                 {geom::Width{drag_handle_diameter}, geom::Height{drag_handle_diameter}}};
 
-            drag_handle_indicator = std::make_shared<DragHandleIndicator>(
-                handle_rect,
-                server.the_buffer_allocator(),
-                server.the_scene_report(),
-                server.the_display_configuration_observer_registrar());
-
-            server.the_surface_stack()->add_surface(
-                drag_handle_indicator, mi::InputReceptionMode::normal);
-            drag_handle_indicator->set_cursor_image(server.the_default_cursor_image());
-            drag_handle_surface_stack = server.the_surface_stack();
+            drag_handle_indicator   = create_handle_indicator(server, HandleKind::drag, handle_rect);
+            resize_handle_indicator = create_handle_indicator(server, HandleKind::resize, handle_rect);
+            handle_surface_stack    = server.the_surface_stack();
 
             if (decoupled)
             {
                 drag_handle_observer = std::make_shared<DragHandleObserver>(this);
                 drag_handle_indicator->register_interest(drag_handle_observer);
 
+                resize_drag_observer = std::make_shared<ResizeDragObserver>(this);
+                resize_handle_indicator->register_interest(resize_drag_observer);
+
                 if (auto const surf = surface.lock(); surf && default_enabled)
                 {
-                    auto const dp = compute_drag_handle_position(surf->top_left(), surf->window_size(), magnification);
+                    auto const [dp, rp] = compute_both_handle_positions(
+                        surf->top_left(), surf->window_size(), magnification);
+
                     drag_handle_indicator->move_to(dp);
                     drag_handle_indicator->show();
+
+                    resize_handle_indicator->move_to(rp);
+                    resize_handle_indicator->show();
                 }
             }
         });
@@ -269,11 +351,21 @@ public:
                 drag_handle_observer.reset();
             }
 
-            if (auto const locked = drag_handle_surface_stack.lock())
+
+            if (resize_drag_observer)
+            {
+                resize_handle_indicator->unregister_interest(*resize_drag_observer);
+                resize_drag_observer.reset();
+            }
+
+            if (auto const locked = handle_surface_stack.lock())
+            {
                 locked->remove_surface(drag_handle_indicator);
+                locked->remove_surface(resize_handle_indicator);
+            }
 
             drag_handle_indicator.reset();
-
+            resize_handle_indicator.reset();
         });
     }
 
@@ -293,11 +385,16 @@ public:
                 auto const top_left = surface_top_left_from_cursor(surf->window_size(), cursor_pos);
                 surf->move_to(top_left);
                 render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
+                auto [dp, rp] = compute_both_handle_positions(top_left, surf->window_size(), magnification);
                 if (drag_handle_indicator)
                 {
-                    drag_handle_indicator->move_to(
-                        compute_drag_handle_position(top_left, surf->window_size(), magnification));
+                    drag_handle_indicator->move_to(dp);
                     drag_handle_indicator->show();
+                }
+                if (resize_handle_indicator)
+                {
+                    resize_handle_indicator->move_to(rp);
+                    resize_handle_indicator->show();
                 }
             }
             surf->show();
@@ -307,6 +404,8 @@ public:
             surf->hide();
             if (drag_handle_indicator)
                 drag_handle_indicator->hide();
+            if (resize_handle_indicator)
+                resize_handle_indicator->hide();
         }
     }
 
@@ -317,10 +416,13 @@ public:
         if (auto const surf = surface.lock())
         {
             surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
-            if (decoupled && drag_handle_indicator)
+            if (decoupled && (drag_handle_indicator || resize_handle_indicator))
             {
-                drag_handle_indicator->move_to(
-                    compute_drag_handle_position(surf->top_left(), surf->window_size(), magnification));
+                auto [dp, rp] = compute_both_handle_positions(surf->top_left(), surf->window_size(), magnification);
+                if (drag_handle_indicator)
+                    drag_handle_indicator->move_to(dp);
+                if (resize_handle_indicator)
+                    resize_handle_indicator->move_to(rp);
             }
         }
     }
@@ -330,9 +432,13 @@ public:
         std::lock_guard lock(mutex);
         auto const capture_position = surface_top_left_from_cursor(size, cursor_pos);
         render_scene_into_surface.capture_area({ capture_position, size });
-        if (decoupled && drag_handle_indicator)
+        if (decoupled &&  (drag_handle_indicator || resize_handle_indicator))
         {
-            drag_handle_indicator->move_to(compute_drag_handle_position(capture_position, size, magnification));
+            auto [dp, rp] = compute_both_handle_positions(capture_position, size, magnification);
+            if (drag_handle_indicator)
+                drag_handle_indicator->move_to(dp);
+            if (resize_handle_indicator)
+                resize_handle_indicator->move_to(rp);
         }
     }
 
@@ -351,17 +457,32 @@ public:
 
         if (new_decoupled)
         {
-            if (auto const surf = surface.lock(); surf && drag_handle_indicator)
+            if (auto const surf = surface.lock())
             {
-                drag_handle_observer = std::make_shared<DragHandleObserver>(this);
-                drag_handle_indicator->register_interest(drag_handle_observer);
-
-                // Only show the handle if the magnifier is currently active.
-                if (default_enabled)
+                if (drag_handle_indicator)
                 {
-                    auto const dp = compute_drag_handle_position(surf->top_left(), surf->window_size(), magnification);
-                    drag_handle_indicator->move_to(dp);
-                    drag_handle_indicator->show();
+                    drag_handle_observer = std::make_shared<DragHandleObserver>(this);
+                    drag_handle_indicator->register_interest(drag_handle_observer);
+                }
+                if (resize_handle_indicator)
+                {
+                    resize_drag_observer = std::make_shared<ResizeDragObserver>(this);
+                    resize_handle_indicator->register_interest(resize_drag_observer);
+                }
+                if (default_enabled && (drag_handle_indicator || resize_handle_indicator))
+                {
+                    auto [dp, rp] = compute_both_handle_positions(
+                        surf->top_left(), surf->window_size(), magnification);
+                    if (drag_handle_indicator)
+                    {
+                        drag_handle_indicator->move_to(dp);
+                        drag_handle_indicator->show();
+                    }
+                    if (resize_handle_indicator)
+                    {
+                        resize_handle_indicator->move_to(rp);
+                        resize_handle_indicator->show();
+                    }
                 }
             }
         }
@@ -375,6 +496,15 @@ public:
                     drag_handle_observer.reset();
                 }
                 drag_handle_indicator->hide();
+            }
+            if (resize_handle_indicator)
+            {
+                if (resize_drag_observer)
+                {
+                    resize_handle_indicator->unregister_interest(*resize_drag_observer);
+                    resize_drag_observer.reset();
+                }
+                resize_handle_indicator->hide();
             }
 
             if (auto const surf = surface.lock(); surf && default_enabled)
@@ -508,12 +638,12 @@ private:
                 surf->move_to(new_pos);
                 self->render_scene_into_surface.capture_area(
                     geom::Rectangle{new_pos, surf->window_size()});
+                auto [dp, rp] = self->compute_both_handle_positions(
+                    new_pos, surf->window_size(), self->magnification);
                 if (self->drag_handle_indicator)
-                {
-                    self->drag_handle_indicator->move_to(
-                        self->compute_drag_handle_position(
-                            new_pos, surf->window_size(), self->magnification));
-                }
+                    self->drag_handle_indicator->move_to(dp);
+                if (self->resize_handle_indicator)
+                    self->resize_handle_indicator->move_to(rp);
             }
         }
 
@@ -521,6 +651,152 @@ private:
         bool drag_active{false};
         geom::Displacement grab_abs{};
         geom::Point drag_start_magnifier_pos{};
+    };
+
+    /// Observes input on the resize handle indicator and changes the magnifier capture size.
+    class ResizeDragObserver : public ms::NullSurfaceObserver
+    {
+    public:
+        explicit ResizeDragObserver(Self* self) : self(self) {}
+
+        void input_consumed(
+            ms::Surface const*,
+            std::shared_ptr<MirEvent const> const& event) override
+        {
+            if (mir_event_get_type(event.get()) != mir_event_type_input)
+                return;
+            auto const* input_ev = mir_event_get_input_event(event.get());
+            switch (mir_input_event_get_type(input_ev))
+            {
+            case mir_input_event_type_pointer:
+                handle_pointer(mir_input_event_get_pointer_event(input_ev));
+                break;
+            case mir_input_event_type_touch:
+                handle_touch(mir_input_event_get_touch_event(input_ev));
+                break;
+            default:
+                break;
+            }
+        }
+
+    private:
+        void handle_pointer(MirPointerEvent const* pev)
+        {
+            auto const action = mir_pointer_event_action(pev);
+            auto const ax = static_cast<int>(
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_x)));
+            auto const ay = static_cast<int>(
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_y)));
+
+            std::lock_guard lock(self->mutex);
+            if (action == mir_pointer_action_button_down &&
+                mir_pointer_event_button_state(pev, mir_pointer_button_primary))
+                start_drag(ax, ay);
+            else if (action == mir_pointer_action_motion && drag_active &&
+                     mir_pointer_event_button_state(pev, mir_pointer_button_primary))
+                apply_drag(ax, ay);
+            else if (action == mir_pointer_action_button_up)
+                drag_active = false;
+        }
+
+        void handle_touch(MirTouchEvent const* tev)
+        {
+            if (mir_touch_event_point_count(tev) != 1)
+                return;
+            auto const action = mir_touch_event_action(tev, 0);
+            auto const ax = static_cast<int>(
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x)));
+            auto const ay = static_cast<int>(
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
+
+            std::lock_guard lock(self->mutex);
+            if (action == mir_touch_action_down)
+                start_drag(ax, ay);
+            else if (action == mir_touch_action_change && drag_active)
+                apply_drag(ax, ay);
+            else if (action == mir_touch_action_up)
+                drag_active = false;
+        }
+
+        void start_drag(int ax, int ay)
+        {
+            drag_active = true;
+            grab_abs = {geom::DeltaX{ax}, geom::DeltaY{ay}};
+
+            auto const surf = self->surface.lock();
+            if (!surf) return;
+            auto const tl   = surf->top_left();
+            auto const sz   = self->render_scene_into_surface.capture_area().size;
+            float const mag = self->magnification;
+
+            // Determine which corner the handle is currently at
+            auto const resize_pos        = self->compute_resize_handle_position(tl, sz, mag);
+            auto const [left, top]       = self->determine_resize_corner(resize_pos, tl, sz);
+
+            // The pinned corner is diagonally opposite the active handle corner
+            pin_left  = !left;
+            pin_above = !top;
+
+            float const inner = (mag - 1.0f) / 2.0f;
+            float const outer = (mag + 1.0f) / 2.0f;
+            pin_pos = geom::Point{
+                pin_left
+                    ? static_cast<int>(tl.x.as_int() - inner * sz.width.as_int())
+                    : static_cast<int>(tl.x.as_int() + outer * sz.width.as_int()),
+                pin_above
+                    ? static_cast<int>(tl.y.as_int() - inner * sz.height.as_int())
+                    : static_cast<int>(tl.y.as_int() + outer * sz.height.as_int())};
+        }
+
+        void apply_drag(int ax, int ay)
+        {
+            float const mag = self->magnification;
+
+            // Visual size from the finger position to the pinned corner
+            int const raw_vis_w = pin_left
+                ? (ax - pin_pos.x.as_int())
+                : (pin_pos.x.as_int() - ax);
+            int const raw_vis_h = pin_above
+                ? (ay - pin_pos.y.as_int())
+                : (pin_pos.y.as_int() - ay);
+
+            auto const clamp = [](int v) { return std::clamp(v, 50, 1000); };
+            geom::Size const new_logical_size{
+                geom::Width{ clamp(static_cast<int>(std::round(raw_vis_w / mag)))},
+                geom::Height{clamp(static_cast<int>(std::round(raw_vis_h / mag)))}};
+
+            float const inner = (mag - 1.0f) / 2.0f;
+            float const outer = (mag + 1.0f) / 2.0f;
+            int const w = new_logical_size.width.as_int();
+            int const h = new_logical_size.height.as_int();
+
+            geom::Point const new_logical_tl{
+                pin_left
+                    ? static_cast<int>(pin_pos.x.as_int() + inner * w)
+                    : static_cast<int>(pin_pos.x.as_int() - outer * w),
+                pin_above
+                    ? static_cast<int>(pin_pos.y.as_int() + inner * h)
+                    : static_cast<int>(pin_pos.y.as_int() - outer * h)};
+
+            auto const surf = self->surface.lock();
+            if (!surf) return;
+
+            surf->move_to(new_logical_tl);
+            self->render_scene_into_surface.capture_area({new_logical_tl, new_logical_size});
+
+            auto const [dp, rp] = self->compute_both_handle_positions(new_logical_tl, new_logical_size, mag);
+            if (self->drag_handle_indicator)
+                self->drag_handle_indicator->move_to(dp);
+            if (self->resize_handle_indicator)
+                self->resize_handle_indicator->move_to(rp);
+        }
+
+        Self* self;
+        bool drag_active{false};
+        geom::Displacement grab_abs{};
+        geom::Point pin_pos{};
+        bool pin_left{false};
+        bool pin_above{false};
     };
 
     static geom::Point surface_top_left_from_cursor(
@@ -553,14 +829,61 @@ private:
         return geom::Point{hx, hy};
     }
 
+    /// Computes the position of the circular resize handle indicator.
+    ///
+    /// The handle is placed at the visual top-left corner of the magnifier.
+    geom::Point compute_resize_handle_position(
+        geom::Point const& logical_top_left,
+        geom::Size const& logical_size,
+        float mag) const
+    {
+        // Visual top-left of the magnifier.
+        int const vis_x = logical_top_left.x.as_int() - (mag - 1.0f) / 2.0f * logical_size.width.as_int();
+        int const vis_y = logical_top_left.y.as_int() - (mag - 1.0f) / 2.0f * logical_size.height.as_int();
+
+        // Default: circle centred on the top-left corner of the visual magnifier,
+        // so it sits half outside the content area.
+        int hx = vis_x;
+        int hy = vis_y;
+
+        return geom::Point{hx, hy};
+    }
+
+    std::pair<geom::Point, geom::Point> compute_both_handle_positions(
+        geom::Point const& logical_top_left,
+        geom::Size const& logical_size,
+        float mag) const
+    {
+        return {
+            compute_drag_handle_position(logical_top_left, logical_size, mag),
+            compute_resize_handle_position(logical_top_left, logical_size, mag)};
+    }
+
+    /// Returns which corner the resize handle is at as (corner_left, corner_top).
+    std::pair<bool, bool> determine_resize_corner(
+        geom::Point const& handle_pos,
+        geom::Point const& logical_top_left,
+        geom::Size const& logical_size) const
+    {
+        int const vis_cx = logical_top_left.x.as_int() + logical_size.width.as_int()  / 2;
+        int const vis_cy = logical_top_left.y.as_int() + logical_size.height.as_int() / 2;
+
+        int const hx = handle_pos.x.as_int() + drag_handle_diameter / 2;
+        int const hy = handle_pos.y.as_int() + drag_handle_diameter / 2;
+
+        return {hx < vis_cx, hy < vis_cy};
+    }
+
     std::mutex mutex;
     RenderSceneIntoSurface render_scene_into_surface;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
     std::shared_ptr<Observer> observer;
     std::weak_ptr<ms::Surface> surface;
     std::shared_ptr<DragHandleIndicator> drag_handle_indicator;
-    std::weak_ptr<msh::SurfaceStack> drag_handle_surface_stack;
+    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
     std::shared_ptr<DragHandleObserver> drag_handle_observer;
+    std::shared_ptr<DragHandleIndicator> resize_handle_indicator;
+    std::shared_ptr<ResizeDragObserver> resize_drag_observer;
     geom::Point cursor_pos;
     float magnification{default_magnification};
     bool default_enabled{false};
