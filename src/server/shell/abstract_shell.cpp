@@ -21,8 +21,6 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/shell/window_manager.h>
-#include <mir/scene/prompt_session.h>
-#include <mir/scene/prompt_session_manager.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/scene/session_coordinator.h>
 #include <mir/scene/session.h>
@@ -89,17 +87,17 @@ void adjust_size_constraints_for_ssd(
 
     auto const horiz_frame_padding = window_size.width - content_size.width;
     auto const vert_frame_padding = window_size.height - content_size.height;
-    if (wm_relevant_mods.width.is_set())
+    if (wm_relevant_mods.width.has_value())
         wm_relevant_mods.width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.height.is_set())
+    if (wm_relevant_mods.height.has_value())
         wm_relevant_mods.height.value() += vert_frame_padding;
-    if (wm_relevant_mods.max_width.is_set() && wm_relevant_mods.max_width.value() < geom::Width{int_max} - horiz_frame_padding)
+    if (wm_relevant_mods.max_width.has_value() && wm_relevant_mods.max_width.value() < geom::Width{int_max} - horiz_frame_padding)
         wm_relevant_mods.max_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.max_height.is_set() && wm_relevant_mods.max_height.value() < geom::Height{int_max} - vert_frame_padding)
+    if (wm_relevant_mods.max_height.has_value() && wm_relevant_mods.max_height.value() < geom::Height{int_max} - vert_frame_padding)
         wm_relevant_mods.max_height.value() += vert_frame_padding;
-    if (wm_relevant_mods.min_width.is_set())
+    if (wm_relevant_mods.min_width.has_value())
         wm_relevant_mods.min_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.min_height.is_set())
+    if (wm_relevant_mods.min_height.has_value())
         wm_relevant_mods.min_height.value() += vert_frame_padding;
 }
 }
@@ -157,7 +155,6 @@ msh::AbstractShell::AbstractShell(
     std::shared_ptr<InputTargeter> const& input_targeter,
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<ms::SessionCoordinator> const& session_coordinator,
-    std::shared_ptr<ms::PromptSessionManager> const& prompt_session_manager,
     std::shared_ptr<ShellReport> const& report,
     std::function<std::shared_ptr<shell::WindowManager>(FocusController* focus_controller)> const& wm_builder,
     std::shared_ptr<mi::Seat> const& seat,
@@ -165,7 +162,6 @@ msh::AbstractShell::AbstractShell(
     input_targeter(input_targeter),
     surface_stack(surface_stack),
     session_coordinator(session_coordinator),
-    prompt_session_manager(prompt_session_manager),
     window_manager(wm_builder(this)),
     seat(seat),
     report(report),
@@ -198,7 +194,6 @@ void msh::AbstractShell::close_session(
     std::shared_ptr<ms::Session> const& session)
 {
     report->closing_session(*session);
-    prompt_session_manager->remove_session(session);
 
     // TODO revisit this when reworking the AbstractShell/WindowManager interactions
     // this is an ugly kludge to extract the list of surfaces owned by the session
@@ -249,7 +244,7 @@ auto msh::AbstractShell::create_surface(
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
-            if (placed_params.server_side_decorated.is_set() && placed_params.server_side_decorated.value())
+            if (placed_params.server_side_decorated.has_value() && placed_params.server_side_decorated.value())
             {
                 *should_decorate = true;
             }
@@ -285,10 +280,10 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
     auto window_size{surface->window_size()};
     auto content_size{surface->content_size()};
 
-    if (wm_relevant_mods.aux_rect.is_set())
+    if (wm_relevant_mods.aux_rect.has_value())
         wm_relevant_mods.aux_rect.value().top_left += surface->content_offset();
 
-    if (modifications.server_side_decorated.is_set())
+    if (modifications.server_side_decorated.has_value())
     {
         if (modifications.server_side_decorated.value())
         {
@@ -329,16 +324,18 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     report->update_surface(*session, *surface, wm_relevant_mods);
 
-    if (wm_relevant_mods.streams.is_set())
+    if (wm_relevant_mods.streams.has_value())
     {
-        session->configure_streams(*surface, wm_relevant_mods.streams.consume());
+        auto streams = std::move(wm_relevant_mods.streams.value());
+        wm_relevant_mods.streams.reset();
+        session->configure_streams(*surface, streams);
     }
     if (!wm_relevant_mods.is_empty())
     {
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
-    if (modifications.cursor_image.is_set())
+    if (modifications.cursor_image.has_value())
     {
         if (modifications.cursor_image.value() == nullptr)
         {
@@ -350,7 +347,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         }
     }
 
-    if (modifications.confine_pointer.is_set())
+    if (modifications.confine_pointer.has_value())
     {
         auto const prev_state = surface->confine_pointer_state();
         auto const new_state = modifications.confine_pointer.value();
@@ -376,30 +373,6 @@ void msh::AbstractShell::destroy_surface(
     report->destroying_surface(*session, *surface);
     decoration_manager->undecorate(surface);
     window_manager->remove_surface(session, surface);
-}
-
-std::shared_ptr<ms::PromptSession> msh::AbstractShell::start_prompt_session_for(
-    std::shared_ptr<ms::Session> const& session,
-    scene::PromptSessionCreationParameters const& params)
-{
-    auto const result = prompt_session_manager->start_prompt_session_for(session, params);
-    report->started_prompt_session(*result, *session);
-    return result;
-}
-
-void msh::AbstractShell::add_prompt_provider_for(
-    std::shared_ptr<ms::PromptSession> const& prompt_session,
-    std::shared_ptr<ms::Session> const& session)
-{
-    prompt_session_manager->add_prompt_provider(prompt_session, session);
-    report->added_prompt_provider(*prompt_session, *session);
-}
-
-void msh::AbstractShell::stop_prompt_session(
-    std::shared_ptr<ms::PromptSession> const& prompt_session)
-{
-    report->stopping_prompt_session(*prompt_session);
-    prompt_session_manager->stop_prompt_session(prompt_session);
 }
 
 void msh::AbstractShell::raise_surface(

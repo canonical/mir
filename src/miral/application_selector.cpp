@@ -17,6 +17,7 @@
 #include "application_selector.h"
 #include <miral/application_info.h>
 #include <miral/application.h>
+#include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/scene/session.h>
 
@@ -67,7 +68,7 @@ void ApplicationSelector::select(miral::Window const& window)
         if (restore_state && restore_state != info.state())
         {
             WindowSpecification spec;
-            spec.state() = restore_state.value();
+            spec.state() = restore_state;
             tools.modify_window(selected, spec);
             restore_state.reset();
         }

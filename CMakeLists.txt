@@ -62,31 +62,40 @@ set(CMAKE_BUILD_TYPE ${CMAKE_BUILD_TYPE} CACHE STRING "${build_types}" FORCE)
 # Enable cmake-gui to display a drop down list for CMAKE_BUILD_TYPE
 set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "${build_types}")
 
-set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD 26)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -pthread -g -Wall -pedantic -Wextra -fPIC")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pthread -g -Wall -fno-strict-aliasing -pedantic -Wnon-virtual-dtor -Wextra -fPIC")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--as-needed")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -Wl,--as-needed")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--as-needed")
+find_package(Threads REQUIRED)
 
+add_compile_options(
+    -g -Wall -pedantic -Wextra -fPIC
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-strict-aliasing>
+    $<$<COMPILE_LANGUAGE:CXX>:-Wnon-virtual-dtor>
+)
+add_link_options(-Wl,--as-needed)
 
 set(MIR_FATAL_COMPILE_WARNINGS ON CACHE BOOL "Should compiler warnings fail the build")
 if(MIR_FATAL_COMPILE_WARNINGS)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Werror")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
+  add_compile_options(-Werror)
   # Disable maybe-uninitialized errors on GCC when optimisation is enabled
   # They are notorious for false-positives
-  # Also, disable array-bounds errors, they are likewise significantly
-  # false-positivey
+  # Also, disable array-bounds and stringop-overflow errors, they are likewise
+  # significantly false-positivey
   # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
   if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=maybe-uninitialized>
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=array-bounds>
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
+    )
   endif()
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized -Wno-error=array-bounds")
+    add_compile_options(
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>
+        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>
+        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
+    )
   endif()
 endif()
 
@@ -94,7 +103,12 @@ include(CheckCXXCompilerFlag)
 check_cxx_compiler_flag(-Wmismatched-tags HAS_W_MISMATCHED_TAGS)
 
 if(HAS_W_MISMATCHED_TAGS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-mismatched-tags")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-mismatched-tags>)
+endif()
+
+check_cxx_compiler_flag(-Werror=braced-scalar-init HAS_W_BRACED_SCALAR_INIT)
+if(HAS_W_BRACED_SCALAR_INIT)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=braced-scalar-init>)
 endif()
 
 # GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
@@ -104,25 +118,19 @@ endif()
 # GCC 7.1.
 check_cxx_compiler_flag(-Wpsabi HAS_W_PSABI)
 if(HAS_W_PSABI)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-psabi")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi>)
 endif()
 
 set(MIR_USE_LD ld CACHE STRING "Linker to use")
 set_property(CACHE MIR_USE_LD PROPERTY STRINGS "ld;gold;lld;mold")
 if(MIR_USE_LD MATCHES "gold")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=gold")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=gold")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=gold")
+  add_link_options(-fuse-ld=gold)
 endif()
 if(MIR_USE_LD MATCHES "lld")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=lld")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=lld")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=lld")
+  add_link_options(-fuse-ld=lld)
 endif()
 if(MIR_USE_LD MATCHES "mold")
-  set (CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -fuse-ld=mold")
-  set (CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -fuse-ld=mold")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fuse-ld=mold")
+  add_link_options(-fuse-ld=mold)
 endif()
 
 string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
@@ -154,26 +162,13 @@ find_package(Boost 1.70.0 COMPONENTS program_options iostreams REQUIRED)
 
 add_compile_definitions(EGL_NO_X11)
 
-pkg_check_modules(WAYLAND_EGLSTREAM wayland-eglstream IMPORTED_TARGET)
-
-# Set the default platforms based on availability of NVIDIA libraries
-if (WAYLAND_EGLSTREAM_FOUND)
-  set(
-    MIR_PLATFORM
-    gbm-kms;atomic-kms;x11;eglstream-kms;wayland
-    CACHE
-    STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
-  )
-else()
-  set(
-    MIR_PLATFORM
-    gbm-kms;atomic-kms;x11;wayland
-    CACHE
-    STRING
-    "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', 'eglstream-kms', or 'wayland')"
-  )
-endif()
+set(
+  MIR_PLATFORM
+  gbm-kms;atomic-kms;x11;wayland
+  CACHE
+  STRING
+  "a list of graphics backends to build (options are 'gbm-kms', 'atomic-kms', 'x11', or 'wayland')"
+)
 
 list(GET MIR_PLATFORM 0 MIR_TEST_PLATFORM)
 
@@ -199,14 +194,15 @@ if(MIR_ENABLE_COVERAGE)
         NAME coverage-html
         EXECUTABLE ctest --test-dir ${CMAKE_BINARY_DIR} --output-on-failure
         EXCLUDE "tests/*" "${CMAKE_BINARY_DIR}/*"
-        LCOV_ARGS --ignore-errors inconsistent --ignore-errors mismatch --ignore-errors unused
+        LCOV_ARGS --ignore-errors inconsistent --ignore-errors mismatch --ignore-errors unused --ignore-errors format
           --exclude "*/examples/*"
           --exclude "*/src/server/console/logind-*"
           --exclude "*/*.tp.h"
           --substitute "s@${CMAKE_SOURCE_DIR}/((?:src/platform/graphics|src/wayland|tests/miral)/[^/]+_wrapper.(?:cpp|h))$@/${CMAKE_BINARY_DIR}/$1@"
           --substitute "s@${CMAKE_SOURCE_DIR}/target@${CMAKE_BINARY_DIR}/target@"
           --substitute "s@${CMAKE_SOURCE_DIR}/miral-generated@${CMAKE_BINARY_DIR}/miral-generated@"
-        GENHTML_ARGS --ignore-errors inconsistent --ignore-errors corrupt
+        GENHTML_ARGS --ignore-errors inconsistent --ignore-errors corrupt --ignore-errors category
+          --exclude "*/src/platform/graphics/drm-formats*"
     )
 
     setup_target_for_coverage_gcovr_xml(
@@ -243,12 +239,6 @@ foreach(platform IN LISTS MIR_PLATFORM)
   if (platform STREQUAL "x11")
      set(MIR_BUILD_PLATFORM_X11 TRUE)
   endif()
-  if (platform STREQUAL "eglstream-kms")
-     if (NOT WAYLAND_EGLSTREAM_FOUND)
-        message(FATAL_ERROR "EGLStream platform requested, but required NVIDIA external EGL platform nvidia-egl-wayland not found")
-     endif()
-     set(MIR_BUILD_PLATFORM_EGLSTREAM_KMS TRUE)
-  endif()
   if (platform STREQUAL "wayland")
      set(MIR_BUILD_PLATFORM_WAYLAND TRUE)
   endif()
@@ -266,7 +256,7 @@ pkg_check_modules(EPOXY REQUIRED IMPORTED_TARGET epoxy)
 pkg_check_modules(FREETYPE freetype2 REQUIRED IMPORTED_TARGET)
 pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0 gio-unix-2.0)
 pkg_check_modules(GLESv2 REQUIRED IMPORTED_TARGET glesv2)
-pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
+pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0>=2.65)
 pkg_check_modules(LIBINPUT REQUIRED IMPORTED_TARGET libinput>=1.1)
 pkg_check_modules(LTTNG_UST REQUIRED IMPORTED_TARGET lttng-ust>=2.9)
 pkg_check_modules(UDEV REQUIRED IMPORTED_TARGET libudev)

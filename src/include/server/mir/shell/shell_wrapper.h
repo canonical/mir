@@ -58,16 +58,6 @@ public:
 
     void close_session(std::shared_ptr<scene::Session> const& session) override;
 
-    auto start_prompt_session_for(
-        std::shared_ptr<scene::Session> const& session,
-        scene::PromptSessionCreationParameters const& params) -> std::shared_ptr<scene::PromptSession> override;
-
-    void add_prompt_provider_for(
-        std::shared_ptr<scene::PromptSession> const& prompt_session,
-        std::shared_ptr<scene::Session> const& session) override;
-
-    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& prompt_session) override;
-
     auto create_surface(
         std::shared_ptr<scene::Session> const& session,
         SurfaceSpecification const& params,

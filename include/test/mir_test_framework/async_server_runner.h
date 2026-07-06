@@ -18,7 +18,6 @@
 #define MIR_TESTS_INCLUDE_MIR_TEST_FRAMEWORK_ASYNC_SERVER_RUNNER_H_
 
 #include <mir_test_framework/temporary_environment_value.h>
-#include <mir/test/auto_unblock_thread.h>
 
 #include <mir/server.h>
 #include <miral/set_window_management_policy.h>
@@ -54,7 +53,7 @@ protected:
 
 private:
     std::list<TemporaryEnvironmentValue> env;
-    mir::test::AutoJoinThread server_thread;
+    std::jthread server_thread;
 
     std::mutex mutex;
     std::condition_variable started;

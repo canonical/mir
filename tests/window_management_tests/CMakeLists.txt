@@ -1,19 +1,13 @@
-include_directories(
-  ${GMOCK_INCLUDE_DIR}
-  ${GTEST_INCLUDE_DIR}
-)
-
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
-set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
-
 mir_add_wrapped_executable(mir_window_management_tests NOINSTALL
   test_minimal_window_manager.cpp
   test_floating_window_manager.cpp)
 
+target_link_options(mir_window_management_tests PRIVATE -flto)
+
 target_include_directories(mir_window_management_tests
   PRIVATE
+  ${GMOCK_INCLUDE_DIR}
+  ${GTEST_INCLUDE_DIR}
   ${CMAKE_SOURCE_DIR}
   ${CMAKE_CURRENT_BINARY_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/server

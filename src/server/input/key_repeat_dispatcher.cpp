@@ -115,8 +115,8 @@ void mi::KeyRepeatDispatcher::remove_device(MirInputDeviceId id)
 {
     std::lock_guard lock(repeat_state_mutex);
     repeat_state_by_device.erase(id); // destructor cancels alarms
-    if (touch_button_device.is_set() && touch_button_device.value() == id)
-        touch_button_device.consume();
+    if (touch_button_device.has_value() && touch_button_device.value() == id)
+        touch_button_device.reset();
 }
 
 void mi::KeyRepeatDispatcher::set_alarm_for_device(
@@ -147,7 +147,7 @@ bool mi::KeyRepeatDispatcher::dispatch(std::shared_ptr<MirEvent const> const& ev
         if (mir_input_event_get_type(iev) != mir_input_event_type_key)
             return next_dispatcher->dispatch(event);
         auto device_id = mir_input_event_get_device_id(iev);
-        if (!disable_repeat_on_touchscreen || !touch_button_device.is_set() || device_id != touch_button_device.value())
+        if (!disable_repeat_on_touchscreen || !touch_button_device.has_value() || device_id != touch_button_device.value())
             handle_key_input(mir_input_event_get_device_id(iev), mir_input_event_get_keyboard_event(iev));
 
         return next_dispatcher->dispatch(event);

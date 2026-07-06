@@ -43,7 +43,6 @@ auto get_enum_value(MirEventType event)
     {
     STRINGIFY(mir_event_type_window)
     STRINGIFY(mir_event_type_resize)
-    STRINGIFY(mir_event_type_prompt_session_state_change)
     STRINGIFY(mir_event_type_orientation)
     STRINGIFY(mir_event_type_close_window)
     STRINGIFY(mir_event_type_input)

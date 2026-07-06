@@ -66,9 +66,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (bool)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (double)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, double)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (int)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (mir::optional_value<bool> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (mir::optional_value<int> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (mir::optional_value<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<bool> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<int> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
@@ -336,9 +336,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::SetTerminator(std::function<void (int)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::~SetTerminator()@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_6.0" 6.0.0
@@ -434,7 +431,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::children() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::generic::Rectangle<int> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowInfo::clip_area(std::optional<mir::geometry::generic::Rectangle<int> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::confine_pointer() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::constrain_resize(mir::geometry::generic::Point<int>&, mir::geometry::generic::Size<int>&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::depth_layer() const@MIRAL_6.0" 6.0.0

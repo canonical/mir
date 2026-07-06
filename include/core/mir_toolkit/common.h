@@ -130,13 +130,6 @@ typedef enum MirOutputType
     mir_output_type_dpi = 17,         /* DRM_MODE_CONNECTOR_DPI         */
 } MirOutputType;
 
-typedef enum MirPromptSessionState
-{
-    mir_prompt_session_state_stopped = 0,
-    mir_prompt_session_state_started,
-    mir_prompt_session_state_suspended
-} MirPromptSessionState;
-
 /**
  * 32-bit pixel formats (8888):
  * The order of components in the enum matches the order of the components
@@ -302,7 +295,7 @@ typedef enum MirPlacementHints
     mir_placement_hints_resize_y = 1 << 5,
 
     /// allow flipping aux_anchor to opposite corner
-    mir_placement_hints_antipodes = 1 << 6,
+    mir_placement_hints_antipodes [[deprecated("UNUSED since Mir 2.0")]] = 1 << 6,
 
     /// allow flipping anchors on both axes
     mir_placement_hints_flip_any = mir_placement_hints_flip_x | mir_placement_hints_flip_y,

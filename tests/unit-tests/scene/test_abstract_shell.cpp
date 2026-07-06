@@ -34,7 +34,6 @@
 #include <mir/test/doubles/mock_surface.h>
 #include <mir/test/doubles/stub_surface.h>
 #include <mir/test/doubles/null_event_sink.h>
-#include <mir/test/doubles/null_prompt_session_manager.h>
 #include <mir/test/doubles/stub_input_targeter.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_display.h>
@@ -162,7 +161,6 @@ struct AbstractShell : Test
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
-        std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
         mt::fake_shared(seat),
@@ -640,8 +638,8 @@ TEST_F(AbstractShell, size_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.width, Eq(mir::optional_value<geom::Width>(window_size.width)));
-    ASSERT_THAT(wm_modifications.height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+    ASSERT_THAT(wm_modifications.width, Eq(std::optional<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.height, Eq(std::optional<geom::Height>(window_size.height)));
 }
 
 TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
@@ -671,8 +669,8 @@ TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.max_width, Eq(mir::optional_value<geom::Width>(window_size.width)));
-    ASSERT_THAT(wm_modifications.max_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+    ASSERT_THAT(wm_modifications.max_width, Eq(std::optional<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.max_height, Eq(std::optional<geom::Height>(window_size.height)));
 }
 
 TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
@@ -702,8 +700,8 @@ TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.min_width, Eq(mir::optional_value<geom::Width>(window_size.width)));
-    ASSERT_THAT(wm_modifications.min_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+    ASSERT_THAT(wm_modifications.min_width, Eq(std::optional<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.min_height, Eq(std::optional<geom::Height>(window_size.height)));
 }
 
 TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
@@ -733,7 +731,7 @@ TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.aux_rect, Eq(mir::optional_value<geom::Rectangle>(adjusted_aux_rect)));
+    ASSERT_THAT(wm_modifications.aux_rect, Eq(std::optional<geom::Rectangle>(adjusted_aux_rect)));
 }
 
 // lp:1625401
@@ -1142,12 +1140,12 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     if (p.set_width)
         EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val} + padding.width));
     else
-        EXPECT_FALSE(captured_spec.width.is_set());
+        EXPECT_FALSE(captured_spec.width.has_value());
 
     if (p.set_height)
         EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val} + padding.height));
     else
-        EXPECT_FALSE(captured_spec.height.is_set());
+        EXPECT_FALSE(captured_spec.height.has_value());
 
     if (p.set_min_size)
     {
@@ -1156,8 +1154,8 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     }
     else
     {
-        EXPECT_FALSE(captured_spec.min_width.is_set());
-        EXPECT_FALSE(captured_spec.min_height.is_set());
+        EXPECT_FALSE(captured_spec.min_width.has_value());
+        EXPECT_FALSE(captured_spec.min_height.has_value());
     }
 
     if (p.set_max_size)
@@ -1167,8 +1165,8 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     }
     else
     {
-        EXPECT_FALSE(captured_spec.max_width.is_set());
-        EXPECT_FALSE(captured_spec.max_height.is_set());
+        EXPECT_FALSE(captured_spec.max_width.has_value());
+        EXPECT_FALSE(captured_spec.max_height.has_value());
     }
 
 }
@@ -1223,12 +1221,12 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
     if (p.set_width)
         EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val}));
     else
-        EXPECT_FALSE(captured_spec.width.is_set());
+        EXPECT_FALSE(captured_spec.width.has_value());
 
     if (p.set_height)
         EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val}));
     else
-        EXPECT_FALSE(captured_spec.height.is_set());
+        EXPECT_FALSE(captured_spec.height.has_value());
 
     if (p.set_min_size)
     {
@@ -1237,8 +1235,8 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
     }
     else
     {
-        EXPECT_FALSE(captured_spec.min_width.is_set());
-        EXPECT_FALSE(captured_spec.min_height.is_set());
+        EXPECT_FALSE(captured_spec.min_width.has_value());
+        EXPECT_FALSE(captured_spec.min_height.has_value());
     }
 
     if (p.set_max_size)
@@ -1248,8 +1246,8 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
     }
     else
     {
-        EXPECT_FALSE(captured_spec.max_width.is_set());
-        EXPECT_FALSE(captured_spec.max_height.is_set());
+        EXPECT_FALSE(captured_spec.max_width.has_value());
+        EXPECT_FALSE(captured_spec.max_height.has_value());
     }
 }
 

@@ -24,11 +24,11 @@
 #include <mir/input/touchpad_settings.h>
 #include <mir/input/touchscreen_settings.h>
 #include <mir/input/mir_keyboard_config.h>
-#include <mir/optional_value.h>
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <mutex>
+#include <optional>
 
 namespace mir
 {
@@ -65,13 +65,13 @@ public:
     std::string name() const override;
     std::string unique_id() const override;
 
-    optional_value<MirPointerConfig> pointer_configuration() const override;
+    std::optional<MirPointerConfig> pointer_configuration() const override;
     void apply_pointer_configuration(MirPointerConfig const&) override;
-    optional_value<MirTouchpadConfig> touchpad_configuration() const override;
+    std::optional<MirTouchpadConfig> touchpad_configuration() const override;
     void apply_touchpad_configuration(MirTouchpadConfig const&) override;
-    optional_value<MirKeyboardConfig> keyboard_configuration() const override;
+    std::optional<MirKeyboardConfig> keyboard_configuration() const override;
     void apply_keyboard_configuration(MirKeyboardConfig const&) override;
-    optional_value<MirTouchscreenConfig> touchscreen_configuration() const override;
+    std::optional<MirTouchscreenConfig> touchscreen_configuration() const override;
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) override;
 
     MirInputDevice config() const;
@@ -85,10 +85,10 @@ private:
     MirInputDeviceId const device_id;
     InputDevice& device;
     InputDeviceInfo const info;
-    optional_value<PointerSettings> pointer;
-    optional_value<TouchpadSettings> touchpad;
-    optional_value<MirKeyboardConfig> keyboard;
-    optional_value<TouchscreenSettings> touchscreen;
+    std::optional<PointerSettings> pointer;
+    std::optional<TouchpadSettings> touchpad;
+    std::optional<MirKeyboardConfig> keyboard;
+    std::optional<TouchscreenSettings> touchscreen;
     std::shared_ptr<dispatch::ActionQueue> actions;
     std::shared_ptr<KeyMapper> const key_mapper;
     std::function<void(Device*)> device_changed_callback;

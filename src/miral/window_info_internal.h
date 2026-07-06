@@ -40,11 +40,11 @@ struct miral::WindowInfo::Self
     mir::geometry::DeltaY height_inc;
     AspectRatio min_aspect;
     AspectRatio max_aspect;
-    mir::optional_value<int> output_id;
+    std::optional<int> output_id;
     MirShellChrome shell_chrome;
     MirDepthLayer depth_layer;
     MirPlacementGravity attached_edges;
-    mir::optional_value<mir::geometry::Rectangle> exclusive_rect;
+    std::optional<mir::geometry::Rectangle> exclusive_rect;
     bool ignore_exclusion_zones;
     std::shared_ptr<void> userdata;
 };

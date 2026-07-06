@@ -98,7 +98,7 @@ void mtf::AsyncServerRunner::add_to_environment(char const* key, char const* val
 
 void mtf::AsyncServerRunner::start_server()
 {
-    mt::AutoJoinThread t([this]
+    std::jthread t([this]
         {
             try
             {
@@ -163,7 +163,9 @@ void mtf::AsyncServerRunner::wait_for_server_exit()
     {
         BOOST_THROW_EXCEPTION(std::logic_error{"stop_server() failed to stop server"});
     }
-    server_thread.stop();
+
+    if (server_thread.joinable())
+        server_thread.join();
 }
 
 mtf::AsyncServerRunner::~AsyncServerRunner() noexcept

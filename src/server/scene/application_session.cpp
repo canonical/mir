@@ -16,6 +16,7 @@
 
 #include "application_session.h"
 
+#include <mir/fatal.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/session_container.h>
 #include <mir/scene/session_listener.h>
@@ -77,7 +78,7 @@ auto ms::ApplicationSession::create_surface(
 
     //TODO: we take the first stream's content for now. Once the surface factory interface takes more than one stream,
     //      we can take all the streams as content.
-    if (!the_params.streams.is_set() || the_params.streams.value().empty())
+    if (!the_params.streams.has_value() || the_params.streams.value().empty())
     {
         BOOST_THROW_EXCEPTION(std::logic_error("surface must have content"));
     }
@@ -95,7 +96,7 @@ auto ms::ApplicationSession::create_surface(
 
     auto surface = surface_factory->create_surface(session, stream_list, params);
 
-    auto const input_mode = params.input_mode.is_set() ? params.input_mode.value() : input::InputReceptionMode::normal;
+    auto const input_mode = params.input_mode.has_value() ? params.input_mode.value() : input::InputReceptionMode::normal;
     surface_stack->add_surface(surface, input_mode);
 
     if (observer && observer_executor)
@@ -118,25 +119,25 @@ auto ms::ApplicationSession::create_surface(
 
     session_listener->surface_created(*this, surface);
 
-    if (params.state.is_set())
+    if (params.state.has_value())
         surface->configure(mir_window_attrib_state, params.state.value());
-    if (params.type.is_set())
+    if (params.type.has_value())
         surface->configure(mir_window_attrib_type, params.type.value());
-    if (params.preferred_orientation.is_set())
+    if (params.preferred_orientation.has_value())
         surface->configure(mir_window_attrib_preferred_orientation, params.preferred_orientation.value());
-    if (params.input_shape.is_set())
+    if (params.input_shape.has_value())
         surface->set_input_region(params.input_shape.value());
-    if (params.depth_layer.is_set())
+    if (params.depth_layer.has_value())
         surface->set_depth_layer(params.depth_layer.value());
-    if (params.application_id.is_set())
+    if (params.application_id.has_value())
         surface->set_application_id(params.application_id.value());
-    if (params.focus_mode.is_set())
+    if (params.focus_mode.has_value())
         surface->set_focus_mode(params.focus_mode.value());
-    if (params.visible_on_lock_screen.is_set())
+    if (params.visible_on_lock_screen.has_value())
         surface->set_visible_on_lock_screen(params.visible_on_lock_screen.value());
-    if (params.tiled_edges.is_set())
+    if (params.tiled_edges.has_value())
         surface->set_tiled_edges(params.tiled_edges.value());
-    if (params.alpha.is_set())
+    if (params.alpha.has_value())
         surface->set_alpha(params.alpha.value());
 
     return surface;
@@ -248,23 +249,6 @@ void ms::ApplicationSession::show()
     {
         surface->show();
     }
-}
-
-void ms::ApplicationSession::start_prompt_session()
-{
-}
-
-void ms::ApplicationSession::stop_prompt_session()
-{
-}
-
-void ms::ApplicationSession::suspend_prompt_session()
-{
-}
-
-void ms::ApplicationSession::resume_prompt_session()
-{
-    start_prompt_session();
 }
 
 auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& /*props*/)

@@ -16,6 +16,7 @@
  */
 
 #include <mir/default_server_configuration.h>
+#include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/options/default_configuration.h>
 #include <mir/main_loop.h>

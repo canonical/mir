@@ -38,7 +38,6 @@ class Context;
 namespace graphics
 {
 class Display;
-struct EGLExtensions;
 
 namespace common
 {
@@ -77,9 +76,7 @@ private:
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
     std::unique_ptr<LinuxDmaBuf> dmabuf_extension;
-    std::shared_ptr<EGLExtensions> const egl_extensions;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
-    bool egl_display_bound{false};
 };
 
 class GLRenderingProvider : public graphics::GLRenderingProvider

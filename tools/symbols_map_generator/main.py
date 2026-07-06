@@ -18,15 +18,16 @@ import logging
 import sys
 import os
 import argparse
+import concurrent.futures
 from pathlib import Path
-from typing import TypedDict, Optional
+from typing import Optional, TypedDict
 from collections import OrderedDict
 import bisect
 
 logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
-library_not_found_error_msg: str = """\
+LIBRARY_NOT_FOUND_ERROR_MSG: str = """\
     Please install libclang-19-dev and python3-clang-19.
     Also, ensure that the required environment variables are set correctly. (e.g.)
         export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1
@@ -51,13 +52,6 @@ HIDDEN_SYMBOLS = {
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
 
-    "miral::SimulatedSecondaryClick::SimulatedSecondaryClick*;",
-    "miral::SimulatedSecondaryClick::disable*;",
-    "miral::SimulatedSecondaryClick::disabled*;",
-    "miral::SimulatedSecondaryClick::displacement_threshold*;",
-    "miral::SimulatedSecondaryClick::enable*;",
-    "miral::SimulatedSecondaryClick::enabled*;",
-    "miral::SimulatedSecondaryClick::operator*;",
     "mir::input::Transformer::?Transformer*;",
     "non-virtual?thunk?to?mir::input::Transformer::?Transformer*;",
     "typeinfo?for?mir::input::Transformer;",
@@ -67,7 +61,6 @@ HIDDEN_SYMBOLS = {
     "miral::MouseKeysConfig::disabled*;",
     "miral::MouseKeysConfig::enable*;",
     "miral::MouseKeysConfig::enabled*;",
-    "miral::ConfigFile::ConfigFile*;",
 }
 
 class HeaderDirectory(TypedDict):
@@ -185,12 +178,22 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
     return result
 
 
-def is_function_inline(node: clang.cindex.CursorKind):
+def is_function_inline(node: clang.cindex.Cursor):
     # This method assumes that the node is a FUNCTION_DECL.
-    # There is no explicit way to check if a function is inlined
-    # but seeing that if it is a FUNCTION_DECL and it has
-    # a definition is good enough.
-    return node.is_definition()
+    # Use libclang's dedicated query rather than node.is_definition(): the
+    # latter is only a proxy for "inline" and, crucially, reports False once
+    # PARSE_SKIP_FUNCTION_BODIES is in effect (the body it would key off is
+    # skipped), which would wrongly emit symbols for inline free functions.
+    # clang_Cursor_isFunctionInlined answers the question directly and is
+    # stable regardless of whether function bodies were parsed.
+    #
+    # Also skip functions with internal linkage (static storage class): they
+    # are never exported from the shared library regardless of whether they
+    # are defined inline.  StorageClass is a declaration-level property and
+    # is equally stable under PARSE_SKIP_FUNCTION_BODIES.
+    if node.storage_class == clang.cindex.StorageClass.STATIC:
+        return True
+    return bool(clang.cindex.conf.lib.clang_Cursor_isFunctionInlined(node))
 
 
 def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
@@ -328,27 +331,43 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
     return result
 
 
-def process_directory(directory: Path, search_dirs: Optional[list[str]]) -> set[str]:
-    result = set()
 
-    files = directory.rglob('*.h')
+def _parse_single_header(file_path: str, parse_args: list[str]) -> set[str]:
+    """Parse a single header file and return the set of symbol strings it defines.
 
-    args = ['-std=c++23', '-x', 'c++-header']
+    Defined at module level (not as a closure) so it is picklable for use with
+    concurrent.futures.ProcessPoolExecutor.  On Linux, ProcessPoolExecutor uses
+    fork by default, so the clang.cindex.Config already set up in the parent
+    process (SO path, library path) is inherited by each worker without any
+    extra initialisation.
+    """
+    idx = clang.cindex.Index.create()
+    parse_options = clang.cindex.TranslationUnit.PARSE_SKIP_FUNCTION_BODIES
+    tu = idx.parse(file_path, args=parse_args, options=parse_options)
+    result: set[str] = set()
+    traverse_ast(tu.cursor, file_path, result)
+    return result
+
+
+def process_directory(directory: Path, search_dirs: list[str]) -> set[str]:
+    files = list(directory.rglob('*.h'))
+
+    args = ['-std=c++26', '-x', 'c++-header']
     for dir in search_dirs:
         args.append(f"-I{dir}")
 
-    for file in files:
-        _logger.debug(f"Processing header file: {file.as_posix()}")
-        file_args = args.copy()
-        idx = clang.cindex.Index.create()
-        tu = idx.parse(
-            file.as_posix(),
-            args=file_args,
-            options=0)
-        root = tu.cursor
-        list(traverse_ast(root, file.as_posix(), result))
+    # Parse all header files in parallel.  Each worker creates its own
+    # clang.cindex.Index so libclang state is never shared across processes.
+    combined: set[str] = set()
+    with concurrent.futures.ProcessPoolExecutor() as executor:
+        futures = [
+            executor.submit(_parse_single_header, f.as_posix(), args)
+            for f in files
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            combined |= future.result()
 
-    return result
+    return combined
 
 
 def read_symbols_from_file(f: argparse.FileType, library_name: str) -> list[Symbol]:
@@ -380,20 +399,29 @@ def read_symbols_from_file(f: argparse.FileType, library_name: str) -> list[Symb
     return retval
 
 
-def get_added_symbols(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool) -> list[str]:
+def get_added_symbols(previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool) -> list[str]:
+    if new_symbols is None:
+        return []
     added_symbols: set[str] = new_symbols.copy()
     for symbol in previous_symbols:
-        if (symbol.name in added_symbols) or (is_internal != symbol.is_internal and symbol.name in added_symbols):
+        if symbol.is_internal() == is_internal and symbol.name in added_symbols:
             added_symbols.remove(symbol.name)
     added_symbols = list(added_symbols)
     added_symbols.sort()
     return added_symbols
 
 
-def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], is_internal: bool):
+def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool) -> bool:
     """
     Prints the diff between the previous symbols and the new symbols.
+    When new_symbols is None (no headers directory was provided), no diff is performed.
+    Returns True if any symbols were added or deleted, False otherwise.
     """
+    if new_symbols is None:
+        print("")
+        print("  \033[1mDiff skipped (no headers directory provided)\033[0m")
+        return False
+
     added_symbols = get_added_symbols(previous_symbols, new_symbols, is_internal)
 
     if len(added_symbols) > 0:
@@ -402,12 +430,17 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: set[str], i
         for s in added_symbols:
             print(f"\033[92m    {s}\033[0m")
 
-    # Deleted symbols
+    # Deleted symbols — only consider wildcard C++ symbols (generated by this tool).
+    # C symbols (is_c_symbol=True) and exact quoted C++ symbols (name starts with '"')
+    # are manually maintained in the map and are not generated by the tool, so they
+    # cannot be compared against new_symbols.
     deleted_symbols = set()
     for symbol in previous_symbols:
-        if is_internal == symbol.is_internal and not symbol.name in new_symbols:
+        if (is_internal == symbol.is_internal()
+                and not symbol.is_c_symbol
+                and not symbol.name.startswith('"')
+                and symbol.name not in new_symbols):
             deleted_symbols.add(symbol.name)
-    deleted_symbols = deleted_symbols - new_symbols
     deleted_symbols = list(deleted_symbols)
     deleted_symbols.sort()
 
@@ -547,19 +580,20 @@ def main():
 
     _logger.info(f"Symbols map generation is beginning for library={library} with version={version}")
 
-    # Create a set that includes all of the available symbols
-    external_symbols: set[str] = set()
+    # Create a set that includes all of the available symbols.
+    # None means "no headers directory was provided" — diff checks are skipped for that type.
+    external_symbols: Optional[set[str]] = None
     if args.external_headers:
         _logger.info(f"Processing external headers directory: {args.external_headers}")
-        external_symbols: set[str] = process_directory(
+        external_symbols = process_directory(
             args.external_headers,
             include_dirs
         )
 
-    internal_symbols: set[str] = set()
+    internal_symbols: Optional[set[str]] = None
     if args.internal_headers:
         _logger.info(f"Processing internal headers directory: {args.internal_headers}")
-        internal_symbols: set[str] = process_directory(
+        internal_symbols = process_directory(
             args.internal_headers,
             include_dirs
         )
@@ -676,5 +710,5 @@ if __name__ == "__main__":
     try:
         main()
     except Exception as e:
-        _logger.exception(library_not_found_error_msg)
+        _logger.exception(LIBRARY_NOT_FOUND_ERROR_MSG)
         sys.exit(1)

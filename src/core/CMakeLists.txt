@@ -1,8 +1,5 @@
 set(MIRCORE_ABI 3)
 
-# We don't need libmircore to have an unused dependency on libpthread
-string (REPLACE " -pthread " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 add_library(mircore SHARED
     anonymous_shm_file.cpp
     fatal.cpp
@@ -17,7 +14,6 @@ add_library(mircore SHARED
     report_exception.cpp ${PROJECT_SOURCE_DIR}/include/core/mir/report_exception.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/optional_value.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fd.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/geometry/rectangle.h

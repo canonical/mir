@@ -11,7 +11,9 @@ use crate::cpp_builder::{sanitize_identifier, CppBuilder};
 use crate::helpers::format_wayland_interface_to_rust_extension_struct;
 
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
-use crate::protocol_parser::{InterfaceItem, WaylandEvent, WaylandInterface, WaylandProtocol};
+use crate::protocol_parser::{
+    InterfaceItem, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
+};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 
@@ -46,16 +48,20 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
                 fn stop(self: &WaylandServer);
                 fn drain_queue(self: &mut WaylandServer) -> bool;
+                fn register_fd_ready_listener(self: &WaylandServer, fd: i32, callback: UniquePtr<FdReadyCallback>);
 
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;
                 fn uid(self: &WaylandClient) -> Result<u32>;
                 fn gid(self: &WaylandClient) -> Result<u32>;
-                fn equals(self: &WaylandClient, id: &WaylandClientId) -> bool;
                 fn id(self: &WaylandClient) -> Box<WaylandClientId>;
                 fn clone_box(self: &WaylandClient) -> Box<WaylandClient>;
+                fn socket_fd(self: &WaylandClient) -> Result<i32>;
+                fn name(self: &WaylandClient) -> Result<String>;
+                fn kill(self: &WaylandClient, object_id: u32, code: u32, message: &CxxString);
 
                 type WaylandClientId;
+                fn equals(self: &WaylandClientId, id: &Box<WaylandClientId>) -> bool;
 
                 #(#rust_types)*
                 #(#rust_tokens)*
@@ -115,6 +121,15 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
     }
 }
 
+/// An event carries a raw pointer across the FFI boundary (and therefore must be declared
+/// `unsafe fn`) when it has a nullable object argument.
+fn event_uses_raw_pointer(event: &WaylandEvent) -> bool {
+    event.args.iter().any(|arg| {
+        arg.allow_null.unwrap_or(false)
+            && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::NewId)
+    })
+}
+
 fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) -> TokenStream {
     let interface_name = format_ident!(
         "{}",
@@ -131,7 +146,13 @@ fn generate_ffi_for_event(interface: &WaylandInterface, event: &WaylandEvent) ->
         })
         .collect();
 
-    quote! {
-        fn #event_name(self: &mut #interface_name, #(#args),*);
+    if event_uses_raw_pointer(event) {
+        quote! {
+            unsafe fn #event_name(self: &mut #interface_name, #(#args),*);
+        }
+    } else {
+        quote! {
+            fn #event_name(self: &mut #interface_name, #(#args),*);
+        }
     }
 }

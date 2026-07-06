@@ -89,13 +89,13 @@ struct StubDevice : public mi::Device
     std::string name() const {return device_name;}
     std::string unique_id() const {return {};}
 
-    mir::optional_value<MirPointerConfig> pointer_configuration() const {return {};}
+    std::optional<MirPointerConfig> pointer_configuration() const {return {};}
     void apply_pointer_configuration(MirPointerConfig const&) {;}
-    mir::optional_value<MirTouchpadConfig> touchpad_configuration() const {return {};}
+    std::optional<MirTouchpadConfig> touchpad_configuration() const {return {};}
     void apply_touchpad_configuration(MirTouchpadConfig const&) {}
-    mir::optional_value<MirKeyboardConfig> keyboard_configuration() const {return {};}
+    std::optional<MirKeyboardConfig> keyboard_configuration() const {return {};}
     void apply_keyboard_configuration(MirKeyboardConfig const&) {}
-    mir::optional_value<MirTouchscreenConfig> touchscreen_configuration() const {return {};}
+    std::optional<MirTouchscreenConfig> touchscreen_configuration() const {return {};}
     void apply_touchscreen_configuration(MirTouchscreenConfig const&) {}
 };
 

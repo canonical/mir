@@ -6,10 +6,6 @@ if (MIR_BUILD_PLATFORM_ATOMIC_KMS)
   add_subdirectory(atomic-kms/)
 endif()
 
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_subdirectory(eglstream-kms)
-endif()
-
 if (MIR_BUILD_PLATFORM_X11)
   add_subdirectory(x11)
 endif()

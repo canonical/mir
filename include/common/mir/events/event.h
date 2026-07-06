@@ -36,9 +36,6 @@ struct MirEvent
     MirResizeEvent* to_resize();
     MirResizeEvent const* to_resize() const;
 
-    MirPromptSessionEvent* to_prompt_session();
-    MirPromptSessionEvent const* to_prompt_session() const;
-
     MirOrientationEvent* to_orientation();
     MirOrientationEvent const* to_orientation() const;
 
