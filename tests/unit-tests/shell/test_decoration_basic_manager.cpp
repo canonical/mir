@@ -19,12 +19,12 @@
 #include "src/server/shell/decoration/basic_manager.h"
 #include "src/server/shell/decoration/decoration.h"
 
+#include <mir/shell/decoration/decoration_strategy.h>
 #include <mir/test/doubles/stub_observer_registrar.h>
 #include <mir/test/doubles/stub_shell.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
-#include <src/server/shell/decoration/decoration_strategy.h>
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
