@@ -868,11 +868,12 @@ private:
 
     /// Computes the position of the circular drag handle indicator.
     ///
-    /// The handle is placed at the visual bottom-right corner of the magnifier.
+    /// The handle is placed fully outside the visual bottom-right corner of the
+    /// magnifier, with its inner edge flush with the surface edge.
     /// Each axis flips independently when the handle would go outside the screen:
-    ///   - Right edge clip  → flip to bottom-left
-    ///   - Bottom edge clip → flip to top-right
-    ///   - Both             → flip to top-left
+    ///   - Right edge clip  → flip to outside bottom-left
+    ///   - Bottom edge clip → flip to outside top-right
+    ///   - Both             → flip to outside top-left
     /// Returns the drag handle position and whether it had to flip off its
     /// native (bottom-right) corner to stay on-screen.
     std::pair<geom::Point, bool> compute_handle_position(
@@ -882,10 +883,10 @@ private:
     {
         auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
-        // Default: circle centred on the bottom-right corner of the visual magnifier,
-        // so it sits half outside the content area.
-        int hx = vis_x + vis_w - drag_handle_diameter / 2;
-        int hy = vis_y + vis_h - drag_handle_diameter / 2;
+        // Default: fully outside the bottom-right corner of the visual magnifier,
+        // inner edge flush with the surface edge.
+        int hx = vis_x + vis_w;
+        int hy = vis_y + vis_h;
 
         int const screen_right  = screen_bounds.top_left.x.as_int()
             + screen_bounds.size.width.as_int();
@@ -894,17 +895,17 @@ private:
 
         bool did_flip = false;
 
-        // Flip x-axis: centre on left corner instead.
+        // Flip x-axis: move to outside the left corner instead.
         if (hx + drag_handle_diameter > screen_right)
         {
-            hx = vis_x - drag_handle_diameter / 2;
+            hx = vis_x - drag_handle_diameter;
             did_flip = true;
         }
 
-        // Flip y-axis: centre on top corner instead.
+        // Flip y-axis: move to outside the top corner instead.
         if (hy + drag_handle_diameter > screen_bottom)
         {
-            hy = vis_y - drag_handle_diameter / 2;
+            hy = vis_y - drag_handle_diameter;
             did_flip = true;
         }
 
@@ -920,11 +921,12 @@ private:
 
     /// Computes the position of the circular resize handle indicator.
     ///
-    /// The handle is placed at the visual top-left corner of the magnifier.
+    /// The handle is placed fully outside the visual top-left corner of the
+    /// magnifier, with its inner edge flush with the surface edge.
     /// Each axis flips independently when the handle would go outside the screen:
-    ///   - Left edge clip → flip to top-right
-    ///   - Top edge clip  → flip to bottom-left
-    ///   - Both           → flip to bottom-right
+    ///   - Left edge clip → flip to outside top-right
+    ///   - Top edge clip  → flip to outside bottom-left
+    ///   - Both           → flip to outside bottom-right
     std::pair<geom::Point, bool> compute_resize_handle_position(
         geom::Point const& logical_top_left,
         geom::Size const& logical_size,
@@ -932,27 +934,27 @@ private:
     {
         auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
-        // Default: circle centred on the top-left corner of the visual magnifier,
-        // so it sits half outside the content area.
-        int hx = vis_x - drag_handle_diameter / 2;
-        int hy = vis_y - drag_handle_diameter / 2;
+        // Default: fully outside the top-left corner of the visual magnifier,
+        // inner edge flush with the surface edge.
+        int hx = vis_x - drag_handle_diameter;
+        int hy = vis_y - drag_handle_diameter;
 
         int const screen_left = screen_bounds.top_left.x.as_int();
         int const screen_top  = screen_bounds.top_left.y.as_int();
 
         bool did_flip = false;
 
-        // Flip x-axis: centre on right corner instead.
+        // Flip x-axis: move to outside the right corner instead.
         if (hx < screen_left)
         {
-            hx = vis_x + vis_w - drag_handle_diameter / 2;
+            hx = vis_x + vis_w;
             did_flip = true;
         }
 
-        // Flip y-axis: centre on bottom corner instead.
+        // Flip y-axis: move to outside the bottom corner instead.
         if (hy < screen_top)
         {
-            hy = vis_y + vis_h - drag_handle_diameter / 2;
+            hy = vis_y + vis_h;
             did_flip = true;
         }
 
