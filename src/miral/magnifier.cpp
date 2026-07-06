@@ -26,6 +26,7 @@
 #include <mir/server.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration_observer.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
@@ -207,18 +208,10 @@ public:
             server.the_cursor_observer_multiplexer()->register_interest(observer);
             cursor_multiplexer = server.the_cursor_observer_multiplexer();
 
-            // Compute bounding rectangle of all connected displays for handle flip logic.
-            {
-                geom::Rectangles rects;
-                server.the_display()->configuration()->for_each_output(
-                    [&rects](mg::DisplayConfigurationOutput const& output)
-                    {
-                        if (output.used && output.connected)
-                            rects.add(output.extents());
-                    });
-                if (rects.size() > 0)
-                    screen_bounds = rects.bounding_rectangle();
-            }
+            // Keep screen bounds up to date so the handle flip logic responds to
+            // display (re)configuration, e.g. resizing a nested window.
+            display_config_observer = std::make_shared<DisplayConfigObserver>(this);
+            server.the_display_configuration_observer_registrar()->register_interest(display_config_observer);
 
             // Create the drag handle indicator.
             geom::Rectangle const handle_rect{
@@ -244,6 +237,12 @@ public:
             std::lock_guard lock(mutex);
             if (auto const locked = cursor_multiplexer.lock())
                 locked->unregister_interest(*observer);
+
+            if (display_config_observer)
+            {
+                server.the_display_configuration_observer_registrar()->unregister_interest(*display_config_observer);
+                display_config_observer.reset();
+            }
 
             if (auto const locked = drag_handle_surface_stack.lock())
                 locked->remove_surface(drag_handle_indicator);
@@ -497,6 +496,58 @@ private:
         geom::Point drag_start_magnifier_pos{};
     };
 
+    class DisplayConfigObserver : public mg::DisplayConfigurationObserver
+    {
+    public:
+        explicit DisplayConfigObserver(Self* self) : self(self) {}
+
+        void initial_configuration(
+            std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        {
+            update_bounds(config);
+        }
+
+        void configuration_applied(
+            std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        {
+            update_bounds(config);
+        }
+
+        void base_configuration_updated(
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+        void session_configuration_applied(
+            std::shared_ptr<mir::scene::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&) override {}
+        void session_configuration_removed(
+            std::shared_ptr<mir::scene::Session> const&) override {}
+        void configuration_failed(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override {}
+        void catastrophic_configuration_error(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override {}
+        void configuration_updated_for_session(
+            std::shared_ptr<mir::scene::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+
+    private:
+        void update_bounds(std::shared_ptr<mg::DisplayConfiguration const> const& config)
+        {
+            geom::Rectangles rects;
+            config->for_each_output([&rects](mg::DisplayConfigurationOutput const& output)
+            {
+                if (output.used && output.connected)
+                    rects.add(output.extents());
+            });
+
+            std::lock_guard lock(self->mutex);
+            if (rects.size() > 0)
+                self->screen_bounds = rects.bounding_rectangle();
+        }
+
+        Self* self;
+    };
+
     static geom::Point surface_top_left_from_cursor(
         geom::Size const& window_size,
         geom::Point const& cursor_pos)
@@ -552,6 +603,7 @@ private:
     RenderSceneIntoSurface render_scene_into_surface;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
     std::shared_ptr<Observer> observer;
+    std::shared_ptr<DisplayConfigObserver> display_config_observer;
     std::weak_ptr<ms::Surface> surface;
     geom::Rectangle screen_bounds;
     std::shared_ptr<DragHandleIndicator> drag_handle_indicator;
