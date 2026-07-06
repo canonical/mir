@@ -297,7 +297,7 @@ public:
             server.the_surface_stack()->add_surface(
                 drag_handle_indicator, mi::InputReceptionMode::normal);
             drag_handle_indicator->set_cursor_image(server.the_default_cursor_image());
-            drag_handle_surface_stack = server.the_surface_stack();
+            handle_surface_stack = server.the_surface_stack();
 
             resize_handle_indicator = std::make_shared<DragHandleIndicator>(
                 handle_rect,
@@ -310,7 +310,6 @@ public:
             server.the_surface_stack()->add_surface(
                 resize_handle_indicator, mi::InputReceptionMode::normal);
             resize_handle_indicator->set_cursor_image(server.the_default_cursor_image());
-            resize_handle_surface_stack = server.the_surface_stack();
         });
 
         server.add_stop_callback([&]
@@ -325,12 +324,12 @@ public:
                 display_config_observer.reset();
             }
 
-            if (auto const locked = drag_handle_surface_stack.lock())
+            if (auto const locked = handle_surface_stack.lock())
+            {
                 locked->remove_surface(drag_handle_indicator);
-            drag_handle_indicator.reset();
-
-            if (auto const locked = resize_handle_surface_stack.lock())
                 locked->remove_surface(resize_handle_indicator);
+            }
+            drag_handle_indicator.reset();
             resize_handle_indicator.reset();
 
         });
@@ -991,10 +990,9 @@ private:
     std::weak_ptr<ms::Surface> surface;
     geom::Rectangle screen_bounds;
     std::shared_ptr<DragHandleIndicator> drag_handle_indicator;
-    std::weak_ptr<msh::SurfaceStack> drag_handle_surface_stack;
+    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
     std::shared_ptr<IndicatorDragObserver> indicator_drag_observer;
     std::shared_ptr<DragHandleIndicator> resize_handle_indicator;
-    std::weak_ptr<msh::SurfaceStack> resize_handle_surface_stack;
     std::shared_ptr<ResizeDragObserver> resize_drag_observer;
     geom::Point cursor_pos;
     float magnification{default_magnification};
