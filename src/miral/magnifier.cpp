@@ -933,20 +933,44 @@ private:
         int const screen_cy = screen_bounds.top_left.y.as_int()
             + screen_bounds.size.height.as_int() / 2;
 
-        int const offset_x = (resize_pos.x.as_int() < screen_cx)
-            ? drag_handle_diameter : -drag_handle_diameter;
-        int const offset_y = (resize_pos.y.as_int() < screen_cy)
-            ? drag_handle_diameter : -drag_handle_diameter;
+        auto const clamp_on_screen = [this](int x, int y)
+        {
+            return geom::Point{
+                std::clamp(x,
+                           screen_bounds.top_left.x.as_int(),
+                           screen_bounds.top_left.x.as_int()
+                               + screen_bounds.size.width.as_int() - drag_handle_diameter),
+                std::clamp(y,
+                           screen_bounds.top_left.y.as_int(),
+                           screen_bounds.top_left.y.as_int()
+                               + screen_bounds.size.height.as_int() - drag_handle_diameter)};
+        };
 
-        drag_pos = geom::Point{
-            std::clamp(resize_pos.x.as_int() + offset_x,
-                       screen_bounds.top_left.x.as_int(),
-                       screen_bounds.top_left.x.as_int()
-                           + screen_bounds.size.width.as_int() - drag_handle_diameter),
-            std::clamp(resize_pos.y.as_int() + offset_y,
-                       screen_bounds.top_left.y.as_int(),
-                       screen_bounds.top_left.y.as_int()
-                           + screen_bounds.size.height.as_int() - drag_handle_diameter)};
+        auto const overlaps = [](geom::Point const& a, geom::Point const& b)
+        {
+            int const ox = a.x.as_int() - b.x.as_int();
+            int const oy = a.y.as_int() - b.y.as_int();
+            return ox * ox + oy * oy < drag_handle_diameter * drag_handle_diameter;
+        };
+
+        // Prefer pushing the drag handle outward (away from the screen centre,
+        // deeper into the corner margin) so it stays clear of the magnified
+        // content. If the corner leaves no room (outward clamps back into an
+        // overlap) fall back to pushing inward.
+        int const out_x = (resize_pos.x.as_int() < screen_cx) ? -drag_handle_diameter : drag_handle_diameter;
+        int const out_y = (resize_pos.y.as_int() < screen_cy) ? -drag_handle_diameter : drag_handle_diameter;
+
+        auto const outward = clamp_on_screen(
+            resize_pos.x.as_int() + out_x, resize_pos.y.as_int() + out_y);
+
+        if (!overlaps(outward, resize_pos))
+        {
+            drag_pos = outward;
+            return;
+        }
+
+        drag_pos = clamp_on_screen(
+            resize_pos.x.as_int() - out_x, resize_pos.y.as_int() - out_y);
     }
 
     std::pair<geom::Point, geom::Point> compute_both_handle_positions(
