@@ -17,12 +17,10 @@
 #include <mir/signal.h>
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <atomic>
 #include <thread>
 #include <latch>
-
-#include <mir/test/auto_unblock_thread.h>
-
-namespace mt = mir::test;
+#include <vector>
 
 TEST(Signal, waits_until_raised)
 {
@@ -56,12 +54,12 @@ TEST(Signal, racing_raises_release_at_least_one_waiter)
 
     int const thread_count{10};
     std::latch threads_spawned{thread_count + 1};
-    std::vector<mt::AutoJoinThread> racing_releasers;
+    std::vector<std::jthread> racing_releasers;
 
     for(auto i = 0; i < thread_count; ++i)
     {
         racing_releasers.emplace_back(
-            mt::AutoJoinThread{
+            std::jthread{
                 [&]()
                 {
                     threads_spawned.arrive_and_wait();
@@ -88,7 +86,7 @@ TEST(Signal, release_from_wait_resets_signal)
 
     std::chrono::milliseconds const delay{500};
 
-    mt::AutoJoinThread releaser{
+    std::jthread releaser{
         [&]()
         {
             signal.raise();

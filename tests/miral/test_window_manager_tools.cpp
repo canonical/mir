@@ -384,21 +384,21 @@ auto mt::StubStubSession::create_surface(
 {
     auto id = mir::frontend::SurfaceId{next_surface_id.fetch_add(1)};
     auto surface = std::make_shared<StubSurface>(
-        params.name.is_set() ? params.name.value() : "",
-        params.type.is_set() ?
+        params.name.has_value() ? params.name.value() : "",
+        params.type.has_value() ?
         params.type.value()
                              : mir_window_type_normal,
-        params.top_left.is_set() ?
+        params.top_left.has_value() ?
         params.top_left.value()
                                  : mir::geometry::Point{},
         mir::geometry::Size{
-            params.width.is_set() ? params.width.value() : mir::geometry::Width{100},
-            params.height.is_set() ? params.height.value() : mir::geometry::Height{100},
+            params.width.has_value() ? params.width.value() : mir::geometry::Width{100},
+            params.height.has_value() ? params.height.value() : mir::geometry::Height{100},
         },
-        params.depth_layer.is_set() ?
+        params.depth_layer.has_value() ?
         params.depth_layer.value()
                                     : mir_depth_layer_application,
-        params.focus_mode.is_set() ?
+        params.focus_mode.has_value() ?
         params.focus_mode.value()
                                    : mir_focus_mode_focusable);
     surfaces[id] = surface;

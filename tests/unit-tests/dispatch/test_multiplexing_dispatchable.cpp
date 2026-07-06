@@ -20,7 +20,6 @@
 #include <mir/test/signal.h>
 #include <mir/test/fd_utils.h>
 #include <mir/test/test_dispatchable.h>
-#include <mir/test/auto_unblock_thread.h>
 
 #include <atomic>
 #include <thread>
@@ -341,7 +340,7 @@ TEST(MultiplexingDispatchableTest, destruction_is_threadsafe)
 
     dispatchee->trigger();
 
-    mt::AutoJoinThread dispatch_thread{[dispatcher]() { dispatcher->dispatch(md::FdEvent::readable); }};
+    std::jthread dispatch_thread{[dispatcher]() { dispatcher->dispatch(md::FdEvent::readable); }};
 
     EXPECT_TRUE(in_dispatch->wait_for(std::chrono::seconds{1}));
 

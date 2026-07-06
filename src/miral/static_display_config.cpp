@@ -16,12 +16,13 @@
 
 #include "static_display_config.h"
 
+#include <mir/fatal.h>
 #include <mir/output_type_names.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/server.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/display_configuration.h>
 #include <miral/runner.h>
 
@@ -71,7 +72,7 @@ auto as_string(MirOrientation orientation) -> char const*
     return orientation_value[orientation/90];
 }
 
-auto as_orientation(std::string const& orientation) -> mir::optional_value<MirOrientation>
+auto as_orientation(std::string const& orientation) -> std::optional<MirOrientation>
 {
     if (orientation == orientation_value[3])
         return mir_orientation_right;
@@ -576,7 +577,7 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
         conf_output.power_mode = mir_power_mode_on;
         conf_output.orientation = mir_orientation_normal;
 
-        if (conf.position.is_set())
+        if (conf.position.has_value())
         {
             conf_output.top_left = conf.position.value();
         }
@@ -588,7 +589,7 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
         size_t preferred_mode_index{select_mode_index(conf_output.preferred_mode_index, conf_output.modes)};
         conf_output.current_mode_index = preferred_mode_index;
 
-        if (conf.size.is_set())
+        if (conf.size.has_value())
         {
             bool matched_mode = false;
 
@@ -596,7 +597,7 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
             {
                 if (mode->size == conf.size.value())
                 {
-                    if (conf.refresh.is_set())
+                    if (conf.refresh.has_value())
                     {
                         if (std::abs(conf.refresh.value() - mode->vrefresh_hz) < 1.0)
                         {
@@ -615,7 +616,7 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
 
             if (!matched_mode)
             {
-                if (conf.refresh.is_set())
+                if (conf.refresh.has_value())
                 {
                     mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
                         conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
@@ -628,17 +629,17 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
             }
         }
 
-        if (conf.scale.is_set())
+        if (conf.scale.has_value())
         {
             conf_output.scale = conf.scale.value();
         }
 
-        if (conf.orientation.is_set())
+        if (conf.orientation.has_value())
         {
             conf_output.orientation = conf.orientation.value();
         }
 
-        if (conf.group_id.is_set())
+        if (conf.group_id.has_value())
         {
             conf_output.logical_group_id = mg::DisplayConfigurationLogicalGroupId{conf.group_id.value()};
         }

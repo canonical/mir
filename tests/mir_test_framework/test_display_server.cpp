@@ -18,7 +18,7 @@
 #include "src/server/compositor/default_display_buffer_compositor_factory.h"
 #include <miral/test_display_server.h>
 
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/floating_window_manager.h>
 #include <miral/set_window_management_policy.h>
 
@@ -26,6 +26,7 @@
 #include <mir_test_framework/headless_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/null_logger.h>
 
+#include <mir/fatal.h>
 #include <mir/fd.h>
 #include <mir/main_loop.h>
 #include <mir/server.h>
@@ -75,8 +76,8 @@ auto miral::TestDisplayServer::build_window_manager_policy(WindowManagerTools co
 
 void miral::TestDisplayServer::start_server()
 {
-    mir::test::AutoJoinThread t([this]
-         {
+    std::jthread t([this]
+        {
             SetWindowManagementPolicy wm_policy{
                 [this](WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
                 {
@@ -175,7 +176,8 @@ void miral::TestDisplayServer::stop_server()
     if (server_running)
         BOOST_THROW_EXCEPTION(std::logic_error{"Failed to stop server"});
 
-    server_thread.stop();
+    if (server_thread.joinable())
+        server_thread.join();
 }
 
 void miral::TestDisplayServer::invoke_tools(std::function<void(WindowManagerTools& tools)> const& f)

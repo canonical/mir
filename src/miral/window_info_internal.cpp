@@ -76,14 +76,14 @@ miral::WindowInfo::Self::Self(Window window, WindowSpecification const& params) 
     attached_edges(params.attached_edges().value_or(mir_placement_gravity_center)),
     ignore_exclusion_zones{params.ignore_exclusion_zones().value_or(false)}
 {
-    if (params.output_id().is_set())
-        output_id = params.output_id().value();
+    if (params.output_id().has_value())
+        output_id = params.output_id();
 
-    if (params.exclusive_rect().is_set())
-        exclusive_rect = params.exclusive_rect().value();
+    if (auto tmp= params.exclusive_rect())
+        exclusive_rect = tmp.value();
 
-    if (params.userdata().is_set())
-        userdata = params.userdata().value();
+    if (auto tmp = params.userdata())
+        userdata = tmp.value();
 
     std::shared_ptr<mir::scene::Surface> const surface{window};
     surface->set_min_width(params.min_width().value_or(miral::default_min_width));
@@ -188,7 +188,7 @@ void miral::WindowInfo::max_aspect(AspectRatio max_aspect)
     self->max_aspect = clamp(max_aspect);
 }
 
-void miral::WindowInfo::output_id(mir::optional_value<int> output_id)
+void miral::WindowInfo::output_id(std::optional<int> output_id)
 {
     self->output_id = output_id;
 }
@@ -218,7 +218,7 @@ void miral::WindowInfo::attached_edges(MirPlacementGravity edges)
     self->attached_edges = edges;
 }
 
-void miral::WindowInfo::exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect)
+void miral::WindowInfo::exclusive_rect(std::optional<mir::geometry::Rectangle> const& rect)
 {
     self->exclusive_rect = rect;
 }

@@ -40,7 +40,6 @@ TEST(LinearisingExecutor, does_not_execute_concurrently)
     std::atomic<int> counter{0};
     std::atomic<int> which_thread{0};
 
-    // Should be make_shared<mt::Signal[2]>, but as of 22.04 g++/libstdc++ don't implement that bit of C++20
     std::shared_ptr<mt::Signal[2]> done{new mt::Signal[2]};
 
     auto counter_check =

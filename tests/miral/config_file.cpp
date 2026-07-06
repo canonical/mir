@@ -38,28 +38,29 @@ std::filesystem::path const config_file = "test_reloading_config_file.config";
 class PendingLoad
 {
 public:
+    static constexpr auto expected_load_timeout = std::chrono::milliseconds{200};
+    static constexpr auto short_load_timeout = std::chrono::milliseconds{10};
+
     void mark_pending()
     {
         std::lock_guard lock{mutex};
         pending_loads = true;
     }
 
-    enum class FailOnTimeout { yes, no };
-    void wait_for_load(FailOnTimeout fail_on_timeout = FailOnTimeout::no)
+    void wait_for_expected_load()
     {
         std::unique_lock lock{mutex};
 
-        if (!cv.wait_for(lock, std::chrono::milliseconds{10}, [this] { return !pending_loads; }))
-        {
-            switch (fail_on_timeout)
-            {
-            case FailOnTimeout::yes:
-                FAIL() << "wait_for_load() timed out" << std::endl;
-                break;
-            case FailOnTimeout::no:
-                break;
-            }
-        }
+        if (!cv.wait_for(lock, expected_load_timeout, [this] { return !pending_loads; }))
+            FAIL() << "wait_for_expected_load() timed out" << std::endl;
+    }
+
+    void wait_for_unexpected_load()
+    {
+        std::unique_lock lock{mutex};
+
+        if (cv.wait_for(lock, short_load_timeout, [this] { return !pending_loads; }))
+            FAIL() << "wait_for_unexpected_load() observed an unexpected load" << std::endl;
     }
 
     void notify_load(std::function<void()> const& under_lock)
@@ -169,7 +170,7 @@ TEST_F(TestConfigFile, with_reload_on_change_and_a_file_something_is_loaded)
             ConfigFile::Mode::reload_on_change,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_when_a_file_is_written_something_is_loaded)
@@ -186,7 +187,7 @@ TEST_F(TestConfigFile, with_reload_on_change_when_a_file_is_written_something_is
     EXPECT_CALL(*this, load).Times(1);
 
     write_a_file();
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_each_time_a_file_is_rewritten_something_is_loaded)
@@ -208,11 +209,11 @@ TEST_F(TestConfigFile, with_reload_on_change_each_time_a_file_is_rewritten_somet
 
     for (auto i = 0; i != times; ++i)
     {
-        wait_for_load();
+        wait_for_expected_load();
         write_a_file();
     }
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_when_config_home_unset_a_file_in_home_config_is_loaded)
@@ -232,7 +233,7 @@ TEST_F(TestConfigFile, with_reload_on_change_when_config_home_unset_a_file_in_ho
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_loaded)
@@ -252,7 +253,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_loaded
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_reloaded)
@@ -272,12 +273,12 @@ TEST_F(TestConfigFile, with_reload_on_change_a_file_in_xdg_config_home_is_reload
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 
     write_config_in(xdg_conf_dir0);
     write_config_in(xdg_conf_home);
     write_config_in(home_config);
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded)
@@ -295,7 +296,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_loaded)
@@ -318,10 +319,10 @@ TEST_F(TestConfigFile, with_reload_on_change_after_a_config_in_xdg_conf_dir0_is_
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 
     write_config_in(xdg_conf_home);
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded_in_preference_to_dir1_or_2)
@@ -342,7 +343,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir0_is_loaded
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir1_is_loaded_in_preference_to_dir2)
@@ -362,7 +363,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir1_is_loaded
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir2_is_loaded)
@@ -381,7 +382,7 @@ TEST_F(TestConfigFile, with_reload_on_change_a_config_in_xdg_conf_dir2_is_loaded
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_and_no_file_nothing_is_loaded)
@@ -412,7 +413,7 @@ TEST_F(TestConfigFile, with_no_reloading_and_a_file_something_is_loaded)
             ConfigFile::Mode::no_reloading,
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_written_nothing_is_loaded)
@@ -429,7 +430,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_written_nothing_is_loade
     EXPECT_CALL(*this, load).Times(0);
 
     write_a_file();
-    wait_for_load();
+    wait_for_unexpected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_rewritten_nothing_is_reloaded)
@@ -447,9 +448,9 @@ TEST_F(TestConfigFile, with_no_reloading_when_a_file_is_rewritten_nothing_is_rel
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
     write_a_file();
-    wait_for_load();
+    wait_for_unexpected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_when_config_home_unset_a_file_in_home_config_is_loaded)
@@ -469,7 +470,7 @@ TEST_F(TestConfigFile, with_no_reloading_when_config_home_unset_a_file_in_home_c
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_loaded)
@@ -489,7 +490,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_loaded)
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_not_reloaded)
@@ -509,12 +510,12 @@ TEST_F(TestConfigFile, with_no_reloading_a_file_in_xdg_config_home_is_not_reload
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 
     write_config_in(xdg_conf_dir0);
     write_config_in(xdg_conf_home);
     write_config_in(home_config);
-    wait_for_load();
+    wait_for_unexpected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded)
@@ -532,7 +533,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded)
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_after_a_config_in_xdg_conf_dir0_is_loaded_a_new_config_in_xdg_conf_home_is_not_loaded)
@@ -554,10 +555,10 @@ TEST_F(TestConfigFile, with_no_reloading_after_a_config_in_xdg_conf_dir0_is_load
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 
     write_config_in(xdg_conf_home);
-    wait_for_load();
+    wait_for_unexpected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded_in_preference_to_dir1_or_2)
@@ -577,7 +578,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir0_is_loaded_in_
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir1_is_loaded_in_preference_to_dir2)
@@ -596,7 +597,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir1_is_loaded_in_
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir2_is_loaded)
@@ -614,7 +615,7 @@ TEST_F(TestConfigFile, with_no_reloading_a_config_in_xdg_conf_dir2_is_loaded)
             [this](std::istream& in, std::filesystem::path path) { load(in, path); }};
     });
 
-    wait_for_load();
+    wait_for_expected_load();
 }
 
 
@@ -801,7 +802,7 @@ TEST_F(TestOverrideConfigFile, override_loader_with_base_file_only_receives_one_
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u));
 }
 
@@ -813,7 +814,7 @@ TEST_F(TestOverrideConfigFile, override_loader_with_conf_files_receives_base_plu
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(3u));
 }
 
@@ -826,7 +827,7 @@ TEST_F(TestOverrideConfigFile, override_loader_ignores_non_conf_files)
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u));
 }
 
@@ -839,7 +840,7 @@ TEST_F(TestOverrideConfigFile, override_loader_sorts_override_files_lexicographi
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     ASSERT_THAT(last_load_paths.size(), Eq(4u));
     // First path is the base config
     EXPECT_THAT(last_load_paths[0].filename(), Eq(override_config_file));
@@ -861,7 +862,7 @@ TEST_F(TestOverrideConfigFile, override_loader_sorts_override_files_in_version_o
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     ASSERT_THAT(last_load_paths.size(), Eq(4u));
     EXPECT_THAT(
         last_load_paths,
@@ -878,11 +879,11 @@ TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_rewritten)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Eq(1));
 
     rewrite_base_config();
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Eq(2));
 }
 
@@ -893,11 +894,11 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_added)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u));
 
     write_override_file("10-new.conf");
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u));
 }
 
@@ -908,11 +909,11 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_modified)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     auto const count_after_initial = load_call_count;
 
     write_override_file("10-existing.conf", "modified");
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Gt(count_after_initial));
 }
 
@@ -923,12 +924,12 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_created_after_startu
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only
 
     // Now create the override directory with a file
     write_override_file("10-late.conf");
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + override
 }
 
@@ -939,12 +940,12 @@ TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_override_cha
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Eq(1));
 
     // Write more files — should NOT trigger a reload
     write_override_file("20-second.conf");
-    wait_for_load();
+    wait_for_unexpected_load();
     EXPECT_THAT(load_call_count, Eq(1));
 }
 
@@ -954,11 +955,11 @@ TEST_F(TestOverrideConfigFile, no_reloading_mode_does_not_reload_on_base_config_
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Eq(1));
 
     rewrite_base_config();
-    wait_for_load();
+    wait_for_unexpected_load();
     EXPECT_THAT(load_call_count, Eq(1));
 }
 
@@ -970,11 +971,11 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_deleted)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(3u)); // base + 2 overrides
 
     delete_override_file("10-first.conf");
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + 1 remaining override
 }
 
@@ -985,11 +986,11 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_moved_out_of_direct
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + 1 override
 
     move_override_file_out("10-first.conf");
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only
 }
 
@@ -1000,12 +1001,12 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_file_is_renamed_to_non_conf
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + 1 override
 
     // Renaming a .conf file away should trigger a reload without it
     rename_override_file("10-first.conf", "10-first.conf.bak");
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only
 }
 
@@ -1016,11 +1017,11 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_deleted)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + 1 override
 
     delete_override_dir();
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only
 }
 
@@ -1031,12 +1032,12 @@ TEST_F(TestOverrideConfigFile, reloads_when_file_is_renamed_to_conf_in_override_
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only, .tmp is ignored
 
     // Atomically renaming a .tmp to .conf should trigger a reload including it
     rename_override_file("10-first.conf.tmp", "10-first.conf");
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + new override
 }
 
@@ -1056,7 +1057,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_created_after_startup
     EXPECT_THAT(load_call_count, Eq(0));
 
     write_base_config();
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Eq(1));
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base config only
     EXPECT_THAT(last_modified_paths, ElementsAre(base_config_path()));
@@ -1072,7 +1073,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_base_config_is_created_after_startup
     EXPECT_THAT(load_call_count, Eq(0));
 
     write_base_config();
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
     EXPECT_THAT(load_call_count, Eq(1));
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + override
     EXPECT_THAT(last_modified_paths, ElementsAre(base_config_path()));
@@ -1087,7 +1088,7 @@ TEST_F(TestOverrideConfigFile, custom_extension_loads_matching_files)
 
     start_config(ConfigFile::Mode::no_reloading, ".yaml");
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(3u)); // base + 2 .yaml overrides
 }
 
@@ -1099,7 +1100,7 @@ TEST_F(TestOverrideConfigFile, custom_extension_ignores_conf_files)
 
     start_config(ConfigFile::Mode::no_reloading, ".yaml");
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + 1 .yaml only
     EXPECT_THAT(last_fresh_paths.back().filename(), Eq("20-second.yaml"));
 }
@@ -1111,11 +1112,11 @@ TEST_F(TestOverrideConfigFile, custom_extension_reloads_when_matching_file_is_ad
 
     start_config(ConfigFile::Mode::reload_on_change, ".yaml");
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only
 
     write_override_file("10-new.yaml");
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + new .yaml
 }
 
@@ -1126,7 +1127,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_moved_into_place_aft
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only
 
     // Build the override directory at a temporary location outside the watched path
@@ -1140,7 +1141,7 @@ TEST_F(TestOverrideConfigFile, reloads_when_override_dir_is_moved_into_place_aft
     // Atomically move the temp dir into place; this generates IN_MOVED_TO, not IN_CREATE
     mark_pending();
     std::filesystem::rename(temp_dir, override_dir());
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
 
     EXPECT_THAT(last_load_stream_count, Eq(2u)); // base + moved override
     EXPECT_THAT(last_fresh_paths, ElementsAre(override_dir() / "10-moved.conf"));
@@ -1153,14 +1154,14 @@ TEST_F(TestOverrideConfigFile, no_reload_when_empty_dir_is_moved_into_place)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     auto const count_after_initial = load_call_count;
 
     auto const temp_dir = std::filesystem::path{override_test_root} / "empty_override_dir";
     std::filesystem::create_directories(temp_dir);
     mark_pending();
     std::filesystem::rename(temp_dir, override_dir());
-    wait_for_load(FailOnTimeout::no);
+    wait_for_unexpected_load();
 
     EXPECT_THAT(load_call_count, Eq(count_after_initial));
 }
@@ -1176,7 +1177,7 @@ TEST_F(TestOverrideConfigFile, override_loader_ignores_regular_file_at_override_
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(1u)); // base only; file masquerading as dir is ignored
 }
 
@@ -1187,11 +1188,11 @@ TEST_F(TestOverrideConfigFile, custom_extension_does_not_reload_when_conf_file_i
 
     start_config(ConfigFile::Mode::reload_on_change, ".yaml");
 
-    wait_for_load();
+    wait_for_expected_load();
     auto const count_after_initial = load_call_count;
 
     write_override_file("10-ignored.conf");
-    wait_for_load(FailOnTimeout::no);
+    wait_for_unexpected_load();
     EXPECT_THAT(load_call_count, Eq(count_after_initial));
 }
 
@@ -1201,7 +1202,7 @@ TEST_F(TestOverrideConfigFile, override_dir_moved_into_place_with_file_triggers_
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     auto const count_after_initial = load_call_count;
 
     // Build the override directory at a temporary location outside the watched path
@@ -1217,7 +1218,7 @@ TEST_F(TestOverrideConfigFile, override_dir_moved_into_place_with_file_triggers_
     // event that could trigger a spurious reload.
     mark_pending();
     std::filesystem::rename(temp_dir, override_dir());
-    wait_for_load(FailOnTimeout::yes);
+    wait_for_expected_load();
 
     EXPECT_THAT(load_call_count, Eq(count_after_initial + 1));
     EXPECT_THAT(last_fresh_paths, ElementsAre(override_dir() / "10-moved.conf"));
@@ -1253,7 +1254,7 @@ TEST_F(TestOverrideConfigFile, unreadable_override_directory_is_treated_as_empty
     // be treated as having no overrides rather than propagating filesystem_error
     EXPECT_NO_THROW(start_config(ConfigFile::Mode::no_reloading));
 
-    wait_for_load(FailOnTimeout::no);
+    wait_for_expected_load();
     // Only the base config should have been loaded; the unreadable directory contributes nothing
     EXPECT_THAT(last_load_stream_count, Eq(1u));
 }
@@ -1356,7 +1357,7 @@ TEST_F(TestMultiRootConfigFile, initial_load_includes_system_override_when_base_
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(last_load_stream_count, Eq(2u));
     EXPECT_THAT(last_load_paths, ElementsAre(base_config_path(), system_override_dir() / "10-system.conf"));
 }
@@ -1369,7 +1370,7 @@ TEST_F(TestMultiRootConfigFile, initial_load_includes_overrides_from_all_roots)
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(
         last_load_paths,
         ElementsAre(
@@ -1384,7 +1385,7 @@ TEST_F(TestMultiRootConfigFile, reload_includes_same_files_as_initial_load)
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
 
     // Trigger a reload by rewriting the base config
     mark_pending();
@@ -1392,7 +1393,7 @@ TEST_F(TestMultiRootConfigFile, reload_includes_same_files_as_initial_load)
         std::ofstream file{base_config_path()};
         file << "updated base content";
     }
-    wait_for_load();
+    wait_for_expected_load();
 
     EXPECT_THAT(
         last_load_paths,
@@ -1407,7 +1408,7 @@ TEST_F(TestMultiRootConfigFile, initial_load_includes_user_overrides_when_base_c
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(
         last_load_paths,
         ElementsAre(system_base_config_path(), user_override_dir() / "20-user.conf"));
@@ -1421,7 +1422,7 @@ TEST_F(TestMultiRootConfigFile, initial_load_includes_overrides_from_both_roots_
 
     start_config(ConfigFile::Mode::no_reloading);
 
-    wait_for_load();
+    wait_for_expected_load();
     EXPECT_THAT(
         last_load_paths,
         ElementsAre(
@@ -1438,12 +1439,12 @@ TEST_F(TestMultiRootConfigFile, reload_matches_initial_load_when_base_config_is_
 
     start_config(ConfigFile::Mode::reload_on_change);
 
-    wait_for_load();
+    wait_for_expected_load();
     auto const initial_paths = last_load_paths;
 
     // Trigger a reload by rewriting the system base config
     write_system_base_config("updated system base");
-    wait_for_load();
+    wait_for_expected_load();
 
     EXPECT_THAT(last_load_paths, Eq(initial_paths));
 }

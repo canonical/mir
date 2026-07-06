@@ -21,12 +21,12 @@
 #include <miral/runner.h>
 #include <miral/window_manager_tools.h>
 
-#include <mir/test/auto_unblock_thread.h>
 #include <mir_test_framework/temporary_environment_value.h>
 
 #include <condition_variable>
 #include <list>
 #include <mutex>
+#include <thread>
 
 namespace mir
 {
@@ -108,7 +108,7 @@ private:
     mir::Server* server_running{nullptr};
 
     WindowManagerTools tools{nullptr};
-    mir::test::AutoJoinThread server_thread;
+    std::jthread server_thread;
     std::mutex mutex;
     std::condition_variable started;
     std::function<void(mir::Server&)> init_server = [](auto&) {};

@@ -17,7 +17,6 @@
 #include <mir/observer_multiplexer.h>
 
 #include <mir/test/barrier.h>
-#include <mir/test/auto_unblock_thread.h>
 #include <mir/test/doubles/explicit_executor.h>
 
 #include <memory>
@@ -256,7 +255,7 @@ TEST(ObserverMultiplexer, can_remove_observer_on_different_thread_than_it_was_ad
     multiplexer.observation_made(value);
     executor.drain_work();
 
-    mt::AutoJoinThread(
+    std::jthread(
         [&]()
         {
             multiplexer.unregister_interest(*observer);
@@ -434,11 +433,11 @@ TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
 
     mt::Barrier threads_ready(values.size());
     mt::Barrier observations_made(values.size() + 1);
-    std::array<mt::AutoJoinThread, values_seen.size()> threads;
+    std::array<std::jthread, values_seen.size()> threads;
 
     for (auto i = 0u; i < values.size(); ++i)
     {
-        threads[i] = mt::AutoJoinThread(
+        threads[i] = std::jthread(
             [&threads_ready, &observations_made, &multiplexer, value = values[i]]()
             {
                 threads_ready.ready();
@@ -495,11 +494,11 @@ TEST(ObserverMultiplexer, multiple_threads_registering_unregistering_and_observi
 
     auto const num_threads = 10;
     mt::Barrier threads_done(num_threads + 1);
-    std::array<mt::AutoJoinThread, num_threads> threads;
+    std::array<std::jthread, num_threads> threads;
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
-        threads[i] = mt::AutoJoinThread(
+        threads[i] = std::jthread(
             [&threads_done, &multiplexer]()
             {
                 for (auto i = 0; i < 50; ++i)
@@ -545,11 +544,11 @@ TEST(ObserverMultiplexer, multiple_threads_unregistering_same_observer_is_safe)
 
     auto const num_threads = 10;
     mt::Barrier threads_done(num_threads + 1);
-    std::array<mt::AutoJoinThread, num_threads> threads;
+    std::array<std::jthread, num_threads> threads;
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
-        threads[i] = mt::AutoJoinThread(
+        threads[i] = std::jthread(
             [&threads_done, &multiplexer]()
             {
                 multiplexer.observation_made("Hello");
@@ -583,14 +582,14 @@ TEST(ObserverMultiplexer, registering_is_threadsafe)
             .WillByDefault(Invoke([notified = &observer_notified[i]](auto) { *notified = true; }));
     }
     mt::Barrier threads_done(observer_notified.size() + 1);
-    std::array<mt::AutoJoinThread, observer_notified.size()> threads;
+    std::array<std::jthread, observer_notified.size()> threads;
 
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
-        threads[i] = mt::AutoJoinThread(
+        threads[i] = std::jthread(
             [&threads_done, &multiplexer, observer = observers[i]]()
             {
                 multiplexer.register_interest(observer);
@@ -628,7 +627,7 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
     }
 
     mt::Barrier threads_done(observer_notified.size() + 1);
-    std::array<mt::AutoJoinThread, observer_notified.size()> threads;
+    std::array<std::jthread, observer_notified.size()> threads;
 
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
@@ -640,7 +639,7 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
 
     for (auto i = 0u; i < threads.size(); ++i)
     {
-        threads[i] = mt::AutoJoinThread(
+        threads[i] = std::jthread(
             [&threads_done, &multiplexer, observer = observers[i]]()
         {
             multiplexer.unregister_interest(*observer);
@@ -694,7 +693,7 @@ TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thr
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
         .WillOnce(InvokeWithoutArgs([&]()
             {
-                mt::AutoJoinThread([&]()
+                std::jthread([&]()
                     {
                         multiplexer.observation_made(second_observation);
                     });
@@ -721,7 +720,7 @@ TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thr
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
         .WillOnce(InvokeWithoutArgs([&]()
             {
-                mt::AutoJoinThread([&]()
+                std::jthread([&]()
                     {
                         multiplexer.observation_made(second_observation);
                     });
@@ -747,7 +746,7 @@ TEST(ObserverMultiplexer, can_trigger_single_observer_during_single_observer_obs
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
         .WillOnce(InvokeWithoutArgs([&]()
             {
-                mt::AutoJoinThread([&]()
+                std::jthread([&]()
                     {
                         multiplexer.single_observer_observation(*observer, second_observation);
                     });
@@ -776,7 +775,7 @@ TEST(ObserverMultiplexer, can_remove_observer_during_other_observers_observation
     EXPECT_CALL(*observer_a, observation_made(StrEq(first_observation)))
         .WillOnce(InvokeWithoutArgs([&]()
             {
-                mt::AutoJoinThread([&]()
+                std::jthread([&]()
                     {
                         multiplexer.unregister_interest(*observer_b);
                     });

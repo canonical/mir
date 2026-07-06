@@ -87,17 +87,17 @@ void adjust_size_constraints_for_ssd(
 
     auto const horiz_frame_padding = window_size.width - content_size.width;
     auto const vert_frame_padding = window_size.height - content_size.height;
-    if (wm_relevant_mods.width.is_set())
+    if (wm_relevant_mods.width.has_value())
         wm_relevant_mods.width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.height.is_set())
+    if (wm_relevant_mods.height.has_value())
         wm_relevant_mods.height.value() += vert_frame_padding;
-    if (wm_relevant_mods.max_width.is_set() && wm_relevant_mods.max_width.value() < geom::Width{int_max} - horiz_frame_padding)
+    if (wm_relevant_mods.max_width.has_value() && wm_relevant_mods.max_width.value() < geom::Width{int_max} - horiz_frame_padding)
         wm_relevant_mods.max_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.max_height.is_set() && wm_relevant_mods.max_height.value() < geom::Height{int_max} - vert_frame_padding)
+    if (wm_relevant_mods.max_height.has_value() && wm_relevant_mods.max_height.value() < geom::Height{int_max} - vert_frame_padding)
         wm_relevant_mods.max_height.value() += vert_frame_padding;
-    if (wm_relevant_mods.min_width.is_set())
+    if (wm_relevant_mods.min_width.has_value())
         wm_relevant_mods.min_width.value() += horiz_frame_padding;
-    if (wm_relevant_mods.min_height.is_set())
+    if (wm_relevant_mods.min_height.has_value())
         wm_relevant_mods.min_height.value() += vert_frame_padding;
 }
 }
@@ -244,7 +244,7 @@ auto msh::AbstractShell::create_surface(
             std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& placed_params)
         {
-            if (placed_params.server_side_decorated.is_set() && placed_params.server_side_decorated.value())
+            if (placed_params.server_side_decorated.has_value() && placed_params.server_side_decorated.value())
             {
                 *should_decorate = true;
             }
@@ -280,10 +280,10 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
     auto window_size{surface->window_size()};
     auto content_size{surface->content_size()};
 
-    if (wm_relevant_mods.aux_rect.is_set())
+    if (wm_relevant_mods.aux_rect.has_value())
         wm_relevant_mods.aux_rect.value().top_left += surface->content_offset();
 
-    if (modifications.server_side_decorated.is_set())
+    if (modifications.server_side_decorated.has_value())
     {
         if (modifications.server_side_decorated.value())
         {
@@ -324,16 +324,18 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     report->update_surface(*session, *surface, wm_relevant_mods);
 
-    if (wm_relevant_mods.streams.is_set())
+    if (wm_relevant_mods.streams.has_value())
     {
-        session->configure_streams(*surface, wm_relevant_mods.streams.consume());
+        auto streams = std::move(wm_relevant_mods.streams.value());
+        wm_relevant_mods.streams.reset();
+        session->configure_streams(*surface, streams);
     }
     if (!wm_relevant_mods.is_empty())
     {
         window_manager->modify_surface(session, surface, wm_relevant_mods);
     }
 
-    if (modifications.cursor_image.is_set())
+    if (modifications.cursor_image.has_value())
     {
         if (modifications.cursor_image.value() == nullptr)
         {
@@ -345,7 +347,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
         }
     }
 
-    if (modifications.confine_pointer.is_set())
+    if (modifications.confine_pointer.has_value())
     {
         auto const prev_state = surface->confine_pointer_state();
         auto const new_state = modifications.confine_pointer.value();

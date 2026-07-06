@@ -34,6 +34,9 @@ public:
     WlRegion(wl_resource* new_resource);
     ~WlRegion();
 
+    /// Returns a set of rectangles whose union forms the region. These are the
+    /// result of the accumulated add()/subtract() operations rather than the
+    /// exact rectangles passed in.
     std::vector<geometry::Rectangle> rectangle_vector();
 
     static WlRegion* from(wl_resource* resource);

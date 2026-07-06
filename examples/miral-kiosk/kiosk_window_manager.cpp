@@ -134,14 +134,14 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
     WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
 
     if ((specification.type() == mir_window_type_normal || specification.type() == mir_window_type_freestyle) &&
-        (!specification.parent().is_set() || !specification.parent().value().lock()))
+        (!specification.parent().has_value() || !specification.parent().value().lock()))
     {
         specification.state() = mir_window_state_maximized;
-        specification.top_left() = mir::optional_value<Point>{}; // Ignore requested position (if any) when we maximize
-        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
+        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we maximize
+        specification.size() = std::nullopt; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, WindowInfo{});
 
-        if (!request.state().is_set() || request.state().value() != mir_window_state_restored)
+        if (!request.state().has_value() || request.state().value() != mir_window_state_restored)
             specification.state() = request.state();
     }
 
@@ -156,11 +156,11 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
         !window_info.parent())
     {
         specification.state() = mir_window_state_maximized;
-        specification.top_left() = mir::optional_value<Point>{}; // Ignore requested position (if any) when we maximize
-        specification.size() = mir::optional_value<Size>{}; // Ignore requested size (if any) when we maximize
+        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we maximize
+        specification.size() = std::nullopt; // Ignore requested size (if any) when we maximize
         tools.place_and_size_for_state(specification, window_info);
 
-        if (!modifications.state().is_set() || modifications.state().value() != mir_window_state_restored)
+        if (!modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)
             specification.state() = modifications.state();
     }
 

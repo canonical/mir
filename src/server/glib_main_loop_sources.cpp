@@ -49,21 +49,6 @@ private:
 
     GSource* gsource;
 };
-
-#ifndef GLIB_HAS_FIXED_LP_1401488
-gboolean idle_callback(gpointer)
-{
-    return G_SOURCE_REMOVE; // Remove the idle source. Only needed once.
-}
-
-void destroy_idler(gpointer user_data)
-{
-    // idle_callback is never totally guaranteed to be called. However this
-    // function is, so we do the unref here...
-    auto gsource = static_cast<GSource*>(user_data);
-    g_source_unref(gsource);
-}
-#endif
 }
 
 /*****************
@@ -102,34 +87,8 @@ md::GSourceHandle::~GSourceHandle()
 {
     if (gsource)
     {
-#ifdef GLIB_HAS_FIXED_LP_1401488
         g_source_destroy(gsource);
         g_source_unref(gsource);
-#else
-        /*
-         * https://bugs.launchpad.net/mir/+bug/1401488
-         * We would like to g_source_unref(gsource); here but it's unsafe
-         * to do so. The reason being we could be in some arbitrary thread,
-         * and so the main loop might be mid-iteration of the same source
-         * making callbacks. And glib lacks protection to prevent sources
-         * getting fully free()'d mid-callback (TODO: fix glib?). So we defer
-         * the final unref of the source to a point in the loop when it's safe.
-         */
-        if (!g_source_is_destroyed(gsource))
-        {
-            auto main_context = g_source_get_context(gsource);
-            g_source_destroy(gsource);
-            auto idler = g_idle_source_new();
-            g_source_set_callback(idler, idle_callback, gsource, destroy_idler);
-            g_source_attach(idler, main_context);
-            g_source_unref(idler);
-        }
-        else
-        {
-            // The source is already destroyed so it's safe to unref now
-            g_source_unref(gsource);
-        }
-#endif
     }
 }
 

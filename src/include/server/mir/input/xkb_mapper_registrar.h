@@ -22,7 +22,6 @@
 #include <mir/input/keymap.h>
 #include <mir/input/keyboard_leds.h>
 #include <mir/input/xkb_mapper.h>
-#include <mir/optional_value.h>
 #include <mir/events/xkb_modifiers.h>
 #include <mir/observer_multiplexer.h>
 
@@ -75,7 +74,7 @@ private:
     private:
         XKBComposeStatePtr state;
         std::unordered_set<xkb_keysym_t> consumed_keys;
-        mir::optional_value<std::tuple<xkb_keysym_t,xkb_keysym_t>> last_composed_key;
+        std::optional<std::tuple<xkb_keysym_t,xkb_keysym_t>> last_composed_key;
     };
 
     struct XkbMappingState
@@ -129,7 +128,7 @@ private:
     MirXkbModifiers xkb_modifiers_;
     std::optional<MirInputDeviceId> last_device_id;
 
-    mir::optional_value<MirInputEventModifiers> modifier_state;
+    std::optional<MirInputEventModifiers> modifier_state;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<ComposeState>> device_composing;
 };
