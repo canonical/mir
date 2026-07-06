@@ -516,10 +516,13 @@ private:
     };
 
     /// Observes input on the drag handle indicator and moves both surfaces.
-    class IndicatorDragObserver : public ms::NullSurfaceObserver
+    /// Base for observers that turn a pointer/touch drag on a handle surface
+    /// into on_drag_start()/on_drag_move() callbacks. Both callbacks are invoked
+    /// with the magnifier mutex held; grab_abs holds the drag's grab position.
+    class HandleDragObserver : public ms::NullSurfaceObserver
     {
     public:
-        explicit IndicatorDragObserver(Self* self) : self(self) {}
+        explicit HandleDragObserver(Self* self) : self(self) {}
 
         void input_consumed(
             ms::Surface const*,
@@ -541,7 +544,22 @@ private:
             }
         }
 
+    protected:
+        virtual void on_drag_start(int ax, int ay) = 0;
+        virtual void on_drag_move(int ax, int ay) = 0;
+
+        Self* self;
+        bool drag_active{false};
+        geom::Displacement grab_abs{};
+
     private:
+        void begin_drag(int ax, int ay)
+        {
+            drag_active = true;
+            grab_abs = {geom::DeltaX{ax}, geom::DeltaY{ay}};
+            on_drag_start(ax, ay);
+        }
+
         void handle_pointer(MirPointerEvent const* pev)
         {
             auto const action = mir_pointer_event_action(pev);
@@ -553,10 +571,10 @@ private:
             std::lock_guard lock(self->mutex);
             if (action == mir_pointer_action_button_down &&
                 mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                start_drag(ax, ay);
+                begin_drag(ax, ay);
             else if (action == mir_pointer_action_motion && drag_active &&
                      mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                apply_drag(ax, ay);
+                on_drag_move(ax, ay);
             else if (action == mir_pointer_action_button_up)
                 drag_active = false;
         }
@@ -573,22 +591,28 @@ private:
 
             std::lock_guard lock(self->mutex);
             if (action == mir_touch_action_down)
-                start_drag(ax, ay);
+                begin_drag(ax, ay);
             else if (action == mir_touch_action_change && drag_active)
-                apply_drag(ax, ay);
+                on_drag_move(ax, ay);
             else if (action == mir_touch_action_up)
                 drag_active = false;
         }
+    };
 
-        void start_drag(int ax, int ay)
+    /// Moves the magnifier when its drag handle is dragged.
+    class IndicatorDragObserver : public HandleDragObserver
+    {
+    public:
+        using HandleDragObserver::HandleDragObserver;
+
+    protected:
+        void on_drag_start(int, int) override
         {
-            drag_active = true;
-            grab_abs = {geom::DeltaX{ax}, geom::DeltaY{ay}};
             if (auto const surf = self->surface.lock())
                 drag_start_magnifier_pos = surf->top_left();
         }
 
-        void apply_drag(int ax, int ay)
+        void on_drag_move(int ax, int ay) override
         {
             geom::Displacement const delta{
                 geom::DeltaX{ax} - grab_abs.dx,
@@ -611,82 +635,19 @@ private:
             }
         }
 
-        Self* self;
-        bool drag_active{false};
-        geom::Displacement grab_abs{};
         geom::Point drag_start_magnifier_pos{};
     };
 
     /// Observes input on the resize handle indicator and changes the magnifier capture size.
-    class ResizeDragObserver : public ms::NullSurfaceObserver
+    /// Resizes the magnifier capture area when its resize handle is dragged.
+    class ResizeDragObserver : public HandleDragObserver
     {
     public:
-        explicit ResizeDragObserver(Self* self) : self(self) {}
+        using HandleDragObserver::HandleDragObserver;
 
-        void input_consumed(
-            ms::Surface const*,
-            std::shared_ptr<MirEvent const> const& event) override
+    protected:
+        void on_drag_start(int, int) override
         {
-            if (mir_event_get_type(event.get()) != mir_event_type_input)
-                return;
-            auto const* input_ev = mir_event_get_input_event(event.get());
-            switch (mir_input_event_get_type(input_ev))
-            {
-            case mir_input_event_type_pointer:
-                handle_pointer(mir_input_event_get_pointer_event(input_ev));
-                break;
-            case mir_input_event_type_touch:
-                handle_touch(mir_input_event_get_touch_event(input_ev));
-                break;
-            default:
-                break;
-            }
-        }
-
-    private:
-        void handle_pointer(MirPointerEvent const* pev)
-        {
-            auto const action = mir_pointer_event_action(pev);
-            auto const ax = static_cast<int>(
-                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_x)));
-            auto const ay = static_cast<int>(
-                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_y)));
-
-            std::lock_guard lock(self->mutex);
-            if (action == mir_pointer_action_button_down &&
-                mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                start_drag(ax, ay);
-            else if (action == mir_pointer_action_motion && drag_active &&
-                     mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                apply_drag(ax, ay);
-            else if (action == mir_pointer_action_button_up)
-                drag_active = false;
-        }
-
-        void handle_touch(MirTouchEvent const* tev)
-        {
-            if (mir_touch_event_point_count(tev) != 1)
-                return;
-            auto const action = mir_touch_event_action(tev, 0);
-            auto const ax = static_cast<int>(
-                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x)));
-            auto const ay = static_cast<int>(
-                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
-
-            std::lock_guard lock(self->mutex);
-            if (action == mir_touch_action_down)
-                start_drag(ax, ay);
-            else if (action == mir_touch_action_change && drag_active)
-                apply_drag(ax, ay);
-            else if (action == mir_touch_action_up)
-                drag_active = false;
-        }
-
-        void start_drag(int ax, int ay)
-        {
-            drag_active = true;
-            grab_abs = {geom::DeltaX{ax}, geom::DeltaY{ay}};
-
             auto const surf = self->surface.lock();
             if (!surf) return;
             auto const tl   = surf->top_left();
@@ -712,7 +673,7 @@ private:
                     : static_cast<int>(tl.y.as_int() + outer * sz.height.as_int())};
         }
 
-        void apply_drag(int ax, int ay)
+        void on_drag_move(int ax, int ay) override
         {
             float const mag = self->magnification;
 
@@ -755,9 +716,6 @@ private:
                 self->resize_handle_indicator->move_to(rp);
         }
 
-        Self* self;
-        bool drag_active{false};
-        geom::Displacement grab_abs{};
         geom::Point pin_pos{};
         bool pin_left{false};
         bool pin_above{false};
