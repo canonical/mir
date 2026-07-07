@@ -47,6 +47,7 @@
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 #include <linux/input-event-codes.h>
@@ -218,27 +219,25 @@ int main(int argc, char const* argv[])
         {
             if (modifiers & mir_input_event_modifier_shift)
             {
+                auto const magnifier_min_magnification = 1.5f;
+                auto const magnifier_max_magnification = 8.0f;
+                auto const magnifier_magnification_step = 0.5f;
+
                 // Zoom the magnifier in/out on ctrl shift +/-
                 switch (mir_keyboard_event_keysym(key_event))
                 {
                     case XKB_KEY_plus:
-                        magnification += 0.5f;
-                        if (magnification >= 5)
-                        {
-                            magnification = 5;
-                            return true;
-                        }
-
+                        magnification = std::clamp(
+                            magnification + magnifier_magnification_step,
+                            magnifier_min_magnification,
+                            magnifier_max_magnification);
                         magnifier.magnification(magnification);
                         return true;
                     case XKB_KEY_underscore:
-                        magnification -= 0.5f;
-                        if (magnification <= 1)
-                        {
-                            magnification = 1;
-                            return true;
-                        }
-
+                        magnification = std::clamp(
+                            magnification - magnifier_magnification_step,
+                            magnifier_min_magnification,
+                            magnifier_max_magnification);
                         magnifier.magnification(magnification);
                         return true;
                     default:

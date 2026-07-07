@@ -57,12 +57,17 @@ using miral::create_stream_info;
 
 auto const default_capture_width = 150;
 auto const default_capture_height = 150;
+auto const min_magnification = 1.0f;
 auto const default_magnification = 1.5f;
+auto const max_magnification = 8.0f;
 
 /// Diameter in pixels of the circular drag handle shown at the corner of the magnifier.
 auto const drag_handle_diameter = 48;
 
-enum class HandleKind { drag, resize };
+/// Magnification step applied by each zoom button press.
+auto const zoom_step = 0.5f;
+
+enum class HandleKind { drag, resize, zoom_in, zoom_out };
 
 class DragHandleIndicator : public ms::BasicSurface
 {
@@ -94,6 +99,10 @@ public:
             break;
         case HandleKind::resize:
             fill_resize_buffer(*buffer);
+            break;
+        case HandleKind::zoom_in:
+        case HandleKind::zoom_out:
+            fill_zoom_buffer(*buffer, kind == HandleKind::zoom_in);
             break;
         }
         auto const sz = window_size();
@@ -263,6 +272,36 @@ private:
         painter.draw_vertical_line(corner_x, corner_y, corner_y + arm_len, thickness, 210, 230);
     }
 
+    static void fill_zoom_buffer(mg::Buffer& buffer, bool zoom_in)
+    {
+        BufferPainter painter{buffer};
+        painter.clear();
+        painter.fill_circle(40, 200);
+
+        // Draw + (zoom in) or – (zoom out) symbol.
+        int const w = painter.buffer_width();
+        int const h = painter.buffer_height();
+        int const bar_thickness = std::max(2, w / 12);
+        int const bar_len       = w * 5 / 8;
+
+        painter.draw_horizontal_line(
+            (w - bar_len) / 2,
+            (w + bar_len) / 2 - 1,
+            (h - bar_thickness) / 2,
+            bar_thickness,
+            210,
+            230);
+
+        if (zoom_in)
+            painter.draw_vertical_line(
+                (w - bar_thickness) / 2,
+                (h - bar_len) / 2,
+                (h + bar_len) / 2 - 1,
+                bar_thickness,
+                210,
+                230);
+    }
+
     SoftwareBufferPool mutable pool;
 };
 }
@@ -328,6 +367,8 @@ public:
 
             drag_handle_indicator   = create_handle_indicator(server, HandleKind::drag, handle_rect);
             resize_handle_indicator = create_handle_indicator(server, HandleKind::resize, handle_rect);
+            zoom_in_indicator       = create_handle_indicator(server, HandleKind::zoom_in, handle_rect);
+            zoom_out_indicator      = create_handle_indicator(server, HandleKind::zoom_out, handle_rect);
             handle_surface_stack    = server.the_surface_stack();
 
             if (decoupled)
@@ -338,16 +379,16 @@ public:
                 resize_drag_observer = std::make_shared<ResizeDragObserver>(this);
                 resize_handle_indicator->register_interest(resize_drag_observer);
 
+                zoom_in_observer = std::make_shared<ZoomButtonObserver>(this, +zoom_step);
+                zoom_in_indicator->register_interest(zoom_in_observer);
+
+                zoom_out_observer = std::make_shared<ZoomButtonObserver>(this, -zoom_step);
+                zoom_out_indicator->register_interest(zoom_out_observer);
+
                 if (auto const surf = surface.lock(); surf && default_enabled)
                 {
-                    auto const [dp, rp] = compute_both_handle_positions(
-                        surf->top_left(), surf->window_size(), magnification);
-
-                    drag_handle_indicator->move_to(dp);
-                    drag_handle_indicator->show();
-
-                    resize_handle_indicator->move_to(rp);
-                    resize_handle_indicator->show();
+                    reposition_all_handles_locked(surf->top_left(), surf->window_size(), magnification);
+                    show_all_handles_locked();
                 }
             }
         });
@@ -371,14 +412,30 @@ public:
                 resize_drag_observer.reset();
             }
 
+            if (zoom_in_observer)
+            {
+                zoom_in_indicator->unregister_interest(*zoom_in_observer);
+                zoom_in_observer.reset();
+            }
+
+            if (zoom_out_observer)
+            {
+                zoom_out_indicator->unregister_interest(*zoom_out_observer);
+                zoom_out_observer.reset();
+            }
+
             if (auto const locked = handle_surface_stack.lock())
             {
                 locked->remove_surface(drag_handle_indicator);
                 locked->remove_surface(resize_handle_indicator);
+                locked->remove_surface(zoom_in_indicator);
+                locked->remove_surface(zoom_out_indicator);
             }
 
             drag_handle_indicator.reset();
             resize_handle_indicator.reset();
+            zoom_in_indicator.reset();
+            zoom_out_indicator.reset();
         });
     }
 
@@ -398,46 +455,22 @@ public:
                 auto const top_left = surface_top_left_from_cursor(surf->window_size(), cursor_pos);
                 surf->move_to(top_left);
                 render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
-                auto [dp, rp] = compute_both_handle_positions(top_left, surf->window_size(), magnification);
-                if (drag_handle_indicator)
-                {
-                    drag_handle_indicator->move_to(dp);
-                    drag_handle_indicator->show();
-                }
-                if (resize_handle_indicator)
-                {
-                    resize_handle_indicator->move_to(rp);
-                    resize_handle_indicator->show();
-                }
+                reposition_all_handles_locked(top_left, surf->window_size(), magnification);
+                show_all_handles_locked();
             }
             surf->show();
         }
         else
         {
             surf->hide();
-            if (drag_handle_indicator)
-                drag_handle_indicator->hide();
-            if (resize_handle_indicator)
-                resize_handle_indicator->hide();
+            hide_all_handles_locked();
         }
     }
 
     void set_magnification(float new_magnification)
     {
         std::lock_guard lock(mutex);
-        magnification = new_magnification;
-        if (auto const surf = surface.lock())
-        {
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
-            if (decoupled && (drag_handle_indicator || resize_handle_indicator))
-            {
-                auto [dp, rp] = compute_both_handle_positions(surf->top_left(), surf->window_size(), magnification);
-                if (drag_handle_indicator)
-                    drag_handle_indicator->move_to(dp);
-                if (resize_handle_indicator)
-                    resize_handle_indicator->move_to(rp);
-            }
-        }
+        set_magnification_locked(new_magnification);
     }
 
     void set_capture_size(geom::Size const& size)
@@ -445,14 +478,7 @@ public:
         std::lock_guard lock(mutex);
         auto const capture_position = surface_top_left_from_cursor(size, cursor_pos);
         render_scene_into_surface.capture_area({ capture_position, size });
-        if (decoupled &&  (drag_handle_indicator || resize_handle_indicator))
-        {
-            auto [dp, rp] = compute_both_handle_positions(capture_position, size, magnification);
-            if (drag_handle_indicator)
-                drag_handle_indicator->move_to(dp);
-            if (resize_handle_indicator)
-                resize_handle_indicator->move_to(rp);
-        }
+        reposition_all_handles_locked(capture_position, size, magnification);
     }
 
     geom::Size current_size() const
@@ -482,20 +508,20 @@ public:
                     resize_drag_observer = std::make_shared<ResizeDragObserver>(this);
                     resize_handle_indicator->register_interest(resize_drag_observer);
                 }
-                if (default_enabled && (drag_handle_indicator || resize_handle_indicator))
+                if (zoom_in_indicator)
                 {
-                    auto [dp, rp] = compute_both_handle_positions(
-                        surf->top_left(), surf->window_size(), magnification);
-                    if (drag_handle_indicator)
-                    {
-                        drag_handle_indicator->move_to(dp);
-                        drag_handle_indicator->show();
-                    }
-                    if (resize_handle_indicator)
-                    {
-                        resize_handle_indicator->move_to(rp);
-                        resize_handle_indicator->show();
-                    }
+                    zoom_in_observer = std::make_shared<ZoomButtonObserver>(this, +zoom_step);
+                    zoom_in_indicator->register_interest(zoom_in_observer);
+                }
+                if (zoom_out_indicator)
+                {
+                    zoom_out_observer = std::make_shared<ZoomButtonObserver>(this, -zoom_step);
+                    zoom_out_indicator->register_interest(zoom_out_observer);
+                }
+                if (default_enabled)
+                {
+                    reposition_all_handles_locked(surf->top_left(), surf->window_size(), magnification);
+                    show_all_handles_locked();
                 }
             }
         }
@@ -518,6 +544,24 @@ public:
                     resize_drag_observer.reset();
                 }
                 resize_handle_indicator->hide();
+            }
+            if (zoom_in_indicator)
+            {
+                if (zoom_in_observer)
+                {
+                    zoom_in_indicator->unregister_interest(*zoom_in_observer);
+                    zoom_in_observer.reset();
+                }
+                zoom_in_indicator->hide();
+            }
+            if (zoom_out_indicator)
+            {
+                if (zoom_out_observer)
+                {
+                    zoom_out_indicator->unregister_interest(*zoom_out_observer);
+                    zoom_out_observer.reset();
+                }
+                zoom_out_indicator->hide();
             }
 
             if (auto const surf = surface.lock(); surf && default_enabled)
@@ -674,12 +718,7 @@ private:
                 surf->move_to(new_pos);
                 self->render_scene_into_surface.capture_area(
                     geom::Rectangle{new_pos, surf->window_size()});
-                auto [dp, rp] = self->compute_both_handle_positions(
-                    new_pos, surf->window_size(), self->magnification);
-                if (self->drag_handle_indicator)
-                    self->drag_handle_indicator->move_to(dp);
-                if (self->resize_handle_indicator)
-                    self->resize_handle_indicator->move_to(rp);
+                self->reposition_all_handles_locked(new_pos, surf->window_size(), self->magnification);
             }
         }
 
@@ -756,17 +795,66 @@ private:
 
             surf->move_to(new_logical_tl);
             self->render_scene_into_surface.capture_area({new_logical_tl, new_logical_size});
-
-            auto const [dp, rp] = self->compute_both_handle_positions(new_logical_tl, new_logical_size, mag);
-            if (self->drag_handle_indicator)
-                self->drag_handle_indicator->move_to(dp);
-            if (self->resize_handle_indicator)
-                self->resize_handle_indicator->move_to(rp);
+            self->reposition_all_handles_locked(new_logical_tl, new_logical_size, mag);
         }
 
         geom::Point pin_pos{};
         bool pin_left{false};
         bool pin_above{false};
+    };
+
+    /// Adjusts the magnification level when a zoom button is tapped or touched.
+    class ZoomButtonObserver : public ms::NullSurfaceObserver
+    {
+    public:
+        ZoomButtonObserver(Self* self, float delta) : self{self}, delta{delta} {}
+
+        void input_consumed(
+            ms::Surface const*,
+            std::shared_ptr<MirEvent const> const& event) override
+        {
+            if (mir_event_get_type(event.get()) != mir_event_type_input)
+                return;
+            auto const* input_ev = mir_event_get_input_event(event.get());
+            switch (mir_input_event_get_type(input_ev))
+            {
+            case mir_input_event_type_pointer:
+                handle_pointer(mir_input_event_get_pointer_event(input_ev));
+                break;
+            case mir_input_event_type_touch:
+                handle_touch(mir_input_event_get_touch_event(input_ev));
+                break;
+            default:
+                break;
+            }
+        }
+
+    private:
+        void handle_pointer(MirPointerEvent const* pev)
+        {
+            auto const action = mir_pointer_event_action(pev);
+
+            std::lock_guard lock(self->mutex);
+            if (action == mir_pointer_action_button_down &&
+                mir_pointer_event_button_state(pev, mir_pointer_button_primary))
+                self->set_magnification_locked(
+                    std::clamp(self->magnification + delta, min_magnification + zoom_step, max_magnification));
+        }
+
+        void handle_touch(MirTouchEvent const* tev)
+        {
+            if (mir_touch_event_point_count(tev) != 1)
+                return;
+            auto const action = mir_touch_event_action(tev, 0);
+
+            std::lock_guard lock(self->mutex);
+            if (action == mir_touch_action_down)
+                self->set_magnification_locked(
+                    std::clamp(self->magnification + delta, min_magnification + zoom_step, max_magnification));
+        }
+
+        Self* self;
+        float delta;
     };
 
     static geom::Point surface_top_left_from_cursor(
@@ -854,6 +942,73 @@ private:
         return {hx < vis_cx, hy < vis_cy};
     }
 
+    /// Computes positions for the zoom-in and zoom-out button indicators.
+    ///
+    /// Returns {zoom_in_pos, zoom_out_pos}.
+    std::pair<geom::Point, geom::Point> compute_zoom_button_positions(
+        geom::Point const& logical_top_left,
+        geom::Size const& logical_size,
+        float mag) const
+    {
+        auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
+
+        int const vertical_padding = 8;
+        int const stack_width = drag_handle_diameter;
+        int const stack_height = 2 * drag_handle_diameter + vertical_padding;
+
+        int const x = vis_x + vis_w - stack_width;
+        int const y = vis_y + vis_h / 2 - stack_height / 2;
+
+        return {geom::Point{x, y}, geom::Point{x, y + drag_handle_diameter + vertical_padding}};
+    }
+
+    /// Repositions all handle and button indicators for the given capture geometry.
+    /// No-op when not in decoupled mode.  Must be called with `mutex` held.
+    void reposition_all_handles_locked(
+        geom::Point const& tl,
+        geom::Size const& sz,
+        float mag)
+    {
+        if (!decoupled)
+            return;
+
+        auto const [dp, rp] = compute_both_handle_positions(tl, sz, mag);
+        if (drag_handle_indicator)   drag_handle_indicator->move_to(dp);
+        if (resize_handle_indicator) resize_handle_indicator->move_to(rp);
+
+        auto const [zp, zm] = compute_zoom_button_positions(tl, sz, mag);
+        if (zoom_in_indicator)  zoom_in_indicator->move_to(zp);
+        if (zoom_out_indicator) zoom_out_indicator->move_to(zm);
+    }
+
+    /// Updates the magnification without acquiring the mutex (caller must hold it).
+    void set_magnification_locked(float new_magnification)
+    {
+        magnification = new_magnification;
+        if (auto const surf = surface.lock())
+        {
+            surf->set_transformation(
+                glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+            reposition_all_handles_locked(surf->top_left(), surf->window_size(), magnification);
+        }
+    }
+
+    void show_all_handles_locked()
+    {
+        if (drag_handle_indicator)   drag_handle_indicator->show();
+        if (resize_handle_indicator) resize_handle_indicator->show();
+        if (zoom_in_indicator)  zoom_in_indicator->show();
+        if (zoom_out_indicator) zoom_out_indicator->show();
+    }
+
+    void hide_all_handles_locked()
+    {
+        if (drag_handle_indicator)   drag_handle_indicator->hide();
+        if (resize_handle_indicator) resize_handle_indicator->hide();
+        if (zoom_in_indicator)  zoom_in_indicator->hide();
+        if (zoom_out_indicator) zoom_out_indicator->hide();
+    }
+
     std::mutex mutex;
     RenderSceneIntoSurface render_scene_into_surface;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
@@ -864,6 +1019,10 @@ private:
     std::shared_ptr<DragHandleObserver> drag_handle_observer;
     std::shared_ptr<DragHandleIndicator> resize_handle_indicator;
     std::shared_ptr<ResizeDragObserver> resize_drag_observer;
+    std::shared_ptr<DragHandleIndicator> zoom_in_indicator;
+    std::shared_ptr<DragHandleIndicator> zoom_out_indicator;
+    std::shared_ptr<ZoomButtonObserver> zoom_in_observer;
+    std::shared_ptr<ZoomButtonObserver> zoom_out_observer;
     geom::Point cursor_pos;
     float magnification{default_magnification};
     bool default_enabled{false};
@@ -892,16 +1051,8 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         {"magnifier", "magnification"},
         "The magnification scale ",
         default_magnification,
-        [this](live_config::Key const& key, std::optional<float> val)
+        [this](live_config::Key const&, std::optional<float> val)
         {
-            if (val.has_value() && *val <= 1.f)
-            {
-                mir::log_warning(
-                    "Config key '%s' should be greater than or equal to 1",
-                    key.to_string().c_str());
-                return;
-            }
-
             magnification(val.value_or(default_magnification));
         });
     config_store.add_int_attribute(
@@ -956,14 +1107,18 @@ miral::Magnifier& miral::Magnifier::enable(bool enabled)
 
 miral::Magnifier& miral::Magnifier::magnification(float magnification)
 {
-    if (magnification <= 1.f)
+    auto const clamped_magnification = std::clamp(magnification, min_magnification, max_magnification);
+    if (magnification != clamped_magnification)
     {
         mir::log_warning(
-            "Magnification should be greater than or equal to 1");
+            "Magnification should be between %.2f and %.2f",
+            min_magnification,
+            max_magnification);
+
         return *this;
     }
 
-    self->set_magnification(magnification);
+    self->set_magnification(clamped_magnification);
     return *this;
 }
 
