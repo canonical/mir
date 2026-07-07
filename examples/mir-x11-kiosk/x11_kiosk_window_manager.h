@@ -40,9 +40,6 @@ public:
     void handle_window_ready(miral::WindowInfo& window_info) override;
     void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event,
                                MirResizeEdge edge) override;
-
-    auto confirm_placement_on_display(const miral::WindowInfo& window_info, MirWindowState new_state,
-        Rectangle const& new_placement) -> Rectangle override;
 };
 
 #endif /* MIRAL_X11_KIOSK_WINDOW_MANAGER_H */

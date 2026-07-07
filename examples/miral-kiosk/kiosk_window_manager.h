@@ -44,9 +44,6 @@ public:
     void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event,
         MirResizeEdge edge) override;
 
-    Rectangle confirm_placement_on_display(const miral::WindowInfo& window_info, MirWindowState new_state,
-        Rectangle const& new_placement) override;
-
 private:
     static const int modifier_mask =
         mir_input_event_modifier_alt |

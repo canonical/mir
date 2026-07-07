@@ -135,13 +135,6 @@ void X11KioskWindowManagerPolicy::handle_request_resize(WindowInfo& /*window_inf
 {
 }
 
-Rectangle
-X11KioskWindowManagerPolicy::confirm_placement_on_display(WindowInfo const& /*window_info*/, MirWindowState /*new_state*/,
-    Rectangle const& new_placement)
-{
-    return new_placement;
-}
-
 void X11KioskWindowManagerPolicy::handle_window_ready(miral::WindowInfo& window_info)
 {
     if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
