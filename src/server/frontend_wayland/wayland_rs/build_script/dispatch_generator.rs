@@ -16,7 +16,7 @@
 
 use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::{
-    dash_to_snake_ident, format_has_arg_ident, format_wayland_interface_to_cpp_class,
+    dash_to_snake, dash_to_snake_ident, format_has_arg_ident, format_wayland_interface_to_cpp_class,
     format_wayland_interface_to_rust_extension_struct, generate_namespace, snake_to_pascal,
 };
 use crate::protocol_parser::{
@@ -30,6 +30,8 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
     let generated_dispatch_implementations = protocols
         .iter()
         .map(|protocol| generate_dispatch_implementations(protocol));
+
+    let server_side_factories = generate_server_side_factories(protocols);
 
     quote! {
         #[allow(dead_code, unused_imports)]
@@ -79,6 +81,132 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
             }
 
             #(#generated_dispatch_implementations)*
+
+            #server_side_factories
+        }
+    }
+}
+
+/// Generate server-side object-creation helpers.
+///
+/// Most Wayland objects are created in response to a client request that carries
+/// a `new_id` argument. A handful of objects, however, are created by the
+/// *server* and handed to the client through an event whose argument is a
+/// `new_id` (for example `zwp_linux_buffer_params_v1.created`, which returns a
+/// server-allocated `wl_buffer`). There is no client-supplied `new_id` and no
+/// `DataInit` available in that flow, so the resource must be allocated
+/// explicitly.
+///
+/// For every interface that appears as the `new_id` of an *event* we generate:
+/// * `create_<interface>` — allocates the resource on behalf of the client,
+///   registers it and wraps it in its middleware `Box` so C++ can pass it to the
+///   corresponding `send_<event>_event`.
+/// * `set_<interface>_inner` — stores the fully constructed C++ object into the
+///   resource's wrapper so subsequent requests route to it (and its lifetime is
+///   tied to the resource), mirroring the request-driven `new_id` path.
+fn generate_server_side_factories(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+    let mut seen: Vec<String> = Vec::new();
+    let mut factories: Vec<TokenStream> = Vec::new();
+
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                let InterfaceItem::Event(event) = item else {
+                    continue;
+                };
+                for arg in &event.args {
+                    if arg.type_ != WaylandArgType::NewId {
+                        continue;
+                    }
+                    let Some(child_name) = arg.interface.as_ref() else {
+                        continue;
+                    };
+                    if child_name == "wl_display" || child_name == "wl_registry" {
+                        continue;
+                    }
+                    if seen.iter().any(|s| s == child_name) {
+                        continue;
+                    }
+                    seen.push(child_name.clone());
+                    factories.push(generate_server_side_factory(protocols, child_name));
+                }
+            }
+        }
+    }
+
+    quote! {
+        #(#factories)*
+    }
+}
+
+/// Resolve the fully-qualified Rust path of the resource type for `interface_name`.
+fn resolve_resource_path(
+    protocols: &Vec<WaylandProtocol>,
+    interface_name: &str,
+) -> TokenStream {
+    let namespace = protocols
+        .iter()
+        .find(|protocol| {
+            protocol
+                .interfaces
+                .iter()
+                .any(|interface| interface.name == interface_name)
+        })
+        .map(generate_namespace)
+        .unwrap_or_else(|| quote! { wayland_server::protocol });
+
+    let interface_module = dash_to_snake_ident(interface_name);
+    let interface_struct = format_ident!("{}", snake_to_pascal(interface_name));
+    quote! { #namespace::#interface_module::#interface_struct }
+}
+
+/// Generate the `create_<interface>` / `set_<interface>_inner` helper pair for a
+/// single server-created interface.
+fn generate_server_side_factory(
+    protocols: &Vec<WaylandProtocol>,
+    interface_name: &str,
+) -> TokenStream {
+    let create_fn = format_ident!("allocate_{}", dash_to_snake(interface_name));
+    let set_inner_fn = format_ident!("set_{}_inner", dash_to_snake(interface_name));
+    let wrapper_struct = format_ident!("{}Wrapper", snake_to_pascal(interface_name));
+    let middleware_struct = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(interface_name)
+    );
+    let cpp_struct = format_ident!("{}", format_wayland_interface_to_cpp_class(interface_name));
+    let resource_path = resolve_resource_path(protocols, interface_name);
+
+    quote! {
+        /// Allocate a server-created resource of this interface for `client`.
+        ///
+        /// The resource is registered and wrapped in its middleware `Box` so that
+        /// C++ can hand it to the appropriate `send_*_event`. The wrapper is left
+        /// without a C++ object until the matching `set_*_inner` is called.
+        pub fn #create_fn(
+            client: &WaylandClient,
+            version: u32,
+        ) -> Result<Box<crate::middleware::#middleware_struct>, Box<dyn std::error::Error>> {
+            let wrapper = Arc::new(Mutex::new(#wrapper_struct { inner: None }));
+            let instance = client
+                .inner_client()
+                .create_resource::<#resource_path, Arc<Mutex<#wrapper_struct>>, ServerState>(
+                    client.display_handle(),
+                    version,
+                    wrapper.clone(),
+                )?;
+            register_resource(&instance);
+            Ok(Box::new(crate::middleware::#middleware_struct { wrapped: instance }))
+        }
+
+        /// Store the fully-constructed C++ object into the resource's wrapper so
+        /// subsequent requests route to it and its lifetime is tied to the resource.
+        pub fn #set_inner_fn(
+            instance: &crate::middleware::#middleware_struct,
+            object: cxx::SharedPtr<ffi::#cpp_struct>,
+        ) {
+            if let Some(data) = instance.wrapped.data::<Arc<Mutex<#wrapper_struct>>>() {
+                data.lock().unwrap().inner = Some(object);
+            }
         }
     }
 }

@@ -19,8 +19,8 @@ use crate::cpp_builder::{
     CppNamespace, CppType,
 };
 use crate::helpers::{
-    format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
-    snake_to_pascal,
+    dash_to_snake, format_wayland_interface_to_cpp_class,
+    format_wayland_interface_to_rust_extension_struct, snake_to_pascal,
 };
 use crate::protocol_parser::{
     WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -54,9 +54,15 @@ pub fn generate_cpp_protocol_builders(
     let fd_ready_callback_builder = create_fd_ready_callback();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
+    // Interfaces that are created server-side and handed back to the client via an event
+    // carrying a `new_id` (e.g. `wl_buffer` via `zwp_linux_buffer_params_v1.created`). For
+    // each such child interface we emit a `create_<interface>` convenience wrapper in the
+    // protocol that *owns* the interface.
+    let event_created_interfaces = collect_event_created_interfaces(protocols);
+
     let mut builders: Vec<CppBuilder> = protocols
         .iter()
-        .map(|protocol| create_cpp_builder(protocol))
+        .map(|protocol| create_cpp_builder(protocol, &event_created_interfaces))
         .collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
@@ -243,7 +249,10 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder
 }
 
-fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
+fn create_cpp_builder(
+    protocol: &WaylandProtocol,
+    event_created_interfaces: &[String],
+) -> CppBuilder {
     let guard = format!("MIR_WAYLANDRS_{}", protocol.name.to_uppercase());
     let mut builder = CppBuilder::new(guard, protocol.name.as_str());
     let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
@@ -261,6 +270,21 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         let class_name = format_wayland_interface_to_cpp_class(interface);
         namespace.add_forward_declaration_class(&class_name);
     }
+
+    // For every interface owned by this protocol that is created server-side and delivered
+    // to the client via an event `new_id`, emit a `create_<interface>` convenience wrapper.
+    // It drives the split allocate/attach FFI in one call: allocate the resource, let the
+    // caller build their C++ subclass from the resulting box, attach it to the resource's
+    // wrapper, and return it — ready to be passed to the parent's `send_<event>_event`.
+    let mut needs_functional = false;
+    for interface in &protocol.interfaces {
+        if !event_created_interfaces.iter().any(|n| n == &interface.name) {
+            continue;
+        }
+        add_server_created_wrapper(&mut namespace, &interface.name);
+        needs_functional = true;
+    }
+
     builder.add_namespace(namespace);
     // Use ffi_fwd.h (generated alongside the protocol headers) instead of the
     // CXX-generated ffi.rs.h to avoid a circular include dependency:
@@ -273,10 +297,80 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     builder.add_header_include("<string>");
     builder.add_header_include("<optional>");
     builder.add_header_include("<rust/cxx.h>");
+    if needs_functional {
+        builder.add_header_include("<functional>");
+    }
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
 
     builder
+}
+
+/// Collect the names of interfaces that are created server-side and returned to the client
+/// through an event carrying a `new_id` argument (e.g. `wl_buffer`). `wl_display` and
+/// `wl_registry` are excluded as they are never created this way.
+fn collect_event_created_interfaces(protocols: &Vec<WaylandProtocol>) -> Vec<String> {
+    let mut seen: Vec<String> = Vec::new();
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                let crate::protocol_parser::InterfaceItem::Event(event) = item else {
+                    continue;
+                };
+                for arg in &event.args {
+                    if arg.type_ != WaylandArgType::NewId {
+                        continue;
+                    }
+                    let Some(child_name) = arg.interface.as_ref() else {
+                        continue;
+                    };
+                    if child_name == "wl_display" || child_name == "wl_registry" {
+                        continue;
+                    }
+                    if !seen.iter().any(|s| s == child_name) {
+                        seen.push(child_name.clone());
+                    }
+                }
+            }
+        }
+    }
+    seen
+}
+
+/// Emit the `create_<interface>` server-side wrapper free function into `namespace`.
+///
+/// The generated function mirrors the Rust-driven `create_immed`/`create_buffer` path but
+/// inverted for the C++-driven case: it allocates the resource (`allocate_<interface>`),
+/// invokes the caller-provided `builder` to construct their C++ subclass from the box and the
+/// freshly-assigned protocol object id, attaches that subclass to the resource's wrapper
+/// (`set_<interface>_inner`) so subsequent requests route to it, and returns it.
+fn add_server_created_wrapper(namespace: &mut CppNamespace, interface_name: &str) {
+    let class_name = format_wayland_interface_to_cpp_class(interface_name);
+    let middleware = snake_to_pascal(&format_wayland_interface_to_rust_extension_struct(
+        interface_name,
+    ));
+    let snake = dash_to_snake(interface_name);
+    let allocate_fn = format!("allocate_{}", snake);
+    let set_inner_fn = format!("set_{}_inner", snake);
+    let fn_name = format!("create_{}", snake);
+
+    let signature = format!(
+        "auto {fn_name}(\n\
+         \x20   WaylandClient const& client,\n\
+         \x20   uint32_t version,\n\
+         \x20   std::function<std::shared_ptr<{class_name}>(::rust::Box<{middleware}>, uint32_t)> const& builder)\n\
+         \x20   -> std::shared_ptr<{class_name}>"
+    );
+
+    let body = format!(
+        "auto instance = {allocate_fn}(client, version);\n\
+         \x20   uint32_t const object_id = instance->object_id();\n\
+         \x20   auto result = builder(std::move(instance), object_id);\n\
+         \x20   {set_inner_fn}(*result->get_box(), result);\n\
+         \x20   return result;"
+    );
+
+    namespace.add_free_function(signature, body);
 }
 
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
