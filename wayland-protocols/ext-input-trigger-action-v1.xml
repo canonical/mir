@@ -43,8 +43,8 @@
     </enum>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy input trigger activation manager object">
-        This informs the compositor that the input trigger activation manager
+      <description summary="destroy input trigger action manager object">
+        This informs the compositor that the input trigger action manager
         object will no longer be used. Existing objects created through this
         interface remain valid.
       </description>
@@ -123,8 +123,8 @@
     </event>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the input trigger activation">
-        This informs the compositor that the input trigger activation will no
+      <description summary="destroy the input trigger action">
+        This informs the compositor that the input trigger action will no
         longer be used.
       </description>
     </request>
