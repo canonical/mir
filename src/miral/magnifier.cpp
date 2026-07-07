@@ -797,8 +797,7 @@ private:
             std::lock_guard lock(self->mutex);
             if (action == mir_pointer_action_button_down &&
                 mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                self->set_magnification_locked(
-                    std::clamp(self->magnification + delta, min_magnification + zoom_step, max_magnification));
+                apply_zoom_locked();
         }
 
         void handle_touch(MirTouchEvent const* tev)
@@ -809,8 +808,14 @@ private:
 
             std::lock_guard lock(self->mutex);
             if (action == mir_touch_action_down)
-                self->set_magnification_locked(
-                    std::clamp(self->magnification + delta, min_magnification + zoom_step, max_magnification));
+                apply_zoom_locked();
+        }
+
+        /// Clamps and applies the zoom step. Callers must hold self->mutex.
+        void apply_zoom_locked()
+        {
+            self->set_magnification_locked(
+                std::clamp(self->magnification + delta, min_magnification + zoom_step, max_magnification));
         }
 
         Self* self;
