@@ -16,8 +16,9 @@
 
 use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::{
-    dash_to_snake, dash_to_snake_ident, format_has_arg_ident, format_wayland_interface_to_cpp_class,
-    format_wayland_interface_to_rust_extension_struct, generate_namespace, snake_to_pascal,
+    dash_to_snake, dash_to_snake_ident, format_has_arg_ident,
+    format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
+    generate_namespace, snake_to_pascal,
 };
 use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandInterface, WaylandProtocol, WaylandRequest,
@@ -140,10 +141,7 @@ fn generate_server_side_factories(protocols: &Vec<WaylandProtocol>) -> TokenStre
 }
 
 /// Resolve the fully-qualified Rust path of the resource type for `interface_name`.
-fn resolve_resource_path(
-    protocols: &Vec<WaylandProtocol>,
-    interface_name: &str,
-) -> TokenStream {
+fn resolve_resource_path(protocols: &Vec<WaylandProtocol>, interface_name: &str) -> TokenStream {
     let namespace = protocols
         .iter()
         .find(|protocol| {

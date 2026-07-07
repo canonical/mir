@@ -278,7 +278,10 @@ fn create_cpp_builder(
     // wrapper, and return it — ready to be passed to the parent's `send_<event>_event`.
     let mut needs_functional = false;
     for interface in &protocol.interfaces {
-        if !event_created_interfaces.iter().any(|n| n == &interface.name) {
+        if !event_created_interfaces
+            .iter()
+            .any(|n| n == &interface.name)
+        {
             continue;
         }
         add_server_created_wrapper(&mut namespace, &interface.name);
