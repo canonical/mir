@@ -105,53 +105,115 @@ public:
     }
 
 private:
-    static void fill_drag_buffer(mg::Buffer& buffer)
+    class BufferPainter
     {
-        auto const writable = mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}));
-        auto const mapping  = writable->map_writeable();
-        auto* const pixels  = reinterpret_cast<uint8_t*>(mapping->data());
-        int const stride    = mapping->stride().as_int();
-        int const w         = buffer.size().width.as_int();
-        int const h         = buffer.size().height.as_int();
-
-        // For mir_pixel_format_argb_8888 on little-endian: memory layout [B, G, R, A].
-        auto const set_pixel = [&](int x, int y, uint8_t grey, uint8_t alpha)
+    public:
+        explicit BufferPainter(mg::Buffer& buffer) :
+            writable{mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}))},
+            mapping{writable->map_writeable()},
+            pixels{reinterpret_cast<uint8_t*>(mapping->data())},
+            stride{mapping->stride().as_int()},
+            width{buffer.size().width.as_int()},
+            height{buffer.size().height.as_int()}
         {
-            uint8_t* p = pixels + y * stride + x * 4;
-            p[0] = grey; p[1] = grey; p[2] = grey; p[3] = alpha;
-        };
+        }
 
-        // Start fully transparent.
-        for (int y = 0; y < h; ++y)
-            for (int x = 0; x < w; ++x)
+        void clear()
+        {
+            for (int y = 0; y < height; ++y)
+                for (int x = 0; x < width; ++x)
                 set_pixel(x, y, 0, 0);
+        }
 
-        // Draw a filled circle with a semi-transparent dark background.
-        float const cx   = (w - 1) / 2.0f;
-        float const cy   = (h - 1) / 2.0f;
-        float const r    = std::min(cx, cy);
-        float const r_sq = r * r;
-
-        for (int y = 0; y < h; ++y)
+        void fill_circle(uint8_t grey, uint8_t alpha)
         {
-            for (int x = 0; x < w; ++x)
+            float const cx = (width - 1) / 2.0f;
+            float const cy = (height - 1) / 2.0f;
+            float const r = std::min(cx, cy);
+            float const r_sq = r * r;
+
+            for (int y = 0; y < height; ++y)
             {
-                float const dx = x - cx;
-                float const dy = y - cy;
-                if (dx * dx + dy * dy <= r_sq)
-                    set_pixel(x, y, 40, 200);
+                for (int x = 0; x < width; ++x)
+                {
+                    float const dx = x - cx;
+                    float const dy = y - cy;
+                    if (dx * dx + dy * dy <= r_sq)
+                        set_pixel(x, y, grey, alpha);
+                }
             }
         }
 
-        // Draw a drag-pan icon: four arrowheads (N/S/E/W) connected by slim stems.
-        // head_half == head_len so the half-width grows by exactly 1 px per row, with
-        // no isolated single-pixel tip rows (the tip row itself is skipped).
-        static int constexpr tip_dist  = 15; // distance from centre to arrow tip
-        static int constexpr head_len  = 5;  // rows from stem junction to tip (== head_half)
-        static int constexpr stem_half = 1;  // half-width of connecting stems (3 px total)
+        void draw_horizontal_line(
+            int x0,
+            int x1,
+            int y,
+            int thickness,
+            uint8_t grey,
+            uint8_t alpha)
+        {
+            for (int t = 0; t < thickness; ++t)
+                for (int x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
+                    set_pixel(x, y + t, grey, alpha);
+        }
 
-        int const ci     = static_cast<int>(cx);
-        int const cj     = static_cast<int>(cy);
+        void draw_vertical_line(
+            int x,
+            int y0,
+            int y1,
+            int thickness,
+            uint8_t grey,
+            uint8_t alpha)
+        {
+            for (int t = 0; t < thickness; ++t)
+                for (int y = std::min(y0, y1); y <= std::max(y0, y1); ++y)
+                    set_pixel(x + t, y, grey, alpha);
+        }
+
+        auto buffer_width() const -> int
+        {
+            return width;
+        }
+
+        auto buffer_height() const -> int
+        {
+            return height;
+        }
+
+    private:
+        void set_pixel(int x, int y, uint8_t grey, uint8_t alpha)
+        {
+            if (x < 0 || x >= width || y < 0 || y >= height)
+                return;
+
+            // For mir_pixel_format_argb_8888 on little-endian: memory layout [B, G, R, A].
+            uint8_t* p = pixels + y * stride + x * 4;
+            p[0] = grey; p[1] = grey; p[2] = grey; p[3] = alpha;
+        }
+
+        std::shared_ptr<mrs::WriteMappable> const writable;
+        std::unique_ptr<mrs::Mapping<std::byte>> const mapping;
+        uint8_t* const pixels;
+        int const stride;
+        int const width;
+        int const height;
+    };
+
+    static void fill_drag_buffer(mg::Buffer& buffer)
+    {
+        BufferPainter painter{buffer};
+        painter.clear();
+        painter.fill_circle(40, 200);
+
+        // Draw a drag-pan icon: four arrowheads (N/S/E/W) connected by slim stems.
+        static int constexpr tip_dist  = 15;
+        static int constexpr head_len  = 5;
+        static int constexpr stem_half = 1;
+
+        int const w  = painter.buffer_width();
+        int const h  = painter.buffer_height();
+        int const ci = (w - 1) / 2;
+        int const cj = (h - 1) / 2;
         int const tip_n  = cj - tip_dist;
         int const tip_s  = cj + tip_dist;
         int const tip_w  = ci - tip_dist;
@@ -161,93 +223,44 @@ private:
         int const base_w = ci - (tip_dist - head_len);
         int const base_e = ci + (tip_dist - head_len);
 
-        auto const in_icon = [&](int x, int y) -> bool
-        {
-            // Vertical stem
-            if (std::abs(x - ci) <= stem_half && y >= base_n && y <= base_s)
-                return true;
-            // Horizontal stem
-            if (std::abs(y - cj) <= stem_half && x >= base_w && x <= base_e)
-                return true;
-            // North arrowhead — skip y==tip_n so the tip starts at 3 px wide, not 1
-            if (y > tip_n && y <= base_n)
-            {
-                if (std::abs(x - ci) <= y - tip_n) return true;
-            }
-            // South arrowhead
-            if (y >= base_s && y < tip_s)
-            {
-                if (std::abs(x - ci) <= tip_s - y) return true;
-            }
-            // West arrowhead
-            if (x > tip_w && x <= base_w)
-            {
-                if (std::abs(y - cj) <= x - tip_w) return true;
-            }
-            // East arrowhead
-            if (x >= base_e && x < tip_e)
-            {
-                if (std::abs(y - cj) <= tip_e - x) return true;
-            }
-            return false;
-        };
+        // Stems
+        painter.draw_vertical_line(ci - stem_half, base_n, base_s, stem_half * 2 + 1, 210, 230);
+        painter.draw_horizontal_line(base_w, base_e, cj - stem_half, stem_half * 2 + 1, 210, 230);
 
-        for (int y = 0; y < h; ++y)
-            for (int x = 0; x < w; ++x)
-                if (in_icon(x, y))
-                    set_pixel(x, y, 210, 230);
+        // North arrowhead — rows from tip_n+1 to base_n, width grows by 1 px per row
+        for (int y = tip_n + 1; y <= base_n; ++y)
+            painter.draw_horizontal_line(ci - (y - tip_n), ci + (y - tip_n), y, 1, 210, 230);
+
+        // South arrowhead
+        for (int y = base_s; y < tip_s; ++y)
+            painter.draw_horizontal_line(ci - (tip_s - y), ci + (tip_s - y), y, 1, 210, 230);
+
+        // West arrowhead — columns from tip_w+1 to base_w
+        for (int x = tip_w + 1; x <= base_w; ++x)
+            painter.draw_vertical_line(x, cj - (x - tip_w), cj + (x - tip_w), 1, 210, 230);
+
+        // East arrowhead
+        for (int x = base_e; x < tip_e; ++x)
+            painter.draw_vertical_line(x, cj - (tip_e - x), cj + (tip_e - x), 1, 210, 230);
     }
 
     static void fill_resize_buffer(mg::Buffer& buffer)
     {
-        auto const writable = mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}));
-        auto const mapping  = writable->map_writeable();
-        auto* const pixels  = reinterpret_cast<uint8_t*>(mapping->data());
-        int const stride    = mapping->stride().as_int();
-        int const w         = buffer.size().width.as_int();
-        int const h         = buffer.size().height.as_int();
-
-        auto const set_pixel = [&](int x, int y, uint8_t grey, uint8_t alpha)
-        {
-            if (x < 0 || x >= w || y < 0 || y >= h) return;
-            uint8_t* p = pixels + y * stride + x * 4;
-            p[0] = grey; p[1] = grey; p[2] = grey; p[3] = alpha;
-        };
-
-        // Start fully transparent.
-        for (int y = 0; y < h; ++y)
-            for (int x = 0; x < w; ++x)
-                set_pixel(x, y, 0, 0);
-
-        // Draw a filled circle with a semi-transparent dark background.
-        float const cx_f  = (w - 1) / 2.0f;
-        float const cy_f  = (h - 1) / 2.0f;
-        float const r     = std::min(cx_f, cy_f);
-        float const r_sq  = r * r;
-        for (int y = 0; y < h; ++y)
-            for (int x = 0; x < w; ++x)
-            {
-                float const dx = x - cx_f, dy = y - cy_f;
-                if (dx * dx + dy * dy <= r_sq)
-                    set_pixel(x, y, 40, 200);
-            }
+        BufferPainter painter{buffer};
+        painter.clear();
+        painter.fill_circle(40, 200);
 
         // Corner bracket: two 2-px arms meeting at the top-left corner, which is
         // where the resize handle always sits within the magnifier surface.
         static int constexpr arm_len   = 12;
         static int constexpr thickness = 2;
-        int const corner_x = w / 4 ;
-        int const corner_y = h / 4;
+        int const w = painter.buffer_width();
+        int const h = painter.buffer_height();
+        int const corner_x =  w / 4;
+        int const corner_y =  h / 4;
 
-        // Horizontal arm
-        for (int t = 0; t < thickness; ++t)
-            for (int i = 0; i <= arm_len; ++i)
-                set_pixel(corner_x + i, corner_y + t, 210, 230);
-
-        // Vertical arm (skip corner pixel to avoid double-draw)
-        for (int t = 0; t < thickness; ++t)
-            for (int i = 1; i <= arm_len; ++i)
-                set_pixel(corner_x + t, corner_y + i, 210, 230);
+        painter.draw_horizontal_line(corner_x, corner_x + arm_len, corner_y, thickness, 210, 230);
+        painter.draw_vertical_line(corner_x, corner_y, corner_y + arm_len, thickness, 210, 230);
     }
 
     SoftwareBufferPool mutable pool;
