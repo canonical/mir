@@ -51,7 +51,7 @@ void miral::CanonicalWindowManagerPolicy::handle_modify_window(
     tools.modify_window(window_info, modifications);
 }
 
-void miral::CanonicalWindowManagerPolicy::handle_raise_window(WindowInfo& window_info)
+void miral::CanonicalWindowManagerPolicy::handle_activate_window(WindowInfo& window_info)
 {
     tools.select_active_window(window_info.window());
 }

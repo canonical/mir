@@ -702,10 +702,10 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-void miral::WindowManagementTrace::handle_raise_window(miral::WindowInfo& window_info)
+void miral::WindowManagementTrace::handle_activate_window(miral::WindowInfo& window_info)
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    policy->handle_raise_window(window_info);
+    policy->handle_activate_window(window_info);
 }
 MIRAL_TRACE_EXCEPTION
 

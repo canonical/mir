@@ -399,7 +399,7 @@ void miral::BasicWindowManager::handle_raise_surface(
         return;
 
     if (timestamp >= last_input_event_timestamp)
-        policy->handle_raise_window(info_for(surface));
+        policy->handle_activate_window(info_for(surface));
 }
 
 void miral::BasicWindowManager::handle_request_move(

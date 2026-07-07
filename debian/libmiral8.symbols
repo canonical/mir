@@ -54,8 +54,8 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::CanonicalWindowManagerPolicy::advise_focus_gained(miral::WindowInfo const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::CanonicalWindowManagerPolicy::handle_activate_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::CanonicalWindowManagerPolicy::handle_raise_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_window_ready(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigFile::ConfigFile(miral::MirRunner&, std::filesystem::__cxx11::path, miral::ConfigFile::Mode, std::function<void (std::basic_istream<char, std::char_traits<char> >&, std::filesystem::__cxx11::path const&)>)@MIRAL_6.0" 6.0.0
@@ -66,11 +66,11 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (bool)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (double)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, double)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (int)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<bool> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<int> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::operator=(miral::ConfigurationOption const&)@MIRAL_6.0" 6.0.0
@@ -260,10 +260,10 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::MinimalWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::MinimalWindowManager::handle_activate_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::MinimalWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_6.0" 6.0.0

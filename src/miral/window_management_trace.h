@@ -88,7 +88,7 @@ private:
 
     virtual void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
-    virtual void handle_raise_window(WindowInfo& window_info) override;
+    virtual void handle_activate_window(WindowInfo& window_info) override;
 
     virtual bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
