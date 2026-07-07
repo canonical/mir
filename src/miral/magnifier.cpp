@@ -422,10 +422,7 @@ public:
 
             if (decoupled)
             {
-                drag.attach_observer<DragHandleObserver>(this);
-                resize.attach_observer<ResizeDragObserver>(this);
-                zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
-                zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
+                attach_observers_locked();
 
                 if (auto const surf = surface.lock(); surf && default_enabled)
                 {
@@ -505,11 +502,7 @@ public:
         {
             if (auto const surf = surface.lock())
             {
-                drag.attach_observer<DragHandleObserver>(this);
-                resize.attach_observer<ResizeDragObserver>(this);
-                zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
-                zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
-
+                attach_observers_locked();
                 if (default_enabled)
                 {
                     reposition_all_handles_locked(surf->top_left(), surf->window_size(), magnification);
@@ -963,6 +956,16 @@ private:
     {
         for (auto* h : {&drag, &resize, &zoom_in, &zoom_out})
             h->hide();
+    }
+
+    /// Creates and registers concrete observers on each handle. Guards against
+    /// missing indicators. Callers must hold mutex.
+    void attach_observers_locked()
+    {
+        drag.attach_observer<DragHandleObserver>(this);
+        resize.attach_observer<ResizeDragObserver>(this);
+        zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
+        zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
     }
 
     std::mutex mutex;
