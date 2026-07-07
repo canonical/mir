@@ -162,6 +162,12 @@ jobs:
     - name: Build
       run: cmake --build build
 
+    # Install the freshly-built Mir so the Rust crates (mir-sys) are analysed by
+    # clippy against the in-tree miral, rather than a release from the PPA. This
+    # publishes miral.pc (and its dependencies) where pkg-config can find them.
+    - name: Install Mir
+      run: sudo cmake --install build
+
     - name: Clear CCache stats
       run: ccache --show-stats --zero-stats
 
