@@ -421,6 +421,7 @@ public:
             server.the_cursor_observer_multiplexer()->register_interest(observer);
             cursor_multiplexer = server.the_cursor_observer_multiplexer();
 
+            std::lock_guard lock(mutex);
             drag.init(server, HandleKind::drag);
             resize.init(server, HandleKind::resize);
             zoom_in.init(server, HandleKind::zoom_in);
