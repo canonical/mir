@@ -67,6 +67,12 @@ auto const drag_handle_diameter = 48;
 /// Magnification step applied by each zoom button press.
 auto const zoom_step = 0.5f;
 
+/// Painter colour/alpha constants for handle indicator graphics.
+uint8_t constexpr disc_grey  = 40;
+uint8_t constexpr disc_alpha = 200;
+uint8_t constexpr icon_grey  = 210;
+uint8_t constexpr icon_alpha = 230;
+
 enum class HandleKind { drag, resize, zoom_in, zoom_out };
 
 class HandleIndicator : public ms::BasicSurface
@@ -212,7 +218,7 @@ private:
     {
         BufferPainter painter{buffer};
         painter.clear();
-        painter.fill_circle(40, 200);
+        painter.fill_circle(disc_grey, disc_alpha);
 
         // Draw a drag-pan icon: four arrowheads (N/S/E/W) connected by slim stems.
         static int constexpr tip_dist  = 15;
@@ -233,31 +239,31 @@ private:
         int const base_e = ci + (tip_dist - head_len);
 
         // Stems
-        painter.draw_vertical_line(ci - stem_half, base_n, base_s, stem_half * 2 + 1, 210, 230);
-        painter.draw_horizontal_line(base_w, base_e, cj - stem_half, stem_half * 2 + 1, 210, 230);
+        painter.draw_vertical_line(ci - stem_half, base_n, base_s, stem_half * 2 + 1, icon_grey, icon_alpha);
+        painter.draw_horizontal_line(base_w, base_e, cj - stem_half, stem_half * 2 + 1, icon_grey, icon_alpha);
 
         // North arrowhead — rows from tip_n+1 to base_n, width grows by 1 px per row
         for (int y = tip_n + 1; y <= base_n; ++y)
-            painter.draw_horizontal_line(ci - (y - tip_n), ci + (y - tip_n), y, 1, 210, 230);
+            painter.draw_horizontal_line(ci - (y - tip_n), ci + (y - tip_n), y, 1, icon_grey, icon_alpha);
 
         // South arrowhead
         for (int y = base_s; y < tip_s; ++y)
-            painter.draw_horizontal_line(ci - (tip_s - y), ci + (tip_s - y), y, 1, 210, 230);
+            painter.draw_horizontal_line(ci - (tip_s - y), ci + (tip_s - y), y, 1, icon_grey, icon_alpha);
 
         // West arrowhead — columns from tip_w+1 to base_w
         for (int x = tip_w + 1; x <= base_w; ++x)
-            painter.draw_vertical_line(x, cj - (x - tip_w), cj + (x - tip_w), 1, 210, 230);
+            painter.draw_vertical_line(x, cj - (x - tip_w), cj + (x - tip_w), 1, icon_grey, icon_alpha);
 
         // East arrowhead
         for (int x = base_e; x < tip_e; ++x)
-            painter.draw_vertical_line(x, cj - (tip_e - x), cj + (tip_e - x), 1, 210, 230);
+            painter.draw_vertical_line(x, cj - (tip_e - x), cj + (tip_e - x), 1, icon_grey, icon_alpha);
     }
 
     static void fill_resize_buffer(mg::Buffer& buffer)
     {
         BufferPainter painter{buffer};
         painter.clear();
-        painter.fill_circle(40, 200);
+        painter.fill_circle(disc_grey, disc_alpha);
 
         // Corner bracket: two 2-px arms meeting at the top-left corner, which is
         // where the resize handle always sits within the magnifier surface.
@@ -268,15 +274,15 @@ private:
         int const corner_x =  w / 4;
         int const corner_y =  h / 4;
 
-        painter.draw_horizontal_line(corner_x, corner_x + arm_len, corner_y, thickness, 210, 230);
-        painter.draw_vertical_line(corner_x, corner_y, corner_y + arm_len, thickness, 210, 230);
+        painter.draw_horizontal_line(corner_x, corner_x +  arm_len, corner_y, thickness, icon_grey, icon_alpha);
+        painter.draw_vertical_line(corner_x, corner_y , corner_y +  arm_len, thickness, icon_grey, icon_alpha);
     }
 
     static void fill_zoom_buffer(mg::Buffer& buffer, bool zoom_in)
     {
         BufferPainter painter{buffer};
         painter.clear();
-        painter.fill_circle(40, 200);
+        painter.fill_circle(disc_grey, disc_alpha);
 
         // Draw + (zoom in) or – (zoom out) symbol.
         int const w = painter.buffer_width();
@@ -289,8 +295,8 @@ private:
             (w + bar_len) / 2 - 1,
             (h - bar_thickness) / 2,
             bar_thickness,
-            210,
-            230);
+            icon_grey,
+            icon_alpha);
 
         if (zoom_in)
             painter.draw_vertical_line(
@@ -298,8 +304,8 @@ private:
                 (h - bar_len) / 2,
                 (h + bar_len) / 2 - 1,
                 bar_thickness,
-                210,
-                230);
+                icon_grey,
+                icon_alpha);
     }
 
     SoftwareBufferPool mutable pool;
