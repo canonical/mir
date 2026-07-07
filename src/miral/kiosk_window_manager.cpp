@@ -47,8 +47,8 @@ bool KioskWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
     auto const count = mir_touch_event_point_count(event);
 
-    long total_x = 0;
-    long total_y = 0;
+    double total_x = 0;
+    double total_y = 0;
 
     for (auto i = 0U; i != count; ++i)
     {
@@ -56,7 +56,9 @@ bool KioskWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
         total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
     }
 
-    Point const cursor{total_x/count, total_y/count};
+    Point const cursor{
+        static_cast<long>(total_x)/count,
+        static_cast<long>(total_y)/count};
 
     tools.select_active_window(tools.window_at(cursor));
 
@@ -84,15 +86,15 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
 {
     WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
 
-    if ((specification.type() == mir_window_type_normal || specification.type() == mir_window_type_freestyle) &&
-        (!specification.parent().has_value() || !specification.parent().value().lock()))
+    if ((specification.type().transform([](auto t) { return t == mir_window_type_normal || t == mir_window_type_freestyle; }).value_or(false)) &&
+        (specification.parent().transform([](auto p) { return p.expired(); }).value_or(true)))
     {
         specification.state() = target_state;
         specification.size() = std::nullopt; // Ignore requested size (if any) when we change state
         specification.top_left() = std::nullopt; // Ignore requested position (if any) when we change state
         tools.place_and_size_for_state(specification, WindowInfo{});
 
-        if (!request.state().has_value() || request.state().value() != mir_window_state_restored)
+        if (request.state().transform([](auto state) { return state != mir_window_state_restored; }).value_or(true))
             specification.state() = request.state();
     }
 
@@ -106,15 +108,15 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
     if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
         !window_info.parent())
     {
-        if (window_info.is_visible() || !modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)
+        if (window_info.is_visible() || modifications.state().transform([](auto state) { return state != mir_window_state_restored; }).value_or(true))
         {
             specification.state() = target_state;
             specification.size() = std::nullopt; // Ignore requested size (if any) when we change state
             specification.top_left() = std::nullopt; // Ignore requested position (if any) when we change state
             tools.place_and_size_for_state(specification, window_info);
 
-            if (!modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)
-                specification.state() = modifications.state();
+            if (auto const& s = modifications.state(); !s|| s.value() != mir_window_state_restored)
+                specification.state() = s;
         }
     }
 
