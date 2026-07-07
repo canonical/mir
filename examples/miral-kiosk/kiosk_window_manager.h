@@ -18,31 +18,20 @@
 #define MIRAL_KIOSK_WINDOW_MANAGER_H
 
 #include "sw_splash.h"
-
-#include <miral/canonical_window_manager.h>
+#include "kiosk_window_manager_policy.h"
 
 #include <mir_toolkit/events/enums.h>
 
 using namespace mir::geometry;
 
-class KioskWindowManagerPolicy : public miral::CanonicalWindowManagerPolicy
+class KioskWindowManagerPolicy : public KioskWindowManagerPolicyBase
 {
 public:
     KioskWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const&);
 
-    auto place_new_window(miral::ApplicationInfo const& app_info, miral::WindowSpecification const& request)
-    -> miral::WindowSpecification override;
-
+    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
     void advise_focus_gained(miral::WindowInfo const& info) override;
 
-    bool handle_keyboard_event(MirKeyboardEvent const* event) override;
-    bool handle_touch_event(MirTouchEvent const* event) override;
-    bool handle_pointer_event(MirPointerEvent const* event) override;
-    void handle_modify_window(miral::WindowInfo& window_info, miral::WindowSpecification const& modifications) override;
-
-    void handle_request_move(miral::WindowInfo& window_info, MirInputEvent const* input_event) override;
-    void handle_request_resize(miral::WindowInfo& window_info, MirInputEvent const* input_event,
-        MirResizeEdge edge) override;
 
 private:
     static const int modifier_mask =

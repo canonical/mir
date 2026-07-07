@@ -23,12 +23,11 @@
 
 #include <linux/input.h>
 
-namespace ms = mir::scene;
 using namespace miral;
 using namespace miral::toolkit;
 
 KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& splash) :
-    CanonicalWindowManagerPolicy{tools},
+    KioskWindowManagerPolicyBase{tools, mir_window_state_maximized},
     splash{splash}
 {
 }
@@ -79,45 +78,9 @@ bool KioskWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* eve
     return false;
 }
 
-bool KioskWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
-{
-    auto const count = mir_touch_event_point_count(event);
-
-    long total_x = 0;
-    long total_y = 0;
-
-    for (auto i = 0U; i != count; ++i)
-    {
-        total_x += mir_touch_event_axis_value(event, i, mir_touch_axis_x);
-        total_y += mir_touch_event_axis_value(event, i, mir_touch_axis_y);
-    }
-
-    Point const cursor{total_x/count, total_y/count};
-
-    tools.select_active_window(tools.window_at(cursor));
-
-    return false;
-}
-
-bool KioskWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
-{
-    auto const action = mir_pointer_event_action(event);
-
-    Point const cursor{
-        mir_pointer_event_axis_value(event, mir_pointer_axis_x),
-        mir_pointer_event_axis_value(event, mir_pointer_axis_y)};
-
-    if (action == mir_pointer_action_button_down)
-    {
-        tools.select_active_window(tools.window_at(cursor));
-    }
-
-    return false;
-}
-
 void KioskWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
 {
-    CanonicalWindowManagerPolicy::advise_focus_gained(info);
+    KioskWindowManagerPolicyBase::advise_focus_gained(info);
 
     if (auto session = splash->session())
     {
@@ -126,51 +89,4 @@ void KioskWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
         for (auto const& s : app_info.windows())
             tools.raise_tree(s);
     }
-}
-
-auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info, WindowSpecification const& request)
--> WindowSpecification
-{
-    WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
-
-    if ((specification.type() == mir_window_type_normal || specification.type() == mir_window_type_freestyle) &&
-        (!specification.parent().has_value() || !specification.parent().value().lock()))
-    {
-        specification.state() = mir_window_state_maximized;
-        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we maximize
-        specification.size() = std::nullopt; // Ignore requested size (if any) when we maximize
-        tools.place_and_size_for_state(specification, WindowInfo{});
-
-        if (!request.state().has_value() || request.state().value() != mir_window_state_restored)
-            specification.state() = request.state();
-    }
-
-    return specification;
-}
-
-void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
-{
-    WindowSpecification specification = modifications;
-
-    if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
-        !window_info.parent())
-    {
-        specification.state() = mir_window_state_maximized;
-        specification.top_left() = std::nullopt; // Ignore requested position (if any) when we maximize
-        specification.size() = std::nullopt; // Ignore requested size (if any) when we maximize
-        tools.place_and_size_for_state(specification, window_info);
-
-        if (!modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)
-            specification.state() = modifications.state();
-    }
-
-    CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
-}
-
-void KioskWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
-{
-}
-
-void KioskWindowManagerPolicy::handle_request_resize(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/)
-{
 }
