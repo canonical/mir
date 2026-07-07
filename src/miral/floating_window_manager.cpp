@@ -111,19 +111,12 @@ miral::FloatingWindowManager::FloatingWindowManager(
     WindowManagerTools const& tools,
     FocusStealing focus_stealing,
     MirInputEventModifier pointer_drag_modifier) :
-    tools{tools},
+    CanonicalWindowManagerPolicy{tools},
     self{std::make_unique<Impl>(tools, pointer_drag_modifier, focus_stealing)}
 {
 }
 
 miral::FloatingWindowManager::~FloatingWindowManager() = default;
-
-auto miral::FloatingWindowManager::place_new_window(
-    ApplicationInfo const& /*app_info*/, WindowSpecification const& requested_specification)
-    -> WindowSpecification
-{
-    return requested_specification;
-}
 
 void miral::FloatingWindowManager::handle_window_ready(WindowInfo& window_info)
 {
@@ -131,24 +124,6 @@ void miral::FloatingWindowManager::handle_window_ready(WindowInfo& window_info)
     {
         tools.select_active_window(window_info.window());
     }
-}
-
-void miral::FloatingWindowManager::handle_modify_window(
-    WindowInfo& window_info, miral::WindowSpecification const& modifications)
-{
-    tools.modify_window(window_info, modifications);
-}
-
-void miral::FloatingWindowManager::handle_raise_window(WindowInfo& window_info)
-{
-    tools.select_active_window(window_info.window());
-}
-
-auto miral::FloatingWindowManager::confirm_placement_on_display(
-    WindowInfo const& /*window_info*/, MirWindowState /*new_state*/, Rectangle const& new_placement)
-    -> Rectangle
-{
-    return new_placement;
 }
 
 bool miral::FloatingWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
@@ -231,12 +206,6 @@ bool miral::FloatingWindowManager::begin_pointer_resize(
     WindowInfo const& window_info, MirInputEvent const* input_event, MirResizeEdge const& edge)
 {
     return self->begin_pointer_gesture(tools.info_for(window_info.window()), input_event, Gesture::pointer_resizing, edge);
-}
-
-auto miral::FloatingWindowManager::confirm_inherited_move(WindowInfo const& window_info, Displacement movement)
-    -> Rectangle
-{
-    return {window_info.window().top_left()+movement, window_info.window().size()};
 }
 
 void miral::FloatingWindowManager::advise_new_window(miral::WindowInfo const& window_info)

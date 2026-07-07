@@ -129,17 +129,12 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::FloatingWindowManager::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_window_ready(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::~FloatingWindowManager()@MIRAL_6.0" 6.0.0
  (c++)"miral::HoverClick::HoverClick(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::HoverClick::HoverClick(std::shared_ptr<miral::HoverClick::Self>)@MIRAL_6.0" 6.0.0
