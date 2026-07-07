@@ -69,10 +69,10 @@ auto const zoom_step = 0.5f;
 
 enum class HandleKind { drag, resize, zoom_in, zoom_out };
 
-class DragHandleIndicator : public ms::BasicSurface
+class HandleIndicator : public ms::BasicSurface
 {
 public:
-    DragHandleIndicator(
+    HandleIndicator(
         geom::Rectangle const& initial_rect,
         HandleKind kind,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
@@ -321,9 +321,9 @@ public:
     auto create_handle_indicator(
         mir::Server& server,
         HandleKind kind,
-        geom::Rectangle const& rect) -> std::shared_ptr<DragHandleIndicator>
+        geom::Rectangle const& rect) -> std::shared_ptr<HandleIndicator>
     {
-        auto indicator = std::make_shared<DragHandleIndicator>(
+        auto indicator = std::make_shared<HandleIndicator>(
             rect,
             kind,
             server.the_buffer_allocator(),
@@ -1014,13 +1014,13 @@ private:
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
     std::shared_ptr<Observer> observer;
     std::weak_ptr<ms::Surface> surface;
-    std::shared_ptr<DragHandleIndicator> drag_handle_indicator;
+    std::shared_ptr<HandleIndicator> drag_handle_indicator;
     std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
     std::shared_ptr<DragHandleObserver> drag_handle_observer;
-    std::shared_ptr<DragHandleIndicator> resize_handle_indicator;
+    std::shared_ptr<HandleIndicator> resize_handle_indicator;
     std::shared_ptr<ResizeDragObserver> resize_drag_observer;
-    std::shared_ptr<DragHandleIndicator> zoom_in_indicator;
-    std::shared_ptr<DragHandleIndicator> zoom_out_indicator;
+    std::shared_ptr<HandleIndicator> zoom_in_indicator;
+    std::shared_ptr<HandleIndicator> zoom_out_indicator;
     std::shared_ptr<ZoomButtonObserver> zoom_in_observer;
     std::shared_ptr<ZoomButtonObserver> zoom_out_observer;
     geom::Point cursor_pos;
