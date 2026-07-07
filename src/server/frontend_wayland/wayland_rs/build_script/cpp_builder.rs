@@ -123,7 +123,7 @@ impl CppBuilder {
                         ));
                     }
                     result.push_str("    };\n");
-                    result.push_str("\n");
+                    result.push('\n');
                 }
 
                 // Virtual destructor
@@ -200,7 +200,7 @@ impl CppBuilder {
                             ctor_args_str.join(", "),
                             initialiser_list.join(", ")
                         ));
-                        result.push_str("\n");
+                        result.push('\n');
                     }
 
                     for member in &class.protected_members {
@@ -213,7 +213,7 @@ impl CppBuilder {
                         ));
                     }
 
-                    result.push_str("\n");
+                    result.push('\n');
                 }
 
                 result.push_str("private:\n");
@@ -509,7 +509,7 @@ impl CppEnumOption {
     pub fn new(name: impl Into<String>, value: u32) -> CppEnumOption {
         CppEnumOption {
             name: sanitize_identifier(&name.into()),
-            value: value,
+            value,
         }
     }
 }

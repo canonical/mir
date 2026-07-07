@@ -29,7 +29,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
 
     // Next, generate the Rust -> C++ side.
     let cpp_tokens: Vec<TokenStream> = builders
-        .into_iter()
+        .iter()
         .flat_map(|builder: &CppBuilder| builder.to_rust_cpp_bindings())
         .collect();
 

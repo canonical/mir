@@ -18,8 +18,6 @@ use crate::device::{LibinputDevice, LibinputDeviceState, ScrollState};
 use crate::event_processing::process_libinput_events;
 use crate::fd_store::FdStore;
 use crate::udev_monitor::{UdevEventType, UdevMonitor};
-use cxx;
-use input;
 use std::collections::HashSet;
 use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -296,16 +294,13 @@ impl PlatformRs {
             return;
         }
 
-        match self.state.as_mut().unwrap().try_lock() {
-            Ok(mut state) => {
-                process_libinput_events(
-                    &mut *state,
-                    self.device_registry.clone(),
-                    self.bridge.clone(),
-                    &self.report,
-                );
-            }
-            _ => {}
+        if let Ok(mut state) = self.state.as_mut().unwrap().try_lock() {
+            process_libinput_events(
+                &mut state,
+                self.device_registry.clone(),
+                self.bridge.clone(),
+                &self.report,
+            );
         }
     }
 

@@ -27,9 +27,8 @@ use quote::{format_ident, quote};
 use syn::Ident;
 
 pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
-    let generated_dispatch_implementations = protocols
-        .iter()
-        .map(|protocol| generate_dispatch_implementations(protocol));
+    let generated_dispatch_implementations =
+        protocols.iter().map(generate_dispatch_implementations);
 
     quote! {
         #[allow(dead_code, unused_imports)]
