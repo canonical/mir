@@ -17,9 +17,9 @@
 #ifndef MIRAL_X11_KIOSK_WINDOW_MANAGER_H
 #define MIRAL_X11_KIOSK_WINDOW_MANAGER_H
 
-#include "kiosk_window_manager_policy.h"
+#include <miral/kiosk_window_manager.h>
 
-class X11KioskWindowManagerPolicy : public KioskWindowManagerPolicyBase
+class X11KioskWindowManagerPolicy : public miral::KioskWindowManagerPolicy
 {
 public:
     X11KioskWindowManagerPolicy(miral::WindowManagerTools const& tools);

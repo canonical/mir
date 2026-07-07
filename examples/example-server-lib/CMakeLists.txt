@@ -16,7 +16,6 @@ add_custom_command(
 add_library(example-shell-lib STATIC
     tiling_window_manager.cpp   tiling_window_manager.h
     floating_window_manager.cpp floating_window_manager.h
-    kiosk_window_manager_policy.cpp kiosk_window_manager_policy.h
     decoration_provider.cpp     decoration_provider.h
     wallpaper_config.cpp        wallpaper_config.h
         splash_session.h

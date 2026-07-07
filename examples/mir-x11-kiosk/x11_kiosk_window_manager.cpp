@@ -23,7 +23,7 @@
 using namespace miral;
 
 X11KioskWindowManagerPolicy::X11KioskWindowManagerPolicy(WindowManagerTools const& tools) :
-    KioskWindowManagerPolicyBase{tools, mir_window_state_fullscreen}
+    KioskWindowManagerPolicy{tools}
 {
 }
 
@@ -63,7 +63,7 @@ void X11KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, 
         }
     }
 
-    KioskWindowManagerPolicyBase::handle_modify_window(window_info, specification);
+    CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
 }
 
 void X11KioskWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
@@ -81,5 +81,5 @@ void X11KioskWindowManagerPolicy::handle_window_ready(WindowInfo& window_info)
             tools.modify_window(window_info, specification);
         }
     }
-    KioskWindowManagerPolicyBase::handle_window_ready(window_info);
+    CanonicalWindowManagerPolicy::handle_window_ready(window_info);
 }

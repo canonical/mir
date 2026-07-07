@@ -2,8 +2,8 @@
  * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3 as
- * published by the Free Software Foundation.
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -14,29 +14,36 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "kiosk_window_manager_policy.h"
+#include <miral/kiosk_window_manager.h>
 
 #include <miral/application_info.h>
 #include <miral/toolkit_event.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
 
-namespace ms = mir::scene;
+#include <mir/geometry/point.h>
+
 using namespace miral;
 using namespace miral::toolkit;
+using namespace mir::geometry;
 
-KioskWindowManagerPolicyBase::KioskWindowManagerPolicyBase(WindowManagerTools const& tools, MirWindowState target_state) :
+KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools, MirWindowState target_state) :
     CanonicalWindowManagerPolicy{tools},
     target_state{target_state}
 {
 }
 
-bool KioskWindowManagerPolicyBase::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
+KioskWindowManagerPolicy::KioskWindowManagerPolicy(WindowManagerTools const& tools) :
+    KioskWindowManagerPolicy{tools, mir_window_state_fullscreen}
+{
+}
+
+bool KioskWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
 {
     return false;
 }
 
-bool KioskWindowManagerPolicyBase::handle_touch_event(MirTouchEvent const* event)
+bool KioskWindowManagerPolicy::handle_touch_event(MirTouchEvent const* event)
 {
     auto const count = mir_touch_event_point_count(event);
 
@@ -56,7 +63,7 @@ bool KioskWindowManagerPolicyBase::handle_touch_event(MirTouchEvent const* event
     return false;
 }
 
-bool KioskWindowManagerPolicyBase::handle_pointer_event(MirPointerEvent const* event)
+bool KioskWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* event)
 {
     auto const action = mir_pointer_event_action(event);
 
@@ -72,7 +79,7 @@ bool KioskWindowManagerPolicyBase::handle_pointer_event(MirPointerEvent const* e
     return false;
 }
 
-auto KioskWindowManagerPolicyBase::place_new_window(ApplicationInfo const& app_info, WindowSpecification const& request)
+auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info, WindowSpecification const& request)
 -> WindowSpecification
 {
     WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
@@ -92,14 +99,13 @@ auto KioskWindowManagerPolicyBase::place_new_window(ApplicationInfo const& app_i
     return specification;
 }
 
-void KioskWindowManagerPolicyBase::handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
+void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications)
 {
     WindowSpecification specification = modifications;
 
     if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
         !window_info.parent())
     {
-
         if (window_info.is_visible() || !modifications.state().has_value() || modifications.state().value() != mir_window_state_restored)
         {
             specification.state() = target_state;
@@ -115,10 +121,10 @@ void KioskWindowManagerPolicyBase::handle_modify_window(WindowInfo& window_info,
     CanonicalWindowManagerPolicy::handle_modify_window(window_info, specification);
 }
 
-void KioskWindowManagerPolicyBase::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
+void KioskWindowManagerPolicy::handle_request_move(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/)
 {
 }
 
-void KioskWindowManagerPolicyBase::handle_request_resize(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/)
+void KioskWindowManagerPolicy::handle_request_resize(WindowInfo& /*window_info*/, MirInputEvent const* /*input_event*/, MirResizeEdge /*edge*/)
 {
 }

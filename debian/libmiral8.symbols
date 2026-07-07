@@ -225,6 +225,15 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::Keymap::set_keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Keymap::system_locale1()@MIRAL_6.0" 6.0.0
  (c++)"miral::Keymap::~Keymap()@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::KioskWindowManagerPolicy(miral::WindowManagerTools const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::KioskWindowManagerPolicy(miral::WindowManagerTools const&, MirWindowState)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_pointer_event(MirPointerEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_touch_event(MirTouchEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::LocatePointer::LocatePointer(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::LocatePointer::LocatePointer(std::shared_ptr<miral::LocatePointer::Self>)@MIRAL_6.0" 6.0.0
  (c++)"miral::LocatePointer::cancel_request()@MIRAL_6.0" 6.0.0
@@ -698,6 +707,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"typeinfo for miral::ApplicationSwitcher@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::FloatingWindowManager@MIRAL_6.0" 6.0.0
+ (c++)"typeinfo for miral::KioskWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_6.0" 6.0.0
@@ -706,6 +716,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"typeinfo for miral::live_config::Store@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::FloatingWindowManager@MIRAL_6.0" 6.0.0
+ (c++)"vtable for miral::KioskWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::live_config::IniFile@MIRAL_6.0" 6.0.0
