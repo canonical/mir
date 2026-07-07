@@ -1,8 +1,73 @@
-use crate::protocol_parser::WaylandProtocol;
+use crate::protocol_parser::{
+    InterfaceItem, WaylandArg, WaylandArgType, WaylandProtocol, WaylandRequest,
+};
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use std::fs;
 use syn::Ident;
+
+/// Returns true for the libwayland core interfaces (`wl_display`, `wl_registry`).
+///
+/// These are managed internally by the `wayland_server` crate rather than wrapped
+/// by the generator, so they have no C++ counterpart.
+pub fn is_core_interface(name: &str) -> bool {
+    name == "wl_display" || name == "wl_registry"
+}
+
+/// Returns true if the request takes an `object` argument referring to a libwayland
+/// core interface (e.g. `wl_fixes.destroy_registry`, which takes a `wl_registry`).
+///
+/// Such requests reference an interface that has no generated C++ class, so the core
+/// object argument must be ferried to C++ via a minimal middleware (see
+/// `request_core_object_args` and `referenced_core_interfaces`) rather than the usual
+/// wrapper mechanism.
+pub fn request_references_core_object(request: &WaylandRequest) -> bool {
+    !request_core_object_args(request).is_empty()
+}
+
+/// Returns the `object` arguments of a request that refer to a libwayland core interface
+/// (e.g. the `wl_registry` argument of `wl_fixes.destroy_registry`).
+pub fn request_core_object_args(request: &WaylandRequest) -> Vec<&WaylandArg> {
+    request
+        .args
+        .iter()
+        .filter(|arg| {
+            arg.type_ == WaylandArgType::Object
+                && arg
+                    .interface
+                    .as_deref()
+                    .map(is_core_interface)
+                    .unwrap_or(false)
+        })
+        .collect()
+}
+
+/// Collect the names of the libwayland core interfaces that are referenced as `object`
+/// arguments by some request across all protocols (e.g. `wl_registry`).
+///
+/// These core interfaces have no generated C++ class, but the requests that reference them
+/// (such as `wl_fixes.destroy_registry`) are still forwarded to C++. To make that possible a
+/// minimal Rust middleware is generated for each of them, exposing just enough to let the C++
+/// implementation act on the object (currently `destroy_and_delete`).
+pub fn referenced_core_interfaces(protocols: &[WaylandProtocol]) -> Vec<String> {
+    let mut names: Vec<String> = Vec::new();
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                if let InterfaceItem::Request(request) = item {
+                    for arg in request_core_object_args(request) {
+                        if let Some(name) = arg.interface.as_deref() {
+                            if !names.iter().any(|existing| existing == name) {
+                                names.push(name.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    names
+}
 
 /// Write the generated Rust code to a file with proper formatting.
 pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {

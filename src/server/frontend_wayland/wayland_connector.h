@@ -91,6 +91,7 @@ class WlDataDeviceManager;
 class WlSeat;
 class WlShm;
 class WlSubcompositor;
+class WlFixes;
 class WlSurface;
 class WpViewporter;
 class LinuxDRMSyncobjManager;
@@ -238,6 +239,7 @@ private:
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;
+    std::unique_ptr<WlFixes> fixes_global;
     std::unique_ptr<WlSeat> seat_global;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
