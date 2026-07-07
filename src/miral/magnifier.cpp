@@ -304,6 +304,80 @@ private:
 
     SoftwareBufferPool mutable pool;
 };
+
+class Handle
+{
+public:
+    Handle() = default;
+
+    void init(mir::Server& server, HandleKind kind)
+    {
+        indicator = std::make_shared<HandleIndicator>(
+            handle_rect,
+            kind,
+            server.the_buffer_allocator(),
+            server.the_scene_report(),
+            server.the_display_configuration_observer_registrar());
+        handle_surface_stack = server.the_surface_stack();
+
+        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+        indicator->set_cursor_image(server.the_default_cursor_image());
+    }
+
+    void reset()
+    {
+        detach_observer();
+        if (auto const surface_stack = handle_surface_stack.lock())
+            surface_stack->remove_surface(indicator);
+        indicator.reset();
+    }
+
+    template<typename ObserverType, typename... Args>
+    void attach_observer(Args&&... args)
+    {
+        if (!indicator)
+            return;
+
+        observer = std::make_shared<ObserverType>(std::forward<Args>(args)...);
+        indicator->register_interest(observer);
+    }
+
+    void detach_observer()
+    {
+        if (!observer)
+            return;
+
+        indicator->unregister_interest(*observer);
+        observer.reset();
+    }
+
+    void move_to(geom::Point const& pos)
+    {
+        if (indicator)
+            indicator->move_to(pos);
+    }
+
+    void show()
+    {
+        if (indicator)
+            indicator->show();
+    }
+
+    void hide()
+    {
+        if (indicator)
+            indicator->hide();
+    }
+
+private:
+    static constexpr geom::Rectangle handle_rect{
+        {0, 0},
+        {geom::Width{drag_handle_diameter}, geom::Height{drag_handle_diameter}}};
+
+    std::shared_ptr<HandleIndicator> indicator;
+    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
+    std::shared_ptr<ms::NullSurfaceObserver> observer;
+};
 }
 
 class miral::Magnifier::Self
@@ -314,25 +388,6 @@ public:
         render_scene_into_surface
             .capture_area(geom::Rectangle{{300, 300}, geom::Size(default_capture_width, default_capture_height)})
             .overlay_cursor(false);
-    }
-
-    /// Creates a handle indicator surface, adds it to the surface stack and
-    /// gives it the default cursor image.
-    auto create_handle_indicator(
-        mir::Server& server,
-        HandleKind kind,
-        geom::Rectangle const& rect) -> std::shared_ptr<HandleIndicator>
-    {
-        auto indicator = std::make_shared<HandleIndicator>(
-            rect,
-            kind,
-            server.the_buffer_allocator(),
-            server.the_scene_report(),
-            server.the_display_configuration_observer_registrar());
-
-        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
-        indicator->set_cursor_image(server.the_default_cursor_image());
-        return indicator;
     }
 
     void init(mir::Server& server)
@@ -360,30 +415,17 @@ public:
             server.the_cursor_observer_multiplexer()->register_interest(observer);
             cursor_multiplexer = server.the_cursor_observer_multiplexer();
 
-            // Create the drag handle indicator.
-            geom::Rectangle const handle_rect{
-                {0, 0},
-                {geom::Width{drag_handle_diameter}, geom::Height{drag_handle_diameter}}};
-
-            drag_handle_indicator   = create_handle_indicator(server, HandleKind::drag, handle_rect);
-            resize_handle_indicator = create_handle_indicator(server, HandleKind::resize, handle_rect);
-            zoom_in_indicator       = create_handle_indicator(server, HandleKind::zoom_in, handle_rect);
-            zoom_out_indicator      = create_handle_indicator(server, HandleKind::zoom_out, handle_rect);
-            handle_surface_stack    = server.the_surface_stack();
+            drag.init(server, HandleKind::drag);
+            resize.init(server, HandleKind::resize);
+            zoom_in.init(server, HandleKind::zoom_in);
+            zoom_out.init(server, HandleKind::zoom_out);
 
             if (decoupled)
             {
-                drag_handle_observer = std::make_shared<DragHandleObserver>(this);
-                drag_handle_indicator->register_interest(drag_handle_observer);
-
-                resize_drag_observer = std::make_shared<ResizeDragObserver>(this);
-                resize_handle_indicator->register_interest(resize_drag_observer);
-
-                zoom_in_observer = std::make_shared<ZoomButtonObserver>(this, +zoom_step);
-                zoom_in_indicator->register_interest(zoom_in_observer);
-
-                zoom_out_observer = std::make_shared<ZoomButtonObserver>(this, -zoom_step);
-                zoom_out_indicator->register_interest(zoom_out_observer);
+                drag.attach_observer<DragHandleObserver>(this);
+                resize.attach_observer<ResizeDragObserver>(this);
+                zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
+                zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
 
                 if (auto const surf = surface.lock(); surf && default_enabled)
                 {
@@ -399,43 +441,8 @@ public:
             if (auto const locked = cursor_multiplexer.lock())
                 locked->unregister_interest(*observer);
 
-            if (drag_handle_observer)
-            {
-                drag_handle_indicator->unregister_interest(*drag_handle_observer);
-                drag_handle_observer.reset();
-            }
-
-
-            if (resize_drag_observer)
-            {
-                resize_handle_indicator->unregister_interest(*resize_drag_observer);
-                resize_drag_observer.reset();
-            }
-
-            if (zoom_in_observer)
-            {
-                zoom_in_indicator->unregister_interest(*zoom_in_observer);
-                zoom_in_observer.reset();
-            }
-
-            if (zoom_out_observer)
-            {
-                zoom_out_indicator->unregister_interest(*zoom_out_observer);
-                zoom_out_observer.reset();
-            }
-
-            if (auto const locked = handle_surface_stack.lock())
-            {
-                locked->remove_surface(drag_handle_indicator);
-                locked->remove_surface(resize_handle_indicator);
-                locked->remove_surface(zoom_in_indicator);
-                locked->remove_surface(zoom_out_indicator);
-            }
-
-            drag_handle_indicator.reset();
-            resize_handle_indicator.reset();
-            zoom_in_indicator.reset();
-            zoom_out_indicator.reset();
+            for (auto* handle : {&drag, &resize, &zoom_in, &zoom_out})
+                handle->reset();
         });
     }
 
@@ -498,26 +505,11 @@ public:
         {
             if (auto const surf = surface.lock())
             {
-                if (drag_handle_indicator)
-                {
-                    drag_handle_observer = std::make_shared<DragHandleObserver>(this);
-                    drag_handle_indicator->register_interest(drag_handle_observer);
-                }
-                if (resize_handle_indicator)
-                {
-                    resize_drag_observer = std::make_shared<ResizeDragObserver>(this);
-                    resize_handle_indicator->register_interest(resize_drag_observer);
-                }
-                if (zoom_in_indicator)
-                {
-                    zoom_in_observer = std::make_shared<ZoomButtonObserver>(this, +zoom_step);
-                    zoom_in_indicator->register_interest(zoom_in_observer);
-                }
-                if (zoom_out_indicator)
-                {
-                    zoom_out_observer = std::make_shared<ZoomButtonObserver>(this, -zoom_step);
-                    zoom_out_indicator->register_interest(zoom_out_observer);
-                }
+                drag.attach_observer<DragHandleObserver>(this);
+                resize.attach_observer<ResizeDragObserver>(this);
+                zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
+                zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
+
                 if (default_enabled)
                 {
                     reposition_all_handles_locked(surf->top_left(), surf->window_size(), magnification);
@@ -527,41 +519,10 @@ public:
         }
         else
         {
-            if (drag_handle_indicator)
+            for (auto* handle : {&drag, &resize, &zoom_in, &zoom_out})
             {
-                if (drag_handle_observer)
-                {
-                    drag_handle_indicator->unregister_interest(*drag_handle_observer);
-                    drag_handle_observer.reset();
-                }
-                drag_handle_indicator->hide();
-            }
-            if (resize_handle_indicator)
-            {
-                if (resize_drag_observer)
-                {
-                    resize_handle_indicator->unregister_interest(*resize_drag_observer);
-                    resize_drag_observer.reset();
-                }
-                resize_handle_indicator->hide();
-            }
-            if (zoom_in_indicator)
-            {
-                if (zoom_in_observer)
-                {
-                    zoom_in_indicator->unregister_interest(*zoom_in_observer);
-                    zoom_in_observer.reset();
-                }
-                zoom_in_indicator->hide();
-            }
-            if (zoom_out_indicator)
-            {
-                if (zoom_out_observer)
-                {
-                    zoom_out_indicator->unregister_interest(*zoom_out_observer);
-                    zoom_out_observer.reset();
-                }
-                zoom_out_indicator->hide();
+                handle->detach_observer();
+                handle->hide();
             }
 
             if (auto const surf = surface.lock(); surf && default_enabled)
@@ -973,12 +934,11 @@ private:
             return;
 
         auto const [dp, rp] = compute_both_handle_positions(tl, sz, mag);
-        if (drag_handle_indicator)   drag_handle_indicator->move_to(dp);
-        if (resize_handle_indicator) resize_handle_indicator->move_to(rp);
-
         auto const [zp, zm] = compute_zoom_button_positions(tl, sz, mag);
-        if (zoom_in_indicator)  zoom_in_indicator->move_to(zp);
-        if (zoom_out_indicator) zoom_out_indicator->move_to(zm);
+        drag.move_to(dp);
+        resize.move_to(rp);
+        zoom_in.move_to(zp);
+        zoom_out.move_to(zm);
     }
 
     /// Updates the magnification without acquiring the mutex (caller must hold it).
@@ -995,18 +955,14 @@ private:
 
     void show_all_handles_locked()
     {
-        if (drag_handle_indicator)   drag_handle_indicator->show();
-        if (resize_handle_indicator) resize_handle_indicator->show();
-        if (zoom_in_indicator)  zoom_in_indicator->show();
-        if (zoom_out_indicator) zoom_out_indicator->show();
+        for (auto* h : {&drag, &resize, &zoom_in, &zoom_out})
+            h->show();
     }
 
     void hide_all_handles_locked()
     {
-        if (drag_handle_indicator)   drag_handle_indicator->hide();
-        if (resize_handle_indicator) resize_handle_indicator->hide();
-        if (zoom_in_indicator)  zoom_in_indicator->hide();
-        if (zoom_out_indicator) zoom_out_indicator->hide();
+        for (auto* h : {&drag, &resize, &zoom_in, &zoom_out})
+            h->hide();
     }
 
     std::mutex mutex;
@@ -1014,15 +970,87 @@ private:
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
     std::shared_ptr<Observer> observer;
     std::weak_ptr<ms::Surface> surface;
-    std::shared_ptr<HandleIndicator> drag_handle_indicator;
-    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
-    std::shared_ptr<DragHandleObserver> drag_handle_observer;
-    std::shared_ptr<HandleIndicator> resize_handle_indicator;
-    std::shared_ptr<ResizeDragObserver> resize_drag_observer;
-    std::shared_ptr<HandleIndicator> zoom_in_indicator;
-    std::shared_ptr<HandleIndicator> zoom_out_indicator;
-    std::shared_ptr<ZoomButtonObserver> zoom_in_observer;
-    std::shared_ptr<ZoomButtonObserver> zoom_out_observer;
+    geom::Rectangle screen_bounds;
+
+    class Handle
+    {
+    public:
+        Handle() = default;
+
+        void init(mir::Server& server, HandleKind kind)
+        {
+            indicator = std::make_shared<HandleIndicator>(
+                handle_rect,
+                kind,
+                server.the_buffer_allocator(),
+                server.the_scene_report(),
+                server.the_display_configuration_observer_registrar());
+            handle_surface_stack = server.the_surface_stack();
+
+            server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+            indicator->set_cursor_image(server.the_default_cursor_image());
+        }
+
+        void reset()
+        {
+            detach_observer();
+            if(auto const surface_stack = handle_surface_stack.lock())
+                surface_stack->remove_surface(indicator);
+            indicator.reset();
+        }
+
+        template<typename ObserverType, typename... Args>
+        void attach_observer(Args&&... args)
+        {
+            if(!indicator)
+                return;
+
+            observer = std::make_shared<ObserverType>(std::forward<Args>(args)...);
+            indicator->register_interest(observer);
+        }
+
+        void detach_observer()
+        {
+            if (!observer)
+                return;
+
+            indicator->unregister_interest(*observer);
+            observer.reset();
+        }
+
+        void move_to(geom::Point const& pos)
+        {
+            if (indicator)
+                indicator->move_to(pos);
+        }
+
+        void show()
+        {
+            if (indicator)
+                indicator->show();
+        }
+
+        void hide()
+        {
+            if (indicator)
+                indicator->hide();
+        }
+
+    private:
+        static constexpr geom::Rectangle handle_rect{
+            {0, 0},
+            {geom::Width{drag_handle_diameter}, geom::Height{drag_handle_diameter}}};
+
+        std::shared_ptr<HandleIndicator> indicator;
+        std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
+        std::shared_ptr<ms::NullSurfaceObserver> observer;
+    };
+
+    Handle drag;
+    Handle resize;
+    Handle zoom_in;
+    Handle zoom_out;
+
     geom::Point cursor_pos;
     float magnification{default_magnification};
     bool default_enabled{false};
