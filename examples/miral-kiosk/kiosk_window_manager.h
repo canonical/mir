@@ -23,10 +23,10 @@
 
 #include <mir_toolkit/events/enums.h>
 
-class KioskShellWindowManagerPolicy : public miral::KioskWindowManagerPolicy
+class KioskWindowManager : public miral::KioskWindowManagerPolicy
 {
 public:
-    KioskShellWindowManagerPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const&);
+    KioskWindowManager(miral::WindowManagerTools const& tools, std::shared_ptr<SplashSession> const&);
 
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
     void advise_focus_gained(miral::WindowInfo const& info) override;

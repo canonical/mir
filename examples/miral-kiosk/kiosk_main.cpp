@@ -93,7 +93,7 @@ int main(int argc, char const* argv[])
         {
             display_config,
             display_config.layout_option(),
-            set_window_management_policy<KioskShellWindowManagerPolicy>(splash),
+            set_window_management_policy<KioskWindowManager>(splash),
             SetApplicationAuthorizer<KioskAuthorizer>{splash},
             Keymap{},
             show_splash,

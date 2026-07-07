@@ -26,13 +26,13 @@
 using namespace miral;
 using namespace miral::toolkit;
 
-KioskShellWindowManagerPolicy::KioskShellWindowManagerPolicy(WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& splash) :
+KioskWindowManager::KioskWindowManager(WindowManagerTools const& tools, std::shared_ptr<SplashSession> const& splash) :
     miral::KioskWindowManagerPolicy{tools, mir_window_state_maximized},
     splash{splash}
 {
 }
 
-bool KioskShellWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const* event)
+bool KioskWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
 {
     auto const action = mir_keyboard_event_action(event);
     auto const scan_code = mir_keyboard_event_scan_code(event);
@@ -78,7 +78,7 @@ bool KioskShellWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const
     return false;
 }
 
-void KioskShellWindowManagerPolicy::advise_focus_gained(WindowInfo const& info)
+void KioskWindowManager::advise_focus_gained(WindowInfo const& info)
 {
     miral::KioskWindowManagerPolicy::advise_focus_gained(info);
 
