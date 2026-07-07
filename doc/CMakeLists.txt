@@ -14,6 +14,13 @@ mir_add_wrapped_executable(demo-mir-compositor NOINSTALL
 target_link_libraries(demo-mir-compositor
   miral
 )
+
+mir_add_wrapped_executable(demo-config-override NOINSTALL
+  sphinx/how-to/configuration-overrides/main.cpp
+)
+target_link_libraries(demo-config-override
+  miral
+)
 set(OPTIONS_REFERENCE ${SPHINXDIR}/configuring/reference/options.md.include)
 add_custom_target(
   COMMAND
