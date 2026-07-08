@@ -99,7 +99,7 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
 /// explicitly.
 ///
 /// For every interface that appears as the `new_id` of an *event* we generate:
-/// * `create_<interface>` — allocates the resource on behalf of the client,
+/// * `allocate_<interface>` — allocates the resource on behalf of the client,
 ///   registers it and wraps it in its middleware `Box` so C++ can pass it to the
 ///   corresponding `send_<event>_event`.
 /// * `set_<interface>_inner` — stores the fully constructed C++ object into the
