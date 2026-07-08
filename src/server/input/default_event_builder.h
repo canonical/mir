@@ -44,7 +44,7 @@ public:
         xkb_keysym_t keysym,
         int scan_code) override;
 
-    // Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be
+    // Intentionally uses ScrollAxisV1* instead of ScrollAxis* as a reminder that a new copy of this function will be
     // needed for each ScrollAxis struct version.
     EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
@@ -56,7 +56,7 @@ public:
         events::ScrollAxisV1H h_scroll,
         events::ScrollAxisV1V v_scroll) override;
 
-    // Intentionally uses TouchContactV2* instad of TouchContact* as a reminder that a new copy of this function will be
+    // Intentionally uses TouchContactV2* instead of TouchContact* as a reminder that a new copy of this function will be
     // needed for each TouchContact struct version.
     EventUPtr touch_event(
         std::optional<Timestamp> timestamp,

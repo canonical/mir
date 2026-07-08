@@ -198,7 +198,7 @@ void mev::add_touch(
     tev->set_action(current_index, action);
 }
 
-// Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be needed
+// Intentionally uses ScrollAxisV1* instead of ScrollAxis* as a reminder that a new copy of this function will be needed
 // for each ScrollAxis struct version.
 mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
@@ -271,7 +271,7 @@ mir::EventUPtr mev::clone_event(MirEvent const& event)
     return make_uptr_event(event.clone());
 }
 
-// Intentionally uses TouchContactV2 instad of TouchContact as a reminder that a new copy of this function will be needed
+// Intentionally uses TouchContactV2 instead of TouchContact as a reminder that a new copy of this function will be needed
 // for each TouchContact struct version.
 mir::EventUPtr mev::make_touch_event(
     MirInputDeviceId device_id,
