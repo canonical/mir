@@ -173,20 +173,6 @@ void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
     event.to_input()->to_pointer()->set_buttons(button_state);
 }
 
-mir::EventUPtr mev::make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers)
-{
-    auto e = new_event<MirTouchEvent>();
-
-    e->set_device_id(device_id);
-    e->set_event_time(timestamp);
-    e->set_modifiers(modifiers);
-
-    return make_uptr_event(e);
-}
-
 void mev::add_touch(
     MirEvent &event,
     MirTouchId touch_id,
