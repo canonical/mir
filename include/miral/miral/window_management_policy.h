@@ -206,7 +206,7 @@ public:
     ///
     /// \param windows the windows being raised
     /// \note The relative Z-order of these windows will be maintained, they will be raised en bloc.
-    virtual void advise_raise(std::vector<Window> const& windows);
+    virtual void advise_raise(std::span<Window const> windows);
 
     /// Notification that windows are being added to a workspace.
     ///
@@ -219,7 +219,7 @@ public:
     /// \sa miral::WindowManagerTools::add_tree_to_workspace - called to add windows to a workspace
     virtual void advise_adding_to_workspace(
         std::shared_ptr<Workspace> const& workspace,
-        std::vector<Window> const& windows);
+        std::span<Window const> windows);
 
     /// Notification that windows are being removed from a workspace.
     ///
@@ -232,7 +232,7 @@ public:
     /// \sa miral::WindowManagerTools::remove_tree_from_workspace - called to remove windows from a workspace
     virtual void advise_removing_from_workspace(
         std::shared_ptr<Workspace> const& workspace,
-        std::vector<Window> const& windows);
+        std::span<Window const> windows);
 
     /// Request from the client to initiate a move.
     ///
