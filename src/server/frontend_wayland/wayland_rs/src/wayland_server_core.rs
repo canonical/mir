@@ -88,7 +88,10 @@ impl WaylandServer {
 
         let data = crate::dispatch::OutputGlobalData::new(binder);
 
-        let version = <wayland_server::protocol::wl_output::WlOutput as wayland_server::Resource>::interface().version;
+        let version =
+            <wayland_server::protocol::wl_output::WlOutput as wayland_server::Resource>::interface(
+            )
+            .version;
 
         let id = handle.create_global::<
             ServerState,
