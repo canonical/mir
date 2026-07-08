@@ -499,6 +499,7 @@ void InputTriggerActionControlV1::add_input_trigger_event(struct wl_resource* tr
     if (auto* keyboard_trigger = KeyboardTrigger::from(trigger))
     {
         keyboard_trigger->associate_with_action_group(action_group);
+        return;
     }
 
     mir::log_warning(
@@ -511,6 +512,7 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
     if (auto* keyboard_trigger = KeyboardTrigger::from(trigger))
     {
         keyboard_trigger->unassociate_with_action_group(action_group);
+        return;
     }
 
     mir::log_warning(
