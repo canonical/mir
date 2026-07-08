@@ -28,6 +28,8 @@ struct MirInputEvent;
 
 #include <memory>
 
+#define MIR_WINDOW_MANAGEMENT_POLICY_USE_SPAN
+
 namespace miral
 {
 class Window;
