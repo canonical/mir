@@ -20,8 +20,12 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/null_display_configuration_observer.h>
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
+#include "client.h"
 #include <mir/wayland/weak.h>
+#include <mir/wayland/lifetime_tracker.h>
+
+#include <rust/cxx.h>
 
 #include <optional>
 #include <memory>
@@ -34,6 +38,17 @@ namespace mir
 template<typename T>
 class ObserverRegistrar;
 class Executor;
+
+namespace wayland_rs
+{
+class WaylandServer;
+class WaylandClientRegistry;
+// The RAII handle for a dynamically-created `wl_output` global, returned by
+// `WaylandServer::create_output_global`. Defined by the cxx bridge
+// (`wayland_rs/src/ffi.rs.h`); forward-declared here so headers stay light.
+struct OutputGlobal;
+}
+
 namespace frontend
 {
 class DisplayChanger;
@@ -51,44 +66,66 @@ public:
     OutputConfigListener& operator=(OutputConfigListener const&) = delete;
 };
 
-class OutputInstance : public wayland::Output, OutputConfigListener
+class OutputInstance : public wayland_rs::Output, public OutputConfigListener
 {
 public:
-    OutputInstance(wl_resource* resource, OutputGlobal* global);
+    OutputInstance(
+        std::shared_ptr<wayland_rs::Client> const& client,
+        rust::Box<wayland_rs::OutputMiddleware> instance,
+        uint32_t object_id,
+        OutputGlobal* global);
     ~OutputInstance();
 
-    static auto from(wl_resource* output) -> OutputInstance*;
+    static auto from(wayland_rs::Output* output) -> OutputInstance*;
 
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
     void send_done();
 
+    // Disambiguate the two inherited LifetimeTracker::destroyed_flag() (from
+    // wayland_rs::Output and from OutputConfigListener).
+    using wayland_rs::Output::destroyed_flag;
+
     wayland::Weak<OutputGlobal> const global;
 };
 
-class OutputGlobal: public wayland::LifetimeTracker, wayland::Output::Global
+class OutputGlobal : public wayland::LifetimeTracker
 {
 public:
-    OutputGlobal(wl_display* display, graphics::DisplayConfigurationOutput const& initial_configuration);
+    OutputGlobal(
+        wayland_rs::WaylandServer& server,
+        wayland_rs::WaylandClientRegistry& registry,
+        graphics::DisplayConfigurationOutput const& initial_configuration);
+    ~OutputGlobal();
 
-    static auto from(wl_resource* output) -> OutputGlobal*;
-    static auto from_or_throw(wl_resource* output) -> OutputGlobal&;
+    static auto from(wayland_rs::Output* output) -> OutputGlobal*;
+    static auto from_or_throw(wayland_rs::Output* output) -> OutputGlobal&;
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& config);
-    void for_each_output_bound_by(wayland::Client* client, std::function<void(OutputInstance*)> const& functor);
+    void for_each_output_bound_by(wayland_rs::Client* client, std::function<void(OutputInstance*)> const& functor);
     auto current_config() -> graphics::DisplayConfigurationOutput const& { return output_config; }
 
     void add_listener(OutputConfigListener* listener);
     void remove_listener(OutputConfigListener* listener);
 
+    // Called by the per-monitor binder when a client binds this monitor's
+    // `wl_output` global. Constructs the per-bind `OutputInstance` (whose
+    // ownership passes to the Rust server via the returned shared_ptr).
+    auto bind(
+        std::shared_ptr<wayland_rs::Client> const& client,
+        rust::Box<wayland_rs::OutputMiddleware> instance,
+        uint32_t object_id) -> std::shared_ptr<wayland_rs::Output>;
+
 private:
     friend OutputInstance;
 
-    void bind(wl_resource* resource) override;
     void instance_destroyed(OutputInstance* instance);
 
     graphics::DisplayConfigurationOutput output_config;
     std::vector<wayland::Weak<OutputConfigListener>> listeners;
-    std::unordered_map<wayland::Client*, std::vector<OutputInstance*>> instances;
+    std::unordered_map<wayland_rs::Client*, std::vector<OutputInstance*>> instances;
+    // Owns the wl_output global's lifetime: destroyed with this OutputGlobal,
+    // which withdraws the global from the display.
+    std::optional<rust::Box<wayland_rs::OutputGlobal>> global_handle;
 };
 
 class OutputManagerListener
@@ -106,12 +143,13 @@ class OutputManager
 {
 public:
     OutputManager(
-        wl_display* display,
+        wayland_rs::WaylandServer& server,
+        wayland_rs::WaylandClientRegistry& registry,
         std::shared_ptr<Executor> const& executor,
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar);
     ~OutputManager();
 
-    static auto output_id_for(std::optional<wl_resource*> output)
+    static auto output_id_for(wayland_rs::Output* output)
         -> std::optional<graphics::DisplayConfigurationOutputId>;
 
     auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<OutputGlobal*>;
@@ -127,7 +165,8 @@ private:
 
     struct DisplayConfigObserver;
 
-    wl_display* const display;
+    wayland_rs::WaylandServer& server;
+    wayland_rs::WaylandClientRegistry& registry;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const registrar;
     std::shared_ptr<DisplayConfigObserver> const display_config_observer;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<OutputGlobal>> outputs;

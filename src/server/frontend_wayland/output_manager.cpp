@@ -15,16 +15,24 @@
  */
 
 #include "output_manager.h"
-#include "wayland_executor.h"
+
+#include "wayland_client_registry.h"
+#include "output_global_binder.h"
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/observer_registrar.h>
 #include <mir/log.h>
 
+#include <boost/throw_exception.hpp>
+
 #include <algorithm>
+#include <cmath>
+#include <stdexcept>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mw = mir::wayland;
+namespace mwrs = mir::wayland_rs;
 using namespace mir::geometry;
 
 namespace
@@ -35,29 +43,77 @@ auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> uint32_t
     {
     default:
     case mir_subpixel_arrangement_unknown:
-        return mw::Output::Subpixel::unknown;
+        return mwrs::Output::Subpixel::unknown;
 
     case mir_subpixel_arrangement_horizontal_rgb:
-        return mw::Output::Subpixel::horizontal_rgb;
+        return mwrs::Output::Subpixel::horizontal_rgb;
 
     case mir_subpixel_arrangement_horizontal_bgr:
-        return mw::Output::Subpixel::horizontal_bgr;
+        return mwrs::Output::Subpixel::horizontal_bgr;
 
     case mir_subpixel_arrangement_vertical_rgb:
-        return mw::Output::Subpixel::vertical_rgb;
+        return mwrs::Output::Subpixel::vertical_rgb;
 
     case mir_subpixel_arrangement_vertical_bgr:
-        return mw::Output::Subpixel::vertical_bgr;
+        return mwrs::Output::Subpixel::vertical_bgr;
 
     case mir_subpixel_arrangement_none:
-        return mw::Output::Subpixel::none;
+        return mwrs::Output::Subpixel::none;
     }
 }
 
+/// The per-monitor `wayland_rs::OutputGlobalBinder`.
+///
+/// One is created per `OutputGlobal` and handed to the Rust server via
+/// `WaylandServer::create_output_global`; the server owns it for the lifetime
+/// of the global. When a client binds this monitor's `wl_output` global the
+/// server calls `bind()`, which resolves the raw client and forwards to the
+/// owning `OutputGlobal`.
+class OutputGlobalBinder : public mwrs::OutputGlobalBinder
+{
+public:
+    OutputGlobalBinder(mf::OutputGlobal& global, mwrs::WaylandClientRegistry& registry)
+        : global{mw::make_weak(&global)},
+          registry{registry}
+    {
+    }
+
+    auto bind(
+        rust::Box<mwrs::WaylandClient> client,
+        rust::Box<mwrs::OutputMiddleware> instance,
+        uint32_t object_id) -> std::shared_ptr<mwrs::Output> override
+    {
+        auto const resolved = registry.from(client);
+        if (!resolved)
+        {
+            throw std::logic_error{"wl_output bound for an unregistered client"};
+        }
+        if (!global)
+        {
+            throw std::logic_error{"wl_output bound after its monitor was removed"};
+        }
+        return global.value().bind(resolved, std::move(instance), object_id);
+    }
+
+    auto can_view(rust::Box<mwrs::WaylandClientId> /*client_id*/) -> bool override
+    {
+        // Outputs are core Wayland globals and are visible to every client for
+        // as long as the monitor exists.
+        return static_cast<bool>(global);
+    }
+
+private:
+    mw::Weak<mf::OutputGlobal> const global;
+    mwrs::WaylandClientRegistry& registry;
+};
 }
 
-mf::OutputInstance::OutputInstance(wl_resource* resource, OutputGlobal* global)
-    : Output{resource, Version<4>()},
+mf::OutputInstance::OutputInstance(
+    std::shared_ptr<mwrs::Client> const& client,
+    rust::Box<mwrs::OutputMiddleware> instance,
+    uint32_t object_id,
+    OutputGlobal* global)
+    : Output{client, std::move(instance), object_id},
       global{mw::make_weak(global)}
 {
     global->add_listener(this);
@@ -76,9 +132,9 @@ mf::OutputInstance::~OutputInstance()
 }
 // NOLINTEND(bugprone-exception-escape)
 
-auto mf::OutputInstance::from(wl_resource* output) -> OutputInstance*
+auto mf::OutputInstance::from(mwrs::Output* output) -> OutputInstance*
 {
-    return dynamic_cast<OutputInstance*>(mw::Output::from(output));
+    return dynamic_cast<OutputInstance*>(output);
 }
 
 auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool
@@ -98,57 +154,53 @@ auto mf::OutputInstance::output_config_changed(mg::DisplayConfigurationOutput co
         auto const& mode = config.modes[i];
 
         send_mode_event(
-            ((i == config.preferred_mode_index ? mw::Output::Mode::preferred : 0) |
-             (i == config.current_mode_index ? mw::Output::Mode::current : 0)),
+            ((i == config.preferred_mode_index ? mwrs::Output::Mode::preferred : 0) |
+             (i == config.current_mode_index ? mwrs::Output::Mode::current : 0)),
              mode.size.width.as_int(),
              mode.size.height.as_int(),
             mode.vrefresh_hz * 1000);
     }
 
-    if (version_supports_scale())
-    {
-        send_scale_event(ceil(config.scale));
-    }
+    send_scale_event_if_supported(static_cast<int32_t>(ceil(config.scale)));
 
     return true;
 }
 
 void mf::OutputInstance::send_done()
 {
-    if (version_supports_done())
-    {
-        send_done_event();
-    }
+    send_done_event_if_supported();
 }
 
-mf::OutputGlobal::OutputGlobal(wl_display* display, mg::DisplayConfigurationOutput const& initial_configuration)
-    : Global{display, Version<4>{}},
-      output_config{initial_configuration}
+mf::OutputGlobal::OutputGlobal(
+    mwrs::WaylandServer& server,
+    mwrs::WaylandClientRegistry& registry,
+    mg::DisplayConfigurationOutput const& initial_configuration)
+    : output_config{initial_configuration}
 {
+    global_handle.emplace(
+        server.create_output_global(std::make_unique<OutputGlobalBinder>(*this, registry)));
 }
 
-auto mf::OutputGlobal::from(wl_resource* output) -> OutputGlobal*
+mf::OutputGlobal::~OutputGlobal() = default;
+
+auto mf::OutputGlobal::from(mwrs::Output* output) -> OutputGlobal*
 {
     auto const instance = OutputInstance::from(output);
     return instance ? mw::as_nullable_ptr(instance->global) : nullptr;
 }
 
-auto mf::OutputGlobal::from_or_throw(wl_resource* output) -> OutputGlobal&
+auto mf::OutputGlobal::from_or_throw(mwrs::Output* output) -> OutputGlobal&
 {
     auto const instance = OutputInstance::from(output);
     if (!instance)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "wl_output@" +
-            std::to_string(wl_resource_get_id(output)) +
-            " is not a mir::frontend::OutputInstance"));
+            "wl_output is not a mir::frontend::OutputInstance"));
     }
     if (!instance->global)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "the output global associated with wl_output@" +
-            std::to_string(wl_resource_get_id(output)) +
-            " has been destroyed"));
+            "the output global associated with the wl_output has been destroyed"));
     }
     return instance->global.value();
 }
@@ -177,7 +229,7 @@ void mf::OutputGlobal::handle_configuration_changed(mg::DisplayConfigurationOutp
 }
 
 void mf::OutputGlobal::for_each_output_bound_by(
-    wayland::Client* client,
+    mwrs::Client* client,
     std::function<void(OutputInstance*)> const& functor)
 {
     auto const resources = instances.find(client);
@@ -201,20 +253,25 @@ void mf::OutputGlobal::remove_listener(OutputConfigListener* listener)
     std::erase_if(listeners, [&](auto candidate) { return !candidate || &candidate.value() == listener; });
 }
 
-void mf::OutputGlobal::bind(wl_resource* resource)
+auto mf::OutputGlobal::bind(
+    std::shared_ptr<mwrs::Client> const& client,
+    rust::Box<mwrs::OutputMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<mwrs::Output>
 {
-    auto const instance = new OutputInstance(resource, this);
-    instances[instance->client].push_back(instance);
+    auto const output_instance =
+        std::make_shared<OutputInstance>(client, std::move(instance), object_id, this);
+    instances[client.get()].push_back(output_instance.get());
     for (auto const& listener : listeners)
     {
         if (listener) listener.value().output_config_changed(output_config);
     }
-    instance->send_done();
+    output_instance->send_done();
+    return output_instance;
 }
 
 void mf::OutputGlobal::instance_destroyed(OutputInstance* instance)
 {
-    auto const iter = instances.find(instance->client);
+    auto const iter = instances.find(instance->client.get());
     if (iter == instances.end())
     {
         return;
@@ -252,10 +309,12 @@ private:
 };
 
 mf::OutputManager::OutputManager(
-    wl_display* display,
+    mwrs::WaylandServer& server,
+    mwrs::WaylandClientRegistry& registry,
     std::shared_ptr<Executor> const& executor,
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar)
-    : display{display},
+    : server{server},
+      registry{registry},
       registrar{registrar},
       display_config_observer{std::make_shared<DisplayConfigObserver>(*this, executor)}
 {
@@ -267,12 +326,12 @@ mf::OutputManager::~OutputManager()
     registrar->unregister_interest(*display_config_observer);
 }
 
-auto mf::OutputManager::output_id_for(std::optional<wl_resource*> output)
+auto mf::OutputManager::output_id_for(mwrs::Output* output)
     -> std::optional<graphics::DisplayConfigurationOutputId>
 {
     if (output)
     {
-        if (auto const global = OutputGlobal::from(output.value()))
+        if (auto const global = OutputGlobal::from(output))
         {
             return global->current_config().id;
         }
@@ -310,30 +369,30 @@ auto mf::OutputManager::from_output_transform(int32_t transform) -> std::tuple<M
     MirMirrorMode mirror_mode = mir_mirror_mode_none;
     switch (transform)
     {
-        case mw::Output::Transform::normal:
+        case mwrs::Output::Transform::normal:
             break;
-        case mw::Output::Transform::_90:
+        case mwrs::Output::Transform::r_90:
             orientation = mir_orientation_left;
             break;
-        case mw::Output::Transform::_180:
+        case mwrs::Output::Transform::r_180:
             orientation = mir_orientation_inverted;
             break;
-        case mw::Output::Transform::_270:
+        case mwrs::Output::Transform::r_270:
             orientation = mir_orientation_right;
             break;
-        case mw::Output::Transform::flipped:
+        case mwrs::Output::Transform::flipped:
             orientation = mir_orientation_normal;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
-        case mw::Output::Transform::flipped_90:
+        case mwrs::Output::Transform::flipped_90:
             orientation = mir_orientation_left;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
-        case mw::Output::Transform::flipped_180:
+        case mwrs::Output::Transform::flipped_180:
             orientation = mir_orientation_inverted;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
-        case mw::Output::Transform::flipped_270:
+        case mwrs::Output::Transform::flipped_270:
             orientation = mir_orientation_right;
             mirror_mode = mir_mirror_mode_horizontal;
             break;
@@ -362,19 +421,19 @@ auto mir::frontend::OutputManager::to_output_transform(MirOrientation orientatio
             orientation_index = 3;
             break;
         default:
-            return mw::Output::Transform::normal;
+            return mwrs::Output::Transform::normal;
     }
 
     // Lookup table: [orientation_index][mirror_mode]
     static constexpr int32_t transform_table[4][3] = {
         // mir_orientation_normal
-        { mw::Output::Transform::normal, mw::Output::Transform::normal, mw::Output::Transform::flipped },
+        { mwrs::Output::Transform::normal, mwrs::Output::Transform::normal, mwrs::Output::Transform::flipped },
         // mir_orientation_left
-        { mw::Output::Transform::_90, mw::Output::Transform::_90, mw::Output::Transform::flipped_90 },
+        { mwrs::Output::Transform::r_90, mwrs::Output::Transform::r_90, mwrs::Output::Transform::flipped_90 },
         // mir_orientation_inverted
-        { mw::Output::Transform::_180, mw::Output::Transform::_180, mw::Output::Transform::flipped_180 },
+        { mwrs::Output::Transform::r_180, mwrs::Output::Transform::r_180, mwrs::Output::Transform::flipped_180 },
         // mir_orientation_right
-        { mw::Output::Transform::_270, mw::Output::Transform::_270, mw::Output::Transform::flipped_270 },
+        { mwrs::Output::Transform::r_270, mwrs::Output::Transform::r_270, mwrs::Output::Transform::flipped_270 },
     };
 
     return transform_table[orientation_index][mirror_mode];
@@ -399,7 +458,7 @@ void mf::OutputManager::handle_configuration_change(std::shared_ptr<mg::DisplayC
             }
             else if (output_config.used)
             {
-                auto output_global{std::make_unique<OutputGlobal>(display, output_config)};
+                auto output_global{std::make_unique<OutputGlobal>(server, registry, output_config)};
                 auto* output_global_pointer{output_global.get()};
                 outputs[output_config.id] = std::move(output_global);
                 for (auto& listener : listeners)

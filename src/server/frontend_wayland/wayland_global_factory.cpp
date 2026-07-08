@@ -27,6 +27,7 @@
 #include "zwp_pointer_constraints_v1.h"
 #include "input_trigger_action_v1.h"
 #include "input_trigger_registration_v1.h"
+#include "xdg_output_v1.h"
 
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_client_registry.h"
@@ -371,9 +372,13 @@ auto mf::WaylandGlobalFactory::create_zxdg_decoration_manager_v1(rust::Box<wayla
     throw std::logic_error{"WaylandGlobalFactory::create_zxdg_decoration_manager_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_zxdg_output_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::XdgOutputManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::XdgOutputManagerV1>
+auto mf::WaylandGlobalFactory::create_zxdg_output_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgOutputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgOutputManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zxdg_output_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zxdg_output_manager_v1 called for an unregistered client"};
+
+    return std::make_shared<XdgOutputManagerV1>(resolved, std::move(instance), object_id);
 }
 
 auto mf::WaylandGlobalFactory::create_zxdg_shell_v6(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::XdgShellV6Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::XdgShellV6>
