@@ -441,11 +441,38 @@ public:
 
         server.add_stop_callback([&]
         {
-            std::lock_guard lock(mutex);
-            if (auto const locked = cursor_multiplexer.lock())
-                locked->unregister_interest(*observer);
+            // The naive way to do this would be:
+            //  - lock self->mutex
+            //  - unregister observers
+            //
+            // This may cause a deadlock in the following case:
+            //  - lock self->mutex
+            //  - on another thread, the observer gets called into, attempts to lock self->mutex and blocks
+            //  - unregistering the observer waits until the observer returns, which it will not since its waiting on the lock
+            //  - deadlock: unregister waiting on observer, observer waiting on lock held to unregister
+            //
+            //  The lock is only required to grab references to the observers
+            //  and handles, so we lock, copy, then unregister without holding
+            //  the lock.
 
-            for (auto* handle : {&drag, &resize, &zoom_in, &zoom_out})
+            std::shared_ptr<mi::CursorObserverMultiplexer> local_cursor_mux;
+            std::shared_ptr<Observer> local_observer;
+            Handle local_drag, local_resize, local_zoom_in, local_zoom_out;
+            {
+                std::lock_guard lock(mutex);
+
+                local_cursor_mux = cursor_multiplexer.lock();
+                local_observer = observer;
+                local_drag = std::exchange(drag, {});
+                local_resize = std::exchange(resize, {});
+                local_zoom_in = std::exchange(zoom_in, {});
+                local_zoom_out = std::exchange(zoom_out, {});
+            }
+
+            if (local_cursor_mux && local_observer)
+                local_cursor_mux->unregister_interest(*local_observer);
+
+            for (auto* handle : {&local_drag, &local_resize, &local_zoom_in, &local_zoom_out})
                 handle->reset();
         });
     }
