@@ -149,7 +149,7 @@ private:
         {
             for (int y = 0; y < height; ++y)
                 for (int x = 0; x < width; ++x)
-                set_pixel(x, y, 0, 0);
+                    set_pixel(x, y, 0, 0);
         }
 
         void fill_circle(uint8_t grey, uint8_t alpha)
