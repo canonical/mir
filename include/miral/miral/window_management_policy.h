@@ -28,6 +28,9 @@ struct MirInputEvent;
 
 #include <memory>
 
+// This allows downstreams to detect the method rename
+#define MIRAL_USE_HANDLE_RAISE_WINDOW_IS_DEAD
+
 namespace miral
 {
 class Window;
