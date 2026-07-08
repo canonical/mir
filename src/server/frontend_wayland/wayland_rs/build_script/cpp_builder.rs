@@ -239,6 +239,11 @@ impl CppBuilder {
                 result.push_str("};\n\n");
             }
 
+            // Emit free-function declarations at namespace scope.
+            for free_fn in &namespace.free_functions {
+                result.push_str(&format!("{};\n\n", free_fn.signature));
+            }
+
             // Close namespace(s)
             for _ in &namespace.name {
                 result.push_str("}\n");
@@ -283,6 +288,18 @@ impl CppBuilder {
                     result.push_str(&format!("    {}\n", body));
                     result.push_str("}\n\n");
                 }
+            }
+
+            // Emit free-function definitions inside the (re-opened) namespace so that they
+            // can refer to other declarations in this namespace by their unqualified names.
+            if !namespace.free_functions.is_empty() {
+                result.push_str(&format!("namespace {}\n{{\n", namespace_str));
+                for free_fn in &namespace.free_functions {
+                    result.push_str(&format!("{}\n{{\n", free_fn.signature));
+                    result.push_str(&format!("    {}\n", free_fn.body));
+                    result.push_str("}\n\n");
+                }
+                result.push_str(&format!("}}  // namespace {}\n\n", namespace_str));
             }
         }
 
@@ -369,10 +386,22 @@ impl CppBuilder {
     }
 }
 
+/// A free (non-member) function emitted at namespace scope: declared in the header and
+/// defined in the .cpp source. Unlike `CppClass` methods, these are never emitted to the
+/// generated Rust/cxx bindings, so they are suitable for pure C++ convenience wrappers.
+pub struct CppFreeFunction {
+    /// The full function signature, without a trailing semicolon or body, e.g.
+    /// `auto create_wl_buffer(WaylandClient const& client, uint32_t version) -> std::shared_ptr<Buffer>`.
+    pub signature: String,
+    /// The function body (statements only, without the surrounding braces).
+    pub body: String,
+}
+
 pub struct CppNamespace {
     pub name: Vec<String>,
     pub classes: Vec<CppClass>,
     forward_declarations: Vec<String>,
+    free_functions: Vec<CppFreeFunction>,
 }
 
 impl CppNamespace {
@@ -385,6 +414,7 @@ impl CppNamespace {
             name: name.into_iter().map(Into::into).collect(),
             classes: vec![],
             forward_declarations: vec![],
+            free_functions: vec![],
         }
     }
 
@@ -393,6 +423,15 @@ impl CppNamespace {
         self.classes
             .last_mut()
             .expect("classes cannot be empty after push")
+    }
+
+    /// Add a free function to be emitted at namespace scope (declaration in the header,
+    /// definition in the .cpp source).
+    pub fn add_free_function(&mut self, signature: impl Into<String>, body: impl Into<String>) {
+        self.free_functions.push(CppFreeFunction {
+            signature: signature.into(),
+            body: body.into(),
+        });
     }
 
     pub fn add_forward_declaration_struct(&mut self, name: &str) {

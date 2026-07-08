@@ -70,6 +70,21 @@ impl WaylandClient {
         Box::new(self.clone())
     }
 
+    /// Access the underlying [Client].
+    ///
+    /// Used by generated server-side factories to create resources on behalf of
+    /// this client (see [Client::create_resource]).
+    pub(crate) fn inner_client(&self) -> &Client {
+        &self.client
+    }
+
+    /// Access the underlying [DisplayHandle].
+    ///
+    /// Used by generated server-side factories when creating resources.
+    pub(crate) fn display_handle(&self) -> &DisplayHandle {
+        &self.handle
+    }
+
     /// Kill this client with a protocol error.
     ///
     /// This will disconnect the client, sending the protocol error as the reason.
