@@ -23,18 +23,42 @@
   </copyright>
 
   <description summary="Registration of global input triggers and associated actions">
-    This protocol allows for a privileged Wayland client to register ownership
-    of input trigger events and associate them with actions.
+    This protocol lets a privileged client define global input actions and bind
+    them to input triggers, such as key combinations. An action is an activity
+    (for example "play/pause" or "toggle-launcher"); a trigger is an input, such
+    as "Meta+p", that fires it. When a trigger fires, the client subscribed to
+    the action is notified through the `ext_input_trigger_action_v1` protocol.
 
-    ext_input_trigger_registration_v1 and the associated ext_input_trigger_action_v1
-    are based on the following discussion document:
-    https://docs.google.com/document/d/1Hj3BXkmW1quIEWqmN7xeJY29nSPfXP2bmoZvpOsEeJQ/
+    The registering client reserves a trigger (obtaining an
+    `ext_input_trigger_v1`), creates an action (obtaining an
+    `ext_input_trigger_action_control_v1` and, with it, a token), and associates
+    triggers with the action. It then delivers the token to interested clients
+    out of band (for example through a desktop settings service), which subscribe
+    using `ext_input_trigger_action_manager_v1.get_input_trigger_action`.
+
+    For example, binding "Meta+p" to a "play/pause" action:
+
+        # bind the manager global and reserve a key combination
+        manager = registry.bind(ext_input_trigger_registration_manager_v1)
+        trigger = manager.register_keyboard_sym_trigger(Meta, XKB_KEY_p)
+
+        # create the action and collect its token
+        control = manager.get_action_control("play/pause")
+        on control.done(token):
+            control.add_input_trigger_event(trigger)
+            # hand the token to interested clients out of band
+            settings_service.publish("play/pause", token)
+
+        # when the user later removes the binding, purge the action
+        on user_removes_binding("play/pause"):
+            control.cancel_and_destroy()
   </description>
 
   <interface name="ext_input_trigger_registration_manager_v1" version="1">
     <description summary="used to register input triggers and actions">
-      This interface allows a Wayland client to register ownership of input
-      trigger events and associate them with actions.
+      This global interface allows a Wayland client to register ownership of
+      input trigger events and associate them with actions. It is advertised by
+      the registry and bound by the client.
     </description>
 
     <enum name="capability" bitfield="true">
@@ -47,9 +71,10 @@
 
     <event name="capabilities">
       <description summary="input trigger capabilities">
-        This is emitted when ext_input_trigger_registration_manager_v1 is bound
-        and whenever a system gains or loses the capabilities. The argument is
-        a capability enum containing the complete set of capabilities.
+        This is emitted when `ext_input_trigger_registration_manager_v1` is
+        bound and whenever a system gains or loses the capabilities. The
+        argument is a capability enum containing the complete set of
+        capabilities.
       </description>
       <arg name="capabilities" type="uint" enum="capability" summary="types of inputs that support triggers"/>
     </event>
@@ -64,11 +89,11 @@
 
     <enum name="modifiers" bitfield="true">
       <description summary="modifier keys">
-        The various modifiers on the keyboard
+        The various modifiers on the keyboard.
       </description>
       <entry name="alt" value="0x01" summary="any Alt key"/>
       <entry name="alt_left" value="0x02" summary="left Alt key"/>
-      <entry name="alt_right" value="0x04" summary="Right Alt key"/>
+      <entry name="alt_right" value="0x04" summary="right Alt key"/>
       <entry name="shift" value="0x08" summary="any Shift key"/>
       <entry name="shift_left" value="0x10" summary="left Shift key"/>
       <entry name="shift_right" value="0x20" summary="right Shift key"/>
@@ -84,7 +109,7 @@
     </enum>
 
     <request name="register_keyboard_sym_trigger">
-      <description summary="register input trigger">
+      <description summary="register a keysym-based input trigger">
         This request creates an input trigger and asks the compositor to reserve
         it to the manager. This allows triggering on a character key combination
         such as "Meta+a".
@@ -99,22 +124,22 @@
         pressed and ends when that changes. The keysym parameter is interpreted
         according to xkbcommon-keysyms.h.
 
-        The compositor will send either the ext_input_trigger_v1.done or
-        ext_input_trigger_v1.failed event on the created object in
+        The compositor will send either the `ext_input_trigger_v1.done` or
+        `ext_input_trigger_v1.failed` event on the created object in
         response to this request.
 
         Input actions triggered by this request will result in an
-        ext_input_trigger_action_v1.begin event when the key combination is
-        depressed and ext_input_trigger_action_v1.end when the key combination
+        `ext_input_trigger_action_v1.begin` event when the key combination is
+        pressed and `ext_input_trigger_action_v1.end` when the key combination
         changes. Key repeats are ignored.
       </description>
-      <arg name="modifiers" type="uint" enum="modifiers"/>
+      <arg name="modifiers" type="uint" enum="modifiers" summary="bitmask of modifier keys held for the trigger"/>
       <arg name="keysym" type="uint" summary="the key to trigger the action"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
 
     <request name="register_keyboard_code_trigger">
-      <description summary="register input trigger">
+      <description summary="register a keycode-based input trigger">
         This request creates an input trigger and asks the compositor to reserve
         it to the manager. This allows triggering on a specific key combination
         such as "Alt+the-key-above-tab".
@@ -122,16 +147,16 @@
         The trigger begins when the combination of modifiers and keycode are
         pressed and ends when that changes.
 
-        The compositor will send either the ext_input_trigger_v1.done or
-        ext_input_trigger_v1.failed event on the created object in
+        The compositor will send either the `ext_input_trigger_v1.done` or
+        `ext_input_trigger_v1.failed` event on the created object in
         response to this request.
 
         Input actions triggered by this request will result in an
-        ext_input_trigger_action_v1.begin event when the key combination is
-        depressed and ext_input_trigger_action_v1.end when the key combination
+        `ext_input_trigger_action_v1.begin` event when the key combination is
+        pressed and `ext_input_trigger_action_v1.end` when the key combination
         changes. Key repeats are ignored.
       </description>
-      <arg name="modifiers" type="uint" enum="modifiers"/>
+      <arg name="modifiers" type="uint" enum="modifiers" summary="bitmask of modifier keys held for the trigger"/>
       <arg name="keycode" type="uint" summary="the key to trigger the action"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_v1"/>
     </request>
@@ -152,16 +177,19 @@
   </interface>
 
   <interface name="ext_input_trigger_v1" version="1">
-    <description summary="represents the (attempted) registration of an input trigger">
-      In response to the creation of this object the compositor must send
-      either the done or failed event.
+    <description summary="a reserved input trigger">
+      This object represents a client's request to reserve an input trigger.
+      In response to its creation the compositor must send either the `done`
+      or the `failed` event.
 
-      The done event indicates that the trigger is "owned" by the manager.
-      This means the compositor will not allow this, or any other manager to
-      register the trigger event.
+      The done event indicates the trigger is now owned by the manager: the
+      compositor will not allow this or any other manager to register the same
+      trigger. The reservation lasts until the object is destroyed, which
+      releases the trigger.
 
-      The failed event indicates that the trigger is not "owned" by the manager.
-      This means the object is of no further use and should be destroyed.
+      The failed event indicates the trigger could not be owned by the manager,
+      for example because it is already reserved. The object is then of no
+      further use and should be destroyed.
     </description>
 
     <request name="destroy" type="destructor">
@@ -186,9 +214,19 @@
   </interface>
 
   <interface name="ext_input_trigger_action_control_v1" version="1">
-    <description summary="Allows configuration of an input trigger action">
-      In response to the creation of this object the compositor must send
-      the done event.
+    <description summary="an input trigger action">
+      This object represents an input trigger action owned by this client. The
+      action associates one or more input triggers with a token that other
+      clients can use, via the `ext_input_trigger_action_v1` protocol, to be
+      notified when the action fires.
+
+      In response to the creation of this object the compositor must send the
+      done event, which delivers the action's token. Triggers are associated
+      with the action using `add_input_trigger_event` and
+      `drop_input_trigger_event`.
+
+      Destroying the object with `cancel_and_destroy` purges the action, while
+      destroy leaves it intact; see those requests for details.
     </description>
 
     <request name="add_input_trigger_event">
@@ -206,35 +244,51 @@
     </request>
 
     <event name="done">
-      <description summary="the exported action token">
-        The 'done' event contains the unique token of this action and notifies
-        that the provider is done. The action token is usable by the
-        ext_input_trigger_action_v1 protocol to get handles to actions via
-        `ext_input_trigger_action_v1.get_input_trigger_action`. The token can be
-        used by this or another client (or clients). This token must only be
-        valid for a small duration of time, after which trying to use it will
-        raise an `invalid_token` protocol error.
+      <description summary="action registered and token issued">
+        This event delivers the action's token. It is sent once, immediately
+        after the object is created.
+
+        The action token is usable by the `ext_input_trigger_action_manager_v1`
+        protocol to get handles to actions via
+        `ext_input_trigger_action_manager_v1.get_input_trigger_action`. The
+        token can be used by this or another client (or clients).
+
+        The token expires a short, implementation-defined time after this event
+        is sent, whether or not it has been used; using it does not extend its
+        lifetime. A client should therefore use the token, or hand it to
+        another client, promptly. After it expires, passing it to
+        `ext_input_trigger_action_manager_v1.get_input_trigger_action` raises
+        an `invalid_token` protocol error.
       </description>
       <arg name="token" type="string" summary="the exported action token"/>
     </event>
 
-    <request name="cancel" type="destructor">
-      <description summary="purge the input trigger action">
-        This informs the compositor that the input trigger action will no
-        longer be used. This request may be made when the user requests to
-        delete an input trigger.
+    <request name="cancel_and_destroy" type="destructor">
+      <description summary="purge the input trigger action and destroy this object">
+        This purges the input trigger action and destroys this object. It would
+        typically be used when the user deletes the input trigger the action
+        represents.
 
-        Any ext_input_trigger_action_v1 created from the associated token
-        by this or other clients will become unavailable.
+        The action itself ceases to exist: every `ext_input_trigger_action_v1`
+        that was created from this action's token (by this or any other client)
+        is notified with an `ext_input_trigger_action_v1.unavailable` event and
+        will receive no further begin or end events.
+
+        To destroy this object while leaving the action (and any
+        `ext_input_trigger_action_v1` objects derived from it) intact, use
+        destroy instead.
       </description>
     </request>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the input trigger action">
-        This informs the compositor that the input trigger action will no
-        longer be used.
-        Any ext_input_trigger_action_v1 created from the associated token
-        by this or other clients will be unaffected.
+      <description summary="destroy this object but leave the action intact">
+        This destroys this object without purging the input trigger action. The
+        action continues to exist: any `ext_input_trigger_action_v1` created
+        from its token (by this or any other client) is unaffected and keeps
+        receiving begin and end events.
+
+        To purge the action and make those objects unavailable, use
+        `cancel_and_destroy` instead.
       </description>
     </request>
   </interface>
