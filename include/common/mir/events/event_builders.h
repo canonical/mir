@@ -132,12 +132,6 @@ EventUPtr make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers,
-    std::vector<TouchContactV1> const& contacts);
-
-EventUPtr make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
     std::vector<TouchContact> const& contacts);
 
 EventUPtr clone_event(MirEvent const& event);
