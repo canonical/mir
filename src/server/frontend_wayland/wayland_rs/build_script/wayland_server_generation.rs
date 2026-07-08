@@ -48,6 +48,13 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
             return None;
         }
 
+        // `wl_output` is advertised dynamically (one global per monitor) via
+        // `WaylandServer::create_output_global`, so it must not be registered
+        // statically here. See `generate_output_dynamic_global`.
+        if interface.name == "wl_output" {
+            return None;
+        }
+
         let interface_name = format_ident!("{}", interface.name);
         let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
         let version = interface.version;

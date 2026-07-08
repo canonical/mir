@@ -19,73 +19,59 @@
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
 
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
+#include "wayland.h"
+#include "weak.h"
+#include "client.h"
+#include "protocol_error.h"
 #include <mir/geometry/rectangle.h>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
-namespace mir
-{
-namespace frontend
-{
-class WlSubcompositorInstance: wayland::Subcompositor
-{
-public:
-    WlSubcompositorInstance(wl_resource* new_resource);
-
-private:
-    void get_subsurface(wl_resource* new_subsurface, wl_resource* surface, wl_resource* parent) override;
-};
-}
-}
-
-mf::WlSubcompositor::WlSubcompositor(wl_display* display)
-    : Global{display, Version<1>()}
+mf::WlSubcompositor::WlSubcompositor(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::SubcompositorMiddleware> instance,
+    uint32_t object_id)
+    : mw::Subcompositor{std::move(client), std::move(instance), object_id}
 {
 }
 
-void mf::WlSubcompositor::bind(wl_resource* new_wl_subcompositor)
+auto mf::WlSubcompositor::get_subsurface(
+    mw::Weak<mw::Surface> const& surface,
+    mw::Weak<mw::Surface> const& parent,
+    rust::Box<mw::SubsurfaceMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Subsurface>
 {
-    new WlSubcompositorInstance(new_wl_subcompositor);
-}
-
-mf::WlSubcompositorInstance::WlSubcompositorInstance(wl_resource* new_resource)
-    : wayland::Subcompositor(new_resource, Version<1>())
-{
-}
-
-void mf::WlSubcompositorInstance::get_subsurface(
-    wl_resource* new_subsurface,
-    wl_resource* surface,
-    wl_resource* parent)
-{
-    if (surface == parent)
+    WlSurface* child_surface = mw::Surface::from<WlSurface>(surface);
+    WlSurface* parent_surface = mw::Surface::from<WlSurface>(parent);
+    if (child_surface == parent_surface)
     {
-        throw wayland::ProtocolError{
-            new_subsurface,
-            mw::Subcompositor::Error::bad_parent,
+        throw mw::ProtocolError{
+            object_id(),
+            Error::bad_parent,
             "Surface cannot be its own parent"};
     }
-    WlSurface* child_surface = WlSurface::from(surface);
-    WlSurface* parent_surface = WlSurface::from(parent);
     if (child_surface->has_subsurface_with_surface(parent_surface))
     {
-        throw wayland::ProtocolError{
-            new_subsurface,
-            mw::Subcompositor::Error::bad_parent,
+        throw mw::ProtocolError{
+            object_id(),
+            Error::bad_parent,
             "Parent surface cannot be a descendant of the child surface"};
     }
-    new WlSubsurface(new_subsurface, child_surface, parent_surface);
+    return std::make_shared<WlSubsurface>(client, std::move(child_instance), child_object_id, child_surface, parent_surface);
 }
 
-mf::WlSubsurface::WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface)
-    : wayland::Subsurface(new_subsurface, Version<1>()),
+mf::WlSubsurface::WlSubsurface(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::SubsurfaceMiddleware> instance,
+    uint32_t object_id,
+    WlSurface* surface,
+    WlSurface* parent_surface)
+    : mw::Subsurface{std::move(client), std::move(instance), object_id},
       surface{surface},
-      parent{parent_surface},
+      parent{mw::make_weak(parent_surface)},
       synchronized_{true}
 {
     parent_surface->add_subsurface(this);
@@ -153,7 +139,7 @@ void mf::WlSubsurface::set_position(int32_t x, int32_t y)
     surface->set_pending_offset(geom::Displacement{x, y});
 }
 
-void mf::WlSubsurface::place_above(struct wl_resource* sibling)
+void mf::WlSubsurface::place_above(mw::Weak<mw::Surface> const& sibling)
 {
     if (!parent)
     {
@@ -161,28 +147,28 @@ void mf::WlSubsurface::place_above(struct wl_resource* sibling)
         return;
     }
 
-    WlSurface* sibling_surface = WlSurface::from(sibling);
+    WlSurface* sibling_surface = mw::Surface::from<WlSurface>(sibling);
 
     if (sibling_surface == surface)
     {
         throw mw::ProtocolError{
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            Error::bad_surface,
             "wl_subsurface.place_above: sibling cannot be the subsurface itself"};
     }
 
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
         throw mw::ProtocolError{
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            Error::bad_surface,
             "wl_subsurface.place_above: sibling must be the parent or a sibling subsurface"};
     }
 
     parent.value().reorder_subsurface(this, sibling_surface, WlSurface::SubsurfacePlacement::above);
 }
 
-void mf::WlSubsurface::place_below(struct wl_resource* sibling)
+void mf::WlSubsurface::place_below(mw::Weak<mw::Surface> const& sibling)
 {
     if (!parent)
     {
@@ -190,21 +176,21 @@ void mf::WlSubsurface::place_below(struct wl_resource* sibling)
         return;
     }
 
-    WlSurface* sibling_surface = WlSurface::from(sibling);
+    WlSurface* sibling_surface = mw::Surface::from<WlSurface>(sibling);
 
     if (sibling_surface == surface)
     {
         throw mw::ProtocolError{
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            Error::bad_surface,
             "wl_subsurface.place_below: sibling cannot be the subsurface itself"};
     }
 
     if (sibling_surface != &parent.value() && !parent.value().has_subsurface_with_surface(sibling_surface))
     {
         throw mw::ProtocolError{
-            resource,
-            mw::Subsurface::Error::bad_surface,
+            object_id(),
+            Error::bad_surface,
             "wl_subsurface.place_below: sibling must be the parent or a sibling subsurface"};
     }
 
@@ -268,13 +254,13 @@ void mf::WlSubsurface::surface_destroyed()
     {
         // "When a client wants to destroy a wl_surface, they must destroy this 'role object' wl_surface"
         BOOST_THROW_EXCEPTION(std::runtime_error{
-            "wl_surface@" + std::to_string(wl_resource_get_id(surface->resource)) +
-            " destroyed before it's associated wl_subsurface@" + std::to_string(wl_resource_get_id(resource))});
+            "wl_surface@" + std::to_string(surface->object_id()) +
+            " destroyed before it's associated wl_subsurface@" + std::to_string(object_id())});
     }
     else
     {
-        // If the client has been destroyed, everything is getting cleaned up in an arbitrary order. Delete this so our
+        // If the client has been destroyed, everything is getting cleaned up in an arbitrary order. Destroy this so our
         // derived class doesn't end up using the now-defunct surface.
-        delete this;
+        destroy_and_delete();
     }
 }

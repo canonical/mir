@@ -17,21 +17,44 @@
 #ifndef MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 #define MIR_FRONTEND_IDLE_INHIBIT_V1_H_
 
-#include "idle-inhibit-unstable-v1_wrapper.h"
-#include <mir/scene/idle_hub.h>
+#include "idle_inhibit_unstable_v1.h"
 
 #include <memory>
 
 namespace mir
 {
 class Executor;
+
+namespace scene
+{
+class IdleHub;
+}
+
 namespace frontend
 {
-auto create_idle_inhibit_manager_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> wayland_executor,
-    std::shared_ptr<scene::IdleHub> idle_hub)
--> std::shared_ptr<wayland::IdleInhibitManagerV1::Global>;
+struct IdleInhibitV1Ctx
+{
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<scene::IdleHub> const idle_hub;
+};
+
+class IdleInhibitManagerV1 : public wayland_rs::IdleInhibitManagerV1
+{
+public:
+    IdleInhibitManagerV1(
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::IdleInhibitManagerV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<IdleInhibitV1Ctx> ctx);
+
+private:
+    auto create_inhibitor(
+        wayland_rs::Weak<wayland_rs::Surface> const& surface,
+        rust::Box<wayland_rs::IdleInhibitorV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::IdleInhibitorV1> override;
+
+    std::shared_ptr<IdleInhibitV1Ctx> const ctx;
+};
 }
 }
 

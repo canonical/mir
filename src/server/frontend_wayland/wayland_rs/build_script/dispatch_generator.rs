@@ -34,6 +34,8 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
 
     let server_side_factories = generate_server_side_factories(protocols);
 
+    let output_dynamic_global = generate_output_dynamic_global();
+
     quote! {
         #[allow(dead_code, unused_imports)]
         mod dispatch {
@@ -84,6 +86,82 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
             #(#generated_dispatch_implementations)*
 
             #server_side_factories
+
+            #output_dynamic_global
+        }
+    }
+}
+
+/// Generate the machinery for dynamically-created `wl_output` globals.
+///
+/// Unlike every other global (which is registered once at startup via a
+/// `GlobalDispatch<_, Arc<Mutex<UniquePtr<GlobalFactory>>>>`), `wl_output` is
+/// advertised per-monitor and can come and go at runtime. To support this we
+/// use a distinct global-data type ([OutputGlobalData]) that carries a
+/// per-monitor C++ [ffi::OutputGlobalBinder], plus a dedicated
+/// `GlobalDispatch` implementation whose `bind`/`can_view` route to that
+/// binder instead of the shared factory.
+///
+/// The binder is stored behind a `Mutex` because `GlobalDispatch::bind` and
+/// `can_view` only receive a shared reference to the global data, yet the C++
+/// binder methods (like the factory's) require a `Pin<&mut _>` to be invoked.
+fn generate_output_dynamic_global() -> TokenStream {
+    quote! {
+        // A cxx opaque C++ type is not automatically `Send`/`Sync`. The binder
+        // is only ever accessed under the `Mutex` in `OutputGlobalData` (and,
+        // from C++, only on the event-loop thread), so this is sound.
+        unsafe impl Send for ffi::OutputGlobalBinder {}
+        unsafe impl Sync for ffi::OutputGlobalBinder {}
+
+        /// Per-global data for a dynamically-created `wl_output`, carrying the
+        /// C++ binder that builds the `wl_output` object for each client bind.
+        pub(crate) struct OutputGlobalData {
+            binder: Mutex<cxx::UniquePtr<ffi::OutputGlobalBinder>>,
+        }
+
+        impl OutputGlobalData {
+            pub(crate) fn new(binder: cxx::UniquePtr<ffi::OutputGlobalBinder>) -> Self {
+                OutputGlobalData { binder: Mutex::new(binder) }
+            }
+        }
+
+        impl GlobalDispatch<wayland_server::protocol::wl_output::WlOutput, OutputGlobalData>
+            for ServerState
+        {
+            fn bind(
+                _state: &mut Self,
+                handle: &wayland_server::DisplayHandle,
+                client: &wayland_server::Client,
+                resource: New<wayland_server::protocol::wl_output::WlOutput>,
+                global_data: &OutputGlobalData,
+                data_init: &mut wayland_server::DataInit<'_, Self>,
+            ) {
+                use crate::ffi;
+
+                // Step 1: Create a wrapper with no inner value and register it via data_init.
+                let wrapper = Arc::new(Mutex::new(WlOutputWrapper { inner: None }));
+                let instance = data_init.init(resource, wrapper.clone());
+                register_resource(&instance);
+                let protocol_id = Resource::id(&instance).protocol_id();
+
+                // Step 2: Create the middleware object wrapping the wayland resource.
+                let boxed = Box::new(crate::middleware::OutputMiddleware { wrapped: instance });
+
+                // Step 3: Call the per-monitor C++ binder with client, middleware,
+                // and object_id so the C++ object is fully initialized from the start.
+                let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
+                let mut guard = global_data.binder.lock().unwrap();
+                let global = (&mut *guard).pin_mut().bind(wayland_client, boxed, protocol_id);
+
+                // Step 4: Store the fully-initialized C++ object in the wrapper.
+                wrapper.lock().unwrap().inner = Some(global);
+            }
+
+            fn can_view(client: Client, global_data: &OutputGlobalData) -> bool {
+                let client_id = Box::new(WaylandClientId::new(client.id()));
+                let mut guard = global_data.binder.lock().unwrap();
+                (&mut *guard).pin_mut().can_view(client_id)
+            }
         }
     }
 }

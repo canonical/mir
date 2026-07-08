@@ -16,83 +16,73 @@
 
 
 #include "linux_drm_syncobj.h"
-#include "linux-drm-syncobj-v1_wrapper.h"
+#include "wayland.h"
+#include "weak.h"
+#include "client.h"
+#include "protocol_error.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/drm_syncobj.h>
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/weak.h>
+#include <mir/fd.h>
 #include "wl_surface.h"
 #include <drm.h>
 #include <stdexcept>
 #include <system_error>
-#include <wayland-server.h>
+#include <unistd.h>
 #include <xf86drm.h>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
+namespace mw = mir::wayland_rs;
 
 using DRMProviderList = std::vector<std::shared_ptr<mg::DRMRenderingProvider>>;
 
-class mf::syncobj::Manager : public mir::wayland::LinuxDrmSyncobjManagerV1
-{
-public:
-    Manager(
-        struct wl_resource* resource,
-        std::shared_ptr<DRMProviderList const> providers)
-        : LinuxDrmSyncobjManagerV1(resource, Version<1>{}),
-          providers{std::move(providers)}
-    {
-    }
-
-private:
-    void get_surface(struct wl_resource* id, struct wl_resource* wl_surface) override
-    {
-        auto surface = WlSurface::from(wl_surface);
-        try
-        {
-            new SyncTimeline(id, surface);
-        }
-        catch (WlSurface::TimelineAlreadyAssociated const&)
-        {
-            throw wayland::ProtocolError{
-                resource,
-                Error::surface_exists,
-                "Surface already has a linux_drm_syncobj_surface_v1 associated"};
-        }
-    }
-    void import_timeline(struct wl_resource* id, mir::Fd fd) override
-    {
-        try
-        {
-            new Timeline(id, std::move(fd), *providers);
-        }
-        catch (std::runtime_error const&)
-        {
-            throw wayland::ProtocolError{
-                resource,
-                Error::invalid_timeline,
-                "Failed to import DRM Syncobj timeline"};
-        }
-    }
-
-    std::shared_ptr<DRMProviderList const> const providers;
-};
-
-
-
 mf::LinuxDRMSyncobjManager::LinuxDRMSyncobjManager(
-    struct wl_display* display,
-    std::span<std::shared_ptr<graphics::DRMRenderingProvider>> providers)
-    : Global(display, Version<1>{}),
-      providers{std::make_shared<std::vector<std::shared_ptr<graphics::DRMRenderingProvider>>>(
-          providers.begin(),
-          providers.end())}
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::LinuxDrmSyncobjManagerV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<DRMProviderList const> providers)
+    : mw::LinuxDrmSyncobjManagerV1{std::move(client), std::move(instance), object_id},
+      providers{std::move(providers)}
 {
 }
 
-void mf::LinuxDRMSyncobjManager::bind(struct wl_resource* new_resource)
+auto mf::LinuxDRMSyncobjManager::get_surface(
+    mw::Weak<mw::Surface> const& surface,
+    rust::Box<mw::LinuxDrmSyncobjSurfaceV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::LinuxDrmSyncobjSurfaceV1>
 {
-    new syncobj::Manager{new_resource, providers};
+    auto surf = mw::Surface::from<WlSurface>(surface);
+    try
+    {
+        return std::make_shared<SyncTimeline>(client, std::move(child_instance), child_object_id, surf);
+    }
+    catch (WlSurface::TimelineAlreadyAssociated const&)
+    {
+        throw mw::ProtocolError{
+            object_id(),
+            Error::surface_exists,
+            "Surface already has a linux_drm_syncobj_surface_v1 associated"};
+    }
+}
+
+auto mf::LinuxDRMSyncobjManager::import_timeline(
+    int32_t fd,
+    rust::Box<mw::LinuxDrmSyncobjTimelineV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::LinuxDrmSyncobjTimelineV1>
+{
+    // The fd is borrowed across the FFI boundary; dup it so we own our copy.
+    mir::Fd owned_fd{mir::IntOwnedFd{::dup(fd)}};
+    try
+    {
+        return std::make_shared<syncobj::Timeline>(client, std::move(child_instance), child_object_id, std::move(owned_fd), *providers);
+    }
+    catch (std::runtime_error const&)
+    {
+        throw mw::ProtocolError{
+            object_id(),
+            Error::invalid_timeline,
+            "Failed to import DRM Syncobj timeline"};
+    }
 }
 
 mf::SyncPoint::SyncPoint(std::shared_ptr<mg::drm::Syncobj> timeline, uint64_t point)
@@ -116,25 +106,29 @@ auto mf::SyncPoint::to_eventfd() const -> Fd
     return timeline->to_eventfd(point);
 }
 
-mf::SyncTimeline::SyncTimeline(struct wl_resource* new_resource, WlSurface* surface)
-    : mir::wayland::LinuxDrmSyncobjSurfaceV1(new_resource, Version<1>{})
+mf::SyncTimeline::SyncTimeline(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::LinuxDrmSyncobjSurfaceV1Middleware> instance,
+    uint32_t object_id,
+    WlSurface* surface)
+    : mw::LinuxDrmSyncobjSurfaceV1{std::move(client), std::move(instance), object_id}
 {
-    surface->associate_sync_timeline(wayland::make_weak(this));
+    surface->associate_sync_timeline(mw::make_weak(this));
 }
 
 auto mf::SyncTimeline::claim_timeline() -> Points
 {
     if (!acquire_point)
     {
-        throw wayland::ProtocolError{
-            resource,
+        throw mw::ProtocolError{
+            object_id(),
             Error::no_acquire_point,
             "Buffer does not have an acquire point set"};
     }
     if (!release_point)
     {
-        throw wayland::ProtocolError{
-            resource,
+        throw mw::ProtocolError{
+            object_id(),
             Error::no_release_point,
             "Buffer does not have a release point set"};
     }
@@ -150,27 +144,29 @@ auto mf::SyncTimeline::timeline_set() const -> bool
     return acquire_point || release_point;
 }
 
-void mf::SyncTimeline::set_acquire_point(struct wl_resource* timeline, uint32_t point_hi, uint32_t point_lo)
+void mf::SyncTimeline::set_acquire_point(mw::Weak<mw::LinuxDrmSyncobjTimelineV1> const& timeline, uint32_t point_hi, uint32_t point_lo)
 {
-    auto tl = syncobj::Timeline::from(timeline);
+    auto tl = mw::LinuxDrmSyncobjTimelineV1::from<syncobj::Timeline>(timeline);
     acquire_point.emplace(SyncPoint{
         tl->syncobj(),
         static_cast<uint64_t>(point_hi) << 32 | point_lo});
 }
 
-void mf::SyncTimeline::set_release_point(struct wl_resource* timeline, uint32_t point_hi, uint32_t point_lo)
+void mf::SyncTimeline::set_release_point(mw::Weak<mw::LinuxDrmSyncobjTimelineV1> const& timeline, uint32_t point_hi, uint32_t point_lo)
 {
-    auto tl = syncobj::Timeline::from(timeline);
+    auto tl = mw::LinuxDrmSyncobjTimelineV1::from<syncobj::Timeline>(timeline);
     release_point.emplace(SyncPoint{
         tl->syncobj(),
         static_cast<uint64_t>(point_hi) << 32 | point_lo});
 }
 
 mf::syncobj::Timeline::Timeline(
-    struct wl_resource* new_timeline,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::LinuxDrmSyncobjTimelineV1Middleware> instance,
+    uint32_t object_id,
     Fd fd,
     DRMProviderList const& providers)
-    : LinuxDrmSyncobjTimelineV1(new_timeline, Version<1>{})
+    : mw::LinuxDrmSyncobjTimelineV1{std::move(client), std::move(instance), object_id}
 {
     for (auto const& provider : providers)
     {
@@ -179,11 +175,6 @@ mf::syncobj::Timeline::Timeline(
             imported_timeline = std::move(obj);
         }
     }
-}
-
-auto mf::syncobj::Timeline::from(struct wl_resource* resource) -> Timeline*
-{
-    return dynamic_cast<Timeline*>(LinuxDrmSyncobjTimelineV1::from(resource));
 }
 
 auto mf::syncobj::Timeline::syncobj() const -> std::shared_ptr<mg::drm::Syncobj>

@@ -17,7 +17,7 @@
 #include <ranges>
 
 #include "fractional-scale-v1_wrapper.h"
-#include "fractional_scale_v1.h"
+#include "wp_fractional_scale_v1.h"
 #include <mir/default_server_configuration.h>
 
 #include <mir/frontend/wayland.h>
@@ -37,7 +37,7 @@
 #include "layer_shell_v1.h"
 #include <mir/shell/accessibility_manager.h>
 #include "mir_shell.h"
-#include "pointer_constraints_unstable_v1.h"
+#include "zwp_pointer_constraints_v1.h"
 #include "primary_selection_v1.h"
 #include "relative_pointer_unstable_v1.h"
 #include "session_lock_v1.h"

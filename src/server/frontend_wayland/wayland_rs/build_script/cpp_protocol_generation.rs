@@ -52,6 +52,7 @@ pub fn generate_cpp_protocol_builders(
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
     let work_callback_builder = create_work_callback();
     let fd_ready_callback_builder = create_fd_ready_callback();
+    let output_global_binder_builder = create_output_global_binder();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
 
     // Interfaces that are created server-side and handed back to the client via an event
@@ -68,6 +69,7 @@ pub fn generate_cpp_protocol_builders(
     builders.push(wayland_server_notification_handler_builder);
     builders.push(work_callback_builder);
     builders.push(fd_ready_callback_builder);
+    builders.push(output_global_binder_builder);
 
     CppProtocolGenerationOutput {
         ffi_fwd_builder,
@@ -207,6 +209,65 @@ fn create_fd_ready_callback() -> CppBuilder {
 
     let ready_method = CppMethod::new("ready", None, true, false, true, true);
     class.add_method(ready_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
+/// Create the `OutputGlobalBinder` interface.
+///
+/// This is the per-monitor counterpart to the `GlobalFactory` for the
+/// dynamically-created `wl_output` globals. Where `GlobalFactory` owns the
+/// binding logic for every statically-registered global, an
+/// `OutputGlobalBinder` captures the state of a *single* monitor: it is passed
+/// to `WaylandServer::create_output_global` and invoked whenever a client binds
+/// that monitor's `wl_output` global.
+fn create_output_global_binder() -> CppBuilder {
+    let mut builder: CppBuilder =
+        CppBuilder::new("MIR_WAYLANDRS_OUTPUT_GLOBAL_BINDER", "output_global_binder");
+    builder.add_header_include("<memory>");
+    builder.add_header_include("<rust/cxx.h>");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    namespace.add_forward_declaration_class("WaylandClient");
+    namespace.add_forward_declaration_class("WaylandClientId");
+    namespace.add_forward_declaration_class("Output");
+    namespace.add_forward_declaration_struct("OutputMiddleware");
+
+    let mut class = CppClass::new("OutputGlobalBinder");
+
+    // bind: construct the wl_output object for a client that has bound this
+    // monitor's global, mirroring GlobalFactory::create_wl_output.
+    let mut bind_method = CppMethod::new(
+        "bind",
+        Some(CppType::Object("Output".to_string())),
+        true,
+        false,
+        true,
+        true,
+    );
+    bind_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClient".to_string()),
+        "client",
+        false,
+    ));
+    bind_method.add_arg(CppArg::new(
+        CppType::Box("OutputMiddleware".to_string()),
+        "instance",
+        false,
+    ));
+    bind_method.add_arg(CppArg::new(CppType::CppU32, "object_id", false));
+    class.add_method(bind_method);
+
+    // can_view: whether the given client may see this monitor's global.
+    let mut can_view_method =
+        CppMethod::new("can_view", Some(CppType::Bool), true, false, true, true);
+    can_view_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClientId".to_string()),
+        "client_id",
+        false,
+    ));
+    class.add_method(can_view_method);
 
     namespace.add_class(class);
     builder.add_namespace(namespace);

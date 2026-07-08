@@ -17,7 +17,10 @@
 #ifndef MIR_FRONTEND_FRACTIONAL_SCALE_V1_H
 #define MIR_FRONTEND_FRACTIONAL_SCALE_V1_H
 
-#include "fractional-scale-v1_wrapper.h"
+#include "wayland.h"
+#include "fractional_scale_v1.h"
+#include "weak.h"
+
 #include <mir/graphics/display_configuration.h>
 #include <unordered_map>
 #include <utility>
@@ -27,13 +30,28 @@ namespace mir
 namespace frontend
 {
 
-auto create_fractional_scale_v1(wl_display *display)
-    -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>;
-
-class FractionalScaleV1 : public wayland::FractionalScaleV1
+class FractionalScaleManagerV1 : public wayland_rs::FractionalScaleManagerV1
 {
 public:
-  FractionalScaleV1(struct wl_resource *resource);
+    FractionalScaleManagerV1(
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::FractionalScaleManagerV1Middleware> instance,
+        uint32_t object_id);
+
+private:
+    auto get_fractional_scale(
+        wayland_rs::Weak<wayland_rs::Surface> const& surface,
+        rust::Box<wayland_rs::FractionalScaleV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::FractionalScaleV1> override;
+};
+
+class FractionalScaleV1 : public wayland_rs::FractionalScaleV1
+{
+public:
+  FractionalScaleV1(
+      std::shared_ptr<wayland_rs::Client> client,
+      rust::Box<wayland_rs::FractionalScaleV1Middleware> instance,
+      uint32_t object_id);
 
 
   void output_entered(mir::graphics::DisplayConfigurationOutput const& config);

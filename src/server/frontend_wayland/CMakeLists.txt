@@ -10,6 +10,9 @@ set(
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
   wl_client.cpp                 wl_client.h
+  wayland_client.cpp            wayland_client.h
+  wayland_client_notifier.cpp   wayland_client_notifier.h
+  wayland_global_factory.cpp    wayland_global_factory.h
   wayland_executor.cpp          wayland_executor.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
@@ -17,7 +20,7 @@ set(
   wl_data_device.cpp            wl_data_device.h
   wl_data_source.cpp            wl_data_source.h
   output_manager.cpp            output_manager.h
-  pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
+  zwp_pointer_constraints_v1.cpp zwp_pointer_constraints_v1.h
   relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
   wl_subcompositor.cpp          wl_subcompositor.h
                                 wl_surface_role.h
@@ -35,6 +38,7 @@ set(
   mir_shell.cpp                 mir_shell.h
   resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
+  wl_compositor.cpp             wl_compositor.h
   foreign_toplevel_list_v1.cpp  foreign_toplevel_list_v1.h
   foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
   desktop_file_manager.cpp      desktop_file_manager.h
@@ -67,7 +71,7 @@ set(
   session_credentials.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
   wp_viewporter.cpp             wp_viewporter.h
-  fractional_scale_v1.cpp           fractional_scale_v1.h
+  wp_fractional_scale_v1.cpp        wp_fractional_scale_v1.h
   xdg_activation_v1.cpp         xdg_activation_v1.h
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
