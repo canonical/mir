@@ -23,7 +23,7 @@ without modifying each other's files.
 priority order and uses the highest-priority root that contains the file:
 
 1. `$XDG_CONFIG_HOME` (falls back to `$HOME/.config`)
-2. Each entry in `$XDG_CONFIG_DIRS` (falls back to `/etc/xdg`)
+1. Each entry in `$XDG_CONFIG_DIRS` (falls back to `/etc/xdg`)
 
 **Path with a parent directory** (e.g., `/etc/myapp/myapp.conf`): the parent directory
 is used as the first root; `$XDG_CONFIG_DIRS` entries are still appended.
@@ -35,9 +35,9 @@ matches the filter passed to `ConfigFile` are included.
 ## Override ordering and precedence
 
 1. The base file is loaded first.
-2. Override files are collected from all roots and deduplicated by basename: if two roots
+1. Override files are collected from all roots and deduplicated by basename: if two roots
    provide a file with the same basename, the higher-priority root's copy is used.
-3. The resulting set is sorted lexicographically by basename and applied in that order.
+1. The resulting set is sorted lexicographically by basename and applied in that order.
 
 Using numeric prefixes (e.g., `10-site.conf`, `90-user.conf`) is a conventional way to
 control ordering predictably.
@@ -49,14 +49,14 @@ next reload.
 
 `IniFileWithOverrides` applies these rules across the ordered list of files:
 
-| Key type | Rule |
-|---|---|
-| Scalar (`int`, `bool`, `float`, `string`) | Last file to set the key wins. |
-| Array (`ints`, `floats`, `strings`) | Values accumulate across files. |
-| Array with empty assignment (`key=`) | Clears all previously accumulated values; subsequent entries in the same or later files start fresh. |
-| Key absent from all files | Handler receives the preset value (if registered with one), otherwise `std::nullopt`. |
-| Invalid scalar value | Handler receives the preset value (if registered with one), otherwise `std::nullopt`. A later invalid value therefore supersedes any earlier valid value. |
-| Invalid array entry | The invalid entry is silently ignored; valid entries in the same file are kept. If **all** entries in a transaction are invalid, the handler receives the preset value (if registered), otherwise `std::nullopt`. |
+| Key type                                  | Rule                                                                                                                                                                                                              |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scalar (`int`, `bool`, `float`, `string`) | Last file to set the key wins.                                                                                                                                                                                    |
+| Array (`ints`, `floats`, `strings`)       | Values accumulate across files.                                                                                                                                                                                   |
+| Array with empty assignment (`key=`)      | Clears all previously accumulated values; subsequent entries in the same or later files start fresh.                                                                                                              |
+| Key absent from all files                 | Handler receives the preset value (if registered with one), otherwise `std::nullopt`.                                                                                                                             |
+| Invalid scalar value                      | Handler receives the preset value (if registered with one), otherwise `std::nullopt`. A later invalid value therefore supersedes any earlier valid value.                                                         |
+| Invalid array entry                       | The invalid entry is silently ignored; valid entries in the same file are kept. If **all** entries in a transaction are invalid, the handler receives the preset value (if registered), otherwise `std::nullopt`. |
 
 All attribute handlers fire before `on_done`, and both fire exactly once per `load()`
 call.

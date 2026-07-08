@@ -18,7 +18,7 @@ Requires MirAL 5.9 for the override-aware `ConfigFile` constructor;
 **Note**: [Write Your First Wayland Compositor](../tutorial/write-your-first-wayland-compositor.md)
 is a prerequisite for this how-to.
 
----
+______________________________________________________________________
 
 ## Choosing an approach
 
@@ -71,8 +71,8 @@ First, add the required headers:
 ```{literalinclude} ./configuration-overrides/main.cpp
 ---
 language: cpp
-start-after: "[doc:config-override:includes]"
-end-before: "[doc:config-override:includes-end]"
+start-after: '[doc:config-override:includes]'
+end-before: '[doc:config-override:includes-end]'
 ---
 ```
 
@@ -82,8 +82,8 @@ Create an `IniFileWithOverrides`, register typed attributes, and attach an
 ```{literalinclude} ./configuration-overrides/main.cpp
 ---
 language: cpp
-start-after: "[doc:config-override:store]"
-end-before: "[doc:config-override:store-end]"
+start-after: '[doc:config-override:store]'
+end-before: '[doc:config-override:store-end]'
 dedent: 4
 ---
 ```
@@ -100,8 +100,8 @@ method as the callback and a file extension to filter override files:
 ```{literalinclude} ./configuration-overrides/main.cpp
 ---
 language: cpp
-start-after: "[doc:config-override:config-file]"
-end-before: "[doc:config-override:config-file-end]"
+start-after: '[doc:config-override:config-file]'
+end-before: '[doc:config-override:config-file-end]'
 dedent: 4
 ---
 ```
@@ -115,7 +115,7 @@ Given `"demo-compositor.conf"` as the base filename, `ConfigFile` searches these
 directories in priority order:
 
 1. `$XDG_CONFIG_HOME` (defaults to `$HOME/.config`)
-2. Entries in `$XDG_CONFIG_DIRS` (defaults to `/etc/xdg`)
+1. Entries in `$XDG_CONFIG_DIRS` (defaults to `/etc/xdg`)
 
 The base file is loaded from the highest-priority root that contains it. Override
 files are collected from `demo-compositor.conf.d/` under **every** root, filtered by
@@ -181,8 +181,8 @@ Build:
 ```{literalinclude} ./configuration-overrides/test.sh
 ---
 language: bash
-start-after: "[doc:config-override:build]"
-end-before: "[doc:config-override:build-end]"
+start-after: '[doc:config-override:build]'
+end-before: '[doc:config-override:build-end]'
 ---
 ```
 
