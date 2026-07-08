@@ -75,6 +75,18 @@ uint8_t constexpr icon_alpha = 230;
 
 enum class HandleKind { drag, resize, zoom_in, zoom_out };
 
+static std::string name_for_kind(HandleKind kind)
+{
+    switch (kind)
+    {
+    case HandleKind::drag:     return "magnifier-drag-handle";
+    case HandleKind::resize:   return "magnifier-resize-handle";
+    case HandleKind::zoom_in:  return "magnifier-zoom-in-handle";
+    case HandleKind::zoom_out: return "magnifier-zoom-out-handle";
+    }
+    return "magnifier-handle";
+}
+
 class HandleIndicator : public ms::BasicSurface
 {
 public:
@@ -85,7 +97,7 @@ public:
         std::shared_ptr<ms::SceneReport> const& scene_report,
         std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>> const& display_config_registrar) :
         BasicSurface{
-            "magnifier-drag-handle",
+            name_for_kind(kind),
             initial_rect,
             mir_pointer_unconfined,
             create_stream_info(),
