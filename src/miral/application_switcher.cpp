@@ -706,6 +706,8 @@ private:
         if (it != toplevels_in_focus_order.end())
         {
             it->window_title = window_title;
+            if (it->ghost) it->app_id = window_title;
+            it->ghost = false;
         }
         else
         {
