@@ -390,6 +390,13 @@ private:
     std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
     std::shared_ptr<ms::NullSurfaceObserver> observer;
 };
+
+geom::Point surface_top_left_from_cursor(geom::Size const& window_size, geom::Point const& cursor_pos)
+{
+    return geom::Point{
+        cursor_pos.x.as_int() - window_size.width.as_int() / 2,
+        cursor_pos.y.as_int() - window_size.height.as_int() / 2};
+}
 }
 
 class miral::Magnifier::Self
@@ -506,7 +513,7 @@ public:
             if (s->decoupled)
             {
                 // Place surface at last known cursor position when enabling in decoupled mode.
-                auto const top_left = State::surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
+                auto const top_left = surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
                 surf->move_to(top_left);
                 render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
                 s->reposition_all_handles(top_left, surf->window_size(), s->magnification);
@@ -530,7 +537,7 @@ public:
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        auto const capture_position = State::surface_top_left_from_cursor(size, s->cursor_pos);
+        auto const capture_position = surface_top_left_from_cursor(size, s->cursor_pos);
         render_scene_into_surface.capture_area({capture_position, size});
         s->reposition_all_handles(capture_position, size, s->magnification);
     }
@@ -570,7 +577,7 @@ public:
 
             if (auto const surf = s->surface.lock(); surf && s->default_enabled)
             {
-                auto const top_left = State::surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
+                auto const top_left = surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
                 surf->move_to(top_left);
                 render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
             }
@@ -585,15 +592,6 @@ private:
     {
         /// Pixel-space rectangle of signed integer coordinates.
         struct VisualBounds { int x, y, w, h; };
-
-        static geom::Point surface_top_left_from_cursor(
-            geom::Size const& window_size,
-            geom::Point const& cursor_pos)
-        {
-            return geom::Point{
-                cursor_pos.x.as_int() - window_size.width.as_int() / 2,
-                cursor_pos.y.as_int() - window_size.height.as_int() / 2};
-        }
 
         /// Returns the pixel-space top-left and size of the visual magnifier surface
         /// given its logical capture rectangle and magnification factor.
@@ -765,7 +763,7 @@ private:
             if (!surf)
                 return;
 
-            auto const capture_position = State::surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
+            auto const capture_position = surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
             surf->move_to(capture_position);
             self->render_scene_into_surface.capture_area(geom::Rectangle{capture_position, surf->window_size()});
         }
