@@ -17,7 +17,10 @@
 #ifndef MIR_FRONTEND_WL_DATA_DEVICE_MANAGER_H_
 #define MIR_FRONTEND_WL_DATA_DEVICE_MANAGER_H_
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
+
+#include <cstdint>
+#include <memory>
 
 namespace mir
 {
@@ -32,51 +35,61 @@ namespace frontend
 class DragIconController;
 class PointerInputDispatcher;
 
-class WlDataDeviceManager : public wayland::DataDeviceManager::Global
+class WlDataDeviceManager : public wayland_rs::DataDeviceManager
 {
 public:
     WlDataDeviceManager(
-        struct wl_display* display,
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::DataDeviceManagerMiddleware> instance,
+        uint32_t object_id,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         std::shared_ptr<DragIconController> drag_icon_controller,
         std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
-    ~WlDataDeviceManager();
+
+    using wayland_rs::DataDeviceManager::get_data_device;
 
 private:
+    auto create_data_source(
+        rust::Box<wayland_rs::DataSourceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::DataSource> override;
+
+    auto get_data_device(
+        wayland_rs::Weak<wayland_rs::Seat> const& seat,
+        rust::Box<wayland_rs::DataDeviceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::DataDevice> override;
+
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::Clipboard> const clipboard;
     std::shared_ptr<DragIconController> const drag_icon_controller;
-    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher;
-
-    void bind(wl_resource* new_resource) override;
-
-    class Instance : wayland::DataDeviceManager
-    {
-    public:
-        Instance(wl_resource* new_resource, WlDataDeviceManager* manager);
-
-    private:
-        void create_data_source(wl_resource* new_resource) override;
-        void get_data_device(wl_resource* new_data_device, wl_resource* seat) override;
-
-        WlDataDeviceManager* const manager;
-    };
+    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
 };
 
-inline auto validate_dnd_actions(uint32_t dnd_actions) -> bool {
+auto create_wl_data_device_manager(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::DataDeviceManagerMiddleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<scene::Clipboard> const& clipboard,
+    std::shared_ptr<DragIconController> drag_icon_controller,
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
+-> std::shared_ptr<wayland_rs::DataDeviceManager>;
+
+inline auto validate_dnd_actions(uint32_t dnd_actions) -> bool
+{
     return (dnd_actions & ~(
-        mir::wayland::DataDeviceManager::DndAction::none |
-        mir::wayland::DataDeviceManager::DndAction::copy |
-        mir::wayland::DataDeviceManager::DndAction::move |
-        mir::wayland::DataDeviceManager::DndAction::ask)) == 0;
+        mir::wayland_rs::DataDeviceManager::DndAction::none |
+        mir::wayland_rs::DataDeviceManager::DndAction::copy |
+        mir::wayland_rs::DataDeviceManager::DndAction::r_move |
+        mir::wayland_rs::DataDeviceManager::DndAction::ask)) == 0;
 }
 
-inline auto validate_dnd_action(uint32_t dnd_action) -> bool {
-    return dnd_action == mir::wayland::DataDeviceManager::DndAction::none ||
-           dnd_action == mir::wayland::DataDeviceManager::DndAction::copy ||
-           dnd_action == mir::wayland::DataDeviceManager::DndAction::move ||
-           dnd_action == mir::wayland::DataDeviceManager::DndAction::ask;
+inline auto validate_dnd_action(uint32_t dnd_action) -> bool
+{
+    return dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::none ||
+           dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::copy ||
+           dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::r_move ||
+           dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::ask;
 }
 }
 }

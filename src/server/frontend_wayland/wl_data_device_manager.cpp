@@ -15,59 +15,84 @@
  */
 
 #include "wl_data_device_manager.h"
+
 #include "wl_data_device.h"
 #include "wl_data_source.h"
 #include "wl_seat.h"
 
+#include <stdexcept>
+#include <utility>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 mf::WlDataDeviceManager::WlDataDeviceManager(
-    struct wl_display* display,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::DataDeviceManagerMiddleware> instance,
+    uint32_t object_id,
     std::shared_ptr<mir::Executor> const& wayland_executor,
     std::shared_ptr<ms::Clipboard> const& clipboard,
     std::shared_ptr<DragIconController> drag_icon_controller,
-    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher) :
-    Global(display, Version<3>()),
-    wayland_executor{wayland_executor},
-    clipboard{clipboard},
-    drag_icon_controller{std::move(drag_icon_controller)},
-    pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
+    : mw::DataDeviceManager{std::move(client), std::move(instance), object_id},
+      wayland_executor{wayland_executor},
+      clipboard{clipboard},
+      drag_icon_controller{std::move(drag_icon_controller)},
+      pointer_input_dispatcher{std::move(pointer_input_dispatcher)}
 {
 }
 
-mf::WlDataDeviceManager::~WlDataDeviceManager()
+auto mf::create_wl_data_device_manager(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::DataDeviceManagerMiddleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<ms::Clipboard> const& clipboard,
+    std::shared_ptr<DragIconController> drag_icon_controller,
+    std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
+-> std::shared_ptr<mw::DataDeviceManager>
 {
+    return std::make_shared<WlDataDeviceManager>(
+        std::move(client),
+        std::move(instance),
+        object_id,
+        wayland_executor,
+        clipboard,
+        std::move(drag_icon_controller),
+        std::move(pointer_input_dispatcher));
 }
 
-mf::WlDataDeviceManager::Instance::Instance(wl_resource* new_resource, WlDataDeviceManager* manager)
-    : wayland::DataDeviceManager(new_resource, Version<3>()),
-      manager{manager}
+auto mf::WlDataDeviceManager::create_data_source(
+    rust::Box<mw::DataSourceMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::DataSource>
 {
+    return std::make_shared<WlDataSource>(
+        client,
+        std::move(child_instance),
+        child_object_id,
+        wayland_executor,
+        *clipboard);
 }
 
-void mf::WlDataDeviceManager::Instance::create_data_source(wl_resource* new_data_source)
+auto mf::WlDataDeviceManager::get_data_device(
+    mw::Weak<mw::Seat> const& seat,
+    rust::Box<mw::DataDeviceMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::DataDevice>
 {
-    new WlDataSource{
-        new_data_source,
-        manager->wayland_executor,
-        *manager->clipboard};
-}
+    auto const wl_seat = WlSeat::from(seat);
+    if (!wl_seat)
+    {
+        throw std::logic_error{"client provided incorrect seat to wl_data_device_manager.get_data_device"};
+    }
 
-void mf::WlDataDeviceManager::Instance::get_data_device(wl_resource* new_data_device, wl_resource* seat)
-{
-    auto const realseat = mf::WlSeat::from(seat);
-    new WlDataDevice{
-        new_data_device,
-        *manager->wayland_executor,
-        *manager->clipboard,
-        *realseat,
-        manager->pointer_input_dispatcher,
-        manager->drag_icon_controller};
-}
-
-void mf::WlDataDeviceManager::bind(wl_resource* new_resource)
-{
-    new WlDataDeviceManager::Instance{new_resource, this};
+    return std::make_shared<WlDataDevice>(
+        client,
+        std::move(child_instance),
+        child_object_id,
+        *wayland_executor,
+        *clipboard,
+        *wl_seat,
+        pointer_input_dispatcher,
+        drag_icon_controller);
 }

@@ -14,10 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_XDG_DECORATION_UNSTABLE_V1_H
-#define MIR_FRONTEND_XDG_DECORATION_UNSTABLE_V1_H
+#ifndef MIR_FRONTEND_XDG_DECORATION_MANAGER_V1_H
+#define MIR_FRONTEND_XDG_DECORATION_MANAGER_V1_H
 
-#include "xdg-decoration-unstable-v1_wrapper.h"
+#include "xdg_decoration_unstable_v1.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -25,8 +27,12 @@ class DecorationStrategy;
 
 namespace frontend
 {
-auto create_xdg_decoration_unstable_v1(wl_display* display, std::shared_ptr<DecorationStrategy> strategy) -> std::shared_ptr<wayland::XdgDecorationManagerV1::Global>;
+auto create_xdg_decoration_manager_v1(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::XdgDecorationManagerV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<DecorationStrategy> strategy) -> std::shared_ptr<wayland_rs::XdgDecorationManagerV1>;
 }
 } // namespace mir
 
-#endif // MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
+#endif // MIR_FRONTEND_XDG_DECORATION_MANAGER_V1_H

@@ -15,25 +15,41 @@
  */
 
 #include "primary_selection_v1.h"
+
 #include "wl_seat.h"
-#include <mir/scene/clipboard.h>
-#include <mir/wayland/weak.h>
+
+#include "wayland_rs/src/ffi.rs.h"
+
 #include <mir/executor.h>
+#include <mir/scene/clipboard.h>
+
+#include <unistd.h>
+
+#include <stdexcept>
+#include <utility>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace ms = mir::scene;
 
-class mf::PrimarySelectionSource::Source : public ms::DataExchangeSource
+namespace
+{
+auto as_primary_offer_ptr(mw::PrimarySelectionOfferV1* offer) -> std::shared_ptr<mw::PrimarySelectionOfferV1>
+{
+    return offer ? std::shared_ptr<mw::PrimarySelectionOfferV1>{std::shared_ptr<void>{}, offer} : nullptr;
+}
+}
+
+class mf::PrimarySelectionSourceV1::Source : public ms::DataExchangeSource
 {
 public:
     Source(
-        PrimarySelectionSource const* owner,
+        PrimarySelectionSourceV1* owner,
         std::shared_ptr<mir::Executor> wayland_executor,
-        std::vector<std::string> types) :
-        owner{std::move(owner)},
-        wayland_executor{std::move(wayland_executor)},
-        types{std::move(types)}
+        std::vector<std::string> types)
+        : owner{owner},
+          wayland_executor{std::move(wayland_executor)},
+          types{std::move(types)}
     {
     }
 
@@ -45,7 +61,7 @@ public:
     void initiate_send(std::string const& mime_type, mir::Fd const& target_fd) override
     {
         wayland_executor->spawn(
-            [owner = owner, mime_type, target_fd]()
+            [owner = owner, mime_type, target_fd]
             {
                 if (owner)
                 {
@@ -68,7 +84,7 @@ private:
     void offer_accepted(std::optional<std::string> const&) override
     {
     }
-    uint32_t offer_set_actions(uint32_t, uint32_t) override
+    auto offer_set_actions(uint32_t, uint32_t) -> uint32_t override
     {
         return 0;
     }
@@ -76,65 +92,72 @@ private:
     {
     }
 
-    mw::Weak<PrimarySelectionSource const> const owner;
+    mw::Weak<PrimarySelectionSourceV1> const owner;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::vector<std::string> const types;
 };
 
-mf::PrimarySelectionSource::PrimarySelectionSource(
-    wl_resource* resource, std::shared_ptr<mir::Executor> wayland_executor) :
-    PrimarySelectionSourceV1{resource, Version<1>()},
-    wayland_executor{std::move(wayland_executor)}
+mf::PrimarySelectionSourceV1::PrimarySelectionSourceV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::PrimarySelectionSourceV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<mir::Executor> wayland_executor)
+    : mw::PrimarySelectionSourceV1{std::move(client), std::move(instance), object_id},
+      wayland_executor{std::move(wayland_executor)}
 {
 }
 
-auto mir::frontend::PrimarySelectionSource::from(struct wl_resource* resource) -> PrimarySelectionSource*
+auto mf::PrimarySelectionSourceV1::offer(rust::String mime_type) -> void
 {
-    return dynamic_cast<mf::PrimarySelectionSource*>(wayland::PrimarySelectionSourceV1::from(resource));
+    mime_types.push_back(std::string{mime_type});
 }
 
-void mf::PrimarySelectionSource::offer(std::string const& mime_type)
-{
-    mime_types.push_back(mime_type);
-}
-
-auto mf::PrimarySelectionSource::make_source() const -> std::shared_ptr<ms::DataExchangeSource>
+auto mf::PrimarySelectionSourceV1::make_source() -> std::shared_ptr<ms::DataExchangeSource>
 {
     return std::make_shared<Source>(this, wayland_executor, mime_types);
 }
 
 namespace
 {
-class PrimarySelectionOffer : public mw::PrimarySelectionOfferV1
+class PrimarySelectionOfferV1 : public mw::PrimarySelectionOfferV1
 {
 public:
-    PrimarySelectionOffer(mw::PrimarySelectionDeviceV1& parent, std::shared_ptr<ms::DataExchangeSource> source)
-        : PrimarySelectionOfferV1{parent},
+    PrimarySelectionOfferV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::PrimarySelectionOfferV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<ms::DataExchangeSource> source)
+        : mw::PrimarySelectionOfferV1{std::move(client), std::move(instance), object_id},
           source{std::move(source)}
     {
     }
 
-    void receive(std::string const& mime_type, mir::Fd fd) override
+    auto receive(rust::String mime_type, int32_t fd) -> void override
     {
-        source->initiate_send(mime_type, fd);
+        source->initiate_send(std::string{mime_type}, mir::Fd{mir::IntOwnedFd{::dup(fd)}});
+    }
+
+    auto destroy() -> void override
+    {
+        destroy_and_delete();
     }
 
     std::shared_ptr<ms::DataExchangeSource> const source;
 };
 
-class PrimarySelectionDevice : public mw::PrimarySelectionDeviceV1, public mf::WlSeat::FocusListener
+class PrimarySelectionDeviceV1 : public mw::PrimarySelectionDeviceV1, public mf::WlSeat::FocusListener
 {
 private:
     class ClipboardObserver : public ms::ClipboardObserver
     {
     public:
-        ClipboardObserver(PrimarySelectionDevice* owner) : owner{owner}
+        explicit ClipboardObserver(PrimarySelectionDeviceV1* owner) : owner{owner}
         {
         }
 
     private:
-        void drag_n_drop_source_set(const std::shared_ptr<ms::DataExchangeSource>&) override {}
-        void drag_n_drop_source_cleared(const std::shared_ptr<ms::DataExchangeSource>&) override {}
+        void drag_n_drop_source_set(std::shared_ptr<ms::DataExchangeSource> const&) override {}
+        void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const&) override {}
         void end_of_dnd_gesture() override {}
 
         void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source) override
@@ -145,40 +168,47 @@ private:
             }
         }
 
-        mw::Weak<PrimarySelectionDevice> const owner;
+        mw::Weak<PrimarySelectionDeviceV1> const owner;
     };
 
 public:
-    PrimarySelectionDevice(
-        wl_resource* resource,
+    PrimarySelectionDeviceV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::PrimarySelectionDeviceV1Middleware> instance,
+        uint32_t object_id,
         std::shared_ptr<ms::Clipboard> primary_selection_clipboard,
         mf::WlSeat& seat)
-        : PrimarySelectionDeviceV1{resource, Version<1>()},
+        : mw::PrimarySelectionDeviceV1{std::move(client), std::move(instance), object_id},
           clipboard_observer{std::make_shared<ClipboardObserver>(this)},
           primary_selection_clipboard{std::move(primary_selection_clipboard)},
           seat{seat}
     {
         this->primary_selection_clipboard->register_interest(clipboard_observer, mir::immediate_executor);
-        seat.add_focus_listener(client, this);
+        seat.add_focus_listener(this->client.get(), this);
     }
 
-    ~PrimarySelectionDevice()
+    ~PrimarySelectionDeviceV1() override
     {
         primary_selection_clipboard->unregister_interest(*clipboard_observer);
         if (current.source)
         {
             primary_selection_clipboard->clear_paste_source(*current.source);
         }
-        seat.remove_focus_listener(client, this);
+        seat.remove_focus_listener(client.get(), this);
     }
 
 private:
-    void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override
+    auto destroy() -> void override
+    {
+        destroy_and_delete();
+    }
+
+    auto set_selection(std::optional<mw::Weak<mw::PrimarySelectionSourceV1>> const& source, uint32_t serial) -> void override
     {
         (void)serial;
-        auto const source_wrapper = mw::make_weak(source ?
-            dynamic_cast<mf::PrimarySelectionSource*>(mw::PrimarySelectionSourceV1::from(source.value())) :
-            nullptr);
+        auto const source_wrapper = source ?
+            mw::make_weak(mw::PrimarySelectionSourceV1::from<mf::PrimarySelectionSourceV1>(*source)) :
+            mw::Weak<mf::PrimarySelectionSourceV1>{};
         if (source_wrapper)
         {
             pending = {source_wrapper.value().make_source(), source_wrapper};
@@ -197,6 +227,34 @@ private:
         paste_source_set(primary_selection_clipboard->paste_source());
     }
 
+    auto create_offer(std::shared_ptr<ms::DataExchangeSource> const& source) -> std::shared_ptr<PrimarySelectionOfferV1>
+    {
+        PrimarySelectionOfferV1* offer_ptr = nullptr;
+        auto offer = mw::create_zwp_primary_selection_offer_v1(
+            *client->raw_client(),
+            get_box()->version(),
+            [&](rust::Box<mw::PrimarySelectionOfferV1Middleware> box, uint32_t id)
+                -> std::shared_ptr<mw::PrimarySelectionOfferV1>
+            {
+                auto created = std::make_shared<PrimarySelectionOfferV1>(client, std::move(box), id, source);
+                offer_ptr = created.get();
+                return created;
+            });
+
+        if (!offer_ptr)
+        {
+            throw std::logic_error{"failed to create zwp_primary_selection_offer_v1"};
+        }
+
+        send_data_offer_event(offer->get_box());
+        for (auto const& type : source->mime_types())
+        {
+            offer_ptr->send_offer_event(type);
+        }
+
+        return std::static_pointer_cast<PrimarySelectionOfferV1>(offer);
+    }
+
     void paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
     {
         if (pending.source == source)
@@ -212,14 +270,9 @@ private:
         {
             if (!current_offer || current_offer.value().source != source)
             {
-                auto const offer = new PrimarySelectionOffer{*this, source};
-                current_offer = mw::make_weak(offer);
-                send_data_offer_event(offer->resource);
-                for (auto const& type : source->mime_types())
-                {
-                    offer->send_offer_event(type);
-                }
-                send_selection_event(current_offer.value().resource);
+                auto const offer = create_offer(source);
+                current_offer = mw::make_weak(offer.get());
+                send_selection_event(as_primary_offer_ptr(offer.get()));
             }
         }
         else
@@ -232,68 +285,72 @@ private:
         }
     }
 
-    struct Selection {
+    struct Selection
+    {
         std::shared_ptr<ms::DataExchangeSource> source;
-        mw::Weak<mf::PrimarySelectionSource> wrapper;
+        mw::Weak<mf::PrimarySelectionSourceV1> wrapper;
     };
 
     bool has_focus{false};
     Selection pending, current;
-    mw::Weak<PrimarySelectionOffer> current_offer;
+    mw::Weak<PrimarySelectionOfferV1> current_offer;
     std::shared_ptr<ClipboardObserver> clipboard_observer;
     std::shared_ptr<ms::Clipboard> const primary_selection_clipboard;
     mf::WlSeat& seat;
 };
 
-class PrimarySelectionManager : public mw::PrimarySelectionDeviceManagerV1
+class PrimarySelectionDeviceManagerV1 : public mw::PrimarySelectionDeviceManagerV1
 {
 public:
-    PrimarySelectionManager(
-        wl_resource* manager,
+    PrimarySelectionDeviceManagerV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::PrimarySelectionDeviceManagerV1Middleware> instance,
+        uint32_t object_id,
         std::shared_ptr<mir::Executor> wayland_executor,
         std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
-        : PrimarySelectionDeviceManagerV1{manager, Version<1>()},
+        : mw::PrimarySelectionDeviceManagerV1{std::move(client), std::move(instance), object_id},
           wayland_executor{std::move(wayland_executor)},
           primary_selection_clipboard{std::move(primary_selection_clipboard)}
     {
     }
 
-    void create_source(struct wl_resource* id) override
+    using mw::PrimarySelectionDeviceManagerV1::get_device;
+
+private:
+    auto destroy() -> void override
     {
-        new mf::PrimarySelectionSource{id, wayland_executor};
+        destroy_and_delete();
     }
 
-    void get_device(struct wl_resource* id, struct wl_resource* seat) override
+    auto create_source(
+        rust::Box<mw::PrimarySelectionSourceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::PrimarySelectionSourceV1> override
+    {
+        return std::make_shared<mf::PrimarySelectionSourceV1>(
+            client,
+            std::move(child_instance),
+            child_object_id,
+            wayland_executor);
+    }
+
+    auto get_device(
+        mw::Weak<mw::Seat> const& seat,
+        rust::Box<mw::PrimarySelectionDeviceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::PrimarySelectionDeviceV1> override
     {
         auto const wl_seat = mf::WlSeat::from(seat);
         if (!wl_seat)
         {
-            BOOST_THROW_EXCEPTION(std::runtime_error(
-                "client provided incorrect seat to zwp_primary_selection_device_manager_v1.get_device"));
+            throw std::logic_error{
+                "client provided incorrect seat to zwp_primary_selection_device_manager_v1.get_device"};
         }
-        new PrimarySelectionDevice{id, primary_selection_clipboard, *wl_seat};
-    }
 
-    std::shared_ptr<mir::Executor> const wayland_executor;
-    std::shared_ptr<ms::Clipboard> const primary_selection_clipboard;
-};
-
-class PrimarySelectionGlobal : public mw::PrimarySelectionDeviceManagerV1::Global
-{
-public:
-    PrimarySelectionGlobal(
-        wl_display* display,
-        std::shared_ptr<mir::Executor> wayland_executor,
-        std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
-        : Global{display, Version<1>()},
-          wayland_executor{std::move(wayland_executor)},
-          primary_selection_clipboard{std::move(primary_selection_clipboard)}
-    {
-    }
-
-    void bind(wl_resource* manager) override
-    {
-        new PrimarySelectionManager{manager, wayland_executor, primary_selection_clipboard};
+        return std::make_shared<PrimarySelectionDeviceV1>(
+            client,
+            std::move(child_instance),
+            child_object_id,
+            primary_selection_clipboard,
+            *wl_seat);
     }
 
     std::shared_ptr<mir::Executor> const wayland_executor;
@@ -301,14 +358,18 @@ public:
 };
 }
 
-auto mf::create_primary_selection_device_manager_v1(
-    wl_display* display,
+auto mf::create_zwp_primary_selection_device_manager_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::PrimarySelectionDeviceManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<ms::Clipboard> primary_selection_clipboard)
--> std::shared_ptr<mw::PrimarySelectionDeviceManagerV1::Global>
+-> std::shared_ptr<mw::PrimarySelectionDeviceManagerV1>
 {
-    return std::make_shared<PrimarySelectionGlobal>(
-        display,
+    return std::make_shared<PrimarySelectionDeviceManagerV1>(
+        std::move(client),
+        std::move(instance),
+        object_id,
         std::move(wayland_executor),
         std::move(primary_selection_clipboard));
 }

@@ -15,23 +15,23 @@
  */
 
 #include "wl_data_source.h"
+
+#include "protocol_error.h"
 #include "wl_data_device_manager.h"
 
 #include <mir/executor.h>
 #include <mir/scene/clipboard.h>
-#include <mir/wayland/weak.h>
-#include <mir/wayland/protocol_error.h>
 
-#include <vector>
+#include <utility>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 class mf::WlDataSource::ClipboardObserver : public ms::ClipboardObserver
 {
 public:
-    ClipboardObserver(WlDataSource* owner) : owner{owner}
+    explicit ClipboardObserver(WlDataSource* owner) : owner{owner}
     {
     }
 
@@ -52,7 +52,7 @@ private:
         }
     }
 
-    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const& /*source*/) override
+    void drag_n_drop_source_cleared(std::shared_ptr<ms::DataExchangeSource> const&) override
     {
     }
 
@@ -68,16 +68,16 @@ private:
         }
     }
 
-    wayland::Weak<WlDataSource> const owner;
+    mw::Weak<WlDataSource> const owner;
 };
 
 class mf::WlDataSource::Source : public ms::DataExchangeSource
 {
 public:
-    Source(WlDataSource& wl_data_source) :
-        wayland_executor{wl_data_source.wayland_executor},
-        wl_data_source{&wl_data_source},
-        types{wl_data_source.mime_types}
+    explicit Source(WlDataSource& wl_data_source)
+        : wayland_executor{wl_data_source.wayland_executor},
+          wl_data_source{&wl_data_source},
+          types{wl_data_source.mime_types}
     {
     }
 
@@ -88,7 +88,7 @@ public:
 
     void initiate_send(std::string const& mime_type, Fd const& target_fd) override
     {
-        wayland_executor->spawn([wl_data_source=wl_data_source, mime_type, target_fd]()
+        wayland_executor->spawn([wl_data_source=wl_data_source, mime_type, target_fd]
             {
                 if (wl_data_source)
                 {
@@ -127,7 +127,7 @@ public:
         }
     }
 
-    void offer_accepted(const std::optional<std::string> &mime_type) override
+    void offer_accepted(std::optional<std::string> const& mime_type) override
     {
         if (wl_data_source)
         {
@@ -135,7 +135,7 @@ public:
         }
     }
 
-    uint32_t offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action) override
+    auto offer_set_actions(uint32_t dnd_actions, uint32_t preferred_action) -> uint32_t override
     {
         if (wl_data_source)
         {
@@ -151,22 +151,24 @@ public:
     {
         if (wl_data_source)
         {
-            return wl_data_source.value().send_dnd_finished_event_if_supported();
+            wl_data_source.value().send_dnd_finished_event_if_supported();
         }
     }
 
 private:
     std::shared_ptr<Executor> const wayland_executor;
-    wayland::Weak<WlDataSource> const wl_data_source;
+    mw::Weak<WlDataSource> const wl_data_source;
     std::vector<std::string> const types;
     bool performed_or_cancelled{false};
 };
 
 mf::WlDataSource::WlDataSource(
-    wl_resource* new_resource,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::DataSourceMiddleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     scene::Clipboard& clipboard)
-    : mw::DataSource{new_resource, Version<3>()},
+    : mw::DataSource{std::move(client), std::move(instance), object_id},
       wayland_executor{wayland_executor},
       clipboard{clipboard},
       clipboard_observer{std::make_shared<ClipboardObserver>(this)}
@@ -185,11 +187,6 @@ mf::WlDataSource::~WlDataSource()
     {
         clipboard.clear_drag_n_drop_source(source);
     }
-}
-
-auto mf::WlDataSource::from(struct wl_resource* resource) -> WlDataSource*
-{
-    return dynamic_cast<mf::WlDataSource*>(wayland::DataSource::from(resource));
 }
 
 void mf::WlDataSource::set_clipboard_paste_source()
@@ -212,9 +209,9 @@ void mf::WlDataSource::start_drag_n_drop_gesture()
     clipboard.set_drag_n_drop_source(source);
 }
 
-void mf::WlDataSource::offer(std::string const& mime_type)
+auto mf::WlDataSource::offer(rust::String mime_type) -> void
 {
-    mime_types.push_back(mime_type);
+    mime_types.push_back(std::string{mime_type});
 }
 
 void mf::WlDataSource::paste_source_set(std::shared_ptr<ms::DataExchangeSource> const& source)
@@ -247,35 +244,35 @@ void mf::WlDataSource::drag_n_drop_source_set(std::shared_ptr<scene::DataExchang
     }
 }
 
-void mf::WlDataSource::set_actions(uint32_t dnd_actions)
+auto mf::WlDataSource::set_actions(uint32_t dnd_actions) -> void
 {
     if (!mf::validate_dnd_actions(dnd_actions))
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             Error::invalid_action_mask,
             "Invalid DnD actions 0x%x", dnd_actions};
     }
     this->dnd_actions = dnd_actions;
 }
 
-uint32_t mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action)
+auto mf::WlDataSource::drag_n_drop_set_actions(uint32_t dnd_actions, uint32_t preferred_action) -> uint32_t
 {
     using DndAction = mw::DataDeviceManager::DndAction;
 
     if (preferred_action == DndAction::ask)
     {
-        preferred_action = DndAction::move;
+        preferred_action = DndAction::r_move;
     }
 
     if (dnd_actions & DndAction::ask)
     {
-        preferred_action = DndAction::move;
+        preferred_action = DndAction::r_move;
     }
 
     auto const acceptable_options = this->dnd_actions & dnd_actions;
 
-    for (auto action : {preferred_action, DndAction::copy, DndAction::move, DndAction::none})
+    for (auto action : {preferred_action, DndAction::copy, DndAction::r_move, DndAction::none})
     {
         if (action & acceptable_options)
         {

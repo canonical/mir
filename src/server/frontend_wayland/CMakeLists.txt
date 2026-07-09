@@ -59,7 +59,7 @@ set(
   text_input_v1.cpp             text_input_v1.h
   primary_selection_v1.cpp      primary_selection_v1.h
   session_lock_v1.cpp           session_lock_v1.h
-  xdg_decoration_unstable_v1.cpp           xdg_decoration_unstable_v1.h
+  xdg_decoration_manager_v1.cpp            xdg_decoration_manager_v1.h
   xdg_dialog_v1.cpp                        xdg_dialog_v1.h
   server_decoration_manager.cpp            server_decoration_manager.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
@@ -72,7 +72,7 @@ set(
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
   wp_viewporter.cpp             wp_viewporter.h
   wp_fractional_scale_v1.cpp        wp_fractional_scale_v1.h
-  xdg_activation_v1.cpp         xdg_activation_v1.h
+  xdg_activation_unstable_v1.cpp         xdg_activation_unstable_v1.h
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
   data_control_v1.cpp           data_control_v1.h
   surface_registry.cpp          surface_registry.h

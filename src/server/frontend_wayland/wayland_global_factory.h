@@ -30,6 +30,7 @@ namespace mir
 {
 class Executor;
 class DecorationStrategy;
+class MainLoop;
 template<typename T>
 class ObserverRegistrar;
 
@@ -37,6 +38,7 @@ namespace shell
 {
 class AccessibilityManager;
 class Shell;
+class TokenAuthority;
 }
 
 namespace compositor
@@ -48,6 +50,10 @@ namespace scene
 {
 class Session;
 class IdleHub;
+class SessionLock;
+class SessionCoordinator;
+class Clipboard;
+class TextInputHub;
 }
 
 namespace graphics
@@ -63,6 +69,7 @@ class InputDeviceHub;
 class InputDeviceRegistry;
 class KeyboardObserver;
 class Seat;
+class CompositeEventFilter;
 }
 
 namespace time
@@ -85,6 +92,10 @@ class DesktopFileManager;
 class ForeignToplevelIdentifierMap;
 class WlSeat;
 class OutputManager;
+class SessionLockState;
+class XdgActivationV1State;
+class DragIconController;
+class PointerInputDispatcher;
 
 /// The per-client visibility predicate: given the client's session and an
 /// interface name, decide whether the client may see (bind) that global.
@@ -124,6 +135,7 @@ public:
         std::shared_ptr<std::vector<graphics::DRMFormat> const> shm_formats,
         std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory,
         std::shared_ptr<SurfaceStack> surface_stack,
+        std::shared_ptr<scene::SessionLock> session_lock,
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
         std::shared_ptr<time::Clock> clock,
         std::shared_ptr<input::InputDeviceHub> input_hub,
@@ -133,6 +145,15 @@ public:
         std::shared_ptr<SurfaceRegistry> surface_registry,
         std::shared_ptr<DesktopFileManager> desktop_file_manager,
         std::shared_ptr<input::InputDeviceRegistry> input_device_registry,
+        std::shared_ptr<scene::SessionCoordinator> session_coordinator,
+        std::shared_ptr<MainLoop> main_loop,
+        std::shared_ptr<shell::TokenAuthority> token_authority,
+        std::shared_ptr<scene::Clipboard> clipboard,
+        std::shared_ptr<scene::Clipboard> primary_selection_clipboard,
+        std::shared_ptr<DragIconController> drag_icon_controller,
+        std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
+        std::shared_ptr<scene::TextInputHub> text_input_hub,
+        std::shared_ptr<input::CompositeEventFilter> event_filter,
         OutputManager& output_manager);
 
     auto create_ext_data_control_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1> override;
@@ -201,6 +222,7 @@ private:
     std::shared_ptr<std::vector<graphics::DRMFormat> const> const shm_formats;
     std::shared_ptr<compositor::ScreenShooterFactory> const screen_shooter_factory;
     std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<scene::SessionLock> const session_lock;
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<input::InputDeviceHub> const input_hub;
@@ -210,11 +232,26 @@ private:
     std::shared_ptr<SurfaceRegistry> const surface_registry;
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
     std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
+    std::shared_ptr<scene::SessionCoordinator> const session_coordinator;
+    std::shared_ptr<MainLoop> const main_loop;
+    std::shared_ptr<shell::TokenAuthority> const token_authority;
+    std::shared_ptr<scene::Clipboard> const clipboard;
+    std::shared_ptr<scene::Clipboard> const primary_selection_clipboard;
+    std::shared_ptr<DragIconController> const drag_icon_controller;
+    std::shared_ptr<PointerInputDispatcher> const pointer_input_dispatcher;
+    std::shared_ptr<scene::TextInputHub> const text_input_hub;
+    std::shared_ptr<input::CompositeEventFilter> const event_filter;
     OutputManager& output_manager;
     std::shared_ptr<WlSeat> const wl_seat;
     // Shared across every client's ext_foreign_toplevel_list_v1 so a surface
     // always reports the same stable identifier.
     std::shared_ptr<ForeignToplevelIdentifierMap> const foreign_toplevel_id_map;
+    // Shared across every client's ext_session_lock_manager_v1 so the "only one
+    // active lock" invariant is global rather than per-bind.
+    std::shared_ptr<SessionLockState> const session_lock_state;
+    // Shared across every client's xdg_activation_v1 so pending-token bookkeeping
+    // and the keyboard/session observers are global rather than per-bind.
+    std::shared_ptr<XdgActivationV1State> const xdg_activation_state;
 };
 }
 }

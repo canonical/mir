@@ -17,7 +17,9 @@
 #ifndef MIR_FRONTEND_SESSION_LOCK_V1_H
 #define MIR_FRONTEND_SESSION_LOCK_V1_H
 
-#include "ext-session-lock-v1_wrapper.h"
+#include "ext_session_lock_v1.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -33,42 +35,40 @@ class SessionLock;
 namespace frontend
 {
 class WlSeat;
-class SurfaceStack;
 class OutputManager;
 class SessionLockV1;
 class SurfaceRegistry;
 
-class SessionLockManagerV1 : public wayland::SessionLockManagerV1::Global
+/// Tracking of the single active session lock. Shared across every bind of the
+/// session-lock manager so that the "only one lock may be held" invariant is
+/// global rather than per-bind.
+class SessionLockState
 {
 public:
-    SessionLockManagerV1(
-        wl_display* display,
-        Executor& wayland_executor,
-        std::shared_ptr<shell::Shell> const& shell,
-        std::shared_ptr<scene::SessionLock> const& session_lock,
-        WlSeat& seat,
-        OutputManager* output_manager,
-        std::shared_ptr<SurfaceStack> const& surface_stack,
-        std::shared_ptr<SurfaceRegistry> const& surface_registry);
-
-    Executor& wayland_executor;
-    std::shared_ptr<shell::Shell> const shell;
-    std::shared_ptr<scene::SessionLock> const session_lock;
-    WlSeat& seat;
-    OutputManager* const output_manager;
-    std::shared_ptr<SurfaceStack> surface_stack;
-    std::shared_ptr<SurfaceRegistry> const surface_registry;
+    explicit SessionLockState(std::shared_ptr<scene::SessionLock> session_lock);
 
     bool try_lock(SessionLockV1* lock);
     bool try_relinquish_locking_privilege(SessionLockV1* lock);
     bool try_unlock(SessionLockV1* lock);
-    bool is_active_lock(SessionLockV1* lock);
-private:
-    class Instance;
-    void bind(wl_resource* new_resource);
+    bool is_active_lock(SessionLockV1* lock) const;
 
+private:
+    std::shared_ptr<scene::SessionLock> const session_lock;
     SessionLockV1* active_lock = nullptr;
 };
+
+auto create_session_lock_manager_v1(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::ExtSessionLockManagerV1Middleware> instance,
+    uint32_t object_id,
+    Executor& wayland_executor,
+    std::shared_ptr<shell::Shell> const& shell,
+    std::shared_ptr<scene::SessionLock> const& session_lock,
+    WlSeat& seat,
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry,
+    std::shared_ptr<SessionLockState> const& state)
+    -> std::shared_ptr<wayland_rs::ExtSessionLockManagerV1>;
 
 }
 }

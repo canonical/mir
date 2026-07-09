@@ -17,8 +17,7 @@
 #ifndef MIR_FRONTEND_INPUT_METHOD_V2_H
 #define MIR_FRONTEND_INPUT_METHOD_V2_H
 
-
-#include "input-method-unstable-v2_wrapper.h"
+#include "input_method_unstable_v2.h"
 
 #include <memory>
 
@@ -35,12 +34,14 @@ class CompositeEventFilter;
 }
 namespace frontend
 {
-auto create_input_method_manager_v2(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<input::CompositeEventFilter> const event_filter)
--> std::shared_ptr<wayland::InputMethodManagerV2::Global>;
+auto create_zwp_input_method_manager_v2(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::InputMethodManagerV2Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<scene::TextInputHub> text_input_hub,
+    std::shared_ptr<input::CompositeEventFilter> event_filter)
+-> std::shared_ptr<wayland_rs::InputMethodManagerV2>;
 }
 }
 

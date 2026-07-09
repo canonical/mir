@@ -15,11 +15,10 @@
  */
 
 #include "input_method_common.h"
-#include "text-input-unstable-v3_wrapper.h"
 #include <boost/throw_exception.hpp>
 
 namespace ms = mir::scene;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 auto mir::frontend::mir_to_wayland_content_hint(ms::TextInputContentHint hint) -> uint32_t
 {

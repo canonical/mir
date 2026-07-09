@@ -88,6 +88,14 @@ public:
     wayland::Weak<OutputGlobal> const global;
 };
 
+/// Non-owning shared_ptr aliasing a live wayland_rs::Output (e.g. an
+/// OutputInstance), for synchronous wayland_rs sender calls that take
+/// std::shared_ptr<Output>. The returned pointer MUST NOT outlive the object.
+inline auto as_output_ptr(wayland_rs::Output* output) -> std::shared_ptr<wayland_rs::Output>
+{
+    return output ? std::shared_ptr<wayland_rs::Output>{std::shared_ptr<void>{}, output} : nullptr;
+}
+
 class OutputGlobal : public wayland::LifetimeTracker
 {
 public:

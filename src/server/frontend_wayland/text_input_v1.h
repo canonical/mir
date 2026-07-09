@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_TEXT_INPUT_V1_H
 #define MIR_FRONTEND_TEXT_INPUT_V1_H
 
-#include "text-input-unstable-v1_wrapper.h"
+#include "text_input_unstable_v1.h"
 
 #include <memory>
 
@@ -30,11 +30,13 @@ class TextInputHub;
 }
 namespace frontend
 {
-auto create_text_input_manager_v1(
-    wl_display* display,
+auto create_zwp_text_input_manager_v1(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::TextInputManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::TextInputHub> text_input_hub)
--> std::unique_ptr<wayland::TextInputManagerV1::Global>;
+-> std::shared_ptr<wayland_rs::TextInputManagerV1>;
 }
 }
 

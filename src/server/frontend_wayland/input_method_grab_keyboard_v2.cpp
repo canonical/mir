@@ -15,17 +15,17 @@
  */
 
 #include "input_method_grab_keyboard_v2.h"
+#include "wayland.h"
 #include "wl_seat.h"
 
+#include <mir/events/event_builders.h>
+#include <mir/events/keyboard_event.h>
+#include <mir/executor.h>
 #include <mir/input/composite_event_filter.h>
 #include <mir/input/event_filter.h>
-#include <mir/events/keyboard_event.h>
-#include <mir/events/event_builders.h>
-#include <mir/wayland/client.h>
-#include <mir/executor.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mi = mir::input;
 namespace mev = mir::events;
 
@@ -33,13 +33,12 @@ class mf::InputMethodGrabKeyboardV2::Handler
     : public input::EventFilter
 {
 public:
-    Handler(InputMethodGrabKeyboardV2* keyboard, std::shared_ptr<Executor> const& wayland_executor)
+    Handler(InputMethodGrabKeyboardV2* keyboard, std::shared_ptr<Executor> wayland_executor)
         : keyboard{keyboard},
-          wayland_executor{wayland_executor}
+          wayland_executor{std::move(wayland_executor)}
     {
     }
 
-    // \return true indicates the event was consumed by the filter
     bool handle(MirEvent const& event) override
     {
         if (mir_event_get_type(&event) == mir_event_type_input)
@@ -63,21 +62,22 @@ public:
     }
 
 private:
-    wayland::Weak<InputMethodGrabKeyboardV2> const keyboard;
+    mw::Weak<InputMethodGrabKeyboardV2> const keyboard;
     std::shared_ptr<Executor> const wayland_executor;
 };
 
 mf::InputMethodGrabKeyboardV2::InputMethodGrabKeyboardV2(
-    wl_resource* resource,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::InputMethodKeyboardGrabV2Middleware> instance,
+    uint32_t object_id,
     WlSeat& seat,
-    std::shared_ptr<Executor> const& wayland_executor,
+    std::shared_ptr<Executor> wayland_executor,
     input::CompositeEventFilter& event_filter)
-    : wayland::InputMethodKeyboardGrabV2{resource, Version<1>()},
+    : mw::InputMethodKeyboardGrabV2{std::move(client), std::move(instance), object_id},
       handler{std::make_shared<Handler>(this, wayland_executor)},
       helper{seat.make_keyboard_helper(this)}
 {
     event_filter.prepend(handler);
-    // On cleanup the handler will be dropped and automatically removed from the filter
 }
 
 void mf::InputMethodGrabKeyboardV2::send_repeat_info(int32_t rate, int32_t delay)
@@ -87,16 +87,12 @@ void mf::InputMethodGrabKeyboardV2::send_repeat_info(int32_t rate, int32_t delay
 
 void mf::InputMethodGrabKeyboardV2::send_keymap_xkb_v1(mir::Fd const& fd, size_t length)
 {
-    send_keymap_event(mw::Keyboard::KeymapFormat::xkb_v1, fd, length);
+    send_keymap_event(mw::Keyboard::KeymapFormat::xkb_v1, static_cast<int32_t>(fd), static_cast<uint32_t>(length));
 }
 
 void mf::InputMethodGrabKeyboardV2::send_key(std::shared_ptr<MirKeyboardEvent const> const& event)
 {
-    if (!wl_client)
-    {
-        return;
-    }
-    auto const serial = wl_client.value().next_serial(event);
+    auto const serial = client->next_serial(event);
     auto const timestamp = mir_input_event_get_wayland_timestamp(event.get());
     int const scancode = event->scan_code();
     auto const state = (event->action() == mir_keyboard_action_down) ?

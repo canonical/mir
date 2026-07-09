@@ -20,10 +20,12 @@
 #include "surface_registry.h"
 #include "wayland_utils.h"
 #include "wl_surface.h"
+#include "wp_fractional_scale_v1.h"
 #include "wayland_surface_observer.h"
 #include "wl_seat.h"
+#include "client.h"
+#include "weak.h"
 #include <mir/frontend/wayland.h>
-#include <mir/wayland/client.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/scene/surface.h>
@@ -35,7 +37,7 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mwrs = mir::wayland_rs;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -64,12 +66,12 @@ inline void clear_pending_if_unchanged(std::optional<T>& pending, T& cache)
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     Executor& wayland_executor,
     WlSeat* seat,
-    mw::Client* client,
+    std::shared_ptr<wayland_rs::Client> const& client,
     WlSurface* surface,
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : surface{surface},
+    : surface{mwrs::make_weak(surface)},
       client{client},
       shell{shell},
       session{client->client_session()},
@@ -226,14 +228,16 @@ void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
     mods.min_height = geom::Height{height};
 }
 
-void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> const& output)
+void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output)
 {
+    wayland_rs::Output* const output_ptr = output ? mwrs::as_nullable_ptr(output.value()) : nullptr;
+
     // We must process this request immediately (i.e. don't defer until commit())
     if (auto const scene_surface = weak_scene_surface.lock())
     {
         shell::SurfaceSpecification mods;
         mods.state = scene_surface->state_tracker().with(mir_window_state_fullscreen).active_state();
-        if (auto const output_global = OutputGlobal::from(output.value_or(nullptr)))
+        if (auto const output_global = OutputGlobal::from(output_ptr))
         {
             mods.output_id = output_global->current_config().id;
         }
@@ -242,7 +246,7 @@ void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<struct wl_resource*> 
     else
     {
         spec().state = mir_window_state_fullscreen;
-        if (auto const output_id = OutputManager::output_id_for(output))
+        if (auto const output_id = OutputManager::output_id_for(output_ptr))
         {
             spec().output_id = output_id.value();
         }
@@ -445,7 +449,7 @@ void mf::WindowWlSurfaceRole::surface_destroyed()
         // NOTE: the wl_shell_surface specification seems contradictory, so this method is overridden in its implementation
         // NOTE: it's also overridden in layer shell, for reasons explained there
         log_warning("wl_surface@%s destroyed before associated role",
-                    (surface ? std::to_string(wl_resource_get_id(surface.value().resource)) : "?").c_str());
+                    (surface ? std::to_string(surface.value().object_id()) : "?").c_str());
 
         // This isn't strictly correct (as it only applies to wl-shell) but is commonly assumed (e.g. by SDL2) and
         // implemented (e.g. Mutter for xdg-shell)
@@ -490,12 +494,12 @@ auto mf::WindowWlSurfaceRole::output_config_changed(graphics::DisplayConfigurati
             if (auto* global{output_manager->output_for(config.id).value_or(nullptr)})
             {
                 global->for_each_output_bound_by(
-                    client,
+                    client.get(),
                     [&](OutputInstance* instance)
                     {
                         if (auto const fractional_scale = surface.value().get_fractional_scale())
                             fractional_scale.value().output_entered(config);
-                        surface.value().send_enter_event(instance->resource);
+                        surface.value().send_enter_event(as_output_ptr(instance));
                         pending_enter_events.erase(id_it);
                         output_scales[config.id] = std::ceil(config.scale);
                     });
@@ -594,10 +598,10 @@ void mf::WindowWlSurfaceRole::handle_enter_output(graphics::DisplayConfiguration
                     fractional_scale.value().output_entered(config);
 
                 global->for_each_output_bound_by(
-                    client,
+                    client.get(),
                     [&](OutputInstance* instance)
                     {
-                        surface.value().send_enter_event(instance->resource);
+                        surface.value().send_enter_event(as_output_ptr(instance));
                         event_sent = true;
                     });
             }
@@ -629,10 +633,10 @@ void mf::WindowWlSurfaceRole::handle_leave_output(graphics::DisplayConfiguration
                     fractional_scale.value().output_left(config);
 
                 global->for_each_output_bound_by(
-                    client,
+                    client.get(),
                     [&](OutputInstance* instance)
                     {
-                        surface.value().send_leave_event(instance->resource);
+                        surface.value().send_leave_event(as_output_ptr(instance));
                     });
             }
         }

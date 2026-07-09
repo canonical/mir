@@ -17,17 +17,18 @@
 #ifndef MIR_FRONTEND_MIR_SHELL_H
 #define MIR_FRONTEND_MIR_SHELL_H
 
-#include <mir-shell-unstable-v1_wrapper.h>
+#include "mir_shell_unstable_v1.h"
 
 #include <memory>
-
-struct wl_display;
 
 namespace mir
 {
 namespace frontend
 {
-auto create_mir_shell_v1(struct wl_display* display) -> std::shared_ptr<wayland::MirShellV1::Global>;
+auto create_mir_shell_v1(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::MirShellV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland_rs::MirShellV1>;
 }
 }
 
