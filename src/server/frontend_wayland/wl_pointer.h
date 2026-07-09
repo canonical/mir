@@ -17,9 +17,8 @@
 #ifndef MIR_FRONTEND_WL_POINTER_H
 #define MIR_FRONTEND_WL_POINTER_H
 
-
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
 #include <mir/geometry/point.h>
 #include <mir/geometry/displacement.h>
 #include <mir/events/scroll_axis.h>
@@ -36,10 +35,11 @@ struct MirPointerEvent;
 
 namespace mir
 {
-namespace wayland
+namespace wayland_rs
 {
 class RelativePointerV1;
 class Client;
+class PointerMiddleware;
 }
 
 class Executor;
@@ -60,16 +60,19 @@ protected:
     CommitHandler& operator=(CommitHandler const&) = delete;
 };
 
-class WlPointer : public wayland::Pointer, private CommitHandler
+class WlPointer : public wayland_rs::Pointer, private CommitHandler
 {
 public:
     static auto linux_button_to_mir_button(int linux_button) -> std::optional<MirPointerButtons>;
 
-    WlPointer(wl_resource* new_resource);
+    WlPointer(
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::PointerMiddleware> instance,
+        uint32_t object_id);
 
     ~WlPointer();
 
-    void set_relative_pointer(wayland::RelativePointerV1* relative_ptr);
+    void set_relative_pointer(wayland_rs::RelativePointerV1* relative_ptr);
 
     /// Convert the Mir event into Wayland events and send them to the client. root_surface is the one that received
     /// the Mir event, but the final Wayland event may be sent to a subsurface.
@@ -100,19 +103,19 @@ private:
     ///@{
     void set_cursor(
         uint32_t serial,
-        std::optional<wl_resource*> const& surface,
+        std::optional<wayland_rs::Weak<wayland_rs::Surface>> const& surface,
         int32_t hotspot_x,
         int32_t hotspot_y) override;
     ///@}
 
-    wayland::Weak<WlSurface> surface_under_cursor;
+    wayland_rs::Weak<WlSurface> surface_under_cursor;
     std::optional<uint32_t> enter_serial;
-    wayland::DestroyListenerId destroy_listener_id; ///< ID of this pointer's destroy listener on surface_under_cursor
+    uint64_t destroy_listener_id{}; ///< ID of this pointer's destroy listener on surface_under_cursor
     bool needs_frame{false};
     MirPointerButtons current_buttons{0};
     std::optional<geometry::PointF> current_position;
     std::unique_ptr<Cursor> cursor;
-    wayland::Weak<wayland::RelativePointerV1> relative_pointer;
+    wayland_rs::Weak<wayland_rs::RelativePointerV1> relative_pointer;
     geometry::Displacement cursor_hotspot;
 };
 

@@ -17,8 +17,10 @@
 #ifndef MIR_FRONTEND_VIRTUAL_KEYBOARD_V1_H
 #define MIR_FRONTEND_VIRTUAL_KEYBOARD_V1_H
 
-#include "virtual-keyboard-unstable-v1_wrapper.h"
+#include "virtual_keyboard_unstable_v1.h"
+#include "client.h"
 
+#include <cstdint>
 #include <memory>
 
 namespace mir
@@ -30,9 +32,11 @@ class InputDeviceRegistry;
 namespace frontend
 {
 auto create_virtual_keyboard_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland::VirtualKeyboardManagerV1::Global>;
+-> std::shared_ptr<wayland_rs::VirtualKeyboardManagerV1>;
 }
 }
 

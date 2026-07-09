@@ -21,7 +21,7 @@ set(
   wl_data_source.cpp            wl_data_source.h
   output_manager.cpp            output_manager.h
   zwp_pointer_constraints_v1.cpp zwp_pointer_constraints_v1.h
-  relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
+  zwp_relative_pointer_v1.cpp    zwp_relative_pointer_v1.h
   wl_subcompositor.cpp          wl_subcompositor.h
                                 wl_surface_role.h
   window_wl_surface_role.cpp    window_wl_surface_role.h

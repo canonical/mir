@@ -271,6 +271,14 @@ private:
 
     std::optional<geometry::Rectangles> opaque_region_;
 };
+
+/// Non-owning shared_ptr aliasing a live WlSurface, for synchronous wayland_rs
+/// sender calls (send_enter/leave/down) that take std::shared_ptr<Surface>.
+/// The returned pointer MUST NOT outlive the WlSurface.
+inline auto as_surface_ptr(WlSurface* surface) -> std::shared_ptr<wayland_rs::Surface>
+{
+    return surface ? std::shared_ptr<wayland_rs::Surface>{std::shared_ptr<void>{}, surface} : nullptr;
+}
 }
 }
 

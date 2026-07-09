@@ -30,9 +30,12 @@ namespace mir
 {
 class Executor;
 class DecorationStrategy;
+template<typename T>
+class ObserverRegistrar;
 
 namespace shell
 {
+class AccessibilityManager;
 class Shell;
 }
 
@@ -56,6 +59,10 @@ class DRMRenderingProvider;
 namespace input
 {
 class CursorObserverMultiplexer;
+class InputDeviceHub;
+class InputDeviceRegistry;
+class KeyboardObserver;
+class Seat;
 }
 
 namespace time
@@ -73,8 +80,11 @@ namespace frontend
 {
 class KeyboardStateTracker;
 class SurfaceStack;
+class SurfaceRegistry;
 class DesktopFileManager;
 class ForeignToplevelIdentifierMap;
+class WlSeat;
+class OutputManager;
 
 /// The per-client visibility predicate: given the client's session and an
 /// interface name, decide whether the client may see (bind) that global.
@@ -116,7 +126,14 @@ public:
         std::shared_ptr<SurfaceStack> surface_stack,
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
         std::shared_ptr<time::Clock> clock,
-        std::shared_ptr<DesktopFileManager> desktop_file_manager);
+        std::shared_ptr<input::InputDeviceHub> input_hub,
+        std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar,
+        std::shared_ptr<input::Seat> mir_seat,
+        std::shared_ptr<shell::AccessibilityManager> accessibility_manager,
+        std::shared_ptr<SurfaceRegistry> surface_registry,
+        std::shared_ptr<DesktopFileManager> desktop_file_manager,
+        std::shared_ptr<input::InputDeviceRegistry> input_device_registry,
+        OutputManager& output_manager);
 
     auto create_ext_data_control_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1> override;
     auto create_ext_data_control_offer_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlOfferV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlOfferV1> override;
@@ -186,7 +203,15 @@ private:
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
     std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<input::InputDeviceHub> const input_hub;
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> const keyboard_observer_registrar;
+    std::shared_ptr<input::Seat> const mir_seat;
+    std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
+    std::shared_ptr<input::InputDeviceRegistry> const input_device_registry;
+    OutputManager& output_manager;
+    std::shared_ptr<WlSeat> const wl_seat;
     // Shared across every client's ext_foreign_toplevel_list_v1 so a surface
     // always reports the same stable identifier.
     std::shared_ptr<ForeignToplevelIdentifierMap> const foreign_toplevel_id_map;

@@ -18,6 +18,7 @@
 
 #include "shm.h"
 #include "wl_compositor.h"
+#include "wl_seat.h"
 #include "wl_subcompositor.h"
 #include "wp_viewporter.h"
 #include "wp_fractional_scale_v1.h"
@@ -25,6 +26,10 @@
 #include "idle_inhibit_v1.h"
 #include "server_decoration_manager.h"
 #include "zwp_pointer_constraints_v1.h"
+#include "zwp_relative_pointer_v1.h"
+#include "virtual_keyboard_v1.h"
+#include "virtual_pointer_v1.h"
+#include "output_manager.h"
 #include "input_trigger_action_v1.h"
 #include "input_trigger_registration_v1.h"
 #include "xdg_output_v1.h"
@@ -66,7 +71,14 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
     std::shared_ptr<SurfaceStack> surface_stack,
     std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
     std::shared_ptr<time::Clock> clock,
-    std::shared_ptr<DesktopFileManager> desktop_file_manager)
+    std::shared_ptr<input::InputDeviceHub> input_hub,
+    std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> keyboard_observer_registrar,
+    std::shared_ptr<input::Seat> mir_seat,
+    std::shared_ptr<shell::AccessibilityManager> accessibility_manager,
+    std::shared_ptr<SurfaceRegistry> surface_registry,
+    std::shared_ptr<DesktopFileManager> desktop_file_manager,
+    std::shared_ptr<input::InputDeviceRegistry> input_device_registry,
+    OutputManager& output_manager)
     : registry{registry},
       extension_filter{std::move(extension_filter)},
       wayland_executor{std::move(wayland_executor)},
@@ -85,7 +97,24 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
       surface_stack{std::move(surface_stack)},
       cursor_observer_multiplexer{std::move(cursor_observer_multiplexer)},
       clock{std::move(clock)},
+      input_hub{std::move(input_hub)},
+      keyboard_observer_registrar{std::move(keyboard_observer_registrar)},
+      mir_seat{std::move(mir_seat)},
+      accessibility_manager{std::move(accessibility_manager)},
+      surface_registry{std::move(surface_registry)},
       desktop_file_manager{std::move(desktop_file_manager)},
+      input_device_registry{std::move(input_device_registry)},
+      output_manager{output_manager},
+      wl_seat{std::make_shared<WlSeat>(
+          *this->wayland_executor,
+          this->clock,
+          this->input_hub,
+          this->keyboard_observer_registrar,
+          this->mir_seat,
+          this->accessibility_manager,
+          this->surface_registry,
+          this->input_trigger_registry,
+          this->keyboard_state_tracker)},
       foreign_toplevel_id_map{std::make_shared<ForeignToplevelIdentifierMap>()}
 {
 }
@@ -269,9 +298,13 @@ auto mf::WaylandGlobalFactory::create_zwp_primary_selection_offer_v1(rust::Box<w
     throw std::logic_error{"WaylandGlobalFactory::create_zwp_primary_selection_offer_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_relative_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::RelativePointerManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::RelativePointerManagerV1>
+auto mf::WaylandGlobalFactory::create_zwp_relative_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::RelativePointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::RelativePointerManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zwp_relative_pointer_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zwp_relative_pointer_manager_v1 called for an unregistered client"};
+
+    return mf::create_relative_pointer_unstable_v1(resolved, std::move(instance), object_id, shell);
 }
 
 auto mf::WaylandGlobalFactory::create_org_kde_kwin_server_decoration_manager(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ServerDecorationManagerMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ServerDecorationManager>
@@ -307,9 +340,13 @@ auto mf::WaylandGlobalFactory::create_wp_viewporter(rust::Box<wayland_rs::Waylan
     return std::make_shared<WpViewporter>(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_virtual_keyboard_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::VirtualKeyboardManagerV1>
+auto mf::WaylandGlobalFactory::create_zwp_virtual_keyboard_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::VirtualKeyboardManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zwp_virtual_keyboard_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zwp_virtual_keyboard_manager_v1 called for an unregistered client"};
+
+    return mf::create_virtual_keyboard_manager_v1(resolved, std::move(instance), object_id, input_device_registry);
 }
 
 auto mf::WaylandGlobalFactory::create_wl_compositor(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::CompositorMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::Compositor>
@@ -359,9 +396,16 @@ auto mf::WaylandGlobalFactory::create_wl_shell(rust::Box<wayland_rs::WaylandClie
     throw std::logic_error{"WaylandGlobalFactory::create_wl_shell is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_wl_seat(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::SeatMiddleware>, uint32_t) -> std::shared_ptr<wayland_rs::Seat>
+auto mf::WaylandGlobalFactory::create_wl_seat(
+    rust::Box<wayland_rs::WaylandClient> client,
+    rust::Box<wayland_rs::SeatMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland_rs::Seat>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_wl_seat is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_wl_seat called for an unregistered client"};
+
+    return wl_seat->create_instance(resolved, std::move(instance), object_id);
 }
 
 auto mf::WaylandGlobalFactory::create_wl_output(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::OutputMiddleware>, uint32_t) -> std::shared_ptr<wayland_rs::Output>
@@ -410,9 +454,13 @@ auto mf::WaylandGlobalFactory::create_zwlr_screencopy_manager_v1(rust::Box<wayla
         wayland_executor, allocator, screen_shooter_factory, surface_stack);
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::VirtualPointerManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::VirtualPointerManagerV1>
+auto mf::WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::VirtualPointerManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zwlr_virtual_pointer_manager_v1 called for an unregistered client"};
+
+    return mf::create_virtual_pointer_manager_v1(resolved, std::move(instance), object_id, &output_manager, input_device_registry);
 }
 
 auto mf::WaylandGlobalFactory::create_xdg_activation_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::XdgActivationV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::XdgActivationV1>

@@ -27,7 +27,6 @@
 #include <unordered_set>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
 namespace mi = mir::input;
 
 mf::KeyboardHelper::KeyboardHelper(
@@ -47,9 +46,8 @@ mf::KeyboardHelper::KeyboardHelper(
         fatal_error("Failed to create XKB context");
     }
 
-    /* The wayland::Keyboard constructor has already run, creating the keyboard
-     * resource. It is thus safe to send a keymap event to it; the client will receive
-     * the keyboard object before this event.
+    /* The keyboard object has already been created. It is thus safe to send a keymap
+     * event to it; the client will receive the keyboard object before this event.
      */
     set_keymap(initial_keymap);
 
