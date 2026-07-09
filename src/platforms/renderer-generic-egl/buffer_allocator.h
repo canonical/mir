@@ -70,6 +70,8 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
+    auto dma_buf_provider() -> std::shared_ptr<DMABufEGLProvider> override;
+
     auto shared_egl_context() -> EGLContext;
 private:
     std::unique_ptr<renderer::gl::Context> const ctx;

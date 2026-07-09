@@ -74,6 +74,7 @@ set(
   wp_fractional_scale_v1.cpp        wp_fractional_scale_v1.h
   xdg_activation_unstable_v1.cpp         xdg_activation_unstable_v1.h
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
+  zwp_linux_dmabuf_v1.cpp       zwp_linux_dmabuf_v1.h
   data_control_v1.cpp           data_control_v1.h
   surface_registry.cpp          surface_registry.h
   keyboard_state_tracker.cpp    keyboard_state_tracker.h

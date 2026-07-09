@@ -23,6 +23,7 @@
 #include "wp_viewporter.h"
 #include "wp_fractional_scale_v1.h"
 #include "linux_drm_syncobj.h"
+#include "zwp_linux_dmabuf_v1.h"
 #include "idle_inhibit_v1.h"
 #include "server_decoration_manager.h"
 #include "zwp_pointer_constraints_v1.h"
@@ -58,6 +59,7 @@
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_client_registry.h"
 
+#include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/scene/session.h>
 
 #include <stdexcept>
@@ -347,9 +349,14 @@ auto mf::WaylandGlobalFactory::create_zwp_input_method_manager_v2(rust::Box<wayl
         wayland_executor, text_input_hub, event_filter);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_linux_dmabuf_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::LinuxDmabufV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::LinuxDmabufV1>
+auto mf::WaylandGlobalFactory::create_zwp_linux_dmabuf_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::LinuxDmabufV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::LinuxDmabufV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zwp_linux_dmabuf_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zwp_linux_dmabuf_v1 called for an unregistered client"};
+
+    return std::make_shared<mf::LinuxDmabufV1>(
+        resolved, std::move(instance), object_id, allocator->dma_buf_provider());
 }
 
 auto mf::WaylandGlobalFactory::create_wp_linux_drm_syncobj_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::LinuxDrmSyncobjManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::LinuxDrmSyncobjManagerV1>

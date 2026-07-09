@@ -1500,6 +1500,26 @@ auto mg::DMABufEGLProvider::supported_formats() const -> mg::DmaBufFormatDescrip
     return *formats;
 }
 
+auto mg::DMABufEGLProvider::is_importable(mg::DRMFormat format, uint64_t modifier) const -> bool
+{
+    return descriptor_for_format_and_modifiers(format, modifier, *this) != nullptr;
+}
+
+auto mg::DMABufEGLProvider::supported_format_modifiers() const
+    -> std::vector<std::pair<mg::DRMFormat, std::vector<uint64_t>>>
+{
+    std::vector<std::pair<mg::DRMFormat, std::vector<uint64_t>>> result;
+    auto const& descriptors = supported_formats();
+    for (auto i = 0u; i < descriptors.num_formats(); ++i)
+    {
+        auto const& [format, modifiers, external_only] = descriptors[i];
+        result.emplace_back(
+            mg::DRMFormat{static_cast<uint32_t>(format)},
+            std::vector<uint64_t>{modifiers.begin(), modifiers.end()});
+    }
+    return result;
+}
+
 auto mg::DMABufEGLProvider::import_dma_buf(
     mg::DMABufBuffer const& dma_buf,
     std::function<void()>&& on_consumed,

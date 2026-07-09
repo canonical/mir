@@ -284,6 +284,11 @@ auto mge::BufferAllocator::shared_egl_context() -> EGLContext
     return static_cast<EGLContext>(*ctx);
 }
 
+auto mge::BufferAllocator::dma_buf_provider() -> std::shared_ptr<DMABufEGLProvider>
+{
+    return dmabuf_provider;
+}
+
 auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>
 {
     std::shared_ptr<NativeBufferBase> native_buffer{buffer, buffer->native_buffer_base()};

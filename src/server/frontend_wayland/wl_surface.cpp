@@ -23,6 +23,7 @@
 #include "wl_region.h"
 #include "shm.h"
 #include "linux_drm_syncobj.h"
+#include "zwp_linux_dmabuf_v1.h"
 
 #include "wayland.h"
 #include "weak.h"
@@ -626,16 +627,21 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     client.get(),
                     current_buffer->id().as_value());
             }
+            else if (auto const dmabuf = mw::Buffer::from<LinuxDmaBufBuffer>(weak_buffer))
+            {
+                current_buffer = dmabuf->import(
+                    std::move(executor_send_frame_callbacks),
+                    std::move(release_buffer));
+                tracepoint(
+                    mir_server_wayland,
+                    hw_buffer_committed,
+                    client.get(),
+                    current_buffer->id().as_value());
+            }
             else
             {
-                // TODO: hardware (dmabuf) buffers are handled by the migrated
-                // LinuxDmabufV1 (see B2). Until that lands there is no non-shm
-                // buffer type to import; release the buffer and fire the frame
-                // callbacks so the client is not left waiting.
                 mir::log_warning(
-                    "wl_surface@%u committed an unsupported (non-shm) buffer; "
-                    "hardware buffer support is pending the dmabuf migration",
-                    object_id());
+                    "wl_surface@%u committed an unrecognised buffer type", object_id());
                 release_buffer();
                 send_frame_callbacks(frame_callbacks);
             }
