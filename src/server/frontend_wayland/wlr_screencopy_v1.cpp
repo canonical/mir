@@ -38,7 +38,7 @@
 #include <optional>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mwrs = mir::wayland_rs;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
@@ -86,7 +86,7 @@ private:
     /// Only has meaning when damage_amount is partial
     geom::Rectangle output_space_damage;
     /// The frame that will be captured once this capture area takes damage
-    wayland::Weak<Frame> pending_frame;
+    wayland_rs::Weak<Frame> pending_frame;
 };
 
 namespace mir

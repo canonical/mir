@@ -35,7 +35,7 @@
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace mwrs = mir::wayland_rs;
 namespace mi = mir::input;
 namespace mg = mir::graphics;

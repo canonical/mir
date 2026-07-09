@@ -15,7 +15,6 @@
  */
 
 #include "wayland_surface_observer.h"
-#include "wayland_utils.h"
 #include "window_wl_surface_role.h"
 #include "wl_surface.h"
 
@@ -28,7 +27,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     Executor& wayland_executor,

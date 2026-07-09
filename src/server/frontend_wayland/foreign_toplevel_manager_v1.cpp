@@ -16,7 +16,6 @@
 
 #include "foreign_toplevel_manager_v1.h"
 
-#include "wayland_utils.h"
 #include "desktop_file_manager.h"
 #include "foreign_toplevel_handle_creation.h"
 

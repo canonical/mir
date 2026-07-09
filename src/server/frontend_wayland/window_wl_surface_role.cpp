@@ -18,7 +18,6 @@
 
 #include "output_manager.h"
 #include "surface_registry.h"
-#include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wp_fractional_scale_v1.h"
 #include "wayland_surface_observer.h"

@@ -9,7 +9,6 @@ set(
 
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
-  wl_client.cpp                 wl_client.h
   wayland_client.cpp            wayland_client.h
   wayland_client_notifier.cpp   wayland_client_notifier.h
   wayland_global_factory.cpp    wayland_global_factory.h
@@ -36,7 +35,6 @@ set(
   xdg_output_v1.cpp             xdg_output_v1.h
   layer_shell_v1.cpp            layer_shell_v1.h
   mir_shell.cpp                 mir_shell.h
-  resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
   wl_compositor.cpp             wl_compositor.h
   foreign_toplevel_list_v1.cpp  foreign_toplevel_list_v1.h

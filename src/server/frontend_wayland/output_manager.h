@@ -85,7 +85,7 @@ public:
     // wayland_rs::Output and from OutputConfigListener).
     using wayland_rs::Output::destroyed_flag;
 
-    wayland::Weak<OutputGlobal> const global;
+    wayland_rs::Weak<OutputGlobal> const global;
 };
 
 /// Non-owning shared_ptr aliasing a live wayland_rs::Output (e.g. an
@@ -129,7 +129,7 @@ private:
     void instance_destroyed(OutputInstance* instance);
 
     graphics::DisplayConfigurationOutput output_config;
-    std::vector<wayland::Weak<OutputConfigListener>> listeners;
+    std::vector<wayland_rs::Weak<OutputConfigListener>> listeners;
     std::unordered_map<wayland_rs::Client*, std::vector<OutputInstance*>> instances;
     // Owns the wl_output global's lifetime: destroyed with this OutputGlobal,
     // which withdraws the global from the display.
