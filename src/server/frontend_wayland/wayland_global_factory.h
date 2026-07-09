@@ -73,6 +73,8 @@ namespace frontend
 {
 class KeyboardStateTracker;
 class SurfaceStack;
+class DesktopFileManager;
+class ForeignToplevelIdentifierMap;
 
 /// The per-client visibility predicate: given the client's session and an
 /// interface name, decide whether the client may see (bind) that global.
@@ -113,7 +115,8 @@ public:
         std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory,
         std::shared_ptr<SurfaceStack> surface_stack,
         std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
-        std::shared_ptr<time::Clock> clock);
+        std::shared_ptr<time::Clock> clock,
+        std::shared_ptr<DesktopFileManager> desktop_file_manager);
 
     auto create_ext_data_control_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1> override;
     auto create_ext_data_control_offer_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlOfferV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlOfferV1> override;
@@ -183,6 +186,10 @@ private:
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
     std::shared_ptr<time::Clock> const clock;
+    std::shared_ptr<DesktopFileManager> const desktop_file_manager;
+    // Shared across every client's ext_foreign_toplevel_list_v1 so a surface
+    // always reports the same stable identifier.
+    std::shared_ptr<ForeignToplevelIdentifierMap> const foreign_toplevel_id_map;
 };
 }
 }

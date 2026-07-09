@@ -31,6 +31,7 @@
 #include "wlr_screencopy_v1.h"
 #include "ext_image_capture_v1.h"
 #include "ext_output_image_capture_source_v1.h"
+#include "foreign_toplevel_list_v1.h"
 
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_client_registry.h"
@@ -62,7 +63,8 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
     std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory,
     std::shared_ptr<SurfaceStack> surface_stack,
     std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
-    std::shared_ptr<time::Clock> clock)
+    std::shared_ptr<time::Clock> clock,
+    std::shared_ptr<DesktopFileManager> desktop_file_manager)
     : registry{registry},
       extension_filter{std::move(extension_filter)},
       wayland_executor{std::move(wayland_executor)},
@@ -80,7 +82,9 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
       screen_shooter_factory{std::move(screen_shooter_factory)},
       surface_stack{std::move(surface_stack)},
       cursor_observer_multiplexer{std::move(cursor_observer_multiplexer)},
-      clock{std::move(clock)}
+      clock{std::move(clock)},
+      desktop_file_manager{std::move(desktop_file_manager)},
+      foreign_toplevel_id_map{std::make_shared<ForeignToplevelIdentifierMap>()}
 {
 }
 
@@ -113,9 +117,15 @@ auto mf::WaylandGlobalFactory::create_ext_data_control_offer_v1(rust::Box<waylan
     throw std::logic_error{"WaylandGlobalFactory::create_ext_data_control_offer_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_list_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtForeignToplevelListV1>
+auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_list_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtForeignToplevelListV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_ext_foreign_toplevel_list_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_ext_foreign_toplevel_list_v1 called for an unregistered client"};
+
+    return mf::create_ext_foreign_toplevel_list_v1(
+        resolved, std::move(instance), object_id,
+        wayland_executor, surface_stack, desktop_file_manager, foreign_toplevel_id_map);
 }
 
 auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_handle_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtForeignToplevelHandleV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtForeignToplevelHandleV1>
