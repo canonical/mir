@@ -593,8 +593,10 @@ private:
         /// Pixel-space rectangle of signed integer coordinates.
         struct VisualBounds { int x, y, w, h; };
 
-        /// Returns the pixel-space top-left and size of the visual magnifier surface
-        /// given its logical capture rectangle and magnification factor.
+        ///
+        /// The visual rectangle is `mag` times larger than the logical one but
+        /// shares the same centre, which is why the top-left is pulled back by
+        /// (mag-1)/2 * size.
         VisualBounds compute_visual_bounds(
             geom::Point const& logical_top_left,
             geom::Size const& logical_size,
@@ -894,6 +896,26 @@ private:
 
     /// Observes input on the resize handle indicator and changes the magnifier capture size.
     /// Resizes the magnifier capture area when its resize handle is dragged.
+    ///
+    /// Resizing model
+    /// --------------
+    /// The magnifier draws a *logical* capture rectangle (top-left L, size sw x sh)
+    /// scaled by `mag` into a larger *visual* rectangle on screen. Both share the same
+    /// centre, so (with inner = (mag-1)/2, outer = (mag+1)/2) the visual edges are:
+    ///     visual left/top    = L - inner * size
+    ///     visual right/bottom = L + outer * size
+    ///
+    /// A resize drag keeps the visual corner *opposite* the grabbed handle pinned and
+    /// lets the grabbed corner follow the finger:
+    ///
+    ///     pin +-----------+
+    ///         |  visual   |
+    ///         |   rect    |
+    ///         +-----------X  <- grabbed corner follows the finger (ax, ay)
+    ///
+    /// on_drag_start records the pinned visual corner. on_drag_move measures the visual
+    /// extent from pin to finger, converts it back to a logical size (/ mag), then
+    /// back-solves the logical top-left so the pinned visual corner stays put.
     class ResizeDragObserver : public HandleObserver
     {
     public:
@@ -929,6 +951,8 @@ private:
                 geom::Width{clamp(static_cast<int>(std::round(raw_vis_w / mag)))},
                 geom::Height{clamp(static_cast<int>(std::round(raw_vis_h / mag)))}};
 
+            // Back-solve the logical top-left from the pinned visual corner, inverting
+            // the visual-edge identity above so the pinned corner stays fixed.
             float const outer = (mag + 1.0f) / 2.0f;
 
             int const w = new_logical_size.width.as_int();
