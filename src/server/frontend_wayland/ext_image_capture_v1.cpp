@@ -25,51 +25,50 @@
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/time/clock.h>
-#include <mir/wayland/protocol_error.h>
 #include "shm.h"
 #include "wayland_timespec.h"
+#include "protocol_error.h"
+
+#include "wayland_rs/src/ffi.rs.h"
+
+#include <boost/throw_exception.hpp>
 
 #include <cstring>
+#include <stdexcept>
 
 namespace mg = mir::graphics;
 namespace mi = mir::input;
 namespace mf = mir::frontend;
+namespace mwrs = mir::wayland_rs;
 namespace geom = mir::geometry;
 
 namespace mir::frontend
 {
 
 /* Image capture sessions */
-class ExtImageCopyCaptureManagerV1Global
-    : public wayland::ImageCopyCaptureManagerV1::Global
-{
-public:
-    ExtImageCopyCaptureManagerV1Global(
-        wl_display* display,
-        std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
-        std::shared_ptr<time::Clock> const& clock);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<Executor> const wayland_executor;
-    std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
-    std::shared_ptr<time::Clock> const clock;
-};
-
 class ExtImageCopyCaptureManagerV1
-    : public wayland::ImageCopyCaptureManagerV1
+    : public wayland_rs::ExtImageCopyCaptureManagerV1
 {
 public:
-    ExtImageCopyCaptureManagerV1(wl_resource* resource,
+    ExtImageCopyCaptureManagerV1(
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::ExtImageCopyCaptureManagerV1Middleware> instance,
+        uint32_t object_id,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
         std::shared_ptr<time::Clock> const& clock);
 
 private:
-    void create_session(wl_resource* new_resource, wl_resource* source, uint32_t options) override;
-    void create_pointer_cursor_session(wl_resource* new_resource, wl_resource* source, wl_resource* pointer) override;
+    auto create_session(
+        wayland_rs::Weak<wayland_rs::ExtImageCaptureSourceV1> const& source,
+        uint32_t options,
+        rust::Box<wayland_rs::ExtImageCopyCaptureSessionV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureSessionV1> override;
+    auto create_pointer_cursor_session(
+        wayland_rs::Weak<wayland_rs::ExtImageCaptureSourceV1> const& source,
+        wayland_rs::Weak<wayland_rs::Pointer> const& pointer,
+        rust::Box<wayland_rs::ExtImageCopyCaptureCursorSessionV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureCursorSessionV1> override;
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
@@ -77,10 +76,14 @@ private:
 };
 
 class ExtImageCopyCaptureFrameV1
-    : public wayland::ImageCopyCaptureFrameV1
+    : public wayland_rs::ExtImageCopyCaptureFrameV1
 {
 public:
-    ExtImageCopyCaptureFrameV1(wl_resource* resource, ExtImageCopyCaptureSessionV1* session);
+    ExtImageCopyCaptureFrameV1(
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::ExtImageCopyCaptureFrameV1Middleware> instance,
+        uint32_t object_id,
+        ExtImageCopyCaptureSessionV1* session);
 
     bool is_ready() const;
     // \pre backend.has_damage() == true
@@ -88,24 +91,27 @@ public:
     void report_result(ExtImageCopyBackend::CaptureResult const& result);
 
 private:
-    void attach_buffer(wl_resource* buffer) override;
-    void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void capture() override;
+    auto attach_buffer(wayland_rs::Weak<wayland_rs::Buffer> const& buffer) -> void override;
+    auto damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) -> void override;
+    auto capture() -> void override;
 
     bool capture_has_been_called = false;
     bool capture_has_begun = false;
-    wayland::Weak<wayland::Buffer> target;
+    wayland_rs::Weak<wayland_rs::Buffer> target;
     geom::Rectangle frame_damage;
 
-    wayland::Weak<ExtImageCopyCaptureSessionV1> const session;
+    wayland_rs::Weak<ExtImageCopyCaptureSessionV1> const session;
 };
 
 class ExtImageCopyCaptureCursorSessionV1
-    : public wayland::ImageCopyCaptureCursorSessionV1
+    : public wayland_rs::ExtImageCopyCaptureCursorSessionV1
 {
 public:
   ExtImageCopyCaptureCursorSessionV1(
-      wl_resource* resource, std::shared_ptr<Executor> const& wayland_executor,
+      std::shared_ptr<wayland_rs::Client> client,
+      rust::Box<wayland_rs::ExtImageCopyCaptureCursorSessionV1Middleware> instance,
+      uint32_t object_id,
+      std::shared_ptr<Executor> const& wayland_executor,
       std::shared_ptr<input::CursorObserverMultiplexer> const&
           cursor_observer_multiplexer,
       std::shared_ptr<time::Clock> const& clock,
@@ -116,7 +122,9 @@ private:
     class CursorObserver;
     class ImageCopyBackend;
 
-    void get_capture_session(wl_resource* session) override;
+    auto get_capture_session(
+        rust::Box<wayland_rs::ExtImageCopyCaptureSessionV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureSessionV1> override;
 
     void cursor_moved_to(float abs_x, float abs_y);
     void pointer_usable();
@@ -124,7 +132,7 @@ private:
 
     bool pointer_is_usable = true;
     bool pointer_in_source = false;
-    wayland::Weak<ExtImageCopyCaptureSessionV1> cursor_image_session;
+    wayland_rs::Weak<ExtImageCopyCaptureSessionV1> cursor_image_session;
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
@@ -185,94 +193,90 @@ bool mf::ExtImageCopyBackend::has_damage()
 /* Image capture sources */
 
 mf::ExtImageCaptureSourceV1::ExtImageCaptureSourceV1(
-    wl_resource* resource,
-    ExtImageCopyBackendFactory const& backend_factory,
-    ExtImageCopyCursorMapPosition const& cursor_map_position)
-    : wayland::ImageCaptureSourceV1{resource, Version<1>()},
-          backend_factory{backend_factory},
-          cursor_map_position{cursor_map_position}
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::ExtImageCaptureSourceV1Middleware> instance,
+    uint32_t object_id,
+    ExtImageCopyBackendFactory backend_factory,
+    ExtImageCopyCursorMapPosition cursor_map_position)
+    : wayland_rs::ExtImageCaptureSourceV1{std::move(client), std::move(instance), object_id},
+      backend_factory{std::move(backend_factory)},
+      cursor_map_position{std::move(cursor_map_position)}
 {
 }
 
-mf::ExtImageCaptureSourceV1* mf::ExtImageCaptureSourceV1::from_or_throw(wl_resource *resource)
+auto mf::ExtImageCaptureSourceV1::from_or_throw(mwrs::Weak<mwrs::ExtImageCaptureSourceV1> const& source)
+    -> ExtImageCaptureSourceV1&
 {
-    auto source = dynamic_cast<ExtImageCaptureSourceV1*>(wayland::ImageCaptureSourceV1::from(resource));
-
-    if (!source)
+    auto const instance = mwrs::ExtImageCaptureSourceV1::from<ExtImageCaptureSourceV1>(source);
+    if (!instance)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "ext_image_capture_source_v1@" +
-            std::to_string(wl_resource_get_id(resource)) +
-            " is not a mir::frontend::ExtImageCaptureSourceV1"));
+            "ext_image_capture_source_v1 is not a mir::frontend::ExtImageCaptureSourceV1"));
     }
-    return source;
+    return *instance;
 }
 
 /* Image capture sessions */
 
 auto mf::create_ext_image_copy_capture_manager_v1(
-    wl_display* display,
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::ExtImageCopyCaptureManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
     std::shared_ptr<time::Clock> const& clock)
--> std::shared_ptr<wayland::ImageCopyCaptureManagerV1::Global>
+-> std::shared_ptr<mwrs::ExtImageCopyCaptureManagerV1>
 {
-    return std::make_shared<ExtImageCopyCaptureManagerV1Global>(
-        display, wayland_executor, cursor_observer_multiplexer, clock);
-}
-
-mf::ExtImageCopyCaptureManagerV1Global::ExtImageCopyCaptureManagerV1Global(
-    wl_display *display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
-    std::shared_ptr<time::Clock> const& clock)
-    : Global{display, Version<1>()},
-      wayland_executor{wayland_executor},
-      cursor_observer_multiplexer{cursor_observer_multiplexer},
-      clock{clock}
-{
-}
-
-void mf::ExtImageCopyCaptureManagerV1Global::bind(wl_resource *new_resource)
-{
-    new ExtImageCopyCaptureManagerV1{new_resource, wayland_executor, cursor_observer_multiplexer, clock};
+    return std::make_shared<ExtImageCopyCaptureManagerV1>(
+        std::move(client), std::move(instance), object_id, wayland_executor, cursor_observer_multiplexer, clock);
 }
 
 mf::ExtImageCopyCaptureManagerV1::ExtImageCopyCaptureManagerV1(
-    wl_resource *resource,
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::ExtImageCopyCaptureManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
     std::shared_ptr<time::Clock> const& clock)
-    : wayland::ImageCopyCaptureManagerV1{resource, Version<1>()},
+    : wayland_rs::ExtImageCopyCaptureManagerV1{std::move(client), std::move(instance), object_id},
       wayland_executor{wayland_executor},
       cursor_observer_multiplexer{cursor_observer_multiplexer},
       clock{clock}
 {
 }
 
-void mf::ExtImageCopyCaptureManagerV1::create_session(
-    wl_resource* new_resource, wl_resource* source, uint32_t options)
+auto mf::ExtImageCopyCaptureManagerV1::create_session(
+    mwrs::Weak<mwrs::ExtImageCaptureSourceV1> const& source,
+    uint32_t options,
+    rust::Box<mwrs::ExtImageCopyCaptureSessionV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtImageCopyCaptureSessionV1>
 {
-    auto const source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
+    auto& source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
     bool overlay_cursor = (options & Options::paint_cursors) != 0;
 
-    new ExtImageCopyCaptureSessionV1{new_resource, overlay_cursor, source_instance->backend_factory};
+    return std::make_shared<ExtImageCopyCaptureSessionV1>(
+        client, std::move(child_instance), child_object_id, overlay_cursor, source_instance.backend_factory);
 }
 
-void mf::ExtImageCopyCaptureManagerV1::create_pointer_cursor_session(
-    wl_resource* new_resource,
-    wl_resource* source,
-    [[maybe_unused]] wl_resource* pointer)
+auto mf::ExtImageCopyCaptureManagerV1::create_pointer_cursor_session(
+    mwrs::Weak<mwrs::ExtImageCaptureSourceV1> const& source,
+    [[maybe_unused]] mwrs::Weak<mwrs::Pointer> const& pointer,
+    rust::Box<mwrs::ExtImageCopyCaptureCursorSessionV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtImageCopyCaptureCursorSessionV1>
 {
-    auto const source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
-    new ExtImageCopyCaptureCursorSessionV1{new_resource, wayland_executor, cursor_observer_multiplexer, clock, source_instance->cursor_map_position};
+    auto& source_instance = ExtImageCaptureSourceV1::from_or_throw(source);
+    return std::make_shared<ExtImageCopyCaptureCursorSessionV1>(
+        client, std::move(child_instance), child_object_id,
+        wayland_executor, cursor_observer_multiplexer, clock, source_instance.cursor_map_position);
 }
 
 mf::ExtImageCopyCaptureSessionV1::ExtImageCopyCaptureSessionV1(
-    wl_resource *resource,
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::ExtImageCopyCaptureSessionV1Middleware> instance,
+    uint32_t object_id,
     bool overlay_cursor,
     ExtImageCopyBackendFactory const& backend_factory)
-    : wayland::ImageCopyCaptureSessionV1{resource, Version<1>()},
+    : wayland_rs::ExtImageCopyCaptureSessionV1{std::move(client), std::move(instance), object_id},
       backend{backend_factory(this, overlay_cursor)}
 {
 }
@@ -285,7 +289,7 @@ void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(geom::Size const &
 {
     send_buffer_size_event(
         buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
-    send_shm_format_event(wayland::Shm::Format::argb8888);
+    send_shm_format_event(wayland_rs::Shm::Format::argb8888);
     send_done_event();
 }
 
@@ -317,58 +321,55 @@ void mf::ExtImageCopyCaptureSessionV1::maybe_capture_frame()
     frame.begin_capture(*backend);
 }
 
-void mf::ExtImageCopyCaptureSessionV1::create_frame(
-    wl_resource* new_resource)
+auto mf::ExtImageCopyCaptureSessionV1::create_frame(
+    rust::Box<mwrs::ExtImageCopyCaptureFrameV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtImageCopyCaptureFrameV1>
 {
     if (current_frame)
     {
-        throw wayland::ProtocolError{
-            resource, Error::duplicate_frame,
+        throw mwrs::ProtocolError{
+            object_id(), Error::duplicate_frame,
             "A frame already exists for this session"};
     }
-    current_frame = wayland::make_weak(
-        new ExtImageCopyCaptureFrameV1{new_resource, this});
+    auto frame = std::make_shared<ExtImageCopyCaptureFrameV1>(
+        client, std::move(child_instance), child_object_id, this);
+    current_frame = mwrs::make_weak(frame.get());
+    return frame;
 }
 
 mf::ExtImageCopyCaptureFrameV1::ExtImageCopyCaptureFrameV1(
-    wl_resource *resource,
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::ExtImageCopyCaptureFrameV1Middleware> instance,
+    uint32_t object_id,
     ExtImageCopyCaptureSessionV1* session)
-    : wayland::ImageCopyCaptureFrameV1{resource, Version<1>()},
-      session{session}
+    : wayland_rs::ExtImageCopyCaptureFrameV1{std::move(client), std::move(instance), object_id},
+      session{mwrs::make_weak(session)}
 {
 }
 
-void mf::ExtImageCopyCaptureFrameV1::attach_buffer(
-    wl_resource* buffer)
+auto mf::ExtImageCopyCaptureFrameV1::attach_buffer(
+    mwrs::Weak<mwrs::Buffer> const& buffer) -> void
 {
     if (capture_has_been_called)
     {
-        throw wayland::ProtocolError{
-            resource, Error::already_captured,
+        throw mwrs::ProtocolError{
+            object_id(), Error::already_captured,
             "Cannot attach buffer after capture"};
     }
 
-    auto buf = wayland::Buffer::from(buffer);
-    if (!buf)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "wl_buffer@" +
-            std::to_string(wl_resource_get_id(buffer)) +
-            " is not a wayland::Buffer"));
-    }
-    target = wayland::make_weak(buf);
+    target = buffer;
 }
 
-void mf::ExtImageCopyCaptureFrameV1::damage_buffer(
+auto mf::ExtImageCopyCaptureFrameV1::damage_buffer(
     int32_t x,
     int32_t y,
     int32_t width,
-    int32_t height)
+    int32_t height) -> void
 {
     if (x < 0 || y < 0 || width <= 0 || height <= 0)
     {
-        throw wayland::ProtocolError{
-            resource, Error::invalid_buffer_damage,
+        throw mwrs::ProtocolError{
+            object_id(), Error::invalid_buffer_damage,
             "invalid buffer damage coordinates"};
     }
 
@@ -383,18 +384,18 @@ void mf::ExtImageCopyCaptureFrameV1::damage_buffer(
     }
 }
 
-void mf::ExtImageCopyCaptureFrameV1::capture()
+auto mf::ExtImageCopyCaptureFrameV1::capture() -> void
 {
     if (capture_has_been_called)
     {
-        throw wayland::ProtocolError{
-            resource, Error::already_captured,
+        throw mwrs::ProtocolError{
+            object_id(), Error::already_captured,
             "capture already called"};
     }
     if (!target)
     {
-        throw wayland::ProtocolError{
-            resource, Error::no_buffer,
+        throw mwrs::ProtocolError{
+            object_id(), Error::no_buffer,
             "no buffer attached"};
     }
     capture_has_been_called = true;
@@ -416,7 +417,7 @@ void mf::ExtImageCopyCaptureFrameV1::begin_capture(ExtImageCopyBackend& backend)
 {
     capture_has_begun = true;
     // Check buffer constraints
-    auto shm_buffer = dynamic_cast<ShmBuffer*>(wayland::as_nullable_ptr(target));
+    auto shm_buffer = dynamic_cast<ShmBuffer*>(mwrs::as_nullable_ptr(target));
     if (!shm_buffer)
     {
         send_failed_event(FailureReason::buffer_constraints);
@@ -425,7 +426,7 @@ void mf::ExtImageCopyCaptureFrameV1::begin_capture(ExtImageCopyBackend& backend)
     auto shm_data = shm_buffer->data();
     backend.begin_capture(
         shm_data, frame_damage,
-        [frame=wayland::make_weak(this)](ExtImageCopyBackend::CaptureResult const& result)
+        [frame=mwrs::make_weak(this)](ExtImageCopyBackend::CaptureResult const& result)
             {
                 if (frame)
                 {
@@ -505,7 +506,7 @@ public:
     void image_set_to(std::shared_ptr<mg::CursorImage> image) override;
 
 private:
-    wayland::Weak<ExtImageCopyCaptureCursorSessionV1> cursor_session;
+    wayland_rs::Weak<ExtImageCopyCaptureCursorSessionV1> cursor_session;
     std::shared_ptr<time::Clock> const clock;
     std::shared_ptr<mg::CursorImage> cursor_image;
 };
@@ -542,7 +543,7 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
     auto const cursor_size = cursor_image ? cursor_image->size() : geom::Size{1, 1};
     geom::Stride const cursor_stride{cursor_size.width.as_int() * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888)};
 
-    using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
+    using FailureReason = wayland_rs::ExtImageCopyCaptureFrameV1::FailureReason;
     if (shm_data->format() != mir_pixel_format_argb_8888 || shm_data->size() != cursor_size)
     {
         callback(std::unexpected(FailureReason::buffer_constraints));
@@ -588,12 +589,14 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
 }
 
 mf::ExtImageCopyCaptureCursorSessionV1::ExtImageCopyCaptureCursorSessionV1(
-    wl_resource* resource,
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::ExtImageCopyCaptureCursorSessionV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
     std::shared_ptr<time::Clock> const& clock,
     ExtImageCopyCursorMapPosition const& map_position)
-    : wayland::ImageCopyCaptureCursorSessionV1{resource, Version<1>{}},
+    : wayland_rs::ExtImageCopyCaptureCursorSessionV1{std::move(client), std::move(instance), object_id},
       wayland_executor{wayland_executor},
       cursor_observer_multiplexer{cursor_observer_multiplexer},
       cursor_observer{std::make_shared<CursorObserver>(*this)},
@@ -608,13 +611,14 @@ mf::ExtImageCopyCaptureCursorSessionV1::~ExtImageCopyCaptureCursorSessionV1()
     cursor_observer_multiplexer->unregister_interest(*cursor_observer);
 }
 
-void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
-    wl_resource* session)
+auto mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
+    rust::Box<mwrs::ExtImageCopyCaptureSessionV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtImageCopyCaptureSessionV1>
 {
     if (cursor_image_session)
     {
-        throw wayland::ProtocolError{
-            resource, Error::duplicate_session,
+        throw mwrs::ProtocolError{
+            object_id(), Error::duplicate_session,
             "An ext_image_copy_capture_session_v1 already exists for this "
             "ext_image_copy_capture_cursor_session_v1"};
     }
@@ -624,8 +628,10 @@ void mf::ExtImageCopyCaptureCursorSessionV1::get_capture_session(
             cursor_observer_multiplexer->register_interest(backend, *wayland_executor);
             return backend;
         };
-    cursor_image_session = wayland::make_weak(
-        new ExtImageCopyCaptureSessionV1{session, false, backend_factory});
+    auto session = std::make_shared<ExtImageCopyCaptureSessionV1>(
+        client, std::move(child_instance), child_object_id, false, backend_factory);
+    cursor_image_session = mwrs::make_weak(session.get());
+    return session;
 }
 
 void mf::ExtImageCopyCaptureCursorSessionV1::cursor_moved_to(

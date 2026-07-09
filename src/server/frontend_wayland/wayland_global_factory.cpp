@@ -28,6 +28,9 @@
 #include "input_trigger_action_v1.h"
 #include "input_trigger_registration_v1.h"
 #include "xdg_output_v1.h"
+#include "wlr_screencopy_v1.h"
+#include "ext_image_capture_v1.h"
+#include "ext_output_image_capture_source_v1.h"
 
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_client_registry.h"
@@ -55,7 +58,11 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
     std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager,
     std::shared_ptr<InputTriggerRegistry> input_trigger_registry,
     std::shared_ptr<KeyboardStateTracker> keyboard_state_tracker,
-    std::shared_ptr<std::vector<mg::DRMFormat> const> shm_formats)
+    std::shared_ptr<std::vector<mg::DRMFormat> const> shm_formats,
+    std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory,
+    std::shared_ptr<SurfaceStack> surface_stack,
+    std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
+    std::shared_ptr<time::Clock> clock)
     : registry{registry},
       extension_filter{std::move(extension_filter)},
       wayland_executor{std::move(wayland_executor)},
@@ -69,7 +76,11 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
       action_group_manager{std::move(action_group_manager)},
       input_trigger_registry{std::move(input_trigger_registry)},
       keyboard_state_tracker{std::move(keyboard_state_tracker)},
-      shm_formats{std::move(shm_formats)}
+      shm_formats{std::move(shm_formats)},
+      screen_shooter_factory{std::move(screen_shooter_factory)},
+      surface_stack{std::move(surface_stack)},
+      cursor_observer_multiplexer{std::move(cursor_observer_multiplexer)},
+      clock{std::move(clock)}
 {
 }
 
@@ -112,9 +123,15 @@ auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_handle_v1(rust::Box<w
     throw std::logic_error{"WaylandGlobalFactory::create_ext_foreign_toplevel_handle_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtOutputImageCaptureSourceManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtOutputImageCaptureSourceManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_ext_output_image_capture_source_manager_v1 called for an unregistered client"};
+
+    return mf::create_ext_output_image_capture_source_manager_v1(
+        resolved, std::move(instance), object_id,
+        wayland_executor, screen_shooter_factory, surface_stack);
 }
 
 auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1>
@@ -122,9 +139,15 @@ auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_
     throw std::logic_error{"WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtImageCopyCaptureManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtImageCopyCaptureManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_ext_image_copy_capture_manager_v1 called for an unregistered client"};
+
+    return mf::create_ext_image_copy_capture_manager_v1(
+        resolved, std::move(instance), object_id,
+        wayland_executor, cursor_observer_multiplexer, clock);
 }
 
 auto mf::WaylandGlobalFactory::create_ext_input_trigger_action_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtInputTriggerActionManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerActionManagerV1>
@@ -352,9 +375,15 @@ auto mf::WaylandGlobalFactory::create_zwlr_layer_shell_v1(rust::Box<wayland_rs::
     throw std::logic_error{"WaylandGlobalFactory::create_zwlr_layer_shell_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_screencopy_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ScreencopyManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ScreencopyManagerV1>
+auto mf::WaylandGlobalFactory::create_zwlr_screencopy_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ScreencopyManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ScreencopyManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zwlr_screencopy_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zwlr_screencopy_manager_v1 called for an unregistered client"};
+
+    return create_wlr_screencopy_manager_v1(
+        resolved, std::move(instance), object_id,
+        wayland_executor, allocator, screen_shooter_factory, surface_stack);
 }
 
 auto mf::WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::VirtualPointerManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::VirtualPointerManagerV1>

@@ -26,8 +26,12 @@
 #include "ext_image_capture_v1.h"
 #include "output_manager.h"
 
+#include "wayland_rs/src/ffi.rs.h"
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
+namespace mw = mir::wayland;
+namespace mwrs = mir::wayland_rs;
 namespace geom = mir::geometry;
 
 namespace
@@ -87,24 +91,21 @@ private:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 };
 
-class ExtOutputImageCaptureSourceManagerV1Global : public wayland::OutputImageCaptureSourceManagerV1::Global
+class ExtOutputImageCaptureSourceManagerV1 : public wayland_rs::ExtOutputImageCaptureSourceManagerV1
 {
 public:
-    ExtOutputImageCaptureSourceManagerV1Global(wl_display* display, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
+    ExtOutputImageCaptureSourceManagerV1(
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
 
 private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
-};
-
-class ExtOutputImageCaptureSourceManagerV1 : public wayland::OutputImageCaptureSourceManagerV1
-{
-public:
-    ExtOutputImageCaptureSourceManagerV1(wl_resource* resource, std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
-
-private:
-    void create_source(wl_resource* new_resource, wl_resource* output) override;
+    using wayland_rs::ExtOutputImageCaptureSourceManagerV1::create_source;
+    auto create_source(
+        wayland_rs::Weak<wayland_rs::Output> const& output,
+        rust::Box<wayland_rs::ExtImageCaptureSourceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtImageCaptureSourceV1> override;
 
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
 };
@@ -192,7 +193,7 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
     [[maybe_unused]] geom::Rectangle const& frame_damage,
     CaptureCallback const& callback)
 {
-    using FailureReason = wayland::ImageCopyCaptureFrameV1::FailureReason;
+    using FailureReason = wayland_rs::ExtImageCopyCaptureFrameV1::FailureReason;
     if (!output)
     {
         callback(std::unexpected(FailureReason::stopped));
@@ -256,46 +257,42 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
 }
 
 auto mf::create_ext_output_image_capture_source_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
     std::shared_ptr<SurfaceStack> const& surface_stack)
-    -> std::shared_ptr<wayland::OutputImageCaptureSourceManagerV1::Global>
+    -> std::shared_ptr<wayland_rs::ExtOutputImageCaptureSourceManagerV1>
 {
     auto ctx = std::make_shared<ExtImageCaptureV1Ctx>(wayland_executor, screen_shooter_factory, surface_stack);
-    return std::make_shared<ExtOutputImageCaptureSourceManagerV1Global>(display, ctx);
-}
-
-mf::ExtOutputImageCaptureSourceManagerV1Global::ExtOutputImageCaptureSourceManagerV1Global(
-    wl_display* display,
-    std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx) :
-    Global{display, Version<1>()},
-    ctx{ctx}
-{}
-
-void mf::ExtOutputImageCaptureSourceManagerV1Global::bind(wl_resource* new_resource)
-{
-    new ExtOutputImageCaptureSourceManagerV1{new_resource, ctx};
+    return std::make_shared<ExtOutputImageCaptureSourceManagerV1>(
+        std::move(client), std::move(instance), object_id, ctx);
 }
 
 mf::ExtOutputImageCaptureSourceManagerV1::ExtOutputImageCaptureSourceManagerV1(
-    wl_resource* resource,
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx) :
-    wayland::OutputImageCaptureSourceManagerV1{resource, Version<1>()},
+    wayland_rs::ExtOutputImageCaptureSourceManagerV1{std::move(client), std::move(instance), object_id},
     ctx{ctx}
 {}
 
-void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_resource, wl_resource* output)
+auto mf::ExtOutputImageCaptureSourceManagerV1::create_source(
+    wayland_rs::Weak<wayland_rs::Output> const& output,
+    rust::Box<wayland_rs::ExtImageCaptureSourceV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtImageCaptureSourceV1>
 {
-    auto& output_global = OutputGlobal::from_or_throw(output);
+    auto& output_global = OutputGlobal::from_or_throw(mwrs::as_nullable_ptr(output));
     ExtImageCopyBackendFactory backend_factory =
-        [output = wayland::make_weak(&output_global), ctx = ctx](auto* session, bool overlay_cursor)
+        [output = mw::make_weak(&output_global), ctx = ctx](auto* session, bool overlay_cursor)
     {
         return std::make_shared<ExtOutputImageCopyBackend>(
-            session, overlay_cursor, wayland::as_nullable_ptr(output), ctx);
+            session, overlay_cursor, mw::as_nullable_ptr(output), ctx);
     };
     ExtImageCopyCursorMapPosition cursor_map_position =
-        [output = wayland::make_weak(&output_global)](float abs_x, float abs_y) -> std::optional<geom::Point>
+        [output = mw::make_weak(&output_global)](float abs_x, float abs_y) -> std::optional<geom::Point>
     {
         if (!output)
         {
@@ -322,5 +319,6 @@ void mf::ExtOutputImageCaptureSourceManagerV1::create_source(wl_resource* new_re
         decltype(raw_offset) const scaled_offset{x_scale * raw_offset.dx, y_scale * raw_offset.dy};
         return as_point(scaled_offset);
     };
-    new ExtImageCaptureSourceV1{new_resource, backend_factory, cursor_map_position};
+    return std::make_shared<ExtImageCaptureSourceV1>(
+        client, std::move(child_instance), child_object_id, backend_factory, cursor_map_position);
 }

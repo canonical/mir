@@ -36,6 +36,11 @@ namespace shell
 class Shell;
 }
 
+namespace compositor
+{
+class ScreenShooterFactory;
+}
+
 namespace scene
 {
 class Session;
@@ -48,6 +53,16 @@ class GraphicBufferAllocator;
 class DRMRenderingProvider;
 }
 
+namespace input
+{
+class CursorObserverMultiplexer;
+}
+
+namespace time
+{
+class Clock;
+}
+
 namespace wayland_rs
 {
 class WaylandClientRegistry;
@@ -57,6 +72,7 @@ class WaylandServer;
 namespace frontend
 {
 class KeyboardStateTracker;
+class SurfaceStack;
 
 /// The per-client visibility predicate: given the client's session and an
 /// interface name, decide whether the client may see (bind) that global.
@@ -93,7 +109,11 @@ public:
         std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager,
         std::shared_ptr<InputTriggerRegistry> input_trigger_registry,
         std::shared_ptr<KeyboardStateTracker> keyboard_state_tracker,
-        std::shared_ptr<std::vector<graphics::DRMFormat> const> shm_formats);
+        std::shared_ptr<std::vector<graphics::DRMFormat> const> shm_formats,
+        std::shared_ptr<compositor::ScreenShooterFactory> screen_shooter_factory,
+        std::shared_ptr<SurfaceStack> surface_stack,
+        std::shared_ptr<input::CursorObserverMultiplexer> cursor_observer_multiplexer,
+        std::shared_ptr<time::Clock> clock);
 
     auto create_ext_data_control_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1> override;
     auto create_ext_data_control_offer_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtDataControlOfferV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlOfferV1> override;
@@ -159,6 +179,10 @@ private:
     std::shared_ptr<InputTriggerRegistry> const input_trigger_registry;
     std::shared_ptr<KeyboardStateTracker> const keyboard_state_tracker;
     std::shared_ptr<std::vector<graphics::DRMFormat> const> const shm_formats;
+    std::shared_ptr<compositor::ScreenShooterFactory> const screen_shooter_factory;
+    std::shared_ptr<SurfaceStack> const surface_stack;
+    std::shared_ptr<input::CursorObserverMultiplexer> const cursor_observer_multiplexer;
+    std::shared_ptr<time::Clock> const clock;
 };
 }
 }

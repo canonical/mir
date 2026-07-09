@@ -19,9 +19,10 @@
 
 #include <mir/geometry/rectangles.h>
 #include <mir/time/types.h>
-#include <mir/wayland/weak.h>
-#include "ext-image-capture-source-v1_wrapper.h"
-#include "ext-image-copy-capture-v1_wrapper.h"
+
+#include "ext_image_capture_source_v1.h"
+#include "ext_image_copy_capture_v1.h"
+#include "weak.h"
 
 #include <expected>
 #include <functional>
@@ -81,15 +82,18 @@ using ExtImageCopyBackendFactory =
     std::function<std::shared_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*, bool)>;
 using ExtImageCopyCursorMapPosition = std::function<std::optional<geometry::Point>(float abs_x, float abs_y)>;
 
-class ExtImageCaptureSourceV1 : public wayland::ImageCaptureSourceV1
+class ExtImageCaptureSourceV1 : public wayland_rs::ExtImageCaptureSourceV1
 {
 public:
     ExtImageCaptureSourceV1(
-        wl_resource* resource,
-        ExtImageCopyBackendFactory const& backend_factory,
-        ExtImageCopyCursorMapPosition const& cursor_map_position);
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::ExtImageCaptureSourceV1Middleware> instance,
+        uint32_t object_id,
+        ExtImageCopyBackendFactory backend_factory,
+        ExtImageCopyCursorMapPosition cursor_map_position);
 
-    static ExtImageCaptureSourceV1* from_or_throw(wl_resource* resource);
+    static auto from_or_throw(wayland_rs::Weak<wayland_rs::ExtImageCaptureSourceV1> const& source)
+        -> ExtImageCaptureSourceV1&;
 
     ExtImageCopyBackendFactory const backend_factory;
     ExtImageCopyCursorMapPosition const cursor_map_position;
@@ -97,11 +101,13 @@ public:
 
 class ExtImageCopyCaptureFrameV1;
 
-class ExtImageCopyCaptureSessionV1 : public wayland::ImageCopyCaptureSessionV1
+class ExtImageCopyCaptureSessionV1 : public wayland_rs::ExtImageCopyCaptureSessionV1
 {
 public:
     ExtImageCopyCaptureSessionV1(
-        wl_resource* resource,
+        std::shared_ptr<wayland_rs::Client> client,
+        rust::Box<wayland_rs::ExtImageCopyCaptureSessionV1Middleware> instance,
+        uint32_t object_id,
         bool overlay_cursor,
         ExtImageCopyBackendFactory const& backend_factory);
     ~ExtImageCopyCaptureSessionV1();
@@ -111,19 +117,23 @@ public:
     void maybe_capture_frame();
 
 private:
-    void create_frame(wl_resource* new_resource) override;
+    auto create_frame(
+        rust::Box<wayland_rs::ExtImageCopyCaptureFrameV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureFrameV1> override;
 
     bool stopped = false;
-    wayland::Weak<ExtImageCopyCaptureFrameV1> current_frame;
+    wayland_rs::Weak<ExtImageCopyCaptureFrameV1> current_frame;
 
     std::shared_ptr<ExtImageCopyBackend> backend;
 };
 
 auto create_ext_image_copy_capture_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::ExtImageCopyCaptureManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer,
-    std::shared_ptr<time::Clock> const& clock) -> std::shared_ptr<wayland::ImageCopyCaptureManagerV1::Global>;
+    std::shared_ptr<time::Clock> const& clock) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureManagerV1>;
 
 }
 }
