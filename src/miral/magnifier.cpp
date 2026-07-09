@@ -227,40 +227,41 @@ private:
         // Draw a drag-pan icon: four arrowheads (N/S/E/W) connected by slim stems.
         static int constexpr tip_dist  = 15;
         static int constexpr head_len  = 5;
-        static int constexpr stem_half = 1;
+        static int constexpr stem_thickness = 3;
+        static int constexpr base_dist = (tip_dist - head_len);
 
         int const w  = painter.buffer_width();
         int const h  = painter.buffer_height();
-        int const ci = (w - 1) / 2;
-        int const cj = (h - 1) / 2;
-        int const tip_n  = cj - tip_dist;
-        int const tip_s  = cj + tip_dist;
-        int const tip_w  = ci - tip_dist;
-        int const tip_e  = ci + tip_dist;
-        int const base_n = cj - (tip_dist - head_len);
-        int const base_s = cj + (tip_dist - head_len);
-        int const base_w = ci - (tip_dist - head_len);
-        int const base_e = ci + (tip_dist - head_len);
+        int const center_x = (w - 1) / 2;
+        int const center_y = (h - 1) / 2;
+        int const tip_n  = center_y - tip_dist;
+        int const tip_s  = center_y + tip_dist;
+        int const tip_w  = center_x - tip_dist;
+        int const tip_e  = center_x + tip_dist;
+        int const base_n = center_y - base_dist;
+        int const base_s = center_y + base_dist;
+        int const base_w = center_x - base_dist;
+        int const base_e = center_x + base_dist;
 
         // Stems
-        painter.draw_vertical_line(ci - stem_half, base_n, base_s, stem_half * 2 + 1, icon_grey, icon_alpha);
-        painter.draw_horizontal_line(base_w, base_e, cj - stem_half, stem_half * 2 + 1, icon_grey, icon_alpha);
+        painter.draw_vertical_line(center_x - stem_thickness / 2, base_n, base_s, stem_thickness, icon_grey, icon_alpha);
+        painter.draw_horizontal_line(base_w, base_e, center_y - stem_thickness / 2, stem_thickness, icon_grey, icon_alpha);
 
         // North arrowhead — rows from tip_n+1 to base_n, width grows by 1 px per row
         for (int y = tip_n + 1; y <= base_n; ++y)
-            painter.draw_horizontal_line(ci - (y - tip_n), ci + (y - tip_n), y, 1, icon_grey, icon_alpha);
+            painter.draw_horizontal_line(center_x - (y - tip_n), center_x + (y - tip_n), y, 1, icon_grey, icon_alpha);
 
         // South arrowhead
         for (int y = base_s; y < tip_s; ++y)
-            painter.draw_horizontal_line(ci - (tip_s - y), ci + (tip_s - y), y, 1, icon_grey, icon_alpha);
+            painter.draw_horizontal_line(center_x - (tip_s - y), center_x + (tip_s - y), y, 1, icon_grey, icon_alpha);
 
         // West arrowhead — columns from tip_w+1 to base_w
         for (int x = tip_w + 1; x <= base_w; ++x)
-            painter.draw_vertical_line(x, cj - (x - tip_w), cj + (x - tip_w), 1, icon_grey, icon_alpha);
+            painter.draw_vertical_line(x, center_y - (x - tip_w), center_y + (x - tip_w), 1, icon_grey, icon_alpha);
 
         // East arrowhead
         for (int x = base_e; x < tip_e; ++x)
-            painter.draw_vertical_line(x, cj - (tip_e - x), cj + (tip_e - x), 1, icon_grey, icon_alpha);
+            painter.draw_vertical_line(x, center_y - (tip_e - x), center_y + (tip_e - x), 1, icon_grey, icon_alpha);
     }
 
     static void fill_resize_buffer(mg::Buffer& buffer)
