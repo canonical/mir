@@ -14,12 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "render_scene_into_surface.h"
-#include "software_buffer_pool.h"
 #include <miral/magnifier.h>
 
-#include <input-method-unstable-v2_wrapper.h>
-#include <wayland_wrapper.h>
+#include "render_scene_into_surface.h"
+#include "software_buffer_pool.h"
 
 #include <miral/live_config.h>
 #include <mir/log.h>
@@ -31,17 +29,12 @@
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/scene/basic_surface.h>
-#include <mir/scene/scene_report.h>
-#include <mir/compositor/stream.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
-#include <mir/renderer/sw/pixel_source.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <cmath>
-#include <algorithm>
 
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -52,9 +45,6 @@ namespace msh = mir::shell;
 
 namespace
 {
-using miral::SoftwareBufferPool;
-using miral::create_stream_info;
-
 auto const default_capture_width = 150;
 auto const default_capture_height = 150;
 auto const min_magnification = 1.0f;
@@ -100,7 +90,7 @@ public:
             name_for_kind(kind),
             initial_rect,
             mir_pointer_unconfined,
-            create_stream_info(),
+            miral::create_stream_info(),
             nullptr,
             scene_report,
             display_config_registrar},
@@ -320,7 +310,7 @@ private:
                 icon_alpha);
     }
 
-    SoftwareBufferPool mutable pool;
+    miral::SoftwareBufferPool mutable pool;
 };
 
 class Handle
