@@ -53,3 +53,10 @@ target_link_libraries(mirfrontend-xwayland
     PkgConfig::XCB_RES
     PkgConfig::X11_XCURSOR
 )
+
+if (MIR_ENABLE_RUST)
+  target_link_libraries(mirfrontend-xwayland
+    PUBLIC
+      mirwayland_rs
+  )
+endif()

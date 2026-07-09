@@ -79,6 +79,11 @@ namespace time
 {
 class Clock;
 }
+namespace wayland_rs
+{
+class WaylandExecutor;
+class WaylandClientRegistry;
+}
 namespace frontend
 {
 class OutputManager;
@@ -98,6 +103,8 @@ class DesktopFileManager;
 class SurfaceRegistry;
 class InputTriggerRegistry;
 class KeyboardStateTracker;
+class WaylandGlobalFactory;
+class WaylandClientNotifier;
 
 class WaylandExtensions
 {
@@ -219,40 +226,32 @@ private:
         graphics::DisplayConfigurationOutputId output,
         std::function<void(wl_resource* output)> const& callback) override;
 
-    bool wl_display_global_filter_func(wl_client const* client, wl_global const* global) const;
-    static bool wl_display_global_filter_func_thunk(wl_client const* client, wl_global const* global, void* data);
-
-    /* The wayland global filter is called during wl_global_remove
-     * (libwayland needs to know if it should broadcast the removal)
-     *
-     * This means the filter needs to outlive any extension object
-     * that provides a wl_global (which is all of them).
-     *
-     * For safety, just ensure it outlives the wl_display. libwayland
-     * cannot *possibly* call it after then :)
-     */
     WaylandProtocolExtensionFilter const extension_filter;
 
-    std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
-    std::unique_ptr<ServerWrapper> server_wrapper;
-    mir::Fd const pause_signal;
-    std::unique_ptr<WlCompositor> compositor_global;
-    std::unique_ptr<WlSubcompositor> subcompositor_global;
-    std::unique_ptr<WlSeat> seat_global;
-    std::unique_ptr<OutputManager> output_manager;
-    std::shared_ptr<DesktopFileManager> desktop_file_manager;
-    std::unique_ptr<WlDataDeviceManager> data_device_manager_global;
-    std::unique_ptr<WlShm> shm_global;
-    std::unique_ptr<WpViewporter> viewporter;
-    std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
-    std::shared_ptr<Executor> const executor;
+    std::unique_ptr<ServerWrapper> const server_wrapper;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;
     std::shared_ptr<scene::SessionLock> session_lock_;
-    std::thread dispatch_thread;
-    wl_event_source* pause_source;
+
+    /// Owns the connected `Client`s; must outlive the running server.
+    std::unique_ptr<wayland_rs::WaylandClientRegistry> registry;
+    std::unique_ptr<OutputManager> output_manager;
+    std::shared_ptr<DesktopFileManager> desktop_file_manager;
+
+    /// Created in the constructor; ownership is transferred to
+    /// `WaylandServer::run()` when `start()` is called. The executor doubles as
+    /// the server's `WorkCallback`.
+    std::unique_ptr<wayland_rs::WaylandExecutor> pending_executor;
+    std::unique_ptr<WaylandGlobalFactory> pending_factory;
+    std::unique_ptr<WaylandClientNotifier> pending_notifier;
+
+    /// Non-owning view of `pending_executor`, valid for the server's lifetime
+    /// (the executor is kept alive by `run()` on the dispatch thread).
+    Executor* executor;
+
     std::string wayland_display;
+    std::thread dispatch_thread;
 
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
