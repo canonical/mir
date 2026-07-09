@@ -90,8 +90,7 @@ public:
      * Exposed for the Wayland frontend so it can advertise linux-dmabuf formats/modifiers
      * without touching the internal EGL descriptor types.
      */
-    auto supported_format_modifiers() const
-        -> std::vector<std::pair<DRMFormat, std::vector<uint64_t>>>;
+    auto supported_format_modifiers() const -> std::vector<std::pair<DRMFormat, std::vector<uint64_t>>>;
 
     auto as_texture(std::shared_ptr<NativeBufferBase> buffer) -> std::shared_ptr<gl::Texture>;
 
