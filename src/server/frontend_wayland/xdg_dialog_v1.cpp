@@ -36,20 +36,20 @@ public:
     ToplevelsWithDialogs& operator=(ToplevelsWithDialogs const&) = delete;
 
     /// \return true if no duplicates existed before insertion, false otherwise.
-    bool register_toplevel(wl_resource* toplevel)
+    bool register_toplevel(XdgToplevelStable* toplevel)
     {
         auto [_, inserted] = toplevels_with_dialogs.insert(toplevel);
         return inserted;
     }
 
     /// \return true if the toplevel was still registered, false otherwise.
-    bool unregister_toplevel(wl_resource* toplevel)
+    bool unregister_toplevel(XdgToplevelStable* toplevel)
     {
         return toplevels_with_dialogs.erase(toplevel) > 0;
     }
 
 private:
-    std::unordered_set<wl_resource*> toplevels_with_dialogs;
+    std::unordered_set<XdgToplevelStable*> toplevels_with_dialogs;
 };
 
 class XdgDialogV1 : public wayland::XdgDialogV1
@@ -114,7 +114,7 @@ void mir::frontend::XdgWmDialogV1::get_xdg_dialog(wl_resource* id, wl_resource* 
             "Failed to obtain XdgToplevelStable from xdg_toplevel resource"));
     }
 
-    if (!toplevels_with_dialogs->register_toplevel(toplevel))
+    if (!toplevels_with_dialogs->register_toplevel(tl))
     {
         BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
             resource, Error::already_used, "xdg_dialog_v1 already created for this toplevel"));
@@ -122,16 +122,18 @@ void mir::frontend::XdgWmDialogV1::get_xdg_dialog(wl_resource* id, wl_resource* 
 
     auto* dialog = new XdgDialogV1{id};
     dialog->add_destroy_listener(
-        [toplevels_with_dialogs = this->toplevels_with_dialogs, toplevel, wtl = mir::wayland::Weak{tl}]()
+        [toplevels_with_dialogs = this->toplevels_with_dialogs, wtl = mir::wayland::Weak{tl}]()
         {
             if (wtl)
-                toplevels_with_dialogs->unregister_toplevel(toplevel);
+            {
+                toplevels_with_dialogs->unregister_toplevel(&wtl.value());
+            }
         });
 
     tl->add_destroy_listener(
-        [toplevels_with_dialogs = this->toplevels_with_dialogs, toplevel]()
+        [toplevels_with_dialogs = this->toplevels_with_dialogs, tl]()
         {
-            toplevels_with_dialogs->unregister_toplevel(toplevel);
+            toplevels_with_dialogs->unregister_toplevel(tl);
         });
 
     tl->set_type(mir_window_type_dialog);
