@@ -14,20 +14,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xdg_dialog_v1.h"
+#include "xdg_wm_dialog_v1.h"
 
-#include <mir/wayland/protocol_error.h>
-
-#include "xdg-dialog-v1_wrapper.h"
+#include "client.h"
+#include "protocol_error.h"
+#include "weak.h"
 #include "xdg_shell_stable.h"
 
+#include <cstdint>
 #include <memory>
 #include <unordered_set>
+#include <utility>
 
 namespace mir
 {
 namespace frontend
 {
+namespace
+{
+namespace mw = mir::wayland_rs;
+
 class ToplevelsWithDialogs
 {
 public:
@@ -52,105 +58,110 @@ private:
     std::unordered_set<XdgToplevelStable*> toplevels_with_dialogs;
 };
 
-class XdgDialogV1 : public wayland::XdgDialogV1
+class XdgDialogV1 : public mw::XdgDialogV1
 {
 public:
-    explicit XdgDialogV1(wl_resource* id);
+    XdgDialogV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::XdgDialogV1Middleware> instance,
+        uint32_t object_id);
 
     void set_modal() override;
     void unset_modal() override;
 };
 
-class XdgWmDialogV1 : public wayland::XdgWmDialogV1
+class XdgWmDialogV1 : public mw::XdgWmDialogV1
 {
 public:
-    XdgWmDialogV1(wl_resource* resource);
-
-    class Global : public wayland::XdgWmDialogV1::Global
-    {
-    public:
-        Global(wl_display* display);
-
-    private:
-        void bind(wl_resource* new_xdg_wm_dialog_v1) override;
-    };
+    XdgWmDialogV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::XdgWmDialogV1Middleware> instance,
+        uint32_t object_id);
 
 private:
-    void get_xdg_dialog(wl_resource* id, wl_resource* toplevel) override;
+    auto get_xdg_dialog(
+        mw::Weak<mw::XdgToplevel> const& toplevel,
+        rust::Box<mw::XdgDialogV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::XdgDialogV1> override;
 
     std::shared_ptr<ToplevelsWithDialogs> const toplevels_with_dialogs;
 };
+}
 } // namespace frontend
 } // namespace mir
 
-auto mir::frontend::create_xdg_dialog_v1(wl_display* display)
-    -> std::shared_ptr<mir::wayland::XdgWmDialogV1::Global>
+namespace mf = mir::frontend;
+namespace mw = mir::wayland_rs;
+
+auto mf::create_xdg_wm_dialog_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::XdgWmDialogV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<mw::XdgWmDialogV1>
 {
-    return std::make_shared<XdgWmDialogV1::Global>(display);
+    return std::make_shared<XdgWmDialogV1>(std::move(client), std::move(instance), object_id);
 }
 
-mir::frontend::XdgWmDialogV1::Global::Global(wl_display* display) :
-    wayland::XdgWmDialogV1::Global::Global{display, Version<1>{}}
-{
-}
-
-void mir::frontend::XdgWmDialogV1::Global::bind(wl_resource* new_xdg_wm_dialog_v1)
-{
-    new XdgWmDialogV1{new_xdg_wm_dialog_v1};
-}
-
-mir::frontend::XdgWmDialogV1::XdgWmDialogV1(wl_resource* resource) :
-    wayland::XdgWmDialogV1{resource, Version<1>{}},
+mf::XdgWmDialogV1::XdgWmDialogV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::XdgWmDialogV1Middleware> instance,
+    uint32_t object_id) :
+    mw::XdgWmDialogV1{std::move(client), std::move(instance), object_id},
     toplevels_with_dialogs{std::make_shared<ToplevelsWithDialogs>()}
 {
 }
 
-void mir::frontend::XdgWmDialogV1::get_xdg_dialog(wl_resource* id, wl_resource* toplevel)
+auto mf::XdgWmDialogV1::get_xdg_dialog(
+    mw::Weak<mw::XdgToplevel> const& toplevel,
+    rust::Box<mw::XdgDialogV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::XdgDialogV1>
 {
+    using Error = mw::XdgWmDialogV1::Error;
+
     auto* tl = XdgToplevelStable::from(toplevel);
     if (!tl)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Failed to obtain XdgToplevelStable from xdg_toplevel resource"));
+        throw std::runtime_error("Failed to obtain XdgToplevelStable from xdg_toplevel resource");
     }
 
+    auto dialog = std::make_shared<XdgDialogV1>(client, std::move(child_instance), child_object_id);
     if (!toplevels_with_dialogs->register_toplevel(tl))
     {
-        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
-            resource, Error::already_used, "xdg_dialog_v1 already created for this toplevel"));
+        throw mw::ProtocolError{
+            object_id(), Error::already_used, "xdg_dialog_v1 already created for this toplevel"};
     }
 
-    auto* dialog = new XdgDialogV1{id};
     dialog->add_destroy_listener(
-        [toplevels_with_dialogs = this->toplevels_with_dialogs, wtl = mir::wayland::Weak{tl}]()
+        [toplevels_with_dialogs = this->toplevels_with_dialogs, tl]()
         {
-            if (wtl)
-            {
-                toplevels_with_dialogs->unregister_toplevel(&wtl.value());
-            }
+            toplevels_with_dialogs->unregister_toplevel(tl);
         });
 
-    tl->add_destroy_listener(
+    static_cast<mw::XdgToplevel*>(tl)->add_destroy_listener(
         [toplevels_with_dialogs = this->toplevels_with_dialogs, tl]()
         {
             toplevels_with_dialogs->unregister_toplevel(tl);
         });
 
     tl->set_type(mir_window_type_dialog);
+
+    return dialog;
 }
 
-mir::frontend::XdgDialogV1::XdgDialogV1(wl_resource* id) :
-    wayland::XdgDialogV1{id, Version<1>{}}
+mf::XdgDialogV1::XdgDialogV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::XdgDialogV1Middleware> instance,
+    uint32_t object_id) :
+    mw::XdgDialogV1{std::move(client), std::move(instance), object_id}
 {
 }
 
-void mir::frontend::XdgDialogV1::set_modal()
+void mf::XdgDialogV1::set_modal()
 {
     // In Mir, mir_window_type_dialog already represents a modal dialog.
     // No additional state change is needed.
 }
 
-void mir::frontend::XdgDialogV1::unset_modal()
+void mf::XdgDialogV1::unset_modal()
 {
     // Mir does not distinguish between modal and non-modal dialogs at the
     // window type level; the toplevel remains a dialog regardless.

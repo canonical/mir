@@ -200,6 +200,7 @@ public:
     auto create_zwlr_virtual_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::VirtualPointerManagerV1> override;
     auto create_xdg_activation_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgActivationV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgActivationV1> override;
     auto create_zxdg_decoration_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgDecorationManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgDecorationManagerV1> override;
+    auto create_xdg_wm_dialog_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgWmDialogV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgWmDialogV1> override;
     auto create_zxdg_output_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgOutputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgOutputManagerV1> override;
     auto create_zxdg_shell_v6(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgShellV6Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgShellV6> override;
     auto create_xdg_wm_base(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgWmBaseMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgWmBase> override;

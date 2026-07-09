@@ -65,6 +65,7 @@ std::vector<std::string> const supported_extension_names = {
     "ext_session_lock_manager_v1",
     "mir_shell_v1",
     "zxdg_decoration_manager_v1",
+    "xdg_wm_dialog_v1",
     "org_kde_kwin_server_decoration_manager",
     "wp_fractional_scale_manager_v1",
     "xdg_activation_v1",
@@ -178,6 +179,7 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         "zwp_text_input_manager_v3",
         "mir_shell_v1",
         "zxdg_decoration_manager_v1",
+        "xdg_wm_dialog_v1",
         "xdg_activation_v1",
         "wp_fractional_scale_manager_v1"};
 }

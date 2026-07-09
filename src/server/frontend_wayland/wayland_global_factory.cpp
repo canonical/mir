@@ -43,6 +43,7 @@
 #include "xdg_shell_stable.h"
 #include "wl_shell.h"
 #include "xdg_decoration_manager_v1.h"
+#include "xdg_wm_dialog_v1.h"
 #include "mir_shell.h"
 #include "session_lock_v1.h"
 #include "layer_shell_v1.h"
@@ -647,6 +648,18 @@ auto mf::WaylandGlobalFactory::create_zxdg_decoration_manager_v1(
 
     return mf::create_xdg_decoration_manager_v1(
         resolved, std::move(instance), object_id, decoration_strategy);
+}
+
+auto mf::WaylandGlobalFactory::create_xdg_wm_dialog_v1(
+    rust::Box<wayland_rs::WaylandClient> client,
+    rust::Box<wayland_rs::XdgWmDialogV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgWmDialogV1>
+{
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_xdg_wm_dialog_v1 called for an unregistered client"};
+
+    return mf::create_xdg_wm_dialog_v1(resolved, std::move(instance), object_id);
 }
 
 auto mf::WaylandGlobalFactory::create_zxdg_output_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgOutputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgOutputManagerV1>

@@ -14,19 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_XDG_DIALOG_V1_H
-#define MIR_FRONTEND_XDG_DIALOG_V1_H
+#ifndef MIR_FRONTEND_XDG_WM_DIALOG_V1_H
+#define MIR_FRONTEND_XDG_WM_DIALOG_V1_H
 
-#include "xdg-dialog-v1_wrapper.h"
+#include "xdg_dialog_v1.h"
 
-struct wl_display;
+#include <memory>
 
 namespace mir
 {
 namespace frontend
 {
-auto create_xdg_dialog_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgWmDialogV1::Global>;
+auto create_xdg_wm_dialog_v1(
+    std::shared_ptr<wayland_rs::Client> client,
+    rust::Box<wayland_rs::XdgWmDialogV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgWmDialogV1>;
 }
-}
+} // namespace mir
 
-#endif // MIR_FRONTEND_XDG_DIALOG_V1_H
+#endif // MIR_FRONTEND_XDG_WM_DIALOG_V1_H
