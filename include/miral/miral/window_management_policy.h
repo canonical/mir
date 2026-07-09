@@ -27,6 +27,7 @@ struct MirPointerEvent;
 struct MirInputEvent;
 
 #include <memory>
+#include <span>
 
 #define MIR_WINDOW_MANAGEMENT_POLICY_USE_SPAN
 

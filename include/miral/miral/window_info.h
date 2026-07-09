@@ -127,7 +127,7 @@ struct WindowInfo
     /// The children of this window, if any.
     ///
     /// \returns the children of this window
-    auto children() const& -> std::span<Window> const;
+    auto children() const& -> std::span<Window const>;
 
     /// The minimum width of the window.
     ///
