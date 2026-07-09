@@ -23,10 +23,6 @@ MIR_CORE_2.29 {
   extern "C++" {
     "mir::logging::Logger::log(char const*, mir::logging::Severity, char const*, ...)";
     "std::formatter<mir::logging::Severity, char>::format(mir::logging::Severity, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
-    mir::AnonymousShmFile::?AnonymousShmFile*;
-    mir::AnonymousShmFile::AnonymousShmFile*;
-    mir::AnonymousShmFile::base_ptr*;
-    mir::AnonymousShmFile::fd*;
     mir::Fd::Fd*;
     mir::Fd::invalid*;
     mir::Fd::operator*;
@@ -70,11 +66,8 @@ MIR_CORE_2.29 {
     mir::report_exception*;
     mir::security_log*;
     non-virtual?thunk?to?mir::logging::DumbConsoleLogger::log*;
-    typeinfo?for?mir::AnonymousShmFile;
-    typeinfo?for?mir::ShmFile;
     typeinfo?for?mir::logging::DumbConsoleLogger;
     typeinfo?for?mir::logging::Logger;
-    vtable?for?mir::AnonymousShmFile;
     vtable?for?mir::logging::DumbConsoleLogger;
     vtable?for?mir::logging::Logger;
   };
