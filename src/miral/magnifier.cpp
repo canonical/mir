@@ -74,7 +74,8 @@ static std::string name_for_kind(HandleKind kind)
     case HandleKind::zoom_in:  return "magnifier-zoom-in-handle";
     case HandleKind::zoom_out: return "magnifier-zoom-out-handle";
     }
-    return "magnifier-handle";
+
+    std::unreachable();
 }
 
 class HandleIndicator : public ms::BasicSurface
