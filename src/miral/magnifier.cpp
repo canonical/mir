@@ -129,18 +129,16 @@ private:
         explicit BufferPainter(mg::Buffer& buffer) :
             writable{mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}))},
             mapping{writable->map_writeable()},
-            pixels{reinterpret_cast<uint8_t*>(mapping->data())},
             stride{mapping->stride().as_int()},
             width{buffer.size().width.as_int()},
             height{buffer.size().height.as_int()}
         {
+            assert(mapping->format() == format);
         }
 
         void clear()
         {
-            for (int y = 0; y < height; ++y)
-                for (int x = 0; x < width; ++x)
-                    set_pixel(x, y, 0, 0);
+            std::memset(mapping->data(), 0, mapping->len());
         }
 
         void fill_circle(uint8_t grey, uint8_t alpha)
@@ -205,13 +203,16 @@ private:
                 return;
 
             // For mir_pixel_format_argb_8888 on little-endian: memory layout [B, G, R, A].
-            uint8_t* p = pixels + y * stride + x * 4;
-            p[0] = grey; p[1] = grey; p[2] = grey; p[3] = alpha;
+            // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+            auto* pixels = reinterpret_cast<std::uint8_t*>(mapping->data());
+            auto* p = pixels + y * stride + x * MIR_BYTES_PER_PIXEL(format);
+            p[0] = p[1] = p[2] = grey;
+            p[3] = alpha;
         }
 
+        static auto constexpr format = mir_pixel_format_argb_8888;
         std::shared_ptr<mrs::WriteMappable> const writable;
         std::unique_ptr<mrs::Mapping<std::byte>> const mapping;
-        uint8_t* const pixels;
         int const stride;
         int const width;
         int const height;
