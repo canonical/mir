@@ -31,7 +31,9 @@
 #include "wlr_screencopy_v1.h"
 #include "ext_image_capture_v1.h"
 #include "ext_output_image_capture_source_v1.h"
+#include "ext_foreign_toplevel_image_capture_source_v1.h"
 #include "foreign_toplevel_list_v1.h"
+#include "foreign_toplevel_manager_v1.h"
 
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_client_registry.h"
@@ -144,9 +146,15 @@ auto mf::WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1
         wayland_executor, screen_shooter_factory, surface_stack);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_ext_foreign_toplevel_image_capture_source_manager_v1 called for an unregistered client"};
+
+    return mf::create_ext_foreign_toplevel_image_capture_source_manager_v1(
+        resolved, std::move(instance), object_id,
+        wayland_executor, screen_shooter_factory, surface_stack);
 }
 
 auto mf::WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtImageCopyCaptureManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureManagerV1>
@@ -370,9 +378,15 @@ auto mf::WaylandGlobalFactory::create_wl_subcompositor(rust::Box<wayland_rs::Way
     return std::make_shared<WlSubcompositor>(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_manager_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ForeignToplevelManagerV1>
+auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ForeignToplevelManagerV1>
 {
-    throw std::logic_error{"WaylandGlobalFactory::create_zwlr_foreign_toplevel_manager_v1 is not yet implemented"};
+    auto const resolved = registry.from(client);
+    if (!resolved)
+        throw std::logic_error{"create_zwlr_foreign_toplevel_manager_v1 called for an unregistered client"};
+
+    return mf::create_foreign_toplevel_manager_v1(
+        resolved, std::move(instance), object_id,
+        shell, wayland_executor, surface_stack, desktop_file_manager);
 }
 
 auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_handle_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ForeignToplevelHandleV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ForeignToplevelHandleV1>
