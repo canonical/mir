@@ -291,7 +291,7 @@ void TilingWindowManagerPolicy::drag(Point cursor)
     }
 }
 
-void TilingWindowManagerPolicy::handle_raise_window(WindowInfo& window_info)
+void TilingWindowManagerPolicy::handle_activate_window(WindowInfo& window_info)
 {
     tools.select_active_window(window_info.window());
 }

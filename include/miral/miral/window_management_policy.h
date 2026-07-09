@@ -28,6 +28,9 @@ struct MirInputEvent;
 
 #include <memory>
 
+// This allows downstreams to detect the method rename
+#define MIRAL_USE_HANDLE_RAISE_WINDOW_IS_DEAD
+
 namespace miral
 {
 class Window;
@@ -107,14 +110,14 @@ public:
     /// \sa miral::WindowManagerTools::modify_window - the method used to modify a window
     virtual void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) = 0;
 
-    /// Request from the client to raise the window.
+    /// Request from the client to activate the window.
     ///
     /// The compositor author may use #miral::WindowManagerTools::raise_tree in response,
     /// or they may choose to do anything else.
     ///
     /// \param window_info the window
     /// \sa miral::WindowManagerTools::raise_tree - the method used to raise a window
-    virtual void handle_raise_window(WindowInfo& window_info) = 0;
+    virtual void handle_activate_window(WindowInfo& window_info) = 0;
 
     /// Confirm and optionally adjust the placement of a window on the display.
     ///
