@@ -99,7 +99,6 @@ jobs:
 
     steps:
     - name: Download successful architecture markers
-      continue-on-error: true
       uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
       with:
         pattern: successful-arch-*
@@ -123,7 +122,13 @@ jobs:
             exit 1
           fi
 
-          ARCHES+=( "$(cat "$marker_file")" )
+          arch="$(cat "$marker_file")"
+          if [ -z "${arch//[[:space:]]/}" ]; then
+            echo "Architecture marker cannot be empty in ${marker_file}" >&2
+            exit 1
+          fi
+
+          ARCHES+=( "$arch" )
         done < <(find successful-arches -maxdepth 1 -type f -print0)
 
         if [ "${#ARCHES[@]}" -eq 0 ]; then
@@ -131,7 +136,13 @@ jobs:
           exit 0
         fi
 
-        mapfile -t ARCHES < <(printf '%s\n' "${ARCHES[@]}" | sort -u)
+        mapfile -t UNIQUE_ARCHES < <(printf '%s\n' "${ARCHES[@]}" | sort -u)
+        if [ "${#ARCHES[@]}" -ne "${#UNIQUE_ARCHES[@]}" ]; then
+          echo "Duplicate architecture markers found" >&2
+          exit 1
+        fi
+
+        ARCHES=("${UNIQUE_ARCHES[@]}")
         echo "arches=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}")" >> "$GITHUB_OUTPUT"
 
   snap:
