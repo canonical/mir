@@ -116,6 +116,11 @@ jobs:
         fi
 
         mapfile -t ARCHES < <(cat successful-arches/* | sort -u)
+        if [ "${#ARCHES[@]}" -eq 0 ]; then
+          echo 'arches=[]' >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
         jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
 
   snap:
