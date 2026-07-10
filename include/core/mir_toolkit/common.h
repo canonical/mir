@@ -19,18 +19,6 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
-//for clang
-#ifndef __has_feature
-  #define __has_feature(x) 0 // Compatibility with non-clang
-#endif
-
-//for clang
-#ifndef __has_extension
-  #define __has_extension __has_feature // Compatibility with pre-3.0
-#endif
-
-/* This is C code. Not C++. */
-
 /**
  * Attributes of a window that the client and server/shell may wish to
  * get or set over the wire.
