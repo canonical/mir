@@ -116,6 +116,7 @@ jobs:
               if (job.conclusion !== 'success')
                 continue;
 
+              // Matrix job names are expected to be "mir-libs (<arch>)" or "mir-libs (architecture: <arch>)".
               const match = /^mir-libs \((?:architecture:\s*)?([^)]+)\)$/.exec(job.name);
               if (!match)
                 continue;
@@ -129,8 +130,9 @@ jobs:
             page += 1;
           }
 
-          const successful = architectures.filter(architecture => successfulArchitectures.has(architecture));
-          core.setOutput('arches', JSON.stringify(successful));
+          const successfulArchitecturesList =
+            architectures.filter(architecture => successfulArchitectures.has(architecture));
+          core.setOutput('arches', JSON.stringify(successfulArchitecturesList));
 
   snap:
     # Only run if we have access to secrets.
