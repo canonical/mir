@@ -79,71 +79,58 @@ jobs:
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
         publish-channel: 26/edge/pr${{ github.event.number }}
 
-    - name: Record successful architecture
-      if: ${{ success() }}
-      run: echo "${{ matrix.architecture }}" > successful-arch.txt
-
-    - name: Upload successful architecture marker
-      if: ${{ success() }}
-      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-      with:
-        name: successful-arch-${{ matrix.architecture }}
-        path: successful-arch.txt
-
   successful-arches:
     needs: [arches, mir-libs]
     if: ${{ !cancelled() && needs.arches.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
     outputs:
       arches: ${{ steps.collect.outputs.arches }}
 
     steps:
-    - name: Download successful architecture markers
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
-      with:
-        pattern: successful-arch-*
-        path: successful-arches
-        merge-multiple: true
-
     - id: collect
       name: Collect successful architectures
-      run: |
-        set -euo pipefail
+      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+      env:
+        ARCHES: ${{ needs.arches.outputs.arches }}
+      with:
+        script: |
+          const architectures = JSON.parse(process.env.ARCHES);
+          const successfulArchitectures = new Set();
 
-        if [ ! -d successful-arches ]; then
-          echo 'arches=[]' >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
+          let page = 1;
+          while (true)
+          {
+            const response = await github.rest.actions.listJobsForWorkflowRun({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              run_id: context.runId,
+              per_page: 100,
+              page
+            });
 
-        ARCHES=()
-        while IFS= read -r -d '' marker_file; do
-          if [ "$(wc -l < "$marker_file")" -ne 1 ]; then
-            echo "Unexpected marker format in ${marker_file}" >&2
-            exit 1
-          fi
+            for (const job of response.data.jobs)
+            {
+              if (job.conclusion !== 'success')
+                continue;
 
-          arch="$(cat "$marker_file")"
-          if [ -z "${arch//[[:space:]]/}" ]; then
-            echo "Architecture marker cannot be empty in ${marker_file}" >&2
-            exit 1
-          fi
+              const match = /^mir-libs \((?:architecture:\s*)?([^)]+)\)$/.exec(job.name);
+              if (!match)
+                continue;
 
-          ARCHES+=( "$arch" )
-        done < <(find successful-arches -maxdepth 1 -type f -print0)
+              successfulArchitectures.add(match[1].trim());
+            }
 
-        if [ "${#ARCHES[@]}" -eq 0 ]; then
-          echo 'arches=[]' >> "$GITHUB_OUTPUT"
-          exit 0
-        fi
+            if (response.data.jobs.length < 100)
+              break;
 
-        mapfile -t UNIQUE_ARCHES < <(printf '%s\n' "${ARCHES[@]}" | sort -u)
-        if [ "${#ARCHES[@]}" -ne "${#UNIQUE_ARCHES[@]}" ]; then
-          echo "Duplicate architecture markers found" >&2
-          exit 1
-        fi
+            page += 1;
+          }
 
-        ARCHES=("${UNIQUE_ARCHES[@]}")
-        echo "arches=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}")" >> "$GITHUB_OUTPUT"
+          const successful = architectures.filter(architecture => successfulArchitectures.has(architecture));
+          core.setOutput('arches', JSON.stringify(successful));
 
   snap:
     # Only run if we have access to secrets.
