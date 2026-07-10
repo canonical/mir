@@ -43,6 +43,10 @@ jobs:
     needs: [arches]
     if: needs.arches.outputs.should-run == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      amd64: ${{ steps.result.outputs.amd64 }}
+      armhf: ${{ steps.result.outputs.armhf }}
+      arm64: ${{ steps.result.outputs.arm64 }}
     permissions:
       contents: read
 
@@ -79,60 +83,33 @@ jobs:
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
         publish-channel: 26/edge/pr${{ github.event.number }}
 
+    - id: result
+      if: always()
+      name: Record architecture result
+      run: |
+        if [ "${{ job.status }}" = "success" ]; then
+          echo "${{ matrix.architecture }}=success" >> "$GITHUB_OUTPUT"
+        fi
+
   successful-arches:
     needs: [arches, mir-libs]
     if: ${{ !cancelled() && needs.arches.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      actions: read
-      contents: read
     outputs:
       arches: ${{ steps.collect.outputs.arches }}
 
     steps:
     - id: collect
       name: Collect successful architectures
-      uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
       env:
         ARCHES: ${{ needs.arches.outputs.arches }}
-      with:
-        script: |
-          const architectures = JSON.parse(process.env.ARCHES);
-          const successfulArchitectures = new Set();
-
-          let page = 1;
-          while (true)
-          {
-            const response = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-              per_page: 100,
-              page
-            });
-
-            for (const job of response.data.jobs)
-            {
-              if (job.conclusion !== 'success')
-                continue;
-
-              // Matrix job names are expected to be "mir-libs (<arch>)" or "mir-libs (architecture: <arch>)".
-              const match = /^mir-libs \((?:architecture:\s*)?([^)]+)\)$/.exec(job.name);
-              if (!match)
-                continue;
-
-              successfulArchitectures.add(match[1].trim());
-            }
-
-            if (response.data.jobs.length < 100)
-              break;
-
-            page += 1;
-          }
-
-          const successfulArchitecturesList =
-            architectures.filter(architecture => successfulArchitectures.has(architecture));
-          core.setOutput('arches', JSON.stringify(successfulArchitecturesList));
+        RESULTS: ${{ toJSON(needs.mir-libs.outputs) }}
+      run: |
+        jq --compact-output --null-input \
+          --argjson arches "${ARCHES}" \
+          --argjson results "${RESULTS}" \
+          '$arches | map(select($results[.] == "success"))' \
+          | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
 
   snap:
     # Only run if we have access to secrets.
