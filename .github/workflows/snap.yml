@@ -116,12 +116,22 @@ jobs:
           exit 0
         fi
 
-        mapfile -t ARCHES < <(find successful-arches -maxdepth 1 -type f -print0 | xargs -0 -r cat | sort -u)
+        ARCHES=()
+        while IFS= read -r -d '' marker_file; do
+          if [ "$(wc -l < "$marker_file")" -ne 1 ]; then
+            echo "Unexpected marker format in ${marker_file}" >&2
+            exit 1
+          fi
+
+          ARCHES+=( "$(cat "$marker_file")" )
+        done < <(find successful-arches -maxdepth 1 -type f -print0)
+
         if [ "${#ARCHES[@]}" -eq 0 ]; then
           echo 'arches=[]' >> "$GITHUB_OUTPUT"
           exit 0
         fi
 
+        mapfile -t ARCHES < <(printf '%s\n' "${ARCHES[@]}" | sort -u)
         echo "arches=$(jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}")" >> "$GITHUB_OUTPUT"
 
   snap:
