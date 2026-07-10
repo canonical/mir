@@ -212,59 +212,63 @@ struct FakeToucher
 
     mir::EventUPtr move_to(geom::Point const& point)
     {
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
-        mev::add_touch(*ev, 0, mir_touch_action_change,
-                       mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
-                       touched ? 1.0 : 0.0,
-                       touched ? 1.0 : 0.0,
-                       touched ? 1.0 : 0.0,
-                       touched ? 1.0 : 0.0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0,
+            {{
+                0, mir_touch_action_change,
+                       mir_touch_tooltype_finger, geom::PointF{point},
+                       touched ? 1.0f : 0.0f,
+                       touched ? 1.0f : 0.0f,
+                       touched ? 1.0f : 0.0f,
+                       touched ? 1.0f : 0.0f}});
         return ev;
     }
     mir::EventUPtr touch_at(geom::Point const& point)
     {
         touched = true;
 
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
-        mev::add_touch(*ev, 0, mir_touch_action_down,
-                       mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
-                       1.0, 1.0, 1.0, 1.0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0,
+            {{0, mir_touch_action_down,
+                       mir_touch_tooltype_finger, geom::PointF{point},
+                       1.0, 1.0, 1.0, 1.0}});
         return ev;
     }
     mir::EventUPtr touches_at(geom::Point const& point1, geom::Point const& point2)
     {
         touched = true;
 
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
-        mev::add_touch(*ev, 0, mir_touch_action_down,
-                       mir_touch_tooltype_finger, point1.x.as_int(), point1.y.as_int(),
-                       1.0, 1.0, 1.0, 1.0);
-        mev::add_touch(*ev, 0, mir_touch_action_down,
-                       mir_touch_tooltype_finger, point2.x.as_int(), point2.y.as_int(),
-                       1.0, 1.0, 1.0, 1.0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0,
+            {{0, mir_touch_action_down,
+                       mir_touch_tooltype_finger, geom::PointF{point1},
+                       1.0, 1.0, 1.0, 1.0},
+             {1, mir_touch_action_down,
+                       mir_touch_tooltype_finger, geom::PointF{point2},
+                       1.0, 1.0, 1.0, 1.0}});
         return ev;
     }
     mir::EventUPtr release_at(geom::Point const& point)
     {
         touched = false;
 
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
-        mev::add_touch(*ev, 0, mir_touch_action_up,
-                       mir_touch_tooltype_finger, point.x.as_int(), point.y.as_int(),
-                       0.0, 0.0, 0.0, 0.0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0,
+            {{
+                0, mir_touch_action_up,
+                       mir_touch_tooltype_finger, geom::PointF{point},
+                       0.0, 0.0, 0.0, 0.0}});
         return ev;
     }
     mir::EventUPtr releases_at(geom::Point const& point1, geom::Point const& point2)
     {
         touched = false;
 
-        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0);
-        mev::add_touch(*ev, 0, mir_touch_action_up,
-                       mir_touch_tooltype_finger, point1.x.as_int(), point1.y.as_int(),
-                       1.0, 1.0, 1.0, 1.0);
-        mev::add_touch(*ev, 0, mir_touch_action_up,
-                       mir_touch_tooltype_finger, point2.x.as_int(), point2.y.as_int(),
-                       1.0, 1.0, 1.0, 1.0);
+        auto ev = mev::make_touch_event(id, std::chrono::nanoseconds(0), 0,
+            {{
+                0, mir_touch_action_up,
+                mir_touch_tooltype_finger, geom::PointF{point1},
+                1.0, 1.0, 1.0, 1.0},
+             {
+                 1, mir_touch_action_up,
+                 mir_touch_tooltype_finger, geom::PointF{point2},
+                1.0, 1.0, 1.0, 1.0}});
         return ev;
     }
     bool touched = false;

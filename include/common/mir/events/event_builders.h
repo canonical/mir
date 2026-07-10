@@ -74,12 +74,6 @@ void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
 void set_cursor_position(MirEvent& event, float x, float y);
 void set_button_state(MirEvent& event, MirPointerButtons button_state);
 
-// Touch event
-EventUPtr make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers);
-
 void add_touch(
     MirEvent& event,
     MirTouchId touch_id,
@@ -127,12 +121,6 @@ EventUPtr make_input_configure_event(
     float x_axis_value,
     float y_axis_value,
     std::vector<InputDeviceState>&& device_states);
-
-EventUPtr make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    std::vector<TouchContactV1> const& contacts);
 
 EventUPtr make_touch_event(
     MirInputDeviceId device_id,
