@@ -79,11 +79,50 @@ jobs:
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
         publish-channel: 26/edge/pr${{ github.event.number }}
 
+    - name: Record successful architecture
+      if: ${{ success() }}
+      run: echo "${{ matrix.architecture }}" > successful-arch.txt
+
+    - name: Upload successful architecture marker
+      if: ${{ success() }}
+      uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+      with:
+        name: successful-arch-${{ matrix.architecture }}
+        path: successful-arch.txt
+
+  successful-arches:
+    needs: [arches, mir-libs]
+    if: ${{ !cancelled() && needs.arches.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      arches: ${{ steps.collect.outputs.arches }}
+
+    steps:
+    - name: Download successful architecture markers
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      with:
+        pattern: successful-arch-*
+        path: successful-arches
+        merge-multiple: true
+
+    - id: collect
+      name: Collect successful architectures
+      run: |
+        set -euo pipefail
+
+        if [ ! -d successful-arches ] || ! compgen -G "successful-arches/*" > /dev/null; then
+          echo 'arches=[]' >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        mapfile -t ARCHES < <(cat successful-arches/* | sort -u)
+        jq --compact-output --null-input '$ARGS.positional' --args -- "${ARCHES[@]}" | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
+
   snap:
     # Only run if we have access to secrets.
-    if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
+    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name && needs.successful-arches.result == 'success' && needs.successful-arches.outputs.arches != '[]' }}
 
-    needs: [arches, mir-libs]
+    needs: [successful-arches]
 
     runs-on: ubuntu-latest
 
@@ -101,7 +140,7 @@ jobs:
         - canonical/ubuntu-frame
         - Miriway/Miriway
         snapcraft-channel: [stable]
-        architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
+        architecture: ${{ fromJSON(needs.successful-arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
           track: 26
