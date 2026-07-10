@@ -120,7 +120,14 @@ jobs:
 
   snap:
     # Only run if we have access to secrets.
-    if: ${{ !cancelled() && github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name && needs.successful-arches.result == 'success' && needs.successful-arches.outputs.arches != '[]' }}
+    if: >-
+      ${{
+        !cancelled()
+        && github.event_name == 'pull_request'
+        && github.repository == github.event.pull_request.head.repo.full_name
+        && needs.successful-arches.result == 'success'
+        && needs.successful-arches.outputs.arches != '[]'
+      }}
 
     needs: [successful-arches]
 
