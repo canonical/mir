@@ -24,7 +24,7 @@ add_custom_target(
   DEPENDS demo-mir-compositor
 )
 # Verify the options reference is up to date
-add_test(
+mir_add_test(
   NAME verify-options-reference-unchanged
   COMMAND bash -c "diff --unified \
     ${OPTIONS_REFERENCE} \
