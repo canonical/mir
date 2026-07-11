@@ -35,10 +35,20 @@
 #include <condition_variable>
 #include <cstring>
 #include <cstdlib>
+#include <limits>
 #include <stdexcept>
 
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
+
+namespace
+{
+// Returns the integer buffer scale for a WaylandOutputConfig's scale value
+auto windowed_buffer_scale(float scale) -> int32_t
+{
+    return static_cast<int32_t>(std::round(scale));
+}
+}
 
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
@@ -342,7 +352,7 @@ void mgw::DisplayClient::Output::initialize_windowed()
     if (owner_->title)
         xdg_toplevel_set_title(shell_toplevel, owner_->title.value().c_str());
 
-    wl_surface_set_buffer_scale(surface, static_cast<int32_t>(std::round(wc.scale)));
+    wl_surface_set_buffer_scale(surface, windowed_buffer_scale(wc.scale));
     wl_surface_commit(surface);
 
     // After the next roundtrip the surface should be configured
@@ -355,14 +365,14 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
     if (width > 0 && height > 0)
     {
         auto const scale = windowed_config ?
-            static_cast<int32_t>(std::round(windowed_config->scale)) :
+            windowed_buffer_scale(windowed_config->scale) :
             host_scale;
         pending_toplevel_size = geometry::Size{scale * width, scale * height};
     }
     else if (windowed_config)
     {
         // Compositor gave us 0,0 (unconstrained size) — use our configured size
-        auto const scale = static_cast<int32_t>(std::round(windowed_config->scale));
+        auto const scale = windowed_buffer_scale(windowed_config->scale);
         pending_toplevel_size = geometry::Size{
             scale * windowed_config->size.width.as_int(),
             scale * windowed_config->size.height.as_int()};
@@ -577,13 +587,18 @@ mgw::DisplayClient::DisplayClient(
 
     if (!output_configs.empty())
     {
-        // Windowed mode: create custom-sized outputs instead of fullscreen ones
+        // Windowed mode: create custom-sized outputs instead of fullscreen ones.
+        // Keys use the high end of uint32_t to avoid collisions with Wayland global IDs,
+        // which are small positive integers assigned sequentially by the compositor.
+        // Outputs are inserted before the next is constructed so that bound_outputs.size()
+        // gives each output a unique dcout.id.
         std::lock_guard lock{outputs_mutex};
         for (size_t i = 0; i < output_configs.size(); ++i)
         {
             auto out = std::make_unique<Output>(output_configs[i], this);
+            uint32_t const key = std::numeric_limits<uint32_t>::max() - static_cast<uint32_t>(i);
             out->initialize_windowed();
-            bound_outputs.insert(std::make_pair(static_cast<uint32_t>(i), std::move(out)));
+            bound_outputs.insert(std::make_pair(key, std::move(out)));
         }
     }
 
