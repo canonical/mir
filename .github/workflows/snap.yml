@@ -86,8 +86,11 @@ jobs:
     - id: result
       if: always()
       name: Record architecture result
+      env:
+        MATRIX_ARCHITECTURE: ${{ matrix.architecture }}
+        JOB_STATUS: ${{ job.status }}
       run: |
-        echo "${{ matrix.architecture }}=${{ job.status }}" >> "$GITHUB_OUTPUT"
+        echo "${MATRIX_ARCHITECTURE}=${JOB_STATUS}" >> "$GITHUB_OUTPUT"
 
   successful-arches:
     needs: [arches, mir-libs]
