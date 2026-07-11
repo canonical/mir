@@ -87,9 +87,7 @@ jobs:
       if: always()
       name: Record architecture result
       run: |
-        if [ "${{ job.status }}" = "success" ]; then
-          echo "${{ matrix.architecture }}=success" >> "$GITHUB_OUTPUT"
-        fi
+        echo "${{ matrix.architecture }}=${{ job.status }}" >> "$GITHUB_OUTPUT"
 
   successful-arches:
     needs: [arches, mir-libs]
@@ -102,13 +100,11 @@ jobs:
     - id: collect
       name: Collect successful architectures
       env:
-        ARCHES: ${{ needs.arches.outputs.arches }}
         RESULTS: ${{ toJSON(needs.mir-libs.outputs) }}
       run: |
         jq --compact-output --null-input \
-          --argjson arches "${ARCHES}" \
           --argjson results "${RESULTS}" \
-          '$arches | map(select($results[.] == "success"))' \
+          '$results | to_entries | map(select(.value == "success") | .key)' \
           | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
 
   snap:
