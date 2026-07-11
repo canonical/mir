@@ -6,6 +6,8 @@ apt-get --yes --no-install-recommends install \
   cargo \
   ccache \
   clang \
+  dmz-cursor-theme \
+  fonts-ubuntu \
   mold \
   ninja-build \
   python3-venv \
