@@ -397,6 +397,13 @@ geom::Point surface_top_left_from_cursor(geom::Size const& window_size, geom::Po
         cursor_pos.x.as_int() - window_size.width.as_int() / 2,
         cursor_pos.y.as_int() - window_size.height.as_int() / 2};
 }
+
+geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
+{
+    return {
+        geom::Width{std::max(1.0f, std::round(visual_size.width.as_value() / mag))},
+        geom::Height{std::max(1.0f, std::round(visual_size.height.as_value() / mag))}};
+}
 }
 
 class miral::Magnifier::Self
@@ -411,20 +418,20 @@ public:
 
     void init(mir::Server& server)
     {
-        render_scene_into_surface.on_surface_ready([this](auto const& surf)
-        {
-            auto s = state.lock();
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
-            surf->set_depth_layer(mir_depth_layer_always_on_top);
-            surf->set_focus_mode(mir_focus_mode_disabled);
+        render_scene_into_surface.on_surface_ready(
+            [this](auto const& surf)
+            {
+                surf->set_depth_layer(mir_depth_layer_always_on_top);
+                surf->set_focus_mode(mir_focus_mode_disabled);
+                auto s = state.lock();
 
-            if (s->default_enabled)
-                surf->show();
-            else
-                surf->hide();
+                if (s->default_enabled)
+                    surf->show();
+                else
+                    surf->hide();
 
-            s->surface = surf;
-        });
+                s->surface = surf;
+            });
 
         render_scene_into_surface(server);
 
@@ -443,6 +450,7 @@ public:
 
             s->observer = local_observer;
             s->cursor_multiplexer = server.the_cursor_observer_multiplexer();
+            s->visual_size = geom::Size{default_capture_width, default_capture_height}  * default_magnification;
 
             s->drag.init(server, HandleKind::drag);
             s->resize.init(server, HandleKind::resize);
@@ -455,7 +463,8 @@ public:
 
                 if (auto const surf = s->surface.lock(); surf && s->default_enabled)
                 {
-                    s->reposition_all_handles(surf->top_left(), surf->window_size(), s->magnification);
+                    auto const logical_rect = render_scene_into_surface.capture_area();
+                    apply_visual_geometry(surf, logical_rect.top_left, *s, render_scene_into_surface);
                     s->show_all_handles();
                 }
             }
@@ -513,10 +522,9 @@ public:
             if (s->decoupled)
             {
                 // Place surface at last known cursor position when enabling in decoupled mode.
-                auto const top_left = surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
-                surf->move_to(top_left);
-                render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
-                s->reposition_all_handles(top_left, surf->window_size(), s->magnification);
+                auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
+                auto const top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
+                apply_visual_geometry(surf, top_left, *s, render_scene_into_surface);
                 s->show_all_handles();
             }
             surf->show();
@@ -531,15 +539,17 @@ public:
     void set_magnification(float new_magnification)
     {
         auto s = state.lock();
-        s->set_magnification(new_magnification);
+        s->set_magnification(new_magnification, render_scene_into_surface);
     }
 
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        auto const capture_position = surface_top_left_from_cursor(size, s->cursor_pos);
-        render_scene_into_surface.capture_area({capture_position, size});
-        s->reposition_all_handles(capture_position, size, s->magnification);
+        s->visual_size = size * s->magnification;
+        auto const logical_top_left = surface_top_left_from_cursor(size, s->cursor_pos);
+
+        if (auto const surf = s->surface.lock())
+            apply_visual_geometry(surf, logical_top_left, *s, render_scene_into_surface);
     }
 
     geom::Size current_size() const
@@ -555,14 +565,15 @@ public:
 
         s->decoupled = new_decoupled;
 
-        if (new_decoupled)
+        if (s->decoupled)
         {
             if (auto const surf = s->surface.lock())
             {
                 s->attach_observers(this);
                 if (s->default_enabled)
                 {
-                    s->reposition_all_handles(surf->top_left(), surf->window_size(), s->magnification);
+                    auto const logical_rect = render_scene_into_surface.capture_area();
+                    s->reposition_all_handles(logical_rect.top_left, logical_rect.size, s->magnification);
                     s->show_all_handles();
                 }
             }
@@ -577,9 +588,9 @@ public:
 
             if (auto const surf = s->surface.lock(); surf && s->default_enabled)
             {
-                auto const top_left = surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
-                surf->move_to(top_left);
-                render_scene_into_surface.capture_area(geom::Rectangle{top_left, surf->window_size()});
+                auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
+                auto const top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
+                apply_visual_geometry(surf, top_left, *s, render_scene_into_surface);
             }
         }
     }
@@ -691,14 +702,31 @@ private:
             zoom_out.move_to(zm);
         }
 
-        void set_magnification(float new_magnification)
+        void set_magnification(float new_magnification, RenderSceneIntoSurface& render_scene_into_surface)
         {
-            magnification = new_magnification;
             if (auto const surf = surface.lock())
             {
-                surf->set_transformation(
-                    glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
-                reposition_all_handles(surf->top_left(), surf->window_size(), magnification);
+                auto const old_logical_rect = render_scene_into_surface.capture_area();
+
+                // The visual magnifier is scaled about the centre of its logical
+                // capture area. Keep that centre fixed so changing zoom does not
+                // shift the on-screen position.
+                geom::Point const old_visual_centre{
+                    old_logical_rect.top_left.x.as_int() + old_logical_rect.size.width.as_int() / 2,
+                    old_logical_rect.top_left.y.as_int() + old_logical_rect.size.height.as_int() / 2};
+
+                magnification = new_magnification;
+                auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
+
+                geom::Point const new_logical_top_left{
+                    old_visual_centre.x.as_int() - new_logical_size.width.as_int() / 2,
+                    old_visual_centre.y.as_int() - new_logical_size.height.as_int() / 2};
+
+                apply_visual_geometry(surf, new_logical_top_left, *this, render_scene_into_surface);
+            }
+            else
+            {
+                magnification = new_magnification;
             }
         }
 
@@ -743,9 +771,29 @@ private:
 
         geom::Point cursor_pos;
         float magnification{default_magnification};
+        /// The physical (screen) size of the magnifier.  When the magnification
+        /// level changes the logical capture size is recalculated from this so
+        /// that the magnifier's on-screen footprint stays the same.
+        geom::Size visual_size;
         bool default_enabled{false};
         bool decoupled{false};
     };
+
+    /// Sets the logical capture area and transform so that the magnifier
+    /// renders with the supplied logical top-left and keeps the same physical
+    /// (visual) footprint.  The current visual size is taken from the state.
+    static void apply_visual_geometry(
+        std::shared_ptr<ms::Surface> const& surf,
+        geom::Point const& logical_top_left,
+        State& s,
+        RenderSceneIntoSurface& render_scene_into_surface)
+    {
+        auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
+        surf->move_to(logical_top_left);
+        render_scene_into_surface.capture_area(geom::Rectangle{logical_top_left, logical_size});
+        surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s.magnification, s.magnification, 1)));
+        s.reposition_all_handles(logical_top_left, logical_size, s.magnification);
+    }
 
     class Observer : public mi::CursorObserver
     {
@@ -765,9 +813,9 @@ private:
             if (!surf)
                 return;
 
-            auto const capture_position = surface_top_left_from_cursor(surf->window_size(), s->cursor_pos);
-            surf->move_to(capture_position);
-            self->render_scene_into_surface.capture_area(geom::Rectangle{capture_position, surf->window_size()});
+            auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
+            auto const capture_position = surface_top_left_from_cursor(logical_size, s->cursor_pos);
+            self->apply_visual_geometry(surf, capture_position, *s, self->render_scene_into_surface);
         }
 
         void pointer_usable() override {}
@@ -879,16 +927,12 @@ private:
             geom::Displacement const delta{
                 geom::DeltaX{ax} - grab_abs.dx,
                 geom::DeltaY{ay} - grab_abs.dy};
-            geom::Point const new_pos{
+            geom::Point const new_logical_tl{
                 drag_start_magnifier_pos.x + delta.dx,
                 drag_start_magnifier_pos.y + delta.dy};
 
             if (auto const surf = s.surface.lock())
-            {
-                surf->move_to(new_pos);
-                self->render_scene_into_surface.capture_area(geom::Rectangle{new_pos, surf->window_size()});
-                s.reposition_all_handles(new_pos, surf->window_size(), s.magnification);
-            }
+                self->apply_visual_geometry(surf, new_logical_tl, s, self->render_scene_into_surface);
         }
 
         geom::Point drag_start_magnifier_pos{};
@@ -947,9 +991,7 @@ private:
             int const raw_vis_h = pin_pos.y.as_int() - ay;
 
             auto const clamp = [](int v) { return std::clamp(v, 50, 1000); };
-            geom::Size const new_logical_size{
-                geom::Width{clamp(static_cast<int>(std::round(raw_vis_w / mag)))},
-                geom::Height{clamp(static_cast<int>(std::round(raw_vis_h / mag)))}};
+            geom::Size const new_logical_size =  geom::Size{ clamp(raw_vis_w / mag), clamp(raw_vis_h / mag) };
 
             // Back-solve the logical top-left from the pinned visual corner, inverting
             // the visual-edge identity above so the pinned corner stays fixed.
@@ -967,9 +1009,9 @@ private:
             if (!surf)
                 return;
 
-            surf->move_to(new_logical_tl);
-            self->render_scene_into_surface.capture_area({new_logical_tl, new_logical_size});
-            s.reposition_all_handles(new_logical_tl, new_logical_size, mag);
+            s.visual_size = new_logical_size * mag;
+
+            self->apply_visual_geometry(surf, new_logical_tl, s, self->render_scene_into_surface);
         }
 
         geom::Point pin_pos{};
@@ -1010,7 +1052,8 @@ private:
                 mir_pointer_event_button_state(pev, mir_pointer_button_primary))
             {
                 s->set_magnification(
-                    std::clamp(s->magnification + delta, min_magnification + zoom_step, max_magnification));
+                    std::clamp(s->magnification + delta, min_magnification + zoom_step, max_magnification),
+                    self->render_scene_into_surface);
             }
         }
 
@@ -1023,7 +1066,8 @@ private:
             if (action == mir_touch_action_down)
             {
                 s->set_magnification(
-                    std::clamp(s->magnification + delta, min_magnification + zoom_step, max_magnification));
+                    std::clamp(s->magnification + delta, min_magnification + zoom_step, max_magnification),
+                    self->render_scene_into_surface);
             }
         }
 
