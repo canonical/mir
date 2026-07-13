@@ -14,14 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <miral/runner.h>
+#include <miral/floating_window_manager.h>
+#include <miral/set_window_management_policy.h>
+
 // [doc:config-override:includes]
 #include <miral/config_file.h>
-#include <miral/floating_window_manager.h>
-#include <miral/live_config.h>
 #include <miral/live_config_ini_file_with_overrides.h>
 #include <miral/live_config_overrides_list.h>
-#include <miral/runner.h>
-#include <miral/set_window_management_policy.h>
 // [doc:config-override:includes-end]
 
 #include <iostream>
