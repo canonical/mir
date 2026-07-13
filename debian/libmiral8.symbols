@@ -19,7 +19,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ApplicationInfo::operator=(miral::ApplicationInfo const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::userdata() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::userdata(std::shared_ptr<void>)@MIRAL_6.0" 6.0.0
- (c++)"miral::ApplicationInfo::windows() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationInfo::windows() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::~ApplicationInfo()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationSwitcher::ApplicationSwitcher()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationSwitcher::ApplicationSwitcher(miral::ApplicationSwitcher const&)@MIRAL_6.0" 6.0.0
@@ -433,7 +433,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::attached_edges() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::can_be_active() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowInfo::children() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowInfo::children() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::clip_area(std::optional<mir::geometry::generic::Rectangle<int> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::confine_pointer() const@MIRAL_6.0" 6.0.0
@@ -469,7 +469,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::width_inc() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::window() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_create(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_delete(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_update(miral::Zone const&, miral::Zone const&)@MIRAL_6.0" 6.0.0
@@ -485,8 +485,8 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowManagementPolicy::advise_output_create(miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_output_delete(miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_output_update(miral::Output const&, miral::Output const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_raise(std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::advise_raise(std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_resize(miral::WindowInfo const&, mir::geometry::generic::Size<int> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_state_change(miral::WindowInfo const&, MirWindowState)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::~WindowManagementPolicy()@MIRAL_6.0" 6.0.0
