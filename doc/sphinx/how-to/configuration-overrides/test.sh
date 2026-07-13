@@ -42,7 +42,7 @@ timeout 10 bash -e <<'INNER_EOF' || [ $? -eq 124 ]
   WAYLAND_DISPLAY=wayland-99 ./demo-config-override > "${LOG_FILE}" 2>&1 &
   COMPOSITOR_PID=$!
 
-  timeout --preserve-status 3 bash -c "while [ ! -S $XDG_RUNTIME_DIR/wayland-99 ]; do sleep 0.1; done"
+  timeout --preserve-status 3 bash -c 'while [ ! -S "$XDG_RUNTIME_DIR/wayland-99" ]; do sleep 0.1; done'
 
 kill $COMPOSITOR_PID
 wait $COMPOSITOR_PID || true
