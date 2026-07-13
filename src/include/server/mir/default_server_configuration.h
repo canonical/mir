@@ -173,7 +173,6 @@ public:
     std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
-    std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() override;
     std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
     std::shared_ptr<MainLoop>               the_main_loop() override;

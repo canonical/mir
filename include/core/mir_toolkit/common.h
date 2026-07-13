@@ -19,23 +19,11 @@
 #ifndef MIR_COMMON_H_
 #define MIR_COMMON_H_
 
-//for clang
-#ifndef __has_feature
-  #define __has_feature(x) 0 // Compatibility with non-clang
-#endif
-
-//for clang
-#ifndef __has_extension
-  #define __has_extension __has_feature // Compatibility with pre-3.0
-#endif
-
-/* This is C code. Not C++. */
-
 /**
  * Attributes of a window that the client and server/shell may wish to
  * get or set over the wire.
  */
-typedef enum MirWindowAttrib
+enum MirWindowAttrib
 {
     /* Do not specify values...code relies on 0...N ordering. */
     mir_window_attrib_type,
@@ -46,9 +34,9 @@ typedef enum MirWindowAttrib
     mir_window_attrib_preferred_orientation,
     /* Must be last */
     mir_window_attribs
-} MirWindowAttrib;
+};
 
-typedef enum MirWindowType
+enum MirWindowType
 {
     mir_window_type_normal,  /**< AKA "regular"                       */
     mir_window_type_utility, /**< AKA "floating"                      */
@@ -61,9 +49,9 @@ typedef enum MirWindowType
     mir_window_type_tip,         /**< AKA "tooltip"                       */
     mir_window_type_decoration,
     mir_window_types
-} MirWindowType;
+};
 
-typedef enum MirWindowState
+enum MirWindowState
 {
     mir_window_state_unknown,
     mir_window_state_restored,
@@ -78,37 +66,37 @@ typedef enum MirWindowState
     mir_window_state_hidden,
     mir_window_state_attached, /**< Used for panels, notifications and other windows attached to output edges */
     mir_window_states
-} MirWindowState;
+};
 
-typedef enum MirWindowFocusState
+enum MirWindowFocusState
 {
     mir_window_focus_state_unfocused = 0, /**< Inactive and does not have focus           */
     mir_window_focus_state_focused,       /**< Active and has keybaord focus              */
     mir_window_focus_state_active         /**< Active but does not have keyboard focus    */
-} MirWindowFocusState;
+};
 
-typedef enum MirWindowVisibility
+enum MirWindowVisibility
 {
     mir_window_visibility_occluded = 0,
     mir_window_visibility_exposed
-} MirWindowVisibility;
+};
 
-typedef enum MirLifecycleState
+enum MirLifecycleState
 {
     mir_lifecycle_state_will_suspend,
     mir_lifecycle_state_resumed,
     mir_lifecycle_connection_lost
-} MirLifecycleState;
+};
 
-typedef enum MirPowerMode
+enum MirPowerMode
 {
     mir_power_mode_on,      /* Display in use. */
     mir_power_mode_standby, /* Blanked, low power. */
     mir_power_mode_suspend, /* Blanked, lowest power. */
     mir_power_mode_off      /* Powered down. */
-} MirPowerMode;
+};
 
-typedef enum MirOutputType
+enum MirOutputType
 {
     mir_output_type_unknown = 0,      /* DRM_MODE_CONNECTOR_Unknown     */
     mir_output_type_vga = 1,          /* DRM_MODE_CONNECTOR_VGA         */
@@ -128,7 +116,7 @@ typedef enum MirOutputType
     mir_output_type_virtual = 15,     /* DRM_MODE_CONNECTOR_VIRTUAL     */
     mir_output_type_dsi = 16,         /* DRM_MODE_CONNECTOR_DSI         */
     mir_output_type_dpi = 17,         /* DRM_MODE_CONNECTOR_DPI         */
-} MirOutputType;
+};
 
 /**
  * 32-bit pixel formats (8888):
@@ -148,7 +136,7 @@ typedef enum MirOutputType
  * high-to-low bit order following the format name. These are the fastest
  * formats, however colour quality is visibly lower.
  */
-typedef enum MirPixelFormat
+enum MirPixelFormat
 {
     mir_pixel_format_invalid = 0,
     mir_pixel_format_abgr_8888 = 1,
@@ -167,7 +155,7 @@ typedef enum MirPixelFormat
      *         mir_pixel_format_bgr[ax]_8888
      */
     mir_pixel_formats /* Note: This is always max format + 1 */
-} MirPixelFormat;
+};
 
 /* This could be improved... https://bugs.launchpad.net/mir/+bug/1236254 */
 #define MIR_BYTES_PER_PIXEL(f)                                                                                         \
@@ -180,23 +168,23 @@ typedef enum MirPixelFormat
 
 /// Describes transformations applied to both outputs and client surfaces.
 /// Rotations are counter-clockwise.
-typedef enum MirOrientation
+enum MirOrientation
 {
     mir_orientation_normal = 0,
     mir_orientation_left = 90,
     mir_orientation_inverted = 180,
     mir_orientation_right = 270
-} MirOrientation;
+};
 
 /// Describes a mirror transformation that is applied to client surfaces.
-typedef enum MirMirrorMode
+enum MirMirrorMode
 {
     mir_mirror_mode_none,
     mir_mirror_mode_vertical,
     mir_mirror_mode_horizontal
-} MirMirrorMode;
+};
 
-typedef enum MirOrientationMode
+enum MirOrientationMode
 {
     mir_orientation_mode_portrait = 1 << 0,
     mir_orientation_mode_landscape = 1 << 1,
@@ -205,21 +193,21 @@ typedef enum MirOrientationMode
     mir_orientation_mode_portrait_any = mir_orientation_mode_portrait | mir_orientation_mode_portrait_inverted,
     mir_orientation_mode_landscape_any = mir_orientation_mode_landscape | mir_orientation_mode_landscape_inverted,
     mir_orientation_mode_any = mir_orientation_mode_portrait_any | mir_orientation_mode_landscape_any
-} MirOrientationMode;
+};
 
-typedef enum MirEdgeAttachment
+enum MirEdgeAttachment
 {
     mir_edge_attachment_vertical = 1 << 0,
     mir_edge_attachment_horizontal = 1 << 1,
     mir_edge_attachment_any = mir_edge_attachment_vertical | mir_edge_attachment_horizontal
-} MirEdgeAttachment;
+};
 
 // Inspired by GdkGravity
 /**
  * Reference point for aligning a surface relative to a rectangle.
  * Each element (surface and rectangle) has a MirPlacementGravity assigned.
  */
-typedef enum MirPlacementGravity
+enum MirPlacementGravity
 {
     /// the reference point is at the center.
     mir_placement_gravity_center = 0,
@@ -247,7 +235,7 @@ typedef enum MirPlacementGravity
 
     /// the reference point is at the lower right corner.
     mir_placement_gravity_southeast = mir_placement_gravity_south | mir_placement_gravity_east
-} MirPlacementGravity;
+};
 
 // Inspired by GdkAnchorHints
 /**
@@ -274,7 +262,7 @@ typedef enum MirPlacementGravity
  * When multiple flags are set, flipping should take precedence over sliding,
  * which should take precedence over resizing.
  */
-typedef enum MirPlacementHints
+enum MirPlacementHints
 {
     /// allow flipping anchors horizontally
     mir_placement_hints_flip_x = 1 << 0,
@@ -305,7 +293,7 @@ typedef enum MirPlacementHints
 
     /// allow resizing window on both axes
     mir_placement_hints_resize_any = mir_placement_hints_resize_x | mir_placement_hints_resize_y,
-} MirPlacementHints;
+};
 
 /**
  * Hints for resizing a window.
@@ -313,7 +301,7 @@ typedef enum MirPlacementHints
  * These values are used to indicate which edge(s) of a surface
  * is being dragged in a resize operation.
  */
-typedef enum MirResizeEdge
+enum MirResizeEdge
 {
     mir_resize_edge_none = 0,
     mir_resize_edge_west = 1 << 0,
@@ -324,12 +312,12 @@ typedef enum MirResizeEdge
     mir_resize_edge_northeast = mir_resize_edge_north | mir_resize_edge_east,
     mir_resize_edge_southwest = mir_resize_edge_south | mir_resize_edge_west,
     mir_resize_edge_southeast = mir_resize_edge_south | mir_resize_edge_east
-} MirResizeEdge;
+};
 
 /**
  * Form factor associated with a physical output
  */
-typedef enum MirFormFactor
+enum MirFormFactor
 {
     mir_form_factor_unknown,
     mir_form_factor_phone,
@@ -337,14 +325,14 @@ typedef enum MirFormFactor
     mir_form_factor_monitor,
     mir_form_factor_tv,
     mir_form_factor_projector,
-} MirFormFactor;
+};
 
 /**
  * Physical arrangement of subpixels on the physical output
  *
  * This is always relative to the “natural” orientation of the display - mir_orientation_normal.
  */
-typedef enum MirSubpixelArrangement
+enum MirSubpixelArrangement
 {
     mir_subpixel_arrangement_unknown,        /**< Arrangement of subpixels cannot be determined */
     mir_subpixel_arrangement_horizontal_rgb, /**< Subpixels are arranged horizontally, R, G, B from left to right */
@@ -352,37 +340,37 @@ typedef enum MirSubpixelArrangement
     mir_subpixel_arrangement_vertical_rgb,   /**< Subpixels are arranged vertically, R, G, B from top to bottom */
     mir_subpixel_arrangement_vertical_bgr,   /**< Subpixels are arranged vertically, B, G, R from top to bottom */
     mir_subpixel_arrangement_none            /**< Device does not have regular subpixels */
-} MirSubpixelArrangement;
+};
 
 /**
  * Shell chrome
  */
-typedef enum MirShellChrome
+enum MirShellChrome
 {
     mir_shell_chrome_normal,
     mir_shell_chrome_low,
-} MirShellChrome;
+};
 
 /**
  * Pointer Confinement
  */
-typedef enum MirPointerConfinementState
+enum MirPointerConfinementState
 {
     mir_pointer_unconfined,
     mir_pointer_confined_oneshot,
     mir_pointer_confined_persistent,
     mir_pointer_locked_oneshot,
     mir_pointer_locked_persistent,
-} MirPointerConfinementState;
+};
 
 /**
  * Supports gamma correction
  */
-typedef enum MirOutputGammaSupported
+enum MirOutputGammaSupported
 {
     mir_output_gamma_unsupported,
     mir_output_gamma_supported
-} MirOutputGammaSupported;
+};
 
 /**
  * Depth layer controls Z ordering of surfaces.
@@ -391,7 +379,7 @@ typedef enum MirOutputGammaSupported
  * A depth layer can be converted to a number with mir::mir_depth_layer_get_index().
  * This is useful for creating a list indexed by depth layer, or comparing the height of two layers.
  */
-typedef enum MirDepthLayer
+enum MirDepthLayer
 {
     mir_depth_layer_background,    /**< For desktop backgrounds and alike (lowest layer) */
     mir_depth_layer_below,         /**< For panels or other controls/decorations below normal windows */
@@ -399,40 +387,40 @@ typedef enum MirDepthLayer
     mir_depth_layer_always_on_top, /**< For always-on-top application windows */
     mir_depth_layer_above,         /**< For panels or notifications that want to be above normal windows */
     mir_depth_layer_overlay,       /**< For overlays such as lock screens (heighest layer) */
-} MirDepthLayer;
+};
 
 /**
  * Focus mode controls how a surface gains and loses focus.
  */
-typedef enum MirFocusMode
+enum MirFocusMode
 {
     mir_focus_mode_focusable, /**< The surface can gain and lose focus normally */
     mir_focus_mode_disabled,  /**< The surface will never be given focus */
     mir_focus_mode_grabbing,  /**< This mode causes the surface to take focus if possible, and prevents focus from
                                       leaving it as long as it has this mode */
-} MirFocusMode;
+};
 
 /**
  * Hints describing which edges of a surface are considered adjacent
  * to another part of the tiling grid.
  */
-typedef enum MirTiledEdge
+enum MirTiledEdge
 {
     mir_tiled_edge_none = 0,
     mir_tiled_edge_north = 1 << 0,
     mir_tiled_edge_east = 1 << 1,
     mir_tiled_edge_south = 1 << 2,
     mir_tiled_edge_west = 1 << 3
-} MirTiledEdge;
+};
 
 /**
  * Filters that can be applied to output.
  **/
-typedef enum MirOutputFilter
+enum MirOutputFilter
 {
     mir_output_filter_none,      /**< No filter applied */
     mir_output_filter_grayscale, /**< Colors are converted to grayscale */
     mir_output_filter_invert,    /**< Colors are inverted */
-} MirOutputFilter;
+};
 
 #endif
