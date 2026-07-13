@@ -113,6 +113,7 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
         EXPECT_THAT(scene_element_count(), Eq(1));
         auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
         EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+        EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(150, 150)));
     });
     start_server();
 }

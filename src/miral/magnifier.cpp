@@ -483,8 +483,11 @@ public:
 
             s->observer = local_observer;
             s->cursor_multiplexer = server.the_cursor_observer_multiplexer();
-            s->visual_size = clamp_visual_size(
-                geom::Size{default_capture_width, default_capture_height} * default_magnification);
+            if (s->visual_size == geom::Size{})
+            {
+                s->visual_size = clamp_visual_size(
+                    geom::Size{default_capture_width, default_capture_height} * s->magnification);
+            }
 
             auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
             s->drag.init(server, HandleKind::drag, capture_compositor_id);
