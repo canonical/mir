@@ -358,6 +358,11 @@ Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT
 
 Display name for host compositor, e.g. `wayland-0`.
 
+(mir-wayland-wayland-output)=
+### `wayland-output`
+
+Output to place in a window rather than fullscreen. Specify as WIDTHxHEIGHT (e.g. 1920x1080) or WIDTHxHEIGHT^SCALE (e.g. 1920x1080^2). Repeat the option for multiple outputs.
+
 (mir-wayland-wayland-surface-app-id)=
 ### `wayland-surface-app-id`
 
