@@ -37,10 +37,13 @@ matches the filter passed to `ConfigFile` are included.
 1. The base file is loaded first.
 1. Override files are collected from all roots and deduplicated by basename: if two roots
    provide a file with the same basename, the higher-priority root's copy is used.
-1. The resulting set is sorted lexicographically by basename and applied in that order.
+1. The resulting set is sorted lexicographically by basename and applied in
+   that order. Taking whole number prefixes into account.
 
-Using numeric prefixes (e.g., `10-site.conf`, `90-user.conf`) is a conventional way to
-control ordering predictably.
+Using numeric prefixes (e.g., `10-site.conf`, `90-user.conf`) is a conventional
+way to control ordering predictably. Our sorting works such that `5-foo.conf` <
+`10-bar.conf`. Pure lexicographic sorting would place `10-bar.conf` before
+`5-foo.conf`.
 
 When files are added or removed at runtime, priority is re-evaluated from scratch on the
 next reload.

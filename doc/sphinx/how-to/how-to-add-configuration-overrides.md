@@ -131,8 +131,9 @@ Example layout:
     10-site.conf                         # system override
 ```
 
-Override files are applied in lexicographic order of their basename. With the layout
-above, `10-site.conf` is applied before `90-user.conf`.
+Override files are applied in lexicographic order of their basename. With the
+layout above, `10-site.conf` is applied before `90-user.conf`. Whole number
+prefixes are taken into account, so `5-foo.conf` < `10-bar.conf`.
 
 A sample `demo-compositor.conf`:
 
