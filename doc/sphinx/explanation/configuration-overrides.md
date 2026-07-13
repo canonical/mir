@@ -56,7 +56,7 @@ next reload.
 | Array with empty assignment (`key=`)      | Clears all previously accumulated values; subsequent entries in the same or later files start fresh.                                                                                                              |
 | Key absent from all files                 | Handler receives the preset value (if registered with one), otherwise `std::nullopt`.                                                                                                                             |
 | Invalid scalar value                      | Handler receives the preset value (if registered with one), otherwise `std::nullopt`. A later invalid value therefore supersedes any earlier valid value.                                                         |
-| Invalid array entry                       | The invalid entry is silently ignored; valid entries in the same file are kept. If **all** entries in a transaction are invalid, the handler receives the preset value (if registered), otherwise `std::nullopt`. |
+| Invalid array entry                       | The invalid entry is ignored (a warning is logged); valid entries in the same file are kept. If **all** entries in a transaction are invalid, the handler receives the preset value (if registered), otherwise `std::nullopt`. |
 
 All attribute handlers fire before `on_done`, and both fire exactly once per `load()`
 call.
