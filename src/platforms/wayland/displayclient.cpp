@@ -351,9 +351,13 @@ void mgw::DisplayClient::Output::initialize_windowed()
     xdg_toplevel_set_max_size(shell_toplevel, w, h);
 
     if (owner_->app_id)
+    {
         xdg_toplevel_set_app_id(shell_toplevel, owner_->app_id.value().c_str());
+    }
     if (owner_->title)
+    {
         xdg_toplevel_set_title(shell_toplevel, owner_->title.value().c_str());
+    }
 
     wl_surface_set_buffer_scale(surface, windowed_buffer_scale(wc.scale));
     wl_surface_commit(surface);
