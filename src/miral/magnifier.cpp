@@ -43,6 +43,7 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
 namespace msh = mir::shell;
+namespace mc = mir::compositor;
 
 namespace
 {
@@ -88,6 +89,7 @@ public:
     HandleIndicator(
         geom::Rectangle const& initial_rect,
         HandleKind kind,
+        mc::CompositorID capture_compositor_id,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
         std::shared_ptr<ms::SceneReport> const& scene_report,
         std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>> const& display_config_registrar) :
@@ -102,7 +104,8 @@ public:
         pool{
             [allocator, initial_rect]
             { return allocator->alloc_software_buffer(initial_rect.size, mir_pixel_format_argb_8888); },
-            1}
+            1},
+        capture_compositor_id{capture_compositor_id}
     {
         auto buffer = pool.claim();
         switch (kind)
@@ -124,6 +127,13 @@ public:
         set_depth_layer(mir_depth_layer_always_on_top);
         set_focus_mode(mir_focus_mode_disabled);
         hide();
+    }
+
+    auto generate_renderables(mc::CompositorID id) const -> mg::RenderableList override
+    {
+        if (id == capture_compositor_id)
+            return {};
+        return BasicSurface::generate_renderables(id);
     }
 
 private:
@@ -318,6 +328,7 @@ private:
     }
 
     miral::SoftwareBufferPool mutable pool;
+    mc::CompositorID capture_compositor_id;
 };
 
 class Handle
@@ -325,11 +336,12 @@ class Handle
 public:
     Handle() = default;
 
-    void init(mir::Server& server, HandleKind kind)
+    void init(mir::Server& server, HandleKind kind, mc::CompositorID capture_compositor_id)
     {
         indicator = std::make_shared<HandleIndicator>(
             handle_rect,
             kind,
+            capture_compositor_id,
             server.the_buffer_allocator(),
             server.the_scene_report(),
             server.the_display_configuration_observer_registrar());
@@ -474,10 +486,11 @@ public:
             s->visual_size = clamp_visual_size(
                 geom::Size{default_capture_width, default_capture_height} * default_magnification);
 
-            s->drag.init(server, HandleKind::drag);
-            s->resize.init(server, HandleKind::resize);
-            s->zoom_in.init(server, HandleKind::zoom_in);
-            s->zoom_out.init(server, HandleKind::zoom_out);
+            auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
+            s->drag.init(server, HandleKind::drag, capture_compositor_id);
+            s->resize.init(server, HandleKind::resize, capture_compositor_id);
+            s->zoom_in.init(server, HandleKind::zoom_in, capture_compositor_id);
+            s->zoom_out.init(server, HandleKind::zoom_out, capture_compositor_id);
 
             if (s->decoupled)
             {
