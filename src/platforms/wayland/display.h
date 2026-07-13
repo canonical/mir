@@ -27,6 +27,7 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <span>
 #include <thread>
 #include <deque>
 
@@ -62,8 +63,16 @@ public:
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
+        std::optional<std::string> const& title);
+
+    Display(
+        wl_display* const wl_display,
+        std::shared_ptr<WlDisplayProvider> provider,
+        std::shared_ptr<GLConfig> const& gl_config,
+        std::shared_ptr<DisplayReport> const& report,
+        std::optional<std::string> const& app_id,
         std::optional<std::string> const& title,
-        std::vector<WaylandOutputConfig> const& output_configs = {});
+        std::span<WaylandOutputConfig const> output_configs);
 
     ~Display();
 

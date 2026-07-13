@@ -36,6 +36,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <limits>
+#include <span>
 #include <stdexcept>
 
 namespace mgw = mir::graphics::wayland;
@@ -45,7 +46,12 @@ namespace
 {
 auto windowed_buffer_scale(float scale) -> int32_t
 {
-    return static_cast<int32_t>(std::round(scale));
+    if (!std::isfinite(scale) || scale < 0.5f)
+        return 1;
+    auto const rounded = std::round(scale);
+    if (rounded > static_cast<float>(std::numeric_limits<int32_t>::max()))
+        return std::numeric_limits<int32_t>::max();
+    return static_cast<int32_t>(rounded);
 }
 }
 
@@ -60,6 +66,7 @@ public:
 
     Output(
         WaylandOutputConfig const& windowed_config,
+        geom::Point const& top_left,
         DisplayClient* owner);
 
     ~Output();
@@ -79,6 +86,7 @@ public:
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};
     xdg_toplevel* shell_toplevel{nullptr};
+    zxdg_toplevel_decoration_v1* toplevel_decoration{nullptr};
 
     std::optional<WaylandOutputConfig> windowed_config;
     std::optional<geometry::Size> pending_toplevel_size;
@@ -157,6 +165,7 @@ mgw::DisplayClient::Output::Output(
 
 mgw::DisplayClient::Output::Output(
     WaylandOutputConfig const& windowed_config,
+    geom::Point const& top_left,
     DisplayClient* owner) :
     output{nullptr},
     owner_{owner},
@@ -168,11 +177,12 @@ mgw::DisplayClient::Output::Output(
     dcout.type = DisplayConfigurationOutputType::unknown;
     dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
     dcout.current_format = mir_pixel_format_xrgb_8888;
+    dcout.top_left = top_left;
     dcout.connected = true;
     dcout.used = true;
     dcout.power_mode = mir_power_mode_on;
     dcout.orientation = MirOrientation::mir_orientation_normal;
-    dcout.scale = windowed_config.scale;
+    dcout.scale = static_cast<float>(windowed_buffer_scale(windowed_config.scale));
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
     // Populate a mode so display config policies don't disable this output.
@@ -189,6 +199,11 @@ mgw::DisplayClient::Output::~Output()
     if (output)
     {
         wl_output_destroy(output);
+    }
+
+    if (toplevel_decoration)
+    {
+        zxdg_toplevel_decoration_v1_destroy(toplevel_decoration);
     }
 
     if (shell_toplevel)
@@ -357,6 +372,17 @@ void mgw::DisplayClient::Output::initialize_windowed()
     if (owner_->title)
     {
         xdg_toplevel_set_title(shell_toplevel, owner_->title.value().c_str());
+    }
+
+    if (owner_->decoration_manager)
+    {
+        static zxdg_toplevel_decoration_v1_listener const decoration_listener{
+            [](void*, zxdg_toplevel_decoration_v1*, uint32_t){},
+        };
+        toplevel_decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(
+            owner_->decoration_manager, shell_toplevel);
+        zxdg_toplevel_decoration_v1_add_listener(toplevel_decoration, &decoration_listener, nullptr);
+        zxdg_toplevel_decoration_v1_set_mode(toplevel_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
     }
 
     wl_surface_set_buffer_scale(surface, windowed_buffer_scale(wc.scale));
@@ -551,15 +577,24 @@ mgw::DisplayClient::DisplayClient(
     wl_display* display,
     std::shared_ptr<WlDisplayProvider> provider,
     std::optional<std::string> const& app_id,
+    std::optional<std::string> const& title) :
+    DisplayClient{display, std::move(provider), app_id, title, {}}
+{
+}
+
+mgw::DisplayClient::DisplayClient(
+    wl_display* display,
+    std::shared_ptr<WlDisplayProvider> provider,
+    std::optional<std::string> const& app_id,
     std::optional<std::string> const& title,
-    std::vector<WaylandOutputConfig> const& output_configs) :
+    std::span<WaylandOutputConfig const> output_configs) :
     display{display},
     provider{std::move(provider)},
     app_id{app_id},
     title{title},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}},
-    output_configs{output_configs}
+    output_configs{output_configs.begin(), output_configs.end()}
 {
     if (!keyboard_context_)
     {
@@ -598,9 +633,12 @@ mgw::DisplayClient::DisplayClient(
         // Outputs are inserted before the next is constructed so that bound_outputs.size()
         // gives each output a unique dcout.id.
         std::lock_guard lock{outputs_mutex};
+        geom::Point top_left{0, 0};
         for (size_t i = 0; i < output_configs.size(); ++i)
         {
-            auto out = std::make_unique<Output>(output_configs[i], this);
+            auto const& config = output_configs[i];
+            auto out = std::make_unique<Output>(config, top_left, this);
+            top_left.x += geom::as_delta(config.size.width);
             uint32_t const key = std::numeric_limits<uint32_t>::max() - static_cast<uint32_t>(i);
             out->initialize_windowed();
             bound_outputs.insert(std::make_pair(key, std::move(out)));
@@ -635,6 +673,10 @@ mgw::DisplayClient::~DisplayClient()
     {
         std::lock_guard lock{outputs_mutex};
         bound_outputs.clear();
+    }
+    if (decoration_manager)
+    {
+        zxdg_decoration_manager_v1_destroy(decoration_manager);
     }
     registry.reset();
 }
@@ -692,6 +734,11 @@ void mgw::DisplayClient::new_global(
         self->shell = static_cast<decltype(self->shell)>(
             wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
         xdg_wm_base_add_listener(self->shell, &shell_listener, self);
+    }
+    else if (std::strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
+    {
+        self->decoration_manager = static_cast<zxdg_decoration_manager_v1*>(
+            wl_registry_bind(registry, id, &zxdg_decoration_manager_v1_interface, std::min(version, 1u)));
     }
 }
 
