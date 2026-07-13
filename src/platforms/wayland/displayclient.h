@@ -28,10 +28,12 @@
 
 #include "platform.h"
 #include "protocol/xdg-shell-client.h"
+#include "protocol/xdg-decoration-unstable-v1-client.h"
 #include <wayland-client.h>
 #include <EGL/egl.h>
 
 #include <functional>
+#include <span>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -57,8 +59,14 @@ public:
         wl_display* display,
         std::shared_ptr<WlDisplayProvider> provider,
         std::optional<std::string> const& app_id,
+        std::optional<std::string> const& title);
+
+    DisplayClient(
+        wl_display* display,
+        std::shared_ptr<WlDisplayProvider> provider,
+        std::optional<std::string> const& app_id,
         std::optional<std::string> const& title,
-        std::vector<WaylandOutputConfig> const& output_configs = {});
+        std::span<WaylandOutputConfig const> output_configs);
 
     virtual ~DisplayClient();
 
@@ -141,6 +149,7 @@ protected:
 
     wl_compositor* compositor = nullptr;
     xdg_wm_base* shell = nullptr;
+    zxdg_decoration_manager_v1* decoration_manager = nullptr;
     wl_seat* seat = nullptr;
     wl_shm* shm = nullptr;
 
