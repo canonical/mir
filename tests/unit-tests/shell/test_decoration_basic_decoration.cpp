@@ -297,13 +297,12 @@ auto touch_event(
     auto ev = mev::make_touch_event(
         (MirInputDeviceId)1,
         timestamp + 1s,
-        mir_input_event_modifier_none);
-    mev::add_touch(
-        *ev,
-        touch_id,
-        action, mir_touch_tooltype_finger,
-        0, 0,
-        1.0, 1.0, 1.0, 1.0);
+        mir_input_event_modifier_none,
+        {{
+            touch_id,
+            action, mir_touch_tooltype_finger,
+            {0, 0},
+            1.0, 1.0, 1.0, 1.0}});
     mev::map_positions(*ev, [&](auto global, auto)
         {
             return std::make_pair(global, geom::PointF{position});
