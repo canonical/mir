@@ -209,7 +209,7 @@ EOF
 Run the compositor:
 
 ```bash
-WAYLAND_DISPLAY=wayland-99 ./demo-config-override &
+WAYLAND_DISPLAY=wayland-99 ./build/demo-config-override &
 ```
 
 You should see lines like:

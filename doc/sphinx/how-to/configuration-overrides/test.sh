@@ -10,14 +10,14 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 # [doc:config-override:build]
-cmake .
-cmake --build .
+cmake -B build .
+cmake --build build
 # [doc:config-override:build-end]
 
 export XDG_CONFIG_HOME="$(mktemp -d)"
 export XDG_RUNTIME_DIR="$(mktemp -d)"
 export LOG_FILE="$(mktemp -p /tmp config-override.XXXXXX.log)"
-trap 'rm -rf "${XDG_CONFIG_HOME}" "${XDG_RUNTIME_DIR}" "${LOG_FILE}"' EXIT
+trap 'rm -rf "${XDG_CONFIG_HOME}" "${XDG_RUNTIME_DIR}" "${LOG_FILE}" build' EXIT
 
 mkdir -p "${XDG_CONFIG_HOME}/demo-compositor.conf.d"
 cat > "${XDG_CONFIG_HOME}/demo-compositor.conf" <<'CONF'
@@ -43,7 +43,7 @@ timeout 10 bash -e <<'INNER_EOF' || [ $? -eq 124 ]
     MIR_SERVER_VIRTUAL_OUTPUT=800x600 \
     XDG_CONFIG_HOME=${XDG_CONFIG_HOME}
 
-  WAYLAND_DISPLAY=wayland-99 ./demo-config-override > "${LOG_FILE}" 2>&1 &
+  WAYLAND_DISPLAY=wayland-99 ./build/demo-config-override > "${LOG_FILE}" 2>&1 &
   COMPOSITOR_PID=$!
 
   timeout --preserve-status 3 bash -c 'while [ ! -S "$XDG_RUNTIME_DIR/wayland-99" ]; do sleep 0.1; done'
