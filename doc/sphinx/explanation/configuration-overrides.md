@@ -41,7 +41,7 @@ matches the filter passed to `ConfigFile` are included.
    that order. Taking whole number prefixes into account.
 
 Using numeric prefixes (e.g., `10-site.conf`, `90-user.conf`) is a conventional
-way to control ordering predictably. Our sorting works such that `5-foo.conf` <
+way to control ordering predictably. Our sorting works such that `5-foo.conf` \<
 `10-bar.conf`. Pure lexicographic sorting would place `10-bar.conf` before
 `5-foo.conf`.
 
