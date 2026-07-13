@@ -34,20 +34,17 @@ int main(int argc, char const* argv[])
     MirRunner runner{argc, argv};
 
     // [doc:config-override:store]
-    mlc::Key const background_key{"display", "background"};
-    mlc::Key const workspaces_key{"display", "workspaces"};
-
     mlc::IniFileWithOverrides config;
 
     config.add_string_attribute(
-        background_key, "Background colour", "black",
+        {"display", "background"}, "Background colour", "black",
         [](mlc::Key const& key, std::optional<std::string_view> value)
         {
             std::cout << "config: " << key.to_string() << "=" << value.value_or("") << std::endl;
         });
 
     config.add_strings_attribute(
-        workspaces_key, "Workspace names",
+        {"display", "workspaces"}, "Workspace names",
         [](mlc::Key const& key, std::optional<std::span<std::string const>> values)
         {
             std::string joined;
