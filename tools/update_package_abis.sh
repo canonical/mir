@@ -1,5 +1,5 @@
 #!/bin/sh
-# Script to check and update debian packaging to match current ABIs
+# Script to check and update packaging to match current ABIs
 
 set -e
 
@@ -27,6 +27,17 @@ packages="\
     mir-platform-graphics-stub:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
     mir-platform-input-stub:MIR_SERVER_INPUT_PLATFORM_ABI"
 
+rpm_abi_macros="\
+    miral_sover:MIRAL_ABI \
+    mircommon_sover:MIRCOMMON_ABI \
+    mircore_sover:MIRCORE_ABI \
+    miroil_sover:MIROIL_ABI \
+    mirplatform_sover:MIRPLATFORM_ABI \
+    mirserver_sover:MIRSERVER_ABI \
+    mirwayland_sover:MIRWAYLAND_ABI \
+    mirplatformgraphics_sover:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
+    mirplatforminput_sover:MIR_SERVER_INPUT_PLATFORM_ABI"
+
 package_name()
 {
     echo "${1%%:*}"
@@ -42,10 +53,10 @@ print_help_and_exit()
     local prog=$(basename $0)
 
     echo "Usage: $prog [OPTION]..."
-    echo "Update debian packaging to match current ABIs"
+    echo "Update packaging to match current ABIs"
     echo ""
     echo "      --no-vcs   do not register file changes (e.g., moves) with the detected VCS"
-    echo "      --check    check for ABI mismatches without updating debian packaging"
+    echo "      --check    check for ABI mismatches without updating packaging"
     echo "                 exit status = 0: no mismatches, 1: mismatches detected"
     echo "                 use --verbose to get more information about the mismatches"
     echo "  -v, --verbose  enable verbore output"
@@ -118,6 +129,17 @@ update_control_file()
     done
 }
 
+update_rpm_spec()
+{
+    for entry in $rpm_abi_macros;
+    do
+        local macro=${entry%%:*}
+        local abi_var=${entry##*:}
+        local abi=$(eval "echo \$${abi_var}")
+        sed -i "s/^%global ${macro} [[:digit:]]\{1,\}/%global ${macro} ${abi}/" rpm/mir.spec
+    done
+}
+
 get_current_install_file()
 {
     local pkg=$1
@@ -174,6 +196,21 @@ check_control_file()
         if [ -n "$result" ];
         then
             report_abi_mismatch "debian/control contains $result, but $pkg ABI is $abi"
+        fi
+    done
+}
+
+check_rpm_spec()
+{
+    for entry in $rpm_abi_macros;
+    do
+        local macro=${entry%%:*}
+        local abi_var=${entry##*:}
+        local abi=$(eval "echo \$${abi_var}")
+        local current=$(sed -n "s/^%global ${macro} \([[:digit:]]\{1,\}\)/\1/p" rpm/mir.spec)
+        if [ "$current" != "$abi" ];
+        then
+            report_abi_mismatch "rpm/mir.spec defines ${macro} as ${current}, but ${abi_var} is ${abi}"
         fi
     done
 }
@@ -250,6 +287,7 @@ then
     check_for_unknown_packages
     check_control_file
     check_install_files
+    check_rpm_spec
     if [ "$has_check_error" = "yes" ];
     then
         log "Consider running tools/update_package_abis.sh to fix the mismatches."
@@ -259,4 +297,5 @@ else
     check_for_unknown_packages
     update_control_file
     update_install_files
+    update_rpm_spec
 fi
