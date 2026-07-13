@@ -24,6 +24,8 @@
 #include <mir/server.h>
 #include <mir/synchronised.h>
 #include <mir/graphics/display.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_observer.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
@@ -56,8 +58,17 @@ auto const max_magnification = 8.0f;
 /// Diameter in pixels of the circular drag handle shown at the corner of the magnifier.
 auto const drag_handle_diameter = 48;
 
+/// Vertical gap between the zoom-in and zoom-out buttons in their stack.
+auto const zoom_stack_padding = 8;
+
+/// Height of the vertical zoom-in/zoom-out button stack.
+auto const zoom_stack_height = 2 * drag_handle_diameter + zoom_stack_padding;
+
 /// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
-auto const min_visual_dimension = 150;
+/// Derived so the drag handle (bottom-right corner) and the zoom button stack
+/// (right edge, vertically centred) never overlap each other: the drag handle
+/// needs a full diameter of clearance both above and below the centred stack.
+auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height;
 
 /// Magnification step applied by each zoom button press.
 auto const zoom_step = 0.5f;
@@ -441,6 +452,48 @@ geom::Point center(geom::Point const& top_left, geom::Size const& size)
 
 class miral::Magnifier::Self
 {
+private:
+    struct State;
+
+    class DisplayConfigObserver : public mg::DisplayConfigurationObserver
+    {
+    public:
+        explicit DisplayConfigObserver(mir::Synchronised<State>& state) : state{state} {}
+
+        void initial_configuration(
+            std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        {
+            update_bounds(config);
+        }
+
+        void configuration_applied(
+            std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        {
+            update_bounds(config);
+        }
+
+        void base_configuration_updated(
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+        void session_configuration_applied(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&) override {}
+        void session_configuration_removed(std::shared_ptr<ms::Session> const&) override {}
+        void configuration_failed(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override {}
+        void catastrophic_configuration_error(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override {}
+        void configuration_updated_for_session(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+
+    private:
+        void update_bounds(std::shared_ptr<mg::DisplayConfiguration const> const& config);
+
+        mir::Synchronised<State>& state;
+    };
+
 public:
     Self()
     {
@@ -471,17 +524,20 @@ public:
         server.add_init_callback([&]
         {
             auto local_observer = std::make_shared<Observer>(this);
+            auto local_display_config_observer = std::make_shared<DisplayConfigObserver>(state);
 
             // Keep screen bounds up to date to respond to display
             // (re)configuration, e.g. resizing a nested window.
             // Note: register_interest may call initial_configuration() synchronously,
             // which calls update_bounds(), which locks state — so we must not hold
             // the state lock across this call.
+            server.the_display_configuration_observer_registrar()->register_interest(local_display_config_observer);
             server.the_cursor_observer_multiplexer()->register_interest(local_observer);
 
             auto s = state.lock();
 
             s->observer = local_observer;
+            s->display_config_observer = local_display_config_observer;
             s->cursor_multiplexer = server.the_cursor_observer_multiplexer();
             if (s->visual_size == geom::Size{})
             {
@@ -502,7 +558,8 @@ public:
                 if (auto const surf = s->surface.lock(); surf && s->default_enabled)
                 {
                     auto const logical_rect = render_scene_into_surface.capture_area();
-                    apply_visual_geometry(surf, logical_rect.top_left, *s, render_scene_into_surface);
+                    apply_positioned_geometry(
+                        surf, logical_rect.top_left, *s, render_scene_into_surface);
                     s->show_all_handles();
                 }
             }
@@ -527,12 +584,14 @@ public:
 
             std::shared_ptr<mi::CursorObserverMultiplexer> local_cursor_mux;
             std::shared_ptr<Observer> local_observer;
+            std::shared_ptr<DisplayConfigObserver> local_display_config_observer;
             Handle local_drag, local_resize, local_zoom_in, local_zoom_out;
             {
                 auto s = state.lock();
 
                 local_cursor_mux = s->cursor_multiplexer.lock();
                 local_observer = s->observer;
+                local_display_config_observer = std::exchange(s->display_config_observer, {});
                 local_drag = std::exchange(s->drag, {});
                 local_resize = std::exchange(s->resize, {});
                 local_zoom_in = std::exchange(s->zoom_in, {});
@@ -541,6 +600,12 @@ public:
 
             if (local_cursor_mux && local_observer)
                 local_cursor_mux->unregister_interest(*local_observer);
+
+            if (local_display_config_observer)
+            {
+                server.the_display_configuration_observer_registrar()->unregister_interest(
+                    *local_display_config_observer);
+            }
 
             for (auto* handle : {&local_drag, &local_resize, &local_zoom_in, &local_zoom_out})
                 handle->reset();
@@ -582,10 +647,11 @@ public:
     {
         auto s = state.lock();
         s->visual_size = clamp_visual_size(size * s->magnification);
-        auto const logical_top_left = surface_top_left_from_cursor(size, s->cursor_pos);
+        auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
+        auto const logical_top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
 
         if (auto const surf = s->surface.lock())
-            apply_visual_geometry(surf, logical_top_left, *s, render_scene_into_surface);
+            apply_positioned_geometry(surf, logical_top_left, *s, render_scene_into_surface);
     }
 
     geom::Size current_size() const
@@ -609,7 +675,8 @@ public:
                 if (s->default_enabled)
                 {
                     auto const logical_rect = render_scene_into_surface.capture_area();
-                    s->reposition_all_handles(logical_rect.top_left, logical_rect.size, s->magnification);
+                    apply_positioned_geometry(
+                        surf, logical_rect.top_left, *s, render_scene_into_surface);
                     s->show_all_handles();
                 }
             }
@@ -631,7 +698,6 @@ public:
 
 private:
     class Observer;
-    class DisplayConfigObserver;
 
     struct State
     {
@@ -654,9 +720,97 @@ private:
             return {x, y, w, h};
         }
 
-        /// Computes the position of the circular drag handle indicator.
-        ///
-        /// The handle is placed at the visual bottom-right corner of the magnifier.
+        /// Translates logical_top_left, if necessary, so the resulting visual
+        /// rect fits within screen_bounds (preferring to keep the top-left edge
+        /// on-screen if the rect is bigger than the screen in some dimension).
+        /// Used when placing the magnifier so its handles don't end up
+        /// off-screen and unreachable, e.g. after enabling/decoupling while the
+        /// cursor was near a screen edge. Returns logical_top_left unchanged if
+        /// screen bounds aren't known yet.
+        geom::Point clamp_position_to_screen(
+            geom::Point const& logical_top_left,
+            geom::Size const& logical_size,
+            float mag) const
+        {
+            if (screen_bounds.size == geom::Size{})
+                return logical_top_left;
+
+            auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
+            int const screen_left = screen_bounds.top_left.x.as_int();
+            int const screen_top = screen_bounds.top_left.y.as_int();
+            int const screen_right = screen_left + screen_bounds.size.width.as_int();
+            int const screen_bottom = screen_top + screen_bounds.size.height.as_int();
+
+            int dx = 0;
+            if (vis_x < screen_left)
+                dx = screen_left - vis_x;
+            else if (vis_x + vis_w > screen_right)
+                dx = screen_right - (vis_x + vis_w);
+
+            int dy = 0;
+            if (vis_y < screen_top)
+                dy = screen_top - vis_y;
+            else if (vis_y + vis_h > screen_bottom)
+                dy = screen_bottom - (vis_y + vis_h);
+
+            return logical_top_left + geom::Displacement{geom::DeltaX{dx}, geom::DeltaY{dy}};
+        }
+
+        /// Maps the visual magnifier's position across the screen to the logical
+        /// capture's available range. A visual edge flush with the screen maps
+        /// to the corresponding capture edge, with proportional movement between.
+        geom::Point capture_position_for_surface(
+            geom::Point const& surface_top_left,
+            geom::Size const& logical_size,
+            float mag) const
+        {
+            if (screen_bounds.size == geom::Size{})
+                return surface_top_left;
+
+            auto const visual = compute_visual_bounds(surface_top_left, logical_size, mag);
+            int const screen_left = screen_bounds.top_left.x.as_int();
+            int const screen_top = screen_bounds.top_left.y.as_int();
+            int const screen_width = screen_bounds.size.width.as_int();
+            int const screen_height = screen_bounds.size.height.as_int();
+
+            auto const map_axis = [](
+                int visual_start,
+                int visual_extent,
+                int logical_extent,
+                int screen_start,
+                int screen_extent)
+            {
+                int const visual_travel = screen_extent - visual_extent;
+                int const capture_travel = screen_extent - logical_extent;
+
+                if (visual_travel <= 0)
+                    return screen_start + capture_travel / 2;
+
+                double const progress = std::clamp(
+                    static_cast<double>(visual_start - screen_start) / visual_travel,
+                    0.0,
+                    1.0);
+                return screen_start + static_cast<int>(std::round(progress * capture_travel));
+            };
+
+            return geom::Point{
+                map_axis(
+                    visual.x,
+                    visual.w,
+                    logical_size.width.as_int(),
+                    screen_left,
+                    screen_width),
+                map_axis(
+                    visual.y,
+                    visual.h,
+                    logical_size.height.as_int(),
+                    screen_top,
+                    screen_height)};
+        }
+
+        /// Computes the position of the circular drag handle indicator, inset from
+        /// the bottom-right corner of the visual magnifier so it sits within the
+        /// surface's own bounds.
         geom::Point compute_drag_handle_position(
             geom::Point const& logical_top_left,
             geom::Size const& logical_size,
@@ -708,17 +862,15 @@ private:
         {
             auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
-            int const vertical_padding = 8;
             int const stack_width = drag_handle_diameter;
-            int const stack_height = 2 * drag_handle_diameter + vertical_padding;
 
             int const x = vis_x + vis_w - stack_width;
-            int const y = vis_y + vis_h / 2 - stack_height / 2;
+            int const y = vis_y + vis_h / 2 - zoom_stack_height / 2;
 
-            return {geom::Point{x, y}, geom::Point{x, y + drag_handle_diameter + vertical_padding}};
+            return {geom::Point{x, y}, geom::Point{x, y + drag_handle_diameter + zoom_stack_padding}};
         }
 
-        /// Repositions all handle and button indicators for the given capture geometry.
+        /// Repositions all handle and button indicators for the given surface geometry.
         /// No-op when not in decoupled mode.
         void reposition_all_handles(
             geom::Point const& tl,
@@ -742,20 +894,33 @@ private:
             {
                 auto const old_logical_rect = render_scene_into_surface.capture_area();
 
-                // The visual magnifier is scaled about the centre of its logical
-                // capture area. Keep that centre fixed so changing zoom does not
-                // shift the on-screen position.
-                geom::Point const old_visual_centre =
-                    center(old_logical_rect.top_left, old_logical_rect.size);
+                if (decoupled)
+                {
+                    auto const old_surface_centre =
+                        center(surf->top_left(), old_logical_rect.size);
 
-                magnification = new_magnification;
-                auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
+                    magnification = new_magnification;
+                    auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
+                    geom::Point const new_surface_top_left{
+                        old_surface_centre.x.as_int() - new_logical_size.width.as_int() / 2,
+                        old_surface_centre.y.as_int() - new_logical_size.height.as_int() / 2};
 
-                geom::Point const new_logical_top_left{
-                    old_visual_centre.x.as_int() - new_logical_size.width.as_int() / 2,
-                    old_visual_centre.y.as_int() - new_logical_size.height.as_int() / 2};
+                    apply_positioned_geometry(
+                        surf, new_surface_top_left, *this, render_scene_into_surface);
+                }
+                else
+                {
+                    auto const old_logical_centre =
+                        center(old_logical_rect.top_left, old_logical_rect.size);
 
-                apply_visual_geometry(surf, new_logical_top_left, *this, render_scene_into_surface);
+                    magnification = new_magnification;
+                    auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
+                    geom::Point const new_logical_top_left{
+                        old_logical_centre.x.as_int() - new_logical_size.width.as_int() / 2,
+                        old_logical_centre.y.as_int() - new_logical_size.height.as_int() / 2};
+
+                    apply_visual_geometry(surf, new_logical_top_left, *this, render_scene_into_surface);
+                }
             }
             else
             {
@@ -803,6 +968,7 @@ private:
         std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
 
         geom::Point cursor_pos;
+        geom::Rectangle screen_bounds;
         float magnification{default_magnification};
         /// The physical (screen) size of the magnifier.  When the magnification
         /// level changes the logical capture size is recalculated from this so
@@ -812,20 +978,53 @@ private:
         bool decoupled{false};
     };
 
-    /// Sets the logical capture area and transform so that the magnifier
-    /// renders with the supplied logical top-left and keeps the same physical
-    /// (visual) footprint.  The current visual size is taken from the state.
+    /// Applies independent logical capture and surface presentation positions.
+    static void apply_geometry(
+        std::shared_ptr<ms::Surface> const& surf,
+        geom::Point const& logical_top_left,
+        geom::Point const& surface_top_left,
+        State& s,
+        RenderSceneIntoSurface& render_scene_into_surface)
+    {
+        auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
+        render_scene_into_surface.capture_area(geom::Rectangle{logical_top_left, logical_size});
+        // capture_area() moves the backing surface to the capture position, so
+        // apply the independent presentation position afterwards.
+        surf->move_to(surface_top_left);
+        surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s.magnification, s.magnification, 1)));
+        s.reposition_all_handles(surface_top_left, logical_size, s.magnification);
+    }
+
+    /// Applies normal placement, where capture and presentation positions match.
     static void apply_visual_geometry(
         std::shared_ptr<ms::Surface> const& surf,
         geom::Point const& logical_top_left,
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
+        apply_geometry(surf, logical_top_left, logical_top_left, s, render_scene_into_surface);
+    }
+
+    /// Keeps the visual magnifier on-screen and maps its position proportionally
+    /// onto the logical capture's available screen range.
+    static void apply_positioned_geometry(
+        std::shared_ptr<ms::Surface> const& surf,
+        geom::Point const& desired_top_left,
+        State& s,
+        RenderSceneIntoSurface& render_scene_into_surface)
+    {
+        if (!s.decoupled)
+        {
+            apply_visual_geometry(surf, desired_top_left, s, render_scene_into_surface);
+            return;
+        }
+
         auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
-        surf->move_to(logical_top_left);
-        render_scene_into_surface.capture_area(geom::Rectangle{logical_top_left, logical_size});
-        surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s.magnification, s.magnification, 1)));
-        s.reposition_all_handles(logical_top_left, logical_size, s.magnification);
+        auto const surface_top_left =
+            s.clamp_position_to_screen(desired_top_left, logical_size, s.magnification);
+        auto const logical_top_left =
+            s.capture_position_for_surface(surface_top_left, logical_size, s.magnification);
+        apply_geometry(surf, logical_top_left, surface_top_left, s, render_scene_into_surface);
     }
 
     /// Applies visual geometry with the magnifier's logical top-left computed
@@ -836,8 +1035,9 @@ private:
         RenderSceneIntoSurface& render_scene_into_surface)
     {
         auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
-        auto const top_left = surface_top_left_from_cursor(logical_size, s.cursor_pos);
-        apply_visual_geometry(surf, top_left, s, render_scene_into_surface);
+        auto top_left = surface_top_left_from_cursor(logical_size, s.cursor_pos);
+
+        apply_positioned_geometry(surf, top_left, s, render_scene_into_surface);
     }
 
     class Observer : public mi::CursorObserver
@@ -961,8 +1161,11 @@ private:
     protected:
         void on_drag_start(State& s, int, int) override
         {
-            if (auto const surf = s.surface.lock())
-                drag_start_magnifier_pos = surf->top_left();
+            auto const surf = s.surface.lock();
+            if (!surf)
+                return;
+
+            drag_start_magnifier_pos = surf->top_left();
         }
 
         void on_drag_move(State& s, int ax, int ay) override
@@ -970,12 +1173,15 @@ private:
             geom::Displacement const delta{
                 geom::DeltaX{ax} - grab_abs.dx,
                 geom::DeltaY{ay} - grab_abs.dy};
-            geom::Point const new_logical_tl{
+            geom::Point const new_surface_top_left{
                 drag_start_magnifier_pos.x + delta.dx,
                 drag_start_magnifier_pos.y + delta.dy};
 
             if (auto const surf = s.surface.lock())
-                self->apply_visual_geometry(surf, new_logical_tl, s, self->render_scene_into_surface);
+            {
+                self->apply_positioned_geometry(
+                    surf, new_surface_top_left, s, self->render_scene_into_surface);
+            }
         }
 
         geom::Point drag_start_magnifier_pos{};
@@ -1002,7 +1208,8 @@ private:
     ///
     /// on_drag_start records the pinned visual corner. on_drag_move measures the visual
     /// extent from pin to finger, converts it back to a logical size (/ mag), then
-    /// back-solves the logical top-left so the pinned visual corner stays put.
+    /// back-solves the surface top-left so the pinned visual corner stays put unless
+    /// keeping the resized magnifier on-screen requires clamping it.
     class ResizeDragObserver : public HandleObserver
     {
     public:
@@ -1052,7 +1259,7 @@ private:
             int const w = new_logical_size.width.as_int();
             int const h = new_logical_size.height.as_int();
 
-            geom::Point const new_logical_tl{
+            geom::Point const new_surface_top_left{
                 pin_pos.x.as_int() - outer * w,
                 pin_pos.y.as_int() - outer * h,
             };
@@ -1063,7 +1270,8 @@ private:
 
             s.visual_size = new_logical_size * mag;
 
-            self->apply_visual_geometry(surf, new_logical_tl, s, self->render_scene_into_surface);
+            self->apply_positioned_geometry(
+                surf, new_surface_top_left, s, self->render_scene_into_surface);
         }
 
         geom::Point pin_pos{};
@@ -1134,6 +1342,21 @@ private:
     RenderSceneIntoSurface render_scene_into_surface;
     mir::Synchronised<State> state;
 };
+
+void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
+    std::shared_ptr<mg::DisplayConfiguration const> const& config)
+{
+    geom::Rectangles rects;
+    config->for_each_output(
+        [&rects](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.used && output.connected)
+                rects.add(output.extents());
+        });
+
+    auto s = state.lock();
+    s->screen_bounds = rects.size() > 0 ? rects.bounding_rectangle() : geom::Rectangle{};
+}
 
 miral::Magnifier::Magnifier()
     : self(std::make_shared<Self>())

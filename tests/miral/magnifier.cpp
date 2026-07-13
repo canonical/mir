@@ -279,11 +279,16 @@ struct MagnifierHandleTest : MagnifierTest
     /// Returns the centre of the scene element at `index` as a float point.
     geom::PointF element_center(int index)
     {
-        auto const elements = server().the_scene()->scene_elements_for(this);
-        auto const pos = elements.at(static_cast<std::size_t>(index))->renderable()->screen_position();
+        auto const pos = element_rectangle(index);
         return geom::PointF{
             static_cast<float>(pos.top_left.x.as_int() + pos.size.width.as_int() / 2.0f),
             static_cast<float>(pos.top_left.y.as_int() + pos.size.height.as_int() / 2.0f)};
+    }
+
+    geom::Rectangle element_rectangle(int index)
+    {
+        auto const elements = server().the_scene()->scene_elements_for(this);
+        return elements.at(static_cast<std::size_t>(index))->renderable()->screen_position();
     }
 
     // Scene-element indices matching add_init_callback creation order.
@@ -387,6 +392,48 @@ TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier)
 
     EXPECT_THAT(after.x.as_int(), Eq(before.x.as_int() + 20));
     EXPECT_THAT(after.y.as_int(), Eq(before.y.as_int()));
+}
+
+TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier_flush_to_screen_corners)
+{
+    auto from = element_center(drag_handle_index);
+    auto visual_top_left = element_rectangle(resize_handle_index).top_left;
+    drag(
+        from,
+        geom::PointF{
+            from.x.as_value() - visual_top_left.x.as_int(),
+            from.y.as_value() - visual_top_left.y.as_int()});
+
+    EXPECT_THAT(element_rectangle(resize_handle_index).top_left, Eq(geom::Point{0, 0}));
+
+    from = element_center(drag_handle_index);
+    auto const drag_rect = element_rectangle(drag_handle_index);
+    int const visual_right = drag_rect.top_left.x.as_int() + drag_rect.size.width.as_int();
+    int const visual_bottom = drag_rect.top_left.y.as_int() + drag_rect.size.height.as_int();
+    drag(
+        from,
+        geom::PointF{
+            from.x.as_value() + 800 - visual_right,
+            from.y.as_value() + 600 - visual_bottom});
+
+    auto const final_drag_rect = element_rectangle(drag_handle_index);
+    EXPECT_THAT(
+        final_drag_rect.top_left.x.as_int() + final_drag_rect.size.width.as_int(),
+        Eq(800));
+    EXPECT_THAT(
+        final_drag_rect.top_left.y.as_int() + final_drag_rect.size.height.as_int(),
+        Eq(600));
+}
+
+TEST_F(MagnifierHandleTest, double_clicking_drag_handle_does_not_move_magnifier)
+{
+    auto const before = magnifier_top_left();
+    auto const handle_center = element_center(drag_handle_index);
+
+    click(handle_center);
+    click(handle_center);
+
+    EXPECT_THAT(magnifier_top_left(), Eq(before));
 }
 
 TEST_F(MagnifierHandleTest, zoom_in_handle_increases_magnification)
