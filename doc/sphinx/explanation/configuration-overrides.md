@@ -84,10 +84,12 @@ handlers.
 The two are composed explicitly:
 
 ```cpp
-ConfigFile config_file{
+miral::live_config::IniFileWithOverrides config;
+
+miral::ConfigFile config_file{
     runner,
     "myapp.conf",
-    ConfigFile::Mode::reload_on_change,
+    miral::ConfigFile::Mode::reload_on_change,
     [&config](miral::live_config::OverridesList const& changes) { config.load(changes); },
     ".conf"};
 ```
