@@ -43,7 +43,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-// Returns the integer buffer scale for a WaylandOutputConfig's scale value
 auto windowed_buffer_scale(float scale) -> int32_t
 {
     return static_cast<int32_t>(std::round(scale));
@@ -59,7 +58,6 @@ public:
         wl_output* output,
         DisplayClient* owner);
 
-    // Constructor for windowed mode (not tied to a host wl_output)
     Output(
         WaylandOutputConfig const& windowed_config,
         DisplayClient* owner);
@@ -100,7 +98,6 @@ public:
     void scale(int32_t factor);
     void done();
 
-    // Initialize a windowed (non-fullscreen) surface with fixed size
     void initialize_windowed();
 
     // XDG shell events
@@ -348,7 +345,6 @@ void mgw::DisplayClient::Output::initialize_windowed()
     shell_toplevel = xdg_surface_get_toplevel(shell_surface);
     xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
-    // Set fixed min/max size to disable resizing
     int const w = wc.size.width.as_int();
     int const h = wc.size.height.as_int();
     xdg_toplevel_set_min_size(shell_toplevel, w, h);
@@ -361,8 +357,6 @@ void mgw::DisplayClient::Output::initialize_windowed()
 
     wl_surface_set_buffer_scale(surface, windowed_buffer_scale(wc.scale));
     wl_surface_commit(surface);
-
-    // After the next roundtrip the surface should be configured
 }
 
 void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
@@ -609,7 +603,6 @@ mgw::DisplayClient::DisplayClient(
         }
     }
 
-    // Keep roundtripping until surfaces for all outputs are initialized
     while (has_uninitialized_output())
     {
         wl_display_roundtrip(display);
