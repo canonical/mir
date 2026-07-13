@@ -76,8 +76,8 @@ end-before: '[doc:config-override:includes-end]'
 ---
 ```
 
-Create an `IniFileWithOverrides`, register typed attributes, and attach an
-`on_done` callback that fires once per load:
+Create an `IniFileWithOverrides` instance, register typed attributes, and
+attach an `on_done` callback that fires once per load:
 
 ```{literalinclude} ./configuration-overrides/main.cpp
 ---
@@ -88,14 +88,15 @@ dedent: 4
 ---
 ```
 
-Each attribute handler receives the registered {class}`miral::live_config::Key` and an
-`std::optional` value. The value is `std::nullopt` when the key is absent from all files;
-`add_string_attribute` also accepts a preset default (here `"black"`) used in that case.
+Each attribute handler receives the registered {class}`miral::live_config::Key`
+and an `std::optional` value. The value is `std::nullopt` when the key is
+absent from all files; when adding attributes, it's possible to provide a
+preset default (here `"black"`).
 
 ## Attach `ConfigFile`
 
-Construct `ConfigFile` with the override-aware constructor, passing the store's `load`
-method as the callback and a file extension to filter override files:
+Construct `ConfigFile` with the override-aware constructor, using the `load`
+method in the callback and a file extension to filter override files:
 
 ```{literalinclude} ./configuration-overrides/main.cpp
 ---
@@ -105,9 +106,6 @@ end-before: '[doc:config-override:config-file-end]'
 dedent: 4
 ---
 ```
-
-Keep `config_file` alive for the compositor lifetime — destroying it stops reload
-monitoring.
 
 ## Where files live
 
