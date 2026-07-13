@@ -47,10 +47,14 @@ namespace
 auto windowed_buffer_scale(float scale) -> int32_t
 {
     if (!std::isfinite(scale) || scale < 0.5f)
+    {
         return 1;
+    }
     auto const rounded = std::round(scale);
     if (rounded > static_cast<float>(std::numeric_limits<int32_t>::max()))
+    {
         return std::numeric_limits<int32_t>::max();
+    }
     return static_cast<int32_t>(rounded);
 }
 }
