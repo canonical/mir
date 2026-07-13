@@ -138,18 +138,23 @@ above, `10-site.conf` is applied before `90-user.conf`.
 
 A sample `demo-compositor.conf`:
 
-```ini
-display_background=black
-display_workspaces=home
-display_workspaces=work
+```{literalinclude} ./configuration-overrides/test.sh
+---
+language: bash
+start-after: '[doc:config-override:example-conf]'
+end-before: '[doc:config-override:example-conf-end]'
+---
 ```
 
 A sample `demo-compositor.conf.d/90-user.conf` that overrides the background and adds
 a workspace:
 
-```ini
-display_background=blue
-display_workspaces=gaming
+```{literalinclude} ./configuration-overrides/test.sh
+---
+language: bash
+start-after: '[doc:config-override:example-override]'
+end-before: '[doc:config-override:example-override-end]'
+---
 ```
 
 After merging: `display_background` is `blue` (last-writer-wins); `display_workspaces`

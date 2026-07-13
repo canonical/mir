@@ -21,13 +21,17 @@ trap 'rm -rf "${XDG_CONFIG_HOME}" "${XDG_RUNTIME_DIR}" "${LOG_FILE}"' EXIT
 
 mkdir -p "${XDG_CONFIG_HOME}/demo-compositor.conf.d"
 cat > "${XDG_CONFIG_HOME}/demo-compositor.conf" <<'CONF'
+# [doc:config-override:example-conf]
 display_background=black
 display_workspaces=home
 display_workspaces=work
+# [doc:config-override:example-conf-end]
 CONF
 cat > "${XDG_CONFIG_HOME}/demo-compositor.conf.d/90-user.conf" <<'CONF'
+# [doc:config-override:example-override]
 display_background=blue
 display_workspaces=gaming
+# [doc:config-override:example-override-end]
 CONF
 
 timeout 10 bash -e <<'INNER_EOF' || [ $? -eq 124 ]
