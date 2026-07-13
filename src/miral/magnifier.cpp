@@ -544,9 +544,7 @@ public:
             if (s->decoupled)
             {
                 // Place surface at last known cursor position when enabling in decoupled mode.
-                auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
-                auto const top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
-                apply_visual_geometry(surf, top_left, *s, render_scene_into_surface);
+                place_at_cursor(surf, *s, render_scene_into_surface);
                 s->show_all_handles();
             }
             surf->show();
@@ -610,9 +608,7 @@ public:
 
             if (auto const surf = s->surface.lock(); surf && s->default_enabled)
             {
-                auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
-                auto const top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
-                apply_visual_geometry(surf, top_left, *s, render_scene_into_surface);
+                place_at_cursor(surf, *s, render_scene_into_surface);
             }
         }
     }
@@ -816,6 +812,18 @@ private:
         s.reposition_all_handles(logical_top_left, logical_size, s.magnification);
     }
 
+    /// Applies visual geometry with the magnifier's logical top-left computed
+    /// from its current visual size so the surface is centred on the cursor.
+    static void place_at_cursor(
+        std::shared_ptr<ms::Surface> const& surf,
+        State& s,
+        RenderSceneIntoSurface& render_scene_into_surface)
+    {
+        auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
+        auto const top_left = surface_top_left_from_cursor(logical_size, s.cursor_pos);
+        apply_visual_geometry(surf, top_left, s, render_scene_into_surface);
+    }
+
     class Observer : public mi::CursorObserver
     {
     public:
@@ -834,9 +842,7 @@ private:
             if (!surf)
                 return;
 
-            auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
-            auto const capture_position = surface_top_left_from_cursor(logical_size, s->cursor_pos);
-            self->apply_visual_geometry(surf, capture_position, *s, self->render_scene_into_surface);
+            self->place_at_cursor(surf, *s, self->render_scene_into_surface);
         }
 
         void pointer_usable() override {}
@@ -1081,9 +1087,7 @@ private:
             if (action == mir_pointer_action_button_down &&
                 mir_pointer_event_button_state(pev, mir_pointer_button_primary))
             {
-                s->set_magnification(
-                    std::clamp(s->magnification + delta, min_magnification + zoom_step, max_magnification),
-                    self->render_scene_into_surface);
+                apply_zoom(*s);
             }
         }
 
@@ -1095,10 +1099,16 @@ private:
             auto s = self->state.lock();
             if (action == mir_touch_action_down)
             {
-                s->set_magnification(
-                    std::clamp(s->magnification + delta, min_magnification + zoom_step, max_magnification),
-                    self->render_scene_into_surface);
+                apply_zoom(*s);
             }
+        }
+
+        /// Clamps and applies the zoom step. Caller must hold self->state.
+        void apply_zoom(State& s)
+        {
+            s.set_magnification(
+                std::clamp(s.magnification + delta, min_magnification + zoom_step, max_magnification),
+                self->render_scene_into_surface);
         }
 
         Self* self;
