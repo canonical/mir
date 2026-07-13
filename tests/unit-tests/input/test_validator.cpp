@@ -61,13 +61,13 @@ void add_another_touch(mir::EventUPtr const& ev, MirTouchId id, MirTouchAction a
 
 mir::EventUPtr make_touch(MirTouchId id, MirTouchAction action)
 {
-    auto ev = mev::make_touch_event(
+    return mev::make_touch_event(
         MirInputDeviceId(0), std::chrono::nanoseconds(0),
-        mir_input_event_modifier_none);
-    add_another_touch(ev, id, action);
-    return ev;
+        mir_input_event_modifier_none,
+        {{
+                id, action, mir_touch_tooltype_finger,
+                {0, 0}, 0, 0, 0, 0}});
 }
-
 }
 
 // We make a touch that represents two unseen touch ID's changing
