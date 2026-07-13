@@ -5,7 +5,7 @@
 # XDG_CONFIG_HOME, runs the compositor against the virtual platform, and
 # asserts the merged output reflects override precedence.
 
-set -e
+set -euo pipefail
 
 cd "$(dirname "$0")"
 
