@@ -178,6 +178,13 @@ mgw::DisplayClient::Output::Output(
     dcout.scale = windowed_config.scale;
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+    // Populate a mode so display config policies don't disable this output.
+    // Policies check modes.empty() and set used=false when true, which prevents
+    // advise_output_create() from being called and leaves the window manager with
+    // no display areas (falling back to a 100x100 placeholder area).
+    dcout.modes.push_back({windowed_config.size, 60.0f});
+    dcout.current_mode_index = 0;
+    dcout.preferred_mode_index = 0;
 }
 
 mgw::DisplayClient::Output::~Output()
