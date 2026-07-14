@@ -8,10 +8,15 @@ apt-get --yes --no-install-recommends install \
   clang \
   dmz-cursor-theme \
   fonts-ubuntu \
+  glmark-es2 \
+  glmark-es2-wayland \
+  glxgears \
+  mesa-utils \
   mold \
   ninja-build \
   python3-venv \
   ripgrep \
+  xterm \
   yq
 apt-get --no-install-recommends build-dep mir
 
