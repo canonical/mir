@@ -117,6 +117,11 @@ give test steps, and complete the checklist. Reviewers focus on:
 - **Test coverage**: Are new behaviors covered? Are existing tests still valid?
 - **Simplicity**: Prefer `value_or()` over conditionals, `std::erase_if` over manual loops, clear names over clever tricks.
 
+## Commit and session hygiene
+
+- Run `pre-commit run` after `git add` and before `git commit` to surface linting, formatting, and static-check issues in the staged change set.
+- If `pre-commit run` reports failures or applies fixes, restage as needed and re-run checks before committing.
+
 ## Additional resources
 
 - [Hacking Guide](../HACKING.md)
