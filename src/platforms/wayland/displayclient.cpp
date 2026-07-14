@@ -468,20 +468,10 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
             if (windowed_config)
             {
                 dcout.modes[0].size = output_size;
-                {
-                    std::lock_guard lock{mutex};
-                    provider->resize(output_size);
-                }
             }
-            else
             {
-                {
-                    std::lock_guard lock{mutex};
-                    provider = std::make_shared<WlDisplayAllocator>(
-                        owner_->provider->get_egl_display(),
-                        surface,
-                        output_size);
-                }
+                std::lock_guard lock{mutex};
+                provider->resize(output_size);
             }
             owner_->on_display_config_changed();
         }
