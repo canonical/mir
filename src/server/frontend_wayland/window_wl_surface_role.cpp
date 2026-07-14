@@ -368,10 +368,10 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     spec().update_from(state.surface_spec);
 
     surface.value().commit(state);
-    handle_commit();
-
     auto size = pending_size();
     observer->latest_client_size(size);
+
+    handle_commit();
 
     if (auto const scene_surface = weak_scene_surface.lock())
     {
