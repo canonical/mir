@@ -49,7 +49,7 @@ const char* const wayland_surface_title_option_description{"Title of the window 
 const char* const wayland_outputs_option_name{"wayland-output"};
 const char* const wayland_outputs_option_description{
     "Output to place in a window rather than fullscreen. "
-    "Specify as WIDTHxHEIGHT (e.g. 1920x1080) or WIDTHxHEIGHT^SCALE (e.g. 1920x1080^2). "
+    "Specify as `WIDTHxHEIGHT` (e.g. `1920x1080`) or `WIDTHxHEIGHT^SCALE` (e.g. `1920x1080^2`). "
     "Repeat the option for multiple outputs."
 };
 }
