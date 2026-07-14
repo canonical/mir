@@ -86,6 +86,12 @@ Markdown formatting (mdformat), and a large-files check. Run `pre-commit run --a
 - **Comments are for non-obvious intent**: Do not add comments that merely restate code. Add comments only when they capture rationale, invariants, caveats, or constraints that are not clear from the code itself.
 - **Ask to align**: Ask the user questions to align and ground yourself often. When requirements are ambiguous, scope is unclear, or multiple reasonable approaches exist, confirm with the user rather than guessing.
 
+## Communication and evidence
+
+- In commentary (status updates, summaries, and recommendations), when asserting facts about external codebases, standards/specs, tools, or other non-local sources, include a precise reference so the claim is verifiable.
+- Prefer primary sources and stable pointers: repository/file/line, commit SHA, official docs URL, specification section, or release notes.
+- If you cannot provide a reliable reference for an external factual claim, qualify it as uncertain and avoid presenting it as established fact.
+
 The full C++ style guide is `doc/sphinx/contributing/reference/cppguide.md`; day-to-day highlights
 are in `cpp.instructions.md`.
 
