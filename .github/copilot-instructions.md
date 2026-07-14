@@ -122,6 +122,7 @@ give test steps, and complete the checklist. Reviewers focus on:
 
 - Run `pre-commit run` after `git add` and before `git commit` to surface linting, formatting, and static-check issues in the staged change set.
 - If `pre-commit run` reports failures or applies fixes, restage as needed and re-run checks before committing.
+- At the end of a session, briefly consider whether user guidance revealed gaps in these LLM instructions and, when it did, propose or apply focused instruction improvements.
 
 ## Additional resources
 
