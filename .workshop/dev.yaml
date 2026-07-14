@@ -67,6 +67,8 @@ actions:
 
     export MIR_SERVER_CURSOR=software
     export MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:wayland
+    # TODO: uncomment once #5090 lands
+    # export MIR_SERVER_WAYLAND_OUTPUT=1280x1024
     export MIR_SERVER_WAYLAND_HOST=$WAYLAND_DISPLAY
     export WAYLAND_DISPLAY=wayland-0
     "$@"
