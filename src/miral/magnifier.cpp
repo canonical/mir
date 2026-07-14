@@ -55,6 +55,9 @@ auto const max_magnification = 8.0f;
 /// Diameter in pixels of the circular drag handle shown at the corner of the magnifier.
 auto const drag_handle_diameter = 48;
 
+/// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
+auto const min_visual_dimension = 150;
+
 /// Magnification step applied by each zoom button press.
 auto const zoom_step = 0.5f;
 
@@ -405,6 +408,15 @@ geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
         geom::Height{std::max(1.0f, std::round(visual_size.height.as_value() / mag))}};
 }
 
+/// Clamps a visual (on-screen) size so neither dimension shrinks below
+/// min_visual_dimension.
+geom::Size clamp_visual_size(geom::Size const& visual_size)
+{
+    return {
+        std::max(visual_size.width, geom::Width{min_visual_dimension}),
+        std::max(visual_size.height, geom::Height{min_visual_dimension})};
+}
+
 /// The centre of a logical capture rectangle. The visual magnifier shares this
 /// centre, so it also fixes the away direction for handle placement.
 geom::Point center(geom::Point const& top_left, geom::Size const& size)
@@ -459,7 +471,8 @@ public:
 
             s->observer = local_observer;
             s->cursor_multiplexer = server.the_cursor_observer_multiplexer();
-            s->visual_size = geom::Size{default_capture_width, default_capture_height}  * default_magnification;
+            s->visual_size = clamp_visual_size(
+                geom::Size{default_capture_width, default_capture_height} * default_magnification);
 
             s->drag.init(server, HandleKind::drag);
             s->resize.init(server, HandleKind::resize);
@@ -554,7 +567,7 @@ public:
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        s->visual_size = size * s->magnification;
+        s->visual_size = clamp_visual_size(size * s->magnification);
         auto const logical_top_left = surface_top_left_from_cursor(size, s->cursor_pos);
 
         if (auto const surf = s->surface.lock())
@@ -998,8 +1011,17 @@ private:
             int const raw_vis_w = pin_pos.x.as_int() - ax;
             int const raw_vis_h = pin_pos.y.as_int() - ay;
 
-            auto const clamp = [](int v) { return std::clamp(v, 50, 1000); };
-            geom::Size const new_logical_size =  geom::Size{ clamp(raw_vis_w / mag), clamp(raw_vis_h / mag) };
+            // Enforce the surface's minimum on-screen footprint before converting
+            // to a logical size (rounding up so the visual size never dips below
+            // the minimum), and cap the logical size at a sane maximum.
+            auto const clamped_visual_size = clamp_visual_size(geom::Size{raw_vis_w, raw_vis_h});
+            auto const to_logical_dim = [mag](int visual_dim)
+            {
+                return std::min(static_cast<int>(std::ceil(visual_dim / mag)), 1000);
+            };
+            geom::Size const new_logical_size = geom::Size{
+                to_logical_dim(clamped_visual_size.width.as_int()),
+                to_logical_dim(clamped_visual_size.height.as_int())};
 
             // Back-solve the logical top-left from the pinned visual corner, inverting
             // the visual-edge identity above so the pinned corner stays fixed.
