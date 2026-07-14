@@ -153,7 +153,7 @@ mgw::DisplayClient::Output::Output(
     #pragma GCC diagnostic pop
     wl_output_add_listener(output, &output_listener, this);
 
-    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
+    dcout.id = DisplayConfigurationOutputId{static_cast<int>(owner->bound_outputs.size())};
     dcout.card_id = DisplayConfigurationCardId{1};
     dcout.type = DisplayConfigurationOutputType::unknown;
     dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
@@ -176,7 +176,7 @@ mgw::DisplayClient::Output::Output(
     surface{wl_compositor_create_surface(owner->compositor)},
     windowed_config{windowed_config}
 {
-    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
+    dcout.id = DisplayConfigurationOutputId{static_cast<int>(owner->bound_outputs.size())};
     dcout.card_id = DisplayConfigurationCardId{1};
     dcout.type = DisplayConfigurationOutputType::unknown;
     dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
@@ -193,7 +193,12 @@ mgw::DisplayClient::Output::Output(
     // Policies check modes.empty() and set used=false when true, which prevents
     // advise_output_create() from being called and leaves the window manager with
     // no display areas (falling back to a 100x100 placeholder area).
-    dcout.modes.push_back({windowed_config.size, 60.0f});
+    auto const buffer_scale = windowed_buffer_scale(windowed_config.scale);
+    dcout.modes.push_back({
+        geometry::Size{
+            windowed_config.size.width.as_int() * buffer_scale,
+            windowed_config.size.height.as_int() * buffer_scale},
+        60.0f});
     dcout.current_mode_index = 0;
     dcout.preferred_mode_index = 0;
 }
@@ -349,7 +354,9 @@ void mgw::DisplayClient::Output::done()
 
 void mgw::DisplayClient::Output::initialize_windowed()
 {
-    auto const& wc = windowed_config.value();
+    if (!windowed_config)
+        return;
+    auto const& wc = *windowed_config;
 
     static xdg_surface_listener const shell_surface_listener{
         [](void* self, auto, auto... args) { static_cast<Output*>(self)->surface_configure(args...); },
@@ -399,18 +406,20 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
 
     if (width > 0 && height > 0)
     {
-        auto const scale = windowed_config ?
-            windowed_buffer_scale(windowed_config->scale) :
-            host_scale;
-        pending_toplevel_size = geometry::Size{scale * width, scale * height};
+        if (windowed_config)
+        {
+            // Width and height are logical pixels; store as-is for custom_logical_size
+            pending_toplevel_size = geometry::Size{width, height};
+        }
+        else
+        {
+            pending_toplevel_size = geometry::Size{host_scale * width, host_scale * height};
+        }
     }
     else if (windowed_config)
     {
-        // Compositor gave us 0,0 (unconstrained size) — use our configured size
-        auto const scale = windowed_buffer_scale(windowed_config->scale);
-        pending_toplevel_size = geometry::Size{
-            scale * windowed_config->size.width.as_int(),
-            scale * windowed_config->size.height.as_int()};
+        // Compositor gave us 0,0 (unconstrained size) — use our configured logical size
+        pending_toplevel_size = windowed_config->size;
     }
     else if (!dcout.modes.empty())
     {
@@ -424,11 +433,24 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 
     if (pending_toplevel_size)
     {
+        auto const new_size = pending_toplevel_size.value();
         bool const size_is_changed = !dcout.custom_logical_size ||
-            dcout.custom_logical_size.value() != pending_toplevel_size.value();
-        dcout.custom_logical_size = pending_toplevel_size.value();
+            dcout.custom_logical_size.value() != new_size;
+        dcout.custom_logical_size = new_size;
         pending_toplevel_size.reset();
-        output_size = dcout.extents().size;
+        if (windowed_config)
+        {
+            // custom_logical_size is in logical pixels; allocator needs buffer pixels
+            auto const buffer_scale = windowed_buffer_scale(windowed_config->scale);
+            output_size = geometry::Size{
+                new_size.width.as_int() * buffer_scale,
+                new_size.height.as_int() * buffer_scale};
+        }
+        else
+        {
+            // custom_logical_size is already in buffer pixels for non-windowed outputs
+            output_size = dcout.extents().size;
+        }
         if (!has_initialized || size_is_changed)
         {
             has_initialized = true;
