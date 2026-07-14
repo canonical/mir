@@ -83,6 +83,7 @@ Markdown formatting (mdformat), and a large-files check. Run `pre-commit run --a
 - **Consistency is paramount**: Follow the existing style of the files you're modifying. When in doubt, local consistency wins.
 - **Readability over cleverness**: Write code that is easy to understand and maintain.
 - **Minimal changes**: Make the smallest change that fully solves the problem — no incidental reformatting, whitespace normalization, or unrelated comment tweaks. If a formatter touches untouched lines, revert those hunks or commit them separately.
+- **Comments are for non-obvious intent**: Do not add comments that merely restate code. Add comments only when they capture rationale, invariants, caveats, or constraints that are not clear from the code itself.
 - **Ask to align**: Ask the user questions to align and ground yourself often. When requirements are ambiguous, scope is unclear, or multiple reasonable approaches exist, confirm with the user rather than guessing.
 
 The full C++ style guide is `doc/sphinx/contributing/reference/cppguide.md`; day-to-day highlights
