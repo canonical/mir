@@ -66,8 +66,7 @@ jobs:
     permissions:
       checks: write
       contents: read
-      issues: write        # for commenting with TICS results
-      pull-requests: read  # to get the list of changed files
+      pull-requests: write  # for commenting with TICS results
     env:
       PROJECT: mir
       CCACHE_DIR: "/tmp/ccache"
