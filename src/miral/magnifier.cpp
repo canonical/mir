@@ -404,6 +404,15 @@ geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
         geom::Width{std::max(1.0f, std::round(visual_size.width.as_value() / mag))},
         geom::Height{std::max(1.0f, std::round(visual_size.height.as_value() / mag))}};
 }
+
+/// The centre of a logical capture rectangle. The visual magnifier shares this
+/// centre, so it also fixes the away direction for handle placement.
+geom::Point center(geom::Point const& top_left, geom::Size const& size)
+{
+    return geom::Point{
+        top_left.x.as_int() + size.width.as_int() / 2,
+        top_left.y.as_int() + size.height.as_int() / 2};
+}
 }
 
 class miral::Magnifier::Self
@@ -711,9 +720,8 @@ private:
                 // The visual magnifier is scaled about the centre of its logical
                 // capture area. Keep that centre fixed so changing zoom does not
                 // shift the on-screen position.
-                geom::Point const old_visual_centre{
-                    old_logical_rect.top_left.x.as_int() + old_logical_rect.size.width.as_int() / 2,
-                    old_logical_rect.top_left.y.as_int() + old_logical_rect.size.height.as_int() / 2};
+                geom::Point const old_visual_centre =
+                    center(old_logical_rect.top_left, old_logical_rect.size);
 
                 magnification = new_magnification;
                 auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
