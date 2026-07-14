@@ -116,6 +116,7 @@ give test steps, and complete the checklist. Reviewers focus on:
 - **Exception safety**: Does the change maintain at least basic exception safety?
 - **Test coverage**: Are new behaviors covered? Are existing tests still valid?
 - **Simplicity**: Prefer `value_or()` over conditionals, `std::erase_if` over manual loops, clear names over clever tricks.
+- **PR metadata quality**: When reviewing a pull request, evaluate whether the current title and description accurately reflect the actual content and scope; suggest concrete improvements when they do not.
 
 ## Commit and session hygiene
 
