@@ -43,6 +43,11 @@ public:
         return egl_surface;
     }
 
+    void resize(geom::Size new_size)
+    {
+        wl_egl_window_resize(wl_window, new_size.width.as_int(), new_size.height.as_int(), 0, 0);
+    }
+
 private:
     EGLDisplay const dpy;
     struct ::wl_egl_window* const wl_window;
@@ -162,6 +167,12 @@ mgw::WlDisplayAllocator::WlDisplayAllocator(
 
 mgw::WlDisplayAllocator::~WlDisplayAllocator()
 {
+}
+
+void mgw::WlDisplayAllocator::resize(geometry::Size new_size)
+{
+    surface_state->resize(new_size);
+    size = new_size;
 }
 
 auto mgw::WlDisplayAllocator::alloc_framebuffer(
