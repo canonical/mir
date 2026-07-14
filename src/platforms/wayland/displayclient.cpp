@@ -451,7 +451,7 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
             // custom_logical_size is already in buffer pixels for non-windowed outputs
             output_size = dcout.extents().size;
         }
-        if (!has_initialized || size_is_changed)
+        if (!has_initialized)
         {
             has_initialized = true;
             {
@@ -460,6 +460,28 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
                     owner_->provider->get_egl_display(),
                     surface,
                     output_size);
+            }
+            owner_->on_display_config_changed();
+        }
+        else if (size_is_changed)
+        {
+            if (windowed_config)
+            {
+                dcout.modes[0].size = output_size;
+                {
+                    std::lock_guard lock{mutex};
+                    provider->resize(output_size);
+                }
+            }
+            else
+            {
+                {
+                    std::lock_guard lock{mutex};
+                    provider = std::make_shared<WlDisplayAllocator>(
+                        owner_->provider->get_egl_display(),
+                        surface,
+                        output_size);
+                }
             }
             owner_->on_display_config_changed();
         }
