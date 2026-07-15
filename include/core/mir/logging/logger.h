@@ -18,10 +18,12 @@
 #define MIR_LOGGING_LOGGER_H_
 
 #include <mir/logging/tag.h>
+#include <mir/logging/event.h>
 
 #include <format>
 #include <iosfwd>
 #include <memory>
+#include <source_location>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -30,8 +32,6 @@ namespace mir
 {
 namespace logging
 {
-class Event;
-
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
@@ -49,16 +49,9 @@ public:
     virtual void log(char const* component, Severity severity, char const* format, ...)
         __attribute__((format(printf, 4, 5)));
 
-    /*
-     * Cruft removal: when we're sure we've got the right API/ABI, we should
-     * *remove* log(severity, string, string) above and make this the
-     * required-to-implement interface.
-     */
-    void log(Severity severity, Tags tags, std::string_view message);
-
     template<typename... Args>
     void log(Severity severity, Tags tags, std::format_string<Args...> fmt, Args&&... args)
-    { log(severity, tags, std::format(fmt, std::forward<Args>(args)...)); }
+    { log(Event{severity, tags, std::format(fmt, std::forward<Args>(args)...)}); }
 
 protected:
     Logger() {}
@@ -67,8 +60,8 @@ protected:
     Logger& operator=(Logger const&) = delete;
 };
 
-void log(Severity severity, std::string const& message, std::string const& component);
-void log(Severity severity, Tags tags, std::string_view message);
+void log(Severity severity, std::string const& message, std::string const& component, std::source_location location = std::source_location::current());
+void log(Severity severity, Tags tags, std::string_view message, std::source_location location = std::source_location::current());
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string_view message, std::string_view component);
 
