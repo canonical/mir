@@ -20,6 +20,10 @@
 #include "software_buffer_pool.h"
 
 #include <miral/live_config.h>
+#include <mir/events/event.h>
+#include <mir/events/input_event.h>
+#include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 #include <mir/log.h>
 #include <mir/server.h>
 #include <mir/synchronised.h>
@@ -27,8 +31,10 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/geometry/rectangles.h>
+#include <mir/input/composite_event_filter.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/input/event_filter.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/scene/basic_surface.h>
@@ -494,6 +500,23 @@ private:
         mir::Synchronised<State>& state;
     };
 
+    class InputFilter : public mi::EventFilter
+    {
+    public:
+        explicit InputFilter(mir::Synchronised<State>& state) : state{state} {}
+
+        auto handle(MirEvent const& event) -> bool override;
+
+    private:
+        void reset_gestures();
+        auto handle_pointer(MirPointerEvent const& event, State const& state) -> bool;
+        auto handle_touch(MirTouchEvent const& event, State const& state) -> bool;
+
+        mir::Synchronised<State>& state;
+        std::optional<bool> pointer_gesture_consumed;
+        std::optional<bool> touch_gesture_consumed;
+    };
+
 public:
     Self()
     {
@@ -533,6 +556,8 @@ public:
             // the state lock across this call.
             server.the_display_configuration_observer_registrar()->register_interest(local_display_config_observer);
             server.the_cursor_observer_multiplexer()->register_interest(local_observer);
+            input_filter = std::make_shared<InputFilter>(state);
+            server.the_composite_event_filter()->prepend(input_filter);
 
             auto s = state.lock();
 
@@ -609,6 +634,8 @@ public:
 
             for (auto* handle : {&local_drag, &local_resize, &local_zoom_in, &local_zoom_out})
                 handle->reset();
+
+            input_filter.reset();
         });
     }
 
@@ -718,6 +745,48 @@ private:
             int const x = logical_top_left.x.as_int() - (mag - 1.0f) / 2.0f * logical_size.width.as_int();
             int const y = logical_top_left.y.as_int() - (mag - 1.0f) / 2.0f * logical_size.height.as_int();
             return {x, y, w, h};
+        }
+
+        auto point_is_on_magnifier_surface(geom::PointF const& point) const -> bool
+        {
+            if (!decoupled || !default_enabled)
+                return false;
+
+            auto const surf = surface.lock();
+            if (!surf)
+                return false;
+
+            auto const surface_top_left = surf->top_left();
+            auto const logical_size = surf->window_size();
+            auto const visual = compute_visual_bounds(surface_top_left, logical_size, magnification);
+            auto const contains = [&point](int x, int y, int width, int height)
+            {
+                return point.x.as_value() >= x && point.x.as_value() < x + width &&
+                    point.y.as_value() >= y && point.y.as_value() < y + height;
+            };
+
+            if (!contains(visual.x, visual.y, visual.w, visual.h))
+                return false;
+
+            auto const [drag_position, resize_position] =
+                compute_both_handle_positions(surface_top_left, logical_size, magnification);
+            auto const [zoom_in_position, zoom_out_position] =
+                compute_zoom_button_positions(surface_top_left, logical_size, magnification);
+
+            for (auto const& handle_position :
+                {drag_position, resize_position, zoom_in_position, zoom_out_position})
+            {
+                if (contains(
+                    handle_position.x.as_int(),
+                    handle_position.y.as_int(),
+                    drag_handle_diameter,
+                    drag_handle_diameter))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// Translates logical_top_left, if necessary, so the resulting visual
@@ -1349,7 +1418,88 @@ private:
 
     RenderSceneIntoSurface render_scene_into_surface;
     mir::Synchronised<State> state;
+    std::shared_ptr<InputFilter> input_filter;
 };
+
+auto miral::Magnifier::Self::InputFilter::handle(MirEvent const& event) -> bool
+{
+    if (event.type() != mir_event_type_input)
+        return false;
+
+    auto const s = state.lock();
+    if (!s->decoupled || !s->default_enabled)
+    {
+        reset_gestures();
+        return false;
+    }
+
+    auto const* input_event = event.to_input();
+    switch (input_event->input_type())
+    {
+    case mir_input_event_type_pointer:
+        return handle_pointer(*input_event->to_pointer(), *s);
+    case mir_input_event_type_touch:
+        return handle_touch(*input_event->to_touch(), *s);
+    default:
+        return false;
+    }
+}
+
+void miral::Magnifier::Self::InputFilter::reset_gestures()
+{
+    pointer_gesture_consumed.reset();
+    touch_gesture_consumed.reset();
+}
+
+auto miral::Magnifier::Self::InputFilter::handle_pointer(
+    MirPointerEvent const& event,
+    State const& state) -> bool
+{
+    auto const action = event.action();
+    if (action == mir_pointer_action_button_down && !pointer_gesture_consumed)
+    {
+        pointer_gesture_consumed =
+            event.position().transform([&state](auto const& position)
+                { return state.point_is_on_magnifier_surface(position); }).value_or(false);
+    }
+
+    if (pointer_gesture_consumed)
+    {
+        auto const consumed = *pointer_gesture_consumed;
+        if (action == mir_pointer_action_button_up && event.buttons() == 0)
+            pointer_gesture_consumed.reset();
+        return consumed;
+    }
+
+    return event.position().transform([&state](auto const& position)
+        { return state.point_is_on_magnifier_surface(position); }).value_or(false);
+}
+
+auto miral::Magnifier::Self::InputFilter::handle_touch(
+    MirTouchEvent const& event,
+    State const& state) -> bool
+{
+    if (!touch_gesture_consumed)
+    {
+        bool starts_on_magnifier = false;
+        for (auto i = 0u; i != event.pointer_count(); ++i)
+        {
+            starts_on_magnifier =
+                starts_on_magnifier || state.point_is_on_magnifier_surface(event.position(i));
+        }
+        touch_gesture_consumed = starts_on_magnifier;
+    }
+
+    auto const consumed = *touch_gesture_consumed;
+    bool gesture_ended = event.pointer_count() > 0;
+    for (auto i = 0u; i != event.pointer_count(); ++i)
+        gesture_ended = gesture_ended && event.action(i) == mir_touch_action_up;
+
+    if (gesture_ended)
+        touch_gesture_consumed.reset();
+
+    return consumed;
+}
 
 void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)

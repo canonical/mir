@@ -18,7 +18,10 @@
 #include <mir/server.h>
 #include <mir/compositor/scene.h>
 #include <mir/compositor/scene_element.h>
+#include <mir/events/event_builders.h>
+#include <mir/events/touch_contact.h>
 #include <mir/graphics/renderable.h>
+#include <mir/input/composite_event_filter.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/event_builder.h>
@@ -262,6 +265,7 @@ struct MagnifierHandleTest : MagnifierTest
                 server.add_init_callback(
                     [&server, this]
                     {
+                        composite_event_filter = server.the_composite_event_filter();
                         input_device_registry = server.the_input_device_registry();
                         input_device_hub = server.the_input_device_hub();
                     });
@@ -365,6 +369,7 @@ struct MagnifierHandleTest : MagnifierTest
 
     std::weak_ptr<mi::InputDeviceRegistry> input_device_registry;
     std::weak_ptr<mi::InputDeviceHub> input_device_hub;
+    std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
     std::shared_ptr<mi::VirtualInputDevice> pointer_device;
 
 private:
@@ -434,6 +439,112 @@ TEST_F(MagnifierHandleTest, double_clicking_drag_handle_does_not_move_magnifier)
     click(handle_center);
 
     EXPECT_THAT(magnifier_top_left(), Eq(before));
+}
+
+TEST_F(MagnifierHandleTest, consumes_pointer_events_on_decoupled_magnifier_surface)
+{
+    auto const event = mir::events::make_pointer_event(
+        MirInputDeviceId{},
+        std::chrono::nanoseconds{},
+        MirInputEventModifiers{},
+        mir_pointer_action_motion,
+        MirPointerButtons{},
+        element_center(magnifier_index),
+        geom::DisplacementF{},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+
+    EXPECT_TRUE(composite_event_filter.lock()->handle(*event));
+}
+
+TEST_F(MagnifierHandleTest, consumes_touch_events_on_decoupled_magnifier_surface)
+{
+    auto const event = mir::events::make_touch_event(
+        MirInputDeviceId{},
+        std::chrono::nanoseconds{},
+        MirInputEventModifiers{},
+        std::vector<mir::events::TouchContact>{{
+            0,
+            mir_touch_action_down,
+            mir_touch_tooltype_finger,
+            element_center(magnifier_index),
+            1.0f,
+            1.0f,
+            1.0f,
+            0.0f}});
+
+    EXPECT_TRUE(composite_event_filter.lock()->handle(*event));
+}
+
+TEST_F(MagnifierHandleTest, does_not_consume_events_outside_decoupled_magnifier_surface)
+{
+    auto const pointer_event = mir::events::make_pointer_event(
+        MirInputDeviceId{},
+        std::chrono::nanoseconds{},
+        MirInputEventModifiers{},
+        mir_pointer_action_motion,
+        MirPointerButtons{},
+        geom::PointF{799.0f, 599.0f},
+        geom::DisplacementF{},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    auto const touch_event = mir::events::make_touch_event(
+        MirInputDeviceId{},
+        std::chrono::nanoseconds{},
+        MirInputEventModifiers{},
+        std::vector<mir::events::TouchContact>{{
+            0,
+            mir_touch_action_down,
+            mir_touch_tooltype_finger,
+            geom::PointF{799.0f, 599.0f},
+            1.0f,
+            1.0f,
+            1.0f,
+            0.0f}});
+
+    EXPECT_FALSE(composite_event_filter.lock()->handle(*pointer_event));
+    EXPECT_FALSE(composite_event_filter.lock()->handle(*touch_event));
+}
+
+TEST_F(MagnifierHandleTest, does_not_consume_events_when_magnifier_is_inactive)
+{
+    auto const magnifier_center = element_center(magnifier_index);
+    magnifier.decouple(false);
+
+    auto const pointer_event = mir::events::make_pointer_event(
+        MirInputDeviceId{},
+        std::chrono::nanoseconds{},
+        MirInputEventModifiers{},
+        mir_pointer_action_motion,
+        MirPointerButtons{},
+        magnifier_center,
+        geom::DisplacementF{},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    auto const touch_event = mir::events::make_touch_event(
+        MirInputDeviceId{},
+        std::chrono::nanoseconds{},
+        MirInputEventModifiers{},
+        std::vector<mir::events::TouchContact>{{
+            0,
+            mir_touch_action_down,
+            mir_touch_tooltype_finger,
+            magnifier_center,
+            1.0f,
+            1.0f,
+            1.0f,
+            0.0f}});
+
+    EXPECT_FALSE(composite_event_filter.lock()->handle(*pointer_event));
+    EXPECT_FALSE(composite_event_filter.lock()->handle(*touch_event));
+
+    magnifier.decouple(true).enable(false);
+
+    EXPECT_FALSE(composite_event_filter.lock()->handle(*pointer_event));
+    EXPECT_FALSE(composite_event_filter.lock()->handle(*touch_event));
 }
 
 TEST_F(MagnifierHandleTest, zoom_in_handle_increases_magnification)
