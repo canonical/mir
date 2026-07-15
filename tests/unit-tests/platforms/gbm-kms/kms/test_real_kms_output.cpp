@@ -17,12 +17,11 @@
 #include <mir/graphics/kms_framebuffer.h>
 #include "src/platforms/gbm-kms/server/kms/real_kms_output.h"
 #include "src/platforms/gbm-kms/server/kms/page_flipper.h"
-#include <mir/fatal.h>
 
-#include <mir/test/fake_shared.h>
-
+#include <mir/test/death.h>
 #include <mir/test/doubles/mock_drm.h>
 #include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/fake_shared.h>
 
 #include <stdexcept>
 
