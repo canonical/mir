@@ -19,8 +19,8 @@
 
 #include <miral/application.h>
 
+#include <span>
 #include <string>
-#include <vector>
 
 namespace miral
 {
@@ -60,7 +60,7 @@ struct ApplicationInfo
     /// #miral::Application.
     ///
     /// \returns The list of windows associated with the application.
-    auto windows() const -> std::vector<Window>&;
+    auto windows() const& -> std::span<Window>;
 
     /// Return the user data set for this application.
     ///
