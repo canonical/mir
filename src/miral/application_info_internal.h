@@ -20,6 +20,8 @@
 #include <miral/application_info.h>
 #include <miral/window.h>
 
+#include <vector>
+
 struct miral::ApplicationInfo::Self
 {
     Self() = default;

@@ -31,12 +31,15 @@ add_custom_target(
   DEPENDS demo-mir-compositor
 )
 # Verify the options reference is up to date
-add_test(
+# We filter out the `mircommon` and `LD_LIBRARY_PATH` lines, which are not part
+# of the reference, as they interfere with the diff on Alpine.
+mir_add_test(
   NAME verify-options-reference-unchanged
   COMMAND bash -c "diff --unified \
     ${OPTIONS_REFERENCE} \
     <(
       ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown \
+      | grep -v -e mircommon -e LD_LIBRARY_PATH \
       | head -c -1 \
       | sed 's@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g' \
      )"

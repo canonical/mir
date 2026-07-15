@@ -120,10 +120,10 @@ private:
     void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
 
     void advise_adding_to_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+        std::shared_ptr<Workspace> const& workspace, std::span<Window const> windows) override;
 
     void advise_removing_from_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+        std::shared_ptr<Workspace> const& workspace, std::span<Window const> windows) override;
 
     auto confirm_placement_on_display(
         WindowInfo const& window_info,
@@ -155,7 +155,7 @@ public:
 
     virtual void advise_delete_window(WindowInfo const& window_info) override;
 
-    virtual void advise_raise(std::vector<Window> const& windows) override;
+    virtual void advise_raise(std::span<Window const> windows) override;
 
     void advise_output_create(Output const& output) override;
 

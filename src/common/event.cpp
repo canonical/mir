@@ -55,13 +55,6 @@ void expect_index_in_range(size_t size, size_t index)
 }
 }
 
-// GCC and Clang both ensure the switch is exhaustive.
-// GCC, however, gets a "control reaches end of non-void function" warning without this
-#ifndef __clang__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-#endif
-
 char const* mir::event_type_to_c_str(MirEventType t)
 {
     switch (t)
@@ -82,24 +75,10 @@ char const* mir::event_type_to_c_str(MirEventType t)
         return "mir_event_type_window_output";
     case mir_event_type_window_placement:
         return "mir_event_type_window_placement";
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    case mir_event_type_key:
-        return "mir_event_type_key";
-    case mir_event_type_motion:
-        return "mir_event_type_motion";
-    case mir_event_type_input_configuration:
-        return "mir_event_type_input_configuration";
-    case mir_event_type_prompt_session_state_change:
-        return "mir_event_type_prompt_session_state_change";
-#pragma GCC diagnostic pop
     }
-}
 
-#ifndef __clang__
-#pragma GCC diagnostic pop
-#endif
+    std::unreachable();
+}
 
 std::string mir::event_type_to_string(MirEventType t)
 {
