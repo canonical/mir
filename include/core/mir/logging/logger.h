@@ -30,12 +30,14 @@ namespace mir
 {
 namespace logging
 {
+class Event;
+
 // A facade to shield the inner core of mir to prevent an actual
 // logging framework from leaking implementation detail.
 class Logger
 {
 public:
-    virtual void log(Severity severity, std::string const& message, std::string const& component) = 0;
+    virtual void log(Event const& log_event) = 0;
 
     /*
      * Those playing at home may wonder why we're saying the 4th argument is the format string,
@@ -59,7 +61,6 @@ public:
     { log(severity, tags, std::format(fmt, std::forward<Args>(args)...)); }
 
 protected:
-
     Logger() {}
     virtual ~Logger() = default;
     Logger(Logger const&) = delete;
