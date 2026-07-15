@@ -19,10 +19,25 @@
 
 #include <mir/logging/logger.h>
 #include <mir/logging/event.h>
+#include <mir/logging/tag.h>
 
 #include <gmock/gmock.h>
 
 #include <string>
+#include <ranges>
+
+namespace mir::logging
+{
+inline void PrintTo(Event const& ev, std::ostream* os)
+{
+    *os <<
+        (ev.tags() |
+            std::views::transform([](Tag const& tag) { return tag::name(tag); }) |
+            std::views::join_with(':') |
+            std::ranges::to<std::string>())
+        << ": " << ev.message();
+}
+}
 
 namespace mir
 {
