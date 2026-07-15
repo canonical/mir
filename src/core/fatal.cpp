@@ -40,16 +40,4 @@ void mir::fatal_error_abort(char const* reason, ...)
     std::abort();
 }
 
-void mir::fatal_error_except(char const* reason, ...)
-{
-    char buffer[1024];
-    va_list args;
-
-    va_start(args, reason);
-    std::vsnprintf(buffer, sizeof buffer, reason, args);
-    va_end(args);
-
-    BOOST_THROW_EXCEPTION(std::runtime_error(buffer));
-}
-
 void (*mir::fatal_error)(char const* reason, ...){&mir::fatal_error_abort};
