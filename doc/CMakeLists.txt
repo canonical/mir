@@ -31,16 +31,17 @@ mir_add_test(
     diff_output=$(diff --unified \
       ${OPTIONS_REFERENCE} \
       <(
-        ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown 2>$stderr_file \
+        ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown 2>\"$stderr_file\" \
         | head -c -1 \
         | sed 's@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g' \
       ))
     diff_status=$?
-    if [ $diff_status -ne 0 ]; then
+    if [ $diff_status -ne 0 ]
+    then
       printf '%s\n' \"$diff_output\"
-      cat $stderr_file >&2
+      cat \"$stderr_file\" >&2
     fi
-    rm $stderr_file
+    rm \"$stderr_file\"
     exit $diff_status"
 )
 
