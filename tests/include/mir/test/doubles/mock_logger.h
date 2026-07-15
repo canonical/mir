@@ -37,6 +37,47 @@ MATCHER_P2(LogMatching, severity_matcher, message_matcher, "")
            testing::ExplainMatchResult(message_matcher, std::string{arg.message()}, result_listener);
 }
 
+class IsTagMatcher
+{
+public:
+    using is_gtest_matcher = void;
+
+    IsTagMatcher(mir::logging::Tag const& t)
+        : tag{&t}
+    {
+    }
+
+    bool MatchAndExplain(std::reference_wrapper<mir::logging::Tag const> t, std::ostream*) const {
+        return &t.get() == tag;
+    }
+
+    void DescribeTo(std::ostream* os) const {
+        *os << "is the tag " << mir::logging::tag::name(*tag);
+    }
+
+    void DescribeNegationTo(std::ostream* os) const {
+        *os << "is not the tag " << mir::logging::tag::name(*tag);
+    }
+
+private:
+     mir::logging::Tag const* const tag;
+};
+
+inline auto IsTag(mir::logging::Tag const& tag)
+    -> testing::Matcher<std::reference_wrapper<mir::logging::Tag const>>
+{
+    return IsTagMatcher(tag);
+}
+
+MATCHER_P3(LogMatching, severity_matcher, message_matcher, tags_matcher, "")
+{
+    if (!testing::ExplainMatchResult(severity_matcher, arg.severity(), result_listener))
+        return false;
+    if (!testing::ExplainMatchResult(message_matcher, std::string{arg.message()}, result_listener))
+        return false;
+    return testing::ExplainMatchResult(tags_matcher, arg.tags(), result_listener);
+}
+
 class MockLogger : public logging::Logger
 {
 public:
