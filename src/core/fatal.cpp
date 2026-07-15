@@ -16,15 +16,12 @@
 
 #include <mir/fatal.h>
 
-#include <boost/throw_exception.hpp>
-
-#include <stdexcept>
 #include <cstdlib>
 #include <cstdio>
 #include <cstdarg>
 
 [[noreturn]]
-void mir::fatal_error_abort(char const* reason, ...)
+void mir::fatal_error(char const* reason, ...)
 {
     va_list args;
 
@@ -39,5 +36,3 @@ void mir::fatal_error_abort(char const* reason, ...)
 
     std::abort();
 }
-
-void (*mir::fatal_error)(char const* reason, ...){&mir::fatal_error_abort};
