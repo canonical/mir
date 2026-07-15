@@ -30,6 +30,8 @@
 #include <gmock/gmock.h>
 #include <fcntl.h>
 
+#include "mir/test/death.h"
+
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;
 namespace geom = mir::geometry;
@@ -276,7 +278,6 @@ TEST_F(RealKMSOutputTest, operations_use_possible_crtc)
 
 TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
 {
-    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
     using namespace testing;
 
     uint32_t const fb_id{67};
@@ -311,9 +312,7 @@ TEST_F(RealKMSOutputTest, set_crtc_failure_is_handled_gracefully)
     EXPECT_NO_THROW({
         EXPECT_FALSE(output.schedule_page_flip(*fb));
     });
-    EXPECT_THROW({  // schedule failed. It's programmer error if you then wait.
-        output.wait_for_page_flip();
-    }, std::runtime_error);
+    MIR_EXPECT_DEATH(output.wait_for_page_flip(), "");
 }
 
 TEST_F(RealKMSOutputTest, clear_crtc_gets_crtc_if_none_is_current)
@@ -452,8 +451,6 @@ TEST_F(RealKMSOutputTest, has_no_cursor_if_no_hardware_support)
 
 TEST_F(RealKMSOutputTest, clear_crtc_is_non_fatal_on_permission_error)
 {
-    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
-
     using namespace testing;
 
     setup_outputs_connected_crtc();
@@ -478,8 +475,6 @@ TEST_F(RealKMSOutputTest, clear_crtc_is_non_fatal_on_permission_error)
 
 TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails_for_non_permission_reason)
 {
-    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
-
     using namespace testing;
 
     setup_outputs_connected_crtc();
@@ -490,12 +485,9 @@ TEST_F(RealKMSOutputTest, clear_crtc_throws_if_drm_call_fails_for_non_permission
         mt::fake_shared(mock_page_flipper)};
 
     EXPECT_CALL(mock_drm, drmModeSetCrtc(_, crtc_ids[0], 0, 0, 0, nullptr, 0, nullptr))
-        .Times(1)
-        .WillOnce(Return(-EINVAL));
+        .WillRepeatedly(Return(-EINVAL));
 
-    EXPECT_THROW({
-        output.clear_crtc();
-    }, std::runtime_error);
+    MIR_EXPECT_DEATH(output.clear_crtc(), "");
 }
 
 TEST_F(RealKMSOutputTest, drm_set_gamma)
