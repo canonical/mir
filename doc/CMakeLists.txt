@@ -27,7 +27,7 @@ add_custom_target(
 mir_add_test(
   NAME verify-options-reference-unchanged
   COMMAND bash -c "
-    stderr_file=$(mktemp)
+    stderr_file=$(mktemp \"\${TMPDIR:-/tmp}/mir-options-stderr.XXXXXX\")
     diff_output=$(diff --unified \
       ${OPTIONS_REFERENCE} \
       <(
