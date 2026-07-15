@@ -757,8 +757,9 @@ private:
         }
 
         /// Maps the visual magnifier's position across the screen to the logical
-        /// capture's available range. A visual edge flush with the screen maps
-        /// to the corresponding capture edge, with proportional movement between.
+        /// capture. At a flush visual edge, the capture extends far enough outside
+        /// the screen to place that screen edge just beyond the controls. Movement
+        /// between the two edges is proportional.
         geom::Point capture_position_for_surface(
             geom::Point const& surface_top_left,
             geom::Size const& logical_size,
@@ -772,25 +773,30 @@ private:
             int const screen_top = screen_bounds.top_left.y.as_int();
             int const screen_width = screen_bounds.size.width.as_int();
             int const screen_height = screen_bounds.size.height.as_int();
+            int const handle_clearance =
+                static_cast<int>(std::ceil(drag_handle_diameter / mag));
 
             auto const map_axis = [](
                 int visual_start,
                 int visual_extent,
                 int logical_extent,
                 int screen_start,
-                int screen_extent)
+                int screen_extent,
+                int max_out_of_bounds)
             {
                 int const visual_travel = screen_extent - visual_extent;
-                int const capture_travel = screen_extent - logical_extent;
 
                 if (visual_travel <= 0)
-                    return screen_start + capture_travel / 2;
+                    return screen_start + (screen_extent - logical_extent) / 2;
 
                 double const progress = std::clamp(
                     static_cast<double>(visual_start - screen_start) / visual_travel,
                     0.0,
                     1.0);
-                return screen_start + static_cast<int>(std::round(progress * capture_travel));
+                int const out_of_bounds = std::min(logical_extent / 2, max_out_of_bounds);
+                int const capture_start = screen_start - out_of_bounds;
+                int const capture_travel = screen_extent - logical_extent + 2 * out_of_bounds;
+                return capture_start + static_cast<int>(std::round(progress * capture_travel));
             };
 
             return geom::Point{
@@ -799,13 +805,15 @@ private:
                     visual.w,
                     logical_size.width.as_int(),
                     screen_left,
-                    screen_width),
+                    screen_width,
+                    handle_clearance),
                 map_axis(
                     visual.y,
                     visual.h,
                     logical_size.height.as_int(),
                     screen_top,
-                    screen_height)};
+                    screen_height,
+                    handle_clearance)};
         }
 
         /// Computes the position of the circular drag handle indicator, inset from
