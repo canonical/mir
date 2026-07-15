@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/logging/tag.h"
 #include "src/server/report/logging/display_report.h"
 #include <mir/graphics/frame.h>
-#include <mir/logging/logger.h>
 #include <mir/test/doubles/mock_egl.h>
+#include <mir/test/doubles/mock_logger.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -30,22 +31,19 @@ using namespace testing;
 
 namespace
 {
-class MockLogger : public ml::Logger
-{
-public:
-    MOCK_METHOD(void, log, (ml::Severity severity, const std::string& message, const std::string& component), (override));
-    ~MockLogger() noexcept(true) {}
-};
-
 struct DisplayReport : public testing::Test
 {
-    std::shared_ptr<MockLogger> logger{std::make_shared<MockLogger>()};
+    void SetUp() override
+    {
+        // Ensure all log messages get emitted, so our scraping works
+        ml::tag::set_severity("base", ml::Severity::debug);
+    }
+
+    std::shared_ptr<mtd::MockLogger> logger{std::make_shared<mtd::MockLogger>()};
     testing::NiceMock<mtd::MockEGL> mock_egl;
     EGLDisplay disp = reinterpret_cast<EGLDisplay>(9);
     EGLConfig config = reinterpret_cast<EGLConfig>(8);
 };
-
-char const* const component = "graphics";
 
 #define STRMACRO(X) #X
 std::string egl_string_mapping [] =
@@ -96,6 +94,7 @@ std::string egl_string_mapping [] =
 
 TEST_F(DisplayReport, eglconfig)
 {
+    using mtd::LogMatching;
     int dummy_value = 7;
     auto ext_str = "EGL_EXT_imaginary";
     auto client_ext_str = "EGL_EXT_oil_platform";
@@ -106,18 +105,19 @@ TEST_F(DisplayReport, eglconfig)
         .Times(AnyNumber())
         .WillRepeatedly(DoAll(SetArgPointee<3>(dummy_value),Return(EGL_TRUE)));
 
+    // We match the log messages with EndsWith as the tag & component might be prepended
+    // to the start of the message.
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational, "Display EGL Extensions: " + std::string{ext_str}, component));
+        LogMatching(Eq(ml::Severity::informational), EndsWith("Display EGL Extensions: " + std::string{ext_str}))));
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational, "EGL_EXT_client_extensions: " + std::string{client_ext_str}, component));
+        LogMatching(Eq(ml::Severity::informational), EndsWith("EGL_EXT_client_extensions: " + std::string{client_ext_str}))));
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational, "Display EGL Configuration:", component));
+        LogMatching(Eq(ml::Severity::informational), EndsWith(std::string{"Display EGL Configuration:"}))));
     for(auto &i : egl_string_mapping)
     {
         EXPECT_CALL(*logger, log(
-            ml::Severity::informational,
-            "    [" + i + "] : " + std::to_string(dummy_value),
-            component));
+            LogMatching(Eq(ml::Severity::informational),
+            EndsWith("    [" + i + "] : " + std::to_string(dummy_value)))));
     }
 
     mrl::DisplayReport report(logger);
@@ -135,20 +135,19 @@ TEST_F(DisplayReport, eglconfig_clears_eglerror_when_there_are_no_extensions)
 
 TEST_F(DisplayReport, reports_vsync)
 {
+    using mtd::LogMatching;
     std::chrono::nanoseconds const nanos_per_frame{16666666};
     std::string const interval_str{"interval 16.666ms"};
     unsigned int display1_id {1223};
     unsigned int display2_id {4492};
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational,
-        AllOf(StartsWith("vsync on "+std::to_string(display1_id)),
-              HasSubstr(interval_str)),
-        component));
+        LogMatching(Eq(ml::Severity::informational),
+        AllOf(HasSubstr("vsync on "+std::to_string(display1_id)),
+              HasSubstr(interval_str)))));
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational,
-        AllOf(StartsWith("vsync on "+std::to_string(display2_id)),
-              HasSubstr(interval_str)),
-        component));
+        LogMatching(Eq(ml::Severity::informational),
+        AllOf(HasSubstr("vsync on "+std::to_string(display2_id)),
+              HasSubstr(interval_str)))));
     mrl::DisplayReport report(logger);
 
     mir::graphics::Frame frame;
@@ -162,6 +161,7 @@ TEST_F(DisplayReport, reports_vsync)
 
 TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
 {
+    using mtd::LogMatching;
     int const hz = 60;
     std::string const interval_str{"interval 16.666ms (60.00Hz)"};
     unsigned const id{123};
@@ -172,15 +172,13 @@ TEST_F(DisplayReport, reports_vsync_steady_interval_despite_missed_frames)
 
     auto const id_str = std::to_string(id);
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational,
-        AllOf(StartsWith("vsync on "+id_str+": #"+std::to_string(d1)+","),
-              HasSubstr(interval_str)),
-        component));
+        LogMatching(Eq(ml::Severity::informational),
+        AllOf(HasSubstr("vsync on "+id_str+": #"+std::to_string(d1)+","),
+              HasSubstr(interval_str)))));
     EXPECT_CALL(*logger, log(
-        ml::Severity::informational,
-        AllOf(StartsWith("vsync on "+id_str+": #"+std::to_string(d1+d2)+","),
-              HasSubstr(interval_str)),
-        component));
+        LogMatching(Eq(ml::Severity::informational),
+        AllOf(HasSubstr("vsync on "+id_str+": #"+std::to_string(d1+d2)+","),
+              HasSubstr(interval_str)))));
 
     mrl::DisplayReport report(logger);
     mir::graphics::Frame frame;

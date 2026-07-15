@@ -28,30 +28,30 @@ ml::SharedLibraryProberReport::SharedLibraryProberReport(std::shared_ptr<Logger>
 
 void ml::SharedLibraryProberReport::probing_path(std::filesystem::path const& path)
 {
-    logger->log(ml::Severity::informational,
-                std::string("Loading modules from: ") + path.string(),
-                MIR_LOG_COMPONENT);
+    logger->log(ml::Event{ml::Severity::informational,
+                           MIR_LOG_COMPONENT,
+                           std::string("Loading modules from: ") + path.string()});
 }
 
 void ml::SharedLibraryProberReport::probing_failed(std::filesystem::path const& path, std::exception const& error)
 {
-    logger->log(ml::Severity::error,
-                std::string("Failed to load libraries from path: ") + path.string() +
-                " (error was:" + error.what() + ")",
-                MIR_LOG_COMPONENT);
+    logger->log(ml::Event{ml::Severity::error,
+                           MIR_LOG_COMPONENT,
+                           std::string("Failed to load libraries from path: ") + path.string() +
+                           " (error was:" + error.what() + ")"});
 }
 
 void ml::SharedLibraryProberReport::loading_library(std::filesystem::path const& filename)
 {
-    logger->log(ml::Severity::informational,
-                std::string("Loading module: ") + filename.string(),
-                MIR_LOG_COMPONENT);
+    logger->log(ml::Event{ml::Severity::informational,
+                           MIR_LOG_COMPONENT,
+                           std::string("Loading module: ") + filename.string()});
 }
 
 void ml::SharedLibraryProberReport::loading_failed(std::filesystem::path const& filename, std::exception const& error)
 {
-    logger->log(ml::Severity::warning,
-                std::string("Failed to load module: ") + filename.string() +
-                " (error was:" + error.what() + ")",
-                MIR_LOG_COMPONENT);
+    logger->log(ml::Event{ml::Severity::warning,
+                           MIR_LOG_COMPONENT,
+                           std::string("Failed to load module: ") + filename.string() +
+                           " (error was:" + error.what() + ")"});
 }
