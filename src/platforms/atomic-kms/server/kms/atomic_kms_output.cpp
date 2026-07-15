@@ -259,7 +259,7 @@ void mga::AtomicKMSOutput::reset()
     }
     catch (std::exception const& e)
     {
-        fatal_error(e.what());
+        fatal_error("%s", e.what());
     }
 
     /* Discard previously current crtc */
