@@ -26,13 +26,22 @@ add_custom_target(
 # Verify the options reference is up to date
 mir_add_test(
   NAME verify-options-reference-unchanged
-  COMMAND bash -c "diff --unified \
-    ${OPTIONS_REFERENCE} \
-    <(
-      ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown \
-      | head -c -1 \
-      | sed 's@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g' \
-     )"
+  COMMAND bash -c "
+    stderr_file=$(mktemp)
+    diff_output=$(diff --unified \
+      ${OPTIONS_REFERENCE} \
+      <(
+        ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown 2>$stderr_file \
+        | head -c -1 \
+        | sed 's@${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}@\\<LIBDIR\\>@g' \
+      ))
+    diff_status=$?
+    if [ $diff_status -ne 0 ]; then
+      printf '%s\n' \"$diff_output\"
+      cat $stderr_file >&2
+    fi
+    rm $stderr_file
+    exit $diff_status"
 )
 
 option(
