@@ -244,7 +244,7 @@ MirPointerEvent const* mir_input_event_get_pointer_event(MirInputEvent const* ev
 {
     if(ev->input_type() != mir_input_event_type_pointer)
     {
-        mir::fatal_error("expected pointer input event but event was of type ",
+        mir::fatal_error("expected pointer input event but event was of type %s",
             input_event_type_to_c_str(ev->input_type()));
     }
 

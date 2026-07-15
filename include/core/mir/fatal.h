@@ -31,7 +31,7 @@ namespace mir
  *   \param [in] reason  A printf-style format string.
  */
 [[noreturn]]
-void fatal_error(char const* reason, ...);
+void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
 } // namespace mir
 
 #endif // MIR_FATAL_H_
