@@ -169,15 +169,6 @@ std::function<void()> mir::DefaultServerConfiguration::the_stop_callback()
     return []{};
 }
 
-auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
--> void (*)(char const* reason, ...)
-{
-    if (the_options()->is_set(options::fatal_except_opt))
-        return &fatal_error_except;
-    else
-        return fatal_error;
-}
-
 auto mir::DefaultServerConfiguration::the_logger()
     -> std::shared_ptr<ml::Logger>
 {

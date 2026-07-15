@@ -248,8 +248,6 @@ void mir::run_mir(
         main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
     }
 
-    FatalErrorStrategy fatal_error_strategy{config.the_fatal_error_strategy()};
-
     DisplayServer server(config);
     server_ptr = &server;
 
