@@ -26,23 +26,12 @@
 namespace mir
 {
 /**
- * fatal_error() is strictly for "this should never happen" situations that
- * you cannot recover from. By default it points at fatal_error_abort().
- * Note the reason parameter is a simple char* so its value is clearly visible
- * in stack trace output.
- * \remark There is no attempt to make this thread-safe, if it needs to be changed
- * that should be done before spinning up the Mir server.
- *   \param [in] reason  A printf-style format string.
- */
-extern void (*fatal_error)(char const* reason, ...);
-
-/**
- * An alternative to fatal_error_except() that kills the program and dump core
- * as cleanly as possible.
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dump core as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
 [[noreturn]]
-void fatal_error_abort(char const* reason, ...);
+void fatal_error(char const* reason, ...);
 } // namespace mir
 
 #endif // MIR_FATAL_H_

@@ -286,7 +286,7 @@ void msh::BasicIdleHandler::register_observers(ProofOfMutexLock const&)
     {
         if (*off_timeout <= time::Duration{0})
         {
-            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", off_timeout->count());
+            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", static_cast<int64_t>(off_timeout->count()));
         }
         if (*off_timeout >= dim_time_before_off * 2)
         {

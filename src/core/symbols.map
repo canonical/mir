@@ -27,8 +27,6 @@ MIR_CORE_2.29 {
     mir::Fd::invalid*;
     mir::Fd::operator*;
     mir::fatal_error*;
-    mir::fatal_error_abort*;
-    mir::fatal_error_except*;
     mir::geometry::Rectangles::Rectangles*;
     mir::geometry::Rectangles::add*;
     mir::geometry::Rectangles::begin*;
