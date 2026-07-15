@@ -17,6 +17,8 @@
 #include <mir/logging/tag.h>
 #include <mir/logging/event.h>
 
+#include <ranges>
+
 namespace ml = mir::logging;
 
 class ml::Event::Impl
@@ -50,12 +52,33 @@ public:
         return location_;
     }
 
+    class ImplWithAllocatedMessage;
 private:
     Severity const sev_;
     Tags const tags_;
     std::string_view const message_;
     std::source_location const location_;
 };
+
+static auto const& uncategorised_tag = ml::create_tag(ml::base(), "uncategorised");
+
+class ml::Event::Impl::ImplWithAllocatedMessage : public Impl
+{
+public:
+    ImplWithAllocatedMessage(
+        Severity sev,
+        std::unique_ptr<char const[]> message,
+        std::source_location loc)
+        : Impl(sev, std::span{&uncategorised_ref, 1}, std::string_view{message.get()}, loc),
+          message_storage{std::move(message)}
+    {
+    }
+private:
+    static std::reference_wrapper<Tag const> const uncategorised_ref;
+    std::unique_ptr<char const[]> const message_storage;
+};
+
+std::reference_wrapper<ml::Tag const> const ml::Event::Impl::ImplWithAllocatedMessage::uncategorised_ref = std::cref(uncategorised_tag);
 
 ml::Event::Event(
     Severity sev,
@@ -65,6 +88,31 @@ ml::Event::Event(
     : impl{new Impl{sev, tags, message, location}, [](Impl* p) { delete p; }}
 {
 }
+
+namespace
+{
+auto create_message_string(std::string_view component, std::string_view message) -> std::unique_ptr<char const[]>
+{
+    auto const combined_message = std::views::concat(component, std::string_view{": "}, message);
+    auto storage = std::make_unique<char[]>(combined_message.size() + 1);
+
+    std::ranges::copy(combined_message, storage.get());
+
+    return storage;
+}
+}
+
+ml::Event::Event(
+    Severity sev,
+    std::string_view component,
+    std::string_view message,
+    std::source_location location)
+    : impl{
+        new Impl::ImplWithAllocatedMessage{sev, create_message_string(component, message), location},
+        [](Impl* p) { delete static_cast<Impl::ImplWithAllocatedMessage*>(p); }}
+{
+}
+
 
 auto ml::Event::severity() const -> Severity
 {
