@@ -42,6 +42,11 @@ public:
 
     ~ClaimedBuffer() override;
 
+    ClaimedBuffer(ClaimedBuffer const&) = delete;
+    ClaimedBuffer& operator=(ClaimedBuffer const&) = delete;
+    ClaimedBuffer(ClaimedBuffer&&) = delete;
+    ClaimedBuffer& operator=(ClaimedBuffer&&) = delete;
+
     auto map_readable() const -> std::unique_ptr<mir::renderer::software::Mapping<std::byte const>> override;
     mir::graphics::BufferID id() const override;
     mir::geometry::Size size() const override;
@@ -49,8 +54,8 @@ public:
     mir::graphics::NativeBufferBase* native_buffer_base() override;
 
 private:
-    std::shared_ptr<mir::graphics::Buffer> const buffer;
-    std::function<void()> const release_callback;
+    std::shared_ptr<mir::graphics::Buffer> buffer;
+    std::function<void()> release_callback;
 };
 }
 
