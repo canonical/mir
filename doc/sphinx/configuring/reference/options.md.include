@@ -178,11 +178,6 @@ Mouse scroll speed scaling factor. Use negative values for natural scrolling.
 
 Mouse vertical scroll speed scaling factor. Use negative values for natural scrolling.
 
-(global-on-fatal-error-except)=
-### `on-fatal-error-except`
-
-Throw an exception when a fatal error condition occurs. This replaces the default behaviour of dumping core and can make it easier to diagnose issues.
-
 (global-platform-display-libs)=
 ### `platform-display-libs`
 
