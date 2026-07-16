@@ -58,7 +58,7 @@ namespace
 auto const default_capture_width = 150;
 auto const default_capture_height = 150;
 auto const min_magnification = 1.0f;
-auto const default_magnification = 1.5f;
+auto const default_magnification = 1.25f;
 auto const max_magnification = 8.0f;
 
 /// Diameter in pixels of the circular drag handle shown at the corner of the magnifier.
@@ -77,7 +77,7 @@ auto const zoom_stack_height = 2 * drag_handle_diameter + zoom_stack_padding;
 auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height;
 
 /// Magnification step applied by each zoom button press.
-auto const zoom_step = 0.5f;
+auto const zoom_step = 0.25f;
 
 /// Painter colour/alpha constants for handle indicator graphics.
 uint8_t constexpr disc_grey  = 40;

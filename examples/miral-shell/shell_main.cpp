@@ -223,9 +223,9 @@ int main(int argc, char const* argv[])
         {
             if (modifiers & mir_input_event_modifier_shift)
             {
-                auto const magnifier_min_magnification = 1.5f;
+                auto const magnifier_min_magnification = 1.25f;
                 auto const magnifier_max_magnification = 8.0f;
-                auto const magnifier_magnification_step = 0.5f;
+                auto const magnifier_magnification_step = 0.25f;
 
                 // Zoom the magnifier in/out on ctrl shift +/-
                 switch (mir_keyboard_event_keysym(key_event))

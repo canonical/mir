@@ -553,7 +553,7 @@ TEST_F(MagnifierHandleTest, zoom_in_handle_increases_magnification)
 
     click(element_center(zoom_in_handle_index));
 
-    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(1.5f, 1.5f, 1.0f));
     EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
     EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before));
 }
