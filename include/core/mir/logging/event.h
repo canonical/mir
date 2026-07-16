@@ -53,6 +53,11 @@ public:
     auto message() const -> std::string_view;
     auto location() const -> std::source_location;
 
+    /**
+     * Should this Event be logged given the current logging configuration?
+     */
+    auto should_log() const -> bool;
+
     Event(Event const&) = delete;
     Event(Event&&) = delete;
     auto operator=(Event const&) -> Event& = delete;

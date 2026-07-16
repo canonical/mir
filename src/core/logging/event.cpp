@@ -17,6 +17,7 @@
 #include <mir/logging/tag.h>
 #include <mir/logging/event.h>
 
+#include <algorithm>
 #include <ranges>
 
 namespace ml = mir::logging;
@@ -132,4 +133,11 @@ auto ml::Event::message() const -> std::string_view
 auto ml::Event::location() const -> std::source_location
 {
     return impl->location();
+}
+
+auto ml::Event::should_log() const -> bool
+{
+    auto const sev = impl->severity();
+    return
+        std::ranges::any_of(impl->tags(), [sev](Tag const& tag) { return ml::logging_enabled_for(tag, sev); });
 }
