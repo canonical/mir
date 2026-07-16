@@ -80,12 +80,6 @@ char const* mir::event_type_to_c_str(MirEventType t)
     std::unreachable();
 }
 
-std::string mir::event_type_to_string(MirEventType t)
-{
-    return event_type_to_c_str(t);
-}
-
-
 MirEventType mir_event_get_type(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
     return ev->type();
