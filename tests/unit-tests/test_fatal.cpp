@@ -28,3 +28,9 @@ TEST(FatalErrorDeathTest, fatal_error_formats_message_to_stderr)
                                       "Mary", 1, "little", "lamb"),
                      "Mary had 1 little lamb");
 }
+
+TEST(FatalErrorDeathTest, mir_fatal_error_formats_message_and_source_location)
+{
+    MIR_EXPECT_DEATH(MIR_FATAL_ERROR("{} had {} {} {}", "Mary", 1, "little", "lamb"),
+                     "Mary had 1 little lamb .*test_fatal.cpp:[0-9]+ in .*mir_fatal_error_formats_message_and_source_location");
+}

@@ -19,6 +19,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstdarg>
+#include <iostream>
 
 [[noreturn]]
 void mir::fatal_error(char const* reason, ...)
@@ -33,6 +34,18 @@ void mir::fatal_error(char const* reason, ...)
     std::vfprintf(stderr, reason, args);
     std::fprintf(stderr, "\n");
     va_end(args);
+
+    std::abort();
+}
+
+[[noreturn]]
+void mir::fatal_error(std::source_location const loc, std::string_view message)
+{
+    std::println(std::cerr, "Mir fatal error: {} ({}:{} in {})",
+        message,
+        loc.file_name(),
+        loc.line(),
+        loc.function_name());
 
     std::abort();
 }
