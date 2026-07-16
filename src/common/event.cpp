@@ -20,7 +20,7 @@
 
 #include "events/event_private.h"
 
-#include <mir/events/event_type_to_string.h>
+#include <mir/events/event_type_formatter.h>
 #include <mir/fatal.h>
 
 #include <mir_toolkit/events/event.h>
@@ -41,8 +41,7 @@ void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXC
     auto type = ev->type();
     if (type != t)
     {
-        MIR_FATAL_ERROR("Expected {} but event is of type {}",
-            mir::event_type_to_c_str(t), mir::event_type_to_c_str(type));
+        MIR_FATAL_ERROR("Expected {} but event is of type {}", t, type);
     }
 })
 
@@ -55,36 +54,35 @@ void expect_index_in_range(size_t size, size_t index)
 }
 }
 
-char const* mir::event_type_to_c_str(MirEventType t)
+auto std::formatter<MirEventType>::format(MirEventType type, std::format_context& ctx) const -> std::format_context::iterator
 {
-    switch (t)
+    auto to_c_str = [](MirEventType t)
     {
-    case mir_event_type_window:
-        return "mir_event_type_window";
-    case mir_event_type_resize:
-        return "mir_event_type_resize";
-    case mir_event_type_orientation:
-        return "mir_event_type_orientation";
-    case mir_event_type_close_window:
-        return "mir_event_type_close_window";
-    case mir_event_type_input:
-        return "mir_event_type_input";
-    case mir_event_type_input_device_state:
-        return "mir_event_type_input_device_state";
-    case mir_event_type_window_output:
-        return "mir_event_type_window_output";
-    case mir_event_type_window_placement:
-        return "mir_event_type_window_placement";
-    }
+        switch (t)
+        {
+        case mir_event_type_window:
+            return "mir_event_type_window";
+        case mir_event_type_resize:
+            return "mir_event_type_resize";
+        case mir_event_type_orientation:
+            return "mir_event_type_orientation";
+        case mir_event_type_close_window:
+            return "mir_event_type_close_window";
+        case mir_event_type_input:
+            return "mir_event_type_input";
+        case mir_event_type_input_device_state:
+            return "mir_event_type_input_device_state";
+        case mir_event_type_window_output:
+            return "mir_event_type_window_output";
+        case mir_event_type_window_placement:
+            return "mir_event_type_window_placement";
+        }
 
-    std::unreachable();
+        std::unreachable();
+    };
+
+    return std::format_to(ctx.out(), "{}", to_c_str(type));
 }
-
-std::string mir::event_type_to_string(MirEventType t)
-{
-    return event_type_to_c_str(t);
-}
-
 
 MirEventType mir_event_get_type(MirEvent const* ev) MIR_HANDLE_EVENT_EXCEPTION(
 {
@@ -96,7 +94,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
     auto const type = ev->type();
     if (type != mir_event_type_input)
     {
-        MIR_FATAL_ERROR("Expected input event but event is of type {}", mir::event_type_to_c_str(type));
+        MIR_FATAL_ERROR("Expected input event but event is of type {}", type);
     }
 
     return ev->to_input();
