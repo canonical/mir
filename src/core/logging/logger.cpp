@@ -50,7 +50,11 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
     std::vsnprintf(message, bufsize, format, va);
     va_end(va);
 
-    log(Event{severity, std::string{component}, std::string{message}});
+    Event const ev{severity, std::string{component}, std::string{message}};
+    if (ev.should_log())
+    {
+        log(ev);
+    }
 }
 
 namespace
@@ -71,16 +75,25 @@ std::shared_ptr<ml::Logger> get_logger()
 
 void ml::log(ml::Severity severity, const std::string& message, const std::string& component, std::source_location location)
 {
-    auto const logger = get_logger();
+    Event const ev{severity, component, message, location};
 
-    logger->log(Event{severity, component, message, location});
+    if (ev.should_log())
+    {
+        auto const logger = get_logger();
+
+        logger->log(ev);
+    }
 }
 
 void ml::log(Severity severity, Tags tags, std::string_view message, std::source_location location)
 {
-    auto const logger = get_logger();
+    Event const ev{severity, tags, message, location};
+    if (ev.should_log())
+    {
+        auto const logger = get_logger();
 
-    logger->log(Event{severity, tags, message, location});
+        logger->log(ev);
+    }
 }
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
