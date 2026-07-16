@@ -47,7 +47,7 @@ std::string mir_test_framework::library_path()
     if (libpath.empty())
     {
         // Try to find the location of libmircore.so
-        void (*fn_in_mircore)(char const*, ...) = mir::fatal_error;
+        void (&fn_in_mircore)(std::source_location const loc, std::string_view) = mir::fatal_error;
         Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
         dladdr(reinterpret_cast<void*>(&fn_in_mircore), &library_info);
 

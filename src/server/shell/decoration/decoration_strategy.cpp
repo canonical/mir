@@ -416,8 +416,7 @@ auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::Bord
         return BorderType::None;
     }
 
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
-    return {};
+    MIR_FATAL_ERROR("should be unreachable");
 }
 
 auto msd::DecorationStrategy::default_decoration_strategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) -> std::shared_ptr<DecorationStrategy>

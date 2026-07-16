@@ -41,7 +41,7 @@ void expect_event_type(EventType const* ev, MirEventType t) MIR_HANDLE_EVENT_EXC
     auto type = ev->type();
     if (type != t)
     {
-        mir::fatal_error("Expected %s but event is of type %s",
+        MIR_FATAL_ERROR("Expected {} but event is of type {}",
             mir::event_type_to_c_str(t), mir::event_type_to_c_str(type));
     }
 })
@@ -50,7 +50,7 @@ void expect_index_in_range(size_t size, size_t index)
 {
     if (index >= size)
     {
-        mir::fatal_error("Index out of range in event data access");
+        MIR_FATAL_ERROR("Index out of range in event data access");
     }
 }
 }
@@ -90,7 +90,7 @@ MirInputEvent const* mir_event_get_input_event(MirEvent const* ev) MIR_HANDLE_EV
     auto const type = ev->type();
     if (type != mir_event_type_input)
     {
-        mir::fatal_error("Expected input event but event is of type %s", mir::event_type_to_c_str(type));
+        MIR_FATAL_ERROR("Expected input event but event is of type {}", mir::event_type_to_c_str(type));
     }
 
     return ev->to_input();

@@ -101,7 +101,7 @@ void mgg::RealKMSOutput::reset()
     }
     catch (std::exception const& e)
     {
-        fatal_error("%s", e.what());
+        MIR_FATAL_ERROR("{}", e.what());
     }
 
     // TODO: What if we can't locate the DPMS property?
@@ -219,8 +219,8 @@ void mgg::RealKMSOutput::clear_crtc()
         }
         else
         {
-            fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                        mgk::connector_name(connector).c_str(), result);
+            MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
+                        mgk::connector_name(connector), result);
         }
     }
 
@@ -251,8 +251,8 @@ void mgg::RealKMSOutput::wait_for_page_flip()
         return;
     if (!current_crtc)
     {
-        fatal_error("Output %s has no associated CRTC to wait on",
-                   mgk::connector_name(connector).c_str());
+        MIR_FATAL_ERROR("Output {} has no associated CRTC to wait on",
+                   mgk::connector_name(connector));
     }
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }

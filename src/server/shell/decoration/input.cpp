@@ -169,7 +169,7 @@ void msd::InputManager::update_window_state(WindowState const& window_state)
         }
         else
         {
-            fatal_error("Invalid widget");
+            MIR_FATAL_ERROR("Invalid widget");
         }
     }
 

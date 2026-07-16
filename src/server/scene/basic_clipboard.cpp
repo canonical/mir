@@ -37,7 +37,7 @@ void ms::BasicClipboard::set_paste_source(std::shared_ptr<DataExchangeSource> co
 {
     if (!source)
     {
-        fatal_error("BasicClipboard::set_paste_source(nullptr)");
+        MIR_FATAL_ERROR("BasicClipboard::set_paste_source(nullptr)");
     }
     bool notify{false};
     {
@@ -93,7 +93,7 @@ void mir::scene::BasicClipboard::set_drag_n_drop_source(std::shared_ptr<DataExch
 {
     if (!source)
     {
-        fatal_error("BasicClipboard::start_drag_n_drop_gesture(nullptr)");
+        MIR_FATAL_ERROR("BasicClipboard::start_drag_n_drop_gesture(nullptr)");
     }
     bool notify{false};
     {
@@ -114,7 +114,7 @@ void mir::scene::BasicClipboard::clear_drag_n_drop_source(std::shared_ptr<DataEx
 {
     if (!source)
     {
-        fatal_error("BasicClipboard::clear_drag_n_drop_source(nullptr)");
+        MIR_FATAL_ERROR("BasicClipboard::clear_drag_n_drop_source(nullptr)");
     }
     bool notify{false};
     {
