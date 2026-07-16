@@ -35,7 +35,7 @@ matches the filter passed to `ConfigFile` are included.
 ## Override ordering and precedence
 
 1. The base file is loaded first.
-1. Override files are collected from all roots and deduplicated by basename: if two roots
+1. Override files are collected from all roots and de-duplicated by basename: if two roots
    provide a file with the same basename, the higher-priority root's copy is used.
 1. The resulting set is sorted lexicographically by basename and applied in
    that order. Taking whole number prefixes into account.
