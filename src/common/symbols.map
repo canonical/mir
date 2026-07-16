@@ -63,6 +63,9 @@ global:
   mir_window_event_get_attribute_value;
 
   extern "C++" {
+    "std::formatter<MirPointerConfig, char>::format(MirPointerConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+    "std::formatter<MirTouchpadConfig, char>::format(MirTouchpadConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+    "std::formatter<MirTouchscreenConfig, char>::format(MirTouchscreenConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
     ?MirCloseWindowEvent*;
     ?MirKeyboardEvent*;
     ?MirPointerEvent*;
@@ -395,8 +398,6 @@ global:
     mir::dispatch::epoll_to_fd_event*;
     mir::dispatch::fd_event_to_epoll*;
     mir::errno_to_cstr*;
-    mir::event_type_to_c_str*;
-    mir::event_type_to_string*;
     mir::events::TouchContactV2::TouchContactV2*;
     mir::events::TouchContactV2::operator*;
     mir::events::add_touch*;
@@ -665,9 +666,6 @@ global:
     vtable?for?mir::time::Clock;
     vtable?for?mir::time::PosixTimestamp;
     vtable?for?mir::time::SteadyClock;
-    "std::formatter<MirPointerConfig, char>::format(MirPointerConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
-    "std::formatter<MirTouchpadConfig, char>::format(MirTouchpadConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
-    "std::formatter<MirTouchscreenConfig, char>::format(MirTouchscreenConfig const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
   };
 local: *;
 };
