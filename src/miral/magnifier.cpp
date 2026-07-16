@@ -241,9 +241,7 @@ private:
 
             // For mir_pixel_format_argb_8888 on little-endian: memory layout [B, G, R, A].
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            std::span<std::uint8_t> const pixels{
-                reinterpret_cast<std::uint8_t*>(mapping->data()),
-                mapping->len()};
+            std::span<std::uint8_t> const pixels{reinterpret_cast<std::uint8_t*>(mapping->data()), mapping->len()};
             auto const offset = y * stride.as_value() + x * MIR_BYTES_PER_PIXEL(format);
             auto const pixel = pixels.subspan(offset, MIR_BYTES_PER_PIXEL(format));
             pixel[0] = pixel[1] = pixel[2] = grey;
