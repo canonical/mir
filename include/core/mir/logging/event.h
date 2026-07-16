@@ -38,7 +38,11 @@ public:
      * Event should almost always be directly constructed during a function call
      * to Logger::log().
      */
-    Event(Severity sev, Tags tags, std::string_view message, std::source_location location = std::source_location::current());
+    Event(
+        Severity sev,
+        Tags tags,
+        std::string_view message,
+        std::source_location location = std::source_location::current());
 
     /**
      * Transitional Event constructor for call-sites that have not yet migrated to Tags
@@ -46,7 +50,11 @@ public:
      * These Events are all categorised in a catch-all "uncategorised" tag;
      * the `category` included here is added to the message
      */
-    Event(Severity sev, std::string_view component, std::string_view message, std::source_location location = std::source_location::current());
+    Event(
+        Severity sev,
+        std::string_view component,
+        std::string_view message,
+        std::source_location location = std::source_location::current());
 
     auto severity() const -> Severity;
     auto tags() const -> Tags;
@@ -62,10 +70,11 @@ public:
     Event(Event&&) = delete;
     auto operator=(Event const&) -> Event& = delete;
     auto operator=(Event&&) -> Event& = delete;
+
 private:
     class Impl;
     // Impl ptr has explicit deleter to allow us to do memory shenanagins for optimisation.
-    std::unique_ptr<Impl, void(*)(Impl*)> const impl;
+    std::unique_ptr<Impl, void (*)(Impl*)> const impl;
 };
 }
 

@@ -30,11 +30,8 @@ namespace mir::logging
 {
 inline void PrintTo(Event const& ev, std::ostream* os)
 {
-    *os <<
-        (ev.tags() |
-            std::views::transform([](Tag const& tag) { return tag::name(tag); }) |
-            std::views::join_with(':') |
-            std::ranges::to<std::string>())
+    *os << (ev.tags() | std::views::transform([](Tag const& tag) { return tag::name(tag); }) |
+            std::views::join_with(':') | std::ranges::to<std::string>())
         << ": " << ev.message();
 }
 }
@@ -57,32 +54,21 @@ class IsTagMatcher
 public:
     using is_gtest_matcher = void;
 
-    IsTagMatcher(mir::logging::Tag const& t)
-        : tag{&t}
-    {
-    }
+    IsTagMatcher(mir::logging::Tag const& t) : tag{&t} {}
 
-    bool MatchAndExplain(std::reference_wrapper<mir::logging::Tag const> t, std::ostream*) const {
-        return &t.get() == tag;
-    }
+    bool MatchAndExplain(std::reference_wrapper<mir::logging::Tag const> t, std::ostream*) const
+    { return &t.get() == tag; }
 
-    void DescribeTo(std::ostream* os) const {
-        *os << "is the tag " << mir::logging::tag::name(*tag);
-    }
+    void DescribeTo(std::ostream* os) const { *os << "is the tag " << mir::logging::tag::name(*tag); }
 
-    void DescribeNegationTo(std::ostream* os) const {
-        *os << "is not the tag " << mir::logging::tag::name(*tag);
-    }
+    void DescribeNegationTo(std::ostream* os) const { *os << "is not the tag " << mir::logging::tag::name(*tag); }
 
 private:
-     mir::logging::Tag const* const tag;
+    mir::logging::Tag const* const tag;
 };
 
-inline auto IsTag(mir::logging::Tag const& tag)
-    -> testing::Matcher<std::reference_wrapper<mir::logging::Tag const>>
-{
-    return IsTagMatcher(tag);
-}
+inline auto IsTag(mir::logging::Tag const& tag) -> testing::Matcher<std::reference_wrapper<mir::logging::Tag const>>
+{ return IsTagMatcher(tag); }
 
 MATCHER_P3(LogMatching, severity_matcher, message_matcher, tags_matcher, "")
 {

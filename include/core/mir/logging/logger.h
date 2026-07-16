@@ -60,8 +60,16 @@ protected:
     Logger& operator=(Logger const&) = delete;
 };
 
-void log(Severity severity, std::string const& message, std::string const& component, std::source_location location = std::source_location::current());
-void log(Severity severity, Tags tags, std::string_view message, std::source_location location = std::source_location::current());
+void log(
+    Severity severity,
+    std::string const& message,
+    std::string const& component,
+    std::source_location location = std::source_location::current());
+void log(
+    Severity severity,
+    Tags tags,
+    std::string_view message,
+    std::source_location location = std::source_location::current());
 void set_logger(std::shared_ptr<Logger> const& new_logger);
 void format_message(std::ostream& stream, Severity severity, std::string_view message, std::string_view component);
 
