@@ -44,6 +44,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <span>
 
 namespace mi = mir::input;
 namespace ms = mir::scene;
@@ -68,13 +69,13 @@ auto const drag_handle_diameter = 48;
 auto const zoom_stack_padding = 8;
 
 /// Height of the vertical zoom-in/zoom-out button stack.
-auto const zoom_stack_height = 2 * drag_handle_diameter + zoom_stack_padding;
+geom::Height const zoom_stack_height{2 * drag_handle_diameter + zoom_stack_padding};
 
 /// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
 /// Derived so the drag handle (bottom-right corner) and the zoom button stack
 /// (right edge, vertically centred) never overlap each other: the drag handle
 /// needs a full diameter of clearance both above and below the centred stack.
-auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height;
+auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height.as_int();
 
 /// Magnification step applied by each zoom button press.
 auto const zoom_step = 0.25f;
@@ -157,12 +158,27 @@ private:
     class BufferPainter
     {
     public:
+        struct HorizontalLine
+        {
+            geom::X start;
+            geom::X end;
+            geom::Y y;
+            geom::Height thickness;
+        };
+
+        struct VerticalLine
+        {
+            geom::X x;
+            geom::Y start;
+            geom::Y end;
+            geom::Width thickness;
+        };
+
         explicit BufferPainter(mg::Buffer& buffer) :
             writable{mrs::as_write_mappable(std::shared_ptr<mg::Buffer>(&buffer, [](mg::Buffer*) {}))},
             mapping{writable->map_writeable()},
-            stride{mapping->stride().as_int()},
-            width{buffer.size().width.as_int()},
-            height{buffer.size().height.as_int()}
+            stride{mapping->stride()},
+            size{buffer.size()}
         {
             assert(mapping->format() == format);
         }
@@ -174,79 +190,78 @@ private:
 
         void fill_circle(uint8_t grey, uint8_t alpha)
         {
-            float const cx = (width - 1) / 2.0f;
-            float const cy = (height - 1) / 2.0f;
-            float const r = std::min(cx, cy);
-            float const r_sq = r * r;
+            auto const cx = geom::as_x((size.width - geom::DeltaX{1}) / 2.0f);
+            auto const cy = geom::as_y((size.height - geom::DeltaY{1}) / 2.0f);
+            auto const r = std::min(cx.as_value(), cy.as_value());
+            auto const r_sq = r * r;
 
-            for (int y = 0; y < height; ++y)
+            for (geom::Y y{0}; y < geom::as_y(size.height); y = y + geom::DeltaY{1})
             {
-                for (int x = 0; x < width; ++x)
+                for (geom::X x{0}; x < geom::as_x(size.width); x = x + geom::DeltaX{1})
                 {
-                    float const dx = x - cx;
-                    float const dy = y - cy;
-                    if (dx * dx + dy * dy <= r_sq)
-                        set_pixel(x, y, grey, alpha);
+                    auto const dx = x - cx;
+                    auto const dy = y - cy;
+                    auto const delta = dx.as_value() * dx.as_value() + dy.as_value() * dy.as_value();
+
+                    if (delta <= r_sq)
+                        set_pixel(geom::Point{x, y}, grey, alpha);
                 }
             }
         }
 
         void draw_horizontal_line(
-            int x0,
-            int x1,
-            int y,
-            int thickness,
+            HorizontalLine const& line,
             uint8_t grey,
             uint8_t alpha)
         {
-            for (int t = 0; t < thickness; ++t)
-                for (int x = std::min(x0, x1); x <= std::max(x0, x1); ++x)
-                    set_pixel(x, y + t, grey, alpha);
+            auto const true_start = std::min<geom::X>(line.start, line.end);
+            auto const true_end = std::max<geom::X>(line.start, line.end);
+            for (int t = 0; t < line.thickness.as_value(); ++t)
+                for (auto x = true_start; x <= true_end; x = x + geom::DeltaX{1})
+                    set_pixel(geom::Point{x, line.y + geom::DeltaY{t}}, grey, alpha);
         }
 
         void draw_vertical_line(
-            int x,
-            int y0,
-            int y1,
-            int thickness,
+            VerticalLine const& line,
             uint8_t grey,
             uint8_t alpha)
         {
-            for (int t = 0; t < thickness; ++t)
-                for (int y = std::min(y0, y1); y <= std::max(y0, y1); ++y)
-                    set_pixel(x + t, y, grey, alpha);
+            auto const true_start = std::min<geom::Y>(line.start, line.end);
+            auto const true_end = std::max<geom::Y>(line.start, line.end);
+            for (int t = 0; t < line.thickness.as_value(); ++t)
+                for (auto y = true_start; y <= true_end; y = y + geom::DeltaY{1})
+                    set_pixel(geom::Point{line.x + geom::DeltaX{t}, y}, grey, alpha);
         }
 
-        auto buffer_width() const -> int
+        auto buffer_size() const -> geom::Size
         {
-            return width;
-        }
-
-        auto buffer_height() const -> int
-        {
-            return height;
+            return size;
         }
 
     private:
-        void set_pixel(int x, int y, uint8_t grey, uint8_t alpha)
+        void set_pixel(geom::Point const& point, uint8_t grey, uint8_t alpha)
         {
-            if (x < 0 || x >= width || y < 0 || y >= height)
+            auto const x = point.x.as_value();
+            auto const y = point.y.as_value();
+            if (x < 0 || x >= size.width.as_value() || y < 0 || y >= size.height.as_value())
                 return;
 
             // For mir_pixel_format_argb_8888 on little-endian: memory layout [B, G, R, A].
             // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-            auto* pixels = reinterpret_cast<std::uint8_t*>(mapping->data());
-            auto* p = pixels + y * stride + x * MIR_BYTES_PER_PIXEL(format);
-            p[0] = p[1] = p[2] = grey;
-            p[3] = alpha;
+            std::span<std::uint8_t> const pixels{
+                reinterpret_cast<std::uint8_t*>(mapping->data()),
+                mapping->len()};
+            auto const offset = y * stride.as_value() + x * MIR_BYTES_PER_PIXEL(format);
+            auto const pixel = pixels.subspan(offset, MIR_BYTES_PER_PIXEL(format));
+            pixel[0] = pixel[1] = pixel[2] = grey;
+            pixel[3] = alpha;
         }
 
         static auto constexpr format = mir_pixel_format_argb_8888;
         std::shared_ptr<mrs::WriteMappable> const writable;
         std::unique_ptr<mrs::Mapping<std::byte>> const mapping;
-        int const stride;
-        int const width;
-        int const height;
+        geom::Stride const stride;
+        geom::Size const size;
     };
 
     static void fill_drag_buffer(mg::Buffer& buffer)
@@ -261,38 +276,85 @@ private:
         static int constexpr stem_thickness = 3;
         static int constexpr base_dist = (tip_dist - head_len);
 
-        int const w  = painter.buffer_width();
-        int const h  = painter.buffer_height();
-        int const center_x = (w - 1) / 2;
-        int const center_y = (h - 1) / 2;
-        int const tip_n  = center_y - tip_dist;
-        int const tip_s  = center_y + tip_dist;
-        int const tip_w  = center_x - tip_dist;
-        int const tip_e  = center_x + tip_dist;
-        int const base_n = center_y - base_dist;
-        int const base_s = center_y + base_dist;
-        int const base_w = center_x - base_dist;
-        int const base_e = center_x + base_dist;
+        auto const [w, h]  = painter.buffer_size();
+        auto const center_x = geom::as_x((w - geom::DeltaX{1}) / 2);
+        auto const center_y = geom::as_y((h - geom::DeltaY{1}) / 2);
+        auto const tip_n  = center_y - geom::DeltaY{tip_dist};
+        auto const tip_s  = center_y + geom::DeltaY{tip_dist};
+        auto const tip_w  = center_x - geom::DeltaX{tip_dist};
+        auto const tip_e  = center_x + geom::DeltaX{tip_dist};
+        auto const base_n = center_y - geom::DeltaY{base_dist};
+        auto const base_s = center_y + geom::DeltaY{base_dist};
+        auto const base_w = center_x - geom::DeltaX{base_dist};
+        auto const base_e = center_x + geom::DeltaX{base_dist};
 
         // Stems
-        painter.draw_vertical_line(center_x - stem_thickness / 2, base_n, base_s, stem_thickness, icon_grey, icon_alpha);
-        painter.draw_horizontal_line(base_w, base_e, center_y - stem_thickness / 2, stem_thickness, icon_grey, icon_alpha);
+        painter.draw_vertical_line(
+            {
+                .x = center_x - geom::DeltaX{stem_thickness / 2},
+                .start = base_n,
+                .end = base_s,
+                .thickness = geom::Width{stem_thickness},
+            },
+            icon_grey,
+            icon_alpha);
+        painter.draw_horizontal_line(
+            {
+                .start = base_w,
+                .end = base_e,
+                .y = center_y - geom::DeltaY{stem_thickness / 2},
+                .thickness = geom::Height{stem_thickness},
+            },
+            icon_grey,
+            icon_alpha);
 
         // North arrowhead — rows from tip_n+1 to base_n, width grows by 1 px per row
-        for (int y = tip_n + 1; y <= base_n; ++y)
-            painter.draw_horizontal_line(center_x - (y - tip_n), center_x + (y - tip_n), y, 1, icon_grey, icon_alpha);
+        for (auto y = tip_n + geom::DeltaY{1}; y <= base_n; y = y + geom::DeltaY{1})
+            painter.draw_horizontal_line(
+                {
+                    .start = center_x - geom::DeltaX((y - tip_n).as_value()),
+                    .end = center_x + geom::DeltaX((y - tip_n).as_value()),
+                    .y = y,
+                    .thickness = geom::Height{1},
+                },
+                icon_grey,
+                icon_alpha);
 
         // South arrowhead
-        for (int y = base_s; y < tip_s; ++y)
-            painter.draw_horizontal_line(center_x - (tip_s - y), center_x + (tip_s - y), y, 1, icon_grey, icon_alpha);
+        for (auto y = base_s; y < tip_s; y = y + geom::DeltaY{1})
+            painter.draw_horizontal_line(
+                {
+                    .start = center_x - geom::DeltaX((tip_s - y).as_value()),
+                    .end = center_x + geom::DeltaX((tip_s - y).as_value()),
+                    .y = y,
+                    .thickness = geom::Height{1},
+                },
+                icon_grey,
+                icon_alpha);
 
         // West arrowhead — columns from tip_w+1 to base_w
-        for (int x = tip_w + 1; x <= base_w; ++x)
-            painter.draw_vertical_line(x, center_y - (x - tip_w), center_y + (x - tip_w), 1, icon_grey, icon_alpha);
+        for (auto x = tip_w + geom::DeltaX{1}; x <= base_w; x = x + geom::DeltaX{1})
+            painter.draw_vertical_line(
+                {
+                    .x = x,
+                    .start = center_y - geom::DeltaY((x - tip_w).as_value()),
+                    .end = center_y + geom::DeltaY((x - tip_w).as_value()),
+                    .thickness = geom::Width{1},
+                },
+                icon_grey,
+                icon_alpha);
 
         // East arrowhead
-        for (int x = base_e; x < tip_e; ++x)
-            painter.draw_vertical_line(x, center_y - (tip_e - x), center_y + (tip_e - x), 1, icon_grey, icon_alpha);
+        for (auto x = base_e; x < tip_e; x = x + geom::DeltaX{1})
+            painter.draw_vertical_line(
+                {
+                    .x = x,
+                    .start = center_y - geom::DeltaY((tip_e - x).as_value()),
+                    .end = center_y + geom::DeltaY((tip_e - x).as_value()),
+                    .thickness = geom::Width{1},
+                },
+                icon_grey,
+                icon_alpha);
     }
 
     static void fill_resize_buffer(mg::Buffer& buffer)
@@ -305,13 +367,28 @@ private:
         // where the resize handle always sits within the magnifier surface.
         static int constexpr arm_len   = 12;
         static int constexpr thickness = 2;
-        int const w = painter.buffer_width();
-        int const h = painter.buffer_height();
-        int const corner_x =  w / 4;
-        int const corner_y =  h / 4;
+        auto const [w, h] = painter.buffer_size();
+        auto const corner_x =  geom::as_x(w / 4);
+        auto const corner_y =  geom::as_y(h / 4);
 
-        painter.draw_horizontal_line(corner_x, corner_x +  arm_len, corner_y, thickness, icon_grey, icon_alpha);
-        painter.draw_vertical_line(corner_x, corner_y , corner_y +  arm_len, thickness, icon_grey, icon_alpha);
+        painter.draw_horizontal_line(
+            {
+                .start = corner_x,
+                .end = corner_x + geom::DeltaX{arm_len},
+                .y = corner_y,
+                .thickness = geom::Height{thickness},
+            },
+            icon_grey,
+            icon_alpha);
+        painter.draw_vertical_line(
+            {
+                .x = corner_x,
+                .start = corner_y,
+                .end = corner_y + geom::DeltaY{arm_len},
+                .thickness = geom::Width{thickness},
+            },
+            icon_grey,
+            icon_alpha);
     }
 
     static void fill_zoom_buffer(mg::Buffer& buffer, bool zoom_in)
@@ -321,25 +398,28 @@ private:
         painter.fill_circle(disc_grey, disc_alpha);
 
         // Draw + (zoom in) or – (zoom out) symbol.
-        int const w = painter.buffer_width();
-        int const h = painter.buffer_height();
-        int const bar_thickness = std::max(2, w / 12);
-        int const bar_len       = w * 5 / 8;
+        auto const [w, h] = painter.buffer_size();
+        int const bar_thickness = std::max(geom::Width{2}, w / 12).as_value();
+        int const bar_len = (w * 5 / 8).as_value();
 
         painter.draw_horizontal_line(
-            (w - bar_len) / 2,
-            (w + bar_len) / 2 - 1,
-            (h - bar_thickness) / 2,
-            bar_thickness,
+            {
+                .start = geom::as_x((w - geom::Width{bar_len}) / 2),
+                .end = geom::as_x((w + geom::Width{bar_len}) / 2 - geom::DeltaX{1}),
+                .y = geom::as_y((h - geom::Height{bar_thickness}) / 2),
+                .thickness = geom::Height{bar_thickness},
+            },
             icon_grey,
             icon_alpha);
 
         if (zoom_in)
             painter.draw_vertical_line(
-                (w - bar_thickness) / 2,
-                (h - bar_len) / 2,
-                (h + bar_len) / 2 - 1,
-                bar_thickness,
+                {
+                    .x = geom::as_x((w - geom::Width{bar_thickness}) / 2),
+                    .start = geom::as_y((h - geom::Height{bar_len}) / 2),
+                    .end = geom::as_y((h + geom::Height{bar_len}) / 2 - geom::DeltaY{1}),
+                    .thickness = geom::Width{bar_thickness},
+                },
                 icon_grey,
                 icon_alpha);
     }
@@ -425,9 +505,10 @@ private:
 
 geom::Point surface_top_left_from_cursor(geom::Size const& window_size, geom::Point const& cursor_pos)
 {
-    return geom::Point{
-        cursor_pos.x.as_int() - window_size.width.as_int() / 2,
-        cursor_pos.y.as_int() - window_size.height.as_int() / 2};
+    return cursor_pos -
+        geom::Displacement{
+            geom::as_delta(window_size.width / 2),
+            geom::as_delta(window_size.height / 2)};
 }
 
 geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
@@ -450,9 +531,10 @@ geom::Size clamp_visual_size(geom::Size const& visual_size)
 /// centre, so it also fixes the away direction for handle placement.
 geom::Point center(geom::Point const& top_left, geom::Size const& size)
 {
-    return geom::Point{
-        top_left.x.as_int() + size.width.as_int() / 2,
-        top_left.y.as_int() + size.height.as_int() / 2};
+    return top_left +
+        geom::Displacement{
+            geom::as_delta(size.width / 2),
+            geom::as_delta(size.height / 2)};
 }
 }
 
@@ -729,7 +811,13 @@ private:
     struct State
     {
         /// Pixel-space rectangle of signed integer coordinates.
-        struct VisualBounds { int x, y, w, h; };
+        struct VisualBounds
+        {
+            geom::X x;
+            geom::Y y;
+            geom::Width w;
+            geom::Height h;
+        };
 
         ///
         /// The visual rectangle is `mag` times larger than the logical one but
@@ -740,10 +828,10 @@ private:
             geom::Size const& logical_size,
             float mag) const
         {
-            int const w = mag * logical_size.width.as_int();
-            int const h = mag * logical_size.height.as_int();
-            int const x = logical_top_left.x.as_int() - (mag - 1.0f) / 2.0f * logical_size.width.as_int();
-            int const y = logical_top_left.y.as_int() - (mag - 1.0f) / 2.0f * logical_size.height.as_int();
+            auto const w = mag * logical_size.width;
+            auto const h = mag * logical_size.height;
+            auto const x = logical_top_left.x - geom::as_delta((mag - 1.0f) / 2.0f * logical_size.width);
+            auto const y = logical_top_left.y - geom::as_delta((mag - 1.0f) / 2.0f * logical_size.height);
             return {x, y, w, h};
         }
 
@@ -759,13 +847,15 @@ private:
             auto const surface_top_left = surf->top_left();
             auto const logical_size = surf->window_size();
             auto const visual = compute_visual_bounds(surface_top_left, logical_size, magnification);
-            auto const contains = [&point](int x, int y, int width, int height)
+            auto const contains = [&point](geom::Rectangle const& area)
             {
-                return point.x.as_value() >= x && point.x.as_value() < x + width &&
-                    point.y.as_value() >= y && point.y.as_value() < y + height;
+                return point.x.as_value() >= area.left().as_int() &&
+                    point.x.as_value() < area.right().as_int() &&
+                    point.y.as_value() >= area.top().as_int() &&
+                    point.y.as_value() < area.bottom().as_int();
             };
 
-            if (!contains(visual.x, visual.y, visual.w, visual.h))
+            if (!contains(geom::Rectangle{{visual.x, visual.y}, {visual.w, visual.h}}))
                 return false;
 
             auto const [drag_position, resize_position] =
@@ -776,11 +866,9 @@ private:
             for (auto const& handle_position :
                 {drag_position, resize_position, zoom_in_position, zoom_out_position})
             {
-                if (contains(
-                    handle_position.x.as_int(),
-                    handle_position.y.as_int(),
-                    drag_handle_diameter,
-                    drag_handle_diameter))
+                if (contains(geom::Rectangle{
+                    handle_position,
+                    {drag_handle_diameter, drag_handle_diameter}}))
                 {
                     return false;
                 }
@@ -805,22 +893,22 @@ private:
                 return logical_top_left;
 
             auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
-            int const screen_left = screen_bounds.top_left.x.as_int();
-            int const screen_top = screen_bounds.top_left.y.as_int();
-            int const screen_right = screen_left + screen_bounds.size.width.as_int();
-            int const screen_bottom = screen_top + screen_bounds.size.height.as_int();
+            auto const screen_left = screen_bounds.top_left.x;
+            auto const screen_top = screen_bounds.top_left.y;
+            auto const screen_right = screen_left + geom::as_delta(screen_bounds.size.width);
+            auto const screen_bottom = screen_top + geom::as_delta(screen_bounds.size.height);
 
-            int dx = 0;
+            auto dx = geom::DeltaX{0};
             if (vis_x < screen_left)
                 dx = screen_left - vis_x;
-            else if (vis_x + vis_w > screen_right)
-                dx = screen_right - (vis_x + vis_w);
+            else if (vis_x + geom::as_delta(vis_w) > screen_right)
+                dx = screen_right - (vis_x + geom::as_delta(vis_w));
 
-            int dy = 0;
+            auto dy = geom::DeltaY{0};
             if (vis_y < screen_top)
                 dy = screen_top - vis_y;
-            else if (vis_y + vis_h > screen_bottom)
-                dy = screen_bottom - (vis_y + vis_h);
+            else if (vis_y + geom::as_delta(vis_h) > screen_bottom)
+                dy = screen_bottom - (vis_y + geom::as_delta(vis_h));
 
             return logical_top_left + geom::Displacement{geom::DeltaX{dx}, geom::DeltaY{dy}};
         }
@@ -838,51 +926,54 @@ private:
                 return surface_top_left;
 
             auto const visual = compute_visual_bounds(surface_top_left, logical_size, mag);
-            int const screen_left = screen_bounds.top_left.x.as_int();
-            int const screen_top = screen_bounds.top_left.y.as_int();
-            int const screen_width = screen_bounds.size.width.as_int();
-            int const screen_height = screen_bounds.size.height.as_int();
-            int const handle_clearance =
-                static_cast<int>(std::ceil(drag_handle_diameter / mag));
+            auto const screen_left = screen_bounds.top_left.x;
+            auto const screen_top = screen_bounds.top_left.y;
+            auto const screen_width = screen_bounds.size.width;
+            auto const screen_height = screen_bounds.size.height;
+            auto const handle_clearance = static_cast<int>(std::ceil(drag_handle_diameter / mag));
 
-            auto const map_axis = [](
-                int visual_start,
-                int visual_extent,
-                int logical_extent,
-                int screen_start,
-                int screen_extent,
-                int max_out_of_bounds)
+            struct AxisMapping
             {
-                int const visual_travel = screen_extent - visual_extent;
+                int visual_start;
+                int visual_extent;
+                int logical_extent;
+                int screen_start;
+                int screen_extent;
+                int max_out_of_bounds;
+            };
+
+            auto const map_axis = [](AxisMapping const& axis)
+            {
+                int const visual_travel = axis.screen_extent - axis.visual_extent;
 
                 if (visual_travel <= 0)
-                    return screen_start + (screen_extent - logical_extent) / 2;
+                    return axis.screen_start + (axis.screen_extent - axis.logical_extent) / 2;
 
-                double const progress = std::clamp(
-                    static_cast<double>(visual_start - screen_start) / visual_travel,
-                    0.0,
-                    1.0);
-                int const out_of_bounds = std::min(logical_extent / 2, max_out_of_bounds);
-                int const capture_start = screen_start - out_of_bounds;
-                int const capture_travel = screen_extent - logical_extent + 2 * out_of_bounds;
+                auto const progress =
+                    std::clamp(static_cast<double>(axis.visual_start - axis.screen_start) / visual_travel, 0.0, 1.0);
+                int const out_of_bounds = std::min(axis.logical_extent / 2, axis.max_out_of_bounds);
+                int const capture_start = axis.screen_start - out_of_bounds;
+                int const capture_travel = axis.screen_extent - axis.logical_extent + 2 * out_of_bounds;
                 return capture_start + static_cast<int>(std::round(progress * capture_travel));
             };
 
             return geom::Point{
-                map_axis(
-                    visual.x,
-                    visual.w,
-                    logical_size.width.as_int(),
-                    screen_left,
-                    screen_width,
-                    handle_clearance),
-                map_axis(
-                    visual.y,
-                    visual.h,
-                    logical_size.height.as_int(),
-                    screen_top,
-                    screen_height,
-                    handle_clearance)};
+                map_axis({
+                    .visual_start = visual.x.as_value(),
+                    .visual_extent = visual.w.as_value(),
+                    .logical_extent = logical_size.width.as_value(),
+                    .screen_start = screen_left.as_value(),
+                    .screen_extent = screen_width.as_value(),
+                    .max_out_of_bounds = handle_clearance,
+                }),
+                map_axis({
+                    .visual_start = visual.y.as_value(),
+                    .visual_extent = visual.h.as_value(),
+                    .logical_extent = logical_size.height.as_value(),
+                    .screen_start = screen_top.as_value(),
+                    .screen_extent = screen_height.as_value(),
+                    .max_out_of_bounds = handle_clearance,
+                })};
         }
 
         /// Computes the position of the circular drag handle indicator, inset from
@@ -895,8 +986,8 @@ private:
         {
             auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
-            int hx = vis_x + vis_w - drag_handle_diameter;
-            int hy = vis_y + vis_h - drag_handle_diameter;
+            auto hx = vis_x + geom::as_delta(vis_w) - geom::DeltaX{drag_handle_diameter};
+            auto hy = vis_y + geom::as_delta(vis_h) - geom::DeltaY{drag_handle_diameter};
 
             return geom::Point{hx, hy};
         }
@@ -913,10 +1004,7 @@ private:
 
             // Default: circle centred on the top-left corner of the visual magnifier,
             // so it sits half outside the content area.
-            int hx = vis_x;
-            int hy = vis_y;
-
-            return geom::Point{hx, hy};
+            return geom::Point{vis_x, vis_y};
         }
 
         std::pair<geom::Point, geom::Point> compute_both_handle_positions(
@@ -939,12 +1027,14 @@ private:
         {
             auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
 
-            int const stack_width = drag_handle_diameter;
+            geom::Width const stack_width{drag_handle_diameter};
 
-            int const x = vis_x + vis_w - stack_width;
-            int const y = vis_y + vis_h / 2 - zoom_stack_height / 2;
+            auto const x = vis_x + geom::as_delta(vis_w) - geom::as_delta(stack_width);
+            auto const y = vis_y + geom::as_delta(vis_h / 2) - geom::as_delta(zoom_stack_height / 2);
 
-            return {geom::Point{x, y}, geom::Point{x, y + drag_handle_diameter + zoom_stack_padding}};
+            return {
+                geom::Point{x, y},
+                geom::Point{x, y + geom::DeltaY{drag_handle_diameter} + geom::DeltaY{zoom_stack_padding}}};
         }
 
         /// Repositions all handle and button indicators for the given surface geometry.
@@ -978,9 +1068,10 @@ private:
 
                     magnification = new_magnification;
                     auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
-                    geom::Point const new_surface_top_left{
-                        old_surface_centre.x.as_int() - new_logical_size.width.as_int() / 2,
-                        old_surface_centre.y.as_int() - new_logical_size.height.as_int() / 2};
+                    auto const new_surface_top_left = old_surface_centre -
+                        geom::Displacement{
+                            geom::as_delta(new_logical_size.width / 2),
+                            geom::as_delta(new_logical_size.height / 2)};
 
                     apply_positioned_geometry(
                         surf, new_surface_top_left, *this, render_scene_into_surface);
@@ -992,9 +1083,10 @@ private:
 
                     magnification = new_magnification;
                     auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
-                    geom::Point const new_logical_top_left{
-                        old_logical_centre.x.as_int() - new_logical_size.width.as_int() / 2,
-                        old_logical_centre.y.as_int() - new_logical_size.height.as_int() / 2};
+                    auto const new_logical_top_left = old_logical_centre -
+                        geom::Displacement{
+                            geom::as_delta(new_logical_size.width / 2),
+                            geom::as_delta(new_logical_size.height / 2)};
 
                     apply_visual_geometry(surf, new_logical_top_left, *this, render_scene_into_surface);
                 }
@@ -1055,21 +1147,26 @@ private:
         bool decoupled{false};
     };
 
+    struct GeometryPositions
+    {
+        geom::Point logical_top_left;
+        geom::Point surface_top_left;
+    };
+
     /// Applies independent logical capture and surface presentation positions.
     static void apply_geometry(
         std::shared_ptr<ms::Surface> const& surf,
-        geom::Point const& logical_top_left,
-        geom::Point const& surface_top_left,
+        GeometryPositions const& positions,
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
         auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
-        render_scene_into_surface.capture_area(geom::Rectangle{logical_top_left, logical_size});
+        render_scene_into_surface.capture_area(geom::Rectangle{positions.logical_top_left, logical_size});
         // capture_area() moves the backing surface to the capture position, so
         // apply the independent presentation position afterwards.
-        surf->move_to(surface_top_left);
+        surf->move_to(positions.surface_top_left);
         surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s.magnification, s.magnification, 1)));
-        s.reposition_all_handles(surface_top_left, logical_size, s.magnification);
+        s.reposition_all_handles(positions.surface_top_left, logical_size, s.magnification);
     }
 
     /// Applies normal placement, where capture and presentation positions match.
@@ -1079,7 +1176,14 @@ private:
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
-        apply_geometry(surf, logical_top_left, logical_top_left, s, render_scene_into_surface);
+        apply_geometry(
+            surf,
+            {
+                .logical_top_left = logical_top_left,
+                .surface_top_left = logical_top_left,
+            },
+            s,
+            render_scene_into_surface);
     }
 
     /// Keeps the visual magnifier on-screen and maps its position proportionally
@@ -1101,7 +1205,14 @@ private:
             s.clamp_position_to_screen(desired_top_left, logical_size, s.magnification);
         auto const logical_top_left =
             s.capture_position_for_surface(surface_top_left, logical_size, s.magnification);
-        apply_geometry(surf, logical_top_left, surface_top_left, s, render_scene_into_surface);
+        apply_geometry(
+            surf,
+            {
+                .logical_top_left = logical_top_left,
+                .surface_top_left = surface_top_left,
+            },
+            s,
+            render_scene_into_surface);
     }
 
     /// Applies visual geometry with the magnifier's logical top-left computed
@@ -1175,36 +1286,36 @@ private:
         }
 
     protected:
-        virtual void on_drag_start(State& s, int ax, int ay) = 0;
-        virtual void on_drag_move(State& s, int ax, int ay) = 0;
+        virtual void on_drag_start(State& s, geom::Point point) = 0;
+        virtual void on_drag_move(State& s, geom::Point point) = 0;
 
         Self* self;
         bool drag_active{false};
         geom::Displacement grab_abs{};
 
     private:
-        void begin_drag(State& s, int ax, int ay)
+        void begin_drag(State& s, geom::Point point)
         {
             drag_active = true;
-            grab_abs = {geom::DeltaX{ax}, geom::DeltaY{ay}};
-            on_drag_start(s, ax, ay);
+            grab_abs = {geom::as_delta(point.x), geom::as_delta(point.y)};
+            on_drag_start(s, point);
         }
 
         void handle_pointer(MirPointerEvent const* pev)
         {
             auto const action = mir_pointer_event_action(pev);
-            auto const ax = static_cast<int>(
-                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_x)));
-            auto const ay = static_cast<int>(
-                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_y)));
+            auto const point = geom::Point{
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_x)),
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_y)),
+            };
 
             auto s = self->state.lock();
             if (action == mir_pointer_action_button_down &&
                 mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                begin_drag(*s, ax, ay);
+                begin_drag(*s, point);
             else if (action == mir_pointer_action_motion && drag_active &&
                      mir_pointer_event_button_state(pev, mir_pointer_button_primary))
-                on_drag_move(*s, ax, ay);
+                on_drag_move(*s, point);
             else if (action == mir_pointer_action_button_up)
                 drag_active = false;
         }
@@ -1214,16 +1325,16 @@ private:
             if (mir_touch_event_point_count(tev) != 1)
                 return;
             auto const action = mir_touch_event_action(tev, 0);
-            auto const ax = static_cast<int>(
-                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x)));
-            auto const ay = static_cast<int>(
-                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)));
+            auto const point = geom::Point{
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x)),
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)),
+            };
 
             auto s = self->state.lock();
             if (action == mir_touch_action_down)
-                begin_drag(*s, ax, ay);
+                begin_drag(*s, point);
             else if (action == mir_touch_action_change && drag_active)
-                on_drag_move(*s, ax, ay);
+                on_drag_move(*s, point);
             else if (action == mir_touch_action_up)
                 drag_active = false;
         }
@@ -1236,7 +1347,7 @@ private:
         using HandleObserver::HandleObserver;
 
     protected:
-        void on_drag_start(State& s, int, int) override
+        void on_drag_start(State& s, geom::Point) override
         {
             auto const surf = s.surface.lock();
             if (!surf)
@@ -1245,11 +1356,10 @@ private:
             drag_start_magnifier_pos = surf->top_left();
         }
 
-        void on_drag_move(State& s, int ax, int ay) override
+        void on_drag_move(State& s, geom::Point point) override
         {
             geom::Displacement const delta{
-                geom::DeltaX{ax} - grab_abs.dx,
-                geom::DeltaY{ay} - grab_abs.dy};
+                geom::as_delta(point.x - grab_abs.dx), geom::as_delta(point.y - grab_abs.dy)};
             geom::Point const new_surface_top_left{
                 drag_start_magnifier_pos.x + delta.dx,
                 drag_start_magnifier_pos.y + delta.dy};
@@ -1293,7 +1403,7 @@ private:
         using HandleObserver::HandleObserver;
 
     protected:
-        void on_drag_start(State& s, int, int) override
+        void on_drag_start(State& s, geom::Point) override
         {
             auto const surf = s.surface.lock();
             if (!surf)
@@ -1303,42 +1413,41 @@ private:
             float const mag = s.magnification;
 
             float const outer = (mag + 1.0f) / 2.0f;
-            pin_pos = geom::Point{
-                tl.x.as_int() + outer * sz.width.as_int(),
-                tl.y.as_int() + outer * sz.height.as_int(),
-            };
+            pin_pos = tl + geom::Displacement{geom::as_delta(outer * sz.width), geom::as_delta(outer * sz.height)};
         }
 
-        void on_drag_move(State& s, int ax, int ay) override
+        void on_drag_move(State& s, geom::Point point) override
         {
             float const mag = s.magnification;
 
             // Visual size from the finger position to the pinned corner
-            int const raw_vis_w = pin_pos.x.as_int() - ax;
-            int const raw_vis_h = pin_pos.y.as_int() - ay;
+            geom::Width const raw_vis_w{geom::as_width(pin_pos.x - point.x)};
+            geom::Height const raw_vis_h {geom::as_height(pin_pos.y - point.y)};
 
             // Enforce the surface's minimum on-screen footprint before converting
             // to a logical size (rounding up so the visual size never dips below
             // the minimum), and cap the logical size at a sane maximum.
             auto const clamped_visual_size = clamp_visual_size(geom::Size{raw_vis_w, raw_vis_h});
-            auto const to_logical_dim = [mag](int visual_dim)
+            auto const to_logical_dimension = [mag](auto visual_dimension)
             {
-                return std::min(static_cast<int>(std::ceil(visual_dim / mag)), 1000);
+                return decltype(visual_dimension){
+                    std::min(static_cast<int>(std::ceil(visual_dimension.as_value() / mag)), 1000)};
             };
-            geom::Size const new_logical_size = geom::Size{
-                to_logical_dim(clamped_visual_size.width.as_int()),
-                to_logical_dim(clamped_visual_size.height.as_int())};
+
+            geom::Size const new_logical_size{
+                to_logical_dimension(clamped_visual_size.width),
+                to_logical_dimension(clamped_visual_size.height)};
 
             // Back-solve the logical top-left from the pinned visual corner, inverting
             // the visual-edge identity above so the pinned corner stays fixed.
             float const outer = (mag + 1.0f) / 2.0f;
 
-            int const w = new_logical_size.width.as_int();
-            int const h = new_logical_size.height.as_int();
-
             geom::Point const new_surface_top_left{
-                pin_pos.x.as_int() - outer * w,
-                pin_pos.y.as_int() - outer * h,
+                pin_pos -
+                    geom::Displacement{
+                        geom::as_delta(outer * new_logical_size.width),
+                        geom::as_delta(outer * new_logical_size.height),
+                    },
             };
 
             auto const surf = s.surface.lock();
