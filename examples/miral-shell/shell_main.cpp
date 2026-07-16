@@ -209,7 +209,11 @@ int main(int argc, char const* argv[])
         .magnification(magnification)
         .capture_size(capture_size)
         .enable(false);
-    auto magnifier_filter = [magnifier=magnifier, &magnification, &capture_size](MirKeyboardEvent const* key_event) mutable {
+    auto magnifier_filter = [magnifier = magnifier,
+                             &magnification,
+                             &capture_size,
+                             decoupled = false](MirKeyboardEvent const* key_event) mutable
+    {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
 
         if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
@@ -226,22 +230,22 @@ int main(int argc, char const* argv[])
                 // Zoom the magnifier in/out on ctrl shift +/-
                 switch (mir_keyboard_event_keysym(key_event))
                 {
-                    case XKB_KEY_plus:
-                        magnification = std::clamp(
-                            magnification + magnifier_magnification_step,
-                            magnifier_min_magnification,
-                            magnifier_max_magnification);
-                        magnifier.magnification(magnification);
-                        return true;
-                    case XKB_KEY_underscore:
-                        magnification = std::clamp(
-                            magnification - magnifier_magnification_step,
-                            magnifier_min_magnification,
-                            magnifier_max_magnification);
-                        magnifier.magnification(magnification);
-                        return true;
-                    default:
-                        break;
+                case XKB_KEY_plus:
+                    magnification = std::clamp(
+                        magnification + magnifier_magnification_step,
+                        magnifier_min_magnification,
+                        magnifier_max_magnification);
+                    magnifier.magnification(magnification);
+                    return true;
+                case XKB_KEY_underscore:
+                    magnification = std::clamp(
+                        magnification - magnifier_magnification_step,
+                        magnifier_min_magnification,
+                        magnifier_max_magnification);
+                    magnifier.magnification(magnification);
+                    return true;
+                default:
+                    break;
                 }
             }
             else if (modifiers & mir_input_event_modifier_alt)
@@ -249,20 +253,24 @@ int main(int argc, char const* argv[])
                 // Grow area on ctrl alt +/-
                 switch (mir_keyboard_event_keysym(key_event))
                 {
-                    case XKB_KEY_equal:
-                    {
-                        capture_size.width = Width(std::min(1000, capture_size.width.as_int() + 100));
-                        capture_size.height = Height(std::min(1000, capture_size.height.as_int() + 100));
-                        magnifier.capture_size(capture_size);
-                        return true;
-                    }
-                    case XKB_KEY_minus:
-                        capture_size.width = Width(std::max(100, capture_size.width.as_int() - 100));
-                        capture_size.height = Height(std::max(100, capture_size.height.as_int() - 100));
-                        magnifier.capture_size(capture_size);
-                        return true;
-                    default:
-                        break;
+                case XKB_KEY_equal:
+                {
+                    capture_size.width = Width(std::min(1000, capture_size.width.as_int() + 100));
+                    capture_size.height = Height(std::min(1000, capture_size.height.as_int() + 100));
+                    magnifier.capture_size(capture_size);
+                    return true;
+                }
+                case XKB_KEY_minus:
+                    capture_size.width = Width(std::max(100, capture_size.width.as_int() - 100));
+                    capture_size.height = Height(std::max(100, capture_size.height.as_int() - 100));
+                    magnifier.capture_size(capture_size);
+                    return true;
+                case XKB_KEY_m:
+                    decoupled = !decoupled;
+                    magnifier.decouple(decoupled);
+                    return true;
+                default:
+                    break;
                 }
             }
             else
@@ -270,34 +278,16 @@ int main(int argc, char const* argv[])
                 // Turn on/off the magnifier on ctrl +/-
                 switch (mir_keyboard_event_keysym(key_event))
                 {
-                    case XKB_KEY_equal:
-                        magnifier.enable(true);
-                        return true;
-                    case XKB_KEY_minus:
-                        magnifier.enable(false);
-                        return true;
-                    default:
-                        break;
+                case XKB_KEY_equal:
+                    magnifier.enable(true);
+                    return true;
+                case XKB_KEY_minus:
+                    magnifier.enable(false);
+                    return true;
+                default:
+                    break;
                 }
             }
-        }
-
-        return false;
-    };
-
-    // Ctrl+Alt+M: toggle between cursor-follow mode and decoupled (draggable) mode
-    auto decouple_magnifier_filter = [magnifier=magnifier, decoupled=false](MirKeyboardEvent const* key_event) mutable {
-        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
-            return false;
-
-        auto const modifiers = mir_keyboard_event_modifiers(key_event);
-        if ((modifiers & mir_input_event_modifier_ctrl) &&
-            (modifiers & mir_input_event_modifier_alt) &&
-            mir_keyboard_event_keysym(key_event) == XKB_KEY_m)
-        {
-            decoupled = !decoupled;
-            magnifier.decouple(decoupled);
-            return true;
         }
 
         return false;
@@ -429,7 +419,6 @@ int main(int argc, char const* argv[])
             sticky_keys,
             magnifier,
             AppendKeyboardEventFilter{magnifier_filter},
-            AppendKeyboardEventFilter{decouple_magnifier_filter},
             AppendKeyboardEventFilter{sticky_keys_filter},
             cursor_scale,
             locate_pointer,
