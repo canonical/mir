@@ -420,11 +420,11 @@ public:
     {
         wayland_init(display);
         if (!layer_shell())
-            mir::fatal_error("The %s interface is required for the application switcher to run. "
+            MIR_FATAL_ERROR("The {} interface is required for the application switcher to run. "
                 "Please enable it using miral::WaylandExtensions.", miral::WaylandExtensions::zwlr_layer_shell_v1);
 
         if (!toplevel_manager)
-            mir::fatal_error("The %s interface is required for the application switcher to run. "
+            MIR_FATAL_ERROR("The {} interface is required for the application switcher to run. "
                 "Please enable it using miral::WaylandExtensions.", miral::WaylandExtensions::zwlr_foreign_toplevel_manager_v1);
 
         shm_ = std::make_shared<miral::tk::WaylandShmPool>(shm());

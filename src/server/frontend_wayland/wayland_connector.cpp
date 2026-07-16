@@ -433,7 +433,7 @@ mf::WaylandConnector::WaylandConnector(
     }
     else
     {
-        fatal_error("Unable to bind Wayland socket");
+        MIR_FATAL_ERROR("Unable to bind Wayland socket");
     }
 
     auto wayland_loop = wl_display_get_event_loop(display.get());
