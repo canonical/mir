@@ -34,7 +34,7 @@ namespace mir
  * cannot recover from. Kills the program and dump core as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
-[[noreturn]]
+[[noreturn, deprecated("Use MIR_FATAL_ERROR() instead")]]
 void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
 
 /**

@@ -726,7 +726,7 @@ void miral::ReloadingYamlFileDisplayConfig::init_auto_reload(mir::Server& server
         std::lock_guard lock{mutex};
         if (the_display_configuration_controller_.use_count() || the_main_loop_.use_count())
         {
-            mir::fatal_error("Init function should only be called once: %s", __PRETTY_FUNCTION__);
+            MIR_FATAL_ERROR("Init function should only be called once: {}", __PRETTY_FUNCTION__);
         }
 
         the_display_configuration_controller_ = server.the_display_configuration_controller();

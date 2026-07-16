@@ -67,7 +67,7 @@ public:
                 return handlers[i];
             }
         }
-        mir::fatal_error("Attempted to access signal handler for signal %i not in intercepted list", sig);
+        MIR_FATAL_ERROR("Attempted to access signal handler for signal {} not in intercepted list", sig);
     }
 
     /**
@@ -114,7 +114,7 @@ public:
                 return AtomicOutPtr{handlers[i]};
             }
         }
-        mir::fatal_error("Attempted to access signal handler for signal %i not in intercepted list", sig);
+        MIR_FATAL_ERROR("Attempted to access signal handler for signal {} not in intercepted list", sig);
     }
 
 private:
@@ -204,12 +204,12 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
          * However, we've just performed emergency cleanup, so if the handler was trying to fix things up
          * and continue we unfortunately can't let them.
          */
-        mir::fatal_error("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
+        MIR_FATAL_ERROR("Unsupported attempt to continue after a fatal signal: {}", signum_to_string(sig));
     }
     // The handler doesn't care about fancy context, we can just call it via raise()
     std::raise(sig);
     // We definitely can't continue, though, even if their handler tries.
-    mir::fatal_error("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
+    MIR_FATAL_ERROR("Unsupported attempt to continue after a fatal signal: {}", signum_to_string(sig));
 }
 }
 
@@ -233,7 +233,7 @@ void mir::run_mir(
         [&server_ptr](int)
         {
             if (!server_ptr)
-                fatal_error("Logic error in mir::run_mir() server_ptr is nullptr");
+                MIR_FATAL_ERROR("Logic error in mir::run_mir() server_ptr is nullptr");
             server_ptr->stop();
         };
 

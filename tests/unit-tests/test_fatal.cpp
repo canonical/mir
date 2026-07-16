@@ -24,9 +24,12 @@ using namespace testing;
 
 TEST(FatalErrorDeathTest, fatal_error_formats_message_to_stderr)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MIR_EXPECT_DEATH(mir::fatal_error("%s had %d %s %s",
                                       "Mary", 1, "little", "lamb"),
                      "Mary had 1 little lamb");
+#pragma GCC diagnostic pop
 }
 
 TEST(FatalErrorDeathTest, mir_fatal_error_formats_message_and_source_location)
