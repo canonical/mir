@@ -832,10 +832,12 @@ private:
             auto const visual = compute_visual_bounds(surface_top_left, logical_size, magnification);
             auto const contains = [&point](geom::Rectangle const& area)
             {
-                return point.x.as_value() >= area.left().as_int() &&
-                    point.x.as_value() < area.right().as_int() &&
-                    point.y.as_value() >= area.top().as_int() &&
-                    point.y.as_value() < area.bottom().as_int();
+                auto const left = static_cast<float>(area.left().as_value());
+                auto const right = static_cast<float>(area.right().as_value());
+                auto const top = static_cast<float>(area.top().as_value());
+                auto const bottom = static_cast<float>(area.bottom().as_value());
+                return point.x.as_value() >= left && point.x.as_value() < right && point.y.as_value() >= top &&
+                       point.y.as_value() < bottom;
             };
 
             if (!contains(geom::Rectangle{{visual.x, visual.y}, {visual.w, visual.h}}))
