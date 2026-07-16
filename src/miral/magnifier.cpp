@@ -494,9 +494,11 @@ geom::Point surface_top_left_from_cursor(geom::Size const& window_size, geom::Po
 
 geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
 {
+    float widthf{static_cast<float>(visual_size.width.as_value())};
+    float heightf{static_cast<float>(visual_size.height.as_value())};
     return {
-        geom::Width{std::max(1.0f, std::round(visual_size.width.as_value() / mag))},
-        geom::Height{std::max(1.0f, std::round(visual_size.height.as_value() / mag))}};
+        geom::Width{std::max(1.0f, std::round(widthf/ mag))},
+        geom::Height{std::max(1.0f, std::round(heightf / mag))}};
 }
 
 /// Clamps a visual (on-screen) size so neither dimension shrinks below
