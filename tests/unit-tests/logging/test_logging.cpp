@@ -14,11 +14,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <exception>
 #include <mir/logging/tag.h>
 #include <mir/options/program_option.h>
 #include <boost/program_options/detail/cmdline.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
+
+#define MIR_LOG_COMPONENT "tests"
 #include <mir/log.h>
 
 #include <boost/program_options.hpp>
@@ -229,4 +232,266 @@ TEST_F(TestLog, can_set_severity_by_full_path_when_tag_name_is_the_same)
     ml::tag::set_severity(std::format("base/graphics/gbm-kms/bypass"), severity);
 
     EXPECT_TRUE(ml::logging_enabled_for(bypass_b, severity));
+}
+
+TEST_F(TestLog, logging_captures_source_location)
+{
+    auto const& tag = ml::base();
+
+    // Ensure that all log messages are propagated
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
+
+    std::source_location logged_loc, next_line;
+
+    ON_CALL(*logger, log(_))
+        .WillByDefault(
+            Invoke(
+                [&logged_loc](ml::Event const& ev)
+                {
+                    logged_loc = ev.location();
+                }));
+
+    mir::log(ml::Severity::informational, {tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log(ml::Severity::informational, {tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, "And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    try
+    {
+        throw std::runtime_error{"Just to test"};
+    }
+    catch (std::exception const&)
+    {
+        auto prev_line = std::source_location::current();
+        mir::log(
+            ml::Severity::debug,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "The exception_ptr API works");
+
+        EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+        EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 1));
+    }
+
+    try
+    {
+        throw "Don't do this, but we need to check the non-std::exception path";
+    }
+    catch (...)
+    {
+        auto prev_line = std::source_location::current();
+        mir::log(
+            ml::Severity::debug,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "The exception_ptr API works");
+
+        EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+        EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 1));
+    }
+
+    mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, std::string{"The string API works"});
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+}
+
+TEST_F(TestLog, log_debug_captures_source_location)
+{
+    auto const& tag = ml::base();
+
+    // Ensure that all log messages are propagated
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
+
+    std::source_location logged_loc, next_line;
+
+    ON_CALL(*logger, log(_))
+        .WillByDefault(
+            Invoke(
+                [&logged_loc](ml::Event const& ev)
+                {
+                    logged_loc = ev.location();
+                }));
+
+    mir::log_debug({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_debug({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_debug("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+}
+
+TEST_F(TestLog, log_info_captures_source_location)
+{
+    auto const& tag = ml::base();
+
+    // Ensure that all log messages are propagated
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
+
+    std::source_location logged_loc, next_line;
+
+    ON_CALL(*logger, log(_))
+        .WillByDefault(
+            Invoke(
+                [&logged_loc](ml::Event const& ev)
+                {
+                    logged_loc = ev.location();
+                }));
+
+    mir::log_info({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_info({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_info("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_info(std::string{"The string API works"});
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+}
+
+TEST_F(TestLog, log_warning_captures_source_location)
+{
+    auto const& tag = ml::base();
+
+    // Ensure that all log messages are propagated
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
+
+    std::source_location logged_loc, next_line;
+
+    ON_CALL(*logger, log(_))
+        .WillByDefault(
+            Invoke(
+                [&logged_loc](ml::Event const& ev)
+                {
+                    logged_loc = ev.location();
+                }));
+
+    mir::log_warning({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_warning({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_warning("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+}
+
+TEST_F(TestLog, log_error_captures_source_location)
+{
+    auto const& tag = ml::base();
+
+    // Ensure that all log messages are propagated
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
+
+    std::source_location logged_loc, next_line;
+
+    ON_CALL(*logger, log(_))
+        .WillByDefault(
+            Invoke(
+                [&logged_loc](ml::Event const& ev)
+                {
+                    logged_loc = ev.location();
+                }));
+
+    mir::log_error({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_error({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_error("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+}
+
+TEST_F(TestLog, log_critical_captures_source_location)
+{
+    auto const& tag = ml::base();
+
+    // Ensure that all log messages are propagated
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
+
+    std::source_location logged_loc, next_line;
+
+    ON_CALL(*logger, log(_))
+        .WillByDefault(
+            Invoke(
+                [&logged_loc](ml::Event const& ev)
+                {
+                    logged_loc = ev.location();
+                }));
+
+    mir::log_critical({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_critical({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_critical("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 }
