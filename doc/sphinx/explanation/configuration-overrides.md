@@ -66,8 +66,8 @@ call.
 
 ## Reload model
 
-With `ConfigFile::Mode::reload_on_change`, `ConfigFile` monitors the relevant directories
-via inotify. On any change, it re-evaluates the full file list and calls the
+With `ConfigFile::Mode::reload_on_change`, `ConfigFile` monitors the relevant directories.
+On any change, it re-evaluates the full file list and calls the
 `OverrideLoader` callback with an `OverridesList` classifying each file as:
 
 - **unchanged** — present in both old and new state, content unchanged
