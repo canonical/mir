@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <atomic>
 #include <mir/logging/logger.h>
 
 #include <mir/synchronised.h>
@@ -30,7 +31,6 @@
 #include <iostream>
 #include <chrono>
 #include <format>
-#include <mutex>
 #include <cerrno>
 #include <cstdarg>
 #include <cstdio>
@@ -59,18 +59,7 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
 
 namespace
 {
-std::mutex log_mutex;
-std::shared_ptr<ml::Logger> the_logger;
-
-std::shared_ptr<ml::Logger> get_logger()
-{
-    std::lock_guard lock{log_mutex};
-
-    if (!the_logger)
-        the_logger = std::make_shared<ml::DumbConsoleLogger>();
-
-    return the_logger;
-}
+std::atomic<std::shared_ptr<ml::Logger>> the_logger{std::make_shared<mir::logging::DumbConsoleLogger>()};
 }
 
 void ml::log(ml::Severity severity, const std::string& message, const std::string& component, std::source_location location)
@@ -79,9 +68,7 @@ void ml::log(ml::Severity severity, const std::string& message, const std::strin
 
     if (ev.should_log())
     {
-        auto const logger = get_logger();
-
-        logger->log(ev);
+        the_logger.load(std::memory_order_acquire)->log(ev);
     }
 }
 
@@ -90,9 +77,7 @@ void ml::log(Severity severity, Tags tags, std::string_view message, std::source
     Event const ev{severity, tags, message, location};
     if (ev.should_log())
     {
-        auto const logger = get_logger();
-
-        logger->log(ev);
+        the_logger.load(std::memory_order_acquire)->log(ev);
     }
 }
 
@@ -100,8 +85,7 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
 {
     if (new_logger)
     {
-        std::lock_guard lock{log_mutex};
-        the_logger = new_logger;
+        the_logger.store(new_logger, std::memory_order_release);
     }
 }
 
