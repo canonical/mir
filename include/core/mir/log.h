@@ -22,6 +22,7 @@
 #include <mir/logging/logger.h> // for Severity
 
 #include <format>
+#include <source_location>
 #include <string>
 #include <cstdarg>
 #include <exception>
@@ -30,17 +31,138 @@
 namespace mir
 {
 [[gnu::format(printf, 3, 0)]]
-void logv(logging::Severity sev, char const* component, char const* fmt, va_list va);
-[[gnu::format(printf, 3, 4)]]
-void log(logging::Severity sev, char const* component, char const* fmt, ...);
-void log(logging::Severity sev, char const* component, std::string const& message);
-void log(logging::Severity sev, char const* component, std::exception_ptr const& exception, std::string const& message);
+void logv(
+    logging::Severity sev,
+    char const* component,
+    char const* fmt,
+    va_list va,
+    std::source_location loc = std::source_location::current());
+
+/*
+ * The following is a bit weird because we want to have both a variadic
+ * logging API (both the older printf-style and the new std::format-style),
+ * but we also want to capture a std::source_location for each of the log sites
+ * and the idiomatic way to do *that* is with a default
+ * `std::source_location loc = std::source_location::current()` argument.
+ * (This use of ::current() is defined in the C++ spec as resolving to the call site).
+ *
+ * That combination plays badly: you can't have both variadics and default arguments,
+ * because how can the compiler tell what argument should be variadic and what should be
+ * defaulted?
+ *
+ * We *can* resolve this for the compiler by using a user-provided template deduction
+ * guide.
+ *
+ * Unfortunately, template deduction guides only apply to templated *types*, not
+ * templated *functions*.
+ *
+ * So: mir::log becomes a templated *type* with a family of partial- and
+ * complete-specialisations, and mir::log(...) becomes calls to the constructors
+ * of those types.
+ *
+ * Each of the old overloads of mir::log() becomes a (partial-)specialisation,
+ * with a deduction guide to direct the compiler to the correct specialisation.
+ *
+ * The non-variadic APIs get two deduction guides - one with an explicit
+ * std::source_location parameter and one without. That lets callers either omit
+ * the std::source_location if they *are* the site that should be recorded as the
+ * source of the log, or accept a std::source_location themselves and pass that on
+ * if they're proxying for a different call-site.
+ *
+ * The variadic APIs can only have the single deduction guide; if a caller wants
+ * to pass an explicit source_location they will need to manually select the
+ * correct specialisation. For example:
+ * ```
+ *    std::source_location loc;
+ *    mir::log<logging::Severity, char const*, char const*, Args...>::log(..., loc);
+ * ```
+ */
+template<typename ...Args>
+struct log;
+
+template<typename ...Args>
+struct log<logging::Severity, char const*, char const*, Args...> final
+{
+    log(
+        logging::Severity sev,
+        char const* component,
+        char const* fmt,
+        Args... args,
+        std::source_location loc = std::source_location::current())
+    {
+        auto const forwarder =
+            [sev, component, loc](char const* fmt, ...)
+            {
+                va_list va;
+                va_start(va, fmt);
+                mir::logv(sev, component, fmt, va, loc);
+                va_end(va);
+            };
+        forwarder(fmt, args...);
+    }
+};
+template<typename ...Args>
+log(logging::Severity, char const*, char const*, Args...)
+    -> log<logging::Severity, char const*, char const*, Args...>;
+
+template<>
+struct log<logging::Severity, char const*, std::string const&> final
+{
+    log(
+        logging::Severity sev,
+        char const* component,
+        std::string const& message,
+        std::source_location loc = std::source_location::current());
+};
+log(logging::Severity, char const*, std::string const&)
+    -> log<logging::Severity, char const*, std::string const&>;
+log(logging::Severity, char const*, std::string const&, std::source_location)
+    -> log<logging::Severity, char const*, std::string const&>;
+
+template<>
+struct log<logging::Severity, char const*, std::exception_ptr const&, std::string const&> final
+{
+    log(
+        logging::Severity sev,
+        char const* component,
+        std::exception_ptr const& exception,
+        std::string const& message,
+        std::source_location log = std::source_location::current());
+};
+log(logging::Severity, char const*, std::exception_ptr const&, std::string const&)
+    -> log<logging::Severity, char const*, std::exception_ptr const&, std::string const&>;
+log(logging::Severity, char const*, std::exception_ptr const&, std::string const&, std::source_location)
+    -> log<logging::Severity, char const*, std::exception_ptr const&, std::string const&>;
+
 
 template<typename... Args>
-void log(logging::Severity severity, logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
-{ log(severity, tags, std::format(fmt, std::forward<Args>(args)...)); }
+struct log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...> final
+{
+    log(
+        logging::Severity severity,
+        logging::Tags tags,
+        std::format_string<Args...> fmt,
+        Args&&... args,
+        std::source_location loc = std::source_location::current())
+    {
+        log<logging::Severity, logging::Tags, std::string_view>(severity, tags, std::format(fmt, std::forward<Args>(args)...), loc);
+    }
+};
+template<typename... Args>
+log(logging::Severity, logging::Tags, std::format_string<Args...>, Args&&...)
+    -> log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>;
 
-void log(logging::Severity sev, logging::Tags tags, std::string_view message);
+template<>
+struct log<logging::Severity, logging::Tags, std::string_view> final
+{
+    log(logging::Severity sev,
+        logging::Tags tags,
+        std::string_view message,
+        std::source_location loc = std::source_location::current());
+};
+log(logging::Severity, logging::Tags, std::string_view) -> log<logging::Severity, logging::Tags, std::string_view>;
+log(logging::Severity, logging::Tags, std::string_view, std::source_location)
+        -> log<logging::Severity, logging::Tags, std::string_view>;
 
 /// Log a security event according to the OWASP specification
 ///
