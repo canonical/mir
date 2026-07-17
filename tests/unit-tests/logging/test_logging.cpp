@@ -368,6 +368,24 @@ TEST_F(TestLog, log_info_captures_source_location)
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_info({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_info("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_info(std::string{"The string API works"});
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 }
 
 TEST_F(TestLog, log_warning_captures_source_location)
@@ -388,6 +406,18 @@ TEST_F(TestLog, log_warning_captures_source_location)
                 }));
 
     mir::log_warning({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_warning({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_warning("And the %s works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -416,6 +446,18 @@ TEST_F(TestLog, log_error_captures_source_location)
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_error({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_error("And the %s works, too", "printf API");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 }
 
 TEST_F(TestLog, log_critical_captures_source_location)
@@ -436,6 +478,18 @@ TEST_F(TestLog, log_critical_captures_source_location)
                 }));
 
     mir::log_critical({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_critical({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_critical("And the %s works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
