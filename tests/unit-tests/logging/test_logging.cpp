@@ -20,6 +20,8 @@
 #include <boost/program_options/detail/cmdline.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
+
+#define MIR_LOG_COMPONENT "tests"
 #include <mir/log.h>
 
 #include <boost/program_options.hpp>
@@ -326,6 +328,18 @@ TEST_F(TestLog, log_debug_captures_source_location)
                 }));
 
     mir::log_debug({tag}, "Hello");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_debug({tag}, "I take a {} string", "format");
+    next_line = std::source_location::current();
+
+    EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
+    EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
+
+    mir::log_debug("And the %s works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
