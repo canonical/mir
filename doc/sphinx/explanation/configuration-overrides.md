@@ -1,7 +1,7 @@
 ---
 myst:
   html_meta:
-    description: How Mir's ConfigFile resolves XDG directories, orders override files, and merges INI values.
+    description: How ConfigFile resolves configuration files, orders override files, and how IniFileWithOverrides merges INI values.
 ---
 
 (configuration-overrides)=
