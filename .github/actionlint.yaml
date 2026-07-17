@@ -1,3 +1,6 @@
 self-hosted-runner:
   labels:
     - self-hosted-linux-amd64-resolute-large-tiobe
+    # actionlint v1.7.12 doesn't know about ubuntu-26.04:
+    #    https://github.com/rhysd/actionlint/pull/683
+    - ubuntu-26.04
