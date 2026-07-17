@@ -14,14 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <miral/custom_decorations.h>
 #include <miral/decorations.h>
 
-#include <memory>
+#include "decoration_strategy_adapter.h"
 
-#include <mir/default_server_configuration.h>
-#include <mir/server.h>
 #include <mir/decoration_strategy.h>
+#include <mir/fatal.h>
+#include <mir/server.h>
 
+#include <memory>
+#include <utility>
 
 struct miral::Decorations::Self : mir::DecorationStrategy
 {
@@ -29,17 +32,10 @@ struct miral::Decorations::Self : mir::DecorationStrategy
 
 void miral::Decorations::operator()(mir::Server& server) const
 {
-    server.add_pre_init_callback(
-        [this, &server]()
-        {
-            server.set_the_decoration_strategy(self);
-        });
+    server.add_pre_init_callback([this, &server]() { server.set_the_decoration_strategy(self); });
 }
 
-miral::Decorations::Decorations(std::shared_ptr<Self> strategy) :
-    self{std::move(strategy)}
-{
-}
+miral::Decorations::Decorations(std::shared_ptr<Self> strategy) : self{std::move(strategy)} {}
 
 auto miral::Decorations::always_ssd() -> Decorations
 {
@@ -83,4 +79,38 @@ auto miral::Decorations::prefer_csd() -> Decorations
     };
 
     return Decorations(std::make_shared<PreferClientSide>());
+}
+
+struct miral::CustomDecorations::Self
+{
+    std::shared_ptr<miral::DecorationStrategy> strategy;
+};
+
+miral::CustomDecorations::CustomDecorations(std::shared_ptr<DecorationStrategy> strategy)
+{
+    if (!strategy)
+        mir::fatal_error("CustomDecorations: null DecorationStrategy");
+
+    self = std::make_shared<Self>();
+    self->strategy = std::move(strategy);
+}
+
+void miral::CustomDecorations::operator()(mir::Server& server) const
+{
+    auto const keep_alive = self;
+    server.add_pre_init_callback(
+        [keep_alive, &server]()
+        {
+            auto const allocator = server.the_buffer_allocator();
+            if (!allocator)
+                mir::fatal_error("CustomDecorations: no buffer allocator available");
+
+            auto adapter = std::make_shared<DecorationStrategyAdapter>(keep_alive->strategy, allocator);
+            server.set_the_decoration_renderer_strategy(adapter);
+        });
+    server.add_stop_callback(
+        [&server]()
+        {
+            server.set_the_decoration_renderer_strategy(nullptr);
+        });
 }

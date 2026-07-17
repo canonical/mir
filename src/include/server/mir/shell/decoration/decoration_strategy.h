@@ -109,6 +109,9 @@ public:
 
     auto scale() const -> float;
 
+    /// Opaque per-window token, stable for the lifetime of this decorated window.
+    auto window_id() const -> uint64_t;
+
 private:
     WindowState(WindowState const&) = delete;
 

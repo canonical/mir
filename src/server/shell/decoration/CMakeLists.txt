@@ -9,7 +9,8 @@ set(
   basic_decoration.h    basic_decoration.cpp
   window.h              window.cpp
   input.h               input.cpp
-  decoration_strategy.h decoration_strategy.cpp
+  decoration_strategy.cpp
+  render_title_text.cpp
 )
 
 add_library(

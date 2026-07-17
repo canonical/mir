@@ -128,6 +128,7 @@ mir_add_wrapped_executable(mir_unit_tests NOINSTALL
 target_include_directories(mir_unit_tests PRIVATE
   ${CMAKE_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/miral
   ${CMAKE_BINARY_DIR}/src/server/console
 )
 
@@ -233,6 +234,7 @@ target_link_libraries(mir_unit_tests
 
   mir-test-doubles-static
   mir-test-doubles-platform-static
+  miral-internal
   )
 
 target_link_libraries(mir_umock_unit_tests

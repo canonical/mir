@@ -23,7 +23,9 @@ namespace mir { class Server; }
 
 namespace miral
 {
-/// Configures the window decoration strategy.
+/// Configures SSD vs CSD negotiation policy (mir::DecorationStrategy).
+/// This is distinct from miral::CustomDecorations (see custom_decorations.h), which
+/// selects the server-side decoration renderer when SSD is active.
 /// \note The strategy can only be applied to clients that are able to negotiate the decoration style with the server.
 /// \remark Since MirAL 5.1
 class Decorations
@@ -56,6 +58,7 @@ private:
 
     std::shared_ptr<Self> self;
 };
+
 }
 
 #endif // MIRAL_DECORATIONS_H

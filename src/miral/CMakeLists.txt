@@ -34,6 +34,10 @@ add_library(miral-internal STATIC
                                          window_info_defaults.h
     window_specification_internal.cpp    window_specification_internal.h
     basic_store.cpp                      basic_store.h
+    decoration_buffers.cpp             ${miral_include}/miral/decoration_buffers.h
+    decoration_surface.cpp             ${miral_include}/miral/decoration_surface.h
+    decoration_strategy_state.cpp      ${miral_include}/miral/decoration_strategy.h
+    decoration_strategy_adapter.cpp    decoration_strategy_adapter.h
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
     live_config_watcher.cpp               live_config_watcher.h
     version_compare.cpp                   version_compare.h
@@ -143,6 +147,7 @@ add_library(miral-external OBJECT
     ${miral_include}/miral/lambda_as_function.h
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
+    decorations.cpp                     ${miral_include}/miral/custom_decorations.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
@@ -183,6 +188,7 @@ target_include_directories(miral-internal
         ${CMAKE_CURRENT_SOURCE_DIR}
     PRIVATE
         ${PROJECT_SOURCE_DIR}/src/include/server
+        ${PROJECT_SOURCE_DIR}/src/server
 )
 
 target_link_libraries(miral-internal

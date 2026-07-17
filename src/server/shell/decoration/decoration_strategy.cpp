@@ -15,23 +15,19 @@
  */
 
 
-#include "decoration_strategy.h"
+#include <mir/shell/decoration/decoration_strategy.h>
+#include <mir/shell/decoration/render_title_text.h>
 #include "window.h"
 
 #include <mir/fatal.h>
 #include <mir/geometry/displacement.h>
 #include <mir/log.h>
-#include <mir/default_font.h>
 #include <mir/renderer/sw/pixel_source.h>
 
 #include <boost/throw_exception.hpp>
-#include <ft2build.h>
 #include <memory>
-#include FT_FREETYPE_H
 #include <endian.h>
 
-#include <locale>
-#include <codecvt>
 #include <filesystem>
 #include <map>
 #include <mutex>
@@ -231,30 +227,6 @@ private:
     Theme const unfocused_theme;
     Theme const* current_theme;
 
-    class Text
-    {
-    public:
-        static auto instance() -> std::shared_ptr<Text>;
-
-        virtual ~Text() = default;
-
-        virtual void render(
-            Pixel* buf,
-            geom::Size buf_size,
-            std::string const& text,
-            geom::Point top_left,
-            geom::Height height_pixels,
-            Pixel color) = 0;
-
-    private:
-        class Impl;
-        class Null;
-
-        static std::mutex static_mutex;
-        static std::weak_ptr<Text> singleton;
-    };
-    std::shared_ptr<Text> const text;
-
     // Info needed to render a button icon
     struct Icon
     {
@@ -425,272 +397,6 @@ auto msd::DecorationStrategy::default_decoration_strategy(std::shared_ptr<mir::g
     return std::make_shared<::DecorationStrategy>(allocator);
 }
 
-class RendererStrategy::Text::Impl
-    : public Text
-{
-public:
-    Impl();
-    ~Impl();
-
-    void render(
-        Pixel* buf,
-        geom::Size buf_size,
-        std::string const& text,
-        geom::Point top_left,
-        geom::Height height_pixels,
-        Pixel color) override;
-
-private:
-    std::mutex mutex;
-    FT_Library library;
-    FT_Face face;
-
-    void set_char_size(geom::Height height);
-    void rasterize_glyph(char32_t glyph);
-    void render_glyph(
-        Pixel* buf,
-        geom::Size buf_size,
-        FT_Bitmap const* glyph,
-        geom::Point top_left,
-        Pixel color);
-
-    static auto font_path() -> std::string;
-    static auto utf8_to_utf32(std::string const& text) -> std::u32string;
-};
-
-class RendererStrategy::Text::Null
-    : public Text
-{
-public:
-    void render(
-        Pixel*,
-        geom::Size,
-        std::string const&,
-        geom::Point,
-        geom::Height,
-        Pixel) override
-    {
-    }
-
-private:
-};
-
-std::mutex RendererStrategy::Text::static_mutex;
-std::weak_ptr<RendererStrategy::Text> RendererStrategy::Text::singleton;
-
-auto RendererStrategy::Text::instance() -> std::shared_ptr<Text>
-{
-    std::lock_guard lock{static_mutex};
-    auto shared = singleton.lock();
-    if (!shared)
-    {
-        try
-        {
-            shared = std::make_shared<Impl>();
-        }
-        catch (std::runtime_error const& error)
-        {
-            mir::log_warning("%s", error.what());
-            shared = std::make_shared<Null>();
-        }
-        singleton = shared;
-    }
-    return shared;
-}
-
-RendererStrategy::Text::Impl::Impl()
-{
-    if (auto const error = FT_Init_FreeType(&library))
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Initializing freetype library failed with error " + std::to_string(error)));
-
-    auto const path = font_path();
-    if (auto const error = FT_New_Face(library, path.c_str(), 0, &face))
-    {
-        if (error == FT_Err_Unknown_File_Format)
-            BOOST_THROW_EXCEPTION(std::runtime_error(
-                "Font " + path + " has unsupported format"));
-        else
-            BOOST_THROW_EXCEPTION(std::runtime_error(
-                "Loading font from " + path + " failed with error " + std::to_string(error)));
-    }
-}
-
-RendererStrategy::Text::Impl::~Impl()
-{
-    if (auto const error = FT_Done_Face(face))
-        mir::log_warning("Failed to uninitialize font face with error %d", error);
-    face = nullptr;
-
-    if (auto const error = FT_Done_FreeType(library))
-        mir::log_warning("Failed to uninitialize FreeType with error %d", error);
-    library = nullptr;
-}
-
-void RendererStrategy::Text::Impl::render(
-    Pixel* buf,
-    geom::Size buf_size,
-    std::string const& text,
-    geom::Point top_left,
-    geom::Height height_pixels,
-    Pixel color)
-{
-    if (!area(buf_size) || height_pixels <= geom::Height{})
-        return;
-
-    std::lock_guard lock{mutex};
-
-    if (!library || !face)
-    {
-        mir::log_warning("FreeType not initialized");
-        return;
-    }
-
-    try
-    {
-        set_char_size(height_pixels);
-    }
-    catch (std::runtime_error const& error)
-    {
-        mir::log_warning("%s", error.what());
-        return;
-    }
-
-    auto const utf32 = utf8_to_utf32(text);
-
-    for (char32_t const glyph : utf32)
-    {
-        try
-        {
-            rasterize_glyph(glyph);
-
-            geom::Point glyph_top_left =
-                top_left +
-                geom::Displacement{
-                    face->glyph->bitmap_left,
-                    height_pixels.as_int() - face->glyph->bitmap_top};
-            render_glyph(buf, buf_size, &face->glyph->bitmap, glyph_top_left, color);
-
-            top_left += geom::Displacement{
-                face->glyph->advance.x / 64,
-                face->glyph->advance.y / 64};
-        }
-        catch (std::runtime_error const& error)
-        {
-            mir::log_warning("%s", error.what());
-        }
-    }
-}
-
-void RendererStrategy::Text::Impl::set_char_size(geom::Height height)
-{
-    if (auto const error = FT_Set_Pixel_Sizes(face, 0, height.as_int()))
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Setting char size failed with error " + std::to_string(error)));
-}
-
-namespace
-{
-auto freetype_error_to_string(FT_Error error) -> char const*
-{
-    auto reason = FT_Error_String(error);
-    /* The reason is only available if freetype has been built with a specific feature enabled */
-    if (!reason)
-    {
-        return "<unknown error>";
-    }
-    return reason;
-}
-}
-
-void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
-{
-    auto const glyph_index = FT_Get_Char_Index(face, glyph);
-
-    if (auto const error = FT_Load_Glyph(face, glyph_index, 0))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Failed to load glyph " + std::to_string(glyph_index) +
-            " (" + freetype_error_to_string(error) + ")"));
-    }
-
-    if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error(
-            "Failed to render glyph " + std::to_string(glyph_index) +
-            " (" + freetype_error_to_string(error) + ")"));
-    }
-}
-
-void RendererStrategy::Text::Impl::render_glyph(
-    Pixel* buf,
-    geom::Size buf_size,
-    FT_Bitmap const* glyph,
-    geom::Point top_left,
-    Pixel color)
-{
-    geom::X const buffer_left = std::max(top_left.x, geom::X{});
-    geom::X const buffer_right = std::min(top_left.x + geom::DeltaX{glyph->width}, as_x(buf_size.width));
-
-    geom::Y const buffer_top = std::max(top_left.y, geom::Y{});
-    geom::Y const buffer_bottom = std::min(top_left.y + geom::DeltaY{glyph->rows}, as_y(buf_size.height));
-
-    geom::Displacement const glyph_offset = as_displacement(top_left);
-
-    unsigned char color_red = 0, color_green = 0, color_blue = 0, color_alpha = 0;
-    unpack_pixel(color, color_red, color_green, color_blue, color_alpha);
-
-    for (geom::Y buffer_y = buffer_top; buffer_y < buffer_bottom; buffer_y += geom::DeltaY{1})
-    {
-        geom::Y const glyph_y = buffer_y - glyph_offset.dy;
-        unsigned char* const glyph_row = glyph->buffer + glyph_y.as_int() * glyph->pitch;
-        Pixel* const buffer_row = buf + buffer_y.as_int() * buf_size.width.as_int();
-
-        for (geom::X buffer_x = buffer_left; buffer_x < buffer_right; buffer_x += geom::DeltaX{1})
-        {
-            geom::X const glyph_x = buffer_x - glyph_offset.dx;
-            unsigned char const glyph_alpha = (static_cast<int>(glyph_row[glyph_x.as_int()]) * color_alpha) / 255;
-            buffer_row[buffer_x.as_int()] =
-                blend_pixel(buffer_row[buffer_x.as_int()], color_red, color_green, color_blue, glyph_alpha);
-        }
-    }
-}
-
-auto RendererStrategy::Text::Impl::font_path() -> std::string
-{
-    auto const path = mir::default_font();
-    if (path.empty())
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to find a font"));
-    }
-    return path;
-}
-
-auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
-{
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-#pragma GCC diagnostic pop
-
-    std::u32string utf32_text;
-    try {
-        utf32_text = converter.from_bytes(text);
-    } catch(const std::range_error& e) {
-        mir::log_warning("Window title %s is not valid UTF-8", text.c_str());
-        // fall back to ASCII
-        for (char const c : text)
-        {
-            if (isprint(c))
-                utf32_text += c;
-            else
-                utf32_text += 0xFFFD; // REPLACEMENT CHARACTER (�)
-        }
-    }
-    return utf32_text;
-}
-
 RendererStrategy::RendererStrategy(
     std::shared_ptr<StaticGeometry> const& static_geometry,
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) :
@@ -702,7 +408,6 @@ RendererStrategy::RendererStrategy(
         default_unfocused_background,
         default_unfocused_text},
     current_theme{nullptr},
-    text{Text::instance()},
     button_icons{
         {msd::Button::Close, {
             default_close_normal_button,
@@ -883,7 +588,7 @@ void RendererStrategy::redraw_titlebar_background(geom::Size const scaled_titleb
 
 void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_size)
 {
-    text->render(
+    msd::render_title_text(
         titlebar_pixels.get(),
         scaled_titlebar_size,
         name,

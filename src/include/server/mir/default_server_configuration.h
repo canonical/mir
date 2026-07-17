@@ -350,6 +350,9 @@ public:
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
     auto the_display_configuration_observer() -> std::shared_ptr<graphics::DisplayConfigurationObserver>;
 
+    auto the_decoration_renderer_strategy() -> std::shared_ptr<mir::shell::decoration::DecorationStrategy> override;
+    void set_the_decoration_renderer_strategy(std::shared_ptr<mir::shell::decoration::DecorationStrategy> strategy) override;
+
 protected:
     std::shared_ptr<options::Option> the_options() const;
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
@@ -453,6 +456,7 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
+    std::shared_ptr<mir::shell::decoration::DecorationStrategy> decoration_renderer_strategy;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;

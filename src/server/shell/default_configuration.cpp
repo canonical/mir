@@ -76,8 +76,9 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
     return decoration_manager(
         [this]()->std::shared_ptr<msd::Manager>
         {
+            auto const custom = the_decoration_renderer_strategy();
             return std::make_shared<msd::BasicManager>(
-                msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
+                custom ? custom : msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
                 *the_display_configuration_observer_registrar(),
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),

@@ -39,3 +39,5 @@ MirAL also has other strategies: {func}`miral::Decorations::prefer_csd`,
 {func}`miral::Decorations::always_ssd`, and
 {func}`miral::Decorations::always_csd`. Try playing around with different
 strategies and seeing how they behave differently.
+
+For limited buffer-based custom SSD rendering, see {ref}`custom-server-side-decorations`.

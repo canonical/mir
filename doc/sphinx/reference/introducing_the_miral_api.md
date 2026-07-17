@@ -87,6 +87,35 @@ Most of the remaining MirAL components are designed to be passed into
 - Controlling the available Wayland extension protocols: {class}`miral::WaylandExtensions`; and,
 - Selecting server-side or client-side decorations: {class}`miral::Decorations`.
 
+### Custom server-side decorations
+
+MirAL supports **limited buffer-based customization** of server-side decorations via
+{class}`miral::CustomDecorations` and the types in {file}`miral/custom_decorations.h`:
+{class}`miral::DecorationStrategy`, {class}`miral::DecorationBuffers`, and
+{class}`miral::DecorationSurface`.
+
+This is separate from {class}`miral::Decorations`, which controls SSD vs CSD negotiation.
+Use both a {class}`miral::Decorations` policy and {class}`miral::CustomDecorations` when
+replacing the built-in SSD appearance (for example `prefer_ssd()` or `prefer_csd()`).
+
+See {ref}`custom-server-side-decorations` and
+`examples/miral-custom-decorations/miral-custom-decorations.cpp`.
+
+#### Limitations
+
+- Metric methods (`titlebar_height()`, `side_border_width()`, `bottom_border_height()`)
+  default to 24/4/4 pixels and control *internal* geometry (distinct from the client-visible
+  size from `compute_size_with_decorations()`).
+- Rendering methods receive `WindowState`, `InputState`, and `DecorationBuffers` on each
+  call and return an optional {class}`miral::DecorationSurface`. Implementations must be
+  stateless.
+- Allocate pixels with `DecorationBuffers::create_mapping()`; public headers do not expose
+  `mir::graphics::Buffer`.
+- Buffer pixel dimensions must account for `WindowState::scale()` (HiDPI).
+- Only software buffers are supported.
+- Button functions are limited to close, maximize, and minimize.
+- The renderer strategy is fixed at `MirRunner` construction; it cannot be changed at runtime.
+
 ## Further reading
 
 You can explore the full API in the - [API reference](/api/library_root)

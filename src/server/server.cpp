@@ -786,6 +786,16 @@ void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy
     self->server_config->set_the_decoration_strategy(strategy);
 }
 
+auto mir::Server::the_decoration_renderer_strategy() const -> std::shared_ptr<shell::decoration::DecorationStrategy>
+{
+    return self->server_config->the_decoration_renderer_strategy();
+}
+
+void mir::Server::set_the_decoration_renderer_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy)
+{
+    self->server_config->set_the_decoration_renderer_strategy(std::move(strategy));
+}
+
 void mir::Server::for_each_output_binding(wayland::Client* client, graphics::DisplayConfigurationOutputId output,
     std::function<void(wl_resource* output)> const& callback)
 {

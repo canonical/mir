@@ -18,7 +18,7 @@
 #define MIR_SHELL_DECORATION_BASIC_DECORATION_H_
 
 #include "decoration.h"
-#include "decoration_strategy.h"
+#include <mir/shell/decoration/decoration_strategy.h>
 
 #include <mir/geometry/rectangle.h>
 #include <mir_toolkit/common.h>

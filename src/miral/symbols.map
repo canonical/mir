@@ -64,6 +64,7 @@ global:
     miral::BasicSetApplicationAuthorizer::BasicSetApplicationAuthorizer*;
     miral::BasicSetApplicationAuthorizer::operator*;
     miral::BasicSetApplicationAuthorizer::the_application_authorizer*;
+
     miral::BounceKeys::BounceKeys*;
     miral::BounceKeys::delay*;
     miral::BounceKeys::disable*;
@@ -92,6 +93,10 @@ global:
     miral::CursorTheme::?CursorTheme*;
     miral::CursorTheme::CursorTheme*;
     miral::CursorTheme::operator*;
+    miral::CustomDecorations::*;
+    miral::DecorationBuffers::*;
+    miral::DecorationSurface::*;
+    miral::CustomRenderer::?CustomRenderer*;
     miral::CustomRenderer::CustomRenderer*;
     miral::CustomRenderer::operator*;
     miral::Decorations::Decorations*;
@@ -100,6 +105,7 @@ global:
     miral::Decorations::operator*;
     miral::Decorations::prefer_csd*;
     miral::Decorations::prefer_ssd*;
+    miral::DecorationStrategy::*;
     miral::DisplayConfiguration::?DisplayConfiguration*;
     miral::DisplayConfiguration::DisplayConfiguration*;
     miral::DisplayConfiguration::Node::?Node*;
@@ -520,6 +526,7 @@ global:
     miral::WindowSpecification::visible_on_lock_screen*;
     miral::WindowSpecification::width_inc*;
     miral::WindowSpecification::window_placement_gravity*;
+
     miral::X11Support::?X11Support*;
     miral::X11Support::X11Support*;
     miral::X11Support::default_to_enabled*;
@@ -610,6 +617,7 @@ global:
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_modify_window*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::handle_window_ready*;
     non-virtual?thunk?to?miral::CanonicalWindowManagerPolicy::place_new_window*;
+    non-virtual?thunk?to?miral::DecorationStrategy::*;
     non-virtual?thunk?to?miral::FdHandle::?FdHandle*;
     non-virtual?thunk?to?miral::FloatingWindowManager::?FloatingWindowManager*;
     non-virtual?thunk?to?miral::FloatingWindowManager::advise_focus_gained*;
@@ -705,6 +713,7 @@ global:
     typeinfo?for?miral::CursorTheme;
     typeinfo?for?miral::CustomRenderer;
     typeinfo?for?miral::Decorations;
+    typeinfo?for?miral::DecorationStrategy*;
     typeinfo?for?miral::DisplayConfiguration::Node;
     typeinfo?for?miral::DisplayConfiguration;
     typeinfo?for?miral::ExternalClientLauncher;
@@ -759,6 +768,7 @@ global:
     typeinfo?for?std::formatter?miral::live_config::Key*char?;
     vtable?for?miral::ApplicationAuthorizer;
     vtable?for?miral::CanonicalWindowManagerPolicy;
+    vtable?for?miral::DecorationStrategy*;
     vtable?for?miral::FdHandle;
     vtable?for?miral::FloatingWindowManager;
     vtable?for?miral::KioskWindowManagerPolicy;
@@ -767,6 +777,7 @@ global:
     vtable?for?miral::live_config::IniFile;
     vtable?for?miral::live_config::IniFileWithOverrides;
     vtable?for?miral::live_config::Store;
+    typeinfo?name?for?miral::DecorationStrategy*;
   };
 local: *;
 };
