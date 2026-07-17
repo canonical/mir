@@ -185,12 +185,48 @@ namespace
 // For C++-overload-resolution reasons these always-available functions need to be
 // defined in the same namespace as the conditionally-available ones below.
 
-inline void log_debug(logging::Tags tags, std::string_view message)
-{ mir::log(logging::Severity::debug, tags, message); }
+/*
+ * As above, the log_{debug,info,warn,error,critical} family need to be
+ * types-with-deduction-guides
+ */
+template<typename... Args>
+struct log_debug;
+
+template<>
+struct log_debug<logging::Tags, std::string_view>
+{
+    log_debug(
+        logging::Tags tags,
+        std::string_view message,
+        std::source_location loc = std::source_location::current())
+    {
+        mir::log(logging::Severity::debug, tags, message, loc);
+    }
+};
+log_debug(logging::Tags, std::string_view) -> log_debug<logging::Tags, std::string_view>;
+log_debug(logging::Tags, std::string_view, std::source_location)
+    -> log_debug<logging::Tags, std::string_view>;
 
 template<typename... Args>
-void log_debug(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
-{ log_debug(tags, std::format(fmt, std::forward<Args>(args)...)); }
+struct log_debug<logging::Tags, std::format_string<Args...>, Args...>
+{
+    log_debug(
+        logging::Tags tags,
+        std::format_string<Args...> fmt,
+        Args&&... args,
+        std::source_location const& location = std::source_location::current())
+    {
+        mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
+            logging::Severity::debug,
+            tags,
+            fmt,
+            std::forward<Args>(args)...,
+            location);
+    }
+};
+template<typename ...Args>
+log_debug(logging::Tags, std::format_string<Args...>, Args&&...)
+    -> log_debug<logging::Tags, std::format_string<Args...>, Args...>;
 
 inline void log_info(logging::Tags tags, std::string_view message)
 { mir::log(logging::Severity::informational, tags, message); }
@@ -229,8 +265,8 @@ inline void log_info(std::string const& message)
 inline void log_info(char const* fmt, ...)
 {
     va_list va;
-    va_start(va, fmt);
     ::mir::logv(::mir::logging::Severity::informational, MIR_LOG_COMPONENT, fmt, va);
+    va_start(va, fmt);
     va_end(va);
 }
 
@@ -243,14 +279,24 @@ inline void log_error(char const* fmt, ...)
     va_end(va);
 }
 
-[[gnu::format(printf, 1, 2)]]
-inline void log_debug(char const* fmt, ...)
+template<typename... Args>
+struct log_debug<char const*, Args...>
 {
-    va_list va;
-    va_start(va, fmt);
-    ::mir::logv(::mir::logging::Severity::debug, MIR_LOG_COMPONENT, fmt, va);
-    va_end(va);
-}
+    log_debug(
+        char const* fmt,
+        Args... args,
+        std::source_location const& location = std::source_location::current())
+    {
+        mir::log<logging::Severity, char const*, char const*, Args...>(
+            logging::Severity::debug,
+            MIR_LOG_COMPONENT,
+            fmt,
+            args...,
+            location);
+    }
+};
+template<typename ...Args>
+log_debug(char const*, Args...) -> log_debug<char const*, Args...>;
 
 inline void log_critical(std::string const& message)
 { ::mir::log(::mir::logging::Severity::critical, MIR_LOG_COMPONENT, message); }
