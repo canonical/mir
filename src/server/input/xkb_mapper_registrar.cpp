@@ -103,7 +103,7 @@ mi::XKBContextPtr mi::make_unique_context()
     auto context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!context)
     {
-        fatal_error("Failed to create XKB context");
+        MIR_FATAL_ERROR("Failed to create XKB context");
     }
     return {context, &xkb_context_unref};
 }

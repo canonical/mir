@@ -22,6 +22,7 @@
 #include <mir/input/keymap.h>
 
 #include <iosfwd>
+#include <format>
 #include <memory>
 
 /*
@@ -47,5 +48,11 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, MirKeyboardConfig const& keyboard);
+
+template<>
+struct std::formatter<MirKeyboardConfig> : std::formatter<std::string>
+{
+    auto format(MirKeyboardConfig const& keyboard, std::format_context& ctx) const -> std::format_context::iterator;
+};
 
 #endif

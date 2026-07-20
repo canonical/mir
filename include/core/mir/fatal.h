@@ -23,6 +23,11 @@
 #ifndef MIR_FATAL_H_
 #define MIR_FATAL_H_
 
+#include <format>
+#include <source_location>
+#include <string_view>
+#include <utility>
+
 namespace mir
 {
 /**
@@ -30,8 +35,23 @@ namespace mir
  * cannot recover from. Kills the program and dump core as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
-[[noreturn]]
+[[noreturn, deprecated("Use MIR_FATAL_ERROR() instead")]]
 void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
+
+/**
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dump core as cleanly as possible.
+ *   \param [in] loc  The source location where the fatal error occurred.
+ *   \param [in] message  A message describing the fatal error.
+ */
+[[noreturn]]
+void fatal_error(std::source_location const loc, std::string_view message);
+
+template<typename... Args>
+[[noreturn]] inline void fatal_error(std::source_location const loc, std::format_string<Args...> reason, Args&&... args)
+{ fatal_error(loc, std::format(reason, std::forward<Args>(args)...)); }
 } // namespace mir
+
+#define MIR_FATAL_ERROR(...) ::mir::fatal_error(::std::source_location::current(), __VA_ARGS__)
 
 #endif // MIR_FATAL_H_

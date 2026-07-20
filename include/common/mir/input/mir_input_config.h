@@ -23,6 +23,7 @@
 #include <memory>
 #include <vector>
 #include <string>
+#include <format>
 #include <iosfwd>
 #include <functional>
 
@@ -108,5 +109,17 @@ private:
 
 std::ostream& operator<<(std::ostream&, MirInputDevice const&);
 std::ostream& operator<<(std::ostream&, MirInputConfig const&);
+
+template<>
+struct std::formatter<MirInputDevice> : std::formatter<std::string>
+{
+    auto format(MirInputDevice const& device, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<MirInputConfig> : std::formatter<std::string>
+{
+    auto format(MirInputConfig const& config, std::format_context& ctx) const -> std::format_context::iterator;
+};
 
 #endif

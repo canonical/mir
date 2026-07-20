@@ -20,14 +20,14 @@
 #include <mir/scene/surface.h>
 #include <mir/event_printer.h>
 
-#include <boost/lexical_cast.hpp>
+#include <sstream>
 
 using mir::scene::Session;
 using mir::scene::Surface;
 
 namespace
 {
-char const* const component = "shell::Shell";
+auto const& shell_report{mir::logging::create_tag(mir::logging::base(), "shell")};
 
 void log_basics(std::ostream& out, Session const& session, Surface const& surface, char const* action)
 {
@@ -48,12 +48,12 @@ mrl::ShellReport::ShellReport(std::shared_ptr<mir::logging::Logger> const& log) 
 
 void mrl::ShellReport::opened_session(Session const& session)
 {
-    log->log(Severity::informational, "session \"" + session.name() + "\" opened", component);
+    log->log(Severity::informational, {shell_report}, "session \"{}\" opened", session.name());
 }
 
 void mrl::ShellReport::closing_session(Session const& session)
 {
-    log->log(Severity::informational, "session \"" + session.name() + "\" closing", component);
+    log->log(Severity::informational, {shell_report}, "session \"{}\" closing", session.name());
 }
 
 void mrl::ShellReport::created_surface(
@@ -67,7 +67,7 @@ void mrl::ShellReport::created_surface(
     if (auto const parent = surface.parent())
         out << ", parent=\"" << parent->name() << "\"";
 
-    log->log(Severity::informational, out.str(), component);
+    log->log(Severity::informational, {shell_report}, out.str());
 }
 
 void mrl::ShellReport::update_surface(
@@ -77,7 +77,7 @@ void mrl::ShellReport::update_surface(
 {
     std::ostringstream out;
     log_basics(out, session, surface, "update");
-    log->log(Severity::informational, out.str(), component);
+    log->log(Severity::informational, {shell_report}, out.str());
 }
 
 void mrl::ShellReport::update_surface(
@@ -87,7 +87,7 @@ void mrl::ShellReport::update_surface(
 {
     std::ostringstream out;
     log_basics(out, session, surface, "update");
-    log->log(Severity::informational, out.str(), component);
+    log->log(Severity::informational, {shell_report}, out.str());
 }
 
 void mrl::ShellReport::destroying_surface(
@@ -96,17 +96,17 @@ void mrl::ShellReport::destroying_surface(
 {
     std::ostringstream out;
     log_basics(out, session, surface, "destroying");
-    log->log(Severity::informational, out.str(), component);
+    log->log(Severity::informational, {shell_report}, out.str());
 }
 
 void mrl::ShellReport::adding_display(geometry::Rectangle const& area)
 {
-    log->log(Severity::informational, "Adding display area: " + boost::lexical_cast<std::string>(area), component);
+    log->log(Severity::informational, {shell_report}, "Adding display area: {}", area);
 }
 
 void mrl::ShellReport::removing_display(geometry::Rectangle const& area)
 {
-    log->log(Severity::informational, "Removing display area: " + boost::lexical_cast<std::string>(area), component);
+    log->log(Severity::informational, {shell_report}, "Removing display area: {}", area);
 }
 
 void mrl::ShellReport::input_focus_set_to(
@@ -127,10 +127,10 @@ void mrl::ShellReport::input_focus_set_to(
         out << '\"' << session_name << "\" input focus surface[" << focus_surface << "] \"" << surface_name;
     }
 
-    log->log(Severity::informational, out.str(), component);
+    log->log(Severity::informational, {shell_report}, out.str());
 }
 
 void mrl::ShellReport::surfaces_raised(shell::SurfaceSet const& surfaces)
 {
-    log->log(Severity::informational, "Raising " + boost::lexical_cast<std::string>(surfaces.size()) + " surfaces", component);
+    log->log(Severity::informational, {shell_report}, "Raising {} surfaces", surfaces.size());
 }

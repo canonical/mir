@@ -15,6 +15,7 @@
  */
 
 #include <mir/input/mir_touchscreen_config.h>
+#include <format>
 #include <ostream>
 #include <tuple>
 
@@ -85,4 +86,26 @@ bool MirTouchscreenConfig::operator==(MirTouchscreenConfig const& other) const
 std::ostream& operator<<(std::ostream& out, MirTouchscreenConfig const& conf)
 {
     return out << " mode:" << conf.mapping_mode() << " outputid:" << conf.output_id();
+}
+
+namespace
+{
+char const* as_string(MirTouchscreenMappingMode mode)
+{
+    switch (mode)
+    {
+    case mir_touchscreen_mapping_mode_to_output:
+        return "to_output";
+    case mir_touchscreen_mapping_mode_to_display_wall:
+        return "to_display_wall";
+    default:
+        return "UNKNOWN";
+    }
+}
+}
+
+auto std::formatter<MirTouchscreenConfig>::format(MirTouchscreenConfig const& conf, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    return std::format_to(ctx.out(), " mode:{} outputid:{}", as_string(conf.mapping_mode()), conf.output_id());
 }

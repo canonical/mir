@@ -23,6 +23,7 @@
 #include <iosfwd>
 #include <type_traits>
 #include <cstdint>
+#include <format>
 #include <limits>
 
 namespace mir
@@ -334,5 +335,16 @@ inline constexpr generic::DeltaY<T> as_delta(generic::Height<T> const& h)
 { return generic::DeltaY<T>{h.as_value()}; }
 } // namespace geometry
 } // namespace mir
+
+namespace std
+{
+template<typename T, typename Tag>
+struct formatter<mir::geometry::generic::Value<T, Tag>> : formatter<T>
+{
+    auto format(mir::geometry::generic::Value<T, Tag> const& value, std::format_context& ctx) const
+        -> std::format_context::iterator
+    { return formatter<T>::format(value.as_value(), ctx); }
+};
+}
 
 #endif // MIR_GEOMETRY_DIMENSIONS_H_

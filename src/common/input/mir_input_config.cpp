@@ -113,14 +113,14 @@ MirTouchpadConfig& MirInputDevice::touchpad_config()
 {
     if (auto& tmp = impl->touchpad)
         return tmp.value();
-    mir::fatal_error("Touchpad config not available");
+    MIR_FATAL_ERROR("Touchpad config not available");
 }
 
 MirTouchpadConfig const& MirInputDevice::touchpad_config() const
 {
     if (auto const& tmp = impl->touchpad)
         return tmp.value();
-    mir::fatal_error("Touchpad config not available");
+    MIR_FATAL_ERROR("Touchpad config not available");
 }
 
 void MirInputDevice::set_touchpad_config(MirTouchpadConfig const& conf)
@@ -137,14 +137,14 @@ MirTouchscreenConfig& MirInputDevice::touchscreen_config()
 {
     if (auto& tmp = impl->touchscreen)
         return tmp.value();
-    mir::fatal_error("Touchscreen config not available");
+    MIR_FATAL_ERROR("Touchscreen config not available");
 }
 
 MirTouchscreenConfig const& MirInputDevice::touchscreen_config() const
 {
     if (auto const& tmp = impl->touchscreen)
         return tmp.value();
-    mir::fatal_error("Touchscreen config not available");
+    MIR_FATAL_ERROR("Touchscreen config not available");
 }
 
 void MirInputDevice::set_touchscreen_config(MirTouchscreenConfig const& conf)
@@ -161,14 +161,14 @@ MirKeyboardConfig& MirInputDevice::keyboard_config()
 {
     if (auto& tmp = impl->keyboard)
         return tmp.value();
-    mir::fatal_error("Keyboard config not available");
+    MIR_FATAL_ERROR("Keyboard config not available");
 }
 
 MirKeyboardConfig const& MirInputDevice::keyboard_config() const
 {
     if (auto const& tmp = impl->keyboard)
         return tmp.value();
-    mir::fatal_error("Keyboard config not available");
+    MIR_FATAL_ERROR("Keyboard config not available");
 }
 
 void MirInputDevice::set_keyboard_config(MirKeyboardConfig const& conf)
@@ -185,14 +185,14 @@ MirPointerConfig& MirInputDevice::pointer_config()
 {
     if (auto& tmp = impl->pointer)
         return tmp.value();
-    mir::fatal_error("Pointer config not available");
+    MIR_FATAL_ERROR("Pointer config not available");
 }
 
 MirPointerConfig const& MirInputDevice::pointer_config() const
 {
     if (auto const& tmp = impl->pointer)
         return tmp.value();
-    mir::fatal_error("Pointer config not available");
+    MIR_FATAL_ERROR("Pointer config not available");
 }
 
 void MirInputDevice::set_pointer_config(MirPointerConfig const& conf)
@@ -313,4 +313,30 @@ std::ostream& operator<<(std::ostream& out, MirInputConfig const& rhs)
            out << '[' << conf << ']';
         });
     return out << "}";
+}
+
+auto std::formatter<MirInputDevice>::format(MirInputDevice const& device, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    auto out = std::format_to(ctx.out(), "{} {} {}", device.id(), device.name(), device.unique_id());
+    if (device.has_pointer_config())
+        out = std::format_to(out, " pointer:({})", device.pointer_config());
+    if (device.has_touchpad_config())
+        out = std::format_to(out, " touchpad:({})", device.touchpad_config());
+    if (device.has_touchscreen_config())
+        out = std::format_to(out, " touchscreen:({})", device.touchscreen_config());
+    if (device.has_keyboard_config())
+        out = std::format_to(out, " keyboard:({})", device.keyboard_config());
+    return out;
+}
+
+auto std::formatter<MirInputConfig>::format(MirInputConfig const& config, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    auto out = std::format_to(ctx.out(), "MirInputConfig{{");
+    config.for_each([&out](MirInputDevice const& device)
+        {
+            out = std::format_to(out, "[{}]", device);
+        });
+    return std::format_to(out, "}}");
 }

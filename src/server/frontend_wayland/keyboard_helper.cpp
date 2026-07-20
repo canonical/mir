@@ -44,7 +44,7 @@ mf::KeyboardHelper::KeyboardHelper(
 {
     if (!context)
     {
-        fatal_error("Failed to create XKB context");
+        MIR_FATAL_ERROR("Failed to create XKB context");
     }
 
     /* The wayland::Keyboard constructor has already run, creating the keyboard

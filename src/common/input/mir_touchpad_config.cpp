@@ -15,6 +15,7 @@
  */
 
 #include <mir/input/mir_touchpad_config.h>
+#include <format>
 #include <ostream>
 #include <tuple>
 
@@ -178,4 +179,57 @@ std::ostream& operator<<(std::ostream& out, MirTouchpadConfig const& conf)
         << " middle-button-emulation:" << conf.middle_mouse_button_emulation()
         << " disable-with-external-mouse:" << conf.disable_with_external_mouse()
         << " disable-while-typing:" << conf.disable_while_typing();
+}
+
+namespace
+{
+char const* as_string(MirTouchpadClickMode mode)
+{
+    switch (mode)
+    {
+    case mir_touchpad_click_mode_none:
+        return "none";
+    case mir_touchpad_click_mode_area_to_click:
+        return "area";
+    case mir_touchpad_click_mode_finger_count:
+        return "clickfinger";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+char const* as_string(MirTouchpadScrollMode mode)
+{
+    switch (mode)
+    {
+    case mir_touchpad_scroll_mode_none:
+        return "none";
+    case mir_touchpad_scroll_mode_two_finger_scroll:
+        return "two-finger";
+    case mir_touchpad_scroll_mode_edge_scroll:
+        return "edge";
+    case mir_touchpad_scroll_mode_button_down_scroll:
+        return "button-down";
+    default:
+        return "UNKNOWN";
+    }
+}
+}
+
+auto std::formatter<MirTouchpadConfig>::format(MirTouchpadConfig const& conf, std::format_context& ctx) const ->
+    std::format_context::iterator
+{
+    auto out = std::format_to(ctx.out(), "{{click-mode={}", as_string(conf.click_mode()));
+    out = std::format_to(out, "|scroll-mode={}", as_string(conf.scroll_mode()));
+    if (conf.scroll_mode() == mir_touchpad_scroll_mode_button_down_scroll)
+        out = std::format_to(out, ",touchpad-scroll-button={}", conf.button_down_scroll_button());
+    if (conf.tap_to_click())
+        out = std::format_to(out, "|tap-to-click");
+    if (conf.middle_mouse_button_emulation())
+        out = std::format_to(out, "|middle-mouse-button-emulation");
+    if (conf.disable_with_external_mouse())
+        out = std::format_to(out, "|disable-with-external-mouse");
+    if (conf.disable_while_typing())
+        out = std::format_to(out, "|disable-while-typing");
+    return std::format_to(out, "}}");
 }

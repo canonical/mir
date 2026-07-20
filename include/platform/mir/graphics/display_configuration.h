@@ -27,6 +27,7 @@
 #include <glm/glm.hpp>
 
 #include <functional>
+#include <format>
 #include <map>
 #include <memory>
 #include <optional>
@@ -257,5 +258,33 @@ std::ostream& operator<<(std::ostream& out, DisplayConfiguration const& val);
 
 }
 }
+
+template<>
+struct std::formatter<mir::graphics::DisplayConfigurationCard> : std::formatter<std::string>
+{
+    auto format(mir::graphics::DisplayConfigurationCard const& card, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<mir::graphics::DisplayConfigurationMode> : std::formatter<std::string>
+{
+    auto format(mir::graphics::DisplayConfigurationMode const& mode, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<mir::graphics::DisplayConfigurationOutput> : std::formatter<std::string>
+{
+    auto format(mir::graphics::DisplayConfigurationOutput const& output, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
+
+template<>
+struct std::formatter<mir::graphics::DisplayConfiguration> : std::formatter<std::string>
+{
+    auto format(mir::graphics::DisplayConfiguration const& config, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
 
 #endif /* MIR_GRAPHICS_DISPLAY_CONFIGURATION_H_ */

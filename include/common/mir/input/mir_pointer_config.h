@@ -20,6 +20,7 @@
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/mir_input_device_types.h>
 
+#include <format>
 #include <memory>
 #include <iosfwd>
 
@@ -78,5 +79,11 @@ private:
 };
 
 std::ostream& operator<<(std::ostream& out, MirPointerConfig const& rhs);
+
+template<>
+struct std::formatter<MirPointerConfig> : std::formatter<std::string>
+{
+    auto format(MirPointerConfig const& rhs, std::format_context& ctx) const -> std::format_context::iterator;
+};
 
 #endif

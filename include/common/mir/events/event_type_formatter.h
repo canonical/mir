@@ -14,16 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_EVENT_TYPE_TO_STRING_H_
-#define MIR_EVENT_TYPE_TO_STRING_H_
+#ifndef MIR_EVENT_TYPE_FORMATTER_H_
+#define MIR_EVENT_TYPE_FORMATTER_H_
 
-#include <string>
-#include <mir_toolkit/client_types.h>
+#include <mir_toolkit/events/enums.h>
 
-namespace mir
+#include <format>
+
+template<>
+struct std::formatter<MirEventType>
 {
-std::string event_type_to_string(MirEventType t);
-char const* event_type_to_c_str(MirEventType t);
-}
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
 
-#endif // MIR_EVENT_TYPE_TO_STRING_H_
+    auto format(MirEventType type, std::format_context& ctx) const -> std::format_context::iterator;
+};
+
+#endif // MIR_EVENT_TYPE_FORMATTER_H_

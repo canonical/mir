@@ -19,6 +19,7 @@
 
 #include "forward.h"
 #include "dimensions.h"
+#include <format>
 #include <ostream>
 
 namespace mir
@@ -104,6 +105,19 @@ std::ostream& operator<<(std::ostream& out, Point<T> const& value)
 
 }
 }
+}
+
+namespace std
+{
+template<typename T>
+struct formatter<mir::geometry::generic::Point<T>>
+{
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+    auto format(mir::geometry::generic::Point<T> const& value, std::format_context& ctx) const
+        -> std::format_context::iterator
+    { return std::format_to(ctx.out(), "{}, {}", value.x, value.y); }
+};
 }
 
 #endif // MIR_GEOMETRY_POINT_H_
