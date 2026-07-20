@@ -61,25 +61,45 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
                 OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
             }
 
-            fn parse_post_error(what: &str) -> (u32, u32, String) {
-                let mut parts = what.splitn(3, ':');
-                let object_id = parts.next()
-                    .and_then(|s| s.trim().parse::<u32>().ok())
-                    .unwrap_or(0);
-                let code = parts.next()
-                    .and_then(|s| s.trim().parse::<u32>().ok())
-                    .unwrap_or(0);
-                let message = parts.next()
-                    .map(|s| s.trim().to_string())
-                    .unwrap_or_else(|| what.to_string());
-                (object_id, code, message)
-            }
-
             fn post_protocol_error(resource: &impl Resource, object_id: u32, code: u32, message: String) {
                 let target_id = OBJECT_REGISTRY.read().unwrap_or_else(|e| e.into_inner()).get(&object_id).cloned();
                 if let Some(handle) = resource.handle().upgrade() {
                     let id = target_id.unwrap_or_else(|| resource.id());
                     handle.post_error(id, code, CString::new(message).expect("Error message contained null byte"));
+                }
+            }
+
+            /// Handle a C++ exception that crossed the FFI boundary during dispatch.
+            ///
+            /// `mir::wayland_rs::ProtocolError` encodes itself as
+            /// "MIR_PROTOCOL_ERROR:<object_id>:<code>: <message>" (only what() survives
+            /// the cxx boundary). Anything without that sentinel is an internal server
+            /// error and must not be dressed up as a client protocol violation.
+            fn handle_dispatch_error(resource: &impl Resource, what: &str) {
+                if let Some(encoded) = what.strip_prefix("MIR_PROTOCOL_ERROR:") {
+                    let mut parts = encoded.splitn(3, ':');
+                    let object_id = parts.next()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let code = parts.next()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let message = parts.next()
+                        .map(|s| s.trim().to_string())
+                        .unwrap_or_else(|| encoded.to_string());
+                    post_protocol_error(resource, object_id, code, message);
+                } else {
+                    log::error!("Internal error dispatching Wayland request on {}: {}", resource.id(), what);
+                    // No protocol-level error code fits an internal failure; what matters
+                    // is that the client sees an honest message rather than a garbled
+                    // pseudo-protocol-error, and the real cause is in the server log.
+                    if let Some(handle) = resource.handle().upgrade() {
+                        handle.post_error(
+                            resource.id(),
+                            0,
+                            CString::new("internal server error").expect("static string"),
+                        );
+                    }
                 }
             }
 
@@ -501,8 +521,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     child_wrapper.lock().unwrap().inner = Some(child);
                 }
                 Err(err) => {
-                    let (object_id, code, message) = parse_post_error(err.what());
-                    post_protocol_error(resource, object_id, code, message);
+                    handle_dispatch_error(resource, err.what());
                 }
             }
         }
@@ -518,8 +537,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // SAFETY: The mutex guard provides the only mutable access while the call is
             // in progress. The pinned reference is used only for this FFI call.
             if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
-                let (object_id, code, message) = parse_post_error(err.what());
-                post_protocol_error(resource, object_id, code, message);
+                handle_dispatch_error(resource, err.what());
             }
         }
     }
@@ -670,9 +688,13 @@ fn generate_dispatch_impl(
                 _state: &mut Self,
                 _client: ClientId,
                 resource: &#namespace_name::#interface_name::#protocol_struct_name,
-                _data: &Arc<Mutex<#wrapper_struct_name>>,
+                data: &Arc<Mutex<#wrapper_struct_name>>,
             ) {
                 unregister_resource(resource);
+                // The C++ object holds the middleware, whose resource handle holds
+                // `data`, whose `inner` holds the C++ object. Break the cycle here
+                // or the whole chain (and the client's session) leaks.
+                data.lock().unwrap_or_else(|e| e.into_inner()).inner.take();
             }
         }
     }

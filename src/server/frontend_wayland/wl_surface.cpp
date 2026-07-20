@@ -46,8 +46,6 @@
 #include <chrono>
 #include <ranges>
 #include <boost/throw_exception.hpp>
-#include <charconv>
-#include <string_view>
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -98,25 +96,7 @@ public:
         }
         catch (mw::ProtocolError const& err)
         {
-            // ProtocolError encodes "<object_id>:<code>: message" in what();
-            // recover the code and message to re-post outside the dispatch path.
-            std::string_view const encoded{err.what()};
-            auto const first = encoded.find(':');
-            auto const second = encoded.find(':', first + 1);
-            uint32_t code = 0;
-            std::string message{encoded};
-            if (first != std::string_view::npos && second != std::string_view::npos)
-            {
-                std::from_chars(
-                    encoded.data() + first + 1,
-                    encoded.data() + second,
-                    code);
-                auto msg_start = second + 1;
-                if (msg_start < encoded.size() && encoded[msg_start] == ' ')
-                    ++msg_start;
-                message = std::string{encoded.substr(msg_start)};
-            }
-            self.post_error(code, message);
+            self.post_error(err.code(), err.message());
         }
         catch (...)
         {

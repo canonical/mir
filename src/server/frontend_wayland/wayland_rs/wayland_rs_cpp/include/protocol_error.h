@@ -30,10 +30,23 @@ class ProtocolError : public std::runtime_error
 {
 public:
     ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...);
+
+    /// Encoded as "MIR_PROTOCOL_ERROR:<object_id>:<error_code>: <message>" so the
+    /// error survives the cxx FFI boundary (which only carries what()); the Rust
+    /// dispatch layer parses this back. Other exception types lack the sentinel
+    /// prefix and must not be parsed as protocol errors.
+    static constexpr char const* what_sentinel = "MIR_PROTOCOL_ERROR:";
     auto what() const noexcept -> char const* override;
 
+    auto object_id() const noexcept -> uint32_t;
+    auto code() const noexcept -> uint32_t;
+    auto message() const noexcept -> std::string const&;
+
 private:
+    uint32_t object_id_;
+    uint32_t code_;
     std::string message_;
+    std::string what_;
 };
 }
 }
