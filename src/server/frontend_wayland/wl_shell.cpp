@@ -37,7 +37,7 @@ namespace frontend
 class WlShellSurface : public wayland_rs::ShellSurface, public WindowWlSurfaceRole
 {
 public:
-    using wayland_rs::ShellSurface::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland_rs::ShellSurface::destroyed_flag(); }
 
     WlShellSurface(
         std::shared_ptr<wayland_rs::Client> client,

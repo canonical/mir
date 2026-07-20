@@ -20,8 +20,8 @@
 #include "wlr_screencopy_unstable_v1.h"
 
 #include <mir/geometry/rectangle.h>
-#include <mir/wayland/lifetime_tracker.h>
-#include <mir/wayland/weak.h>
+#include "lifetime_tracker.h"
+#include "weak.h"
 
 #include <memory>
 #include <glm/glm.hpp>
@@ -58,7 +58,7 @@ auto create_wlr_screencopy_manager_v1(
 -> std::shared_ptr<wayland_rs::ScreencopyManagerV1>;
 
 /// Tracks damage and captures frames when needed. Each instance used by a single manager (and thus a single client).
-class WlrScreencopyV1DamageTracker : public wayland::LifetimeTracker
+class WlrScreencopyV1DamageTracker : public wayland_rs::LifetimeTracker
 {
 public:
     struct FrameParams

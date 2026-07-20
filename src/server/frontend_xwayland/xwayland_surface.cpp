@@ -29,7 +29,7 @@
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/events/input_event.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include "boost/throw_exception.hpp"
 

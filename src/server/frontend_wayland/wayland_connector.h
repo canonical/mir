@@ -221,7 +221,7 @@ private:
     struct ServerWrapper;
 
     void for_each_output_binding(
-        wayland::Client* client,
+        wayland_rs::Client* client,
         graphics::DisplayConfigurationOutputId output,
         std::function<void(wl_resource* output)> const& callback) override;
 

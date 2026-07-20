@@ -121,7 +121,7 @@ private:
 class SessionLockSurfaceV1 : public mw::ExtSessionLockSurfaceV1, public WindowWlSurfaceRole
 {
 public:
-    using mw::ExtSessionLockSurfaceV1::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::ExtSessionLockSurfaceV1::destroyed_flag(); }
 
     SessionLockSurfaceV1(
         std::shared_ptr<mw::Client> client,

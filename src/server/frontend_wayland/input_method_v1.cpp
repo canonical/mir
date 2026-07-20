@@ -427,7 +427,7 @@ private:
             text_input_hub->unregister_interest(*state_observer);
         }
 
-        using mw::InputPanelSurfaceV1::destroyed_flag;
+        auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::InputPanelSurfaceV1::destroyed_flag(); }
 
         void show()
         {

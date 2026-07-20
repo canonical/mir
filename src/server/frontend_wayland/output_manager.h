@@ -22,8 +22,8 @@
 
 #include "wayland.h"
 #include "client.h"
-#include <mir/wayland/weak.h>
-#include <mir/wayland/lifetime_tracker.h>
+#include "weak.h"
+#include "lifetime_tracker.h"
 
 #include <rust/cxx.h>
 
@@ -54,7 +54,7 @@ namespace frontend
 class DisplayChanger;
 class OutputGlobal;
 
-class OutputConfigListener : public virtual wayland::LifetimeTracker
+class OutputConfigListener : public wayland_rs::LifetimeTracker
 {
 public:
     // Returns true if the wl_output needs to send a done event
@@ -83,7 +83,7 @@ public:
 
     // Disambiguate the two inherited LifetimeTracker::destroyed_flag() (from
     // wayland_rs::Output and from OutputConfigListener).
-    using wayland_rs::Output::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland_rs::Output::destroyed_flag(); }
 
     wayland_rs::Weak<OutputGlobal> const global;
 };
@@ -96,7 +96,7 @@ inline auto as_output_ptr(wayland_rs::Output* output) -> std::shared_ptr<wayland
     return output ? std::shared_ptr<wayland_rs::Output>{std::shared_ptr<void>{}, output} : nullptr;
 }
 
-class OutputGlobal : public wayland::LifetimeTracker
+class OutputGlobal : public wayland_rs::LifetimeTracker
 {
 public:
     OutputGlobal(

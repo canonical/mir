@@ -68,7 +68,7 @@ namespace frontend
 class LayerSurfaceV1 : public mw::LayerSurfaceV1, public WindowWlSurfaceRole
 {
 public:
-    using mw::LayerSurfaceV1::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::LayerSurfaceV1::destroyed_flag(); }
 
     LayerSurfaceV1(
         std::shared_ptr<mw::Client> client,

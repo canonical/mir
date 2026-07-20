@@ -22,7 +22,7 @@
 #include "wl_touch.h"
 
 #include <mir/input/keymap.h>
-#include <mir/wayland/client.h>
+#include "client.h"
 #include <mir/events/pointer_event.h>
 #include <mir/events/touch_event.h>
 

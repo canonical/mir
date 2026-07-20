@@ -22,7 +22,7 @@
 
 #include <mir/flags.h>
 #include "weak.h"
-#include <mir/wayland/lifetime_tracker.h>
+#include "lifetime_tracker.h"
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/size.h>
 #include <mir/geometry/rectangle.h>

@@ -20,7 +20,7 @@
 
 #include "wayland_rs/src/ffi.rs.h"
 
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <optional>
 
@@ -43,7 +43,7 @@ public:
         mwrs::Output* wl_output);
     ~XdgOutputV1();
 
-    using mwrs::XdgOutputV1::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mwrs::XdgOutputV1::destroyed_flag(); }
 
 private:
     auto output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool override;

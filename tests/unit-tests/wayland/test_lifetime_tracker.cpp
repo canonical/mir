@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/wayland/lifetime_tracker.h>
-#include <mir/wayland/weak.h>
+#include "lifetime_tracker.h"
+#include "weak.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 using namespace testing;
 
@@ -50,7 +50,7 @@ struct LifetimeTrackerTest: Test
 TEST_F(LifetimeTrackerTest, first_destroy_listener_id_is_not_zero)
 {
     auto const id = tracker.add_destroy_listener([](){});
-    EXPECT_THAT(id.as_value(), Ne(0));
+    EXPECT_THAT(id, Ne(0));
 }
 
 TEST_F(LifetimeTrackerTest, destroy_listener_is_called)
@@ -97,6 +97,6 @@ TEST_F(LifetimeTrackerTest, can_be_marked_as_destroyed_from_within_listener)
 
 TEST_F(LifetimeTrackerTest, removing_invalid_destroy_listener_ids_does_not_cause_problem)
 {
-    tracker.remove_destroy_listener(mw::DestroyListenerId{0});
-    tracker.remove_destroy_listener(mw::DestroyListenerId{125});
+    tracker.remove_destroy_listener(0);
+    tracker.remove_destroy_listener(125);
 }

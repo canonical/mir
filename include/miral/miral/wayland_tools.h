@@ -28,7 +28,7 @@ struct wl_resource;
 
 namespace mir { class Server; }
 
-namespace mir::wayland { class Client; }
+namespace mir::wayland_rs { class Client; }
 
 namespace miral
 {
@@ -48,7 +48,7 @@ public:
     void operator()(mir::Server& server) const;
 
     void for_each_binding(
-        mir::wayland::Client* client,
+        mir::wayland_rs::Client* client,
         Output const& output,
         std::function<void(wl_resource* output)> const& callback) const;
 

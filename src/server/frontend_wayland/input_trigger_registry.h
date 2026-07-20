@@ -91,7 +91,7 @@ private:
 };
 
 // Version-agnostic interface
-class InputTriggerRegistry::Action : public virtual wayland_rs::LifetimeTracker
+class InputTriggerRegistry::Action : public wayland_rs::LifetimeTracker
 {
 public:
     Action() = default;
@@ -151,7 +151,7 @@ private:
     Executor& wayland_executor;
 };
 
-class InputTriggerRegistry::Trigger: public virtual wayland_rs::LifetimeTracker
+class InputTriggerRegistry::Trigger: public wayland_rs::LifetimeTracker
 {
 public:
     enum class EventOutcome

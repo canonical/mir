@@ -25,7 +25,7 @@
 #include <mir/scene/scene_change_notification.h>
 #include <mir/frontend/surface_stack.h>
 #include <mir/geometry/rectangles.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 #include <mir/executor.h>
 #include "output_manager.h"
 #include "shm.h"

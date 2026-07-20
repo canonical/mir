@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/wayland/lifetime_tracker.h>
-#include <mir/wayland/weak.h>
+#include "lifetime_tracker.h"
+#include "weak.h"
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 
 using namespace testing;
 

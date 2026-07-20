@@ -28,7 +28,7 @@
 #include <mir/input/input_sink.h>
 #include <mir/input/virtual_input_device.h>
 #include <mir/log.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include "protocol_error.h"
 

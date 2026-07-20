@@ -25,7 +25,7 @@
 
 struct wl_client;
 struct wl_resource;
-namespace mir::wayland { class Client; }
+namespace mir::wayland_rs { class Client; }
 
 namespace mir
 {
@@ -61,7 +61,7 @@ public:
     WaylandTools& operator=(WaylandTools const&) = delete;
 
     virtual void for_each_output_binding(
-        wayland::Client* client,
+        wayland_rs::Client* client,
         graphics::DisplayConfigurationOutputId output,
         std::function<void(struct wl_resource* output)> const& callback) = 0;
 

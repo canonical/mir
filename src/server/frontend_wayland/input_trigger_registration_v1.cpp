@@ -89,11 +89,11 @@ public:
     InputTriggerModifiers const modifiers;
     std::shared_ptr<mf::KeyboardStateTracker const> const keyboard_state_tracker;
 
-    // KeyboardTrigger derives both wayland::LifetimeTracker (via Trigger, used
+    // KeyboardTrigger derives both wayland_rs::LifetimeTracker (via Trigger, used
     // by the InputTriggerRegistry) and wayland_rs::LifetimeTracker (via
     // ExtInputTriggerV1, used by the Rust backend). Disambiguate the inherited
     // destroyed_flag() to the wayland_rs one so wayland_rs::Weak<> resolves it.
-    using mwrs::ExtInputTriggerV1::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mwrs::ExtInputTriggerV1::destroyed_flag(); }
 
 private:
     virtual auto is_active() const -> bool override;

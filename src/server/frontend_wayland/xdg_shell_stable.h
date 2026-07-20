@@ -91,7 +91,7 @@ auto create_xdg_shell_stable(
 class XdgPopupStable : public wayland_rs::XdgPopup, public WindowWlSurfaceRole
 {
 public:
-    using wayland_rs::XdgPopup::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland_rs::XdgPopup::destroyed_flag(); }
 
     XdgPopupStable(
         std::shared_ptr<wayland_rs::Client> client,
@@ -142,7 +142,7 @@ private:
 class XdgToplevelStable : public wayland_rs::XdgToplevel, public WindowWlSurfaceRole
 {
 public:
-    using wayland_rs::XdgToplevel::destroyed_flag;
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland_rs::XdgToplevel::destroyed_flag(); }
 
     XdgToplevelStable(
         std::shared_ptr<wayland_rs::Client> client,

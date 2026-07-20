@@ -17,9 +17,6 @@
 #include "render_scene_into_surface.h"
 #include <miral/magnifier.h>
 
-#include <input-method-unstable-v2_wrapper.h>
-#include <wayland_wrapper.h>
-
 #include <miral/live_config.h>
 #include <mir/log.h>
 #include <mir/server.h>

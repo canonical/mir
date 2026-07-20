@@ -22,7 +22,7 @@
 
 #include "wayland_rs/src/ffi.rs.h"
 
-#include <mir/wayland/weak.h>
+#include "weak.h"
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/scene/surface.h>

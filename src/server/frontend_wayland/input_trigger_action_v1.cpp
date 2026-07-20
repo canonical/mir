@@ -18,7 +18,7 @@
 
 #include "protocol_error.h"
 
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <memory>
 #include <string>
@@ -117,7 +117,7 @@ auto mf::InputTriggerActionManagerV1::get_input_trigger_action(
         }
 
         auto const action = std::make_shared<InputTriggerActionV1>(client, std::move(child_instance), child_object_id);
-        action_group->add(mir::wayland::make_weak<Action const>(action.get()));
+        action_group->add(mir::wayland_rs::make_weak<Action const>(action.get()));
         return action;
     }
 

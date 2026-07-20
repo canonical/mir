@@ -28,7 +28,7 @@
 
 struct wl_display;
 struct wl_resource;
-namespace mir::wayland { class Client; }
+namespace mir::wayland_rs { class Client; }
 
 namespace mir
 {
@@ -516,7 +516,7 @@ public:
      * not exited) otherwise they throw a std::logic_error.
      * @{ */
     void for_each_output_binding(
-        wayland::Client* client,
+        wayland_rs::Client* client,
         graphics::DisplayConfigurationOutputId output,
         std::function<void(wl_resource* output)> const& callback);
     /** @} */

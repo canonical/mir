@@ -423,7 +423,7 @@ auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::
 }
 
 void mf::WaylandConnector::for_each_output_binding(
-    wayland::Client* /*client*/,
+    wayland_rs::Client* /*client*/,
     graphics::DisplayConfigurationOutputId /*output*/,
     std::function<void(wl_resource* output)> const& /*callback*/)
 {

@@ -20,7 +20,7 @@
 #include "xwayland_spawner.h"
 #include "wayland_connector.h"
 #include <mir/log.h>
-#include <mir/wayland/client.h>
+#include "client.h"
 
 #include <boost/throw_exception.hpp>
 #include <sys/socket.h>
@@ -34,7 +34,7 @@
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 using namespace std::chrono_literals;
 
 namespace

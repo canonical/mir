@@ -80,10 +80,10 @@ public:
         CaptureCallback const& callback) override;
 
 private:
-    wayland::Weak<OutputGlobal> const output;
+    wayland_rs::Weak<OutputGlobal> const output;
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
 
-    wayland::DestroyListenerId destroy_listener_id;
+    uint64_t destroy_listener_id;
     std::shared_ptr<scene::SceneChangeNotification> change_notifier;
     std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
 
@@ -173,7 +173,7 @@ bool mf::ExtOutputImageCopyBackend::has_damage()
 
 void mf::ExtOutputImageCopyBackend::create_change_notifier()
 {
-    auto callback = [this, weak_self = wayland::make_weak(this)](std::optional<geom::Rectangle> const& damage)
+    auto callback = [this, weak_self = wayland_rs::make_weak(this)](std::optional<geom::Rectangle> const& damage)
     {
         ctx->wayland_executor->spawn(
             [weak_self, damage]()
