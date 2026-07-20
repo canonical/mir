@@ -106,24 +106,6 @@ private:
     std::unique_ptr<EGLBufferCopier> const blitter;
 };
 
-class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
-{
-public:
-    LinuxDmaBuf(wl_display* display, std::shared_ptr<DMABufEGLProvider> provider);
-
-    auto buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<common::EGLContextExecutor> egl_delegate) -> std::shared_ptr<Buffer>;
-
-private:
-    class Instance;
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<DMABufEGLProvider> const provider;
-};
-
 }
 }
 

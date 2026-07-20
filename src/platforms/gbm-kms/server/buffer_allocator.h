@@ -82,7 +82,6 @@ private:
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
-    std::unique_ptr<LinuxDmaBuf> dmabuf_extension;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 

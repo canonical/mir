@@ -63,9 +63,6 @@ MIR_PLATFORM_2.29 {
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
-    mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::buffer_from_resource*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
