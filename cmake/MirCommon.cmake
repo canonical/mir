@@ -315,26 +315,6 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
 endfunction()
 
-function (mir_generate_protocol_wrapper TARGET_NAME NAME_PREFIX PROTOCOL_FILE)
-  if (NAME_PREFIX STREQUAL "")
-    set(NAME_PREFIX "@") # won't match anything
-  endif()
-  get_filename_component(PROTOCOL_NAME "${PROTOCOL_FILE}" NAME_WE)
-  set(OUTPUT_PATH_HEADER "${CMAKE_CURRENT_BINARY_DIR}/${PROTOCOL_NAME}_wrapper.h")
-  set(OUTPUT_PATH_SRC "${CMAKE_CURRENT_BINARY_DIR}/${PROTOCOL_NAME}_wrapper.cpp")
-  set(PROTOCOL_PATH "${PROJECT_SOURCE_DIR}/wayland-protocols/${PROTOCOL_FILE}")
-  add_custom_command(
-    OUTPUT "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}"
-    VERBATIM
-    COMMAND "sh" "-c"
-    "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator ${NAME_PREFIX} ${PROTOCOL_PATH} header > ${OUTPUT_PATH_HEADER}"
-    COMMAND "sh" "-c"
-    "${CMAKE_BINARY_DIR}/bin/mir_wayland_generator ${NAME_PREFIX} ${PROTOCOL_PATH} source > ${OUTPUT_PATH_SRC}"
-    DEPENDS mir_wayland_generator "${PROTOCOL_PATH}"
-  )
-  target_sources("${TARGET_NAME}" PRIVATE "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
-endfunction()
-
 function (mir_make_pkgconfig_variable PKGCONFIG_VARIABLE INPUT_PATH)
   get_filename_component(INPUT_ABSOLUTE "${INPUT_PATH}" ABSOLUTE BASE_DIR "${CMAKE_INSTALL_PREFIX}")
   file(RELATIVE_PATH INPUT_RELATIVE "${CMAKE_INSTALL_PREFIX}" "${INPUT_ABSOLUTE}")
