@@ -28,3 +28,10 @@ TEST(FatalErrorDeathTest, fatal_error_formats_message_to_stderr)
                                       "Mary", 1, "little", "lamb"),
                      "Mary had 1 little lamb");
 }
+
+TEST(FatalErrorDeathTest, fatal_error_raises_sigabrt)
+{
+    MIR_EXPECT_EXIT(mir::fatal_error("Hello world"),
+                    KilledBySignal(SIGABRT),
+                    "Hello world");
+}
