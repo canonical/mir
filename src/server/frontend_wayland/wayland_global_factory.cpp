@@ -175,12 +175,23 @@ auto mf::WaylandGlobalFactory::can_view(rust::Str interface_name, rust::Box<mwrs
         return false;
     }
 
+    std::string const name{interface_name};
+
+    // Explicit synchronisation (linux_drm_syncobj_v1) can only be supported when
+    // we have a DRM rendering provider to import client timelines into. When
+    // running without one (e.g. nested on the egl-generic renderer, or purely
+    // software rendering) we must not advertise the global; otherwise clients
+    // would import timelines that we cannot back, leading to a protocol error.
+    if (name == "wp_linux_drm_syncobj_manager_v1" && (!drm_providers || drm_providers->empty()))
+    {
+        return false;
+    }
+
     if (!extension_filter)
     {
         return true;
     }
 
-    std::string const name{interface_name};
     return extension_filter(client->client_session(), name.c_str());
 }
 

@@ -1,3 +1,5 @@
+include(RustLibrary)
+
 add_rust_cxx_library(mirwayland_rs
   CRATE wayland_rs
   CXX_BRIDGE_SOURCE_FILE src/ffi.rs

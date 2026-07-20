@@ -18,7 +18,6 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-stable-v1_wrapper.h"
 
 #include <EGL/egl.h>
 #include <memory>

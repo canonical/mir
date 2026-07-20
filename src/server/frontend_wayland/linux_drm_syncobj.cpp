@@ -24,6 +24,7 @@
 #include <mir/graphics/drm_syncobj.h>
 #include <mir/fd.h>
 #include "wl_surface.h"
+#include <boost/throw_exception.hpp>
 #include <drm.h>
 #include <stdexcept>
 #include <system_error>
@@ -174,6 +175,11 @@ mf::syncobj::Timeline::Timeline(
         {
             imported_timeline = std::move(obj);
         }
+    }
+
+    if (!imported_timeline)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("No DRM rendering provider could import the syncobj timeline"));
     }
 }
 

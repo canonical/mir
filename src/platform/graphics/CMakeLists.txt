@@ -75,8 +75,6 @@ add_library(mirplatformgraphicscommon OBJECT
   drm_syncobj.cpp
 )
 
-mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" linux-dmabuf-stable-v1.xml)
-
 if (DRM_VERSION VERSION_GREATER 2.4.107)
   target_compile_definitions(
     mirplatformgraphicscommon
@@ -148,7 +146,6 @@ target_link_libraries(
   mirplatformgraphicscommon
 
   PUBLIC
-    mirwayland
     mircommon
     kms_utils
     PkgConfig::EGL
@@ -157,3 +154,7 @@ target_link_libraries(
     PkgConfig::PIXMAN
     PkgConfig::LIBDISPLAY_INFO
 )
+
+if (MIR_ENABLE_RUST)
+  target_link_libraries(mirplatformgraphicscommon PUBLIC mirwayland_rs)
+endif()

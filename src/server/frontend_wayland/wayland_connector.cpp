@@ -47,6 +47,8 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <system_error>
+#include <sys/socket.h>
 #include <sys/stat.h>
 
 namespace mf = mir::frontend;
@@ -356,19 +358,41 @@ void mf::WaylandConnector::stop()
 
 int mf::WaylandConnector::client_socket_fd() const
 {
-    // TODO: injecting a pre-connected client from an existing socket fd (used by
-    // XWayland and nested clients) needs a new WaylandServer::insert_client FFI.
-    BOOST_THROW_EXCEPTION(std::runtime_error{
-        "WaylandConnector::client_socket_fd is not yet supported by the wayland_rs backend"});
+    int socket_fds[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, socket_fds) < 0)
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno, std::system_category(), "Failed to create socket pair for Wayland client"}));
+
+    // The server end is adopted by the wayland_rs backend, which takes ownership
+    // and closes it when the client disconnects; we must not close it here. The
+    // client end is returned to (and owned by) the caller.
+    server_wrapper->server->insert_client(socket_fds[0]);
+    return socket_fds[1];
 }
 
 int mf::WaylandConnector::client_socket_fd(
-    std::function<void(std::shared_ptr<scene::Session> const& session)> const& /*connect_handler*/) const
+    std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const
 {
-    // TODO: as above; the per-fd connect handler will be dispatched via
-    // WaylandClientNotifier::on_client_connected once client injection exists.
-    BOOST_THROW_EXCEPTION(std::runtime_error{
-        "WaylandConnector::client_socket_fd is not yet supported by the wayland_rs backend"});
+    int socket_fds[2];
+    if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0, socket_fds) < 0)
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno, std::system_category(), "Failed to create socket pair for Wayland client"}));
+
+    auto const server_fd = socket_fds[0];
+
+    // Register the connect handler and inject the client on the event-loop
+    // thread: `connect_handlers` is only touched there, and registering the
+    // handler before inserting the client guarantees it is present when the
+    // notifier reports the new client (via on_client_connected, keyed by the
+    // server-end fd the backend records for the injected socket).
+    executor->spawn(
+        [this, server_fd, connect_handler]()
+        {
+            connect_handlers[server_fd] = connect_handler;
+            server_wrapper->server->insert_client(server_fd);
+        });
+
+    return socket_fds[1];
 }
 
 void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& /*functor*/)

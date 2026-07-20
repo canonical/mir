@@ -18,7 +18,6 @@
 #define MIR_FRONTEND_WAYLAND_CONNECTOR_H_
 
 #include <mir/shell/token_authority.h>
-#include "wayland_wrapper.h"
 #include "input_trigger_registry.h"
 
 #include <mir/fd.h>

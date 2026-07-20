@@ -23,8 +23,7 @@
 #include <mir/synchronised.h>
 #include <mir_toolkit/common.h>
 #include <mir/errno_utils.h>
-#include "wayland_wrapper.h"
-#include <mir/wayland/protocol_error.h>
+#include "protocol_error.h"
 #include <mir/wayland/client.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_error.h>
@@ -57,7 +56,7 @@
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
-namespace mw = mir::wayland;
+namespace mw = mir::wayland_rs;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
 

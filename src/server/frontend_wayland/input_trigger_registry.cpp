@@ -57,7 +57,7 @@ auto mf::RecentTokens::contains(std::string_view token) const -> bool
 
 template <typename T>
 void iterate_and_erase_expired(
-    std::vector<mir::wayland::Weak<T>>& vec, auto&& callback)
+    std::vector<mir::wayland_rs::Weak<T>>& vec, auto&& callback)
 {
     std::erase_if(
         vec,
@@ -84,7 +84,7 @@ bool mf::InputTriggerRegistry::register_trigger(Trigger* trigger)
     if (already_registered)
         return false;
 
-    triggers.push_back(wayland::make_weak(trigger));
+    triggers.push_back(wayland_rs::make_weak(trigger));
     return true;
 }
 
@@ -131,7 +131,7 @@ ActionGroup::~ActionGroup()
     on_destroy();
 }
 
-void ActionGroup::add(wayland::Weak<Action const> action)
+void ActionGroup::add(wayland_rs::Weak<Action const> action)
 {
     actions.push_back(action);
     if (activation_token)
