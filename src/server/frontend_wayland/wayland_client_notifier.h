@@ -36,6 +36,7 @@ class Shell;
 
 namespace wayland_rs
 {
+class Client;
 class WaylandClientRegistry;
 }
 
@@ -59,17 +60,23 @@ public:
         std::shared_ptr<SessionAuthorizer> session_authorizer,
         wayland_rs::WaylandClientRegistry& registry,
         WaylandSerialSource serial_source,
-        std::function<void(int socket_fd, std::shared_ptr<scene::Session> const& session)> on_client_connected);
+    std::function<void(
+        int socket_fd,
+        std::shared_ptr<scene::Session> const& session,
+        std::shared_ptr<wayland_rs::Client> const& client)> on_client_connected);
 
-    auto client_added(rust::Box<wayland_rs::WaylandClient> wayland_client) -> void override;
-    auto client_removed(rust::Box<wayland_rs::WaylandClientId> id) -> void override;
+auto client_added(rust::Box<wayland_rs::WaylandClient> wayland_client) -> void override;
+auto client_removed(rust::Box<wayland_rs::WaylandClientId> id) -> void override;
 
 private:
-    std::shared_ptr<shell::Shell> const shell;
-    std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    wayland_rs::WaylandClientRegistry& registry;
-    WaylandSerialSource const serial_source;
-    std::function<void(int socket_fd, std::shared_ptr<scene::Session> const& session)> const on_client_connected;
+std::shared_ptr<shell::Shell> const shell;
+std::shared_ptr<SessionAuthorizer> const session_authorizer;
+wayland_rs::WaylandClientRegistry& registry;
+WaylandSerialSource const serial_source;
+std::function<void(
+    int socket_fd,
+    std::shared_ptr<scene::Session> const& session,
+    std::shared_ptr<wayland_rs::Client> const& client)> const on_client_connected;
 };
 }
 }

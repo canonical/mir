@@ -130,7 +130,7 @@ public:
 
 mf::XWaylandWM::XWaylandWM(
     std::shared_ptr<WaylandConnector> wayland_connector,
-    wl_client* wayland_client,
+    wayland_rs::Client* wayland_client,
     Fd const& fd,
     std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
     float assumed_surface_scale)

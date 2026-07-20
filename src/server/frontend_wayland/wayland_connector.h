@@ -209,9 +209,19 @@ public:
 
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
 
+    /// Inject a pre-connected socket `client_fd` as a Wayland client and deliver
+    /// the resulting `wayland_rs::Client` to `on_created` once the backend has
+    /// adopted it. Used by XWayland, which connects over a socket pair rather
+    /// than the listening socket. A duplicate of `client_fd` is handed to the
+    /// backend (which owns and closes it on disconnect); the caller keeps its Fd.
+    void create_wayland_client(
+        Fd const& client_fd,
+        std::function<void(std::shared_ptr<wayland_rs::Client> const& client)> const& on_created);
+
     /// Runs callback the first time a wl_surface with the given id is created, or immediately if one currently exists
     /// Callback is never called if a wl_surface with the id is never created
-    void on_surface_created(wl_client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
+    void on_surface_created(
+        wayland_rs::Client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
     auto socket_name() const -> std::optional<std::string> override;
 
@@ -254,6 +264,7 @@ private:
 
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
+    std::unordered_map<int, std::function<void(std::shared_ptr<wayland_rs::Client> const& client)>> mutable client_connect_handlers;
 };
 }
 }

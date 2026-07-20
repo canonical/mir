@@ -26,10 +26,13 @@
 #include <mutex>
 #include <optional>
 
-struct wl_client;
-
 namespace mir
 {
+namespace wayland_rs
+{
+class Client;
+}
+
 namespace frontend
 {
 class WaylandConnector;
@@ -52,7 +55,7 @@ public:
         float scale);
     ~XWaylandServer();
 
-    auto client() const -> wl_client* { return wayland_client; }
+    auto client() const -> wayland_rs::Client* { return wayland_client.get(); }
     auto x11_wm_fd() const -> Fd const& { return xwayland.x11_fd; }
     auto is_running() const -> bool;
 
@@ -61,7 +64,7 @@ private:
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
     XWaylandProcessInfo const xwayland;
-    wl_client* const wayland_client{nullptr};
+    std::shared_ptr<wayland_rs::Client> const wayland_client;
 
     mutable std::mutex mutex;
     mutable bool running;

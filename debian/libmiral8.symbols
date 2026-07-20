@@ -411,6 +411,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WaylandTools::WaylandTools()@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandTools::WaylandTools(miral::WaylandTools const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandTools::for_each_binding(mir::wayland::Client*, miral::Output const&, std::function<void (wl_resource*)> const&) const@MIRAL_6.0" 6.0.0
+ (c++)"miral::WaylandTools::for_each_binding(mir::wayland_rs::Client*, miral::Output const&, std::function<void (wl_resource*)> const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandTools::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandTools::operator=(miral::WaylandTools const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandTools::~WaylandTools()@MIRAL_6.0" 6.0.0

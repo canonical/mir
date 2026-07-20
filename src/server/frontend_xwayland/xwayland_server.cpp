@@ -125,28 +125,30 @@ auto fork_xwayland_process(
     }
 }
 
-auto connect_xwayland_wl_client(
+auto connect_xwayland_client(
     std::shared_ptr<mf::WaylandConnector> const& wayland_connector,
     mir::Fd const& wayland_fd,
-    float scale) -> wl_client*
+    float scale) -> std::shared_ptr<mw::Client>
 {
     struct CreateClientContext
     {
         std::mutex mutex;
-        wl_client* client{nullptr};
+        std::shared_ptr<mw::Client> client;
         bool ready{false};
         std::condition_variable condition_variable;
     };
 
     auto const ctx = std::make_shared<CreateClientContext>();
 
-    wayland_connector->run_on_wayland_display(
-        [ctx, wayland_fd, scale](wl_display* display)
+    wayland_connector->create_wayland_client(
+        wayland_fd,
+        [ctx, scale](std::shared_ptr<mw::Client> const& client)
         {
             {
                 std::lock_guard lock{ctx->mutex};
-                ctx->client = wl_client_create(display, wayland_fd);
-                mw::Client::from(ctx->client).set_output_geometry_scale(scale);
+                ctx->client = client;
+                if (client)
+                    client->set_output_geometry_scale(scale);
                 ctx->ready = true;
             }
             ctx->condition_variable.notify_one();
@@ -156,12 +158,12 @@ auto connect_xwayland_wl_client(
     if (!ctx->condition_variable.wait_for(client_lock, 10s, [ctx]{ return ctx->ready; }))
     {
         // "Shouldn't happen" but this is better than hanging.
-        BOOST_THROW_EXCEPTION(std::runtime_error("Creating XWayland wl_client timed out"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Creating XWayland client timed out"));
     }
 
     if (!ctx->client)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XWayland wl_client"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to create XWayland client"));
     }
 
     return ctx->client;
@@ -174,7 +176,7 @@ mf::XWaylandServer::XWaylandServer(
     std::string const& xwayland_path,
     float scale)
     : xwayland{fork_xwayland_process(spawner, xwayland_path, scale)},
-      wayland_client{connect_xwayland_wl_client(wayland_connector, xwayland.wayland_fd, scale)},
+      wayland_client{connect_xwayland_client(wayland_connector, xwayland.wayland_fd, scale)},
       running{true}
 {
 }

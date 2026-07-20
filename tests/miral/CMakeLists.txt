@@ -82,12 +82,8 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     output_filter.cpp
     sticky_keys.cpp
     runner.cpp
-    wayland_extensions.cpp
     zone.cpp
-    example_xdg_shell_v6.cpp example_xdg_shell_v6.h
 )
-
-set_source_files_properties(example_xdg_shell_v6.cpp wayland_extensions.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(miral-test
     mir-test-assist

@@ -50,6 +50,7 @@
 #include <system_error>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
@@ -242,7 +243,10 @@ mf::WaylandConnector::WaylandConnector(
         session_authorizer,
         *registry,
         serial_source,
-        [this](int socket_fd, std::shared_ptr<scene::Session> const& session)
+        [this](
+            int socket_fd,
+            std::shared_ptr<scene::Session> const& session,
+            std::shared_ptr<wayland_rs::Client> const& client)
         {
             auto const handler_iter = connect_handlers.find(socket_fd);
             if (handler_iter != std::end(connect_handlers))
@@ -250,6 +254,14 @@ mf::WaylandConnector::WaylandConnector(
                 auto const callback = handler_iter->second;
                 connect_handlers.erase(handler_iter);
                 callback(session);
+            }
+
+            auto const client_handler_iter = client_connect_handlers.find(socket_fd);
+            if (client_handler_iter != std::end(client_connect_handlers))
+            {
+                auto const callback = client_handler_iter->second;
+                client_connect_handlers.erase(client_handler_iter);
+                callback(client);
             }
         });
 
@@ -402,8 +414,32 @@ void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*
     // executor; XWayland integration is pending.
 }
 
+void mf::WaylandConnector::create_wayland_client(
+    Fd const& client_fd,
+    std::function<void(std::shared_ptr<wayland_rs::Client> const& client)> const& on_created)
+{
+    // `insert_client` takes ownership of the fd and closes it when the client
+    // disconnects, so hand the backend a duplicate and keep our own Fd intact.
+    auto const server_fd = ::dup(client_fd);
+    if (server_fd < 0)
+        BOOST_THROW_EXCEPTION((std::system_error{
+            errno, std::system_category(), "Failed to duplicate fd for Wayland client"}));
+
+    // Register the client handler and inject the client on the event-loop
+    // thread: `client_connect_handlers` is only touched there, and registering
+    // the handler before inserting the client guarantees it is present when the
+    // notifier reports the new client (keyed by the server-end fd the backend
+    // records for the injected socket).
+    executor->spawn(
+        [this, server_fd, on_created]()
+        {
+            client_connect_handlers[server_fd] = on_created;
+            server_wrapper->server->insert_client(server_fd);
+        });
+}
+
 void mf::WaylandConnector::on_surface_created(
-    wl_client* /*client*/,
+    wayland_rs::Client* /*client*/,
     uint32_t /*id*/,
     std::function<void(WlSurface*)> const& /*callback*/)
 {

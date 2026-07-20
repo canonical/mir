@@ -38,7 +38,7 @@ mf::WaylandClientNotifier::WaylandClientNotifier(
     std::shared_ptr<SessionAuthorizer> session_authorizer,
     mwrs::WaylandClientRegistry& registry,
     WaylandSerialSource serial_source,
-    std::function<void(int, std::shared_ptr<ms::Session> const&)> on_client_connected)
+    std::function<void(int, std::shared_ptr<ms::Session> const&, std::shared_ptr<mwrs::Client> const&)> on_client_connected)
     : shell{std::move(shell)},
       session_authorizer{std::move(session_authorizer)},
       registry{registry},
@@ -79,7 +79,7 @@ try
 
     if (on_client_connected)
     {
-        on_client_connected(socket_fd, session);
+        on_client_connected(socket_fd, session, client);
     }
 }
 catch (rust::Error const& error)
