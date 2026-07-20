@@ -48,7 +48,7 @@ std::string mir_test_framework::library_path()
     {
         // Try to find the location of libmircommon.so
         Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
-        dladdr(reinterpret_cast<void*>(&mir::fatal_error_abort), &library_info);
+        dladdr(reinterpret_cast<void*>(&mir::fatal_error), &library_info);
 
         std::unique_ptr<char, decltype(&std::free)> const tmp{strdup(library_info.dli_fname), &std::free};
         libpath = dirname(tmp.get());

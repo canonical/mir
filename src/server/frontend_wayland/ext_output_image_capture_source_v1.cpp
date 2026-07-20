@@ -216,7 +216,7 @@ void mf::ExtOutputImageCopyBackend::begin_capture(
     {
     case DamageAmount::none:
         // This should never happen as maybe_capture_frame() checks has_damage() before calling begin_capture()
-        fatal_error_abort("begin_capture() called with no damage - this is a precondition violation");
+        fatal_error("begin_capture() called with no damage - this is a precondition violation");
         break;
 
     case DamageAmount::partial:

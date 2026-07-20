@@ -2950,7 +2950,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 })
                 .or_else([&]()-> decltype(info.exclusive_rect())
                 {
-                    fatal_error_abort("Attached window has no exclusive rect");
+                    fatal_error("Attached window has no exclusive rect");
                     std::unreachable();
                 });
         }
@@ -2969,7 +2969,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 })
                 .or_else([&]()-> decltype(info.exclusive_rect())
                 {
-                    fatal_error_abort("Attached window has no exclusive rect");
+                    fatal_error("Attached window has no exclusive rect");
                     std::unreachable();
                 });
         }
