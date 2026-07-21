@@ -48,7 +48,7 @@ mir::EventUPtr EventBuilder::make_key_event(MirInputDeviceId device_id, std::chr
 mir::EventUPtr EventBuilder::make_touch_event(MirInputDeviceId device_id, std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers)
 {
-    return mir::events::make_touch_event(device_id, timestamp, modifiers);
+    return mir::events::make_touch_event(device_id, timestamp, modifiers, {});
 }
 
 // Pointer event

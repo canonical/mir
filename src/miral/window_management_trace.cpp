@@ -128,7 +128,7 @@ auto dump_of(miral::Application const& application) -> std::string
         return null_ptr;
 }
 
-auto dump_of(std::vector<miral::Window> const& windows) -> std::string;
+auto dump_of(std::span<miral::Window const> windows) -> std::string;
 
 auto dump_of(miral::WindowInfo const& info) -> std::string
 {
@@ -216,7 +216,7 @@ auto dump_of(miral::WindowSpecification const& specification) -> std::string
     return out.str();
 }
 
-auto dump_of(std::vector<miral::Window> const& windows) -> std::string
+auto dump_of(std::span<miral::Window const> windows) -> std::string
 {
     std::stringstream out;
 
@@ -702,10 +702,10 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-void miral::WindowManagementTrace::handle_raise_window(miral::WindowInfo& window_info)
+void miral::WindowManagementTrace::handle_activate_window(miral::WindowInfo& window_info)
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(window_info).c_str());
-    policy->handle_raise_window(window_info);
+    policy->handle_activate_window(window_info);
 }
 MIRAL_TRACE_EXCEPTION
 
@@ -835,7 +835,7 @@ try {
 }
 MIRAL_TRACE_EXCEPTION
 
-void miral::WindowManagementTrace::advise_raise(std::vector<miral::Window> const& windows)
+void miral::WindowManagementTrace::advise_raise(std::span<Window const> windows)
 try {
     mir::log_info("%s window_info=%s", __func__, dump_of(windows).c_str());
     policy->advise_raise(windows);
@@ -858,7 +858,7 @@ try {
 MIRAL_TRACE_EXCEPTION
 
 void miral::WindowManagementTrace::advise_adding_to_workspace(
-    std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
+    std::shared_ptr<miral::Workspace> const& workspace, std::span<Window const> windows)
 try {
     mir::log_info("%s workspace=%p, windows=%s", __func__, static_cast<void*>(workspace.get()), dump_of(windows).c_str());
     policy->advise_adding_to_workspace(workspace, windows);
@@ -866,7 +866,7 @@ try {
 MIRAL_TRACE_EXCEPTION
 
 void miral::WindowManagementTrace::advise_removing_from_workspace(
-    std::shared_ptr<miral::Workspace> const& workspace, std::vector<miral::Window> const& windows)
+    std::shared_ptr<miral::Workspace> const& workspace, std::span<Window const> windows)
 try {
     mir::log_info("%s workspace=%p, windows=%s", __func__, static_cast<void*>(workspace.get()), dump_of(windows).c_str());
     policy->advise_removing_from_workspace(workspace, windows);

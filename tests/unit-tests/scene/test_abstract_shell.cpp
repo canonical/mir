@@ -407,7 +407,7 @@ TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
     auto const event = mir::events::make_touch_event(
         mir_input_event_type_touch,
         event_timestamp,
-        modifiers);
+        modifiers, {});
 
     EXPECT_CALL(*wm, handle_touch_event(_))
         .WillOnce(Return(false))

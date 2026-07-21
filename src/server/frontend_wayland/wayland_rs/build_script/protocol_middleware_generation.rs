@@ -142,6 +142,11 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
                 self.wrapped.version()
             }
 
+            pub fn object_id(&self) -> u32 {
+                use wayland_server::Resource;
+                self.wrapped.id().protocol_id()
+            }
+
             pub fn destroy_and_delete(&self) {
                 use wayland_server::Resource;
                 if self.wrapped.is_alive() {

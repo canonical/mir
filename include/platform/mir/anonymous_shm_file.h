@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_CORE_ANONYMOUS_SHM_FILE_H_
-#define MIR_CORE_ANONYMOUS_SHM_FILE_H_
+#ifndef MIR_ANONYMOUS_SHM_FILE_H_
+#define MIR_ANONYMOUS_SHM_FILE_H_
 
-#include "shm_file.h"
+#include <mir/shm_file.h>
 #include <mir/fd.h>
 
 namespace mir
@@ -40,4 +40,4 @@ private:
 
 }
 
-#endif /* MIR_CORE_ANONYMOUS_SHM_FILE_H_ */
+#endif /* MIR_ANONYMOUS_SHM_FILE_H_ */

@@ -1,7 +1,6 @@
 set(MIRCORE_ABI 3)
 
 add_library(mircore SHARED
-    anonymous_shm_file.cpp
     fatal.cpp
     fd.cpp
     depth_layer.cpp
@@ -12,7 +11,6 @@ add_library(mircore SHARED
     logging/logger.cpp
     logging/tag.cpp
     report_exception.cpp ${PROJECT_SOURCE_DIR}/include/core/mir/report_exception.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/anonymous_shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/int_wrapper.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fatal.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/fd.h
@@ -27,7 +25,6 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/logging/dumb_console_logger.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/logging/logger.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/logging/tag.h
-    ${PROJECT_SOURCE_DIR}/include/core/mir/shm_file.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/depth_layer.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/common.h
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h

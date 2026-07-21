@@ -45,7 +45,6 @@ char const* const mo::shared_library_prober_report_opt = "shared-library-prober-
 char const* const mo::shell_report_opt            = "shell-report";
 char const* const mo::touchspots_opt              = "enable-touchspots";
 char const* const mo::cursor_opt                  = "cursor";
-char const* const mo::fatal_except_opt            = "on-fatal-error-except";
 char const* const mo::debug_opt                   = "debug";
 char const* const mo::composite_delay_opt         = "composite-delay";
 char const* const mo::enable_key_repeat_opt       = "enable-key-repeat";
@@ -239,8 +238,6 @@ mo::DefaultConfiguration::DefaultConfiguration(
         (idle_timeout_when_locked_opt, po::value<int>()->default_value(0),
             "Number of seconds Mir will remain idle before turning off the display "
             "when the session is locked, or 0 to keep the display on forever.")
-        (fatal_except_opt, "Throw an exception when a fatal error condition occurs. "
-            "This replaces the default behaviour of dumping core and can make it easier to diagnose issues.")
         (debug_opt, "Enable debugging information. "
             "Useful when developing Mir servers.")
         (console_provider,

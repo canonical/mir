@@ -17,6 +17,7 @@ These pages provide additional detail about a number of aspects related to using
 - [Accessibility Methods](accessibility-methods.md)
 - [Libraries](consumer-libraries.md)
 - [XDG Portals support](xdg-portal.md)
+- [Configuration overrides](configuration-overrides.md)
 
 ```{toctree}
 ---

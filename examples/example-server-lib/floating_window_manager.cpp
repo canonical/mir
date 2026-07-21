@@ -481,7 +481,7 @@ WindowSpecification FloatingWindowManagerPolicy::place_new_window(
 }
 
 void FloatingWindowManagerPolicy::advise_adding_to_workspace(
-    std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows)
+    std::shared_ptr<Workspace> const& workspace, std::span<Window const> windows)
 {
     if (windows.empty())
         return;

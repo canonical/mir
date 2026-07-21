@@ -180,9 +180,8 @@ TEST_F(SurfaceCreation, consume_calls_send_event)
         MirInputDeviceId(0), std::chrono::nanoseconds(0),
         mir_keyboard_action_down, 0, 0, mir_input_event_modifier_none);
     auto touch_event = mev::make_touch_event(
-        MirInputDeviceId(0), std::chrono::nanoseconds(0), mir_input_event_modifier_none);
-    mev::add_touch(*touch_event, 0, mir_touch_action_down, mir_touch_tooltype_finger, 0, 0,
-        0, 0, 0, 0);
+        MirInputDeviceId(0), std::chrono::nanoseconds(0), mir_input_event_modifier_none,
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, {0, 0}, 0.0, 0.0, 0.0, 0.0}});
 
     surface.register_interest(observer, executor);
 

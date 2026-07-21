@@ -143,7 +143,7 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     }
     catch (std::runtime_error const& e)
     {
-        mir::fatal_error_abort("Cannot format log message: %s", e.what());
+        mir::fatal_error("Cannot format log message: %s", e.what());
     }
 }
 

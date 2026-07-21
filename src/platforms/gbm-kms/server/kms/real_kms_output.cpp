@@ -101,7 +101,7 @@ void mgg::RealKMSOutput::reset()
     }
     catch (std::exception const& e)
     {
-        fatal_error(e.what());
+        fatal_error("%s", e.what());
     }
 
     // TODO: What if we can't locate the DPMS property?

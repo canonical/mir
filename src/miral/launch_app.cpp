@@ -132,7 +132,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
     posix_spawnattr_t attr;
     if (auto const error = posix_spawnattr_init(&attr))
     {
-        mir::fatal_error_abort("Failed to init spawn attributes: %s", std::strerror(error));
+        mir::fatal_error("Failed to init spawn attributes: %s", std::strerror(error));
     }
 
     // Unblock all signals in the child, preserving their existing dispositions
@@ -144,7 +144,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         if (result != 0)
         {
             posix_spawnattr_destroy(&attr);
-            mir::fatal_error_abort("%s: %s", what, std::strerror(result));
+            mir::fatal_error("%s: %s", what, std::strerror(result));
         }
     };
 
@@ -175,7 +175,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
         // The child calls _exit() immediately, avoiding any non-async-signal-safe work.
         pid_t const placeholder = fork();
         if (placeholder < 0)
-            mir::fatal_error_abort("Failed to fork placeholder process: %s", std::strerror(errno));
+            mir::fatal_error("Failed to fork placeholder process: %s", std::strerror(errno));
         if (placeholder == 0)
             _exit(EXIT_FAILURE);
         return placeholder;

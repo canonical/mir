@@ -167,7 +167,7 @@ struct MockWindowManagerPolicy : miral::CanonicalWindowManagerPolicy
     MOCK_METHOD(void, advise_new_window, (miral::WindowInfo const& window_info), (override));
     MOCK_METHOD(void, advise_move_to, (miral::WindowInfo const& window_info, mir::geometry::Point top_left), (override));
     MOCK_METHOD(void, advise_resize, (miral::WindowInfo const& window_info, mir::geometry::Size const& new_size), (override));
-    MOCK_METHOD(void, advise_raise, (std::vector<miral::Window> const&), (override));
+    MOCK_METHOD(void, advise_raise, (std::span<miral::Window const>), (override));
     MOCK_METHOD(void, advise_output_create, (miral::Output const&), (override));
     MOCK_METHOD(void, advise_output_update, (miral::Output const&, miral::Output const&), (override));
     MOCK_METHOD(void, advise_output_delete, (miral::Output const&), (override));

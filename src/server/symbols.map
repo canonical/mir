@@ -43,7 +43,6 @@ global:
     mir::DefaultServerConfiguration::the_drag_icon_controller*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
-    mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
     mir::DefaultServerConfiguration::the_frontend_display_changer*;
     mir::DefaultServerConfiguration::the_frontend_surface_stack*;
@@ -841,7 +840,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_drag_icon_controller*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_emergency_cleanup*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frontend_display_changer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frontend_surface_stack*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_gl_config*;
@@ -1427,7 +1425,6 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_changer*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_platforms*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_emergency_cleanup*;
-    virtual?thunk?to?mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_idle_handler*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_idle_hub*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_input_dispatcher*;

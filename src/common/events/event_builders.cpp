@@ -173,20 +173,6 @@ void mev::set_button_state(MirEvent& event, MirPointerButtons button_state)
     event.to_input()->to_pointer()->set_buttons(button_state);
 }
 
-mir::EventUPtr mev::make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers)
-{
-    auto e = new_event<MirTouchEvent>();
-
-    e->set_device_id(device_id);
-    e->set_event_time(timestamp);
-    e->set_modifiers(modifiers);
-
-    return make_uptr_event(e);
-}
-
 void mev::add_touch(
     MirEvent &event,
     MirTouchId touch_id,
@@ -212,7 +198,7 @@ void mev::add_touch(
     tev->set_action(current_index, action);
 }
 
-// Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be needed
+// Intentionally uses ScrollAxisV1* instead of ScrollAxis* as a reminder that a new copy of this function will be needed
 // for each ScrollAxis struct version.
 mir::EventUPtr mev::make_pointer_event(
     MirInputDeviceId device_id,
@@ -285,18 +271,7 @@ mir::EventUPtr mev::clone_event(MirEvent const& event)
     return make_uptr_event(event.clone());
 }
 
-mir::EventUPtr mev::make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    std::vector<mev::TouchContactV1> const& contacts)
-{
-    std::vector<mev::TouchContact> contacts_new{begin(contacts), end(contacts)};
-    auto e = new_event<MirTouchEvent>(device_id, timestamp, modifiers, contacts_new);
-    return make_uptr_event(e);
-}
-
-// Intentionally uses TouchContactV2 instad of TouchContact as a reminder that a new copy of this function will be needed
+// Intentionally uses TouchContactV2 instead of TouchContact as a reminder that a new copy of this function will be needed
 // for each TouchContact struct version.
 mir::EventUPtr mev::make_touch_event(
     MirInputDeviceId device_id,

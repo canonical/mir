@@ -61,14 +61,12 @@ jobs:
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
 
-    # TODO: replace with tiobe-labeled image when available
-    runs-on: [self-hosted, amd64, xlarge, resolute]
+    runs-on: [self-hosted-linux-amd64-resolute-large-tiobe]
 
     permissions:
       checks: write
       contents: read
-      issues: write        # for commenting with TICS results
-      pull-requests: read  # to get the list of changed files
+      pull-requests: write  # for commenting with TICS results
     env:
       PROJECT: mir
       CCACHE_DIR: "/tmp/ccache"

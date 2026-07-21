@@ -15,6 +15,7 @@ AUR
 backend
 backends
 barebones
+basename
 Binutils
 boolean
 BounceKeys
@@ -112,6 +113,7 @@ initializer
 inlined
 inlining
 Inlining
+inotify
 InputDispatcher
 InputPlatform
 intel

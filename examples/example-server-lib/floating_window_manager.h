@@ -110,7 +110,7 @@ private:
 
     void advise_adding_to_workspace(
         std::shared_ptr<miral::Workspace> const& workspace,
-        std::vector<miral::Window> const& windows) override;
+        std::span<miral::Window const> windows) override;
 
     // Switch workspace, taking window (if not null)
     void switch_workspace_to(
