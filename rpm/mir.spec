@@ -372,7 +372,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
     - [graphics] Add `MIR_PIN_COMPOSITING_TO` to allow pinning a certain provider for display [#4958](https://github.com/canonical/mir/pull/4958)
     - Initial implementation of the new logging API [#4895](https://github.com/canonical/mir/pull/4895)
     - Add support for WLCS keyboard [#4716](https://github.com/canonical/mir/pull/4716)
-    - workshop: initial definiton [#4965](https://github.com/canonical/mir/pull/4965)
+    - workshop: initial definition [#4965](https://github.com/canonical/mir/pull/4965)
 
   - Bugs fixed:
 
