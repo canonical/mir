@@ -230,10 +230,44 @@ fn generate_extension_method_for_event(
         })
         .collect();
 
+    // Sending an event whose target or object argument has been destroyed panics
+    // wayland-backend ("Attempting to send an event with objects from wrong client"),
+    // e.g. wl_keyboard.leave sent from the focused surface's own destruction path.
+    // libwayland tolerated such events (clients ignore ids of zombie objects), so
+    // match that by dropping the event instead.
+    let object_guards: Vec<TokenStream> = event
+        .args
+        .iter()
+        .filter(|arg| matches!(arg.type_, WaylandArgType::Object))
+        .map(|arg| {
+            let name = format_ident!("{}", sanitize_identifier(&arg.name));
+            if arg.allow_null.unwrap_or(false) {
+                quote! {
+                    if let Some(__obj) = unsafe { #name.as_ref() } {
+                        if !__obj.wrapped.is_alive() {
+                            return;
+                        }
+                    }
+                }
+            } else {
+                quote! {
+                    if !#name.wrapped.is_alive() {
+                        return;
+                    }
+                }
+            }
+        })
+        .collect();
+
     // Generate the ffi code that will call into the underlying method that is defined on the object
     // The first item is the definition, and the second is the method declaration for the trait.
     quote! {
         pub fn #event_name(&mut self, #(#ffi_args),*) {
+            use wayland_server::Resource;
+            if !self.wrapped.is_alive() {
+                return;
+            }
+            #(#object_guards)*
             self.wrapped.#event_name(#(#rust_args),*)
         }
     }

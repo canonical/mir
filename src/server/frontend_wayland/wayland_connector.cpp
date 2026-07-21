@@ -16,6 +16,7 @@
 
 #include "wayland_connector.h"
 
+#include "wayland_executor.h"
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_rs/wayland_rs_cpp/include/wayland_executor.h"
 #include "wayland_rs/wayland_rs_cpp/include/wayland_client_registry.h"
@@ -23,6 +24,7 @@
 #include "wayland_global_factory.h"
 #include "wayland_client.h"
 #include "wayland_client_notifier.h"
+#include "work_callback.h"
 #include "output_manager.h"
 #include "desktop_file_manager.h"
 #include "surface_registry.h"
@@ -30,6 +32,7 @@
 #include "frame_executor.h"
 #include "foreign_toplevel_manager_v1.h"
 
+#include <memory>
 #include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/main_loop.h>
@@ -117,6 +120,24 @@ auto choose_wayland_socket_name() -> std::string
 
     return "wayland-0";
 }
+
+class WaylandWorkCallback : public mir::wayland_rs::WorkCallback
+{
+public:
+    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland_rs::WaylandExecutor> const& executor)
+        : executor(executor)
+    {
+    }
+
+    void execute() override
+    {
+        if (auto const locked = executor.lock())
+            locked->execute();
+    }
+
+private:
+    std::weak_ptr<mir::wayland_rs::WaylandExecutor> executor;
+};
 }
 
 mf::WaylandConnector::WaylandConnector(
@@ -163,14 +184,12 @@ mf::WaylandConnector::WaylandConnector(
     // The executor doubles as the server's WorkCallback. Ownership is handed to
     // WaylandServer::run() in start(); until then we keep a non-owning view so
     // the factory and output manager can queue work onto the event loop.
-    pending_executor = std::make_unique<mwrs::WaylandExecutor>(server);
-    executor = pending_executor.get();
-    auto const executor_sp = std::shared_ptr<Executor>{std::shared_ptr<void>{}, pending_executor.get()};
+    executor = std::make_shared<mwrs::WaylandExecutor>(server);
 
     output_manager = std::make_unique<OutputManager>(
         server,
         *registry,
-        executor_sp,
+        executor,
         display_config_registrar);
 
     desktop_file_manager = std::make_shared<mf::DesktopFileManager>(
@@ -202,7 +221,7 @@ mf::WaylandConnector::WaylandConnector(
     pending_factory = std::make_unique<WaylandGlobalFactory>(
         *registry,
         extension_filter,
-        executor_sp,
+        executor,
         frame_callback_executor,
         allocator,
         server,
@@ -274,7 +293,7 @@ mf::WaylandConnector::WaylandConnector(
 
     extensions->init(WaylandExtensions::Context{
         nullptr,
-        executor_sp,
+        executor,
         shell,
         session_authorizer,
         main_clipboard,
@@ -345,7 +364,7 @@ void mf::WaylandConnector::start()
                     wayland_display,
                     std::move(pending_factory),
                     std::move(pending_notifier),
-                    std::move(pending_executor));
+                    std::make_unique<WaylandWorkCallback>(executor));
             }
             catch (std::exception const& e)
             {

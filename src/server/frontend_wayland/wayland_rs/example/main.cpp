@@ -142,11 +142,29 @@ public:
 private:
     int fd;
 };
+
+class WaylandWorkCallback : public mir::wayland_rs::WorkCallback
+{
+public:
+    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland_rs::WaylandExecutor> const& executor)
+        : executor(executor)
+    {
+    }
+
+    void execute() override
+    {
+        if (auto const locked = executor.lock())
+            locked->execute();
+    }
+
+private:
+    std::weak_ptr<mir::wayland_rs::WaylandExecutor> executor;
+};
 }
 
 void run_server(
     rust::Box<mir::wayland_rs::WaylandServer>& server,
-    std::unique_ptr<mir::wayland_rs::WaylandExecutor> executor)
+    std::shared_ptr<mir::wayland_rs::WaylandExecutor> const& executor)
 {
     try
     {
@@ -163,7 +181,7 @@ void run_server(
             wayland_socket,
             nullptr,
             std::make_unique<WaylandServerNotificationHandler>(registry),
-            std::move(executor));
+            std::make_unique<WaylandWorkCallback>(executor));
     }
     catch (rust::Error const& error)
     {
@@ -202,8 +220,7 @@ int main()
     // The executor lets us schedule arbitrary work onto the server's event loop.
     // Ownership is handed to the server (via run), but it remains valid for the
     // server's lifetime, so we keep a non-owning reference to spawn work with.
-    auto executor = std::make_unique<mir::wayland_rs::WaylandExecutor>(*server);
-    mir::Executor& work_executor = *executor;
+    auto executor = std::make_shared<mir::wayland_rs::WaylandExecutor>(*server);
 
     // A pipe whose read end we ask the server to watch. Writing to the write end
     // makes the read end readable, which the server reports via FdReadyCallback.
@@ -219,18 +236,18 @@ int main()
     server->register_fd_ready_listener(read_fd, std::make_unique<ExampleFdReadyCallback>(read_fd));
 
     std::thread server_thread(
-        [&server, executor = std::move(executor)]() mutable
+        [&server, executor]() mutable
         {
-            run_server(server, std::move(executor));
+            run_server(server, executor);
         });
 
     run_client();
 
     // Queue several functions from this (non event-loop) thread. They are run,
     // in order, on the event-loop thread.
-    work_executor.spawn([] { std::cout << "    Scheduled work 1 ran on the event loop." << std::endl; });
-    work_executor.spawn([] { std::cout << "    Scheduled work 2 ran on the event loop." << std::endl; });
-    work_executor.spawn([] { std::cout << "    Scheduled work 3 ran on the event loop." << std::endl; });
+    executor->spawn([] { std::cout << "    Scheduled work 1 ran on the event loop." << std::endl; });
+    executor->spawn([] { std::cout << "    Scheduled work 2 ran on the event loop." << std::endl; });
+    executor->spawn([] { std::cout << "    Scheduled work 3 ran on the event loop." << std::endl; });
 
     // Make the watched descriptor readable; the server's FdReadyCallback fires
     // on the event-loop thread.

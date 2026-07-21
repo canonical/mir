@@ -17,8 +17,6 @@
 #ifndef MIR_WAYLANDRS_WAYLAND_EXECUTOR
 #define MIR_WAYLANDRS_WAYLAND_EXECUTOR
 
-#include "work_callback.h"
-
 #include <mir/executor.h>
 
 #include <functional>
@@ -43,7 +41,7 @@ struct WaylandServer;
 /// was spawned. The server must be running for queued work to be executed; a
 /// signal raised before the server is running is dropped, so `spawn` re-signals
 /// until one is delivered.
-class WaylandExecutor : public mir::Executor, public WorkCallback
+class WaylandExecutor : public mir::Executor
 {
 public:
     explicit WaylandExecutor(WaylandServer& server);
@@ -53,7 +51,7 @@ public:
 
     /// Run all currently queued work. Called from Rust on the event-loop
     /// thread.
-    void execute() override;
+    void execute();
 
 private:
     WaylandServer& server;

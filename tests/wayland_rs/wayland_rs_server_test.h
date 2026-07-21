@@ -63,6 +63,24 @@ inline auto make_temp_runtime_dir() -> std::string
     return dir;
 }
 
+class WaylandWorkCallback : public mir::wayland_rs::WorkCallback
+{
+public:
+    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland_rs::WaylandExecutor> const& executor)
+        : executor(executor)
+    {
+    }
+
+    void execute() override
+    {
+        if (auto const locked = executor.lock())
+            locked->execute();
+    }
+
+private:
+    std::weak_ptr<mir::wayland_rs::WaylandExecutor> executor;
+};
+
 /// A test fixture that runs a `WaylandServer` on a background thread.
 ///
 /// The server is bound inside a private temporary XDG_RUNTIME_DIR (so the test
@@ -79,8 +97,7 @@ public:
         xdg_runtime_dir.emplace("XDG_RUNTIME_DIR", runtime_dir.c_str());
 
         server.emplace(create_wayland_server());
-        auto executor_owned = std::make_unique<WaylandExecutor>(**server);
-        executor = executor_owned.get();
+        auto executor = std::make_shared<WaylandExecutor>(**server);
 
         // A socket name unique to this process so parallel test runs do not collide.
         socket = "mir-wayland-rs-test-" + std::to_string(::getpid());
@@ -88,13 +105,13 @@ public:
         server_thread = std::thread{
             [this,
              notification_handler = make_notification_handler(),
-             handler = std::move(executor_owned)]() mutable
+             executor = executor]() mutable
             {
                 (*server)->run(
                     socket,
                     nullptr,
                     std::move(notification_handler),
-                    std::move(handler));
+                    std::make_unique<WaylandWorkCallback>(executor));
             }};
     }
 

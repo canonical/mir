@@ -251,13 +251,9 @@ private:
     /// Created in the constructor; ownership is transferred to
     /// `WaylandServer::run()` when `start()` is called. The executor doubles as
     /// the server's `WorkCallback`.
-    std::unique_ptr<wayland_rs::WaylandExecutor> pending_executor;
+    std::shared_ptr<wayland_rs::WaylandExecutor> executor;
     std::unique_ptr<WaylandGlobalFactory> pending_factory;
     std::unique_ptr<WaylandClientNotifier> pending_notifier;
-
-    /// Non-owning view of `pending_executor`, valid for the server's lifetime
-    /// (the executor is kept alive by `run()` on the dispatch thread).
-    Executor* executor;
 
     std::string wayland_display;
     std::thread dispatch_thread;
