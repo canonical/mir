@@ -222,7 +222,8 @@ mf::WlDataDevice::WlDataDevice(
 {
     clipboard.register_interest(clipboard_observer, wayland_executor);
     // this will call focus_on() with the initial state
-    seat.add_focus_listener(client.get(), this);
+    // (this->client: the constructor parameter of the same name is moved-from)
+    seat.add_focus_listener(this->client.get(), this);
 }
 
 mf::WlDataDevice::~WlDataDevice()
