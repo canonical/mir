@@ -185,7 +185,7 @@ mf::VirtualKeyboardV1::~VirtualKeyboardV1()
 
 void mf::VirtualKeyboardV1::keymap(uint32_t format, int32_t fd, uint32_t size)
 {
-    mir::Fd owned_fd{mir::IntOwnedFd{::dup(fd)}};
+    mir::Fd owned_fd{::dup(fd)};
     if (auto const device = device_handle.lock())
     {
         auto keymap = load_keymap(format, std::move(owned_fd), size);

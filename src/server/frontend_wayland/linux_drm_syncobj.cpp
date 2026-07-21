@@ -72,7 +72,7 @@ auto mf::LinuxDRMSyncobjManager::import_timeline(
     uint32_t child_object_id) -> std::shared_ptr<mw::LinuxDrmSyncobjTimelineV1>
 {
     // The fd is borrowed across the FFI boundary; dup it so we own our copy.
-    mir::Fd owned_fd{mir::IntOwnedFd{::dup(fd)}};
+    mir::Fd owned_fd{::dup(fd)};
     try
     {
         return std::make_shared<syncobj::Timeline>(client, std::move(child_instance), child_object_id, std::move(owned_fd), *providers);

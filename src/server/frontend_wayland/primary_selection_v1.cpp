@@ -134,7 +134,7 @@ public:
 
     auto receive(rust::String mime_type, int32_t fd) -> void override
     {
-        source->initiate_send(std::string{mime_type}, mir::Fd{mir::IntOwnedFd{::dup(fd)}});
+        source->initiate_send(std::string{mime_type}, mir::Fd{::dup(fd)});
     }
 
     auto destroy() -> void override

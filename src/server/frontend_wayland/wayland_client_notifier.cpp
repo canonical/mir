@@ -67,7 +67,7 @@ try
     }
 
     // The Rust client owns its socket, so hand the session a duplicate to own.
-    auto session = shell->open_session(pid, Fd{IntOwnedFd{::dup(socket_fd)}}, "");
+    auto session = shell->open_session(pid, Fd{::dup(socket_fd)}, "");
 
     auto client = std::make_shared<WaylandClient>(
         std::move(wayland_client),

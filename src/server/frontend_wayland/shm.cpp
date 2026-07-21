@@ -418,8 +418,18 @@ auto mf::Shm::create_pool(
     }
 
     // The fd is borrowed from the Rust dispatch layer and is only valid for the duration of this
-    // call; dup() it so the pool can retain ownership of the backing store.
-    mir::Fd owned_fd{mir::IntOwnedFd{::dup(fd)}};
+    // call; dup() it so the pool can retain ownership of the backing store. The dup()ed fd is wrapped
+    // in a mir::Fd via the owning `int` constructor so that it is close()d when the pool (and hence
+    // the backing store) is destroyed. mir::IntOwnedFd must *not* be used here: it produces a
+    // non-owning mir::Fd that never close()s the descriptor, leaking one fd per pool.
+    mir::Fd owned_fd{::dup(fd)};
+    if (owned_fd == mir::Fd::invalid)
+    {
+        throw mwrs::ProtocolError{
+            object_id(),
+            mwrs::Shm::Error::invalid_fd,
+            "Failed to dup() client-provided SHM pool fd"};
+    }
 
     try
     {

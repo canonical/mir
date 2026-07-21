@@ -105,6 +105,11 @@ auto make_shm_fd_with_seals(size_t size, int seals) -> mir::Fd
     }
     return fd;
 }
+
+bool fd_is_open(int fd)
+{
+    return ::fcntl(fd, F_GETFD) != -1;
+}
 }
 
 TEST(ShmBacking, can_get_rw_range_covering_whole_pool)
@@ -592,4 +597,34 @@ TEST(ShmBacking, resize_doesnt_install_sigbus_handler_when_safe)
     // SIGBUS handler should remain unset.
     sigaction(SIGBUS, nullptr, &new_sigbus_handler);
     EXPECT_THAT(new_sigbus_handler, SignalHandlerIsEqual(initial_sigbus_handler));
+}
+
+TEST(ShmBacking, closes_owned_backing_fd_when_pool_destroyed)
+{
+    using namespace testing;
+
+    // Regression test for an fd leak: mf::Shm::create_pool dup()s the borrowed
+    // client fd and hands ownership of the duplicate to the pool. If that
+    // duplicate is wrapped non-owningly (via mir::IntOwnedFd) it is never
+    // close()d, leaking one descriptor per pool until the compositor exhausts
+    // its fd table and mmap() fails. Emulate create_pool's ownership contract:
+    // dup a borrowed fd, hand the (sole-owner) duplicate to the pool, and
+    // confirm the duplicate is closed once the pool is destroyed while the
+    // borrowed original is left untouched.
+    constexpr size_t const shm_size = 4000;
+    auto borrowed = make_shm_fd(shm_size);
+
+    int duped_number;
+    {
+        mir::Fd owned{::dup(borrowed)};
+        duped_number = owned;
+        ASSERT_THAT(duped_number, Ne(mir::Fd::invalid));
+        ASSERT_TRUE(fd_is_open(duped_number));
+
+        auto backing = mir::shm::rw_pool_from_fd(std::move(owned), shm_size);
+        EXPECT_TRUE(fd_is_open(duped_number));
+    }
+
+    EXPECT_FALSE(fd_is_open(duped_number));
+    EXPECT_TRUE(fd_is_open(borrowed));
 }

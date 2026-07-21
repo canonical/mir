@@ -438,7 +438,7 @@ mf::ExtDataControlOfferV1::ExtDataControlOfferV1(
 
 auto mf::ExtDataControlOfferV1::receive(rust::String mime, int32_t fd) -> void
 {
-    parent.value().receive_from_current_source(std::string{mime}, mir::Fd{mir::IntOwnedFd{::dup(fd)}}, is_primary);
+    parent.value().receive_from_current_source(std::string{mime}, mir::Fd{::dup(fd)}, is_primary);
 }
 
 mf::ExtDataControlDeviceV1::ExtDataControlDeviceV1(

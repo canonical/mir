@@ -125,7 +125,7 @@ public:
     {
         if (device && device.value().current_offer.is(*this))
         {
-            source->initiate_send(std::string{mime_type}, mir::Fd{mir::IntOwnedFd{::dup(fd)}});
+            source->initiate_send(std::string{mime_type}, mir::Fd{::dup(fd)});
         }
     }
 

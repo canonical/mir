@@ -113,7 +113,7 @@ void mf::LinuxBufferParamsV1::add(
     uint32_t modifier_lo)
 {
     // The fd is borrowed for the duration of this call; take our own copy.
-    mir::Fd owned_fd{mir::IntOwnedFd{::dup(fd)}};
+    mir::Fd owned_fd{::dup(fd)};
 
     if (consumed)
         throw mwrs::ProtocolError{
