@@ -40,7 +40,7 @@ miral::AppendEventFilter::AppendEventFilter(std::function<bool(MirEvent const* e
 {
 }
 
-void miral::AppendEventFilter::operator()(mir::Server& server)
+void miral::AppendEventFilter::operator()(mir::Server& server) const
 {
     server.add_init_callback([this, &server] { server.the_composite_event_filter()->append(filter); });
 }
