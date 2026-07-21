@@ -71,19 +71,8 @@ auto const zoom_stack_padding = 8;
 /// Height of the vertical zoom-in/zoom-out button stack.
 geom::Height const zoom_stack_height{2 * drag_handle_diameter + zoom_stack_padding};
 
-/// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
-/// Derived so the drag handle (bottom-right corner) and the zoom button stack
-/// (right edge, vertically centred) never overlap each other: the drag handle
-/// needs a full diameter of clearance both above and below the centred stack.
-auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height.as_int();
-
 /// Magnification step applied by each zoom button press.
 auto const zoom_step = 0.25f;
-
-/// Painter colour/alpha constants for handle indicator graphics.
-uint8_t constexpr disc_grey  = 40;
-uint8_t constexpr icon_grey  = 210;
-uint8_t constexpr background_alpha = 150;
 
 enum class HandleKind { drag, resize, zoom_in, zoom_out };
 
@@ -187,7 +176,7 @@ private:
             std::memset(mapping->data(), 0, mapping->len());
         }
 
-        void fill_circle(uint8_t grey)
+        void fill_circle()
         {
             auto const cx = geom::as_x((size.width - geom::DeltaX{1}) / 2.0f);
             auto const cy = geom::as_y((size.height - geom::DeltaY{1}) / 2.0f);
@@ -203,27 +192,27 @@ private:
                     auto const delta = dx.as_value() * dx.as_value() + dy.as_value() * dy.as_value();
 
                     if (delta <= r_sq)
-                        set_pixel(geom::Point{x, y}, grey);
+                        set_pixel(geom::Point{x, y}, disc_grey);
                 }
             }
         }
 
-        void draw_horizontal_line(HorizontalLine const& line, uint8_t grey)
+        void draw_horizontal_line(HorizontalLine const& line)
         {
             auto const true_start = std::min<geom::X>(line.start, line.end);
             auto const true_end = std::max<geom::X>(line.start, line.end);
             for (int t = 0; t < line.thickness.as_value(); ++t)
                 for (auto x = true_start; x <= true_end; x = x + geom::DeltaX{1})
-                    set_pixel(geom::Point{x, line.y + geom::DeltaY{t}}, grey);
+                    set_pixel(geom::Point{x, line.y + geom::DeltaY{t}}, icon_grey);
         }
 
-        void draw_vertical_line(VerticalLine const& line, uint8_t grey)
+        void draw_vertical_line(VerticalLine const& line)
         {
             auto const true_start = std::min<geom::Y>(line.start, line.end);
             auto const true_end = std::max<geom::Y>(line.start, line.end);
             for (int t = 0; t < line.thickness.as_value(); ++t)
                 for (auto y = true_start; y <= true_end; y = y + geom::DeltaY{1})
-                    set_pixel(geom::Point{line.x + geom::DeltaX{t}, y}, grey);
+                    set_pixel(geom::Point{line.x + geom::DeltaX{t}, y}, icon_grey);
         }
 
         auto buffer_size() const -> geom::Size
@@ -248,6 +237,11 @@ private:
             pixel[3] = background_alpha;
         }
 
+        /// Painter colour/alpha constants for handle indicator graphics.
+        inline uint8_t static disc_grey = 40;
+        inline uint8_t static icon_grey = 210;
+        inline uint8_t static background_alpha = 150;
+
         static auto constexpr format = mir_pixel_format_argb_8888;
         std::shared_ptr<mrs::WriteMappable> const writable;
         std::unique_ptr<mrs::Mapping<std::byte>> const mapping;
@@ -259,7 +253,7 @@ private:
     {
         BufferPainter painter{buffer};
         painter.clear();
-        painter.fill_circle(disc_grey);
+        painter.fill_circle();
 
         // Draw a drag-pan icon: four arrowheads (N/S/E/W) connected by slim stems.
         static int constexpr tip_dist  = 15;
@@ -286,16 +280,14 @@ private:
                 .start = base_n,
                 .end = base_s,
                 .thickness = geom::Width{stem_thickness},
-            },
-            icon_grey);
+            });
         painter.draw_horizontal_line(
             {
                 .start = base_w,
                 .end = base_e,
                 .y = center_y - geom::DeltaY{stem_thickness / 2},
                 .thickness = geom::Height{stem_thickness},
-            },
-            icon_grey);
+            });
 
         // North arrowhead — rows from tip_n+1 to base_n, width grows by 1 px per row
         for (auto y = tip_n + geom::DeltaY{1}; y <= base_n; y = y + geom::DeltaY{1})
@@ -305,8 +297,7 @@ private:
                     .end = center_x + geom::DeltaX((y - tip_n).as_value()),
                     .y = y,
                     .thickness = geom::Height{1},
-                },
-                icon_grey);
+                });
 
         // South arrowhead
         for (auto y = base_s; y < tip_s; y = y + geom::DeltaY{1})
@@ -316,8 +307,7 @@ private:
                     .end = center_x + geom::DeltaX((tip_s - y).as_value()),
                     .y = y,
                     .thickness = geom::Height{1},
-                },
-                icon_grey);
+                });
 
         // West arrowhead — columns from tip_w+1 to base_w
         for (auto x = tip_w + geom::DeltaX{1}; x <= base_w; x = x + geom::DeltaX{1})
@@ -327,8 +317,7 @@ private:
                     .start = center_y - geom::DeltaY((x - tip_w).as_value()),
                     .end = center_y + geom::DeltaY((x - tip_w).as_value()),
                     .thickness = geom::Width{1},
-                },
-                icon_grey);
+                });
 
         // East arrowhead
         for (auto x = base_e; x < tip_e; x = x + geom::DeltaX{1})
@@ -338,15 +327,14 @@ private:
                     .start = center_y - geom::DeltaY((tip_e - x).as_value()),
                     .end = center_y + geom::DeltaY((tip_e - x).as_value()),
                     .thickness = geom::Width{1},
-                },
-                icon_grey);
+                });
     }
 
     static void fill_resize_buffer(mg::Buffer& buffer)
     {
         BufferPainter painter{buffer};
         painter.clear();
-        painter.fill_circle(disc_grey);
+        painter.fill_circle();
 
         // Corner bracket: two 2-px arms meeting at the top-left corner, which is
         // where the resize handle always sits within the magnifier surface.
@@ -362,23 +350,21 @@ private:
                 .end = corner_x + geom::DeltaX{arm_len},
                 .y = corner_y,
                 .thickness = geom::Height{thickness},
-            },
-            icon_grey);
+            });
         painter.draw_vertical_line(
             {
                 .x = corner_x,
                 .start = corner_y,
                 .end = corner_y + geom::DeltaY{arm_len},
                 .thickness = geom::Width{thickness},
-            },
-            icon_grey);
+            });
     }
 
     static void fill_zoom_buffer(mg::Buffer& buffer, bool zoom_in)
     {
         BufferPainter painter{buffer};
         painter.clear();
-        painter.fill_circle(disc_grey);
+        painter.fill_circle();
 
         // Draw + (zoom in) or – (zoom out) symbol.
         auto const [w, h] = painter.buffer_size();
@@ -391,8 +377,7 @@ private:
                 .end = geom::as_x((w + geom::Width{bar_len}) / 2 - geom::DeltaX{1}),
                 .y = geom::as_y((h - geom::Height{bar_thickness}) / 2),
                 .thickness = geom::Height{bar_thickness},
-            },
-            icon_grey);
+            });
 
         if (zoom_in)
             painter.draw_vertical_line(
@@ -401,8 +386,7 @@ private:
                     .start = geom::as_y((h - geom::Height{bar_len}) / 2),
                     .end = geom::as_y((h + geom::Height{bar_len}) / 2 - geom::DeltaY{1}),
                     .thickness = geom::Width{bar_thickness},
-                },
-                icon_grey);
+                });
     }
 
     miral::SoftwareBufferPool mutable pool;
@@ -505,6 +489,12 @@ geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
 /// min_visual_dimension.
 geom::Size clamp_visual_size(geom::Size const& visual_size)
 {
+    /// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
+    /// Derived so the drag handle (bottom-right corner) and the zoom button stack
+    /// (right edge, vertically centred) never overlap each other: the drag handle
+    /// needs a full diameter of clearance both above and below the centred stack.
+    auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height.as_int();
+
     return {
         std::max(visual_size.width, geom::Width{min_visual_dimension}),
         std::max(visual_size.height, geom::Height{min_visual_dimension})};
