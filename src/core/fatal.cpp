@@ -50,3 +50,18 @@ void mir::fatal_error(std::source_location const loc, std::string_view message)
 
     std::abort();
 }
+
+[[noreturn]]
+void mir::fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc)
+{
+    std::string message;
+    try
+    {
+        message = std::vformat(fmt, args);
+    }
+    catch (...)
+    {
+        message = fmt;
+    }
+    fatal_error(loc, std::string_view{message});
+}

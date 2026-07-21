@@ -47,9 +47,22 @@ void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
 [[noreturn]]
 void fatal_error(std::source_location const loc, std::string_view message);
 
+/**
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dump core as cleanly as possible.
+ *   \param [in] fmt  A std::format-style format string.
+ *   \param [in] args  Type-erased format arguments.
+ *   \param [in] loc  The source location where the fatal error occurred.
+ */
+[[noreturn]]
+void fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc);
+
 template<typename... Args>
-[[noreturn]] inline void fatal_error(std::source_location const loc, std::format_string<Args...> reason, Args&&... args)
-{ fatal_error(loc, std::format(reason, std::forward<Args>(args)...)); }
+[[noreturn]] inline void fatal_error(
+    std::source_location const loc,
+    std::format_string<Args...> reason,
+    Args const&... args)
+{ fatal_error(reason.get(), std::make_format_args(args...), loc); }
 } // namespace mir
 
 #define MIR_FATAL_ERROR(...) ::mir::fatal_error(::std::source_location::current(), __VA_ARGS__)
