@@ -603,21 +603,29 @@ public:
 
         server.add_init_callback([&]
         {
-            auto local_observer = std::make_shared<Observer>(this);
-            auto local_display_config_observer = std::make_shared<DisplayConfigObserver>(state);
-
-            // Keep screen bounds up to date to respond to display
-            // (re)configuration, e.g. resizing a nested window.
-            // Note: register_interest may call initial_configuration() synchronously,
-            // which calls update_bounds(), which locks state — so we must not hold
-            // the state lock across this call.
-            server.the_display_configuration_observer_registrar()->register_interest(local_display_config_observer);
-            server.the_cursor_observer_multiplexer()->register_interest(local_observer);
             input_filter = std::make_shared<InputFilter>(state);
             server.the_composite_event_filter()->prepend(input_filter);
 
-            server.the_main_loop()->spawn([=, this, &server]
-                                          { this->post_init(server, local_observer, local_display_config_observer); });
+            server.the_main_loop()->spawn(
+                [=, this, &server]
+                {
+                    auto local_observer = std::make_shared<Observer>(this);
+                    auto local_display_config_observer = std::make_shared<DisplayConfigObserver>(state);
+
+                    // Init `State` references under lock
+                    this->post_init(server, local_observer, local_display_config_observer);
+
+                    // Keep screen bounds up to date to respond to display
+                    // (re)configuration, e.g. resizing a nested window.
+                    //
+                    // Note: register_interest may call initial_configuration()
+                    // synchronously, which calls update_bounds(), which locks
+                    // state — so we must not hold the state lock across this
+                    // call. Hence why we're calling after `post_init()`.
+                    server.the_display_configuration_observer_registrar()->register_interest(
+                        local_display_config_observer);
+                    server.the_cursor_observer_multiplexer()->register_interest(local_observer);
+                });
         });
 
         server.add_stop_callback([&]
