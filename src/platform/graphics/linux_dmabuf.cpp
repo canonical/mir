@@ -35,6 +35,7 @@
 
 #include <EGL/egl.h>
 #include <cstdint>
+#include <future>
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -1026,15 +1027,38 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         dma_buf.format(),
         dma_buf.modifier().value_or(DRM_FORMAT_MOD_INVALID),
         *this);
-    return std::make_shared<DmabufTexBuffer>(
-        dpy,
-        *egl_extensions,
-        dma_buf,
-        *descriptor,
-        shared_from_this(),
-        egl_delegate,
-        std::move(on_consumed),
-        std::move(on_release));
+
+    /* Constructing a DmabufTexBuffer creates a GL texture bound to the imported
+     * dma-buf's EGLImage, which requires a current EGL context. This is called from
+     * the Wayland frontend thread, which has no current context, so run the
+     * construction on the EGL delegate (which holds a context in the renderer's share
+     * group) and wait for the result. Without a current context the texture is never
+     * bound to the EGLImage and samples as black.
+     */
+    std::promise<std::shared_ptr<Buffer>> buffer_promise;
+    auto buffer_future = buffer_promise.get_future();
+    egl_delegate->spawn(
+        [&]()
+        {
+            try
+            {
+                buffer_promise.set_value(
+                    std::make_shared<DmabufTexBuffer>(
+                        dpy,
+                        *egl_extensions,
+                        dma_buf,
+                        *descriptor,
+                        shared_from_this(),
+                        egl_delegate,
+                        std::move(on_consumed),
+                        std::move(on_release)));
+            }
+            catch (...)
+            {
+                buffer_promise.set_exception(std::current_exception());
+            }
+        });
+    return buffer_future.get();
 }
 
 void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)
