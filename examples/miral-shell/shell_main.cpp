@@ -212,7 +212,7 @@ int main(int argc, char const* argv[])
     auto magnifier_filter = [magnifier = magnifier,
                              &magnification,
                              &capture_size,
-                             decoupled = false](MirKeyboardEvent const* key_event) mutable
+                             follows_cursor = true](MirKeyboardEvent const* key_event) mutable
     {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
 
@@ -266,8 +266,11 @@ int main(int argc, char const* argv[])
                     magnifier.capture_size(capture_size);
                     return true;
                 case XKB_KEY_m:
-                    decoupled = !decoupled;
-                    magnifier.decouple(decoupled);
+                    follows_cursor = !follows_cursor;
+                    if (follows_cursor)
+                        magnifier.follow_cursor();
+                    else
+                        magnifier.stop_following_cursor();
                     return true;
                 default:
                     break;

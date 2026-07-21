@@ -641,7 +641,7 @@ public:
             s->zoom_in.init(server, HandleKind::zoom_in, capture_compositor_id);
             s->zoom_out.init(server, HandleKind::zoom_out, capture_compositor_id);
 
-            if (s->decoupled)
+            if (!s->follow_cursor)
             {
                 s->attach_observers(this);
 
@@ -714,9 +714,10 @@ public:
 
         if (enable)
         {
-            if (s->decoupled)
+            if (!s->follow_cursor)
             {
-                // Place surface at last known cursor position when enabling in decoupled mode.
+                // Place surface at last known cursor position when enabling
+                // and not following the cursor.
                 place_at_cursor(surf, *s, render_scene_into_surface);
                 s->show_all_handles();
             }
@@ -751,39 +752,41 @@ public:
         return render_scene_into_surface.capture_area().size;
     }
 
-    void set_decoupled(bool new_decoupled)
+    void follow_cursor()
     {
         auto s = state.lock();
-        if (s->decoupled == new_decoupled)
+        if (s->follow_cursor)
             return;
 
-        s->decoupled = new_decoupled;
-
-        if (s->decoupled)
+        s->follow_cursor = true;
+        for (auto* handle : {&s->drag, &s->resize, &s->zoom_in, &s->zoom_out})
         {
-            if (auto const surf = s->surface.lock())
-            {
-                s->attach_observers(this);
-                if (s->default_enabled)
-                {
-                    auto const logical_rect = render_scene_into_surface.capture_area();
-                    apply_positioned_geometry(
-                        surf, logical_rect.top_left, *s, render_scene_into_surface);
-                    s->show_all_handles();
-                }
-            }
+            handle->detach_observer();
+            handle->hide();
         }
-        else
-        {
-            for (auto* handle : {&s->drag, &s->resize, &s->zoom_in, &s->zoom_out})
-            {
-                handle->detach_observer();
-                handle->hide();
-            }
 
-            if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+        if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+        {
+            place_at_cursor(surf, *s, render_scene_into_surface);
+        }
+    }
+
+    void stop_following_cursor()
+    {
+        auto s = state.lock();
+        if (!s->follow_cursor)
+            return;
+
+        s->follow_cursor = false;
+
+        if (auto const surf = s->surface.lock())
+        {
+            s->attach_observers(this);
+            if (s->default_enabled)
             {
-                place_at_cursor(surf, *s, render_scene_into_surface);
+                auto const logical_rect = render_scene_into_surface.capture_area();
+                apply_positioned_geometry(surf, logical_rect.top_left, *s, render_scene_into_surface);
+                s->show_all_handles();
             }
         }
     }
@@ -820,7 +823,7 @@ private:
 
         auto point_is_on_magnifier_surface(geom::PointF const& point) const -> bool
         {
-            if (!decoupled || !default_enabled)
+            if (follow_cursor || !default_enabled)
                 return false;
 
             auto const surf = surface.lock();
@@ -866,9 +869,9 @@ private:
         /// rect fits within screen_bounds (preferring to keep the top-left edge
         /// on-screen if the rect is bigger than the screen in some dimension).
         /// Used when placing the magnifier so its handles don't end up
-        /// off-screen and unreachable, e.g. after enabling/decoupling while the
-        /// cursor was near a screen edge. Returns logical_top_left unchanged if
-        /// screen bounds aren't known yet.
+        /// off-screen and unreachable, e.g. after stopping following the
+        /// cursor while it was near a screen edge. Returns logical_top_left
+        /// unchanged if screen bounds aren't known yet.
         geom::Point clamp_position_to_screen(
             geom::Point const& logical_top_left,
             geom::Size const& logical_size,
@@ -1023,13 +1026,13 @@ private:
         }
 
         /// Repositions all handle and button indicators for the given surface geometry.
-        /// No-op when not in decoupled mode.
+        /// No-op when following the cursor.
         void reposition_all_handles(
             geom::Point const& tl,
             geom::Size const& sz,
             float mag)
         {
-            if (!decoupled)
+            if (follow_cursor)
                 return;
 
             auto const [dp, rp] = compute_both_handle_positions(tl, sz, mag);
@@ -1046,7 +1049,7 @@ private:
             {
                 auto const old_logical_rect = render_scene_into_surface.capture_area();
 
-                if (decoupled)
+                if (!follow_cursor)
                 {
                     auto const old_surface_centre =
                         center(surf->top_left(), old_logical_rect.size);
@@ -1129,7 +1132,7 @@ private:
         /// that the magnifier's on-screen footprint stays the same.
         geom::Size visual_size;
         bool default_enabled{false};
-        bool decoupled{false};
+        bool follow_cursor{true};
     };
 
     struct GeometryPositions
@@ -1179,7 +1182,7 @@ private:
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
-        if (!s.decoupled)
+        if (s.follow_cursor)
         {
             apply_visual_geometry(surf, desired_top_left, s, render_scene_into_surface);
             return;
@@ -1223,8 +1226,7 @@ private:
             auto s = self->state.lock();
             s->cursor_pos = geom::Point{abs_x, abs_y};
 
-            // In decoupled mode the surface stays put; only update when coupled.
-            if (s->decoupled)
+            if (!s->follow_cursor)
                 return;
 
             auto const surf = s->surface.lock();
@@ -1521,7 +1523,7 @@ auto miral::Magnifier::Self::InputFilter::handle(MirEvent const& event) -> bool
         return false;
 
     auto const s = state.lock();
-    if (!s->decoupled || !s->default_enabled)
+    if (s->follow_cursor || !s->default_enabled)
     {
         reset_gestures();
         return false;
@@ -1679,12 +1681,12 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             capture_size(size);
         });
     config_store.add_bool_attribute(
-        {"magnifier", "decouple"},
-        "Whether the magnifier is decoupled from the cursor position",
+        {"magnifier", "follow_cursor"},
+        "Whether the magnifier follows the cursor",
         [this](live_config::Key const&, std::optional<bool> val)
         {
             if (val.has_value())
-                decouple(*val);
+                *val ? follow_cursor() : stop_following_cursor();
         });
 }
 
@@ -1717,9 +1719,15 @@ miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size
     return *this;
 }
 
-miral::Magnifier& miral::Magnifier::decouple(bool decoupled)
+miral::Magnifier& miral::Magnifier::follow_cursor()
 {
-    self->set_decoupled(decoupled);
+    self->follow_cursor();
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::stop_following_cursor()
+{
+    self->stop_following_cursor();
     return *this;
 }
 

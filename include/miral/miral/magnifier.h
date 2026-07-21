@@ -43,20 +43,22 @@ public:
     ///     region that will be magnified.
     ///     - {magnifier, capture_size, height}: The height of the rectangular
     ///     region that will be magnified.
-    ///     - {magnifier, decouple}: Whether the magnifier is decoupled from
-    ///     the cursor position.
+    ///     - {magnifier, follow_cursor}: Whether the magnifier follows the
+    ///     cursor.
     explicit Magnifier(live_config::Store& config_store);
 
     Magnifier& enable(bool enabled);
     Magnifier& magnification(float magnification);
     Magnifier& capture_size(mir::geometry::Size const& size);
 
-    /// When \p decoupled is true, the magnifier surface is no longer tied to
-    /// the cursor position and can instead be dragged freely with the pointer
-    /// or a single touch contact.  When false (the default), the surface
-    /// follows the cursor as before.
+    /// Makes the magnifier follow the cursor.
     /// \remark Since MirAL 6.0
-    Magnifier& decouple(bool decoupled);
+    Magnifier& follow_cursor();
+
+    /// Stops the magnifier following the cursor, allowing it to be dragged
+    /// freely with the pointer or a single touch contact.
+    /// \remark Since MirAL 6.0
+    Magnifier& stop_following_cursor();
 
     void operator()(mir::Server& server);
 
