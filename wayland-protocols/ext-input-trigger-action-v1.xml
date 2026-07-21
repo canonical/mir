@@ -23,7 +23,7 @@
   </copyright>
 
   <description summary="Subscription for global input actions">
-    This protocol lets a client react to a global input action. An action is an
+    This protocol lets a client react to a global action. An action is an
     activity (for example "play/pause" or "toggle-launcher") that a privileged
     client has bound to one or more input triggers, such as a key combination,
     using the `ext_input_trigger_registration_v1` protocol.
@@ -36,8 +36,11 @@
 
     For example, a media player reacting to the system "play/pause" action:
 
-        # obtain the action's token out of band (e.g. from a settings
-        # service), then subscribe to the action
+        # obtain the action's token out of band; here it is looked up from a
+        # desktop settings service that the registering client published it to
+        token = settings_service.lookup("play/pause")
+
+        # subscribe to the action
         manager = registry.bind(ext_input_trigger_action_manager_v1)
         action = manager.get_input_trigger_action(token)
 
