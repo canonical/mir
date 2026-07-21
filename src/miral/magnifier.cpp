@@ -691,15 +691,18 @@ public:
         s->zoom_in.init(server, HandleKind::zoom_in, capture_compositor_id);
         s->zoom_out.init(server, HandleKind::zoom_out, capture_compositor_id);
 
-        if (!s->follow_cursor)
+        if (auto const surf = s->surface.lock(); surf && s->default_enabled)
         {
-            s->attach_observers(this);
-
-            if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+            if (!s->follow_cursor)
             {
+                s->attach_observers(this);
                 auto const logical_rect = render_scene_into_surface.capture_area();
                 apply_positioned_geometry(surf, logical_rect.top_left, *s, render_scene_into_surface);
                 s->show_all_handles();
+            }
+            else
+            {
+                place_at_cursor(surf, *s, render_scene_into_surface);
             }
         }
     }
