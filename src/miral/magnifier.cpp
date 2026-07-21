@@ -41,6 +41,7 @@
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
+#include <mir/main_loop.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -515,6 +516,7 @@ class miral::Magnifier::Self
 {
 private:
     struct State;
+    class Observer;
 
     class DisplayConfigObserver : public mg::DisplayConfigurationObserver
     {
@@ -614,35 +616,8 @@ public:
             input_filter = std::make_shared<InputFilter>(state);
             server.the_composite_event_filter()->prepend(input_filter);
 
-            auto s = state.lock();
-
-            s->observer = local_observer;
-            s->display_config_observer = local_display_config_observer;
-            s->cursor_multiplexer = server.the_cursor_observer_multiplexer();
-            if (s->visual_size == geom::Size{})
-            {
-                s->visual_size = clamp_visual_size(
-                    geom::Size{default_capture_width, default_capture_height} * s->magnification);
-            }
-
-            auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
-            s->drag.init(server, HandleKind::drag, capture_compositor_id);
-            s->resize.init(server, HandleKind::resize, capture_compositor_id);
-            s->zoom_in.init(server, HandleKind::zoom_in, capture_compositor_id);
-            s->zoom_out.init(server, HandleKind::zoom_out, capture_compositor_id);
-
-            if (!s->follow_cursor)
-            {
-                s->attach_observers(this);
-
-                if (auto const surf = s->surface.lock(); surf && s->default_enabled)
-                {
-                    auto const logical_rect = render_scene_into_surface.capture_area();
-                    apply_positioned_geometry(
-                        surf, logical_rect.top_left, *s, render_scene_into_surface);
-                    s->show_all_handles();
-                }
-            }
+            server.the_main_loop()->spawn([=, this, &server]
+                                          { this->post_init(server, local_observer, local_display_config_observer); });
         });
 
         server.add_stop_callback([&]
@@ -692,6 +667,41 @@ public:
 
             input_filter.reset();
         });
+    }
+
+    void post_init(
+        mir::Server& server,
+        std::shared_ptr<Observer> const& local_observer,
+        std::shared_ptr<DisplayConfigObserver> const& local_display_config_observer)
+    {
+        auto s = state.lock();
+
+        s->observer = local_observer;
+        s->display_config_observer = local_display_config_observer;
+        s->cursor_multiplexer = server.the_cursor_observer_multiplexer();
+        if (s->visual_size == geom::Size{})
+        {
+            s->visual_size =
+                clamp_visual_size(geom::Size{default_capture_width, default_capture_height} * s->magnification);
+        }
+
+        auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
+        s->drag.init(server, HandleKind::drag, capture_compositor_id);
+        s->resize.init(server, HandleKind::resize, capture_compositor_id);
+        s->zoom_in.init(server, HandleKind::zoom_in, capture_compositor_id);
+        s->zoom_out.init(server, HandleKind::zoom_out, capture_compositor_id);
+
+        if (!s->follow_cursor)
+        {
+            s->attach_observers(this);
+
+            if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+            {
+                auto const logical_rect = render_scene_into_surface.capture_area();
+                apply_positioned_geometry(surf, logical_rect.top_left, *s, render_scene_into_surface);
+                s->show_all_handles();
+            }
+        }
     }
 
     void set_enable(bool enable)
@@ -782,8 +792,6 @@ public:
     }
 
 private:
-    class Observer;
-
     struct State
     {
         /// Pixel-space rectangle of signed integer coordinates.
