@@ -4,9 +4,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::AddInitCallback::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::AddInitCallback::~AddInitCallback()@MIRAL_6.0" 6.0.0
  (c++)"miral::AppendEventFilter::AppendEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::AppendEventFilter::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::AppendEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter(std::function<bool (MirKeyboardEvent const*)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::gid() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::pid() const@MIRAL_6.0" 6.0.0
@@ -333,7 +333,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::OutputFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::OutputFilter::~OutputFilter()@MIRAL_6.0" 6.0.0
  (c++)"miral::PrependEventFilter::PrependEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::PrependEventFilter::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::PrependEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_6.0" 6.0.0
  (c++)"miral::SessionLockListener::SessionLockListener(std::function<void ()> const&, std::function<void ()> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SessionLockListener::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
