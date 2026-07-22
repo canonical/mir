@@ -15,8 +15,11 @@ add_subdirectory(gl)
 add_subdirectory(renderers/)
 
 add_library(mirplatform SHARED
+  anonymous_shm_file.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/input/input_sink.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/console_services.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/shm_file.h
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/anonymous_shm_file.h
 )
 
 target_include_directories(mirplatform

@@ -42,6 +42,8 @@
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
 #include <miral/cursor_scale.h>
+#include <miral/touch_emulator.h>
+#include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -358,6 +360,28 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto touch_emulator = TouchEmulator::disabled();
+    auto toggle_touch_emulator_filter = [&touch_emulator, touch_emulator_enabled = false](MirKeyboardEvent const* key_event) mutable
+    {
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down ||
+            !(modifiers & mir_input_event_modifier_ctrl) ||
+            !(modifiers & mir_input_event_modifier_alt) ||
+            !(modifiers & mir_input_event_modifier_shift) ||
+            mir_keyboard_event_keysym(key_event) != XKB_KEY_E)
+            return false;
+
+        touch_emulator_enabled = !touch_emulator_enabled;
+        if (touch_emulator_enabled)
+            touch_emulator.enable();
+        else
+            touch_emulator.disable();
+
+        return true;
+    };
+
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -392,6 +416,8 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
-            BasicApplicationSwitcher{}
+            BasicApplicationSwitcher{},
+            touch_emulator,
+            AppendKeyboardEventFilter{toggle_touch_emulator_filter},
         });
 }

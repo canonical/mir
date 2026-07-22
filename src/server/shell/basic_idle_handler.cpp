@@ -15,6 +15,7 @@
  */
 
 #include "basic_idle_handler.h"
+
 #include <mir/fatal.h>
 #include <mir/scene/idle_hub.h>
 #include <mir/scene/session_lock.h>
@@ -23,6 +24,7 @@
 #include <mir/input/scene.h>
 #include <mir/shell/display_configuration_controller.h>
 
+#include <cinttypes>
 #include <mutex>
 
 namespace ms = mir::scene;
@@ -286,7 +288,7 @@ void msh::BasicIdleHandler::register_observers(ProofOfMutexLock const&)
     {
         if (*off_timeout <= time::Duration{0})
         {
-            fatal_error("BasicIdleHandler given invalid timeout %d, should be >0", off_timeout->count());
+            fatal_error("BasicIdleHandler given invalid timeout %" PRId64 ", should be >0", static_cast<int64_t>(off_timeout->count()));
         }
         if (*off_timeout >= dim_time_before_off * 2)
         {

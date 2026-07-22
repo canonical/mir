@@ -46,7 +46,7 @@ public:
     ///               Returning `true` prevents later filters from seeing the event.
     explicit AppendKeyboardEventFilter(std::function<bool(MirKeyboardEvent const* event)> const& filter);
 
-    void operator()(mir::Server& server);
+    void operator()(mir::Server& server) const;
 
 private:
     class Filter;

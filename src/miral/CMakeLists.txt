@@ -159,6 +159,7 @@ add_library(miral-external OBJECT
     sticky_keys.cpp                     ${miral_include}/miral/sticky_keys.h
     locate_pointer.cpp                  ${miral_include}/miral/locate_pointer.h
     logging_config.cpp                  ${miral_include}/miral/logging_config.h
+    touch_emulator.cpp                  ${miral_include}/miral/touch_emulator.h
 )
 
 add_library(miral SHARED

@@ -146,7 +146,7 @@ void miral::TestDisplayServer::start_server()
             }
             catch (std::exception const& e)
             {
-                mir::fatal_error(e.what());
+                mir::fatal_error("%s", e.what());
             }
 
             {

@@ -2,6 +2,10 @@ MIR_PLATFORM_2.29 {
  global:
   extern "C++" {
     mir::gl::tessellate_renderable_into_rectangle*;
+    mir::AnonymousShmFile::?AnonymousShmFile*;
+    mir::AnonymousShmFile::AnonymousShmFile*;
+    mir::AnonymousShmFile::base_ptr*;
+    mir::AnonymousShmFile::fd*;
     mir::graphics::AtomicFrame::increment*;
     mir::graphics::AtomicFrame::load*;
     mir::graphics::AtomicFrame::store*;
@@ -35,6 +39,9 @@ MIR_PLATFORM_2.29 {
     mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
     mir::graphics::DisplayConfigurationPolicy::apply_to*;
+    typeinfo?for?mir::AnonymousShmFile;
+    typeinfo?for?mir::ShmFile;
+    vtable?for?mir::AnonymousShmFile;
     mir::graphics::DisplayConfigurationPolicy::operator*;
     mir::graphics::DisplayInfo::?DisplayInfo*;
     mir::graphics::DisplayInfo::DisplayInfo*;

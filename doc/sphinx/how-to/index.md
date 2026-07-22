@@ -10,6 +10,7 @@ These guides cover the key aspects of developing a Wayland compositor with Mir.
 - [How to specify start up applications](how-to-specify-startup-apps.md)
 - [How to handle user input](how-to-handle-keyboard-input.md)
 - [Specifying CSD/SSD Preference](specifying-csd-ssd-preference.md)
+- [How to add configuration overrides](how-to-add-configuration-overrides.md)
 
 ```{toctree}
 ---

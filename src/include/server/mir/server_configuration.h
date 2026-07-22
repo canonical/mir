@@ -85,8 +85,6 @@ public:
     virtual std::shared_ptr<frontend::Connector> the_xwayland_connector() = 0;
     virtual std::shared_ptr<graphics::Display> the_display() = 0;
     virtual std::shared_ptr<compositor::Compositor> the_compositor() = 0;
-    [[deprecated("Prefer using the_screen_shooter_factory to access a screen shooter.")]]
-    virtual std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() = 0;
     virtual std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() = 0;
     virtual std::shared_ptr<input::InputManager> the_input_manager() = 0;
     virtual std::shared_ptr<input::InputDispatcher> the_input_dispatcher() = 0;
@@ -97,7 +95,6 @@ public:
     virtual auto the_display_platforms() -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& = 0;
     virtual auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& = 0;
     virtual std::shared_ptr<EmergencyCleanup> the_emergency_cleanup() = 0;
-    virtual auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) = 0;
     virtual std::shared_ptr<scene::Clipboard> the_main_clipboard() = 0;
     virtual std::shared_ptr<scene::Clipboard> the_primary_selection_clipboard() = 0;
     virtual std::shared_ptr<scene::TextInputHub> the_text_input_hub() = 0;

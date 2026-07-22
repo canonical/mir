@@ -320,7 +320,7 @@ auto miral::WindowInfo::parent() const -> Window
     return self->parent;
 }
 
-auto miral::WindowInfo::children() const -> std::vector <Window> const&
+auto miral::WindowInfo::children() const& -> std::span<Window const>
 {
     return self->children;
 }

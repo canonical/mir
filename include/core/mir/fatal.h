@@ -26,46 +26,12 @@
 namespace mir
 {
 /**
- * fatal_error() is strictly for "this should never happen" situations that
- * you cannot recover from. By default it points at fatal_error_abort().
- * Note the reason parameter is a simple char* so its value is clearly visible
- * in stack trace output.
- * \remark There is no attempt to make this thread-safe, if it needs to be changed
- * that should be done before spinning up the Mir server.
- *   \param [in] reason  A printf-style format string.
- */
-extern void (*fatal_error)(char const* reason, ...);
-
-/**
- * Throws an exception that will typically kill the Mir server and propagate from
- * mir::run_mir.
- *   \param [in] reason  A printf-style format string.
- */
-void fatal_error_except(char const* reason, ...);
-
-/**
- * An alternative to fatal_error_except() that kills the program and dump core
- * as cleanly as possible.
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dump core as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
 [[noreturn]]
-void fatal_error_abort(char const* reason, ...);
-
-// Utility class to override & restore existing error handler
-class FatalErrorStrategy
-{
-public:
-    explicit FatalErrorStrategy(void (*fatal_error_handler)(char const* reason, ...)) :
-        old_fatal_error_handler(fatal_error)
-    { fatal_error = fatal_error_handler; }
-
-    ~FatalErrorStrategy() { fatal_error = old_fatal_error_handler; }
-
-private:
-    void (*old_fatal_error_handler)(char const* reason, ...);
-    FatalErrorStrategy(FatalErrorStrategy const&) = delete;
-    FatalErrorStrategy& operator=(FatalErrorStrategy const&) = delete;
-};
+void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
 } // namespace mir
 
 #endif // MIR_FATAL_H_

@@ -330,15 +330,13 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)
     auto const select_event = mir::events::make_touch_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
-        mir_input_event_modifier_none);
-    mir::events::add_touch(
-        *select_event,
-        (int)std::chrono::system_clock::now().time_since_epoch().count(),
-        mir_touch_action_down,
-        mir_touch_tooltype_finger,
-        static_cast<float>(window1.top_left().x.as_int() + window1.size().width.as_int() - 1),
-        static_cast<float>(window1.top_left().y.as_int() + window1.size().height.as_int() - 1),
-        1.f, 0.f, 0.f, 0.f);
+        mir_input_event_modifier_none,
+        {{
+            (int)std::chrono::system_clock::now().time_since_epoch().count(),
+            mir_touch_action_down,
+            mir_touch_tooltype_finger,
+            geom::PointF{window1.top_left() + mir::geometry::generic::as_displacement(window1.size()) - geom::Displacement{1, 1}},
+            1.f, 0.f, 0.f, 0.f}});
     publish_event(*select_event);
 
     EXPECT_TRUE(focused(window1));
@@ -455,13 +453,12 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
     auto const start_event = mir::events::make_touch_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
-        mir_input_event_modifier_shift);
-    mir::events::add_touch(
-        *start_event,
+        mir_input_event_modifier_shift,
+    {{
         (int)std::chrono::system_clock::now().time_since_epoch().count(),
         mir_touch_action_down,
         mir_touch_tooltype_finger,
-        start_ptr_pos.x.as_value(), start_ptr_pos.y.as_value(), 1.f, 0.f, 0.f, 0.f);
+        start_ptr_pos, 1.f, 0.f, 0.f, 0.f}});
 
     mir::log_info("can_move_window_with_touch: requesting move");
     request_move(window, start_event->to_input());
@@ -471,13 +468,12 @@ TEST_F(MinimalWindowManagerTest, can_move_window_with_touch)
     auto const move_event = mir::events::make_touch_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
-        mir_input_event_modifier_shift);
-    mir::events::add_touch(
-        *move_event,
+        mir_input_event_modifier_shift,
+    {{
         (int)std::chrono::system_clock::now().time_since_epoch().count(),
         mir_touch_action_change,
         mir_touch_tooltype_finger,
-        end_ptr_pos.x.as_value(), end_ptr_pos.y.as_value(), 1.f, 0.f, 0.f, 0.f);
+        end_ptr_pos, 1.f, 0.f, 0.f, 0.f}});
 
     mir::log_info("can_move_window_with_touch: publishing event");
     publish_event(*move_event);
@@ -546,13 +542,12 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
     auto const start_event = mir::events::make_touch_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
-        mir_input_event_modifier_none);
-    mir::events::add_touch(
-        *start_event,
-        (int)std::chrono::system_clock::now().time_since_epoch().count(),
-        mir_touch_action_down,
-        mir_touch_tooltype_finger,
-        100, 100, 1.f, 0.f, 0.f, 0.f);
+        mir_input_event_modifier_none,
+        {{
+            (int)std::chrono::system_clock::now().time_since_epoch().count(),
+            mir_touch_action_down,
+            mir_touch_tooltype_finger,
+        {100, 100}, 1.f, 0.f, 0.f, 0.f}});
     request_resize(
         window,
         start_event->to_input(),
@@ -562,13 +557,12 @@ TEST_F(MinimalWindowManagerTest, can_resize_south_east_with_touch)
     auto const move_event = mir::events::make_touch_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
-        mir_input_event_modifier_none);
-    mir::events::add_touch(
-        *move_event,
-        (int)std::chrono::system_clock::now().time_since_epoch().count(),
-        mir_touch_action_change,
-        mir_touch_tooltype_finger,
-        50, 50, 1.f, 0.f, 0.f, 0.f);
+        mir_input_event_modifier_none,
+        {{
+            (int)std::chrono::system_clock::now().time_since_epoch().count(),
+            mir_touch_action_change,
+            mir_touch_tooltype_finger,
+            {50, 50}, 1.f, 0.f, 0.f, 0.f}});
     publish_event(*move_event);
 
     // Assert that the window is resized
@@ -860,13 +854,12 @@ TEST_P(MinimalWindowManagerStartMoveStateChangeTest, maximized_windows_that_are_
     auto const start_event = mir::events::make_touch_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
-        mir_input_event_modifier_shift);
-    mir::events::add_touch(
-        *start_event,
-        static_cast<int>(std::chrono::system_clock::now().time_since_epoch().count()),
+        mir_input_event_modifier_shift,
+    {{
+        (int)std::chrono::system_clock::now().time_since_epoch().count(),
         mir_touch_action_down,
         mir_touch_tooltype_finger,
-        pointer_x, pointer_y, 1.f, 0.f, 0.f, 0.f);
+        geom::PointF{pointer_x, pointer_y}, 1.f, 0.f, 0.f, 0.f}});
 
     // Finally, assert that we are in the maximized state before the window is moved,
     // and that we exit the maximized state afterward.
