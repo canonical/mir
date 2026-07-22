@@ -44,12 +44,12 @@ class RWMappable;
 
 namespace frontend
 {
-class ShmBuffer : public wayland_rs::Buffer
+class ShmBuffer : public wayland::Buffer
 {
 public:
     ShmBuffer(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::BufferMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::BufferMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> wayland_executor,
         std::shared_ptr<shm::RWMappableRange> data,
@@ -60,7 +60,7 @@ public:
     auto data() -> std::shared_ptr<renderer::software::RWMappable>;
 
 private:
-    wayland_rs::Weak<ShmBuffer> const weak_me;
+    wayland::Weak<ShmBuffer> const weak_me;
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<shm::RWMappableRange> const data_;
     geometry::Size const size_;
@@ -68,12 +68,12 @@ private:
     graphics::DRMFormat const format_;
 };
 
-class ShmPool : public wayland_rs::ShmPool
+class ShmPool : public wayland::ShmPool
 {
 public:
     ShmPool(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ShmPoolMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ShmPoolMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> wayland_executor,
         std::shared_ptr<std::vector<graphics::DRMFormat> const> supported_formats,
@@ -85,8 +85,8 @@ public:
         int32_t width, int32_t height,
         int32_t stride,
         uint32_t format,
-        rust::Box<wayland_rs::BufferMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::Buffer> override;
+        rust::Box<wayland::BufferMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Buffer> override;
 
     void resize(int32_t new_size) override;
 
@@ -96,12 +96,12 @@ private:
     std::shared_ptr<shm::ReadWritePool> const backing_store;
 };
 
-class Shm : public wayland_rs::Shm
+class Shm : public wayland::Shm
 {
 public:
     Shm(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ShmMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ShmMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> wayland_executor,
         std::shared_ptr<std::vector<graphics::DRMFormat> const> supported_formats);
@@ -109,8 +109,8 @@ public:
     auto create_pool(
         int32_t fd,
         int32_t size,
-        rust::Box<wayland_rs::ShmPoolMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ShmPool> override;
+        rust::Box<wayland::ShmPoolMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ShmPool> override;
 
 private:
     std::shared_ptr<Executor> const wayland_executor;

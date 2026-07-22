@@ -45,7 +45,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
         use crate::middleware::*;
         use crate::dispatch::*;
 
-        #[cxx::bridge(namespace = "mir::wayland_rs")]
+        #[cxx::bridge(namespace = "mir::wayland")]
         #[allow(dead_code, unused_imports)]
         mod ffi {
             extern "Rust" {

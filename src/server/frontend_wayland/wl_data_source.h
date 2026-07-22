@@ -35,12 +35,12 @@ class DataExchangeSource;
 
 namespace frontend
 {
-class WlDataSource : public wayland_rs::DataSource
+class WlDataSource : public wayland::DataSource
 {
 public:
     WlDataSource(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::DataSourceMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::DataSourceMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> const& wayland_executor,
         scene::Clipboard& clipboard);

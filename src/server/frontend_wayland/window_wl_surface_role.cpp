@@ -36,7 +36,7 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -65,7 +65,7 @@ inline void clear_pending_if_unchanged(std::optional<T>& pending, T& cache)
 mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     Executor& wayland_executor,
     WlSeat* seat,
-    std::shared_ptr<wayland_rs::Client> const& client,
+    std::shared_ptr<wayland::Client> const& client,
     WlSurface* surface,
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager,
@@ -227,9 +227,9 @@ void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
     mods.min_height = geom::Height{height};
 }
 
-void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output)
+void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& output)
 {
-    wayland_rs::Output* const output_ptr = output ? mwrs::as_nullable_ptr(output.value()) : nullptr;
+    wayland::Output* const output_ptr = output ? mwrs::as_nullable_ptr(output.value()) : nullptr;
 
     // We must process this request immediately (i.e. don't defer until commit())
     if (auto const scene_surface = weak_scene_surface.lock())

@@ -21,7 +21,7 @@
 #include "wl_surface.h"
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 using mir::shell::SurfaceSpecification;
 using namespace mir::geometry;

@@ -34,12 +34,12 @@ namespace frontend
 class OutputManager;
 
 auto create_virtual_pointer_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
     uint32_t object_id,
     OutputManager* output_manager,
     std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland_rs::VirtualPointerManagerV1>;
+-> std::shared_ptr<wayland::VirtualPointerManagerV1>;
 }
 }
 

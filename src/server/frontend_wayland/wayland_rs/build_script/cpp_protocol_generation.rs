@@ -81,7 +81,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_GLOBALS", "global_factory");
     builder.add_header_include("<memory>");
     builder.add_header_include("<rust/cxx.h>");
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
     let mut class = CppClass::new("GlobalFactory");
     namespace.add_forward_declaration_class("WaylandClient");
     protocols.iter().for_each(|protocol| {
@@ -145,7 +145,7 @@ fn create_wayland_server_notification_handler() -> CppBuilder {
     builder.add_header_include("<rust/cxx.h>");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
     namespace.add_forward_declaration_class("WaylandClient");
     namespace.add_forward_declaration_class("WaylandClientId");
     let mut class = CppClass::new("WaylandServerNotificationHandler");
@@ -181,7 +181,7 @@ fn create_work_callback() -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_WORK_CALLBACK", "work_callback");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
     let mut class = CppClass::new("WorkCallback");
 
     let execute_method = CppMethod::new("execute", None, true, false, true, true);
@@ -204,7 +204,7 @@ fn create_fd_ready_callback() -> CppBuilder {
         CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
     let mut class = CppClass::new("FdReadyCallback");
 
     let ready_method = CppMethod::new("ready", None, true, false, true, true);
@@ -228,7 +228,7 @@ fn create_output_global_binder() -> CppBuilder {
         CppBuilder::new("MIR_WAYLANDRS_OUTPUT_GLOBAL_BINDER", "output_global_binder");
     builder.add_header_include("<memory>");
     builder.add_header_include("<rust/cxx.h>");
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
     namespace.add_forward_declaration_class("WaylandClient");
     namespace.add_forward_declaration_class("WaylandClientId");
     namespace.add_forward_declaration_class("Output");
@@ -287,7 +287,7 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
     // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
     builder.add_header_include("<rust/cxx.h>");
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
 
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
@@ -322,7 +322,7 @@ fn create_cpp_builder(
 ) -> CppBuilder {
     let guard = format!("MIR_WAYLANDRS_{}", protocol.name.to_uppercase());
     let mut builder = CppBuilder::new(guard, protocol.name.as_str());
-    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland"]);
 
     let classes = protocol
         .interfaces
@@ -456,10 +456,10 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     // null/expired or does not refer to a `Self`. Usage: `Surface::from<WlSurfaceImpl>(weak)`.
     class.add_raw_public_decl(format!(
         "    template<typename Self>\n\
-         \x20   static auto from(::mir::wayland_rs::Weak<{class_name}> const& weak) -> Self*\n\
+         \x20   static auto from(::mir::wayland::Weak<{class_name}> const& weak) -> Self*\n\
          \x20   {{\n\
-         \x20       return ::mir::wayland_rs::as_nullable_ptr(\n\
-         \x20           ::mir::wayland_rs::weak_cast<Self>(weak));\n\
+         \x20       return ::mir::wayland::as_nullable_ptr(\n\
+         \x20           ::mir::wayland::weak_cast<Self>(weak));\n\
          \x20   }}",
         class_name = class_name
     ));
@@ -540,7 +540,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
 
     // Add a protected constructor and member so that subclasses know which client
     // they are serving and can interact with it as they please. The client is the
-    // hand-written `mir::wayland_rs::Client` interface (wrapping the raw Rust
+    // hand-written `mir::wayland::Client` interface (wrapping the raw Rust
     // `WaylandClient`), resolved from the registry on the C++ side.
     class.add_protected_constructor_arg(CppArg::new(
         CppType::SharedPtr("Client".to_string()),
@@ -782,10 +782,10 @@ fn delegation_argument_expression(arg: &CppArg) -> String {
     let name = arg.name();
     match (arg.cpp_type(), arg.has_name()) {
         (CppType::Object(type_name), Some(has_name)) => format!(
-            "{has_name} ? std::make_optional(wayland_rs::Weak<{type_name}>({name})) : std::nullopt"
+            "{has_name} ? std::make_optional(wayland::Weak<{type_name}>({name})) : std::nullopt"
         ),
         (CppType::Object(type_name), None) => {
-            format!("wayland_rs::Weak<{type_name}>({name})")
+            format!("wayland::Weak<{type_name}>({name})")
         }
         (_, Some(has_name)) => {
             format!("{has_name} ? std::make_optional(std::move({name})) : std::nullopt")

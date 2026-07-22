@@ -29,7 +29,7 @@ int const max_serial_event_pairs = 100;
 }
 
 mf::WaylandClient::WaylandClient(
-    wayland_rs::RawWlClient raw_client,
+    wayland::RawWlClient raw_client,
     std::shared_ptr<ms::Session> session,
     std::shared_ptr<msh::Shell> shell,
     WaylandSerialSource serial_source)
@@ -45,7 +45,7 @@ mf::WaylandClient::~WaylandClient()
     mark_being_destroyed();
 }
 
-auto mf::WaylandClient::raw_client() const -> wayland_rs::RawWlClient const&
+auto mf::WaylandClient::raw_client() const -> wayland::RawWlClient const&
 {
     return raw;
 }

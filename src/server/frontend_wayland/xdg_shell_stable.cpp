@@ -37,8 +37,8 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland_rs;
-namespace mwrs = mir::wayland_rs;
+namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 
 namespace mir
 {
@@ -1030,7 +1030,7 @@ auto mf::XdgShellStable::get_window(
             }
         }
 
-        log_debug("No window currently associated with wayland_rs::XdgSurface@%u", xdgsurface->object_id());
+        log_debug("No window currently associated with wayland::XdgSurface@%u", xdgsurface->object_id());
     }
 
     return {};

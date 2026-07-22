@@ -33,7 +33,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 using DRMProviderList = std::vector<std::shared_ptr<mg::DRMRenderingProvider>>;
 

@@ -36,7 +36,7 @@ namespace frontend
 {
 namespace
 {
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 class ToplevelsWithDecorations
 {
@@ -107,7 +107,7 @@ private:
 } // namespace mir
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 auto mf::create_xdg_decoration_manager_v1(
     std::shared_ptr<mw::Client> client,

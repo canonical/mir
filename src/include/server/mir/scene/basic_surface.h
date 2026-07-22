@@ -257,7 +257,7 @@ private:
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;
     std::unordered_map<graphics::DisplayConfigurationOutputId, float> tracked_output_scales;
-    wayland_rs::Weak<frontend::WlSurface> weak_surface;
+    wayland::Weak<frontend::WlSurface> weak_surface;
     std::weak_ptr<Session> const session_;
 };
 

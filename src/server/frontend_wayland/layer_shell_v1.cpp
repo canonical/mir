@@ -36,7 +36,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 namespace
 {
@@ -155,7 +155,7 @@ private:
     /// Sends a configure event if needed
     void configure();
 
-    // from wayland_rs::LayerSurfaceV1
+    // from wayland::LayerSurfaceV1
     void set_size(uint32_t width, uint32_t height) override;
     void set_anchor(uint32_t anchor) override;
     void set_exclusive_zone(int32_t zone) override;
@@ -252,7 +252,7 @@ auto mf::LayerShellV1::get_window(
             return scene_surface.value();
         }
 
-        log_debug("No window currently associated with wayland_rs::LayerSurfaceV1@%u", layer_surface->object_id());
+        log_debug("No window currently associated with wayland::LayerSurfaceV1@%u", layer_surface->object_id());
     }
 
     return {};

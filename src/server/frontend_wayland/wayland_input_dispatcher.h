@@ -55,7 +55,7 @@ private:
     WaylandInputDispatcher& operator=(WaylandInputDispatcher const&) = delete;
 
     WlSeat* const seat;
-    wayland_rs::Weak<WlSurface> const wl_surface;
+    wayland::Weak<WlSurface> const wl_surface;
 };
 }
 }

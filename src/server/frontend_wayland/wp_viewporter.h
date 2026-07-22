@@ -30,19 +30,19 @@ namespace mir::frontend
 {
 class WlSurface;
 
-class WpViewporter : public wayland_rs::Viewporter
+class WpViewporter : public wayland::Viewporter
 {
 public:
     WpViewporter(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ViewporterMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ViewporterMiddleware> instance,
         uint32_t object_id);
 
 private:
     auto get_viewport(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        rust::Box<wayland_rs::ViewportMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::Viewport> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::ViewportMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Viewport> override;
 };
 
 /**
@@ -50,12 +50,12 @@ private:
  *
  * Threadsafety: This is a Wayland object, and should only be accessed from the Wayland thread
  */
-class Viewport : public wayland_rs::Viewport
+class Viewport : public wayland::Viewport
 {
 public:
     Viewport(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ViewportMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ViewportMiddleware> instance,
         uint32_t object_id,
         WlSurface* surface);
     ~Viewport() override;
@@ -70,7 +70,7 @@ public:
      *
      * \returns The source viewport into the buffer, in buffer coordinates, and
      *          The logical (post-scaling) size of this wl_surface
-     * \throws A wayland_rs::ProtocolError if any of the wp_viewporter preconditions are not met.
+     * \throws A wayland::ProtocolError if any of the wp_viewporter preconditions are not met.
      */
     auto resolve_viewport(int32_t scale, geometry::Size buffer_size) const
         -> std::pair<geometry::RectangleD, geometry::Size>;
@@ -79,7 +79,7 @@ private:
     void set_destination(int32_t width, int32_t height) override;
 
     bool mutable viewport_changed;
-    wayland_rs::Weak<wayland_rs::Surface> surface;
+    wayland::Weak<wayland::Surface> surface;
     std::optional<geometry::RectangleD> source;
     std::optional<geometry::Size> destination;
 };

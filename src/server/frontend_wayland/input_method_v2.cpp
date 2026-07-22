@@ -27,7 +27,7 @@
 #include <ranges>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 namespace ms = mir::scene;
 
 namespace

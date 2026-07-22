@@ -78,7 +78,7 @@ namespace time
 {
 class Clock;
 }
-namespace wayland_rs
+namespace wayland
 {
 class WaylandExecutor;
 class WaylandClientRegistry;
@@ -210,18 +210,18 @@ public:
     void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
 
     /// Inject a pre-connected socket `client_fd` as a Wayland client and deliver
-    /// the resulting `wayland_rs::Client` to `on_created` once the backend has
+    /// the resulting `wayland::Client` to `on_created` once the backend has
     /// adopted it. Used by XWayland, which connects over a socket pair rather
     /// than the listening socket. A duplicate of `client_fd` is handed to the
     /// backend (which owns and closes it on disconnect); the caller keeps its Fd.
     void create_wayland_client(
         Fd const& client_fd,
-        std::function<void(std::shared_ptr<wayland_rs::Client> const& client)> const& on_created);
+        std::function<void(std::shared_ptr<wayland::Client> const& client)> const& on_created);
 
     /// Runs callback the first time a wl_surface with the given id is created, or immediately if one currently exists
     /// Callback is never called if a wl_surface with the id is never created
     void on_surface_created(
-        wayland_rs::Client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
+        wayland::Client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
     auto socket_name() const -> std::optional<std::string> override;
 
@@ -231,7 +231,7 @@ private:
     struct ServerWrapper;
 
     void for_each_output_binding(
-        wayland_rs::Client* client,
+        wayland::Client* client,
         graphics::DisplayConfigurationOutputId output,
         std::function<void(wl_resource* output)> const& callback) override;
 
@@ -244,14 +244,14 @@ private:
     std::shared_ptr<scene::SessionLock> session_lock_;
 
     /// Owns the connected `Client`s; must outlive the running server.
-    std::unique_ptr<wayland_rs::WaylandClientRegistry> registry;
+    std::unique_ptr<wayland::WaylandClientRegistry> registry;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
 
     /// Created in the constructor; ownership is transferred to
     /// `WaylandServer::run()` when `start()` is called. The executor doubles as
     /// the server's `WorkCallback`.
-    std::shared_ptr<wayland_rs::WaylandExecutor> executor;
+    std::shared_ptr<wayland::WaylandExecutor> executor;
     std::unique_ptr<WaylandGlobalFactory> pending_factory;
     std::unique_ptr<WaylandClientNotifier> pending_notifier;
 
@@ -260,7 +260,7 @@ private:
 
     // Only accessed on event loop
     std::unordered_map<int, std::function<void(std::shared_ptr<scene::Session> const& session)>> mutable connect_handlers;
-    std::unordered_map<int, std::function<void(std::shared_ptr<wayland_rs::Client> const& client)>> mutable client_connect_handlers;
+    std::unordered_map<int, std::function<void(std::shared_ptr<wayland::Client> const& client)>> mutable client_connect_handlers;
 };
 }
 }

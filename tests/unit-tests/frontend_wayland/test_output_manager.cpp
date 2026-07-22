@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 using namespace testing;
 

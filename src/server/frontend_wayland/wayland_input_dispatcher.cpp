@@ -30,7 +30,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::WaylandInputDispatcher::WaylandInputDispatcher(
     WlSeat* seat,

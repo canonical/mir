@@ -35,7 +35,7 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 mf::ShmBuffer::ShmBuffer(
     std::shared_ptr<mwrs::Client> client,
@@ -218,7 +218,7 @@ mf::ShmPool::ShmPool(
     std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats,
     Fd backing_store,
     int32_t claimed_size) :
-    wayland_rs::ShmPool{std::move(client), std::move(instance), object_id},
+    wayland::ShmPool{std::move(client), std::move(instance), object_id},
     wayland_executor{std::move(wayland_executor)},
     supported_formats{std::move(supported_formats)},
     backing_store{shm::rw_pool_from_fd(std::move(backing_store), claimed_size)}
@@ -393,7 +393,7 @@ mf::Shm::Shm(
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats)
-    : wayland_rs::Shm{std::move(client), std::move(instance), object_id},
+    : wayland::Shm{std::move(client), std::move(instance), object_id},
       wayland_executor{std::move(wayland_executor)},
       supported_formats{std::move(supported_formats)}
 {

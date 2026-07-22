@@ -59,7 +59,7 @@ private:
 
 namespace
 {
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 class ServerSurfaceDecoration : public mw::ServerDecoration
 {

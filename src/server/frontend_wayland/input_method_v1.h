@@ -41,17 +41,17 @@ class OutputManager;
 class SurfaceRegistry;
 
 auto create_zwp_input_method_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::InputMethodV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::InputMethodV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::TextInputHub> text_input_hub)
--> std::shared_ptr<wayland_rs::InputMethodV1>;
+-> std::shared_ptr<wayland::InputMethodV1>;
 
 /// Interface for implementing virtual keyboards.
 auto create_zwp_input_panel_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::InputPanelV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::InputPanelV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<shell::Shell> shell,
@@ -59,7 +59,7 @@ auto create_zwp_input_panel_v1(
     OutputManager* output_manager,
     std::shared_ptr<scene::TextInputHub> text_input_hub,
     std::shared_ptr<SurfaceRegistry> surface_registry)
--> std::shared_ptr<wayland_rs::InputPanelV1>;
+-> std::shared_ptr<wayland::InputPanelV1>;
 }
 }
 

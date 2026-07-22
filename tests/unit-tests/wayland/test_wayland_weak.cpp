@@ -20,7 +20,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 using namespace testing;
 

@@ -20,7 +20,7 @@
 #include "weak.h"
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 void mf::SurfaceRegistry::add_surface(
     std::shared_ptr<input::Surface const> const& surf, mwrs::Weak<mf::WlSurface> const& wl_surf)

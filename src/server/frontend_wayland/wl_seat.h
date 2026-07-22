@@ -43,7 +43,7 @@ namespace shell
 {
 class AccessibilityManager;
 }
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 class Seat;
@@ -77,7 +77,7 @@ public:
     void start_dispatch_to_data_device(WlDataDevice* wl_data_device);
     void stop_dispatch_to_data_device();
 private:
-    wayland_rs::Weak<WlPointer> wl_pointer;
+    wayland::Weak<WlPointer> wl_pointer;
     WlDataDevice* wl_data_device{nullptr};
     std::shared_ptr<bool const> wl_data_device_destroyed;
 };
@@ -103,16 +103,16 @@ public:
     WlSeat(WlSeat&&) = delete;
     WlSeat& operator=(WlSeat&&) = delete;
 
-    static auto from(wayland_rs::Weak<wayland_rs::Seat> const& seat) -> WlSeat*;
+    static auto from(wayland::Weak<wayland::Seat> const& seat) -> WlSeat*;
 
     auto create_instance(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::SeatMiddleware> instance,
-        uint32_t object_id) -> std::shared_ptr<wayland_rs::Seat>;
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::SeatMiddleware> instance,
+        uint32_t object_id) -> std::shared_ptr<wayland::Seat>;
 
-    void for_each_listener(wayland_rs::Client* client, std::function<void(PointerEventDispatcher*)> func);
-    void for_each_listener(wayland_rs::Client* client, std::function<void(WlKeyboard*)> func);
-    void for_each_listener(wayland_rs::Client* client, std::function<void(WlTouch*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(PointerEventDispatcher*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(WlKeyboard*)> func);
+    void for_each_listener(wayland::Client* client, std::function<void(WlTouch*)> func);
 
     class FocusListener
     {
@@ -132,14 +132,14 @@ public:
     auto make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shared_ptr<KeyboardHelper>;
 
     /// Adds the listener for future use, and makes a call into it to inform of initial state
-    void add_focus_listener(wayland_rs::Client* client, FocusListener* listener);
-    void remove_focus_listener(wayland_rs::Client* client, FocusListener* listener);
+    void add_focus_listener(wayland::Client* client, FocusListener* listener);
+    void remove_focus_listener(wayland::Client* client, FocusListener* listener);
 
 private:
     void set_focus_to(WlSurface* surface);
 
-    wayland_rs::Client* focused_client{nullptr}; ///< Can be null
-    wayland_rs::Weak<WlSurface> focused_surface;
+    wayland::Client* focused_client{nullptr}; ///< Can be null
+    wayland::Weak<WlSurface> focused_surface;
     uint64_t focused_surface_destroy_listener_id{};
 
     template<class T>

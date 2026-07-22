@@ -37,7 +37,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace mi = mir::input;
 
 namespace
@@ -94,32 +94,32 @@ struct VirtualKeyboardV1Ctx
 };
 
 class VirtualKeyboardManagerV1
-    : public wayland_rs::VirtualKeyboardManagerV1
+    : public wayland::VirtualKeyboardManagerV1
 {
 public:
     VirtualKeyboardManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
 
 private:
-    using wayland_rs::VirtualKeyboardManagerV1::create_virtual_keyboard;
+    using wayland::VirtualKeyboardManagerV1::create_virtual_keyboard;
     auto create_virtual_keyboard(
-        wayland_rs::Weak<wayland_rs::Seat> const& seat,
-        rust::Box<wayland_rs::VirtualKeyboardV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::VirtualKeyboardV1> override;
+        wayland::Weak<wayland::Seat> const& seat,
+        rust::Box<wayland::VirtualKeyboardV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualKeyboardV1> override;
 
     std::shared_ptr<VirtualKeyboardV1Ctx> const ctx;
 };
 
 class VirtualKeyboardV1
-    : public wayland_rs::VirtualKeyboardV1
+    : public wayland::VirtualKeyboardV1
 {
 public:
     VirtualKeyboardV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::VirtualKeyboardV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualKeyboardV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
     ~VirtualKeyboardV1();
@@ -138,40 +138,40 @@ private:
 }
 
 auto mf::create_virtual_keyboard_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland_rs::VirtualKeyboardManagerV1>
+-> std::shared_ptr<wayland::VirtualKeyboardManagerV1>
 {
     auto ctx = std::shared_ptr<VirtualKeyboardV1Ctx>{new VirtualKeyboardV1Ctx{device_registry}};
     return std::make_shared<VirtualKeyboardManagerV1>(std::move(client), std::move(instance), object_id, std::move(ctx));
 }
 
 mf::VirtualKeyboardManagerV1::VirtualKeyboardManagerV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
-    : wayland_rs::VirtualKeyboardManagerV1{std::move(client), std::move(instance), object_id},
+    : wayland::VirtualKeyboardManagerV1{std::move(client), std::move(instance), object_id},
       ctx{ctx}
 {
 }
 
 auto mf::VirtualKeyboardManagerV1::create_virtual_keyboard(
-    wayland_rs::Weak<wayland_rs::Seat> const&,
-    rust::Box<wayland_rs::VirtualKeyboardV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<wayland_rs::VirtualKeyboardV1>
+    wayland::Weak<wayland::Seat> const&,
+    rust::Box<wayland::VirtualKeyboardV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualKeyboardV1>
 {
     return std::make_shared<VirtualKeyboardV1>(client, std::move(child_instance), child_object_id, ctx);
 }
 
 mf::VirtualKeyboardV1::VirtualKeyboardV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualKeyboardV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
-    : wayland_rs::VirtualKeyboardV1{std::move(client), std::move(instance), object_id},
+    : wayland::VirtualKeyboardV1{std::move(client), std::move(instance), object_id},
       ctx{ctx},
       keyboard_device{std::make_shared<mi::VirtualInputDevice>("virtual-keyboard", mi::DeviceCapability::keyboard)},
       device_handle{ctx->device_registry->add_device(keyboard_device)}

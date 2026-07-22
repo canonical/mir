@@ -58,7 +58,7 @@ namespace compositor
 {
 class BufferStream;
 }
-namespace wayland_rs
+namespace wayland
 {
 class WaylandServer;
 }
@@ -72,12 +72,12 @@ class FractionalScaleV1;
 
 struct WlSurfaceState
 {
-    class Callback : public wayland_rs::Callback
+    class Callback : public wayland::Callback
     {
     public:
         Callback(
-            std::shared_ptr<wayland_rs::Client> client,
-            rust::Box<wayland_rs::CallbackMiddleware> instance,
+            std::shared_ptr<wayland::Client> client,
+            rust::Box<wayland::CallbackMiddleware> instance,
             uint32_t object_id);
     };
 
@@ -91,7 +91,7 @@ struct WlSurfaceState
     // NOTE: nullopt has a distinct meaning from the optional containing a null Weak here
     // nullopt: the current state should not be changed
     // null Weak: the current buffer, if any, should be cleared
-    std::optional<wayland_rs::Weak<wayland_rs::Buffer>> buffer;
+    std::optional<wayland::Weak<wayland::Buffer>> buffer;
 
     shell::SurfaceSpecification surface_spec;
     std::optional<float> scale;
@@ -100,8 +100,8 @@ struct WlSurfaceState
     std::optional<geometry::Rectangles> opaque_region;
     std::optional<MirOrientation> orientation;
     std::optional<MirMirrorMode> mirror_mode;
-    std::vector<wayland_rs::Weak<Callback>> frame_callbacks;
-    wayland_rs::Weak<Viewport> viewport;
+    std::vector<wayland::Weak<Callback>> frame_callbacks;
+    wayland::Weak<Viewport> viewport;
 
     std::optional<SyncPoint> release_fence;
 
@@ -126,16 +126,16 @@ private:
     WlSurface* const surface;
 };
 
-class WlSurface : public wayland_rs::Surface
+class WlSurface : public wayland::Surface
 {
 public:
-    WlSurface(std::shared_ptr<wayland_rs::Client> client,
-              rust::Box<wayland_rs::SurfaceMiddleware> instance,
+    WlSurface(std::shared_ptr<wayland::Client> client,
+              rust::Box<wayland::SurfaceMiddleware> instance,
               uint32_t object_id,
               std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
               std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-              wayland_rs::WaylandServer& server);
+              wayland::WaylandServer& server);
 
     ~WlSurface();
 
@@ -170,14 +170,14 @@ public:
     auto confine_pointer_state() const -> MirPointerConfinementState;
 
     void set_fractional_scale(FractionalScaleV1* fractional_scale);
-    auto get_fractional_scale() const -> wayland_rs::Weak<FractionalScaleV1>;
+    auto get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>;
 
     /**
      * Associate a viewport (buffer scale & crop metadata) with this surface
      *
      * \throws A std::logic_error if the surface already has a viewport associated
      */
-    void associate_viewport(wayland_rs::Weak<Viewport> viewport);
+    void associate_viewport(wayland::Weak<Viewport> viewport);
 
     /**
      * Associate a DRM Syncobj timeline with this surface
@@ -188,7 +188,7 @@ public:
      *
      * \throws A TimelineAlreadyAssociated if the surface already has a timeline associated
      */
-    void associate_sync_timeline(wayland_rs::Weak<SyncTimeline> timeline);
+    void associate_sync_timeline(wayland::Weak<SyncTimeline> timeline);
 
     class TimelineAlreadyAssociated : public std::logic_error
     {
@@ -206,7 +206,7 @@ private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::Executor> const frame_callback_executor;
-    wayland_rs::WaylandServer& server;
+    wayland::WaylandServer& server;
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
@@ -246,23 +246,23 @@ private:
     float scale{1};
     std::optional<geometry::Size> buffer_size_;
 
-    using CallbackList = std::vector<wayland_rs::Weak<WlSurfaceState::Callback>>;
+    using CallbackList = std::vector<wayland::Weak<WlSurfaceState::Callback>>;
     CallbackList frame_callbacks;
     CallbackList heartbeat_quirk_frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
-    wayland_rs::Weak<Viewport> viewport;
-    wayland_rs::Weak<FractionalScaleV1> fractional_scale;
-    wayland_rs::Weak<SyncTimeline> sync_timeline;
+    wayland::Weak<Viewport> viewport;
+    wayland::Weak<FractionalScaleV1> fractional_scale;
+    wayland::Weak<SyncTimeline> sync_timeline;
 
     void send_frame_callbacks(CallbackList& list);
 
-    void attach(std::optional<wayland_rs::Weak<wayland_rs::Buffer>> const& buffer, int32_t x, int32_t y) override;
+    void attach(std::optional<wayland::Weak<wayland::Buffer>> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    auto frame(rust::Box<wayland_rs::CallbackMiddleware> child_instance, uint32_t child_object_id)
-        -> std::shared_ptr<wayland_rs::Callback> override;
-    void set_opaque_region(std::optional<wayland_rs::Weak<wayland_rs::Region>> const& region) override;
-    void set_input_region(std::optional<wayland_rs::Weak<wayland_rs::Region>> const& region) override;
+    auto frame(rust::Box<wayland::CallbackMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<wayland::Callback> override;
+    void set_opaque_region(std::optional<wayland::Weak<wayland::Region>> const& region) override;
+    void set_input_region(std::optional<wayland::Weak<wayland::Region>> const& region) override;
     void commit() override;
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
     void set_buffer_transform(uint32_t transform) override;
@@ -275,9 +275,9 @@ private:
 /// Non-owning shared_ptr aliasing a live WlSurface, for synchronous wayland_rs
 /// sender calls (send_enter/leave/down) that take std::shared_ptr<Surface>.
 /// The returned pointer MUST NOT outlive the WlSurface.
-inline auto as_surface_ptr(WlSurface* surface) -> std::shared_ptr<wayland_rs::Surface>
+inline auto as_surface_ptr(WlSurface* surface) -> std::shared_ptr<wayland::Surface>
 {
-    return surface ? std::shared_ptr<wayland_rs::Surface>{std::shared_ptr<void>{}, surface} : nullptr;
+    return surface ? std::shared_ptr<wayland::Surface>{std::shared_ptr<void>{}, surface} : nullptr;
 }
 }
 }

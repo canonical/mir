@@ -27,7 +27,7 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mi = mir::input;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::WaylandSurfaceObserver::WaylandSurfaceObserver(
     Executor& wayland_executor,

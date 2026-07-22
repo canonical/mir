@@ -39,7 +39,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;
@@ -174,7 +174,7 @@ mf::WlPointer::~WlPointer()
         surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
 }
 
-void mir::frontend::WlPointer::set_relative_pointer(mir::wayland_rs::RelativePointerV1* relative_ptr)
+void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
 {
     relative_pointer = mwrs::make_weak(relative_ptr);
 }

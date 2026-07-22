@@ -29,20 +29,20 @@ namespace frontend
 {
 class SurfacesWithDecorations;
 
-class ServerDecorationManager : public wayland_rs::ServerDecorationManager
+class ServerDecorationManager : public wayland::ServerDecorationManager
 {
 public:
     ServerDecorationManager(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ServerDecorationManagerMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ServerDecorationManagerMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<DecorationStrategy> strategy);
 
 private:
     auto create(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        rust::Box<wayland_rs::ServerDecorationMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ServerDecoration> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::ServerDecorationMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ServerDecoration> override;
 
     std::shared_ptr<SurfacesWithDecorations> const surfaces_with_decorations;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;

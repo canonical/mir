@@ -40,14 +40,14 @@ namespace frontend
 class SurfaceStack;
 
 auto create_foreign_toplevel_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ForeignToplevelManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
--> std::shared_ptr<wayland_rs::ForeignToplevelManagerV1>;
+-> std::shared_ptr<wayland::ForeignToplevelManagerV1>;
 
 class GDesktopFileCache : public DesktopFileCache
 {

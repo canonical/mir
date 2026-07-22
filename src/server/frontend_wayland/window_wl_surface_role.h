@@ -48,7 +48,7 @@ namespace shell
 struct SurfaceSpecification;
 class Shell;
 }
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 class Output;
@@ -69,7 +69,7 @@ public:
     WindowWlSurfaceRole(
         Executor& wayland_executor,
         WlSeat* seat,
-        std::shared_ptr<wayland_rs::Client> const& client,
+        std::shared_ptr<wayland::Client> const& client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
         OutputManager* output_manager,
@@ -93,7 +93,7 @@ public:
     void set_parent(std::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
-    void set_fullscreen(std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output);
+    void set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& output);
 
     void set_type(MirWindowType type);
 
@@ -146,8 +146,8 @@ protected:
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
 
 private:
-    wayland_rs::Weak<WlSurface> const surface;
-    std::shared_ptr<wayland_rs::Client> const client;
+    wayland::Weak<WlSurface> const surface;
+    std::shared_ptr<wayland::Client> const client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;

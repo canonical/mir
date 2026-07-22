@@ -74,7 +74,7 @@ public:
     bool any_trigger_handled(MirEvent const& event);
 
 private:
-    std::vector<wayland_rs::Weak<Trigger>> triggers;
+    std::vector<wayland::Weak<Trigger>> triggers;
 };
 
 class InputTriggerRegistry::ActivationToken
@@ -91,7 +91,7 @@ private:
 };
 
 // Version-agnostic interface
-class InputTriggerRegistry::Action : public wayland_rs::LifetimeTracker
+class InputTriggerRegistry::Action : public wayland::LifetimeTracker
 {
 public:
     Action() = default;
@@ -118,7 +118,7 @@ public:
     ActionGroup(ActionGroup&&) = delete;
     auto operator=(ActionGroup&&) -> ActionGroup& = delete;
 
-    void add(wayland_rs::Weak<Action const> action);
+    void add(wayland::Weak<Action const> action);
     void send_end(MirEvent const& event);
     void send_begin(MirEvent const& event);
     void cancel();
@@ -127,7 +127,7 @@ public:
 private:
     std::function<void()> const on_destroy{};
     std::shared_ptr<shell::TokenAuthority> token_authority;
-    std::vector<wayland_rs::Weak<Action const>> actions;
+    std::vector<wayland::Weak<Action const>> actions;
     std::optional<ActivationToken> activation_token;
     bool cancelled{false};
 };
@@ -151,7 +151,7 @@ private:
     Executor& wayland_executor;
 };
 
-class InputTriggerRegistry::Trigger: public wayland_rs::LifetimeTracker
+class InputTriggerRegistry::Trigger: public wayland::LifetimeTracker
 {
 public:
     enum class EventOutcome

@@ -19,7 +19,7 @@
 #include "wl_region.h"
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 namespace mg = mir::graphics;
 
 mf::WlCompositor::WlCompositor(

@@ -28,7 +28,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 }
@@ -55,7 +55,7 @@ public:
         float scale);
     ~XWaylandServer();
 
-    auto client() const -> wayland_rs::Client* { return wayland_client.get(); }
+    auto client() const -> wayland::Client* { return wayland_client.get(); }
     auto x11_wm_fd() const -> Fd const& { return xwayland.x11_fd; }
     auto is_running() const -> bool;
 
@@ -64,7 +64,7 @@ private:
     XWaylandServer& operator=(XWaylandServer const&) = delete;
 
     XWaylandProcessInfo const xwayland;
-    std::shared_ptr<wayland_rs::Client> const wayland_client;
+    std::shared_ptr<wayland::Client> const wayland_client;
 
     mutable std::mutex mutex;
     mutable bool running;

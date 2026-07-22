@@ -83,14 +83,14 @@ private:
     struct Impl
     {
         Impl(
-            wayland_rs::Weak<WindowWlSurfaceRole> window,
+            wayland::Weak<WindowWlSurfaceRole> window,
             std::unique_ptr<WaylandInputDispatcher> input_dispatcher)
             : window{window},
               input_dispatcher{std::move(input_dispatcher)}
         {
         }
 
-        wayland_rs::Weak<WindowWlSurfaceRole> const window;
+        wayland::Weak<WindowWlSurfaceRole> const window;
         std::unique_ptr<WaylandInputDispatcher> const input_dispatcher;
 
         geometry::Size window_size{};

@@ -31,8 +31,8 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mw = mir::wayland_rs;
-namespace mwrs = mir::wayland_rs;
+namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 using namespace mir::geometry;
 
 namespace
@@ -62,7 +62,7 @@ auto as_subpixel_arrangement(MirSubpixelArrangement arrangement) -> uint32_t
     }
 }
 
-/// The per-monitor `wayland_rs::OutputGlobalBinder`.
+/// The per-monitor `wayland::OutputGlobalBinder`.
 ///
 /// One is created per `OutputGlobal` and handed to the Rust server via
 /// `WaylandServer::create_output_global`; the server owns it for the lifetime

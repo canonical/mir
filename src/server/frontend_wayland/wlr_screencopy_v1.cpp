@@ -38,8 +38,8 @@
 #include <optional>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
-namespace mwrs = mir::wayland_rs;
+namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 namespace mg = mir::graphics;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
@@ -86,7 +86,7 @@ private:
     /// Only has meaning when damage_amount is partial
     geom::Rectangle output_space_damage;
     /// The frame that will be captured once this capture area takes damage
-    wayland_rs::Weak<Frame> pending_frame;
+    wayland::Weak<Frame> pending_frame;
 };
 
 namespace mir
@@ -104,12 +104,12 @@ struct WlrScreencopyV1Ctx
 class WlrScreencopyFrameV1;
 
 class WlrScreencopyManagerV1
-    : public wayland_rs::ScreencopyManagerV1
+    : public wayland::ScreencopyManagerV1
 {
 public:
     WlrScreencopyManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ScreencopyManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ScreencopyManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<WlrScreencopyV1Ctx> const& ctx);
 
@@ -117,20 +117,20 @@ public:
 
     std::unique_ptr<compositor::ScreenShooter> const screen_shooter;
 private:
-    /// From wayland_rs::ScreencopyManagerV1
+    /// From wayland::ScreencopyManagerV1
     /// @{
     auto capture_output(
         int32_t overlay_cursor,
-        wayland_rs::Weak<wayland_rs::Output> const& output,
-        rust::Box<wayland_rs::ScreencopyFrameV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ScreencopyFrameV1> override;
+        wayland::Weak<wayland::Output> const& output,
+        rust::Box<wayland::ScreencopyFrameV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ScreencopyFrameV1> override;
     auto capture_output_region(
         int32_t overlay_cursor,
-        wayland_rs::Weak<wayland_rs::Output> const& output,
+        wayland::Weak<wayland::Output> const& output,
         int32_t x, int32_t y,
         int32_t width, int32_t height,
-        rust::Box<wayland_rs::ScreencopyFrameV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ScreencopyFrameV1> override;
+        rust::Box<wayland::ScreencopyFrameV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ScreencopyFrameV1> override;
     /// @}
 
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
@@ -138,13 +138,13 @@ private:
 };
 
 class WlrScreencopyFrameV1
-    : public wayland_rs::ScreencopyFrameV1,
+    : public wayland::ScreencopyFrameV1,
       WlrScreencopyV1DamageTracker::Frame
 {
 public:
     WlrScreencopyFrameV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ScreencopyFrameV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ScreencopyFrameV1Middleware> instance,
         uint32_t object_id,
         WlrScreencopyManagerV1* manager,
         std::shared_ptr<WlrScreencopyV1Ctx> const& ctx,
@@ -152,22 +152,22 @@ public:
 
     /// From WlrScreencopyV1DamageTracker::Frame
     /// @{
-    auto destroyed_flag() const -> std::shared_ptr<bool const> override { return wayland_rs::LifetimeTracker::destroyed_flag(); }
+    auto destroyed_flag() const -> std::shared_ptr<bool const> override { return wayland::LifetimeTracker::destroyed_flag(); }
     auto parameters() const -> WlrScreencopyV1DamageTracker::FrameParams const& override { return params; }
     void capture(geometry::Rectangle buffer_space_damage) override;
     /// @}
 
 private:
-    void prepare_target(wayland_rs::Buffer* buffer);
+    void prepare_target(wayland::Buffer* buffer);
     void report_result(std::optional<time::Timestamp> captured_time, geom::Rectangle buffer_space_damage);
 
-    /// From wayland_rs::ScreencopyFrameV1
+    /// From wayland::ScreencopyFrameV1
     /// @{
-    auto copy(wayland_rs::Weak<wayland_rs::Buffer> const& buffer) -> void override;
-    auto copy_with_damage(wayland_rs::Weak<wayland_rs::Buffer> const& buffer) -> void override;
+    auto copy(wayland::Weak<wayland::Buffer> const& buffer) -> void override;
+    auto copy_with_damage(wayland::Weak<wayland::Buffer> const& buffer) -> void override;
     /// @}
 
-    wayland_rs::Weak<WlrScreencopyManagerV1> const manager;
+    wayland::Weak<WlrScreencopyManagerV1> const manager;
     std::shared_ptr<WlrScreencopyV1Ctx> const ctx;
     WlrScreencopyV1DamageTracker::FrameParams const params;
     geometry::Stride const stride;
@@ -353,7 +353,7 @@ mf::WlrScreencopyManagerV1::WlrScreencopyManagerV1(
     rust::Box<mwrs::ScreencopyManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<WlrScreencopyV1Ctx> const& ctx)
-    : wayland_rs::ScreencopyManagerV1{std::move(client), std::move(instance), object_id},
+    : wayland::ScreencopyManagerV1{std::move(client), std::move(instance), object_id},
       screen_shooter(ctx->screen_shooter_factory->create(thread_pool_executor)),
       ctx{ctx},
       damage_tracker{*ctx->wayland_executor, *ctx->surface_stack}
@@ -405,14 +405,14 @@ mf::WlrScreencopyFrameV1::WlrScreencopyFrameV1(
     WlrScreencopyManagerV1* manager,
     std::shared_ptr<WlrScreencopyV1Ctx> const& ctx,
     WlrScreencopyV1DamageTracker::FrameParams const& params)
-    : wayland_rs::ScreencopyFrameV1{std::move(client), std::move(instance), object_id},
+    : wayland::ScreencopyFrameV1{std::move(client), std::move(instance), object_id},
       manager{mwrs::make_weak(manager)},
       ctx{ctx},
       params{params},
       stride{params.buffer_size.width.as_uint32_t() * 4}
 {
     send_buffer_event(
-        wayland_rs::Shm::Format::argb8888,
+        wayland::Shm::Format::argb8888,
         params.buffer_size.width.as_uint32_t(),
         params.buffer_size.height.as_uint32_t(),
         stride.as_uint32_t());

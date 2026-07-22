@@ -25,7 +25,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::WlDataDeviceManager::WlDataDeviceManager(
     std::shared_ptr<mw::Client> client,

@@ -36,28 +36,28 @@ namespace frontend
 
 class WlSurface;
 
-class WlSubcompositor : public wayland_rs::Subcompositor
+class WlSubcompositor : public wayland::Subcompositor
 {
 public:
     WlSubcompositor(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::SubcompositorMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::SubcompositorMiddleware> instance,
         uint32_t object_id);
 
 private:
     auto get_subsurface(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        wayland_rs::Weak<wayland_rs::Surface> const& parent,
-        rust::Box<wayland_rs::SubsurfaceMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::Subsurface> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        wayland::Weak<wayland::Surface> const& parent,
+        rust::Box<wayland::SubsurfaceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Subsurface> override;
 };
 
-class WlSubsurface: public WlSurfaceRole, public wayland_rs::Subsurface
+class WlSubsurface: public WlSurfaceRole, public wayland::Subsurface
 {
 public:
     WlSubsurface(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::SubsurfaceMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::SubsurfaceMiddleware> instance,
         uint32_t object_id,
         WlSurface* surface,
         WlSurface* parent_surface);
@@ -79,8 +79,8 @@ public:
 
 private:
     void set_position(int32_t x, int32_t y) override;
-    void place_above(wayland_rs::Weak<wayland_rs::Surface> const& sibling) override;
-    void place_below(wayland_rs::Weak<wayland_rs::Surface> const& sibling) override;
+    void place_above(wayland::Weak<wayland::Surface> const& sibling) override;
+    void place_below(wayland::Weak<wayland::Surface> const& sibling) override;
     void set_sync() override;
     void set_desync() override;
 
@@ -90,7 +90,7 @@ private:
 
     WlSurface* const surface;
     /// This class is responsible for removing itself from the parent's children list when needed
-    wayland_rs::Weak<WlSurface> const parent;
+    wayland::Weak<WlSurface> const parent;
     bool synchronized_;
     std::optional<WlSurfaceState> cached_state;
 };

@@ -35,29 +35,29 @@ namespace frontend
 class DragIconController;
 class PointerInputDispatcher;
 
-class WlDataDeviceManager : public wayland_rs::DataDeviceManager
+class WlDataDeviceManager : public wayland::DataDeviceManager
 {
 public:
     WlDataDeviceManager(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::DataDeviceManagerMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::DataDeviceManagerMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<scene::Clipboard> const& clipboard,
         std::shared_ptr<DragIconController> drag_icon_controller,
         std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher);
 
-    using wayland_rs::DataDeviceManager::get_data_device;
+    using wayland::DataDeviceManager::get_data_device;
 
 private:
     auto create_data_source(
-        rust::Box<wayland_rs::DataSourceMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::DataSource> override;
+        rust::Box<wayland::DataSourceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::DataSource> override;
 
     auto get_data_device(
-        wayland_rs::Weak<wayland_rs::Seat> const& seat,
-        rust::Box<wayland_rs::DataDeviceMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::DataDevice> override;
+        wayland::Weak<wayland::Seat> const& seat,
+        rust::Box<wayland::DataDeviceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::DataDevice> override;
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<scene::Clipboard> const clipboard;
@@ -66,30 +66,30 @@ private:
 };
 
 auto create_wl_data_device_manager(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::DataDeviceManagerMiddleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::DataDeviceManagerMiddleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<scene::Clipboard> const& clipboard,
     std::shared_ptr<DragIconController> drag_icon_controller,
     std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher)
--> std::shared_ptr<wayland_rs::DataDeviceManager>;
+-> std::shared_ptr<wayland::DataDeviceManager>;
 
 inline auto validate_dnd_actions(uint32_t dnd_actions) -> bool
 {
     return (dnd_actions & ~(
-        mir::wayland_rs::DataDeviceManager::DndAction::none |
-        mir::wayland_rs::DataDeviceManager::DndAction::copy |
-        mir::wayland_rs::DataDeviceManager::DndAction::r_move |
-        mir::wayland_rs::DataDeviceManager::DndAction::ask)) == 0;
+        mir::wayland::DataDeviceManager::DndAction::none |
+        mir::wayland::DataDeviceManager::DndAction::copy |
+        mir::wayland::DataDeviceManager::DndAction::r_move |
+        mir::wayland::DataDeviceManager::DndAction::ask)) == 0;
 }
 
 inline auto validate_dnd_action(uint32_t dnd_action) -> bool
 {
-    return dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::none ||
-           dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::copy ||
-           dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::r_move ||
-           dnd_action == mir::wayland_rs::DataDeviceManager::DndAction::ask;
+    return dnd_action == mir::wayland::DataDeviceManager::DndAction::none ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::copy ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::r_move ||
+           dnd_action == mir::wayland::DataDeviceManager::DndAction::ask;
 }
 }
 }

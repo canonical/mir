@@ -29,7 +29,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::WpViewporter::WpViewporter(
     std::shared_ptr<mw::Client> client,

@@ -32,11 +32,11 @@ class InputDeviceRegistry;
 namespace frontend
 {
 auto create_virtual_keyboard_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland_rs::VirtualKeyboardManagerV1>;
+-> std::shared_ptr<wayland::VirtualKeyboardManagerV1>;
 }
 }
 

@@ -31,7 +31,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 mf::WaylandClientNotifier::WaylandClientNotifier(
     std::shared_ptr<msh::Shell> shell,

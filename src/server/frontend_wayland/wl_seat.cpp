@@ -45,7 +45,7 @@
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace mev = mir::events;
 
 template<class T>

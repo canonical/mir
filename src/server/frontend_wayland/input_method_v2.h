@@ -35,13 +35,13 @@ class CompositeEventFilter;
 namespace frontend
 {
 auto create_zwp_input_method_manager_v2(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::InputMethodManagerV2Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::InputMethodManagerV2Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::TextInputHub> text_input_hub,
     std::shared_ptr<input::CompositeEventFilter> event_filter)
--> std::shared_ptr<wayland_rs::InputMethodManagerV2>;
+-> std::shared_ptr<wayland::InputMethodManagerV2>;
 }
 }
 

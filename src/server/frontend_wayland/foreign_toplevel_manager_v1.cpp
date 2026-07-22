@@ -50,7 +50,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 namespace mir
 {
@@ -87,7 +87,7 @@ private:
     void clear_surface_observers(); ///< Should NOT be called under lock
 
     std::shared_ptr<Executor> const wayland_executor;
-    wayland_rs::Weak<ForeignToplevelManagerV1> const manager; ///< Can only be safely accessed on the Wayland thread
+    wayland::Weak<ForeignToplevelManagerV1> const manager; ///< Can only be safely accessed on the Wayland thread
     std::mutex mutex;
     std::map<
         std::weak_ptr<scene::Surface>,
@@ -103,7 +103,7 @@ class ForeignSurfaceObserver
 {
 public:
     ForeignSurfaceObserver(
-        wayland_rs::Weak<ForeignToplevelManagerV1> manager,
+        wayland::Weak<ForeignToplevelManagerV1> manager,
         std::shared_ptr<scene::Surface> const& surface,
         std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
     ~ForeignSurfaceObserver();
@@ -123,24 +123,24 @@ private:
     void depth_layer_set_to(scene::Surface const*, MirDepthLayer) override;
     ///@}
 
-    wayland_rs::Weak<ForeignToplevelManagerV1> const manager;
+    wayland::Weak<ForeignToplevelManagerV1> const manager;
 
     std::mutex mutex;
     std::weak_ptr<scene::Surface> weak_surface;
     /// If nullptr, the surface is not supposed to have a handle (such as when it does not have a toplevel type)
     /// If it points to an empty Weak, the handle is being created or was destroyed by the client
-    std::shared_ptr<wayland_rs::Weak<ForeignToplevelHandleV1>> handle;
+    std::shared_ptr<wayland::Weak<ForeignToplevelHandleV1>> handle;
 
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
 };
 
 class ForeignToplevelManagerV1
-    : public wayland_rs::ForeignToplevelManagerV1
+    : public wayland::ForeignToplevelManagerV1
 {
 public:
     ForeignToplevelManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ForeignToplevelManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<Executor> const& wayland_executor,
@@ -162,12 +162,12 @@ private:
 
 /// Used by a client to aquire information about or control a specific toplevel
 class ForeignToplevelHandleV1
-    : public wayland_rs::ForeignToplevelHandleV1
+    : public wayland::ForeignToplevelHandleV1
 {
 public:
     ForeignToplevelHandleV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ForeignToplevelHandleV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ForeignToplevelHandleV1Middleware> instance,
         uint32_t object_id,
         ForeignToplevelManagerV1 const& manager,
         std::shared_ptr<scene::Surface> const& surface);
@@ -188,12 +188,12 @@ private:
     void unset_maximized() override;
     void set_minimized() override;
     void unset_minimized() override;
-    void activate(wayland_rs::Weak<wayland_rs::Seat> const& seat) override;
+    void activate(wayland::Weak<wayland::Seat> const& seat) override;
     void close() override;
     void set_rectangle(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
+        wayland::Weak<wayland::Surface> const& surface,
         int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_fullscreen(std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output) override;
+    void set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& output) override;
     void unset_fullscreen() override;
     ///@}
 
@@ -205,14 +205,14 @@ private:
 }
 
 auto mf::create_foreign_toplevel_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ForeignToplevelManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
--> std::shared_ptr<wayland_rs::ForeignToplevelManagerV1>
+-> std::shared_ptr<wayland::ForeignToplevelManagerV1>
 {
     return std::make_shared<ForeignToplevelManagerV1>(
         std::move(client), std::move(instance), object_id, shell, wayland_executor, surface_stack, desktop_file_manager);
@@ -299,7 +299,7 @@ void mf::ForeignSceneObserver::clear_surface_observers()
 // ForeignSurfaceObserver
 
 mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
-    wayland_rs::Weak<ForeignToplevelManagerV1> manager,
+    wayland::Weak<ForeignToplevelManagerV1> manager,
     std::shared_ptr<scene::Surface> const& surface,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
     : manager{manager},
@@ -346,7 +346,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             if (!manager)
                 return;
 
-            handle = std::make_shared<wayland_rs::Weak<ForeignToplevelHandleV1>>();
+            handle = std::make_shared<wayland::Weak<ForeignToplevelHandleV1>>();
 
             auto const name = surface->name();
             auto const app_id = desktop_file_manager->resolve_app_id(*surface);
@@ -360,8 +360,8 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             mwrs::create_zwlr_foreign_toplevel_handle_v1(
                 *mgr.client->raw_client(),
                 mgr.get_box()->version(),
-                [&](rust::Box<wayland_rs::ForeignToplevelHandleV1Middleware> box, uint32_t object_id)
-                    -> std::shared_ptr<wayland_rs::ForeignToplevelHandleV1>
+                [&](rust::Box<wayland::ForeignToplevelHandleV1Middleware> box, uint32_t object_id)
+                    -> std::shared_ptr<wayland::ForeignToplevelHandleV1>
                 {
                     auto created = std::make_shared<ForeignToplevelHandleV1>(
                         mgr.client, std::move(box), object_id, mgr, surface);
@@ -636,14 +636,14 @@ std::shared_ptr<mf::DesktopFile> mf::GDesktopFileCache::lookup_by_exec_string(st
 // ForeignToplevelManagerV1
 
 mf::ForeignToplevelManagerV1::ForeignToplevelManagerV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ForeignToplevelManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<shell::Shell> const& shell,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
-    : wayland_rs::ForeignToplevelManagerV1{std::move(client), std::move(instance), object_id},
+    : wayland::ForeignToplevelManagerV1{std::move(client), std::move(instance), object_id},
       shell{shell},
       surface_stack{surface_stack},
       observer{std::make_shared<ForeignSceneObserver>(wayland_executor, this, desktop_file_manager)}
@@ -665,12 +665,12 @@ void mf::ForeignToplevelManagerV1::stop()
 // ForeignToplevelHandleV1
 
 mf::ForeignToplevelHandleV1::ForeignToplevelHandleV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ForeignToplevelHandleV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ForeignToplevelHandleV1Middleware> instance,
     uint32_t object_id,
     ForeignToplevelManagerV1 const& manager,
     std::shared_ptr<ms::Surface> const& surface)
-    : wayland_rs::ForeignToplevelHandleV1{std::move(client), std::move(instance), object_id},
+    : wayland::ForeignToplevelHandleV1{std::move(client), std::move(instance), object_id},
       weak_shell{manager.shell},
       weak_surface{surface}
 {
@@ -746,10 +746,10 @@ void mf::ForeignToplevelHandleV1::set_minimized()
 void mf::ForeignToplevelHandleV1::unset_minimized()
 {
     attempt_change_surface_state(mir_window_state_minimized, false);
-    activate(wayland_rs::Weak<wayland_rs::Seat>{});
+    activate(wayland::Weak<wayland::Seat>{});
 }
 
-void mf::ForeignToplevelHandleV1::activate(wayland_rs::Weak<wayland_rs::Seat> const& /*seat*/)
+void mf::ForeignToplevelHandleV1::activate(wayland::Weak<wayland::Seat> const& /*seat*/)
 {
     auto timestamp = std::numeric_limits<uint64_t>::max(); // TODO: make this correct
     auto const shell = weak_shell.lock();
@@ -773,7 +773,7 @@ void mf::ForeignToplevelHandleV1::close()
 }
 
 void mf::ForeignToplevelHandleV1::set_rectangle(
-    wayland_rs::Weak<wayland_rs::Surface> const& /*surface*/,
+    wayland::Weak<wayland::Surface> const& /*surface*/,
     int32_t /*x*/,
     int32_t /*y*/,
     int32_t /*width*/,
@@ -783,7 +783,7 @@ void mf::ForeignToplevelHandleV1::set_rectangle(
     // Nothing must be done with this info. It is not a protocol violation to ignore it
 }
 
-void mf::ForeignToplevelHandleV1::set_fullscreen(std::optional<wayland_rs::Weak<wayland_rs::Output>> const& /*output*/)
+void mf::ForeignToplevelHandleV1::set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& /*output*/)
 {
     attempt_change_surface_state(mir_window_state_fullscreen, true);
     // TODO: respect output

@@ -18,7 +18,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace ms = mir::scene;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 auto mir::frontend::mir_to_wayland_content_hint(ms::TextInputContentHint hint) -> uint32_t
 {

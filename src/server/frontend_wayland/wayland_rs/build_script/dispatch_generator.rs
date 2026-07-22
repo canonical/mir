@@ -71,7 +71,7 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
 
             /// Handle a C++ exception that crossed the FFI boundary during dispatch.
             ///
-            /// `mir::wayland_rs::ProtocolError` encodes itself as
+            /// `mir::wayland::ProtocolError` encodes itself as
             /// "MIR_PROTOCOL_ERROR:<object_id>:<code>: <message>" (only what() survives
             /// the cxx boundary). Anything without that sentinel is an internal server
             /// error and must not be dressed up as a client protocol violation.

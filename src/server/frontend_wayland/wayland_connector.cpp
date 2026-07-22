@@ -61,7 +61,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 void mf::WaylandExtensions::init(Context const& context)
 {
@@ -121,10 +121,10 @@ auto choose_wayland_socket_name() -> std::string
     return "wayland-0";
 }
 
-class WaylandWorkCallback : public mir::wayland_rs::WorkCallback
+class WaylandWorkCallback : public mir::wayland::WorkCallback
 {
 public:
-    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland_rs::WaylandExecutor> const& executor)
+    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland::WaylandExecutor> const& executor)
         : executor(executor)
     {
     }
@@ -136,7 +136,7 @@ public:
     }
 
 private:
-    std::weak_ptr<mir::wayland_rs::WaylandExecutor> executor;
+    std::weak_ptr<mir::wayland::WaylandExecutor> executor;
 };
 }
 
@@ -265,7 +265,7 @@ mf::WaylandConnector::WaylandConnector(
         [this](
             int socket_fd,
             std::shared_ptr<scene::Session> const& session,
-            std::shared_ptr<wayland_rs::Client> const& client)
+            std::shared_ptr<wayland::Client> const& client)
         {
             auto const handler_iter = connect_handlers.find(socket_fd);
             if (handler_iter != std::end(connect_handlers))
@@ -435,7 +435,7 @@ void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*
 
 void mf::WaylandConnector::create_wayland_client(
     Fd const& client_fd,
-    std::function<void(std::shared_ptr<wayland_rs::Client> const& client)> const& on_created)
+    std::function<void(std::shared_ptr<wayland::Client> const& client)> const& on_created)
 {
     // `insert_client` takes ownership of the fd and closes it when the client
     // disconnects, so hand the backend a duplicate and keep our own Fd intact.
@@ -458,7 +458,7 @@ void mf::WaylandConnector::create_wayland_client(
 }
 
 void mf::WaylandConnector::on_surface_created(
-    wayland_rs::Client* /*client*/,
+    wayland::Client* /*client*/,
     uint32_t /*id*/,
     std::function<void(WlSurface*)> const& /*callback*/)
 {
@@ -478,7 +478,7 @@ auto mf::WaylandConnector::get_extension(std::string const& name) const -> std::
 }
 
 void mf::WaylandConnector::for_each_output_binding(
-    wayland_rs::Client* /*client*/,
+    wayland::Client* /*client*/,
     graphics::DisplayConfigurationOutputId /*output*/,
     std::function<void(wl_resource* output)> const& /*callback*/)
 {

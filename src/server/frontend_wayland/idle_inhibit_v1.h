@@ -38,20 +38,20 @@ struct IdleInhibitV1Ctx
     std::shared_ptr<scene::IdleHub> const idle_hub;
 };
 
-class IdleInhibitManagerV1 : public wayland_rs::IdleInhibitManagerV1
+class IdleInhibitManagerV1 : public wayland::IdleInhibitManagerV1
 {
 public:
     IdleInhibitManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::IdleInhibitManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::IdleInhibitManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<IdleInhibitV1Ctx> ctx);
 
 private:
     auto create_inhibitor(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        rust::Box<wayland_rs::IdleInhibitorV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::IdleInhibitorV1> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::IdleInhibitorV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::IdleInhibitorV1> override;
 
     std::shared_ptr<IdleInhibitV1Ctx> const ctx;
 };

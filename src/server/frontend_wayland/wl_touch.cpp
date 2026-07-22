@@ -26,7 +26,7 @@
 #include <mir/time/clock.h>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace geom = mir::geometry;
 
 mf::WlTouch::WlTouch(

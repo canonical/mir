@@ -22,7 +22,7 @@
 #include "text_input_unstable_v3.h"
 
 namespace ms = mir::scene;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 namespace mir
 {

@@ -67,7 +67,7 @@
 #include <string>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace mg = mir::graphics;
 
 mf::WaylandGlobalFactory::WaylandGlobalFactory(
@@ -196,9 +196,9 @@ auto mf::WaylandGlobalFactory::can_view(rust::Str interface_name, rust::Box<mwrs
 }
 
 auto mf::WaylandGlobalFactory::create_ext_data_control_manager_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::ExtDataControlManagerV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtDataControlManagerV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::ExtDataControlManagerV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::ExtDataControlManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -209,12 +209,12 @@ auto mf::WaylandGlobalFactory::create_ext_data_control_manager_v1(
         clipboard, primary_selection_clipboard);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_data_control_offer_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtDataControlOfferV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtDataControlOfferV1>
+auto mf::WaylandGlobalFactory::create_ext_data_control_offer_v1(rust::Box<wayland::WaylandClient>, rust::Box<wayland::ExtDataControlOfferV1Middleware>, uint32_t) -> std::shared_ptr<wayland::ExtDataControlOfferV1>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_ext_data_control_offer_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_list_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtForeignToplevelListV1>
+auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_list_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ExtForeignToplevelListV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ExtForeignToplevelListV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -225,12 +225,12 @@ auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_list_v1(rust::Box<way
         wayland_executor, surface_stack, desktop_file_manager, foreign_toplevel_id_map);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_handle_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ExtForeignToplevelHandleV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ExtForeignToplevelHandleV1>
+auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_handle_v1(rust::Box<wayland::WaylandClient>, rust::Box<wayland::ExtForeignToplevelHandleV1Middleware>, uint32_t) -> std::shared_ptr<wayland::ExtForeignToplevelHandleV1>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_ext_foreign_toplevel_handle_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtOutputImageCaptureSourceManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ExtOutputImageCaptureSourceManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ExtOutputImageCaptureSourceManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -241,7 +241,7 @@ auto mf::WaylandGlobalFactory::create_ext_output_image_capture_source_manager_v1
         wayland_executor, screen_shooter_factory, surface_stack);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtForeignToplevelImageCaptureSourceManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ExtForeignToplevelImageCaptureSourceManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ExtForeignToplevelImageCaptureSourceManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -252,7 +252,7 @@ auto mf::WaylandGlobalFactory::create_ext_foreign_toplevel_image_capture_source_
         wayland_executor, screen_shooter_factory, surface_stack);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtImageCopyCaptureManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtImageCopyCaptureManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ExtImageCopyCaptureManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ExtImageCopyCaptureManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -263,7 +263,7 @@ auto mf::WaylandGlobalFactory::create_ext_image_copy_capture_manager_v1(rust::Bo
         wayland_executor, cursor_observer_multiplexer, clock);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_input_trigger_action_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtInputTriggerActionManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerActionManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_input_trigger_action_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ExtInputTriggerActionManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ExtInputTriggerActionManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -272,7 +272,7 @@ auto mf::WaylandGlobalFactory::create_ext_input_trigger_action_manager_v1(rust::
     return std::make_shared<InputTriggerActionManagerV1>(resolved, std::move(instance), object_id, action_group_manager);
 }
 
-auto mf::WaylandGlobalFactory::create_ext_input_trigger_registration_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ExtInputTriggerRegistrationManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerRegistrationManagerV1>
+auto mf::WaylandGlobalFactory::create_ext_input_trigger_registration_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ExtInputTriggerRegistrationManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ExtInputTriggerRegistrationManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -283,9 +283,9 @@ auto mf::WaylandGlobalFactory::create_ext_input_trigger_registration_manager_v1(
 }
 
 auto mf::WaylandGlobalFactory::create_ext_session_lock_manager_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::ExtSessionLockManagerV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::ExtSessionLockManagerV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::ExtSessionLockManagerV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::ExtSessionLockManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -304,7 +304,7 @@ auto mf::WaylandGlobalFactory::create_ext_session_lock_manager_v1(
         session_lock_state);
 }
 
-auto mf::WaylandGlobalFactory::create_wp_fractional_scale_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::FractionalScaleManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::FractionalScaleManagerV1>
+auto mf::WaylandGlobalFactory::create_wp_fractional_scale_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::FractionalScaleManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::FractionalScaleManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -313,7 +313,7 @@ auto mf::WaylandGlobalFactory::create_wp_fractional_scale_manager_v1(rust::Box<w
     return std::make_shared<FractionalScaleManagerV1>(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_idle_inhibit_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::IdleInhibitManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::IdleInhibitManagerV1>
+auto mf::WaylandGlobalFactory::create_zwp_idle_inhibit_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::IdleInhibitManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::IdleInhibitManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -323,12 +323,12 @@ auto mf::WaylandGlobalFactory::create_zwp_idle_inhibit_manager_v1(rust::Box<wayl
     return std::make_shared<IdleInhibitManagerV1>(resolved, std::move(instance), object_id, std::move(ctx));
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_input_method_context_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::InputMethodContextV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::InputMethodContextV1>
+auto mf::WaylandGlobalFactory::create_zwp_input_method_context_v1(rust::Box<wayland::WaylandClient>, rust::Box<wayland::InputMethodContextV1Middleware>, uint32_t) -> std::shared_ptr<wayland::InputMethodContextV1>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_zwp_input_method_context_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_input_method_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::InputMethodV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::InputMethodV1>
+auto mf::WaylandGlobalFactory::create_zwp_input_method_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::InputMethodV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::InputMethodV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -339,7 +339,7 @@ auto mf::WaylandGlobalFactory::create_zwp_input_method_v1(rust::Box<wayland_rs::
         wayland_executor, text_input_hub);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_input_panel_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::InputPanelV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::InputPanelV1>
+auto mf::WaylandGlobalFactory::create_zwp_input_panel_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::InputPanelV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::InputPanelV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -350,7 +350,7 @@ auto mf::WaylandGlobalFactory::create_zwp_input_panel_v1(rust::Box<wayland_rs::W
         wayland_executor, shell, wl_seat.get(), &output_manager, text_input_hub, surface_registry);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_input_method_manager_v2(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::InputMethodManagerV2Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::InputMethodManagerV2>
+auto mf::WaylandGlobalFactory::create_zwp_input_method_manager_v2(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::InputMethodManagerV2Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::InputMethodManagerV2>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -361,7 +361,7 @@ auto mf::WaylandGlobalFactory::create_zwp_input_method_manager_v2(rust::Box<wayl
         wayland_executor, text_input_hub, event_filter);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_linux_dmabuf_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::LinuxDmabufV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::LinuxDmabufV1>
+auto mf::WaylandGlobalFactory::create_zwp_linux_dmabuf_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::LinuxDmabufV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::LinuxDmabufV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -371,7 +371,7 @@ auto mf::WaylandGlobalFactory::create_zwp_linux_dmabuf_v1(rust::Box<wayland_rs::
         resolved, std::move(instance), object_id, allocator->dma_buf_provider());
 }
 
-auto mf::WaylandGlobalFactory::create_wp_linux_drm_syncobj_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::LinuxDrmSyncobjManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::LinuxDrmSyncobjManagerV1>
+auto mf::WaylandGlobalFactory::create_wp_linux_drm_syncobj_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::LinuxDrmSyncobjManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::LinuxDrmSyncobjManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -381,9 +381,9 @@ auto mf::WaylandGlobalFactory::create_wp_linux_drm_syncobj_manager_v1(rust::Box<
 }
 
 auto mf::WaylandGlobalFactory::create_mir_shell_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::MirShellV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::MirShellV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::MirShellV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::MirShellV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -392,7 +392,7 @@ auto mf::WaylandGlobalFactory::create_mir_shell_v1(
     return mf::create_mir_shell_v1(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_pointer_constraints_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::PointerConstraintsV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::PointerConstraintsV1>
+auto mf::WaylandGlobalFactory::create_zwp_pointer_constraints_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::PointerConstraintsV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::PointerConstraintsV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -402,9 +402,9 @@ auto mf::WaylandGlobalFactory::create_zwp_pointer_constraints_v1(rust::Box<wayla
 }
 
 auto mf::WaylandGlobalFactory::create_zwp_primary_selection_device_manager_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::PrimarySelectionDeviceManagerV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::PrimarySelectionDeviceManagerV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::PrimarySelectionDeviceManagerV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -415,12 +415,12 @@ auto mf::WaylandGlobalFactory::create_zwp_primary_selection_device_manager_v1(
         wayland_executor, primary_selection_clipboard);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_primary_selection_offer_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::PrimarySelectionOfferV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::PrimarySelectionOfferV1>
+auto mf::WaylandGlobalFactory::create_zwp_primary_selection_offer_v1(rust::Box<wayland::WaylandClient>, rust::Box<wayland::PrimarySelectionOfferV1Middleware>, uint32_t) -> std::shared_ptr<wayland::PrimarySelectionOfferV1>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_zwp_primary_selection_offer_v1 is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_relative_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::RelativePointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::RelativePointerManagerV1>
+auto mf::WaylandGlobalFactory::create_zwp_relative_pointer_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::RelativePointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::RelativePointerManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -429,7 +429,7 @@ auto mf::WaylandGlobalFactory::create_zwp_relative_pointer_manager_v1(rust::Box<
     return mf::create_relative_pointer_unstable_v1(resolved, std::move(instance), object_id, shell);
 }
 
-auto mf::WaylandGlobalFactory::create_org_kde_kwin_server_decoration_manager(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ServerDecorationManagerMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ServerDecorationManager>
+auto mf::WaylandGlobalFactory::create_org_kde_kwin_server_decoration_manager(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ServerDecorationManagerMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ServerDecorationManager>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -438,7 +438,7 @@ auto mf::WaylandGlobalFactory::create_org_kde_kwin_server_decoration_manager(rus
     return std::make_shared<ServerDecorationManager>(resolved, std::move(instance), object_id, decoration_strategy);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::TextInputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::TextInputManagerV1>
+auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::TextInputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::TextInputManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -449,7 +449,7 @@ auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v1(rust::Box<waylan
         wayland_executor, text_input_hub);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v2(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::TextInputManagerV2Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::TextInputManagerV2>
+auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v2(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::TextInputManagerV2Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::TextInputManagerV2>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -460,7 +460,7 @@ auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v2(rust::Box<waylan
         wayland_executor, text_input_hub);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v3(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::TextInputManagerV3Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::TextInputManagerV3>
+auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v3(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::TextInputManagerV3Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::TextInputManagerV3>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -471,7 +471,7 @@ auto mf::WaylandGlobalFactory::create_zwp_text_input_manager_v3(rust::Box<waylan
         wayland_executor, text_input_hub, input_device_registry);
 }
 
-auto mf::WaylandGlobalFactory::create_wp_viewporter(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ViewporterMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::Viewporter>
+auto mf::WaylandGlobalFactory::create_wp_viewporter(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ViewporterMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::Viewporter>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -480,7 +480,7 @@ auto mf::WaylandGlobalFactory::create_wp_viewporter(rust::Box<wayland_rs::Waylan
     return std::make_shared<WpViewporter>(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zwp_virtual_keyboard_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::VirtualKeyboardManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::VirtualKeyboardManagerV1>
+auto mf::WaylandGlobalFactory::create_zwp_virtual_keyboard_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::VirtualKeyboardManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -489,7 +489,7 @@ auto mf::WaylandGlobalFactory::create_zwp_virtual_keyboard_manager_v1(rust::Box<
     return mf::create_virtual_keyboard_manager_v1(resolved, std::move(instance), object_id, input_device_registry);
 }
 
-auto mf::WaylandGlobalFactory::create_wl_compositor(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::CompositorMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::Compositor>
+auto mf::WaylandGlobalFactory::create_wl_compositor(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::CompositorMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::Compositor>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -505,7 +505,7 @@ auto mf::WaylandGlobalFactory::create_wl_compositor(rust::Box<wayland_rs::Waylan
         server);
 }
 
-auto mf::WaylandGlobalFactory::create_wl_shm(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ShmMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::Shm>
+auto mf::WaylandGlobalFactory::create_wl_shm(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ShmMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::Shm>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -521,15 +521,15 @@ auto mf::WaylandGlobalFactory::create_wl_shm(rust::Box<wayland_rs::WaylandClient
         shm_formats);
 }
 
-auto mf::WaylandGlobalFactory::create_wl_data_offer(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::DataOfferMiddleware>, uint32_t) -> std::shared_ptr<wayland_rs::DataOffer>
+auto mf::WaylandGlobalFactory::create_wl_data_offer(rust::Box<wayland::WaylandClient>, rust::Box<wayland::DataOfferMiddleware>, uint32_t) -> std::shared_ptr<wayland::DataOffer>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_wl_data_offer is not yet implemented"};
 }
 
 auto mf::WaylandGlobalFactory::create_wl_data_device_manager(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::DataDeviceManagerMiddleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::DataDeviceManager>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::DataDeviceManagerMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::DataDeviceManager>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -541,9 +541,9 @@ auto mf::WaylandGlobalFactory::create_wl_data_device_manager(
 }
 
 auto mf::WaylandGlobalFactory::create_wl_shell(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::ShellMiddleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::Shell>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::ShellMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::Shell>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -561,9 +561,9 @@ auto mf::WaylandGlobalFactory::create_wl_shell(
 }
 
 auto mf::WaylandGlobalFactory::create_wl_seat(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::SeatMiddleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::Seat>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::SeatMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::Seat>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -572,12 +572,12 @@ auto mf::WaylandGlobalFactory::create_wl_seat(
     return wl_seat->create_instance(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_wl_output(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::OutputMiddleware>, uint32_t) -> std::shared_ptr<wayland_rs::Output>
+auto mf::WaylandGlobalFactory::create_wl_output(rust::Box<wayland::WaylandClient>, rust::Box<wayland::OutputMiddleware>, uint32_t) -> std::shared_ptr<wayland::Output>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_wl_output is not yet implemented"};
 }
 
-auto mf::WaylandGlobalFactory::create_wl_subcompositor(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::SubcompositorMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::Subcompositor>
+auto mf::WaylandGlobalFactory::create_wl_subcompositor(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::SubcompositorMiddleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::Subcompositor>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -586,7 +586,7 @@ auto mf::WaylandGlobalFactory::create_wl_subcompositor(rust::Box<wayland_rs::Way
     return std::make_shared<WlSubcompositor>(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ForeignToplevelManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ForeignToplevelManagerV1>
+auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ForeignToplevelManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ForeignToplevelManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -597,15 +597,15 @@ auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_manager_v1(rust::Box
         shell, wayland_executor, surface_stack, desktop_file_manager);
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_handle_v1(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::ForeignToplevelHandleV1Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::ForeignToplevelHandleV1>
+auto mf::WaylandGlobalFactory::create_zwlr_foreign_toplevel_handle_v1(rust::Box<wayland::WaylandClient>, rust::Box<wayland::ForeignToplevelHandleV1Middleware>, uint32_t) -> std::shared_ptr<wayland::ForeignToplevelHandleV1>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_zwlr_foreign_toplevel_handle_v1 is not yet implemented"};
 }
 
 auto mf::WaylandGlobalFactory::create_zwlr_layer_shell_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::LayerShellV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::LayerShellV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::LayerShellV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::LayerShellV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -616,7 +616,7 @@ auto mf::WaylandGlobalFactory::create_zwlr_layer_shell_v1(
         *wayland_executor, shell, *wl_seat, &output_manager, surface_registry);
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_screencopy_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::ScreencopyManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::ScreencopyManagerV1>
+auto mf::WaylandGlobalFactory::create_zwlr_screencopy_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::ScreencopyManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::ScreencopyManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -627,7 +627,7 @@ auto mf::WaylandGlobalFactory::create_zwlr_screencopy_manager_v1(rust::Box<wayla
         wayland_executor, allocator, screen_shooter_factory, surface_stack);
 }
 
-auto mf::WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::VirtualPointerManagerV1>
+auto mf::WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::VirtualPointerManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::VirtualPointerManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -637,9 +637,9 @@ auto mf::WaylandGlobalFactory::create_zwlr_virtual_pointer_manager_v1(rust::Box<
 }
 
 auto mf::WaylandGlobalFactory::create_xdg_activation_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::XdgActivationV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgActivationV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::XdgActivationV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::XdgActivationV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -649,9 +649,9 @@ auto mf::WaylandGlobalFactory::create_xdg_activation_v1(
 }
 
 auto mf::WaylandGlobalFactory::create_zxdg_decoration_manager_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::XdgDecorationManagerV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgDecorationManagerV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::XdgDecorationManagerV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::XdgDecorationManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -662,9 +662,9 @@ auto mf::WaylandGlobalFactory::create_zxdg_decoration_manager_v1(
 }
 
 auto mf::WaylandGlobalFactory::create_xdg_wm_dialog_v1(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::XdgWmDialogV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgWmDialogV1>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::XdgWmDialogV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::XdgWmDialogV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -673,7 +673,7 @@ auto mf::WaylandGlobalFactory::create_xdg_wm_dialog_v1(
     return mf::create_xdg_wm_dialog_v1(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zxdg_output_manager_v1(rust::Box<wayland_rs::WaylandClient> client, rust::Box<wayland_rs::XdgOutputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgOutputManagerV1>
+auto mf::WaylandGlobalFactory::create_zxdg_output_manager_v1(rust::Box<wayland::WaylandClient> client, rust::Box<wayland::XdgOutputManagerV1Middleware> instance, uint32_t object_id) -> std::shared_ptr<wayland::XdgOutputManagerV1>
 {
     auto const resolved = registry.from(client);
     if (!resolved)
@@ -682,15 +682,15 @@ auto mf::WaylandGlobalFactory::create_zxdg_output_manager_v1(rust::Box<wayland_r
     return std::make_shared<XdgOutputManagerV1>(resolved, std::move(instance), object_id);
 }
 
-auto mf::WaylandGlobalFactory::create_zxdg_shell_v6(rust::Box<wayland_rs::WaylandClient>, rust::Box<wayland_rs::XdgShellV6Middleware>, uint32_t) -> std::shared_ptr<wayland_rs::XdgShellV6>
+auto mf::WaylandGlobalFactory::create_zxdg_shell_v6(rust::Box<wayland::WaylandClient>, rust::Box<wayland::XdgShellV6Middleware>, uint32_t) -> std::shared_ptr<wayland::XdgShellV6>
 {
     throw std::logic_error{"WaylandGlobalFactory::create_zxdg_shell_v6 is not yet implemented"};
 }
 
 auto mf::WaylandGlobalFactory::create_xdg_wm_base(
-    rust::Box<wayland_rs::WaylandClient> client,
-    rust::Box<wayland_rs::XdgWmBaseMiddleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::XdgWmBase>
+    rust::Box<wayland::WaylandClient> client,
+    rust::Box<wayland::XdgWmBaseMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::XdgWmBase>
 {
     auto const resolved = registry.from(client);
     if (!resolved)

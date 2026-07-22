@@ -786,7 +786,7 @@ void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy
     self->server_config->set_the_decoration_strategy(strategy);
 }
 
-void mir::Server::for_each_output_binding(wayland_rs::Client* client, graphics::DisplayConfigurationOutputId output,
+void mir::Server::for_each_output_binding(wayland::Client* client, graphics::DisplayConfigurationOutputId output,
     std::function<void(wl_resource* output)> const& callback)
 {
     if (auto const wc = dynamic_pointer_cast<frontend::WaylandTools>(self->server_config->the_wayland_connector()))

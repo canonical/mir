@@ -28,10 +28,10 @@ class DecorationStrategy;
 namespace frontend
 {
 auto create_xdg_decoration_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::XdgDecorationManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::XdgDecorationManagerV1Middleware> instance,
     uint32_t object_id,
-    std::shared_ptr<DecorationStrategy> strategy) -> std::shared_ptr<wayland_rs::XdgDecorationManagerV1>;
+    std::shared_ptr<DecorationStrategy> strategy) -> std::shared_ptr<wayland::XdgDecorationManagerV1>;
 }
 } // namespace mir
 

@@ -32,7 +32,7 @@ namespace frontend
 {
 namespace
 {
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 class ToplevelsWithDialogs
 {
@@ -91,7 +91,7 @@ private:
 } // namespace mir
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 auto mf::create_xdg_wm_dialog_v1(
     std::shared_ptr<mw::Client> client,

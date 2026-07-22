@@ -28,12 +28,12 @@ namespace frontend
 {
 class KeyboardStateTracker;
 
-class InputTriggerRegistrationManagerV1 : public wayland_rs::ExtInputTriggerRegistrationManagerV1
+class InputTriggerRegistrationManagerV1 : public wayland::ExtInputTriggerRegistrationManagerV1
 {
 public:
     InputTriggerRegistrationManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ExtInputTriggerRegistrationManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ExtInputTriggerRegistrationManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager,
         std::shared_ptr<InputTriggerRegistry> input_trigger_registry,
@@ -43,19 +43,19 @@ private:
     auto register_keyboard_sym_trigger(
         uint32_t modifiers,
         uint32_t keysym,
-        rust::Box<wayland_rs::ExtInputTriggerV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerV1> override;
+        rust::Box<wayland::ExtInputTriggerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ExtInputTriggerV1> override;
 
     auto register_keyboard_code_trigger(
         uint32_t modifiers,
         uint32_t keycode,
-        rust::Box<wayland_rs::ExtInputTriggerV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerV1> override;
+        rust::Box<wayland::ExtInputTriggerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ExtInputTriggerV1> override;
 
     auto get_action_control(
         rust::String name,
-        rust::Box<wayland_rs::ExtInputTriggerActionControlV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerActionControlV1> override;
+        rust::Box<wayland::ExtInputTriggerActionControlV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ExtInputTriggerActionControlV1> override;
 
     std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const action_group_manager;
     std::shared_ptr<InputTriggerRegistry> const input_trigger_registry;

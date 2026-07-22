@@ -32,13 +32,13 @@ namespace frontend
 class SurfaceStack;
 
 auto create_ext_output_image_capture_source_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtOutputImageCaptureSourceManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtOutputImageCaptureSourceManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
     std::shared_ptr<SurfaceStack> const& surface_stack)
-    -> std::shared_ptr<wayland_rs::ExtOutputImageCaptureSourceManagerV1>;
+    -> std::shared_ptr<wayland::ExtOutputImageCaptureSourceManagerV1>;
 
 }
 }

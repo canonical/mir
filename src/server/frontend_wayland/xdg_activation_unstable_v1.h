@@ -53,7 +53,7 @@ struct XdgActivationTokenData
         shell::TokenAuthority::Token const& token,
         std::shared_ptr<scene::Session> session,
         std::optional<uint32_t> serial,
-        std::optional<wayland_rs::Weak<wayland_rs::Seat>> seat) :
+        std::optional<wayland::Weak<wayland::Seat>> seat) :
         token{token},
         session{session},
         serial{serial},
@@ -64,11 +64,11 @@ struct XdgActivationTokenData
     shell::TokenAuthority::Token const token;
     std::weak_ptr<scene::Session> session;
     std::optional<uint32_t> serial;
-    std::optional<wayland_rs::Weak<wayland_rs::Seat>> seat;
+    std::optional<wayland::Weak<wayland::Seat>> seat;
 };
 
 /// The cross-client shared state previously held by the `XdgActivationV1` global.
-/// Owned once by the connector/factory; every per-bind `wayland_rs::XdgActivationV1`
+/// Owned once by the connector/factory; every per-bind `wayland::XdgActivationV1`
 /// object refers to a single instance of this.
 class XdgActivationV1State
 {
@@ -92,7 +92,7 @@ public:
     auto get_token_data(Token const& token) -> std::shared_ptr<XdgActivationTokenData>;
     auto create_token(
         std::optional<uint32_t> serial,
-        std::optional<wayland_rs::Weak<wayland_rs::Seat>> seat,
+        std::optional<wayland::Weak<wayland::Seat>> seat,
         std::shared_ptr<scene::Session> session) -> std::shared_ptr<XdgActivationTokenData>;
     void invalidate_all();
     void invalidate_if_not_from_session(std::shared_ptr<scene::Session> const&);
@@ -116,10 +116,10 @@ private:
 };
 
 auto create_xdg_activation_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::XdgActivationV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::XdgActivationV1Middleware> instance,
     uint32_t object_id,
-    XdgActivationV1State& state) -> std::shared_ptr<wayland_rs::XdgActivationV1>;
+    XdgActivationV1State& state) -> std::shared_ptr<wayland::XdgActivationV1>;
 }
 }
 

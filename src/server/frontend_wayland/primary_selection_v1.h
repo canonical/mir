@@ -34,14 +34,14 @@ class Clipboard;
 }
 namespace frontend
 {
-class PrimarySelectionSourceV1 : public mir::wayland_rs::PrimarySelectionSourceV1
+class PrimarySelectionSourceV1 : public mir::wayland::PrimarySelectionSourceV1
 {
 public:
     class Source;
 
     PrimarySelectionSourceV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::PrimarySelectionSourceV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::PrimarySelectionSourceV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<mir::Executor> wayland_executor);
 
@@ -58,12 +58,12 @@ private:
 };
 
 auto create_zwp_primary_selection_device_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::PrimarySelectionDeviceManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::PrimarySelectionDeviceManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::Clipboard> primary_selection_clipboard)
--> std::shared_ptr<wayland_rs::PrimarySelectionDeviceManagerV1>;
+-> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1>;
 }
 }
 

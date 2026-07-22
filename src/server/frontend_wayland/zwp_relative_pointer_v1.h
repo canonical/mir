@@ -30,11 +30,11 @@ namespace shell { class Shell; }
 namespace frontend
 {
 auto create_relative_pointer_unstable_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::RelativePointerManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::RelativePointerManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<wayland_rs::RelativePointerManagerV1>;
+-> std::shared_ptr<wayland::RelativePointerManagerV1>;
 }
 }
 

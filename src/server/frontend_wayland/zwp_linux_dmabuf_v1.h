@@ -51,12 +51,12 @@ using DmaBufPlaneInfo = graphics::DMABufBuffer::PlaneDescriptor;
  * surface downcasts the committed buffer to this type and calls import() to turn
  * the dma-buf(s) into a real graphics::Buffer via the DMABufEGLProvider.
  */
-class LinuxDmaBufBuffer : public wayland_rs::Buffer, public graphics::DMABufBuffer
+class LinuxDmaBufBuffer : public wayland::Buffer, public graphics::DMABufBuffer
 {
 public:
     LinuxDmaBufBuffer(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::BufferMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::BufferMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<graphics::DMABufEGLProvider> provider,
         geometry::Size size,
@@ -86,12 +86,12 @@ private:
 };
 
 /// Accumulates plane parameters and mints wl_buffers (zwp_linux_buffer_params_v1).
-class LinuxBufferParamsV1 : public wayland_rs::LinuxBufferParamsV1
+class LinuxBufferParamsV1 : public wayland::LinuxBufferParamsV1
 {
 public:
     LinuxBufferParamsV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LinuxBufferParamsV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LinuxBufferParamsV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<graphics::DMABufEGLProvider> provider);
 
@@ -107,8 +107,8 @@ public:
 
     auto create_immed(
         int32_t width, int32_t height, uint32_t format, uint32_t flags,
-        rust::Box<wayland_rs::BufferMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::Buffer> override;
+        rust::Box<wayland::BufferMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Buffer> override;
 
 private:
     /* EGL_EXT_image_dma_buf_import allows up to 3 planes, and
@@ -124,38 +124,38 @@ private:
 };
 
 /// Sends the format/modifier feedback table (zwp_linux_dmabuf_feedback_v1).
-class LinuxDmabufFeedbackV1 : public wayland_rs::LinuxDmabufFeedbackV1
+class LinuxDmabufFeedbackV1 : public wayland::LinuxDmabufFeedbackV1
 {
 public:
     LinuxDmabufFeedbackV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LinuxDmabufFeedbackV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LinuxDmabufFeedbackV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<graphics::DMABufEGLProvider> provider);
 };
 
 /// The zwp_linux_dmabuf_v1 global instance (one per client bind).
-class LinuxDmabufV1 : public wayland_rs::LinuxDmabufV1
+class LinuxDmabufV1 : public wayland::LinuxDmabufV1
 {
 public:
     LinuxDmabufV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LinuxDmabufV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LinuxDmabufV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<graphics::DMABufEGLProvider> provider);
 
     auto create_params(
-        rust::Box<wayland_rs::LinuxBufferParamsV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::LinuxBufferParamsV1> override;
+        rust::Box<wayland::LinuxBufferParamsV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LinuxBufferParamsV1> override;
 
     auto get_default_feedback(
-        rust::Box<wayland_rs::LinuxDmabufFeedbackV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::LinuxDmabufFeedbackV1> override;
+        rust::Box<wayland::LinuxDmabufFeedbackV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LinuxDmabufFeedbackV1> override;
 
     auto get_surface_feedback(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        rust::Box<wayland_rs::LinuxDmabufFeedbackV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::LinuxDmabufFeedbackV1> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::LinuxDmabufFeedbackV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LinuxDmabufFeedbackV1> override;
 
 private:
     void send_formats();

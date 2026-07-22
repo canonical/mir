@@ -25,19 +25,19 @@ namespace mir
 {
 namespace frontend
 {
-class XdgOutputManagerV1 : public wayland_rs::XdgOutputManagerV1
+class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1
 {
 public:
     XdgOutputManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::XdgOutputManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::XdgOutputManagerV1Middleware> instance,
         uint32_t object_id);
 
 private:
     auto get_xdg_output(
-        wayland_rs::Weak<wayland_rs::Output> const& output,
-        rust::Box<wayland_rs::XdgOutputV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::XdgOutputV1> override;
+        wayland::Weak<wayland::Output> const& output,
+        rust::Box<wayland::XdgOutputV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::XdgOutputV1> override;
 };
 }
 }

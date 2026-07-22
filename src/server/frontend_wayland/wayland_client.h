@@ -46,7 +46,7 @@ namespace frontend
 /// across the whole frontend.
 using WaylandSerialSource = std::shared_ptr<std::atomic<uint32_t>>;
 
-/// A concrete `mir::wayland_rs::Client` backed by a Mir session.
+/// A concrete `mir::wayland::Client` backed by a Mir session.
 ///
 /// This is the wayland_rs replacement for `WlClient`: it wraps the raw Rust
 /// `WaylandClient`, owns the associated `scene::Session`, and tracks the
@@ -54,20 +54,20 @@ using WaylandSerialSource = std::shared_ptr<std::atomic<uint32_t>>;
 /// that prompted them.
 ///
 /// Instances are created by the `WaylandClientNotifier` on client connect,
-/// stored in the `wayland_rs::WaylandClientRegistry`, and handed (as a
-/// `shared_ptr<wayland_rs::Client>`) to every Wayland object the client makes.
-class WaylandClient : public wayland_rs::Client
+/// stored in the `wayland::WaylandClientRegistry`, and handed (as a
+/// `shared_ptr<wayland::Client>`) to every Wayland object the client makes.
+class WaylandClient : public wayland::Client
 {
 public:
     WaylandClient(
-        wayland_rs::RawWlClient raw_client,
+        wayland::RawWlClient raw_client,
         std::shared_ptr<scene::Session> session,
         std::shared_ptr<shell::Shell> shell,
         WaylandSerialSource serial_source);
 
     ~WaylandClient() override;
 
-    auto raw_client() const -> wayland_rs::RawWlClient const& override;
+    auto raw_client() const -> wayland::RawWlClient const& override;
     auto is_being_destroyed() const -> bool override;
     auto client_session() const -> std::shared_ptr<scene::Session> override;
     auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t override;
@@ -81,7 +81,7 @@ public:
     void mark_being_destroyed();
 
 private:
-    wayland_rs::RawWlClient const raw;
+    wayland::RawWlClient const raw;
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<shell::Shell> const shell;
     WaylandSerialSource const serial_source;

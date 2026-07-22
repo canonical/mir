@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 class KeyboardMiddleware;
@@ -34,13 +34,13 @@ namespace frontend
 class WlSurface;
 
 class WlKeyboard
-    : public wayland_rs::Keyboard,
+    : public wayland::Keyboard,
       private KeyboardCallbacks
 {
 public:
     WlKeyboard(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::KeyboardMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::KeyboardMiddleware> instance,
         uint32_t object_id,
         WlSeat& seat);
 
@@ -49,7 +49,7 @@ public:
 
 private:
     std::shared_ptr<KeyboardHelper> const helper;
-    wayland_rs::Weak<WlSurface> focused_surface;
+    wayland::Weak<WlSurface> focused_surface;
 
     /// KeyboardCallbacks overrides
     /// @{

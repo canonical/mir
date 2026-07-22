@@ -29,25 +29,25 @@ namespace mir::frontend
 {
 class WlSurface;
 
-class LinuxDRMSyncobjManager : public wayland_rs::LinuxDrmSyncobjManagerV1
+class LinuxDRMSyncobjManager : public wayland::LinuxDrmSyncobjManagerV1
 {
 public:
     LinuxDRMSyncobjManager(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LinuxDrmSyncobjManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LinuxDrmSyncobjManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const> providers);
 
 private:
     auto get_surface(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        rust::Box<wayland_rs::LinuxDrmSyncobjSurfaceV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::LinuxDrmSyncobjSurfaceV1> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::LinuxDrmSyncobjSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LinuxDrmSyncobjSurfaceV1> override;
 
     auto import_timeline(
         int32_t fd,
-        rust::Box<wayland_rs::LinuxDrmSyncobjTimelineV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::LinuxDrmSyncobjTimelineV1> override;
+        rust::Box<wayland::LinuxDrmSyncobjTimelineV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LinuxDrmSyncobjTimelineV1> override;
 
     std::shared_ptr<std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const> const providers;
 };
@@ -68,12 +68,12 @@ private:
     uint64_t point;
 };
 
-class SyncTimeline : public wayland_rs::LinuxDrmSyncobjSurfaceV1
+class SyncTimeline : public wayland::LinuxDrmSyncobjSurfaceV1
 {
 public:
     SyncTimeline(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LinuxDrmSyncobjSurfaceV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LinuxDrmSyncobjSurfaceV1Middleware> instance,
         uint32_t object_id,
         WlSurface* surface);
 
@@ -98,8 +98,8 @@ public:
     bool timeline_set() const;
 
 private:
-    void set_acquire_point(wayland_rs::Weak<wayland_rs::LinuxDrmSyncobjTimelineV1> const& timeline, uint32_t point_hi, uint32_t point_lo) override;
-    void set_release_point(wayland_rs::Weak<wayland_rs::LinuxDrmSyncobjTimelineV1> const& timeline, uint32_t point_hi, uint32_t point_lo) override;
+    void set_acquire_point(wayland::Weak<wayland::LinuxDrmSyncobjTimelineV1> const& timeline, uint32_t point_hi, uint32_t point_lo) override;
+    void set_release_point(wayland::Weak<wayland::LinuxDrmSyncobjTimelineV1> const& timeline, uint32_t point_hi, uint32_t point_lo) override;
 
     std::optional<SyncPoint> acquire_point;
     std::optional<SyncPoint> release_point;
@@ -107,12 +107,12 @@ private:
 
 namespace syncobj
 {
-class Timeline : public wayland_rs::LinuxDrmSyncobjTimelineV1
+class Timeline : public wayland::LinuxDrmSyncobjTimelineV1
 {
 public:
     Timeline(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LinuxDrmSyncobjTimelineV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LinuxDrmSyncobjTimelineV1Middleware> instance,
         uint32_t object_id,
         mir::Fd fd,
         std::vector<std::shared_ptr<graphics::DRMRenderingProvider>> const& providers);

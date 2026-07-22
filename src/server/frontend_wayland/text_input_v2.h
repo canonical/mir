@@ -31,12 +31,12 @@ class TextInputHub;
 namespace frontend
 {
 auto create_zwp_text_input_manager_v2(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::TextInputManagerV2Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::TextInputManagerV2Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::TextInputHub> text_input_hub)
--> std::shared_ptr<wayland_rs::TextInputManagerV2>;
+-> std::shared_ptr<wayland::TextInputManagerV2>;
 }
 }
 

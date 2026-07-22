@@ -34,7 +34,7 @@ namespace shell
 class Shell;
 class Surface;
 }
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 }
@@ -44,12 +44,12 @@ class WlSeat;
 class OutputManager;
 class SurfaceRegistry;
 
-class LayerShellV1 : public wayland_rs::LayerShellV1
+class LayerShellV1 : public wayland::LayerShellV1
 {
 public:
     LayerShellV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::LayerShellV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::LayerShellV1Middleware> instance,
         uint32_t object_id,
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
@@ -58,7 +58,7 @@ public:
         std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     static auto get_window(
-        wayland_rs::Weak<wayland_rs::LayerSurfaceV1> const& surface) -> std::shared_ptr<scene::Surface>;
+        wayland::Weak<wayland::LayerSurfaceV1> const& surface) -> std::shared_ptr<scene::Surface>;
 
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
@@ -67,26 +67,26 @@ public:
     std::shared_ptr<SurfaceRegistry> const surface_registry;
 
 private:
-    using wayland_rs::LayerShellV1::get_layer_surface;
+    using wayland::LayerShellV1::get_layer_surface;
     auto get_layer_surface(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output,
+        wayland::Weak<wayland::Surface> const& surface,
+        std::optional<wayland::Weak<wayland::Output>> const& output,
         uint32_t layer,
         rust::String namespace_,
-        rust::Box<wayland_rs::LayerSurfaceV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::LayerSurfaceV1> override;
+        rust::Box<wayland::LayerSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LayerSurfaceV1> override;
 };
 
 auto create_layer_shell_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::LayerShellV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::LayerShellV1Middleware> instance,
     uint32_t object_id,
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> const& shell,
     WlSeat& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
--> std::shared_ptr<wayland_rs::LayerShellV1>;
+-> std::shared_ptr<wayland::LayerShellV1>;
 
 }
 }

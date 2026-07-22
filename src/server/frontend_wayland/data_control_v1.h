@@ -30,12 +30,12 @@ class Clipboard;
 namespace frontend
 {
 auto create_ext_data_control_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtDataControlManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtDataControlManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mir::scene::Clipboard> const& clipboard,
     std::shared_ptr<mir::scene::Clipboard> const& primary_clipboard)
--> std::shared_ptr<wayland_rs::ExtDataControlManagerV1>;
+-> std::shared_ptr<wayland::ExtDataControlManagerV1>;
 }
 }
 

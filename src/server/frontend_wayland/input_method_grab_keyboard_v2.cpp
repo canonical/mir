@@ -25,7 +25,7 @@
 #include <mir/input/event_filter.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 namespace mi = mir::input;
 namespace mev = mir::events;
 

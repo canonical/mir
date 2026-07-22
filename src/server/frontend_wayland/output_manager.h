@@ -39,7 +39,7 @@ template<typename T>
 class ObserverRegistrar;
 class Executor;
 
-namespace wayland_rs
+namespace wayland
 {
 class WaylandServer;
 class WaylandClientRegistry;
@@ -54,7 +54,7 @@ namespace frontend
 class DisplayChanger;
 class OutputGlobal;
 
-class OutputConfigListener : public wayland_rs::LifetimeTracker
+class OutputConfigListener : public wayland::LifetimeTracker
 {
 public:
     // Returns true if the wl_output needs to send a done event
@@ -66,50 +66,50 @@ public:
     OutputConfigListener& operator=(OutputConfigListener const&) = delete;
 };
 
-class OutputInstance : public wayland_rs::Output, public OutputConfigListener
+class OutputInstance : public wayland::Output, public OutputConfigListener
 {
 public:
     OutputInstance(
-        std::shared_ptr<wayland_rs::Client> const& client,
-        rust::Box<wayland_rs::OutputMiddleware> instance,
+        std::shared_ptr<wayland::Client> const& client,
+        rust::Box<wayland::OutputMiddleware> instance,
         uint32_t object_id,
         OutputGlobal* global);
     ~OutputInstance();
 
-    static auto from(wayland_rs::Output* output) -> OutputInstance*;
+    static auto from(wayland::Output* output) -> OutputInstance*;
 
     auto output_config_changed(graphics::DisplayConfigurationOutput const& config) -> bool override;
     void send_done();
 
     // Disambiguate the two inherited LifetimeTracker::destroyed_flag() (from
-    // wayland_rs::Output and from OutputConfigListener).
-    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland_rs::Output::destroyed_flag(); }
+    // wayland::Output and from OutputConfigListener).
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland::Output::destroyed_flag(); }
 
-    wayland_rs::Weak<OutputGlobal> const global;
+    wayland::Weak<OutputGlobal> const global;
 };
 
-/// Non-owning shared_ptr aliasing a live wayland_rs::Output (e.g. an
+/// Non-owning shared_ptr aliasing a live wayland::Output (e.g. an
 /// OutputInstance), for synchronous wayland_rs sender calls that take
 /// std::shared_ptr<Output>. The returned pointer MUST NOT outlive the object.
-inline auto as_output_ptr(wayland_rs::Output* output) -> std::shared_ptr<wayland_rs::Output>
+inline auto as_output_ptr(wayland::Output* output) -> std::shared_ptr<wayland::Output>
 {
-    return output ? std::shared_ptr<wayland_rs::Output>{std::shared_ptr<void>{}, output} : nullptr;
+    return output ? std::shared_ptr<wayland::Output>{std::shared_ptr<void>{}, output} : nullptr;
 }
 
-class OutputGlobal : public wayland_rs::LifetimeTracker
+class OutputGlobal : public wayland::LifetimeTracker
 {
 public:
     OutputGlobal(
-        wayland_rs::WaylandServer& server,
-        wayland_rs::WaylandClientRegistry& registry,
+        wayland::WaylandServer& server,
+        wayland::WaylandClientRegistry& registry,
         graphics::DisplayConfigurationOutput const& initial_configuration);
     ~OutputGlobal();
 
-    static auto from(wayland_rs::Output* output) -> OutputGlobal*;
-    static auto from_or_throw(wayland_rs::Output* output) -> OutputGlobal&;
+    static auto from(wayland::Output* output) -> OutputGlobal*;
+    static auto from_or_throw(wayland::Output* output) -> OutputGlobal&;
 
     void handle_configuration_changed(graphics::DisplayConfigurationOutput const& config);
-    void for_each_output_bound_by(wayland_rs::Client* client, std::function<void(OutputInstance*)> const& functor);
+    void for_each_output_bound_by(wayland::Client* client, std::function<void(OutputInstance*)> const& functor);
     auto current_config() -> graphics::DisplayConfigurationOutput const& { return output_config; }
 
     void add_listener(OutputConfigListener* listener);
@@ -119,9 +119,9 @@ public:
     // `wl_output` global. Constructs the per-bind `OutputInstance` (whose
     // ownership passes to the Rust server via the returned shared_ptr).
     auto bind(
-        std::shared_ptr<wayland_rs::Client> const& client,
-        rust::Box<wayland_rs::OutputMiddleware> instance,
-        uint32_t object_id) -> std::shared_ptr<wayland_rs::Output>;
+        std::shared_ptr<wayland::Client> const& client,
+        rust::Box<wayland::OutputMiddleware> instance,
+        uint32_t object_id) -> std::shared_ptr<wayland::Output>;
 
 private:
     friend OutputInstance;
@@ -129,11 +129,11 @@ private:
     void instance_destroyed(OutputInstance* instance);
 
     graphics::DisplayConfigurationOutput output_config;
-    std::vector<wayland_rs::Weak<OutputConfigListener>> listeners;
-    std::unordered_map<wayland_rs::Client*, std::vector<OutputInstance*>> instances;
+    std::vector<wayland::Weak<OutputConfigListener>> listeners;
+    std::unordered_map<wayland::Client*, std::vector<OutputInstance*>> instances;
     // Owns the wl_output global's lifetime: destroyed with this OutputGlobal,
     // which withdraws the global from the display.
-    std::optional<rust::Box<wayland_rs::OutputGlobal>> global_handle;
+    std::optional<rust::Box<wayland::OutputGlobal>> global_handle;
 };
 
 class OutputManagerListener
@@ -151,13 +151,13 @@ class OutputManager
 {
 public:
     OutputManager(
-        wayland_rs::WaylandServer& server,
-        wayland_rs::WaylandClientRegistry& registry,
+        wayland::WaylandServer& server,
+        wayland::WaylandClientRegistry& registry,
         std::shared_ptr<Executor> const& executor,
         std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const& registrar);
     ~OutputManager();
 
-    static auto output_id_for(wayland_rs::Output* output)
+    static auto output_id_for(wayland::Output* output)
         -> std::optional<graphics::DisplayConfigurationOutputId>;
 
     auto output_for(graphics::DisplayConfigurationOutputId id) -> std::optional<OutputGlobal*>;
@@ -173,8 +173,8 @@ private:
 
     struct DisplayConfigObserver;
 
-    wayland_rs::WaylandServer& server;
-    wayland_rs::WaylandClientRegistry& registry;
+    wayland::WaylandServer& server;
+    wayland::WaylandClientRegistry& registry;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> const registrar;
     std::shared_ptr<DisplayConfigObserver> const display_config_observer;
     std::unordered_map<graphics::DisplayConfigurationOutputId, std::unique_ptr<OutputGlobal>> outputs;

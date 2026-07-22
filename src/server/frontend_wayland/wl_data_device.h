@@ -42,12 +42,12 @@ namespace frontend
 class PointerInputDispatcher;
 class DragIconController;
 
-class WlDataDevice : public wayland_rs::DataDevice, public WlSeat::FocusListener
+class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
     WlDataDevice(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::DataDeviceMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::DataDeviceMiddleware> instance,
         uint32_t object_id,
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
@@ -57,13 +57,13 @@ public:
     ~WlDataDevice() override;
 
     auto start_drag(
-        std::optional<wayland_rs::Weak<wayland_rs::DataSource>> const& source,
-        wayland_rs::Weak<wayland_rs::Surface> const& origin,
-        std::optional<wayland_rs::Weak<wayland_rs::Surface>> const& icon,
+        std::optional<wayland::Weak<wayland::DataSource>> const& source,
+        wayland::Weak<wayland::Surface> const& origin,
+        std::optional<wayland::Weak<wayland::Surface>> const& icon,
         uint32_t serial) -> void override;
 
     auto set_selection(
-        std::optional<wayland_rs::Weak<wayland_rs::DataSource>> const& source,
+        std::optional<wayland::Weak<wayland::DataSource>> const& source,
         uint32_t serial) -> void override;
 
     auto release() -> void override
@@ -91,7 +91,7 @@ private:
         auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
     private:
-        wayland_rs::Weak<WlSurface> const surface;
+        wayland::Weak<WlSurface> const surface;
         std::shared_ptr<scene::Surface> shared_scene_surface;
         std::shared_ptr<DragIconController> const drag_icon_controller;
     };
@@ -116,8 +116,8 @@ private:
     std::function<void()> const end_of_gesture_callback;
     bool has_focus = false;
     std::weak_ptr<scene::DataExchangeSource> weak_source;
-    wayland_rs::Weak<Offer> current_offer;
-    wayland_rs::Weak<WlSurface> weak_surface;
+    wayland::Weak<Offer> current_offer;
+    wayland::Weak<WlSurface> weak_surface;
     bool sent_enter = false;
     std::optional<DragIconSurface> drag_surface;
 };

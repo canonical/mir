@@ -28,7 +28,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::WlSubcompositor::WlSubcompositor(
     std::shared_ptr<mw::Client> client,

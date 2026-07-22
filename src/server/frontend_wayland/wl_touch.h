@@ -35,7 +35,7 @@ namespace time
 {
 class Clock;
 }
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 class TouchMiddleware;
@@ -45,12 +45,12 @@ namespace frontend
 {
 class WlSurface;
 
-class WlTouch : public wayland_rs::Touch
+class WlTouch : public wayland::Touch
 {
 public:
     WlTouch(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::TouchMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::TouchMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<time::Clock> const& clock);
 
@@ -63,7 +63,7 @@ public:
 private:
     struct TouchedSurface
     {
-        wayland_rs::Weak<WlSurface> surface;
+        wayland::Weak<WlSurface> surface;
         uint64_t destroy_listener_id;
     };
 

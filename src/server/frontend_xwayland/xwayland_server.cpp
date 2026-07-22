@@ -34,7 +34,7 @@
 
 namespace mf = mir::frontend;
 namespace md = mir::dispatch;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 using namespace std::chrono_literals;
 
 namespace

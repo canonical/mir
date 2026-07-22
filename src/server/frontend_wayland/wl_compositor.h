@@ -30,37 +30,37 @@ namespace graphics
 class GraphicBufferAllocator;
 }
 
-namespace wayland_rs
+namespace wayland
 {
 class WaylandServer;
 }
 
 namespace frontend
 {
-class WlCompositor : public wayland_rs::Compositor
+class WlCompositor : public wayland::Compositor
 {
 public:
     WlCompositor(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::CompositorMiddleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::CompositorMiddleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<Executor> const& frame_callback_executor,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-        wayland_rs::WaylandServer& server);
+        wayland::WaylandServer& server);
 
 private:
     auto create_surface(
-        rust::Box<wayland_rs::SurfaceMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::Surface> override;
+        rust::Box<wayland::SurfaceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Surface> override;
     auto create_region(
-        rust::Box<wayland_rs::RegionMiddleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::Region> override;
+        rust::Box<wayland::RegionMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Region> override;
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<Executor> const frame_callback_executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
-    wayland_rs::WaylandServer& server;
+    wayland::WaylandServer& server;
 };
 }
 }

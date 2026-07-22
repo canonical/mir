@@ -27,7 +27,7 @@
 #include <cstring> // memcpy
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 mf::WlKeyboard::WlKeyboard(
     std::shared_ptr<mwrs::Client> client,

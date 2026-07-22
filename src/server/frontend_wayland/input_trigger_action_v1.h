@@ -26,20 +26,20 @@ namespace mir
 {
 namespace frontend
 {
-class InputTriggerActionManagerV1 : public wayland_rs::ExtInputTriggerActionManagerV1
+class InputTriggerActionManagerV1 : public wayland::ExtInputTriggerActionManagerV1
 {
 public:
     InputTriggerActionManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ExtInputTriggerActionManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ExtInputTriggerActionManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<InputTriggerRegistry::ActionGroupManager> action_group_manager);
 
 private:
     auto get_input_trigger_action(
         rust::String token,
-        rust::Box<wayland_rs::ExtInputTriggerActionV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::ExtInputTriggerActionV1> override;
+        rust::Box<wayland::ExtInputTriggerActionV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ExtInputTriggerActionV1> override;
 
     std::shared_ptr<InputTriggerRegistry::ActionGroupManager> const action_group_manager;
 };

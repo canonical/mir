@@ -35,13 +35,13 @@ class WlSeat;
 
 /// A keyboard that sends all key events to its client without ever entering a surface
 class InputMethodGrabKeyboardV2
-    : public wayland_rs::InputMethodKeyboardGrabV2,
+    : public wayland::InputMethodKeyboardGrabV2,
       public KeyboardCallbacks
 {
 public:
     InputMethodGrabKeyboardV2(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::InputMethodKeyboardGrabV2Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::InputMethodKeyboardGrabV2Middleware> instance,
         uint32_t object_id,
         WlSeat& seat,
         std::shared_ptr<Executor> wayland_executor,

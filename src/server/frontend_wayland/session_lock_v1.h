@@ -58,8 +58,8 @@ private:
 };
 
 auto create_session_lock_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtSessionLockManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtSessionLockManagerV1Middleware> instance,
     uint32_t object_id,
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> const& shell,
@@ -68,7 +68,7 @@ auto create_session_lock_manager_v1(
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry,
     std::shared_ptr<SessionLockState> const& state)
-    -> std::shared_ptr<wayland_rs::ExtSessionLockManagerV1>;
+    -> std::shared_ptr<wayland::ExtSessionLockManagerV1>;
 
 }
 }

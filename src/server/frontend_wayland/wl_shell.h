@@ -39,17 +39,17 @@ class OutputManager;
 class SurfaceRegistry;
 
 auto create_wl_shell(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ShellMiddleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ShellMiddleware> instance,
     uint32_t object_id,
     Executor& wayland_executor,
     std::shared_ptr<shell::Shell> const& shell,
     WlSeat* seat,
     OutputManager* const output_manager,
-    std::shared_ptr<SurfaceRegistry> const& surface_registry) -> std::shared_ptr<wayland_rs::Shell>;
+    std::shared_ptr<SurfaceRegistry> const& surface_registry) -> std::shared_ptr<wayland::Shell>;
 
 auto get_wl_shell_window(
-    wayland_rs::Weak<wayland_rs::ShellSurface> const& surface) -> std::shared_ptr<scene::Surface>;
+    wayland::Weak<wayland::ShellSurface> const& surface) -> std::shared_ptr<scene::Surface>;
 }
 }
 

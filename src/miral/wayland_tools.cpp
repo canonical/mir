@@ -31,7 +31,7 @@ public:
     }
 
     void for_each_output_binding(
-        mir::wayland_rs::Client* client,
+        mir::wayland::Client* client,
         mir::graphics::DisplayConfigurationOutputId output,
         std::function<void(struct wl_resource* output)> const& callback)
     {
@@ -63,7 +63,7 @@ void miral::WaylandTools::operator()(mir::Server& server) const
 }
 
 void miral::WaylandTools::for_each_binding(
-    mir::wayland_rs::Client* client,
+    mir::wayland::Client* client,
     Output const& output,
     std::function<void(wl_resource* output)> const& callback) const
 {

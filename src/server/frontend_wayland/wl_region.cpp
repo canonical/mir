@@ -20,7 +20,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 mf::WlRegion::WlRegion(
     std::shared_ptr<mwrs::Client> client,

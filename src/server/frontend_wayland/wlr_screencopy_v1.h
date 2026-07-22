@@ -48,22 +48,22 @@ namespace frontend
 class SurfaceStack;
 
 auto create_wlr_screencopy_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ScreencopyManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ScreencopyManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
     std::shared_ptr<compositor::ScreenShooterFactory> const& screen_shooter_factory,
     std::shared_ptr<SurfaceStack> const& surface_stack)
--> std::shared_ptr<wayland_rs::ScreencopyManagerV1>;
+-> std::shared_ptr<wayland::ScreencopyManagerV1>;
 
 /// Tracks damage and captures frames when needed. Each instance used by a single manager (and thus a single client).
-class WlrScreencopyV1DamageTracker : public wayland_rs::LifetimeTracker
+class WlrScreencopyV1DamageTracker : public wayland::LifetimeTracker
 {
 public:
     struct FrameParams
     {
-        wayland_rs::Output* output;
+        wayland::Output* output;
         geometry::Rectangle output_space_area;
         geometry::Size buffer_size;
         glm::mat2 transform;

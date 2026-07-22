@@ -62,17 +62,17 @@ private:
 
 /// Used by a client to acquire information about a specific toplevel
 class ExtForeignToplevelHandleV1
-    : public wayland_rs::ExtForeignToplevelHandleV1
+    : public wayland::ExtForeignToplevelHandleV1
 {
 public:
     ExtForeignToplevelHandleV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ExtForeignToplevelHandleV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ExtForeignToplevelHandleV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<scene::Surface> const& surface);
 
     static auto from_or_throw(
-        wayland_rs::Weak<wayland_rs::ExtForeignToplevelHandleV1> const& handle) -> ExtForeignToplevelHandleV1&;
+        wayland::Weak<wayland::ExtForeignToplevelHandleV1> const& handle) -> ExtForeignToplevelHandleV1&;
     auto surface() const -> std::weak_ptr<scene::Surface>;
 
     /// Sends the .closed event and makes this surface inert
@@ -84,14 +84,14 @@ private:
 
 
 auto create_ext_foreign_toplevel_list_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtForeignToplevelListV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
     std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
--> std::shared_ptr<wayland_rs::ExtForeignToplevelListV1>;
+-> std::shared_ptr<wayland::ExtForeignToplevelListV1>;
 
 }
 }

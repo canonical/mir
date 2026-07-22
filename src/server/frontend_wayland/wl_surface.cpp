@@ -53,7 +53,7 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 namespace msh = mir::shell;
 
 // One-shot fd-ready listener that resumes a fence-gated commit once the client's

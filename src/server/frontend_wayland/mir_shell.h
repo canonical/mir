@@ -26,9 +26,9 @@ namespace mir
 namespace frontend
 {
 auto create_mir_shell_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::MirShellV1Middleware> instance,
-    uint32_t object_id) -> std::shared_ptr<wayland_rs::MirShellV1>;
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::MirShellV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::MirShellV1>;
 }
 }
 

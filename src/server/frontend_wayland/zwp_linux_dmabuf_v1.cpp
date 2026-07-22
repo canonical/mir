@@ -37,7 +37,7 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 namespace geom = mir::geometry;
 
 mf::LinuxDmaBufBuffer::LinuxDmaBufBuffer(
@@ -50,7 +50,7 @@ mf::LinuxDmaBufBuffer::LinuxDmaBufBuffer(
     uint32_t flags,
     uint64_t modifier,
     std::vector<DmaBufPlaneInfo> planes)
-    : wayland_rs::Buffer(std::move(client), std::move(instance), object_id),
+    : wayland::Buffer(std::move(client), std::move(instance), object_id),
       provider{std::move(provider)},
       size_{size},
       format_{format},
@@ -107,7 +107,7 @@ mf::LinuxBufferParamsV1::LinuxBufferParamsV1(
     rust::Box<mwrs::LinuxBufferParamsV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
-    : wayland_rs::LinuxBufferParamsV1(std::move(client), std::move(instance), object_id),
+    : wayland::LinuxBufferParamsV1(std::move(client), std::move(instance), object_id),
       planes{},
       consumed{false},
       provider{std::move(provider)}
@@ -276,7 +276,7 @@ mf::LinuxDmabufFeedbackV1::LinuxDmabufFeedbackV1(
     rust::Box<mwrs::LinuxDmabufFeedbackV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
-    : wayland_rs::LinuxDmabufFeedbackV1(std::move(client), std::move(instance), object_id)
+    : wayland::LinuxDmabufFeedbackV1(std::move(client), std::move(instance), object_id)
 {
     if (!provider)
     {
@@ -341,7 +341,7 @@ mf::LinuxDmabufV1::LinuxDmabufV1(
     rust::Box<mwrs::LinuxDmabufV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
-    : wayland_rs::LinuxDmabufV1(std::move(client), std::move(instance), object_id),
+    : wayland::LinuxDmabufV1(std::move(client), std::move(instance), object_id),
       provider{std::move(provider)}
 {
     if (get_box()->version() < 4)

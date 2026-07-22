@@ -41,7 +41,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 using namespace mir::geometry;
 
 namespace

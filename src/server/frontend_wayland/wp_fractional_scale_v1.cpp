@@ -27,7 +27,7 @@
 #include <memory>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::FractionalScaleManagerV1::FractionalScaleManagerV1(
     std::shared_ptr<mw::Client> client,

@@ -27,8 +27,8 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland_rs;
-namespace mwrs = mir::wayland_rs;
+namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 
 namespace
 {
@@ -129,7 +129,7 @@ mf::XdgOutputManagerV1::XdgOutputManagerV1(
     std::shared_ptr<mwrs::Client> client,
     rust::Box<mwrs::XdgOutputManagerV1Middleware> instance,
     uint32_t object_id)
-    : wayland_rs::XdgOutputManagerV1{std::move(client), std::move(instance), object_id}
+    : wayland::XdgOutputManagerV1{std::move(client), std::move(instance), object_id}
 {
 }
 

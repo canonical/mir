@@ -30,27 +30,27 @@ namespace mir
 namespace frontend
 {
 
-class FractionalScaleManagerV1 : public wayland_rs::FractionalScaleManagerV1
+class FractionalScaleManagerV1 : public wayland::FractionalScaleManagerV1
 {
 public:
     FractionalScaleManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::FractionalScaleManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::FractionalScaleManagerV1Middleware> instance,
         uint32_t object_id);
 
 private:
     auto get_fractional_scale(
-        wayland_rs::Weak<wayland_rs::Surface> const& surface,
-        rust::Box<wayland_rs::FractionalScaleV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::FractionalScaleV1> override;
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::FractionalScaleV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::FractionalScaleV1> override;
 };
 
-class FractionalScaleV1 : public wayland_rs::FractionalScaleV1
+class FractionalScaleV1 : public wayland::FractionalScaleV1
 {
 public:
   FractionalScaleV1(
-      std::shared_ptr<wayland_rs::Client> client,
-      rust::Box<wayland_rs::FractionalScaleV1Middleware> instance,
+      std::shared_ptr<wayland::Client> client,
+      rust::Box<wayland::FractionalScaleV1Middleware> instance,
       uint32_t object_id);
 
 

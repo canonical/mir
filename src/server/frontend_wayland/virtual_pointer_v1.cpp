@@ -35,8 +35,8 @@
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
-namespace mwrs = mir::wayland_rs;
+namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
@@ -53,40 +53,40 @@ struct VirtualPointerV1Ctx
 };
 
 class VirtualPointerManagerV1
-    : public wayland_rs::VirtualPointerManagerV1
+    : public wayland::VirtualPointerManagerV1
 {
 public:
     VirtualPointerManagerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
 
 private:
-    using wayland_rs::VirtualPointerManagerV1::create_virtual_pointer;
+    using wayland::VirtualPointerManagerV1::create_virtual_pointer;
     auto create_virtual_pointer(
-        std::optional<wayland_rs::Weak<wayland_rs::Seat>> const& seat,
-        rust::Box<wayland_rs::VirtualPointerV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::VirtualPointerV1> override;
-    using wayland_rs::VirtualPointerManagerV1::create_virtual_pointer_with_output;
+        std::optional<wayland::Weak<wayland::Seat>> const& seat,
+        rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1> override;
+    using wayland::VirtualPointerManagerV1::create_virtual_pointer_with_output;
     auto create_virtual_pointer_with_output(
-        std::optional<wayland_rs::Weak<wayland_rs::Seat>> const& seat,
-        std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output,
-        rust::Box<wayland_rs::VirtualPointerV1Middleware> child_instance,
-        uint32_t child_object_id) -> std::shared_ptr<wayland_rs::VirtualPointerV1> override;
+        std::optional<wayland::Weak<wayland::Seat>> const& seat,
+        std::optional<wayland::Weak<wayland::Output>> const& output,
+        rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1> override;
 
     std::shared_ptr<VirtualPointerV1Ctx> const ctx;
 };
 
 class VirtualPointerV1
-    : public wayland_rs::VirtualPointerV1
+    : public wayland::VirtualPointerV1
 {
 public:
     VirtualPointerV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::VirtualPointerV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualPointerV1Middleware> instance,
         uint32_t object_id,
-        std::optional<wayland_rs::Weak<wayland_rs::Output>> output,
+        std::optional<wayland::Weak<wayland::Output>> output,
         std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
     ~VirtualPointerV1();
 
@@ -137,52 +137,52 @@ private:
 }
 
 auto mf::create_virtual_pointer_manager_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
     uint32_t object_id,
     OutputManager* output_manager,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland_rs::VirtualPointerManagerV1>
+-> std::shared_ptr<wayland::VirtualPointerManagerV1>
 {
     auto ctx = std::shared_ptr<VirtualPointerV1Ctx>{new VirtualPointerV1Ctx{output_manager, device_registry}};
     return std::make_shared<VirtualPointerManagerV1>(std::move(client), std::move(instance), object_id, std::move(ctx));
 }
 
 mf::VirtualPointerManagerV1::VirtualPointerManagerV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualPointerManagerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
-    : wayland_rs::VirtualPointerManagerV1{std::move(client), std::move(instance), object_id},
+    : wayland::VirtualPointerManagerV1{std::move(client), std::move(instance), object_id},
       ctx{ctx}
 {
 }
 
 auto mf::VirtualPointerManagerV1::create_virtual_pointer(
-    std::optional<wayland_rs::Weak<wayland_rs::Seat>> const&,
-    rust::Box<wayland_rs::VirtualPointerV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<wayland_rs::VirtualPointerV1>
+    std::optional<wayland::Weak<wayland::Seat>> const&,
+    rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1>
 {
     return std::make_shared<VirtualPointerV1>(client, std::move(child_instance), child_object_id, std::nullopt, ctx);
 }
 
 auto mf::VirtualPointerManagerV1::create_virtual_pointer_with_output(
-    std::optional<wayland_rs::Weak<wayland_rs::Seat>> const&,
-    std::optional<wayland_rs::Weak<wayland_rs::Output>> const& output,
-    rust::Box<wayland_rs::VirtualPointerV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<wayland_rs::VirtualPointerV1>
+    std::optional<wayland::Weak<wayland::Seat>> const&,
+    std::optional<wayland::Weak<wayland::Output>> const& output,
+    rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1>
 {
     return std::make_shared<VirtualPointerV1>(client, std::move(child_instance), child_object_id, output, ctx);
 }
 
 
 mf::VirtualPointerV1::VirtualPointerV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::VirtualPointerV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerV1Middleware> instance,
     uint32_t object_id,
-    std::optional<wayland_rs::Weak<wayland_rs::Output>> output,
+    std::optional<wayland::Weak<wayland::Output>> output,
     std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
-    : wayland_rs::VirtualPointerV1{std::move(client), std::move(instance), object_id},
+    : wayland::VirtualPointerV1{std::move(client), std::move(instance), object_id},
       ctx{ctx},
       pointer_device{std::make_shared<mi::VirtualInputDevice>("virtual-pointer", mi::DeviceCapability::pointer)},
       output{ctx->output_manager->output_for(

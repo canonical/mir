@@ -35,7 +35,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mwrs = mir::wayland_rs;
+namespace mwrs = mir::wayland;
 
 namespace mir
 {
@@ -73,7 +73,7 @@ private:
     void clear_surface_observers();
 
     std::shared_ptr<Executor> const wayland_executor;
-    wayland_rs::Weak<ExtForeignToplevelListV1> const manager;
+    wayland::Weak<ExtForeignToplevelListV1> const manager;
     std::map<
         std::weak_ptr<scene::Surface>,
         std::shared_ptr<ForeignSurfaceObserver>,
@@ -89,7 +89,7 @@ class ForeignSurfaceObserver
 {
 public:
     ForeignSurfaceObserver(
-        wayland_rs::Weak<ExtForeignToplevelListV1> manager,
+        wayland::Weak<ExtForeignToplevelListV1> manager,
         std::shared_ptr<scene::Surface> const& surface,
         std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
         std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map);
@@ -108,14 +108,14 @@ private:
     void depth_layer_set_to(scene::Surface const*, MirDepthLayer) override;
     ///@}
 
-    wayland_rs::Weak<ExtForeignToplevelListV1> const manager;
+    wayland::Weak<ExtForeignToplevelListV1> const manager;
 
     std::weak_ptr<scene::Surface> weak_surface;
     /// True if the surface counts as a toplevel window
     bool has_handle = false;
     /// The toplevel handle. This will be empty if the surface is not
     /// a toplevel window or if the client has destroyed the handle.
-    wayland_rs::Weak<ExtForeignToplevelHandleV1> handle;
+    wayland::Weak<ExtForeignToplevelHandleV1> handle;
 
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
     std::shared_ptr<ForeignToplevelIdentifierMap> const id_map;
@@ -126,12 +126,12 @@ private:
 /// The Wayland objects it creates for each toplevel can be used to acquire information
 /// Useful for task bars and app switchers
 class ExtForeignToplevelListV1
-    : public wayland_rs::ExtForeignToplevelListV1
+    : public wayland::ExtForeignToplevelListV1
 {
 public:
     ExtForeignToplevelListV1(
-        std::shared_ptr<wayland_rs::Client> client,
-        rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware> instance,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ExtForeignToplevelListV1Middleware> instance,
         uint32_t object_id,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<SurfaceStack> const& surface_stack,
@@ -153,14 +153,14 @@ private:
 }
 
 auto mf::create_ext_foreign_toplevel_list_v1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtForeignToplevelListV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
     std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
--> std::shared_ptr<wayland_rs::ExtForeignToplevelListV1>
+-> std::shared_ptr<wayland::ExtForeignToplevelListV1>
 {
     return std::make_shared<ExtForeignToplevelListV1>(
         std::move(client), std::move(instance), object_id,
@@ -313,7 +313,7 @@ void mf::ForeignSceneObserver::clear_surface_observers()
 // ForeignSurfaceObserver
 
 mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
-    wayland_rs::Weak<ExtForeignToplevelListV1> manager,
+    wayland::Weak<ExtForeignToplevelListV1> manager,
     std::shared_ptr<scene::Surface> const& surface,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
     std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
@@ -360,8 +360,8 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             mwrs::create_ext_foreign_toplevel_handle_v1(
                 *list.client->raw_client(),
                 list.get_box()->version(),
-                [&](rust::Box<wayland_rs::ExtForeignToplevelHandleV1Middleware> box, uint32_t object_id)
-                    -> std::shared_ptr<wayland_rs::ExtForeignToplevelHandleV1>
+                [&](rust::Box<wayland::ExtForeignToplevelHandleV1Middleware> box, uint32_t object_id)
+                    -> std::shared_ptr<wayland::ExtForeignToplevelHandleV1>
                 {
                     auto created = std::make_shared<ExtForeignToplevelHandleV1>(
                         list.client, std::move(box), object_id, surface);
@@ -447,14 +447,14 @@ void mf::ForeignSurfaceObserver::depth_layer_set_to(scene::Surface const*, MirDe
 // ExtForeignToplevelListV1
 
 mf::ExtForeignToplevelListV1::ExtForeignToplevelListV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtForeignToplevelListV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtForeignToplevelListV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
     std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
-    : wayland_rs::ExtForeignToplevelListV1{std::move(client), std::move(instance), object_id},
+    : wayland::ExtForeignToplevelListV1{std::move(client), std::move(instance), object_id},
       surface_stack{surface_stack},
       observer{std::make_shared<ForeignSceneObserver>(wayland_executor, this, desktop_file_manager, id_map)}
 {
@@ -482,23 +482,23 @@ void mf::ExtForeignToplevelListV1::stop()
 // ExtForeignToplevelHandleV1
 
 mf::ExtForeignToplevelHandleV1::ExtForeignToplevelHandleV1(
-    std::shared_ptr<wayland_rs::Client> client,
-    rust::Box<wayland_rs::ExtForeignToplevelHandleV1Middleware> instance,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtForeignToplevelHandleV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<ms::Surface> const& surface)
-    : wayland_rs::ExtForeignToplevelHandleV1{std::move(client), std::move(instance), object_id},
+    : wayland::ExtForeignToplevelHandleV1{std::move(client), std::move(instance), object_id},
       weak_surface{surface}
 {
 }
 
 auto mf::ExtForeignToplevelHandleV1::from_or_throw(
-    wayland_rs::Weak<wayland_rs::ExtForeignToplevelHandleV1> const& handle) -> ExtForeignToplevelHandleV1&
+    wayland::Weak<wayland::ExtForeignToplevelHandleV1> const& handle) -> ExtForeignToplevelHandleV1&
 {
-    auto const frontend = wayland_rs::ExtForeignToplevelHandleV1::from<ExtForeignToplevelHandleV1>(handle);
+    auto const frontend = wayland::ExtForeignToplevelHandleV1::from<ExtForeignToplevelHandleV1>(handle);
     if (!frontend)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
-            "wayland_rs::ExtForeignToplevelHandleV1 is not a mir::frontend::ExtForeignToplevelHandleV1"));
+            "wayland::ExtForeignToplevelHandleV1 is not a mir::frontend::ExtForeignToplevelHandleV1"));
     }
     return *frontend;
 }

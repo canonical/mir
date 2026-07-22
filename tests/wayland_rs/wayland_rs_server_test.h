@@ -37,7 +37,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 namespace test
 {
@@ -63,10 +63,10 @@ inline auto make_temp_runtime_dir() -> std::string
     return dir;
 }
 
-class WaylandWorkCallback : public mir::wayland_rs::WorkCallback
+class WaylandWorkCallback : public mir::wayland::WorkCallback
 {
 public:
-    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland_rs::WaylandExecutor> const& executor)
+    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland::WaylandExecutor> const& executor)
         : executor(executor)
     {
     }
@@ -78,7 +78,7 @@ public:
     }
 
 private:
-    std::weak_ptr<mir::wayland_rs::WaylandExecutor> executor;
+    std::weak_ptr<mir::wayland::WaylandExecutor> executor;
 };
 
 /// A test fixture that runs a `WaylandServer` on a background thread.

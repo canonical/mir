@@ -41,7 +41,7 @@ auto format_message(char const* fmt, va_list args) -> std::string
 }
 }
 
-mir::wayland_rs::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...)
+mir::wayland::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...)
     : std::runtime_error{"Client protocol error"},
       object_id_{object_id},
       code_{error_code}
@@ -54,22 +54,22 @@ mir::wayland_rs::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error
     what_ = what_sentinel + std::to_string(object_id_) + ":" + std::to_string(code_) + ": " + message_;
 }
 
-auto mir::wayland_rs::ProtocolError::what() const noexcept -> char const*
+auto mir::wayland::ProtocolError::what() const noexcept -> char const*
 {
     return what_.c_str();
 }
 
-auto mir::wayland_rs::ProtocolError::object_id() const noexcept -> uint32_t
+auto mir::wayland::ProtocolError::object_id() const noexcept -> uint32_t
 {
     return object_id_;
 }
 
-auto mir::wayland_rs::ProtocolError::code() const noexcept -> uint32_t
+auto mir::wayland::ProtocolError::code() const noexcept -> uint32_t
 {
     return code_;
 }
 
-auto mir::wayland_rs::ProtocolError::message() const noexcept -> std::string const&
+auto mir::wayland::ProtocolError::message() const noexcept -> std::string const&
 {
     return message_;
 }

@@ -30,7 +30,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland_rs;
+namespace mw = mir::wayland;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace ms = mir::scene;
@@ -133,7 +133,7 @@ public:
     ~SessionLockSurfaceV1() = default;
 
 private:
-    // From wayland_rs::ExtSessionLockSurfaceV1
+    // From wayland::ExtSessionLockSurfaceV1
     void ack_configure(uint32_t serial) override;
 
     // From WindowWlSurfaceRole
