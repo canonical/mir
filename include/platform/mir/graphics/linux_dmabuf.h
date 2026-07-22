@@ -56,12 +56,30 @@ public:
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
+        std::unique_ptr<renderer::gl::Context> import_context,
         EGLImageAllocator allocate_importable_image);
 
     ~DMABufEGLProvider();
 
     auto devnum() const -> dev_t;
 
+    /**
+     * The EGL context used to import dma-bufs.
+     *
+     * Importing a dma-buf creates a GL texture, which requires a current EGL
+     * context. Callers of import_dma_buf() must make this context current on
+     * the calling thread first (see import_dma_buf()).
+     */
+    auto context() const -> renderer::gl::Context&;
+
+    /**
+     * Import a dma-buf into a graphics::Buffer.
+     *
+     * \note This must be called with a valid EGL context current on the
+     *       calling thread (for example, context() made current). Constructing
+     *       the buffer binds a GL texture to the imported EGLImage, which
+     *       requires a current context; without one the texture samples black.
+     */
     auto import_dma_buf(
         DMABufBuffer const& dma_buf,
         std::function<void()>&& on_consumed,
@@ -102,6 +120,7 @@ private:
     dev_t const devnum_;
     std::unique_ptr<DmaBufFormatDescriptors> const formats;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::unique_ptr<renderer::gl::Context> const import_context;
     EGLImageAllocator allocate_importable_image;
     std::unique_ptr<EGLBufferCopier> const blitter;
 };

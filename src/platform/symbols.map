@@ -14,6 +14,7 @@ MIR_PLATFORM_2.29 {
     mir::graphics::DMABufEGLProvider::?DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::as_texture*;
+    mir::graphics::DMABufEGLProvider::context*;
     mir::graphics::DMABufEGLProvider::devnum*;
     mir::graphics::DMABufEGLProvider::import_dma_buf*;
     mir::graphics::DMABufEGLProvider::is_importable*;

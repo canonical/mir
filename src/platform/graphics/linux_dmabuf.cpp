@@ -31,6 +31,8 @@
 #include <mir/graphics/buffer_basic.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/raii.h>
 #include <mir/renderer/sw/pixel_source.h>
 
 #include <EGL/egl.h>
@@ -973,6 +975,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     std::shared_ptr<EGLExtensions> egl_extensions,
     mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::unique_ptr<renderer::gl::Context> import_context,
     EGLImageAllocator allocate_importable_image)
     : dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
@@ -980,6 +983,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
       devnum_{get_devnum(dpy)},
       formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
       egl_delegate{std::move(egl_delegate)},
+      import_context{std::move(import_context)},
       allocate_importable_image{std::move(allocate_importable_image)},
       blitter{std::make_unique<mg::EGLBufferCopier>(this->egl_delegate)}
 {
@@ -990,6 +994,11 @@ mg::DMABufEGLProvider::~DMABufEGLProvider() = default;
 auto mg::DMABufEGLProvider::devnum() const -> dev_t
 {
     return devnum_;
+}
+
+auto mg::DMABufEGLProvider::context() const -> mir::renderer::gl::Context&
+{
+    return *import_context;
 }
 
 auto mg::DMABufEGLProvider::supported_formats() const -> mg::DmaBufFormatDescriptors const&
@@ -1029,36 +1038,20 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         *this);
 
     /* Constructing a DmabufTexBuffer creates a GL texture bound to the imported
-     * dma-buf's EGLImage, which requires a current EGL context. This is called from
-     * the Wayland frontend thread, which has no current context, so run the
-     * construction on the EGL delegate (which holds a context in the renderer's share
-     * group) and wait for the result. Without a current context the texture is never
-     * bound to the EGLImage and samples as black.
+     * dma-buf's EGLImage, which requires a current EGL context. It is a precondition
+     * of this method that the caller has made a suitable context (for example,
+     * context()) current on the calling thread. Without a current context the texture
+     * is never bound to the EGLImage and samples as black.
      */
-    std::promise<std::shared_ptr<Buffer>> buffer_promise;
-    auto buffer_future = buffer_promise.get_future();
-    egl_delegate->spawn(
-        [&]()
-        {
-            try
-            {
-                buffer_promise.set_value(
-                    std::make_shared<DmabufTexBuffer>(
-                        dpy,
-                        *egl_extensions,
-                        dma_buf,
-                        *descriptor,
-                        shared_from_this(),
-                        egl_delegate,
-                        std::move(on_consumed),
-                        std::move(on_release)));
-            }
-            catch (...)
-            {
-                buffer_promise.set_exception(std::current_exception());
-            }
-        });
-    return buffer_future.get();
+    return std::make_shared<DmabufTexBuffer>(
+        dpy,
+        *egl_extensions,
+        dma_buf,
+        *descriptor,
+        shared_from_this(),
+        egl_delegate,
+        std::move(on_consumed),
+        std::move(on_release));
 }
 
 void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)

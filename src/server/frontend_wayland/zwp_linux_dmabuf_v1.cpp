@@ -27,6 +27,8 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/log.h>
+#include <mir/raii.h>
+#include <mir/renderer/gl/context.h>
 
 #include <algorithm>
 #include <cstring>
@@ -62,6 +64,14 @@ auto mf::LinuxDmaBufBuffer::import(
     std::function<void()>&& on_consumed,
     std::function<void()>&& on_release) -> std::shared_ptr<mg::Buffer>
 {
+    /* import_dma_buf() creates a GL texture bound to the imported EGLImage, which
+     * requires a current EGL context. The Wayland commit thread has none, so make the
+     * provider's import context current for the duration of the import.
+     */
+    auto& ctx = provider->context();
+    auto const context_guard = mir::raii::paired_calls(
+        [&ctx]() { ctx.make_current(); },
+        [&ctx]() { ctx.release_current(); });
     return provider->import_dma_buf(*this, std::move(on_consumed), std::move(on_release));
 }
 
