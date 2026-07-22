@@ -30,7 +30,6 @@
 #include <optional>
 #include <mutex>
 
-#include <wayland-server-core.h>
 #include <xcb/xfixes.h>
 
 namespace mir

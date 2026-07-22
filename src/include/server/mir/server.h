@@ -26,7 +26,6 @@
 #include <optional>
 #include <vector>
 
-struct wl_display;
 struct wl_resource;
 namespace mir::wayland { class Client; }
 
@@ -470,11 +469,9 @@ public:
     /// It can be passed to another process, or used with wl_display_connect_to_fd()
     auto open_wayland_client_socket() -> Fd;
 
-    void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
-            wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder);
 
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value

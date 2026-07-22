@@ -8,7 +8,6 @@ set(
   wayland_client.cpp            wayland_client.h
   wayland_client_notifier.cpp   wayland_client_notifier.h
   wayland_global_factory.cpp    wayland_global_factory.h
-  wayland_executor.cpp          wayland_executor.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
   wl_data_device_manager.cpp    wl_data_device_manager.h

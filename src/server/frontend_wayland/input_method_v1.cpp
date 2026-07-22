@@ -309,11 +309,7 @@ private:
 
         auto modifiers_map(rust::Vec<uint8_t> map) -> void override
         {
-            struct wl_array raw_map;
-            raw_map.size = map.size();
-            raw_map.alloc = map.size();
-            raw_map.data = map.data();
-            change.pending_change.modifier_map = ms::CopyableWlArray(&raw_map);
+            change.pending_change.modifier_map = std::vector<uint8_t>(map.begin(), map.end());
             change.waiting_status = InputMethodV1ChangeWaitingStatus::none;
         }
 

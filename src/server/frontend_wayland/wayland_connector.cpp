@@ -16,7 +16,6 @@
 
 #include "wayland_connector.h"
 
-#include "wayland_executor.h"
 #include "wayland_rs/src/ffi.rs.h"
 #include "wayland_rs/wayland_rs_cpp/include/wayland_executor.h"
 #include "wayland_rs/wayland_rs_cpp/include/wayland_client_registry.h"
@@ -86,7 +85,7 @@ auto mir::frontend::WaylandExtensions::get_extension(std::string const& name) co
     return {};
 }
 
-void mf::WaylandExtensions::run_builders(wl_display*, std::function<void(std::function<void()>&& work)> const&)
+void mf::WaylandExtensions::run_builders(std::function<void(std::function<void()>&& work)> const&)
 {
 }
 
@@ -285,14 +284,11 @@ mf::WaylandConnector::WaylandConnector(
         });
 
     // Run the builders before the server starts (because that's what GTK3
-    // expects). There is no libwayland display in the wayland_rs backend, so
-    // builders that need one get nullptr.
+    // expects).
     extensions->run_builders(
-        nullptr,
         [executor = this->executor](std::function<void()>&& work) { executor->spawn(std::move(work)); });
 
     extensions->init(WaylandExtensions::Context{
-        nullptr,
         executor,
         shell,
         session_authorizer,
@@ -424,13 +420,6 @@ int mf::WaylandConnector::client_socket_fd(
         });
 
     return socket_fds[1];
-}
-
-void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& /*functor*/)
-{
-    // TODO: there is no libwayland wl_display in the wayland_rs backend. Callers
-    // that need to run work on the Wayland event loop should be ported to the
-    // executor; XWayland integration is pending.
 }
 
 void mf::WaylandConnector::create_wayland_client(

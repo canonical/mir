@@ -505,18 +505,8 @@ auto mir::Server::get_activation_token() const -> std::string
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-void mir::Server::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
-{
-    if (auto const config = self->server_config)
-    {
-        std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector())
-            ->run_on_wayland_display(functor);
-    }
-}
-
 void mir::Server::add_wayland_extension(
     std::string const& name, std::function<std::shared_ptr<void>(
-        wl_display*,
         std::function<void(std::function<void()>&& work)> const&)> builder)
 {
     if (auto const config = self->server_config)

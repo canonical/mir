@@ -29,7 +29,6 @@ target_link_libraries(graphics_platform_common
     mircommon
     mircore
   PRIVATE
-    PkgConfig::WAYLAND_SERVER
     PkgConfig::GLESv2
     PkgConfig::DRM
     PkgConfig::EGL

@@ -209,9 +209,7 @@ private:
         }
         if (change.modifier_map)
         {
-            auto const data = change.modifier_map.value().data();
-            auto const bytes = static_cast<uint8_t const*>(data->data);
-            send_modifiers_map_event(std::vector<uint8_t>{bytes, bytes + data->size});
+            send_modifiers_map_event(change.modifier_map.value());
         }
         if (change.direction)
         {

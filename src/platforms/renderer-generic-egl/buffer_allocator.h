@@ -22,7 +22,6 @@
 #include <mir/graphics/platform.h>
 
 #include <EGL/egl.h>
-#include <wayland-server-core.h>
 
 #include <memory>
 

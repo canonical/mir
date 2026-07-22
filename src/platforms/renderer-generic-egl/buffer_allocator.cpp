@@ -49,8 +49,6 @@
 #include <system_error>
 #include <fcntl.h>
 
-#include <wayland-server.h>
-
 #define MIR_LOG_COMPONENT "generic-egl-buffer-allocator"
 #include <mir/log.h>
 #include <mutex>

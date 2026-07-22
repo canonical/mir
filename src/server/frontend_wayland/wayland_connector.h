@@ -25,7 +25,6 @@
 #include <mir/frontend/drag_icon_controller.h>
 #include <mir/frontend/wayland.h>
 
-#include <wayland-server-core.h>
 #include <optional>
 #include <unordered_map>
 #include <unordered_set>
@@ -111,7 +110,6 @@ public:
     /// The resources needed to init Wayland extensions
     struct Context
     {
-        wl_display* display;
         std::shared_ptr<Executor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         std::shared_ptr<SessionAuthorizer> session_authorizer;
@@ -146,7 +144,7 @@ public:
     WaylandExtensions(WaylandExtensions const&) = delete;
     WaylandExtensions& operator=(WaylandExtensions const&) = delete;
 
-    virtual void run_builders(wl_display* display, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
+    virtual void run_builders(std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop);
 
     void init(Context const& context);
 
@@ -206,8 +204,6 @@ public:
 
     int client_socket_fd(
         std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
-
-    void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
 
     /// Inject a pre-connected socket `client_fd` as a Wayland client and deliver
     /// the resulting `wayland::Client` to `on_created` once the backend has

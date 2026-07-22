@@ -114,12 +114,11 @@ protected:
     }
 
     void run_builders(
-        wl_display* display,
         std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop) override
     {
         for (auto const& hook : enabled_external_hooks)
         {
-            add_extension(hook.name, hook.builder(display, run_on_wayland_mainloop));
+            add_extension(hook.name, hook.builder(run_on_wayland_mainloop));
         }
     }
 
@@ -242,7 +241,6 @@ std::shared_ptr<mf::Connector>
 void mir::DefaultServerConfiguration::add_wayland_extension(
     std::string const& name,
     std::function<std::shared_ptr<void>(
-        wl_display*,
         std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop)> builder)
 {
     wayland_extension_hooks.push_back({name, builder});
