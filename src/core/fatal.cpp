@@ -19,11 +19,9 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstdarg>
-#include <iostream>
-#include <print>
 
 [[noreturn]]
-void mir::fatal_error(char const* reason, ...)
+void mir::fatal_error(char const* reason, ...) noexcept
 {
     va_list args;
 
@@ -40,28 +38,27 @@ void mir::fatal_error(char const* reason, ...)
 }
 
 [[noreturn]]
-void mir::fatal_error(std::source_location const loc, std::string_view message)
+void mir::fatal_error(std::source_location const loc, std::string_view message) noexcept
 {
-    std::println(std::cerr, "Mir fatal error: {} ({}:{} in {})",
-        message,
-        loc.file_name(),
-        loc.line(),
-        loc.function_name());
+    // Use fprintf(), avoiding any object construction and minimizing the
+    // potential for heap operations between the error location and the abort().
+    std::fprintf(stderr, "Mir fatal error: %.*s (%s:%u in %s)\n",
+        static_cast<int>(message.size()), message.data(),
+        loc.file_name(), loc.line(), loc.function_name());
 
     std::abort();
 }
 
 [[noreturn]]
-void mir::fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc)
+void mir::fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc) noexcept
 {
-    std::string message;
     try
     {
-        message = std::vformat(fmt, args);
+        fatal_error(loc, std::vformat(fmt, args));
     }
     catch (...)
     {
-        message = fmt;
+        // Formatting failed with an exception! Just report what we can
+        fatal_error(loc, fmt);
     }
-    fatal_error(loc, std::string_view{message});
 }

@@ -36,7 +36,7 @@ namespace mir
  *   \param [in] reason  A printf-style format string.
  */
 [[noreturn, deprecated("Use MIR_FATAL_ERROR() instead")]]
-void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
+void fatal_error(char const* reason, ...) noexcept __attribute__((format(printf, 1, 2)));
 
 /**
  * fatal_error() is strictly for "this should never happen" situations that you
@@ -45,7 +45,7 @@ void fatal_error(char const* reason, ...) __attribute__((format(printf, 1, 2)));
  *   \param [in] message  A message describing the fatal error.
  */
 [[noreturn]]
-void fatal_error(std::source_location const loc, std::string_view message);
+void fatal_error(std::source_location const loc, std::string_view message) noexcept;
 
 /**
  * fatal_error() is strictly for "this should never happen" situations that you
@@ -55,13 +55,13 @@ void fatal_error(std::source_location const loc, std::string_view message);
  *   \param [in] loc  The source location where the fatal error occurred.
  */
 [[noreturn]]
-void fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc);
+void fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc) noexcept;
 
 template<typename... Args>
 [[noreturn]] inline void fatal_error(
     std::source_location const loc,
     std::format_string<Args...> reason,
-    Args const&... args)
+    Args const&... args) noexcept
 { fatal_error(reason.get(), std::make_format_args(args...), loc); }
 } // namespace mir
 
