@@ -87,11 +87,11 @@ std::shared_ptr<mf::Connector> mir::DefaultServerConfiguration::the_xwayland_con
             }
             catch (std::exception& x)
             {
-                mir::fatal_error(
-                    "Failed to start XWaylandConnector: %s\n  (xwayland-path is '%s', x11-scale is '%s')",
+                MIR_FATAL_ERROR(
+                    "Failed to start XWaylandConnector: {}\n  (xwayland-path is '{}', x11-scale is '{}')",
                     x.what(),
-                    options->get<std::string>("xwayland-path").c_str(),
-                    options->get<std::string>(mo::x11_scale_opt).c_str());
+                    options->get<std::string>("xwayland-path"),
+                    options->get<std::string>(mo::x11_scale_opt));
             }
         }
 

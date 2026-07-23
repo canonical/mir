@@ -7,6 +7,8 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"mir::Fd::operator int() const@MIR_CORE_2.29" 2.29.0
  (c++)"mir::Fd::operator=(mir::Fd)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::fatal_error(char const*, ...)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::fatal_error(std::source_location, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::fatal_error(std::basic_string_view<char, std::char_traits<char> >, std::basic_format_args<std::basic_format_context<std::__format::_Sink_iter<char>, char> >, std::source_location)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::Rectangles()@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::Rectangles(std::initializer_list<mir::geometry::generic::Rectangle<int> > const&)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::geometry::Rectangles::add(mir::geometry::generic::Rectangle<int> const&)@MIR_CORE_2.29" 2.29.0

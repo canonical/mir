@@ -469,7 +469,7 @@ mgw::DisplayClient::DisplayClient(
 {
     if (!keyboard_context_)
     {
-        fatal_error("Failed to create XKB context");
+        MIR_FATAL_ERROR("Failed to create XKB context");
     }
 
     registry = {wl_display_get_registry(display), &wl_registry_destroy};

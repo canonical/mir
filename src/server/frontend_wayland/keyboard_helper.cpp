@@ -43,7 +43,7 @@ mf::KeyboardHelper::KeyboardHelper(
 {
     if (!context)
     {
-        fatal_error("Failed to create XKB context");
+        MIR_FATAL_ERROR("Failed to create XKB context");
     }
 
     /* The keyboard object has already been created. It is thus safe to send a keymap

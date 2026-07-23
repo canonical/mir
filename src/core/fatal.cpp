@@ -21,7 +21,7 @@
 #include <cstdarg>
 
 [[noreturn]]
-void mir::fatal_error(char const* reason, ...)
+void mir::fatal_error(char const* reason, ...) noexcept
 {
     va_list args;
 
@@ -35,4 +35,30 @@ void mir::fatal_error(char const* reason, ...)
     va_end(args);
 
     std::abort();
+}
+
+[[noreturn]]
+void mir::fatal_error(std::source_location const loc, std::string_view message) noexcept
+{
+    // Use fprintf(), avoiding any object construction and minimizing the
+    // potential for heap operations between the error location and the abort().
+    std::fprintf(stderr, "Mir fatal error: %.*s (%s:%u in %s)\n",
+        static_cast<int>(message.size()), message.data(),
+        loc.file_name(), loc.line(), loc.function_name());
+
+    std::abort();
+}
+
+[[noreturn]]
+void mir::fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc) noexcept
+{
+    try
+    {
+        fatal_error(loc, std::vformat(fmt, args));
+    }
+    catch (...)
+    {
+        // Formatting failed with an exception! Just report what we can
+        fatal_error(loc, fmt);
+    }
 }

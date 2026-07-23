@@ -776,7 +776,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
 
     if (!session)
     {
-        fatal_error("Property handlers did not set a valid session");
+        MIR_FATAL_ERROR("Property handlers did not set a valid session");
     }
 
     // property_handlers will have updated the pending spec. Use it.

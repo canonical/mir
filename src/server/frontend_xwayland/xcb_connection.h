@@ -374,7 +374,7 @@ private:
     {
         if (src_len > dest_len)
         {
-            fatal_error("%zu elements of data does not fit in %zu element long array", src_len, dest_len);
+            MIR_FATAL_ERROR("{} elements of data does not fit in {} element long array", src_len, dest_len);
         }
         for (unsigned i = 0; i < src_len; i++)
         {
