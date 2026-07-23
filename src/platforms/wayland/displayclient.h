@@ -28,7 +28,6 @@
 
 #include "platform.h"
 #include "protocol/xdg-shell-client.h"
-#include "protocol/xdg-decoration-unstable-v1-client.h"
 #include <wayland-client.h>
 #include <EGL/egl.h>
 
@@ -149,7 +148,6 @@ protected:
 
     wl_compositor* compositor = nullptr;
     xdg_wm_base* shell = nullptr;
-    zxdg_decoration_manager_v1* decoration_manager = nullptr;
     wl_seat* seat = nullptr;
     wl_shm* shm = nullptr;
 
