@@ -67,3 +67,8 @@ auto mtd::StubBufferAllocator::buffer_from_shm(
 
     return buffer;
 }
+
+auto mtd::StubBufferAllocator::dma_buf_provider() -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    return nullptr;
+}

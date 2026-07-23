@@ -98,7 +98,7 @@ public:
      *
      * \return the provider, or nullptr if this allocator does not support dmabuf import.
      */
-    virtual auto dma_buf_provider() -> std::shared_ptr<DMABufEGLProvider> { return nullptr; }
+    virtual auto dma_buf_provider() -> std::shared_ptr<DMABufEGLProvider> = 0;
 
 protected:
     GraphicBufferAllocator() = default;

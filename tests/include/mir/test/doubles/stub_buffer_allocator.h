@@ -43,7 +43,9 @@ public:
     auto buffer_from_shm(
         std::shared_ptr<renderer::software::RWMappable> data,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer>;
+        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer> override;
+
+    auto dma_buf_provider() -> std::shared_ptr<graphics::DMABufEGLProvider> override;
 };
 
 }
