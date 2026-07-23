@@ -28,23 +28,21 @@
 #include <string_view>
 #include <cstring>
 
+#include <mir/test/doubles/mock_logger.h>
+
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
 namespace ml = mir::logging;
-
-class MockLogger : public mir::logging::Logger
-{
-public:
-    MOCK_METHOD(void, log, (mir::logging::Severity severity, std::string const&message, std::string const& component), (override));
-};
+namespace mtd = mir::test::doubles;
+using namespace testing;
 
 class TestLog : public testing::Test
 {
 public:
     void SetUp() override
     {
-        logger = std::make_shared<testing::NiceMock<MockLogger>>();
+        logger = std::make_shared<testing::NiceMock<mtd::MockLogger>>();
         mir::logging::set_logger(logger);
     }
 
@@ -52,21 +50,23 @@ public:
     {
         // Replace Mir's logger so that we own the last reference to our MockLogger
         // allowing it to be destroyed and verified after the test finishes.
-        mir::logging::set_logger(std::make_shared<MockLogger>());
+        mir::logging::set_logger(std::make_shared<mtd::MockLogger>());
         ASSERT_TRUE(logger.unique()) << "Test needs to destroy the MockLogger to verify assertions";
         logger.reset();
     }
 
-    std::shared_ptr<testing::NiceMock<MockLogger>> logger;
+    std::shared_ptr<testing::NiceMock<mtd::MockLogger>> logger;
 };
 
 TEST_F(TestLog, log_calls_logger)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     auto const severity = mir::logging::Severity::informational;
     auto const message = "test message";
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(severity, message, std::string{ml::tag::name(tag)}));
+    EXPECT_CALL(*logger, log(LogMatching(Eq(severity), Eq(std::string{message}), ElementsAre(IsTag(tag)))));
 
     ml::tag::set_severity(ml::tag::name(tag), severity);
     mir::log(severity, {tag}, message);
@@ -74,11 +74,12 @@ TEST_F(TestLog, log_calls_logger)
 
 TEST_F(TestLog, log_calls_logger_with_colon_separated_component_for_multiple_tags)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     auto const severity = mir::logging::Severity::debug;
     auto const message = "A message, and a system of messages";
-    std::string expected_component = "graphics:wayland";
 
-    EXPECT_CALL(*logger, log(severity, message, expected_component));
+    EXPECT_CALL(*logger, log(LogMatching(Eq(severity), Eq(std::string{message}), ElementsAre(IsTag(ml::graphics()), IsTag(ml::wayland())))));
 
     ml::tag::set_severity("graphics", severity);
     mir::log(severity, {ml::graphics(), ml::wayland()}, message);
@@ -86,12 +87,14 @@ TEST_F(TestLog, log_calls_logger_with_colon_separated_component_for_multiple_tag
 
 TEST_F(TestLog, log_debug_works)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     constexpr auto fmt_string = "{} around the world";
     auto const value = "Twice";
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::debug), Eq(message), ElementsAre(IsTag(tag))))).Times(2);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
     mir::log_debug({tag}, message);
@@ -100,12 +103,14 @@ TEST_F(TestLog, log_debug_works)
 
 TEST_F(TestLog, log_info_works)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     constexpr auto fmt_string = "Arbitrarium {}";
     auto const value = 18;
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::informational, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::informational), Eq(message), ElementsAre(IsTag(tag))))).Times(2);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::informational);
     mir::log_info({tag}, message);
@@ -114,12 +119,14 @@ TEST_F(TestLog, log_info_works)
 
 TEST_F(TestLog, log_warning_works)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     constexpr auto fmt_string = "Abort! Abort! {:.2f}";
     auto const value = 23.22222222;
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::warning, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::warning), Eq(message), ElementsAre(IsTag(tag))))).Times(2);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::warning);
     mir::log_warning({tag}, message);
@@ -128,12 +135,14 @@ TEST_F(TestLog, log_warning_works)
 
 TEST_F(TestLog, log_error_works)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     constexpr std::string_view fmt_string = "Terrain warning: {}m";
     auto const value = 100;
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::error, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::error), Eq(message), ElementsAre(IsTag(tag))))).Times(2);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::error);
     mir::log_error({tag}, message);
@@ -142,12 +151,14 @@ TEST_F(TestLog, log_error_works)
 
 TEST_F(TestLog, log_critical_works)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     constexpr std::string_view fmt_string = "Critical error: {}";
     auto const value = "ENOCAKE";
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::critical, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::critical), Eq(message), ElementsAre(IsTag(tag))))).Times(2);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::critical);
     mir::log_critical({tag}, message);
@@ -156,6 +167,8 @@ TEST_F(TestLog, log_critical_works)
 
 TEST_F(TestLog, can_use_format_string)
 {
+    using mtd::LogMatching;
+    using mtd::IsTag;
     auto const severity = mir::logging::Severity::informational;
     auto const& tag = ml::input();
     constexpr std::string_view fmt_string = "now: {}, then: {:10.5f}, again: {}";
@@ -166,7 +179,7 @@ TEST_F(TestLog, can_use_format_string)
 
     auto const message = std::format(fmt_string, now, a_float, a_stringish);
 
-    EXPECT_CALL(*logger, log(severity, message, std::string{ml::tag::name(tag)}));
+    EXPECT_CALL(*logger, log(LogMatching(Eq(severity), Eq(message), ElementsAre(IsTag(tag)))));
 
     ml::tag::set_severity(ml::tag::name(tag), severity);
     mir::log(severity, {tag}, message);

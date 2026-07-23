@@ -30,6 +30,8 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir_toolkit/mir_version_number.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/synchronised.h
     ${PROJECT_SOURCE_DIR}/include/core/mir/input/mousekeys_keymap.h
+    logging/event.cpp
+    ${PROJECT_SOURCE_DIR}/include/core/mir/logging/event.h
 )
 
 target_include_directories(mircore
