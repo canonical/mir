@@ -22,7 +22,7 @@
 
 namespace
 {
-auto format_message(uint32_t object_id, uint32_t error_code, char const* fmt, va_list args) -> std::string
+auto format_message(char const* fmt, va_list args) -> std::string
 {
     va_list args_copy;
     va_copy(args_copy, args);
@@ -31,26 +31,45 @@ auto format_message(uint32_t object_id, uint32_t error_code, char const* fmt, va
 
     if (len < 0)
     {
-        return std::to_string(object_id) + ":" + std::to_string(error_code) + ": formatting error";
+        return "formatting error";
     }
 
     std::vector<char> buf(len + 1);
     std::vsnprintf(buf.data(), buf.size(), fmt, args);
 
-    return std::to_string(object_id) + ":" + std::to_string(error_code) + ": " + buf.data();
+    return buf.data();
 }
 }
 
-mir::wayland_rs::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...)
-    : std::runtime_error{"Client protocol error"}
+mir::wayland::ProtocolError::ProtocolError(uint32_t object_id, uint32_t error_code, char const* fmt, ...)
+    : std::runtime_error{"Client protocol error"},
+      object_id_{object_id},
+      code_{error_code}
 {
     va_list args;
     va_start(args, fmt);
-    message_ = format_message(object_id, error_code, fmt, args);
+    message_ = format_message(fmt, args);
     va_end(args);
+
+    what_ = what_sentinel + std::to_string(object_id_) + ":" + std::to_string(code_) + ": " + message_;
 }
 
-auto mir::wayland_rs::ProtocolError::what() const noexcept -> char const*
+auto mir::wayland::ProtocolError::what() const noexcept -> char const*
 {
-    return message_.c_str();
+    return what_.c_str();
+}
+
+auto mir::wayland::ProtocolError::object_id() const noexcept -> uint32_t
+{
+    return object_id_;
+}
+
+auto mir::wayland::ProtocolError::code() const noexcept -> uint32_t
+{
+    return code_;
+}
+
+auto mir::wayland::ProtocolError::message() const noexcept -> std::string const&
+{
+    return message_;
 }

@@ -1,24 +1,21 @@
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
-if (MIR_ENABLE_RUST)
-  add_subdirectory(wayland_rs/)
-endif()
-
 set(
   WAYLAND_SOURCES
 
   wayland_default_configuration.cpp
   wayland_connector.cpp         wayland_connector.h
-  wl_client.cpp                 wl_client.h
-  wayland_executor.cpp          wayland_executor.h
+  wayland_client.cpp            wayland_client.h
+  wayland_client_notifier.cpp   wayland_client_notifier.h
+  wayland_global_factory.cpp    wayland_global_factory.h
   wayland_surface_observer.cpp  wayland_surface_observer.h
   wayland_input_dispatcher.cpp  wayland_input_dispatcher.h
   wl_data_device_manager.cpp    wl_data_device_manager.h
   wl_data_device.cpp            wl_data_device.h
   wl_data_source.cpp            wl_data_source.h
   output_manager.cpp            output_manager.h
-  pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
-  relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
+  zwp_pointer_constraints_v1.cpp zwp_pointer_constraints_v1.h
+  zwp_relative_pointer_v1.cpp    zwp_relative_pointer_v1.h
   wl_subcompositor.cpp          wl_subcompositor.h
                                 wl_surface_role.h
   window_wl_surface_role.cpp    window_wl_surface_role.h
@@ -33,8 +30,8 @@ set(
   xdg_output_v1.cpp             xdg_output_v1.h
   layer_shell_v1.cpp            layer_shell_v1.h
   mir_shell.cpp                 mir_shell.h
-  resource_lifetime_tracker.cpp resource_lifetime_tracker.h
   wl_region.cpp                 wl_region.h
+  wl_compositor.cpp             wl_compositor.h
   foreign_toplevel_list_v1.cpp  foreign_toplevel_list_v1.h
   foreign_toplevel_manager_v1.cpp foreign_toplevel_manager_v1.h
   desktop_file_manager.cpp      desktop_file_manager.h
@@ -55,8 +52,8 @@ set(
   text_input_v1.cpp             text_input_v1.h
   primary_selection_v1.cpp      primary_selection_v1.h
   session_lock_v1.cpp           session_lock_v1.h
-  xdg_decoration_unstable_v1.cpp           xdg_decoration_unstable_v1.h
-  xdg_dialog_v1.cpp                        xdg_dialog_v1.h
+  xdg_decoration_manager_v1.cpp            xdg_decoration_manager_v1.h
+  xdg_wm_dialog_v1.cpp                     xdg_wm_dialog_v1.h
   server_decoration_manager.cpp            server_decoration_manager.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
@@ -67,9 +64,10 @@ set(
   session_credentials.cpp
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/buffer_stream.h
   wp_viewporter.cpp             wp_viewporter.h
-  fractional_scale_v1.cpp           fractional_scale_v1.h
-  xdg_activation_v1.cpp         xdg_activation_v1.h
+  wp_fractional_scale_v1.cpp        wp_fractional_scale_v1.h
+  xdg_activation_unstable_v1.cpp         xdg_activation_unstable_v1.h
   linux_drm_syncobj.cpp         linux_drm_syncobj.h
+  zwp_linux_dmabuf_v1.cpp       zwp_linux_dmabuf_v1.h
   data_control_v1.cpp           data_control_v1.h
   surface_registry.cpp          surface_registry.h
   keyboard_state_tracker.cpp    keyboard_state_tracker.h

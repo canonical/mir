@@ -16,15 +16,14 @@
 
 #include "wl_pointer.h"
 
-#include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
-#include "relative-pointer-unstable-v1_wrapper.h"
+#include "relative_pointer_unstable_v1.h"
+
+#include "wayland_rs/src/ffi.rs.h"
 
 #include <mir/fatal.h>
 #include <mir/log.h>
-#include <mir/executor.h>
-#include <mir/frontend/wayland.h>
 #include <mir/scene/surface.h>
 #include <mir/frontend/buffer_stream.h>
 #include <mir/geometry/displacement.h>
@@ -33,16 +32,14 @@
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/events/pointer_event.h>
-#include <mir/wayland/client.h>
 
 #include <linux/input-event-codes.h>
-#include <boost/throw_exception.hpp>
 #include <cstring>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;
@@ -110,16 +107,16 @@ auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint3
         return std::nullopt;
 
     case mir_pointer_axis_source_wheel:
-        return mw::Pointer::AxisSource::wheel;
+        return mwrs::Pointer::AxisSource::wheel;
 
     case mir_pointer_axis_source_finger:
-        return mw::Pointer::AxisSource::finger;
+        return mwrs::Pointer::AxisSource::finger;
 
     case mir_pointer_axis_source_continuous:
-        return mw::Pointer::AxisSource::continuous;
+        return mwrs::Pointer::AxisSource::continuous;
 
     case mir_pointer_axis_source_wheel_tilt:
-        return mw::Pointer::AxisSource::wheel_tilt;
+        return mwrs::Pointer::AxisSource::wheel_tilt;
     }
 
     MIR_FATAL_ERROR("Invalid MirPointerAxisSource {}", static_cast<int>(mir_source));
@@ -162,8 +159,11 @@ auto mf::WlPointer::linux_button_to_mir_button(int linux_button) -> std::optiona
     return std::nullopt;
 }
 
-mf::WlPointer::WlPointer(wl_resource* new_resource)
-    : Pointer(new_resource, Version<9>()),
+mf::WlPointer::WlPointer(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::PointerMiddleware> instance,
+    uint32_t object_id)
+    : Pointer(std::move(client), std::move(instance), object_id),
       cursor{std::make_unique<NullCursor>()}
 {
 }
@@ -176,7 +176,7 @@ mf::WlPointer::~WlPointer()
 
 void mir::frontend::WlPointer::set_relative_pointer(mir::wayland::RelativePointerV1* relative_ptr)
 {
-    relative_pointer = make_weak(relative_ptr);
+    relative_pointer = mwrs::make_weak(relative_ptr);
 }
 
 void mir::frontend::WlPointer::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
@@ -215,7 +215,7 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
     auto const serial = client->next_serial(event.value_or(nullptr));
     send_leave_event(
         serial,
-        surface_under_cursor.value().raw_resource());
+        as_surface_ptr(&surface_under_cursor.value()));
     current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
     // to prevent changing surfaces while buttons are pressed, we wouldn't need to clear current_buttons regardless)
@@ -234,7 +234,7 @@ void mf::WlPointer::buttons(std::shared_ptr<MirPointerEvent const> const& event)
         if (mapping.first & (event_buttons ^ current_buttons))
         {
             bool const pressed = (mapping.first & event_buttons);
-            auto const state = pressed ? ButtonState::pressed : ButtonState::released;
+            auto const state = pressed ? mwrs::Pointer::ButtonState::pressed : mwrs::Pointer::ButtonState::released;
             auto const serial = client->next_serial(event);;
             send_button_event(serial, timestamp_of(event), mapping.second, state);
             needs_frame = true;
@@ -253,7 +253,7 @@ auto mf::WlPointer::axis(
     bool event_sent = false;
     bool value120_sent = false;
 
-    if (axis.value120.as_value() && version_supports_axis_value120())
+    if (axis.value120.as_value() && get_box()->version() >= 8)
     {
         send_axis_value120_event(wayland_axis, axis.value120.as_value());
         event_sent = true;
@@ -261,7 +261,7 @@ auto mf::WlPointer::axis(
     }
 
     // Only send discrete if value120 was not already sent (to avoid duplicating discrete info)
-    if (axis.discrete.as_value() && version_supports_axis_discrete() && !value120_sent)
+    if (axis.discrete.as_value() && get_box()->version() >= 5 && !value120_sent)
     {
         send_axis_discrete_event(wayland_axis, axis.discrete.as_value());
         event_sent = true;
@@ -275,7 +275,7 @@ auto mf::WlPointer::axis(
         event_sent = true;
     }
 
-    if (axis.stop && version_supports_axis_stop())
+    if (axis.stop && get_box()->version() >= 5)
     {
         send_axis_stop_event(timestamp_of(event), wayland_axis);
         event_sent = true;
@@ -288,13 +288,13 @@ void mf::WlPointer::axes(std::shared_ptr<MirPointerEvent const> const& event)
 {
     bool axis_event_sent = false;
 
-    axis_event_sent |= axis(event, event->h_scroll(), Axis::horizontal_scroll);
-    axis_event_sent |= axis(event, event->v_scroll(), Axis::vertical_scroll);
+    axis_event_sent |= axis(event, event->h_scroll(), mwrs::Pointer::Axis::horizontal_scroll);
+    axis_event_sent |= axis(event, event->v_scroll(), mwrs::Pointer::Axis::vertical_scroll);
     needs_frame |= axis_event_sent;
 
     // Don't send an axis source unless we have one and we're also sending some sort of axis event.
     auto const axis_source = wayland_axis_source(event->axis_source());
-    if (axis_source && axis_event_sent && version_supports_axis_source())
+    if (axis_source && axis_event_sent && get_box()->version() >= 5)
     {
         send_axis_source_event(axis_source.value());
         needs_frame = true;
@@ -335,7 +335,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
         buttons(event);
         send_enter_event(
             enter_serial.value(),
-            target_surface->raw_resource(),
+            as_surface_ptr(target_surface),
             position_on_target.x.as_value(),
             position_on_target.y.as_value());
         current_position = position_on_target;
@@ -345,7 +345,7 @@ void mf::WlPointer::enter_or_motion(std::shared_ptr<MirPointerEvent const> const
                 leave(std::nullopt);
                 maybe_frame();
             });
-        surface_under_cursor = mw::make_weak(target_surface);
+        surface_under_cursor = mwrs::make_weak(target_surface);
     }
     else if (position_on_target != current_position)
     {
@@ -399,7 +399,7 @@ namespace
 {
 struct CursorSurfaceRole : mf::NullWlSurfaceRole
 {
-    mw::Weak<mf::WlSurface> const surface;
+    mwrs::Weak<mf::WlSurface> const surface;
     mf::CommitHandler* const commit_handler;
     explicit CursorSurfaceRole(mf::WlSurface* surface, mf::CommitHandler* commit_handler) :
         NullWlSurfaceRole(surface),
@@ -436,7 +436,7 @@ struct WlSurfaceCursor : mf::WlPointer::Cursor
 private:
     void apply_latest_buffer();
 
-    mw::Weak<mf::WlSurface> const surface;
+    mwrs::Weak<mf::WlSurface> const surface;
     std::shared_ptr<mc::BufferStream> const stream;
     CursorSurfaceRole surface_role;
 
@@ -460,7 +460,7 @@ private:
 
 void mf::WlPointer::set_cursor(
     uint32_t serial,
-    std::optional<wl_resource*> const& surface,
+    std::optional<mwrs::Weak<mwrs::Surface>> const& surface,
     int32_t hotspot_x, int32_t hotspot_y)
 {
     if (!enter_serial || serial != enter_serial.value())
@@ -474,7 +474,11 @@ void mf::WlPointer::set_cursor(
 
     if (surface)
     {
-        auto const wl_surface = WlSurface::from(*surface);
+        auto const wl_surface = mwrs::Surface::from<WlSurface>(*surface);
+        if (!wl_surface)
+        {
+            return;
+        }
         cursor_hotspot = {hotspot_x, hotspot_y};
         if (!cursor->cursor_surface() || wl_surface != *cursor->cursor_surface())
         {

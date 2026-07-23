@@ -18,7 +18,6 @@
 #define MIR_TEST_DOUBLES_STUB_BUFFER_ALLOCATOR_H_
 
 #include <mir/graphics/graphic_buffer_allocator.h>
-#include <wayland-server.h>
 
 namespace mir
 {
@@ -44,7 +43,9 @@ public:
     auto buffer_from_shm(
         std::shared_ptr<renderer::software::RWMappable> data,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer>;
+        std::function<void()>&& on_release) -> std::shared_ptr<graphics::Buffer> override;
+
+    auto dma_buf_provider() -> std::shared_ptr<graphics::DMABufEGLProvider> override;
 };
 
 }

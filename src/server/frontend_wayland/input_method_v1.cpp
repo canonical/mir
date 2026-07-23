@@ -15,16 +15,21 @@
  */
 
 #include "input_method_v1.h"
-#include <mir/scene/text_input_hub.h>
-#include <mir/shell/surface_specification.h>
-#include <mir/shell/shell.h>
+
+#include "input_method_common.h"
+#include "output_manager.h"
+#include "wayland_rs/src/ffi.rs.h"
+#include "window_wl_surface_role.h"
+#include "wl_surface.h"
+
+#include <mir/executor.h>
+#include <mir/log.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
-#include <mir/log.h>
-#include "wl_surface.h"
-#include "output_manager.h"
-#include "window_wl_surface_role.h"
-#include "input_method_common.h"
+#include <mir/scene/text_input_hub.h>
+#include <mir/shell/shell.h>
+#include <mir/shell/surface_specification.h>
+
 #include <deque>
 #include <ranges>
 
@@ -32,44 +37,61 @@ namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
 
-/// Handles activation and deactivation of the InputMethodContextV1
-class mf::InputMethodV1::Instance : wayland::InputMethodV1
+namespace
+{
+class InputMethodV1 : public mw::InputMethodV1
 {
 public:
-    Instance(wl_resource* new_resource,
-         std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-         std::shared_ptr<Executor> const& wayland_executor)
-        : InputMethodV1{new_resource, Version<1>()},
-          text_input_hub(text_input_hub),
+    InputMethodV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::InputMethodV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<mir::Executor> wayland_executor,
+        std::shared_ptr<ms::TextInputHub> text_input_hub)
+        : mw::InputMethodV1{std::move(client), std::move(instance), object_id},
+          text_input_hub{std::move(text_input_hub)},
           state_observer{std::make_shared<StateObserver>(this)}
     {
-        text_input_hub->register_interest(state_observer, *wayland_executor);
+        this->text_input_hub->register_interest(state_observer, *wayland_executor);
     }
 
-    ~Instance()
+    ~InputMethodV1() override
     {
         text_input_hub->unregister_interest(*state_observer);
     }
 
     void activated(
-        scene::TextInputStateSerial serial,
+        ms::TextInputStateSerial serial,
         bool new_input_field,
-        scene::TextInputState const& state)
+        ms::TextInputState const& state)
     {
-        // Create the new context if we have a new field or if we're not yet activated
         if (!is_activated || new_input_field)
         {
             deactivated();
 
-            context = std::make_shared<InputMethodContextV1>(
-                this,
-                text_input_hub);
+            std::shared_ptr<InputMethodContextV1> created_context;
+            auto const context_base = mw::create_zwp_input_method_context_v1(
+                *client->raw_client(),
+                get_box()->version(),
+                [&](rust::Box<mw::InputMethodContextV1Middleware> instance, uint32_t object_id)
+                    -> std::shared_ptr<mw::InputMethodContextV1>
+                {
+                    created_context = std::make_shared<InputMethodContextV1>(
+                        client,
+                        std::move(instance),
+                        object_id,
+                        text_input_hub);
+                    return created_context;
+                });
+            if (!created_context)
+            {
+                throw std::logic_error{"failed to create zwp_input_method_context_v1"};
+            }
+            (void)context_base;
+            context = created_context;
             is_activated = true;
             cached_state = ms::TextInputState{};
-            send_activate_event(context->resource);
-
-            // According to maliit's implementation, this clears the preedit string state
-            // and the cursor position state on their side of things
+            send_activate_event(context->get_box());
             context->send_reset_event();
         }
 
@@ -80,7 +102,7 @@ public:
             {
                 switch (cached_state.change_cause.value())
                 {
-                    case mir::scene::TextInputChangeCause::other:
+                    case ms::TextInputChangeCause::other:
                         context->reset_pending_change();
                         context->send_reset_event();
                         break;
@@ -90,7 +112,6 @@ public:
             }
         }
 
-        // Notify about the surrounding text changing
         if (cached_state.surrounding_text != state.surrounding_text ||
             cached_state.cursor != state.cursor ||
             cached_state.anchor != state.anchor)
@@ -104,14 +125,13 @@ public:
                 state.anchor.value_or(0));
         }
 
-        // Notify about the new content type
         if (cached_state.content_hint != state.content_hint || cached_state.content_purpose != state.content_purpose)
         {
             cached_state.content_hint = state.content_hint;
             cached_state.content_purpose = state.content_purpose;
             context->send_content_type_event(
-                mir_to_wayland_content_hint(state.content_hint.value_or(ms::TextInputContentHint::none)),
-                mir_to_wayland_content_purpose(state.content_purpose.value_or(ms::TextInputContentPurpose::normal)));
+                mf::mir_to_wayland_content_hint(state.content_hint.value_or(ms::TextInputContentHint::none)),
+                mf::mir_to_wayland_content_purpose(state.content_purpose.value_or(ms::TextInputContentPurpose::normal)));
         }
 
         context->add_serial(serial);
@@ -124,9 +144,8 @@ public:
             is_activated = false;
             if (context)
             {
-                auto resource = context->resource;
                 context_on_deathbed = context;
-                send_deactivate_event(resource);
+                send_deactivate_event(context);
                 context = nullptr;
             }
         }
@@ -135,43 +154,42 @@ public:
 private:
     struct StateObserver : ms::TextInputStateObserver
     {
-        StateObserver(Instance* input_method)
+        explicit StateObserver(InputMethodV1* input_method)
             : input_method{input_method}
         {
         }
 
         void activated(
-            scene::TextInputStateSerial serial,
+            ms::TextInputStateSerial serial,
             bool new_input_field,
-            scene::TextInputState const& state) override
+            ms::TextInputState const& state) override
         {
             if (input_method)
-                input_method->activated(serial, new_input_field, state);
+                input_method.value().activated(serial, new_input_field, state);
         }
 
         void deactivated() override
         {
             if (input_method)
-                input_method->deactivated();
+                input_method.value().deactivated();
         }
 
         void show_input_panel() override {}
         void hide_input_panel() override {}
 
-        Instance* const input_method;
+        mw::Weak<InputMethodV1> const input_method;
     };
 
-    /// https://wayland.app/protocols/input-method-unstable-v1
-    /// The InputMethodContextV1 is associated with a single TextInput
-    /// and will be destroyed when that text input is no longer receiving text.
-    class InputMethodContextV1 : public wayland::InputMethodContextV1
+    class InputMethodContextV1 : public mw::InputMethodContextV1
     {
     public:
         InputMethodContextV1(
-            mf::InputMethodV1::Instance* method,
-            std::shared_ptr<scene::TextInputHub> const& text_input_hub)
-            : wayland::InputMethodContextV1(*static_cast<wayland::InputMethodV1*>(method)),
-              text_input_hub(text_input_hub)
+            std::shared_ptr<mw::Client> client,
+            rust::Box<mw::InputMethodContextV1Middleware> instance,
+            uint32_t object_id,
+            std::shared_ptr<ms::TextInputHub> text_input_hub)
+            : mw::InputMethodContextV1{std::move(client), std::move(instance), object_id},
+              text_input_hub{std::move(text_input_hub)}
         {
         }
 
@@ -192,8 +210,6 @@ private:
         }
 
     private:
-
-        /// Certain actions "wait" for another action to happen before being committed.
         enum class InputMethodV1ChangeWaitingStatus
         {
             none,
@@ -203,7 +219,7 @@ private:
 
         struct InputMethodV1Change
         {
-            scene::TextInputChange pending_change{{}};
+            ms::TextInputChange pending_change{{}};
             InputMethodV1ChangeWaitingStatus waiting_status;
 
             void reset()
@@ -212,26 +228,17 @@ private:
                 waiting_status = InputMethodV1ChangeWaitingStatus::none;
             }
 
-            /// If a change is waiting to be sent to the text input BUT
-            /// we encounter another change beforehand, we will nullify the
-            /// pending change.
             void check_waiting_status(InputMethodV1ChangeWaitingStatus expected)
             {
-                if (waiting_status != InputMethodV1ChangeWaitingStatus::none
-                    && expected != waiting_status)
+                if (waiting_status != InputMethodV1ChangeWaitingStatus::none && expected != waiting_status)
                 {
                     reset();
                 }
             }
         };
 
-        /// The input method client will be sending up the "done_count" as their serial.
-        /// We will map this done_count back to the serial of the text input.
-        /// \param done_count Serial of the input method
-        /// \returns A text input state serial
         auto find_serial(uint32_t done_count) const -> std::optional<ms::TextInputStateSerial>
         {
-            // Loop in reverse order because the serial we're looking for will generally be at the end
             for (auto const& serial_pair : std::ranges::reverse_view(serials))
             {
                 if (serial_pair.first == done_count)
@@ -252,199 +259,157 @@ private:
             }
             else
             {
-                log_warning("%s: invalid commit serial %d", interface_name, serial);
+                mir::log_warning("%s: invalid commit serial %d", "zwp_input_method_context_v1", serial);
             }
 
             change.reset();
         }
 
-        /// Commit the provided string to the text input immediately.
-        /// \param serial The serial
-        /// \param text Text to commit
-        void commit_string(uint32_t serial, const std::string &text) override
+        auto commit_string(uint32_t serial, rust::String text) -> void override
         {
             change.check_waiting_status(InputMethodV1ChangeWaitingStatus::commit_string);
-            change.pending_change.commit_text = text;
+            change.pending_change.commit_text = std::string{text};
             on_text_changed(serial);
         }
 
-        /// Creates a "tentative" input value that will be overridden when a string is "committed".
-        /// This let's the user see what they're typing, while also allowing for autocomplete.
-        /// \param serial The serial
-        /// \param text The preedit text
-        /// \param commit Fallback text in the event that a user unfocuses the text input
-        void preedit_string(uint32_t serial, const std::string &text, const std::string &commit) override
+        auto preedit_string(uint32_t serial, rust::String text, rust::String commit) -> void override
         {
             change.check_waiting_status(InputMethodV1ChangeWaitingStatus::preedit_string);
-            change.pending_change.preedit_text = text;
-            change.pending_change.preedit_commit = commit;
+            change.pending_change.preedit_text = std::string{text};
+            change.pending_change.preedit_commit = std::string{commit};
             on_text_changed(serial);
         }
 
-        /// Only defined for text inputs v1 and v2. This request will be fulfilled when
-        //  preedit_string is next called.
-        void preedit_styling(uint32_t index, uint32_t length, uint32_t style) override
+        auto preedit_styling(uint32_t index, uint32_t length, uint32_t style) -> void override
         {
             change.pending_change.preedit_style = { index, length, style };
             change.waiting_status = InputMethodV1ChangeWaitingStatus::preedit_string;
         }
 
-        /// Set the cursor position to the index. This request will be fulfilled when
-        /// preedit_string is next called.
-        /// \param index New cursor position
-        void preedit_cursor(int32_t index) override
+        auto preedit_cursor(int32_t index) -> void override
         {
             change.pending_change.preedit_cursor_begin = index;
             change.pending_change.preedit_cursor_end = index;
             change.waiting_status = InputMethodV1ChangeWaitingStatus::preedit_string;
         }
 
-        /// Deletes the text starting from index to length. This request will be fulfilled when
-        //  commit_string is next called.
-        /// \param index Start of the deletion
-        /// \param length Length of the deletion
-        void delete_surrounding_text(int32_t index, uint32_t length) override
+        auto delete_surrounding_text(int32_t index, uint32_t length) -> void override
         {
-            // First, we move the cursor position to index
             change.pending_change.cursor_position = { index, 0 };
-
-            // Then we set delete_after to length (representing the start of the cursor position)
-            // and delete_before to the 0
             change.pending_change.delete_after = length;
             change.pending_change.delete_before = 0;
-
             change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
 
-        /// Changes the cursor position. This request will be fulfilled when
-        //  commit_string is next called.
-        /// \param index New cursor position
-        /// \param anchor New anchor position. An anchor is used to define the end of the selected region of text.
-        void cursor_position(int32_t index, int32_t anchor) override
+        auto cursor_position(int32_t index, int32_t anchor) -> void override
         {
             change.pending_change.cursor_position = { index, anchor };
             change.waiting_status = InputMethodV1ChangeWaitingStatus::commit_string;
         }
 
-        void modifiers_map(struct wl_array *map) override
+        auto modifiers_map(rust::Vec<uint8_t> map) -> void override
         {
-            change.pending_change.modifier_map = scene::CopyableWlArray(map);
+            change.pending_change.modifier_map = std::vector<uint8_t>(map.begin(), map.end());
             change.waiting_status = InputMethodV1ChangeWaitingStatus::none;
         }
 
-        void keysym(uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) override
+        auto keysym(uint32_t serial, uint32_t time, uint32_t sym, uint32_t state, uint32_t modifiers) -> void override
         {
             change.pending_change.keysym = { time, sym, state, modifiers };
             on_text_changed(serial);
         }
 
-        void grab_keyboard(struct wl_resource */*keyboard*/) override
+        auto grab_keyboard(rust::Box<mw::KeyboardMiddleware>, uint32_t) -> std::shared_ptr<mw::Keyboard> override
         {
-            // TODO: Lacking use case for this request
+            return nullptr;
         }
 
-        void key(uint32_t /*serial*/, uint32_t /*time*/, uint32_t /*key*/, uint32_t /*state*/) override
+        auto key(uint32_t, uint32_t, uint32_t, uint32_t) -> void override
         {
-            // TODO: Relies on grab_keyboard being implemented
         }
 
-        void modifiers(uint32_t /*serial*/, uint32_t /*mods_depressed*/, uint32_t /*mods_latched*/, uint32_t /*mods_locked*/,
-            uint32_t /*group*/) override
+        auto modifiers(uint32_t, uint32_t, uint32_t, uint32_t, uint32_t) -> void override
         {
-            // TODO: Relies on grab_keyboard being implemented
         }
 
-        void language(uint32_t /*serial*/, const std::string &/*language*/) override
+        auto language(uint32_t, rust::String) -> void override
         {
-            // Ignored because text inputs purposefully delegate the language concern to input methods
         }
 
-        void text_direction(uint32_t serial, uint32_t direction) override
+        auto text_direction(uint32_t serial, uint32_t direction) -> void override
         {
             change.pending_change.direction = direction;
             on_text_changed(serial);
         }
 
-        std::shared_ptr<scene::TextInputHub> const text_input_hub;
+        std::shared_ptr<ms::TextInputHub> const text_input_hub;
         InputMethodV1Change change;
         static size_t constexpr max_remembered_serials{10};
-        std::deque<std::pair<uint32_t , ms::TextInputStateSerial>> serials;
+        std::deque<std::pair<uint32_t, ms::TextInputStateSerial>> serials;
         uint32_t done_event_count{0};
     };
 
-    std::shared_ptr<scene::TextInputHub> const text_input_hub;
+    std::shared_ptr<ms::TextInputHub> const text_input_hub;
     std::shared_ptr<StateObserver> const state_observer;
     bool is_activated = false;
     std::shared_ptr<InputMethodContextV1> context = nullptr;
     std::shared_ptr<InputMethodContextV1> context_on_deathbed = nullptr;
-    scene::TextInputState cached_state{};
+    ms::TextInputState cached_state{};
 };
 
-mf::InputMethodV1::InputMethodV1(
-    wl_display *display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub)
-    : Global(display, Version<1>()),
-      wayland_executor(wayland_executor),
-      text_input_hub(text_input_hub)
-{
-}
-
-void mf::InputMethodV1::bind(wl_resource *new_resource)
-{
-    new Instance{new_resource, text_input_hub, wayland_executor};
-}
-
-/// Provides access to the InputPanelSurface when the get_input_panel_surface action is triggered
-class mf::InputPanelV1::Instance : wayland::InputPanelV1
+class InputPanelV1 : public mw::InputPanelV1
 {
 public:
-    Instance(
-        std::shared_ptr<Executor> const& wayland_executor,
-        std::shared_ptr<shell::Shell> const& shell,
-        WlSeat* seat,
-        OutputManager* const output_manager,
-        wl_resource* new_resource,
-        std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-        std::shared_ptr<SurfaceRegistry> const& surface_registry) :
-        InputPanelV1{new_resource, Version<1>()},
-        wayland_executor{wayland_executor},
-        shell{shell},
-        seat{seat},
-        output_manager{output_manager},
-        text_input_hub{text_input_hub},
-        surface_registry{surface_registry}
-    {}
+    InputPanelV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::InputPanelV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<mir::Executor> wayland_executor,
+        std::shared_ptr<mir::shell::Shell> shell,
+        mf::WlSeat* seat,
+        mf::OutputManager* output_manager,
+        std::shared_ptr<ms::TextInputHub> text_input_hub,
+        std::shared_ptr<mf::SurfaceRegistry> surface_registry)
+        : mw::InputPanelV1{std::move(client), std::move(instance), object_id},
+          wayland_executor{std::move(wayland_executor)},
+          shell{std::move(shell)},
+          seat{seat},
+          output_manager{output_manager},
+          text_input_hub{std::move(text_input_hub)},
+          surface_registry{std::move(surface_registry)}
+    {
+    }
 
 private:
-
-    class InputPanelSurfaceV1 : public wayland::InputPanelSurfaceV1,
-        public WindowWlSurfaceRole
+    class InputPanelSurfaceV1
+        : public mw::InputPanelSurfaceV1,
+          public mf::WindowWlSurfaceRole
     {
     public:
         InputPanelSurfaceV1(
-            wl_resource* id,
-            std::shared_ptr<Executor> const& wayland_executor,
-            WlSeat* seat,
-            WlSurface* surface,
-            std::shared_ptr<shell::Shell> const& shell,
-            OutputManager* const output_manager,
-            std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-            std::shared_ptr<SurfaceRegistry> const& surface_registry)
-            : wayland::InputPanelSurfaceV1(id, Version<1>()),
-              WindowWlSurfaceRole(
+            std::shared_ptr<mw::Client> client,
+            rust::Box<mw::InputPanelSurfaceV1Middleware> instance,
+            uint32_t object_id,
+            std::shared_ptr<mir::Executor> const& wayland_executor,
+            mf::WlSeat* seat,
+            mf::WlSurface* surface,
+            std::shared_ptr<mir::shell::Shell> const& shell,
+            mf::OutputManager* output_manager,
+            std::shared_ptr<ms::TextInputHub> text_input_hub,
+            std::shared_ptr<mf::SurfaceRegistry> const& surface_registry)
+            : mw::InputPanelSurfaceV1{client, std::move(instance), object_id},
+              mf::WindowWlSurfaceRole(
                   *wayland_executor,
                   seat,
-                  wayland::InputPanelSurfaceV1::client,
+                  client,
                   surface,
                   shell,
                   output_manager,
                   surface_registry),
-              output_manager(output_manager),
-              text_input_hub{text_input_hub},
+              text_input_hub{std::move(text_input_hub)},
               state_observer{std::make_shared<StateObserver>(this)}
         {
-            text_input_hub->register_interest(state_observer, *wayland_executor);
+            this->text_input_hub->register_interest(state_observer, *wayland_executor);
             mir::shell::SurfaceSpecification spec;
             spec.state = mir_window_state_hidden;
             spec.type = MirWindowType::mir_window_type_inputmethod;
@@ -456,6 +421,8 @@ private:
         {
             text_input_hub->unregister_interest(*state_observer);
         }
+
+        auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::InputPanelSurfaceV1::destroyed_flag(); }
 
         void show()
         {
@@ -469,14 +436,13 @@ private:
             remove_state_now(mir_window_state_attached);
         }
 
-        virtual void handle_state_change(MirWindowState /*new_state*/) override {};
-        virtual void handle_active_change(bool /*is_now_active*/) override {};
-        virtual void handle_resize(
-            std::optional<geometry::Point> const& /*new_top_left*/,
-            geometry::Size const& /*new_size*/) override {};
-        virtual void handle_close_request() override {};
-        virtual void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
-        virtual void handle_commit() override
+        void handle_state_change(MirWindowState) override {}
+        void handle_active_change(bool) override {}
+        void handle_resize(std::optional<mir::geometry::Point> const&, mir::geometry::Size const&) override {}
+        void handle_close_request() override {}
+        void handle_tiled_edges(mir::Flags<MirTiledEdge>) override {}
+
+        void handle_commit() override
         {
             auto surface_opt = scene_surface();
             if (!surface_opt)
@@ -484,8 +450,7 @@ private:
 
             auto surface = surface_opt->get();
             auto input_region_list = surface->get_input_region();
-            auto next_bounds = input_region_list.empty() ? surface->input_bounds()
-                : input_region_list[0];
+            auto next_bounds = input_region_list.empty() ? surface->input_bounds() : input_region_list[0];
             if (last_bounds == next_bounds)
                 return;
 
@@ -493,114 +458,134 @@ private:
             spec.exclusive_rect = std::optional<mir::geometry::Rectangle>(next_bounds);
             last_bounds = next_bounds;
             apply_spec(spec);
-        };
-        virtual void destroy_role() const override
+        }
+
+        void destroy_role() const override
         {
-            wl_resource_destroy(resource);
-        };
+            const_cast<InputPanelSurfaceV1*>(this)->destroy_and_delete();
+        }
 
     private:
         struct StateObserver : ms::TextInputStateObserver
         {
-            StateObserver(InputPanelSurfaceV1* input_panel_surface)
+            explicit StateObserver(InputPanelSurfaceV1* input_panel_surface)
                 : input_panel_surface{input_panel_surface}
             {
             }
 
-            void activated(
-                scene::TextInputStateSerial,
-                bool,
-                scene::TextInputState const&) override {}
-
+            void activated(ms::TextInputStateSerial, bool, ms::TextInputState const&) override {}
             void deactivated() override {}
 
             void show_input_panel() override
             {
-                input_panel_surface->show();
+                input_panel_surface.value().show();
             }
 
             void hide_input_panel() override
             {
-                input_panel_surface->hide();
+                input_panel_surface.value().hide();
             }
 
-            InputPanelSurfaceV1* const input_panel_surface;
+            mw::Weak<InputPanelSurfaceV1> const input_panel_surface;
         };
 
-        void set_toplevel(struct wl_resource* output, uint32_t position) override
+        using mw::InputPanelSurfaceV1::set_toplevel;
+
+        auto set_toplevel(mw::Weak<mw::Output> const& output, uint32_t position) -> void override
         {
             mir::shell::SurfaceSpecification spec;
-            auto const output_id = output_manager->output_id_for(output);
-            spec.output_id = output_id.value();
+            auto const output_id = mf::OutputManager::output_id_for(mw::as_nullable_ptr(output));
+            if (output_id)
+            {
+                spec.output_id = output_id.value();
+            }
             if (position == Position::center_bottom)
             {
                 spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
             }
             else
-                log_warning("Invalid position: %u", position);
+            {
+                mir::log_warning("Invalid position: %u", position);
+            }
 
             apply_spec(spec);
             show();
         }
 
-        void set_overlay_panel() override
+        auto set_overlay_panel() -> void override
         {
-            // TODO: Unused by maliit-keyboard
         }
 
-        OutputManager* output_manager;
-        std::shared_ptr<scene::TextInputHub> const text_input_hub;
+        std::shared_ptr<ms::TextInputHub> const text_input_hub;
         std::shared_ptr<StateObserver> const state_observer;
-        geometry::Rectangle last_bounds;
+        mir::geometry::Rectangle last_bounds;
     };
 
-    void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
+    using mw::InputPanelV1::get_input_panel_surface;
+
+    auto get_input_panel_surface(
+        mw::Weak<mw::Surface> const& surface,
+        rust::Box<mw::InputPanelSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::InputPanelSurfaceV1> override
     {
-        new InputPanelSurfaceV1(
-            id,
+        return std::make_shared<InputPanelSurfaceV1>(
+            client,
+            std::move(child_instance),
+            child_object_id,
             wayland_executor,
             seat,
-            WlSurface::from(surface),
+            mw::Surface::from<mf::WlSurface>(surface),
             shell,
             output_manager,
             text_input_hub,
             surface_registry);
     }
 
-    std::shared_ptr<Executor> const wayland_executor;
-    std::shared_ptr<shell::Shell> const shell;
-    WlSeat* seat;
-    OutputManager* const output_manager;
-    std::shared_ptr<scene::TextInputHub> const text_input_hub;
-    std::shared_ptr<SurfaceRegistry> const surface_registry;
+    std::shared_ptr<mir::Executor> const wayland_executor;
+    std::shared_ptr<mir::shell::Shell> const shell;
+    mf::WlSeat* seat;
+    mf::OutputManager* const output_manager;
+    std::shared_ptr<ms::TextInputHub> const text_input_hub;
+    std::shared_ptr<mf::SurfaceRegistry> const surface_registry;
 };
+}
 
-mf::InputPanelV1::InputPanelV1(
-    wl_display* display,
-    std::shared_ptr<Executor> const& wayland_executor,
-    std::shared_ptr<shell::Shell> const& shell,
-    WlSeat* seat,
-    OutputManager* const output_manager,
-    std::shared_ptr<scene::TextInputHub> const& text_input_hub,
-    std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : Global(display, Version<1>()),
-      wayland_executor{wayland_executor},
-      shell{shell},
-      seat{seat},
-      output_manager{output_manager},
-      text_input_hub{text_input_hub},
-      surface_registry{surface_registry}
-{}
-
-void mf::InputPanelV1::bind(wl_resource *new_resource)
+auto mf::create_zwp_input_method_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::InputMethodV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<scene::TextInputHub> text_input_hub)
+-> std::shared_ptr<mw::InputMethodV1>
 {
-    new Instance{
-        wayland_executor,
-        shell,
+    return std::make_shared<InputMethodV1>(
+        std::move(client),
+        std::move(instance),
+        object_id,
+        std::move(wayland_executor),
+        std::move(text_input_hub));
+}
+
+auto mf::create_zwp_input_panel_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::InputPanelV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<shell::Shell> shell,
+    WlSeat* seat,
+    OutputManager* output_manager,
+    std::shared_ptr<scene::TextInputHub> text_input_hub,
+    std::shared_ptr<SurfaceRegistry> surface_registry)
+-> std::shared_ptr<mw::InputPanelV1>
+{
+    return std::make_shared<InputPanelV1>(
+        std::move(client),
+        std::move(instance),
+        object_id,
+        std::move(wayland_executor),
+        std::move(shell),
         seat,
         output_manager,
-        new_resource,
-        text_input_hub,
-        surface_registry,
-    };
+        std::move(text_input_hub),
+        std::move(surface_registry));
 }

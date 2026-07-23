@@ -17,15 +17,21 @@
 #ifndef MIR_FRONTEND_XDG_SHELL_STABLE_H
 #define MIR_FRONTEND_XDG_SHELL_STABLE_H
 
-#include "xdg-shell_wrapper.h"
+#include "xdg_shell.h"
 #include "window_wl_surface_role.h"
+
+#include <memory>
+#include <optional>
 
 namespace mir
 {
 namespace scene
 {
-class Shell;
 class Surface;
+}
+namespace shell
+{
+class Shell;
 }
 namespace frontend
 {
@@ -35,18 +41,21 @@ class WlSurface;
 class XdgSurfaceStable;
 class XdgPositionerStable;
 
-class XdgShellStable : public wayland::XdgWmBase::Global
+class XdgShellStable : public wayland::XdgWmBase
 {
 public:
     XdgShellStable(
-        wl_display* display,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::XdgWmBaseMiddleware> instance,
+        uint32_t object_id,
         Executor& wayland_executor,
         std::shared_ptr<shell::Shell> const& shell,
         WlSeat& seat,
         OutputManager* output_manager,
         std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
-    static auto get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>;
+    static auto get_window(
+        wayland::Weak<wayland::XdgSurface> const& surface) -> std::shared_ptr<scene::Surface>;
 
     Executor& wayland_executor;
     std::shared_ptr<shell::Shell> const shell;
@@ -55,15 +64,39 @@ public:
     std::shared_ptr<SurfaceRegistry> const surface_registry;
 
 private:
-    class Instance;
-    void bind(wl_resource* new_resource) override;
+    auto create_positioner(
+        rust::Box<wayland::XdgPositionerMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::XdgPositioner> override;
+
+    using wayland::XdgWmBase::get_xdg_surface;
+    auto get_xdg_surface(
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::XdgSurfaceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::XdgSurface> override;
+
+    auto pong(uint32_t serial) -> void override;
 };
+
+auto create_xdg_shell_stable(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::XdgWmBaseMiddleware> instance,
+    uint32_t object_id,
+    Executor& wayland_executor,
+    std::shared_ptr<shell::Shell> const& shell,
+    WlSeat& seat,
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
+-> std::shared_ptr<wayland::XdgWmBase>;
 
 class XdgPopupStable : public wayland::XdgPopup, public WindowWlSurfaceRole
 {
 public:
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland::XdgPopup::destroyed_flag(); }
+
     XdgPopupStable(
-        wl_resource* new_resource,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::XdgPopupMiddleware> instance,
+        uint32_t object_id,
         XdgSurfaceStable* xdg_surface,
         std::optional<WlSurfaceRole*> parent_role,
         XdgPositionerStable& positioner,
@@ -73,8 +106,10 @@ public:
     /// parent scene surface (as is the case for layer shell surfaces with a margin)
     void set_aux_rect_offset_now(geometry::Displacement const& new_aux_rect_offset);
 
-    void grab(struct wl_resource* seat, uint32_t serial) override;
-    void reposition(wl_resource* positioner, uint32_t token) override;
+    using wayland::XdgPopup::grab;
+    auto grab(wayland::Weak<wayland::Seat> const& seat, uint32_t serial) -> void override;
+    using wayland::XdgPopup::reposition;
+    auto reposition(wayland::Weak<wayland::XdgPositioner> const& positioner, uint32_t token) -> void override;
 
     void handle_commit() override {};
     void handle_state_change(MirWindowState /*new_state*/) override {};
@@ -85,7 +120,7 @@ public:
     void handle_close_request() override;
     void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
 
-    static auto from(wl_resource* resource) -> XdgPopupStable*;
+    static auto from(wayland::Weak<wayland::XdgPopup> const& resource) -> XdgPopupStable*;
 
 private:
     void destroy_role() const override;
@@ -104,27 +139,40 @@ private:
     auto popup_rect() const -> std::optional<geometry::Rectangle>;
 };
 
-class XdgToplevelStable : mir::wayland::XdgToplevel, public WindowWlSurfaceRole
+class XdgToplevelStable : public wayland::XdgToplevel, public WindowWlSurfaceRole
 {
 public:
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return wayland::XdgToplevel::destroyed_flag(); }
+
     XdgToplevelStable(
-        wl_resource* new_resource,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::XdgToplevelMiddleware> instance,
+        uint32_t object_id,
         XdgSurfaceStable* xdg_surface,
         WlSurface* surface);
 
-    void set_parent(std::optional<struct wl_resource*> const& parent) override;
-    void set_title(std::string const& title) override;
-    void set_app_id(std::string const& app_id) override;
-    void show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y) override;
-    void move(struct wl_resource* seat, uint32_t serial) override;
-    void resize(struct wl_resource* seat, uint32_t serial, uint32_t edges) override;
-    void set_max_size(int32_t width, int32_t height) override;
-    void set_min_size(int32_t width, int32_t height) override;
-    void set_maximized() override;
-    void unset_maximized() override;
-    void set_fullscreen(std::optional<struct wl_resource*> const& output) override;
-    void unset_fullscreen() override;
-    void set_minimized() override;
+    using wayland::XdgToplevel::set_parent;
+    auto set_parent(std::optional<wayland::Weak<wayland::XdgToplevel>> const& parent) -> void override;
+    auto set_title(rust::String title) -> void override;
+    auto set_app_id(rust::String app_id) -> void override;
+    using wayland::XdgToplevel::show_window_menu;
+    auto show_window_menu(
+        wayland::Weak<wayland::Seat> const& seat,
+        uint32_t serial,
+        int32_t x,
+        int32_t y) -> void override;
+    using wayland::XdgToplevel::r_move;
+    auto r_move(wayland::Weak<wayland::Seat> const& seat, uint32_t serial) -> void override;
+    using wayland::XdgToplevel::resize;
+    auto resize(wayland::Weak<wayland::Seat> const& seat, uint32_t serial, uint32_t edges) -> void override;
+    auto set_max_size(int32_t width, int32_t height) -> void override;
+    auto set_min_size(int32_t width, int32_t height) -> void override;
+    auto set_maximized() -> void override;
+    auto unset_maximized() -> void override;
+    using wayland::XdgToplevel::set_fullscreen;
+    auto set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& output) -> void override;
+    auto unset_fullscreen() -> void override;
+    auto set_minimized() -> void override;
 
     void handle_commit() override;
     void handle_state_change(MirWindowState /*new_state*/) override;
@@ -133,13 +181,13 @@ public:
     void handle_close_request() override;
     void handle_tiled_edges(Flags<MirTiledEdge> tiled_edges) override;
 
-    static XdgToplevelStable* from(wl_resource* surface);
+    static auto from(wayland::Weak<wayland::XdgToplevel> const& surface) -> XdgToplevelStable*;
 
 private:
     void send_toplevel_configure();
     void destroy_role() const override;
 
-    mir::wayland::Weak<XdgSurfaceStable> const xdg_surface;
+    wayland::Weak<XdgSurfaceStable> const xdg_surface;
 };
 }
 }

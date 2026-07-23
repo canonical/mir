@@ -17,20 +17,20 @@
 #include "xdg_shell_stable.h"
 
 #include "wl_surface.h"
-#include "wayland_utils.h"
+#include "protocol_error.h"
+#include "weak.h"
 
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/client.h>
-#include <mir/frontend/wayland.h>
+#include "wayland_rs/src/ffi.rs.h"
+
+#include "weak.h"
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/scene/surface.h>
 #include <mir/log.h>
 
-#include <boost/throw_exception.hpp>
-
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
 #include <vector>
 
 namespace mf = mir::frontend;
@@ -38,38 +38,45 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 
 namespace mir
 {
 namespace frontend
 {
 
-class XdgSurfaceStable : public mw::XdgSurface
+class XdgSurfaceStable : public mwrs::XdgSurface
 {
 public:
-    static XdgSurfaceStable* from(wl_resource* surface);
+    static auto from(mwrs::Weak<mwrs::XdgSurface> const& surface) -> XdgSurfaceStable*;
 
-    XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell);
+    XdgSurfaceStable(
+        std::shared_ptr<mwrs::Client> client,
+        rust::Box<mwrs::XdgSurfaceMiddleware> instance,
+        uint32_t object_id,
+        WlSurface* surface,
+        XdgShellStable const& xdg_shell);
     ~XdgSurfaceStable() = default;
 
-    void get_toplevel(wl_resource* new_toplevel) override;
-    void get_popup(
-        wl_resource* new_popup,
-        std::optional<wl_resource*> const& parent_surface,
-        wl_resource* positioner) override;
-    void set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void ack_configure(uint32_t serial) override;
+    auto get_toplevel(
+        rust::Box<mwrs::XdgToplevelMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgToplevel> override;
+    using mwrs::XdgSurface::get_popup;
+    auto get_popup(
+        std::optional<mwrs::Weak<mwrs::XdgSurface>> const& parent_surface,
+        mwrs::Weak<mwrs::XdgPositioner> const& positioner,
+        rust::Box<mwrs::XdgPopupMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgPopup> override;
+    auto set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) -> void override;
+    auto ack_configure(uint32_t serial) -> void override;
 
     void send_configure();
 
-    mw::Weak<WindowWlSurfaceRole> const& window_role();
-
-    using mw::XdgSurface::client;
-    using mw::XdgSurface::resource;
+    auto window_role() -> mw::Weak<WindowWlSurfaceRole> const&;
 
 private:
     mw::Weak<WindowWlSurfaceRole> window_role_;
-    mw::Weak<WlSurface> const surface;
+    mwrs::Weak<WlSurface> const surface;
     /// Serials of configure events sent on this xdg_surface that have not yet been
     /// consumed by an ack_configure, in the order they were sent. Acking a serial
     /// consumes it and every serial sent before it.
@@ -79,54 +86,81 @@ public:
     XdgShellStable const& xdg_shell;
 };
 
-class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpecification
+class XdgPositionerStable : public mwrs::XdgPositioner, public shell::SurfaceSpecification
 {
 public:
-    XdgPositionerStable(wl_resource* new_resource);
+    XdgPositionerStable(
+        std::shared_ptr<mwrs::Client> client,
+        rust::Box<mwrs::XdgPositionerMiddleware> instance,
+        uint32_t object_id);
 
-    void ensure_complete() const;
+    void ensure_complete();
 
     bool reactive{false};
 
 private:
-    void set_size(int32_t width, int32_t height) override;
-    void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_anchor(uint32_t anchor) override;
-    void set_gravity(uint32_t gravity) override;
-    void set_constraint_adjustment(uint32_t constraint_adjustment) override;
-    void set_offset(int32_t x, int32_t y) override;
-    void set_reactive() override;
-    void set_parent_size(int32_t parent_width, int32_t parent_height) override;
-    void set_parent_configure(uint32_t serial) override;
+    auto set_size(int32_t width, int32_t height) -> void override;
+    auto set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) -> void override;
+    auto set_anchor(uint32_t anchor) -> void override;
+    auto set_gravity(uint32_t gravity) -> void override;
+    auto set_constraint_adjustment(uint32_t constraint_adjustment) -> void override;
+    auto set_offset(int32_t x, int32_t y) -> void override;
+    auto set_reactive() -> void override;
+    auto set_parent_size(int32_t parent_width, int32_t parent_height) -> void override;
+    auto set_parent_configure(uint32_t serial) -> void override;
 };
 
 }
 }
 namespace mf = mir::frontend;  // Keep CLion's parsing happy
 
-class mf::XdgShellStable::Instance : public mw::XdgWmBase
+namespace
 {
-public:
-    Instance(wl_resource* new_resource, mf::XdgShellStable* shell);
-
-private:
-    void create_positioner(wl_resource* new_positioner) override;
-    void get_xdg_surface(wl_resource* new_xdg_surface, wl_resource* surface) override;
-    void pong(uint32_t serial) override;
-
-    mf::XdgShellStable* const shell;
-};
+// Wayland `array` arguments are opaque byte blobs on the wire. The xdg-shell
+// `states` and `capabilities` arrays are defined as arrays of uint32_t enum
+// values, so each entry must be appended as a uint32_t in native byte order
+// (matching libwayland's historical `wl_array` semantics).
+void append_u32(std::vector<uint8_t>& array, uint32_t value)
+{
+    auto const* const bytes = reinterpret_cast<uint8_t const*>(&value);
+    array.insert(array.end(), bytes, bytes + sizeof(value));
+}
+}
 
 // XdgShellStable
 
-mf::XdgShellStable::XdgShellStable(
-    struct wl_display* display,
+auto mf::create_xdg_shell_stable(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::XdgWmBaseMiddleware> instance,
+    uint32_t object_id,
     Executor& wayland_executor,
     std::shared_ptr<msh::Shell> const& shell,
     WlSeat& seat,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : Global(display, Version<5>()),
+-> std::shared_ptr<mwrs::XdgWmBase>
+{
+    return std::make_shared<XdgShellStable>(
+        std::move(client),
+        std::move(instance),
+        object_id,
+        wayland_executor,
+        shell,
+        seat,
+        output_manager,
+        surface_registry);
+}
+
+mf::XdgShellStable::XdgShellStable(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::XdgWmBaseMiddleware> instance,
+    uint32_t object_id,
+    Executor& wayland_executor,
+    std::shared_ptr<msh::Shell> const& shell,
+    WlSeat& seat,
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
+    : XdgWmBase{std::move(client), std::move(instance), object_id},
       wayland_executor{wayland_executor},
       shell{shell},
       seat{seat},
@@ -135,28 +169,27 @@ mf::XdgShellStable::XdgShellStable(
 {
 }
 
-void mf::XdgShellStable::bind(wl_resource* new_resource)
+auto mf::XdgShellStable::create_positioner(
+    rust::Box<mwrs::XdgPositionerMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgPositioner>
 {
-    new Instance{new_resource, this};
+    return std::make_shared<XdgPositionerStable>(client, std::move(child_instance), child_object_id);
 }
 
-mf::XdgShellStable::Instance::Instance(wl_resource* new_resource, mf::XdgShellStable* shell)
-    : XdgWmBase{new_resource, Version<5>()},
-      shell{shell}
+auto mf::XdgShellStable::get_xdg_surface(
+    mwrs::Weak<mwrs::Surface> const& surface,
+    rust::Box<mwrs::XdgSurfaceMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgSurface>
 {
+    return std::make_shared<XdgSurfaceStable>(
+        client,
+        std::move(child_instance),
+        child_object_id,
+        mwrs::Surface::from<WlSurface>(surface),
+        *this);
 }
 
-void mf::XdgShellStable::Instance::create_positioner(wl_resource* new_positioner)
-{
-    new XdgPositionerStable{new_positioner};
-}
-
-void mf::XdgShellStable::Instance::get_xdg_surface(wl_resource* new_shell_surface, wl_resource* surface)
-{
-    new XdgSurfaceStable{new_shell_surface, WlSurface::from(surface), *shell};
-}
-
-void mf::XdgShellStable::Instance::pong(uint32_t serial)
+auto mf::XdgShellStable::pong(uint32_t serial) -> void
 {
     (void)serial;
     // TODO
@@ -164,90 +197,102 @@ void mf::XdgShellStable::Instance::pong(uint32_t serial)
 
 // XdgSurfaceStable
 
-mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
+auto mf::XdgSurfaceStable::from(mwrs::Weak<mwrs::XdgSurface> const& surface) -> XdgSurfaceStable*
 {
-    auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgSurfaceStable*>(static_cast<mw::XdgSurface*>(tmp));
+    return mwrs::XdgSurface::from<XdgSurfaceStable>(surface);
 }
 
-mf::XdgSurfaceStable::XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell)
-    : mw::XdgSurface(new_resource, Version<5>()),
+mf::XdgSurfaceStable::XdgSurfaceStable(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::XdgSurfaceMiddleware> instance,
+    uint32_t object_id,
+    WlSurface* surface,
+    XdgShellStable const& xdg_shell)
+    : mwrs::XdgSurface{std::move(client), std::move(instance), object_id},
       surface{surface},
       xdg_shell{xdg_shell}
 {
 }
 
-void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
+auto mf::XdgSurfaceStable::get_toplevel(
+    rust::Box<mwrs::XdgToplevelMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgToplevel>
 {
     if (!surface)
     {
-        throw mw::ProtocolError{
-            resource,
-            mw::generic_error_code,
+        throw mwrs::ProtocolError{
+            object_id(),
+            0,
             "Tried to create toplevel after destroying surface"};
     }
     if (window_role_)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::already_constructed,
             "Tried to create toplevel on surface with existing role"};
     }
-    auto toplevel = new XdgToplevelStable{new_toplevel, this, &surface.value()};
-    window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel);
+    auto toplevel = std::make_shared<XdgToplevelStable>(
+        client, std::move(child_instance), child_object_id, this, &surface.value());
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel.get());
+    return toplevel;
 }
 
-void mf::XdgSurfaceStable::get_popup(
-    wl_resource* new_popup,
-    std::optional<struct wl_resource*> const& parent_surface,
-    wl_resource* positioner)
+auto mf::XdgSurfaceStable::get_popup(
+    std::optional<mwrs::Weak<mwrs::XdgSurface>> const& parent_surface,
+    mwrs::Weak<mwrs::XdgPositioner> const& positioner,
+    rust::Box<mwrs::XdgPopupMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgPopup>
 {
     std::optional<WlSurfaceRole*> parent_role;
     if (parent_surface)
     {
         XdgSurfaceStable* parent_xdg_surface = XdgSurfaceStable::from(parent_surface.value());
-        auto const& parent_window_role = parent_xdg_surface->window_role();
-        if (parent_window_role)
+        if (parent_xdg_surface)
         {
-            parent_role = static_cast<WlSurfaceRole*>(&parent_window_role.value());
-        }
-        else
-        {
-            log_warning("Parent window of a popup has no role");
+            auto const& parent_window_role = parent_xdg_surface->window_role();
+            if (parent_window_role)
+            {
+                parent_role = static_cast<WlSurfaceRole*>(&parent_window_role.value());
+            }
+            else
+            {
+                log_warning("Parent window of a popup has no role");
+            }
         }
     }
 
-    auto xdg_positioner = static_cast<XdgPositionerStable*>(
-        static_cast<mw::XdgPositioner*>(
-            wl_resource_get_user_data(positioner)));
+    auto* xdg_positioner = mwrs::XdgPositioner::from<XdgPositionerStable>(positioner);
 
     if (!surface)
     {
-        throw mw::ProtocolError{
-            resource,
-            mw::generic_error_code,
+        throw mwrs::ProtocolError{
+            object_id(),
+            0,
             "Tried to create popup after destroying surface"};
     }
     if (window_role_)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::already_constructed,
             "Tried to create popup on surface with existing role"};
     }
 
-    auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
-    window_role_ = mw::make_weak<WindowWlSurfaceRole>(popup);
+    auto popup = std::make_shared<XdgPopupStable>(
+        client, std::move(child_instance), child_object_id, this, parent_role, *xdg_positioner, &surface.value());
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(popup.get());
+    return popup;
 }
 
-void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
+auto mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height) -> void
 {
     if (width <= 0 || height <= 0)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_size,
-            "Invalid %s size %dx%d", interface_name, width, height};
+            "Invalid xdg_surface size %dx%d", width, height};
     }
     if (window_role_)
     {
@@ -257,13 +302,13 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
     }
 }
 
-void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
+auto mf::XdgSurfaceStable::ack_configure(uint32_t serial) -> void
 {
     auto const it = std::find(unacked_configure_serials.begin(), unacked_configure_serials.end(), serial);
     if (it == unacked_configure_serials.end())
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_serial,
             "ack_configure with serial %u that was never sent or has already been acked", serial};
     }
@@ -278,7 +323,7 @@ void mf::XdgSurfaceStable::send_configure()
     send_configure_event(serial);
 }
 
-mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceStable::window_role()
+auto mf::XdgSurfaceStable::window_role() -> mw::Weak<mf::WindowWlSurfaceRole> const&
 {
     return window_role_;
 }
@@ -286,16 +331,18 @@ mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceStable::window_role()
 // XdgPopupStable
 
 mf::XdgPopupStable::XdgPopupStable(
-    wl_resource* new_resource,
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::XdgPopupMiddleware> instance,
+    uint32_t object_id,
     XdgSurfaceStable* xdg_surface,
     std::optional<WlSurfaceRole*> parent_role,
     XdgPositionerStable& positioner,
     WlSurface* surface)
-    : mw::XdgPopup(new_resource, Version<5>()),
+    : mwrs::XdgPopup{std::move(client), std::move(instance), object_id},
       WindowWlSurfaceRole(
           xdg_surface->xdg_shell.wayland_executor,
           &xdg_surface->xdg_shell.seat,
-          mw::XdgPopup::client,
+          mwrs::XdgPopup::client,
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager,
@@ -303,7 +350,7 @@ mf::XdgPopupStable::XdgPopupStable(
       reactive{positioner.reactive},
       aux_rect{positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{}},
       shell{xdg_surface->xdg_shell.shell},
-      xdg_surface{xdg_surface}
+      xdg_surface{mwrs::make_weak(xdg_surface)}
 {
     positioner.ensure_complete();
     positioner.type = mir_window_type_tip;
@@ -345,21 +392,19 @@ void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_a
     }
 }
 
-void mf::XdgPopupStable::grab(struct wl_resource* seat, uint32_t serial)
+auto mf::XdgPopupStable::grab(mwrs::Weak<mwrs::Seat> const& seat, uint32_t serial) -> void
 {
     (void)seat, (void)serial;
     set_type(mir_window_type_menu);
 }
 
-void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t token)
+auto mf::XdgPopupStable::reposition(mwrs::Weak<mwrs::XdgPositioner> const& positioner_resource, uint32_t token) -> void
 {
-    auto const& positioner = *static_cast<XdgPositionerStable*>(
-        static_cast<mw::XdgPositioner*>(
-            wl_resource_get_user_data(positioner_resource)));
-    positioner.ensure_complete();
+    auto* positioner = mwrs::XdgPositioner::from<XdgPositionerStable>(positioner_resource);
+    positioner->ensure_complete();
 
-    reactive = positioner.reactive;
-    aux_rect = positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{};
+    reactive = positioner->reactive;
+    aux_rect = positioner->aux_rect ? positioner->aux_rect.value() : geom::Rectangle{};
     reposition_token = token;
 
     auto const scene_surface_{scene_surface()};
@@ -367,12 +412,12 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     {
         if (auto const session = scene_surface_.value()->session().lock())
         {
-            shell->modify_surface(session, scene_surface_.value(), positioner);
+            shell->modify_surface(session, scene_surface_.value(), *positioner);
         }
     }
     else
     {
-        apply_spec(positioner);
+        apply_spec(*positioner);
     }
 }
 
@@ -396,7 +441,7 @@ void mf::XdgPopupStable::handle_resize(
     {
         if (reposition_token)
         {
-            send_repositioned_event(reposition_token.value());
+            send_repositioned_event_if_supported(reposition_token.value());
             reposition_token = std::nullopt;
         }
         send_configure_event(cached_top_left.value().x.as_int(),
@@ -413,11 +458,11 @@ void mf::XdgPopupStable::handle_close_request()
     send_popup_done_event();
 }
 
-auto mf::XdgPopupStable::from(wl_resource* resource) -> XdgPopupStable*
+auto mf::XdgPopupStable::from(mwrs::Weak<mwrs::XdgPopup> const& resource) -> XdgPopupStable*
 {
-    auto popup = dynamic_cast<XdgPopupStable*>(mw::XdgPopup::from(resource));
+    auto popup = mwrs::XdgPopup::from<XdgPopupStable>(resource);
     if (!popup)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Invalid resource given to XdgPopupStable::from()"));
+        throw std::runtime_error("Invalid resource given to XdgPopupStable::from()");
     return popup;
 }
 
@@ -435,60 +480,48 @@ auto mf::XdgPopupStable::popup_rect() const -> std::optional<geometry::Rectangle
 
 void mf::XdgPopupStable::destroy_role() const
 {
-    wl_resource_destroy(resource);
+    const_cast<XdgPopupStable*>(this)->destroy_and_delete();
 }
 
 // XdgToplevelStable
 
-mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceStable* xdg_surface, WlSurface* surface)
-    : mw::XdgToplevel(new_resource, Version<5>()),
+mf::XdgToplevelStable::XdgToplevelStable(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::XdgToplevelMiddleware> instance,
+    uint32_t object_id,
+    XdgSurfaceStable* xdg_surface,
+    WlSurface* surface)
+    : mwrs::XdgToplevel{std::move(client), std::move(instance), object_id},
       WindowWlSurfaceRole(
           xdg_surface->xdg_shell.wayland_executor,
           &xdg_surface->xdg_shell.seat,
-          mw::XdgToplevel::client,
+          mwrs::XdgToplevel::client,
           surface,
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager,
           xdg_surface->xdg_shell.surface_registry),
-      xdg_surface{xdg_surface}
+      xdg_surface{mwrs::make_weak(xdg_surface)}
 {
-    if (version_supports_wm_capabilities())
-    {
-        std::vector<uint32_t> capabilities{
-            WmCapabilities::maximize,
-            WmCapabilities::minimize,
-            WmCapabilities::fullscreen,
-        };
-        wl_array capability_array{};
-        wl_array_init(&capability_array);
-        for (auto& capability : capabilities)
-        {
-            if (uint32_t *item = static_cast<decltype(item)>(wl_array_add(&capability_array, sizeof *item)))
-            {
-                *item = capability;
-            }
-        }
-        send_wm_capabilities_event(&capability_array);
-        wl_array_release(&capability_array);
-    }
+    std::vector<uint8_t> capabilities;
+    append_u32(capabilities, WmCapabilities::maximize);
+    append_u32(capabilities, WmCapabilities::minimize);
+    append_u32(capabilities, WmCapabilities::fullscreen);
+    send_wm_capabilities_event_if_supported(capabilities);
 
-    wl_array states{};
-    wl_array_init(&states);
-    send_configure_event(0, 0, &states);
-    wl_array_release(&states);
+    send_configure_event(0, 0, {});
     xdg_surface->send_configure();
 }
 
-void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const& parent)
+auto mf::XdgToplevelStable::set_parent(std::optional<mwrs::Weak<mwrs::XdgToplevel>> const& parent) -> void
 {
-    if (parent && parent.value())
+    if (parent)
     {
         auto parent_toplevel = XdgToplevelStable::from(parent.value());
 
         if (parent_toplevel == this)
         {
-            throw mw::ProtocolError{
-                resource,
+            throw mwrs::ProtocolError{
+                object_id(),
                 Error::invalid_parent,
                 "A toplevel cannot be its own parent"};
         }
@@ -500,8 +533,8 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
             {
                 if (ancestor == this_surface)
                 {
-                    throw mw::ProtocolError{
-                        resource,
+                    throw mwrs::ProtocolError{
+                        object_id(),
                         Error::invalid_parent,
                         "Parent toplevel must not be a descendant of the child toplevel"};
                 }
@@ -516,28 +549,32 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
     }
 }
 
-void mf::XdgToplevelStable::set_title(std::string const& title)
+auto mf::XdgToplevelStable::set_title(rust::String title) -> void
 {
-    WindowWlSurfaceRole::set_title(title);
+    WindowWlSurfaceRole::set_title(std::string{title});
 }
 
-void mf::XdgToplevelStable::set_app_id(std::string const& app_id)
+auto mf::XdgToplevelStable::set_app_id(rust::String app_id) -> void
 {
-    WindowWlSurfaceRole::set_application_id(app_id);
+    WindowWlSurfaceRole::set_application_id(std::string{app_id});
 }
 
-void mf::XdgToplevelStable::show_window_menu(struct wl_resource* seat, uint32_t serial, int32_t x, int32_t y)
+auto mf::XdgToplevelStable::show_window_menu(
+    mwrs::Weak<mwrs::Seat> const& seat,
+    uint32_t serial,
+    int32_t x,
+    int32_t y) -> void
 {
     (void)seat, (void)serial, (void)x, (void)y;
     // TODO
 }
 
-void mf::XdgToplevelStable::move(struct wl_resource* /*seat*/, uint32_t serial)
+auto mf::XdgToplevelStable::r_move(mwrs::Weak<mwrs::Seat> const& /*seat*/, uint32_t serial) -> void
 {
     initiate_interactive_move(serial);
 }
 
-void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial, uint32_t edges)
+auto mf::XdgToplevelStable::resize(mwrs::Weak<mwrs::Seat> const& /*seat*/, uint32_t serial, uint32_t edges) -> void
 {
     MirResizeEdge edge = mir_resize_edge_none;
 
@@ -580,8 +617,8 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
         break;
 
     default:
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_resize_edge,
             "Invalid resize edge %d", edges};
     }
@@ -589,24 +626,24 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
     initiate_interactive_resize(edge, serial);
 }
 
-void mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height)
+auto mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height) -> void
 {
     if (width < 0 || height < 0)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_size,
             "Invalid maximum size %dx%d", width, height};
     }
     WindowWlSurfaceRole::set_max_size(width, height);
 }
 
-void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
+auto mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height) -> void
 {
     if (width < 0 || height < 0)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_size,
             "Invalid minimum size %dx%d", width, height};
     }
@@ -622,8 +659,8 @@ void mf::XdgToplevelStable::handle_commit()
     // "no minimum", so this comparison only triggers when the client has set genuinely conflicting constraints.
     if (max_size.width < min_size.width || max_size.height < min_size.height)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_size,
             "Maximum size %dx%d is smaller than minimum size %dx%d",
             max_size.width.as_int(), max_size.height.as_int(),
@@ -631,31 +668,31 @@ void mf::XdgToplevelStable::handle_commit()
     }
 }
 
-void mf::XdgToplevelStable::set_maximized()
+auto mf::XdgToplevelStable::set_maximized() -> void
 {
     // We must process this request immediately (i.e. don't defer until commit())
     add_state_now(mir_window_state_maximized);
 }
 
-void mf::XdgToplevelStable::unset_maximized()
+auto mf::XdgToplevelStable::unset_maximized() -> void
 {
     // We must process this request immediately (i.e. don't defer until commit())
     remove_state_now(mir_window_state_maximized);
 }
 
-void mf::XdgToplevelStable::set_fullscreen(std::optional<struct wl_resource*> const& output)
+auto mf::XdgToplevelStable::set_fullscreen(std::optional<mwrs::Weak<mwrs::Output>> const& output) -> void
 {
     WindowWlSurfaceRole::set_fullscreen(output);
 }
 
-void mf::XdgToplevelStable::unset_fullscreen()
+auto mf::XdgToplevelStable::unset_fullscreen() -> void
 {
     // We must process this request immediately (i.e. don't defer until commit())
     // TODO: should we instead restore the previous state?
     remove_state_now(mir_window_state_fullscreen);
 }
 
-void mf::XdgToplevelStable::set_minimized()
+auto mf::XdgToplevelStable::set_minimized() -> void
 {
     // We must process this request immediately (i.e. don't defer until commit())
     add_state_now(mir_window_state_minimized);
@@ -690,13 +727,11 @@ void mf::XdgToplevelStable::handle_close_request()
 
 void mf::XdgToplevelStable::send_toplevel_configure()
 {
-    wl_array states{};
-    wl_array_init(&states);
+    std::vector<uint8_t> states;
 
     if (is_active())
     {
-        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::activated;
+        append_u32(states, State::activated);
     }
 
     auto opt_window_size = requested_window_size();
@@ -711,36 +746,30 @@ void mf::XdgToplevelStable::send_toplevel_configure()
             mir_window_state_horizmaximized,
             mir_window_state_vertmaximized}))
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::maximized;
+            append_u32(states, State::maximized);
         }
 
         if (state.has(mir_window_state_fullscreen))
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::fullscreen;
+            append_u32(states, State::fullscreen);
         }
 
         auto tiled_edges = s->tiled_edges();
         if (tiled_edges & mir_tiled_edge_north)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_top;
+            append_u32(states, State::tiled_top);
         }
         if (tiled_edges & mir_tiled_edge_east)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_right;
+            append_u32(states, State::tiled_right);
         }
         if (tiled_edges & mir_tiled_edge_south)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_bottom;
+            append_u32(states, State::tiled_bottom);
         }
         if (tiled_edges & mir_tiled_edge_west)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_left;
+            append_u32(states, State::tiled_left);
         }
 
         if (state.has_any({
@@ -759,27 +788,28 @@ void mf::XdgToplevelStable::send_toplevel_configure()
     // 0 sizes means default for toplevel configure
     auto size = opt_window_size.value_or(geom::Size{0, 0});
 
-    send_configure_event(size.width.as_int(), size.height.as_int(), &states);
-    wl_array_release(&states);
+    send_configure_event(size.width.as_int(), size.height.as_int(), states);
 
     if (xdg_surface) xdg_surface.value().send_configure();
 }
 
-mf::XdgToplevelStable* mf::XdgToplevelStable::from(wl_resource* surface)
+auto mf::XdgToplevelStable::from(mwrs::Weak<mwrs::XdgToplevel> const& surface) -> XdgToplevelStable*
 {
-    auto* tmp = wl_resource_get_user_data(surface);
-    return static_cast<XdgToplevelStable*>(static_cast<mw::XdgToplevel*>(tmp));
+    return mwrs::XdgToplevel::from<XdgToplevelStable>(surface);
 }
 
 void mf::XdgToplevelStable::destroy_role() const
 {
-    wl_resource_destroy(resource);
+    const_cast<XdgToplevelStable*>(this)->destroy_and_delete();
 }
 
 // XdgPositionerStable
 
-mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
-    : mw::XdgPositioner(new_resource, Version<5>())
+mf::XdgPositionerStable::XdgPositionerStable(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::XdgPositionerMiddleware> instance,
+    uint32_t object_id)
+    : mwrs::XdgPositioner{std::move(client), std::move(instance), object_id}
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
@@ -787,43 +817,43 @@ mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
     placement_hints = static_cast<MirPlacementHints>(0);
 }
 
-void mf::XdgPositionerStable::ensure_complete() const
+void mf::XdgPositionerStable::ensure_complete()
 {
     if (!width || !height || !aux_rect)
     {
-        throw mw::ProtocolError{
-            resource,
-            mw::XdgWmBase::Error::invalid_positioner,
+        throw mwrs::ProtocolError{
+            object_id(),
+            mwrs::XdgWmBase::Error::invalid_positioner,
             "Incomplete positioner"};
     }
 }
 
-void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)
+auto mf::XdgPositionerStable::set_size(int32_t width, int32_t height) -> void
 {
     if (width <= 0 || height <= 0)
     {
-        throw mw::ProtocolError{
-            resource,
-            mw::XdgPositioner::Error::invalid_input,
+        throw mwrs::ProtocolError{
+            object_id(),
+            mwrs::XdgPositioner::Error::invalid_input,
             "Invalid popup positioner size: %dx%d", width, height};
     }
     this->width = geom::Width{width};
     this->height = geom::Height{height};
 }
 
-void mf::XdgPositionerStable::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height)
+auto mf::XdgPositionerStable::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) -> void
 {
     if (width < 0 || height < 0)
     {
-        throw mw::ProtocolError{
-            resource,
-            mw::XdgPositioner::Error::invalid_input,
+        throw mwrs::ProtocolError{
+            object_id(),
+            mwrs::XdgPositioner::Error::invalid_input,
             "Invalid popup anchor rect size: %dx%d", width, height};
     }
     aux_rect = geom::Rectangle{{x, y}, {width, height}};
 }
 
-void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
+auto mf::XdgPositionerStable::set_anchor(uint32_t anchor) -> void
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
@@ -866,16 +896,16 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            throw mw::ProtocolError{
-                resource,
-                mw::XdgPositioner::Error::invalid_input,
+            throw mwrs::ProtocolError{
+                object_id(),
+                mwrs::XdgPositioner::Error::invalid_input,
                 "Invalid anchor value %u", anchor};
     }
 
     aux_rect_placement_gravity = placement;
 }
 
-void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
+auto mf::XdgPositionerStable::set_gravity(uint32_t gravity) -> void
 {
     MirPlacementGravity placement = mir_placement_gravity_center;
 
@@ -918,16 +948,16 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
             break;
 
         default:
-            throw mw::ProtocolError{
-                resource,
-                mw::XdgPositioner::Error::invalid_input,
+            throw mwrs::ProtocolError{
+                object_id(),
+                mwrs::XdgPositioner::Error::invalid_input,
                 "Invalid gravity value %d", gravity};
     }
 
     surface_placement_gravity = placement;
 }
 
-void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adjustment)
+auto mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adjustment) -> void
 {
     uint32_t new_placement_hints{0};
     if (constraint_adjustment & ConstraintAdjustment::slide_x)
@@ -957,42 +987,41 @@ void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adju
     placement_hints = static_cast<MirPlacementHints>(new_placement_hints);
 }
 
-void mf::XdgPositionerStable::set_offset(int32_t x, int32_t y)
+auto mf::XdgPositionerStable::set_offset(int32_t x, int32_t y) -> void
 {
     aux_rect_placement_offset_x = x;
     aux_rect_placement_offset_y = y;
 }
 
-void mf::XdgPositionerStable::set_reactive()
+auto mf::XdgPositionerStable::set_reactive() -> void
 {
     reactive = true;
 }
 
-void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t parent_height)
+auto mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t parent_height) -> void
 {
     if (parent_width <= 0 || parent_height <= 0)
     {
-        throw mw::ProtocolError{
-            resource,
+        throw mwrs::ProtocolError{
+            object_id(),
             Error::invalid_input,
             "Invalid popup positioner parent size: %dx%d", parent_width, parent_height};
     }
     parent_size = geom::Size{parent_width, parent_height};
 }
 
-void mf::XdgPositionerStable::set_parent_configure(uint32_t /*serial*/)
+auto mf::XdgPositionerStable::set_parent_configure(uint32_t /*serial*/) -> void
 {
     // TODO
     log_warning("xdg_positioner.set_parent_configure not implemented");
 }
 
-auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<scene::Surface>
+auto mf::XdgShellStable::get_window(
+    mwrs::Weak<mwrs::XdgSurface> const& surface) -> std::shared_ptr<scene::Surface>
 {
-    namespace mw = mir::wayland;
-
-    if (mw::XdgSurface::is_instance(surface))
+    auto const xdgsurface = XdgSurfaceStable::from(surface);
+    if (xdgsurface)
     {
-        auto const xdgsurface = XdgSurfaceStable::from(surface);
         if (auto const& role = xdgsurface->window_role())
         {
             if (auto const scene_surface = role.value().scene_surface())
@@ -1001,7 +1030,7 @@ auto mf::XdgShellStable::get_window(wl_resource* surface) -> std::shared_ptr<sce
             }
         }
 
-        log_debug("No window currently associated with wayland::XdgSurface %p", static_cast<void*>(surface));
+        log_debug("No window currently associated with wayland::XdgSurface@%u", xdgsurface->object_id());
     }
 
     return {};

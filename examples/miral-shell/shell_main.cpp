@@ -95,7 +95,7 @@ int main(int argc, char const* argv[])
 
     ExternalClientLauncher external_client_launcher;
 
-    std::string terminal_cmd{"miral-terminal"};
+    std::string terminal_cmd{"konsole"};
 
     auto const quit_on_ctrl_alt_bksp = [&](MirKeyboardEvent const* kev)
         {

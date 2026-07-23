@@ -15,7 +15,7 @@
  */
 
 #include "virtual_pointer_v1.h"
-#include "wayland_wrapper.h"
+#include "wayland.h"
 #include "wl_pointer.h"
 #include "output_manager.h"
 
@@ -28,13 +28,15 @@
 #include <mir/input/input_sink.h>
 #include <mir/input/virtual_input_device.h>
 #include <mir/log.h>
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
+
+#include "protocol_error.h"
 
 #include <linux/input-event-codes.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
@@ -50,30 +52,28 @@ struct VirtualPointerV1Ctx
     std::shared_ptr<mi::InputDeviceRegistry> const device_registry;
 };
 
-class VirtualPointerManagerV1Global
-    : public wayland::VirtualPointerManagerV1::Global
-{
-public:
-    VirtualPointerManagerV1Global(wl_display* display, std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<VirtualPointerV1Ctx> const ctx;
-};
-
 class VirtualPointerManagerV1
     : public wayland::VirtualPointerManagerV1
 {
 public:
-    VirtualPointerManagerV1(wl_resource* resource, std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
+    VirtualPointerManagerV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
 
 private:
-    void create_virtual_pointer(std::optional<wl_resource*> const& seat, wl_resource* id) override;
-    void create_virtual_pointer_with_output(
-        std::optional<wl_resource*> const& seat,
-        std::optional<wl_resource*> const& output,
-        wl_resource* id) override;
+    using wayland::VirtualPointerManagerV1::create_virtual_pointer;
+    auto create_virtual_pointer(
+        std::optional<wayland::Weak<wayland::Seat>> const& seat,
+        rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1> override;
+    using wayland::VirtualPointerManagerV1::create_virtual_pointer_with_output;
+    auto create_virtual_pointer_with_output(
+        std::optional<wayland::Weak<wayland::Seat>> const& seat,
+        std::optional<wayland::Weak<wayland::Output>> const& output,
+        rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1> override;
 
     std::shared_ptr<VirtualPointerV1Ctx> const ctx;
 };
@@ -83,8 +83,10 @@ class VirtualPointerV1
 {
 public:
     VirtualPointerV1(
-        wl_resource* resource,
-        std::optional<wl_resource*> output,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualPointerV1Middleware> instance,
+        uint32_t object_id,
+        std::optional<wayland::Weak<wayland::Output>> output,
         std::shared_ptr<VirtualPointerV1Ctx> const& ctx);
     ~VirtualPointerV1();
 
@@ -135,64 +137,56 @@ private:
 }
 
 auto mf::create_virtual_pointer_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
+    uint32_t object_id,
     OutputManager* output_manager,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<mw::VirtualPointerManagerV1::Global>
+-> std::shared_ptr<wayland::VirtualPointerManagerV1>
 {
     auto ctx = std::shared_ptr<VirtualPointerV1Ctx>{new VirtualPointerV1Ctx{output_manager, device_registry}};
-    return std::make_shared<VirtualPointerManagerV1Global>(display, std::move(ctx));
-}
-
-mf::VirtualPointerManagerV1Global::VirtualPointerManagerV1Global(
-    wl_display* display,
-    std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
-    : Global{display, Version<2>()},
-      ctx{ctx}
-{
-}
-
-void mf::VirtualPointerManagerV1Global::bind(wl_resource* new_resource)
-{
-    new VirtualPointerManagerV1{new_resource, ctx};
+    return std::make_shared<VirtualPointerManagerV1>(std::move(client), std::move(instance), object_id, std::move(ctx));
 }
 
 mf::VirtualPointerManagerV1::VirtualPointerManagerV1(
-    wl_resource* resource,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
-    : wayland::VirtualPointerManagerV1{resource, Version<2>()},
+    : wayland::VirtualPointerManagerV1{std::move(client), std::move(instance), object_id},
       ctx{ctx}
 {
 }
 
-void mf::VirtualPointerManagerV1::create_virtual_pointer(
-    std::optional<wl_resource*> const& seat,
-    wl_resource* id)
+auto mf::VirtualPointerManagerV1::create_virtual_pointer(
+    std::optional<wayland::Weak<wayland::Seat>> const&,
+    rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1>
 {
-    (void)seat;
-    new VirtualPointerV1{id, std::nullopt, ctx};
+    return std::make_shared<VirtualPointerV1>(client, std::move(child_instance), child_object_id, std::nullopt, ctx);
 }
 
-void mf::VirtualPointerManagerV1::create_virtual_pointer_with_output(
-    std::optional<wl_resource*> const& seat,
-    std::optional<wl_resource*> const& output,
-    wl_resource* id)
+auto mf::VirtualPointerManagerV1::create_virtual_pointer_with_output(
+    std::optional<wayland::Weak<wayland::Seat>> const&,
+    std::optional<wayland::Weak<wayland::Output>> const& output,
+    rust::Box<wayland::VirtualPointerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualPointerV1>
 {
-    (void)seat;
-    (void)output;
-    new VirtualPointerV1{id, output, ctx};
+    return std::make_shared<VirtualPointerV1>(client, std::move(child_instance), child_object_id, output, ctx);
 }
 
 
 mf::VirtualPointerV1::VirtualPointerV1(
-    wl_resource* resource,
-    std::optional<wl_resource*> output,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerV1Middleware> instance,
+    uint32_t object_id,
+    std::optional<wayland::Weak<wayland::Output>> output,
     std::shared_ptr<VirtualPointerV1Ctx> const& ctx)
-    : wayland::VirtualPointerV1{resource, Version<2>()},
+    : wayland::VirtualPointerV1{std::move(client), std::move(instance), object_id},
       ctx{ctx},
       pointer_device{std::make_shared<mi::VirtualInputDevice>("virtual-pointer", mi::DeviceCapability::pointer)},
       output{ctx->output_manager->output_for(
-          ctx->output_manager->output_id_for(output).value_or(
+          OutputManager::output_id_for(output ? mwrs::as_nullable_ptr(output.value()) : nullptr).value_or(
               mg::DisplayConfigurationOutputId{})).value_or(nullptr)}
 {
     update_absolute_motion_area();
@@ -221,7 +215,7 @@ void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y
     if (x > x_extent || y > y_extent)
     {
         // FIXME: Specific error proposed in https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/143
-        throw mw::ProtocolError{resource, mw::generic_error_code, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent};
+        throw mwrs::ProtocolError{object_id(), 0, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent};
     }
 
     pending.timestamp = std::chrono::milliseconds{time};
@@ -244,22 +238,22 @@ void mf::VirtualPointerV1::button(uint32_t time, uint32_t button, uint32_t state
     {
         switch (state)
         {
-        case mw::Pointer::ButtonState::pressed:
+        case mwrs::Pointer::ButtonState::pressed:
             pending.buttons_pressed |= mir_button.value();
             break;
 
-        case mw::Pointer::ButtonState::released:
+        case mwrs::Pointer::ButtonState::released:
             pending.buttons_pressed &= ~mir_button.value();
             break;
 
         default:
-            throw mw::ProtocolError{resource, mw::generic_error_code, "Invalid button state %d", state};
+            throw mwrs::ProtocolError{object_id(), 0, "Invalid button state %d", state};
         }
     }
     else
     {
         // Since the set of allowed buttons is not clearly defined, we warn instead of throwing a protocol error
-        log_warning("%s.button given unknown button %d", interface_name, button);
+        log_warning("zwlr_virtual_pointer_v1.button given unknown button %d", button);
     }
 }
 
@@ -268,16 +262,16 @@ void mf::VirtualPointerV1::axis(uint32_t time, uint32_t axis, double value)
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mw::Pointer::Axis::horizontal_scroll:
+    case mwrs::Pointer::Axis::horizontal_scroll:
         pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
-    case mw::Pointer::Axis::vertical_scroll:
+    case mwrs::Pointer::Axis::vertical_scroll:
         pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
     default:
-        throw mw::ProtocolError{resource, Error::invalid_axis, "Unknown axis %d", axis};
+        throw mwrs::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 
@@ -349,12 +343,12 @@ void mf::VirtualPointerV1::axis_source(uint32_t axis_source)
 {
     switch (axis_source)
     {
-    case mw::Pointer::AxisSource::wheel: pending.axis_source = mir_pointer_axis_source_wheel; break;
-    case mw::Pointer::AxisSource::finger: pending.axis_source = mir_pointer_axis_source_finger; break;
-    case mw::Pointer::AxisSource::continuous: pending.axis_source = mir_pointer_axis_source_continuous; break;
-    case mw::Pointer::AxisSource::wheel_tilt: pending.axis_source = mir_pointer_axis_source_wheel_tilt; break;
+    case mwrs::Pointer::AxisSource::wheel: pending.axis_source = mir_pointer_axis_source_wheel; break;
+    case mwrs::Pointer::AxisSource::finger: pending.axis_source = mir_pointer_axis_source_finger; break;
+    case mwrs::Pointer::AxisSource::continuous: pending.axis_source = mir_pointer_axis_source_continuous; break;
+    case mwrs::Pointer::AxisSource::wheel_tilt: pending.axis_source = mir_pointer_axis_source_wheel_tilt; break;
     default:
-        throw mw::ProtocolError{resource, Error::invalid_axis_source, "Unknown axis source %d", axis_source};
+        throw mwrs::ProtocolError{object_id(), Error::invalid_axis_source, "Unknown axis source %d", axis_source};
     }
 }
 
@@ -363,10 +357,10 @@ void mf::VirtualPointerV1::axis_stop(uint32_t time, uint32_t axis)
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mw::Pointer::Axis::horizontal_scroll: pending.scroll_h.stop = true; break;
-    case mw::Pointer::Axis::vertical_scroll: pending.scroll_v.stop = true; break;
+    case mwrs::Pointer::Axis::horizontal_scroll: pending.scroll_h.stop = true; break;
+    case mwrs::Pointer::Axis::vertical_scroll: pending.scroll_v.stop = true; break;
     default:
-        throw mw::ProtocolError{resource, Error::invalid_axis, "Unknown axis %d", axis};
+        throw mwrs::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 
@@ -375,20 +369,20 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mw::Pointer::Axis::horizontal_scroll:
+    case mwrs::Pointer::Axis::horizontal_scroll:
         pending.scroll_h.discrete += geom::DeltaX{discrete};
         pending.scroll_h.value120 += geom::DeltaX{discrete * 120};
         pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
-    case mw::Pointer::Axis::vertical_scroll:
+    case mwrs::Pointer::Axis::vertical_scroll:
         pending.scroll_v.discrete += geom::DeltaY{discrete};
         pending.scroll_v.value120 += geom::DeltaY{discrete * 120};
         pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
     default:
-        throw mw::ProtocolError{resource, Error::invalid_axis, "Unknown axis %d", axis};
+        throw mwrs::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 

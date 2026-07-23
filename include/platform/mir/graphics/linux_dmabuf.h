@@ -18,11 +18,13 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-stable-v1_wrapper.h"
 
 #include <EGL/egl.h>
+#include <sys/types.h>
 #include <memory>
 #include <span>
+#include <utility>
+#include <vector>
 
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/drm_formats.h>
@@ -55,12 +57,30 @@ public:
         std::shared_ptr<EGLExtensions> egl_extensions,
         EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
+        std::unique_ptr<renderer::gl::Context> import_context,
         EGLImageAllocator allocate_importable_image);
 
     ~DMABufEGLProvider();
 
     auto devnum() const -> dev_t;
 
+    /**
+     * The EGL context used to import dma-bufs.
+     *
+     * Importing a dma-buf creates a GL texture, which requires a current EGL
+     * context. Callers of import_dma_buf() must make this context current on
+     * the calling thread first (see import_dma_buf()).
+     */
+    auto context() const -> renderer::gl::Context&;
+
+    /**
+     * Import a dma-buf into a graphics::Buffer.
+     *
+     * \note This must be called with a valid EGL context current on the
+     *       calling thread (for example, context() made current). Constructing
+     *       the buffer binds a GL texture to the imported EGLImage, which
+     *       requires a current context; without one the texture samples black.
+     */
     auto import_dma_buf(
         DMABufBuffer const& dma_buf,
         std::function<void()>&& on_consumed,
@@ -74,6 +94,22 @@ public:
      */
     void validate_import(DMABufBuffer const& dma_buf);
 
+    /**
+     * Whether the given format/modifier combination can be imported by this provider.
+     *
+     * Exposed for the (Rust-backed) Wayland frontend, which no longer has access to the
+     * internal EGL format descriptors.
+     */
+    auto is_importable(DRMFormat format, uint64_t modifier) const -> bool;
+
+    /**
+     * The formats (and their supported modifiers) this provider can import.
+     *
+     * Exposed for the Wayland frontend so it can advertise linux-dmabuf formats/modifiers
+     * without touching the internal EGL descriptor types.
+     */
+    auto supported_format_modifiers() const -> std::vector<std::pair<DRMFormat, std::vector<uint64_t>>>;
+
     auto as_texture(std::shared_ptr<NativeBufferBase> buffer) -> std::shared_ptr<gl::Texture>;
 
     auto supported_formats() const -> DmaBufFormatDescriptors const&;
@@ -85,26 +121,9 @@ private:
     dev_t const devnum_;
     std::unique_ptr<DmaBufFormatDescriptors> const formats;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::unique_ptr<renderer::gl::Context> const import_context;
     EGLImageAllocator allocate_importable_image;
     std::unique_ptr<EGLBufferCopier> const blitter;
-};
-
-class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
-{
-public:
-    LinuxDmaBuf(wl_display* display, std::shared_ptr<DMABufEGLProvider> provider);
-
-    auto buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<common::EGLContextExecutor> egl_delegate) -> std::shared_ptr<Buffer>;
-
-private:
-    class Instance;
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<DMABufEGLProvider> const provider;
 };
 
 }

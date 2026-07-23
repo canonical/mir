@@ -21,9 +21,9 @@
 #include <mir/executor.h>
 #include <mir/scene/text_input_hub.h>
 
-#include <memory>
 #include <boost/throw_exception.hpp>
 #include <deque>
+#include <memory>
 #include <ranges>
 #include <utility>
 
@@ -31,6 +31,8 @@ namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace ms = mir::scene;
 
+namespace
+{
 auto wayland_to_mir_content_hint(uint32_t hint) -> ms::TextInputContentHint
 {
 #define WAYLAND_TO_MIR_HINT(wl_name, mir_name) \
@@ -107,37 +109,34 @@ struct TextInputV1Ctx
     std::shared_ptr<ms::TextInputHub> const text_input_hub;
 };
 
-class TextInputManagerV1Global
-    : public mw::TextInputManagerV1::Global
-{
-public:
-    TextInputManagerV1Global(wl_display* display, std::unique_ptr<TextInputV1Ctx> ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<TextInputV1Ctx> const ctx;
-};
-
-class TextInputManagerV1
-    : public mw::TextInputManagerV1
-{
-public:
-    TextInputManagerV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx> ctx);
-
-private:
-    void create_text_input(wl_resource* id) override;
-
-    std::shared_ptr<TextInputV1Ctx> const ctx;
-};
-
 class TextInputV1
     : public mw::TextInputV1,
       private mf::WlSeat::FocusListener
 {
 public:
-    TextInputV1(wl_resource* resource, std::shared_ptr<TextInputV1Ctx> const& ctx);
-    ~TextInputV1();
+    TextInputV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::TextInputV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<TextInputV1Ctx> const& ctx)
+        : mw::TextInputV1{std::move(client), std::move(instance), object_id},
+          ctx{ctx},
+          handler{std::make_shared<Handler>(this, ctx->wayland_executor)},
+          state{State::inactive}
+    {
+    }
+
+    ~TextInputV1() override
+    {
+        if (seat)
+        {
+            seat.value()->remove_focus_listener(client.get(), this);
+        }
+
+        state = State::inactive;
+        on_new_input_field = false;
+        ctx->text_input_hub->deactivate_handler(handler);
+    }
 
 private:
     struct Handler : ms::TextInputChangeHandler
@@ -169,7 +168,6 @@ private:
     std::optional<mf::WlSeat*> seat;
     std::shared_ptr<Handler> const handler;
     mw::Weak<mf::WlSurface> current_surface;
-    /// Set to true if and only if the text input has been enabled since the last commit
     bool on_new_input_field{false};
 
     enum class State
@@ -186,270 +184,218 @@ private:
     };
     std::deque<SerialPair> state_serials;
 
-    /// Sends the text change to the client if possible
-    void send_text_change(ms::TextInputChange const& change);
-
-    /// Returns the client serial (aka the commit count) that corresponds to the given state serial
-    auto find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>;
-
-   /// From WlSeat::FocusListener
-   void focus_on(mf::WlSurface* surface) override;
-
-    /// From wayland::TextInputV1
-    /// @{
-    void activate(wl_resource* seat, wl_resource* surface) override;
-    void deactivate(wl_resource* seat) override;
-    void show_input_panel() override;
-    void hide_input_panel() override;
-    void reset() override;
-    void set_surrounding_text(std::string const& text, uint32_t cursor, uint32_t anchor) override;
-    void set_content_type(uint32_t hint, uint32_t purpose) override;
-    void set_cursor_rectangle(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_preferred_language(std::string const& language) override;
-    void commit_state(uint32_t serial) override;
-    void invoke_action(uint32_t button, uint32_t index) override;
-    /// @}
-};
-
-auto mf::create_text_input_manager_v1(
-    wl_display* display,
-    std::shared_ptr<Executor> wayland_executor,
-    std::shared_ptr<scene::TextInputHub> text_input_hub)
--> std::unique_ptr<wayland::TextInputManagerV1::Global>
-{
-    auto ctx = std::make_unique<TextInputV1Ctx>(TextInputV1Ctx{std::move(wayland_executor), std::move(text_input_hub)});
-    return std::make_unique<TextInputManagerV1Global>(display, std::move(ctx));
-}
-
-TextInputManagerV1Global::TextInputManagerV1Global(
-    wl_display* display,
-    std::unique_ptr<TextInputV1Ctx> ctx)
-    : Global{display, Version<1>()},
-      ctx{std::move(ctx)}
-{
-}
-
-void TextInputManagerV1Global::bind(wl_resource* new_resource)
-{
-    new TextInputManagerV1{new_resource, ctx};
-}
-
-TextInputManagerV1::TextInputManagerV1(
-    wl_resource *resource,
-    std::shared_ptr<TextInputV1Ctx> ctx)
-    : mw::TextInputManagerV1{resource, Version<1>()},
-      ctx{std::move(ctx)}
-{
-}
-
-void TextInputManagerV1::create_text_input(wl_resource *id)
-{
-    new TextInputV1{id, ctx};
-}
-
-TextInputV1::TextInputV1(
-    wl_resource* resource,
-    std::shared_ptr<TextInputV1Ctx> const& ctx)
-    : mw::TextInputV1{resource, Version<1>()},
-      ctx{ctx},
-      handler{std::make_shared<Handler>(this, ctx->wayland_executor)},
-      state{State::inactive}
-{
-}
-
-TextInputV1::~TextInputV1()
-{
-    if (seat)
+    void send_text_change(ms::TextInputChange const& change)
     {
-        seat.value()->remove_focus_listener(client, this);
-    }
-
-    state = State::inactive;
-    on_new_input_field = false;
-    ctx->text_input_hub->deactivate_handler(handler);
-}
-
-void TextInputV1::send_text_change(ms::TextInputChange const& change)
-{
-    auto const client_serial = find_client_serial(change.serial);
-    if (state == State::inactive || !current_surface || !client_serial)
-    {
-        // We are no longer enabled, or we don't have a valid serial
-        return;
-    }
-    if (change.preedit_style)
-    {
-        send_preedit_styling_event(
-            change.preedit_style->index,
-            change.preedit_style->length,
-            change.preedit_style->style);
-    }
-    if (change.keysym)
-    {
-        send_keysym_event(
-            client_serial.value(),
-            change.keysym->time,
-            change.keysym->sym,
-            change.keysym->state,
-            change.keysym->modifiers);
-    }
-    if (change.modifier_map)
-    {
-        send_modifiers_map_event(change.modifier_map.value().data());
-    }
-    if (change.direction)
-    {
-        send_text_direction_event(client_serial.value(), change.direction.value());
-    }
-    if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
-    {
-        send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
-        send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), change.preedit_commit.value_or(""));
-    }
-    if (change.cursor_position)
-    {
-        send_cursor_position_event(change.cursor_position->index, change.cursor_position->anchor);
-    }
-    if (change.delete_before || change.delete_after)
-    {
-        send_delete_surrounding_text_event(change.delete_before.value_or(0), change.delete_after.value_or(0));
-    }
-    if (change.commit_text)
-    {
-        send_commit_string_event(client_serial.value(), change.commit_text.value());
-    }
-}
-
-auto TextInputV1::find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>
-{
-    // Loop in reverse order because the serial we're looking for will generally be at the end
-    for (auto const& serial_pair : std::ranges::reverse_view(state_serials))
-    {
-        if (serial_pair.hub_serial == state_serial)
+        auto const client_serial = find_client_serial(change.serial);
+        if (state == State::inactive || !current_surface || !client_serial)
         {
-            return serial_pair.client_serial;
+            return;
+        }
+        if (change.preedit_style)
+        {
+            send_preedit_styling_event(
+                change.preedit_style->index,
+                change.preedit_style->length,
+                change.preedit_style->style);
+        }
+        if (change.keysym)
+        {
+            send_keysym_event(
+                client_serial.value(),
+                change.keysym->time,
+                change.keysym->sym,
+                change.keysym->state,
+                change.keysym->modifiers);
+        }
+        if (change.modifier_map)
+        {
+            send_modifiers_map_event(change.modifier_map.value());
+        }
+        if (change.direction)
+        {
+            send_text_direction_event(client_serial.value(), change.direction.value());
+        }
+        if (change.preedit_text || change.preedit_cursor_begin || change.preedit_cursor_end)
+        {
+            send_preedit_cursor_event(change.preedit_cursor_begin.value_or(0));
+            send_preedit_string_event(client_serial.value(), change.preedit_text.value_or(""), change.preedit_commit.value_or(""));
+        }
+        if (change.cursor_position)
+        {
+            send_cursor_position_event(change.cursor_position->index, change.cursor_position->anchor);
+        }
+        if (change.delete_before || change.delete_after)
+        {
+            send_delete_surrounding_text_event(change.delete_before.value_or(0), change.delete_after.value_or(0));
+        }
+        if (change.commit_text)
+        {
+            send_commit_string_event(client_serial.value(), change.commit_text.value());
         }
     }
-    return std::nullopt;
-}
 
-void TextInputV1::focus_on(mf::WlSurface* surface)
-{
-    if (current_surface)
+    auto find_client_serial(ms::TextInputStateSerial state_serial) const -> std::optional<uint32_t>
     {
-        send_leave_event();
+        for (auto const& serial_pair : std::ranges::reverse_view(state_serials))
+        {
+            if (serial_pair.hub_serial == state_serial)
+            {
+                return serial_pair.client_serial;
+            }
+        }
+        return std::nullopt;
     }
-    current_surface = mw::make_weak(surface);
-    if (surface)
+
+    void focus_on(mf::WlSurface* surface) override
     {
-        send_enter_event(surface->resource);
+        if (current_surface)
+        {
+            send_leave_event();
+        }
+        current_surface = mw::make_weak(surface);
+        if (surface)
+        {
+            send_enter_event(as_surface_ptr(surface));
+        }
+        else
+        {
+            deactivate(mw::Weak<mw::Seat>{});
+            ctx->text_input_hub->deactivate_handler(handler);
+        }
     }
-    else
+
+    using mw::TextInputV1::activate;
+    using mw::TextInputV1::deactivate;
+
+    auto activate(mw::Weak<mw::Seat> const& seat, mw::Weak<mw::Surface> const&) -> void override
     {
-        deactivate(nullptr);
+        auto const wl_seat = mf::WlSeat::from(seat);
+        if (!wl_seat)
+        {
+            BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat activating TextInputV1"));
+        }
+        this->seat = std::make_optional(wl_seat);
+        wl_seat->add_focus_listener(client.get(), this);
+
+        if (current_surface)
+        {
+            on_new_input_field = true;
+            state = State::active;
+            pending_state = {};
+        }
+    }
+
+    auto deactivate(mw::Weak<mw::Seat> const&) -> void override
+    {
+        on_new_input_field = false;
+        state = State::inactive;
+    }
+
+    auto show_input_panel() -> void override
+    {
+        commit_state(0);
+        ctx->text_input_hub->show_input_panel();
+    }
+
+    auto hide_input_panel() -> void override
+    {
         ctx->text_input_hub->deactivate_handler(handler);
+        ctx->text_input_hub->hide_input_panel();
     }
-}
 
-void TextInputV1::activate(wl_resource *seat_resource, wl_resource *surface)
-{
-    (void)surface;
-
-    auto const wl_seat = mf::WlSeat::from(seat_resource);
-    if (!wl_seat)
+    auto reset() -> void override
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("failed to resolve WlSeat activating TextInputV1"));
-    }
-    this->seat = std::make_optional(wl_seat);
-    wl_seat->add_focus_listener(client, this);
-
-    if (current_surface)
-    {
-        on_new_input_field = true;
-        state = State::active;
         pending_state = {};
     }
-}
 
-void TextInputV1::deactivate(wl_resource *seat)
-{
-    (void)seat;
-    on_new_input_field = false;
-    state = State::inactive;
-}
-
-/// Electron appears to call show_input_panel() when commit_state() should be called.
-void TextInputV1::show_input_panel()
-{
-    commit_state(0);
-    ctx->text_input_hub->show_input_panel();
-}
-
-void TextInputV1::hide_input_panel()
-{
-    ctx->text_input_hub->deactivate_handler(handler);
-    ctx->text_input_hub->hide_input_panel();
-}
-
-void TextInputV1::reset()
-{
-    pending_state = {};
-}
-
-void TextInputV1::set_surrounding_text(const std::string &text, uint32_t cursor, uint32_t anchor)
-{
-    if (state == State::active)
+    auto set_surrounding_text(rust::String text, uint32_t cursor, uint32_t anchor) -> void override
     {
-        pending_state.surrounding_text = text;
-        pending_state.cursor = cursor;
-        pending_state.anchor = anchor;
-    }
-}
-
-void TextInputV1::set_content_type(uint32_t hint, uint32_t purpose)
-{
-    if (state == State::active)
-    {
-        pending_state.content_hint.emplace(wayland_to_mir_content_hint(hint));
-        pending_state.content_purpose = wayland_to_mir_content_purpose(purpose);
-    }
-}
-
-void TextInputV1::set_cursor_rectangle(int32_t x, int32_t y, int32_t width, int32_t height)
-{
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-}
-
-void TextInputV1::set_preferred_language(const std::string &language)
-{
-    // Ignored, input methods decide language for themselves
-    (void)language;
-}
-
-void TextInputV1::commit_state(uint32_t client_serial)
-{
-    if (state == State::active && current_surface)
-    {
-        auto const hub_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, pending_state);
-        state_serials.push_back({client_serial, hub_serial});
-        while (state_serials.size() > max_remembered_serials)
+        if (state == State::active)
         {
-            state_serials.pop_front();
+            pending_state.surrounding_text = std::string{text};
+            pending_state.cursor = cursor;
+            pending_state.anchor = anchor;
         }
     }
-    else
+
+    auto set_content_type(uint32_t hint, uint32_t purpose) -> void override
     {
-        ctx->text_input_hub->deactivate_handler(handler);
+        if (state == State::active)
+        {
+            pending_state.content_hint.emplace(wayland_to_mir_content_hint(hint));
+            pending_state.content_purpose = wayland_to_mir_content_purpose(purpose);
+        }
     }
-    on_new_input_field = false;
+
+    auto set_cursor_rectangle(int32_t x, int32_t y, int32_t width, int32_t height) -> void override
+    {
+        (void)x;
+        (void)y;
+        (void)width;
+        (void)height;
+    }
+
+    auto set_preferred_language(rust::String) -> void override
+    {
+    }
+
+    auto commit_state(uint32_t client_serial) -> void override
+    {
+        if (state == State::active && current_surface)
+        {
+            auto const hub_serial = ctx->text_input_hub->set_handler_state(handler, on_new_input_field, pending_state);
+            state_serials.push_back({client_serial, hub_serial});
+            while (state_serials.size() > max_remembered_serials)
+            {
+                state_serials.pop_front();
+            }
+        }
+        else
+        {
+            ctx->text_input_hub->deactivate_handler(handler);
+        }
+        on_new_input_field = false;
+    }
+
+    auto invoke_action(uint32_t button, uint32_t index) -> void override
+    {
+        (void)button;
+        (void)index;
+    }
+};
+
+class TextInputManagerV1 : public mw::TextInputManagerV1
+{
+public:
+    TextInputManagerV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::TextInputManagerV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<TextInputV1Ctx> ctx)
+        : mw::TextInputManagerV1{std::move(client), std::move(instance), object_id},
+          ctx{std::move(ctx)}
+    {
+    }
+
+private:
+    auto create_text_input(rust::Box<mw::TextInputV1Middleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::TextInputV1> override
+    {
+        return std::make_shared<TextInputV1>(client, std::move(child_instance), child_object_id, ctx);
+    }
+
+    std::shared_ptr<TextInputV1Ctx> const ctx;
+};
 }
 
-void TextInputV1::invoke_action(uint32_t button, uint32_t index)
+auto mf::create_zwp_text_input_manager_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::TextInputManagerV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<Executor> wayland_executor,
+    std::shared_ptr<scene::TextInputHub> text_input_hub)
+-> std::shared_ptr<mw::TextInputManagerV1>
 {
-    // TODO
-    (void)button;
-    (void)index;
+    auto ctx = std::make_shared<TextInputV1Ctx>(TextInputV1Ctx{std::move(wayland_executor), std::move(text_input_hub)});
+    return std::make_shared<TextInputManagerV1>(std::move(client), std::move(instance), object_id, std::move(ctx));
 }
