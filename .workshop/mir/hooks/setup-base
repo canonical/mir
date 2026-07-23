@@ -6,10 +6,16 @@ apt-get --yes --no-install-recommends install \
   cargo \
   ccache \
   clang \
+  dmz-cursor-theme \
+  fonts-ubuntu \
+  glmark2-es2 \
+  glmark2-es2-wayland \
+  mesa-utils \
   mold \
   ninja-build \
   python3-venv \
   ripgrep \
+  xterm \
   yq
 apt-get --no-install-recommends build-dep mir
 
