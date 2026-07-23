@@ -90,7 +90,6 @@ public:
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};
     xdg_toplevel* shell_toplevel{nullptr};
-    zxdg_toplevel_decoration_v1* toplevel_decoration{nullptr};
 
     std::optional<WaylandOutputConfig> windowed_config;
     std::optional<geometry::Size> pending_toplevel_size;
@@ -208,11 +207,6 @@ mgw::DisplayClient::Output::~Output()
     if (output)
     {
         wl_output_destroy(output);
-    }
-
-    if (toplevel_decoration)
-    {
-        zxdg_toplevel_decoration_v1_destroy(toplevel_decoration);
     }
 
     if (shell_toplevel)
@@ -383,17 +377,6 @@ void mgw::DisplayClient::Output::initialize_windowed()
     if (owner_->title)
     {
         xdg_toplevel_set_title(shell_toplevel, owner_->title.value().c_str());
-    }
-
-    if (owner_->decoration_manager)
-    {
-        static zxdg_toplevel_decoration_v1_listener const decoration_listener{
-            [](void*, zxdg_toplevel_decoration_v1*, uint32_t){},
-        };
-        toplevel_decoration = zxdg_decoration_manager_v1_get_toplevel_decoration(
-            owner_->decoration_manager, shell_toplevel);
-        zxdg_toplevel_decoration_v1_add_listener(toplevel_decoration, &decoration_listener, nullptr);
-        zxdg_toplevel_decoration_v1_set_mode(toplevel_decoration, ZXDG_TOPLEVEL_DECORATION_V1_MODE_SERVER_SIDE);
     }
 
     wl_surface_set_buffer_scale(surface, windowed_buffer_scale(wc.scale));
@@ -712,10 +695,6 @@ mgw::DisplayClient::~DisplayClient()
         std::lock_guard lock{outputs_mutex};
         bound_outputs.clear();
     }
-    if (decoration_manager)
-    {
-        zxdg_decoration_manager_v1_destroy(decoration_manager);
-    }
     registry.reset();
 }
 
@@ -772,11 +751,6 @@ void mgw::DisplayClient::new_global(
         self->shell = static_cast<decltype(self->shell)>(
             wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
         xdg_wm_base_add_listener(self->shell, &shell_listener, self);
-    }
-    else if (std::strcmp(interface, zxdg_decoration_manager_v1_interface.name) == 0)
-    {
-        self->decoration_manager = static_cast<zxdg_decoration_manager_v1*>(
-            wl_registry_bind(registry, id, &zxdg_decoration_manager_v1_interface, std::min(version, 1u)));
     }
 }
 
