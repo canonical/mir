@@ -406,7 +406,6 @@ private:
                   shell,
                   output_manager,
                   surface_registry),
-              output_manager{output_manager},
               text_input_hub{std::move(text_input_hub)},
               state_observer{std::make_shared<StateObserver>(this)}
         {
@@ -517,7 +516,6 @@ private:
         {
         }
 
-        mf::OutputManager* output_manager;
         std::shared_ptr<ms::TextInputHub> const text_input_hub;
         std::shared_ptr<StateObserver> const state_observer;
         mir::geometry::Rectangle last_bounds;
