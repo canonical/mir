@@ -299,9 +299,9 @@ float mir_pointer_event_axis_value(MirPointerEvent const* pev, MirPointerAxis ax
        return pev->v_scroll().value120.as_value();
    case mir_pointer_axis_hscroll_value120:
        return pev->h_scroll().value120.as_value();
-    default:
-        MIR_FATAL_ERROR("Invalid axis enumeration {}", static_cast<int>(axis));
-    }
+   default:
+       MIR_FATAL_ERROR("Invalid axis enumeration {}", static_cast<int>(axis));
+   }
 })
 
 bool mir_pointer_event_axis_stop(MirPointerEvent const* pev, MirPointerAxis axis) MIR_HANDLE_EVENT_EXCEPTION(

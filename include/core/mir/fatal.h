@@ -32,7 +32,7 @@ namespace mir
 {
 /**
  * fatal_error() is strictly for "this should never happen" situations that you
- * cannot recover from. Kills the program and dump core as cleanly as possible.
+ * cannot recover from. Kills the program and dumps core as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
 [[noreturn, deprecated("Use MIR_FATAL_ERROR() instead")]]
@@ -40,7 +40,7 @@ void fatal_error(char const* reason, ...) noexcept __attribute__((format(printf,
 
 /**
  * fatal_error() is strictly for "this should never happen" situations that you
- * cannot recover from. Kills the program and dump core as cleanly as possible.
+ * cannot recover from. Kills the program and dumps core as cleanly as possible.
  *   \param [in] loc  The source location where the fatal error occurred.
  *   \param [in] message  A message describing the fatal error.
  */
@@ -49,7 +49,7 @@ void fatal_error(std::source_location const loc, std::string_view message) noexc
 
 /**
  * fatal_error() is strictly for "this should never happen" situations that you
- * cannot recover from. Kills the program and dump core as cleanly as possible.
+ * cannot recover from. Kills the program and dumps core as cleanly as possible.
  *   \param [in] fmt  A std::format-style format string.
  *   \param [in] args  Type-erased format arguments.
  *   \param [in] loc  The source location where the fatal error occurred.
