@@ -43,6 +43,10 @@ jobs:
     needs: [arches]
     if: needs.arches.outputs.should-run == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      amd64: ${{ steps.result.outputs.amd64 }}
+      armhf: ${{ steps.result.outputs.armhf }}
+      arm64: ${{ steps.result.outputs.arm64 }}
     permissions:
       contents: read
 
@@ -79,11 +83,45 @@ jobs:
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
         publish-channel: 26/edge/pr${{ github.event.number }}
 
+    - id: result
+      if: always()
+      name: Record architecture result
+      env:
+        MATRIX_ARCHITECTURE: ${{ matrix.architecture }}
+        JOB_STATUS: ${{ job.status }}
+      run: |
+        echo "${MATRIX_ARCHITECTURE}=${JOB_STATUS}" >> "$GITHUB_OUTPUT"
+
+  successful-arches:
+    needs: [arches, mir-libs]
+    if: ${{ !cancelled() && needs.arches.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      arches: ${{ steps.collect.outputs.arches }}
+
+    steps:
+    - id: collect
+      name: Collect successful architectures
+      env:
+        RESULTS: ${{ toJSON(needs.mir-libs.outputs) }}
+      run: |
+        jq --compact-output --null-input \
+          --argjson results "${RESULTS}" \
+          '$results | to_entries | map(select(.value == "success") | .key)' \
+          | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
+
   snap:
     # Only run if we have access to secrets.
-    if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
+    if: >-
+      ${{
+        !cancelled()
+        && github.event_name == 'pull_request'
+        && github.repository == github.event.pull_request.head.repo.full_name
+        && needs.successful-arches.result == 'success'
+        && needs.successful-arches.outputs.arches != '[]'
+      }}
 
-    needs: [arches, mir-libs]
+    needs: [successful-arches]
 
     runs-on: ubuntu-latest
 
@@ -101,7 +139,7 @@ jobs:
         - canonical/ubuntu-frame
         - Miriway/Miriway
         snapcraft-channel: [stable]
-        architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
+        architecture: ${{ fromJSON(needs.successful-arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
           track: 26
