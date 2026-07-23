@@ -3,7 +3,8 @@ Section: x11
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
-Build-Depends: cmake,
+Build-Depends: cargo,
+               cmake,
                debhelper (>= 9),
                eglexternalplatform-dev,
                libapparmor-dev,

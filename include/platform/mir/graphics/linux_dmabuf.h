@@ -20,6 +20,7 @@
 #include "egl_context_executor.h"
 
 #include <EGL/egl.h>
+#include <sys/types.h>
 #include <memory>
 #include <span>
 #include <utility>
