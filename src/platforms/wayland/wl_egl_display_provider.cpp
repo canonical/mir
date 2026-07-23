@@ -7,9 +7,6 @@
 #include <wayland-egl-core.h>
 #include <mir/graphics/egl_helpers.h>
 
-#include <mutex>
-#include <optional>
-
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
 namespace mgw = mir::graphics::wayland;
@@ -23,32 +20,27 @@ public:
 
     ~SurfaceState()
     {
-        if (egl_surface != EGL_NO_SURFACE) eglDestroySurface(dpy, egl_surface);
         wl_egl_window_destroy(wl_window);
     }
 
-    auto surface(EGLConfig egl_config) -> EGLSurface
+    auto create_surface(EGLConfig egl_config) -> EGLSurface
     {
-        std::lock_guard lock{mutex};
-        if (egl_surface == EGL_NO_SURFACE)
-        {
-            egl_surface = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
-        }
-
-        if (egl_surface == EGL_NO_SURFACE)
+        auto surf = eglCreatePlatformWindowSurface(dpy, egl_config, wl_window, nullptr);
+        if (surf == EGL_NO_SURFACE)
         {
             BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL surface"));
         }
+        return surf;
+    }
 
-        return egl_surface;
+    void resize(geom::Size new_size)
+    {
+        wl_egl_window_resize(wl_window, new_size.width.as_int(), new_size.height.as_int(), 0, 0);
     }
 
 private:
     EGLDisplay const dpy;
     struct ::wl_egl_window* const wl_window;
-
-    std::mutex mutex;
-    EGLSurface egl_surface{EGL_NO_SURFACE};
 };
 
 class mgw::WlDisplayAllocator::Framebuffer::EGLState
@@ -164,6 +156,12 @@ mgw::WlDisplayAllocator::~WlDisplayAllocator()
 {
 }
 
+void mgw::WlDisplayAllocator::resize(geometry::Size new_size)
+{
+    surface_state->resize(new_size);
+    size = new_size;
+}
+
 auto mgw::WlDisplayAllocator::alloc_framebuffer(
     GLConfig const& config,
     EGLContext share_context) -> std::unique_ptr<EGLFramebuffer>
@@ -201,7 +199,7 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
         BOOST_THROW_EXCEPTION(egl_error("Failed to create EGL context"));
     }
 
-    auto surface = surface_state->surface(egl_config);
+    auto surface = surface_state->create_surface(egl_config);
 
     return std::make_unique<Framebuffer>(dpy, egl_context, surface, surface_state, size);
 }

@@ -31,13 +31,33 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <condition_variable>
 #include <cstring>
 #include <cstdlib>
+#include <limits>
+#include <span>
 #include <stdexcept>
 
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
+
+namespace
+{
+auto windowed_buffer_scale(float scale) -> int32_t
+{
+    if (!std::isfinite(scale) || scale < 0.5f)
+    {
+        return 1;
+    }
+    auto const rounded = std::round(scale);
+    if (rounded > static_cast<float>(std::numeric_limits<int32_t>::max()))
+    {
+        return std::numeric_limits<int32_t>::max();
+    }
+    return static_cast<int32_t>(rounded);
+}
+}
 
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
@@ -46,6 +66,11 @@ class mgw::DisplayClient::Output  :
 public:
     Output(
         wl_output* output,
+        DisplayClient* owner);
+
+    Output(
+        WaylandOutputConfig const& windowed_config,
+        geom::Point const& top_left,
         DisplayClient* owner);
 
     ~Output();
@@ -66,6 +91,7 @@ public:
     xdg_surface* shell_surface{nullptr};
     xdg_toplevel* shell_toplevel{nullptr};
 
+    std::optional<WaylandOutputConfig> windowed_config;
     std::optional<geometry::Size> pending_toplevel_size;
     bool has_initialized{false};
 
@@ -82,6 +108,8 @@ public:
     void mode(uint32_t flags, int32_t width, int32_t height, int32_t refresh);
     void scale(int32_t factor);
     void done();
+
+    void initialize_windowed();
 
     // XDG shell events
     void toplevel_configure(int32_t width, int32_t height, wl_array* states);
@@ -124,7 +152,7 @@ mgw::DisplayClient::Output::Output(
     #pragma GCC diagnostic pop
     wl_output_add_listener(output, &output_listener, this);
 
-    dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
+    dcout.id = DisplayConfigurationOutputId{static_cast<int>(owner->bound_outputs.size())};
     dcout.card_id = DisplayConfigurationCardId{1};
     dcout.type = DisplayConfigurationOutputType::unknown;
     dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
@@ -136,6 +164,42 @@ mgw::DisplayClient::Output::Output(
     dcout.scale = 1.0;
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+}
+
+mgw::DisplayClient::Output::Output(
+    WaylandOutputConfig const& windowed_config,
+    geom::Point const& top_left,
+    DisplayClient* owner) :
+    output{nullptr},
+    owner_{owner},
+    surface{wl_compositor_create_surface(owner->compositor)},
+    windowed_config{windowed_config}
+{
+    dcout.id = DisplayConfigurationOutputId{static_cast<int>(owner->bound_outputs.size())};
+    dcout.card_id = DisplayConfigurationCardId{1};
+    dcout.type = DisplayConfigurationOutputType::unknown;
+    dcout.pixel_formats = {mir_pixel_format_argb_8888,mir_pixel_format_xrgb_8888};
+    dcout.current_format = mir_pixel_format_xrgb_8888;
+    dcout.top_left = top_left;
+    dcout.connected = true;
+    dcout.used = true;
+    dcout.power_mode = mir_power_mode_on;
+    dcout.orientation = MirOrientation::mir_orientation_normal;
+    dcout.scale = static_cast<float>(windowed_buffer_scale(windowed_config.scale));
+    dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
+    dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+    // Populate a mode so display config policies don't disable this output.
+    // Policies check modes.empty() and set used=false when true, which prevents
+    // advise_output_create() from being called and leaves the window manager with
+    // no display areas (falling back to a 100x100 placeholder area).
+    auto const buffer_scale = windowed_buffer_scale(windowed_config.scale);
+    dcout.modes.push_back({
+        geometry::Size{
+            windowed_config.size.width.as_int() * buffer_scale,
+            windowed_config.size.height.as_int() * buffer_scale},
+        60.0f});
+    dcout.current_mode_index = 0;
+    dcout.preferred_mode_index = 0;
 }
 
 mgw::DisplayClient::Output::~Output()
@@ -282,13 +346,63 @@ void mgw::DisplayClient::Output::done()
     }
 }
 
+void mgw::DisplayClient::Output::initialize_windowed()
+{
+    if (!windowed_config)
+        return;
+    auto const& wc = *windowed_config;
+
+    static xdg_surface_listener const shell_surface_listener{
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->surface_configure(args...); },
+    };
+    shell_surface = xdg_wm_base_get_xdg_surface(owner_->shell, surface);
+    xdg_surface_add_listener(shell_surface, &shell_surface_listener, this);
+
+    static xdg_toplevel_listener const shell_toplevel_listener{
+        [](void* self, auto, auto... args) { static_cast<Output*>(self)->toplevel_configure(args...); },
+        [](auto...){},
+    };
+    shell_toplevel = xdg_surface_get_toplevel(shell_surface);
+    xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
+
+    int const w = wc.size.width.as_int();
+    int const h = wc.size.height.as_int();
+    xdg_toplevel_set_min_size(shell_toplevel, w, h);
+    xdg_toplevel_set_max_size(shell_toplevel, w, h);
+
+    if (owner_->app_id)
+    {
+        xdg_toplevel_set_app_id(shell_toplevel, owner_->app_id.value().c_str());
+    }
+    if (owner_->title)
+    {
+        xdg_toplevel_set_title(shell_toplevel, owner_->title.value().c_str());
+    }
+
+    wl_surface_set_buffer_scale(surface, windowed_buffer_scale(wc.scale));
+    wl_surface_commit(surface);
+}
+
 void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
 {
     (void)states;
 
     if (width > 0 && height > 0)
     {
-        pending_toplevel_size = geometry::Size{host_scale*width, host_scale*height};
+        if (windowed_config)
+        {
+            // Width and height are logical pixels; store as-is for custom_logical_size
+            pending_toplevel_size = geometry::Size{width, height};
+        }
+        else
+        {
+            pending_toplevel_size = geometry::Size{host_scale * width, host_scale * height};
+        }
+    }
+    else if (windowed_config)
+    {
+        // Compositor gave us 0,0 (unconstrained size) — use our configured logical size
+        pending_toplevel_size = windowed_config->size;
     }
     else if (!dcout.modes.empty())
     {
@@ -302,12 +416,25 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 
     if (pending_toplevel_size)
     {
+        auto const new_size = pending_toplevel_size.value();
         bool const size_is_changed = !dcout.custom_logical_size ||
-            dcout.custom_logical_size.value() != pending_toplevel_size.value();
-        dcout.custom_logical_size = pending_toplevel_size.value();
+            dcout.custom_logical_size.value() != new_size;
+        dcout.custom_logical_size = new_size;
         pending_toplevel_size.reset();
-        output_size = dcout.extents().size;
-        if (!has_initialized || size_is_changed)
+        if (windowed_config)
+        {
+            // custom_logical_size is in logical pixels; allocator needs buffer pixels
+            auto const buffer_scale = windowed_buffer_scale(windowed_config->scale);
+            output_size = geometry::Size{
+                new_size.width.as_int() * buffer_scale,
+                new_size.height.as_int() * buffer_scale};
+        }
+        else
+        {
+            // custom_logical_size is already in buffer pixels for non-windowed outputs
+            output_size = dcout.extents().size;
+        }
+        if (!has_initialized)
         {
             has_initialized = true;
             {
@@ -316,6 +443,18 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
                     owner_->provider->get_egl_display(),
                     surface,
                     output_size);
+            }
+            owner_->on_display_config_changed();
+        }
+        else if (size_is_changed)
+        {
+            if (windowed_config)
+            {
+                dcout.modes[0].size = output_size;
+            }
+            {
+                std::lock_guard lock{mutex};
+                provider->resize(output_size);
             }
             owner_->on_display_config_changed();
         }
@@ -460,12 +599,23 @@ mgw::DisplayClient::DisplayClient(
     std::shared_ptr<WlDisplayProvider> provider,
     std::optional<std::string> const& app_id,
     std::optional<std::string> const& title) :
+    DisplayClient{display, std::move(provider), app_id, title, {}}
+{
+}
+
+mgw::DisplayClient::DisplayClient(
+    wl_display* display,
+    std::shared_ptr<WlDisplayProvider> provider,
+    std::optional<std::string> const& app_id,
+    std::optional<std::string> const& title,
+    std::span<WaylandOutputConfig const> output_configs) :
     display{display},
     provider{std::move(provider)},
     app_id{app_id},
     title{title},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
-    registry{nullptr, [](auto){}}
+    registry{nullptr, [](auto){}},
+    output_configs{output_configs.begin(), output_configs.end()}
 {
     if (!keyboard_context_)
     {
@@ -493,12 +643,33 @@ mgw::DisplayClient::DisplayClient(
             return false;
         };
 
-    // Roundtrip once to bind to all output globals, then keep roundtripping until surfaces for all outputs are
-    // initialized
-    do
+    // Roundtrip once to bind to all globals (compositor, shell, seat, and — in fullscreen mode — outputs)
+    wl_display_roundtrip(display);
+
+    if (!output_configs.empty())
+    {
+        // Windowed mode: create custom-sized outputs instead of fullscreen ones.
+        // Keys use the high end of uint32_t to avoid collisions with Wayland global IDs,
+        // which are small positive integers assigned sequentially by the compositor.
+        // Outputs are inserted before the next is constructed so that bound_outputs.size()
+        // gives each output a unique dcout.id.
+        std::lock_guard lock{outputs_mutex};
+        geom::Point top_left{0, 0};
+        for (size_t i = 0; i < output_configs.size(); ++i)
+        {
+            auto const& config = output_configs[i];
+            auto out = std::make_unique<Output>(config, top_left, this);
+            top_left.x += geom::as_delta(config.size.width);
+            uint32_t const key = std::numeric_limits<uint32_t>::max() - static_cast<uint32_t>(i);
+            out->initialize_windowed();
+            bound_outputs.insert(std::make_pair(key, std::move(out)));
+        }
+    }
+
+    while (has_uninitialized_output())
     {
         wl_display_roundtrip(display);
-    } while (has_uninitialized_output());
+    }
 }
 
 void mgw::DisplayClient::on_display_config_changed()
@@ -558,15 +729,19 @@ void mgw::DisplayClient::new_global(
     }
     else if (std::strcmp(interface, "wl_output") == 0)
     {
-        auto output =
-            static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));
-        std::lock_guard lock{self->outputs_mutex};
-        self->bound_outputs.insert(
-            std::make_pair(
-                id,
-                std::make_unique<Output>(
-                    output,
-                    self)));
+        // In windowed mode we create our own outputs, so we skip binding host wl_output globals
+        if (self->output_configs.empty())
+        {
+            auto output =
+                static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));
+            std::lock_guard lock{self->outputs_mutex};
+            self->bound_outputs.insert(
+                std::make_pair(
+                    id,
+                    std::make_unique<Output>(
+                        output,
+                        self)));
+        }
     }
     else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0)
     {

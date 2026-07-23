@@ -26,11 +26,13 @@
 #include <mir/graphics/gl_config.h>
 #include <mir/executor.h>
 
+#include "platform.h"
 #include "protocol/xdg-shell-client.h"
 #include <wayland-client.h>
 #include <EGL/egl.h>
 
 #include <functional>
+#include <span>
 #include <unordered_map>
 #include <memory>
 #include <mutex>
@@ -57,6 +59,13 @@ public:
         std::shared_ptr<WlDisplayProvider> provider,
         std::optional<std::string> const& app_id,
         std::optional<std::string> const& title);
+
+    DisplayClient(
+        wl_display* display,
+        std::shared_ptr<WlDisplayProvider> provider,
+        std::optional<std::string> const& app_id,
+        std::optional<std::string> const& title,
+        std::span<WaylandOutputConfig const> output_configs);
 
     virtual ~DisplayClient();
 
@@ -171,6 +180,8 @@ protected:
     int32_t pointer_scale{1};
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
+
+    std::vector<WaylandOutputConfig> const output_configs;
 
     std::mutex mutable outputs_mutex;
     // Outputs that will be dropped during the next Display::configure(). It is unsafe to actually drop them until then.

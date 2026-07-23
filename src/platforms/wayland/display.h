@@ -27,6 +27,7 @@
 
 #include <xkbcommon/xkbcommon.h>
 
+#include <span>
 #include <thread>
 #include <deque>
 
@@ -63,6 +64,15 @@ public:
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
         std::optional<std::string> const& title);
+
+    Display(
+        wl_display* const wl_display,
+        std::shared_ptr<WlDisplayProvider> provider,
+        std::shared_ptr<GLConfig> const& gl_config,
+        std::shared_ptr<DisplayReport> const& report,
+        std::optional<std::string> const& app_id,
+        std::optional<std::string> const& title,
+        std::span<WaylandOutputConfig const> output_configs);
 
     ~Display();
 
@@ -135,10 +145,10 @@ private:
     std::shared_ptr<input::wayland::TouchInput> touch_sink;
     geometry::PointF pointer_pos;
     geometry::DisplacementF pointer_scroll;
-    std::chrono::nanoseconds pointer_time;
+    std::chrono::nanoseconds pointer_time{};
     MirPointerAxisSource pointer_axis_source_ = mir_pointer_axis_source_none;
     std::vector<events::TouchContact> touch_contacts;
-    std::chrono::nanoseconds touch_time;
+    std::chrono::nanoseconds touch_time{};
 
     std::thread runner;
     void run();

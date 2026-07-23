@@ -33,6 +33,7 @@
 #include <sys/eventfd.h>
 #include <poll.h>
 #include <algorithm>
+#include <span>
 #include <vector>
 
 namespace mgw = mir::graphics::wayland;
@@ -100,6 +101,30 @@ mgw::Display::Display(
     std::optional<std::string> const& app_id,
     std::optional<std::string> const& title) :
     DisplayClient{wl_display, std::move(provider), app_id, title},
+    report{report},
+    shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
+    flush_signal{::eventfd(0, EFD_SEMAPHORE)},
+    keyboard_sink{std::make_shared<NullKeyboardInput>()},
+    pointer_sink{std::make_shared<NullPointerInput>()},
+    touch_sink{std::make_shared<NullTouchInput>()}
+{
+    runner = std::thread{[this] { run(); }};
+
+    {
+        std::lock_guard lock{the_display_mtx};
+        the_display = this;
+    }
+}
+
+mgw::Display::Display(
+    wl_display* const wl_display,
+    std::shared_ptr<WlDisplayProvider> provider,
+    std::shared_ptr<GLConfig> const&,
+    std::shared_ptr<DisplayReport> const& report,
+    std::optional<std::string> const& app_id,
+    std::optional<std::string> const& title,
+    std::span<WaylandOutputConfig const> output_configs) :
+    DisplayClient{wl_display, std::move(provider), app_id, title, output_configs},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
     flush_signal{::eventfd(0, EFD_SEMAPHORE)},

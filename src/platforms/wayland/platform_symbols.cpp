@@ -45,6 +45,13 @@ const char* const wayland_surface_app_id_option_description{"Application ID for 
 
 const char* const wayland_surface_title_option{"wayland-surface-title"};
 const char* const wayland_surface_title_option_description{"Title of the window containing the Mir output."};
+
+const char* const wayland_outputs_option_name{"wayland-output"};
+const char* const wayland_outputs_option_description{
+    "Output to place in a window rather than fullscreen. "
+    "Specify as `WIDTHxHEIGHT` (e.g. `1920x1080`) or `WIDTHxHEIGHT^SCALE` (e.g. `1920x1080^2`). "
+    "Repeat the option for multiple outputs."
+};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
@@ -62,8 +69,15 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     if (options->is_set(wayland_surface_title_option))
         title = options->get<std::string>(wayland_surface_title_option);
 
+    std::vector<mgw::WaylandOutputConfig> output_configs;
+    if (options->is_set(wayland_outputs_option_name))
+    {
+        auto outputs = options->get<std::vector<std::string>>(wayland_outputs_option_name);
+        output_configs = mgw::Platform::parse_output_sizes(outputs);
+    }
+
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title);
+    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title, std::move(output_configs));
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -78,6 +92,10 @@ void add_graphics_platform_options(boost::program_options::options_description& 
         (wayland_surface_title_option,
          boost::program_options::value<std::string>(),
          wayland_surface_title_option_description);
+    config.add_options()
+        (wayland_outputs_option_name,
+         boost::program_options::value<std::vector<std::string>>()->multitoken(),
+         wayland_outputs_option_description);
 }
 
 auto probe_graphics_platform(
