@@ -22,19 +22,39 @@
     THE SOFTWARE.
   </copyright>
 
-  <description summary="Registration for global input actions">
-    This protocol allows for a Wayland clients to subscribe to input trigger
-    actions for "begin" and "end" notifications.
+  <description summary="Subscription for global input actions">
+    This protocol lets a client react to a global input action. An action is an
+    activity (for example "play/pause" or "toggle-launcher") that a privileged
+    client has bound to one or more input triggers, such as a key combination,
+    using the `ext_input_trigger_registration_v1` protocol.
 
-    ext_input_trigger_action_v1 and the associated ext_input_trigger_registration_v1
-    are based on the following discussion document:
-    https://docs.google.com/document/d/1Hj3BXkmW1quIEWqmN7xeJY29nSPfXP2bmoZvpOsEeJQ/
+    A client subscribes by passing a token to
+    `ext_input_trigger_action_manager_v1.get_input_trigger_action`. The token
+    is issued by the compositor, delivered to the registering client, and then
+    passed to interested clients out of band (for example through a desktop
+    settings service).
+
+    For example, a media player reacting to the system "play/pause" action:
+
+        # obtain the action's token out of band (e.g. from a settings
+        # service), then subscribe to the action
+        manager = registry.bind(ext_input_trigger_action_manager_v1)
+        action = manager.get_input_trigger_action(token)
+
+        # toggle playback each time the action fires
+        on action.begin(time, activation_token):
+            player.toggle_play_pause()
+
+        # the action no longer exists; clean up
+        on action.unavailable():
+            action.destroy()
   </description>
 
   <interface name="ext_input_trigger_action_manager_v1" version="1">
     <description summary="used to register interest in input actions">
-      This interface allows a Wayland client to register interest in
-      input trigger actions.
+      This global interface allows a Wayland client to register interest in
+      input trigger actions. It is advertised by the registry and bound by the
+      client.
     </description>
 
     <enum name="error">
@@ -56,10 +76,10 @@
 
         The token should be one issued by the compositor. If the token was not
         issued by the compositor, or is no longer valid, the compositor must
-        raise an invalid_token protocol error.
+        raise an `invalid_token` protocol error.
 
         If the token has been issued by the compositor, is still valid, but is
-        no longer available, then an ext_input_trigger_action_v1.unavailable
+        no longer available, then an `ext_input_trigger_action_v1.unavailable`
         event should be sent immediately.
       </description>
       <arg name="token" type="string" summary="the exported action token"/>
@@ -68,20 +88,28 @@
   </interface>
 
   <interface name="ext_input_trigger_action_v1" version="1">
-    <description summary="receives notifications of input trigger actions">
-      The compositor sends notification of the triggering of the associated
-      action: begin and end will always be sent in pairs, with begin always
-      preceding end.
+    <description summary="a subscription to an input trigger action">
+      This object is a client's handle to an input trigger action, obtained by
+      passing an action token to
+      `ext_input_trigger_action_manager_v1.get_input_trigger_action`.
+
+      The compositor notifies the client each time the associated action fires:
+      `begin` and `end` are always sent in pairs, with `begin` always preceding
+      `end`.
+
+      If the action becomes unavailable the compositor sends the `unavailable`
+      event, after which the object is of no further use and should be
+      destroyed.
     </description>
 
     <event name="begin">
       <description summary="begin the input action">
         One of the input triggers associated with the action has occurred.
 
-        The app may begin the activity it associates with the action.
+        The client may begin the activity it associates with the action.
 
         For keyboard triggers, this will be sent when all keys in the
-        corresponding trigger has been pressed.
+        corresponding trigger have been pressed.
 
         The time argument is a timestamp with millisecond granularity, with an
         undefined base. clients must not assume any relation to wall-clock
@@ -98,7 +126,7 @@
       <description summary="end the input action">
         The input trigger that led to the "begin" event has stopped.
 
-        The app may end (or begin!) the activity it associates with the action.
+        The client may end (or begin!) the activity it associates with the action.
 
         For keyboard triggers, this will be sent when any key in the
         corresponding trigger has been released.
@@ -115,10 +143,15 @@
     </event>
 
     <event name="unavailable">
-      <description summary="the input action is (or has become) unavailable">
-        Sent if the token is or becomes unavailable.
+      <description summary="the input action is no longer available">
+        The action this object refers to is, or has become, unavailable, so no
+        begin or end events will be delivered. For example, the provider may
+        have purged the action with
+        `ext_input_trigger_action_control_v1.cancel_and_destroy`, or the token
+        may already have been unavailable when this object was created (see
+        `ext_input_trigger_action_manager_v1.get_input_trigger_action`).
 
-        This means the object is of no further use and should be destroyed.
+        This object is of no further use and should be destroyed.
       </description>
     </event>
 
