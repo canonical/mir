@@ -194,7 +194,7 @@ mf::WaylandConnector::WaylandConnector(
     desktop_file_manager = std::make_shared<mf::DesktopFileManager>(
         std::make_shared<mf::GDesktopFileCache>(main_loop));
 
-    auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
+    surface_registry = std::make_shared<mf::SurfaceRegistry>();
     auto const action_group_manager =
         std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
     auto const input_trigger_registry = std::make_shared<frontend::InputTriggerRegistry>();
@@ -452,6 +452,18 @@ void mf::WaylandConnector::on_surface_created(
     std::function<void(WlSurface*)> const& /*callback*/)
 {
     // TODO: XWayland surface hook; pending XWayland port to the wayland_rs frontend.
+}
+
+void mf::WaylandConnector::run_on_wayland_display(
+    std::function<void(mir::Executor&)> const& functor)
+{
+    executor->spawn([executor = executor, functor]() { functor(*executor); });
+}
+
+auto mf::WaylandConnector::scene_surface_for(scene::Session const& session, uint32_t id) const
+    -> std::shared_ptr<scene::Surface>
+{
+    return surface_registry->scene_surface_for(session, id);
 }
 
 auto mf::WaylandConnector::socket_name() const -> std::optional<std::string>

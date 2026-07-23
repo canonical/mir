@@ -68,6 +68,7 @@ namespace scene
 {
 class Clipboard;
 class IdleHub;
+class Session;
 class Surface;
 class TextInputHub;
 class SessionLock;
@@ -219,6 +220,15 @@ public:
     void on_surface_created(
         wayland::Client* client, uint32_t id, std::function<void(WlSurface*)> const& callback);
 
+    /// Run the supplied functor on the Wayland event-loop thread, passing the
+    /// executor that dispatches work onto that loop.
+    void run_on_wayland_display(std::function<void(mir::Executor&)> const& functor);
+
+    /// Resolve the `scene::Surface` for the Wayland surface identified by
+    /// (`session`, protocol object `id`), or nullptr if unknown.
+    auto scene_surface_for(scene::Session const& session, uint32_t id) const
+        -> std::shared_ptr<scene::Surface>;
+
     auto socket_name() const -> std::optional<std::string> override;
 
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
@@ -241,6 +251,7 @@ private:
 
     /// Owns the connected `Client`s; must outlive the running server.
     std::unique_ptr<wayland::WaylandClientRegistry> registry;
+    std::shared_ptr<SurfaceRegistry> surface_registry;
     std::unique_ptr<OutputManager> output_manager;
     std::shared_ptr<DesktopFileManager> desktop_file_manager;
 
