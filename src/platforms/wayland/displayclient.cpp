@@ -31,6 +31,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <condition_variable>
 #include <cstring>
 #include <cstdlib>
@@ -39,6 +40,15 @@
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
 
+namespace
+{
+// The wp_fractional_scale_v1 protocol expresses scale as a fixed-point numerator
+// with a denominator of 120 (e.g. 1.75x scale = 210/120).
+float constexpr fractional_scale_denominator = 120.0f;
+
+// Epsilon for floating-point scale comparison to avoid unnecessary reconfigurations.
+float constexpr scale_change_epsilon = 1e-6f;
+}
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
     public DisplaySink
@@ -57,7 +67,8 @@ public:
 
     DisplayConfigurationOutput dcout;
     geom::Size output_size;
-    int32_t host_scale{1};
+    float host_scale{1.0f};
+    geom::Size logical_size;
 
     wl_output* const output;
     DisplayClient* const owner_;
@@ -65,6 +76,8 @@ public:
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};
     xdg_toplevel* shell_toplevel{nullptr};
+    wp_fractional_scale_v1* fractional_scale{nullptr};
+    wp_viewport* viewport{nullptr};
 
     std::optional<geometry::Size> pending_toplevel_size;
     bool has_initialized{false};
@@ -82,6 +95,9 @@ public:
     void mode(uint32_t flags, int32_t width, int32_t height, int32_t refresh);
     void scale(int32_t factor);
     void done();
+
+    // fractional scale events
+    void preferred_scale(uint32_t scale);
 
     // XDG shell events
     void toplevel_configure(int32_t width, int32_t height, wl_array* states);
@@ -140,6 +156,16 @@ mgw::DisplayClient::Output::Output(
 
 mgw::DisplayClient::Output::~Output()
 {
+    if (fractional_scale)
+    {
+        wp_fractional_scale_v1_destroy(fractional_scale);
+    }
+
+    if (viewport)
+    {
+        wp_viewport_destroy(viewport);
+    }
+
     if (output)
     {
         wl_output_destroy(output);
@@ -250,7 +276,7 @@ void mgw::DisplayClient::Output::mode(uint32_t flags, int32_t width, int32_t hei
 
 void mgw::DisplayClient::Output::scale(int32_t factor)
 {
-    host_scale = factor;
+    host_scale = static_cast<float>(factor);
 }
 
 void mgw::DisplayClient::Output::done()
@@ -275,7 +301,29 @@ void mgw::DisplayClient::Output::done()
             xdg_toplevel_set_app_id(shell_toplevel, owner_->app_id.value().c_str());
         if (owner_->title)
             xdg_toplevel_set_title(shell_toplevel, owner_->title.value().c_str());
-        wl_surface_set_buffer_scale(surface, host_scale);
+
+        if (owner_->fractional_scale_manager)
+        {
+            static wp_fractional_scale_v1_listener const fractional_scale_listener{
+                [](void* self, auto, auto... args) { static_cast<Output*>(self)->preferred_scale(args...); },
+            };
+            fractional_scale = wp_fractional_scale_manager_v1_get_fractional_scale(
+                owner_->fractional_scale_manager, surface);
+            wp_fractional_scale_v1_add_listener(fractional_scale, &fractional_scale_listener, this);
+        }
+
+        if (owner_->viewporter)
+        {
+            viewport = wp_viewporter_get_viewport(owner_->viewporter, surface);
+        }
+
+        // When using viewporter, set buffer scale to 1; the viewport destination handles logical size.
+        // Otherwise fall back to integer buffer scale.
+        if (!viewport)
+        {
+            wl_surface_set_buffer_scale(surface, static_cast<int32_t>(host_scale));
+        }
+
         wl_surface_commit(surface);
 
         // After the next roundtrip the surface should be configured
@@ -288,7 +336,10 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
 
     if (width > 0 && height > 0)
     {
-        pending_toplevel_size = geometry::Size{host_scale*width, host_scale*height};
+        logical_size = geometry::Size{width, height};
+        pending_toplevel_size = geometry::Size{
+            static_cast<int>(std::round(host_scale * width)),
+            static_cast<int>(std::round(host_scale * height))};
     }
     else if (!dcout.modes.empty())
     {
@@ -302,12 +353,25 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 
     if (pending_toplevel_size)
     {
-        bool const size_is_changed = !dcout.custom_logical_size ||
-            dcout.custom_logical_size.value() != pending_toplevel_size.value();
-        dcout.custom_logical_size = pending_toplevel_size.value();
+        auto const new_pixel_size = pending_toplevel_size.value();
         pending_toplevel_size.reset();
-        output_size = dcout.extents().size;
-        if (!has_initialized || size_is_changed)
+
+        // logical_size is the host's window logical size (from toplevel_configure).
+        // output_size is the physical pixel buffer size rendered into by the GL renderer.
+        // dcout.custom_logical_size overrides the logical area for surface placement; it must
+        // match the logical window size so that nested clients see the correct output geometry.
+        // view_area() returns output_size (pixel coordinates) for the GL renderer.
+        bool const size_is_changed = !has_initialized || output_size != new_pixel_size;
+        output_size = new_pixel_size;
+        dcout.custom_logical_size = logical_size;
+        dcout.scale = host_scale;
+
+        if (viewport && logical_size.width.as_int() > 0 && logical_size.height.as_int() > 0)
+        {
+            wp_viewport_set_destination(viewport, logical_size.width.as_int(), logical_size.height.as_int());
+        }
+
+        if (size_is_changed)
         {
             has_initialized = true;
             {
@@ -320,6 +384,54 @@ void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
             owner_->on_display_config_changed();
         }
     }
+}
+
+void mgw::DisplayClient::Output::preferred_scale(uint32_t scale)
+{
+    // Only resize the EGL buffer when viewporter is available
+    // (viewporter is required for non-integer buffer-to-surface mapping)
+    if (!viewport) return;
+
+    float const new_scale = scale / fractional_scale_denominator;
+    if (std::abs(new_scale - host_scale) < scale_change_epsilon)
+        return;
+
+    host_scale = new_scale;
+    dcout.scale = host_scale;
+
+    if (logical_size.width.as_int() <= 0 || logical_size.height.as_int() <= 0)
+        return;
+
+    auto const new_pixel_size = geometry::Size{
+        static_cast<int>(std::round(host_scale * logical_size.width.as_int())),
+        static_cast<int>(std::round(host_scale * logical_size.height.as_int()))};
+
+    if (!has_initialized)
+    {
+        // surface_configure hasn't fired yet; update pending_toplevel_size so
+        // it picks up the correct pixel size when it does.
+        pending_toplevel_size = new_pixel_size;
+        return;
+    }
+
+    bool const size_is_changed = (new_pixel_size != output_size);
+    output_size = new_pixel_size;
+    // dcout.custom_logical_size stays as logical_size (set in surface_configure);
+    // only the pixel buffer size changes with the scale.
+
+    wp_viewport_set_destination(viewport, logical_size.width.as_int(), logical_size.height.as_int());
+
+    if (size_is_changed)
+    {
+        std::lock_guard lock{mutex};
+        provider = std::make_shared<WlDisplayAllocator>(
+            owner_->provider->get_egl_display(),
+            surface,
+            output_size);
+    }
+
+    // Always notify on scale change so nested clients receive the updated wl_output.scale.
+    owner_->on_display_config_changed();
 }
 
 void mgw::DisplayClient::Output::for_each_display_sink(std::function<void(DisplaySink&)> const& f)
@@ -398,7 +510,11 @@ auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milli
 
 auto mgw::DisplayClient::Output::view_area() const -> geometry::Rectangle
 {
-    return dcout.extents();
+    // output_size is the physical pixel buffer size; this is what the GL renderer needs
+    // for glViewport.  dcout.extents() returns the logical output area (used by the
+    // nested compositor for surface placement), which differs from the pixel size when
+    // the host scale is not 1.
+    return {dcout.top_left, output_size};
 }
 
 bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
@@ -525,6 +641,14 @@ mgw::DisplayClient::~DisplayClient()
         bound_outputs.clear();
     }
     registry.reset();
+    if (fractional_scale_manager)
+    {
+        wp_fractional_scale_manager_v1_destroy(fractional_scale_manager);
+    }
+    if (viewporter)
+    {
+        wp_viewporter_destroy(viewporter);
+    }
 }
 
 void mgw::DisplayClient::new_global(
@@ -576,6 +700,16 @@ void mgw::DisplayClient::new_global(
         self->shell = static_cast<decltype(self->shell)>(
             wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
         xdg_wm_base_add_listener(self->shell, &shell_listener, self);
+    }
+    else if (strcmp(interface, wp_fractional_scale_manager_v1_interface.name) == 0)
+    {
+        self->fractional_scale_manager = static_cast<decltype(self->fractional_scale_manager)>(
+            wl_registry_bind(registry, id, &wp_fractional_scale_manager_v1_interface, std::min(version, 1u)));
+    }
+    else if (strcmp(interface, wp_viewporter_interface.name) == 0)
+    {
+        self->viewporter = static_cast<decltype(self->viewporter)>(
+            wl_registry_bind(registry, id, &wp_viewporter_interface, std::min(version, 1u)));
     }
 }
 
