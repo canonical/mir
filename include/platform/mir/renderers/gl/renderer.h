@@ -36,13 +36,19 @@ namespace renderer
 {
 namespace gl
 {
-
+class Logger;
 class Renderer : public renderer::Renderer
 {
 public:
     Renderer(
         std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
         std::unique_ptr<graphics::gl::OutputSurface> output);
+
+    Renderer(
+        std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
+        std::unique_ptr<graphics::gl::OutputSurface> output,
+        std::shared_ptr<Logger> const& logger);
+
     virtual ~Renderer();
 
     // These are called with a valid GL context:

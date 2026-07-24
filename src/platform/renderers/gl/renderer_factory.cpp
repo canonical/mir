@@ -15,15 +15,31 @@
  */
 
 #include <mir/renderers/gl/renderer_factory.h>
+
+#include "renderer_logger.h"
+
+
 #include <mir/renderers/gl/renderer.h>
 #include <mir/graphics/platform.h>
 #include <mir/renderer/gl/gl_surface.h>
 
 namespace mrg = mir::renderer::gl;
 
+struct mrg::RendererFactory::Self
+{
+    Self() : logger{std::make_shared<Logger>()} {}
+
+    std::shared_ptr<Logger> const logger;
+};
+
+mrg::RendererFactory::RendererFactory()
+    : self{std::make_shared<mrg::RendererFactory::Self>()}
+{
+}
+
 auto mrg::RendererFactory::create_renderer_for(
     std::unique_ptr<graphics::gl::OutputSurface> output_surface,
     std::shared_ptr<graphics::GLRenderingProvider> gl_provider) const -> std::unique_ptr<mir::renderer::Renderer>
 {
-    return std::make_unique<Renderer>(std::move(gl_provider), std::move(output_surface));
+    return std::make_unique<Renderer>(std::move(gl_provider), std::move(output_surface), self->logger);
 }
