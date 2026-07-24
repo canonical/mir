@@ -477,15 +477,6 @@ geom::Point surface_top_left_from_cursor(geom::Size const& window_size, geom::Po
             geom::as_delta(window_size.height / 2)};
 }
 
-geom::Size logical_size_from_visual(geom::Size const& visual_size, float mag)
-{
-    float widthf{static_cast<float>(visual_size.width.as_value())};
-    float heightf{static_cast<float>(visual_size.height.as_value())};
-    return {
-        geom::Width{std::max(1.0f, std::round(widthf/ mag))},
-        geom::Height{std::max(1.0f, std::round(heightf / mag))}};
-}
-
 /// Clamps a visual (on-screen) size so neither dimension shrinks below
 /// min_visual_dimension.
 geom::Size clamp_visual_size(geom::Size const& visual_size)
@@ -751,7 +742,7 @@ public:
     {
         auto s = state.lock();
         s->visual_size = clamp_visual_size(size * s->magnification);
-        auto const logical_size = logical_size_from_visual(s->visual_size, s->magnification);
+        auto const logical_size = s->logical_size();
         auto const logical_top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
 
         if (auto const surf = s->surface.lock())
@@ -1064,7 +1055,7 @@ private:
                         center(surf->top_left(), old_logical_rect.size);
 
                     magnification = new_magnification;
-                    auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
+                    auto const new_logical_size = logical_size();
                     auto const new_surface_top_left = old_surface_centre -
                         geom::Displacement{
                             geom::as_delta(new_logical_size.width / 2),
@@ -1079,7 +1070,7 @@ private:
                         center(old_logical_rect.top_left, old_logical_rect.size);
 
                     magnification = new_magnification;
-                    auto const new_logical_size = logical_size_from_visual(visual_size, magnification);
+                    auto const new_logical_size = logical_size();
                     auto const new_logical_top_left = old_logical_centre -
                         geom::Displacement{
                             geom::as_delta(new_logical_size.width / 2),
@@ -1123,6 +1114,15 @@ private:
             zoom_out.attach_observer<ZoomButtonObserver>(self, -zoom_step);
         }
 
+        auto logical_size() -> geom::Size
+        {
+            float widthf{static_cast<float>(visual_size.width.as_value())};
+            float heightf{static_cast<float>(visual_size.height.as_value())};
+            return {
+                geom::Width{std::max(1.0f, std::round(widthf / magnification))},
+                geom::Height{std::max(1.0f, std::round(heightf / magnification))}};
+        }
+
         std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
         std::shared_ptr<Observer> observer;
         std::shared_ptr<DisplayConfigObserver> display_config_observer;
@@ -1157,7 +1157,7 @@ private:
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
-        auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
+        auto const logical_size = s.logical_size();
         render_scene_into_surface.capture_area(geom::Rectangle{positions.logical_top_left, logical_size});
         // capture_area() moves the backing surface to the capture position, so
         // apply the independent presentation position afterwards.
@@ -1197,7 +1197,7 @@ private:
             return;
         }
 
-        auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
+        auto const logical_size = s.logical_size();
         auto const surface_top_left =
             s.clamp_position_to_screen(desired_top_left, logical_size, s.magnification);
         auto const logical_top_left =
@@ -1219,7 +1219,7 @@ private:
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
-        auto const logical_size = logical_size_from_visual(s.visual_size, s.magnification);
+        auto const logical_size = s.logical_size();
         auto top_left = surface_top_left_from_cursor(logical_size, s.cursor_pos);
 
         apply_positioned_geometry(surf, top_left, s, render_scene_into_surface);
