@@ -31,6 +31,9 @@
 #include <mir/test/doubles/mock_output_surface.h>
 
 #include <mir/graphics/transformation.h>
+#include <mir/logging/logger.h>
+#include <mir/logging/tag.h>
+#include <mir/renderers/gl/renderer_factory.h>
 
 using testing::SetArgPointee;
 using testing::InSequence;
@@ -173,11 +176,43 @@ public:
     StubProgram prog;
 };
 
+class MockRendererLogger : public mir::logging::Logger
+{
+public:
+    MOCK_METHOD(void, log, (mir::logging::Severity, std::string const&, std::string const&), (override));
+};
+
 auto make_output_surface() -> std::unique_ptr<mtd::MockOutputSurface>
 {
     return std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
 }
 
+}
+
+TEST_F(GLRenderer, logs_renderer_capabilities_only_once_for_successive_renderer_creation)
+{
+    auto logger = std::make_shared<testing::StrictMock<MockRendererLogger>>();
+    mir::logging::set_logger(logger);
+    mir::logging::tag::set_severity("graphics", mir::logging::Severity::debug);
+
+    auto initial_log_count = 0u;
+    EXPECT_CALL(*logger, log(mir::logging::Severity::informational, testing::_, "graphics"))
+        .WillRepeatedly([&] { initial_log_count++; });
+
+    mrg::RendererFactory factory;
+
+    auto first_renderer = factory.create_renderer_for(make_output_surface(), gl_platform);
+    auto const log_count_after_first_renderer = initial_log_count;
+
+    auto second_renderer = factory.create_renderer_for(make_output_surface(), gl_platform);
+    auto const log_count_after_second_renderer = initial_log_count;
+
+    ASSERT_EQ(log_count_after_first_renderer, log_count_after_second_renderer)
+        << "Renderer capabilities should only be logged once for successive renderer creation";
+
+    // Clear out any references to the logger so its destroyed.
+    mir::logging::set_logger(std::make_shared<MockRendererLogger>());
+    logger.reset();
 }
 
 TEST_F(GLRenderer, disables_blending_for_rgbx_surfaces)
