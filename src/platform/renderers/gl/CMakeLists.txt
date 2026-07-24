@@ -2,6 +2,7 @@ ADD_LIBRARY(mirrenderergl OBJECT
 
   renderer.cpp
   renderer_factory.cpp
+  renderer_logger.cpp
 )
 
 target_include_directories(

@@ -37,24 +37,6 @@ using ActionGroupManager = mf::InputTriggerRegistry::ActionGroupManager;
 using Trigger = mf::InputTriggerRegistry::Trigger;
 
 
-void mf::RecentTokens::add(std::string_view token)
-{
-    *current = token;
-
-    if (++current == tokens.end())
-    {
-        current = tokens.begin();
-    }
-}
-
-auto mf::RecentTokens::contains(std::string_view token) const -> bool
-{
-    if(token.empty())
-        return false;
-
-    return std::find(tokens.begin(), tokens.end(), token) != tokens.end();
-}
-
 template <typename T>
 void iterate_and_erase_expired(
     std::vector<mir::wayland::Weak<T>>& vec, auto&& callback)

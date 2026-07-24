@@ -20,16 +20,15 @@
 
 #include <mir/events/event.h>
 #include <mir/executor.h>
+#include <mir/recent_items.h>
 #include <mir/shell/token_authority.h>
 #include <mir/wayland/lifetime_tracker.h>
 #include <mir/wayland/weak.h>
 
-#include <array>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
-#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -41,23 +40,7 @@ namespace frontend
 class KeyboardSymTrigger;
 class KeyboardCodeTrigger;
 
-/// A fixed-capacity circular buffer of recently seen tokens.
-///
-/// Tracks the last \c capacity tokens added, allowing efficient membership
-/// checks. Older tokens are evicted as new ones are inserted once the buffer
-/// is full.
-class RecentTokens
-{
-public:
-    void add(std::string_view token);
-
-    auto contains(std::string_view token) const -> bool;
-
-    static constexpr auto capacity = 32;
-private:
-    std::array<std::string, capacity> tokens;
-    decltype(tokens)::iterator current{tokens.begin()};
-};
+using RecentTokens = RecentItems<std::string, 32>;
 
 class InputTriggerRegistry
 {

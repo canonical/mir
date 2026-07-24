@@ -16,6 +16,9 @@
 #define MIR_LOG_COMPONENT "GLRenderer"
 
 #include <mir/renderers/gl/renderer.h>
+
+#include "renderer_logger.h"
+
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/transformation.h>
 #include <mir/graphics/display_sink.h>
@@ -28,6 +31,8 @@
 #include <mir/graphics/program_factory.h>
 #include <mir/graphics/program.h>
 #include <mir/renderer/gl/gl_surface.h>
+#include <mir/recent_items.h>
+#include <mir/synchronised.h>
 
 #define GLM_FORCE_RADIANS
 #include <glm/gtc/matrix_transform.hpp>
@@ -558,6 +563,39 @@ auto make_output_current(std::unique_ptr<mg::gl::OutputSurface> output) -> std::
     output->make_current();
     return output;
 }
+
+auto log_capabilities_legacy(auto const& capabilities)
+{
+
+    EGLDisplay disp = eglGetCurrentDisplay();
+    if (disp != EGL_NO_DISPLAY)
+    {
+        for (auto i = 0u; i != std::size(mrg::Capabilities::eglstrings); ++i)
+        {
+            auto const label = mrg::Capabilities::eglstrings[i].label.data();
+            auto const val = capabilities.egl_strings[i].data();
+            mir::log_info("%s: %s", label, val ? val : "");
+        }
+    }
+
+    for (auto i = 0u; i != std::size(mrg::Capabilities::glstrings); ++i)
+    {
+        auto const label = mrg::Capabilities::glstrings[i].label.data();
+        auto const val = capabilities.gl_strings[i].data();
+        mir::log_info("%s: %s", label, val ? val : "");
+    }
+
+    mir::log_info("GL max texture size = %d", capabilities.max_texture_size);
+
+    mir::log_info(
+        "GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
+        capabilities.framebuffer_bits[0],
+        capabilities.framebuffer_bits[1],
+        capabilities.framebuffer_bits[2],
+        capabilities.framebuffer_bits[3],
+        capabilities.framebuffer_bits[4],
+        capabilities.framebuffer_bits[5]);
+}
 }
 
 mrg::Renderer::Renderer(
@@ -571,52 +609,23 @@ mrg::Renderer::Renderer(
       gl_interface{std::move(gl_interface)}
 {
     eglBindAPI(EGL_OPENGL_ES_API);
-    EGLDisplay disp = eglGetCurrentDisplay();
-    if (disp != EGL_NO_DISPLAY)
-    {
-        struct {GLint id; char const* label;} const eglstrings[] =
-        {
-            {EGL_VENDOR,      "EGL vendor"},
-            {EGL_VERSION,     "EGL version"},
-            {EGL_CLIENT_APIS, "EGL client APIs"},
-            {EGL_EXTENSIONS,  "EGL extensions"},
-        };
-        for (auto& s : eglstrings)
-        {
-            auto val = eglQueryString(disp, s.id);
-            mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
-        }
-    }
+    log_capabilities_legacy(collect_capabilities());
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
 
-    struct {GLenum id; char const* label;} const glstrings[] =
-    {
-        {GL_VENDOR,   "GL vendor"},
-        {GL_RENDERER, "GL renderer"},
-        {GL_VERSION,  "GL version"},
-        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
-        {GL_EXTENSIONS, "GL extensions"},
-    };
-
-    for (auto& s : glstrings)
-    {
-        auto val = reinterpret_cast<char const*>(glGetString(s.id)); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: glGetString returns an ASCII string, guaranteed not to have the high-bit set, so it's representationally-identical to signed char
-        mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
-    }
-
-    GLint max_texture_size = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    mir::log_info("GL max texture size = %d", max_texture_size);
-
-    GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
-    glGetIntegerv(GL_RED_BITS, &rbits);
-    glGetIntegerv(GL_GREEN_BITS, &gbits);
-    glGetIntegerv(GL_BLUE_BITS, &bbits);
-    glGetIntegerv(GL_ALPHA_BITS, &abits);
-    glGetIntegerv(GL_DEPTH_BITS, &dbits);
-    glGetIntegerv(GL_STENCIL_BITS, &sbits);
-    mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
-                  rbits, gbits, bbits, abits, dbits, sbits);
-
+mrg::Renderer::Renderer(
+    std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
+    std::unique_ptr<graphics::gl::OutputSurface> output,
+    std::shared_ptr<mrg::Logger> const& logger) :
+    output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
+    clear_color{0.0f, 0.0f, 0.0f, 1.0f},
+    program_factory{std::make_unique<ProgramFactory>()},
+    screen_to_gl_coords(0),
+    display_transform(1),
+    gl_interface{std::move(gl_interface)}
+{
+    eglBindAPI(EGL_OPENGL_ES_API);
+    logger->maybe_log_capabilities();
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 

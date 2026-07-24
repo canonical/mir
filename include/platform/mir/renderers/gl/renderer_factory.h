@@ -26,14 +26,19 @@ namespace renderer
 {
 namespace gl
 {
-
 class RendererFactory : public renderer::RendererFactory
 {
 public:
+    RendererFactory();
+
     auto create_renderer_for(
         std::unique_ptr<graphics::gl::OutputSurface> output_surface,
         std::shared_ptr<graphics::GLRenderingProvider> gl_provider) const
         -> std::unique_ptr<renderer::Renderer> override;
+
+private:
+    struct Self;
+    std::shared_ptr<Self> const self;
 };
 
 }
