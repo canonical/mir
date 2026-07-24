@@ -58,6 +58,7 @@ struct SentinelCursorObserver : public mi::CursorObserver
     void image_set_to(std::shared_ptr<mir::graphics::CursorImage>) override {}
     mir::test::Signal signal;
 };
+
 }
 
 class MagnifierTest : public TestServer
@@ -123,14 +124,33 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
 
 TEST_F(MagnifierTest, can_set_capture_size)
 {
-    magnifier.capture_size(Size(500, 500));
+    magnifier.capture_size(Size(200, 200));
     magnifier.enable(true);
     add_start_callback([&]
     {
         EXPECT_THAT(scene_element_count(), Eq(1));
-        EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(500, 500)));
+        EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 200)));
     });
     start_server();
+}
+
+TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
+{
+    magnifier.enable(true);
+    start_server();
+
+    auto const mux = server().the_cursor_observer_multiplexer();
+    auto sentinel = std::make_shared<SentinelCursorObserver>();
+    mux->register_interest(sentinel);
+    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+
+    magnifier.capture_size(Size(1000, 1000));
+    magnifier_renderable()->buffer();
+
+    auto const capture_size = magnifier_renderable()->screen_position().size;
+    EXPECT_THAT(capture_size.width, Lt(Width{1000}));
+    EXPECT_THAT(capture_size.height, Lt(Height{1000}));
+    mux->unregister_interest(*sentinel);
 }
 
 TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)

@@ -477,16 +477,92 @@ geom::Point surface_top_left_from_cursor(geom::Size const& window_size, geom::Po
             geom::as_delta(window_size.height / 2)};
 }
 
+auto rectangles_empty(geom::Rectangles const& rects) -> bool
+{
+    return rects.size() == 0 ||
+           std::ranges::any_of(
+               rects,
+               [](auto const& rect)
+               { return rect.size.width == geom::Width{0} || rect.size.height == geom::Height{0}; });
+}
+
+/// Pixel-space rectangle of signed integer coordinates.
+struct VisualBounds
+{
+    geom::X x;
+    geom::Y y;
+    geom::Width w;
+    geom::Height h;
+};
+
+auto find_current_screen(geom::Rectangles const& rects, geom::Rectangle const& visual_bounds) -> geom::Rectangle
+{
+    auto max_overlap = 0u;
+    auto max_overlap_iter = rects.begin();
+
+    for(auto iter = rects.begin(); iter != rects.end(); iter++)
+    {
+        auto const& rect = *iter;
+        auto const overlap = mir::geometry::generic::intersection_of(rect, visual_bounds);
+        auto const overlap_area = overlap.size.width.as_uint32_t() * overlap.size.height.as_uint32_t();
+
+        if (overlap_area > max_overlap)
+        {
+            max_overlap = overlap_area;
+            max_overlap_iter = iter;
+        }
+    }
+
+    return *max_overlap_iter;
+}
+
+auto overlaps_multiple_outputs(geom::Rectangles const& rects, geom::Rectangle const& visual_bounds) -> bool
+{
+    auto overlaps = 0;
+    for (auto const& rect : rects)
+    {
+        if (rect.overlaps(visual_bounds) && ++overlaps > 1)
+            return true;
+    }
+
+    return false;
+}
+
+static void clamp_visual_size_for_output(
+    geom::Size& visual_size,
+    geom::Point const& top_left,
+    geom::Rectangles const& screen_bounds)
+{
+    if (rectangles_empty(screen_bounds))
+        return;
+
+    auto const current_screen_bounds = find_current_screen(screen_bounds, {top_left, visual_size});
+    auto const max_visual_size = current_screen_bounds.size * 0.8;
+    visual_size = geom::Size{
+        std::min(max_visual_size.width, visual_size.width),
+        std::min(max_visual_size.height, visual_size.height),
+    };
+}
+
+/// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
+/// Derived so the drag handle (bottom-right corner) and the zoom button stack
+/// (right edge, vertically centred) never overlap each other: the drag handle
+/// needs a full diameter of clearance both above and below the centred stack.
+auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height.as_int();
+
+geom::Size clamp_visual_size(geom::Size const& visual_size, geom::Size const& current_output_size)
+{
+    auto const max_size = current_output_size * 0.8;
+
+    return {
+        std::clamp(visual_size.width, geom::Width{min_visual_dimension}, max_size.width),
+        std::clamp(visual_size.height, geom::Height{min_visual_dimension}, max_size.height)};
+}
+
 /// Clamps a visual (on-screen) size so neither dimension shrinks below
 /// min_visual_dimension.
-geom::Size clamp_visual_size(geom::Size const& visual_size)
+auto clamp_minimum_visual_size(geom::Size const& visual_size) -> geom::Size
 {
-    /// Minimum on-screen (visual) width/height of the magnifier surface, in pixels.
-    /// Derived so the drag handle (bottom-right corner) and the zoom button stack
-    /// (right edge, vertically centred) never overlap each other: the drag handle
-    /// needs a full diameter of clearance both above and below the centred stack.
-    auto const min_visual_dimension = 2 * drag_handle_diameter + zoom_stack_height.as_int();
-
     return {
         std::max(visual_size.width, geom::Width{min_visual_dimension}),
         std::max(visual_size.height, geom::Height{min_visual_dimension})};
@@ -512,7 +588,13 @@ private:
     class DisplayConfigObserver : public mg::DisplayConfigurationObserver
     {
     public:
-        explicit DisplayConfigObserver(mir::Synchronised<State>& state) : state{state} {}
+        DisplayConfigObserver(
+            mir::Synchronised<State>& state,
+            RenderSceneIntoSurface& render_scene_into_surface)
+            : state{state},
+              render_scene_into_surface{render_scene_into_surface}
+        {
+        }
 
         void initial_configuration(
             std::shared_ptr<mg::DisplayConfiguration const> const& config) override
@@ -546,6 +628,7 @@ private:
         void update_bounds(std::shared_ptr<mg::DisplayConfiguration const> const& config);
 
         mir::Synchronised<State>& state;
+        RenderSceneIntoSurface& render_scene_into_surface;
     };
 
     class InputFilter : public mi::EventFilter
@@ -601,7 +684,8 @@ public:
                 [=, this, &server]
                 {
                     auto local_observer = std::make_shared<Observer>(this);
-                    auto local_display_config_observer = std::make_shared<DisplayConfigObserver>(state);
+                    auto local_display_config_observer =
+                        std::make_shared<DisplayConfigObserver>(state, render_scene_into_surface);
 
                     // Init `State` references under lock
                     this->post_init(server, local_observer, local_display_config_observer);
@@ -681,7 +765,7 @@ public:
         if (s->visual_size == geom::Size{})
         {
             s->visual_size =
-                clamp_visual_size(geom::Size{default_capture_width, default_capture_height} * s->magnification);
+                clamp_minimum_visual_size(geom::Size{default_capture_width, default_capture_height} * s->magnification);
         }
 
         auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
@@ -741,12 +825,21 @@ public:
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        s->visual_size = clamp_visual_size(size * s->magnification);
-        auto const logical_size = s->logical_size();
-        auto const logical_top_left = surface_top_left_from_cursor(logical_size, s->cursor_pos);
+        s->visual_size = clamp_minimum_visual_size(size * s->magnification);
 
         if (auto const surf = s->surface.lock())
+        {
+            if (!rectangles_empty(s->screen_bounds))
+            {
+                auto const surface_top_left = surf->top_left();
+                auto const current_output =
+                    find_current_screen(s->screen_bounds, geom::Rectangle{surface_top_left, s->visual_size});
+                s->visual_size = clamp_visual_size(s->visual_size, current_output.size);
+            }
+
+            auto const logical_top_left = surface_top_left_from_cursor(s->logical_size(), s->cursor_pos);
             apply_positioned_geometry(surf, logical_top_left, *s, render_scene_into_surface);
+        }
     }
 
     geom::Size current_size() const
@@ -796,15 +889,6 @@ public:
 private:
     struct State
     {
-        /// Pixel-space rectangle of signed integer coordinates.
-        struct VisualBounds
-        {
-            geom::X x;
-            geom::Y y;
-            geom::Width w;
-            geom::Height h;
-        };
-
         ///
         /// The visual rectangle is `mag` times larger than the logical one but
         /// shares the same centre, which is why the top-left is pulled back by
@@ -877,14 +961,20 @@ private:
             geom::Size const& logical_size,
             float mag) const
         {
-            if (screen_bounds.size == geom::Size{})
+            if (rectangles_empty(screen_bounds))
                 return logical_top_left;
 
             auto const [vis_x, vis_y, vis_w, vis_h] = compute_visual_bounds(logical_top_left, logical_size, mag);
-            auto const screen_left = screen_bounds.top_left.x;
-            auto const screen_top = screen_bounds.top_left.y;
-            auto const screen_right = screen_left + geom::as_delta(screen_bounds.size.width);
-            auto const screen_bottom = screen_top + geom::as_delta(screen_bounds.size.height);
+            auto const visual_bounds = geom::Rectangle{{vis_x, vis_y}, {vis_w, vis_h}};
+            if (overlaps_multiple_outputs(screen_bounds, visual_bounds))
+                return logical_top_left;
+
+            auto const current_screen =
+                find_current_screen(screen_bounds, visual_bounds);
+            auto const screen_left = current_screen.top_left.x;
+            auto const screen_top = current_screen.top_left.y;
+            auto const screen_right = screen_left + geom::as_delta(current_screen.size.width);
+            auto const screen_bottom = screen_top + geom::as_delta(current_screen.size.height);
 
             auto dx = geom::DeltaX{0};
             if (vis_x < screen_left)
@@ -910,14 +1000,16 @@ private:
             geom::Size const& logical_size,
             float mag) const
         {
-            if (screen_bounds.size == geom::Size{})
+            if (rectangles_empty(screen_bounds))
                 return surface_top_left;
 
             auto const visual = compute_visual_bounds(surface_top_left, logical_size, mag);
-            auto const screen_left = screen_bounds.top_left.x;
-            auto const screen_top = screen_bounds.top_left.y;
-            auto const screen_width = screen_bounds.size.width;
-            auto const screen_height = screen_bounds.size.height;
+            auto const current_screen =
+                find_current_screen(screen_bounds, geom::Rectangle{{visual.x, visual.y}, {visual.w, visual.h}});
+            auto const screen_left = current_screen.top_left.x;
+            auto const screen_top = current_screen.top_left.y;
+            auto const screen_width = current_screen.size.width;
+            auto const screen_height = current_screen.size.height;
             auto const handle_clearance = static_cast<int>(std::ceil(drag_handle_diameter / mag));
 
             struct AxisMapping
@@ -1048,14 +1140,14 @@ private:
             if (auto const surf = surface.lock())
             {
                 auto const old_logical_rect = render_scene_into_surface.capture_area();
+                magnification = new_magnification;
+                auto const new_logical_size = logical_size();
 
                 if (!follow_cursor)
                 {
                     auto const old_surface_centre =
                         center(surf->top_left(), old_logical_rect.size);
 
-                    magnification = new_magnification;
-                    auto const new_logical_size = logical_size();
                     auto const new_surface_top_left = old_surface_centre -
                         geom::Displacement{
                             geom::as_delta(new_logical_size.width / 2),
@@ -1069,8 +1161,6 @@ private:
                     auto const old_logical_centre =
                         center(old_logical_rect.top_left, old_logical_rect.size);
 
-                    magnification = new_magnification;
-                    auto const new_logical_size = logical_size();
                     auto const new_logical_top_left = old_logical_centre -
                         geom::Displacement{
                             geom::as_delta(new_logical_size.width / 2),
@@ -1134,7 +1224,7 @@ private:
         std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
 
         geom::Point cursor_pos;
-        geom::Rectangle screen_bounds;
+        geom::Rectangles screen_bounds;
         float magnification{default_magnification};
         /// The physical (screen) size of the magnifier.  When the magnification
         /// level changes the logical capture size is recalculated from this so
@@ -1150,6 +1240,7 @@ private:
         geom::Point surface_top_left;
     };
 
+
     /// Applies independent logical capture and surface presentation positions.
     static void apply_geometry(
         std::shared_ptr<ms::Surface> const& surf,
@@ -1157,6 +1248,7 @@ private:
         State& s,
         RenderSceneIntoSurface& render_scene_into_surface)
     {
+        clamp_visual_size_for_output(s.visual_size, positions.surface_top_left, s.screen_bounds);
         auto const logical_size = s.logical_size();
         render_scene_into_surface.capture_area(geom::Rectangle{positions.logical_top_left, logical_size});
         // capture_area() moves the backing surface to the capture position, so
@@ -1197,6 +1289,7 @@ private:
             return;
         }
 
+        clamp_visual_size_for_output(s.visual_size, desired_top_left, s.screen_bounds);
         auto const logical_size = s.logical_size();
         auto const surface_top_left =
             s.clamp_position_to_screen(desired_top_left, logical_size, s.magnification);
@@ -1423,7 +1516,7 @@ private:
             // Enforce the surface's minimum on-screen footprint before converting
             // to a logical size (rounding up so the visual size never dips below
             // the minimum), and cap the logical size at a sane maximum.
-            auto const clamped_visual_size = clamp_visual_size(geom::Size{raw_vis_w, raw_vis_h});
+            auto const clamped_visual_size = clamp_minimum_visual_size(geom::Size{raw_vis_w, raw_vis_h});
             auto const to_logical_dimension = [mag](auto visual_dimension)
             {
                 return decltype(visual_dimension){
@@ -1618,7 +1711,22 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
         });
 
     auto s = state.lock();
-    s->screen_bounds = rects.size() > 0 ? rects.bounding_rectangle() : geom::Rectangle{};
+    s->screen_bounds = rects;
+    if (auto const surf = s->surface.lock())
+    {
+        auto const top_left = surf->top_left();
+        auto const current_output = find_current_screen(rects, geom::Rectangle{top_left, s->visual_size});
+        auto const pre_clamp_visual_size = s->visual_size;
+        s->visual_size = clamp_visual_size(s->visual_size, current_output.size);
+
+        if (pre_clamp_visual_size == s->visual_size)
+            return;
+
+        if (s->follow_cursor)
+            Self::place_at_cursor(surf, *s, render_scene_into_surface);
+        else
+            Self::apply_positioned_geometry(surf, top_left, *s, render_scene_into_surface);
+    }
 }
 
 miral::Magnifier::Magnifier()
