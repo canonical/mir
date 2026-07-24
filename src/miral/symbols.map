@@ -225,6 +225,7 @@ global:
     miral::Magnifier::enable*;
     miral::Magnifier::magnification*;
     miral::Magnifier::operator*;
+    miral::Magnifier::set_behavior*;
     miral::MinimalWindowManager::?MinimalWindowManager*;
     miral::MinimalWindowManager::MinimalWindowManager*;
     miral::MinimalWindowManager::advise_delete_app*;

@@ -881,7 +881,10 @@ auto miral::BasicWindowManager::window_at(geometry::Point cursor) const
 -> Window
 {
     auto surface_at = focus_controller->surface_at(cursor);
-    return surface_at ? info_for(surface_at).window() : Window{};
+    if (!surface_at || !window_info.contains(surface_at))
+        return Window{};
+
+    return info_for(surface_at).window();
 }
 
 auto miral::BasicWindowManager::active_output() -> geometry::Rectangle const
