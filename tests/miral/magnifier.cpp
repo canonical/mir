@@ -29,6 +29,7 @@
 #include <mir/input/input_device_registry.h>
 #include <mir/input/input_sink.h>
 #include <mir/input/virtual_input_device.h>
+#include <mir/main_loop.h>
 #include <mir/test/signal.h>
 #include <mir/executor.h>
 #include "add_virtual_device.h"
@@ -84,6 +85,13 @@ public:
     { return magnifier_renderable()->screen_position().top_left; }
 
     auto scene_element_count() const -> size_t { return server().the_scene()->scene_elements_for(this).size(); }
+
+    void wait_for_magnifier_initialization()
+    {
+        mir::test::Signal initialized;
+        server().the_main_loop()->spawn([&initialized] { initialized.raise(); });
+        ASSERT_TRUE(initialized.wait_for(2s)) << "timed out waiting for magnifier initialization";
+    }
 
     static constexpr auto magnifier_index = 0;
     Magnifier magnifier;
@@ -205,17 +213,15 @@ TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
 // would deadlock. The test body runs on a separate thread while the main loop
 // runs in the background.
 //
-// Synchronisation: a SentinelCursorObserver is registered on the multiplexer.
-// Because for_each_observer dispatches in registration order (magnifier's
-// observer registered first), the sentinel fires only after the magnifier has
-// processed each cursor event. Waiting for the sentinel's initial-state
-// delivery acts as a "fence" that guarantees all earlier main-loop tasks
-// (including the magnifier's own initial cursor event) have run.
+// Synchronisation: Magnifier registers its cursor observer from a main-loop
+// task. Wait for that task before registering a sentinel, so the sentinel is
+// ordered after Magnifier when cursor events are dispatched.
 
 TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
+    wait_for_magnifier_initialization();
 
     auto const mux = server().the_cursor_observer_multiplexer();
     auto sentinel = std::make_shared<SentinelCursorObserver>();
@@ -238,6 +244,7 @@ TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
 {
     magnifier.enable(true);
     start_server();
+    wait_for_magnifier_initialization();
 
     auto const mux = server().the_cursor_observer_multiplexer();
     auto sentinel = std::make_shared<SentinelCursorObserver>();
