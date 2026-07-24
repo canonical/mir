@@ -135,7 +135,7 @@ TEST_F(MagnifierTest, can_set_capture_size)
 
 TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
 {
-    magnifier.enable(true).stop_following_cursor();
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     add_start_callback([&]
     {
         // 4 indicators + 1 magnifier surface
@@ -146,7 +146,7 @@ TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
 
 TEST_F(MagnifierTest, handles_hidden_when_disabled_in_decoupled_mode)
 {
-    magnifier.enable(true).stop_following_cursor();
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     add_start_callback([&]
     {
         magnifier.enable(false);
@@ -157,11 +157,11 @@ TEST_F(MagnifierTest, handles_hidden_when_disabled_in_decoupled_mode)
 
 TEST_F(MagnifierTest, toggling_to_coupled_hides_handles)
 {
-    magnifier.enable(true).stop_following_cursor();
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     add_start_callback([&]
     {
         EXPECT_THAT(scene_element_count(), Eq(5));
-        magnifier.follow_cursor();
+        magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
         EXPECT_THAT(scene_element_count(), Eq(1));
     });
     start_server();
@@ -173,7 +173,7 @@ TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
     add_start_callback([&]
     {
         EXPECT_THAT(scene_element_count(), Eq(1));
-        magnifier.stop_following_cursor();
+        magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
         EXPECT_THAT(scene_element_count(), Eq(5));
     });
     start_server();
@@ -194,7 +194,7 @@ TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
 
 TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
 {
-    magnifier.enable(true).stop_following_cursor();
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
 
     auto const mux = server().the_cursor_observer_multiplexer();
@@ -257,7 +257,7 @@ struct MagnifierHandleTest : MagnifierTest
 {
     MagnifierHandleTest()
     {
-        magnifier.enable(true).stop_following_cursor();
+        magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
 
         add_server_init(
             [this](mir::Server& server)
@@ -511,7 +511,7 @@ TEST_F(MagnifierHandleTest, does_not_consume_events_outside_decoupled_magnifier_
 TEST_F(MagnifierHandleTest, does_not_consume_events_when_magnifier_is_inactive)
 {
     auto const magnifier_center = element_center(magnifier_index);
-    magnifier.follow_cursor();
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
 
     auto const pointer_event = mir::events::make_pointer_event(
         MirInputDeviceId{},
@@ -541,7 +541,7 @@ TEST_F(MagnifierHandleTest, does_not_consume_events_when_magnifier_is_inactive)
     EXPECT_FALSE(composite_event_filter.lock()->handle(*pointer_event));
     EXPECT_FALSE(composite_event_filter.lock()->handle(*touch_event));
 
-    magnifier.stop_following_cursor().enable(false);
+    magnifier.set_behavior(Magnifier::Behavior::freely_positioned).enable(false);
 
     EXPECT_FALSE(composite_event_filter.lock()->handle(*pointer_event));
     EXPECT_FALSE(composite_event_filter.lock()->handle(*touch_event));

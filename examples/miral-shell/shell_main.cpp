@@ -268,9 +268,9 @@ int main(int argc, char const* argv[])
                 case XKB_KEY_m:
                     follows_cursor = !follows_cursor;
                     if (follows_cursor)
-                        magnifier.follow_cursor();
+                        magnifier.set_behavior(miral::Magnifier::Behavior::follow_cursor);
                     else
-                        magnifier.stop_following_cursor();
+                        magnifier.set_behavior(miral::Magnifier::Behavior::freely_positioned);
                     return true;
                 default:
                     break;

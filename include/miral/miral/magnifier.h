@@ -33,6 +33,14 @@ namespace live_config { class Store; }
 class Magnifier
 {
 public:
+    /// Describes how the magnifier is positioned.
+    /// \remark Since MirAL 6.0
+    enum class Behavior
+    {
+        follow_cursor,
+        freely_positioned
+    };
+
     Magnifier();
     /// Construct a `Magnifier` instance with access to a live config store.
     ///
@@ -51,14 +59,12 @@ public:
     Magnifier& magnification(float magnification);
     Magnifier& capture_size(mir::geometry::Size const& size);
 
-    /// Makes the magnifier follow the cursor.
+    /// Sets how the magnifier is positioned.
+    ///
+    /// When freely positioned, the magnifier can be dragged with the pointer
+    /// or a single touch contact.
     /// \remark Since MirAL 6.0
-    Magnifier& follow_cursor();
-
-    /// Stops the magnifier following the cursor, allowing it to be dragged
-    /// freely with the pointer or a single touch contact.
-    /// \remark Since MirAL 6.0
-    Magnifier& stop_following_cursor();
+    Magnifier& set_behavior(Behavior behavior);
 
     void operator()(mir::Server& server);
 

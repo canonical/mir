@@ -1689,13 +1689,21 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             size.height = geom::Height(*val);
             capture_size(size);
         });
-    config_store.add_bool_attribute(
-        {"magnifier", "follow_cursor"},
-        "Whether the magnifier follows the cursor",
-        [this](live_config::Key const&, std::optional<bool> val)
+    config_store.add_string_attribute(
+        {"magnifier", "behavior"},
+        "What behavior the magnifier should exhibit",
+        [this](live_config::Key const&, std::optional<std::string_view> val)
         {
-            if (val.has_value())
-                *val ? follow_cursor() : stop_following_cursor();
+            if (!val.has_value())
+                return;
+
+            if (*val == "follow_cursor")
+                set_behavior(Behavior::follow_cursor);
+            else if (*val == "freely_positioned")
+                set_behavior(Behavior::freely_positioned);
+            else
+                mir::log_warning(
+                    "Config key 'magnifier.behavior' should be either 'follow_cursor' or 'freely_positioned'");
         });
 }
 
@@ -1728,15 +1736,17 @@ miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size
     return *this;
 }
 
-miral::Magnifier& miral::Magnifier::follow_cursor()
+miral::Magnifier& miral::Magnifier::set_behavior(Behavior behavior)
 {
-    self->follow_cursor();
-    return *this;
-}
-
-miral::Magnifier& miral::Magnifier::stop_following_cursor()
-{
-    self->stop_following_cursor();
+    switch (behavior)
+    {
+    case Behavior::follow_cursor:
+        self->follow_cursor();
+        break;
+    case Behavior::freely_positioned:
+        self->stop_following_cursor();
+        break;
+    }
     return *this;
 }
 
