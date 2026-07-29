@@ -29,16 +29,22 @@
     using the `ext_input_trigger_registration_v1` protocol.
 
     A client subscribes by passing a token to
-    `ext_input_trigger_action_manager_v1.get_input_trigger_action`. The token
-    is issued by the compositor, delivered to the registering client, and then
-    passed to interested clients out of band (for example through a desktop
-    settings service).
+    `ext_input_trigger_action_manager_v1.get_input_trigger_action`. The token is
+    acquired either by registering the action with the
+    `ext_input_trigger_registration_v1` protocol, in which case the compositor
+    issues the token to the registering client, or out of band from another
+    client that registered it (for example through a desktop settings service).
 
     For example, a media player reacting to the system "play/pause" action:
 
-        # obtain the action's token out of band; here it is looked up from a
-        # desktop settings service that the registering client published it to
+        # acquire the token. Either receive it from a remote service...
         token = settings_service.lookup("play/pause")
+
+        # ...or register the action yourself using
+        # ext_input_trigger_registration_v1 and use the token it issues
+        control = registration_manager.get_action_control("play/pause")
+        on control.done(token):
+            ...
 
         # subscribe to the action
         manager = registry.bind(ext_input_trigger_action_manager_v1)

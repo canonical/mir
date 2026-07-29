@@ -32,9 +32,11 @@
     The registering client reserves a trigger (obtaining an
     `ext_input_trigger_v1`), creates an action (obtaining an
     `ext_input_trigger_action_control_v1` and, with it, a token), and associates
-    triggers with the action. It then delivers the token to interested clients
-    out of band (for example through a desktop settings service), which subscribe
-    using `ext_input_trigger_action_manager_v1.get_input_trigger_action`.
+    triggers with the action. The token may then be used with
+    `ext_input_trigger_action_manager_v1.get_input_trigger_action` to subscribe
+    to the action. The registering client can use the token itself, or deliver
+    it to other interested clients out of band (for example through a desktop
+    settings service), or both.
 
     For example, binding "Meta+p" to a "play/pause" action:
 
@@ -46,8 +48,13 @@
         control = manager.get_action_control("play/pause")
         on control.done(token):
             control.add_input_trigger_event(trigger)
-            # hand the token to interested clients out of band
+
+            # deliver the token to other interested clients out of band...
             settings_service.publish("play/pause", token)
+
+            # ...and/or subscribe to the action directly, in the same way an
+            # unprivileged client would (see ext_input_trigger_action_v1)
+            action = action_manager.get_input_trigger_action(token)
 
         # when the user later removes the binding, purge the action
         on user_removes_binding("play/pause"):
