@@ -122,7 +122,7 @@ auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint3
         return mw::Pointer::AxisSource::wheel_tilt;
     }
 
-    mir::fatal_error("Invalid MirPointerAxisSource %d", mir_source);
+    MIR_FATAL_ERROR("Invalid MirPointerAxisSource {}", static_cast<int>(mir_source));
     return std::nullopt;
 }
 }

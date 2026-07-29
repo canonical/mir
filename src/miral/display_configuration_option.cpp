@@ -211,11 +211,11 @@ void miral::display_configuration_options(mir::Server& server)
             }
             catch (std::invalid_argument const&)
             {
-                mir::fatal_error("Failed to parse scale '%s' as double", scale_str.c_str());
+                MIR_FATAL_ERROR("Failed to parse scale '{}' as double", scale_str);
             }
             if (scale < scale_min || scale > scale_max)
             {
-                mir::fatal_error("Invalid scale %f, must be between %f and %f", scale, scale_min, scale_max);
+                MIR_FATAL_ERROR("Invalid scale {}, must be between {} and {}", scale, scale_min, scale_max);
             }
 
             auto layout_selector = wrapped;
@@ -232,7 +232,7 @@ void miral::display_configuration_options(mir::Server& server)
             {
                 if (scale != 1.0)
                 {
-                    mir::fatal_error("Display scale option can't be used with static display configuration");
+                    MIR_FATAL_ERROR("Display scale option can't be used with static display configuration");
                 }
                 auto sdc = std::make_shared<StaticDisplayConfig>(display_layout.substr(mir::strlen_c(static_opt_val)));
                 server.add_init_callback([sdc, &server]{ sdc->init_auto_reload(server); });
@@ -248,12 +248,12 @@ void miral::display_configuration_options(mir::Server& server)
             {
                 if (scale != 1.0)
                 {
-                    mir::fatal_error("Display scale option can't be used with autoscale");
+                    MIR_FATAL_ERROR("Display scale option can't be used with autoscale");
                 }
 
                 if (display_layout.compare(0, mir::strlen_c(static_opt_val), static_opt_val) == 0)
                 {
-                    mir::fatal_error("Display autoscale option can't be used with static display configuration");
+                    MIR_FATAL_ERROR("Display autoscale option can't be used with static display configuration");
                 }
 
                 auto const auto_scale_target = options->get<int>(display_autoscale_opt);

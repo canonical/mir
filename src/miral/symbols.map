@@ -336,6 +336,12 @@ global:
     miral::StickyKeys::on_modifier_clicked*;
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
+    miral::TouchEmulator::TouchEmulator*;
+    "miral::TouchEmulator::disable()";
+    "miral::TouchEmulator::disabled()";
+    "miral::TouchEmulator::enable()";
+    "miral::TouchEmulator::enabled()";
+    "miral::TouchEmulator::operator()(mir::Server&)";
     miral::WaylandExtensions::?WaylandExtensions*;
     miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::EnableInfo::app*;
@@ -736,6 +742,7 @@ global:
     typeinfo?for?miral::SlowKeys;
     typeinfo?for?miral::StartupInternalClient;
     typeinfo?for?miral::StickyKeys;
+    typeinfo?for?miral::TouchEmulator;
     typeinfo?for?miral::WaylandExtensions::Builder;
     typeinfo?for?miral::WaylandExtensions::Context;
     typeinfo?for?miral::WaylandExtensions::EnableInfo;

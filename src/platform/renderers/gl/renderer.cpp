@@ -158,12 +158,6 @@ const GLchar* const vertex_shader_src =
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
-
-template<typename Index, typename Range>
-    requires std::integral<Index>
-auto enumerate_with_idx_type(Range&& range) {
-    return std::views::zip(std::views::iota(Index{0}), std::forward<Range>(range));
-}
 }
 
 class mrg::Renderer::ProgramFactory : public mir::graphics::gl::ProgramFactory
@@ -540,7 +534,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
-    for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(tex_uniforms))
+    for (auto const [index, uniform] : tex_uniforms | std::views::enumerate)
     {
         /* You can reference uniform arrays as tex[0], tex[1], tex[2], … until you
          * hit the end of the array, which will return -1 as the location.
@@ -744,11 +738,11 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     {   // Avoid reloading the screen-global uniforms on every renderable
         // TODO: We actually only need to bind these *once*, right? Not once per frame?
         prog->last_used_frameno = frameno;
-        for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(prog->tex_uniforms))
+        for (auto const [index, uniform] : prog->tex_uniforms | std::views::enumerate)
         {
             if (uniform != -1)
             {
-                glUniform1i(uniform, index);
+                glUniform1i(uniform, static_cast<GLint>(index));
             }
         }
         glUniformMatrix4fv(prog->display_transform_uniform, 1, GL_FALSE,

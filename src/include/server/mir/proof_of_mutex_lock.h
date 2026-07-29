@@ -31,7 +31,7 @@ public:
     {
         if (!lock.owns_lock())
         {
-            fatal_error("ProofOfMutexLock created with unlocked unique_lock");
+            MIR_FATAL_ERROR("ProofOfMutexLock created with unlocked unique_lock");
         }
     }
     ProofOfMutexLock(ProofOfMutexLock const&) = delete;

@@ -46,9 +46,10 @@ std::string mir_test_framework::library_path()
 
     if (libpath.empty())
     {
-        // Try to find the location of libmircommon.so
+        // Try to find the location of libmircore.so
+        void (&fn_in_mircore)(std::source_location const loc, std::string_view) = mir::fatal_error;
         Dl_info library_info{nullptr, nullptr, nullptr, nullptr};
-        dladdr(reinterpret_cast<void*>(&mir::fatal_error), &library_info);
+        dladdr(reinterpret_cast<void*>(&fn_in_mircore), &library_info);
 
         std::unique_ptr<char, decltype(&std::free)> const tmp{strdup(library_info.dli_fname), &std::free};
         libpath = dirname(tmp.get());

@@ -259,7 +259,7 @@ void mga::AtomicKMSOutput::reset()
     }
     catch (std::exception const& e)
     {
-        fatal_error("%s", e.what());
+        MIR_FATAL_ERROR("{}", e.what());
     }
 
     /* Discard previously current crtc */
@@ -407,8 +407,8 @@ void mga::AtomicKMSOutput::clear_crtc()
         }
         else
         {
-            fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                        mgk::connector_name(conf->connector).c_str(), result);
+            MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
+                        mgk::connector_name(conf->connector), result);
         }
     }
 

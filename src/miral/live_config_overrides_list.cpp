@@ -51,9 +51,9 @@ void mlc::OverridesList::for_each(Loader unchanged, Loader fresh, Loader modifie
         }
         catch (std::exception const& e)
         {
-            mir::fatal_error(
-                "Openers must not throw exceptions. Failed to open '%s' with exception '%s'",
-                event.path.string().c_str(),
+            MIR_FATAL_ERROR(
+                "Openers must not throw exceptions. Failed to open '{}' with exception '{}'",
+                event.path.string(),
                 e.what());
         }
 

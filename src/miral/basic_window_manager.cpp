@@ -1286,7 +1286,7 @@ void miral::BasicWindowManager::place_attached_to_zone(
     }
 
     default:
-        fatal_error("BasicWindowManager::place_attached_to_zone() called for window not in a maximized or attached state");
+        MIR_FATAL_ERROR("BasicWindowManager::place_attached_to_zone() called for window not in a maximized or attached state");
     }
 
     // TODO: Maybe remove update_window and update only if the rect has changed?
@@ -2950,7 +2950,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 })
                 .or_else([&]()-> decltype(info.exclusive_rect())
                 {
-                    fatal_error("Attached window has no exclusive rect");
+                    MIR_FATAL_ERROR("Attached window has no exclusive rect");
                     std::unreachable();
                 });
         }
@@ -2969,7 +2969,7 @@ void miral::BasicWindowManager::update_application_zones_and_attached_windows()
                 })
                 .or_else([&]()-> decltype(info.exclusive_rect())
                 {
-                    fatal_error("Attached window has no exclusive rect");
+                    MIR_FATAL_ERROR("Attached window has no exclusive rect");
                     std::unreachable();
                 });
         }

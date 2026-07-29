@@ -74,7 +74,7 @@ auto ms::ApplicationSession::create_surface(
     Executor* observer_executor) -> std::shared_ptr<Surface>
 {
     if (session && session.get() != this)
-        fatal_error("Incorrect session");
+        MIR_FATAL_ERROR("Incorrect session");
 
     //TODO: we take the first stream's content for now. Once the surface factory interface takes more than one stream,
     //      we can take all the streams as content.

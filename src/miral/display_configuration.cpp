@@ -209,7 +209,7 @@ auto miral::DisplayConfiguration::Node::type() const -> Type
 auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 {
     if (type() != Type::string)
-        mir::fatal_error("Attempting to access a Node of type %s as a string", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as a string", node_type_to_string(type()));
 
     return self->as<std::string>();
 }
@@ -217,7 +217,7 @@ auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 auto miral::DisplayConfiguration::Node::as_int() const -> int
 {
     if (type() != Type::integer)
-        mir::fatal_error("Attempting to access a Node of type %s as an integer", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as an integer", node_type_to_string(type()));
 
     return self->as<int>();
 }
@@ -225,7 +225,7 @@ auto miral::DisplayConfiguration::Node::as_int() const -> int
 void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)> const& f) const
 {
     if (type() != Type::sequence)
-        mir::fatal_error("Attempting to access a Node of type %s as a sequence", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as a sequence", node_type_to_string(type()));
 
     for (auto const& item : self->node)
         f(Node(std::make_unique<Self>(item)));
@@ -234,7 +234,7 @@ void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)
 auto miral::DisplayConfiguration::Node::has(std::string const& key) const -> bool
 {
     if (type() != Type::map)
-        mir::fatal_error("Attempting to access a Node of type %s as a map", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as a map", node_type_to_string(type()));
 
     if (self->node[key])
         return true;
