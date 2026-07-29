@@ -22,8 +22,8 @@
     THE SOFTWARE.
   </copyright>
 
-  <description summary="Subscription for global input actions">
-    This protocol lets a client react to a global action. An action is an
+  <description summary="Subscription to input trigger actions">
+    This protocol lets a client react to an input trigger action. An action is an
     activity (for example "play/pause" or "toggle-launcher") that a privileged
     client has bound to one or more input triggers, such as a key combination,
     using the `ext_input_trigger_registration_v1` protocol.
@@ -60,7 +60,7 @@
   </description>
 
   <interface name="ext_input_trigger_action_manager_v1" version="1">
-    <description summary="used to register interest in input actions">
+    <description summary="used to register interest in input trigger actions">
       This global interface allows a Wayland client to register interest in
       input trigger actions. It is advertised by the registry and bound by the
       client.
@@ -112,7 +112,7 @@
     </description>
 
     <event name="begin">
-      <description summary="begin the input action">
+      <description summary="begin the input trigger action">
         One of the input triggers associated with the action has occurred.
 
         The client may begin the activity it associates with the action.
@@ -132,7 +132,7 @@
     </event>
 
     <event name="end">
-      <description summary="end the input action">
+      <description summary="end the input trigger action">
         The input trigger that led to the `begin` event has stopped.
 
         The client may end (or begin!) the activity it associates with the action.
@@ -152,7 +152,7 @@
     </event>
 
     <event name="unavailable">
-      <description summary="the input action is no longer available">
+      <description summary="the input trigger action is no longer available">
         The action this object refers to is, or has become, unavailable, so no
         `begin` or `end` events will be delivered. For example, the provider may
         have purged the action with

@@ -22,9 +22,9 @@
     THE SOFTWARE.
   </copyright>
 
-  <description summary="Registration of global input triggers and associated actions">
-    This protocol lets a privileged client define global input actions and bind
-    them to input triggers, such as key combinations. An action is an activity
+  <description summary="Registration of input triggers and associated actions">
+    This protocol lets a privileged client define actions and bind them to
+    input triggers, such as key combinations. An action is an activity
     (for example "play/pause" or "toggle-launcher"); a trigger is an input, such
     as "Meta+p", that fires it. When a trigger fires, the client subscribed to
     the action is notified through the `ext_input_trigger_action_v1` protocol.
