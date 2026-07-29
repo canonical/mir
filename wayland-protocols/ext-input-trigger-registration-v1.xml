@@ -175,8 +175,8 @@
         The name parameter describes the action (it has no semantic content and
         may be duplicated across actions).
 
-        The compositor will send the ext_input_trigger_action_control_v1.done event in
-        response to this request.
+        The compositor will send the `ext_input_trigger_action_control_v1.done`
+        event in response to this request.
       </description>
       <arg name="name" type="string" summary="a description of the action"/>
       <arg name="id" type="new_id" interface="ext_input_trigger_action_control_v1"/>
@@ -189,12 +189,12 @@
       In response to its creation the compositor must send either the `done`
       or the `failed` event.
 
-      The done event indicates the trigger is now owned by the manager: the
+      The `done` event indicates the trigger is now owned by the manager: the
       compositor will not allow this or any other manager to register the same
       trigger. The reservation lasts until the object is destroyed, which
       releases the trigger.
 
-      The failed event indicates the trigger could not be owned by the manager,
+      The `failed` event indicates the trigger could not be owned by the manager,
       for example because it is already reserved. The object is then of no
       further use and should be destroyed.
     </description>
@@ -214,7 +214,7 @@
 
     <event name="failed">
       <description summary="input trigger failed to register">
-        The failed event indicates that the trigger is not "owned" by the manager.
+        The `failed` event indicates that the trigger is not "owned" by the manager.
         This means the object is of no further use and should be destroyed.
       </description>
     </event>
@@ -228,12 +228,12 @@
       notified when the action fires.
 
       In response to the creation of this object the compositor must send the
-      done event, which delivers the action's token. Triggers are associated
+      `done` event, which delivers the action's token. Triggers are associated
       with the action using `add_input_trigger_event` and
       `drop_input_trigger_event`.
 
       Destroying the object with `cancel_and_destroy` purges the action, while
-      destroy leaves it intact; see those requests for details.
+      `destroy` leaves it intact; see those requests for details.
     </description>
 
     <request name="add_input_trigger_event">
@@ -279,11 +279,11 @@
         The action itself ceases to exist: every `ext_input_trigger_action_v1`
         that was created from this action's token (by this or any other client)
         is notified with an `ext_input_trigger_action_v1.unavailable` event and
-        will receive no further begin or end events.
+        will receive no further `begin` or `end` events.
 
         To destroy this object while leaving the action (and any
         `ext_input_trigger_action_v1` objects derived from it) intact, use
-        destroy instead.
+        `destroy` instead.
       </description>
     </request>
 
@@ -292,7 +292,7 @@
         This destroys this object without purging the input trigger action. The
         action continues to exist: any `ext_input_trigger_action_v1` created
         from its token (by this or any other client) is unaffected and keeps
-        receiving begin and end events.
+        receiving `begin` and `end` events.
 
         To purge the action and make those objects unavailable, use
         `cancel_and_destroy` instead.

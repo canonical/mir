@@ -133,7 +133,7 @@
 
     <event name="end">
       <description summary="end the input action">
-        The input trigger that led to the "begin" event has stopped.
+        The input trigger that led to the `begin` event has stopped.
 
         The client may end (or begin!) the activity it associates with the action.
 
@@ -154,7 +154,7 @@
     <event name="unavailable">
       <description summary="the input action is no longer available">
         The action this object refers to is, or has become, unavailable, so no
-        begin or end events will be delivered. For example, the provider may
+        `begin` or `end` events will be delivered. For example, the provider may
         have purged the action with
         `ext_input_trigger_action_control_v1.cancel_and_destroy`, or the token
         may already have been unavailable when this object was created (see
