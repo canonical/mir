@@ -36,11 +36,13 @@ void log(logging::Severity sev, char const* component, char const* fmt, ...);
 void log(logging::Severity sev, char const* component, std::string const& message);
 void log(logging::Severity sev, char const* component, std::exception_ptr const& exception, std::string const& message);
 
+void log(logging::Severity severity, logging::Tags tags, std::string_view msg);
+
 template<typename... Args>
 void log(logging::Severity severity, logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
-{ log(severity, tags, std::format(fmt, std::forward<Args>(args)...)); }
-
-void log(logging::Severity sev, logging::Tags tags, std::string_view message);
+{
+    logging::log(severity, tags, fmt.get(), std::make_format_args(args...));
+}
 
 /// Log a security event according to the OWASP specification
 ///
@@ -71,28 +73,28 @@ void log_debug(logging::Tags tags, std::format_string<Args...> fmt, Args&&... ar
 { log_debug(tags, std::format(fmt, std::forward<Args>(args)...)); }
 
 inline void log_info(logging::Tags tags, std::string_view message)
-{ mir::log(logging::Severity::informational, tags, message); }
+{ mir::log(logging::Severity::informational, tags, "{}", message); }
 
 template<typename... Args>
 void log_info(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
 { log_info(tags, std::format(fmt, std::forward<Args>(args)...)); }
 
 inline void log_warning(logging::Tags tags, std::string_view message)
-{ mir::log(logging::Severity::warning, tags, message); }
+{ mir::log(logging::Severity::warning, tags, "{}", message); }
 
 template<typename... Args>
 void log_warning(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
 { log(logging::Severity::warning, tags, fmt, std::forward<Args>(args)...); }
 
 inline void log_error(logging::Tags tags, std::string_view message)
-{ mir::log(logging::Severity::error, tags, message); }
+{ mir::log(logging::Severity::error, tags, "{}", message); }
 
 template<typename... Args>
 void log_error(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
 { log(logging::Severity::error, tags, fmt, std::forward<Args>(args)...); }
 
 inline void log_critical(logging::Tags tags, std::string_view message)
-{ mir::log(logging::Severity::critical, tags, message); }
+{ mir::log(logging::Severity::critical, tags, "{}", message); }
 
 template<typename... Args>
 void log_critical(logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)

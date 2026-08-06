@@ -17,6 +17,7 @@
 #ifndef MIR_LOGGING_EVENT_H_
 #define MIR_LOGGING_EVENT_H_
 
+#include <cstddef>
 #include <mir/logging/tag.h>
 
 #include <memory>
@@ -34,14 +35,15 @@ public:
     /**
      * Create an Event
      *
-     * \warning The `tags` and `message` parameters are non-owning views; an
+     * \warning The `tags`, `fmt`, and `args` parameters are non-owning views; an
      * Event should almost always be directly constructed during a function call
      * to Logger::log().
      */
     Event(
         Severity sev,
         Tags tags,
-        std::string_view message,
+        std::string_view fmt,
+        std::format_args args,
         std::source_location location = std::source_location::current());
 
     /**
@@ -56,9 +58,18 @@ public:
         std::string_view message,
         std::source_location location = std::source_location::current());
 
+    ~Event();
+
     auto severity() const -> Severity;
     auto tags() const -> Tags;
-    auto message() const -> std::string_view;
+
+    /**
+     * Generate the message of this Event
+     *
+     * Callers should ensure to cache this value; this will
+     * allocate and generate a new string each call.
+     */
+    auto message() const -> std::string;
     auto location() const -> std::source_location;
 
     /**
@@ -71,10 +82,10 @@ public:
     auto operator=(Event const&) -> Event& = delete;
     auto operator=(Event&&) -> Event& = delete;
 
-private:
     class Impl;
-    // Impl ptr has explicit deleter to allow us to do memory shenanagins for optimisation.
-    std::unique_ptr<Impl, void (*)(Impl*)> const impl;
+private:
+    alignas(std::max_align_t) std::array<std::byte, 128> storage;
+    Impl* const impl;
 };
 }
 

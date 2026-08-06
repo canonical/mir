@@ -25,8 +25,11 @@
 
 namespace mir {
 
-void logv(logging::Severity sev, char const* component,
-          char const* fmt, va_list va)
+void logv(
+    logging::Severity sev,
+    char const* component,
+    char const* fmt,
+    va_list va)
 {
     char message[1024];
     int max = sizeof(message) - 1;
@@ -91,7 +94,7 @@ void log(
     logging::Tags tags,
     std::string_view message)
 {
-    logging::log(severity, tags, message);
+    logging::log(severity, tags, message, std::make_format_args());
 }
 
 void security_log(

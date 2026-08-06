@@ -85,9 +85,9 @@ void ml::log(ml::Severity severity, const std::string& message, const std::strin
     }
 }
 
-void ml::log(Severity severity, Tags tags, std::string_view message, std::source_location location)
+void ml::log(Severity severity, Tags tags, std::string_view fmt, std::format_args args, std::source_location location)
 {
-    Event const ev{severity, tags, message, location};
+    Event const ev{severity, tags, fmt, args, location};
     if (ev.should_log())
     {
         auto const logger = get_logger();
