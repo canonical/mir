@@ -2428,12 +2428,24 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
 	    // Falls through.
 
         case mir_window_type_gloss:
-        case mir_window_type_freestyle:
         case mir_window_type_inputmethod:
         case mir_window_type_tip:
         case mir_window_type_decoration:
             if (target_type != original_type)
                 BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
+            break;
+
+        case mir_window_type_freestyle:
+            // freestyle is the default type for unclassified surfaces; allow it to be
+            // upgraded to dialog (e.g. via xdg_wm_dialog_v1) or stay as freestyle.
+            switch (target_type)
+            {
+            case mir_window_type_freestyle:
+            case mir_window_type_dialog:
+                break;
+            default:
+                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
+            }
             break;
 
         default:
