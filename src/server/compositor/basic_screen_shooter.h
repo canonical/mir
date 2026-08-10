@@ -87,7 +87,7 @@ std::shared_ptr<graphics::Cursor> const& cursor);
             glm::mat2 const& transform,
             bool overlay_cursor) -> time::Timestamp;
 
-        auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappable> buffer)
+        auto renderer_for(geometry::Size buffer_size, MirPixelFormat buffer_format)
             -> renderer::Renderer&;
 
         std::mutex mutex;

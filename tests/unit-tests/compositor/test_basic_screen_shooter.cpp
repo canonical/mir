@@ -451,3 +451,23 @@ TEST_F(BasicScreenShooter, recovers_from_a_failure_to_build_a_renderer)
     EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
     capture_and_run(buffer);
 }
+
+TEST_F(BasicScreenShooter, recovers_from_a_failure_in_render)
+{
+    EXPECT_CALL(*next_renderer, render(_))
+        .WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer>
+            {
+                throw std::runtime_error{"throw in render()!"};
+            })
+        .WillRepeatedly(DoDefault());
+
+    EXPECT_CALL(callback, Call(nullopt_time));
+    capture_and_run(buffer);
+    Mock::VerifyAndClearExpectations(&callback);
+
+    /* The buffer handed to the failed render must not be left pending on the
+     * display provider, or every subsequent capture fails too.
+     */
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    capture_and_run(buffer);
+}
