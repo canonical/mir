@@ -25,13 +25,17 @@ namespace ml = mir::logging;
 class ml::Event::Impl
 {
 public:
-    Impl(Severity sev, Tags tags, std::string_view message, std::source_location loc)
+    Impl(
+        Severity sev,
+        Tags tags,
+        std::source_location loc)
         : sev_{sev},
           tags_{tags},
-          message_{message},
           location_{loc}
     {
     }
+
+    virtual ~Impl() = default;
 
     auto severity() const -> Severity
     {
@@ -43,64 +47,85 @@ public:
         return tags_;
     }
 
-    auto message() const -> std::string_view
-    {
-        return message_;
-    }
+    virtual auto message() const -> std::string = 0;
 
     auto location() const -> std::source_location
     {
         return location_;
     }
 
-    class ImplWithAllocatedMessage;
 private:
     Severity const sev_;
     Tags const tags_;
-    std::string_view const message_;
     std::source_location const location_;
 };
 
-static auto const& uncategorised_tag = ml::create_tag(ml::base(), "uncategorised");
-
-class ml::Event::Impl::ImplWithAllocatedMessage : public Impl
+class DeferredFormattingImpl : public ml::Event::Impl
 {
 public:
-    ImplWithAllocatedMessage(
-        Severity sev,
-        std::unique_ptr<char const[]> message,
+    DeferredFormattingImpl(
+        ml::Severity sev,
+        ml::Tags tags,
+        std::string_view fmt,
+        std::format_args args,
         std::source_location loc)
-        : Impl(sev, std::span{&uncategorised_ref, 1}, std::string_view{message.get()}, loc),
-          message_storage{std::move(message)}
+        : Impl(sev, tags, loc),
+          fmt{fmt},
+          args{args}
     {
     }
+
+    auto message() const -> std::string override
+    {
+        return std::vformat(fmt, args);
+    }
 private:
-    static std::reference_wrapper<Tag const> const uncategorised_ref;
-    std::unique_ptr<char const[]> const message_storage;
+    std::string_view const fmt;
+    std::format_args const args;
 };
 
-std::reference_wrapper<ml::Tag const> const ml::Event::Impl::ImplWithAllocatedMessage::uncategorised_ref = std::cref(uncategorised_tag);
+class ImplWithComponentAndMessage : public ml::Event::Impl
+{
+public:
+    ImplWithComponentAndMessage(
+        ml::Severity sev,
+        std::string_view component,
+        std::string_view message,
+        std::source_location loc)
+        : Impl(sev, std::span{&uncategorised_ref, 1}, loc),
+          message_{message},
+          component{component}
+    {
+    }
+
+    auto message() const -> std::string override
+    {
+        return std::format("{}: {}", component, message_);
+    }
+
+private:
+    static std::reference_wrapper<ml::Tag const> const uncategorised_ref;
+    std::string const message_;
+    std::string const component;
+};
+
+static auto const& uncategorised_tag = ml::create_tag(ml::base(), "uncategorised");
+std::reference_wrapper<ml::Tag const> const ImplWithComponentAndMessage::uncategorised_ref = std::cref(uncategorised_tag);
 
 ml::Event::Event(
     Severity sev,
     Tags tags,
-    std::string_view message,
+    std::string_view fmt,
+    std::format_args args,
     std::source_location location)
-    : impl{new Impl{sev, tags, message, location}, [](Impl* p) { delete p; }}
 {
-}
+    static_assert(sizeof(DeferredFormattingImpl) < sizeof(decltype(storage)));
+    /* Sadly we can't do `alignof(storage)`; we need to manually keep the alignas
+     * on the declaration of storage and the alignof check here in sync.
+     */
+    static_assert(alignof(std::max_align_t) >= alignof(DeferredFormattingImpl));
 
-namespace
-{
-auto create_message_string(std::string_view component, std::string_view message) -> std::unique_ptr<char const[]>
-{
-    auto const combined_message = std::views::concat(component, std::string_view{": "}, message);
-    auto storage = std::make_unique<char[]>(combined_message.size() + 1);
-
-    std::ranges::copy(combined_message, storage.get());
-
-    return storage;
-}
+    new(storage.data()) DeferredFormattingImpl{sev, tags, fmt, args, location};
 }
 
 ml::Event::Event(
@@ -108,36 +133,51 @@ ml::Event::Event(
     std::string_view component,
     std::string_view message,
     std::source_location location)
-    : impl{
-        new Impl::ImplWithAllocatedMessage{sev, create_message_string(component, message), location},
-        [](Impl* p) { delete static_cast<Impl::ImplWithAllocatedMessage*>(p); }}
 {
+    static_assert(sizeof(ImplWithComponentAndMessage) < sizeof(decltype(storage)));
+    /* Sadly we can't do `alignof(storage)`; we need to manually keep the alignas
+     * on the declaration of storage and the alignof check here in sync.
+     */
+    static_assert(alignof(std::max_align_t) >= alignof(ImplWithComponentAndMessage));
+
+    new(storage.data()) ImplWithComponentAndMessage{sev, component, message, location};
+}
+
+ml::Event::~Event()
+{
+    // We have our own storage, so need to call the destructor manually ourselves.
+    impl()->~Impl();
 }
 
 
 auto ml::Event::severity() const -> Severity
 {
-    return impl->severity();
+    return impl()->severity();
 }
 
 auto ml::Event::tags() const -> Tags
 {
-    return impl->tags();
+    return impl()->tags();
 }
 
-auto ml::Event::message() const -> std::string_view
+auto ml::Event::message() const -> std::string
 {
-    return impl->message();
+    return impl()->message();
 }
 
 auto ml::Event::location() const -> std::source_location
 {
-    return impl->location();
+    return impl()->location();
 }
 
 auto ml::Event::should_log() const -> bool
 {
-    auto const sev = impl->severity();
+    auto const sev = impl()->severity();
     return
-        std::ranges::any_of(impl->tags(), [sev](Tag const& tag) { return ml::logging_enabled_for(tag, sev); });
+        std::ranges::any_of(impl()->tags(), [sev](Tag const& tag) { return ml::logging_enabled_for(tag, sev); });
+}
+
+auto ml::Event::impl() const -> Impl const*
+{
+    return std::launder(reinterpret_cast<Impl const*>(storage.data()));
 }
