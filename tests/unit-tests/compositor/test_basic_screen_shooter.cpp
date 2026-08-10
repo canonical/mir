@@ -73,11 +73,13 @@ struct BasicScreenShooter : Test
                 });
         ON_CALL(*gl_provider, surface_for_sink(_, _))
             .WillByDefault(
-                [](mg::DisplaySink& sink, auto const&)
+                [this](mg::DisplaySink& sink, auto const&)
                     -> std::unique_ptr<mg::gl::OutputSurface>
                 {
                     if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
+                        captured_sink = &sink;
+                        captured_allocator = cpu_provider;
                         auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
                         auto format = cpu_provider->supported_formats().front();
                         ON_CALL(*surface, commit())
@@ -85,6 +87,12 @@ struct BasicScreenShooter : Test
                                 [cpu_provider, format]()
                                 {
                                     return cpu_provider->alloc_fb(format);
+                                });
+                        ON_CALL(*surface, size())
+                            .WillByDefault(
+                                [cpu_provider]()
+                                {
+                                    return cpu_provider->output_size();
                                 });
                         return surface;
                     }
@@ -108,6 +116,40 @@ struct BasicScreenShooter : Test
     }
 
     std::unique_ptr<mtd::MockRenderer> next_renderer{std::make_unique<testing::NiceMock<mtd::MockRenderer>>()};
+
+    /* The default create_renderer_for() hands out the single `next_renderer`;
+     * tests that expect more than one Renderer need a fresh one each time.
+     */
+    void supply_unlimited_renderers()
+    {
+        ON_CALL(*renderer_factory, create_renderer_for(_, _)).WillByDefault(
+            [this](auto output_surface, auto)
+            {
+                ++renderers_created;
+                auto renderer = std::make_unique<testing::NiceMock<mtd::MockRenderer>>();
+                ON_CALL(*renderer, render(_))
+                    .WillByDefault(
+                        [surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
+                        {
+                            return surface->commit();
+                        });
+                return renderer;
+            });
+    }
+
+    void capture_and_run(std::shared_ptr<mtd::StubBuffer> const& target)
+    {
+        shooter->capture(target, viewport_rect, viewport_transform, false, [&](auto time)
+            {
+                callback.Call(time);
+            });
+        executor.execute();
+    }
+
+    int renderers_created{0};
+    std::vector<geom::Size> sink_sizes;
+    mg::DisplaySink* captured_sink{nullptr};
+    mg::CPUAddressableDisplayAllocator* captured_allocator{nullptr};
 
     std::shared_ptr<mtd::MockScene> scene{std::make_shared<NiceMock<mtd::MockScene>>()};
     mg::RenderableList renderables{[]()
@@ -315,4 +357,97 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
 TEST_F(BasicScreenShooter, compositor_id_is_not_null)
 {
     EXPECT_THAT(shooter->id(), NotNull());
+}
+
+TEST_F(BasicScreenShooter, reuses_a_single_renderer_across_differently_sized_buffers)
+{
+    supply_unlimited_renderers();
+
+    for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}, geom::Size{1920, 1080}})
+    {
+        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+        capture_and_run(std::make_shared<mtd::StubBuffer>(size));
+        Mock::VerifyAndClearExpectations(&callback);
+    }
+
+    EXPECT_THAT(renderers_created, Eq(1));
+}
+
+TEST_F(BasicScreenShooter, only_acquires_one_output_surface_across_differently_sized_buffers)
+{
+    supply_unlimited_renderers();
+
+    EXPECT_CALL(*gl_provider, surface_for_sink(_, _)).Times(1);
+
+    for (auto const& size : {geom::Size{800, 600}, geom::Size{1024, 768}, geom::Size{800, 600}})
+    {
+        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+        capture_and_run(std::make_shared<mtd::StubBuffer>(size));
+        Mock::VerifyAndClearExpectations(&callback);
+    }
+}
+
+TEST_F(BasicScreenShooter, output_geometry_tracks_the_current_buffer)
+{
+    supply_unlimited_renderers();
+
+    for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}})
+    {
+        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+        capture_and_run(std::make_shared<mtd::StubBuffer>(size));
+        Mock::VerifyAndClearExpectations(&callback);
+
+        ASSERT_THAT(captured_sink, NotNull());
+        ASSERT_THAT(captured_allocator, NotNull());
+        // Both must report the buffer we just captured into, not the one we started with
+        EXPECT_THAT(captured_sink->view_area(), Eq(geom::Rectangle{{0, 0}, size}));
+        EXPECT_THAT(captured_allocator->output_size(), Eq(size));
+    }
+}
+
+TEST_F(BasicScreenShooter, builds_a_new_renderer_when_the_pixel_format_changes)
+{
+    supply_unlimited_renderers();
+
+    for (auto const format : {mir_pixel_format_abgr_8888, mir_pixel_format_argb_8888, mir_pixel_format_abgr_8888})
+    {
+        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+        capture_and_run(std::make_shared<mtd::StubBuffer>(geom::Size{800, 600}, format));
+        Mock::VerifyAndClearExpectations(&callback);
+    }
+
+    EXPECT_THAT(renderers_created, Eq(3));
+}
+
+TEST_F(BasicScreenShooter, recovers_from_a_failure_to_build_a_renderer)
+{
+    supply_unlimited_renderers();
+
+    ON_CALL(*gl_provider, surface_for_sink).WillByDefault(
+        [](auto&, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
+        });
+
+    EXPECT_CALL(callback, Call(nullopt_time));
+    capture_and_run(buffer);
+    Mock::VerifyAndClearExpectations(&callback);
+
+    /* The failed attempt must not leave a buffer pending on the display
+     * provider, or every subsequent capture fails too.
+     */
+    ON_CALL(*gl_provider, surface_for_sink(_, _))
+        .WillByDefault(
+            [](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
+            {
+                auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
+                auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
+                auto format = cpu_provider->supported_formats().front();
+                ON_CALL(*surface, commit())
+                    .WillByDefault([cpu_provider, format]() { return cpu_provider->alloc_fb(format); });
+                return surface;
+            });
+
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    capture_and_run(buffer);
 }
