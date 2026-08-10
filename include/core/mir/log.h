@@ -40,7 +40,7 @@ void log(logging::Severity severity, logging::Tags tags, std::string_view msg);
 
 template<typename... Args>
 void log(logging::Severity severity, logging::Tags tags, std::format_string<Args...> fmt, Args&&... args)
-{ logging::log(severity, tags, fmt.get(), std::make_format_args(args...)); }
+{ logging::log(severity, tags, fmt.get(), std::make_format_args(std::forward<Args>(args)...)); }
 
 /// Log a security event according to the OWASP specification
 ///
