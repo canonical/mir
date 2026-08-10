@@ -55,10 +55,17 @@ private:
 class XdgDialogV1 : public wayland::XdgDialogV1
 {
 public:
-    explicit XdgDialogV1(wl_resource* id);
+    explicit XdgDialogV1(wl_resource* id, XdgToplevelStable* toplevel);
 
     void set_modal() override;
     void unset_modal() override;
+
+private:
+    wayland::Weak<XdgToplevelStable> const weak_toplevel;
+    /// The window type to restore on unset_modal(), captured when we made the toplevel modal.
+    MirWindowType type_before_modal{mir_window_type_normal};
+    /// Whether the dialog window type currently in effect was applied by us.
+    bool modal_applied_by_us{false};
 };
 
 class XdgWmDialogV1 : public wayland::XdgWmDialogV1
@@ -120,7 +127,7 @@ void mir::frontend::XdgWmDialogV1::get_xdg_dialog(wl_resource* id, wl_resource* 
             resource, Error::already_used, "xdg_dialog_v1 already created for this toplevel"));
     }
 
-    auto* dialog = new XdgDialogV1{id};
+    auto* dialog = new XdgDialogV1{id, tl};
     dialog->add_destroy_listener(
         [toplevels_with_dialogs = this->toplevels_with_dialogs, wtl = mir::wayland::Weak{tl}]()
         {
@@ -135,23 +142,34 @@ void mir::frontend::XdgWmDialogV1::get_xdg_dialog(wl_resource* id, wl_resource* 
         {
             toplevels_with_dialogs->unregister_toplevel(tl);
         });
-
-    tl->set_type(mir_window_type_dialog);
 }
 
-mir::frontend::XdgDialogV1::XdgDialogV1(wl_resource* id) :
-    wayland::XdgDialogV1{id, Version<1>{}}
+mir::frontend::XdgDialogV1::XdgDialogV1(wl_resource* id, XdgToplevelStable* toplevel) :
+    wayland::XdgDialogV1{id, Version<1>{}},
+    weak_toplevel{mir::wayland::Weak{toplevel}}
 {
 }
 
 void mir::frontend::XdgDialogV1::set_modal()
 {
-    // In Mir, mir_window_type_dialog already represents a modal dialog.
-    // No additional state change is needed.
+    if (!weak_toplevel || modal_applied_by_us)
+        return;
+
+    auto& toplevel = weak_toplevel.value();
+    type_before_modal = toplevel.pending_type();
+    modal_applied_by_us = true;
+    toplevel.set_type(mir_window_type_dialog);
 }
 
 void mir::frontend::XdgDialogV1::unset_modal()
 {
-    // Mir does not distinguish between modal and non-modal dialogs at the
-    // window type level; the toplevel remains a dialog regardless.
+    if (!weak_toplevel || !modal_applied_by_us)
+        return;
+
+    auto& toplevel = weak_toplevel.value();
+    modal_applied_by_us = false;
+
+    // Something else (e.g. a mir_shell_v1 archetype) has since retyped the toplevel; leave it alone.
+    if (toplevel.pending_type() == mir_window_type_dialog)
+        toplevel.set_type(type_before_modal);
 }
