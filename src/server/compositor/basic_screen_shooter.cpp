@@ -25,6 +25,7 @@
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/graphics/platform.h>
+#include <mir/raii.h>
 #include <mir/renderer/renderer_factory.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/display_sink.h>
@@ -96,14 +97,19 @@ public:
         return current_size;
     }
 
+    /// Advertise the geometry the next capture will render into.
+    void set_output_geometry(geom::Size size, MirPixelFormat format)
+    {
+        current_size = size;
+        current_format = format;
+    }
+
     void set_next_buffer(std::shared_ptr<mrs::WriteMappable> buffer)
     {
         if (next_buffer)
         {
             BOOST_THROW_EXCEPTION((std::logic_error{"Attempt to set next buffer with a buffer already pending"}));
         }
-        current_size = buffer->size();
-        current_format = buffer->format();
         next_buffer = std::move(buffer);
     }
 
@@ -217,10 +223,29 @@ auto mc::BasicScreenShooter::Self::render(
 
     scene_elements.clear();
 
-    auto& renderer = renderer_for_buffer(buffer);
+    auto const buffer_size = buffer->size();
+    if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
+    }
+
+    auto& renderer = renderer_for(buffer_size, buffer->format());
     renderer.set_output_transform(transform);
     renderer.set_viewport(area);
     renderer.set_output_filter(output_filter->filter());
+
+    /* Hand the buffer over only once we have a renderer to consume it, and make
+     * sure it can't outlive this capture: a buffer left pending would fail every
+     * subsequent capture. On success it has already been claimed by alloc_fb().
+     */
+    output->set_next_buffer(buffer);
+    auto const drop_unconsumed_buffer = mir::raii::paired_calls(
+        [](){},
+        [this]()
+        {
+            output->clear_next_buffer();
+        });
+
     /* We don't need the result of this `render` call, as we know it's
      * going into the buffer we just set
      */
@@ -232,47 +257,32 @@ auto mc::BasicScreenShooter::Self::render(
     return captured_time;
 }
 
-auto mc::BasicScreenShooter::Self::renderer_for_buffer(std::shared_ptr<mrs::WriteMappable> buffer)
+auto mc::BasicScreenShooter::Self::renderer_for(geom::Size buffer_size, MirPixelFormat buffer_format)
     -> mr::Renderer&
 {
-    auto const buffer_size = buffer->size();
-    if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
-    }
+    // The renderer is built from the buffer's geometry, so this has to come first
+    output->set_output_geometry(buffer_size, buffer_format);
 
-    auto const buffer_format = buffer->format();
-    // The renderer is built from the pending buffer, so this has to come first
-    output->set_next_buffer(std::move(buffer));
+    /* The Renderer's output surface resizes itself to whatever buffer is
+     * pending, but it binds a pixel format for its lifetime, so only a
+     * format change forces us to build a new one.
+     */
+    if (!current_renderer || buffer_format != last_rendered_format)
+    {
+        /* Build everything before touching any member, so that a failure leaves
+         * the (still perfectly usable) previous renderer in place.
+         */
+        auto sink = std::make_unique<OffscreenDisplaySink>(output, buffer_size);
+        auto gl_surface = render_provider->surface_for_sink(*sink, *config);
+        auto renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
 
-    try
-    {
-        /* The Renderer's output surface resizes itself to whatever buffer is
-         * pending, but it binds a pixel format for its lifetime, so only a
-         * format change forces us to build a new one.
-         */
-        if (!current_renderer || buffer_format != last_rendered_format)
-        {
-            offscreen_sink = std::make_unique<OffscreenDisplaySink>(output, buffer_size);
-            auto gl_surface = render_provider->surface_for_sink(*offscreen_sink, *config);
-            current_renderer = renderer_factory->create_renderer_for(std::move(gl_surface), render_provider);
-            last_rendered_format = buffer_format;
-        }
-        else
-        {
-            offscreen_sink->set_size(buffer_size);
-        }
+        offscreen_sink = std::move(sink);
+        current_renderer = std::move(renderer);
+        last_rendered_format = buffer_format;
     }
-    catch (...)
+    else
     {
-        /* We've taken ownership of the buffer but have no renderer to consume
-         * it. Drop it, so the next capture isn't rejected for having a buffer
-         * already pending, and force a rebuild on the next attempt.
-         */
-        output->clear_next_buffer();
-        current_renderer.reset();
-        last_rendered_format = mir_pixel_format_invalid;
-        throw;
+        offscreen_sink->set_size(buffer_size);
     }
 
     return *current_renderer;
