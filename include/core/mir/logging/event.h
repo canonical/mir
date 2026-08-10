@@ -84,8 +84,9 @@ public:
 
     class Impl;
 private:
+    auto impl() const -> Impl const*;
+
     alignas(std::max_align_t) std::array<std::byte, 128> storage;
-    Impl* const impl;
 };
 }
 

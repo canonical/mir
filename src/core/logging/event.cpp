@@ -118,13 +118,14 @@ ml::Event::Event(
     std::string_view fmt,
     std::format_args args,
     std::source_location location)
-    : impl{new(storage.data()) DeferredFormattingImpl{sev, tags, fmt, args, location}}
 {
     static_assert(sizeof(DeferredFormattingImpl) < sizeof(decltype(storage)));
     /* Sadly we can't do `alignof(storage)`; we need to manually keep the alignas
      * on the declaration of storage and the alignof check here in sync.
      */
     static_assert(alignof(std::max_align_t) >= alignof(DeferredFormattingImpl));
+
+    new(storage.data()) DeferredFormattingImpl{sev, tags, fmt, args, location};
 }
 
 ml::Event::Event(
@@ -132,46 +133,51 @@ ml::Event::Event(
     std::string_view component,
     std::string_view message,
     std::source_location location)
-    : impl{
-        new(storage.data()) ImplWithComponentAndMessage{sev, component, message, location}}
 {
     static_assert(sizeof(ImplWithComponentAndMessage) < sizeof(decltype(storage)));
     /* Sadly we can't do `alignof(storage)`; we need to manually keep the alignas
      * on the declaration of storage and the alignof check here in sync.
      */
     static_assert(alignof(std::max_align_t) >= alignof(ImplWithComponentAndMessage));
+
+    new(storage.data()) ImplWithComponentAndMessage{sev, component, message, location};
 }
 
 ml::Event::~Event()
 {
     // We have our own storage, so need to call the destructor manually ourselves.
-    impl->~Impl();
+    impl()->~Impl();
 }
 
 
 auto ml::Event::severity() const -> Severity
 {
-    return impl->severity();
+    return impl()->severity();
 }
 
 auto ml::Event::tags() const -> Tags
 {
-    return impl->tags();
+    return impl()->tags();
 }
 
 auto ml::Event::message() const -> std::string
 {
-    return impl->message();
+    return impl()->message();
 }
 
 auto ml::Event::location() const -> std::source_location
 {
-    return impl->location();
+    return impl()->location();
 }
 
 auto ml::Event::should_log() const -> bool
 {
-    auto const sev = impl->severity();
+    auto const sev = impl()->severity();
     return
-        std::ranges::any_of(impl->tags(), [sev](Tag const& tag) { return ml::logging_enabled_for(tag, sev); });
+        std::ranges::any_of(impl()->tags(), [sev](Tag const& tag) { return ml::logging_enabled_for(tag, sev); });
+}
+
+auto ml::Event::impl() const -> Impl const*
+{
+    return std::launder(reinterpret_cast<Impl const*>(storage.data()));
 }
