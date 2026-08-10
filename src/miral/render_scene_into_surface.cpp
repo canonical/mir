@@ -15,6 +15,7 @@
  */
 
 #include "render_scene_into_surface.h"
+#include "software_buffer_pool.h"
 
 #include <mir/executor.h>
 #include <mir/server.h>
@@ -38,132 +39,10 @@ namespace mc = mir::compositor;
 namespace mrs = mir::renderer::software;
 namespace mi = mir::input;
 
+
 namespace
 {
-class ClaimedBuffer : public mg::Buffer
-{
-public:
-    explicit ClaimedBuffer(
-        std::shared_ptr<Buffer> const& buffer,
-        std::function<void()>&& release_callback)
-        : buffer(buffer), release_callback(std::move(release_callback))
-    {
-    }
-
-    ~ClaimedBuffer() override
-    {
-        release_callback();
-    }
-
-    std::unique_ptr<mrs::Mapping<std::byte const>> map_readable() const override
-    {
-        return buffer->map_readable();
-    }
-    mg::BufferID id() const override { return buffer->id(); }
-    geom::Size size() const override { return buffer->size(); }
-    MirPixelFormat pixel_format() const override { return buffer->pixel_format(); }
-    mg::NativeBufferBase* native_buffer_base() override { return buffer->native_buffer_base(); }
-
-private:
-    std::shared_ptr<Buffer> const buffer;
-    std::function<void()> const release_callback;
-};
-
-/// A simple buffer pool. Users provide the buffers that back the pool.
-/// These buffers may be claimed later.
-class BufferPool
-{
-public:
-    using BufferBuilder = std::function<std::shared_ptr<mg::Buffer>()>;
-
-    BufferPool(BufferBuilder&& builder_func, size_t default_size)
-        : data(std::make_shared<Self>(std::move(builder_func), default_size))
-    {
-    }
-
-    /// Claims the next free buffer from the pool. This may resize the buffer pool
-    /// if that is required to claim a buffer.
-    /// \returns A buffer from the pool
-    std::shared_ptr<mg::Buffer> claim()
-    {
-        std::lock_guard lock{data->mutex};
-        for (size_t i = 0; i < data->buffers.size(); ++i)
-        {
-            if (auto& [used, buffer] = data->buffers[i]; !used)
-            {
-                used = true;
-                std::weak_ptr weak_data = data;
-                return std::make_shared<ClaimedBuffer>(buffer, [weak_data=weak_data, i]
-                {
-                    if (auto const locked = weak_data.lock())
-                    {
-                        std::lock_guard lock{locked->mutex};
-                        locked->buffers[i].first = false;
-                    }
-                });
-            }
-        }
-
-        data->buffers.emplace_back(true, data->builder());
-        size_t i = data->buffers.size() - 1;
-
-        std::weak_ptr weak_data = data;
-        return std::make_shared<ClaimedBuffer>(data->buffers[i].second, [weak_data=weak_data, i]
-        {
-            if (auto const locked = weak_data.lock())
-            {
-                std::lock_guard lock{locked->mutex};
-                locked->buffers[i].first = false;
-            }
-        });
-    }
-
-    void set_builder(BufferBuilder&& in_builder)
-    {
-        std::lock_guard lock{data->mutex};
-        data->builder = std::move(in_builder);
-        for (auto& b: data->buffers)
-            b = { b.first, data->builder() };
-    }
-
-private:
-    struct Self
-    {
-        Self(BufferBuilder&& builder_func, size_t default_size)
-            : builder(std::move(builder_func))
-        {
-            for (size_t i = 0; i < default_size; ++i)
-                buffers.emplace_back(false, builder());
-        }
-
-        std::mutex mutex;
-        BufferBuilder builder;
-
-        /// List of available buffers along with their "claimed" status.
-        std::vector<std::pair<bool, std::shared_ptr<mg::Buffer>>> buffers;
-    };
-
-    std::shared_ptr<Self> data;
-};
-
-class AlwaysHasSubmittedBufferStream : public mc::Stream
-{
-public:
-    bool has_submitted_buffer() const override
-    {
-        return true;
-    }
-};
-
-std::list<ms::StreamInfo> create_stream_info()
-{
-    std::list<ms::StreamInfo> result;
-    result.push_back({
-        std::make_shared<AlwaysHasSubmittedBufferStream>(),
-        geom::Displacement{}
-    });
-    return result;
-}
+using miral::SoftwareBufferPool;
 
 class SceneRenderingSurface : public ms::BasicSurface
 {
@@ -243,6 +122,11 @@ public:
         overlay_cursor = next_overlay_cursor;
     }
 
+    mc::CompositorID screen_shooter_id() const
+    {
+        return screen_shooter->id();
+    }
+
 private:
     std::mutex mutable mutex;
     std::shared_ptr<mc::Scene> const scene;
@@ -250,7 +134,7 @@ private:
     bool overlay_cursor = false;
     std::shared_ptr<mc::ScreenShooter> screen_shooter;
     std::shared_ptr<mg::GraphicBufferAllocator> allocator;
-    BufferPool mutable pool;
+    SoftwareBufferPool mutable pool;
 };
 }
 
@@ -318,8 +202,14 @@ public:
             on_surface_ready(surface);
     }
 
+    mc::CompositorID capture_compositor_id() const
+    {
+        std::lock_guard lock{mutex};
+        return surface ? surface->screen_shooter_id() : nullptr;
+    }
+
 private:
-    std::mutex mutex;
+    mutable std::mutex mutex;
     std::function<void(std::shared_ptr<mir::scene::Surface> const&)> on_surface_ready{[](auto const&){}};
     geom::Rectangle initial_capture_area;
     bool initial_overlay_cursor = false;
@@ -349,6 +239,11 @@ miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::overlay_cursor(boo
 {
     self->set_overlay_cursor(overlay_cursor);
     return *this;
+}
+
+auto miral::RenderSceneIntoSurface::capture_compositor_id() const -> mir::compositor::CompositorID
+{
+    return self->capture_compositor_id();
 }
 
 miral::RenderSceneIntoSurface& miral::RenderSceneIntoSurface::on_surface_ready(
