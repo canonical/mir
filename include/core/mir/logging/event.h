@@ -83,6 +83,7 @@ public:
     auto operator=(Event&&) -> Event& = delete;
 
     class Impl;
+
 private:
     auto impl() const -> Impl const*;
 
