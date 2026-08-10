@@ -317,7 +317,7 @@ public:
     // NOTE: This must be called with a current GL context
     OutputFilter(std::unique_ptr<mg::gl::OutputSurface> output)
      : output{std::move(output)},
-        texture{make_texture(this->output->size())},
+        texture{make_texture()},
         framebuffer{make_framebuffer(texture)},
         filter{mir_output_filter_none},
         program{nullptr},
@@ -356,6 +356,8 @@ public:
             output->bind();
             return;
         }
+
+        ensure_texture_storage_for(output->size());
 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
 
@@ -490,12 +492,28 @@ private:
         return program;
     }
 
-   static GLuint make_texture(mir::geometry::Size size)
+   static GLuint make_texture()
     {
         GLuint tex{0};
         glGenTextures(1, &tex);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        return tex;
+    }
+
+    /* The output surface can be resized under us, so (re)specify the
+     * intermediate texture whenever it no longer matches. This is only ever
+     * reached with a filter active, so an unfiltered output never pays for it.
+     */
+    void ensure_texture_storage_for(mir::geometry::Size size)
+    {
+        if (size == texture_size)
+            return;
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0,
                      GL_RGBA,
                      size.width.as_value(),
@@ -504,9 +522,7 @@ private:
                      GL_RGBA,
                      GL_UNSIGNED_BYTE,
                      nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        return tex;
+        texture_size = size;
     }
 
     static GLuint make_framebuffer(GLuint tex)
@@ -522,6 +538,7 @@ private:
     std::unique_ptr<mg::gl::OutputSurface> output;
     TextureHandle const texture;
     FramebufferHandle const framebuffer;
+    mir::geometry::Size texture_size;
     MirOutputFilter filter;
     std::unique_ptr<ProgramHandle> program;
     GLint position_attrib;
@@ -657,6 +674,16 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
 {
     output_surface->make_current();
     output_surface->bind();
+
+    /* The output surface can change size between renders (the screen shooter
+     * captures to whatever buffer the client hands us), and set_viewport() is a
+     * no-op when the logical area is unchanged, so the GL viewport has to be
+     * re-derived here.
+     */
+    if (output_surface->size() != last_output_size)
+    {
+        update_gl_viewport();
+    }
 
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -931,7 +958,7 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     update_gl_viewport();
 }
 
-void mrg::Renderer::update_gl_viewport()
+void mrg::Renderer::update_gl_viewport() const
 {
     /*
      * Letterboxing: Move the glViewport to add black bars in the case that
@@ -947,6 +974,7 @@ void mrg::Renderer::update_gl_viewport()
     auto viewport_height = fabs(transformed_viewport[1]);
 
     auto const output_size = output_surface->size();
+    last_output_size = output_size;
     auto const output_width = output_size.width.as_value();
     auto const output_height = output_size.height.as_value();
 

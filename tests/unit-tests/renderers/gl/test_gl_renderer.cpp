@@ -420,6 +420,50 @@ TEST_F(GLRenderer, unchanged_viewport_avoids_gl_calls)
     renderer.set_viewport(view_area);
 }
 
+TEST_F(GLRenderer, unchanged_viewport_updates_gl_if_output_resized)
+{   /* The screen shooter renders through an output surface that resizes itself
+     * to whatever buffer it's capturing into, so the logical viewport can stay
+     * put while the output underneath changes size.
+     */
+    mir::geometry::Rectangle const view_area{{0, 0}, {1920, 1080}};
+
+    auto output_surface = make_output_surface();
+    auto* const output_surface_ptr = output_surface.get();
+
+    ON_CALL(*output_surface, size())
+        .WillByDefault(Return(mir::geometry::Size{1920, 1080}));
+    ON_CALL(*output_surface, commit())
+        .WillByDefault([]() { return std::unique_ptr<mg::Framebuffer>(); });
+
+    mrg::Renderer renderer(gl_platform, std::move(output_surface));
+    renderer.set_viewport(view_area);
+    renderer.render(renderable_list);
+
+    ON_CALL(*output_surface_ptr, size())
+        .WillByDefault(Return(mir::geometry::Size{1280, 720}));
+
+    EXPECT_CALL(mock_gl, glViewport(0, 0, 1280, 720));
+    renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, unchanged_viewport_and_output_size_avoids_gl_viewport_calls)
+{
+    mir::geometry::Rectangle const view_area{{0, 0}, {1920, 1080}};
+
+    auto output_surface = make_output_surface();
+    ON_CALL(*output_surface, size())
+        .WillByDefault(Return(mir::geometry::Size{1920, 1080}));
+    ON_CALL(*output_surface, commit())
+        .WillByDefault([]() { return std::unique_ptr<mg::Framebuffer>(); });
+
+    mrg::Renderer renderer(gl_platform, std::move(output_surface));
+    renderer.set_viewport(view_area);
+    renderer.render(renderable_list);
+
+    EXPECT_CALL(mock_gl, glViewport(_, _, _, _)).Times(0);
+    renderer.render(renderable_list);
+}
+
 TEST_F(GLRenderer, unchanged_viewport_updates_gl_if_rotated)
 {   // Regression test for LP: #1672269
     int const screen_width = 1920;
