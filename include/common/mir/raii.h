@@ -85,13 +85,14 @@ inline auto defer(Cleanup&& cleanup)
 {
     struct Deferred
     {
-        explicit Deferred(Cleanup&& fn) : cleanup{std::move(fn)} {}
-        Deferred(Deferred&&) = default;
+        explicit Deferred(Cleanup&& fn) : cleanup{std::move(fn)}, owner{true} {}
+        Deferred(Deferred&& that) : cleanup{std::move(that.cleanup)}, owner{that.owner} { that.owner = false; }
         Deferred(Deferred const&) = delete;
         Deferred& operator=(Deferred const&) = delete;
-        ~Deferred() { cleanup(); }
+        ~Deferred() { if (owner) cleanup(); }
     private:
         Cleanup cleanup;
+        bool owner;
     };
     return Deferred{std::forward<Cleanup>(cleanup)};
 }
