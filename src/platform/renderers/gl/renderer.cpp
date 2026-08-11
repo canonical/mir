@@ -504,8 +504,9 @@ private:
     }
 
     /* The output surface can be resized under us, so (re)specify the
-     * intermediate texture whenever it no longer matches. This is only ever
-     * reached with a filter active, so an unfiltered output never pays for it.
+     * intermediate texture storage whenever it no longer matches. This is only
+     * reached with a filter active, so an unfiltered output never allocates
+     * texture storage.
      */
     void ensure_texture_storage_for(mir::geometry::Size size)
     {
