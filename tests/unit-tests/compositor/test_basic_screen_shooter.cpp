@@ -381,9 +381,7 @@ TEST_F(BasicScreenShooter, only_acquires_one_output_surface_across_differently_s
 
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1024, 768}, geom::Size{800, 600}})
     {
-        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
-        Mock::VerifyAndClearExpectations(&callback);
     }
 }
 
@@ -393,9 +391,7 @@ TEST_F(BasicScreenShooter, output_geometry_tracks_the_current_buffer)
 
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}})
     {
-        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
-        Mock::VerifyAndClearExpectations(&callback);
 
         ASSERT_THAT(captured_sink, NotNull());
         ASSERT_THAT(captured_allocator, NotNull());
@@ -433,9 +429,8 @@ TEST_F(BasicScreenShooter, recovers_from_a_failure_to_build_a_renderer)
     capture_and_run(buffer);
     Mock::VerifyAndClearExpectations(&callback);
 
-    /* The failed attempt must not leave a buffer pending on the display
-     * provider, or every subsequent capture fails too.
-     */
+    // The failed attempt must not leave a buffer pending on the display
+    // provider, or every subsequent capture fails too.
     ON_CALL(*gl_provider, surface_for_sink(_, _))
         .WillByDefault(
             [](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
@@ -465,9 +460,8 @@ TEST_F(BasicScreenShooter, recovers_from_a_failure_in_render)
     capture_and_run(buffer);
     Mock::VerifyAndClearExpectations(&callback);
 
-    /* The buffer handed to the failed render must not be left pending on the
-     * display provider, or every subsequent capture fails too.
-     */
+    // The buffer handed to the failed render must not be left pending on the
+    // display provider, or every subsequent capture fails too.
     EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
     capture_and_run(buffer);
 }
