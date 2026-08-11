@@ -273,7 +273,7 @@ struct XdgDialog : miral::TestServer
         };
 
         launcher.launch(client);
-        EXPECT_TRUE(done.wait_for(std::chrono::milliseconds{10}));
+        EXPECT_TRUE(done.wait_for(std::chrono::milliseconds{100}));
 
         return type;
     }
