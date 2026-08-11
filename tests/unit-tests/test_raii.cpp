@@ -199,3 +199,22 @@ TEST_F(RaiiTest, paired_call_takes_std_function_refs)
     EXPECT_THAT(creator_call_count, Eq(expected_calls));
     EXPECT_THAT(deleter_call_count, Eq(expected_calls));
 }
+
+TEST_F(RaiiTest, defer_calls_cleanup_on_destruction)
+{
+    EXPECT_CALL(*this, destroy_void()).Times(1);
+
+    {
+        auto const guard = mir::raii::defer([this] { destroy_void(); });
+    }
+}
+
+TEST_F(RaiiTest, defer_does_not_call_cleanup_before_destruction)
+{
+    EXPECT_CALL(*this, destroy_void()).Times(0);
+
+    auto const guard = mir::raii::defer([this] { destroy_void(); });
+
+    Mock::VerifyAndClearExpectations(this);
+    EXPECT_CALL(*this, destroy_void()).Times(1);
+}

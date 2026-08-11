@@ -106,8 +106,7 @@ public:
     try
     {
         mir::set_thread_name("Mir/Comp");
-        auto const signal_when_stopped = mir::raii::paired_calls(
-            [](){},
+        auto const signal_when_stopped = mir::raii::defer(
             [this]()
             {
                 stopped.set_value();

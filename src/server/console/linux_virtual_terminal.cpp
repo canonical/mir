@@ -456,8 +456,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                      * Otherwise we leave the VT subsystem in a glorious state of
                      * waiting forever for us to ACK the switch.
                      */
-                    auto ack_when_done = mir::raii::paired_calls(
-                        [](){},
+                    auto ack_when_done = mir::raii::defer(
                         [this]()
                         {
                             fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
@@ -491,8 +490,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                      * Otherwise we leave the VT subsystem in a glorious state of
                      * waiting forever for us to ACK the switch.
                      */
-                    auto ack_when_done = mir::raii::paired_calls(
-                        [](){},
+                    auto ack_when_done = mir::raii::defer(
                         [this, &action]()
                         {
                             fops->ioctl(vt_fd.fd(), VT_RELDISP, action);

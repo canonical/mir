@@ -73,6 +73,28 @@ inline auto paired_calls(Creator&& creator, Deleter&& deleter) ->
 template<typename Owned, typename Deleter>
 inline auto deleter_for(Owned* owned, Deleter&& deleter) -> std::unique_ptr<Owned, Deleter>
 { return {owned, deleter}; }
+
+/**
+ * Creates an RAII object that calls \p cleanup on destruction.
+ * Use this when only a cleanup action is needed (no paired setup call).
+ *
+ * \param cleanup called on destruction of the returned object
+ */
+template<typename Cleanup>
+inline auto defer(Cleanup&& cleanup)
+{
+    struct Deferred
+    {
+        explicit Deferred(Cleanup&& fn) : cleanup{std::move(fn)} {}
+        Deferred(Deferred&&) = default;
+        Deferred(Deferred const&) = delete;
+        Deferred& operator=(Deferred const&) = delete;
+        ~Deferred() { cleanup(); }
+    private:
+        Cleanup cleanup;
+    };
+    return Deferred{std::forward<Cleanup>(cleanup)};
+}
 }
 }
 
