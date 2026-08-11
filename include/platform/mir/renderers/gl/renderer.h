@@ -106,13 +106,16 @@ protected:
     virtual void draw(graphics::Renderable const& renderable) const;
 
 private:
-    void update_gl_viewport() const;
+    void update_gl_viewport();
 
     class ProgramFactory;
     std::unique_ptr<ProgramFactory> program_factory;
     geometry::Rectangle viewport;
-    /// Size the GL viewport was last derived for; the output surface may resize under us.
-    geometry::Size mutable last_output_size;
+    /* Size the GL viewport was last derived for; the output surface may resize
+     * under us, so set_viewport() (which callers invoke before each render)
+     * re-derives the GL viewport when this no longer matches.
+     */
+    geometry::Size last_output_size;
     glm::mat4 screen_to_gl_coords;
     glm::mat4 display_transform;
     std::vector<mir::gl::Primitive> mutable primitives;

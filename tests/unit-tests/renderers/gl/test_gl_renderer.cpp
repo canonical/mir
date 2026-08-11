@@ -443,6 +443,7 @@ TEST_F(GLRenderer, unchanged_viewport_updates_gl_if_output_resized)
         .WillByDefault(Return(mir::geometry::Size{1280, 720}));
 
     EXPECT_CALL(mock_gl, glViewport(0, 0, 1280, 720));
+    renderer.set_viewport(view_area);
     renderer.render(renderable_list);
 }
 
@@ -461,6 +462,7 @@ TEST_F(GLRenderer, unchanged_viewport_and_output_size_avoids_gl_viewport_calls)
     renderer.render(renderable_list);
 
     EXPECT_CALL(mock_gl, glViewport(_, _, _, _)).Times(0);
+    renderer.set_viewport(view_area);
     renderer.render(renderable_list);
 }
 
