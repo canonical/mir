@@ -436,6 +436,7 @@ TEST_F(GLRenderer, unchanged_viewport_updates_gl_if_output_resized)
         .WillByDefault([]() { return std::unique_ptr<mg::Framebuffer>(); });
 
     mrg::Renderer renderer(gl_platform, std::move(output_surface));
+    EXPECT_CALL(mock_gl, glViewport(0, 0, 1920, 1080));
     renderer.set_viewport(view_area);
     renderer.render(renderable_list);
 
