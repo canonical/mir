@@ -408,7 +408,9 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         mw::TextInputManagerV3::interface_name,
         mw::MirShellV1::interface_name,
         mw::XdgDecorationManagerV1::interface_name,
-        mw::XdgWmDialogV1::interface_name,
+        // Disable (by default) xdg_wm_dialog_v1. (Works around https://github.com/canonical/mir/issues/5112)
+        // TODO: reinstate this once the implementation is fixed!
+        // mw::XdgWmDialogV1::interface_name,
         mw::XdgActivationV1::interface_name,
         mw::FractionalScaleManagerV1::interface_name};
 }
