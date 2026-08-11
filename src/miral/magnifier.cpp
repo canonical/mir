@@ -261,6 +261,8 @@ public:
         server.add_init_callback(
             [&]
             {
+                input_filter = std::make_shared<InputFilter>(state);
+                server.the_composite_event_filter()->prepend(input_filter);
 
                 server.the_main_loop()->spawn([=, this, &server] { this->post_init(server); });
             });
@@ -304,6 +306,7 @@ public:
                 for (auto* handle : {&local_drag, &local_resize, &local_zoom_in, &local_zoom_out})
                     handle->reset();
 
+                input_filter.reset();
             });
     }
 
@@ -451,6 +454,23 @@ public:
     }
 
 private:
+    class InputFilter : public mi::EventFilter
+    {
+    public:
+        explicit InputFilter(mir::Synchronised<State>& state) : state{state} {}
+
+        auto handle(MirEvent const& event) -> bool override;
+
+    private:
+        void reset_gestures();
+        auto handle_pointer(MirPointerEvent const& event, State const& state) -> bool;
+        auto handle_touch(MirTouchEvent const& event, State const& state) -> bool;
+
+        mir::Synchronised<State>& state;
+        std::optional<bool> pointer_gesture_consumed;
+        std::optional<bool> touch_gesture_consumed;
+    };
+
     class DisplayConfigObserver : public mg::DisplayConfigurationObserver
     {
     public:
@@ -756,10 +776,88 @@ private:
 
     mir::Synchronised<State> state;
 
+    std::shared_ptr<InputFilter> input_filter;
     std::shared_ptr<CursorObserver> cursor_observer;
     std::shared_ptr<DisplayConfigObserver> display_config_observer;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
 };
+
+auto miral::Magnifier::Self::InputFilter::handle(MirEvent const& event) -> bool
+{
+    if (event.type() != mir_event_type_input)
+        return false;
+
+    auto const s = state.lock();
+    if (s->follow_cursor || !s->default_enabled)
+    {
+        reset_gestures();
+        return false;
+    }
+
+    auto const* input_event = event.to_input();
+    switch (input_event->input_type())
+    {
+    case mir_input_event_type_pointer:
+        return handle_pointer(*input_event->to_pointer(), *s);
+    case mir_input_event_type_touch:
+        return handle_touch(*input_event->to_touch(), *s);
+    default:
+        return false;
+    }
+}
+
+void miral::Magnifier::Self::InputFilter::reset_gestures()
+{
+    pointer_gesture_consumed.reset();
+    touch_gesture_consumed.reset();
+}
+
+auto miral::Magnifier::Self::InputFilter::handle_pointer(MirPointerEvent const& event, State const& state) -> bool
+{
+    auto const action = event.action();
+    if (action == mir_pointer_action_button_down && !pointer_gesture_consumed)
+    {
+        pointer_gesture_consumed =
+            event.position()
+                .transform([&state](auto const& position) { return state.point_is_on_magnifier_surface(position); })
+                .value_or(false);
+    }
+
+    if (pointer_gesture_consumed)
+    {
+        auto const consumed = *pointer_gesture_consumed;
+        if (action == mir_pointer_action_button_up && event.buttons() == 0)
+            pointer_gesture_consumed.reset();
+        return consumed;
+    }
+
+    return event.position()
+        .transform([&state](auto const& position) { return state.point_is_on_magnifier_surface(position); })
+        .value_or(false);
+}
+
+auto miral::Magnifier::Self::InputFilter::handle_touch(MirTouchEvent const& event, State const& state) -> bool
+{
+    if (!touch_gesture_consumed)
+    {
+        bool starts_on_magnifier = false;
+        for (auto i = 0u; i != event.pointer_count(); ++i)
+        {
+            starts_on_magnifier = starts_on_magnifier || state.point_is_on_magnifier_surface(event.position(i));
+        }
+        touch_gesture_consumed = starts_on_magnifier;
+    }
+
+    auto const consumed = *touch_gesture_consumed;
+    bool gesture_ended = event.pointer_count() > 0;
+    for (auto i = 0u; i != event.pointer_count(); ++i)
+        gesture_ended = gesture_ended && event.action(i) == mir_touch_action_up;
+
+    if (gesture_ended)
+        touch_gesture_consumed.reset();
+
+    return consumed;
+}
 
 void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
