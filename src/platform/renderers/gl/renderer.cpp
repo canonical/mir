@@ -675,16 +675,6 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
     output_surface->make_current();
     output_surface->bind();
 
-    /* The output surface can change size between renders (the screen shooter
-     * captures to whatever buffer the client hands us), and set_viewport() is a
-     * no-op when the logical area is unchanged, so the GL viewport has to be
-     * re-derived here.
-     */
-    if (output_surface->size() != last_output_size)
-    {
-        update_gl_viewport();
-    }
-
     glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
     glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -917,8 +907,16 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 
 void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
+    /* The output surface can change size under us (the screen shooter captures
+     * to whatever buffer the client hands us), which changes the GL viewport
+     * even when the logical area is unchanged.
+     */
     if (rect == viewport)
+    {
+        if (output_surface->size() != last_output_size)
+            update_gl_viewport();
         return;
+    }
 
     /*
      * Here we provide a 3D perspective projection with a default 30 degrees
@@ -958,7 +956,7 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
     update_gl_viewport();
 }
 
-void mrg::Renderer::update_gl_viewport() const
+void mrg::Renderer::update_gl_viewport()
 {
     /*
      * Letterboxing: Move the glViewport to add black bars in the case that
