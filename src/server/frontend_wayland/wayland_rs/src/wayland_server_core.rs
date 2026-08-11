@@ -109,7 +109,7 @@ impl WaylandServer {
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
     pub fn run(
-        &mut self,
+        &self,
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
         notification_handler: UniquePtr<WaylandServerNotificationHandler>,
@@ -134,6 +134,19 @@ impl WaylandServer {
             .display_handle
             .lock()
             .expect("No recovery from lock poisoning") = Some(state.handle.clone());
+
+        // This ensures that the display handle will be dropped when this method returns.
+        struct ClearDisplayHandleOnDrop<'a>(&'a WaylandServer);
+        impl Drop for ClearDisplayHandleOnDrop<'_> {
+            fn drop(&mut self) {
+                *self
+                    .0
+                    .display_handle
+                    .lock()
+                    .expect("No recovery from lock poisoning") = None;
+            }
+        }
+        let _clear_display_handle = ClearDisplayHandleOnDrop(self);
 
         // First, add the listener to the event loop.
         let listener = ListeningSocket::bind(socket)?;
@@ -285,13 +298,6 @@ impl WaylandServer {
                 .flush_clients()
                 .map_err(|_| "Failed to flush clients")?;
         }
-
-        // The display handle is about to become inert; stop handing out clones
-        // for dynamic global creation.
-        *self
-            .display_handle
-            .lock()
-            .expect("No recovery from lock poisoning") = None;
 
         Ok(())
     }
