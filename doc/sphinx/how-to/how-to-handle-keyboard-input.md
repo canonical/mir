@@ -32,7 +32,7 @@ easier to read.
  #include <miral/runner.h>
 +#include <miral/append_keyboard_event_filter.h>
 +#include <miral/external_client.h>
- #include <miral/minimal_window_manager.h>
+ #include <miral/floating_window_manager.h>
  #include <miral/set_window_management_policy.h>
 +#include <miral/toolkit_event.h>
 
@@ -93,7 +93,7 @@ subsection.
 ```diff
      return runner.run_with(
          {
-             set_window_management_policy<MinimalWindowManager>(),
+             set_window_management_policy<FloatingWindowManager>(),
 +            external_client_launcher,
 +            miral::AppendKeyboardEventFilter{builtin_keybinds}
          });

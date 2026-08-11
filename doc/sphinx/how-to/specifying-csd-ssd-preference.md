@@ -18,7 +18,7 @@ specify a preference, you only need to change two lines:
  #include <miral/configuration_option.h>
 +#include <miral/decorations.h>
  #include <miral/external_client.h>
- #include <miral/minimal_window_manager.h>
+ #include <miral/floating_window_manager.h>
  #include <miral/set_window_management_policy.h>
 @@ -74,5 +75,6 @@ int main(int argc, char const* argv[])
              external_client_launcher,
