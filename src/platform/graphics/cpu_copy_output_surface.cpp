@@ -161,7 +161,7 @@ private:
      * screen shooter captures to whatever buffer the client provides), so
      * (re)specify our storage whenever it no longer matches.
      */
-    void ensure_storage_for(geom::Size size);
+    void ensure_storage_for_size();
 
     mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
@@ -228,23 +228,24 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
               ? std::make_shared<RenderbufferHandle>()
               : nullptr}
 {
-    ensure_storage_for(size());
+    ensure_storage_for_size();
 }
 
-void mgc::CPUCopyOutputSurface::Impl::ensure_storage_for(geom::Size size)
+void mgc::CPUCopyOutputSurface::Impl::ensure_storage_for_size()
 {
-    if (size == allocated_size)
+    auto const next_size = size();
+    if (next_size == allocated_size)
     {
         return;
     }
 
     glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size.width.as_int(), size.height.as_int());
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, next_size.width.as_int(), next_size.height.as_int());
 
     if (depth_stencil_buffer)
     {
         glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer->operator GLuint());
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, size.width.as_int(), size.height.as_int());
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, next_size.width.as_int(), next_size.height.as_int());
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -288,7 +289,7 @@ void mgc::CPUCopyOutputSurface::Impl::ensure_storage_for(geom::Size size)
         }
     }
 
-    allocated_size = size;
+    allocated_size = next_size;
 }
 
 mgc::CPUCopyOutputSurface::Impl::~Impl()
@@ -322,7 +323,7 @@ mgc::CPUCopyOutputSurface::Impl::~Impl()
 
 void mgc::CPUCopyOutputSurface::Impl::bind()
 {
-    ensure_storage_for(size());
+    ensure_storage_for_size();
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 
