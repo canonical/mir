@@ -14,6 +14,13 @@ MIR_PLATFORM_2.29 {
     mir::graphics::DMABufEGLProvider::?DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::DMABufEGLProvider*;
     mir::graphics::DMABufEGLProvider::as_texture*;
+    mir::graphics::DMABufEGLProvider::context*;
+    mir::graphics::DMABufEGLProvider::devnum*;
+    mir::graphics::DMABufEGLProvider::import_dma_buf*;
+    mir::graphics::DMABufEGLProvider::is_importable*;
+    mir::graphics::DMABufEGLProvider::supported_format_modifiers*;
+    mir::graphics::DMABufEGLProvider::supported_formats*;
+    mir::graphics::DMABufEGLProvider::validate_import*;
     mir::graphics::DRMFormat::DRMFormat*;
     mir::graphics::DRMFormat::Info::alpha_equivalent*;
     mir::graphics::DRMFormat::Info::bytes_per_pixel*;
@@ -64,9 +71,6 @@ MIR_PLATFORM_2.29 {
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
     mir::graphics::GammaCurves::GammaCurves*;
     mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
-    mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::buffer_from_resource*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;

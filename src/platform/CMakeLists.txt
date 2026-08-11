@@ -31,7 +31,6 @@ target_link_libraries(mirplatform
   PRIVATE
     mircommon
   PUBLIC
-    mirwayland
     mirplatformgraphicscommon
     graphics_platform_common
     miroptions
@@ -40,6 +39,10 @@ target_link_libraries(mirplatform
     mirrenderergl
     mirgl
 )
+
+if (MIR_ENABLE_RUST)
+  target_link_libraries(mirplatform PUBLIC mirwayland_rs)
+endif()
 
 set_target_properties(
   mirplatform

@@ -16,23 +16,25 @@
 
 #include "wl_touch.h"
 
-#include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_seat.h"
+#include "wayland_rs/src/ffi.rs.h"
 
-#include <mir/executor.h>
 #include <mir_toolkit/events/event.h>
 #include <mir/events/touch_event.h>
 #include <mir/log.h>
 #include <mir/time/clock.h>
-#include <mir/wayland/client.h>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 namespace geom = mir::geometry;
 
-mf::WlTouch::WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock)
-    : Touch(new_resource, Version<9>()),
+mf::WlTouch::WlTouch(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::TouchMiddleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<time::Clock> const& clock)
+    : Touch(std::move(client), std::move(instance), object_id),
       clock{clock}
 {
 }
@@ -109,12 +111,12 @@ void mf::WlTouch::down(
             up(serial, timestamp, touch_id);
             maybe_frame();
         });
-    touch_id_to_surface[touch_id] = {mw::make_weak(target_surface), listener_id};
+    touch_id_to_surface[touch_id] = {mwrs::make_weak(target_surface), listener_id};
 
     send_down_event(
         serial,
         ms.count(),
-        target_surface->raw_resource(),
+        as_surface_ptr(target_surface),
         touch_id,
         position_on_target.x.as_value(),
         position_on_target.y.as_value());

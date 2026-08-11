@@ -25,7 +25,8 @@ use cxx::UniquePtr;
 use log;
 use std::error;
 use std::option::Option;
-use std::os::fd::{AsRawFd, RawFd};
+use std::os::fd::{AsRawFd, FromRawFd, RawFd};
+use std::os::unix::net::UnixStream;
 use std::sync::{mpsc, Arc, Mutex};
 use wayland_server::{
     backend::{ClientData, ClientId, DisconnectReason},
@@ -42,6 +43,13 @@ pub struct WaylandServer {
     work_signal: Mutex<Option<Ping>>,
     fd_listener_signal: Mutex<Option<Ping>>,
     pending_fd_listeners: Mutex<Vec<PendingFdListener>>,
+    client_signal: Mutex<Option<Ping>>,
+    pending_clients: Mutex<Vec<RawFd>>,
+    /// A clone of the running display's handle, populated for the duration of
+    /// [WaylandServer::run]. It lets C++ create and destroy dynamic globals
+    /// (e.g. one `wl_output` per monitor) from any thread; the handle is
+    /// internally synchronised by the backend.
+    display_handle: Mutex<Option<DisplayHandle>>,
 }
 
 impl WaylandServer {
@@ -52,7 +60,51 @@ impl WaylandServer {
             work_signal: Mutex::new(None),
             fd_listener_signal: Mutex::new(None),
             pending_fd_listeners: Mutex::new(Vec::new()),
+            client_signal: Mutex::new(None),
+            pending_clients: Mutex::new(Vec::new()),
+            display_handle: Mutex::new(None),
         }
+    }
+
+    /// Create a `wl_output` global backed by the given per-output binder.
+    ///
+    /// Unlike the statically-registered globals, `wl_output` globals are
+    /// dynamic: Mir advertises one per connected monitor and withdraws it when
+    /// the monitor is unplugged. The `binder` captures the C++ state for a
+    /// single monitor and is invoked whenever a client binds this global.
+    ///
+    /// The returned [OutputGlobal] owns the global's lifetime: dropping it
+    /// (from C++, via the returned `Box`) removes the global from the display.
+    ///
+    /// # Panics
+    /// Panics if called while the server is not running (i.e. outside of an
+    /// active [WaylandServer::run]).
+    pub fn create_output_global(
+        &self,
+        binder: UniquePtr<crate::ffi::OutputGlobalBinder>,
+    ) -> Box<OutputGlobal> {
+        let handle = self
+            .display_handle
+            .lock()
+            .expect("No recovery from lock poisoning")
+            .as_ref()
+            .expect("create_output_global called while the server was not running")
+            .clone();
+
+        let data = crate::dispatch::OutputGlobalData::new(binder);
+
+        let version =
+            <wayland_server::protocol::wl_output::WlOutput as wayland_server::Resource>::interface(
+            )
+            .version;
+
+        let id = handle.create_global::<
+            ServerState,
+            wayland_server::protocol::wl_output::WlOutput,
+            crate::dispatch::OutputGlobalData,
+        >(version, data);
+
+        Box::new(OutputGlobal { id, handle })
     }
 
     /// Run the wayland server.
@@ -80,44 +132,25 @@ impl WaylandServer {
             disconnect_rx,
         };
 
+        // Publish a clone of the display handle so that C++ can create and
+        // destroy dynamic globals (e.g. per-monitor `wl_output`s) while the
+        // server is running. Cleared again before `run` returns.
+        *self
+            .display_handle
+            .lock()
+            .expect("No recovery from lock poisoning") = Some(state.handle.clone());
+
         // First, add the listener to the event loop.
         let listener = ListeningSocket::bind(socket)?;
+        let listener_disconnect_tx = disconnect_tx.clone();
         loop_handle.insert_source(
             Generic::new(listener, Interest::READ, Mode::Level),
             move |_, listener, state: &mut ServerState| {
                 if let Ok(stream) = listener.accept() {
                     if let Some(stream) = stream {
-                        // Insert the client into the display.
-                        // This registers the client's socket with the Display's internal backend.
-                        let disconnect_tx = disconnect_tx.clone();
-                        let client_state = ClientState {
-                            on_disconnect: Box::new(move |client_id, reason| {
-                                log::info!(
-                                    "Client disconnected: {:?}, reason: {:?}",
-                                    client_id,
-                                    reason
-                                );
-                                // We publish the notification about the disconnected client onto the channel
-                                // so that the WaylandServerNotificationHandler is guaranteed to only be
-                                // spoken to on a single thread.
-                                let _ = disconnect_tx.send((client_id, reason));
-                            }),
-                            socket_fd: stream.as_raw_fd(),
-                        };
-                        match state.handle.insert_client(stream, Arc::new(client_state)) {
-                            Err(e) => log::error!("Failed to add client: {}", e),
-                            Ok(client) => {
-                                // Notify C++ that we have a new WaylandClient available to us.
-                                // The C++ side of things can choose to hold onto this Box if they
-                                // choose to.
-                                let wayland_client =
-                                    WaylandClient::new(client.clone(), state.handle.clone());
-                                state
-                                    .notification_handler
-                                    .pin_mut()
-                                    .client_added(Box::new(wayland_client));
-                            }
-                        }
+                        // Insert the client into the display. This registers the
+                        // client's socket with the Display's internal backend.
+                        WaylandServer::insert_stream_client(state, &listener_disconnect_tx, stream);
                     }
                 }
                 Ok(PostAction::Continue)
@@ -195,6 +228,26 @@ impl WaylandServer {
             })
             .map_err(|_| "Failed to insert fd listener signal into event loop")?;
 
+        // Add a client-injection signal so that C++ can ask (from any thread) for
+        // a pre-connected socket fd to be adopted as a Wayland client (used for
+        // MirAL internal clients and the WLCS test harness). The ping coalesces
+        // multiple requests into a single wake; when it fires we drain the queue
+        // of pending fds and insert a client for each.
+        let (client_pinger, client_ping_source) = calloop::ping::make_ping()?;
+
+        *self
+            .client_signal
+            .lock()
+            .expect("No recovery from lock poisoning") = Some(client_pinger);
+
+        let client_disconnect_tx = disconnect_tx.clone();
+        let client_queue = &self.pending_clients;
+        loop_handle
+            .insert_source(client_ping_source, move |_, _, state: &mut ServerState| {
+                WaylandServer::drain_pending_clients(client_queue, &client_disconnect_tx, state);
+            })
+            .map_err(|_| "Failed to insert client signal into event loop")?;
+
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
 
         // Drain any work the C++ side queued before the work signal was ready.
@@ -207,6 +260,11 @@ impl WaylandServer {
         // signal was ready; their signal would have been dropped. Registrations
         // queued from here on raise their own signal and are handled by the loop.
         Self::drain_pending_fd_listeners(&loop_handle, &self.pending_fd_listeners);
+
+        // Likewise, adopt any clients injected before the client signal was
+        // ready; their signal would have been dropped. Injections queued from
+        // here on raise their own signal and are handled by the loop.
+        Self::drain_pending_clients(&self.pending_clients, &disconnect_tx, &mut state);
 
         while !state.stop_requested {
             // 1. Dispatch events
@@ -230,6 +288,13 @@ impl WaylandServer {
                 .flush_clients()
                 .map_err(|_| "Failed to flush clients")?;
         }
+
+        // The display handle is about to become inert; stop handing out clones
+        // for dynamic global creation.
+        *self
+            .display_handle
+            .lock()
+            .expect("No recovery from lock poisoning") = None;
 
         Ok(())
     }
@@ -358,6 +423,91 @@ impl WaylandServer {
             }
         }
     }
+
+    /// Adopt a pre-connected socket `fd` as a Wayland client.
+    ///
+    /// This is how Mir injects clients that connect over a socket pair rather
+    /// than the listening socket: MirAL internal clients (see
+    /// `Server::open_client_wayland`) and the WLCS test harness (see
+    /// `Server::open_wayland_client_socket`). The server end of the pair is
+    /// handed here; ownership of `fd` is transferred to the server, which closes
+    /// it when the client disconnects.
+    ///
+    /// This may be called from any thread, and either before or while the server
+    /// is running. Injections queued before the server starts are applied when
+    /// `run` begins; injections made while it is running wake the loop so they
+    /// are applied promptly. Injections coalesce onto a single wake.
+    pub fn insert_client(&self, fd: i32) {
+        self.pending_clients
+            .lock()
+            .expect("No recovery from lock poisoning")
+            .push(fd as RawFd);
+
+        if let Some(signal) = self
+            .client_signal
+            .lock()
+            .expect("No recovery from lock poisoning")
+            .as_ref()
+        {
+            signal.ping();
+        }
+    }
+
+    /// Adopt `stream` as a Wayland client: register it with the display's
+    /// backend and notify C++ of the new client. Shared by the listening-socket
+    /// accept path and the injected-fd path so both behave identically. Runs on
+    /// the event-loop thread.
+    fn insert_stream_client(
+        state: &mut ServerState,
+        disconnect_tx: &mpsc::Sender<(ClientId, DisconnectReason)>,
+        stream: UnixStream,
+    ) {
+        let disconnect_tx = disconnect_tx.clone();
+        let client_state = ClientState {
+            on_disconnect: Box::new(move |client_id, reason| {
+                log::info!("Client disconnected: {:?}, reason: {:?}", client_id, reason);
+                // We publish the notification about the disconnected client onto
+                // the channel so that the WaylandServerNotificationHandler is
+                // guaranteed to only be spoken to on a single thread.
+                let _ = disconnect_tx.send((client_id, reason));
+            }),
+            socket_fd: stream.as_raw_fd(),
+        };
+        match state.handle.insert_client(stream, Arc::new(client_state)) {
+            Err(e) => log::error!("Failed to add client: {}", e),
+            Ok(client) => {
+                // Notify C++ that we have a new WaylandClient available to us.
+                // The C++ side of things can choose to hold onto this Box if they
+                // choose to.
+                let wayland_client = WaylandClient::new(client.clone(), state.handle.clone());
+                state
+                    .notification_handler
+                    .pin_mut()
+                    .client_added(Box::new(wayland_client));
+            }
+        }
+    }
+
+    /// Drain `queue` of pending injected client fds, adopting a client for each.
+    /// Runs on the event-loop thread.
+    fn drain_pending_clients(
+        queue: &Mutex<Vec<RawFd>>,
+        disconnect_tx: &mpsc::Sender<(ClientId, DisconnectReason)>,
+        state: &mut ServerState,
+    ) {
+        let pending: Vec<RawFd> = {
+            let mut queue = queue.lock().expect("No recovery from lock poisoning");
+            std::mem::take(&mut *queue)
+        };
+
+        for fd in pending {
+            // SAFETY: `fd` is the server end of a socket pair whose ownership was
+            // transferred to us by the C++ caller via `insert_client`; nothing
+            // else touches it, so we may take ownership here.
+            let stream = unsafe { UnixStream::from_raw_fd(fd) };
+            Self::insert_stream_client(state, disconnect_tx, stream);
+        }
+    }
 }
 
 /// Notified when a registered file descriptor becomes ready for reading.
@@ -388,6 +538,22 @@ impl FdReadyListener for CxxFdReadyListener {
 /// Create a new wayland server.
 pub fn create_wayland_server() -> Box<WaylandServer> {
     Box::new(WaylandServer::new())
+}
+
+/// An RAII handle owning the lifetime of a dynamically-created `wl_output`
+/// global (see [WaylandServer::create_output_global]).
+///
+/// Dropping it withdraws the global from the display. It is handed to C++ as a
+/// `Box<OutputGlobal>`; when C++ drops that box the global is removed.
+pub struct OutputGlobal {
+    id: wayland_server::backend::GlobalId,
+    handle: DisplayHandle,
+}
+
+impl Drop for OutputGlobal {
+    fn drop(&mut self) {
+        self.handle.remove_global::<ServerState>(self.id.clone());
+    }
 }
 
 /// The state of the wayland server.

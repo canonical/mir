@@ -15,8 +15,9 @@
  */
 
 #include "virtual_keyboard_v1.h"
-#include "wayland_wrapper.h"
+#include "wayland.h"
 
+#include <mir/fd.h>
 #include <mir/input/event_builder.h>
 #include <mir/input/input_sink.h>
 #include <mir/input/input_device_registry.h>
@@ -32,10 +33,11 @@
 
 #include <cstring>
 #include <sys/mman.h>
+#include <unistd.h>
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
+namespace mwrs = mir::wayland;
 namespace mi = mir::input;
 
 namespace
@@ -44,9 +46,9 @@ auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
 {
     switch (wayland_state)
     {
-    case mw::Keyboard::KeyState::pressed:
+    case mwrs::Keyboard::KeyState::pressed:
         return mir_keyboard_action_down;
-    case mw::Keyboard::KeyState::released:
+    case mwrs::Keyboard::KeyState::released:
         return mir_keyboard_action_up;
     default:
         // Protocol does not provide an appropriate error code, so throw a generic runtime_error. This will be expressed
@@ -58,7 +60,7 @@ auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
 
 auto load_keymap(uint32_t format, mir::Fd fd, size_t size) -> std::shared_ptr<mi::Keymap>
 {
-    if (format != mw::Keyboard::KeymapFormat::xkb_v1)
+    if (format != mwrs::Keyboard::KeymapFormat::xkb_v1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("invalid keymap format " + std::to_string(format)));
     }
@@ -91,26 +93,22 @@ struct VirtualKeyboardV1Ctx
     std::shared_ptr<mi::InputDeviceRegistry> const device_registry;
 };
 
-class VirtualKeyboardManagerV1Global
-    : public wayland::VirtualKeyboardManagerV1::Global
-{
-public:
-    VirtualKeyboardManagerV1Global(wl_display* display, std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<VirtualKeyboardV1Ctx> const ctx;
-};
-
 class VirtualKeyboardManagerV1
     : public wayland::VirtualKeyboardManagerV1
 {
 public:
-    VirtualKeyboardManagerV1(wl_resource* resource, std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
+    VirtualKeyboardManagerV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
 
 private:
-    void create_virtual_keyboard(struct wl_resource* seat, struct wl_resource* id) override;
+    using wayland::VirtualKeyboardManagerV1::create_virtual_keyboard;
+    auto create_virtual_keyboard(
+        wayland::Weak<wayland::Seat> const& seat,
+        rust::Box<wayland::VirtualKeyboardV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualKeyboardV1> override;
 
     std::shared_ptr<VirtualKeyboardV1Ctx> const ctx;
 };
@@ -119,11 +117,15 @@ class VirtualKeyboardV1
     : public wayland::VirtualKeyboardV1
 {
 public:
-    VirtualKeyboardV1(wl_resource* resource, std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
+    VirtualKeyboardV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::VirtualKeyboardV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx);
     ~VirtualKeyboardV1();
 
 private:
-    void keymap(uint32_t format, mir::Fd fd, uint32_t size) override;
+    void keymap(uint32_t format, int32_t fd, uint32_t size) override;
     void key(uint32_t time, uint32_t key, uint32_t state) override;
     void modifiers(uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked, uint32_t group) override;
 
@@ -136,45 +138,40 @@ private:
 }
 
 auto mf::create_virtual_keyboard_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<mi::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<mw::VirtualKeyboardManagerV1::Global>
+-> std::shared_ptr<wayland::VirtualKeyboardManagerV1>
 {
     auto ctx = std::shared_ptr<VirtualKeyboardV1Ctx>{new VirtualKeyboardV1Ctx{device_registry}};
-    return std::make_shared<VirtualKeyboardManagerV1Global>(display, std::move(ctx));
-}
-
-mf::VirtualKeyboardManagerV1Global::VirtualKeyboardManagerV1Global(
-    wl_display* display,
-    std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
-    : Global{display, Version<1>()},
-      ctx{ctx}
-{
-}
-
-void mf::VirtualKeyboardManagerV1Global::bind(wl_resource* new_resource)
-{
-    new VirtualKeyboardManagerV1{new_resource, ctx};
+    return std::make_shared<VirtualKeyboardManagerV1>(std::move(client), std::move(instance), object_id, std::move(ctx));
 }
 
 mf::VirtualKeyboardManagerV1::VirtualKeyboardManagerV1(
-    wl_resource* resource,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
-    : wayland::VirtualKeyboardManagerV1{resource, Version<1>()},
+    : wayland::VirtualKeyboardManagerV1{std::move(client), std::move(instance), object_id},
       ctx{ctx}
 {
 }
 
-void mf::VirtualKeyboardManagerV1::create_virtual_keyboard(struct wl_resource* seat, struct wl_resource* id)
+auto mf::VirtualKeyboardManagerV1::create_virtual_keyboard(
+    wayland::Weak<wayland::Seat> const&,
+    rust::Box<wayland::VirtualKeyboardV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::VirtualKeyboardV1>
 {
-    (void)seat;
-    new VirtualKeyboardV1{id, ctx};
+    return std::make_shared<VirtualKeyboardV1>(client, std::move(child_instance), child_object_id, ctx);
 }
 
 mf::VirtualKeyboardV1::VirtualKeyboardV1(
-    wl_resource* resource,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualKeyboardV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<VirtualKeyboardV1Ctx> const& ctx)
-    : wayland::VirtualKeyboardV1{resource, Version<1>()},
+    : wayland::VirtualKeyboardV1{std::move(client), std::move(instance), object_id},
       ctx{ctx},
       keyboard_device{std::make_shared<mi::VirtualInputDevice>("virtual-keyboard", mi::DeviceCapability::keyboard)},
       device_handle{ctx->device_registry->add_device(keyboard_device)}
@@ -186,11 +183,12 @@ mf::VirtualKeyboardV1::~VirtualKeyboardV1()
     ctx->device_registry->remove_device(keyboard_device);
 }
 
-void mf::VirtualKeyboardV1::keymap(uint32_t format, mir::Fd fd, uint32_t size)
+void mf::VirtualKeyboardV1::keymap(uint32_t format, int32_t fd, uint32_t size)
 {
+    mir::Fd owned_fd{::dup(fd)};
     if (auto const device = device_handle.lock())
     {
-        auto keymap = load_keymap(format, std::move(fd), size);
+        auto keymap = load_keymap(format, std::move(owned_fd), size);
         MirKeyboardConfig const config{std::move(keymap)};
         device->apply_keyboard_configuration(config);
     }

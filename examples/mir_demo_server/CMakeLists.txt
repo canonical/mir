@@ -12,7 +12,6 @@ target_include_directories(exampleserverconfig
 
 target_link_libraries(exampleserverconfig
   mirserver
-  mirwayland
 )
 
 mir_add_wrapped_executable(mir_demo_server

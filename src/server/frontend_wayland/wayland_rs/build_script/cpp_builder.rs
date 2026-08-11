@@ -672,7 +672,7 @@ fn cpp_bare_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
         (CppType::Object(name), _) => format!("std::shared_ptr<{}>", name),
-        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}>", name),
+        (CppType::Weak(name), _) => format!("wayland::Weak<{}>", name),
         (CppType::Box(name), _) => format!("rust::Box<{}>", name),
         (CppType::SharedPtr(name), _) => format!("std::shared_ptr<{}>", name),
         (CppType::String, true) => "rust::String".into(),

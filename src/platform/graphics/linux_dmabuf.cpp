@@ -23,9 +23,6 @@
 #include <mir/synchronised.h>
 #include <mir_toolkit/common.h>
 #include <mir/errno_utils.h>
-#include "wayland_wrapper.h"
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/client.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/texture.h>
@@ -34,10 +31,13 @@
 #include <mir/graphics/buffer_basic.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
+#include <mir/renderer/gl/context.h>
+#include <mir/raii.h>
 #include <mir/renderer/sw/pixel_source.h>
 
 #include <EGL/egl.h>
 #include <cstdint>
+#include <future>
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -53,24 +53,11 @@
 #include <utility>
 #include <algorithm>
 #include <drm_fourcc.h>
-#include <wayland-server.h>
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
-namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
-
-namespace
-{
-    template <typename T>
-    void wl_array_add(wl_array *array, T value)
-    {
-        if (auto d = static_cast<T*>(wl_array_add(array, sizeof(T))))
-            *d = value;
-    }
-}
-
 
 class mg::DmaBufFormatDescriptors
 {
@@ -549,412 +536,6 @@ BufferGLDescription const* descriptor_for_format_and_modifiers(
 
 }
 
-/**
- * Holds on to all imported dmabuf buffers, and allows looking up by wl_buffer
- *
- * \note This is not threadsafe, and should only be accessed on the Wayland thread
- */
-class WlDmaBufBuffer : public mir::wayland::Buffer, public mir::graphics::DMABufBuffer
-{
-public:
-    WlDmaBufBuffer(
-        wl_resource* wl_buffer,
-        int32_t width,
-        int32_t height,
-        mg::DRMFormat format,
-        uint32_t flags,
-        uint64_t modifier,
-        std::vector<PlaneInfo> plane_params)
-            : Buffer(wl_buffer, Version<1>{}),
-              width{width},
-              height{height},
-              format_{format},
-              flags{flags},
-              modifier_{modifier},
-              planes_{std::move(plane_params)}
-    {
-    }
-
-    ~WlDmaBufBuffer() = default;
-
-    static auto maybe_dmabuf_from_wl_buffer(wl_resource* buffer) -> WlDmaBufBuffer*
-    {
-        return dynamic_cast<WlDmaBufBuffer*>(Buffer::from(buffer));
-    }
-
-    auto size() const -> geom::Size override
-    {
-        return {width, height};
-    }
-
-    auto layout() const -> mg::gl::Texture::Layout override
-    {
-        if (flags & mw::LinuxBufferParamsV1::Flags::y_invert)
-        {
-            return mg::gl::Texture::Layout::TopRowFirst;
-        }
-        else
-        {
-            return mg::gl::Texture::Layout::GL;
-        }
-    }
-
-    auto format() const -> mg::DRMFormat override
-    {
-        return format_;
-    }
-
-    auto modifier() const -> std::optional<uint64_t> override
-    {
-        return modifier_;
-    }
-
-    auto planes() const -> std::vector<PlaneInfo> const& override
-    {
-        return planes_;
-    }
-private:
-    int32_t const width, height;
-    mg::DRMFormat const format_;
-    uint32_t const flags;
-    std::optional<uint64_t> const modifier_;
-    std::vector<PlaneInfo> const planes_;
-};
-
-class LinuxDmaBufParams : public mir::wayland::LinuxBufferParamsV1
-{
-public:
-    LinuxDmaBufParams(
-        wl_resource* new_resource,
-        std::shared_ptr<mg::DMABufEGLProvider> provider)
-        : mir::wayland::LinuxBufferParamsV1(new_resource, Version<5>{}),
-          consumed{false},
-          provider{std::move(provider)}
-    {
-    }
-
-private:
-    /* EGL_EXT_image_dma_buf_import allows up to 3 planes, and
-     * EGL_EXT_image_dma_buf_import_modifiers adds an extra plane.
-     */
-    std::array<PlaneInfo, 4> planes;
-    std::optional<uint64_t> modifier;
-    bool consumed;
-    /* We don't *really* need to create an mg::Buffer from here, but we *do* need to validate
-     * that the dma-buf(s) can be succesfully imported to an EGLImage.
-     *
-     * The only way to ensure that is to actually import them.
-     */
-    std::shared_ptr<mg::DMABufEGLProvider> const provider;
-
-    void add(
-        mir::Fd fd,
-        uint32_t plane_idx,
-        uint32_t offset,
-        uint32_t stride,
-        uint32_t modifier_hi,
-        uint32_t modifier_lo) override
-    {
-        if (consumed)
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::already_used,
-                    "Params already used to create a buffer"}));
-        }
-        if (plane_idx >= planes.size())
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::plane_idx,
-                    "Plane index %u higher than maximum number of planes, %zu", plane_idx, planes.size()}));
-        }
-
-        if (planes[plane_idx].dma_buf != mir::Fd::invalid)
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::plane_set,
-                    "Plane %u already has a dmabuf", plane_idx}));
-        }
-
-        planes[plane_idx].dma_buf = std::move(fd);
-        planes[plane_idx].offset = offset;
-        planes[plane_idx].stride = stride;
-
-        auto const new_modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
-        if (modifier)
-        {
-            if (*modifier != new_modifier)
-            {
-                BOOST_THROW_EXCEPTION((
-                    mw::ProtocolError{
-                        resource,
-                        Error::invalid_format,
-                        "Modifier %" PRIu64 " for plane %u doesn't match previously set"
-                        " modifier %" PRIu64 " - all planes must use the same modifier",
-                        new_modifier,
-                        plane_idx,
-                        *modifier}));
-            }
-        }
-        else
-        {
-            modifier = (static_cast<uint64_t>(modifier_hi) << 32) | modifier_lo;
-        }
-    }
-
-    /**
-     * Basic sanity check of the set plane properties
-     *
-     * \throws  A ProtocolError if any sanity checks fail.
-     * \return  An iterator pointing to the element past the end of the plane
-     *          infos
-     */
-    auto validate_and_count_planes() -> decltype(LinuxDmaBufParams::planes)::const_iterator
-    {
-        if (consumed)
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::already_used,
-                    "Params already used to create a buffer"}));
-        }
-        auto const plane_count =
-            std::count_if(
-                planes.begin(),
-                planes.end(),
-                [](auto const& plane) { return plane.dma_buf != mir::Fd::invalid; });
-        if (plane_count == 0)
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::incomplete,
-                    "No dmabuf has been added to the params"}));
-        }
-        for (auto i = 0; i != plane_count; ++i)
-        {
-            if (planes[i].dma_buf == mir::Fd::invalid)
-            {
-                BOOST_THROW_EXCEPTION((
-                    mw::ProtocolError{
-                        resource,
-                        Error::incomplete,
-                        "Missing dmabuf for plane %u", i}));
-            }
-        }
-
-        // TODO: Basic verification of size & offset (see libweston/linux-dmabuf.c)
-        return planes.cbegin() + plane_count;
-    }
-
-    void validate_params(int32_t width, int32_t height, uint32_t format, uint32_t /*flags*/)
-    {
-        // TODO: Validate flags
-        if (width < 1 || height < 1)
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::invalid_dimensions,
-                    "Width %i or height %i invalid; both must be >= 1!",
-                    width, height}));
-        }
-        if (!descriptor_for_format_and_modifiers(mg::DRMFormat{format}, modifier.value(), *provider))
-        {
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::invalid_format,
-                    "Client requested unsupported format/modifier combination %s/%s (%u/%u,%u)",
-                    mg::DRMFormat{format}.name(),
-                    mg::drm_modifier_to_string(*modifier).c_str(),
-                    static_cast<uint32_t>(format),
-                    static_cast<uint32_t>(*modifier >> 32),
-                    static_cast<uint32_t>(*modifier & 0xFFFFFFFF)}));
-        }
-    }
-
-    void create(int32_t width, int32_t height, uint32_t format, uint32_t flags) override
-    {
-        validate_params(width, height, format, flags);
-
-        try
-        {
-            auto const buffer_resource = wl_resource_create(client->raw_client(), &wl_buffer_interface, 1, 0);
-            if (!buffer_resource)
-            {
-                wl_client_post_no_memory(client->raw_client());
-                return;
-            }
-
-            auto const last_valid_plane = validate_and_count_planes();
-
-            mg::DRMFormat const drm_format{format};
-            auto dma_buf = new WlDmaBufBuffer{
-                buffer_resource,
-                width,
-                height,
-                drm_format,
-                flags,
-                modifier.value(),
-                {planes.cbegin(), last_valid_plane}};
-
-            // We don't need to keep it around, but we do need to ensure that we *can* create a Buffer
-            // from this dma-buf
-            provider->validate_import(*dma_buf);
-            send_created_event(buffer_resource);
-        }
-        catch (std::system_error const& err)
-        {
-            if (err.code().category() != mg::egl_category())
-            {
-                throw;
-            }
-            /* The client should handle this fine, but let's make sure we can see
-             * any failures that might happen.
-             */
-            mir::log_debug("Failed to import client dmabufs: %s", err.what());
-            send_failed_event();
-        }
-        consumed = true;
-    }
-
-    void
-    create_immed(
-        struct wl_resource* buffer_id,
-        int32_t width,
-        int32_t height,
-        uint32_t format,
-        uint32_t flags) override
-    {
-        validate_params(width, height, format, flags);
-
-        try
-        {
-            auto const last_valid_plane = validate_and_count_planes();
-
-            mg::DRMFormat const drm_format{format};
-            auto dma_buf = new WlDmaBufBuffer{
-                buffer_id,
-                width,
-                height,
-                drm_format,
-                flags,
-                modifier.value(),
-                {planes.cbegin(), last_valid_plane}};
-            // We don't need to keep it around, but we do need to ensure that we *can* create a Buffer
-            // from this dma-buf
-            provider->validate_import(*dma_buf);
-        }
-        catch (std::system_error const& err)
-        {
-            if (err.code().category() != mg::egl_category())
-            {
-                throw;
-            }
-            /* The protocol gives implementations the choice of sending an invalid_wl_buffer
-             * protocol error and disconnecting the client here, or sending a failed() event
-             * and not disconnecting the client.
-             *
-             * Both Weston and GNOME Shell choose to disconnect the client, rather than possibly
-             * allowing them to attempt to use an invalid wl_buffer. Let's follow their lead.
-             */
-            BOOST_THROW_EXCEPTION((
-                mw::ProtocolError{
-                    resource,
-                    Error::invalid_wl_buffer,
-                    "Failed to import dmabuf: %s", err.what()
-                }));
-        }
-    }
-};
-
-class LinuxDmaBufFeedback : public mir::wayland::LinuxDmabufFeedbackV1
-{
-public:
-    LinuxDmaBufFeedback(
-        wl_resource* new_resource,
-        struct wl_resource* surface,
-        std::shared_ptr<mg::DMABufEGLProvider> provider)
-        : mir::wayland::LinuxDmabufFeedbackV1(new_resource, Version<5>{}),
-          provider{std::move(provider)}
-    {
-        // We have the same feedback regardless of surface.
-        (void)surface;
-
-        // Build table in shared memory.
-        struct Format
-        {
-            uint32_t format;
-            uint32_t padding; /* unused */
-            uint64_t modifier;
-        };
-        auto const& formats = this->provider->supported_formats();
-        size_t format_table_length = 0;
-        for (auto i = 0u; i < formats.num_formats(); ++i)
-        {
-            format_table_length += formats[i].modifiers.size();
-        }
-        mir::AnonymousShmFile shm_buffer{format_table_length * sizeof(Format)};
-        Format *data = static_cast<Format*>(shm_buffer.base_ptr());
-        size_t k = 0;
-        for (auto i = 0u; i < formats.num_formats(); ++i)
-        {
-            auto format = formats[i];
-            for (auto j = 0u; j < format.modifiers.size(); ++j)
-            {
-                data[k].format = format.format;
-                data[k].padding = 0;
-                data[k].modifier = format.modifiers[j];
-                k++;
-            }
-        }
-
-        {
-            send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
-            wl_array main_device = {};
-            wl_array_init(&main_device);
-            wl_array_add<dev_t>(&main_device, this->provider->devnum());
-            send_main_device_event(&main_device);
-            wl_array_release(&main_device);
-        }
-
-        {
-            // We only currently support one device, which accessess all formats.
-            wl_array device = {};
-            wl_array_init(&device);
-            wl_array_add<dev_t>(&device, this->provider->devnum());
-            send_tranche_target_device_event(&device);
-            wl_array_release(&device);
-        }
-        send_tranche_flags_event(0);
-
-        {
-            wl_array indicies = {};
-            wl_array_init(&indicies);
-            for (auto i = 0u; i < format_table_length; ++i)
-            {
-                uint32_t *index = static_cast<uint32_t*>(wl_array_add(&indicies, sizeof(uint32_t)));
-                *index = i;
-            }
-            send_tranche_formats_event(&indicies);
-            wl_array_release(&indicies);
-        }
-        send_tranche_done_event();
-
-        send_done_event();
-    }
-
-private:
-    std::shared_ptr<mg::DMABufEGLProvider> const provider;
-};
-
 GLuint get_tex_id()
 {
     GLuint tex;
@@ -1354,88 +935,6 @@ private:
 
 }
 
-class mg::LinuxDmaBuf::Instance : public mir::wayland::LinuxDmabufV1
-{
-public:
-    Instance(
-        wl_resource* new_resource,
-        std::shared_ptr<mg::DMABufEGLProvider> provider)
-        : mir::wayland::LinuxDmabufV1(new_resource, Version<5>{}),
-          provider{std::move(provider)}
-    {
-        if (wl_resource_get_version(new_resource) < 4)
-        {
-            send_formats();
-        }
-    }
-private:
-    void send_formats()
-    {
-        auto const& formats = this->provider->supported_formats();
-        for (auto i = 0u; i < formats.num_formats(); ++i)
-        {
-            auto [format, modifiers, external_only] = formats[i];
-
-            send_format_event(format);
-            for (auto j = 0u; j < modifiers.size(); ++j)
-            {
-                auto const modifier = modifiers[j];
-                send_modifier_event_if_supported(
-                    format,
-                    modifier >> 32,
-                    modifier & 0xFFFFFFFF);
-            }
-        }
-    }
-
-    void create_params(struct wl_resource* params_id) override
-    {
-        new LinuxDmaBufParams{params_id, provider};
-    }
-
-    void get_default_feedback(struct wl_resource* params_id) override
-    {
-        new LinuxDmaBufFeedback{params_id, nullptr, provider};
-    }
-
-    void get_surface_feedback(struct wl_resource* params_id, struct wl_resource* surface) override
-    {
-        new LinuxDmaBufFeedback{params_id, surface, provider};
-    }
-
-    std::shared_ptr<mg::DMABufEGLProvider> const provider;
-};
-
-mg::LinuxDmaBuf::LinuxDmaBuf(
-    wl_display* display,
-    std::shared_ptr<mg::DMABufEGLProvider> provider)
-    : mir::wayland::LinuxDmabufV1::Global(display, Version<5>{}),
-      provider{std::move(provider)}
-{
-}
-
-auto mg::LinuxDmaBuf::buffer_from_resource(
-    wl_resource* buffer,
-    std::function<void()>&& on_consumed,
-    std::function<void()>&& on_release,
-    std::shared_ptr<mgc::EGLContextExecutor> /*egl_delegate*/)
-    -> std::shared_ptr<Buffer>
-{
-    if (auto dmabuf = WlDmaBufBuffer::maybe_dmabuf_from_wl_buffer(buffer))
-    {
-        return provider->import_dma_buf(
-            *dmabuf,
-            std::move(on_consumed),
-            std::move(on_release));
-    }
-    return nullptr;
-}
-
-void mg::LinuxDmaBuf::bind(wl_resource* new_resource)
-{
-    new LinuxDmaBuf::Instance{new_resource, provider};
-}
-
 namespace
 {
 dev_t get_devnum(EGLDisplay dpy)
@@ -1476,6 +975,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     std::shared_ptr<EGLExtensions> egl_extensions,
     mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::unique_ptr<renderer::gl::Context> import_context,
     EGLImageAllocator allocate_importable_image)
     : dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
@@ -1483,6 +983,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
       devnum_{get_devnum(dpy)},
       formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
       egl_delegate{std::move(egl_delegate)},
+      import_context{std::move(import_context)},
       allocate_importable_image{std::move(allocate_importable_image)},
       blitter{std::make_unique<mg::EGLBufferCopier>(this->egl_delegate)}
 {
@@ -1495,9 +996,34 @@ auto mg::DMABufEGLProvider::devnum() const -> dev_t
     return devnum_;
 }
 
+auto mg::DMABufEGLProvider::context() const -> mir::renderer::gl::Context&
+{
+    return *import_context;
+}
+
 auto mg::DMABufEGLProvider::supported_formats() const -> mg::DmaBufFormatDescriptors const&
 {
     return *formats;
+}
+
+auto mg::DMABufEGLProvider::is_importable(mg::DRMFormat format, uint64_t modifier) const -> bool
+{
+    return descriptor_for_format_and_modifiers(format, modifier, *this) != nullptr;
+}
+
+auto mg::DMABufEGLProvider::supported_format_modifiers() const
+    -> std::vector<std::pair<mg::DRMFormat, std::vector<uint64_t>>>
+{
+    std::vector<std::pair<mg::DRMFormat, std::vector<uint64_t>>> result;
+    auto const& descriptors = supported_formats();
+    for (auto i = 0u; i < descriptors.num_formats(); ++i)
+    {
+        auto const& [format, modifiers, external_only] = descriptors[i];
+        result.emplace_back(
+            mg::DRMFormat{static_cast<uint32_t>(format)},
+            std::vector<uint64_t>{modifiers.begin(), modifiers.end()});
+    }
+    return result;
 }
 
 auto mg::DMABufEGLProvider::import_dma_buf(
@@ -1510,6 +1036,13 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         dma_buf.format(),
         dma_buf.modifier().value_or(DRM_FORMAT_MOD_INVALID),
         *this);
+
+    /* Constructing a DmabufTexBuffer creates a GL texture bound to the imported
+     * dma-buf's EGLImage, which requires a current EGL context. It is a precondition
+     * of this method that the caller has made a suitable context (for example,
+     * context()) current on the calling thread. Without a current context the texture
+     * is never bound to the EGLImage and samples as black.
+     */
     return std::make_shared<DmabufTexBuffer>(
         dpy,
         *egl_extensions,

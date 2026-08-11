@@ -21,8 +21,8 @@
 #include "wl_surface_role.h"
 
 #include <mir/flags.h>
-#include <mir/wayland/weak.h>
-#include <mir/wayland/lifetime_tracker.h>
+#include "weak.h"
+#include "lifetime_tracker.h"
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/size.h>
 #include <mir/geometry/rectangle.h>
@@ -33,8 +33,6 @@
 #include <optional>
 #include <chrono>
 
-struct wl_client;
-struct wl_resource;
 struct MirInputEvent;
 
 namespace mir
@@ -53,6 +51,7 @@ class Shell;
 namespace wayland
 {
 class Client;
+class Output;
 }
 namespace frontend
 {
@@ -70,7 +69,7 @@ public:
     WindowWlSurfaceRole(
         Executor& wayland_executor,
         WlSeat* seat,
-        wayland::Client* client,
+        std::shared_ptr<wayland::Client> const& client,
         WlSurface* surface,
         std::shared_ptr<shell::Shell> const& shell,
         OutputManager* output_manager,
@@ -94,7 +93,7 @@ public:
     void set_parent(std::optional<std::shared_ptr<scene::Surface>> const& parent);
     void set_max_size(int32_t width, int32_t height);
     void set_min_size(int32_t width, int32_t height);
-    void set_fullscreen(std::optional<wl_resource*> const& output);
+    void set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& output);
 
     void set_type(MirWindowType type);
 
@@ -148,7 +147,7 @@ protected:
 
 private:
     wayland::Weak<WlSurface> const surface;
-    wayland::Client* const client;
+    std::shared_ptr<wayland::Client> const client;
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<scene::Session> const session;
     OutputManager* output_manager;
