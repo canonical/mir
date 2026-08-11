@@ -223,13 +223,7 @@ auto mc::BasicScreenShooter::Self::render(
 
     scene_elements.clear();
 
-    auto const buffer_size = buffer->size();
-    if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
-    }
-
-    auto& renderer = renderer_for(buffer_size, buffer->format());
+    auto& renderer = renderer_for(buffer->size(), buffer->format());
     renderer.set_output_transform(transform);
     renderer.set_viewport(area);
     renderer.set_output_filter(output_filter->filter());
@@ -260,6 +254,11 @@ auto mc::BasicScreenShooter::Self::render(
 auto mc::BasicScreenShooter::Self::renderer_for(geom::Size buffer_size, MirPixelFormat buffer_format)
     -> mr::Renderer&
 {
+    if (buffer_size.height == geom::Height{0} || buffer_size.width == geom::Width{0})
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Attempt to capture to a zero-sized buffer"}));
+    }
+
     // The renderer is built from the buffer's geometry, so this has to come first
     output->set_output_geometry(buffer_size, buffer_format);
 
