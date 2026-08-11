@@ -255,6 +255,18 @@ void mir::frontend::WindowWlSurfaceRole::set_type(MirWindowType type)
     spec().type = type;
 }
 
+auto mir::frontend::WindowWlSurfaceRole::pending_type() const -> MirWindowType
+{
+    constexpr MirWindowType default_type = mir_window_type_freestyle;
+    if (pending_changes)
+        return pending_changes->type.value_or(default_type);
+
+    if (auto const scene_surface = weak_scene_surface.lock())
+        return scene_surface->type();
+
+    return default_type;
+}
+
 void mf::WindowWlSurfaceRole::add_state_now(MirWindowState state)
 {
     if (auto const scene_surface = weak_scene_surface.lock())
