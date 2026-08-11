@@ -381,7 +381,9 @@ TEST_F(BasicScreenShooter, only_acquires_one_output_surface_across_differently_s
 
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1024, 768}, geom::Size{800, 600}})
     {
+        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
+        Mock::VerifyAndClearExpectations(&callback);
     }
 }
 
@@ -391,7 +393,9 @@ TEST_F(BasicScreenShooter, output_geometry_tracks_the_current_buffer)
 
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}})
     {
+        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
+        Mock::VerifyAndClearExpectations(&callback);
 
         ASSERT_THAT(captured_sink, NotNull());
         ASSERT_THAT(captured_allocator, NotNull());
