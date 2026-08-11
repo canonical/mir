@@ -55,7 +55,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn stop(self: &WaylandServer);
                 fn drain_queue(self: &WaylandServer) -> bool;
                 fn register_fd_ready_listener(self: &WaylandServer, fd: i32, callback: UniquePtr<FdReadyCallback>);
-                fn create_output_global(self: &WaylandServer, binder: UniquePtr<OutputGlobalBinder>) -> Box<OutputGlobal>;
+                fn create_output_global(self: &WaylandServer, binder: UniquePtr<OutputGlobalBinder>) -> Result<Box<OutputGlobal>>;
 
                 type OutputGlobal;
 

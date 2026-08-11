@@ -71,19 +71,19 @@ impl WaylandServer {
     /// The returned [OutputGlobal] owns the global's lifetime: dropping it
     /// (from C++, via the returned `Box`) removes the global from the display.
     ///
-    /// # Panics
-    /// Panics if called while the server is not running (i.e. outside of an
-    /// active [WaylandServer::run]).
+    /// # Errors
+    /// Returns an error if called while the server is not running (i.e. outside
+    /// of an active [WaylandServer::run]).
     pub fn create_output_global(
         &self,
         binder: UniquePtr<crate::ffi::OutputGlobalBinder>,
-    ) -> Box<OutputGlobal> {
+    ) -> Result<Box<OutputGlobal>, Box<dyn error::Error>> {
         let handle = self
             .display_handle
             .lock()
             .expect("No recovery from lock poisoning")
             .as_ref()
-            .expect("create_output_global called while the server was not running")
+            .ok_or("create_output_global called while the server was not running")?
             .clone();
 
         let data = crate::dispatch::OutputGlobalData::new(binder);
@@ -99,7 +99,7 @@ impl WaylandServer {
             crate::dispatch::OutputGlobalData,
         >(version, data);
 
-        Box::new(OutputGlobal { id, handle })
+        Ok(Box::new(OutputGlobal { id, handle }))
     }
 
     /// Run the wayland server.
