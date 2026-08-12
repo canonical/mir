@@ -16,6 +16,7 @@
 
 #include <miral/magnifier.h>
 
+#include "magnifier_handle_indicator.h"
 #include "magnifier_layout.h"
 #include "render_scene_into_surface.h"
 
@@ -30,17 +31,24 @@
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
+#include <mir/scene/basic_surface.h>
+#include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
 #include <mir/main_loop.h>
 
 #include <algorithm>
 #include <optional>
+#include <concepts>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace msh = mir::shell;
+namespace mc = mir::compositor;
+
+namespace mmc = miral::magnifier_controls;
 namespace mml = miral::magnifier_layout;
 
 namespace
@@ -52,6 +60,78 @@ auto const default_capture_height = 300;
 auto const min_magnification = 1.25f;
 auto const default_magnification = 1.5f;
 auto const max_magnification = 8.0f;
+
+class Handle
+{
+public:
+    Handle() = default;
+
+    void init(mir::Server& server, mmc::HandleKind kind, mc::CompositorID capture_compositor_id)
+    {
+        indicator = std::make_shared<miral::HandleIndicator>(
+            handle_rect,
+            kind,
+            capture_compositor_id,
+            server.the_buffer_allocator(),
+            server.the_scene_report(),
+            server.the_display_configuration_observer_registrar());
+        handle_surface_stack = server.the_surface_stack();
+
+        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+        indicator->set_cursor_image(server.the_default_cursor_image());
+    }
+
+    void reset()
+    {
+        if (auto const surface_stack = handle_surface_stack.lock())
+            surface_stack->remove_surface(indicator);
+        indicator.reset();
+    }
+
+    void move_to(geom::Point const& pos)
+    {
+        if (indicator)
+            indicator->move_to(pos);
+    }
+
+    void show()
+    {
+        if (indicator)
+            indicator->show();
+    }
+
+    void hide()
+    {
+        if (indicator)
+            indicator->hide();
+    }
+
+private:
+    static constexpr geom::Rectangle handle_rect{
+        {0, 0},
+        {
+            geom::Width{mmc::handle_diameter},
+            geom::Height{mmc::handle_diameter}}};
+
+    std::shared_ptr<miral::HandleIndicator> indicator;
+    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
+};
+
+struct Handles
+{
+    Handle drag;
+    Handle resize;
+    Handle zoom_in;
+    Handle zoom_out;
+
+    void for_each(std::invocable<Handle&, mmc::HandleKind> auto&& f)
+    {
+        f(drag, mmc::HandleKind::drag);
+        f(resize, mmc::HandleKind::resize);
+        f(zoom_in, mmc::HandleKind::zoom_in);
+        f(zoom_out, mmc::HandleKind::zoom_out);
+    }
+};
 
 struct State
 {
@@ -80,9 +160,16 @@ struct State
         freely_positioned_center =
             geom::RectangleD{geom::PointD{new_placement.surface_top_left}, new_placement.capture_area.size}.centre();
 
+        auto const positions = mmc::positions_for(new_placement, magnification);
+        handles.for_each([&](Handle& handle, mmc::HandleKind kind) { handle.move_to(positions.for_kind(kind)); });
+
         apply_geometry(render_scene_into_surface, new_placement.capture_area, new_placement.surface_top_left);
         applied_placement = new_placement;
     }
+
+    void show_all_handles() { handles.for_each([](Handle& handle, auto) { handle.show(); }); }
+
+    void hide_all_handles() { handles.for_each([](Handle& handle, auto) { handle.hide(); }); }
 
     auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
 
@@ -106,6 +193,7 @@ struct State
     }
 
     std::weak_ptr<ms::Surface> surface;
+    Handles handles;
     geom::Point cursor_pos;
     geom::PointD freely_positioned_center;
     geom::Rectangles screen_bounds;
@@ -164,11 +252,16 @@ public:
 
                 auto s = state.lock();
 
+                auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
+                s->handles.for_each([&](Handle& handle, mmc::HandleKind kind)
+                                    { handle.init(server, kind, capture_compositor_id); });
+
                 if (auto const surf = s->surface.lock(); surf && s->enabled)
                 {
                     if (!s->follow_cursor)
                     {
                         place_freely(*s);
+                        s->show_all_handles();
                     }
                     else
                     {
@@ -180,12 +273,37 @@ public:
         server.add_stop_callback(
             [&]
             {
+                // The naive way to do this would be:
+                //  - lock self->state
+                //  - unregister observers
+                //
+                // This may cause a deadlock in the following case:
+                //  - lock self->state
+                //  - on another thread, the observer gets called into, attempts to lock self->state and blocks
+                //  - unregistering the observer waits until the observer returns,
+                //    which it will not since its waiting on the lock
+                //  - deadlock: unregister waiting on observer, observer waiting on lock held to unregister
+                //
+                //  The lock is only required to grab references to the observers
+                //  and handles, so we lock, copy, then unregister without holding
+                //  the lock.
+
+                Handles local_handles;
+                {
+                    auto s = state.lock();
+
+                    local_handles = std::exchange(s->handles, {});
+                }
+
                 if (cursor_observer)
                     server.the_cursor_observer_multiplexer()->unregister_interest(*cursor_observer);
 
                 if (display_config_observer)
                     server.the_display_configuration_observer_registrar()->unregister_interest(
                         *display_config_observer);
+
+                local_handles.for_each([](Handle& handle, auto) { handle.reset(); });
+
             });
     }
 
@@ -201,12 +319,16 @@ public:
         if (enable)
         {
             if (!s->follow_cursor)
+            {
                 place_freely(*s);
+                s->show_all_handles();
+            }
             surf->show();
         }
         else
         {
             surf->hide();
+            s->hide_all_handles();
         }
     }
 
@@ -258,6 +380,7 @@ public:
             return;
 
         s->follow_cursor = true;
+        s->hide_all_handles();
         place_at_cursor(*s);
     }
 
@@ -272,6 +395,7 @@ public:
         if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
             place_freely(*s);
+            s->show_all_handles();
         }
     }
 
