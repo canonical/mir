@@ -489,3 +489,32 @@ TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_t
         EXPECT_THAT(rect.bottom(), Le(geom::Y{600}));
     }
 }
+
+// Dragging the resize handle away from the magnifier centre must increase the
+// capture size, visible as the enlarged screen_position().size of the surface.
+//
+// screen_position().size comes from the buffer stream's TrackingSubmission. The
+// MultiMonitorArbiter only advances to a newly-submitted buffer once the
+// previous submission has been "claimed" (i.e. buffer() called on the
+// Renderable). We trigger that manually here, mimicking what a real compositor
+// render pass would do, to flush the stale pre-resize submission and expose the
+// post-resize buffer with the new size.
+TEST_F(MagnifierHandleTest, resize_handle_changes_capture_size)
+{
+    auto const mag_center = element_center(magnifier_index);
+    auto const from = element_center(resize_handle_index);
+    // Move 30 pixels away from the magnifier centre to enlarge the capture area.
+    geom::PointF const to{
+        from.x.as_value() + (from.x.as_value() >= mag_center.x.as_value() ? 30.0f : -30.0f),
+        from.y.as_value() + (from.y.as_value() >= mag_center.y.as_value() ? 30.0f : -30.0f)};
+    drag(from, to);
+
+    // Advance the arbiter: claim the stale current frame so the next
+    // scene_elements_for call receives the new post-resize submission.
+    magnifier_renderable()->buffer();
+
+    auto const size = magnifier_renderable()->screen_position().size;
+
+    EXPECT_THAT(size.width.as_int(),  Gt(150));
+    EXPECT_THAT(size.height.as_int(), Gt(150));
+}
