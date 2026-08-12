@@ -78,15 +78,6 @@ log<logging::Severity, char const*, std::exception_ptr const&, std::string const
     }
 }
 
-log<logging::Severity, logging::Tags, std::string_view>::log(
-    logging::Severity severity,
-    logging::Tags tags,
-    std::string_view message,
-    std::source_location loc)
-{
-    logging::log(severity, tags, message, std::make_format_args(), loc);
-}
-
 void security_log(
     logging::Severity severity,
     std::string const& event,

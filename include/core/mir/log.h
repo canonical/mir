@@ -187,7 +187,15 @@ struct log<logging::Severity, logging::Tags, std::string_view> final
     log(logging::Severity sev,
         logging::Tags tags,
         std::string_view message,
-        std::source_location loc = std::source_location::current());
+        std::source_location loc = std::source_location::current())
+    {
+        log<logging::Severity, logging::Tags, std::format_string<std::string_view>, std::string_view>(
+            sev,
+            tags,
+            "{}",
+            message,
+            loc);
+    }
 };
 log(logging::Severity, logging::Tags, std::string_view) -> log<logging::Severity, logging::Tags, std::string_view>;
 log(logging::Severity, logging::Tags, std::string_view, std::source_location)
