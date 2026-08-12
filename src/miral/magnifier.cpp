@@ -65,6 +65,9 @@ auto const min_magnification = 1.25f;
 auto const default_magnification = 1.25f;
 auto const max_magnification = 8.0f;
 
+/// Magnification step applied by each zoom button press.
+auto const zoom_step = 0.25f;
+
 class Handle
 {
 public:
@@ -524,6 +527,8 @@ private:
     {
         state.handles.drag.attach_observer<DragHandleObserver>(this);
         state.handles.resize.attach_observer<ResizeDragObserver>(this);
+        state.handles.zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
+        state.handles.zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
     }
 
     /// Applies visual geometry with the magnifier's logical top-left computed
@@ -718,6 +723,65 @@ private:
 
     private:
         Self* self;
+    };
+
+    /// Adjusts the magnification level when a zoom button is tapped or touched.
+    class ZoomButtonObserver : public ms::NullSurfaceObserver
+    {
+    public:
+        ZoomButtonObserver(Self* self, float delta) : self{self}, delta{delta} {}
+
+        void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
+        {
+            if (mir_event_get_type(event.get()) != mir_event_type_input)
+                return;
+            auto const* input_ev = mir_event_get_input_event(event.get());
+            switch (mir_input_event_get_type(input_ev))
+            {
+            case mir_input_event_type_pointer:
+                handle_pointer(mir_input_event_get_pointer_event(input_ev));
+                break;
+            case mir_input_event_type_touch:
+                handle_touch(mir_input_event_get_touch_event(input_ev));
+                break;
+            default:
+                break;
+            }
+        }
+
+    private:
+        void handle_pointer(MirPointerEvent const* pev)
+        {
+            auto const action = mir_pointer_event_action(pev);
+            auto s = self->state.lock();
+            if (action == mir_pointer_action_button_down &&
+                mir_pointer_event_button_state(pev, mir_pointer_button_primary))
+            {
+                apply_zoom(*s);
+            }
+        }
+
+        void handle_touch(MirTouchEvent const* tev)
+        {
+            if (mir_touch_event_point_count(tev) != 1)
+                return;
+            auto const action = mir_touch_event_action(tev, 0);
+            auto s = self->state.lock();
+            if (action == mir_touch_action_down)
+            {
+                apply_zoom(*s);
+            }
+        }
+
+        /// Clamps and applies the zoom step. Caller must hold self->state.
+        void apply_zoom(State& s)
+        {
+            self->set_magnification(
+                s, std::clamp(s.magnification + delta, min_magnification, max_magnification));
+        }
+
+        Self* self;
+        float delta;
     };
 
     mir::Synchronised<State> state;

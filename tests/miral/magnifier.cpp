@@ -438,6 +438,21 @@ private:
     }
 };
 
+struct MagnifierInitiallyDisabledHandleTest : MagnifierHandleTest
+{
+    MagnifierInitiallyDisabledHandleTest()
+    {
+        magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+        magnifier.enable(false).set_behavior(Magnifier::Behavior::freely_positioned);
+    }
+
+    void SetUp() override
+    {
+        MagnifierHandleTest::SetUp();
+        magnifier.enable(true);
+    }
+};
+
 TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier)
 {
     auto const before = magnifier_top_left();
@@ -450,6 +465,21 @@ TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier)
     EXPECT_THAT(after.x.as_int(), Eq(before.x.as_int() + 20));
     EXPECT_THAT(after.y.as_int(), Eq(before.y.as_int()));
 }
+
+TEST_F(MagnifierInitiallyDisabledHandleTest, handles_are_functional_after_enabling)
+{
+    auto const before = magnifier_top_left();
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 20, drag_from.y.as_value()});
+
+    EXPECT_THAT(magnifier_top_left().x.as_int(), Eq(before.x.as_int() + 20));
+
+    auto const before_zoom = magnifier_renderable()->transformation();
+    click(element_center(zoom_in_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before_zoom));
+}
+
 
 TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier_flush_to_screen_corners)
 {
@@ -509,6 +539,38 @@ TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_t
         EXPECT_THAT(rect.top(), Ge(geom::Y{0}));
         EXPECT_THAT(rect.bottom(), Le(geom::Y{600}));
     }
+}
+
+TEST_F(MagnifierHandleTest, zoom_in_handle_increases_magnification)
+{
+    auto const before = magnifier_renderable()->transformation();
+
+    click(element_center(zoom_in_handle_index));
+
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(1.5f, 1.5f, 1.0f));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before));
+}
+
+TEST_F(MagnifierHandleTest, zoom_out_handle_decreases_magnification)
+{
+    auto const initial = magnifier_renderable()->transformation();
+    click(element_center(zoom_in_handle_index));
+    ASSERT_THAT(magnifier_renderable()->transformation(), Ne(initial));
+
+    click(element_center(zoom_out_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(initial));
+}
+
+TEST_F(MagnifierHandleTest, zoom_out_handle_clamps_at_minimum_magnification)
+{
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(1.25f, 1.25f, 1.0f));
+    ASSERT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+
+    click(element_center(zoom_out_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
 }
 
 // Dragging the resize handle away from the magnifier centre must increase the
