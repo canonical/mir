@@ -114,7 +114,15 @@ struct log<logging::Severity, char const*, char const*, Args...> final
     {
         char message[1024];
 
+#if !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat-security"
+#endif
         std::snprintf(message, sizeof(message), fmt, args...);
+#if !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
+
         log<logging::Severity, std::string const&, std::string const&>(
             sev,
             component,
