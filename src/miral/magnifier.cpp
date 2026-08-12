@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "render_scene_into_surface.h"
 #include <miral/magnifier.h>
+
+#include "magnifier_layout.h"
+#include "render_scene_into_surface.h"
 
 #include <input-method-unstable-v2_wrapper.h>
 #include <wayland_wrapper.h>
@@ -24,6 +26,7 @@
 #include <mir/log.h>
 #include <mir/server.h>
 #include <mir/synchronised.h>
+#include <mir/geometry/rectangles.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
@@ -47,9 +50,36 @@ auto const max_magnification = 8.0f;
 
 struct State
 {
+    auto layout() const -> miral::MagnifierLayout
+    {
+        return {screen_bounds, preferred_visual_size, magnification};
+    }
+
+    auto current_placement(ms::Surface const& surf) const -> miral::MagnifierLayout::Placement
+    {
+        return layout().placement_of(render_scene_into_surface.capture_area(), surf.top_left());
+    }
+
+    void apply_geometry(miral::MagnifierLayout::Placement const& placement)
+    {
+        preferred_visual_size = placement.preferred_visual_size;
+        render_scene_into_surface.capture_area(placement.capture_area);
+
+        if (auto const surf = surface.lock())
+        {
+            surf->move_to(placement.untransformed_surface_top_left);
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+        }
+    }
+
     std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
+    geom::Rectangles screen_bounds;
     float magnification{default_magnification};
+    /// The on-screen size the user has asked the magnifier to be. Persistent
+    /// intent: when the magnification changes the capture size is recomputed
+    /// from this so the magnifier's on-screen footprint stays the same.
+    geom::Size preferred_visual_size;
     bool default_enabled{false};
     miral::RenderSceneIntoSurface render_scene_into_surface;
 };
@@ -72,11 +102,9 @@ public:
         s->render_scene_into_surface.on_surface_ready(
             [this](auto const& surf)
             {
-                auto s = state.lock();
-                surf->set_transformation(
-                    glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
                 surf->set_depth_layer(mir_depth_layer_always_on_top);
                 surf->set_focus_mode(mir_focus_mode_disabled);
+                auto s = state.lock();
 
                 if (s->default_enabled)
                     surf->show();
@@ -94,6 +122,14 @@ public:
                 cursor_observer = std::make_shared<CursorObserver>(this);
                 server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
                 cursor_multiplexer = server.the_cursor_observer_multiplexer();
+
+                auto s = state.lock();
+
+                if (s->preferred_visual_size == geom::Size{})
+                    s->preferred_visual_size = geom::Size{default_capture_width, default_capture_height} * s->magnification;
+
+                if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+                    place_at_cursor(*s);
             });
 
         server.add_stop_callback(
@@ -119,22 +155,41 @@ public:
 
     void set_magnification(float new_magnification)
     {
-        auto s = state.lock();
-        s->magnification = new_magnification;
-        if (auto const surf = s->surface.lock())
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
+        set_magnification(*state.lock(), new_magnification);
+    }
+
+    void set_magnification(State& s, float new_magnification)
+    {
+        if (auto const surf = s.surface.lock())
+        {
+            auto const old_placement = s.current_placement(*surf);
+            s.magnification = new_magnification;
+
+            s.apply_geometry(s.layout().place_following_cursor_at(old_placement.scaling_center()));
+        }
+        else
+        {
+            s.magnification = new_magnification;
+        }
     }
 
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        auto const capture_position = CursorObserver::cursor_position_to_capture_position(size, s->cursor_pos);
-        s->render_scene_into_surface.capture_area({capture_position, size});
+        auto const layout = miral::MagnifierLayout{s->screen_bounds, size * s->magnification, s->magnification};
+        s->apply_geometry(layout.place_following_cursor_at(s->cursor_pos));
     }
 
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
 
 private:
+    /// Applies visual geometry with the magnifier's logical top-left computed
+    /// from its current visual size so the surface is centred on the cursor.
+    void place_at_cursor(State& s)
+    {
+        s.apply_geometry(s.layout().place_following_cursor_at(s.cursor_pos));
+    }
+
     class CursorObserver : public mi::CursorObserver
     {
     public:
@@ -144,31 +199,17 @@ private:
         {
             auto s = self->state.lock();
             s->cursor_pos = geom::Point{abs_x, abs_y};
+
             auto const surf = s->surface.lock();
             if (!surf)
                 return;
 
-            auto const capture_position = cursor_position_to_capture_position(
-                surf->window_size(),
-                s->cursor_pos);
-            surf->move_to(capture_position);
-            s->render_scene_into_surface.capture_area(
-                geom::Rectangle{capture_position, surf->window_size()});
+            self->place_at_cursor(*s);
         }
 
         void pointer_usable() override {}
         void pointer_unusable() override {}
         void image_set_to(std::shared_ptr<mg::CursorImage>) override {}
-
-        static geom::Point cursor_position_to_capture_position(
-            geom::Size const& window_size,
-            geom::Point const& cursor_pos)
-        {
-            return geom::Point{
-                cursor_pos.x.as_value() - window_size.width.as_value() / 2,
-                cursor_pos.y.as_value() - window_size.height.as_value() / 2
-            };
-        }
 
     private:
         Self* self;
