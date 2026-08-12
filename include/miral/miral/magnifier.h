@@ -26,14 +26,22 @@ namespace miral
 {
 namespace live_config { class Store; }
 
-/// Renders a magnified region of the scene at the cursor position.
+/// Renders a magnified region of the scene.
 /// By default, the magnifier captures a 300x300 region centred on the cursor
-/// and displays it at 1.5x, producing a 450x450 visual area. Changing the
+/// and displays it at 1.25x, producing a 375x375 visual area. Changing the
 /// magnification preserves the visual area and adjusts the captured region.
 /// \remark Since MirAL 5.5
 class Magnifier
 {
 public:
+    /// Describes how the magnifier is positioned.
+    /// \remark Since MirAL 6.0
+    enum class Behavior
+    {
+        follow_cursor,
+        freely_positioned
+    };
+
     Magnifier();
     /// Construct a `Magnifier` instance with access to a live config store.
     ///
@@ -49,6 +57,10 @@ public:
     Magnifier& enable(bool enabled);
     Magnifier& magnification(float magnification);
     Magnifier& capture_size(mir::geometry::Size const& size);
+
+    /// Sets how the magnifier is positioned.
+    /// \remark Since MirAL 6.0
+    Magnifier& set_behavior(Behavior behavior);
 
     void operator()(mir::Server& server);
 
