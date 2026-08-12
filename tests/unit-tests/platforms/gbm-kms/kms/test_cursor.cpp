@@ -809,7 +809,7 @@ TEST_F(MesaCursorTest, cursor_renderable_screen_position_is_expected)
 {
     using namespace testing;
 
-    auto image = std::make_shared<StubCursorImage>();
+    std::shared_ptr<mg::CursorImage> image = std::make_shared<StubCursorImage>();
     cursor.move_to(geom::Point{50, 50});
     cursor.show(image);
 
@@ -821,7 +821,7 @@ TEST_F(MesaCursorTest, cursor_renderable_src_bounds_is_expected)
 {
     using namespace testing;
 
-    auto image = std::make_shared<StubCursorImage>();
+    std::shared_ptr<mg::CursorImage> image = std::make_shared<StubCursorImage>();
     cursor.move_to(geom::Point{50, 50});
     cursor.show(image);
 
