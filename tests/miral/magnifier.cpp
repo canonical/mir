@@ -19,8 +19,11 @@
 #include <mir/server.h>
 #include <mir/compositor/scene.h>
 #include <mir/compositor/scene_element.h>
+#include <mir/events/event_builders.h>
+#include <mir/events/touch_contact.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/display_configuration_observer.h>
+#include <mir/input/composite_event_filter.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/event_builder.h>
@@ -435,6 +438,7 @@ struct MagnifierHandleTest : MagnifierTest
                 server.add_init_callback(
                     [&server, this]
                     {
+                        composite_event_filter = server.the_composite_event_filter();
                         input_device_registry = server.the_input_device_registry();
                         input_device_hub = server.the_input_device_hub();
                     });
@@ -534,8 +538,30 @@ struct MagnifierHandleTest : MagnifierTest
         flush_observer_callbacks();
     }
 
+    /// Builds a pointer event suitable for feeding straight to the event
+    /// filter, bypassing the input stack so the test can read the filter's
+    /// consume/don't-consume decision directly.
+    mir::EventUPtr make_pointer(MirPointerAction action, MirPointerButtons buttons, geom::PointF pos)
+    {
+        return mir::events::make_pointer_event(
+            MirInputDeviceId{0}, std::chrono::nanoseconds{0}, mir_input_event_modifier_none,
+            action, buttons, pos, geom::DisplacementF{0, 0}, mir_pointer_axis_source_none,
+            mir::events::ScrollAxisH{}, mir::events::ScrollAxisV{});
+    }
+
+    mir::EventUPtr make_touch(MirTouchAction action, geom::PointF pos)
+    {
+        std::vector<mir::events::TouchContact> const contacts{
+            mir::events::TouchContact{0, action, mir_touch_tooltype_finger, pos, 1.0f, 0.0f, 0.0f, 0.0f}};
+        return mir::events::make_touch_event(
+            MirInputDeviceId{0}, std::chrono::nanoseconds{0}, mir_input_event_modifier_none, contacts);
+    }
+
+    bool filter_consumes(MirEvent const& event) { return composite_event_filter.lock()->handle(event); }
+
     std::weak_ptr<mi::InputDeviceRegistry> input_device_registry;
     std::weak_ptr<mi::InputDeviceHub> input_device_hub;
+    std::weak_ptr<mi::CompositeEventFilter> composite_event_filter;
     std::shared_ptr<mi::VirtualInputDevice> pointer_device;
 
 private:
@@ -748,4 +774,66 @@ TEST_F(MagnifierHandleTest, resize_handle_preserves_grab_offset)
     EXPECT_THAT(
         element_rectangle(resize_handle_index).top_left,
         Eq(before + geom::Displacement{-20, -20}));
+}
+
+// The freely-positioned magnifier installs an event filter that swallows
+// pointer and touch events landing on its content so they do not fall through
+// to the windows underneath. These tests drive that filter directly through the
+// composite event filter and read its consume decision.
+
+TEST_F(MagnifierHandleTest, pointer_over_magnifier_content_is_consumed)
+{
+    auto const on_magnifier = element_center(magnifier_index);
+    auto const down = make_pointer(mir_pointer_action_button_down, mir_pointer_button_primary, on_magnifier);
+
+    EXPECT_THAT(filter_consumes(*down), Eq(true));
+}
+
+TEST_F(MagnifierHandleTest, pointer_over_control_handle_is_not_consumed)
+{
+    auto const on_handle = element_center(drag_handle_index);
+    auto const down = make_pointer(mir_pointer_action_button_down, mir_pointer_button_primary, on_handle);
+
+    EXPECT_THAT(filter_consumes(*down), Eq(false));
+}
+
+TEST_F(MagnifierHandleTest, pointer_gesture_latches_from_press_until_release)
+{
+    auto const on_magnifier = element_center(magnifier_index);
+    geom::PointF const away{790.0f, 10.0f};
+
+    auto const down = make_pointer(mir_pointer_action_button_down, mir_pointer_button_primary, on_magnifier);
+    ASSERT_THAT(filter_consumes(*down), Eq(true));
+
+    // The gesture began on the magnifier, so it stays consumed even after the
+    // pointer leaves the magnifier's content.
+    auto const motion = make_pointer(mir_pointer_action_motion, mir_pointer_button_primary, away);
+    EXPECT_THAT(filter_consumes(*motion), Eq(true));
+
+    auto const up = make_pointer(mir_pointer_action_button_up, MirPointerButtons{0}, away);
+    EXPECT_THAT(filter_consumes(*up), Eq(true));
+
+    // Once released the latch is cleared: a fresh press away from the magnifier
+    // is no longer ours.
+    auto const down_away = make_pointer(mir_pointer_action_button_down, mir_pointer_button_primary, away);
+    EXPECT_THAT(filter_consumes(*down_away), Eq(false));
+}
+
+TEST_F(MagnifierHandleTest, pointer_over_magnifier_is_not_consumed_when_following_cursor)
+{
+    auto const on_magnifier = element_center(magnifier_index);
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    flush_main_loop("behavior change");
+
+    auto const down = make_pointer(mir_pointer_action_button_down, mir_pointer_button_primary, on_magnifier);
+    EXPECT_THAT(filter_consumes(*down), Eq(false));
+}
+
+TEST_F(MagnifierHandleTest, touch_over_magnifier_content_is_consumed)
+{
+    auto const on_magnifier = element_center(magnifier_index);
+    auto const down = make_touch(mir_touch_action_down, on_magnifier);
+
+    EXPECT_THAT(filter_consumes(*down), Eq(true));
 }
