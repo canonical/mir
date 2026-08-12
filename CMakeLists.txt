@@ -93,7 +93,6 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>
-        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>
     )
   endif()
 endif()
