@@ -676,8 +676,15 @@ private:
         });
         if (it != toplevels_in_focus_order.end())
         {
+            auto const was_ghost = it->ghost;
             it->app_id = app_id;
             it->ghost = false;
+            if (was_ghost && is_running)
+            {
+                if (!tentative_focus_index)
+                    tentative_focus_index = std::distance(toplevels_in_focus_order.begin(), it);
+                draw_internal();
+            }
         }
         else
         {
@@ -694,9 +701,16 @@ private:
         });
         if (it != toplevels_in_focus_order.end())
         {
+            auto const was_ghost = it->ghost;
             it->window_title = window_title;
             if (it->ghost) it->app_id = window_title;
             it->ghost = false;
+            if (was_ghost && is_running)
+            {
+                if (!tentative_focus_index)
+                    tentative_focus_index = std::distance(toplevels_in_focus_order.begin(), it);
+                draw_internal();
+            }
         }
         else
         {
