@@ -14,16 +14,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "render_scene_into_surface.h"
 #include <miral/magnifier.h>
 
+#include "magnifier_layout.h"
+#include "render_scene_into_surface.h"
 #include <miral/live_config.h>
 #include <mir/log.h>
 #include <mir/server.h>
 #include <mir/synchronised.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_observer.h>
+#include <mir/geometry/rectangles.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
+#include <mir/observer_registrar.h>
+#include <mir/main_loop.h>
 
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,6 +38,7 @@ namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace mml = miral::magnifier_layout;
 
 namespace
 {
@@ -45,9 +52,32 @@ auto const max_magnification = 8.0f;
 
 struct State
 {
+    void apply_geometry(auto const capture_area, auto const surface_top_left)
+    {
+        render_scene_into_surface.capture_area(capture_area);
+
+        if (auto const surf = surface.lock())
+        {
+            surf->move_to(surface_top_left);
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+        }
+
+    }
+
+    void apply_geometry(mml::Placement const& new_placement)
+    {
+        apply_geometry(new_placement.capture_area, new_placement.capture_area.top_left);
+    }
+
+    auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
+
     std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
+    geom::Rectangles screen_bounds;
     float magnification{default_magnification};
+    geom::SizeD requested_visual_size{
+        default_capture_width * static_cast<double>(default_magnification),
+        default_capture_height * static_cast<double>(default_magnification)};
     bool default_enabled{false};
     miral::RenderSceneIntoSurface render_scene_into_surface;
 };
@@ -70,18 +100,17 @@ public:
         s->render_scene_into_surface.on_surface_ready(
             [this](auto const& surf)
             {
-                auto s = state.lock();
-                surf->set_transformation(
-                    glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
                 surf->set_depth_layer(mir_depth_layer_always_on_top);
                 surf->set_focus_mode(mir_focus_mode_disabled);
+                auto s = state.lock();
+                s->surface = surf;
+                surf->set_transformation(
+                    glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
 
                 if (s->default_enabled)
                     surf->show();
                 else
                     surf->hide();
-
-                s->surface = surf;
             });
 
         s->render_scene_into_surface(server);
@@ -89,17 +118,35 @@ public:
         server.add_init_callback(
             [&]
             {
-                cursor_observer = std::make_shared<CursorObserver>(this);
-                server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
-                cursor_multiplexer = server.the_cursor_observer_multiplexer();
+                server.the_main_loop()->spawn([=, this, &server] { this->post_init(server); });
             });
 
         server.add_stop_callback(
             [&]
             {
-                if (auto const locked = cursor_multiplexer.lock())
-                    locked->unregister_interest(*cursor_observer);
+                auto const cursor_mux = cursor_multiplexer.lock();
+                if (cursor_mux && cursor_observer)
+                    cursor_mux->unregister_interest(*cursor_observer);
+
+                if (display_config_observer)
+                    server.the_display_configuration_observer_registrar()->unregister_interest(
+                        *display_config_observer);
             });
+    }
+
+    void post_init(mir::Server& server)
+    {
+        cursor_observer = std::make_shared<CursorObserver>(this);
+        server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
+        cursor_multiplexer = server.the_cursor_observer_multiplexer();
+
+        display_config_observer = std::make_shared<DisplayConfigObserver>(*this);
+        server.the_display_configuration_observer_registrar()->register_interest(display_config_observer);
+
+        auto s = state.lock();
+
+        if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+            place_at_cursor(*s);
     }
 
     void set_enable(bool enable)
@@ -117,22 +164,81 @@ public:
 
     void set_magnification(float new_magnification)
     {
-        auto s = state.lock();
-        s->magnification = new_magnification;
-        if (auto const surf = s->surface.lock())
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
+        set_magnification(*state.lock(), new_magnification);
+    }
+
+    void set_magnification(State& s, float new_magnification)
+    {
+        s.magnification = new_magnification;
+        if (!s.surface.lock() || !s.has_outputs())
+            return;
+
+        place_at_cursor(s);
     }
 
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        auto const capture_position = CursorObserver::cursor_position_to_capture_position(size, s->cursor_pos);
-        s->render_scene_into_surface.capture_area({capture_position, size});
+        s->requested_visual_size = geom::SizeD{size} * s->magnification;
+        auto const capture_top_left = s->render_scene_into_surface.capture_area().top_left;
+        s->render_scene_into_surface.capture_area({capture_top_left, size});
+
+        if (s->surface.lock() && s->has_outputs())
+            place_at_cursor(*s);
     }
 
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
 
 private:
+    class DisplayConfigObserver : public mg::DisplayConfigurationObserver
+    {
+    public:
+        DisplayConfigObserver(Self& self) : self{self} {}
+
+        void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        { update_bounds(config); }
+
+        void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        { update_bounds(config); }
+
+        void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+        void session_configuration_applied(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&) override
+        {}
+        void session_configuration_removed(std::shared_ptr<ms::Session> const&) override {}
+        void configuration_failed(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&)
+            override
+        {}
+        void catastrophic_configuration_error(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override
+        {}
+        void configuration_updated_for_session(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {}
+
+    private:
+        void update_bounds(std::shared_ptr<mg::DisplayConfiguration const> const& config);
+        Self& self;
+    };
+
+    /// Applies visual geometry with the magnifier's logical top-left computed
+    /// from its current visual size so the surface is centred on the cursor.
+    void place_at_cursor(State& s)
+    {
+        if (!s.has_outputs())
+            return;
+
+        s.apply_geometry(
+            mml::place_following_cursor(
+                geom::PointD{s.cursor_pos},
+                s.requested_visual_size,
+                s.screen_bounds,
+                s.magnification));
+    }
+
     class CursorObserver : public mi::CursorObserver
     {
     public:
@@ -142,31 +248,17 @@ private:
         {
             auto s = self->state.lock();
             s->cursor_pos = geom::Point{abs_x, abs_y};
+
             auto const surf = s->surface.lock();
             if (!surf)
                 return;
 
-            auto const capture_position = cursor_position_to_capture_position(
-                surf->window_size(),
-                s->cursor_pos);
-            surf->move_to(capture_position);
-            s->render_scene_into_surface.capture_area(
-                geom::Rectangle{capture_position, surf->window_size()});
+            self->place_at_cursor(*s);
         }
 
         void pointer_usable() override {}
         void pointer_unusable() override {}
         void image_set_to(std::shared_ptr<mg::CursorImage>) override {}
-
-        static geom::Point cursor_position_to_capture_position(
-            geom::Size const& window_size,
-            geom::Point const& cursor_pos)
-        {
-            return geom::Point{
-                cursor_pos.x.as_value() - window_size.width.as_value() / 2,
-                cursor_pos.y.as_value() - window_size.height.as_value() / 2
-            };
-        }
 
     private:
         Self* self;
@@ -175,8 +267,29 @@ private:
     mir::Synchronised<State> state;
 
     std::shared_ptr<CursorObserver> cursor_observer;
+    std::shared_ptr<DisplayConfigObserver> display_config_observer;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
 };
+
+void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
+    std::shared_ptr<mg::DisplayConfiguration const> const& config)
+{
+    geom::Rectangles rects;
+    config->for_each_output(
+        [&rects](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.used && output.connected)
+                rects.add(output.extents());
+        });
+
+    auto s = self.state.lock();
+    s->screen_bounds = rects;
+    if (!s->has_outputs())
+        return;
+
+    if (s->surface.lock())
+        self.place_at_cursor(*s);
+}
 
 miral::Magnifier::Magnifier()
     : self(std::make_shared<Self>())
