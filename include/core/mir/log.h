@@ -171,10 +171,15 @@ struct log<logging::Severity, logging::Tags, std::format_string<Args...>, Args..
         logging::Severity severity,
         logging::Tags tags,
         std::format_string<Args...> fmt,
-        Args&&... args,
+        Args... args,
         std::source_location loc = std::source_location::current())
     {
-        log<logging::Severity, logging::Tags, std::string_view>(severity, tags, std::format(fmt, std::forward<Args>(args)...), loc);
+        log<logging::Severity, logging::Tags, std::string_view, std::format_args>(
+            severity,
+            tags,
+            fmt.get(),
+            std::make_format_args(args...),
+            loc);
     }
 };
 template<typename... Args>
