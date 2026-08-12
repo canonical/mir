@@ -30,14 +30,6 @@
 
 namespace mir
 {
-[[gnu::format(printf, 3, 0)]]
-void logv(
-    logging::Severity sev,
-    char const* component,
-    char const* fmt,
-    va_list va,
-    std::source_location loc = std::source_location::current());
-
 /*
  * The following is a bit weird because we want to have both a variadic
  * logging API (both the older printf-style and the new std::format-style),

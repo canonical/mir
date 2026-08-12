@@ -17,7 +17,6 @@
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
-#include <cstdio>
 #include <exception>
 #include <format>
 
@@ -25,24 +24,6 @@
 #include <source_location>
 
 namespace mir {
-
-void logv(
-    logging::Severity sev,
-    char const* component,
-    char const* fmt,
-    va_list va,
-    std::source_location loc)
-{
-    char message[1024];
-    int max = sizeof(message) - 1;
-    int len = std::vsnprintf(message, max, fmt, va);
-    if (len > max)
-        len = max;
-    message[len] = '\0';
-
-    // Suboptimal: Constructing a std::string for message/component.
-    logging::log(sev, message, component, loc);
-}
 
 log<logging::Severity, logging::Tags, std::string_view, std::format_args>::log(
     logging::Severity sev,
