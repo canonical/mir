@@ -56,6 +56,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     override_watcher.cpp
     version_compare.cpp
     magnifier_layout.cpp
+    magnifier_handle_indicator.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
@@ -70,6 +71,7 @@ target_link_libraries(miral-test-internal
     mir-test-doubles-static
     miral-internal
     miral-external
+    mirnullreport
     PkgConfig::WAYLAND_CLIENT
 )
 
