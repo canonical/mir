@@ -23,6 +23,7 @@
 #include <miral/live_config.h>
 #include <mir/log.h>
 #include <mir/server.h>
+#include <mir/synchronised.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
@@ -43,6 +44,15 @@ auto const default_capture_height = 300;
 auto const min_magnification = 1.25f;
 auto const default_magnification = 1.25f;
 auto const max_magnification = 8.0f;
+
+struct State
+{
+    std::weak_ptr<ms::Surface> surface;
+    geom::Point cursor_pos;
+    float magnification{default_magnification};
+    bool default_enabled{false};
+    miral::RenderSceneIntoSurface render_scene_into_surface;
+};
 }
 
 class miral::Magnifier::Self
@@ -50,50 +60,55 @@ class miral::Magnifier::Self
 public:
     Self()
     {
-        render_scene_into_surface
+        state.lock()
+            ->render_scene_into_surface
             .capture_area(geom::Rectangle{{300, 300}, geom::Size(default_capture_width, default_capture_height)})
             .overlay_cursor(false);
     }
 
     void init(mir::Server& server)
     {
-        render_scene_into_surface.on_surface_ready([this](auto const& surf)
-        {
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
-            surf->set_depth_layer(mir_depth_layer_always_on_top);
-            surf->set_focus_mode(mir_focus_mode_disabled);
+        auto const s = state.lock();
+        s->render_scene_into_surface.on_surface_ready(
+            [this](auto const& surf)
+            {
+                auto s = state.lock();
+                surf->set_transformation(
+                    glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
+                surf->set_depth_layer(mir_depth_layer_always_on_top);
+                surf->set_focus_mode(mir_focus_mode_disabled);
 
-            if (default_enabled)
-                surf->show();
-            else
-                surf->hide();
+                if (s->default_enabled)
+                    surf->show();
+                else
+                    surf->hide();
 
-            std::lock_guard lock(mutex);
-            surface = surf;
-        });
+                s->surface = surf;
+            });
 
-        render_scene_into_surface(server);
+        s->render_scene_into_surface(server);
 
-        server.add_init_callback([&]
-        {
-            observer = std::make_shared<Observer>(this);
-            server.the_cursor_observer_multiplexer()->register_interest(observer);
-            cursor_multiplexer = server.the_cursor_observer_multiplexer();
-        });
+        server.add_init_callback(
+            [&]
+            {
+                cursor_observer = std::make_shared<CursorObserver>(this);
+                server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
+                cursor_multiplexer = server.the_cursor_observer_multiplexer();
+            });
 
-        server.add_stop_callback([&]
-        {
-            std::lock_guard lock(mutex);
-            if (auto const locked = cursor_multiplexer.lock())
-                locked->unregister_interest(*observer);
-        });
+        server.add_stop_callback(
+            [&]
+            {
+                if (auto const locked = cursor_multiplexer.lock())
+                    locked->unregister_interest(*cursor_observer);
+            });
     }
 
     void set_enable(bool enable)
     {
-        std::lock_guard lock(mutex);
-        default_enabled = enable;
-        if (auto const surf = surface.lock())
+        auto s = state.lock();
+        s->default_enabled = enable;
+        if (auto const surf = s->surface.lock())
         {
             if (enable)
                 surf->show();
@@ -104,43 +119,40 @@ public:
 
     void set_magnification(float new_magnification)
     {
-        std::lock_guard lock(mutex);
-        magnification = new_magnification;
-        if (auto const surf = surface.lock())
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+        auto s = state.lock();
+        s->magnification = new_magnification;
+        if (auto const surf = s->surface.lock())
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(s->magnification, s->magnification, 1)));
     }
 
     void set_capture_size(geom::Size const& size)
     {
-        std::lock_guard lock(mutex);
-        auto const capture_position = Observer::cursor_position_to_capture_position(size, cursor_pos);
-        render_scene_into_surface.capture_area({ capture_position, size });
+        auto s = state.lock();
+        auto const capture_position = CursorObserver::cursor_position_to_capture_position(size, s->cursor_pos);
+        s->render_scene_into_surface.capture_area({capture_position, size});
     }
 
-    geom::Size current_size() const
-    {
-        return render_scene_into_surface.capture_area().size;
-    }
+    geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
 
 private:
-    class Observer : public mi::CursorObserver
+    class CursorObserver : public mi::CursorObserver
     {
     public:
-        explicit Observer(Self* self) : self(self) {}
+        explicit CursorObserver(Self* self) : self(self) {}
 
         void cursor_moved_to(float abs_x, float abs_y) override
         {
-            std::lock_guard lock(self->mutex);
-            self->cursor_pos = geom::Point{abs_x, abs_y};
-            auto const surf = self->surface.lock();
+            auto s = self->state.lock();
+            s->cursor_pos = geom::Point{abs_x, abs_y};
+            auto const surf = s->surface.lock();
             if (!surf)
                 return;
 
             auto const capture_position = cursor_position_to_capture_position(
                 surf->window_size(),
-                self->cursor_pos);
+                s->cursor_pos);
             surf->move_to(capture_position);
-            self->render_scene_into_surface.capture_area(
+            s->render_scene_into_surface.capture_area(
                 geom::Rectangle{capture_position, surf->window_size()});
         }
 
@@ -162,16 +174,10 @@ private:
         Self* self;
     };
 
-    friend Observer;
+    mir::Synchronised<State> state;
 
-    std::mutex mutex;
-    RenderSceneIntoSurface render_scene_into_surface;
+    std::shared_ptr<CursorObserver> cursor_observer;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
-    std::shared_ptr<Observer> observer;
-    std::weak_ptr<ms::Surface> surface;
-    geom::Point cursor_pos;
-    float magnification = default_magnification;
-    bool default_enabled = false;
 };
 
 miral::Magnifier::Magnifier()
