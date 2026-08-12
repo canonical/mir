@@ -76,6 +76,10 @@ struct BasicScreenShooter : Test
                 [this](mg::DisplaySink& sink, auto const&)
                     -> std::unique_ptr<mg::gl::OutputSurface>
                 {
+                    if (fail_surface_for_sink)
+                    {
+                        BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
+                    }
                     if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
                         captured_sink = &sink;
@@ -147,6 +151,7 @@ struct BasicScreenShooter : Test
     }
 
     int renderers_created{0};
+    bool fail_surface_for_sink{false};
     std::vector<geom::Size> sink_sizes;
     mg::DisplaySink* captured_sink{nullptr};
     mg::CPUAddressableDisplayAllocator* captured_allocator{nullptr};
@@ -422,32 +427,51 @@ TEST_F(BasicScreenShooter, recovers_from_a_failure_to_build_a_renderer)
 {
     supply_unlimited_renderers();
 
-    ON_CALL(*gl_provider, surface_for_sink).WillByDefault(
-        [](auto&, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
-        });
-
+    fail_surface_for_sink = true;
     EXPECT_CALL(callback, Call(nullopt_time));
     capture_and_run(buffer);
     Mock::VerifyAndClearExpectations(&callback);
 
-    // The failed attempt must not leave a buffer pending on the display
-    // provider, or every subsequent capture fails too.
-    ON_CALL(*gl_provider, surface_for_sink(_, _))
-        .WillByDefault(
-            [](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
-            {
-                auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
-                auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
-                auto format = cpu_provider->supported_formats().front();
-                ON_CALL(*surface, commit())
-                    .WillByDefault([cpu_provider, format]() { return cpu_provider->alloc_fb(format); });
-                return surface;
-            });
-
+    // A build that failed before we ever had a renderer must not wedge the
+    // shooter; the next capture has to try again from scratch.
+    fail_surface_for_sink = false;
     EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
     capture_and_run(buffer);
+
+    EXPECT_THAT(renderers_created, Eq(1));
+}
+
+TEST_F(BasicScreenShooter, retains_the_previous_renderer_when_a_rebuild_fails)
+{
+    supply_unlimited_renderers();
+
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    capture_and_run(std::make_shared<mtd::StubBuffer>(geom::Size{800, 600}, mir_pixel_format_abgr_8888));
+    Mock::VerifyAndClearExpectations(&callback);
+
+    auto const* const original_sink = captured_sink;
+    ASSERT_THAT(original_sink, NotNull());
+
+    // Only a format change forces a rebuild, and a failed rebuild must leave
+    // the renderer we already have (and the sink it was built from) untouched.
+    fail_surface_for_sink = true;
+    EXPECT_CALL(callback, Call(nullopt_time));
+    capture_and_run(std::make_shared<mtd::StubBuffer>(geom::Size{1024, 768}, mir_pixel_format_argb_8888));
+    Mock::VerifyAndClearExpectations(&callback);
+
+    fail_surface_for_sink = false;
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
+    capture_and_run(std::make_shared<mtd::StubBuffer>(geom::Size{1280, 720}, mir_pixel_format_abgr_8888));
+
+    // Back on the original format, so the surviving renderer must be reused
+    EXPECT_THAT(renderers_created, Eq(1));
+    /* Reading through this pointer is well defined precisely because the failed
+     * rebuild kept the original sink alive; a build that assigned to the
+     * members before it could succeed would have freed it (and left the
+     * surviving renderer built from a destroyed sink), which the sanitiser
+     * builds catch as a use-after-free.
+     */
+    EXPECT_THAT(original_sink->view_area(), Eq(geom::Rectangle{{0, 0}, geom::Size{1280, 720}}));
 }
 
 TEST_F(BasicScreenShooter, recovers_from_a_failure_in_render)
