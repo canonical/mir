@@ -17,6 +17,7 @@
 #include <miral/magnifier.h>
 
 #include "magnifier_handle_indicator.h"
+#include "magnifier_geometry.h"
 #include "magnifier_layout.h"
 #include "render_scene_into_surface.h"
 
@@ -490,6 +491,7 @@ private:
     void attach_observers(State& state)
     {
         state.handles.drag.attach_observer<DragHandleObserver>(this);
+        state.handles.resize.attach_observer<ResizeDragObserver>(this);
     }
 
     /// Applies visual geometry with the magnifier's logical top-left computed
@@ -636,6 +638,80 @@ private:
         }
 
         geom::PointD drag_start{};
+    };
+
+    /// Observes input on the resize handle indicator and changes the magnifier capture size.
+    /// Resizes the magnifier capture area when its resize handle is dragged.
+    ///
+    /// Resizing model
+    /// --------------
+    /// The magnifier draws a *logical* capture rectangle (top-left L, size sw x sh)
+    /// scaled by `mag` into a larger *visual* rectangle on screen. Both share the same
+    /// centre, so (with inner = (mag-1)/2, outer = (mag+1)/2) the visual edges are:
+    ///     visual left/top    = L - inner * size
+    ///     visual right/bottom = L + outer * size
+    ///
+    /// A resize drag keeps the visual corner *opposite* the grabbed handle pinned and
+    /// lets the grabbed corner follow the finger:
+    ///
+    ///     pin +-----------+
+    ///         |  visual   |
+    ///         |   rect    |
+    ///         +-----------X  <- grabbed corner follows the finger (ax, ay)
+    ///
+    /// on_drag_start records the pinned visual corner. on_drag_move measures the visual
+    /// extent from pin to finger, converts it back to a logical size (/ mag), then
+    /// back-solves the surface top-left so the pinned visual corner stays put unless
+    /// keeping the resized magnifier on-screen requires clamping it.
+    class ResizeDragObserver : public HandleObserver
+    {
+    public:
+        using HandleObserver::HandleObserver;
+
+    protected:
+        void on_drag_start(State& s, geom::Point) override
+        {
+            has_pinned_visual_corner = false;
+            auto const surf = s.surface.lock();
+            if (!surf || !s.applied_placement)
+                return;
+
+            auto const bounds = miral::magnifier_geometry::visual_bounds(
+                s.applied_placement->surface_top_left,
+                s.applied_placement->capture_area.size,
+                s.magnification);
+            resize_start_visual_top_left = {bounds.left().as_value(), bounds.top().as_value()};
+            pinned_visual_corner = {bounds.right().as_value(), bounds.bottom().as_value()};
+            has_pinned_visual_corner = true;
+            s.user_positioned = true;
+        }
+
+        void on_drag_move(State& s, geom::Point point) override
+        {
+            auto const surf = s.surface.lock();
+            if (!surf || !has_pinned_visual_corner)
+                return;
+
+            if (!s.has_outputs())
+                return;
+
+            auto const dragged_visual_top_left = geom::PointD{
+                resize_start_visual_top_left.x.as_value() + point.x.as_value() - grab_abs.dx.as_value(),
+                resize_start_visual_top_left.y.as_value() + point.y.as_value() - grab_abs.dy.as_value()};
+            s.requested_visual_size = {
+                pinned_visual_corner.x.as_value() - dragged_visual_top_left.x.as_value(),
+                pinned_visual_corner.y.as_value() - dragged_visual_top_left.y.as_value()};
+            s.apply_geometry(
+                mml::resize_freely(
+                    dragged_visual_top_left,
+                    pinned_visual_corner,
+                    s.screen_bounds,
+                    s.magnification));
+        }
+
+        geom::PointD pinned_visual_corner{};
+        geom::PointD resize_start_visual_top_left{};
+        bool has_pinned_visual_corner{false};
     };
 
     class CursorObserver : public mi::CursorObserver

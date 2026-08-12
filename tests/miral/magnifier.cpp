@@ -523,3 +523,52 @@ TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_t
         EXPECT_THAT(rect.bottom(), Le(geom::Y{600}));
     }
 }
+
+// Dragging the resize handle away from the magnifier centre must increase the
+// capture size, visible as the enlarged screen_position().size of the surface.
+//
+// screen_position().size comes from the buffer stream's TrackingSubmission. The
+// MultiMonitorArbiter only advances to a newly-submitted buffer once the
+// previous submission has been "claimed" (i.e. buffer() called on the
+// Renderable). We trigger that manually here, mimicking what a real compositor
+// render pass would do, to flush the stale pre-resize submission and expose the
+// post-resize buffer with the new size.
+TEST_F(MagnifierHandleTest, resize_handle_changes_capture_size)
+{
+    // The magnifier starts flush against the top left corner of the output,
+    // where the resize handle cannot be dragged any further out, so move it
+    // clear of the corner first.
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 100, drag_from.y.as_value() + 100});
+
+    auto const before = magnifier_renderable()->screen_position().size;
+    auto const pinned_corner = element_rectangle(drag_handle_index).bottom_right();
+
+    // Move the resize handle away from the magnifier to enlarge it.
+    auto const from = element_center(resize_handle_index);
+    drag(from, geom::PointF{from.x.as_value() - 30, from.y.as_value() - 30});
+
+    // Advance the arbiter: claim the stale current frame so the next
+    // scene_elements_for call receives the new post-resize submission.
+    magnifier_renderable()->buffer();
+
+    auto const size = magnifier_renderable()->screen_position().size;
+
+    EXPECT_THAT(size.width, Gt(before.width));
+    EXPECT_THAT(size.height, Gt(before.height));
+    EXPECT_THAT(element_rectangle(drag_handle_index).bottom_right(), Eq(pinned_corner));
+}
+
+TEST_F(MagnifierHandleTest, resize_handle_preserves_grab_offset)
+{
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 100, drag_from.y.as_value() + 100});
+
+    auto const from = element_center(resize_handle_index);
+    auto const before = element_rectangle(resize_handle_index).top_left;
+    drag(from, geom::PointF{from.x.as_value() - 20, from.y.as_value() - 20});
+
+    EXPECT_THAT(
+        element_rectangle(resize_handle_index).top_left,
+        Eq(before + geom::Displacement{-20, -20}));
+}
