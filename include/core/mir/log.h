@@ -110,9 +110,9 @@ struct log<logging::Severity, logging::Tags, std::string_view, std::format_args>
         std::source_location loc = std::source_location::current());
 };
 log(logging::Severity, logging::Tags, std::string_view, std::format_args)
-    -> log<logging::Severity, std::string_view, std::format_args>;
+    -> log<logging::Severity, logging::Tags, std::string_view, std::format_args>;
 log(logging::Severity, logging::Tags, std::string_view, std::format_args, std::source_location)
-    -> log<logging::Severity, std::string_view, std::format_args>;
+    -> log<logging::Severity, logging::Tags, std::string_view, std::format_args>;
 
 template<typename ...Args>
 struct log<logging::Severity, char const*, char const*, Args...> final
