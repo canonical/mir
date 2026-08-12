@@ -26,10 +26,14 @@
 #include <mir/log.h>
 #include <mir/server.h>
 #include <mir/synchronised.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/graphics/display_configuration_observer.h>
 #include <mir/geometry/rectangles.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
+#include <mir/observer_registrar.h>
+#include <mir/main_loop.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -119,25 +123,41 @@ public:
         server.add_init_callback(
             [&]
             {
-                cursor_observer = std::make_shared<CursorObserver>(this);
-                server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
-                cursor_multiplexer = server.the_cursor_observer_multiplexer();
-
-                auto s = state.lock();
-
-                if (s->preferred_visual_size == geom::Size{})
-                    s->preferred_visual_size = geom::Size{default_capture_width, default_capture_height} * s->magnification;
-
-                if (auto const surf = s->surface.lock(); surf && s->default_enabled)
-                    place_at_cursor(*s);
+                server.the_main_loop()->spawn([=, this, &server] { this->post_init(server); });
             });
 
         server.add_stop_callback(
             [&]
             {
-                if (auto const locked = cursor_multiplexer.lock())
-                    locked->unregister_interest(*cursor_observer);
+                auto const cursor_mux = cursor_multiplexer.lock();
+                if (cursor_mux && cursor_observer)
+                    cursor_mux->unregister_interest(*cursor_observer);
+
+                if (display_config_observer)
+                    server.the_display_configuration_observer_registrar()->unregister_interest(
+                        *display_config_observer);
             });
+    }
+
+    void post_init(mir::Server& server)
+    {
+        cursor_observer = std::make_shared<CursorObserver>(this);
+        server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
+        cursor_multiplexer = server.the_cursor_observer_multiplexer();
+
+        display_config_observer = std::make_shared<DisplayConfigObserver>(*this);
+        server.the_display_configuration_observer_registrar()->register_interest(display_config_observer);
+
+        auto s = state.lock();
+
+        if (s->preferred_visual_size == geom::Size{})
+        {
+            s->preferred_visual_size =
+                geom::Size{default_capture_width, default_capture_height} * s->magnification;
+        }
+
+        if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+            place_at_cursor(*s);
     }
 
     void set_enable(bool enable)
@@ -183,6 +203,40 @@ public:
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
 
 private:
+    class DisplayConfigObserver : public mg::DisplayConfigurationObserver
+    {
+    public:
+        DisplayConfigObserver(Self& self) : self{self} {}
+
+        void initial_configuration(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        { update_bounds(config); }
+
+        void configuration_applied(std::shared_ptr<mg::DisplayConfiguration const> const& config) override
+        { update_bounds(config); }
+
+        void base_configuration_updated(std::shared_ptr<mg::DisplayConfiguration const> const&) override {}
+        void session_configuration_applied(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration> const&) override
+        {}
+        void session_configuration_removed(std::shared_ptr<ms::Session> const&) override {}
+        void configuration_failed(std::shared_ptr<mg::DisplayConfiguration const> const&, std::exception const&)
+            override
+        {}
+        void catastrophic_configuration_error(
+            std::shared_ptr<mg::DisplayConfiguration const> const&,
+            std::exception const&) override
+        {}
+        void configuration_updated_for_session(
+            std::shared_ptr<ms::Session> const&,
+            std::shared_ptr<mg::DisplayConfiguration const> const&) override
+        {}
+
+    private:
+        void update_bounds(std::shared_ptr<mg::DisplayConfiguration const> const& config);
+        Self& self;
+    };
+
     /// Applies visual geometry with the magnifier's logical top-left computed
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
@@ -218,8 +272,30 @@ private:
     mir::Synchronised<State> state;
 
     std::shared_ptr<CursorObserver> cursor_observer;
+    std::shared_ptr<DisplayConfigObserver> display_config_observer;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
 };
+
+void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
+    std::shared_ptr<mg::DisplayConfiguration const> const& config)
+{
+    geom::Rectangles rects;
+    config->for_each_output(
+        [&rects](mg::DisplayConfigurationOutput const& output)
+        {
+            if (output.used && output.connected)
+                rects.add(output.extents());
+        });
+
+    auto s = self.state.lock();
+    s->screen_bounds = rects;
+    if (auto const surf = s->surface.lock())
+    {
+        auto const placement = s->layout().place_following_cursor_at(s->cursor_pos);
+        if (placement != s->current_placement(*surf))
+            s->apply_geometry(placement);
+    }
+}
 
 miral::Magnifier::Magnifier()
     : self(std::make_shared<Self>())
