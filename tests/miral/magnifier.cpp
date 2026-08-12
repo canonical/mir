@@ -25,7 +25,7 @@
 #include <gmock/gmock.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-namespace mtf = mir_test_framework;
+namespace geom = mir::geometry;
 
 using namespace testing;
 using namespace miral;
@@ -46,6 +46,12 @@ public:
         add_server_init(magnifier);
     }
 
+    auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
+    { return server().the_scene()->scene_elements_for(this).at(magnifier_index)->renderable(); }
+
+    auto scene_element_count() const -> size_t { return server().the_scene()->scene_elements_for(this).size(); }
+
+    static constexpr auto magnifier_index = 0;
     Magnifier magnifier;
 };
 
@@ -53,9 +59,7 @@ TEST_F(MagnifierTest, magnifier_disabled_by_default)
 {
     add_start_callback([&]
     {
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(0));
+        EXPECT_THAT(scene_element_count(), Eq(0));
     });
     start_server();
 }
@@ -65,9 +69,7 @@ TEST_F(MagnifierTest, can_start_enabled)
     magnifier.enable(true);
     add_start_callback([&]
     {
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(1));
+        EXPECT_THAT(scene_element_count(), Eq(1));
     });
     start_server();
 }
@@ -78,26 +80,22 @@ TEST_F(MagnifierTest, magnification_results_in_scaled_transform)
     magnifier.enable(true);
     add_start_callback([&]
     {
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(1));
+        EXPECT_THAT(scene_element_count(), Eq(1));
         auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
-
-        EXPECT_THAT(elements.at(0)->renderable()->transformation(), Eq(expected));
+        EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+        EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(300, 300)));
     });
     start_server();
 }
 
 TEST_F(MagnifierTest, can_set_capture_size)
 {
-    magnifier.capture_size(Size(500, 500));
+    magnifier.capture_size(Size(200, 200));
     magnifier.enable(true);
     add_start_callback([&]
     {
-        auto const scene = server().the_scene();
-        auto const elements = scene->scene_elements_for(this);
-        EXPECT_THAT(elements.size(), Eq(1));
-        EXPECT_THAT(elements.at(0)->renderable()->screen_position().size, Eq(Size(500, 500)));
+        EXPECT_THAT(scene_element_count(), Eq(1));
+        EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 200)));
     });
     start_server();
 }
