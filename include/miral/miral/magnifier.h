@@ -34,7 +34,9 @@ namespace live_config { class Store; }
 /// In the freely positioned mode, the magnifier is initially centred on the
 /// primary output. The magnifier does not follow the cursor. A handle is
 /// displayed in the bottom-right corner that allows the user to drag the
-/// magnifier around the screen via the pointer or a touch point.
+/// magnifier around the screen via the pointer or a touch point. To change the
+/// size of the magnifier, a handle is displayed in the top-left corner that
+/// can be dragged via the pointer or a touch point.
 /// \remark Since MirAL 5.5
 class Magnifier
 {
