@@ -49,12 +49,6 @@ auto data_buffer_to_debug_string(
     return ss.str();
 }
 
-template<typename T, size_t length>
-constexpr size_t length_of(T(&)[length])
-{
-    return length;
-}
-
 auto xcb_error_to_string(int error) -> std::string
 {
     // see https://xcb.freedesktop.org/manual/group__XCB__Core__API.html#ga70a6bade94bd2824db552abcf5fbdbe3
