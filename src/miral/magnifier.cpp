@@ -64,6 +64,14 @@ struct State
         return layout().placement_of(render_scene_into_surface.capture_area(), surf.top_left());
     }
 
+    /// The corner the user currently sees, which is what the free-placement
+    /// entry points expect. Re-placing there is a no-op that re-applies the
+    /// current output confinement.
+    auto visible_top_left(ms::Surface const& surf) const -> geom::Point
+    {
+        return current_placement(surf).visual_bounds().top_left;
+    }
+
     void apply_geometry(miral::MagnifierLayout::Placement const& placement)
     {
         preferred_visual_size = placement.preferred_visual_size;
@@ -84,7 +92,8 @@ struct State
     /// intent: when the magnification changes the capture size is recomputed
     /// from this so the magnifier's on-screen footprint stays the same.
     geom::Size preferred_visual_size;
-    bool default_enabled{false};
+    bool enabled{false};
+    bool follow_cursor{true};
     miral::RenderSceneIntoSurface render_scene_into_surface;
 };
 }
@@ -110,7 +119,7 @@ public:
                 surf->set_focus_mode(mir_focus_mode_disabled);
                 auto s = state.lock();
 
-                if (s->default_enabled)
+                if (s->enabled)
                     surf->show();
                 else
                     surf->hide();
@@ -156,20 +165,40 @@ public:
                 geom::Size{default_capture_width, default_capture_height} * s->magnification;
         }
 
-        if (auto const surf = s->surface.lock(); surf && s->default_enabled)
-            place_at_cursor(*s);
+        if (auto const surf = s->surface.lock(); surf && s->enabled)
+        {
+            if (!s->follow_cursor)
+            {
+                s->apply_geometry(s->layout().place_freely_at(s->visible_top_left(*surf)));
+            }
+            else
+            {
+                place_at_cursor(*s);
+            }
+        }
     }
 
     void set_enable(bool enable)
     {
         auto s = state.lock();
-        s->default_enabled = enable;
-        if (auto const surf = s->surface.lock())
+        s->enabled = enable;
+        auto const surf = s->surface.lock();
+        if (!surf)
+            return;
+
+        if (enable)
         {
-            if (enable)
-                surf->show();
-            else
-                surf->hide();
+            if (!s->follow_cursor)
+            {
+                // Place surface at last known cursor position when enabling
+                // and not following the cursor.
+                place_at_cursor(*s);
+            }
+            surf->show();
+        }
+        else
+        {
+            surf->hide();
         }
     }
 
@@ -184,8 +213,17 @@ public:
         {
             auto const old_placement = s.current_placement(*surf);
             s.magnification = new_magnification;
+            auto const new_layout = s.layout();
 
-            s.apply_geometry(s.layout().place_following_cursor_at(old_placement.scaling_center()));
+            if (!s.follow_cursor)
+            {
+                s.apply_geometry(
+                    new_layout.place_freely_centered_on(old_placement.scaling_center()));
+            }
+            else
+            {
+                s.apply_geometry(new_layout.place_following_cursor_at(old_placement.scaling_center()));
+            }
         }
         else
         {
@@ -197,10 +235,40 @@ public:
     {
         auto s = state.lock();
         auto const layout = miral::MagnifierLayout{s->screen_bounds, size * s->magnification, s->magnification};
-        s->apply_geometry(layout.place_following_cursor_at(s->cursor_pos));
+        s->apply_geometry(
+            s->follow_cursor ?
+                layout.place_following_cursor_at(s->cursor_pos) :
+                layout.place_freely_centered_on(s->cursor_pos));
     }
 
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
+
+    void follow_cursor()
+    {
+        auto s = state.lock();
+        if (s->follow_cursor)
+            return;
+
+        s->follow_cursor = true;
+        place_at_cursor(*s);
+    }
+
+    void stop_following_cursor()
+    {
+        auto s = state.lock();
+        if (!s->follow_cursor)
+            return;
+
+        s->follow_cursor = false;
+
+        if (auto const surf = s->surface.lock())
+        {
+            if (s->enabled)
+            {
+                s->apply_geometry(s->layout().place_freely_at(s->visible_top_left(*surf)));
+            }
+        }
+    }
 
 private:
     class DisplayConfigObserver : public mg::DisplayConfigurationObserver
@@ -241,7 +309,11 @@ private:
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
     {
-        s.apply_geometry(s.layout().place_following_cursor_at(s.cursor_pos));
+        auto const layout = s.layout();
+        s.apply_geometry(
+            s.follow_cursor ?
+                layout.place_following_cursor_at(s.cursor_pos) :
+                layout.place_freely_centered_on(s.cursor_pos));
     }
 
     class CursorObserver : public mi::CursorObserver
@@ -253,6 +325,9 @@ private:
         {
             auto s = self->state.lock();
             s->cursor_pos = geom::Point{abs_x, abs_y};
+
+            if (!s->follow_cursor)
+                return;
 
             auto const surf = s->surface.lock();
             if (!surf)
@@ -291,7 +366,11 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
     s->screen_bounds = rects;
     if (auto const surf = s->surface.lock())
     {
-        auto const placement = s->layout().place_following_cursor_at(s->cursor_pos);
+        auto const layout = s->layout();
+        auto const placement =
+            s->follow_cursor ?
+                layout.place_following_cursor_at(s->cursor_pos) :
+                layout.place_freely_at(s->visible_top_left(*surf));
         if (placement != s->current_placement(*surf))
             s->apply_geometry(placement);
     }
@@ -388,6 +467,20 @@ miral::Magnifier& miral::Magnifier::magnification(float magnification)
 miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size)
 {
     self->set_capture_size(size);
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::set_behavior(Behavior behavior)
+{
+    switch (behavior)
+    {
+    case Behavior::follow_cursor:
+        self->follow_cursor();
+        break;
+    case Behavior::freely_positioned:
+        self->stop_following_cursor();
+        break;
+    }
     return *this;
 }
 

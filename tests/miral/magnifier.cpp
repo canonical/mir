@@ -71,6 +71,9 @@ public:
     auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
     { return server().the_scene()->scene_elements_for(this).at(magnifier_index)->renderable(); }
 
+    auto magnifier_top_left() const -> geom::Point
+    { return magnifier_renderable()->screen_position().top_left; }
+
     auto scene_element_count() const -> size_t { return server().the_scene()->scene_elements_for(this).size(); }
 
     /// Waits for work already queued on the main loop to complete. The display
@@ -153,5 +156,61 @@ TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
     auto const capture_size = magnifier_renderable()->screen_position().size;
     EXPECT_THAT(capture_size.width, Lt(Width{1000}));
     EXPECT_THAT(capture_size.height, Lt(Height{1000}));
+    mux->unregister_interest(*sentinel);
+}
+
+// These tests run in the test body (after start_server() returns) rather than
+// inside add_start_callback. Start callbacks are enqueued on the main loop via
+// main_loop->enqueue, so blocking inside one waiting for more main-loop work
+// would deadlock. The test body runs on a separate thread while the main loop
+// runs in the background.
+//
+// Synchronisation: Magnifier registers its cursor observer from a main-loop
+// task. Wait for that task before registering a sentinel, so the sentinel is
+// ordered after Magnifier when cursor events are dispatched.
+
+TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+
+    auto const mux = server().the_cursor_observer_multiplexer();
+    auto sentinel = std::make_shared<SentinelCursorObserver>();
+    mux->register_interest(sentinel);
+    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+    sentinel->signal.reset();
+
+    auto const before = magnifier_top_left();
+
+    mux->cursor_moved_to(400, 300);
+    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for cursor event";
+
+    auto const after = magnifier_top_left();
+
+    EXPECT_THAT(after, Eq(before));
+    mux->unregister_interest(*sentinel);
+}
+
+TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
+{
+    magnifier.enable(true);
+    start_server();
+    wait_for_magnifier_initialization();
+
+    auto const mux = server().the_cursor_observer_multiplexer();
+    auto sentinel = std::make_shared<SentinelCursorObserver>();
+    mux->register_interest(sentinel);
+    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+    sentinel->signal.reset();
+
+    auto const before = magnifier_top_left();
+
+    mux->cursor_moved_to(400, 300);
+    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for cursor event";
+
+    auto const after = magnifier_top_left();
+
+    EXPECT_THAT(after, Ne(before));
     mux->unregister_interest(*sentinel);
 }
