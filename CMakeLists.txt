@@ -94,7 +94,6 @@ if(MIR_FATAL_COMPILE_WARNINGS)
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>
-        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
     )
   endif()
 endif()
