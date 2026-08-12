@@ -209,7 +209,11 @@ int main(int argc, char const* argv[])
         .magnification(magnification)
         .capture_size(capture_size)
         .enable(false);
-    auto magnifier_filter = [magnifier=magnifier, &magnification, &capture_size](MirKeyboardEvent const* key_event) mutable {
+    auto magnifier_filter = [magnifier = magnifier,
+                             &magnification,
+                             &capture_size,
+                             follows_cursor=true](MirKeyboardEvent const* key_event) mutable
+    {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
 
         if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down)
@@ -260,6 +264,13 @@ int main(int argc, char const* argv[])
                         capture_size.width = Width(std::max(100, capture_size.width.as_int() - 100));
                         capture_size.height = Height(std::max(100, capture_size.height.as_int() - 100));
                         magnifier.capture_size(capture_size);
+                        return true;
+                    case XKB_KEY_m:
+                        follows_cursor = !follows_cursor;
+                        if (follows_cursor)
+                            magnifier.set_behavior(miral::Magnifier::Behavior::follow_cursor);
+                        else
+                            magnifier.set_behavior(miral::Magnifier::Behavior::freely_positioned);
                         return true;
                     default:
                         break;
