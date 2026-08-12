@@ -28,7 +28,6 @@
 #include <mir/geometry/displacement.h>
 #include <mutex>
 #include <queue>
-#include <unordered_set>
 #include <sys/eventfd.h>
 #include <poll.h>
 #include <string>
@@ -52,8 +51,7 @@ struct ToplevelInfo
     std::string app_id;
     std::string window_title;
     /// True until the first app_id or title event is received from the compositor.
-    /// Ghost entries (done fired before any identity) are tracked but excluded from
-    /// display and navigation — they are a Mir bug: https://github.com/canonical/mir/issues/4944
+    /// Entries without an identity are excluded from display and navigation.
     bool ghost = true;
 };
 
@@ -265,7 +263,7 @@ private:
             selected_top_level = info_list[*selected_window_index];
 
         // First, sort the information such that application ids are displayed in order alongside
-        // their associated list of windows. Ghost entries (no app_id or title) are excluded.
+        // their associated list of windows. Entries with no app_id or title are excluded.
         std::vector<std::pair<std::string, std::vector<ToplevelInfo>>> list_of_app_id_to_window_mapping;
         for (auto const& info : info_list)
         {
@@ -449,9 +447,6 @@ public:
             }
         }
         toplevels_in_focus_order.clear();
-        for (auto* handle : ghost_handles)
-            zwlr_foreign_toplevel_handle_v1_destroy(handle);
-        ghost_handles.clear();
     }
 
     using miral::tk::WaylandApp::WaylandApp;
@@ -463,8 +458,6 @@ public:
     void add(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
         toplevels_in_focus_order.push_back(ToplevelInfo{toplevel, "<unset>", "<unset>"});
-        if (!tentative_focus_index)
-            tentative_focus_index = 0;
     }
 
     void focus(zwlr_foreign_toplevel_handle_v1* toplevel)
@@ -527,7 +520,7 @@ public:
 
         // Find the window with the next unique application id.
         // Guaranteed to terminate: if every entry shares the same app_id (or all are
-        // ghosts) the index wraps all the way back to its starting position, which passes
+        // awaiting identity) the index wraps all the way back to its starting position, which passes
         // is_first_toplevel_with_app_id for the original entry.
         do
         {
@@ -677,8 +670,6 @@ private:
 
     void app_id(zwlr_foreign_toplevel_handle_v1* toplevel, char const* app_id)
     {
-        if (ghost_handles.count(toplevel))
-            return;
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
         {
             return element.handle == toplevel;
@@ -697,8 +688,6 @@ private:
 
     void window_title(zwlr_foreign_toplevel_handle_v1* toplevel, char const* window_title)
     {
-        if (ghost_handles.count(toplevel))
-            return;
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
         {
             return element.handle == toplevel;
@@ -718,9 +707,6 @@ private:
 
     void state(zwlr_foreign_toplevel_handle_v1* handle, wl_array* states)
     {
-        if (ghost_handles.count(handle))
-            return;
-
         auto const* states_casted = static_cast<zwlr_foreign_toplevel_handle_v1_state*>(states->data);
         for (size_t i = 0; i < states->size / sizeof(zwlr_foreign_toplevel_handle_v1_state); i++)
         {
@@ -734,13 +720,6 @@ private:
 
     void remove(zwlr_foreign_toplevel_handle_v1* toplevel)
     {
-        if (ghost_handles.count(toplevel))
-        {
-            ghost_handles.erase(toplevel);
-            zwlr_foreign_toplevel_handle_v1_destroy(toplevel);
-            return;
-        }
-
         auto const it = std::ranges::find_if(toplevels_in_focus_order, [toplevel](auto const& element)
         {
             return element.handle == toplevel;
@@ -763,29 +742,7 @@ private:
         .output_enter = [](void*, auto*, wl_output*) {},
         .output_leave = [](void*, auto*, wl_output*) {},
         .state = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->state(args...); },
-        .done = [](void* data, zwlr_foreign_toplevel_handle_v1* handle)
-        {
-            auto const self = static_cast<WaylandApp*>(data);
-
-            if (self->ghost_handles.count(handle))
-                return;
-
-            auto const it = std::ranges::find_if(self->toplevels_in_focus_order, [handle](auto const& element)
-            {
-                return element.handle == handle;
-            });
-
-            if (it == self->toplevels_in_focus_order.end())
-                return;
-
-            if (it->ghost)
-            {
-                mir::log_info("ApplicationSwitcher: compositor sent done for toplevel with no app_id or title "
-                    "(handle=%p) — likely a Mir bug. Hiding from switcher.", static_cast<void*>(handle));
-                self->remove_from_list(it);
-                self->ghost_handles.insert(handle);
-            }
-        },
+        .done = [](void*, zwlr_foreign_toplevel_handle_v1*) {},
         .closed = [](void* data, auto... args) { static_cast<WaylandApp*>(data)->remove(args...); },
     };
 
@@ -886,9 +843,6 @@ private:
     std::shared_ptr<miral::tk::LayerShellWaylandSurface> surface_;
     ToplevelInfoPrinter printer;
     std::vector<ToplevelInfo> toplevels_in_focus_order;
-    /// Handles that were identified as Mir ghost toplevels (no app_id/title after done).
-    /// All subsequent events for these handles are silently dropped.
-    std::unordered_set<zwlr_foreign_toplevel_handle_v1*> ghost_handles;
     std::optional<size_t> tentative_focus_index;
     SelectorState selector_state = SelectorState::Applications;
     bool is_running = false;
