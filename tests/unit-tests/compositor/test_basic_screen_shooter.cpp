@@ -363,11 +363,11 @@ TEST_F(BasicScreenShooter, reuses_a_single_renderer_across_differently_sized_buf
 {
     supply_unlimited_renderers();
 
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now()))).Times(4);
+
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}, geom::Size{1920, 1080}})
     {
-        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
-        Mock::VerifyAndClearExpectations(&callback);
     }
 
     EXPECT_THAT(renderers_created, Eq(1));
@@ -378,12 +378,11 @@ TEST_F(BasicScreenShooter, only_acquires_one_output_surface_across_differently_s
     supply_unlimited_renderers();
 
     EXPECT_CALL(*gl_provider, surface_for_sink(_, _)).Times(1);
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now()))).Times(3);
 
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1024, 768}, geom::Size{800, 600}})
     {
-        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
-        Mock::VerifyAndClearExpectations(&callback);
     }
 }
 
@@ -391,11 +390,11 @@ TEST_F(BasicScreenShooter, output_geometry_tracks_the_current_buffer)
 {
     supply_unlimited_renderers();
 
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now()))).Times(3);
+
     for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}})
     {
-        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
-        Mock::VerifyAndClearExpectations(&callback);
 
         ASSERT_THAT(captured_sink, NotNull());
         ASSERT_THAT(captured_allocator, NotNull());
@@ -409,11 +408,11 @@ TEST_F(BasicScreenShooter, builds_a_new_renderer_when_the_pixel_format_changes)
 {
     supply_unlimited_renderers();
 
+    EXPECT_CALL(callback, Call(std::make_optional(clock->now()))).Times(3);
+
     for (auto const format : {mir_pixel_format_abgr_8888, mir_pixel_format_argb_8888, mir_pixel_format_abgr_8888})
     {
-        EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
         capture_and_run(std::make_shared<mtd::StubBuffer>(geom::Size{800, 600}, format));
-        Mock::VerifyAndClearExpectations(&callback);
     }
 
     EXPECT_THAT(renderers_created, Eq(3));
