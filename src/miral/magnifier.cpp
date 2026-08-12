@@ -33,8 +33,8 @@ namespace mg = mir::graphics;
 
 namespace
 {
-auto const default_capture_width = 150;
-auto const default_capture_height = 150;
+auto const default_capture_width = 300;
+auto const default_capture_height = 300;
 auto const default_magnification = 1.5f;
 }
 
