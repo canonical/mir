@@ -29,15 +29,15 @@
 #include <string_view>
 
 #if defined(__clang__)
-#pragma GCC diagnostic push
-// [[gnu::format]] on non-variadic functions is a clang extension
-#pragma GCC diagnostic ignored "-Wgcc-compat"
-// Clang likes to warn about the unused log_{debug,info,etc} templates & functions
-#pragma GCC diagnostic ignored "-Wunused-template"
-#pragma GCC diagnostic ignored "-Wunused-function"
-#define FORMAT_ATTRIB(fmt, args) [[gnu::format(printf, fmt, args)]]
+  #pragma GCC diagnostic push
+  // [[gnu::format]] on non-variadic functions is a clang extension
+  #pragma GCC diagnostic ignored "-Wgcc-compat"
+  // Clang likes to warn about the unused log_{debug,info,etc} templates & functions
+  #pragma GCC diagnostic ignored "-Wunused-template"
+  #pragma GCC diagnostic ignored "-Wunused-function"
+  #define FORMAT_ATTRIB(fmt, args) [[gnu::format(printf, fmt, args)]]
 #else
-#define FORMAT_ATTRIB(fmt, args)
+  #define FORMAT_ATTRIB(fmt, args)
 #endif
 
 namespace mir
@@ -81,15 +81,14 @@ namespace mir
  *    mir::log<logging::Severity, char const*, char const*, Args...>::log(..., loc);
  * ```
  */
-template<typename ...Args>
+template<typename... Args>
 struct log;
 
 /* Legacy component/message pair */
 template<>
 struct log<logging::Severity, std::string const&, std::string const&> final
 {
-    log(
-        logging::Severity sev,
+    log(logging::Severity sev,
         std::string const& component,
         std::string const& message,
         std::source_location location = std::source_location::current());
@@ -102,8 +101,7 @@ log(logging::Severity, std::string const&, std::string const&, std::source_locat
 template<>
 struct log<logging::Severity, logging::Tags, std::string_view, std::format_args> final
 {
-    log(
-        logging::Severity sev,
+    log(logging::Severity sev,
         logging::Tags tags,
         std::string_view fmt,
         std::format_args args,
@@ -114,13 +112,12 @@ log(logging::Severity, logging::Tags, std::string_view, std::format_args)
 log(logging::Severity, logging::Tags, std::string_view, std::format_args, std::source_location)
     -> log<logging::Severity, logging::Tags, std::string_view, std::format_args>;
 
-template<typename ...Args>
+template<typename... Args>
 struct log<logging::Severity, char const*, char const*, Args...> final
 {
     // fmt is the 4th argument because there's an implicit "this" as the first argument
     FORMAT_ATTRIB(4, 5)
-    log(
-        logging::Severity sev,
+    log(logging::Severity sev,
         char const* component,
         char const* fmt,
         Args... args,
@@ -129,30 +126,24 @@ struct log<logging::Severity, char const*, char const*, Args...> final
         char message[1024];
 
 #if !defined(__clang__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat-security"
+  #pragma GCC diagnostic push
+  #pragma GCC diagnostic ignored "-Wformat-security"
 #endif
         std::snprintf(message, sizeof(message), fmt, args...);
 #if !defined(__clang__)
-#pragma GCC diagnostic pop
+  #pragma GCC diagnostic pop
 #endif
 
-        log<logging::Severity, std::string const&, std::string const&>(
-            sev,
-            component,
-            message,
-            loc);
+        log<logging::Severity, std::string const&, std::string const&>(sev, component, message, loc);
     }
 };
-template<typename ...Args>
-log(logging::Severity, char const*, char const*, Args...)
-    -> log<logging::Severity, char const*, char const*, Args...>;
+template<typename... Args>
+log(logging::Severity, char const*, char const*, Args...) -> log<logging::Severity, char const*, char const*, Args...>;
 
 template<>
 struct log<logging::Severity, char const*, std::exception_ptr const&, std::string const&> final
 {
-    log(
-        logging::Severity sev,
+    log(logging::Severity sev,
         char const* component,
         std::exception_ptr const& exception,
         std::string const& message,
@@ -163,23 +154,17 @@ log(logging::Severity, char const*, std::exception_ptr const&, std::string const
 log(logging::Severity, char const*, std::exception_ptr const&, std::string const&, std::source_location)
     -> log<logging::Severity, char const*, std::exception_ptr const&, std::string const&>;
 
-
 template<typename... Args>
 struct log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...> final
 {
-    log(
-        logging::Severity severity,
+    log(logging::Severity severity,
         logging::Tags tags,
         std::format_string<Args...> fmt,
         Args... args,
         std::source_location loc = std::source_location::current())
     {
         log<logging::Severity, logging::Tags, std::string_view, std::format_args>(
-            severity,
-            tags,
-            fmt.get(),
-            std::make_format_args(args...),
-            loc);
+            severity, tags, fmt.get(), std::make_format_args(args...), loc);
     }
 };
 template<typename... Args>
@@ -195,16 +180,12 @@ struct log<logging::Severity, logging::Tags, std::string_view> final
         std::source_location loc = std::source_location::current())
     {
         log<logging::Severity, logging::Tags, std::format_string<std::string_view>, std::string_view>(
-            sev,
-            tags,
-            "{}",
-            message,
-            loc);
+            sev, tags, "{}", message, loc);
     }
 };
 log(logging::Severity, logging::Tags, std::string_view) -> log<logging::Severity, logging::Tags, std::string_view>;
 log(logging::Severity, logging::Tags, std::string_view, std::source_location)
-        -> log<logging::Severity, logging::Tags, std::string_view>;
+    -> log<logging::Severity, logging::Tags, std::string_view>;
 
 /// Log a security event according to the OWASP specification
 ///
@@ -237,17 +218,11 @@ struct log_debug;
 template<>
 struct log_debug<logging::Tags, std::string_view>
 {
-    log_debug(
-        logging::Tags tags,
-        std::string_view message,
-        std::source_location loc = std::source_location::current())
-    {
-        mir::log(logging::Severity::debug, tags, message, loc);
-    }
+    log_debug(logging::Tags tags, std::string_view message, std::source_location loc = std::source_location::current())
+    { mir::log(logging::Severity::debug, tags, message, loc); }
 };
 log_debug(logging::Tags, std::string_view) -> log_debug<logging::Tags, std::string_view>;
-log_debug(logging::Tags, std::string_view, std::source_location)
-    -> log_debug<logging::Tags, std::string_view>;
+log_debug(logging::Tags, std::string_view, std::source_location) -> log_debug<logging::Tags, std::string_view>;
 
 template<typename... Args>
 struct log_debug<logging::Tags, std::format_string<Args...>, Args...>
@@ -259,14 +234,10 @@ struct log_debug<logging::Tags, std::format_string<Args...>, Args...>
         std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
-            logging::Severity::debug,
-            tags,
-            fmt,
-            std::forward<Args>(args)...,
-            location);
+            logging::Severity::debug, tags, fmt, std::forward<Args>(args)..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_debug(logging::Tags, std::format_string<Args...>, Args&&...)
     -> log_debug<logging::Tags, std::format_string<Args...>, Args...>;
 
@@ -276,17 +247,11 @@ struct log_info;
 template<>
 struct log_info<logging::Tags, std::string_view>
 {
-    log_info(
-        logging::Tags tags,
-        std::string_view message,
-        std::source_location loc = std::source_location::current())
-    {
-        mir::log(logging::Severity::informational, tags, message, loc);
-    }
+    log_info(logging::Tags tags, std::string_view message, std::source_location loc = std::source_location::current())
+    { mir::log(logging::Severity::informational, tags, message, loc); }
 };
 log_info(logging::Tags, std::string_view) -> log_info<logging::Tags, std::string_view>;
-log_info(logging::Tags, std::string_view, std::source_location)
-    -> log_info<logging::Tags, std::string_view>;
+log_info(logging::Tags, std::string_view, std::source_location) -> log_info<logging::Tags, std::string_view>;
 
 template<typename... Args>
 struct log_info<logging::Tags, std::format_string<Args...>, Args...>
@@ -298,14 +263,10 @@ struct log_info<logging::Tags, std::format_string<Args...>, Args...>
         std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
-            logging::Severity::informational,
-            tags,
-            fmt,
-            std::forward<Args>(args)...,
-            location);
+            logging::Severity::informational, tags, fmt, std::forward<Args>(args)..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_info(logging::Tags, std::format_string<Args...>, Args&&...)
     -> log_info<logging::Tags, std::format_string<Args...>, Args...>;
 
@@ -319,13 +280,10 @@ struct log_warning<logging::Tags, std::string_view>
         logging::Tags tags,
         std::string_view message,
         std::source_location loc = std::source_location::current())
-    {
-        mir::log(logging::Severity::warning, tags, message, loc);
-    }
+    { mir::log(logging::Severity::warning, tags, message, loc); }
 };
 log_warning(logging::Tags, std::string_view) -> log_warning<logging::Tags, std::string_view>;
-log_warning(logging::Tags, std::string_view, std::source_location)
-    -> log_warning<logging::Tags, std::string_view>;
+log_warning(logging::Tags, std::string_view, std::source_location) -> log_warning<logging::Tags, std::string_view>;
 
 template<typename... Args>
 struct log_warning<logging::Tags, std::format_string<Args...>, Args...>
@@ -337,14 +295,10 @@ struct log_warning<logging::Tags, std::format_string<Args...>, Args...>
         std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
-            logging::Severity::warning,
-            tags,
-            fmt,
-            std::forward<Args>(args)...,
-            location);
+            logging::Severity::warning, tags, fmt, std::forward<Args>(args)..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_warning(logging::Tags, std::format_string<Args...>, Args&&...)
     -> log_warning<logging::Tags, std::format_string<Args...>, Args...>;
 
@@ -354,17 +308,11 @@ struct log_error;
 template<>
 struct log_error<logging::Tags, std::string_view>
 {
-    log_error(
-        logging::Tags tags,
-        std::string_view message,
-        std::source_location loc = std::source_location::current())
-    {
-        mir::log(logging::Severity::error, tags, message, loc);
-    }
+    log_error(logging::Tags tags, std::string_view message, std::source_location loc = std::source_location::current())
+    { mir::log(logging::Severity::error, tags, message, loc); }
 };
 log_error(logging::Tags, std::string_view) -> log_error<logging::Tags, std::string_view>;
-log_error(logging::Tags, std::string_view, std::source_location)
-    -> log_error<logging::Tags, std::string_view>;
+log_error(logging::Tags, std::string_view, std::source_location) -> log_error<logging::Tags, std::string_view>;
 
 template<typename... Args>
 struct log_error<logging::Tags, std::format_string<Args...>, Args...>
@@ -376,14 +324,10 @@ struct log_error<logging::Tags, std::format_string<Args...>, Args...>
         std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
-            logging::Severity::error,
-            tags,
-            fmt,
-            std::forward<Args>(args)...,
-            location);
+            logging::Severity::error, tags, fmt, std::forward<Args>(args)..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_error(logging::Tags, std::format_string<Args...>, Args&&...)
     -> log_error<logging::Tags, std::format_string<Args...>, Args...>;
 
@@ -397,13 +341,10 @@ struct log_critical<logging::Tags, std::string_view>
         logging::Tags tags,
         std::string_view message,
         std::source_location loc = std::source_location::current())
-    {
-        mir::log(logging::Severity::critical, tags, message, loc);
-    }
+    { mir::log(logging::Severity::critical, tags, message, loc); }
 };
 log_critical(logging::Tags, std::string_view) -> log_critical<logging::Tags, std::string_view>;
-log_critical(logging::Tags, std::string_view, std::source_location)
-    -> log_critical<logging::Tags, std::string_view>;
+log_critical(logging::Tags, std::string_view, std::source_location) -> log_critical<logging::Tags, std::string_view>;
 
 template<typename... Args>
 struct log_critical<logging::Tags, std::format_string<Args...>, Args...>
@@ -415,14 +356,10 @@ struct log_critical<logging::Tags, std::format_string<Args...>, Args...>
         std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
-            logging::Severity::critical,
-            tags,
-            fmt,
-            std::forward<Args>(args)...,
-            location);
+            logging::Severity::critical, tags, fmt, std::forward<Args>(args)..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_critical(logging::Tags, std::format_string<Args...>, Args&&...)
     -> log_critical<logging::Tags, std::format_string<Args...>, Args...>;
 
@@ -433,43 +370,28 @@ struct log_debug<char const*, Args...>
 {
     // fmt is the *second* argument, because the implicit "this" pointer is the first.
     FORMAT_ATTRIB(2, 3)
-    log_debug(
-        char const* fmt,
-        Args... args,
-        std::source_location const& location = std::source_location::current())
+    log_debug(char const* fmt, Args... args, std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, char const*, char const*, Args...>(
-            logging::Severity::debug,
-            MIR_LOG_COMPONENT,
-            fmt,
-            args...,
-            location);
+            logging::Severity::debug, MIR_LOG_COMPONENT, fmt, args..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_debug(char const*, Args...) -> log_debug<char const*, Args...>;
 
 template<>
 struct log_debug<std::string const&>
 {
-    log_debug(
-        std::string const& msg,
-        std::source_location const& location = std::source_location::current())
-    {
-        mir::log(logging::Severity::debug, MIR_LOG_COMPONENT, msg, location);
-    }
+    log_debug(std::string const& msg, std::source_location const& location = std::source_location::current())
+    { mir::log(logging::Severity::debug, MIR_LOG_COMPONENT, msg, location); }
 };
 log_debug(std::string const&) -> log_debug<std::string const&>;
 
 template<>
 struct log_info<std::string const&>
 {
-    log_info(
-        std::string const& msg,
-        std::source_location const& location = std::source_location::current())
-    {
-        mir::log(logging::Severity::informational, MIR_LOG_COMPONENT, msg, location);
-    }
+    log_info(std::string const& msg, std::source_location const& location = std::source_location::current())
+    { mir::log(logging::Severity::informational, MIR_LOG_COMPONENT, msg, location); }
 };
 log_info(std::string const&) -> log_info<std::string const&>;
 
@@ -478,20 +400,13 @@ struct log_info<char const*, Args...>
 {
     // fmt is the *second* argument, because the implicit "this" pointer is the first.
     FORMAT_ATTRIB(2, 3)
-    log_info(
-        char const* fmt,
-        Args... args,
-        std::source_location const& location = std::source_location::current())
+    log_info(char const* fmt, Args... args, std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, char const*, char const*, Args...>(
-            logging::Severity::informational,
-            MIR_LOG_COMPONENT,
-            fmt,
-            args...,
-            location);
+            logging::Severity::informational, MIR_LOG_COMPONENT, fmt, args..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_info(char const*, Args...) -> log_info<char const*, Args...>;
 
 template<typename... Args>
@@ -499,31 +414,20 @@ struct log_warning<char const*, Args...>
 {
     // fmt is the *second* argument, because the implicit "this" pointer is the first.
     FORMAT_ATTRIB(2, 3)
-    log_warning(
-        char const* fmt,
-        Args... args,
-        std::source_location const& location = std::source_location::current())
+    log_warning(char const* fmt, Args... args, std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, char const*, char const*, Args...>(
-            logging::Severity::warning,
-            MIR_LOG_COMPONENT,
-            fmt,
-            args...,
-            location);
+            logging::Severity::warning, MIR_LOG_COMPONENT, fmt, args..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_warning(char const*, Args...) -> log_warning<char const*, Args...>;
 
 template<>
 struct log_warning<std::string const&>
 {
-    log_warning(
-        std::string const& msg,
-        std::source_location const& location = std::source_location::current())
-    {
-        mir::log(logging::Severity::warning, MIR_LOG_COMPONENT, msg, location);
-    }
+    log_warning(std::string const& msg, std::source_location const& location = std::source_location::current())
+    { mir::log(logging::Severity::warning, MIR_LOG_COMPONENT, msg, location); }
 };
 log_warning(std::string const&) -> log_warning<std::string const&>;
 
@@ -532,31 +436,20 @@ struct log_error<char const*, Args...>
 {
     // fmt is the *second* argument, because the implicit "this" pointer is the first.
     FORMAT_ATTRIB(2, 3)
-    log_error(
-        char const* fmt,
-        Args... args,
-        std::source_location const& location = std::source_location::current())
+    log_error(char const* fmt, Args... args, std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, char const*, char const*, Args...>(
-            logging::Severity::error,
-            MIR_LOG_COMPONENT,
-            fmt,
-            args...,
-            location);
+            logging::Severity::error, MIR_LOG_COMPONENT, fmt, args..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_error(char const*, Args...) -> log_error<char const*, Args...>;
 
 template<>
 struct log_error<std::string const&>
 {
-    log_error(
-        std::string const& msg,
-        std::source_location const& location = std::source_location::current())
-    {
-        mir::log(logging::Severity::error, MIR_LOG_COMPONENT, msg, location);
-    }
+    log_error(std::string const& msg, std::source_location const& location = std::source_location::current())
+    { mir::log(logging::Severity::error, MIR_LOG_COMPONENT, msg, location); }
 };
 log_error(std::string const&) -> log_error<std::string const&>;
 
@@ -565,31 +458,20 @@ struct log_critical<char const*, Args...>
 {
     // fmt is the *second* argument, because the implicit "this" pointer is the first.
     FORMAT_ATTRIB(2, 3)
-    log_critical(
-        char const* fmt,
-        Args... args,
-        std::source_location const& location = std::source_location::current())
+    log_critical(char const* fmt, Args... args, std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, char const*, char const*, Args...>(
-            logging::Severity::critical,
-            MIR_LOG_COMPONENT,
-            fmt,
-            args...,
-            location);
+            logging::Severity::critical, MIR_LOG_COMPONENT, fmt, args..., location);
     }
 };
-template<typename ...Args>
+template<typename... Args>
 log_critical(char const*, Args...) -> log_critical<char const*, Args...>;
 
 template<>
 struct log_critical<std::string const&>
 {
-    log_critical(
-        std::string const& msg,
-        std::source_location const& location = std::source_location::current())
-    {
-        mir::log(logging::Severity::critical, MIR_LOG_COMPONENT, msg, location);
-    }
+    log_critical(std::string const& msg, std::source_location const& location = std::source_location::current())
+    { mir::log(logging::Severity::critical, MIR_LOG_COMPONENT, msg, location); }
 };
 log_critical(std::string const&) -> log_critical<std::string const&>;
 
@@ -599,7 +481,7 @@ log_critical(std::string const&) -> log_critical<std::string const&>;
 } // namespace mir
 
 #if defined(__clang__)
-#pragma GCC diagnostic pop
+  #pragma GCC diagnostic pop
 #endif
 
 #endif // MIR_LOG_H_
