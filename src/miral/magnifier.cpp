@@ -882,6 +882,22 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             size.height = geom::Height(*val);
             capture_size(size);
         });
+    config_store.add_string_attribute(
+        {"magnifier", "behavior"},
+        "What behavior the magnifier should exhibit",
+        [this](live_config::Key const&, std::optional<std::string_view> val)
+        {
+            if (!val.has_value())
+                return;
+
+            if (*val == "follow_cursor")
+                set_behavior(Behavior::follow_cursor);
+            else if (*val == "freely_positioned")
+                set_behavior(Behavior::freely_positioned);
+            else
+                mir::log_warning(
+                    "Config key 'magnifier.behavior' should be either 'follow_cursor' or 'freely_positioned'");
+        });
 }
 
 miral::Magnifier& miral::Magnifier::enable(bool enabled)
