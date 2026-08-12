@@ -127,27 +127,6 @@ log(logging::Severity, char const*, char const*, Args...)
     -> log<logging::Severity, char const*, char const*, Args...>;
 
 template<>
-struct log<logging::Severity, char const*, std::string const&> final
-{
-    log(
-        logging::Severity sev,
-        char const* component,
-        std::string const& message,
-        std::source_location loc = std::source_location::current())
-    {
-        log<logging::Severity, std::string const&, std::string const&>(
-            sev,
-            component,
-            message,
-            loc);
-    }
-};
-log(logging::Severity, char const*, std::string const&)
-    -> log<logging::Severity, char const*, std::string const&>;
-log(logging::Severity, char const*, std::string const&, std::source_location)
-    -> log<logging::Severity, char const*, std::string const&>;
-
-template<>
 struct log<logging::Severity, char const*, std::exception_ptr const&, std::string const&> final
 {
     log(
