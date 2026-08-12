@@ -223,50 +223,10 @@ void mgg::DisplaySink::post()
     // Predicted worst case render time for the next frame...
     auto predicted_render_time = 50ms;
 
-    if (holding_client_buffers)
-    {
-        /*
-         * For composited frames we defer wait_for_page_flip till just before
-         * the next frame, but not for bypass frames. Deferring the flip of
-         * bypass frames would increase the time we held
-         * visible_bypass_frame unacceptably, resulting in client stuttering
-         * unless we allocate more buffers (which I'm trying to avoid).
-         * Also, bypass does not need the deferred page flip because it has
-         * no compositing/rendering step for which to save time for.
-         */
-        wait_for_page_flip();
-
-        // It's very likely the next frame will be bypassed like this one so
-        // we only need time for kernel page flip scheduling...
-        predicted_render_time = 5ms;
-    }
-    else
-    {
-        /*
-         * Not in clone mode? We can afford to wait for the page flip then,
-         * making us double-buffered (noticeably less laggy than the triple
-         * buffering that clone mode requires).
-         */
-        if (outputs.size() == 1)
-            wait_for_page_flip();
-
-        /*
-         * TODO: If you're optimistic about your GPU performance and/or
-         *       measure it carefully you may wish to set predicted_render_time
-         *       to a lower value here for lower latency.
-         *
-         *predicted_render_time = 9ms; // e.g. about the same as Weston
-         */
-    }
-
-    recommend_sleep = 0ms;
-    if (outputs.size() == 1)
-    {
-        auto const& output = outputs.front();
-        auto const min_frame_interval = 1000ms / output->max_refresh_rate();
-        if (predicted_render_time < min_frame_interval)
-            recommend_sleep = min_frame_interval - predicted_render_time;
-    }
+    auto const& output = outputs.front();
+    auto const min_frame_interval = 1000ms / output->max_refresh_rate();
+    if (predicted_render_time < min_frame_interval)
+        recommend_sleep = min_frame_interval - predicted_render_time;
 }
 
 std::chrono::milliseconds mgg::DisplaySink::recommended_sleep() const
