@@ -51,6 +51,8 @@ public:
     ///     region that will be magnified.
     ///     - {magnifier, capture_size, height}: The height of the rectangular
     ///     region that will be magnified.
+    ///     - {magnifier, behavior}: How the magnifier is positioned, either
+    ///     "follow_cursor" or "freely_positioned".
     explicit Magnifier(live_config::Store& config_store);
 
     Magnifier& enable(bool enabled);
