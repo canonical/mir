@@ -38,6 +38,7 @@ add_library(miral-internal STATIC
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
     live_config_watcher.cpp               live_config_watcher.h
     version_compare.cpp                   version_compare.h
+    magnifier_handle_indicator.cpp       magnifier_handle_indicator.h
     magnifier_layout.cpp                 magnifier_layout.h
 )
 
