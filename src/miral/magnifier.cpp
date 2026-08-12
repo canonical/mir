@@ -16,6 +16,7 @@
 
 #include <miral/magnifier.h>
 
+#include "magnifier_handle_indicator.h"
 #include "magnifier_layout.h"
 #include "render_scene_into_surface.h"
 
@@ -32,15 +33,20 @@
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
+#include <mir/scene/basic_surface.h>
+#include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
 #include <mir/main_loop.h>
 
+#include <concepts>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace msh = mir::shell;
+namespace mc = mir::compositor;
 
 namespace
 {
@@ -51,6 +57,80 @@ auto const default_capture_height = 300;
 auto const min_magnification = 1.25f;
 auto const default_magnification = 1.25f;
 auto const max_magnification = 8.0f;
+
+class Handle
+{
+public:
+    Handle() = default;
+
+    void init(mir::Server& server, miral::HandleKind kind, mc::CompositorID capture_compositor_id)
+    {
+        indicator = std::make_shared<miral::HandleIndicator>(
+            handle_rect,
+            kind,
+            capture_compositor_id,
+            server.the_buffer_allocator(),
+            server.the_scene_report(),
+            server.the_display_configuration_observer_registrar());
+        handle_surface_stack = server.the_surface_stack();
+
+        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+        indicator->set_cursor_image(server.the_default_cursor_image());
+    }
+
+    void reset()
+    {
+        if (auto const surface_stack = handle_surface_stack.lock())
+            surface_stack->remove_surface(indicator);
+        indicator.reset();
+    }
+
+    void move_to(geom::Point const& pos)
+    {
+        if (indicator)
+            indicator->move_to(pos);
+    }
+
+    void show()
+    {
+        if (indicator)
+            indicator->show();
+    }
+
+    void hide()
+    {
+        if (indicator)
+            indicator->hide();
+    }
+
+private:
+    static constexpr geom::Rectangle handle_rect{
+        {0, 0},
+        {
+            geom::Width{miral::MagnifierLayout::handle_diameter},
+            geom::Height{miral::MagnifierLayout::handle_diameter}}};
+
+    std::shared_ptr<miral::HandleIndicator> indicator;
+    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
+};
+
+/// The magnifier's control handles, named to match
+/// `MagnifierLayout::HandlePositions` so the two stay in step.
+struct Handles
+{
+    Handle drag;
+    Handle resize;
+    Handle zoom_in;
+    Handle zoom_out;
+
+    void for_each(std::invocable<Handle&, miral::HandleKind> auto&& f)
+    {
+        f(drag, miral::HandleKind::drag);
+        f(resize, miral::HandleKind::resize);
+        f(zoom_in, miral::HandleKind::zoom_in);
+        f(zoom_out, miral::HandleKind::zoom_out);
+    }
+};
 
 struct State
 {
@@ -77,6 +157,13 @@ struct State
         preferred_visual_size = placement.preferred_visual_size;
         render_scene_into_surface.capture_area(placement.capture_area);
 
+        if (!follow_cursor)
+        {
+            auto const positions = placement.handle_positions();
+            handles.for_each([&](Handle& handle, miral::HandleKind kind)
+                { handle.move_to(positions.for_kind(kind)); });
+        }
+
         if (auto const surf = surface.lock())
         {
             surf->move_to(placement.untransformed_surface_top_left);
@@ -84,7 +171,12 @@ struct State
         }
     }
 
+    void show_all_handles() { handles.for_each([](Handle& handle, auto) { handle.show(); }); }
+
+    void hide_all_handles() { handles.for_each([](Handle& handle, auto) { handle.hide(); }); }
+
     std::weak_ptr<ms::Surface> surface;
+    Handles handles;
     geom::Point cursor_pos;
     geom::Rectangles screen_bounds;
     float magnification{default_magnification};
@@ -138,6 +230,13 @@ public:
         server.add_stop_callback(
             [&]
             {
+                Handles local_handles;
+                {
+                    auto s = state.lock();
+
+                    local_handles = std::exchange(s->handles, {});
+                }
+
                 auto const cursor_mux = cursor_multiplexer.lock();
                 if (cursor_mux && cursor_observer)
                     cursor_mux->unregister_interest(*cursor_observer);
@@ -145,6 +244,9 @@ public:
                 if (display_config_observer)
                     server.the_display_configuration_observer_registrar()->unregister_interest(
                         *display_config_observer);
+
+                local_handles.for_each([](Handle& handle, auto) { handle.reset(); });
+
             });
     }
 
@@ -165,11 +267,16 @@ public:
                 geom::Size{default_capture_width, default_capture_height} * s->magnification;
         }
 
+        auto const capture_compositor_id = s->render_scene_into_surface.capture_compositor_id();
+        s->handles.for_each([&](Handle& handle, miral::HandleKind kind)
+            { handle.init(server, kind, capture_compositor_id); });
+
         if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
             if (!s->follow_cursor)
             {
                 s->apply_geometry(s->layout().place_freely_at(s->visible_top_left(*surf)));
+                s->show_all_handles();
             }
             else
             {
@@ -193,12 +300,14 @@ public:
                 // Place surface at last known cursor position when enabling
                 // and not following the cursor.
                 place_at_cursor(*s);
+                s->show_all_handles();
             }
             surf->show();
         }
         else
         {
             surf->hide();
+            s->hide_all_handles();
         }
     }
 
@@ -250,6 +359,7 @@ public:
             return;
 
         s->follow_cursor = true;
+        s->hide_all_handles();
         place_at_cursor(*s);
     }
 
@@ -266,6 +376,7 @@ public:
             if (s->enabled)
             {
                 s->apply_geometry(s->layout().place_freely_at(s->visible_top_left(*surf)));
+                s->show_all_handles();
             }
         }
     }

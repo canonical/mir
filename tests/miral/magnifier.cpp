@@ -159,6 +159,52 @@ TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
     mux->unregister_interest(*sentinel);
 }
 
+TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    add_start_callback([&]
+    {
+        // 4 indicators + 1 magnifier surface
+        EXPECT_THAT(scene_element_count(), Eq(5));
+    });
+    start_server();
+}
+
+TEST_F(MagnifierTest, handles_hidden_when_disabled_in_decoupled_mode)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    add_start_callback([&]
+    {
+        magnifier.enable(false);
+        EXPECT_THAT(scene_element_count(), Eq(0));
+    });
+    start_server();
+}
+
+TEST_F(MagnifierTest, toggling_to_coupled_hides_handles)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    add_start_callback([&]
+    {
+        EXPECT_THAT(scene_element_count(), Eq(5));
+        magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+        EXPECT_THAT(scene_element_count(), Eq(1));
+    });
+    start_server();
+}
+
+TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
+{
+    magnifier.enable(true);
+    add_start_callback([&]
+    {
+        EXPECT_THAT(scene_element_count(), Eq(1));
+        magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
+        EXPECT_THAT(scene_element_count(), Eq(5));
+    });
+    start_server();
+}
+
 // These tests run in the test body (after start_server() returns) rather than
 // inside add_start_callback. Start callbacks are enqueued on the main loop via
 // main_loop->enqueue, so blocking inside one waiting for more main-loop work
