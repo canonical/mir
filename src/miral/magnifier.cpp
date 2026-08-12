@@ -20,9 +20,6 @@
 #include "magnifier_layout.h"
 #include "render_scene_into_surface.h"
 
-#include <input-method-unstable-v2_wrapper.h>
-#include <wayland_wrapper.h>
-
 #include <miral/live_config.h>
 #include <mir/events/event.h>
 #include <mir/events/input_event.h>
