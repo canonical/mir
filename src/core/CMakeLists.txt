@@ -34,6 +34,20 @@ add_library(mircore SHARED
     ${PROJECT_SOURCE_DIR}/include/core/mir/logging/event.h
 )
 
+# Our logging uses an extra, defaulted std::source_location argument
+# This (of course) doesn't appear in the format string, so the printf format machinery
+# warns that the function is being passed more arguments than the format string specifies.
+#
+# This warning needs to be suppressed for code *using* log.h,
+# so make it PUBLIC
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(
+    mircore
+    PUBLIC
+      -Wno-format-extra-args)
+endif()
+
+
 target_include_directories(mircore
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/core

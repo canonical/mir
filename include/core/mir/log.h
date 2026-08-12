@@ -28,6 +28,18 @@
 #include <exception>
 #include <string_view>
 
+#if defined(__clang__)
+#pragma GCC diagnostic push
+// [[gnu::format]] on non-variadic functions is a clang extension
+#pragma GCC diagnostic ignored "-Wgcc-compat"
+// Clang likes to warn about the unused log_{debug,info,etc} templates & functions
+#pragma GCC diagnostic ignored "-Wunused-template"
+#pragma GCC diagnostic ignored "-Wunused-function"
+#define FORMAT_ATTRIB(fmt, args) [[gnu::format(printf, fmt, args)]]
+#else
+#define FORMAT_ATTRIB(fmt, args)
+#endif
+
 namespace mir
 {
 /*
@@ -105,6 +117,8 @@ log(logging::Severity, logging::Tags, std::string_view, std::format_args, std::s
 template<typename ...Args>
 struct log<logging::Severity, char const*, char const*, Args...> final
 {
+    // fmt is the 4th argument because there's an implicit "this" as the first argument
+    FORMAT_ATTRIB(4, 5)
     log(
         logging::Severity sev,
         char const* component,
@@ -404,6 +418,8 @@ log_critical(logging::Tags, std::format_string<Args...>, Args&&...)
 template<typename... Args>
 struct log_debug<char const*, Args...>
 {
+    // fmt is the *second* argument, because the implicit "this" pointer is the first.
+    FORMAT_ATTRIB(2, 3)
     log_debug(
         char const* fmt,
         Args... args,
@@ -447,6 +463,8 @@ log_info(std::string const&) -> log_info<std::string const&>;
 template<typename... Args>
 struct log_info<char const*, Args...>
 {
+    // fmt is the *second* argument, because the implicit "this" pointer is the first.
+    FORMAT_ATTRIB(2, 3)
     log_info(
         char const* fmt,
         Args... args,
@@ -466,6 +484,8 @@ log_info(char const*, Args...) -> log_info<char const*, Args...>;
 template<typename... Args>
 struct log_warning<char const*, Args...>
 {
+    // fmt is the *second* argument, because the implicit "this" pointer is the first.
+    FORMAT_ATTRIB(2, 3)
     log_warning(
         char const* fmt,
         Args... args,
@@ -497,6 +517,8 @@ log_warning(std::string const&) -> log_warning<std::string const&>;
 template<typename... Args>
 struct log_error<char const*, Args...>
 {
+    // fmt is the *second* argument, because the implicit "this" pointer is the first.
+    FORMAT_ATTRIB(2, 3)
     log_error(
         char const* fmt,
         Args... args,
@@ -528,6 +550,8 @@ log_error(std::string const&) -> log_error<std::string const&>;
 template<typename... Args>
 struct log_critical<char const*, Args...>
 {
+    // fmt is the *second* argument, because the implicit "this" pointer is the first.
+    FORMAT_ATTRIB(2, 3)
     log_critical(
         char const* fmt,
         Args... args,
@@ -560,5 +584,9 @@ log_critical(std::string const&) -> log_critical<std::string const&>;
 } // (nested anonymous) namespace
 
 } // namespace mir
+
+#if defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 #endif // MIR_LOG_H_
