@@ -752,3 +752,112 @@ TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_t
         EXPECT_THAT(rect.bottom(), Le(geom::Y{600}));
     }
 }
+
+// Dragging the resize handle away from the magnifier centre must increase the
+// capture size, visible as the enlarged screen_position().size of the surface.
+//
+// screen_position().size comes from the buffer stream's TrackingSubmission. The
+// MultiMonitorArbiter only advances to a newly-submitted buffer once the
+// previous submission has been "claimed" (i.e. buffer() called on the
+// Renderable). We trigger that manually here, mimicking what a real compositor
+// render pass would do, to flush the stale pre-resize submission and expose the
+// post-resize buffer with the new size.
+TEST_F(MagnifierHandleTest, resize_handle_changes_capture_size)
+{
+    auto const original_size = magnifier_renderable()->screen_position().size;
+    auto const pinned_corner = element_rectangle(drag_handle_index).bottom_right();
+
+    // Move the resize handle away from the magnifier to enlarge it.
+    auto const from_grow = element_center(resize_handle_index);
+    drag(from_grow, geom::PointF{from_grow.x.as_value() - 30, from_grow.y.as_value() - 30});
+
+    // Advance the arbiter: claim the stale current frame so the next
+    // scene_elements_for call receives the new post-resize submission.
+    magnifier_renderable()->buffer();
+
+    auto const size_after_growing = magnifier_renderable()->screen_position().size;
+
+    EXPECT_THAT(size_after_growing.width, Gt(original_size.width));
+    EXPECT_THAT(size_after_growing.height, Gt(original_size.height));
+    EXPECT_THAT(element_rectangle(drag_handle_index).bottom_right(), Eq(pinned_corner));
+
+    // Move the resize handle back towards the magnifier to shrink it.
+    auto const from_shrink = element_center(resize_handle_index);
+    drag(from_shrink, geom::PointF{from_shrink.x.as_value() + 60, from_shrink.y.as_value() + 60});
+
+    magnifier_renderable()->buffer();
+
+    auto const size_after_shrinking = magnifier_renderable()->screen_position().size;
+
+    EXPECT_THAT(size_after_shrinking.width, Lt(original_size.width));
+    EXPECT_THAT(size_after_shrinking.height, Lt(original_size.height));
+    EXPECT_THAT(element_rectangle(drag_handle_index).bottom_right(), Eq(pinned_corner));
+}
+
+TEST_F(MagnifierHandleTest, resize_handle_preserves_grab_offset)
+{
+    auto const from = element_center(resize_handle_index);
+    auto const before = element_rectangle(resize_handle_index).top_left;
+    drag(from, geom::PointF{from.x.as_value() - 20, from.y.as_value() - 20});
+
+    // Check in a range rather than exact coordinates because of floating-point
+    // rounding.
+    EXPECT_THAT(
+        element_rectangle(resize_handle_index).top_left.x,
+        AllOf(Ge(before.x + geom::DeltaX{-21}), Le(before.x + geom::DeltaX{-19})));
+    EXPECT_THAT(
+        element_rectangle(resize_handle_index).top_left.y,
+        AllOf(Ge(before.y + geom::DeltaY{-21}), Le(before.y + geom::DeltaY{-19})));
+}
+
+TEST_F(MagnifierHandleTest, resizing_with_primary_button_ignores_secondary_button_chords)
+{
+    auto const from = element_center(resize_handle_index);
+    auto const before = element_rectangle(resize_handle_index).top_left;
+    auto const middle = from + geom::DisplacementF{-20, -20};
+    auto const to = from + geom::DisplacementF{-40, -40};
+
+    send_pointer_events({
+        {mir_pointer_action_button_down, mir_pointer_button_primary, from},
+        {mir_pointer_action_motion, mir_pointer_button_primary, middle},
+        {
+            mir_pointer_action_button_down,
+            MirPointerButtons{mir_pointer_button_primary | mir_pointer_button_secondary},
+            middle},
+        {mir_pointer_action_button_up, mir_pointer_button_primary, middle},
+        {mir_pointer_action_motion, mir_pointer_button_primary, to},
+        {mir_pointer_action_button_up, MirPointerButtons{0}, to}});
+
+    EXPECT_THAT(
+        element_rectangle(resize_handle_index).top_left.x,
+        AllOf(Ge(before.x + geom::DeltaX{-41}), Le(before.x + geom::DeltaX{-39})));
+    EXPECT_THAT(
+        element_rectangle(resize_handle_index).top_left.y,
+        Lt(before.y + geom::DeltaY{-20}));
+}
+
+TEST_F(MagnifierHandleTest, resize_handle_does_not_resume_after_multitouch_cancels_the_gesture)
+{
+    auto const from = element_center(resize_handle_index);
+    send_touch({touch_contact(0, mir_touch_action_down, from)});
+    send_touch({touch_contact(0, mir_touch_action_change, from + geom::DisplacementF{-20, -20})});
+    auto const position_after_single_touch_resize = element_rectangle(resize_handle_index).top_left;
+
+    send_touch({
+        touch_contact(0, mir_touch_action_change, from + geom::DisplacementF{-20, -20}),
+        touch_contact(1, mir_touch_action_down, from)});
+    send_touch({
+        touch_contact(0, mir_touch_action_change, from + geom::DisplacementF{-20, -20}),
+        touch_contact(1, mir_touch_action_up, from)});
+    send_touch({touch_contact(0, mir_touch_action_change, from + geom::DisplacementF{-60, -60})});
+
+    EXPECT_THAT(element_rectangle(resize_handle_index).top_left, Eq(position_after_single_touch_resize));
+
+    send_touch({touch_contact(0, mir_touch_action_up, from + geom::DisplacementF{-60, -60})});
+    auto const fresh_from = element_center(resize_handle_index);
+    send_touch({touch_contact(2, mir_touch_action_down, fresh_from)});
+    send_touch({touch_contact(2, mir_touch_action_change, fresh_from + geom::DisplacementF{-20, -20})});
+    send_touch({touch_contact(2, mir_touch_action_up, fresh_from + geom::DisplacementF{-20, -20})});
+
+    EXPECT_THAT(element_rectangle(resize_handle_index).top_left.x, Lt(position_after_single_touch_resize.x));
+}
