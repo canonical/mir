@@ -264,6 +264,14 @@ struct State
     geom::Size preferred_visual_size;
     bool enabled{false};
     bool follow_cursor{true};
+    /// The last values received from the live config. The store re-fires
+    /// every handler on each reload (changed or not), so these are what let
+    /// a reload that leaves the magnifier keys untouched avoid clobbering
+    /// runtime state (handle-driven zoom/resize) or re-placing the surface.
+    std::optional<bool> config_enable;
+    std::optional<float> config_magnification;
+    std::optional<int> config_capture_width;
+    std::optional<int> config_capture_height;
     /// Whether the user has dragged or resized the magnifier. Until they
     /// have, it keeps returning to the centre of the primary output.
     bool user_positioned{false};
@@ -443,7 +451,30 @@ public:
         s->place_centered_on(layout, center);
     }
 
-    geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
+    /// The capture size described by the cached live-config values, falling
+    /// back to the defaults for keys the config has never set.
+    geom::Size config_capture_size() const
+    {
+        auto const s = state.lock();
+        return {
+            geom::Width(s->config_capture_width.value_or(default_capture_width)),
+            geom::Height(s->config_capture_height.value_or(default_capture_height))};
+    }
+
+    /// Records the latest live-config value into `slot`, returning true only
+    /// when it changed. The config store re-fires every handler on each
+    /// reload (changed or not), so this is what keeps an unrelated reload
+    /// from re-applying values over runtime state.
+    template<typename T>
+    bool config_changed(std::optional<T> State::* slot, T const& val)
+    {
+        auto s = state.lock();
+        auto& cached = (*s).*slot;
+        if (cached == val)
+            return false;
+        cached = val;
+        return true;
+    }
 
     void follow_cursor()
     {
@@ -834,17 +865,26 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         "Whether the magnifier is enabled",
         [this](live_config::Key const&, std::optional<bool> val)
         {
-            if (val.has_value())
-            {
-                enable(*val);
-            }
+            if (!val.has_value())
+                return;
+
+            if (!self->config_changed(&State::config_enable, *val))
+                return;
+            enable(*val);
         });
     config_store.add_float_attribute(
         {"magnifier", "magnification"},
         "The magnification scale ",
         default_magnification,
         [this](live_config::Key const&, std::optional<float> val)
-        { magnification(val.value_or(default_magnification)); });
+        {
+            if (!val.has_value())
+                return;
+
+            if (!self->config_changed(&State::config_magnification, *val))
+                return;
+            magnification(*val);
+        });
     config_store.add_int_attribute(
         {"magnifier", "capture_size", "width"},
         "The width of the rectangular region that will be magnified",
@@ -862,9 +902,9 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (!val.has_value())
                 return;
 
-            auto size = self->current_size();
-            size.width = geom::Width(*val);
-            capture_size(size);
+            if (!self->config_changed(&State::config_capture_width, *val))
+                return;
+            capture_size(self->config_capture_size());
         });
     config_store.add_int_attribute(
         {"magnifier", "capture_size", "height"},
@@ -883,9 +923,9 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (!val.has_value())
                 return;
 
-            auto size = self->current_size();
-            size.height = geom::Height(*val);
-            capture_size(size);
+            if (!self->config_changed(&State::config_capture_height, *val))
+                return;
+            capture_size(self->config_capture_size());
         });
     config_store.add_string_attribute(
         {"magnifier", "behavior"},
