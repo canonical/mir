@@ -444,7 +444,7 @@ auto miral::MagnifierLayout::resize_from_pinned_corner(
     auto const capped_capture_dimension = [this](auto visual_dimension)
     {
         return decltype(visual_dimension){std::min(
-            static_cast<int>(std::ceil(visual_dimension.as_value() / magnification)),
+            static_cast<int>(std::ceil(static_cast<float>(visual_dimension.as_value()) / magnification)),
             maximum_capture_dimension)};
     };
     auto const capture_size = geom::Size{
@@ -456,7 +456,10 @@ auto miral::MagnifierLayout::resize_from_pinned_corner(
     // extent from the size placement will actually settle on, so the pinned
     // corner does not drift by a pixel as the capture size is rounded.
     auto const preferred = clamp_to_minimum(capture_size * magnification);
-    auto const footprint = capture_size_for(preferred) * magnification;
+    auto const unclamped_footprint = capture_size_for(preferred) * magnification;
+    auto const provisional = surface_top_left_for_visual_top_left(
+        pinned_visual_bottom_right - as_displacement(unclamped_footprint), capture_size_for(preferred), magnification);
+    auto const footprint = capture_size_for(clamped_visual_size_at(provisional, preferred)) * magnification;
 
     return place_freely_at_visual(
         pinned_visual_bottom_right - as_displacement(footprint), preferred);
