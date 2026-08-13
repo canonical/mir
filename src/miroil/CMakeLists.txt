@@ -62,7 +62,7 @@ if (MIR_ARCH MATCHES 64  AND  # On 32bit platforms int64_t presents as `long lon
 
     add_custom_target(check-miroil-symbols ALL
         DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil 2.29.0 ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         VERBATIM)
 endif()
