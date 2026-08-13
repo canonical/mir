@@ -13,7 +13,7 @@ If you find unclear wording, stale instructions, or missing guidance, please ope
 
 ## Understand where content belongs
 
-Mir documentation in `doc/sphinx/` follows the Diátaxis framework:
+Mir documentation in `doc/sphinx/` follows the [Diátaxis](https://diataxis.fr/) framework:
 
 - `tutorial/` for learning-oriented guides
 - `how-to/` for step-by-step task guides
