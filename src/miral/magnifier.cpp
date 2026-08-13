@@ -43,6 +43,7 @@
 #include <mir/observer_registrar.h>
 #include <mir/main_loop.h>
 
+#include <algorithm>
 #include <concepts>
 #include <array>
 #include <glm/gtc/matrix_transform.hpp>
@@ -215,6 +216,43 @@ struct State
 
     void hide_all_handles() { handles.for_each([](Handle& handle, auto) { handle.hide(); }); }
 
+    /// Places the magnifier by whichever rule the current behavior calls for.
+    /// Both rules take the point the magnifier is to be centred on, so the
+    /// choice between them lives here rather than at every call site.
+    void place_centered_on(miral::MagnifierLayout const& layout, geom::Point center)
+    {
+        apply_geometry(
+            follow_cursor ? layout.place_following_cursor_at(center) : layout.place_freely_centered_on(center));
+    }
+
+    /// Where a freely-positioned magnifier belongs: wherever the user last
+    /// dragged or resized it to, or, until they have moved it at all, the
+    /// centre of the primary output. Deliberately not the cursor, which is
+    /// where the follow-cursor behavior would have left it.
+    auto place_freely(ms::Surface const& surf) const -> miral::MagnifierLayout::Placement
+    {
+        auto const l = layout();
+        return user_positioned ?
+            l.place_freely_at(visible_top_left(surf)) :
+            l.place_freely_centered_on(primary_output_center());
+    }
+
+    /// The centre of the primary output, i.e. the first usable one.
+    auto primary_output_center() const -> geom::Point
+    {
+        auto const primary = std::ranges::find_if(
+            screen_bounds,
+            [](geom::Rectangle const& output)
+            { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
+
+        if (primary == std::ranges::end(screen_bounds))
+            return {};
+
+        return primary->top_left +
+               geom::Displacement{
+                   geom::as_delta(primary->size.width / 2), geom::as_delta(primary->size.height / 2)};
+    }
+
     std::weak_ptr<ms::Surface> surface;
     Handles handles;
     geom::Point cursor_pos;
@@ -226,6 +264,9 @@ struct State
     geom::Size preferred_visual_size;
     bool enabled{false};
     bool follow_cursor{true};
+    /// Whether the user has dragged or resized the magnifier. Until they
+    /// have, it keeps returning to the centre of the primary output.
+    bool user_positioned{false};
     miral::RenderSceneIntoSurface render_scene_into_surface;
 };
 }
@@ -333,7 +374,7 @@ public:
         {
             if (!s->follow_cursor)
             {
-                s->apply_geometry(s->layout().place_freely_at(s->visible_top_left(*surf)));
+                s->apply_geometry(s->place_freely(*surf));
                 s->show_all_handles();
             }
             else
@@ -356,9 +397,7 @@ public:
             if (!s->follow_cursor)
             {
                 attach_observers(*s);
-                // Place surface at last known cursor position when enabling
-                // and not following the cursor.
-                place_at_cursor(*s);
+                s->apply_geometry(s->place_freely(*surf));
                 s->show_all_handles();
             }
             surf->show();
@@ -381,17 +420,7 @@ public:
         {
             auto const old_placement = s.current_placement(*surf);
             s.magnification = new_magnification;
-            auto const new_layout = s.layout();
-
-            if (!s.follow_cursor)
-            {
-                s.apply_geometry(
-                    new_layout.place_freely_centered_on(old_placement.scaling_center()));
-            }
-            else
-            {
-                s.apply_geometry(new_layout.place_following_cursor_at(old_placement.scaling_center()));
-            }
+            s.place_centered_on(s.layout(), old_placement.scaling_center());
         }
         else
         {
@@ -402,11 +431,8 @@ public:
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        auto const layout = miral::MagnifierLayout{s->screen_bounds, size * s->magnification, s->magnification};
-        s->apply_geometry(
-            s->follow_cursor ?
-                layout.place_following_cursor_at(s->cursor_pos) :
-                layout.place_freely_centered_on(s->cursor_pos));
+        s->place_centered_on(
+            miral::MagnifierLayout{s->screen_bounds, size * s->magnification, s->magnification}, s->cursor_pos);
     }
 
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
@@ -446,13 +472,14 @@ public:
         s->follow_cursor = false;
         attach_observers(*s);
 
-        if (auto const surf = s->surface.lock())
+        // Following the cursor leaves the magnifier sitting on it, which is
+        // exactly where a freely-positioned magnifier should not start.
+        s->user_positioned = false;
+
+        if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
-            if (s->enabled)
-            {
-                s->apply_geometry(s->layout().place_freely_at(s->visible_top_left(*surf)));
-                s->show_all_handles();
-            }
+            s->apply_geometry(s->place_freely(*surf));
+            s->show_all_handles();
         }
     }
 
@@ -501,14 +528,7 @@ private:
 
     /// Applies visual geometry with the magnifier's logical top-left computed
     /// from its current visual size so the surface is centred on the cursor.
-    void place_at_cursor(State& s)
-    {
-        auto const layout = s.layout();
-        s.apply_geometry(
-            s.follow_cursor ?
-                layout.place_following_cursor_at(s.cursor_pos) :
-                layout.place_freely_centered_on(s.cursor_pos));
-    }
+    void place_at_cursor(State& s) { s.place_centered_on(s.layout(), s.cursor_pos); }
 
     /// Base for observers that turn a pointer/touch drag on a handle surface
     /// into on_drag_start()/on_drag_move() callbacks. Both callbacks are invoked
@@ -615,6 +635,7 @@ private:
             geom::Point const new_visual_top_left{
                 drag_start_visual_top_left.x + delta.dx, drag_start_visual_top_left.y + delta.dy};
 
+            s.user_positioned = true;
             s.apply_geometry(s.layout().place_freely_at(new_visual_top_left));
         }
 
@@ -664,6 +685,7 @@ private:
             if (!surf)
                 return;
 
+            s.user_positioned = true;
             s.apply_geometry(s.layout().resize_from_pinned_corner(pinned_visual_corner, point));
         }
 
@@ -720,11 +742,11 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
     s->screen_bounds = rects;
     if (auto const surf = s->surface.lock())
     {
-        auto const layout = s->layout();
+        // The new bounds reach the placement through State::layout(), which
+        // reads screen_bounds: re-placing therefore re-clamps the magnifier's
+        // size and re-confines it to whichever output it now sits on.
         auto const placement =
-            s->follow_cursor ?
-                layout.place_following_cursor_at(s->cursor_pos) :
-                layout.place_freely_at(s->visible_top_left(*surf));
+            s->follow_cursor ? s->layout().place_following_cursor_at(s->cursor_pos) : s->place_freely(*surf);
         if (placement != s->current_placement(*surf))
             s->apply_geometry(placement);
     }
