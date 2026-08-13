@@ -4,7 +4,7 @@ myst:
     description: How to report Mir bugs and request features with actionable details, reproducible steps, and the right channels.
 ---
 
-(how-to-report-issues)=
+(contributing-reporting-issues)=
 
 # How to report Mir issues and request features
 
@@ -56,4 +56,4 @@ Concrete use cases help maintainers assess scope and priority.
 
 - [Getting involved in Mir](getting-involved-in-mir)
 - [Good first issues](https://github.com/canonical/mir/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Good%20first%20issue%22)
-- [How to test Mir for a release](test-mir-for-a-release)
+- [How to test Mir for a release](how-to-test-mir-for-a-release)
