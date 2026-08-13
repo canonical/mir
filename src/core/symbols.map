@@ -13,14 +13,6 @@ MIR_CORE_2.29 {
      * The eagle-eyed will notice the difference between these constructors is a "C1" vs "C2".
      * Modern compilers only emit the C1 and C2 forms; C3 form is omitted from this list.
      */
-    /* mir::log<mir::logging::Severity, std::span<std::reference_wrapper<mir::logging::Tag const> const, 18446744073709551615ul>, std::basic_string_view<char, std::char_traits<char> > >::log(mir::logging::Severity, std::span<std::reference_wrapper<mir::logging::Tag const> const, 18446744073709551615ul>, std::basic_string_view<char, std::char_traits<char> >, std::source_location) */
-    _ZN3mir3logIJNS_7logging8SeverityESt4spanIKSt17reference_wrapperIKNS1_3TagEELm18446744073709551615EESt17basic_string_viewIcSt11char_traitsIcEEEEC1ES2_S9_SD_St15source_location;
-    _ZN3mir3logIJNS_7logging8SeverityESt4spanIKSt17reference_wrapperIKNS1_3TagEELm18446744073709551615EESt17basic_string_viewIcSt11char_traitsIcEEEEC2ES2_S9_SD_St15source_location;
-
-    /* mir::log<mir::logging::Severity, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&>::log(mir::logging::Severity, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::source_location) */
-    _ZN3mir3logIJNS_7logging8SeverityEPKcRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEC1ES2_S4_SC_St15source_location;
-    _ZN3mir3logIJNS_7logging8SeverityEPKcRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEC2ES2_S4_SC_St15source_location;
-
     /* mir::log<mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&>::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::source_location) */
     _ZN3mir3logIJNS_7logging8SeverityEPKcRKNSt15__exception_ptr13exception_ptrERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEC1ES2_S4_S8_SG_St15source_location;
     _ZN3mir3logIJNS_7logging8SeverityEPKcRKNSt15__exception_ptr13exception_ptrERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEEEC2ES2_S4_S8_SG_St15source_location;
