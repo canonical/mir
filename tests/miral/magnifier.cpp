@@ -273,6 +273,20 @@ TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
 // task. Wait for that task before registering a sentinel, so the sentinel is
 // ordered after Magnifier when cursor events are dispatched.
 
+TEST_F(MagnifierTest, decoupled_magnifier_starts_centred_on_the_output)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    auto const rect = magnifier_renderable()->screen_position();
+    auto const center = rect.top_left + geom::Displacement{
+        geom::as_delta(rect.size.width / 2), geom::as_delta(rect.size.height / 2)};
+
+    EXPECT_THAT(center, Eq(geom::Point{400, 300}));
+}
+
 TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
@@ -460,6 +474,18 @@ TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier)
 
     EXPECT_THAT(after.x.as_int(), Eq(before.x.as_int() + 20));
     EXPECT_THAT(after.y.as_int(), Eq(before.y.as_int()));
+}
+
+TEST_F(MagnifierHandleTest, returns_to_last_free_position_after_behavior_toggle)
+{
+    auto const from = element_center(drag_handle_index);
+    drag(from, geom::PointF{from.x.as_value() + 100, from.y.as_value() + 50});
+    auto const last_free_position = magnifier_top_left();
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
+
+    EXPECT_THAT(magnifier_top_left(), Eq(last_free_position));
 }
 
 TEST_F(MagnifierHandleTest, drag_handle_keeps_magnifier_controls_within_screen_bounds)
