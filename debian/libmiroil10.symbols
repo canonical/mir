@@ -1,5 +1,4 @@
 libmiroil.so.10 libmiroil10 #MINVER#
- MIROIL_10.0@MIROIL_10.0 2.29.0
  (c++)"miroil::Compositor::~Compositor()@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::set_base_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration> const&)@MIROIL_10.0" 2.29.0
