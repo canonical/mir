@@ -69,6 +69,10 @@ struct BasicScreenShooter : Test
             .WillByDefault(
                 [this](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
                 {
+                    if (fail_surface_for_sink)
+                    {
+                        BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
+                    }
                     if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
                         captured_sink = &sink;
@@ -125,6 +129,7 @@ struct BasicScreenShooter : Test
     }
 
     int renderers_created{0};
+    bool fail_surface_for_sink{false};
     std::vector<geom::Size> sink_sizes;
     mg::DisplaySink* captured_sink{nullptr};
     mg::CPUAddressableDisplayAllocator* captured_allocator{nullptr};
