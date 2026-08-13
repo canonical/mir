@@ -120,6 +120,11 @@ def new_lines_from_unfiltered(unfiltered):
     if searched:
         filtered = [' (c++)"' + symbol + '" ' + version + '\n' for symbol, version in searched]
         return list(set(filtered))
+    elif re.search(r'^\+ ', result.stdout, flags=re.MULTILINE):
+        # Only non-C++ symbols appeared (e.g. version-node self-references like
+        # "MIROIL_10.0@MIROIL_10.0" emitted by GNU ld but not lld). These are
+        # not meaningful ABI symbols and should not be tracked in the symbols file.
+        return []
     else:
         return None
 
