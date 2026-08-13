@@ -231,6 +231,19 @@ TEST(MagnifierLayout, pinned_resize_holds_the_corner_exactly_across_magnificatio
         }
     }
 }
+TEST(MagnifierLayout, resize_past_the_output_cap_holds_size_and_position)
+{
+    miral::MagnifierLayout const layout{outputs(), {200, 200}, 1.25f};
+    auto const pinned_corner = geom::Point{700, 550};
+
+    auto const first = layout.resize_from_pinned_corner(pinned_corner, {50, 50});
+    auto const second = layout.resize_from_pinned_corner(pinned_corner, {40, 40});
+
+    EXPECT_THAT(first.visual_bounds(), Eq(second.visual_bounds()));
+    EXPECT_THAT(first.resize_anchor(), Eq(pinned_corner));
+    EXPECT_THAT(second.resize_anchor(), Eq(pinned_corner));
+}
+
 // The minimum is what the control layout demands: the resize handle and the
 // zoom stack side by side across the top, and the zoom stack clear of the drag
 // handle down the right.
@@ -242,4 +255,3 @@ TEST(MagnifierLayout, clamps_the_visual_size_to_fit_the_controls)
 
     EXPECT_THAT(bounds.size, Eq(geom::Size{2 * 48, 2 * 48 + 8 + 48}));
 }
-
