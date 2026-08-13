@@ -35,7 +35,7 @@
 %global mirplatforminput_sover 11
 
 Name:           mir
-Version:        2.29.0~dev
+Version:        2.30.0~dev
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -333,8 +333,8 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Tue Jun 02 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.29.0~dev-1
-- Begin development for 2.29.0 release
+* Thu Aug 13 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0~dev-1
+- Begin development for 2.30.0 release
 
 * Fri Jun 05 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.28.0-1
 
