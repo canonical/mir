@@ -24,6 +24,7 @@
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
 
+#include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
@@ -35,7 +36,11 @@ namespace
 {
 auto const default_capture_width = 300;
 auto const default_capture_height = 300;
+/// The lowest magnification that still reads as visibly magnified; below
+/// this the magnifier is hard to distinguish from the unmagnified scene.
+auto const min_magnification = 1.25f;
 auto const default_magnification = 1.25f;
+auto const max_magnification = 8.0f;
 }
 
 class miral::Magnifier::Self
@@ -189,18 +194,8 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         {"magnifier", "magnification"},
         "The magnification scale ",
         default_magnification,
-        [this](live_config::Key const& key, std::optional<float> val)
-        {
-            if (val.has_value() && *val <= 1.f)
-            {
-                mir::log_warning(
-                    "Config key '%s' should be greater than or equal to 1",
-                    key.to_string().c_str());
-                return;
-            }
-
-            magnification(val.value_or(default_magnification));
-        });
+        [this](live_config::Key const&, std::optional<float> val)
+        { magnification(val.value_or(default_magnification)); });
     config_store.add_int_attribute(
         {"magnifier", "capture_size", "width"},
         "The width of the rectangular region that will be magnified",
@@ -253,14 +248,15 @@ miral::Magnifier& miral::Magnifier::enable(bool enabled)
 
 miral::Magnifier& miral::Magnifier::magnification(float magnification)
 {
-    if (magnification <= 1.f)
+    auto const clamped_magnification = std::clamp(magnification, min_magnification, max_magnification);
+    if (magnification != clamped_magnification)
     {
-        mir::log_warning(
-            "Magnification should be greater than or equal to 1");
+        mir::log_warning("Magnification should be between %.2f and %.2f", min_magnification, max_magnification);
+
         return *this;
     }
 
-    self->set_magnification(magnification);
+    self->set_magnification(clamped_magnification);
     return *this;
 }
 
