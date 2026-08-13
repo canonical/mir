@@ -80,12 +80,9 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   add_compile_options(-Werror)
   # Disable maybe-uninitialized errors on GCC when optimisation is enabled
   # They are notorious for false-positives
-  # Also, disable stringop-overflow errors, they are likewise
-  # significantly false-positivey
   if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C>:-Wno-error=maybe-uninitialized>
-        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
     )
   endif()
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
@@ -105,16 +102,6 @@ endif()
 check_cxx_compiler_flag(-Werror=braced-scalar-init HAS_W_BRACED_SCALAR_INIT)
 if(HAS_W_BRACED_SCALAR_INIT)
   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=braced-scalar-init>)
-endif()
-
-# GCC 7.1 fixed a bug in the ARM ABI, which results in some std::vector methods
-# (among others) generating this warning.
-#
-# There's nothing we can do about it; everything just needs to be rebuilt with
-# GCC 7.1.
-check_cxx_compiler_flag(-Wpsabi HAS_W_PSABI)
-if(HAS_W_PSABI)
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-psabi>)
 endif()
 
 set(MIR_USE_LD ld CACHE STRING "Linker to use")
