@@ -42,9 +42,9 @@
 #include <mir/main_loop.h>
 
 #include <algorithm>
-#include <optional>
 #include <concepts>
 #include <array>
+#include <optional>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
@@ -215,6 +215,27 @@ struct State
 
     auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
 
+    auto free_placement_center() const -> geom::PointD
+    {
+        return user_positioned ? freely_positioned_center : geom::PointD{primary_output_center()};
+    }
+
+    /// The centre of the primary output, i.e. the first usable one.
+    auto primary_output_center() const -> geom::Point
+    {
+        auto const primary = std::ranges::find_if(
+            screen_bounds,
+            [](geom::Rectangle const& output)
+            { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
+
+        if (primary == std::ranges::end(screen_bounds))
+            return {};
+
+        return primary->top_left +
+               geom::Displacement{
+                   geom::as_delta(primary->size.width / 2), geom::as_delta(primary->size.height / 2)};
+    }
+
     std::weak_ptr<ms::Surface> surface;
     Handles handles;
     geom::Point cursor_pos;
@@ -227,6 +248,8 @@ struct State
     std::optional<mml::FreePlacement> applied_placement;
     bool enabled{false};
     bool follow_cursor{true};
+    /// Whether the user has dragged or resized the magnifier. Until they
+    /// have, it keeps returning to the centre of the primary output.
     bool user_positioned{false};
     miral::RenderSceneIntoSurface render_scene_into_surface;
 };
@@ -330,9 +353,6 @@ public:
         {
             if (!s->follow_cursor)
             {
-                s->freely_positioned_center = geom::PointD{
-                    surf->top_left() +
-                    geom::generic::as_displacement(s->render_scene_into_surface.capture_area().size / 2.0)};
                 place_freely(*s);
                 s->show_all_handles();
             }
@@ -377,7 +397,11 @@ public:
     {
         s.magnification = new_magnification;
         s.applied_placement.reset();
-        if (!s.surface.lock() || !s.has_outputs())
+        auto const surf = s.surface.lock();
+        if (!surf)
+            return;
+
+        if (!s.has_outputs())
             return;
 
         if (s.follow_cursor)
@@ -443,9 +467,6 @@ public:
 
         if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
-            s->freely_positioned_center = geom::PointD{
-                surf->top_left() +
-                geom::generic::as_displacement(s->render_scene_into_surface.capture_area().size / 2.0)};
             place_freely(*s);
             s->show_all_handles();
         }
@@ -514,7 +535,7 @@ private:
 
     void place_freely(State& s)
     {
-        place_freely_at(s, s.freely_positioned_center);
+        place_freely_at(s, s.free_placement_center());
     }
 
     void place_freely_at(State& s, geom::PointD center)
@@ -768,12 +789,22 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
         return;
     }
 
-    if (s->surface.lock())
+    if (auto const surf = s->surface.lock())
     {
         if (s->follow_cursor)
-            self.place_at_cursor(*s);
-        else
-            self.place_freely(*s);
+        {
+            s->apply_geometry(
+                mml::place_following_cursor(
+                    geom::PointD{s->cursor_pos}, s->requested_visual_size, s->screen_bounds, s->magnification));
+        }
+        else if (
+            auto const placement = mml::place_freely(
+                s->free_placement_center(), s->requested_visual_size, s->screen_bounds, s->magnification);
+            placement != s->applied_placement)
+        {
+            s->applied_placement = placement;
+            s->apply_geometry(placement);
+        }
     }
 }
 
