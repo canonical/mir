@@ -15,6 +15,7 @@
  */
 
 #include <miral/magnifier.h>
+#include <miral/live_config_ini_file.h>
 #include <mir/server.h>
 #include <mir/compositor/scene.h>
 #include <mir/compositor/scene_element.h>
@@ -37,6 +38,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <sstream>
 
 namespace geom = mir::geometry;
 namespace mi = mir::input;
@@ -341,6 +343,67 @@ TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
     move_cursor_to(400, 300);
 
     EXPECT_THAT(magnifier_top_left(), Ne(before));
+}
+
+struct MagnifierLiveConfigTest : TestServer
+{
+    MagnifierLiveConfigTest()
+    {
+        start_server_in_setup = false;
+        add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:virtual");
+        add_to_environment("MIR_SERVER_VIRTUAL_OUTPUT", "800x600");
+    }
+
+    void SetUp() override
+    {
+        TestServer::SetUp();
+        add_server_init(magnifier);
+    }
+
+    auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
+    { return server().the_scene()->scene_elements_for(this).at(0)->renderable(); }
+
+    void flush_main_loop()
+    {
+        mir::test::Signal flushed;
+        server().the_main_loop()->spawn([&flushed] { flushed.raise(); });
+        ASSERT_TRUE(flushed.wait_for(2s)) << "timed out waiting for the main loop";
+    }
+
+    miral::live_config::IniFile ini_file;
+    Magnifier magnifier{ini_file};
+};
+
+TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_preserves_runtime_state)
+{
+    std::istringstream config{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(config, "test");
+
+    start_server();
+    flush_main_loop();
+
+    // Runtime-only changes, as made through the behavior toggle and
+    // zoom/resize handles.
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    magnifier.magnification(2.0f);
+    magnifier.capture_size(Size(200, 200));
+    magnifier_renderable()->buffer();
+
+    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+    auto const before_pos = magnifier_renderable()->screen_position();
+    auto const before_transform = magnifier_renderable()->transformation();
+
+    // A config write to an unrelated key reloads the whole file, re-firing
+    // every handler with unchanged (here: preset) values.
+    std::istringstream reload{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(reload, "test");
+    // Claim the stale frame so the next scene read reflects any
+    // (incorrectly) resized capture area.
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(before_transform));
+    EXPECT_THAT(magnifier_renderable()->screen_position(), Eq(before_pos));
 }
 
 // Input events are dispatched synchronously through SurfaceInputDispatcher into
