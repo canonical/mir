@@ -26,11 +26,9 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"mir::input::MouseKeysKeymap::for_each_key_action_pair(std::function<void (unsigned int, mir::input::MouseKeysKeymap::Action)>&&) const@MIR_CORE_2.29" 2.29.0
  (c++)"mir::input::MouseKeysKeymap::get_action(unsigned int) const@MIR_CORE_2.29" 2.29.0
  (c++)"mir::input::MouseKeysKeymap::set_action(unsigned int, std::optional<mir::input::MouseKeysKeymap::Action>)@MIR_CORE_2.29" 2.29.0
- (c++)"mir::log(mir::logging::Severity, char const*, char const*, ...)@MIR_CORE_2.29" 2.29.0
- (c++)"mir::log(mir::logging::Severity, char const*, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.29" 2.29.0
- (c++)"mir::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.29" 2.29.0
- (c++)"mir::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.29" 2.29.0
- (c++)"mir::log(mir::logging::Severity, std::span<std::reference_wrapper<mir::logging::Tag const> const, 18446744073709551615ul>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::log<mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&>::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::source_location)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::log<mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&>::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::source_location)@MIR_CORE_2.29" 2.29.0
+ (c++)"mir::log<mir::logging::Severity, std::span<std::reference_wrapper<mir::logging::Tag const> const, 18446744073709551615ul>, std::basic_string_view<char, std::char_traits<char> >, std::basic_format_args<std::basic_format_context<std::__format::_Sink_iter<char>, char> > >::log(mir::logging::Severity, std::span<std::reference_wrapper<mir::logging::Tag const> const, 18446744073709551615ul>, std::basic_string_view<char, std::char_traits<char> >, std::basic_format_args<std::basic_format_context<std::__format::_Sink_iter<char>, char> >, std::source_location)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::DumbConsoleLogger::log(mir::logging::Event const&)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::DumbConsoleLogger::log(mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::DumbConsoleLogger::~DumbConsoleLogger()@MIR_CORE_2.29" 2.29.0
@@ -73,7 +71,7 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"typeinfo for mir::logging::DumbConsoleLogger@MIR_CORE_2.29" 2.29.0
  (c++)"typeinfo for mir::logging::Logger@MIR_CORE_2.29" 2.29.0
  (c++)"vtable for mir::logging::DumbConsoleLogger@MIR_CORE_2.29" 2.29.0
- (c++)"vtable for mir::logging::Logger@MIR_CORE_2.29" 2.29.0
+ (c++)"vtable for mir::logging::Logger@MIR_CORE_2.29" 2.29.0 mir::log<mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&>::log(mir::logging::Severity, char const*, std::__exception_ptr::exception_ptr const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::source_location)@MIR_CORE_2.29 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, __va_list_tag*)@MIR_CORE_2.29" 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, char*)@MIR_CORE_2.29" 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, std::__va_list)@MIR_CORE_2.29" 2.29.0
