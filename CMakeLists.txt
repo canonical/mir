@@ -80,13 +80,11 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   add_compile_options(-Werror)
   # Disable maybe-uninitialized errors on GCC when optimisation is enabled
   # They are notorious for false-positives
-  # Also, disable array-bounds and stringop-overflow errors, they are likewise
+  # Also, disable stringop-overflow errors, they are likewise
   # significantly false-positivey
-  # (We particularly hit https://gcc.gnu.org/bugzilla/show_bug.cgi?id=111415)
   if ((CMAKE_C_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
     add_compile_options(
         $<$<COMPILE_LANGUAGE:C>:-Wno-error=maybe-uninitialized>
-        $<$<COMPILE_LANGUAGE:C>:-Wno-error=array-bounds>
         $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
     )
   endif()
