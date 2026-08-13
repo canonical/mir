@@ -101,6 +101,35 @@ public:
         flush_main_loop("magnifier initialization");
     }
 
+    /// Registering interest replays the current cursor state, so waiting for
+    /// the sentinel's first signal is how a test knows the initial placement
+    /// has settled.
+    void wait_for_initial_cursor_state()
+    {
+        auto const mux = server().the_cursor_observer_multiplexer();
+        auto const sentinel = std::make_shared<SentinelCursorObserver>();
+        mux->register_interest(sentinel);
+        ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+        mux->unregister_interest(*sentinel);
+    }
+
+    /// Moves the cursor and returns once the move has been dispatched to every
+    /// observer. Magnifier registers its observer from a main-loop task, so
+    /// callers wanting the magnifier to have seen the move must have called
+    /// wait_for_magnifier_initialization() first.
+    void move_cursor_to(float x, float y)
+    {
+        auto const mux = server().the_cursor_observer_multiplexer();
+        auto const sentinel = std::make_shared<SentinelCursorObserver>();
+        mux->register_interest(sentinel);
+        ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+        sentinel->signal.reset();
+
+        mux->cursor_moved_to(x, y);
+        ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for cursor event";
+        mux->unregister_interest(*sentinel);
+    }
+
     static constexpr auto magnifier_index = 0;
     Magnifier magnifier;
 };
@@ -155,10 +184,7 @@ TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
     magnifier.enable(true);
     start_server();
 
-    auto const mux = server().the_cursor_observer_multiplexer();
-    auto sentinel = std::make_shared<SentinelCursorObserver>();
-    mux->register_interest(sentinel);
-    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+    wait_for_initial_cursor_state();
 
     magnifier.capture_size(Size(1000, 1000));
     magnifier_renderable()->buffer();
@@ -166,7 +192,6 @@ TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
     auto const capture_size = magnifier_renderable()->screen_position().size;
     EXPECT_THAT(capture_size.width, Lt(Width{1000}));
     EXPECT_THAT(capture_size.height, Lt(Height{1000}));
-    mux->unregister_interest(*sentinel);
 }
 
 TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
@@ -225,27 +250,32 @@ TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
 // task. Wait for that task before registering a sentinel, so the sentinel is
 // ordered after Magnifier when cursor events are dispatched.
 
+TEST_F(MagnifierTest, decoupled_magnifier_starts_centred_on_the_output)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    auto const rect = magnifier_renderable()->screen_position();
+    auto const center = rect.top_left + geom::Displacement{
+        geom::as_delta(rect.size.width / 2), geom::as_delta(rect.size.height / 2)};
+
+    EXPECT_THAT(center, Eq(geom::Point{400, 300}));
+}
+
 TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
     wait_for_magnifier_initialization();
-
-    auto const mux = server().the_cursor_observer_multiplexer();
-    auto sentinel = std::make_shared<SentinelCursorObserver>();
-    mux->register_interest(sentinel);
-    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
-    sentinel->signal.reset();
+    wait_for_initial_cursor_state();
 
     auto const before = magnifier_top_left();
 
-    mux->cursor_moved_to(400, 300);
-    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for cursor event";
+    move_cursor_to(400, 300);
 
-    auto const after = magnifier_top_left();
-
-    EXPECT_THAT(after, Eq(before));
-    mux->unregister_interest(*sentinel);
+    EXPECT_THAT(magnifier_top_left(), Eq(before));
 }
 
 TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
@@ -253,22 +283,13 @@ TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
     magnifier.enable(true);
     start_server();
     wait_for_magnifier_initialization();
-
-    auto const mux = server().the_cursor_observer_multiplexer();
-    auto sentinel = std::make_shared<SentinelCursorObserver>();
-    mux->register_interest(sentinel);
-    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
-    sentinel->signal.reset();
+    wait_for_initial_cursor_state();
 
     auto const before = magnifier_top_left();
 
-    mux->cursor_moved_to(400, 300);
-    ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for cursor event";
+    move_cursor_to(400, 300);
 
-    auto const after = magnifier_top_left();
-
-    EXPECT_THAT(after, Ne(before));
-    mux->unregister_interest(*sentinel);
+    EXPECT_THAT(magnifier_top_left(), Ne(before));
 }
 
 // Input events are dispatched synchronously through SurfaceInputDispatcher into
@@ -282,7 +303,7 @@ TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
 // elements to avoid brittle hardcoded coordinates.
 //
 // Scene element ordering (fixed, determined by creation order in add_init_callback):
-//   [0] magnifier surface  (size 150×150)
+//   [0] magnifier surface  (size 300×300)
 //   [1] drag handle        (size 48×48)
 //   [2] resize handle      (size 48×48)
 //   [3] zoom-in handle     (size 48×48)
@@ -501,13 +522,17 @@ TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_t
 // post-resize buffer with the new size.
 TEST_F(MagnifierHandleTest, resize_handle_changes_capture_size)
 {
-    auto const mag_center = element_center(magnifier_index);
+    // The magnifier starts flush against the top left corner of the output,
+    // where the resize handle cannot be dragged any further out, so move it
+    // clear of the corner first.
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 100, drag_from.y.as_value() + 100});
+
+    auto const before = magnifier_renderable()->screen_position().size;
+
+    // Move the resize handle away from the magnifier to enlarge it.
     auto const from = element_center(resize_handle_index);
-    // Move 30 pixels away from the magnifier centre to enlarge the capture area.
-    geom::PointF const to{
-        from.x.as_value() + (from.x.as_value() >= mag_center.x.as_value() ? 30.0f : -30.0f),
-        from.y.as_value() + (from.y.as_value() >= mag_center.y.as_value() ? 30.0f : -30.0f)};
-    drag(from, to);
+    drag(from, geom::PointF{from.x.as_value() - 30, from.y.as_value() - 30});
 
     // Advance the arbiter: claim the stale current frame so the next
     // scene_elements_for call receives the new post-resize submission.
@@ -515,6 +540,6 @@ TEST_F(MagnifierHandleTest, resize_handle_changes_capture_size)
 
     auto const size = magnifier_renderable()->screen_position().size;
 
-    EXPECT_THAT(size.width.as_int(),  Gt(150));
-    EXPECT_THAT(size.height.as_int(), Gt(150));
+    EXPECT_THAT(size.width, Gt(before.width));
+    EXPECT_THAT(size.height, Gt(before.height));
 }
