@@ -4,11 +4,14 @@
 
 These how-to guides cover the key aspects of working on Mir.
 
-## Developing
+## Getting involved
 
 - [](howto-contribute)
-- [Contributing documentation](how-to-contribute-documentation.md)
-- [Reporting issues and requesting features](how-to-report-issues.md)
+- [Contributing documentation](contributing-documentation)
+- [Reporting issues and requesting features](contributing-reporting-issues)
+
+## Developing
+
 - [](how-to-update-symbols-maps)
 - [Enabling graphics on a device](how-to-enable-graphics-for-snaps-on-a-device)
 - [](how-to-update-wayland-explorer)

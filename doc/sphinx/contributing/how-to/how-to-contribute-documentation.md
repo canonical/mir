@@ -4,7 +4,7 @@ myst:
     description: How to contribute documentation to Mir, including structure, style, local builds, and pull request checks.
 ---
 
-(how-to-contribute-documentation)=
+(contributing-documentation)=
 
 # How to contribute documentation to Mir
 
