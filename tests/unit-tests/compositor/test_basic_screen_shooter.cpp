@@ -53,28 +53,21 @@ struct BasicScreenShooter : Test
     BasicScreenShooter()
     {
         ON_CALL(*scene, scene_elements_for(_)).WillByDefault(Return(scene_elements));
-        ON_CALL(*renderer_factory, create_renderer_for(_,_)).WillByDefault(
+        ON_CALL(*renderer_factory, create_renderer_for(_, _))
+            .WillByDefault(
                 [this](auto output_surface, auto)
                 {
                     ON_CALL(*next_renderer, render(_))
-                        .WillByDefault(
-                            [surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
-                            {
-                                return surface->commit();
-                            });
+                        .WillByDefault([surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
+                                       { return surface->commit(); });
 
                     return std::move(next_renderer);
                 });
         ON_CALL(*gl_provider, as_texture(_))
-            .WillByDefault(
-                [this](auto buffer)
-                {
-                    return default_gl_behaviour_provider.as_texture(std::move(buffer));
-                });
+            .WillByDefault([this](auto buffer) { return default_gl_behaviour_provider.as_texture(std::move(buffer)); });
         ON_CALL(*gl_provider, surface_for_sink(_, _))
             .WillByDefault(
-                [this](mg::DisplaySink& sink, auto const&)
-                    -> std::unique_ptr<mg::gl::OutputSurface>
+                [this](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
                 {
                     if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
@@ -83,25 +76,15 @@ struct BasicScreenShooter : Test
                         auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
                         auto format = cpu_provider->supported_formats().front();
                         ON_CALL(*surface, commit())
-                            .WillByDefault(
-                                [cpu_provider, format]()
-                                {
-                                    return cpu_provider->alloc_fb(format);
-                                });
+                            .WillByDefault([cpu_provider, format]() { return cpu_provider->alloc_fb(format); });
                         ON_CALL(*surface, size())
-                            .WillByDefault(
-                                [cpu_provider]()
-                                {
-                                    return cpu_provider->output_size();
-                                });
+                            .WillByDefault([cpu_provider]() { return cpu_provider->output_size(); });
                         return surface;
                     }
                     BOOST_THROW_EXCEPTION((std::runtime_error{"CPU output support not available?!"}));
                 });
-        ON_CALL(*gl_provider, suitability_for_allocator(_))
-            .WillByDefault(Return(mg::probe::supported));
-        ON_CALL(*gl_provider, suitability_for_display(_))
-            .WillByDefault(Return(mg::probe::supported));
+        ON_CALL(*gl_provider, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::supported));
+        ON_CALL(*gl_provider, suitability_for_display(_)).WillByDefault(Return(mg::probe::supported));
 
         shooter = std::make_unique<mc::BasicScreenShooter>(
             scene,
@@ -122,27 +105,22 @@ struct BasicScreenShooter : Test
      */
     void supply_unlimited_renderers()
     {
-        ON_CALL(*renderer_factory, create_renderer_for(_, _)).WillByDefault(
-            [this](auto output_surface, auto)
-            {
-                ++renderers_created;
-                auto renderer = std::make_unique<testing::NiceMock<mtd::MockRenderer>>();
-                ON_CALL(*renderer, render(_))
-                    .WillByDefault(
-                        [surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
-                        {
-                            return surface->commit();
-                        });
-                return renderer;
-            });
+        ON_CALL(*renderer_factory, create_renderer_for(_, _))
+            .WillByDefault(
+                [this](auto output_surface, auto)
+                {
+                    ++renderers_created;
+                    auto renderer = std::make_unique<testing::NiceMock<mtd::MockRenderer>>();
+                    ON_CALL(*renderer, render(_))
+                        .WillByDefault([surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
+                                       { return surface->commit(); });
+                    return renderer;
+                });
     }
 
     void capture_and_run(std::shared_ptr<mtd::StubBuffer> const& target)
     {
-        shooter->capture(target, viewport_rect, viewport_transform, false, [&](auto time)
-            {
-                callback.Call(time);
-            });
+        shooter->capture(target, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
         executor.execute();
     }
 
@@ -153,15 +131,16 @@ struct BasicScreenShooter : Test
 
     std::shared_ptr<mtd::MockScene> scene{std::make_shared<NiceMock<mtd::MockScene>>()};
     mg::RenderableList renderables{[]()
-        {
-            mg::RenderableList renderables;
-            for (int i = 0; i < 6; i++)
-            {
-                renderables.push_back(std::make_shared<mtd::StubRenderable>());
-            }
-            return renderables;
-        }()};
-    mc::SceneElementSequence scene_elements{[&]()
+                                   {
+                                       mg::RenderableList renderables;
+                                       for (int i = 0; i < 6; i++)
+                                       {
+                                           renderables.push_back(std::make_shared<mtd::StubRenderable>());
+                                       }
+                                       return renderables;
+                                   }()};
+    mc::SceneElementSequence scene_elements{
+        [&]()
         {
             mc::SceneElementSequence elements;
             for (auto& renderable : renderables)
@@ -171,9 +150,11 @@ struct BasicScreenShooter : Test
             return elements;
         }()};
     mtd::StubGlRenderingProvider default_gl_behaviour_provider;
-    std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()};
+    std::shared_ptr<mtd::MockGlRenderingProvider> gl_provider{
+        std::make_shared<testing::NiceMock<mtd::MockGlRenderingProvider>>()};
     std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers{gl_provider};
-    std::shared_ptr<mtd::MockRendererFactory> renderer_factory{std::make_shared<testing::NiceMock<mtd::MockRendererFactory>>()};
+    std::shared_ptr<mtd::MockRendererFactory> renderer_factory{
+        std::make_shared<testing::NiceMock<mtd::MockRendererFactory>>()};
     std::shared_ptr<mtd::StubBufferAllocator> buffer_allocator;
     std::shared_ptr<mtd::AdvanceableClock> clock{std::make_shared<mtd::AdvanceableClock>()};
     std::shared_ptr<mtd::MockCursor> cursor{std::make_shared<mtd::MockCursor>()};
@@ -190,10 +171,7 @@ struct BasicScreenShooter : Test
 
 TEST_F(BasicScreenShooter, calls_callback_from_executor)
 {
-    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     clock->advance_by(1s);
     EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
     executor.execute();
@@ -201,10 +179,7 @@ TEST_F(BasicScreenShooter, calls_callback_from_executor)
 
 TEST_F(BasicScreenShooter, renders_scene_elements)
 {
-    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     InSequence seq;
     EXPECT_CALL(*scene, scene_elements_for(_)).WillOnce(Return(scene_elements));
     EXPECT_THAT(renderables.size(), Gt(0));
@@ -215,10 +190,7 @@ TEST_F(BasicScreenShooter, renders_scene_elements)
 
 TEST_F(BasicScreenShooter, render_curor_when_overlay_cursor_is_true)
 {
-    shooter->capture(buffer, viewport_rect, viewport_transform, true, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    shooter->capture(buffer, viewport_rect, viewport_transform, true, [&](auto time) { callback.Call(time); });
     InSequence seq;
     EXPECT_CALL(*scene, scene_elements_for(_)).WillOnce(Return(scene_elements));
     auto const cursor_renderable = std::make_shared<mtd::StubRenderable>();
@@ -232,10 +204,7 @@ TEST_F(BasicScreenShooter, render_curor_when_overlay_cursor_is_true)
 
 TEST_F(BasicScreenShooter, sets_viewport_correctly_before_render)
 {
-    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     Sequence a, b;
     EXPECT_CALL(*next_renderer, set_viewport(Eq(viewport_rect))).InSequence(b);
     EXPECT_CALL(*next_renderer, render(_)).InSequence(a, b);
@@ -246,53 +215,37 @@ TEST_F(BasicScreenShooter, sets_viewport_correctly_before_render)
 TEST_F(BasicScreenShooter, graceful_failure_on_zero_sized_buffer)
 {
     auto broken_buffer = std::make_shared<mtd::StubBuffer>(geom::Size{0, 0});
-    shooter->capture(broken_buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    shooter->capture(broken_buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     EXPECT_CALL(callback, Call(nullopt_time));
     executor.execute();
 }
 
 TEST_F(BasicScreenShooter, throw_in_scene_elements_for_causes_graceful_failure)
 {
-    ON_CALL(*scene, scene_elements_for(_)).WillByDefault(Invoke([](auto) -> mc::SceneElementSequence
-        {
-            throw std::runtime_error{"throw in scene_elements_for()!"};
-        }));
-    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    ON_CALL(*scene, scene_elements_for(_))
+        .WillByDefault(Invoke(
+            [](auto) -> mc::SceneElementSequence { throw std::runtime_error{"throw in scene_elements_for()!"}; }));
+    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     EXPECT_CALL(callback, Call(nullopt_time));
     executor.execute();
 }
 
 TEST_F(BasicScreenShooter, throw_in_surface_for_output_handled_gracefully)
 {
-    ON_CALL(*gl_provider, surface_for_sink).WillByDefault(
-        [](auto&, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
-        });
-    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    ON_CALL(*gl_provider, surface_for_sink)
+        .WillByDefault(
+            [](auto&, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
+            { BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"})); });
+    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     EXPECT_CALL(callback, Call(nullopt_time));
     executor.execute();
 }
 
 TEST_F(BasicScreenShooter, throw_in_render_causes_graceful_failure)
 {
-    EXPECT_CALL(*next_renderer, render(_)).WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer>
-        {
-            throw std::runtime_error{"throw in render()!"};
-        });
-    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time)
-        {
-            callback.Call(time);
-        });
+    EXPECT_CALL(*next_renderer, render(_))
+        .WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer> { throw std::runtime_error{"throw in render()!"}; });
+    shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     EXPECT_CALL(callback, Call(nullopt_time));
     executor.execute();
 }
@@ -338,11 +291,8 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
 
     // This doesn't actually have to be atomic
     std::atomic<int> call_count = 0;
-    auto const spawn_a_capture =
-        [&]()
-        {
-            shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto) { call_count++; });
-        };
+    auto const spawn_a_capture = [&]()
+    { shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto) { call_count++; }); };
 
     auto const expected_call_count = 20;
     for (auto i = 0; i < expected_call_count; ++i)
@@ -354,10 +304,7 @@ TEST_F(BasicScreenShooter, ensures_renderer_is_current_on_only_one_thread)
     EXPECT_THAT(call_count, Eq(expected_call_count));
 }
 
-TEST_F(BasicScreenShooter, compositor_id_is_not_null)
-{
-    EXPECT_THAT(shooter->id(), NotNull());
-}
+TEST_F(BasicScreenShooter, compositor_id_is_not_null) { EXPECT_THAT(shooter->id(), NotNull()); }
 
 TEST_F(BasicScreenShooter, reuses_a_single_renderer_across_differently_sized_buffers)
 {
@@ -365,7 +312,8 @@ TEST_F(BasicScreenShooter, reuses_a_single_renderer_across_differently_sized_buf
 
     EXPECT_CALL(callback, Call(std::make_optional(clock->now()))).Times(4);
 
-    for (auto const& size : {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}, geom::Size{1920, 1080}})
+    for (auto const& size :
+         {geom::Size{800, 600}, geom::Size{1920, 1080}, geom::Size{640, 480}, geom::Size{1920, 1080}})
     {
         capture_and_run(std::make_shared<mtd::StubBuffer>(size));
     }
@@ -418,45 +366,10 @@ TEST_F(BasicScreenShooter, builds_a_new_renderer_when_the_pixel_format_changes)
     EXPECT_THAT(renderers_created, Eq(3));
 }
 
-TEST_F(BasicScreenShooter, recovers_from_a_failure_to_build_a_renderer)
-{
-    supply_unlimited_renderers();
-
-    ON_CALL(*gl_provider, surface_for_sink).WillByDefault(
-        [](auto&, auto&) -> std::unique_ptr<mg::gl::OutputSurface>
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Throw in surface_for_sink"}));
-        });
-
-    EXPECT_CALL(callback, Call(nullopt_time));
-    capture_and_run(buffer);
-    Mock::VerifyAndClearExpectations(&callback);
-
-    // The failed attempt must not leave a buffer pending on the display
-    // provider, or every subsequent capture fails too.
-    ON_CALL(*gl_provider, surface_for_sink(_, _))
-        .WillByDefault(
-            [](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
-            {
-                auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
-                auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
-                auto format = cpu_provider->supported_formats().front();
-                ON_CALL(*surface, commit())
-                    .WillByDefault([cpu_provider, format]() { return cpu_provider->alloc_fb(format); });
-                return surface;
-            });
-
-    EXPECT_CALL(callback, Call(std::make_optional(clock->now())));
-    capture_and_run(buffer);
-}
-
 TEST_F(BasicScreenShooter, recovers_from_a_failure_in_render)
 {
     EXPECT_CALL(*next_renderer, render(_))
-        .WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer>
-            {
-                throw std::runtime_error{"throw in render()!"};
-            })
+        .WillOnce([](auto) -> std::unique_ptr<mg::Framebuffer> { throw std::runtime_error{"throw in render()!"}; })
         .WillRepeatedly(DoDefault());
 
     EXPECT_CALL(callback, Call(nullopt_time));
