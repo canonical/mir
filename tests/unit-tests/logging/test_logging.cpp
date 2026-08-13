@@ -276,14 +276,13 @@ TEST_F(TestLog, logging_captures_source_location)
     catch (std::exception const&)
     {
         auto prev_line = std::source_location::current();
-        mir::log(
-            ml::Severity::debug,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "The exception_ptr API works");
+        /* This log line needs to be on a single line, as clang and gcc disagree as to which line of a multi-line
+         * function call should be reported by source_location::current();
+         */
+        mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, std::current_exception(), "The exception_ptr API works");
 
         EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
-        EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 1));
+        EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 4));
     }
 
     try
@@ -293,14 +292,13 @@ TEST_F(TestLog, logging_captures_source_location)
     catch (...)
     {
         auto prev_line = std::source_location::current();
-        mir::log(
-            ml::Severity::debug,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "The exception_ptr API works");
+        /* This log line needs to be on a single line, as clang and gcc disagree as to which line of a multi-line
+         * function call should be reported by source_location::current();
+         */
+        mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, std::current_exception(), "The exception_ptr API works");
 
         EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
-        EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 1));
+        EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 4));
     }
 
     mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, std::string{"The string API works"});
