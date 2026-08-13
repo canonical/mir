@@ -278,6 +278,34 @@ TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
     EXPECT_THAT(magnifier_top_left(), Eq(before));
 }
 
+TEST_F(MagnifierTest, capture_size_change_does_not_recenter_on_cursor_in_decoupled_mode)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    // Move the cursor away from the magnifier, then re-apply the capture size
+    // (as happens on a live config reload).
+    move_cursor_to(700, 500);
+
+    auto const centre = [this]
+    {
+        auto const rect = magnifier_renderable()->screen_position();
+        return rect.top_left +
+               geom::Displacement{geom::as_delta(rect.size.width / 2), geom::as_delta(rect.size.height / 2)};
+    };
+
+    auto const before = centre();
+    magnifier.capture_size(Size(200, 200));
+    // Claim the stale frame so the next scene read receives the resized one.
+    magnifier_renderable()->buffer();
+    auto const after = centre();
+
+    EXPECT_THAT(after, Eq(before));
+    EXPECT_THAT(after, Ne(geom::Point{700, 500}));
+}
+
 TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
 {
     magnifier.enable(true);

@@ -431,8 +431,16 @@ public:
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
-        s->place_centered_on(
-            miral::MagnifierLayout{s->screen_bounds, size * s->magnification, s->magnification}, s->cursor_pos);
+        auto const layout = miral::MagnifierLayout{s->screen_bounds, size * s->magnification, s->magnification};
+
+        // When freely positioned, re-centre on the magnifier's current centre
+        // so re-applying the size (e.g. on a live config reload) does not
+        // teleport it onto the cursor.
+        auto const center =
+            !s->follow_cursor && s->surface.lock() ?
+                s->current_placement(*s->surface.lock()).scaling_center() :
+                s->cursor_pos;
+        s->place_centered_on(layout, center);
     }
 
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
