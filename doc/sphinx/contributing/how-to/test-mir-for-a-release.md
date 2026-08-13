@@ -72,13 +72,13 @@ in which we need to test:
 
 <!-- rc-testing:start -->
 
-|            | 24.04 | 26.04 | 26.10 |
-| ---------- | ----- | ----- | ----- |
-| atomic-kms |       |       |       |
-| gbm-kms    |       |       |       |
-| x11        |       |       |       |
-| wayland    |       |       |       |
-| virtual    |       |       |       |
+|            | 26.04 | 26.10 |
+| ---------- | ----- | ----- |
+| atomic-kms |       |       |
+| gbm-kms    |       |       |
+| x11        |       |       |
+| wayland    |       |       |
+| virtual    |       |       |
 
 <!-- rc-testing:end -->
 
@@ -210,7 +210,7 @@ For each Ubuntu release ensure that the compositor can start with each of the co
 
 <!-- rc-testing:start -->
 
-|         | 24.04 | 25.10 |
+|         | 26.04 | 26.10 |
 | ------- | ----- | ----- |
 | vt      |       |       |
 | logind  |       |       |
