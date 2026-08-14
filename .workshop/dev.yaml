@@ -70,5 +70,5 @@ actions:
     # TODO: uncomment once #5090 lands
     # export MIR_SERVER_WAYLAND_OUTPUT=1280x1024
     export MIR_SERVER_WAYLAND_HOST=$WAYLAND_DISPLAY
-    export WAYLAND_DISPLAY=wayland-0
+    export WAYLAND_DISPLAY=mir-wayland-0
     "$@"
