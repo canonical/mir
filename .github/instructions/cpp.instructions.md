@@ -83,7 +83,7 @@ Use these standard aliases in `.cpp` files for brevity:
 
 - **Use C++23 features** where appropriate
 - **Constructors**: Use `explicit` for single-argument constructors
-- **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`)
+- **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`). This includes default member initializers — write `bool ready{false};`, not `bool ready = false;`
 - **Null pointers**: Use `nullptr` instead of `NULL` or `0`
 - **Const correctness**: Use `const` wherever possible; prefer `int const*` over `const int*`
 - **Smart pointers**: Prefer smart pointers over raw pointers for ownership

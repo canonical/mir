@@ -24,7 +24,7 @@ set(CMAKE_GCOV gcov)
 
 project(
   Mir
-  VERSION 2.29.0
+  VERSION 2.30.0
   DESCRIPTION "Mir compositor library"
   LANGUAGES C CXX
 )
@@ -93,8 +93,6 @@ if(MIR_FATAL_COMPILE_WARNINGS)
   if ((CMAKE_CXX_COMPILER_ID MATCHES "GNU") AND NOT (CMAKE_BUILD_TYPE MATCHES "Debug"))
     add_compile_options(
         $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>
-        $<$<COMPILE_LANGUAGE:CXX>:-Wno-error=array-bounds>
-        $<$<COMPILE_LANGUAGE:C>:-Wno-error=stringop-overflow>
     )
   endif()
 endif()

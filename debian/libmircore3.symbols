@@ -34,7 +34,6 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"mir::logging::DumbConsoleLogger::~DumbConsoleLogger()@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::Logger::log(char const*, mir::logging::Severity, char const*, ...)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::Logger::log(mir::logging::Severity, std::initializer_list<std::reference_wrapper<mir::logging::Tag const> const>, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.29" 2.29.0
- (c++)"mir::logging::add_logging_options(boost::program_options::options_description_easy_init)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::base()@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::create_tag(mir::logging::Tag const&, std::basic_string_view<char, std::char_traits<char> >)@MIR_CORE_2.29" 2.29.0
  (c++)"mir::logging::format_message(std::basic_ostream<char, std::char_traits<char> >&, mir::logging::Severity, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIR_CORE_2.29" 2.29.0
