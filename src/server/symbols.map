@@ -71,8 +71,6 @@ global:
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
-    mir::DefaultServerConfiguration::the_prompt_session_listener*;
-    mir::DefaultServerConfiguration::the_prompt_session_manager*;
     mir::DefaultServerConfiguration::the_renderer_factory*;
     mir::DefaultServerConfiguration::the_rendering_platforms*;
     mir::DefaultServerConfiguration::the_scene*;
@@ -175,8 +173,6 @@ global:
     mir::Server::override_the_logger*;
     mir::Server::override_the_persistent_surface_store*;
     mir::Server::override_the_pointer_input_dispatcher*;
-    mir::Server::override_the_prompt_session_listener*;
-    mir::Server::override_the_prompt_session_manager*;
     mir::Server::override_the_renderer_factory*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
@@ -220,8 +216,6 @@ global:
     mir::Server::the_output_filter*;
     mir::Server::the_persistent_surface_store*;
     mir::Server::the_pointer_input_dispatcher*;
-    mir::Server::the_prompt_session_listener*;
-    mir::Server::the_prompt_session_manager*;
     mir::Server::the_renderer_factory*;
     mir::Server::the_rendering_platforms*;
     mir::Server::the_scene*;
@@ -865,8 +859,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_persistent_surface_store*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_prompt_session_listener*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_prompt_session_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_renderer_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_rendering_platforms*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_scene*;
