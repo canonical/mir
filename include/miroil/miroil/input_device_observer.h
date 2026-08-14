@@ -26,7 +26,7 @@ namespace miroil
 class InputDeviceObserver
 {
 public:
-    InputDeviceObserver() = default;
+    InputDeviceObserver();
     InputDeviceObserver(InputDeviceObserver const&) = delete;
     InputDeviceObserver& operator=(InputDeviceObserver const&) = delete;
     virtual ~InputDeviceObserver();

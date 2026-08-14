@@ -35,7 +35,7 @@ class DisplayConfigurationControllerWrapper
 {
 public:
     DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const& wrapped);
-    ~DisplayConfigurationControllerWrapper() = default;
+    ~DisplayConfigurationControllerWrapper();
 
     /**
      * Set the base display configuration.

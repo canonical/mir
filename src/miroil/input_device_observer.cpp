@@ -16,4 +16,5 @@
 
 #include <miroil/input_device_observer.h>
 
+miroil::InputDeviceObserver::InputDeviceObserver() = default;
 miroil::InputDeviceObserver::~InputDeviceObserver() = default;

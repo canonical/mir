@@ -196,6 +196,8 @@ miroil::Surface::Surface(std::shared_ptr<mir::scene::Surface> wrapped) :
 {
 }
 
+miroil::Surface::~Surface() = default;
+
 void miroil::Surface::add_observer(std::shared_ptr<SurfaceObserver> const& observer)
 {
     auto it = observers.find(observer);
@@ -278,3 +280,7 @@ void miroil::Surface::set_keymap(MirInputDeviceId /*id*/, const std::string& /*m
 {
     mir::log_warning("Stubbed function miroil::Surface::set_keymap() called - per-surface keymaps no longer supported");
 }
+
+miroil::SurfaceObserver::SurfaceObserver() = default;
+
+miroil::SurfaceObserver::~SurfaceObserver() = default;

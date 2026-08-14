@@ -46,7 +46,7 @@ struct DisplayConfigurationOptions
 class DisplayConfigurationStorage
 {
 public:
-    virtual ~DisplayConfigurationStorage() = default;
+    virtual ~DisplayConfigurationStorage();
 
     virtual void save(DisplayId const&, DisplayConfigurationOptions const&) = 0;
     virtual bool load(DisplayId const&, DisplayConfigurationOptions&) const = 0;

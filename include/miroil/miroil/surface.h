@@ -40,7 +40,7 @@ class Surface
 {
 public:
     Surface(std::shared_ptr<mir::scene::Surface> wrapped);
-    ~Surface() = default;
+    ~Surface();
 
     mir::scene::Surface* get_wrapped() const;
     void add_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer);

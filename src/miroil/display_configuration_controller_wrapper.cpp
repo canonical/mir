@@ -29,4 +29,5 @@ DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std
 {
 }
 
+DisplayConfigurationControllerWrapper::~DisplayConfigurationControllerWrapper() = default;
 }

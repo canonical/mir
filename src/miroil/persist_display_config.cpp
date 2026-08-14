@@ -267,3 +267,5 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
         storage->save(display_id, config);
     });
 }
+
+miroil::DisplayConfigurationStorage::~DisplayConfigurationStorage() = default;

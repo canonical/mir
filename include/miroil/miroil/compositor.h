@@ -31,7 +31,7 @@ public:
     virtual void stop() = 0;
 
 protected:
-    Compositor() = default;
+    Compositor();
     Compositor(Compositor const&) = delete;
 };
 
