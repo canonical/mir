@@ -1,10 +1,13 @@
 libmiroil.so.10 libmiroil10 #MINVER#
  MIROIL_10.0@MIROIL_10.0 2.29.0
+ (c++)"miroil::Compositor::Compositor()@MIROIL_10.0" 2.29.0
  (c++)"miroil::Compositor::~Compositor()@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayConfigurationControllerWrapper::set_base_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration> const&)@MIROIL_10.0" 2.29.0
+ (c++)"miroil::DisplayConfigurationControllerWrapper::~DisplayConfigurationControllerWrapper()@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayConfigurationPolicy::DisplayConfigurationPolicy()@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayConfigurationPolicy::~DisplayConfigurationPolicy()@MIROIL_10.0" 2.29.0
+ (c++)"miroil::DisplayConfigurationStorage::~DisplayConfigurationStorage()@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayListenerWrapper::DisplayListenerWrapper(std::shared_ptr<mir::compositor::DisplayListener> const&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayListenerWrapper::add_display(mir::geometry::generic::Rectangle<int> const&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::DisplayListenerWrapper::remove_display(mir::geometry::generic::Rectangle<int> const&)@MIROIL_10.0" 2.29.0
@@ -28,6 +31,7 @@ libmiroil.so.10 libmiroil10 #MINVER#
  (c++)"miroil::InputDevice::operator=(miroil::InputDevice&&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::InputDevice::operator==(miroil::InputDevice const&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::InputDevice::~InputDevice()@MIROIL_10.0" 2.29.0
+ (c++)"miroil::InputDeviceObserver::InputDeviceObserver()@MIROIL_10.0" 2.29.0
  (c++)"miroil::InputDeviceObserver::~InputDeviceObserver()@MIROIL_10.0" 2.29.0
  (c++)"miroil::MirServerHooks::MirServerHooks()@MIROIL_10.0" 2.29.0
  (c++)"miroil::MirServerHooks::create_input_device_observer(std::shared_ptr<miroil::InputDeviceObserver>&)@MIROIL_10.0" 2.29.0
@@ -59,15 +63,22 @@ libmiroil.so.10 libmiroil10 #MINVER#
  (c++)"miroil::Surface::set_orientation(MirOrientation)@MIROIL_10.0" 2.29.0
  (c++)"miroil::Surface::top_left() const@MIROIL_10.0" 2.29.0
  (c++)"miroil::Surface::visible() const@MIROIL_10.0" 2.29.0
+ (c++)"miroil::Surface::~Surface()@MIROIL_10.0" 2.29.0
+ (c++)"miroil::SurfaceObserver::SurfaceObserver()@MIROIL_10.0" 2.29.0
+ (c++)"miroil::SurfaceObserver::~SurfaceObserver()@MIROIL_10.0" 2.29.0
  (c++)"miroil::dispatch_input_event(miral::Window const&, MirInputEvent const*)@MIROIL_10.0" 2.29.0
  (c++)"typeinfo for miroil::Compositor@MIROIL_10.0" 2.29.0
  (c++)"typeinfo for miroil::DisplayConfigurationPolicy@MIROIL_10.0" 2.29.0
+ (c++)"typeinfo for miroil::DisplayConfigurationStorage@MIROIL_10.0" 2.29.0
  (c++)"typeinfo for miroil::EventBuilder@MIROIL_10.0" 2.29.0
  (c++)"typeinfo for miroil::InputDeviceObserver@MIROIL_10.0" 2.29.0
+ (c++)"typeinfo for miroil::SurfaceObserver@MIROIL_10.0" 2.29.0
  (c++)"vtable for miroil::Compositor@MIROIL_10.0" 2.29.0
  (c++)"vtable for miroil::DisplayConfigurationPolicy@MIROIL_10.0" 2.29.0
+ (c++)"vtable for miroil::DisplayConfigurationStorage@MIROIL_10.0" 2.29.0
  (c++)"vtable for miroil::EventBuilder@MIROIL_10.0" 2.29.0
  (c++)"vtable for miroil::InputDeviceObserver@MIROIL_10.0" 2.29.0
+ (c++)"vtable for miroil::SurfaceObserver@MIROIL_10.0" 2.29.0
  (c++|arch-bits=32)"miroil::EventBuilder::make_key_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, MirKeyboardAction, unsigned int, int, unsigned int)@MIROIL_10.0" 2.29.0
  (c++|arch-bits=32)"miroil::EventBuilder::make_pointer_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_10.0" 2.29.0
  (c++|arch-bits=32)"miroil::EventBuilder::make_touch_event(long long, std::chrono::duration<long long, std::ratio<1ll, 1000000000ll> >, unsigned int)@MIROIL_10.0" 2.29.0
@@ -76,14 +87,3 @@ libmiroil.so.10 libmiroil10 #MINVER#
  (c++|arch-bits=64)"miroil::EventBuilder::make_pointer_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int, MirPointerAction, unsigned int, float, float, float, float, float, float)@MIROIL_10.0" 2.29.0
  (c++|arch-bits=64)"miroil::EventBuilder::make_touch_event(long, std::chrono::duration<long, std::ratio<1l, 1000000000l> >, unsigned int)@MIROIL_10.0" 2.29.0
  (c++|arch-bits=64)"miroil::Surface::set_keymap(long, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIROIL_10.0" 2.29.0
- MIROIL_10.0@MIROIL_10.0 2.30.0
- (c++)"miroil::DisplayConfigurationControllerWrapper::~DisplayConfigurationControllerWrapper()@MIROIL_10.0" 2.30.0
- (c++)"miroil::DisplayConfigurationStorage::~DisplayConfigurationStorage()@MIROIL_10.0" 2.30.0
- (c++)"miroil::InputDeviceObserver::InputDeviceObserver()@MIROIL_10.0" 2.30.0
- (c++)"miroil::Surface::~Surface()@MIROIL_10.0" 2.30.0
- (c++)"miroil::SurfaceObserver::SurfaceObserver()@MIROIL_10.0" 2.30.0
- (c++)"miroil::SurfaceObserver::~SurfaceObserver()@MIROIL_10.0" 2.30.0
- (c++)"typeinfo for miroil::DisplayConfigurationStorage@MIROIL_10.0" 2.30.0
- (c++)"typeinfo for miroil::SurfaceObserver@MIROIL_10.0" 2.30.0
- (c++)"vtable for miroil::DisplayConfigurationStorage@MIROIL_10.0" 2.30.0
- (c++)"vtable for miroil::SurfaceObserver@MIROIL_10.0" 2.30.0
