@@ -244,11 +244,7 @@ miral::MagnifierLayout::MagnifierLayout(
 
 auto miral::MagnifierLayout::capture_size_for(geom::Size visual_size) const -> geom::Size
 {
-    return {
-        geom::Width{std::max(
-            1.0f, std::round(static_cast<float>(visual_size.width.as_value()) / magnification))},
-        geom::Height{std::max(
-            1.0f, std::round(static_cast<float>(visual_size.height.as_value()) / magnification))}};
+    return visual_size / magnification;
 }
 
 auto miral::MagnifierLayout::clamped_visual_size_at(
