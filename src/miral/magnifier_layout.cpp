@@ -55,7 +55,7 @@ auto scale_around_centre(geom::Point surface_top_left, geom::Size capture_size, 
 
 /// Inverse of scale_around_centre(), solving for the surface origin that puts the
 /// visible rectangle's top left where the caller wants it.
-auto surface_top_left_for_visual_top_left(
+auto shrink_point_around_centre(
     geom::Point visual_top_left, geom::Size capture_size, float magnification) -> geom::Point
 {
     auto const inset = (magnification - 1.0f) / 2.0f;
@@ -372,12 +372,12 @@ auto miral::MagnifierLayout::place_freely_at_visual(
     // Sizing depends on which output the magnifier lands on, which depends on
     // where it is placed, so choose an output from a provisional placement and
     // then honour the requested visual corner using the size that results.
-    auto const provisional = surface_top_left_for_visual_top_left(
+    auto const provisional = shrink_point_around_centre(
         visual_top_left, capture_size_for(preferred), magnification);
     auto const capture_size = capture_size_for(clamped_visual_size_at(provisional, preferred));
 
     auto const surface_top_left =
-        surface_top_left_for_visual_top_left(visual_top_left, capture_size, magnification);
+        shrink_point_around_centre(visual_top_left, capture_size, magnification);
     auto const confined = confined_surface_position(surface_top_left, capture_size);
 
     return {
@@ -454,7 +454,7 @@ auto miral::MagnifierLayout::resize_from_pinned_corner(
     // corner does not drift by a pixel as the capture size is rounded.
     auto const preferred = clamp_to_minimum(capture_size * magnification);
     auto const unclamped_footprint = capture_size_for(preferred) * magnification;
-    auto const provisional = surface_top_left_for_visual_top_left(
+    auto const provisional = shrink_point_around_centre(
         pinned_visual_bottom_right - as_displacement(unclamped_footprint), capture_size_for(preferred), magnification);
     auto const footprint = capture_size_for(clamped_visual_size_at(provisional, preferred)) * magnification;
 
