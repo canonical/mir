@@ -748,7 +748,7 @@ TEST_F(SurfaceInputDispatcher, pointer_enter_synthesised_when_surface_resizes_to
     scene.notify_surface_resized(surface.get(), {20, 20});
 }
 
-TEST_F(SurfaceInputDispatcher, no_spurious_enter_when_surface_resize_does_not_change_cursor_target)
+TEST_F(SurfaceInputDispatcher, leave_and_enter_synthesised_when_surface_under_cursor_resizes)
 {
     FakePointer pointer;
     dispatcher.start();
@@ -756,11 +756,18 @@ TEST_F(SurfaceInputDispatcher, no_spurious_enter_when_surface_resize_does_not_ch
     // Surface at (0, 0) covering the cursor position
     auto surface = scene.add_mutable_surface({{0, 0}, {20, 20}});
 
-    // Enter happens on the initial motion event
-    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    {
+        InSequence seq;
+        // Enter happens on the initial motion event
+        EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+        // Resize triggers leave + enter to allow the client to refresh its cursor image
+        EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
+        EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    }
+
     EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
 
-    // Resize - cursor is still inside, no new enter
+    // Resize - cursor is still inside, but the surface layout may have changed
     surface->geom = {{0, 0}, {30, 30}};
     scene.notify_surface_resized(surface.get(), {30, 30});
 }

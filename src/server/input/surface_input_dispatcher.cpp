@@ -43,7 +43,7 @@ struct InputDispatcherSceneObserver :
     InputDispatcherSceneObserver(
         std::function<void(std::shared_ptr<ms::Surface>)> const& on_removed,
         std::function<void(ms::Surface const*)> const& on_surface_moved,
-        std::function<void()> const& on_surface_resized,
+        std::function<void(ms::Surface const*)> const& on_surface_resized,
         std::function<void()> const& on_scene_changed)
         : on_removed(on_removed),
           on_surface_moved{on_surface_moved},
@@ -77,9 +77,9 @@ struct InputDispatcherSceneObserver :
         // TODO: Do we need to listen to visibility events?
     }
 
-    void content_resized_to(ms::Surface const*, mir::geometry::Size const& /*size*/) override
+    void content_resized_to(ms::Surface const* surf, mir::geometry::Size const& /*size*/) override
     {
-        on_surface_resized();
+        on_surface_resized(surf);
     }
 
     void moved_to(ms::Surface const* surf, mir::geometry::Point const& /*top_left*/) override
@@ -94,7 +94,7 @@ struct InputDispatcherSceneObserver :
 
     std::function<void(std::shared_ptr<ms::Surface>)> const on_removed;
     std::function<void(ms::Surface const*)> const on_surface_moved;
-    std::function<void()> const on_surface_resized;
+    std::function<void(ms::Surface const*)> const on_surface_resized;
     std::function<void()> const on_scene_changed;
 };
 
@@ -149,7 +149,7 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
     scene_observer = std::make_shared<InputDispatcherSceneObserver>(
         [this](std::shared_ptr<ms::Surface> const& s) { surface_removed(s); },
         [this](scene::Surface const* s) { surface_moved(s); },
-        [this] { surface_resized(); },
+        [this](scene::Surface const* s) { surface_resized(s); },
         [this] { scene_changed(); });
     scene->add_observer(scene_observer);
 }
@@ -343,7 +343,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
     }
 }
 
-void mi::SurfaceInputDispatcher::surface_resized()
+void mi::SurfaceInputDispatcher::surface_resized(ms::Surface const* resized_surface)
 {
     std::lock_guard lock{dispatcher_mutex};
 
@@ -362,6 +362,13 @@ void mi::SurfaceInputDispatcher::surface_resized()
     if (entered_surface_changed)
     {
         current_target = ctx.target_surface;
+    }
+    else if (ctx.target_surface && ctx.target_surface.get() == resized_surface)
+    {
+        // The pointer is still inside the same surface, but the surface changed size.
+        // Re-send leave + enter so the client can update the cursor image.
+        send_enter_exit_event(ctx.target_surface, ctx.pev, mir_pointer_action_leave);
+        send_enter_exit_event(ctx.target_surface, ctx.pev, mir_pointer_action_enter);
     }
 }
 
