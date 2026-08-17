@@ -774,7 +774,7 @@ MATCHER(TouchMovementEvent, "")
 MATCHER(PointerMovementEvent, "")
 {
     auto pev = maybe_pointer_event(to_address(arg));
-    if (event_is_nullptr(pev, *result_listener))
+    if (event_is_nullptr(pev, result_listener))
         return false;
 
     if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
