@@ -41,10 +41,7 @@ geom::Height const minimum_visual_height{
     zoom_stack_height + geom::DeltaY{miral::MagnifierLayout::handle_diameter}};
 auto constexpr maximum_capture_dimension{1000};
 
-/// The visible rectangle of a surface of `capture_size` placed at
-/// `surface_top_left`, given that the compositor scales it about its centre.
-/// The single home of the inset arithmetic described in the header.
-auto visual_rect_for(geom::Point surface_top_left, geom::Size capture_size, float magnification)
+auto scale_around_centre(geom::Point surface_top_left, geom::Size capture_size, float magnification)
     -> geom::Rectangle
 {
     auto const inset = (magnification - 1.0f) / 2.0f;
@@ -56,7 +53,7 @@ auto visual_rect_for(geom::Point surface_top_left, geom::Size capture_size, floa
         capture_size * magnification};
 }
 
-/// Inverse of visual_rect_for(), solving for the surface origin that puts the
+/// Inverse of scale_around_centre(), solving for the surface origin that puts the
 /// visible rectangle's top left where the caller wants it.
 auto surface_top_left_for_visual_top_left(
     geom::Point visual_top_left, geom::Size capture_size, float magnification) -> geom::Point
@@ -196,7 +193,7 @@ auto miral::MagnifierLayout::HandlePositions::for_kind(HandleKind kind) const ->
 
 auto miral::MagnifierLayout::Placement::visual_bounds() const -> geom::Rectangle
 {
-    return visual_rect_for(untransformed_surface_top_left, capture_area.size, magnification);
+    return scale_around_centre(untransformed_surface_top_left, capture_area.size, magnification);
 }
 
 auto miral::MagnifierLayout::Placement::scaling_center() const -> geom::Point
@@ -263,7 +260,7 @@ auto miral::MagnifierLayout::clamped_visual_size_at(
     geom::Point surface_top_left, geom::Size visual_size) const -> geom::Size
 {
     auto const output =
-        current_output(outputs, visual_rect_for(surface_top_left, capture_size_for(visual_size), magnification));
+        current_output(outputs, scale_around_centre(surface_top_left, capture_size_for(visual_size), magnification));
 
     return output ? clamp_to_output(visual_size, output->size) : visual_size;
 }
@@ -271,7 +268,7 @@ auto miral::MagnifierLayout::clamped_visual_size_at(
 auto miral::MagnifierLayout::confined_surface_position(
     geom::Point surface_top_left, geom::Size capture_size) const -> geom::Point
 {
-    auto const bounds = visual_rect_for(surface_top_left, capture_size, magnification);
+    auto const bounds = scale_around_centre(surface_top_left, capture_size, magnification);
     auto const output = current_output(outputs, bounds);
 
     // A magnifier resting entirely on the desktop is left where the user put
@@ -297,7 +294,7 @@ auto miral::MagnifierLayout::confined_surface_position(
 auto miral::MagnifierLayout::capture_position_for(
     geom::Point surface_top_left, geom::Size capture_size) const -> geom::Point
 {
-    auto const bounds = visual_rect_for(surface_top_left, capture_size, magnification);
+    auto const bounds = scale_around_centre(surface_top_left, capture_size, magnification);
     auto const output = current_output(outputs, bounds);
     if (!output)
         return surface_top_left;
@@ -429,7 +426,7 @@ auto miral::MagnifierLayout::place_freely_centered_on(geom::Point center_point) 
         capture_size_for(clamped_visual_size_at(provisional, preferred_visual_size));
 
     return place_freely_at_visual(
-        visual_rect_for(top_left_centered_on(center_point, capture_size), capture_size, magnification)
+        scale_around_centre(top_left_centered_on(center_point, capture_size), capture_size, magnification)
             .top_left,
         preferred_visual_size);
 }
