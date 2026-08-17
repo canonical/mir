@@ -65,6 +65,26 @@ struct MockSurfaceWithGeometry : public mtd::MockSurface
     geom::Rectangle const geom;
 };
 
+struct MockSurfaceWithMutableGeometry : public mtd::MockSurface
+{
+    MockSurfaceWithMutableGeometry(geom::Rectangle const& geom)
+        : geom(geom)
+    {
+    }
+
+    bool input_area_contains(geom::Point const& p) const override
+    {
+        return geom.contains(p);
+    }
+
+    geom::Rectangle input_bounds() const override
+    {
+        return geom;
+    }
+
+    geom::Rectangle geom;
+};
+
 struct StubInputScene : public mtd::StubInputScene
 {
     std::shared_ptr<mtd::MockSurface> add_surface(geom::Rectangle const& geometry)
@@ -75,6 +95,26 @@ struct StubInputScene : public mtd::StubInputScene
         observer->surface_added(surface);
 
         return surface;
+    }
+
+    std::shared_ptr<NiceMock<MockSurfaceWithMutableGeometry>> add_mutable_surface(geom::Rectangle const& geometry)
+    {
+        auto surface = std::make_shared<NiceMock<MockSurfaceWithMutableGeometry>>(geometry);
+        surfaces.add(surface);
+        observer->surface_added(surface);
+        return surface;
+    }
+
+    void notify_surface_moved(ms::Surface* surface, geom::Point const& top_left)
+    {
+        auto surface_observer = std::dynamic_pointer_cast<ms::SurfaceObserver>(observer);
+        surface_observer->moved_to(surface, top_left);
+    }
+
+    void notify_surface_resized(ms::Surface* surface, geom::Size const& size)
+    {
+        auto surface_observer = std::dynamic_pointer_cast<ms::SurfaceObserver>(observer);
+        surface_observer->content_resized_to(surface, size);
     }
 
     void remove_surface(std::shared_ptr<ms::Surface> const& surface)
@@ -670,4 +710,83 @@ TEST_F(SurfaceInputDispatcher, touch_gesture_target_may_vanish_but_things_contin
     scene.remove_surface(surface_2);
     EXPECT_FALSE(dispatcher.dispatch(toucher.release_at({0, 0})));
     EXPECT_TRUE(dispatcher.dispatch(toucher.touch_at({0, 0})));
+}
+
+TEST_F(SurfaceInputDispatcher, pointer_enter_synthesised_when_surface_moves_under_cursor)
+{
+    FakePointer pointer;
+    dispatcher.start();
+
+    // Place cursor at (10, 10) where there is no surface
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+
+    // Now add a surface that doesn't cover (10, 10)
+    auto surface = scene.add_mutable_surface({{20, 20}, {10, 10}});
+
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+
+    // Move the surface so it now covers (10, 10)
+    surface->geom = {{5, 5}, {10, 10}};
+    scene.notify_surface_moved(surface.get(), {5, 5});
+}
+
+TEST_F(SurfaceInputDispatcher, pointer_enter_synthesised_when_surface_resizes_to_cover_cursor)
+{
+    FakePointer pointer;
+    dispatcher.start();
+
+    // Place cursor at (10, 10) where there is no surface
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+
+    // Surface at (0, 0) with size 5x5 - cursor at (10, 10) is outside
+    auto surface = scene.add_mutable_surface({{0, 0}, {5, 5}});
+
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+
+    // Resize the surface to cover (10, 10)
+    surface->geom = {{0, 0}, {20, 20}};
+    scene.notify_surface_resized(surface.get(), {20, 20});
+}
+
+TEST_F(SurfaceInputDispatcher, no_spurious_enter_when_surface_resize_does_not_change_cursor_target)
+{
+    FakePointer pointer;
+    dispatcher.start();
+
+    // Surface at (0, 0) covering the cursor position
+    auto surface = scene.add_mutable_surface({{0, 0}, {20, 20}});
+
+    // Enter happens on the initial motion event
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+
+    // Resize - cursor is still inside, no new enter
+    surface->geom = {{0, 0}, {30, 30}};
+    scene.notify_surface_resized(surface.get(), {30, 30});
+}
+
+TEST_F(SurfaceInputDispatcher, pointer_leave_then_enter_synthesised_correctly_on_surface_move)
+{
+    FakePointer pointer;
+    dispatcher.start();
+
+    // Cursor at (10, 10), surface covering (0, 0) to (20, 20)
+    auto surface = scene.add_mutable_surface({{0, 0}, {20, 20}});
+
+    {
+        InSequence seq;
+        EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+        EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
+        EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    }
+
+    // Initial motion enters the surface
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+
+    // Move surface so it no longer covers (10, 10), then move back
+    surface->geom = {{30, 30}, {20, 20}};
+    scene.notify_surface_moved(surface.get(), {30, 30});
+
+    surface->geom = {{0, 0}, {20, 20}};
+    scene.notify_surface_moved(surface.get(), {0, 0});
 }

@@ -333,7 +333,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
         [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });
     if (entered_surface_changed)
     {
-        ctx.current_target = ctx.target_surface;
+        current_target = ctx.target_surface;
     } else
     {
         send_motion_event_to_moved_surface(
@@ -361,7 +361,7 @@ void mi::SurfaceInputDispatcher::surface_resized()
 
     if (entered_surface_changed)
     {
-        ctx.current_target = ctx.target_surface;
+        current_target = ctx.target_surface;
     }
 }
 
