@@ -363,12 +363,18 @@ void mi::SurfaceInputDispatcher::surface_resized(ms::Surface const* resized_surf
     {
         current_target = ctx.target_surface;
     }
-    else
+    else if (ctx.target_surface.get() == resized_surface)
     {
-        send_motion_event_to_moved_surface(
-            ctx,
-            resized_surface,
-            [](auto surf, auto ev) { deliver_without_relative_motion(surf, ev); });
+        /*
+         * The resized surface is still under the cursor, but the geometry change
+         * may have altered the surface-local cursor coordinates or the region the
+         * pointer is in (e.g. restore → fullscreen at the same top-left).
+         *
+         * Send a leave + enter pair so the client receives a fresh enter serial
+         * and can re-evaluate the cursor image without requiring cursor movement.
+         */
+        send_enter_exit_event(ctx.current_target, ctx.pev, mir_pointer_action_leave);
+        send_enter_exit_event(ctx.target_surface, ctx.pev, mir_pointer_action_enter);
     }
 }
 

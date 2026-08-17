@@ -771,18 +771,6 @@ MATCHER(TouchMovementEvent, "")
     return true;
 }
 
-MATCHER(PointerMovementEvent, "")
-{
-    auto pev = maybe_pointer_event(to_address(arg));
-    if (event_is_nullptr(pev, result_listener))
-        return false;
-
-    if (!enums_match(mir_pointer_action_motion, mir_pointer_event_action(pev), result_listener))
-        return false;
-
-    return true;
-}
-
 MATCHER_P2(WindowEvent, attrib, value, "")
 {
     auto as_address = to_address(arg);
