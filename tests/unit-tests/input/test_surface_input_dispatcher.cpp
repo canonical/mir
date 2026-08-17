@@ -718,7 +718,7 @@ TEST_F(SurfaceInputDispatcher, pointer_enter_synthesised_when_surface_moves_unde
     dispatcher.start();
 
     // Place cursor at (10, 10) where there is no surface
-    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+    EXPECT_FALSE(dispatcher.dispatch(pointer.move_to({10, 10})));
 
     // Now add a surface that doesn't cover (10, 10)
     auto surface = scene.add_mutable_surface({{20, 20}, {10, 10}});
@@ -736,7 +736,7 @@ TEST_F(SurfaceInputDispatcher, pointer_enter_synthesised_when_surface_resizes_to
     dispatcher.start();
 
     // Place cursor at (10, 10) where there is no surface
-    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+    EXPECT_FALSE(dispatcher.dispatch(pointer.move_to({10, 10})));
 
     // Surface at (0, 0) with size 5x5 - cursor at (10, 10) is outside
     auto surface = scene.add_mutable_surface({{0, 0}, {5, 5}});
