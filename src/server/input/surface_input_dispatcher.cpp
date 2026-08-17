@@ -363,12 +363,12 @@ void mi::SurfaceInputDispatcher::surface_resized(ms::Surface const* resized_surf
     {
         current_target = ctx.target_surface;
     }
-    else if (ctx.target_surface && ctx.target_surface.get() == resized_surface)
+    else
     {
-        // The pointer is still inside the same surface, but the surface changed size.
-        // Re-send leave + enter so the client can update the cursor image.
-        send_enter_exit_event(ctx.target_surface, ctx.pev, mir_pointer_action_leave);
-        send_enter_exit_event(ctx.target_surface, ctx.pev, mir_pointer_action_enter);
+        send_motion_event_to_moved_surface(
+            ctx,
+            resized_surface,
+            [](auto surf, auto ev) { deliver_without_relative_motion(surf, ev); });
     }
 }
 
