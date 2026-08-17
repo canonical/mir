@@ -65,11 +65,6 @@ auto shrink_point_around_centre(
                geom::as_delta(inset * capture_size.height)};
 }
 
-auto center(geom::Point top_left, geom::Size size) -> geom::Point
-{
-    return top_left + geom::Displacement{geom::as_delta(size.width / 2), geom::as_delta(size.height / 2)};
-}
-
 auto top_left_centered_on(geom::Point center_point, geom::Size size) -> geom::Point
 {
     return center_point - geom::Displacement{geom::as_delta(size.width / 2), geom::as_delta(size.height / 2)};
@@ -198,7 +193,7 @@ auto miral::MagnifierLayout::Placement::visual_bounds() const -> geom::Rectangle
 
 auto miral::MagnifierLayout::Placement::scaling_center() const -> geom::Point
 {
-    return center(untransformed_surface_top_left, capture_area.size);
+    return geom::Rectangle{untransformed_surface_top_left, capture_area.size}.centre();
 }
 
 auto miral::MagnifierLayout::Placement::resize_anchor() const -> geom::Point
