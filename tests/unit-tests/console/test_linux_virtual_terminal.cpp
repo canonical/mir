@@ -1399,7 +1399,7 @@ TEST_F(LinuxVirtualTerminalTest, calls_drop_master_on_vt_switch_away)
 
         EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
             .WillOnce(Return(0));
-        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr))
+        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, (void*)nullptr))
             .Times(0);
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
 
@@ -1453,7 +1453,7 @@ TEST_F(LinuxVirtualTerminalTest, revokes_evdev_device_on_switch_away)
         set_up_expectations_for_vt_setup(vt_num, false);
         set_up_expectations_for_switch_handler(SIGUSR1);
 
-        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr));
+        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, (void*)nullptr));
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
 
         set_up_expectations_for_vt_teardown();
@@ -1504,7 +1504,7 @@ TEST_F(LinuxVirtualTerminalTest, failure_to_revoke_on_switch_away_is_not_fatal)
         set_up_expectations_for_vt_setup(vt_num, false);
         set_up_expectations_for_switch_handler(SIGUSR1);
 
-        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr))
+        EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, (void*)nullptr))
             .WillOnce([]() { errno = EINVAL; return -1; });
         EXPECT_CALL(mock_fops, ioctl(fake_vt_fd, VT_RELDISP, allow_switch));
 
@@ -1549,7 +1549,7 @@ TEST_F(LinuxVirtualTerminalTest, does_not_drop_master_for_non_drm_devices_on_swi
     int const fake_device_fd = open("/dev/null", O_RDONLY | O_CLOEXEC);
     EXPECT_CALL(mock_fops, open(StrEq(device_node), _))
         .WillOnce(Return(fake_device_fd));
-    EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, nullptr))
+    EXPECT_CALL(mock_fops, ioctl(fake_device_fd, EVIOCREVOKE, (void*)nullptr))
         .WillRepeatedly(Return(0));
 
     EXPECT_CALL(drm, drmDropMaster(fake_device_fd))
@@ -1761,7 +1761,7 @@ TEST_F(LinuxVirtualTerminalTest, input_device_gets_new_fd_on_vt_switch_to)
             });
 
     // We don't care about the revoke, but we need to expect it
-    EXPECT_CALL(mock_fops, ioctl(_, EVIOCREVOKE, nullptr))
+    EXPECT_CALL(mock_fops, ioctl(_, EVIOCREVOKE, (void*)nullptr))
         .Times(AnyNumber())
         .WillRepeatedly(Return(0));
 
