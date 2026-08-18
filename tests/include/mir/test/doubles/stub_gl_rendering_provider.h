@@ -46,7 +46,7 @@ public:
                 {
                     static int unused = 1;
                     return factory.compile_fragment_shader(&unused, "extension code", "fragment code");
-                }));
+                });
 
         return tex_buf;
     }
