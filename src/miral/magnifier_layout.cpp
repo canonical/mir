@@ -41,28 +41,30 @@ geom::Height const minimum_visual_height{
     zoom_stack_height + geom::DeltaY{miral::MagnifierLayout::handle_diameter}};
 auto constexpr maximum_capture_dimension{1000};
 
+/// The integral top-left offset between a capture rectangle and its bounds
+/// after scaling about the centre. The opposite offset may differ by one pixel.
+auto centre_inset_of(geom::Size capture_size, float magnification) -> geom::Displacement
+{
+    auto const inset = (magnification - 1.0f) / 2.0f;
+    return {geom::as_delta(inset * capture_size.width), geom::as_delta(inset * capture_size.height)};
+}
+
 auto scale_around_centre(geom::Point surface_top_left, geom::Size capture_size, float magnification)
     -> geom::Rectangle
 {
-    auto const inset = (magnification - 1.0f) / 2.0f;
-    return {
-        surface_top_left -
-            geom::Displacement{
-                geom::as_delta(inset * capture_size.width),
-                geom::as_delta(inset * capture_size.height)},
-        capture_size * magnification};
+    return {surface_top_left - centre_inset_of(capture_size, magnification), capture_size * magnification};
 }
 
 /// Inverse of scale_around_centre(), solving for the surface origin that puts the
 /// visible rectangle's top left where the caller wants it.
+///
+/// Both directions must derive the inset from the same integral capture size.
+/// Reconstructing it from the visual size with reciprocal magnification rounds
+/// the size and inset independently, causing magnification-dependent drift.
 auto shrink_point_around_centre(
     geom::Point visual_top_left, geom::Size capture_size, float magnification) -> geom::Point
 {
-    auto const inset = (magnification - 1.0f) / 2.0f;
-    return visual_top_left +
-           geom::Displacement{
-               geom::as_delta(inset * capture_size.width),
-               geom::as_delta(inset * capture_size.height)};
+    return visual_top_left + centre_inset_of(capture_size, magnification);
 }
 
 auto top_left_centered_on(geom::Point center_point, geom::Size size) -> geom::Point
