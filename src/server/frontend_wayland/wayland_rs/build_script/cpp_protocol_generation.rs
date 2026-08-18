@@ -90,7 +90,11 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .interfaces
             .iter()
             .filter(|interface| interface.is_global)
-            .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
+            .filter(|interface| {
+                interface.name != "wl_display"
+                    && interface.name != "wl_registry"
+                    && interface.name != "wl_output"
+            })
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
                 let ext_name =
@@ -238,7 +242,8 @@ fn create_output_global_binder() -> CppBuilder {
     let mut class = CppClass::new("OutputGlobalBinder");
 
     // bind: construct the wl_output object for a client that has bound this
-    // monitor's global, mirroring GlobalFactory::create_wl_output.
+    // monitor's global, mirroring GlobalFactory::create_<interface> for the
+    // statically-registered globals.
     let mut bind_method = CppMethod::new(
         "bind",
         Some(CppType::Object("Output".to_string())),

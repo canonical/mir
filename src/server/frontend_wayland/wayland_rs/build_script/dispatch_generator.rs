@@ -729,6 +729,10 @@ fn generate_dispatch_implementations(protocol: &WaylandProtocol) -> TokenStream 
         .interfaces
         .iter()
         .filter(|interface| interface.is_global)
+        // `wl_output` gets its `GlobalDispatch` from `generate_output_dynamic_global`
+        // (per-monitor, `OutputGlobalData`), so it must not also get a static
+        // `SharedFactory` implementation here.
+        .filter(|interface| interface.name != "wl_output")
         .collect();
 
     let global_dispatch_impls = global_interfaces.iter().map(|interface| {
