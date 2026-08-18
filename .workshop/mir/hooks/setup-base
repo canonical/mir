@@ -8,12 +8,17 @@ apt-get --yes --no-install-recommends install \
   clang \
   dmz-cursor-theme \
   fonts-ubuntu \
+  gcovr \
   glmark2-es2 \
   glmark2-es2-wayland \
+  lcov \
+  libclang-rt-dev \
+  llvm \
   mesa-utils \
   mold \
   ninja-build \
   python3-venv \
+  python3-livereload \
   ripgrep \
   xterm \
   yq
@@ -23,3 +28,36 @@ cat <<'EOF' > /etc/profile.d/mir.sh
 export PATH="$HOME/build/bin:$PATH"
 export CCACHE_SLOPPINESS=include_file_ctime,include_file_mtime,modules,pch_defines,time_macros
 EOF
+
+cat <<'EOF' > /usr/local/bin/gcov
+#!/bin/sh
+exec llvm-cov gcov "$@"
+EOF
+chmod +x /usr/local/bin/gcov
+
+cat <<'EOF' > /etc/systemd/system/mir-coverage.path
+[Unit]
+Description=Watch for livereload directory existence
+
+[Path]
+# Triggers as soon as the target folder exists
+PathExists=/home/workshop/build/coverage-html
+Unit=mir-coverage.service
+
+[Install]
+WantedBy=default.target
+EOF
+
+cat <<'EOF' > /etc/systemd/system/mir-coverage.service
+[Unit]
+Description=LiveReload HTTP Server
+
+[Service]
+Type=simple
+WorkingDirectory=/home/workshop/build/coverage-html
+# Adjust the path to 'livereload' executable if installed in a venv or ~/.local/bin/
+ExecStart=/usr/bin/livereload --host 0 --port 8001 /home/workshop/build/coverage-html
+Restart=on-failure
+EOF
+
+systemctl enable --now mir-coverage.path

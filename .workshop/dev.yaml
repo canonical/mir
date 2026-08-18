@@ -25,6 +25,13 @@ actions:
     set -xeu
     cmake --build ~/build "$@"
 
+  coverage: |
+    set -xeu
+    cmake ~/build -DMIR_ENABLE_COVERAGE=ON
+    cmake --build ~/build --target coverage-html "$@"
+    echo
+    echo "Coverage report available at http://$( hostname -f ):8001/"
+
   package: |
     set -xeu
     cd $HOME
