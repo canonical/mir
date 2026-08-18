@@ -429,7 +429,7 @@ TEST_F(SurfaceStack, scene_observer_can_query_scene_within_surface_exists_notifi
         EXPECT_THAT(stack.input_surface_at({}).get(), Eq(stub_surface1.get()));
     };
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
-        .WillOnce(scene_query);
+        .WillOnce([&](auto&&){ scene_query(); });
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_observer(mt::fake_shared(observer));
@@ -450,7 +450,7 @@ TEST_F(SurfaceStack, scene_observer_can_async_query_scene_within_surface_exists_
     };
 
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
-        .WillOnce(async_scene_query);
+        .WillOnce([&](auto&&){ async_scene_query(); });
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_observer(mt::fake_shared(observer));
@@ -467,7 +467,7 @@ TEST_F(SurfaceStack, scene_observer_can_remove_surface_from_scene_within_surface
         stack.remove_surface(stub_surface1);
     };
     EXPECT_CALL(observer, surface_exists(stub_surface1)).Times(1)
-        .WillOnce(surface_removal);
+        .WillOnce([&](auto&&){ surface_removal(); });
 
     stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
     stack.add_observer(mt::fake_shared(observer));
