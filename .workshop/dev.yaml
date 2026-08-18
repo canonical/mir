@@ -12,10 +12,6 @@ sdks:
 - name: copilot
 - name: project-mir
 - name: system
-  plugs:
-    doc:
-      interface: tunnel
-      endpoint: localhost:8000
 actions:
   configure: |
     cmake \
@@ -71,7 +67,7 @@ actions:
       shift
     fi
 
-    cmake --build ~/build --target "doc-${target:-run}" "$@"
+    SPHINX_HOST=$( hostname -f ) cmake --build ~/build --target "doc-${target:-run}" "$@"
 
   ccache: ccache "$@"
 
