@@ -74,19 +74,31 @@ TEST(MagnifierLayout, clamps_position_when_size_is_unchanged_after_output_remova
     EXPECT_THAT(placement.untransformed_surface_top_left, Eq(geom::Point{600, 0}));
 }
 
-TEST(MagnifierLayout, chooses_output_using_visual_bounds)
+TEST(MagnifierLayout, chooses_output_containing_visual_bounds_center)
 {
     auto bounds = outputs();
     bounds.add({{800, 0}, {400, 300}});
     miral::MagnifierLayout const layout{bounds, {500, 500}, 2.0f};
 
-    // Deliberately just right of the boundary: the 250x250 capture rect sits
-    // mostly on the small output, while the 500x500 visual bounds sit mostly
-    // on the large one. Selecting by the capture rect would clamp the size to
-    // 0.8 * (400, 300).
+    // The visual bounds' center lies on the small output, which determines
+    // the size even though the bounds extend farther over the large output.
     auto const placement = layout.place_following_cursor_at({810, 150});
 
-    EXPECT_THAT(placement.visual_bounds().size, Eq(geom::Size{500, 480}));
+    EXPECT_THAT(placement.visual_bounds().size, Eq(geom::Size{320, 240}));
+}
+
+TEST(MagnifierLayout, chooses_nearest_output_when_visual_bounds_center_is_in_a_gap)
+{
+    geom::Rectangles bounds;
+    bounds.add({{900, 0}, {100, 100}});
+    bounds.add({{510, 0}, {200, 200}});
+    miral::MagnifierLayout const layout{bounds, {1000, 200}, 1.0f};
+
+    // Both outputs overlap the initial visual bounds, but its center is in
+    // the gap and much closer to the second output.
+    auto const placement = layout.place_following_cursor_at({500, 100});
+
+    EXPECT_THAT(placement.visual_bounds().size, Eq(geom::Size{160, 160}));
 }
 
 TEST(MagnifierLayout, follow_cursor_is_not_confined_to_an_output)

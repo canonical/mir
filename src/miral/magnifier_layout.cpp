@@ -86,28 +86,18 @@ auto is_usable(geom::Rectangle const& output) -> bool
     return output.size.width > geom::Width{0} && output.size.height > geom::Height{0};
 }
 
-/// Squared distance between two rectangles, zero when they intersect. Only
-/// ever used to order outputs, so the squared value is enough and the square
-/// root is not worth taking.
-auto squared_distance_between(geom::Rectangle const& lhs, geom::Rectangle const& rhs) -> long long
+/// Squared distance between a point and rectangle.
+auto squared_distance_between(geom::Point const& p, geom::Rectangle const& r) -> long long
 {
-    auto const gap = [](int lhs_start, int lhs_end, int rhs_start, int rhs_end)
-    {
-        return std::max({0, rhs_start - lhs_end, lhs_start - rhs_end});
-    };
-
-    auto const dx = gap(
-        lhs.left().as_value(), lhs.right().as_value(), rhs.left().as_value(), rhs.right().as_value());
-    auto const dy = gap(
-        lhs.top().as_value(), lhs.bottom().as_value(), rhs.top().as_value(), rhs.bottom().as_value());
-
+    auto const dx = std::max({0, r.left().as_value() - p.x.as_value(), p.x.as_value() - r.right().as_value()});
+    auto const dy = std::max({0, r.top().as_value() - p.y.as_value(), p.y.as_value() - r.bottom().as_value()});
     return static_cast<long long>(dx) * dx + static_cast<long long>(dy) * dy;
 }
 
-/// The output the magnifier is considered to be on: the one it overlaps most,
-/// or, when it overlaps none, the one nearest to it. Callers only use the
-/// result to clamp, and the nearest output is the one the magnifier will be
-/// pulled back onto.
+/// The output the magnifier is considered to be on is either the one
+/// containing its center, or the closest one to its center. Callers only use
+/// the result to clamp, and the nearest output is the one the magnifier will
+/// be pulled back onto.
 auto current_output(geom::Rectangles const& outputs, geom::Rectangle const& bounds)
     -> std::optional<geom::Rectangle>
 {
@@ -115,23 +105,23 @@ auto current_output(geom::Rectangles const& outputs, geom::Rectangle const& boun
     if (std::ranges::empty(usable))
         return std::nullopt;
 
-    auto maximum_overlap = 0u;
-    auto minimum_distance = std::numeric_limits<long long>::max();
-    auto current = *std::ranges::begin(usable);
+    // Find the output containing the magnifier's center, if any.
+    auto const bounds_center = bounds.centre();
+    auto const output_containing_center =
+        std::ranges::find_if(usable, [bounds_center](auto const& output) { return output.contains(bounds_center); });
+    if (output_containing_center != std::ranges::end(usable))
+        return *output_containing_center;
 
+    // Find the closest output to the magnifier's center
+    auto current = *std::ranges::begin(usable);
+    auto current_distance = squared_distance_between(bounds_center, current);
     for (auto const& output : usable)
     {
-        auto const overlap = geom::generic::intersection_of(output, bounds);
-        auto const overlap_area = overlap.size.width.as_uint32_t() * overlap.size.height.as_uint32_t();
-        auto const distance = squared_distance_between(output, bounds);
-
-        // Any overlap beats no overlap; distance only decides between outputs
-        // that the magnifier misses entirely.
-        if (overlap_area > maximum_overlap || (maximum_overlap == 0 && distance < minimum_distance))
+        auto const distance = squared_distance_between(bounds_center, output);
+        if (distance < current_distance)
         {
-            maximum_overlap = overlap_area;
-            minimum_distance = distance;
             current = output;
+            current_distance = distance;
         }
     }
 
