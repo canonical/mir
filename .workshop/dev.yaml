@@ -17,9 +17,19 @@ sdks:
       interface: tunnel
       endpoint: localhost:8000
 actions:
-  cmake: |
-    set -xeu
-    cmake ~/build "$@"
+  configure: |
+    cmake \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_INSTALL_PREFIX=$HOME/install \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DMIR_USE_LD=mold \
+      -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+      -B $HOME/build \
+      -G Ninja \
+      . \
+      "$@"
 
   build: |
     set -xeu
