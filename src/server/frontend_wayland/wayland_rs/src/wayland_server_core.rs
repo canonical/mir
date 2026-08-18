@@ -43,9 +43,7 @@ pub struct WaylandServer {
     fd_listener_signal: Mutex<Option<Ping>>,
     pending_fd_listeners: Mutex<Vec<PendingFdListener>>,
     /// A clone of the running display's handle, populated for the duration of
-    /// [WaylandServer::run]. It lets C++ create and destroy dynamic globals
-    /// (e.g. one `wl_output` per monitor) from any thread; the handle is
-    /// internally synchronised by the backend.
+    /// [WaylandServer::run].
     display_handle: Mutex<Option<DisplayHandle>>,
 }
 
