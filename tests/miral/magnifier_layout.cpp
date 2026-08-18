@@ -163,6 +163,21 @@ TEST(MagnifierLayout, places_the_visible_corner_where_asked)
     EXPECT_THAT(placement.untransformed_surface_top_left, Ne(geom::Point{100, 100}));
 }
 
+TEST(MagnifierLayout, preserves_the_requested_visual_corner_across_magnifications)
+{
+    auto const visual_top_left = geom::Point{101, 103};
+    for (auto const magnification : {1.0f, 1.25f, 1.5f, 2.0f, 3.5f, 8.0f})
+    {
+        for (auto const dimension : {200, 213, 271, 340})
+        {
+            miral::MagnifierLayout const layout{{}, {dimension, dimension}, magnification};
+
+            EXPECT_THAT(layout.place_freely_at(visual_top_left).visual_bounds().top_left, Eq(visual_top_left))
+                << "magnification " << magnification << ", size " << dimension;
+        }
+    }
+}
+
 TEST(MagnifierLayout, ignores_outputs_with_no_area)
 {
     geom::Rectangles bounds;
