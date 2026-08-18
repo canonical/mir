@@ -47,7 +47,6 @@ public:
     {
         ON_CALL(mock_drm, drmHandleEvent(static_cast<int>(mock_drm_fd), _))
             .WillByDefault(
-                Invoke(
                     [this](auto drm_fd, drmEventContextPtr ctx) -> int
                     {
 
@@ -78,7 +77,7 @@ public:
 
                         mock_drm.consume_event_on(device_node);
                         return 0;
-                    }));
+                    });
     }
 
     void add_flip_event(

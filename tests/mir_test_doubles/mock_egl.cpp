@@ -94,7 +94,7 @@ mtd::MockEGL::MockEGL()
                        Return(EGL_TRUE)));
 
     ON_CALL(*this, eglChooseConfig(_,_,_,_,_))
-    .WillByDefault(Invoke(
+    .WillByDefault(
         [&] (EGLDisplay, const EGLint *, EGLConfig *configs,
              EGLint config_size, EGLint *num_config) -> EGLBoolean
         {
@@ -109,7 +109,7 @@ mtd::MockEGL::MockEGL()
                 *num_config = fake_configs_num;
             }
             return EGL_TRUE;
-        }));
+        });
 
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .WillByDefault(Return(fake_egl_surface));
@@ -123,18 +123,18 @@ mtd::MockEGL::MockEGL()
     .WillByDefault(Return(fake_egl_context));
 
     ON_CALL(*this, eglMakeCurrent(_,_,_,_))
-    .WillByDefault(Invoke(
+    .WillByDefault(
         [this] (EGLDisplay, EGLSurface, EGLSurface, EGLContext context)
         {
             (*current_contexts.lock())[std::this_thread::get_id()] = context;
             return EGL_TRUE;
-        }));
+        });
 
     ON_CALL(*this, eglGetCurrentContext())
-    .WillByDefault(Invoke([this]
+    .WillByDefault([this]
         {
             return (*current_contexts.lock())[std::this_thread::get_id()];
-        }));
+        });
 
     ON_CALL(*this, eglSwapBuffers(_,_))
         .WillByDefault(Return(EGL_TRUE));
@@ -189,11 +189,11 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
     using namespace ::testing;
     // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .WillByDefault(Invoke(
+        .WillByDefault(
             [&] (EGLDisplay,EGLConfig,AnyNativeType nw, EGLint const*) -> EGLSurface
             {
                 return reinterpret_cast<EGLSurface>(nw);
-            }));
+            });
 
     ON_CALL(*this, eglSwapBuffers(_,_))
         .WillByDefault(Return(EGL_TRUE));

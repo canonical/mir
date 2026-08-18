@@ -362,9 +362,8 @@ auto mt::TestWindowManagerTools::create_and_select_window_for_session(
 
     EXPECT_CALL(*window_manager_policy, advise_new_window(testing::_))
         .WillOnce(
-            testing::Invoke(
                 [&result](miral::WindowInfo const& window_info)
-                { result = window_info.window(); }));
+                { result = window_info.window(); });
 
     basic_window_manager.add_session(session_to_add);
     basic_window_manager.add_surface(session_to_add, creation_parameters, &create_surface);

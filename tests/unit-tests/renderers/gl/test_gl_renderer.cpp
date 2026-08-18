@@ -129,12 +129,12 @@ public:
         EXPECT_CALL(*mock_buffer, size())
             .WillRepeatedly(Return(mir::geometry::Size{123, 456}));
         ON_CALL(*mock_buffer, shader(_))
-            .WillByDefault(testing::Invoke(
+            .WillByDefault(
                 [](auto& factory) -> mg::gl::Program&
                 {
                     static int unused = 1;
                     return factory.compile_fragment_shader(&unused, "extension code", "fragment code");
-                }));
+                });
 
         renderable = std::make_shared<testing::NiceMock<mtd::MockRenderable>>();
         EXPECT_CALL(*renderable, id()).WillRepeatedly(Return(&renderable));
@@ -343,7 +343,7 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
     InSequence seq;
     EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(AnyNumber());
     EXPECT_CALL(*mock_output_surface, commit())
-        .WillRepeatedly(testing::Invoke([]() { return std::unique_ptr<mg::Framebuffer>(); }));
+        .WillRepeatedly([]() { return std::unique_ptr<mg::Framebuffer>(); });
 
     mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
     renderer.render(renderable_list);

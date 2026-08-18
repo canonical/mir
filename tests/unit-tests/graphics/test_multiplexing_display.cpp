@@ -172,11 +172,10 @@ TEST(MultiplexingDisplay, each_display_in_configuration_has_unique_id)
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(conf);
-                    }));
+                    });
 
         displays.push_back(std::move(display));
     }
@@ -222,11 +221,10 @@ TEST(MultiplexingDisplay, configuration_is_union_of_all_displays)
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(conf);
-                    }));
+                    });
 
         displays.push_back(std::move(display));
     }
@@ -344,7 +342,6 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_succee
 
     ON_CALL(*d1, configuration())
         .WillByDefault(
-            Invoke(
                 [&gen, card1]()
                 {
                     return std::make_unique<mtd::StubDisplayConfig>(
@@ -352,17 +349,16 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_succee
                             gen.generate_output(card1),
                             gen.generate_output(card1)
                         });
-                 }));
+                 });
     ON_CALL(*d2, configuration())
         .WillByDefault(
-            Invoke(
                 [&gen, card2]()
                 {
                     return std::make_unique<mtd::StubDisplayConfig>(
                         std::vector<mg::DisplayConfigurationOutput>{
                             gen.generate_output(card2)
                         });
-                 }));
+                 });
 
     // Each Display should get a configure() call with only its own configuration
     EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(card1)))
@@ -391,7 +387,6 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_
 
     ON_CALL(*d1, configuration())
         .WillByDefault(
-            Invoke(
                 [&gen, card1]()
                 {
                     return std::make_unique<mtd::StubDisplayConfig>(
@@ -399,17 +394,16 @@ TEST(MultiplexingDisplay, apply_if_confguration_preserves_display_buffers_fails_
                             gen.generate_output(card1),
                             gen.generate_output(card1)
                         });
-                 }));
+                 });
     ON_CALL(*d2, configuration())
         .WillByDefault(
-            Invoke(
                 [&gen, card2]()
                 {
                     return std::make_unique<mtd::StubDisplayConfig>(
                         std::vector<mg::DisplayConfigurationOutput>{
                             gen.generate_output(card2)
                         });
-                 }));
+                 });
 
     // Each Display should get a configure() call with only its own configuration
     EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(card1)))
@@ -451,29 +445,26 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_fails
 
     ON_CALL(*d1, configuration())
         .WillByDefault(
-            Invoke(
                 [&d1_conf]()
                 {
                     return d1_conf->clone();
-                }));
+                });
     ON_CALL(*d2, configuration())
         .WillByDefault(
-            Invoke(
                 [&d2_conf]()
                 {
                     return d2_conf->clone();
-                }));
+                });
 
     // Each Display should get a configure() call with only its own configuration
     EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(card1)))
         .WillRepeatedly(
-            Invoke(
                 [&d1_conf](auto const& config)
                 {
                     auto real_config = dynamic_cast<mtd::StubDisplayConfig const&>(config);
                     d1_conf->outputs = real_config.outputs;
                     return true;
-                }));
+                });
     EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(card2)))
         .WillOnce(Return(false));
 
@@ -522,29 +513,26 @@ TEST(MultiplexingDisplay, apply_if_configuration_preserves_display_buffers_throw
 
     ON_CALL(*d1, configuration())
         .WillByDefault(
-            Invoke(
                 [&d1_conf]()
                 {
                     return d1_conf->clone();
-                }));
+                });
     ON_CALL(*d2, configuration())
         .WillByDefault(
-            Invoke(
                 [&d2_conf]()
                 {
                     return d2_conf->clone();
-                }));
+                });
 
     // The first display will get two configuration requests…
     EXPECT_CALL(*d1, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(card1)))
         .WillOnce(
-            Invoke(
                 [&d1_conf](auto const& config)
                 {
                     auto real_config = dynamic_cast<mtd::StubDisplayConfig const&>(config);
                     d1_conf->outputs = real_config.outputs;
                     return true;        // The first will succeed, changing state…
-                }))
+                })
         .WillOnce(
             Return(false));            // The second (to return to initial configuration) will fail
     EXPECT_CALL(*d2, apply_if_configuration_preserves_display_buffers(IsConfigurationOfCard(card2)))
@@ -633,11 +621,10 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
 
     ON_CALL(*d1, configuration())
         .WillByDefault(
-            Invoke(
                 [&d1_conf]()
                 {
                     return d1_conf->clone();
-                }));
+                });
     ON_CALL(*d1, configure(_))
         .WillByDefault(
             [&d1_conf](mg::DisplayConfiguration const& conf)
@@ -649,11 +636,10 @@ TEST(MultiplexingDisplay, applies_initial_display_configuration)
 
     ON_CALL(*d2, configuration())
         .WillByDefault(
-            Invoke(
                 [&d2_conf]()
                 {
                     return d2_conf->clone();
-                }));
+                });
     ON_CALL(*d2, configure(_))
         .WillByDefault(
             [&d2_conf](mg::DisplayConfiguration const& conf)
@@ -747,11 +733,10 @@ TEST(MultiplexingDisplay, sets_output_names_to_unique_values)
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(conf);
-                    }));
+                    });
 
         displays.push_back(std::move(display));
     }
@@ -800,11 +785,10 @@ TEST(MultiplexingDisplay, output_names_begin_with_connector_type)
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(conf);
-                    }));
+                    });
         displays.push_back(std::move(display));
     }
 
@@ -843,11 +827,10 @@ TEST(MultiplexingDisplay, output_names_are_bucketed_by_type)
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [&display_conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(display_conf);
-                    }));
+                    });
         displays.push_back(std::move(display));
     }
 
@@ -885,11 +868,10 @@ TEST(MultiplexingDisplay, output_name_does_not_contain_card_id_when_only_one_car
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [&display_conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(display_conf);
-                    }));
+                    });
         displays.push_back(std::move(display));
     }
 
@@ -942,11 +924,10 @@ TEST(MultiplexingDisplay, when_additional_cards_exist_their_outputs_are_numbered
         auto display = std::make_unique<NiceMock<mtd::MockDisplay>>();
         ON_CALL(*display, configuration())
             .WillByDefault(
-                Invoke(
                     [conf]()
                     {
                         return std::make_unique<mtd::StubDisplayConfig>(conf);
-                    }));
+                    });
         displays.push_back(std::move(display));
     }
 

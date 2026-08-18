@@ -41,9 +41,8 @@ struct WindowPlacementMaximized : mt::TestWindowManagerTools
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
-                Invoke(
                     [&result](WindowInfo const& window_info)
-                        { result = window_info.window(); }));
+                        { result = window_info.window(); });
 
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
         basic_window_manager.select_active_window(result);

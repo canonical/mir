@@ -213,7 +213,7 @@ TEST_F(KeyRepeatDispatcher, stops_repeat_on_device_removal)
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyDownEvent())).Times(1);
     EXPECT_CALL(*mock_next_dispatcher, dispatch(mt::KeyRepeatEvent())).Times(1);
     EXPECT_CALL(*mock_alarm, reschedule_in(repeat_delay)).Times(1).WillOnce(Return(true));
-    ON_CALL(*mock_alarm, cancel()).WillByDefault(Invoke([&](){alarm_canceled = true; return true;}));
+    ON_CALL(*mock_alarm, cancel()).WillByDefault([&](){alarm_canceled = true; return true;});
 
     dispatcher.dispatch(a_key_down_event());
 

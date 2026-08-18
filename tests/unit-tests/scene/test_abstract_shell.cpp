@@ -175,13 +175,13 @@ struct AbstractShell : Test
         ON_CALL(surface_factory, create_surface(_, _, _))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
         ON_CALL(seat, create_device_state())
-            .WillByDefault(Invoke(
+            .WillByDefault(
                     []()
                     {
                         return mev::make_input_configure_event(
                             0ns, 0, mir_input_event_modifier_none, 0.0f, 0.0f,
                             std::vector<mev::InputDeviceState>());
-                    }));
+                    });
     }
 
     auto create_surface(ms::Surface& surface) -> std::shared_ptr<ms::Surface>
@@ -291,11 +291,11 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
 
     EXPECT_CALL(surface_stack, add_surface(_, mi::InputReceptionMode::receives_all_input));
 
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(
         [&](std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const&,
             std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, msh::SurfaceSpecification const&)> const& build)
-            { return build(session, params); }));
+            { return build(session, params); });
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
@@ -310,7 +310,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(1);
 
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(
         [&](std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& params,
             std::function<std::shared_ptr<ms::Surface>(
@@ -320,7 +320,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
                 auto modified_params = params;
                 modified_params.server_side_decorated = true;
                 return build(session, modified_params);
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
@@ -336,7 +336,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(0);
 
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(
         [&](std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& params,
             std::function<std::shared_ptr<ms::Surface>(
@@ -346,7 +346,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
                 auto modified_params = params;
                 modified_params.server_side_decorated = false;
                 return build(session, modified_params);
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
@@ -1123,17 +1123,17 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _))
 
         .WillRepeatedly(
-            Invoke([padding](geom::Size const& content, MirWindowType, MirWindowState)
-                   { return geom::Size{content.width + padding.width, content.height + padding.height}; }));
+            [padding](geom::Size const& content, MirWindowType, MirWindowState)
+                   { return geom::Size{content.width + padding.width, content.height + padding.height}; });
 
     msh::SurfaceSpecification captured_spec;
     EXPECT_CALL(*wm, add_surface(session, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](auto, auto spec, auto)
             {
                 captured_spec = spec;
                 return std::make_shared<NiceMock<mtd::MockSurface>>();
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 
@@ -1209,12 +1209,12 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
 
     msh::SurfaceSpecification captured_spec;
     EXPECT_CALL(*wm, add_surface(session, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](auto, auto spec, auto)
             {
                 captured_spec = spec;
                 return std::make_shared<NiceMock<mtd::MockSurface>>();
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 
