@@ -88,6 +88,7 @@ private:
 
     void surface_moved(scene::Surface const* moved_surface);
     void surface_resized(scene::Surface const* resized_surface);
+    void window_state_changed(scene::Surface const* surface);
     void scene_changed();
 
     std::shared_ptr<input::Surface> current_target;

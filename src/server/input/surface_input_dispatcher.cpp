@@ -44,10 +44,12 @@ struct InputDispatcherSceneObserver :
         std::function<void(std::shared_ptr<ms::Surface>)> const& on_removed,
         std::function<void(ms::Surface const*)> const& on_surface_moved,
         std::function<void(ms::Surface const*)> const& on_surface_resized,
+        std::function<void(ms::Surface const*)> const& on_window_state_changed,
         std::function<void()> const& on_scene_changed)
         : on_removed(on_removed),
           on_surface_moved{on_surface_moved},
           on_surface_resized{on_surface_resized},
+          on_window_state_changed{on_window_state_changed},
           on_scene_changed{on_scene_changed}
     {
     }
@@ -72,9 +74,17 @@ struct InputDispatcherSceneObserver :
         surface->register_interest(shared_from_this());
     }
 
-    void attrib_changed(ms::Surface const*, MirWindowAttrib /*attrib*/, int /*value*/) override
+    void attrib_changed(ms::Surface const* surf, MirWindowAttrib attrib, int value) override
     {
-        // TODO: Do we need to listen to visibility events?
+        if (attrib == mir_window_attrib_state)
+        {
+            auto const state = static_cast<MirWindowState>(value);
+            // Only synthesise pointer events for visible-state transitions.
+            // Minimised/hidden windows are removed from the input scene
+            // separately and don't need a re-enter.
+            if (state != mir_window_state_minimized && state != mir_window_state_hidden)
+                on_window_state_changed(surf);
+        }
     }
 
     void content_resized_to(ms::Surface const* surf, mir::geometry::Size const& /*size*/) override
@@ -95,6 +105,7 @@ struct InputDispatcherSceneObserver :
     std::function<void(std::shared_ptr<ms::Surface>)> const on_removed;
     std::function<void(ms::Surface const*)> const on_surface_moved;
     std::function<void(ms::Surface const*)> const on_surface_resized;
+    std::function<void(ms::Surface const*)> const on_window_state_changed;
     std::function<void()> const on_scene_changed;
 };
 
@@ -150,6 +161,7 @@ mi::SurfaceInputDispatcher::SurfaceInputDispatcher(std::shared_ptr<mi::Scene> co
         [this](std::shared_ptr<ms::Surface> const& s) { surface_removed(s); },
         [this](scene::Surface const* s) { surface_moved(s); },
         [this](scene::Surface const* s) { surface_resized(s); },
+        [this](scene::Surface const* s) { window_state_changed(s); },
         [this] { scene_changed(); });
     scene->add_observer(scene_observer);
 }
@@ -343,7 +355,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
     }
 }
 
-void mi::SurfaceInputDispatcher::surface_resized(ms::Surface const* resized_surface)
+void mi::SurfaceInputDispatcher::surface_resized(ms::Surface const* /*resized_surface*/)
 {
     std::lock_guard lock{dispatcher_mutex};
 
@@ -363,15 +375,39 @@ void mi::SurfaceInputDispatcher::surface_resized(ms::Surface const* resized_surf
     {
         current_target = ctx.target_surface;
     }
-    else if (ctx.target_surface.get() == resized_surface)
+}
+
+void mi::SurfaceInputDispatcher::window_state_changed(ms::Surface const* surface)
+{
+    std::lock_guard lock{dispatcher_mutex};
+
+    if (!last_pointer_event)
+        return;
+
+    auto ctx = context_for_event(
+        last_pointer_event.get(),
+        current_target,
+        [this](auto point) { return scene->input_surface_at(point); });
+
+    // If we're in a move/resize gesture we don't need to synthesize an event
+    if (gesture_owner)
+        return;
+
+    auto const entered_surface_changed = dispatch_scene_change_enter_exit_events(
+        ctx,
+        [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); });
+
+    if (entered_surface_changed)
+    {
+        current_target = ctx.target_surface;
+    }
+    else if (ctx.target_surface.get() == surface)
     {
         /*
-         * The resized surface is still under the cursor, but the geometry change
-         * may have altered the surface-local cursor coordinates or the region the
-         * pointer is in (e.g. restore → fullscreen at the same top-left).
-         *
-         * Send a leave + enter pair so the client receives a fresh enter serial
-         * and can re-evaluate the cursor image without requiring cursor movement.
+         * The surface whose state changed is still under the cursor. The geometry
+         * has settled to its final position (attrib_changed fires after place_and_size),
+         * so send a leave + enter pair to give the client a fresh enter serial and
+         * trigger cursor re-evaluation (e.g. restore → fullscreen at the same top-left).
          */
         send_enter_exit_event(ctx.current_target, ctx.pev, mir_pointer_action_leave);
         send_enter_exit_event(ctx.target_surface, ctx.pev, mir_pointer_action_enter);

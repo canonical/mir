@@ -117,6 +117,12 @@ struct StubInputScene : public mtd::StubInputScene
         surface_observer->content_resized_to(surface, size);
     }
 
+    void notify_surface_state_changed(ms::Surface* surface)
+    {
+        auto surface_observer = std::dynamic_pointer_cast<ms::SurfaceObserver>(observer);
+        surface_observer->attrib_changed(surface, mir_window_attrib_state, mir_window_state_fullscreen);
+    }
+
     void remove_surface(std::shared_ptr<ms::Surface> const& surface)
     {
         surfaces.remove(surface);
@@ -748,7 +754,7 @@ TEST_F(SurfaceInputDispatcher, pointer_enter_synthesised_when_surface_resizes_to
     scene.notify_surface_resized(surface.get(), {20, 20});
 }
 
-TEST_F(SurfaceInputDispatcher, reenter_synthesised_when_surface_under_cursor_resizes)
+TEST_F(SurfaceInputDispatcher, reenter_synthesised_when_surface_state_changes_with_cursor_inside)
 {
     FakePointer pointer;
     dispatcher.start();
@@ -760,7 +766,7 @@ TEST_F(SurfaceInputDispatcher, reenter_synthesised_when_surface_under_cursor_res
         InSequence seq;
         // Enter happens on the initial motion event
         EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
-        // Resize triggers a leave + enter so the client gets a fresh enter serial
+        // State change triggers leave + enter so the client gets a fresh enter serial
         // and can re-evaluate the cursor image (e.g. after fullscreen at same top-left)
         EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
         EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
@@ -768,7 +774,25 @@ TEST_F(SurfaceInputDispatcher, reenter_synthesised_when_surface_under_cursor_res
 
     EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
 
-    // Resize - cursor is still inside, but the surface layout may have changed
+    // Window state change (e.g. fullscreen) with cursor still inside the surface
+    scene.notify_surface_state_changed(surface.get());
+}
+
+TEST_F(SurfaceInputDispatcher, no_spurious_reenter_when_surface_resizes_without_state_change)
+{
+    FakePointer pointer;
+    dispatcher.start();
+
+    // Surface at (0, 0) covering the cursor position
+    auto surface = scene.add_mutable_surface({{0, 0}, {20, 20}});
+
+    // Enter happens on the initial motion event; resize alone must not add leave+enter
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(0);
+
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({10, 10})));
+
+    // Resize - cursor is still inside; no spurious leave+enter
     surface->geom = {{0, 0}, {30, 30}};
     scene.notify_surface_resized(surface.get(), {30, 30});
 }
