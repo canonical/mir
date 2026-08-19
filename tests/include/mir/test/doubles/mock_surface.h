@@ -46,15 +46,15 @@ struct MockSurface : public scene::BasicSurface
         ON_CALL(*this, parent())
             .WillByDefault(testing::Return(nullptr));
         ON_CALL(*this, set_focus_state(testing::_))
-            .WillByDefault(testing::Invoke([this](MirWindowFocusState focus_state)
+            .WillByDefault([this](MirWindowFocusState focus_state)
                 {
                     BasicSurface::set_focus_state(focus_state);
-                }));
+                });
         ON_CALL(*this, move_to(testing::_))
-            .WillByDefault(testing::Invoke([this](geometry::Point const& top_left)
-               {
+            .WillByDefault([this](geometry::Point const& top_left)
+                {
                     BasicSurface::move_to(top_left);
-               }));
+                });
     }
 
     ~MockSurface() noexcept {}

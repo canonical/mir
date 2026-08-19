@@ -44,9 +44,8 @@ struct FocusMode : mt::TestWindowManagerTools
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
-                Invoke(
                     [&result](WindowInfo const& window_info)
-                        { result = window_info.window(); }));
+                        { result = window_info.window(); });
 
         creation_parameters.type = mir_window_type_normal;
         creation_parameters.set_size({600, 400});

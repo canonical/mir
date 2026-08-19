@@ -98,7 +98,7 @@ public:
 
         mir::Fd stub_fd{::open("/dev/null", O_RDWR | O_CLOEXEC)};
         ON_CALL(drm, open(StrEq(device_name), _)).WillByDefault(
-            InvokeWithoutArgs([stub_fd]() { return stub_fd; }));
+            [stub_fd]() { return stub_fd; });
         return stub_fd;
     }
 private:

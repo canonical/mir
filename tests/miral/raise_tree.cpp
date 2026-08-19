@@ -46,9 +46,9 @@ struct RaiseTree : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
-            .WillOnce(Invoke([this](WindowInfo const& window_info){ parent = window_info.window(); }))
-            .WillOnce(Invoke([this](WindowInfo const& window_info){ child = window_info.window(); }))
-            .WillOnce(Invoke([this](WindowInfo const& window_info){ another_window = window_info.window(); }));
+            .WillOnce([this](WindowInfo const& window_info){ parent = window_info.window(); })
+            .WillOnce([this](WindowInfo const& window_info){ child = window_info.window(); })
+            .WillOnce([this](WindowInfo const& window_info){ another_window = window_info.window(); });
 
         creation_parameters.set_size(initial_parent_size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);

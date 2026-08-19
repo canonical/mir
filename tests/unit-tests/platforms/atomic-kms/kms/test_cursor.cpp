@@ -257,17 +257,17 @@ public:
           mt::fake_shared(current_configuration)}
     {
         ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
-            .WillByDefault(Invoke([](int , uint64_t , uint64_t *value)
+            .WillByDefault([](int , uint64_t , uint64_t *value)
               {
                   *value = 64;
                   return 0;
-              }));
+              });
         ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
-            .WillByDefault(Invoke([](int , uint64_t , uint64_t *value)
+            .WillByDefault([](int , uint64_t , uint64_t *value)
               {
                   *value = 64;
                   return 0;
-              }));
+              });
     }
 
     struct MockGBM : NiceMock<mtd::MockGBM>

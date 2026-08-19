@@ -223,8 +223,8 @@ TEST_F(BasicScreenShooter, graceful_failure_on_zero_sized_buffer)
 TEST_F(BasicScreenShooter, throw_in_scene_elements_for_causes_graceful_failure)
 {
     ON_CALL(*scene, scene_elements_for(_))
-        .WillByDefault(Invoke(
-            [](auto) -> mc::SceneElementSequence { throw std::runtime_error{"throw in scene_elements_for()!"}; }));
+        .WillByDefault(
+            [](auto) -> mc::SceneElementSequence { throw std::runtime_error{"throw in scene_elements_for()!"}; });
     shooter->capture(buffer, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
     EXPECT_CALL(callback, Call(nullopt_time));
     executor.execute();
