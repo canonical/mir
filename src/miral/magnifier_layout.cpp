@@ -130,13 +130,12 @@ auto current_output(geom::Rectangles const& outputs, geom::Rectangle const& boun
     return current;
 }
 
-/// True when every corner of `bounds` lies on some output, i.e. nothing of the
-/// magnifier hangs over empty space. A magnifier straddling the shared edge of
-/// two outputs satisfies this and is left alone; one hanging off the desktop
-/// does not, and is pulled back.
+/// True when every corner of `bounds` lies on some output. A magnifier
+/// straddling the shared edge of two outputs satisfies this and is left alone;
+/// one hanging off the desktop does not, and is pulled back.
 ///
-/// Corners only: on an L-shaped desktop a rectangle can have all four corners
-/// covered while a bite out of one edge sits over the notch. Confining such a
+/// Corners only: gapped, C-shaped, or U-shaped layouts can have all four
+/// corners covered while some of `bounds` sits over empty space. Confining such a
 /// placement would be no better - there is no single output it belongs to -
 /// so the cheap test is the useful one.
 auto is_fully_on_outputs(geom::Rectangles const& outputs, geom::Rectangle const& bounds) -> bool
