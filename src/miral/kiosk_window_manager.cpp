@@ -87,7 +87,8 @@ auto KioskWindowManagerPolicy::place_new_window(ApplicationInfo const& app_info,
     WindowSpecification specification = CanonicalWindowManagerPolicy::place_new_window(app_info, request);
 
     if ((specification.type().transform([](auto t) { return t == mir_window_type_normal || t == mir_window_type_freestyle; }).value_or(false)) &&
-        (specification.parent().transform([](auto p) { return p.expired(); }).value_or(true)))
+        (specification.parent().transform([](auto p) { return p.expired(); }).value_or(true)) &&
+        specification.state() != mir_window_state_attached)
     {
         specification.state() = target_state;
         specification.size() = std::nullopt; // Ignore requested size (if any) when we change state
@@ -106,7 +107,8 @@ void KioskWindowManagerPolicy::handle_modify_window(WindowInfo& window_info, Win
     WindowSpecification specification = modifications;
 
     if ((window_info.type() == mir_window_type_normal || window_info.type() == mir_window_type_freestyle) &&
-        !window_info.parent())
+        !window_info.parent() &&
+        specification.state().value_or(window_info.state()) != mir_window_state_attached)
     {
         if (window_info.is_visible() || modifications.state().transform([](auto state) { return state != mir_window_state_restored; }).value_or(true))
         {
