@@ -11,6 +11,7 @@ apt-get --yes --no-install-recommends install \
   gcovr \
   glmark2-es2 \
   glmark2-es2-wayland \
+  inotify-tools \
   lcov \
   libclang-rt-dev \
   llvm \
@@ -35,29 +36,29 @@ exec llvm-cov gcov "$@"
 EOF
 chmod +x /usr/local/bin/gcov
 
-cat <<'EOF' > /etc/systemd/system/mir-coverage.path
-[Unit]
-Description=Watch for livereload directory existence
-
-[Path]
-# Triggers as soon as the target folder exists
-PathExists=/home/workshop/build/coverage-html
-Unit=mir-coverage.service
-
-[Install]
-WantedBy=default.target
-EOF
-
 cat <<'EOF' > /etc/systemd/system/mir-coverage.service
 [Unit]
-Description=LiveReload HTTP Server
+Description=Mir test coverage report
+After=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/home/workshop/build/coverage-html
-# Adjust the path to 'livereload' executable if installed in a venv or ~/.local/bin/
-ExecStart=/usr/bin/livereload --host 0 --port 8001 /home/workshop/build/coverage-html
+ExecStartPre=/bin/bash -c 'until [ -d /home/workshop/build/coverage-html ]; do sleep 2; done'
+# Monitor livereload itself and the folder disappearing
+ExecStart=/bin/bash -c '\
+  /usr/bin/livereload --host 0 --port 8001 /home/workshop/build/coverage-html & \
+  LR_PID=$$!; \
+  inotifywait -qq -e delete_self -e move_self /home/workshop/build/coverage-html & \
+  IN_PID=$$!; \
+  wait -n; \
+  kill $$LR_PID $$IN_PID 2>/dev/null; \
+  exit 1'
+
 Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
 EOF
 
-systemctl enable --now mir-coverage.path
+systemctl enable --now --no-block mir-coverage.service
