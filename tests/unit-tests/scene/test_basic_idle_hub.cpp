@@ -109,10 +109,10 @@ TEST_F(BasicIdleHub, observer_can_remove_itself_in_idle_notification)
     EXPECT_CALL(*observer, active()).Times(AnyNumber());
     hub->register_interest(observer, executor, 5s);
     executor.execute();
-    EXPECT_CALL(*observer, idle()).WillOnce(Invoke([&]()
+    EXPECT_CALL(*observer, idle()).WillOnce([&]()
         {
             hub->unregister_interest(*observer);
-        }));
+        });
     advance_by(6s);
     executor.execute();
 }

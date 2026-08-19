@@ -175,7 +175,7 @@ struct DecorationBasicDecoration
     void SetUp() override
     {
         ON_CALL(shell, create_surface(_, _, _, _))
-            .WillByDefault(Invoke([this](
+            .WillByDefault([this](
                     std::shared_ptr<ms::Session> const&,
                     msh::SurfaceSpecification const& params,
                     std::shared_ptr<ms::SurfaceObserver> const& observer,
@@ -185,7 +185,7 @@ struct DecorationBasicDecoration
                     decoration_surface.resize({params.width.value(), params.height.value()});
                     decoration_surface.register_interest(observer);
                     return mt::fake_shared(decoration_surface);
-                }));
+                });
         ON_CALL(*session, create_buffer_stream(_))
             .WillByDefault(Return(mt::fake_shared(buffer_stream)));
         window_surface.resize(default_window_size);

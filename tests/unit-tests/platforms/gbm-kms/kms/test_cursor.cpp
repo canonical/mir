@@ -305,17 +305,17 @@ struct MesaCursorTest : ::testing::Test
     {
         using namespace ::testing;
         ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
-            .WillByDefault(Invoke([this](int , uint64_t , uint64_t *value)
+            .WillByDefault([this](int , uint64_t , uint64_t *value)
                                   {
                                       *value = cursor_side;
                                       return 0;
-                                  }));
+                                  });
         ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
-            .WillByDefault(Invoke([this](int , uint64_t , uint64_t *value)
+            .WillByDefault([this](int , uint64_t , uint64_t *value)
                                   {
                                       *value = cursor_side;
                                       return 0;
-                                  }));
+                                  });
 
     }
 
@@ -369,10 +369,10 @@ TEST_F(MesaCursorTest, respects_drm_cap_cursor)
 {
     auto const drm_buffer_size = 255;
     ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_WIDTH, _))
-        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
+        .WillByDefault([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; });
 
     ON_CALL(mock_drm, drmGetCap(_, DRM_CAP_CURSOR_HEIGHT, _))
-        .WillByDefault(Invoke([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; }));
+        .WillByDefault([](int , uint64_t , uint64_t *value) { *value = drm_buffer_size; return 0; });
 
     EXPECT_CALL(mock_gbm, gbm_bo_create(_, drm_buffer_size, drm_buffer_size, _, _));
 

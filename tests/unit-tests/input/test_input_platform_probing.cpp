@@ -64,17 +64,17 @@ struct InputPlatformProbe : ::testing::Test
         ON_CALL(mock_options, get(StrEq(platform_path),Matcher<char const*>(_)))
             .WillByDefault(Return(platform_path_value));
         ON_CALL(mock_options, get(StrEq(platform_path)))
-            .WillByDefault(Invoke(
+            .WillByDefault(
                     [this](char const*) -> boost::any const&
                     {
                         return platform_path_value_as_any;
-                    }));
+                    });
         ON_CALL(mock_options, get(StrEq(platform_input_lib)))
-            .WillByDefault(Invoke(
+            .WillByDefault(
                     [this](char const*) -> boost::any const&
                     {
                         return platform_input_lib_value_as_any;
-                    }));
+                    });
 #ifdef MIR_BUILD_PLATFORM_X11
         ON_CALL(mock_x11, XGetXCBConnection(_))
             .WillByDefault(Return(reinterpret_cast<xcb_connection_t*>(1)));
