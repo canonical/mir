@@ -51,10 +51,13 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
             extern "Rust" {
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
-                fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
+                fn run(self: &WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
                 fn stop(self: &WaylandServer);
-                fn drain_queue(self: &mut WaylandServer) -> bool;
+                fn drain_queue(self: &WaylandServer) -> bool;
                 fn register_fd_ready_listener(self: &WaylandServer, fd: i32, callback: UniquePtr<FdReadyCallback>);
+
+                type OutputGlobal;
+                fn create_output_global(self: &WaylandServer, binder: UniquePtr<OutputGlobalBinder>) -> Result<Box<OutputGlobal>>;
 
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;

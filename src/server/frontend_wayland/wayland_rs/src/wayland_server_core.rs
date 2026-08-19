@@ -42,6 +42,9 @@ pub struct WaylandServer {
     work_signal: Mutex<Option<Ping>>,
     fd_listener_signal: Mutex<Option<Ping>>,
     pending_fd_listeners: Mutex<Vec<PendingFdListener>>,
+    /// A clone of the running display's handle, populated for the duration of
+    /// [WaylandServer::run].
+    display_handle: Mutex<Option<DisplayHandle>>,
 }
 
 impl WaylandServer {
@@ -52,7 +55,49 @@ impl WaylandServer {
             work_signal: Mutex::new(None),
             fd_listener_signal: Mutex::new(None),
             pending_fd_listeners: Mutex::new(Vec::new()),
+            display_handle: Mutex::new(None),
         }
+    }
+
+    /// Create a `wl_output` global backed by the given per-output binder.
+    ///
+    /// Unlike the statically-registered globals, `wl_output` globals are
+    /// dynamic: Mir advertises one per connected monitor and withdraws it when
+    /// the monitor is unplugged. The `binder` captures the C++ state for a
+    /// single monitor and is invoked whenever a client binds this global.
+    ///
+    /// The returned [OutputGlobal] owns the global's lifetime: dropping it
+    /// (from C++, via the returned `Box`) removes the global from the display.
+    ///
+    /// # Errors
+    /// Returns an error if called while the server is not running (i.e. outside
+    /// of an active [WaylandServer::run]).
+    pub fn create_output_global(
+        &self,
+        binder: UniquePtr<crate::ffi::OutputGlobalBinder>,
+    ) -> Result<Box<OutputGlobal>, Box<dyn error::Error>> {
+        let handle = self
+            .display_handle
+            .lock()
+            .expect("No recovery from lock poisoning")
+            .as_ref()
+            .ok_or("create_output_global called while the server was not running")?
+            .clone();
+
+        let data = crate::dispatch::OutputGlobalData::new(binder);
+
+        let version =
+            <wayland_server::protocol::wl_output::WlOutput as wayland_server::Resource>::interface(
+            )
+            .version;
+
+        let id = handle.create_global::<
+            ServerState,
+            wayland_server::protocol::wl_output::WlOutput,
+            crate::dispatch::OutputGlobalData,
+        >(version, data);
+
+        Ok(Box::new(OutputGlobal { id, handle }))
     }
 
     /// Run the wayland server.
@@ -62,7 +107,7 @@ impl WaylandServer {
     /// # Arguments
     /// * `socket` - The name of the socket to bind to (e.g. "wayland-0").
     pub fn run(
-        &mut self,
+        &self,
         socket: &str,
         factory: UniquePtr<GlobalFactory>,
         notification_handler: UniquePtr<WaylandServerNotificationHandler>,
@@ -79,6 +124,27 @@ impl WaylandServer {
             work_callback,
             disconnect_rx,
         };
+
+        // Publish a clone of the display handle so that C++ can create and
+        // destroy dynamic globals (e.g. per-monitor `wl_output`s) while the
+        // server is running. Cleared again before `run` returns.
+        *self
+            .display_handle
+            .lock()
+            .expect("No recovery from lock poisoning") = Some(state.handle.clone());
+
+        // This ensures that the display handle will be dropped when this method returns.
+        struct ClearDisplayHandleOnDrop<'a>(&'a WaylandServer);
+        impl Drop for ClearDisplayHandleOnDrop<'_> {
+            fn drop(&mut self) {
+                *self
+                    .0
+                    .display_handle
+                    .lock()
+                    .expect("No recovery from lock poisoning") = None;
+            }
+        }
+        let _clear_display_handle = ClearDisplayHandleOnDrop(self);
 
         // First, add the listener to the event loop.
         let listener = ListeningSocket::bind(socket)?;
@@ -388,6 +454,22 @@ impl FdReadyListener for CxxFdReadyListener {
 /// Create a new wayland server.
 pub fn create_wayland_server() -> Box<WaylandServer> {
     Box::new(WaylandServer::new())
+}
+
+/// An RAII handle owning the lifetime of a dynamically-created `wl_output`
+/// global (see [WaylandServer::create_output_global]).
+///
+/// Dropping it withdraws the global from the display. It is handed to C++ as a
+/// `Box<OutputGlobal>`; when C++ drops that box the global is removed.
+pub struct OutputGlobal {
+    id: wayland_server::backend::GlobalId,
+    handle: DisplayHandle,
+}
+
+impl Drop for OutputGlobal {
+    fn drop(&mut self) {
+        self.handle.remove_global::<ServerState>(self.id.clone());
+    }
 }
 
 /// The state of the wayland server.
