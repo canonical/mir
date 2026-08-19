@@ -27,6 +27,8 @@
 #include <mir/scene/surface.h>
 #include <mir/input/seat.h>
 #include <mir/wayland/weak.h>
+#include <mir/log.h>
+
 #include "decoration/manager.h"
 
 #include <iterator>
@@ -252,6 +254,7 @@ auto msh::AbstractShell::create_surface(
         };
 
     auto const result = window_manager->add_surface(session, wm_visible_spec, build);
+    managed_surfaces.insert(result);
     report->created_surface(*session, *result);
 
     if (*should_decorate)
@@ -372,6 +375,7 @@ void msh::AbstractShell::destroy_surface(
 {
     report->destroying_surface(*session, *surface);
     decoration_manager->undecorate(surface);
+    managed_surfaces.erase(surface);
     window_manager->remove_surface(session, surface);
 }
 
@@ -689,7 +693,11 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<scene::Surface>
 {
-    return surface_stack->surface_at(cursor);
+    auto const surface = surface_stack->surface_at(cursor);
+    if(!managed_surfaces.contains(surface))
+        return nullptr;
+
+    return surface;
 }
 
 void msh::AbstractShell::raise(SurfaceSet const& surfaces)
