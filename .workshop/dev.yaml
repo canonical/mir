@@ -14,6 +14,7 @@ sdks:
 - name: system
 actions:
   configure: |
+    set -xeu
     cmake \
       -DCMAKE_BUILD_TYPE=Debug \
       -DCMAKE_INSTALL_PREFIX=$HOME/install \
@@ -33,7 +34,7 @@ actions:
 
   coverage: |
     set -xeu
-    cmake ~/build -DMIR_ENABLE_COVERAGE=ON
+    cmake -S . -B ~/build -DMIR_ENABLE_COVERAGE=ON
     cmake --build ~/build --target coverage-html "$@"
     echo
     echo "Coverage report available at http://$( hostname -f ):8001/"
