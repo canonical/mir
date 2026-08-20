@@ -611,6 +611,27 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
     shell.modify_surface(session, surface, stream_modification);
 }
 
+TEST_F(AbstractShell, modify_surface_applies_streams_after_the_window_manager_changes)
+{
+    std::shared_ptr<ms::Session> session =
+        shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+
+    auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
+    auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
+
+    msh::SurfaceSpecification modifications;
+    modifications.streams = std::vector<msh::StreamSpecification>{};
+    modifications.input_shape = std::vector<geom::Rectangle>{{{0, 0}, {10, 10}}};
+
+    // Applying the streams notifies scene observers, so it must happen once the window
+    // manager has applied the input region (and any resulting geometry changes)
+    InSequence seq;
+    EXPECT_CALL(*wm, modify_surface(_,_,_));
+    EXPECT_CALL(mock_surface, set_streams(_));
+
+    shell.modify_surface(session, surface, modifications);
+}
+
 TEST_F(AbstractShell, size_gets_adjusted_for_windows_with_margins)
 {
     geom::DeltaY const top{3};

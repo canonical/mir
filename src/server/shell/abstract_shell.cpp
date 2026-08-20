@@ -31,6 +31,7 @@
 
 #include <iterator>
 #include <ranges>
+#include <utility>
 #include <vector>
 
 namespace ms = mir::scene;
@@ -324,15 +325,21 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     report->update_surface(*session, *surface, wm_relevant_mods);
 
-    if (wm_relevant_mods.streams.has_value())
-    {
-        auto streams = std::move(wm_relevant_mods.streams.value());
-        wm_relevant_mods.streams.reset();
-        session->configure_streams(*surface, streams);
-    }
+    auto const streams = std::exchange(wm_relevant_mods.streams, std::nullopt);
+
     if (!wm_relevant_mods.is_empty())
     {
         window_manager->modify_surface(session, surface, wm_relevant_mods);
+    }
+    /*
+     * The streams are applied after the window manager has applied the rest of the
+     * modifications (notably the input region and the resulting geometry): applying
+     * them notifies scene observers, and they need to see a settled surface state to
+     * correctly determine what is under the pointer.
+     */
+    if (streams.has_value())
+    {
+        session->configure_streams(*surface, streams.value());
     }
 
     if (modifications.cursor_image.has_value())
