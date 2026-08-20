@@ -67,12 +67,10 @@ struct BasicScreenShooter : Test
             .WillByDefault([this](auto buffer) { return default_gl_behaviour_provider.as_texture(std::move(buffer)); });
         ON_CALL(*gl_provider, surface_for_sink(_, _))
             .WillByDefault(
-                [this](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
+                [](mg::DisplaySink& sink, auto const&) -> std::unique_ptr<mg::gl::OutputSurface>
                 {
                     if (auto cpu_provider = sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>())
                     {
-                        captured_sink = &sink;
-                        captured_allocator = cpu_provider;
                         auto surface = std::make_unique<testing::NiceMock<mtd::MockOutputSurface>>();
                         auto format = cpu_provider->supported_formats().front();
                         ON_CALL(*surface, commit())
@@ -100,47 +98,17 @@ struct BasicScreenShooter : Test
 
     std::unique_ptr<mtd::MockRenderer> next_renderer{std::make_unique<testing::NiceMock<mtd::MockRenderer>>()};
 
-    /* The default create_renderer_for() hands out the single `next_renderer`;
-     * tests that expect more than one Renderer need a fresh one each time.
-     */
-    void supply_unlimited_renderers()
-    {
-        ON_CALL(*renderer_factory, create_renderer_for(_, _))
-            .WillByDefault(
-                [this](auto output_surface, auto)
-                {
-                    ++renderers_created;
-                    auto renderer = std::make_unique<testing::NiceMock<mtd::MockRenderer>>();
-                    ON_CALL(*renderer, render(_))
-                        .WillByDefault([surface = std::shared_ptr<mg::gl::OutputSurface>(std::move(output_surface))]()
-                                       { return surface->commit(); });
-                    return renderer;
-                });
-    }
-
-    void capture_and_run(std::shared_ptr<mtd::StubBuffer> const& target)
-    {
-        shooter->capture(target, viewport_rect, viewport_transform, false, [&](auto time) { callback.Call(time); });
-        executor.execute();
-    }
-
-    int renderers_created{0};
-    std::vector<geom::Size> sink_sizes;
-    mg::DisplaySink* captured_sink{nullptr};
-    mg::CPUAddressableDisplayAllocator* captured_allocator{nullptr};
-
     std::shared_ptr<mtd::MockScene> scene{std::make_shared<NiceMock<mtd::MockScene>>()};
     mg::RenderableList renderables{[]()
-                                   {
-                                       mg::RenderableList renderables;
-                                       for (int i = 0; i < 6; i++)
-                                       {
-                                           renderables.push_back(std::make_shared<mtd::StubRenderable>());
-                                       }
-                                       return renderables;
-                                   }()};
-    mc::SceneElementSequence scene_elements{
-        [&]()
+        {
+            mg::RenderableList renderables;
+            for (int i = 0; i < 6; i++)
+            {
+                renderables.push_back(std::make_shared<mtd::StubRenderable>());
+            }
+            return renderables;
+        }()};
+    mc::SceneElementSequence scene_elements{[&]()
         {
             mc::SceneElementSequence elements;
             for (auto& renderable : renderables)
