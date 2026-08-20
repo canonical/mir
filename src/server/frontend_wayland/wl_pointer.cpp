@@ -487,9 +487,23 @@ void mf::WlPointer::set_cursor(
     }
     else
     {
+        auto const old_cursor_had_surface = cursor->cursor_surface().has_value();
         cursor = std::make_unique<WlHiddenCursor>(nullptr, commit_handler);
         if (surface_under_cursor)
+        {
             cursor->apply_to(&surface_under_cursor.value());
+            if (old_cursor_had_surface)
+            {
+                // Clear surface tracking without sending a leave event.
+                // This forces a synthetic re-enter on the next pointer motion,
+                // giving the client a fresh serial so it can restore the cursor.
+                // (Clients like GTK4 only call wl_pointer_set_cursor on enter events,
+                // not on motion events, so without a new enter the cursor stays hidden.)
+                surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
+                surface_under_cursor = {};
+                destroy_listener_id = {};
+            }
+        }
     }
 }
 
