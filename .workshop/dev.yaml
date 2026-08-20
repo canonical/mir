@@ -12,18 +12,32 @@ sdks:
 - name: copilot
 - name: project-mir
 - name: system
-  plugs:
-    doc:
-      interface: tunnel
-      endpoint: localhost:8000
 actions:
-  cmake: |
+  configure: |
     set -xeu
-    cmake ~/build "$@"
+    cmake \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_INSTALL_PREFIX=$HOME/install \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DMIR_USE_LD=mold \
+      -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+      -B $HOME/build \
+      -G Ninja \
+      . \
+      "$@"
 
   build: |
     set -xeu
     cmake --build ~/build "$@"
+
+  coverage: |
+    set -xeu
+    cmake -S . -B ~/build -DMIR_ENABLE_COVERAGE=ON
+    cmake --build ~/build --target coverage-html "$@"
+    echo
+    echo "Coverage report available at http://$( hostname -f ):8001/"
 
   package: |
     set -xeu
@@ -54,7 +68,7 @@ actions:
       shift
     fi
 
-    cmake --build ~/build --target "doc-${target:-run}" "$@"
+    SPHINX_HOST=$( hostname -f ) cmake --build ~/build --target "doc-${target:-run}" "$@"
 
   ccache: ccache "$@"
 
