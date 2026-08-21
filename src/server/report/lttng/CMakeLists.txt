@@ -50,6 +50,8 @@ target_link_libraries(mirlttng
 
 add_library(mirserverlttng SHARED tracepoints.c)
 
+mir_disable_tsan_for_sources(tracepoints.c)
+
 target_include_directories(mirserverlttng
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}
