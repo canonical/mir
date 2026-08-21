@@ -1,5 +1,5 @@
 #!/bin/sh
-# Script to check and update debian packaging to match current ABIs
+# Script to check and update debian and RPM packaging to match current ABIs
 
 set -e
 
@@ -37,12 +37,28 @@ package_abi_var()
     echo "${1##*:}"
 }
 
+# Maps each ABI variable to its corresponding soversion macro in rpm/mir.spec.
+rpm_sover_macro()
+{
+    case "$1" in
+        MIROIL_ABI) echo "miroil_sover" ;;
+        MIRAL_ABI) echo "miral_sover" ;;
+        MIRCORE_ABI) echo "mircore_sover" ;;
+        MIRCOMMON_ABI) echo "mircommon_sover" ;;
+        MIRPLATFORM_ABI) echo "mirplatform_sover" ;;
+        MIRSERVER_ABI) echo "mirserver_sover" ;;
+        MIR_SERVER_GRAPHICS_PLATFORM_ABI) echo "mirplatformgraphics_sover" ;;
+        MIR_SERVER_INPUT_PLATFORM_ABI) echo "mirplatforminput_sover" ;;
+        MIRWAYLAND_ABI) echo "mirwayland_sover" ;;
+    esac
+}
+
 print_help_and_exit()
 {
     local prog=$(basename $0)
 
     echo "Usage: $prog [OPTION]..."
-    echo "Update debian packaging to match current ABIs"
+    echo "Update debian and RPM packaging to match current ABIs"
     echo ""
     echo "      --no-vcs   do not register file changes (e.g., moves) with the detected VCS"
     echo "      --check    check for ABI mismatches without updating debian packaging"
@@ -157,6 +173,26 @@ update_install_files()
     done
 }
 
+update_spec_file()
+{
+    if [ ! -f rpm/mir.spec ];
+    then
+        return
+    fi
+
+    for p in $packages;
+    do
+        local abi_var=$(package_abi_var $p)
+        local sover_macro=$(rpm_sover_macro $abi_var)
+        if [ -z "$sover_macro" ];
+        then
+            continue
+        fi
+        local abi=$(eval "echo \$${abi_var}")
+        sed -i "s/^%global ${sover_macro} [[:digit:]]\+/%global ${sover_macro} ${abi}/" rpm/mir.spec
+    done
+}
+
 report_abi_mismatch()
 {
     log "ABI mismatch: $1"
@@ -198,6 +234,36 @@ check_install_files()
             then
                 report_abi_mismatch "$current_file contains $suffix, but $pkg ABI is $abi"
             fi
+        fi
+    done
+}
+
+check_spec_file()
+{
+    if [ ! -f rpm/mir.spec ];
+    then
+        return
+    fi
+
+    local seen_macros=""
+    for p in $packages;
+    do
+        local abi_var=$(package_abi_var $p)
+        local sover_macro=$(rpm_sover_macro $abi_var)
+        if [ -z "$sover_macro" ];
+        then
+            continue
+        fi
+        case " $seen_macros " in
+            *" $sover_macro "*) continue ;;
+        esac
+        seen_macros="$seen_macros $sover_macro"
+
+        local abi=$(eval "echo \$${abi_var}")
+        local current=$(grep -o "^%global ${sover_macro} [[:digit:]]\+" rpm/mir.spec | grep -o '[[:digit:]]\+$')
+        if [ -n "$current" ] && [ "$current" != "$abi" ];
+        then
+            report_abi_mismatch "rpm/mir.spec defines ${sover_macro} as ${current}, but ${abi_var} is ${abi}"
         fi
     done
 }
@@ -250,6 +316,7 @@ then
     check_for_unknown_packages
     check_control_file
     check_install_files
+    check_spec_file
     if [ "$has_check_error" = "yes" ];
     then
         log "Consider running tools/update_package_abis.sh to fix the mismatches."
@@ -259,4 +326,5 @@ else
     check_for_unknown_packages
     update_control_file
     update_install_files
+    update_spec_file
 fi
