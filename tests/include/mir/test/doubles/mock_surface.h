@@ -83,6 +83,9 @@ struct MockSurface : public scene::BasicSurface
     MOCK_METHOD(std::list<scene::StreamInfo>, get_streams, (), (const));
     MOCK_METHOD(void, set_streams, (std::list<scene::StreamInfo> const&));
 
+    MOCK_METHOD(void, set_input_region, (std::vector<geometry::Rectangle> const&), (override));
+    MOCK_METHOD(bool, input_area_contains, (geometry::Point const&), (const override));
+
     MOCK_METHOD(void, set_focus_state, (MirWindowFocusState));
     MOCK_METHOD(std::string, application_id, (), (const));
     MOCK_METHOD(std::weak_ptr<scene::Session>, session, (), (const));
