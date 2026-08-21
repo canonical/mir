@@ -1,6 +1,8 @@
 set(MIRWAYLAND_ABI 7)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
-add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirwayland")
+add_compile_definitions(
+    MIR_LOG_COMPONENT_FALLBACK="mirwayland"
+)
 
 add_subdirectory(generator/)
 

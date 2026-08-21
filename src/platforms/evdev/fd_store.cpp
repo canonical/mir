@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "fd_store.h"
 
 #include <mir/log.h>
@@ -38,7 +42,7 @@ mir::Fd mie::FdStore::take_fd(char const* path)
     }
     catch (std::out_of_range const&)
     {
-        mir::log_warning("Failed to find requested fd for path %s", path);
+        mir::log_warning("Failed to find requested fd for path {}", path);
     }
     return mir::Fd{};
 }
@@ -55,7 +59,7 @@ void mie::FdStore::remove_fd(int fd)
 
     if (element == fds.end())
     {
-        mir::log_warning("Attempted to remove unmanaged fd %i", fd);
+        mir::log_warning("Attempted to remove unmanaged fd {}", fd);
     }
     else
     {

@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "input_device_config.h"
 #include "input_device_configuration_options.h"
 
@@ -385,7 +389,7 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
 {
     if (contains(device.capabilities(), mi::DeviceCapability::touchpad))
     {
-        mir::log_debug("Configuring touchpad: '%s'", device.name().c_str());
+        mir::log_debug("Configuring touchpad: '{}'", device.name().c_str());
         if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.has_value())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
@@ -415,7 +419,7 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
 {
     if (contains(device.capabilities(), mi::DeviceCapability::pointer))
     {
-        mir::log_debug("Configuring pointer: '%s'", device.name().c_str());
+        mir::log_debug("Configuring pointer: '{}'", device.name().c_str());
         if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.has_value())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );

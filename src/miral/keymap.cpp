@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/keymap.h>
 
 #include <miral/live_config.h>
@@ -136,7 +140,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     }
     catch (...)
     {
-        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+        mir::log(mir::logging::Severity::warning, "uncategorised", std::current_exception(),
                  "problem adding device (" + device->name() + ")");
     }
 
@@ -186,7 +190,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     }
     catch (...)
     {
-        mir::log(mir::logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(),
+        mir::log(mir::logging::Severity::warning, "uncategorised", std::current_exception(),
             "problem removing device (" + device->name() + ")");
     }
 
@@ -336,7 +340,7 @@ auto read_keymap(Connection const& connection) -> std::optional<std::string>
 
     if (error)
     {
-        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, properties_interface=%s, method_name=%s, interface_name=%s",
+        mir::log_info("Dbus error={}, dest={}, object_path={}, properties_interface={}, method_name={}, interface_name={}",
                       error->message, bus_name, object_path, properties_interface, method_name, interface_name);
     }
 

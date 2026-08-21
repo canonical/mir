@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "egl_helper.h"
 
 #include <mir/graphics/gl_config.h>
@@ -261,7 +265,7 @@ auto mgmh::EGLHelper::egl_config_for_format(EGLint gbm_format) -> EGLConfig
         if (eglGetConfigAttrib(egl_display, config, EGL_NATIVE_VISUAL_ID, &id) == EGL_FALSE)
         {
             mir::log_warning(
-                "Failed to query GBM format of EGLConfig: %s",
+                "Failed to query GBM format of EGLConfig: {}",
                 mg::egl_category().message(eglGetError()).c_str());
             continue;
         }

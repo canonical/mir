@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/display_configuration.h>
 #include <miral/runner.h>
 #include <miral/configuration_option.h>

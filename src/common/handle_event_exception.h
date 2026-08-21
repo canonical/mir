@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/log.h>
 
 #define MIR_HANDLE_EVENT_EXCEPTION(expr) \
@@ -23,6 +26,6 @@
     }                                    \
     catch(std::exception const& e)       \
     {                                    \
-        mir::log_critical("%s", e.what());     \
+        mir::log_critical("{}", e.what());     \
         abort();                         \
     }

@@ -15,12 +15,14 @@
  */
 
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 
 #include <mir/graphics/egl_logger.h>
 
-#define MIR_LOG_COMPONENT "EGL"
 #include <mir/log.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_error.h>
@@ -55,7 +57,7 @@ void egl_debug_logger(
                 return mir::logging::Severity::critical;
                 default:
                 mir::log_error(
-                    "Unexpected EGL log level encountered: %i. This is a Mir programming error.",
+                    "Unexpected EGL log level encountered: {}. This is a Mir programming error.",
                     egl_severity);
                 // Shrug. Let's pick error?
                 return mir::logging::Severity::error;
@@ -64,7 +66,7 @@ void egl_debug_logger(
 
     mir::log(
         severity,
-        MIR_LOG_COMPONENT,
+        "uncategorised",
         "[%s] on [%s]: %s (%s): %s",
         thread_id,
         object_id,

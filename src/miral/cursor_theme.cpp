@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/cursor_theme.h>
 #include "xcursor_loader.h"
 
@@ -25,7 +28,6 @@
 
 #include <algorithm>
 
-#define MIR_LOG_COMPONENT "miral"
 #include <mir/log.h>
 
 namespace mi = mir::input;
@@ -66,7 +68,7 @@ void miral::CursorTheme::operator()(mir::Server& server) const
                 if (has_default_cursor(*xcursor_loader))
                     return xcursor_loader;
 
-                mir::log_warning("Failed to load cursor theme: %s", theme.c_str());
+                mir::log_warning("Failed to load cursor theme: {}", theme.c_str());
 
                 if ((i = j) != std::end(themes)) ++i;
             }

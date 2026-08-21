@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "rendering_platform.h"
 #include "buffer_allocator.h"
 #include <mir/graphics/egl_extensions.h>
@@ -21,7 +24,6 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/renderer/gl/context.h>
 
-#define MIR_LOG_COMPONENT "platform-generic-egl"
 #include <mir/log.h>
 
 #include <EGL/egl.h>
@@ -185,10 +187,10 @@ auto maybe_make_dmabuf_provider(
     catch (std::runtime_error const& error)
     {
         mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
+            "Cannot enable linux-dmabuf import support: {}", error.what());
         mir::log(
             mir::logging::Severity::debug,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             std::current_exception(),
             "Detailed error: ");
     }

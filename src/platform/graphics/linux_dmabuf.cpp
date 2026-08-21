@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/anonymous_shm_file.h>
 #include <mir/fd.h>
@@ -45,7 +48,6 @@
 #include <system_error>
 #include <linux/dma-buf.h>
 
-#define MIR_LOG_COMPONENT "linux-dmabuf-import"
 #include <mir/log.h>
 
 #include <vector>
@@ -100,7 +102,7 @@ public:
         if (returned_formats != num_formats)
         {
             mir::log_warning(
-                "eglQueryDmaBufFormats returned unexpected number of formats (got %i, expected %i)",
+                "eglQueryDmaBufFormats returned unexpected number of formats (got {}, expected {})",
                 returned_formats,
                 num_formats);
             resize(returned_formats);
@@ -120,7 +122,7 @@ public:
                     nullptr,
                     &num_modifiers) != EGL_TRUE)
             {
-                mir::log_warning("eglQueryDmaBufModifiers failed for format %s: %s",
+                mir::log_warning("eglQueryDmaBufModifiers failed for format {}: {}",
                     mg::drm_format_to_string(static_cast<uint32_t>(format)),
                     mg::egl_category().message(eglGetError()).c_str());
 
@@ -150,8 +152,8 @@ public:
             if (returned_modifiers != num_modifiers)
             {
                 mir::log_warning(
-                    "eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x%ux"
-                    " (expected %i, got %i)",
+                    "eglQueryDmaBufModifiers return unexpected number of modifiers for format 0x{}x"
+                    " (expected {}, got {})",
                     format,
                     returned_modifiers,
                     num_modifiers);
@@ -819,7 +821,7 @@ private:
             /* The client should handle this fine, but let's make sure we can see
              * any failures that might happen.
              */
-            mir::log_debug("Failed to import client dmabufs: %s", err.what());
+            mir::log_debug("Failed to import client dmabufs: {}", err.what());
             send_failed_event();
         }
         consumed = true;
@@ -1456,7 +1458,7 @@ dev_t get_devnum(EGLDisplay dpy)
         if (stat(device_path, &device_stat) == -1)
         {
             mir::log_info(
-                "Unable to determine linux-dmabuf device: unable to stat device path: %s", mir::errno_to_cstr(errno));
+                "Unable to determine linux-dmabuf device: unable to stat device path: {}", mir::errno_to_cstr(errno));
             return 0;
         }
 
@@ -1465,7 +1467,7 @@ dev_t get_devnum(EGLDisplay dpy)
     catch (std::runtime_error const& error)
     {
         mir::log_info(
-            "Unable to determine linux-dmabuf device: %s", error.what());
+            "Unable to determine linux-dmabuf device: {}", error.what());
         return 0;
     }
 }

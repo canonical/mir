@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/glib_main_loop_sources.h>
 #include <mir/lockable_callback.h>
 #include <mir/raii.h>
@@ -531,7 +535,7 @@ void md::SignalSources::dispatch_pending_signal()
     auto const sig = read_pending_signal();
     if (sig.sig != -1)
     {
-        mir::log_debug("Handling %s from pid=%d", strsignal(sig.sig), sig.pid);
+        mir::log_debug("Handling {} from pid={}", strsignal(sig.sig), sig.pid);
         dispatch_signal(sig.sig);
     }
 }

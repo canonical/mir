@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "wayland_executor.h"
 
 #include <mir/errno_utils.h>
@@ -237,7 +241,7 @@ int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
     if (auto err = eventfd_read(fd, &unused))
     {
         mir::log_error(
-            "eventfd_read failed to consume wakeup notification: %s (%i)",
+            "eventfd_read failed to consume wakeup notification: {} ({})",
             mir::errno_to_cstr(err),
             err);
     }
@@ -252,7 +256,7 @@ int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
         {
             mir::log(
                 mir::logging::Severity::critical,
-                MIR_LOG_COMPONENT,
+                "uncategorised",
                 std::current_exception(),
                 "Exception processing Wayland event loop work item");
         }
@@ -327,7 +331,7 @@ mf::WaylandExecutor::~WaylandExecutor()
     if (auto err = eventfd_write(notify_fd, 1))
     {
         mir::log_critical(
-            "Failed to create event notification for ~WaylandExecutor: %s (%i)",
+            "Failed to create event notification for ~WaylandExecutor: {} ({})",
             mir::errno_to_cstr(err),
             err);
     }

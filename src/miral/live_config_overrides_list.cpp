@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/live_config_overrides_list.h>
 
 #include <mir/log.h>
@@ -60,10 +64,10 @@ void mlc::OverridesList::for_each(Loader unchanged, Loader fresh, Loader modifie
         if (!stream || !*stream)
         {
             if (event.kind == Context::Kind::fresh)
-                mir::log_warning("Failed to open new file %s. Skipping.", event.path.c_str());
+                mir::log_warning("Failed to open new file {}. Skipping.", event.path.c_str());
             else
             {
-                mir::log_warning("Failed to open file %s. Treating as a drop.", event.path.c_str());
+                mir::log_warning("Failed to open file {}. Treating as a drop.", event.path.c_str());
                 dropped(event.path);
             }
             continue;

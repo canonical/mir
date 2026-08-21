@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "input_platform.h"
 #include "input_device.h"
 
@@ -24,7 +27,6 @@
 #include <mir/dispatch/readable_fd.h>
 #include "../x11_resources.h"
 
-#define MIR_LOG_COMPONENT "x11-input"
 #include <mir/log.h>
 
 #include <cinttypes>
@@ -129,7 +131,7 @@ auto get_pos_on_output(mir::X::X11Resources* x11_resources, xcb_window_t x11_win
             else
             {
                 mir::log_warning(
-                    "X11 window %d does not map to any known output, not applying input transformation",
+                    "X11 window {} does not map to any known output, not applying input transformation",
                     x11_window);
             }
         });

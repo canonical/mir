@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MIR_LOG_COMPONENT "test_floating_window_manager_v2"
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 
 #include <mir/geometry/forward.h>
 #include <mir_test_framework/window_management_test_harness.h>

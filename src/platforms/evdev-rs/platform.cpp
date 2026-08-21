@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "platform.h"
 #include "platform_bridge.h"
 #include "input_report.h"
@@ -183,7 +187,7 @@ public:
 
 void InputDeviceObserver::activated(mir::Fd&& device_fd)
 {
-    mir::log_info("evdev-rs: observer activated() for %s (devnum=%lu, fd=%d)",
+    mir::log_info("evdev-rs: observer activated() for {} (devnum={}, fd={})",
                    devnode.c_str(), static_cast<unsigned long>(devnum), static_cast<int>(device_fd));
 
     auto const locked = platform_self.lock();
@@ -200,7 +204,7 @@ void InputDeviceObserver::activated(mir::Fd&& device_fd)
         return;
     }
 
-    mir::log_info("evdev-rs: enqueuing on_device_activated for %s", devnode.c_str());
+    mir::log_info("evdev-rs: enqueuing on_device_activated for {}", devnode.c_str());
     device_queue->enqueue(
         [devnode = devnode, devnum = devnum, device_fd = device_fd, &platform_impl = platform_impl]()
         {
@@ -209,13 +213,13 @@ void InputDeviceObserver::activated(mir::Fd&& device_fd)
             int const duped = ::dup(static_cast<int>(device_fd));
             if (duped < 0)
             {
-                mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
+                mir::log_error("evdev-rs: dup() failed in activated() for {}", devnode.c_str());
                 return;
             }
 
             if (!platform_impl->is_running())
             {
-                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", duped);
+                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd={}", duped);
                 ::close(duped);
                 return;
             }
@@ -225,7 +229,7 @@ void InputDeviceObserver::activated(mir::Fd&& device_fd)
 
 void InputDeviceObserver::suspended()
 {
-    mir::log_info("evdev-rs: observer suspended() for %s (devnum=%lu)",
+    mir::log_info("evdev-rs: observer suspended() for {} (devnum={})",
                    devnode.c_str(), static_cast<unsigned long>(devnum));
 
     auto const locked = platform_self.lock();
@@ -254,7 +258,7 @@ void InputDeviceObserver::suspended()
 
 void InputDeviceObserver::removed()
 {
-    mir::log_info("evdev-rs: observer removed() for %s (devnum=%lu)",
+    mir::log_info("evdev-rs: observer removed() for {} (devnum={})",
                    devnode.c_str(), static_cast<unsigned long>(devnum));
 
     auto const locked = platform_self.lock();

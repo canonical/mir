@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/output_filter.h>
 #include <miral/live_config.h>
 
@@ -83,7 +87,7 @@ miral::OutputFilter::OutputFilter(live_config::Store& config_store) : OutputFilt
                 else
                 {
                     mir::log_warning(
-                        "Config key '%s' has invalid value: %s",
+                        "Config key '{}' has invalid value: {}",
                         key.to_string().c_str(),
                         std::format("{}",*val).c_str());
                 }

@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "launch_app.h"
 
 #include <mir/fatal.h>
@@ -168,7 +172,7 @@ auto execute_with_environment(std::vector<std::string> const app, Environment& a
 
     if (error != 0)
     {
-        mir::log_warning("Failed to execute client (\"%s\") error: %s", exec_args[0], std::strerror(error));
+        mir::log_warning("Failed to execute client (\"{}\") error: {}", exec_args[0], std::strerror(error));
         // Fork a placeholder child that immediately exits, so the caller can
         // safely call waitpid() on the returned pid (matching the old fork()+exec()
         // contract where a real pid was always returned, even on exec failure).

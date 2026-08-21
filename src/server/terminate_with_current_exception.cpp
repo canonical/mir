@@ -50,7 +50,7 @@ void mir::terminate_with_current_exception()
         termination_exception = std::current_exception();
 
         log(logging::Severity::critical,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             termination_exception,
             "terminate_with_current_exception()");
 

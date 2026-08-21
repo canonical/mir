@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "display_sink.h"
 #include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "kms_output.h"
@@ -294,7 +298,7 @@ auto import_gbm_bo(
     if (!gbm_bo)
     {
         mir::log_debug(
-            "Failed to import buffer type %s:%s (%s [%i])",
+            "Failed to import buffer type {}:{} ({} [{}])",
             buffer->format().name(),
             mg::drm_modifier_to_string(buffer->modifier().value_or(DRM_FORMAT_MOD_INVALID)).c_str(),
             mir::errno_to_cstr(errno),
@@ -346,7 +350,7 @@ auto drm_fb_id_from_dma_buffer(
 
     if (ret)
     {
-        mir::log_warning("drmModeAddFB2WithModifiers returned an error: %d", ret);
+        mir::log_warning("drmModeAddFB2WithModifiers returned an error: {}", ret);
         return {};
     }
 

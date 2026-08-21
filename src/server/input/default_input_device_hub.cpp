@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "default_input_device_hub.h"
 #include "default_device.h"
 
@@ -28,7 +30,7 @@
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/action_queue.h>
 #include <mir/server_action_queue.h>
-#define MIR_LOG_COMPONENT "input-hub"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include "boost/throw_exception.hpp"
@@ -505,7 +507,7 @@ auto mi::DefaultInputDeviceHub::add_device(std::shared_ptr<InputDevice> const& d
     }
     else
     {
-        log_error("Input device %s added twice", device->get_device_info().name.c_str());
+        log_error("Input device {} added twice", device->get_device_info().name.c_str());
         BOOST_THROW_EXCEPTION(std::logic_error("Input device already managed by server"));
     }
 }
@@ -543,7 +545,7 @@ void mi::DefaultInputDeviceHub::remove_device(std::shared_ptr<InputDevice> const
         });
     if (!removed)
     {
-        log_error("Input device %s not found", device->get_device_info().name.c_str());
+        log_error("Input device {} not found", device->get_device_info().name.c_str());
         BOOST_THROW_EXCEPTION(std::logic_error("Input device not managed by server"));
     }
 }

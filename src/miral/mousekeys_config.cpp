@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/mousekeys_config.h>
 #include <miral/live_config.h>
 
@@ -152,7 +156,7 @@ miral::MouseKeysConfig::MouseKeysConfig(live_config::Store& config_store)
         else
         {
             mir::log_warning(
-                "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                "Config value {} does not support negative values. Ignoring the supplied value ({:f})...",
                 key.to_string().c_str(),
                 *val);
         }

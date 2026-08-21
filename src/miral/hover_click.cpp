@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/hover_click.h>
 
 #include <mir/options/option.h>
@@ -84,7 +88,7 @@ miral::HoverClick::HoverClick(miral::live_config::Store& config_store)
 
                 if (*val < 0)
                     mir::log_warning(
-                        "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                        "Config value {} does not support negative values. Ignoring the supplied value ({})...",
                         key.to_string().c_str(),
                         *val);
 

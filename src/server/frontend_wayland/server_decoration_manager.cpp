@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "server_decoration_manager.h"
 
 #include <mir/decoration_strategy.h>
@@ -302,7 +306,7 @@ auto ServerSurfaceDecoration::to_decorations_type(uint32_t mode) const
             nullptr);
 
         mir::log_warning(
-            "Client PID: %d requested invalid KDE decoration mode %u",
+            "Client PID: {} requested invalid KDE decoration mode {}",
             pid,
             mode);
 

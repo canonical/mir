@@ -15,6 +15,10 @@
  */
 
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "decoration_strategy.h"
 #include "window.h"
 
@@ -490,7 +494,7 @@ auto RendererStrategy::Text::instance() -> std::shared_ptr<Text>
         }
         catch (std::runtime_error const& error)
         {
-            mir::log_warning("%s", error.what());
+            mir::log_warning("{}", error.what());
             shared = std::make_shared<Null>();
         }
         singleton = shared;
@@ -519,11 +523,11 @@ RendererStrategy::Text::Impl::Impl()
 RendererStrategy::Text::Impl::~Impl()
 {
     if (auto const error = FT_Done_Face(face))
-        mir::log_warning("Failed to uninitialize font face with error %d", error);
+        mir::log_warning("Failed to uninitialize font face with error {}", error);
     face = nullptr;
 
     if (auto const error = FT_Done_FreeType(library))
-        mir::log_warning("Failed to uninitialize FreeType with error %d", error);
+        mir::log_warning("Failed to uninitialize FreeType with error {}", error);
     library = nullptr;
 }
 
@@ -552,7 +556,7 @@ void RendererStrategy::Text::Impl::render(
     }
     catch (std::runtime_error const& error)
     {
-        mir::log_warning("%s", error.what());
+        mir::log_warning("{}", error.what());
         return;
     }
 
@@ -577,7 +581,7 @@ void RendererStrategy::Text::Impl::render(
         }
         catch (std::runtime_error const& error)
         {
-            mir::log_warning("%s", error.what());
+            mir::log_warning("{}", error.what());
         }
     }
 }
@@ -678,7 +682,7 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
     try {
         utf32_text = converter.from_bytes(text);
     } catch(const std::range_error& e) {
-        mir::log_warning("Window title %s is not valid UTF-8", text.c_str());
+        mir::log_warning("Window title {} is not valid UTF-8", text.c_str());
         // fall back to ASCII
         for (char const c : text)
         {
@@ -931,7 +935,7 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
         }
         else
         {
-            mir::log_warning("Could not render decoration button with unknown function %d\n", static_cast<int>(button.function));
+            mir::log_warning("Could not render decoration button with unknown function {}\n", static_cast<int>(button.function));
         }
     }
 }
@@ -962,7 +966,9 @@ auto RendererStrategy::make_buffer(MirPixelFormat format, mir::geometry::Size si
 
     if (sizeof(Pixel) != MIR_BYTES_PER_PIXEL(buffer_format))
     {
-        mir::log_warning("Failed to draw SSD: tried to create buffer with unsupported format: %d", buffer_format);
+        mir::log_warning(
+            "Failed to draw SSD: tried to create buffer with unsupported format: {}",
+            static_cast<int>(buffer_format));
         return std::nullopt;
     }
 

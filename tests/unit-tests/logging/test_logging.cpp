@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <exception>
 #include <mir/logging/tag.h>
 #include <mir/options/program_option.h>
@@ -21,7 +24,6 @@
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
 
-#define MIR_LOG_COMPONENT "tests"
 #include <mir/log.h>
 
 #include <boost/program_options.hpp>
@@ -263,7 +265,7 @@ TEST_F(TestLog, logging_captures_source_location)
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 
-    mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, "And the %s works, too", "printf API");
+    mir::log(ml::Severity::debug, MIR_LOG_DEFAULT_TAGS, "And the %s works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -278,7 +280,7 @@ TEST_F(TestLog, logging_captures_source_location)
         auto prev_line = std::source_location::current();
         mir::log(
             ml::Severity::debug,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             std::current_exception(),
             "The exception_ptr API works");
 
@@ -295,7 +297,7 @@ TEST_F(TestLog, logging_captures_source_location)
         auto prev_line = std::source_location::current();
         mir::log(
             ml::Severity::debug,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             std::current_exception(),
             "The exception_ptr API works");
 
@@ -303,7 +305,7 @@ TEST_F(TestLog, logging_captures_source_location)
         EXPECT_THAT(logged_loc.line(), Eq(prev_line.line() + 1));
     }
 
-    mir::log(ml::Severity::debug, MIR_LOG_COMPONENT, std::string{"The string API works"});
+    mir::log(ml::Severity::debug, MIR_LOG_DEFAULT_TAGS, std::string{"The string API works"});
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -339,7 +341,7 @@ TEST_F(TestLog, log_debug_captures_source_location)
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 
-    mir::log_debug("And the %s works, too", "printf API");
+    mir::log_debug("And the {} works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -375,7 +377,7 @@ TEST_F(TestLog, log_info_captures_source_location)
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 
-    mir::log_info("And the %s works, too", "printf API");
+    mir::log_info("And the {} works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -417,7 +419,7 @@ TEST_F(TestLog, log_warning_captures_source_location)
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 
-    mir::log_warning("And the %s works, too", "printf API");
+    mir::log_warning("And the {} works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -453,7 +455,7 @@ TEST_F(TestLog, log_error_captures_source_location)
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 
-    mir::log_error("And the %s works, too", "printf API");
+    mir::log_error("And the {} works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
@@ -489,7 +491,7 @@ TEST_F(TestLog, log_critical_captures_source_location)
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));
     EXPECT_THAT(logged_loc.line(), Eq(next_line.line() - 1));
 
-    mir::log_critical("And the %s works, too", "printf API");
+    mir::log_critical("And the {} works, too", "printf API");
     next_line = std::source_location::current();
 
     EXPECT_THAT(logged_loc.file_name(), StrEq(next_line.file_name()));

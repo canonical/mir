@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "open_desktop_entry.h"
 
 #include <mir/log.h>
@@ -103,7 +107,7 @@ void miral::open_desktop_entry(std::string const& desktop_file)
 
     if (error)
     {
-        mir::log_info("Dbus error=%s, dest=%s, object_path=%s, interface_name=%s, method_name=%s, id=%s",
+        mir::log_info("Dbus error={}, dest={}, object_path={}, interface_name={}, method_name={}, id={}",
                       error->message, dest, object_path, interface_name, method_name, id.c_str());
         g_error_free(error);
     }

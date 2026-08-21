@@ -1,3 +1,7 @@
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "basic_store.h"
 
 #include <mir/log.h>
@@ -104,7 +108,7 @@ void mlc::BasicStore::Self::add_key(
     if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
     {
         // if a key is registered multiple times, the last time is used: drop existing earlier registrations
-        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+        mir::log_warning("Config attribute handler for '{}' overwritten", key.to_string().c_str());
     }
 
     attribute_handlers.emplace(key, AttributeDetails{handler, std::string{description}, preset, std::nullopt});
@@ -134,7 +138,7 @@ void mlc::BasicStore::Self::add_key(
     if (attribute_handlers.erase(key) || array_attribute_handlers.erase(key))
     {
         // if a key is registered multiple times, the last time is used: drop existing earlier registrations
-        mir::log_warning("Config attribute handler for '%s' overwritten", key.to_string().c_str());
+        mir::log_warning("Config attribute handler for '{}' overwritten", key.to_string().c_str());
     }
 
     array_attribute_handlers.emplace(
@@ -174,7 +178,7 @@ void mlc::BasicStore::Self::update_key(Key const& key, std::string_view value, s
     }
     else
     {
-        mir::log_warning("Config key '%s' not recognized", key.to_string().c_str());
+        mir::log_warning("Config key '{}' not recognized", key.to_string().c_str());
     }
 }
 
@@ -217,7 +221,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             if (auto const preset = details.preset)
             {
                 mir::log_warning(
-                    "Parsing error: %s in file %s. Using preset value '%s' instead.",
+                    "Parsing error: {} in file {}. Using preset value '{}' instead.",
                     pe.what(),
                     path.c_str(),
                     preset->c_str());
@@ -227,7 +231,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             else
             {
                 mir::log_warning(
-                    "Parsing error: %s in file %s, but no preset value. Using nullopt instead.",
+                    "Parsing error: {} in file {}, but no preset value. Using nullopt instead.",
                     pe.what(),
                     path.c_str());
                 details.handler(key, std::nullopt);
@@ -241,7 +245,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             auto const value_str = std::string{maybe_value.value_or("unset")};
 
             mir::log_warning(
-                "Error processing key '%s' with value '%s' in file '%s': %s",
+                "Error processing key '{}' with value '{}' in file '{}': {}",
                 key.to_string().c_str(),
                 value_str.c_str(),
                 path.c_str(),
@@ -281,7 +285,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
                 auto const preset_str = join_comma(*details.preset);
 
                 mir::log_warning(
-                    "Parsing error: %s in file(s) %s. Using preset value(s) '[%s]' instead.",
+                    "Parsing error: {} in file(s) {}. Using preset value(s) '[{}]' instead.",
                     nvv.what(),
                     modification_paths_str.c_str(),
                     preset_str.c_str());
@@ -291,7 +295,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             else
             {
                 mir::log_warning(
-                    "Parsing error: %s in file(s) %s, but no preset value. Using nullopt instead.",
+                    "Parsing error: {} in file(s) {}, but no preset value. Using nullopt instead.",
                     nvv.what(),
                     modification_paths_str.c_str());
                 details.handler(key, std::nullopt);
@@ -302,7 +306,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
             auto const value_str = maybe_value.transform([](auto const& v) { return join_comma(v); }).value_or("unset");
 
             mir::log_warning(
-                "Error processing key '%s' with values [%s] in file(s) '%s': %s",
+                "Error processing key '{}' with values [{}] in file(s) '{}': {}",
                 key.to_string().c_str(),
                 value_str.c_str(),
                 modification_paths_str.c_str(),
@@ -317,7 +321,7 @@ void mlc::BasicStore::Self::do_transaction(std::function<void()> transaction_bod
         }
         catch (std::exception const& e)
         {
-            mir::log_warning("Error processing done handlers: %s", e.what());
+            mir::log_warning("Error processing done handlers: {}", e.what());
         }
 }
 
@@ -390,7 +394,7 @@ void process_as(std::function<void(mlc::Key const&, std::optional<std::span<Type
             }
             else
             {
-                mir::log_warning("Config key '%s' has invalid value: %s", key.to_string().c_str(), v.c_str());
+                mir::log_warning("Config key '{}' has invalid value: {}", key.to_string().c_str(), v.c_str());
             }
         }
 

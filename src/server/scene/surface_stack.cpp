@@ -14,6 +14,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "surface_stack.h"
 #include "rendering_tracker.h"
 #include "surface_scene_element.h"

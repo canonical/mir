@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <ranges>
 
 #include "fractional-scale-v1_wrapper.h"
@@ -390,7 +394,7 @@ auto configure_wayland_extensions(
 
     for (auto const& name : remaining_extension_names)
     {
-        mir::log_warning("Wayland extension %s not supported", name.c_str());
+        mir::log_warning("Wayland extension {} not supported", name.c_str());
     }
 
     return std::make_unique<WaylandExtensions>(std::move(enabled_internal_builders), std::move(enabled_external_hooks));

@@ -1,4 +1,6 @@
-add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mircommon")
+add_compile_definitions(
+    MIR_LOG_COMPONENT_FALLBACK="mircommon"
+)
 
 add_subdirectory(events)
 add_subdirectory(input)

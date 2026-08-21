@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/simulated_secondary_click.h>
 #include <miral/live_config.h>
 
@@ -77,7 +81,7 @@ miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& conf
             if (*val < 0)
             {
                 mir::log_warning(
-                    "Config value %s does not support negative values. Ignoring the supplied value (%f)...",
+                    "Config value {} does not support negative values. Ignoring the supplied value ({:f})...",
                     key.to_string().c_str(),
                     *val);
                 return;
@@ -97,7 +101,7 @@ miral::SimulatedSecondaryClick::SimulatedSecondaryClick(live_config::Store& conf
             if (*val < 0)
             {
                 mir::log_warning(
-                    "Config value %s does not support negative values. Ignoring the supplied value (%d)...",
+                    "Config value {} does not support negative values. Ignoring the supplied value ({})...",
                     key.to_string().c_str(),
                     *val);
                 return;

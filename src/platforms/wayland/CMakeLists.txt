@@ -1,6 +1,8 @@
 pkg_check_modules(WAYLAND_EGL REQUIRED IMPORTED_TARGET wayland-egl)
 
-add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="wayland")
+add_compile_definitions(
+    MIR_LOG_COMPONENT_FALLBACK="wayland"
+)
 
 add_library(mirplatformwayland-graphics STATIC
     platform.cpp                platform.h

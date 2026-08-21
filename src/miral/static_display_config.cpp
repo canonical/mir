@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "static_display_config.h"
 
 #include <mir/fatal.h>
@@ -344,7 +348,7 @@ try
 
     std::lock_guard lock{mutex};
     config = new_config;
-    mir::log_debug("Loaded display configuration file: %s", filename.c_str());
+    mir::log_debug("Loaded display configuration file: {}", filename.c_str());
 }
 catch (YAML::Exception const& x)
 {
@@ -366,7 +370,7 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
     if (current_config != end(config))
     {
-        mir::log_debug("Display config using layout: '%s'", layout.c_str());
+        mir::log_debug("Display config using layout: '{}'", layout.c_str());
 
         conf.for_each_output([&config=current_config->second.matchers2config](mg::UserDisplayConfigurationOutput& conf_output)
             {
@@ -436,11 +440,11 @@ void miral::YamlFileDisplayConfig::apply_to(mg::DisplayConfiguration& conf)
 
         if (i != std::end(layout_strategies))
         {
-            mir::log_debug("Display config using layout strategy: '%s'", layout.c_str());
+            mir::log_debug("Display config using layout strategy: '{}'", layout.c_str());
         }
         else
         {
-            mir::log_warning("Display config does not contain layout '%s'", layout.c_str());
+            mir::log_warning("Display config does not contain layout '{}'", layout.c_str());
             mir::log_debug("Display config using layout strategy: 'default'");
             apply_default_configuration(conf);
         }
@@ -618,12 +622,12 @@ void miral::YamlFileDisplayConfig::apply_to_output(mg::UserDisplayConfigurationO
             {
                 if (conf.refresh.has_value())
                 {
-                    mir::log_warning("Display config contains unmatched mode: '%dx%d@%2.1f'",
+                    mir::log_warning("Display config contains unmatched mode: '{}x{}@{:2.1f}'",
                         conf.size.value().width.as_int(), conf.size.value().height.as_int(), conf.refresh.value());
                 }
                 else
                 {
-                    mir::log_warning("Display config contains unmatched mode: '%dx%d'",
+                    mir::log_warning("Display config contains unmatched mode: '{}x{}'",
                                      conf.size.value().width.as_int(), conf.size.value().height.as_int());
                 }
             }
@@ -686,12 +690,12 @@ auto miral::YamlFileDisplayConfig::layout_userdata(std::string const& key) -> st
             if (second.userdata.contains(key))
                 return second.userdata.at(key);
 
-            mir::log_info("Parsing display configuration: No user data on layout=%s for key=%s", layout.c_str(), key.c_str());
+            mir::log_info("Parsing display configuration: No user data on layout={} for key={}", layout.c_str(), key.c_str());
             return std::nullopt;
         }
     }
 
-    mir::log_warning("Parsing display configuration: Cannot find layout: %s", layout.c_str());
+    mir::log_warning("Parsing display configuration: Cannot find layout: {}", layout.c_str());
     return std::nullopt;
 }
 
@@ -775,7 +779,7 @@ void miral::ReloadingYamlFileDisplayConfig::confirm(mir::graphics::DisplayConfig
             }
 
             mir::log_debug(
-                "%s display configuration template: %s",
+                "{} display configuration template: {}",
                 out ? "Wrote" : "Failed writing",
                 filename.c_str());
         }
@@ -845,7 +849,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                             }
                             else
                             {
-                                mir::log_warning("Failed to open display configuration: %s", filename.c_str());
+                                mir::log_warning("Failed to open display configuration: {}", filename.c_str());
                             }
                         }
                         else if (event.name == basename + layout_suffix)
@@ -866,7 +870,7 @@ void miral::ReloadingYamlFileDisplayConfig::auto_reload()
                     }
                     catch (mir::AbnormalExit const& except)
                     {
-                        mir::log_warning("Failed to reload display configuration: %s", except.what());
+                        mir::log_warning("Failed to reload display configuration: {}", except.what());
                     }
 
                     raw_buffer += sizeof_inotify_event+event.len;

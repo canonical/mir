@@ -14,7 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
  #include "platform_probe.h"
+
 
 #include <mir/graphics/display.h>
 #include <mir/log.h>
@@ -45,7 +49,7 @@ auto probe_module(
         MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
     auto desc = describe();
-    mir::log_info("Found %s driver: %s (version %d.%d.%d)",
+    mir::log_info("Found {} driver: {} (version {}.{}.{})",
                   platform_type_name,
                   desc->name,
                   desc->major_version,
@@ -76,7 +80,7 @@ auto probe_module(
                         return "System";
                     }
                 }();
-            mir::log_info("\t%s (priority %i)", device_name.c_str(), device.support_level);
+            mir::log_info("\t{} (priority {})", device_name.c_str(), device.support_level);
         }
     }
     return supported_devices;
@@ -499,7 +503,7 @@ auto mg::select_display_modules(
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                 auto const descriptor = describe_module();
 
-                mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+                mir::log_warning("Manually-specified display platform {} does not claim to support this system. Trying anyway...", descriptor->name);
 
                 // We're here only if the platform doesn't claim to support *any* of the detected devices
                 // Add *all* the found devices into our platform list, and hope.

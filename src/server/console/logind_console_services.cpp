@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <cinttypes>
 #include <cstring>
 #include <boost/throw_exception.hpp>
@@ -112,7 +116,7 @@ std::unique_ptr<LogindSession, decltype(&g_object_unref)> simple_proxy_on_system
 
             if (error)
             {
-                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+                mir::log_error("Proxy is non-null, but has error set?! Error: {}", error->message);
             }
             return proxy;
 
@@ -153,7 +157,7 @@ std::unique_ptr<LogindSeat, decltype(&g_object_unref)> simple_seat_proxy_on_syst
 
             if (error)
             {
-                mir::log_error("Proxy is non-null, but has error set?! Error: %s", error->message);
+                mir::log_error("Proxy is non-null, but has error set?! Error: {}", error->message);
             }
 
             return proxy;
@@ -186,7 +190,7 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
         BOOST_THROW_EXCEPTION((std::runtime_error{"Seat has no active session"}));
     }
 
-    mir::log_debug("Discovered object path for current session = %s", object_path);
+    mir::log_debug("Discovered object path for current session = {}", object_path);
     return {object_path};
 }
 
@@ -281,7 +285,7 @@ mir::LogindConsoleServices::LogindConsoleServices(
 
     if (!logind_session_call_set_type_sync(session_proxy.get(), "wayland", nullptr, &error))
     {
-        mir::log_debug("Failed to set logind session type: %s", error ? error->message : "unknown error");
+        mir::log_debug("Failed to set logind session type: {}", error ? error->message : "unknown error");
     }
 
     g_signal_connect(
@@ -491,7 +495,7 @@ void complete_release_device_call(
         auto const error_message = error ? error->message : "unknown error";
 
         mir::log_warning(
-            "ReleaseDevice call failed: %s",
+            "ReleaseDevice call failed: {}",
             error_message);
     }
 }
@@ -546,7 +550,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LogindConsoleServices::acquire_de
                             nullptr,
                             &error))
                         {
-                            mir::log_info("Failed to release device %i:%i: %s",
+                            mir::log_info("Failed to release device {}:{}: {}",
                                 major(devnum),
                                 minor(devnum),
                                 error->message);
@@ -682,7 +686,7 @@ void complete_pause_device_complete(
         result,
         &err))
     {
-        mir::log_warning("PauseDeviceComplete failed: %s", err->message);
+        mir::log_warning("PauseDeviceComplete failed: {}", err->message);
     }
 }
 }
@@ -702,7 +706,7 @@ void mir::LogindConsoleServices::on_pause_device(
         using namespace std::literals::string_literals;
         if ("pause"s == suspend_type)
         {
-            mir::log_info("Received logind pause event for device %i:%i", major, minor);
+            mir::log_info("Received logind pause event for device {}:{}", major, minor);
             it->second->emit_suspended();
             logind_session_call_pause_device_complete(
                 me->session_proxy.get(),
@@ -713,7 +717,7 @@ void mir::LogindConsoleServices::on_pause_device(
         }
         else if ("force"s == suspend_type)
         {
-            mir::log_info("Received logind force-pause event for device %i:%i", major, minor);
+            mir::log_info("Received logind force-pause event for device {}:{}", major, minor);
             it->second->emit_suspended();
         }
         else if ("gone"s == suspend_type)
@@ -734,7 +738,7 @@ void mir::LogindConsoleServices::on_pause_device(
                  * PauseDevice("gone") signals for DRM devices.
                  */
                 mir::log_debug(
-                    "Ignoring logind PauseDevice(\"gone\") event for DRM device %i:%i",
+                    "Ignoring logind PauseDevice(\"gone\") event for DRM device {}:{}",
                     major, minor);
                 return;
             }
@@ -753,7 +757,7 @@ void mir::LogindConsoleServices::on_pause_device(
         }
         else
         {
-            mir::log_warning("Received unhandled PauseDevice type: %s", suspend_type);
+            mir::log_warning("Received unhandled PauseDevice type: {}", suspend_type);
         }
     }
 }
@@ -901,7 +905,7 @@ private:
            result,
            &error))
         {
-            mir::log_error("%s:%d: Logind request to switch vt failed: %s", __FILE__, __LINE__, error->message);
+            mir::log_error("{}:{}: Logind request to switch vt failed: {}", __FILE__, __LINE__, error->message);
         }
     }
 

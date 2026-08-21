@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "override_watcher.h"
 
 #include <mir/log.h>
@@ -51,7 +55,7 @@ auto watch_override_directory(
     {
         auto const message = ec ? std::format(": {}", ec.message()) : "";
         mir::log_warning(
-            "Override directory path '%s' does not point to a directory%s, ignoring",
+            "Override directory path '{}' does not point to a directory{}, ignoring",
             override_directory_path.c_str(),
             message.c_str());
 
@@ -193,7 +197,7 @@ auto mlc::OverrideWatcher::WatchedRoot::on_directory_created(
     if (current_overrides.empty())
     {
         mir::log_debug(
-            "Override directory '%s' created but contains no matching override files, skipping reload",
+            "Override directory '{}' created but contains no matching override files, skipping reload",
             override_dir_path.c_str());
         return events;
     }
@@ -318,7 +322,7 @@ void mlc::OverrideWatcher::handler(int)
     if (auto maybe_overrides_list = apply_events(summary))
     {
         override_loader(*maybe_overrides_list);
-        mir::log_debug("(Re)loaded [%s]", collect_paths(*maybe_overrides_list).c_str());
+        mir::log_debug("(Re)loaded [{}]", collect_paths(*maybe_overrides_list).c_str());
     }
 }
 
@@ -332,7 +336,7 @@ auto mlc::OverrideWatcher::apply_events(BatchSummary const& summary) -> std::opt
         auto const base_config = find_base_config();
         if (!base_config)
         {
-            mir::log_debug("Base config '%s' not found in any config root", base_config_filename.c_str());
+            mir::log_debug("Base config '{}' not found in any config root", base_config_filename.c_str());
             return std::nullopt;
         }
 
@@ -413,7 +417,7 @@ auto mlc::OverrideWatcher::apply_events(BatchSummary const& summary) -> std::opt
     {
         mir::log(
             mir::logging::Severity::warning,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             std::current_exception(),
             "Failed to reload configuration");
     }

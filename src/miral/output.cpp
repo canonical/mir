@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/output.h>
 
 #include <mir/graphics/display_configuration.h>
@@ -117,7 +121,7 @@ auto miral::Output::attribute(std::string const& key) const -> std::optional<std
     }
     else
     {
-        mir::log_warning("Attempt to read custom output attribute (%s) that wasn't added", key.c_str());
+        mir::log_warning("Attempt to read custom output attribute ({}) that wasn't added", key.c_str());
         return std::nullopt;
     }
 }

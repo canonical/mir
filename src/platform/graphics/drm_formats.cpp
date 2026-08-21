@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/graphics/drm_formats.h>
 #include <mir/synchronised.h>
 #include <mir_toolkit/common.h>
@@ -534,7 +538,7 @@ auto mg::DRMFormat::info() const -> std::optional<Info const>
     if (!unknown_formats->contains(fourcc))
     {
         mir::log_warning(
-            "Detailed info for format %s missing; please report this to https://github.com/canonical/mir/issues/new so this can be added", name());
+            "Detailed info for format {} missing; please report this to https://github.com/canonical/mir/issues/new so this can be added", name());
         unknown_formats->insert(fourcc);
     }
     return std::nullopt;

@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "multiplexing_display.h"
 #include "multiplexing_hw_cursor.h"
 #include <mir/graphics/display_configuration.h>
@@ -332,10 +336,7 @@ auto mg::MultiplexingDisplay::create_hardware_cursor() -> std::shared_ptr<Cursor
     }
     catch (std::exception const&)
     {
-        mir::log(
-            mir::logging::Severity::informational,
-            "display",
-            "Failed to create hardware cursor");
+        mir::log_info({mir::logging::uncategorised()}, "Failed to create hardware cursor");
         return nullptr;
     }
 }

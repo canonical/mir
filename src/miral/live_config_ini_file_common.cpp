@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "live_config_ini_file_common.h"
 
 #include <mir/log.h>
@@ -56,7 +60,7 @@ auto mlc::parse_ini(std::istream& istream, std::filesystem::path path, std::func
             }
             catch (std::exception const& e)
             {
-                mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
+                mir::log_warning("Error processing '{}': {}", path.c_str(), e.what());
             }
     }
 }

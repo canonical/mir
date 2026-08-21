@@ -16,6 +16,10 @@
  *
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "xwayland_spawner.h"
 
 #include <mir/dispatch/multiplexing_dispatchable.h>
@@ -52,7 +56,7 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
     if (fd < 0)
     {
         mir::log_warning(
-            "Failed to create socket %c%s",
+            "Failed to create socket {}{}",
             addr->sun_path[0] ? addr->sun_path[0] : '@',
             addr->sun_path + 1);
         return;
@@ -71,7 +75,7 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
     if (bind(fd, (struct sockaddr*)addr, size) < 0)
     {
         mir::log_warning(
-            "Failed to bind socket %c%s",
+            "Failed to bind socket {}{}",
             addr->sun_path[0] ? addr->sun_path[0] : '@',
             addr->sun_path + 1);
         if (addr->sun_path[0])
@@ -84,7 +88,7 @@ auto create_socket(std::vector<mir::Fd>& fds, struct sockaddr_un *addr, size_t p
     if (listen(fd, 1) < 0)
     {
         mir::log_warning(
-            "Failed to listen to socket %c%s",
+            "Failed to listen to socket {}{}",
             addr->sun_path[0] ? addr->sun_path[0] : '@',
             addr->sun_path + 1);
         if (addr->sun_path[0])
@@ -143,7 +147,7 @@ mf::XWaylandSpawner::XWaylandSpawner(
           {
               log(
                 logging::Severity::error,
-                MIR_LOG_COMPONENT,
+                "uncategorised",
                 std::current_exception(),
                 "Failed to spawn XWayland server.");
           })},

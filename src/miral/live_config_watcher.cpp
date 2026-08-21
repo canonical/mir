@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "live_config_watcher.h"
 
 #include <mir/log.h>
@@ -50,7 +54,7 @@ mlc::InotifyWatch::InotifyWatch(mir::Fd const& inotify_fd, path const& p) :
 
     if (wd_ < 0)
     {
-        mir::log_warning("Failed to add inotify watch for '%s': %s", p.c_str(), strerror(errno));
+        mir::log_warning("Failed to add inotify watch for '{}': {}", p.c_str(), strerror(errno));
         wd_ = -1;
         inotify_fd_ = nullptr;
     }
@@ -85,7 +89,7 @@ auto mlc::InotifyWatch::operator=(InotifyWatch&& other) noexcept -> InotifyWatch
 void mlc::InotifyWatch::reset()
 {
     if (wd_ >= 0 && inotify_fd_ && inotify_rm_watch(*inotify_fd_, wd_) != 0)
-        mir::log_warning("Failed to remove inotify watch (wd=%d): %s", wd_, strerror(errno));
+        mir::log_warning("Failed to remove inotify watch (wd={}): {}", wd_, strerror(errno));
     inotify_fd_ = nullptr;
     wd_ = -1;
 }
@@ -221,7 +225,7 @@ auto mlc::collect_override_files(path const& override_directory, std::string_vie
     if (ec)
     {
         mir::log_warning(
-            "Failed to read override directory '%s': %s", override_directory.c_str(), ec.message().c_str());
+            "Failed to read override directory '{}': {}", override_directory.c_str(), ec.message().c_str());
         return {};
     }
 

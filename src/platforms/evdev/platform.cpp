@@ -376,7 +376,7 @@ void mie::Platform::start()
             catch (std::exception const&)
             {
                 auto const message = "Failed to handle UDev " + event_type + " event for " + device.syspath();
-                log(logging::Severity::warning, MIR_LOG_COMPONENT, std::current_exception(), message);
+                log(logging::Severity::warning, "uncategorised", std::current_exception(), message);
             }
         });
 
@@ -436,7 +436,7 @@ void mie::Platform::device_added(libinput_device* dev)
     auto device_it = find_device(device_ptr.get());
     if (end(devices) != device_it)
     {
-        log_debug("Device %s is an already opened device", libinput_device_get_sysname(dev));
+        log_debug("Device {} is an already opened device", libinput_device_get_sysname(dev));
         return;
     }
 
@@ -446,11 +446,11 @@ void mie::Platform::device_added(libinput_device* dev)
 
         input_device_registry->add_device(devices.back());
 
-        log_info("Opened device: %s", describe(dev).c_str());
+        log_info("Opened device: {}", describe(dev).c_str());
     }
     catch(...)
     {
-        log_error("Failure opening device %s", describe(dev).c_str());
+        log_error("Failure opening device {}", describe(dev).c_str());
     }
 }
 
@@ -464,7 +464,7 @@ void mie::Platform::device_removed(libinput_device* dev)
     input_device_registry->remove_device(*known_device_pos);
     devices.erase(known_device_pos);
 
-    log_info("Removed device: %s", describe(dev).c_str());
+    log_info("Removed device: {}", describe(dev).c_str());
 }
 
 auto mie::Platform::find_device(libinput_device* dev) -> decltype(devices)::iterator

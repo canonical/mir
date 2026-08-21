@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/c_memory.h>
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/display_configuration.h>
@@ -30,7 +33,6 @@
 #include <algorithm>
 #include <cstdlib>
 
-#define MIR_LOG_COMPONENT "display"
 #include <mir/log.h>
 
 namespace mx=mir::X;
@@ -219,7 +221,7 @@ void mgx::Display::configure(mg::DisplayConfiguration const& new_configuration)
         }
 
         if (!found_info)
-            mir::log_error("Could not find info for output %d", conf_output.id.as_value());
+            mir::log_error("Could not find info for output {}", conf_output.id.as_value());
     });
 }
 

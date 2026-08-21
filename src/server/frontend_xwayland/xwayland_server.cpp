@@ -16,6 +16,10 @@
  *
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
 #include "wayland_connector.h"
@@ -197,7 +201,7 @@ mf::XWaylandServer::~XWaylandServer()
     // Calling is_running() one more time will ensure the process is reaped
     if (is_running())
     {
-        log_warning("Failed to kill Xwayland process with PID %d", xwayland.pid);
+        log_warning("Failed to kill Xwayland process with PID {}", xwayland.pid);
     }
 }
 

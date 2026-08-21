@@ -1,7 +1,9 @@
 pkg_check_modules(LIBDISPLAY_INFO REQUIRED IMPORTED_TARGET libdisplay-info)
 pkg_check_modules(PIXMAN REQUIRED IMPORTED_TARGET pixman-1)
 
-add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirplatform")
+add_compile_definitions(
+    MIR_LOG_COMPONENT_FALLBACK="mirplatform"
+)
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 

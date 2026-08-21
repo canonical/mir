@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "render_scene_into_surface.h"
 #include <miral/magnifier.h>
 
@@ -197,7 +201,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (val.has_value() && *val <= 1.f)
             {
                 mir::log_warning(
-                    "Config key '%s' should be greater than or equal to 1",
+                    "Config key '{}' should be greater than or equal to 1",
                     key.to_string().c_str());
                 return;
             }
@@ -213,7 +217,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (val.has_value() && *val <= 0)
             {
                 mir::log_warning(
-                    "Config key '%s' should be greater than 0",
+                    "Config key '{}' should be greater than 0",
                     key.to_string().c_str());
                 return;
             }
@@ -234,7 +238,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (val.has_value() && *val <= 0)
             {
                 mir::log_warning(
-                    "Config key '%s' should be greater than 0",
+                    "Config key '{}' should be greater than 0",
                     key.to_string().c_str());
                 return;
             }

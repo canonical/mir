@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/application_switcher.h>
 #include "wayland_app.h"
 #include "wayland_shm.h"
@@ -81,7 +85,7 @@ struct ToplevelInfoPrinter
 
         if (FT_New_Face(lib, mir::default_font().c_str(), 0, &face))
         {
-            mir::log_error("ApplicationSwitcher: Failed to load font: %s", mir::default_font().c_str());
+            mir::log_error("ApplicationSwitcher: Failed to load font: {}", mir::default_font().c_str());
             FT_Done_FreeType(lib);
             return;
         }
@@ -690,7 +694,7 @@ private:
         }
         else
         {
-            mir::log_info("ApplicationSwitcher: app_id() event for unknown handle %p (app_id='%s') — missed add?",
+            mir::log_info("ApplicationSwitcher: app_id() event for unknown handle {:p} (app_id='{}') — missed add?",
                 static_cast<void*>(toplevel), app_id);
         }
     }
@@ -711,7 +715,7 @@ private:
         }
         else
         {
-            mir::log_info("ApplicationSwitcher: window_title() event for unknown handle %p (title='%s') — missed add?",
+            mir::log_info("ApplicationSwitcher: window_title() event for unknown handle {:p} (title='{}') — missed add?",
                 static_cast<void*>(toplevel), window_title);
         }
     }
@@ -751,7 +755,7 @@ private:
         }
         else
         {
-            mir::log_info("ApplicationSwitcher: remove() closed event for unknown toplevel handle %p — already removed?",
+            mir::log_info("ApplicationSwitcher: remove() closed event for unknown toplevel handle {:p} — already removed?",
                 static_cast<void*>(toplevel));
         }
         zwlr_foreign_toplevel_handle_v1_destroy(toplevel);
@@ -781,7 +785,7 @@ private:
             if (it->ghost)
             {
                 mir::log_info("ApplicationSwitcher: compositor sent done for toplevel with no app_id or title "
-                    "(handle=%p) — likely a Mir bug. Hiding from switcher.", static_cast<void*>(handle));
+                    "(handle={:p}) — likely a Mir bug. Hiding from switcher.", static_cast<void*>(handle));
                 self->remove_from_list(it);
                 self->ghost_handles.insert(handle);
             }
@@ -834,7 +838,7 @@ private:
 
         if (width <= 0 || height <= 0)
         {
-            mir::log_info("ApplicationSwitcher: surface not yet configured (%dx%d) — deferring draw", width, height);
+            mir::log_info("ApplicationSwitcher: surface not yet configured ({}x{}) — deferring draw", width, height);
             return;
         }
 
@@ -946,19 +950,19 @@ public:
             {
                 if (wl_display_dispatch_pending(display) == -1)
                 {
-                    mir::log_warning("ApplicationSwitcher: Failed to dispatch Wayland events (errno=%d)", errno);
+                    mir::log_warning("ApplicationSwitcher: Failed to dispatch Wayland events (errno={})", errno);
                     break;
                 }
             }
 
             // Flush any outgoing requests (ack_configure, or a command-triggered draw).
             if (wl_display_flush(display) == -1 && errno != EAGAIN)
-                mir::log_warning("ApplicationSwitcher: wl_display_flush failed (errno=%d)", errno);
+                mir::log_warning("ApplicationSwitcher: wl_display_flush failed (errno={})", errno);
 
             if (poll(fds, indices, -1) == -1)
             {
                 if (errno != EINTR)
-                    mir::log_warning("ApplicationSwitcher: Failed to wait for Wayland events (errno=%d)", errno);
+                    mir::log_warning("ApplicationSwitcher: Failed to wait for Wayland events (errno={})", errno);
                 wl_display_cancel_read(display);
                 continue;
             }
@@ -983,7 +987,7 @@ public:
         }
         catch (std::exception const& e)
         {
-            mir::log_warning("ApplicationSwitcher: uncaught exception in Wayland thread: %s", e.what());
+            mir::log_warning("ApplicationSwitcher: uncaught exception in Wayland thread: {}", e.what());
         }
         catch (...)
         {

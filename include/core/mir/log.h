@@ -451,7 +451,7 @@ struct log_info<std::format_string<Args...>, Args...>
         std::source_location const& location = std::source_location::current())
     {
         mir::log<logging::Severity, logging::Tags, std::format_string<Args...>, Args...>(
-            logging::Severity::infoinformational,
+            logging::Severity::informational,
             tags,
             fmt,
             std::forward<Args>(args)...,

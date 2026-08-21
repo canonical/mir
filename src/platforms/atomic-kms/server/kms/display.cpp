@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "display.h"
 #include "cursor.h"
 #include "display_sink.h"
@@ -95,7 +99,7 @@ void log_drm_details(mir::Fd const& drm_fd)
     };
 
     mir::log_info(
-        "%s: using driver %s [%s] (version: %i.%i.%i driver date: %s)",
+        "{}: using driver {} [{}] (version: {}.{}.{} driver date: {})",
         device_name.get(),
         version->name,
         version->desc,
@@ -110,13 +114,13 @@ void log_drm_details(mir::Fd const& drm_fd)
         for (auto const& connector : resources.connectors())
         {
             mir::log_info(
-                "\tOutput: %s (%s)",
+                "\tOutput: {} ({})",
                 mg::kms::connector_name(connector).c_str(),
                 describe_connection_status(*connector));
             for (auto i = 0; i < connector->count_modes; ++i)
             {
                 mir::log_info(
-                    "\t\tMode: %i×%i@%.2f",
+                    "\t\tMode: {}×{}@{:.2f}",
                     connector->modes[i].hdisplay,
                     connector->modes[i].vdisplay,
                     calculate_vrefresh_hz(connector->modes[i]));
@@ -126,7 +130,7 @@ void log_drm_details(mir::Fd const& drm_fd)
     catch (std::exception const& error)
     {
         mir::log_info(
-            "\tKMS not supported (%s)",
+            "\tKMS not supported ({})",
             error.what());
     }
 }
@@ -218,7 +222,10 @@ void mga::Display::register_configuration_change_handler(
                 monitor.process_events([conf_change_handler, this]
                                        (mir::udev::Monitor::EventType type, mir::udev::Device const& device)
                                        {
-                                            mir::log_debug("Processing UDEV event for %s: %i", device.syspath(), type);
+                                            mir::log_debug(
+                                                "Processing UDEV event for {}: {}",
+                                                device.syspath(),
+                                                static_cast<int>(type));
                                             dirty_configuration = true;
                                             conf_change_handler();
                                        });

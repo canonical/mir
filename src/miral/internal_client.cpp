@@ -142,7 +142,7 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
             }
             catch (std::exception const&)
             {
-                mir::log(mir::logging::Severity::informational, MIR_LOG_COMPONENT,
+                mir::log(mir::logging::Severity::informational, "uncategorised",
                          std::current_exception(), "internal client failed to connect to server");
             }
         }};

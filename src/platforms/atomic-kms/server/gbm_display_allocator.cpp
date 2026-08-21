@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "gbm_display_allocator.h"
 #include <mir/graphics/kms_framebuffer.h>
 #include "kms/quirks.h"

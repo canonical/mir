@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "input_trigger_registration_v1.h"
 
 #include "input_trigger_registry.h"
@@ -503,7 +507,7 @@ void InputTriggerActionControlV1::add_input_trigger_event(struct wl_resource* tr
     }
 
     mir::log_warning(
-        "input_trigger_action_control_v1.add_input_trigger_event: Unsupported trigger type for resource %p",
+        "input_trigger_action_control_v1.add_input_trigger_event: Unsupported trigger type for resource {:p}",
         (void*)trigger);
 }
 
@@ -516,7 +520,7 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
     }
 
     mir::log_warning(
-        "input_trigger_action_control_v1.drop_input_trigger_event: Unsupported trigger type for resource %p",
+        "input_trigger_action_control_v1.drop_input_trigger_event: Unsupported trigger type for resource {:p}",
         (void*)trigger);
 }
 
@@ -607,7 +611,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     if (!input_trigger_registry->register_trigger(keyboard_trigger))
     {
         mir::log_warning(
-            "register_keyboard_sym_trigger: KeyboardSymTrigger{client=%p, keysym=%s, modifiers=%s} already "
+            "register_keyboard_sym_trigger: KeyboardSymTrigger{{client={:p}, keysym={}, modifiers={}}} already "
             "registered",
             (void*)keyboard_trigger->client,
             keysym_to_string(keysym)(),
@@ -633,7 +637,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_code_trigger
         // Scancodes are not directly translatable to strings unless you have a
         // keyboard layout, which we don't have here.
         mir::log_warning(
-            "register_keyboard_code_trigger: KeyboardCodeTrigger{client=%p, scancode=%d, modifiers=%s} already "
+            "register_keyboard_code_trigger: KeyboardCodeTrigger{{client={:p}, scancode={}, modifiers={}}} already "
             "registered",
             (void*)keyboard_trigger->client,
             keycode,

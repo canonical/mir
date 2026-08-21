@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/input/input_probe.h>
 #include <mir/input/platform.h>
 
@@ -44,7 +48,7 @@ mir::UniqueModulePtr<mi::Platform> create_input_platform(
     auto result = create(options, cleanup_registry, registry, console, report);
 
     mir::log_info(
-        "Selected input driver: %s (version: %d.%d.%d)",
+        "Selected input driver: {} (version: {}.{}.{})",
         desc->name, desc->major_version, desc->minor_version, desc->micro_version);
 
     return result;

@@ -16,6 +16,10 @@
  *
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "xwayland_surface.h"
 #include "xwayland_log.h"
 #include "xwayland_surface_observer.h"
@@ -233,7 +237,7 @@ auto wm_window_type_to_mir_window_type(
         if (override_redirect)
             message << "\n\toverride_redirect";
 
-        mir::log_debug("%s%s\n~~~~~~~~~~~~~~", __PRETTY_FUNCTION__ , message.str().c_str());
+        mir::log_debug("{}{}\n~~~~~~~~~~~~~~", __PRETTY_FUNCTION__ , message.str().c_str());
     }
 
     // See https://specifications.freedesktop.org/wm-spec/wm-spec-latest.html#idm46515148839648
@@ -272,7 +276,7 @@ auto wm_window_type_to_mir_window_type(
         else if (mir::verbose_xwayland_logging_enabled())
         {
             mir::log_debug(
-                "Ignoring unknown window type %s",
+                "Ignoring unknown window type {}",
                 connection->query_name(wm_type).c_str());
         }
     }
@@ -532,7 +536,7 @@ void mf::XWaylandSurface::take_focus()
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("%s taking focus", connection->window_debug_string(window).c_str());
+        log_debug("{} taking focus", connection->window_debug_string(window).c_str());
     }
 
     bool supports_take_focus;
@@ -698,7 +702,7 @@ void mf::XWaylandSurface::attach_wl_surface(WlSurface* wl_surface)
     if (verbose_xwayland_logging_enabled())
     {
         log_debug(
-            "Attaching wl_surface@%u to %s...",
+            "Attaching wl_surface@{} to {}...",
             wl_resource_get_id(wl_surface->resource),
             connection->window_debug_string(window).c_str());
     }
@@ -846,7 +850,7 @@ void mf::XWaylandSurface::move_resize(uint32_t detail)
     }
     else
     {
-        mir::log_warning("XWaylandSurface::move_resize() called with unknown detail %d", detail);
+        mir::log_warning("XWaylandSurface::move_resize() called with unknown detail {}", detail);
     }
 }
 
@@ -942,7 +946,7 @@ auto mf::XWaylandSurface::StateTracker::with_net_wm_state_change(
         if (mir::verbose_xwayland_logging_enabled())
         {
             mir::log_debug(
-                "Ignoring unknown _NET_WM_STATE %s",
+                "Ignoring unknown _NET_WM_STATE {}",
                 conn.query_name(net_wm_state).c_str());
         }
         return *this;
@@ -1016,7 +1020,7 @@ void mf::XWaylandSurface::scene_surface_close_requested()
         if (verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "Sending WM_DELETE_WINDOW request to %s",
+                "Sending WM_DELETE_WINDOW request to {}",
                 connection->window_debug_string(window).c_str());
         }
         uint32_t const client_message_data[]{
@@ -1030,7 +1034,7 @@ void mf::XWaylandSurface::scene_surface_close_requested()
         if (verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "Not closing %s (because it does not support WM_DELETE_WINDOW)",
+                "Not closing {} (because it does not support WM_DELETE_WINDOW)",
                 connection->window_debug_string(window).c_str());
         }
     }
@@ -1041,7 +1045,7 @@ void mf::XWaylandSurface::wl_surface_destroyed()
 {
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("%s's wl_surface destoyed", connection->window_debug_string(window).c_str());
+        log_debug("{}'s wl_surface destoyed", connection->window_debug_string(window).c_str());
     }
     close();
 }
@@ -1077,14 +1081,14 @@ void mf::XWaylandSurface::is_transient_for(xcb_window_t transient_for)
     {
         if (transient_for != XCB_WINDOW_NONE)
         {
-            log_debug("%s set as transient for %s",
+            log_debug("{} set as transient for {}",
                       connection->window_debug_string(window).c_str(),
                       connection->window_debug_string(transient_for).c_str());
         }
         else
         {
             log_debug(
-                "%s is not transient",
+                "{} is not transient",
                 connection->window_debug_string(window).c_str());
         }
     }
@@ -1156,15 +1160,15 @@ void mf::XWaylandSurface::inform_client_of_geometry(
     while (inflight_configures.size() > 1000)
     {
         inflight_configures.pop_front();
-        log_warning("%s inflight_configures buffer capped", connection->window_debug_string(window).c_str());
+        log_warning("{} inflight_configures buffer capped", connection->window_debug_string(window).c_str());
     }
     lock.unlock();
 
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("configuring %s:", connection->window_debug_string(window).c_str());
-        log_debug("            position: %d, %d", geometry.left().as_int(), geometry.top().as_int());
-        log_debug("            size: %dx%d", geometry.size.width.as_int(), geometry.size.height.as_int());
+        log_debug("configuring {}:", connection->window_debug_string(window).c_str());
+        log_debug("            position: {}, {}", geometry.left().as_int(), geometry.top().as_int());
+        log_debug("            size: {}x{}", geometry.size.width.as_int(), geometry.size.height.as_int());
     }
 
     connection->configure_window(
@@ -1331,7 +1335,7 @@ auto mf::XWaylandSurface::plausible_parent(ProofOfMutexLock const&) -> std::shar
                 if (verbose_xwayland_logging_enabled())
                 {
                     log_debug(
-                        "Set parent of %s from xwm->get_focused_window() (%s)",
+                        "Set parent of {} from xwm->get_focused_window() ({})",
                         connection->window_debug_string(window).c_str(),
                         connection->window_debug_string(focused_window.value()).c_str());
                 }
@@ -1342,7 +1346,7 @@ auto mf::XWaylandSurface::plausible_parent(ProofOfMutexLock const&) -> std::shar
 
     if (verbose_xwayland_logging_enabled())
     {
-        log_debug("Unable to find suitable parent for %s", connection->window_debug_string(window).c_str());
+        log_debug("Unable to find suitable parent for {}", connection->window_debug_string(window).c_str());
     }
     return {};
 }
@@ -1390,7 +1394,7 @@ void mf::XWaylandSurface::wm_hints(std::vector<int32_t> const& hints)
         if (verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "%s input hint set to %s",
+                "{} input hint set to {}",
                 connection->window_debug_string(window).c_str(),
                 hints[WmHintsIndices::INPUT] ? "true" : "false");
         }
@@ -1404,7 +1408,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
     std::lock_guard lock{mutex};
     if (hints.size() != WmSizeHintsIndices::END)
     {
-        log_error("WM_NORMAL_HINTS only has %zu element(s)", hints.size());
+        log_error("WM_NORMAL_HINTS only has {} element(s)", hints.size());
         return;
     }
     auto const flags = static_cast<uint32_t>(hints[WmSizeHintsIndices::FLAGS]);
@@ -1415,7 +1419,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
         if (verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "%s min size set to %dx%d",
+                "{} min size set to {}x{}",
                 connection->window_debug_string(window).c_str(),
                 hints[WmSizeHintsIndices::MIN_WIDTH],
                 hints[WmSizeHintsIndices::MIN_HEIGHT]);
@@ -1428,7 +1432,7 @@ void mf::XWaylandSurface::wm_size_hints(std::vector<int32_t> const& hints)
         if (verbose_xwayland_logging_enabled())
         {
             log_debug(
-                "%s max size set to %dx%d",
+                "{} max size set to {}x{}",
                 connection->window_debug_string(window).c_str(),
                 hints[WmSizeHintsIndices::MAX_WIDTH],
                 hints[WmSizeHintsIndices::MAX_HEIGHT]);
@@ -1441,7 +1445,7 @@ void mf::XWaylandSurface::motif_wm_hints(std::vector<uint32_t> const& hints)
     std::lock_guard lock{mutex};
     if (hints.size() != MotifWmHintsIndices::END)
     {
-        log_error("_MOTIF_WM_HINTS value has incorrect size %zu", hints.size());
+        log_error("_MOTIF_WM_HINTS value has incorrect size {}", hints.size());
         return;
     }
     if (MotifWmHintsFlags::DECORATIONS & hints[MotifWmHintsIndices::FLAGS])

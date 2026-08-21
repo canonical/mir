@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/graphics/gl_format.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/ptr_backed_mapping.h>
@@ -21,7 +24,6 @@
 #include <mir/graphics/program_factory.h>
 #include <mir/graphics/egl_context_executor.h>
 
-#define MIR_LOG_COMPONENT "gfx-common"
 #include <mir/log.h>
 
 #include <GLES2/gl2.h>
@@ -194,9 +196,9 @@ public:
         else
         {
             mir::log_error(
-                "Buffer %i has non-GL-compatible pixel format %i; rendering will be incomplete",
+                "Buffer {} has non-GL-compatible pixel format {}; rendering will be incomplete",
                 id.as_value(),
-                pixel_format);
+                static_cast<int>(pixel_format));
         }
 
         uploaded = true;

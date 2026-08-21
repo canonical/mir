@@ -16,6 +16,10 @@
  *
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "xwayland_connector.h"
 
 #include "wayland_connector.h"
@@ -70,7 +74,7 @@ void mf::XWaylandConnector::start()
         std::unique_lock lock{mutex};
         is_started = true;
         maybe_create_spawner(lock);
-        mir::log_info("XWayland started on X11 display %s", spawner->x11_display().c_str());
+        mir::log_info("XWayland started on X11 display {}", spawner->x11_display().c_str());
     }
 }
 
@@ -183,7 +187,7 @@ void mf::XWaylandConnector::spawn()
 
                 log(
                     logging::Severity::error,
-                    MIR_LOG_COMPONENT,
+                    "uncategorised",
                     std::current_exception(),
                     "X11 window manager error");
 
@@ -211,7 +215,7 @@ void mf::XWaylandConnector::spawn()
     {
         log(
             logging::Severity::error,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             std::current_exception(),
             "Spawning XWayland failed");
 

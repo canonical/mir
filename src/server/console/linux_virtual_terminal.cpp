@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "linux_virtual_terminal.h"
 #include "ioctl_vt_switcher.h"
 
@@ -265,7 +269,7 @@ protected:
                  * It might result in this Mir server receiving unexpected input, however, so
                  * we should log something.
                  */
-                mir::log_warning("Failed to revoke input access: %s (%i)", mir::errno_to_cstr(errno), errno);
+                mir::log_warning("Failed to revoke input access: {} ({})", mir::errno_to_cstr(errno), errno);
             }
         }
         // Don't keep the device FD open if nothing else needs it now.
@@ -314,13 +318,13 @@ void switch_back_to_vt(
     if (fops.ioctl(vt_fd, VT_ACTIVATE, prev_active_vt) < 0)
     {
         mir::log_warning(
-            "Failed to switch back to previously active VT %d: %s (%i)",
+            "Failed to switch back to previously active VT {}: {} ({})",
             prev_active_vt, mir::errno_to_cstr(errno), errno);
     }
     else if (fops.ioctl(vt_fd, VT_WAITACTIVE, prev_active_vt) < 0)
     {
         mir::log_warning(
-            "Failed to wait for VT %d to become active: %s (%i)",
+            "Failed to wait for VT {} to become active: {} ({})",
             prev_active_vt, mir::errno_to_cstr(errno), errno);
     }
 }
@@ -654,7 +658,7 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
         catch (std::exception const& e)
         {
             mir::log_warning(
-                "Failed to determine active VT before taking over: %s; will not restore previous VT on shutdown",
+                "Failed to determine active VT before taking over: {}; will not restore previous VT on shutdown",
                 e.what());
             prev_active_vt = 0;
         }

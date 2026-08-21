@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "display_sink.h"
 #include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "kms_output.h"

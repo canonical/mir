@@ -319,7 +319,7 @@ void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Su
     if (!insert_result.second)
     {
         log_error(
-            "Can not add ForeignSurfaceObserver: surface %p already in the observers map",
+            "Can not add ForeignSurfaceObserver: surface {:p} already in the observers map",
             static_cast<void*>(surface.get()));
         observer->cease_and_desist();
     }
@@ -331,7 +331,7 @@ void mf::ForeignSceneObserver::destroy_surface_observer(std::shared_ptr<scene::S
     if (iter == surface_observers.end())
     {
         log_error(
-            "Can not remove ForeignSurfaceObserver: surface %p not in observers map",
+            "Can not remove ForeignSurfaceObserver: surface {:p} not in observers map",
             static_cast<void*>(surface.get()));
     }
     else

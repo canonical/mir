@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "ioctl_vt_switcher.h"
 #include <mir/errno_utils.h>
 #include <mir/log.h>
@@ -31,6 +35,6 @@ void mir::console::IoctlVTSwitcher::switch_to(
 {
     if (ioctl(vt_fd, VT_ACTIVATE, vt_number) == -1)
     {
-        mir::log_error("%s:%d: Kernel request to change VT switch failed: %s", __FILE__, __LINE__, mir::errno_to_cstr(errno));
+        mir::log_error("{}:{}: Kernel request to change VT switch failed: {}", __FILE__, __LINE__, mir::errno_to_cstr(errno));
     }
 }

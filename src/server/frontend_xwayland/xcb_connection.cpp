@@ -317,7 +317,7 @@ auto mf::XCBConnection::read_property(
             {
                 log(
                     logging::Severity::warning,
-                    MIR_LOG_COMPONENT,
+                    "uncategorised",
                     "Exception thrown processing reply for property " +
                     window_debug_string(window) + "." + query_name(prop));
             }
@@ -471,7 +471,7 @@ auto mf::XCBConnection::query_client_pid(
             {
                 log(
                     logging::Severity::warning,
-                    MIR_LOG_COMPONENT,
+                    "uncategorised",
                     "Exception thrown processing reply for querying pid of " +
                     window_debug_string(window));
             }

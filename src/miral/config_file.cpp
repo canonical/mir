@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <miral/config_file.h>
 
 #include <mir/log.h>
@@ -119,7 +123,7 @@ miral::ConfigFile::Self::Self(MirRunner& runner, path file, Mode mode, Loader lo
     {
         std::ifstream config_stream{config_file.value()};
         load_config(config_stream, *config_file);
-        mir::log_debug("Loaded %s", config_file->c_str());
+        mir::log_debug("Loaded {}", config_file->c_str());
     }
 
     switch (mode)
@@ -143,7 +147,7 @@ miral::ConfigFile::Self::Self(
         auto config_files = get_all_config_files(config_roots, *config_file, extension);
         load_multi_configs(config_files);
 
-        mir::log_debug("Loaded [%s]", collect_paths(config_files).c_str());
+        mir::log_debug("Loaded [{}]", collect_paths(config_files).c_str());
     }
 
     switch (mode)
@@ -180,7 +184,7 @@ SingleFileWatcher::SingleFileWatcher(path file, miral::ConfigFile::Loader load_c
 {
     if (directory_watch_descriptor)
     {
-        mir::log_debug("Monitoring %s for configuration changes", (directory.value() / filename).c_str());
+        mir::log_debug("Monitoring {} for configuration changes", (directory.value() / filename).c_str());
     }
 }
 
@@ -199,11 +203,11 @@ void SingleFileWatcher::handler(int)
                         if (std::ifstream config_file{file})
                         {
                             load_config(config_file, file);
-                            mir::log_debug("(Re)loaded %s", file.c_str());
+                            mir::log_debug("(Re)loaded {}", file.c_str());
                         }
                         else
                         {
-                            mir::log_debug("Failed to open %s", file.c_str());
+                            mir::log_debug("Failed to open {}", file.c_str());
                         }
                     }
                 }
@@ -211,7 +215,7 @@ void SingleFileWatcher::handler(int)
                 {
                     mir::log(
                         mir::logging::Severity::warning,
-                        MIR_LOG_COMPONENT,
+                        "uncategorised",
                         std::current_exception(),
                         "Failed to reload configuration");
                 }

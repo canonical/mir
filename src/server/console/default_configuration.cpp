@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/default_server_configuration.h>
 #include <mir/options/configuration.h>
 #include <mir/log.h>
@@ -116,7 +120,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     catch (std::exception const& e)
                     {
                         mir::log_debug(
-                            "Not using logind for session management: %s",
+                            "Not using logind for session management: {}",
                             e.what());
                         throw;
                     }
@@ -139,7 +143,7 @@ std::shared_ptr<mir::ConsoleServices> mir::DefaultServerConfiguration::the_conso
                     catch (std::exception const& e)
                     {
                         mir::log_debug(
-                            "Not using Linux VT subsystem for session management: %s",
+                            "Not using Linux VT subsystem for session management: {}",
                             e.what());
                         throw;
                     }

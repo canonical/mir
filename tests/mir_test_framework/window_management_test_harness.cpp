@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define MIR_LOG_COMPONENT "WindowManagementTestHarness"
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 
 #include <mir/test/doubles/fake_display.h>
 #include <mir/test/doubles/stub_buffer_stream.h>

@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "buffer_allocator.h"
 #include "kms/quirks.h"
 #include <mir/graphics/buffer.h>
@@ -55,7 +58,6 @@
 #include <xf86drm.h>
 #include <drm_fourcc.h>
 
-#define MIR_LOG_COMPONENT "gbm-kms-buffer-allocator"
 #include <mir/log.h>
 
 namespace mg  = mir::graphics;
@@ -133,10 +135,10 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     catch (std::runtime_error const& error)
     {
         mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
+            "Cannot enable linux-dmabuf import support: {}", error.what());
         mir::log(
             mir::logging::Severity::debug,
-            MIR_LOG_COMPONENT,
+            "uncategorised",
             std::current_exception(),
             "Detailed error: ");
     }
@@ -345,7 +347,7 @@ private:
             if (eglGetConfigAttrib(dpy, config, EGL_NATIVE_VISUAL_ID, &id) == EGL_FALSE)
             {
                 mir::log_warning(
-                    "Failed to query GBM format of EGLConfig: %s",
+                    "Failed to query GBM format of EGLConfig: {}",
                     mg::egl_category().message(eglGetError()).c_str());
                 continue;
             }

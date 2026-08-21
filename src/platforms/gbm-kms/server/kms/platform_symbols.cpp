@@ -14,8 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/graphics/platform.h>
-#define MIR_LOG_COMPONENT "gbm-kms"
 #include <mir/log.h>
 
 #include "platform.h"
@@ -167,14 +169,14 @@ auto probe_display_platform(
     {
         if (quirks.should_skip(device))
         {
-            mir::log_info("Not probing device %s due to specified quirk", device.devnode());
+            mir::log_info("Not probing device {} due to specified quirk", device.devnode());
             continue;
         }
 
         auto driver_name = mg::common::get_device_driver(device.parent().get());
         if(std::strcmp(driver_name, "nvidia") == 0)
         {
-            mir::log_info("Not probing device %s due to the GBM display platform being incompatible with Nvidia", device.devnode());
+            mir::log_info("Not probing device {} due to the GBM display platform being incompatible with Nvidia", device.devnode());
             continue;
         }
 
@@ -239,7 +241,7 @@ auto probe_display_platform(
                 using namespace std::literals::string_literals;
                 if ("llvmpipe"s == renderer_string)
                 {
-                    mir::log_info("KMS device only has associated software renderer: %s, device unsuitable", renderer_string);
+                    mir::log_info("KMS device only has associated software renderer: {}, device unsuitable", renderer_string);
                     supported_devices.back().support_level = mg::probe::unsupported;
                     continue;
                 }
@@ -256,7 +258,7 @@ auto probe_display_platform(
                 if (!busid)
                 {
                     mir::log_warning(
-                        "Failed to query BusID for device %s; cannot check if KMS is available",
+                        "Failed to query BusID for device {}; cannot check if KMS is available",
                         device.devnode());
                     supported_devices.back().support_level = mg::probe::supported;
                 }
@@ -290,13 +292,13 @@ auto probe_display_platform(
                         [[fallthrough]];
                     case EINVAL:
                         mir::log_warning(
-                            "Failed to detect whether device %s supports KMS, continuing with lower confidence",
+                            "Failed to detect whether device {} supports KMS, continuing with lower confidence",
                             device.devnode());
                         supported_devices.back().support_level = mg::probe::supported;
                         break;
 
                     default:
-                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): %s (%i), "
+                        mir::log_warning("Unexpected error from drmCheckModesettingSupported(): {} ({}), "
                                          "but continuing anyway", mir::errno_to_cstr(err), err);
                         mir::log_warning("Please file a bug at "
                                          "https://github.com/canonical/mir/issues containing this message");
@@ -309,7 +311,7 @@ auto probe_display_platform(
         {
             mir::log(
                 mir::logging::Severity::informational,
-                MIR_LOG_COMPONENT,
+                "uncategorised",
                 std::current_exception(),
                 "Failed to probe DRM device");
         }
@@ -394,7 +396,7 @@ auto probe_rendering_platform(
     {
         if (quirks.should_skip(device))
         {
-            mir::log_info("Not probing device %s due to specified quirk", device.devnode());
+            mir::log_info("Not probing device {} due to specified quirk", device.devnode());
             continue;
         }
         auto const device_node = device.devnode();
@@ -457,7 +459,7 @@ auto probe_rendering_platform(
                     renderer_string,
                     mir::strlen_c("llvmpipe")) == 0)
                 {
-                    mir::log_info("Detected software renderer: %s", renderer_string);
+                    mir::log_info("Detected software renderer: {}", renderer_string);
                     // Leave the priority at ::unsupported; if we've got a software renderer then
                     // we're not successfully using *this* rendernode.
                 }
@@ -472,7 +474,7 @@ auto probe_rendering_platform(
         {
             mir::log(
                 mir::logging::Severity::informational,
-                MIR_LOG_COMPONENT,
+                "uncategorised",
                 std::current_exception(),
                 "Failed to probe DRM device");
         }

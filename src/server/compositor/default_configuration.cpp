@@ -14,6 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include <mir/default_server_configuration.h>
 
 #include <mir/log.h>
@@ -60,13 +64,13 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             {
                 if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
                 {
-                    mir::log_info("Pinning all compositing to provider: %s", std::getenv("MIR_PIN_COMPOSITING_TO"));
+                    mir::log_info("Pinning all compositing to provider: {}", std::getenv("MIR_PIN_COMPOSITING_TO"));
                     providers = {gl_provider};
                 }
                 else
                 {
                     mir::log_warning(
-                        "MIR_PIN_COMPOSITING_TO is set to '%s', but that rendering platform does not support GL "
+                        "MIR_PIN_COMPOSITING_TO is set to '{}', but that rendering platform does not support GL "
                         "compositing",
                         std::getenv("MIR_PIN_COMPOSITING_TO"));
                 }
