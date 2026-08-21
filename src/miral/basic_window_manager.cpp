@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <stdexcept>
 
 using namespace mir;
 using namespace mir::geometry;
@@ -163,7 +164,7 @@ auto miral::BasicWindowManager::add_surface(
 
     auto const surface = build(session, make_surface_spec(spec));
     Window const window{session, surface};
-    auto& window_info = this->window_info.emplace(window, WindowInfo{window, spec}).first->second;
+    auto& window_info = this->window_info->emplace(surface, WindowInfo{window, spec});
 
     session_info.add_window(window);
 
@@ -359,7 +360,7 @@ void miral::BasicWindowManager::erase(miral::WindowInfo const& info)
     for (auto& child : info.children())
         info_for(child).parent({});
 
-    window_info.erase(info.window());
+    window_info->erase(std::shared_ptr<scene::Surface>{info.window()});
 }
 
 bool miral::BasicWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
@@ -435,6 +436,12 @@ void miral::BasicWindowManager::handle_request_resize(
     }
 }
 
+auto miral::BasicWindowManager::managed_window_membership() const
+-> std::shared_ptr<mir::shell::ManagedWindowMembership const>
+{
+    return window_info;
+}
+
 auto miral::BasicWindowManager::count_applications() const
 -> unsigned int
 {
@@ -473,7 +480,14 @@ auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Session> const& se
 auto miral::BasicWindowManager::info_for(std::weak_ptr<scene::Surface> const& surface) const
 -> WindowInfo&
 {
-    return const_cast<WindowInfo&>(window_info.at(surface));
+    auto const found = window_info->find(surface);
+    if (!found)
+    {
+        // Keep std::out_of_range here to preserve the old map::at() behavior.
+        throw std::out_of_range{"BasicWindowManager::info_for(): unknown surface"};
+    }
+
+    return found->get();
 }
 
 auto miral::BasicWindowManager::info_for(Window const& window) const
@@ -1749,7 +1763,7 @@ auto miral::BasicWindowManager::surface_known(
     std::weak_ptr<scene::Surface> const& surface,
     std::string const& action) -> bool
 {
-    if (window_info.find(surface) != window_info.end())
+    if (window_info->find(surface))
     {
         return true;
     }

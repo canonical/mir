@@ -87,8 +87,7 @@ auto msh::SystemCompositorWindowManager::add_surface(
 
     auto const surface = build(session, placed_parameters);
 
-    std::lock_guard lock{mutex};
-    output_map[surface] = params.output_id.value();
+    output_map->emplace(surface, params.output_id.value());
 
     return surface;
 }
@@ -121,8 +120,7 @@ void msh::SystemCompositorWindowManager::modify_surface(
             surface->resize(rect.size);
         }
 
-        std::lock_guard lock{mutex};
-        output_map[surface] = output_id;
+        output_map->insert_or_assign(surface, output_id);
     }
 
     if (modifications.input_shape.has_value())
@@ -138,8 +136,7 @@ void msh::SystemCompositorWindowManager::remove_surface(
     if (auto const locked = surface.lock())
         session->destroy_surface(locked);
 
-    std::lock_guard lock{mutex};
-    output_map.erase(surface);
+    output_map->erase(surface);
 }
 
 bool msh::SystemCompositorWindowManager::handle_keyboard_event(MirKeyboardEvent const* /*event*/)
@@ -198,6 +195,12 @@ void msh::SystemCompositorWindowManager::handle_request_resize(
     MirInputEvent const* /*event*/,
     MirResizeEdge /*edge*/)
 {
+}
+
+auto msh::SystemCompositorWindowManager::managed_window_membership() const
+-> std::shared_ptr<ManagedWindowMembership const>
+{
+    return output_map;
 }
 
 bool mir::shell::DefaultWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)

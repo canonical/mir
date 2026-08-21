@@ -117,6 +117,8 @@ public:
         MirInputEvent const* event,
         ::MirResizeEdge edge) override;
 
+    auto managed_window_membership() const -> std::shared_ptr<mir::shell::ManagedWindowMembership const> override;
+
     auto create_workspace() -> std::shared_ptr<Workspace> override;
 
     void add_tree_to_workspace(Window const& window, std::shared_ptr<Workspace> const& workspace) override;
@@ -221,7 +223,6 @@ private:
         std::set<Window> attached_windows; ///< Maximized/anchored/etc windows attached to this area
     };
 
-    using SurfaceInfoMap = std::map<std::weak_ptr<mir::scene::Surface>, WindowInfo, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
     using SessionInfoMap = std::map<std::weak_ptr<mir::scene::Session>, ApplicationInfo, std::owner_less<std::weak_ptr<mir::scene::Session>>>;
 
     mir::shell::FocusController* const focus_controller;
@@ -237,11 +238,13 @@ private:
 
     std::shared_ptr<DeadWorkspaces> const dead_workspaces{std::make_shared<DeadWorkspaces>()};
 
+    std::shared_ptr<mir::shell::ManagedWindowRegistry<WindowInfo>> const window_info{
+        std::make_shared<mir::shell::ManagedWindowRegistry<WindowInfo>>()};
+
     std::unique_ptr<WindowManagementPolicy> const policy;
 
     std::mutex mutex;
     SessionInfoMap app_info;
-    SurfaceInfoMap window_info;
     mir::geometry::Rectangles outputs;
     mir::geometry::Point cursor;
     uint64_t last_input_event_timestamp{0};

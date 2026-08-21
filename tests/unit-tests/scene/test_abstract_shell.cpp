@@ -133,6 +133,11 @@ struct MockDecorationManager : public msh::decoration::NullManager
 
 using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
 
+struct MockManagedWindowMembership : msh::ManagedWindowMembership
+{
+    MOCK_METHOD(bool, contains, (std::shared_ptr<ms::Surface> const&), (const, override));
+};
+
 struct AbstractShell : Test
 {
     NiceMock<mtd::MockSurface> mock_surface;
@@ -156,13 +161,20 @@ struct AbstractShell : Test
 
     mtd::StubInputTargeter input_targeter;
     std::shared_ptr<NiceMockWindowManager> wm;
+    std::shared_ptr<NiceMock<MockManagedWindowMembership>> managed_window_membership{
+        std::make_shared<NiceMock<MockManagedWindowMembership>>()};
 
     msh::AbstractShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
         std::make_shared<mir::report::null::ShellReport>(),
-        [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
+        [this](msh::FocusController*)
+        {
+            wm = std::make_shared<NiceMockWindowManager>();
+            ON_CALL(*wm, managed_window_membership()).WillByDefault(Return(managed_window_membership));
+            return wm;
+        },
         mt::fake_shared(seat),
         mt::fake_shared(decoration_manager)};
 
@@ -170,6 +182,8 @@ struct AbstractShell : Test
     {
         ON_CALL(session_manager, set_focus_to(_)).
             WillByDefault(Invoke(&session_manager, &MockSessionManager::unmocked_set_focus_to));
+        ON_CALL(*managed_window_membership, contains(_))
+            .WillByDefault(Return(true));
         ON_CALL(mock_surface, size())
             .WillByDefault(Return(geom::Size{}));
         ON_CALL(surface_factory, create_surface(_, _, _))
@@ -532,7 +546,7 @@ TEST_F(AbstractShell, as_focus_controller_focused_surface_follows_focus)
 
 TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_stack)
 {
-    auto const surface = mt::fake_shared(mock_surface);
+    auto const surface = create_surface(mock_surface);
     geom::Point const cursor{__LINE__, __LINE__};
 
     EXPECT_CALL(surface_stack, surface_at(cursor)).
@@ -541,6 +555,35 @@ TEST_F(AbstractShell, as_focus_controller_delegates_surface_at_to_surface_stack)
     msh::FocusController& focus_controller = shell;
 
     EXPECT_THAT(focus_controller.surface_at(cursor), Eq(surface));
+}
+
+TEST_F(AbstractShell, as_focus_controller_does_not_return_unknown_surface)
+{
+    auto const surface = create_surface(mock_surface);
+    geom::Point const cursor{__LINE__, __LINE__};
+
+    EXPECT_CALL(surface_stack, surface_at(cursor)).
+        WillOnce(Return(surface));
+    EXPECT_CALL(*managed_window_membership, contains(surface)).
+        WillOnce(Return(false));
+
+    msh::FocusController& focus_controller = shell;
+
+    EXPECT_THAT(focus_controller.surface_at(cursor), IsNull());
+}
+
+TEST_F(AbstractShell, as_focus_controller_checks_null_surface_with_shared_membership_view)
+{
+    geom::Point const cursor{__LINE__, __LINE__};
+
+    EXPECT_CALL(surface_stack, surface_at(cursor)).
+        WillOnce(Return(nullptr));
+    EXPECT_CALL(*managed_window_membership, contains(std::shared_ptr<ms::Surface>{})).
+        WillOnce(Return(false));
+
+    msh::FocusController& focus_controller = shell;
+
+    EXPECT_THAT(focus_controller.surface_at(cursor), IsNull());
 }
 
 TEST_F(AbstractShell, as_focus_controller_focus_next_session_skips_surfaceless_sessions)

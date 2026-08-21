@@ -27,6 +27,8 @@
 #include <mir/scene/surface.h>
 #include <mir/input/seat.h>
 #include <mir/wayland/weak.h>
+#include <mir/log.h>
+
 #include "decoration/manager.h"
 
 #include <iterator>
@@ -166,7 +168,8 @@ msh::AbstractShell::AbstractShell(
     seat(seat),
     report(report),
     surface_confinement_updater(std::make_shared<SurfaceConfinementUpdater>(seat.get())),
-    decoration_manager(decoration_manager)
+    decoration_manager(decoration_manager),
+    managed_window_membership(window_manager->managed_window_membership())
 {
 }
 
@@ -689,7 +692,11 @@ bool msh::AbstractShell::handle(MirEvent const& event)
 auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<scene::Surface>
 {
-    return surface_stack->surface_at(cursor);
+    auto const surface = surface_stack->surface_at(cursor);
+    if (!managed_window_membership->contains(surface))
+        return nullptr;
+
+    return surface;
 }
 
 void msh::AbstractShell::raise(SurfaceSet const& surfaces)

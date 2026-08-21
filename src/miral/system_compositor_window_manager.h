@@ -23,9 +23,6 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/observer_registrar.h>
 
-#include <map>
-#include <mutex>
-
 namespace mir
 {
 namespace shell { class DisplayLayout; class FocusController; }
@@ -69,11 +66,10 @@ public:
 /** @} */
 
 private:
-    using OutputMap = std::map<std::weak_ptr<mir::scene::Surface>, mir::graphics::DisplayConfigurationOutputId, std::owner_less<std::weak_ptr<mir::scene::Surface>>>;
     using MirSurfaceCreator = std::function<std::shared_ptr<mir::scene::Surface>(std::shared_ptr<mir::scene::Session> const& session, mir::shell::SurfaceSpecification const& params)>;
 
-    std::mutex mutable mutex;
-    OutputMap output_map;
+    std::shared_ptr<mir::shell::ManagedWindowRegistry<mir::graphics::DisplayConfigurationOutputId>> const output_map{
+        std::make_shared<mir::shell::ManagedWindowRegistry<mir::graphics::DisplayConfigurationOutputId>>()};
     mir::shell::FocusController* const focus_controller;
     std::shared_ptr<mir::shell::DisplayLayout> const display_layout;
     std::shared_ptr<mir::scene::SessionCoordinator> const session_coordinator;
@@ -120,6 +116,8 @@ private:
         std::shared_ptr<mir::scene::Surface> const& surface,
         MirInputEvent const* event,
         MirResizeEdge edge) override;
+
+    auto managed_window_membership() const -> std::shared_ptr<mir::shell::ManagedWindowMembership const> override;
 
     void advise_output_create(Output const& output) override;
     void advise_output_update(Output const& updated, Output const& original) override;

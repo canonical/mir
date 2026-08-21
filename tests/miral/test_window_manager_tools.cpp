@@ -37,6 +37,7 @@
 #include <gmock/gmock.h>
 
 #include <atomic>
+#include <stdexcept>
 
 namespace
 {
@@ -58,8 +59,10 @@ struct StubFocusController : mir::shell::FocusController
 
     void raise(mir::shell::SurfaceSet const& /*windows*/) override {}
 
-    virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
-        { return {}; }
+    auto surface_at(mir::geometry::Point cursor) const -> std::shared_ptr<mir::scene::Surface> override
+    {
+        return surface_at_callback ? surface_at_callback(cursor) : nullptr;
+    }
 
     void swap_z_order(mir::shell::SurfaceSet const& /*first*/, mir::shell::SurfaceSet const& /*second*/) override {}
 
@@ -69,6 +72,8 @@ struct StubFocusController : mir::shell::FocusController
     {
         return false;
     }
+
+    std::function<std::shared_ptr<mir::scene::Surface>(mir::geometry::Point)> surface_at_callback;
 };
 
 struct StubDisplayLayout : mir::shell::DisplayLayout
@@ -285,6 +290,80 @@ mt::TestWindowManagerTools::TestWindowManagerTools()
 }
 
 mt::TestWindowManagerTools::~TestWindowManagerTools() = default;
+
+void mt::TestWindowManagerTools::set_surface_at_callback(
+    std::function<std::shared_ptr<mir::scene::Surface>(mir::geometry::Point)> callback)
+{
+    self->focus_controller.surface_at_callback = std::move(callback);
+}
+
+namespace
+{
+struct ManagedWindowRegistry : mt::TestWindowManagerTools
+{
+};
+}
+
+TEST_F(ManagedWindowRegistry, tracks_surface_lifecycle)
+{
+    auto const membership = basic_window_manager.managed_window_membership();
+    auto const foreign_surface = create_surface(session, {});
+
+    EXPECT_FALSE(membership->contains({}));
+    EXPECT_FALSE(membership->contains(foreign_surface));
+
+    basic_window_manager.add_session(session);
+    auto const surface = basic_window_manager.add_surface(session, {}, &create_surface);
+
+    EXPECT_TRUE(membership->contains(surface));
+    EXPECT_FALSE(membership->contains(foreign_surface));
+
+    basic_window_manager.remove_surface(session, surface);
+    EXPECT_FALSE(membership->contains(surface));
+
+    basic_window_manager.remove_session(session);
+    EXPECT_FALSE(membership->contains(surface));
+}
+
+// This isolates registry access while BWM's mutex is held. AbstractShell's delegation is covered
+// by the tests in tests/unit-tests/scene/test_abstract_shell.cpp.
+TEST_F(ManagedWindowRegistry, policy_window_lookup_queries_registry_without_relocking_window_manager)
+{
+    auto const membership = basic_window_manager.managed_window_membership();
+    std::shared_ptr<mir::scene::Surface> surface;
+
+    set_surface_at_callback(
+        [&membership, &surface](mir::geometry::Point)
+        {
+            return membership->contains(surface) ? surface : nullptr;
+        });
+
+    EXPECT_CALL(*window_manager_policy, advise_new_window(testing::_)).
+        WillOnce(
+            [&]
+            (miral::WindowInfo const&)
+            {
+                EXPECT_THAT(
+                    std::shared_ptr<mir::scene::Surface>{window_manager_tools.window_at({})},
+                    testing::Eq(surface));
+            });
+
+    basic_window_manager.add_session(session);
+    basic_window_manager.add_surface(
+        session,
+        {},
+        [&](std::shared_ptr<mir::scene::Session> const& session, mir::shell::SurfaceSpecification const& specification)
+        {
+            return surface = create_surface(session, specification);
+        });
+}
+
+TEST_F(ManagedWindowRegistry, info_for_unknown_surface_throws_out_of_range)
+{
+    auto const foreign_surface = create_surface(session, {});
+
+    EXPECT_THROW(basic_window_manager.info_for(foreign_surface), std::out_of_range);
+}
 
 auto mt::TestWindowManagerTools::create_surface(
     std::shared_ptr<mir::scene::Session> const& session,

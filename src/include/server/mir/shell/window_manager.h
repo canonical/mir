@@ -18,6 +18,7 @@
 #define MIR_SHELL_WINDOW_MANAGER_H_
 
 #include <mir/frontend/surface_id.h>
+#include <mir/shell/managed_window_membership.h>
 #include <mir_toolkit/common.h>
 #include <mir_toolkit/event.h>
 #include <mir/geometry/forward.h>
@@ -78,6 +79,8 @@ public:
         std::shared_ptr<scene::Surface> const& surface,
         MirInputEvent const* event,
         MirResizeEdge edge) = 0;
+
+    virtual auto managed_window_membership() const -> std::shared_ptr<ManagedWindowMembership const> = 0;
 
     virtual ~WindowManager() = default;
     WindowManager() = default;

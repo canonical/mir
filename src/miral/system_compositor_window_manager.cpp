@@ -96,8 +96,7 @@ auto miral::SystemCompositorWindowManager::add_surface(
 
     auto const surface = build(session, placed_parameters);
 
-    std::lock_guard lock{mutex};
-    output_map[surface] = params.output_id.value();
+    output_map->emplace(surface, params.output_id.value());
 
     return surface;
 }
@@ -130,8 +129,7 @@ void miral::SystemCompositorWindowManager::modify_surface(
             surface->resize(rect.size);
         }
 
-        std::lock_guard lock{mutex};
-        output_map[surface] = output_id;
+        output_map->insert_or_assign(surface, output_id);
     }
 
     if (modifications.input_shape.has_value())
@@ -147,8 +145,7 @@ void miral::SystemCompositorWindowManager::remove_surface(
     if (auto const locked = surface.lock())
         session->destroy_surface(locked);
 
-    std::lock_guard lock{mutex};
-    output_map.erase(surface);
+    output_map->erase(surface);
 }
 
 bool miral::SystemCompositorWindowManager::handle_keyboard_event(MirKeyboardEvent const* event)
@@ -248,10 +245,16 @@ void miral::SystemCompositorWindowManager::handle_request_resize(
 {
 }
 
+auto miral::SystemCompositorWindowManager::managed_window_membership() const
+-> std::shared_ptr<mir::shell::ManagedWindowMembership const>
+{
+    return output_map;
+}
+
 void miral::SystemCompositorWindowManager::advise_output_create(const miral::Output &/*output*/)
 {
     // When a display gets added, we reposition all surfaces across their outputs, most likely to fit them to the screen.
-    for (auto const& surface_output_pair : output_map)
+    for (auto const& surface_output_pair : output_map->snapshot())
     {
         if (auto surface = surface_output_pair.first.lock())
         {
@@ -263,10 +266,8 @@ void miral::SystemCompositorWindowManager::advise_output_create(const miral::Out
 
 void miral::SystemCompositorWindowManager::advise_output_update(const miral::Output & updated, const miral::Output &/*original*/)
 {
-    std::lock_guard lock{mutex};
-
     // When a display gets updated, we reposition any surface that is on the updated Output.
-    for (auto const& surface_output_pair : output_map)
+    for (auto const& surface_output_pair : output_map->snapshot())
     {
         if (auto surface = surface_output_pair.first.lock())
         {
