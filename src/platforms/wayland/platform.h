@@ -19,9 +19,13 @@
 
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display.h>
+#include <mir/geometry/size.h>
 
 #include <wayland-client.h>
 #include <wayland-egl.h>
+
+#include <vector>
+#include <string>
 
 namespace mir
 {
@@ -31,13 +35,29 @@ namespace wayland
 {
 class WlDisplayProvider;
 
+struct WaylandOutputConfig
+{
+    explicit WaylandOutputConfig(geometry::Size const& size, float scale = 1.0f)
+        : size{size},
+          scale{scale}
+    {
+    }
+
+    geometry::Size size;
+    float scale;
+};
+
 class Platform : public graphics::DisplayPlatform
 {
 public:
+    // Parses a list of output specs in the form WIDTHxHEIGHT[^SCALE] (^SCALE is optional)
+    static auto parse_output_sizes(std::vector<std::string> const& outputs) -> std::vector<WaylandOutputConfig>;
+
     Platform(struct wl_display* const wl_display,
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
-        std::optional<std::string> const& title);
+        std::optional<std::string> const& title,
+        std::vector<WaylandOutputConfig> output_configs = {});
     ~Platform() = default;
 
     UniqueModulePtr<Display> create_display(
@@ -52,6 +72,7 @@ private:
     std::shared_ptr<DisplayReport> const report;
     std::optional<std::string> const app_id;
     std::optional<std::string> const title;
+    std::vector<WaylandOutputConfig> const output_configs;
 
     std::shared_ptr<WlDisplayProvider> const provider;
 };
