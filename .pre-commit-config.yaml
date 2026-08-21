@@ -54,3 +54,12 @@ repos:
   hooks:
   - id: clang-format
     files: ^include/(?!platform/mir/graphics/egl_extensions\.h).*\.h$
+
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: 745be0411e3c150e246d527e531e5a221b8c3462  # frozen: v0.15.19
+  hooks:
+  - id: ruff
+    args: [ --fix ]
+    exclude: ^doc/sphinx/.*
+  - id: ruff-format
+    exclude: ^doc/sphinx/.*

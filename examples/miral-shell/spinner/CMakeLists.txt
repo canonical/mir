@@ -21,27 +21,6 @@ pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
 
 add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-overlength-strings>)
 
-
-function(png2header png header varname)
-  add_custom_command(
-    OUTPUT ${header}
-    COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py ${png} ${varname} > ${header}
-    DEPENDS ${png} ${CMAKE_CURRENT_SOURCE_DIR}/png2header.py
-  )
-endfunction()
-
-png2header(
-  ${CMAKE_CURRENT_SOURCE_DIR}/spinner-glow.png
-  ${CMAKE_CURRENT_BINARY_DIR}/spinner_glow.h
-  spinner_glow
-)
-
-png2header(
-  ${CMAKE_CURRENT_SOURCE_DIR}/spinner-logo.png
-  ${CMAKE_CURRENT_BINARY_DIR}/spinner_logo.h
-  spinner_logo
-)
-
 add_library(miral-spinner STATIC
   eglapp.cpp
   eglapp.h
@@ -49,8 +28,8 @@ add_library(miral-spinner STATIC
   miregl.h
   miregl.cpp
   splash.h
-  ${CMAKE_CURRENT_BINARY_DIR}/spinner_logo.h
-  ${CMAKE_CURRENT_BINARY_DIR}/spinner_glow.h
+  spinner_logo.h
+  spinner_glow.h
 )
 
 set_property(
