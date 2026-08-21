@@ -50,6 +50,9 @@ Tag const& wayland();
 Tag const& graphics();
 Tag const& window_management();
 
+// Transitional only: added to transition to making the tagged log mandatory
+Tag const& uncategorised();
+
 using Tags = std::span<std::reference_wrapper<Tag const> const>;
 
 enum class Severity

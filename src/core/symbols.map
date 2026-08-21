@@ -79,6 +79,7 @@ MIR_CORE_2.29 {
     mir::logging::set_logger*;
     mir::logging::tag::name*;
     mir::logging::tag::set_severity*;
+    mir::logging::uncategorised*;
     mir::logging::wayland*;
     mir::logging::window_management*;
     mir::logv*;

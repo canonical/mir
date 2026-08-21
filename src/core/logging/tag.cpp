@@ -65,6 +65,9 @@ auto const& ensure_input_registered = ml::input();
 auto const& ensure_wayland_registered = ml::wayland();
 auto const& ensure_graphics_registered = ml::graphics();
 auto const& ensure_window_management_registered = ml::window_management();
+
+// Transitional
+auto const& ensure_uncategorised_registered = ml::uncategorised();
 }
 
 auto ml::create_tag(Tag const& parent, std::string_view name) -> Tag const&
@@ -115,6 +118,12 @@ auto ml::window_management() -> Tag const&
 {
     static Tag const& window_management = create_tag(base(), "window-management");
     return window_management;
+}
+
+auto ml::uncategorised() -> Tag const&
+{
+    static Tag const& uncategorised = create_tag(base(), "uncategorised");
+    return uncategorised;
 }
 
 auto ml::parse_severity(std::string_view severity_name) -> ml::Severity
