@@ -354,7 +354,7 @@ TEST_F(DecorationBasicDecoration, redrawn_on_focus_state_change)
     Mock::VerifyAndClearExpectations(&buffer_stream);
 }
 
-TEST_F(DecorationBasicDecoration, decoration_resized_on_window_resize)
+TEST_F(DecorationBasicDecoration, decoration_resized_to_content_size_on_window_resize)
 {
     geom::Size new_size{203, 305};
     std::shared_ptr<ms::Surface> decoration_surface_{mt::fake_shared(decoration_surface)};
@@ -366,8 +366,8 @@ TEST_F(DecorationBasicDecoration, decoration_resized_on_window_resize)
     executor.execute();
     ASSERT_TRUE(spec.width.has_value());
     ASSERT_TRUE(spec.height.has_value());
-    EXPECT_THAT(spec.width.value(), Eq(new_size.width));
-    EXPECT_THAT(spec.height.value(), Eq(new_size.height));
+    EXPECT_THAT(spec.width.value(), Eq(window_surface.content_size().width));
+    EXPECT_THAT(spec.height.value(), Eq(window_surface.content_size().height));
 }
 
 TEST_F(DecorationBasicDecoration, makes_padding_for_borders)
