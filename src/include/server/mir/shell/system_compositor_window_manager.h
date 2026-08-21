@@ -20,9 +20,6 @@
 #include <mir/shell/window_manager.h>
 #include <mir/graphics/display_configuration.h>
 
-#include <map>
-#include <mutex>
-
 namespace mir
 {
 namespace scene { class SessionCoordinator; }
@@ -104,10 +101,10 @@ private:
         MirInputEvent const* event,
         MirResizeEdge edge) override;
 
-    using OutputMap = std::map<std::weak_ptr<scene::Surface>, graphics::DisplayConfigurationOutputId, std::owner_less<std::weak_ptr<scene::Surface>>>;
+    auto managed_window_membership() const -> std::shared_ptr<ManagedWindowMembership const> override;
 
-    std::mutex mutable mutex;
-    OutputMap output_map;
+    std::shared_ptr<ManagedWindowRegistry<graphics::DisplayConfigurationOutputId>> const output_map{
+        std::make_shared<ManagedWindowRegistry<graphics::DisplayConfigurationOutputId>>()};
 };
 
 /**

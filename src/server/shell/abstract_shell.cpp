@@ -168,7 +168,8 @@ msh::AbstractShell::AbstractShell(
     seat(seat),
     report(report),
     surface_confinement_updater(std::make_shared<SurfaceConfinementUpdater>(seat.get())),
-    decoration_manager(decoration_manager)
+    decoration_manager(decoration_manager),
+    managed_window_membership(window_manager->managed_window_membership())
 {
 }
 
@@ -254,7 +255,6 @@ auto msh::AbstractShell::create_surface(
         };
 
     auto const result = window_manager->add_surface(session, wm_visible_spec, build);
-    managed_surfaces.insert(result);
     report->created_surface(*session, *result);
 
     if (*should_decorate)
@@ -375,7 +375,6 @@ void msh::AbstractShell::destroy_surface(
 {
     report->destroying_surface(*session, *surface);
     decoration_manager->undecorate(surface);
-    managed_surfaces.erase(surface);
     window_manager->remove_surface(session, surface);
 }
 
@@ -694,7 +693,7 @@ auto msh::AbstractShell::surface_at(geometry::Point cursor) const
 -> std::shared_ptr<scene::Surface>
 {
     auto const surface = surface_stack->surface_at(cursor);
-    if(!managed_surfaces.contains(surface))
+    if (!managed_window_membership->contains(surface))
         return nullptr;
 
     return surface;

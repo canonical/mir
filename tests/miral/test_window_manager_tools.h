@@ -81,6 +81,9 @@ public:
     miral::WindowManagerTools window_manager_tools;
     miral::BasicWindowManager basic_window_manager;
 
+    void set_surface_at_callback(
+        std::function<std::shared_ptr<mir::scene::Surface>(mir::geometry::Point)> callback);
+
     static auto create_surface(
         std::shared_ptr<mir::scene::Session> const& session,
         mir::shell::SurfaceSpecification const& params) -> std::shared_ptr<mir::scene::Surface>;

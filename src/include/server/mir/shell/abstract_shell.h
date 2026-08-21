@@ -18,11 +18,11 @@
 #define MIR_SHELL_ABSTRACT_SHELL_H_
 
 #include <mir/shell/shell.h>
+#include <mir/shell/managed_window_membership.h>
 #include <mir/shell/window_manager_builder.h>
 #include <mir/scene/surface_observer.h>
 
 #include <mutex>
-#include <unordered_set>
 
 namespace mir
 {
@@ -177,7 +177,7 @@ private:
     void update_confinement_for(std::shared_ptr<scene::Surface> const& surface) const;
 
     std::shared_ptr<decoration::Manager> decoration_manager;
-    std::unordered_set<std::shared_ptr<scene::Surface>> managed_surfaces;
+    std::shared_ptr<ManagedWindowMembership const> const managed_window_membership;
 };
 }
 }
