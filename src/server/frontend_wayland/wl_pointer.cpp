@@ -503,6 +503,7 @@ void mf::WlPointer::on_commit(WlSurface* surface)
     {
         // No buffer: We should be unmapping the cursor
 
+        cursor.reset(); // clean up old cursor before creating new one
         cursor = std::make_unique<WlHiddenCursor>(surface, commit_handler);
         if (surface_under_cursor)
             cursor->apply_to(&surface_under_cursor.value());
