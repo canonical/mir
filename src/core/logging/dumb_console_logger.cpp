@@ -15,18 +15,25 @@
  */
 
 #include <mir/logging/dumb_console_logger.h>
+#include <mir/logging/event.h>
 
 #include <iostream>
+#include <ranges>
 
 namespace ml = mir::logging;
 
-void ml::DumbConsoleLogger::log(Severity severity,
-                                const std::string& message,
-                                const std::string& component)
+void ml::DumbConsoleLogger::log(Event const& event)
 {
-    std::ostream& out = severity <Severity::informational ? std::cerr : std::cout;
+    std::ostream& out = event.severity() < Severity::informational ? std::cerr : std::cout;
 
-    format_message(out, severity, message, component);
+    format_message(
+        out,
+        event.severity(),
+        event.message(),
+        event.tags() |
+            std::views::transform([](Tag const& tag) { return tag::name(tag); }) |
+            std::views::join_with(':') |
+            std::ranges::to<std::string>());
 }
 
 mir::logging::DumbConsoleLogger::~DumbConsoleLogger()

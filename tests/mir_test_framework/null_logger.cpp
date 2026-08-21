@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/logging/event.h"
 #include <mir/test/doubles/null_logger.h>
 
 namespace mtd = mir::test::doubles;
@@ -21,6 +22,6 @@ namespace mtd = mir::test::doubles;
 char const* const mtd::logging_opt = "logging";
 char const* const mtd::logging_descr = "output log during tests";
 
-void mtd::NullLogger::log(mir::logging::Severity, const std::string&, const std::string&)
+void mtd::NullLogger::log(mir::logging::Event const&)
 {
 }
