@@ -611,7 +611,7 @@ TEST_F(AbstractShell, modify_surface_does_not_call_wm_for_empty_changes)
     shell.modify_surface(session, surface, stream_modification);
 }
 
-TEST_F(AbstractShell, modify_surface_applies_streams_after_the_window_manager_changes)
+TEST_F(AbstractShell, modify_surface_observers_see_settled_input_region_when_streams_are_applied)
 {
     std::shared_ptr<ms::Session> session =
         shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
@@ -619,15 +619,37 @@ TEST_F(AbstractShell, modify_surface_applies_streams_after_the_window_manager_ch
     auto creation_params = mt::make_surface_spec(session->create_buffer_stream(properties));
     auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
 
+    geom::Rectangle const input_rect{{0, 0}, {10, 10}};
+
     msh::SurfaceSpecification modifications;
     modifications.streams = std::vector<msh::StreamSpecification>{};
-    modifications.input_shape = std::vector<geom::Rectangle>{{{0, 0}, {10, 10}}};
+    modifications.input_shape = std::vector<geom::Rectangle>{input_rect};
 
-    // Applying the streams notifies scene observers, so it must happen once the window
-    // manager has applied the input region (and any resulting geometry changes)
-    InSequence seq;
-    EXPECT_CALL(*wm, modify_surface(_,_,_));
-    EXPECT_CALL(mock_surface, set_streams(_));
+    // Simulate what the real window manager does: apply input_shape to the surface
+    std::vector<geom::Rectangle> current_input_region;
+    ON_CALL(mock_surface, set_input_region(_))
+        .WillByDefault(SaveArg<0>(&current_input_region));
+    ON_CALL(mock_surface, input_area_contains(_))
+        .WillByDefault([&](geom::Point const& pt)
+            {
+                return std::any_of(
+                    current_input_region.begin(), current_input_region.end(),
+                    [&pt](auto const& r) { return r.contains(pt); });
+            });
+    EXPECT_CALL(*wm, modify_surface(_,_,_))
+        .WillOnce([](auto, auto surf, auto const& mods)
+            {
+                if (mods.input_shape)
+                    surf->set_input_region(*mods.input_shape);
+            });
+
+    // When set_streams fires (notifying scene observers), the input region must already
+    // reflect the window manager's changes so that observers see the settled surface state
+    EXPECT_CALL(mock_surface, set_streams(_))
+        .WillOnce([&](auto const&)
+            {
+                EXPECT_TRUE(mock_surface.input_area_contains({5, 5}));
+            });
 
     shell.modify_surface(session, surface, modifications);
 }
