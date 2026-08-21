@@ -1241,13 +1241,18 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
 void miral::BasicWindowManager::place_and_size(WindowInfo& root, Point const& new_pos, Size const& new_size)
 {
+    /*
+     * Move before resizing: the intermediate state is then at the final position, so any
+     * input events synthesized while resizing (e.g. pointer enter) carry the correct
+     * surface-local coordinates.
+     */
+    move_tree(root, new_pos - root.window().top_left());
+
     if (root.window().size() != new_size)
     {
         policy->advise_resize(root, new_size);
         root.window().resize(new_size);
     }
-
-    move_tree(root, new_pos - root.window().top_left());
 }
 
 void miral::BasicWindowManager::place_attached_to_zone(
