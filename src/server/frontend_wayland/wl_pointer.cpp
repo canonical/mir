@@ -604,6 +604,8 @@ void WlSurfaceCursor::apply_latest_buffer()
 WlHiddenCursor::WlHiddenCursor(mf::WlSurface* surface, mf::CommitHandler* commit_handler) :
     surface_role{surface, std::move(commit_handler)}
 {
+    if (surface)
+        surface->set_role(&surface_role);
 }
 
 void WlHiddenCursor::apply_to(mf::WlSurface* surface)
