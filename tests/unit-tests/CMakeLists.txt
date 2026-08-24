@@ -103,7 +103,6 @@ add_subdirectory(platforms/)
 add_subdirectory(renderers/gl)
 add_subdirectory(scene/)
 add_subdirectory(shell/)
-add_subdirectory(wayland/)
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)
   set_source_files_properties(
@@ -186,7 +185,6 @@ target_link_libraries(
   mirserver-static
 
   PkgConfig::LIBINPUT
-  PkgConfig::WAYLAND_SERVER
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 

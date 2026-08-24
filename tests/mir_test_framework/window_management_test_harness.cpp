@@ -24,7 +24,7 @@
 #include <mir/scene/null_surface_observer.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 #include <mir/log.h>
 #include <mir/main_loop.h>
 #include <mir/compositor/compositor.h>

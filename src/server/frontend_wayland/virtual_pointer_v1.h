@@ -17,8 +17,10 @@
 #ifndef MIR_FRONTEND_VIRTUAL_POINTER_V1_H_
 #define MIR_FRONTEND_VIRTUAL_POINTER_V1_H_
 
-#include "wlr-virtual-pointer-unstable-v1_wrapper.h"
+#include "wlr_virtual_pointer_unstable_v1.h"
+#include "client.h"
 
+#include <cstdint>
 #include <memory>
 
 namespace mir
@@ -32,10 +34,12 @@ namespace frontend
 class OutputManager;
 
 auto create_virtual_pointer_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::VirtualPointerManagerV1Middleware> instance,
+    uint32_t object_id,
     OutputManager* output_manager,
     std::shared_ptr<input::InputDeviceRegistry> const& device_registry)
--> std::shared_ptr<wayland::VirtualPointerManagerV1::Global>;
+-> std::shared_ptr<wayland::VirtualPointerManagerV1>;
 }
 }
 

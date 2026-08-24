@@ -17,11 +17,16 @@
 #ifndef MIR_FRONTEND_WL_DATA_DEVICE_H_
 #define MIR_FRONTEND_WL_DATA_DEVICE_H_
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
+#include "weak.h"
 #include "wl_seat.h"
 #include "wl_surface.h"
 
 #include <mir/events/event.h>
+
+#include <functional>
+#include <memory>
+#include <optional>
 
 namespace mir
 {
@@ -41,30 +46,42 @@ class WlDataDevice : public wayland::DataDevice, public WlSeat::FocusListener
 {
 public:
     WlDataDevice(
-        wl_resource* new_resource,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::DataDeviceMiddleware> instance,
+        uint32_t object_id,
         Executor& wayland_executor,
         scene::Clipboard& clipboard,
         WlSeat& seat,
         std::shared_ptr<PointerInputDispatcher> pointer_input_dispatcher,
         std::shared_ptr<DragIconController> drag_icon_controller);
-    ~WlDataDevice();
+    ~WlDataDevice() override;
 
-    /// Wayland requests
-    /// @{
-    void start_drag(
-        std::optional<wl_resource*> const& source,
-        wl_resource* origin,
-        std::optional<wl_resource*> const& icon,
-        uint32_t serial) override;
+    auto start_drag(
+        std::optional<wayland::Weak<wayland::DataSource>> const& source,
+        wayland::Weak<wayland::Surface> const& origin,
+        std::optional<wayland::Weak<wayland::Surface>> const& icon,
+        uint32_t serial) -> void override;
 
-    void set_selection(std::optional<wl_resource*> const& source, uint32_t serial) override;
-    /// @}
+    auto set_selection(
+        std::optional<wayland::Weak<wayland::DataSource>> const& source,
+        uint32_t serial) -> void override;
+
+    auto release() -> void override
+    {
+        destroy_and_delete();
+    }
 
     void event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface);
 
 private:
     class ClipboardObserver;
     class Offer;
+    enum class OfferType
+    {
+        dnd,
+        selection
+    };
+
     class DragIconSurface : public NullWlSurfaceRole
     {
     public:
@@ -79,15 +96,14 @@ private:
         std::shared_ptr<DragIconController> const drag_icon_controller;
     };
 
-    /// Override from WlSeat::FocusListener
     void focus_on(WlSurface* surface) override;
 
-    /// Called by the clipboard observer
     void paste_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
     void drag_n_drop_source_set(std::shared_ptr<scene::DataExchangeSource> const& source);
     void drag_n_drop_source_cleared();
 
-    void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event) const;
+    void validate_pointer_event(std::optional<std::shared_ptr<MirEvent const>> drag_event);
+    auto create_offer(OfferType type, std::shared_ptr<scene::DataExchangeSource> const& source) -> std::shared_ptr<Offer>;
     void make_new_dnd_offer_if_possible(std::shared_ptr<mir::scene::DataExchangeSource> const& source);
 
     void end_of_dnd_gesture();
