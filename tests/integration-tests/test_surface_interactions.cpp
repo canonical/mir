@@ -24,6 +24,8 @@
 #include <mir/scene/basic_surface.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/graphics/display_configuration_observer.h>
+#include <mir/shell/display_layout.h>
+#include <mir/shell/persistent_surface_store.h>
 #include <mir/wayland/weak.h>
 
 #include "src/server/report/null/shell_report.h"
@@ -31,8 +33,10 @@
 #include "src/include/server/mir/scene/session_event_sink.h"
 #include "src/server/scene/session_manager.h"
 #include "src/server/shell/decoration/null_manager.h"
+#include "basic_window_manager.h"
 
-#include <mir/test/doubles/mock_window_manager.h>
+#include <miral/canonical_window_manager.h>
+
 #include <mir/test/doubles/mock_surface_stack.h>
 #include <mir/test/doubles/mock_buffer_stream.h>
 #include <mir/test/doubles/null_event_sink.h>
@@ -42,6 +46,7 @@
 #include <mir/test/doubles/mock_input_seat.h>
 #include <mir/test/doubles/stub_observer_registrar.h>
 #include <mir/test/doubles/stub_cursor_image.h>
+#include <mir/test/doubles/stub_input_device_registry.h>
 
 #include <mir/test/fake_shared.h>
 #include <mir/test/make_surface_spec.h>
@@ -126,7 +131,18 @@ struct MockDecorationManager : public msh::decoration::NullManager
         geom::Size, compute_size_with_decorations, (geom::Size content_size, MirWindowType type, MirWindowState state));
 };
 
-using NiceMockWindowManager = NiceMock<mtd::MockWindowManager>;
+struct StubDisplayLayout : mir::shell::DisplayLayout
+{
+    void clip_to_output(mir::geometry::Rectangle&) override {}
+    void size_to_output(mir::geometry::Rectangle&) override {}
+    bool place_in_output(mir::graphics::DisplayConfigurationOutputId, mir::geometry::Rectangle&) override { return false; }
+};
+
+struct StubPersistentSurfaceStore : mir::shell::PersistentSurfaceStore
+{
+    Id id_for_surface(std::shared_ptr<mir::scene::Surface> const&) override { return {}; }
+    auto surface_for_id(Id const&) const -> std::shared_ptr<mir::scene::Surface> override { return {}; }
+};
 
 struct SurfaceInteractions : Test
 {
@@ -137,6 +153,9 @@ struct SurfaceInteractions : Test
     NiceMock<mtd::MockInputSeat> seat;
     NiceMock<MockDecorationManager> decoration_manager;
     mtd::StubDisplay display{3};
+    StubDisplayLayout display_layout;
+    StubPersistentSurfaceStore persistent_surface_store;
+    mtd::StubObserverRegistrar<mg::DisplayConfigurationObserver> display_config_observer_registrar;
 
     NiceMock<MockSessionManager> session_manager{
         mt::fake_shared(surface_stack),
@@ -146,21 +165,30 @@ struct SurfaceInteractions : Test
         mt::fake_shared(display)};
 
     mtd::StubInputTargeter input_targeter;
-    std::shared_ptr<NiceMockWindowManager> wm;
 
     msh::AbstractShell shell{
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
         std::make_shared<mir::report::null::ShellReport>(),
-        [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
+        [this](msh::FocusController* focus_controller)
+        {
+            return std::make_shared<miral::BasicWindowManager>(
+                focus_controller,
+                mt::fake_shared(display_layout),
+                mt::fake_shared(persistent_surface_store),
+                display_config_observer_registrar,
+                std::make_shared<mtd::StubInputDeviceRegistry>(),
+                [](miral::WindowManagerTools const& tools) -> std::unique_ptr<miral::WindowManagementPolicy>
+                {
+                    return std::make_unique<miral::CanonicalWindowManagerPolicy>(tools);
+                });
+        },
         mt::fake_shared(seat),
         mt::fake_shared(decoration_manager)};
 
     std::shared_ptr<mg::CursorImage> cursor_image = std::make_shared<mtd::StubCursorImage>();
     std::shared_ptr<ms::SceneReport> scene_report = mr::null_scene_report();
-    std::shared_ptr<mir::ObserverRegistrar<mg::DisplayConfigurationObserver>> display_config_registrar =
-        std::make_shared<mtd::StubObserverRegistrar<mg::DisplayConfigurationObserver>>();
 
     void SetUp() override
     {
@@ -194,7 +222,7 @@ struct SurfaceInteractions : Test
                         streams,
                         cursor_image,
                         scene_report,
-                        display_config_registrar);
+                        mt::fake_shared(display_config_observer_registrar));
                 });
     }
 };
@@ -231,19 +259,14 @@ TEST_F(SurfaceInteractions, streams_resize_observer_sees_up_to_date_input_state)
 
     surface->register_interest(observer);
 
-    // The WM resizes the surface to 200x200 when it sees the modification
-    EXPECT_CALL(*wm, modify_surface(_, _, _))
-        .WillOnce(
-            [](auto, auto surf, auto const& /*mods*/)
-            {
-                surf->resize({200, 200});
-            });
-
-    // Submitting a SurfaceSpecification with a new stream causes configure_streams ->
-    // set_streams -> moved_to, so the observer fires after the WM has already resized
+    // Submit a SurfaceSpecification that both resizes the surface to 200x200 and sets a new stream.
+    // The CanonicalWindowManager processes the resize first, then the shell applies the streams.
+    // set_streams fires moved_to, so the observer sees the already-updated 200x200 input region.
     auto new_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     ON_CALL(*new_stream, has_submitted_buffer()).WillByDefault(Return(true));
     msh::SurfaceSpecification modifications;
+    modifications.width = geom::Width{200};
+    modifications.height = geom::Height{200};
     modifications.streams = {msh::StreamSpecification{new_stream, {}}};
     shell.modify_surface(session, surface, modifications);
 

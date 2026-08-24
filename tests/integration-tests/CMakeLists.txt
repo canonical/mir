@@ -50,6 +50,8 @@ target_link_libraries(
 
   mircommon
 
+  miral-internal
+  miral-external
   mirserver-static
   # GBM platform dependencies
   PkgConfig::DRM
