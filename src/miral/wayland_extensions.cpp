@@ -294,9 +294,8 @@ struct miral::WaylandExtensions::Self
             };
 
             auto frig = [build=hook.build, context=std::make_shared<FrigContext>()]
-                (wl_display* display, std::function<void(std::function<void()>&& work)> const& executor)
+                (std::function<void(std::function<void()>&& work)> const& executor)
             {
-                context->display_ = display;
                 context->executor = executor;
                 return build(context.get());
             };

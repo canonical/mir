@@ -479,6 +479,27 @@ auto mir::Server::open_wayland_client_socket() -> Fd
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
+void mir::Server::run_on_wayland_display(std::function<void(Executor&)> const& functor)
+{
+    if (auto const config = self->server_config)
+    {
+        std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector())
+            ->run_on_wayland_display(functor);
+    }
+}
+
+auto mir::Server::scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
+    -> std::shared_ptr<scene::Surface>
+{
+    if (auto const config = self->server_config)
+    {
+        return std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector())
+            ->scene_surface_for(session, id);
+    }
+
+    return nullptr;
+}
+
 auto mir::Server::wayland_display() const -> std::optional<std::string>
 {
     if (auto const config = self->server_config)
@@ -505,18 +526,8 @@ auto mir::Server::get_activation_token() const -> std::string
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-void mir::Server::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
-{
-    if (auto const config = self->server_config)
-    {
-        std::dynamic_pointer_cast<mir::frontend::WaylandConnector>(config->the_wayland_connector())
-            ->run_on_wayland_display(functor);
-    }
-}
-
 void mir::Server::add_wayland_extension(
     std::string const& name, std::function<std::shared_ptr<void>(
-        wl_display*,
         std::function<void(std::function<void()>&& work)> const&)> builder)
 {
     if (auto const config = self->server_config)

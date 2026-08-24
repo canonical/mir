@@ -22,7 +22,7 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/input/mir_input_config.h>
 #include <mir/shell/surface_specification.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <gmock/gmock.h>
 

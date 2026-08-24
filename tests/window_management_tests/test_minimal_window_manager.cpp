@@ -21,7 +21,7 @@
 #include <miral/minimal_window_manager.h>
 #include <miral/output.h>
 #include <mir/scene/session.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 #include <mir/scene/surface.h>
 #include <mir/executor.h>
 #include <mir/events/event_builders.h>

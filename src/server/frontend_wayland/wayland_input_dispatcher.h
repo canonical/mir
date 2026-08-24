@@ -19,7 +19,7 @@
 
 #include <mir_toolkit/common.h>
 #include <mir/geometry/point.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 #include <memory>
 #include <chrono>

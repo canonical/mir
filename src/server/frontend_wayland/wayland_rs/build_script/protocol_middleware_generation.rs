@@ -18,6 +18,36 @@ use crate::protocol_parser::{
 };
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
+use std::collections::HashMap;
+
+/// Maps (interface_name, enum_name) to a value that is guaranteed to convert
+/// into the wayland-rs enum: 0 when valid (bitfields accept empty flags, and
+/// many enums have a 0-valued entry), otherwise the enum's first entry.
+type EnumFallbacks = HashMap<(String, String), u32>;
+
+fn build_enum_fallback_map(protocols: &[WaylandProtocol]) -> EnumFallbacks {
+    let mut map = EnumFallbacks::new();
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                if let InterfaceItem::Enum(e) = item {
+                    let zero_is_valid = e.bitfield.unwrap_or(false)
+                        || e.entries.iter().any(|entry| entry.value == 0);
+                    let fallback = if zero_is_valid {
+                        0
+                    } else {
+                        e.entries
+                            .first()
+                            .map(|entry| entry.value as u32)
+                            .unwrap_or(0)
+                    };
+                    map.insert((interface.name.clone(), e.name.clone()), fallback);
+                }
+            }
+        }
+    }
+    map
+}
 
 pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -> TokenStream {
     // First, generate the imports.
@@ -33,7 +63,10 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     // Wayland protocol methods take arguments that cannot be sent over the C++ -> Rust
     // boundary. To fix this, we first generate middleware structs that make it easy
     // to copy the data.
-    let extensions = protocols.iter().flat_map(generate_extensions_for_protocol);
+    let enum_fallbacks = build_enum_fallback_map(protocols);
+    let extensions = protocols
+        .iter()
+        .flat_map(|protocol| generate_extensions_for_protocol(protocol, &enum_fallbacks));
 
     quote! {
         #[allow(dead_code, unused_imports)]
@@ -95,23 +128,31 @@ fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStr
         .collect()
 }
 
-fn generate_extensions_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
+fn generate_extensions_for_protocol(
+    protocol: &WaylandProtocol,
+    enum_fallbacks: &EnumFallbacks,
+) -> TokenStream {
     protocol
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .flat_map(generate_extension_for_interface)
+        .flat_map(|interface| generate_extension_for_interface(interface, enum_fallbacks))
         .collect()
 }
 
-fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<TokenStream> {
+fn generate_extension_for_interface(
+    interface: &WaylandInterface,
+    enum_fallbacks: &EnumFallbacks,
+) -> Option<TokenStream> {
     let event_extensions: Vec<TokenStream> = interface
         .items
         .iter()
         .filter_map(|item| match item {
-            InterfaceItem::Event(event) => {
-                Some(generate_extension_method_for_event(event, &interface.name))
-            }
+            InterfaceItem::Event(event) => Some(generate_extension_method_for_event(
+                event,
+                &interface.name,
+                enum_fallbacks,
+            )),
             _ => None,
         })
         .collect();
@@ -163,7 +204,11 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
     })
 }
 
-fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &str) -> TokenStream {
+fn generate_extension_method_for_event(
+    event: &WaylandEvent,
+    interface_name: &str,
+    enum_fallbacks: &EnumFallbacks,
+) -> TokenStream {
     let event_name: syn::Ident = format_ident!("{}", sanitize_identifier(&event.name));
     let ffi_args: Vec<TokenStream> = event
         .args
@@ -179,9 +224,38 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
         .args
         .iter()
         .map(|arg| {
-            wayland_arg_to_rust_param_str(arg, interface_name)
+            wayland_arg_to_rust_param_str(arg, interface_name, enum_fallbacks)
                 .parse::<TokenStream>()
                 .expect("Failed to parse argument as TokenStream")
+        })
+        .collect();
+
+    // Sending an event whose target or object argument has been destroyed panics
+    // wayland-backend ("Attempting to send an event with objects from wrong client"),
+    // e.g. wl_keyboard.leave sent from the focused surface's own destruction path.
+    // libwayland tolerated such events (clients ignore ids of zombie objects), so
+    // match that by dropping the event instead.
+    let object_guards: Vec<TokenStream> = event
+        .args
+        .iter()
+        .filter(|arg| matches!(arg.type_, WaylandArgType::Object))
+        .map(|arg| {
+            let name = format_ident!("{}", sanitize_identifier(&arg.name));
+            if arg.allow_null.unwrap_or(false) {
+                quote! {
+                    if let Some(__obj) = unsafe { #name.as_ref() } {
+                        if !__obj.wrapped.is_alive() {
+                            return;
+                        }
+                    }
+                }
+            } else {
+                quote! {
+                    if !#name.wrapped.is_alive() {
+                        return;
+                    }
+                }
+            }
         })
         .collect();
 
@@ -189,6 +263,11 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
     // The first item is the definition, and the second is the method declaration for the trait.
     quote! {
         pub fn #event_name(&mut self, #(#ffi_args),*) {
+            use wayland_server::Resource;
+            if !self.wrapped.is_alive() {
+                return;
+            }
+            #(#object_guards)*
             self.wrapped.#event_name(#(#rust_args),*)
         }
     }
@@ -229,7 +308,11 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
     arg_str
 }
 
-fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> String {
+fn wayland_arg_to_rust_param_str(
+    arg: &WaylandArg,
+    interface_name: &str,
+    enum_fallbacks: &EnumFallbacks,
+) -> String {
     let name = sanitize_identifier(&arg.name);
     let mut param = match arg.type_ {
         WaylandArgType::Int | WaylandArgType::Uint | WaylandArgType::Fixed => name.clone(),
@@ -240,16 +323,25 @@ fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> Stri
     };
 
     if let Some(e) = &arg.enum_ {
-        let rust_enum_path = if let Some(dot_pos) = e.find('.') {
-            let interface = &e[..dot_pos];
-            let enum_name = &e[dot_pos + 1..];
-            format!("{}::{}", interface, snake_to_pascal(enum_name))
+        let (enum_interface, enum_name) = if let Some(dot_pos) = e.find('.') {
+            (&e[..dot_pos], &e[dot_pos + 1..])
         } else {
-            format!("{}::{}", interface_name, snake_to_pascal(e))
+            (interface_name, e.as_str())
         };
+        let rust_enum_path = format!("{}::{}", enum_interface, snake_to_pascal(enum_name));
+        // The fallback must be lazy (`unwrap_or_else`) and use a value that is
+        // actually valid for this enum: not every enum has a 0-valued entry.
+        let fallback = enum_fallbacks
+            .get(&(enum_interface.to_string(), enum_name.to_string()))
+            .unwrap_or_else(|| {
+                panic!(
+                    "Unknown enum '{}' referenced by argument '{}' of interface '{}'",
+                    e, arg.name, interface_name
+                )
+            });
         param = format!(
-            "{}::try_from({}).unwrap_or({}::try_from(0).unwrap())",
-            rust_enum_path, param, rust_enum_path
+            "{}::try_from({}).unwrap_or_else(|_| {}::try_from({}).unwrap())",
+            rust_enum_path, param, rust_enum_path, fallback
         );
     }
 
