@@ -210,41 +210,41 @@ struct TestSurfaceObserver : ms::NullSurfaceObserver
     }
 };
 
-TEST_F(SurfaceInteractions, on_moved_observer_sees_up_to_date_input_state)
+TEST_F(SurfaceInteractions, streams_resize_observer_sees_up_to_date_input_state)
 {
+    // Create a 100x100 surface at the origin
     auto const session = shell.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "TestApp");
-    auto mock_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
-    auto const creation_params = mt::make_surface_spec(mock_stream);
+    auto initial_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    auto const creation_params = mt::make_surface_spec(initial_stream);
 
     auto surface = shell.create_surface(session, creation_params, nullptr, nullptr);
 
     auto observer = std::make_shared<TestSurfaceObserver>();
-
-    geom::Point const new_position{200, 200};
     bool observer_called = false;
 
-    observer->on_moved = [&](ms::Surface const* surf, geom::Point const& top_left)
+    // When moved_to fires (triggered by set_streams), the surface should already be 200x200
+    observer->on_moved = [&](ms::Surface const* surf, geom::Point const& /*top_left*/)
         {
             observer_called = true;
-            EXPECT_THAT(top_left, Eq(new_position));
-            EXPECT_THAT(surf->top_left(), Eq(new_position));
-            // The surface's default input area (bounding box) should already reflect the new position
-            EXPECT_TRUE(surf->input_area_contains({210, 210}));
-            EXPECT_FALSE(surf->input_area_contains({5, 5}));
+            EXPECT_TRUE(surf->input_area_contains({150, 150}));
         };
 
     surface->register_interest(observer);
 
+    // The WM resizes the surface to 200x200 when it sees the modification
     EXPECT_CALL(*wm, modify_surface(_, _, _))
         .WillOnce(
-            [&](auto, auto surf, auto const& mods)
+            [](auto, auto surf, auto const& /*mods*/)
             {
-                if (mods.top_left)
-                    surf->move_to(*mods.top_left);
+                surf->resize({200, 200});
             });
 
+    // Submitting a SurfaceSpecification with a new stream causes configure_streams ->
+    // set_streams -> moved_to, so the observer fires after the WM has already resized
+    auto new_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    ON_CALL(*new_stream, has_submitted_buffer()).WillByDefault(Return(true));
     msh::SurfaceSpecification modifications;
-    modifications.top_left = new_position;
+    modifications.streams = {msh::StreamSpecification{new_stream, {}}};
     shell.modify_surface(session, surface, modifications);
 
     EXPECT_TRUE(observer_called);
