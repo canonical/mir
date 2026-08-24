@@ -44,7 +44,7 @@ pub struct WaylandServer {
     fd_listener_signal: Mutex<Option<Ping>>,
     pending_fd_listeners: Mutex<Vec<PendingFdListener>>,
     client_signal: Mutex<Option<Ping>>,
-    pending_clients: Mutex<Vec<RawFd>>,
+    pending_clients: Mutex<Vec<UnixStream>>,
     /// A clone of the running display's handle, populated for the duration of
     /// [WaylandServer::run].
     display_handle: Mutex<Option<DisplayHandle>>,
@@ -444,10 +444,18 @@ impl WaylandServer {
             return;
         }
 
+        // SAFETY: `fd` is the server end of a socket pair whose ownership was
+        // transferred to us by the C++ caller; nothing else touches it, so we may
+        // take ownership here. Wrapping it in a `UnixStream` immediately upholds
+        // the ownership transfer in all lifecycle paths: if the server is dropped
+        // (or `run` never starts) before the queue is drained, the fd is closed
+        // by RAII rather than leaked.
+        let stream = unsafe { UnixStream::from_raw_fd(fd) };
+
         self.pending_clients
             .lock()
             .expect("No recovery from lock poisoning")
-            .push(fd);
+            .push(stream);
 
         if let Some(signal) = self
             .client_signal
@@ -492,19 +500,15 @@ impl WaylandServer {
     /// Drain `queue` of pending injected client fds, adopting a client for each.
     /// Runs on the event-loop thread.
     fn drain_pending_clients(
-        queue: &Mutex<Vec<RawFd>>,
+        queue: &Mutex<Vec<UnixStream>>,
         disconnect_tx: &mpsc::Sender<(ClientId, DisconnectReason)>,
         state: &mut ServerState,
     ) {
-        let pending: Vec<RawFd> = {
+        let pending: Vec<UnixStream> = {
             let mut queue = queue.lock().expect("No recovery from lock poisoning");
             std::mem::take(&mut *queue)
         };
-        for fd in pending {
-            // SAFETY: `fd` is the server end of a socket pair whose ownership was
-            // transferred to us by the C++ caller via `insert_client`; nothing
-            // else touches it, so we may take ownership here.
-            let stream = unsafe { UnixStream::from_raw_fd(fd) };
+        for stream in pending {
             Self::insert_stream_client(state, disconnect_tx, stream);
         }
     }
