@@ -25,7 +25,7 @@
 #include <stdexcept>
 #include <unistd.h>
 
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 
 using namespace std::chrono_literals;
 

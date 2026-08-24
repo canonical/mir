@@ -17,7 +17,8 @@
 #ifndef MIR_FRONTEND_WL_SUBSURFACE_H
 #define MIR_FRONTEND_WL_SUBSURFACE_H
 
-#include "wayland_wrapper.h"
+#include "wayland.h"
+#include "weak.h"
 #include "wl_surface_role.h"
 #include "wl_surface.h"
 
@@ -30,29 +31,36 @@ namespace shell
 {
 class StreamSpecification;
 }
-namespace wayland
-{
-class Client;
-}
 namespace frontend
 {
 
 class WlSurface;
-class WlSubcompositorInstance;
 
-class WlSubcompositor : wayland::Subcompositor::Global
+class WlSubcompositor : public wayland::Subcompositor
 {
 public:
-    WlSubcompositor(wl_display* display);
+    WlSubcompositor(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::SubcompositorMiddleware> instance,
+        uint32_t object_id);
 
 private:
-    void bind(wl_resource* new_wl_subcompositor);
+    auto get_subsurface(
+        wayland::Weak<wayland::Surface> const& surface,
+        wayland::Weak<wayland::Surface> const& parent,
+        rust::Box<wayland::SubsurfaceMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Subsurface> override;
 };
 
-class WlSubsurface: public WlSurfaceRole, wayland::Subsurface
+class WlSubsurface: public WlSurfaceRole, public wayland::Subsurface
 {
 public:
-    WlSubsurface(wl_resource* new_subsurface, WlSurface* surface, WlSurface* parent_surface);
+    WlSubsurface(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::SubsurfaceMiddleware> instance,
+        uint32_t object_id,
+        WlSurface* surface,
+        WlSurface* parent_surface);
     ~WlSubsurface();
 
     void populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -71,8 +79,8 @@ public:
 
 private:
     void set_position(int32_t x, int32_t y) override;
-    void place_above(struct wl_resource* sibling) override;
-    void place_below(struct wl_resource* sibling) override;
+    void place_above(wayland::Weak<wayland::Surface> const& sibling) override;
+    void place_below(wayland::Weak<wayland::Surface> const& sibling) override;
     void set_sync() override;
     void set_desync() override;
 

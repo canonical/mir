@@ -22,7 +22,7 @@
 
 #include <memory>
 
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 
 using namespace testing;
 
@@ -61,10 +61,10 @@ public:
     virtual ~GeneratedBase() = default;
 
     template<typename Self>
-    static auto from(::mir::wayland_rs::Weak<GeneratedBase> const& weak) -> Self*
+    static auto from(::mir::wayland::Weak<GeneratedBase> const& weak) -> Self*
     {
-        return ::mir::wayland_rs::as_nullable_ptr(
-            ::mir::wayland_rs::weak_cast<Self>(weak));
+        return ::mir::wayland::as_nullable_ptr(
+            ::mir::wayland::weak_cast<Self>(weak));
     }
 };
 

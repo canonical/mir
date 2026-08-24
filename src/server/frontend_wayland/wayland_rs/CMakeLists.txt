@@ -1,7 +1,21 @@
+include(RustLibrary)
+
 add_rust_cxx_library(mirwayland_rs
   CRATE wayland_rs
   CXX_BRIDGE_SOURCE_FILE src/ffi.rs
-  DEPENDS Cargo.toml build_script/main.rs build_script/protocol_parser.rs build_script/wayland_server_generation.rs src/lib.rs src/wayland_server_core.rs
+  DEPENDS Cargo.toml
+    build_script/main.rs
+    build_script/cpp_builder.rs
+    build_script/cpp_protocol_generation.rs
+    build_script/dispatch_generator.rs
+    build_script/ffi_generation.rs
+    build_script/helpers.rs
+    build_script/protocol_generator.rs
+    build_script/protocol_middleware_generation.rs
+    build_script/protocol_parser.rs
+    build_script/wayland_server_generation.rs
+    src/lib.rs
+    src/wayland_server_core.rs
   INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/include

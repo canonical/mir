@@ -45,7 +45,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
         use crate::middleware::*;
         use crate::dispatch::*;
 
-        #[cxx::bridge(namespace = "mir::wayland_rs")]
+        #[cxx::bridge(namespace = "mir::wayland")]
         #[allow(dead_code, unused_imports)]
         mod ffi {
             extern "Rust" {
@@ -55,6 +55,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
                 fn stop(self: &WaylandServer);
                 fn drain_queue(self: &WaylandServer) -> bool;
                 fn register_fd_ready_listener(self: &WaylandServer, fd: i32, callback: UniquePtr<FdReadyCallback>);
+                fn insert_client(self: &WaylandServer, fd: i32);
 
                 type OutputGlobal;
                 fn create_output_global(self: &WaylandServer, binder: UniquePtr<OutputGlobalBinder>) -> Result<Box<OutputGlobal>>;

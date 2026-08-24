@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 /// A weak handle to a Wayland object (any LifetimeTracker subclass).
 ///
@@ -94,7 +94,7 @@ public:
             BOOST_THROW_EXCEPTION(
                 std::logic_error(
                     std::string{"Attempted access of "} + (resource ? "destroyed" : "null") +
-                    " wayland_rs::Weak<" + typeid(T).name() + ">"));
+                    " wayland::Weak<" + typeid(T).name() + ">"));
         }
         return *resource;
     }

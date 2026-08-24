@@ -34,7 +34,7 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
 
     let server_side_factories = generate_server_side_factories(protocols);
 
-    let output_dynamic_global = generate_output_dynamic_global(protocols);
+    let output_dynamic_global = generate_output_dynamic_global();
 
     quote! {
         #[allow(dead_code, unused_imports)]
@@ -61,25 +61,45 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
                 OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
             }
 
-            fn parse_post_error(what: &str) -> (u32, u32, String) {
-                let mut parts = what.splitn(3, ':');
-                let object_id = parts.next()
-                    .and_then(|s| s.trim().parse::<u32>().ok())
-                    .unwrap_or(0);
-                let code = parts.next()
-                    .and_then(|s| s.trim().parse::<u32>().ok())
-                    .unwrap_or(0);
-                let message = parts.next()
-                    .map(|s| s.trim().to_string())
-                    .unwrap_or_else(|| what.to_string());
-                (object_id, code, message)
-            }
-
             fn post_protocol_error(resource: &impl Resource, object_id: u32, code: u32, message: String) {
                 let target_id = OBJECT_REGISTRY.read().unwrap_or_else(|e| e.into_inner()).get(&object_id).cloned();
                 if let Some(handle) = resource.handle().upgrade() {
                     let id = target_id.unwrap_or_else(|| resource.id());
                     handle.post_error(id, code, CString::new(message).expect("Error message contained null byte"));
+                }
+            }
+
+            /// Handle a C++ exception that crossed the FFI boundary during dispatch.
+            ///
+            /// `mir::wayland::ProtocolError` encodes itself as
+            /// "MIR_PROTOCOL_ERROR:<object_id>:<code>: <message>" (only what() survives
+            /// the cxx boundary). Anything without that sentinel is an internal server
+            /// error and must not be dressed up as a client protocol violation.
+            fn handle_dispatch_error(resource: &impl Resource, what: &str) {
+                if let Some(encoded) = what.strip_prefix("MIR_PROTOCOL_ERROR:") {
+                    let mut parts = encoded.splitn(3, ':');
+                    let object_id = parts.next()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let code = parts.next()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let message = parts.next()
+                        .map(|s| s.trim().to_string())
+                        .unwrap_or_else(|| encoded.to_string());
+                    post_protocol_error(resource, object_id, code, message);
+                } else {
+                    log::error!("Internal error dispatching Wayland request on {}: {}", resource.id(), what);
+                    // No protocol-level error code fits an internal failure; what matters
+                    // is that the client sees an honest message rather than a garbled
+                    // pseudo-protocol-error, and the real cause is in the server log.
+                    if let Some(handle) = resource.handle().upgrade() {
+                        handle.post_error(
+                            resource.id(),
+                            0,
+                            CString::new("internal server error").expect("static string"),
+                        );
+                    }
                 }
             }
 
@@ -94,35 +114,18 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
 
 /// Generate the machinery for dynamically-created `wl_output` globals.
 ///
-/// Unlike every other global (which is registered once at startup and bound
-/// through the shared `GlobalFactory`), `wl_output` is advertised per-monitor
-/// and can come and go at runtime. To support this we use a distinct
-/// global-data type ([OutputGlobalData]) carrying a per-monitor C++
-/// [ffi::OutputGlobalBinder], and reuse [generate_global_dispatch_impl] to emit
-/// the `GlobalDispatch` implementation so that binding a `wl_output` follows
-/// exactly the same steps as binding any other global.
+/// Unlike every other global (which is registered once at startup via a
+/// `GlobalDispatch<_, Arc<Mutex<UniquePtr<GlobalFactory>>>>`), `wl_output` is
+/// advertised per-monitor and can come and go at runtime. To support this we
+/// use a distinct global-data type ([OutputGlobalData]) that carries a
+/// per-monitor C++ [ffi::OutputGlobalBinder], plus a dedicated
+/// `GlobalDispatch` implementation whose `bind`/`can_view` route to that
+/// binder instead of the shared factory.
 ///
 /// The binder is stored behind a `Mutex` because `GlobalDispatch::bind` and
 /// `can_view` only receive a shared reference to the global data, yet the C++
 /// binder methods (like the factory's) require a `Pin<&mut _>` to be invoked.
-fn generate_output_dynamic_global(protocols: &Vec<WaylandProtocol>) -> TokenStream {
-    let (protocol, interface) = protocols
-        .iter()
-        .find_map(|protocol| {
-            protocol
-                .interfaces
-                .iter()
-                .find(|interface| interface.name == "wl_output")
-                .map(|interface| (protocol, interface))
-        })
-        .expect("The wayland protocol must define wl_output");
-
-    let global_dispatch_impl = generate_global_dispatch_impl(
-        interface,
-        &generate_namespace(protocol),
-        GlobalBindSource::PerGlobalBinder,
-    );
-
+fn generate_output_dynamic_global() -> TokenStream {
     quote! {
         // A cxx opaque C++ type is not automatically `Send`/`Sync`. The binder
         // is only ever accessed under the `Mutex` in `OutputGlobalData` (and,
@@ -142,7 +145,44 @@ fn generate_output_dynamic_global(protocols: &Vec<WaylandProtocol>) -> TokenStre
             }
         }
 
-        #global_dispatch_impl
+        impl GlobalDispatch<wayland_server::protocol::wl_output::WlOutput, OutputGlobalData>
+            for ServerState
+        {
+            fn bind(
+                _state: &mut Self,
+                handle: &wayland_server::DisplayHandle,
+                client: &wayland_server::Client,
+                resource: New<wayland_server::protocol::wl_output::WlOutput>,
+                global_data: &OutputGlobalData,
+                data_init: &mut wayland_server::DataInit<'_, Self>,
+            ) {
+                use crate::ffi;
+
+                // Step 1: Create a wrapper with no inner value and register it via data_init.
+                let wrapper = Arc::new(Mutex::new(WlOutputWrapper { inner: None }));
+                let instance = data_init.init(resource, wrapper.clone());
+                register_resource(&instance);
+                let protocol_id = Resource::id(&instance).protocol_id();
+
+                // Step 2: Create the middleware object wrapping the wayland resource.
+                let boxed = Box::new(crate::middleware::OutputMiddleware { wrapped: instance });
+
+                // Step 3: Call the per-monitor C++ binder with client, middleware,
+                // and object_id so the C++ object is fully initialized from the start.
+                let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
+                let mut guard = global_data.binder.lock().unwrap();
+                let global = (&mut *guard).pin_mut().bind(wayland_client, boxed, protocol_id);
+
+                // Step 4: Store the fully-initialized C++ object in the wrapper.
+                wrapper.lock().unwrap().inner = Some(global);
+            }
+
+            fn can_view(client: Client, global_data: &OutputGlobalData) -> bool {
+                let client_id = Box::new(WaylandClientId::new(client.id()));
+                let mut guard = global_data.binder.lock().unwrap();
+                (&mut *guard).pin_mut().can_view(client_id)
+            }
+        }
     }
 }
 
@@ -267,72 +307,10 @@ fn generate_server_side_factory(
     }
 }
 
-/// Where a `GlobalDispatch` implementation finds the C++ code that builds the
-/// object a client binds to.
-///
-/// Both variants produce the same `bind` body — create the wrapper, init the
-/// resource, wrap it in middleware, call into C++, store the result — and
-/// differ only in which C++ object is called and how it is reached from the
-/// global data.
-#[derive(Clone, Copy)]
-enum GlobalBindSource {
-    /// The single `GlobalFactory` shared by every statically-registered global.
-    /// Because one factory serves all interfaces, it exposes a
-    /// `create_<interface>` method per global and `can_view` is told which
-    /// interface is being queried.
-    SharedFactory,
-    /// A per-global `OutputGlobalBinder` carried by the global's own data, used
-    /// by the dynamically-created per-monitor `wl_output` globals. The binder
-    /// already *is* the monitor, so its methods need no interface name.
-    PerGlobalBinder,
-}
-
-impl GlobalBindSource {
-    /// The `GlobalDispatch` global-data type.
-    fn global_data_type(&self) -> TokenStream {
-        match self {
-            // An Arc<Mutex<...>> instead of just a UniquePtr because the factory
-            // has to be accessed mutably in order to call methods across the
-            // Rust -> C++ boundary.
-            Self::SharedFactory => quote! { Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>> },
-            Self::PerGlobalBinder => quote! { OutputGlobalData },
-        }
-    }
-
-    /// The expression, in terms of `global_data`, holding the `Mutex` guarding
-    /// the C++ object.
-    fn lock_target(&self) -> TokenStream {
-        match self {
-            Self::SharedFactory => quote! { global_data },
-            Self::PerGlobalBinder => quote! { global_data.binder },
-        }
-    }
-
-    /// The C++ method that builds the bound object.
-    fn bind_method(&self, interface_name: &str) -> Ident {
-        match self {
-            Self::SharedFactory => format_ident!("create_{}", interface_name),
-            Self::PerGlobalBinder => format_ident!("bind"),
-        }
-    }
-
-    /// The arguments passed to the C++ `can_view`, and any bindings they need.
-    fn can_view_args(&self, interface_name: &str) -> (TokenStream, TokenStream) {
-        match self {
-            Self::SharedFactory => (
-                quote! { let interface_name = #interface_name; },
-                quote! { interface_name, client_id },
-            ),
-            Self::PerGlobalBinder => (quote! {}, quote! { client_id }),
-        }
-    }
-}
-
 /// Generate a GlobalDispatch implementation for a single interface.
 fn generate_global_dispatch_impl(
     interface: &WaylandInterface,
     namespace_name: &TokenStream,
-    source: GlobalBindSource,
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name);
 
@@ -347,14 +325,10 @@ fn generate_global_dispatch_impl(
         format_wayland_interface_to_rust_extension_struct(&interface.name)
     );
     let wrapper_struct_name = format_ident!("{}Wrapper", snake_to_pascal(&interface.name));
-
-    let global_data_type = source.global_data_type();
-    let lock_target = source.lock_target();
-    let bind_method = source.bind_method(&interface.name);
-    let (can_view_bindings, can_view_args) = source.can_view_args(&interface.name);
-
+    let create_global_method = format_ident!("create_{}", &interface.name);
+    let interface_name_str = &interface.name;
     quote! {
-        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, #global_data_type>
+        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>>
             for ServerState
         {
             fn bind(
@@ -362,7 +336,10 @@ fn generate_global_dispatch_impl(
                 handle: &wayland_server::DisplayHandle,
                 client: &wayland_server::Client,
                 resource: New<#namespace_name::#interface_name::#interface_struct_name>,
-                global_data: &#global_data_type,
+                // The global data is an Arc<Mutex<...>> instead of just a UniquePtr because it
+                // has to be accessed mutability in order to call methods across the Rust -> C++
+                // boundary.
+                global_data: &Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>,
                 data_init: &mut wayland_server::DataInit<'_, Self>,
             ) {
                 use crate::ffi;
@@ -376,21 +353,21 @@ fn generate_global_dispatch_impl(
                 // Step 2: Create the middleware object wrapping the wayland resource.
                 let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
 
-                // Step 3: Call into C++ with client, middleware, and object_id
+                // Step 3: Call the C++ factory with client, middleware, and object_id
                 // so the C++ object is fully initialized from the start.
                 let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
-                let mut guard = #lock_target.lock().unwrap();
-                let global = (&mut *guard).pin_mut().#bind_method(wayland_client, boxed, protocol_id);
+                let mut guard = global_data.lock().unwrap();
+                let global = (&mut *guard).pin_mut().#create_global_method(wayland_client, boxed, protocol_id);
 
                 // Step 4: Store the fully-initialized C++ object in the wrapper.
                 wrapper.lock().unwrap().inner = Some(global);
             }
 
-            fn can_view(client: Client, global_data: &#global_data_type) -> bool {
-                #can_view_bindings
+            fn can_view(client: Client, global_data: &Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>>) -> bool {
+                let interface_name = #interface_name_str;
                 let client_id = Box::new(WaylandClientId::new(client.id()));
-                let mut guard = #lock_target.lock().unwrap();
-                (&mut *guard).pin_mut().can_view(#can_view_args)
+                let mut guard = global_data.lock().unwrap();
+                (&mut *guard).pin_mut().can_view(interface_name, client_id)
             }
         }
     }
@@ -544,8 +521,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     child_wrapper.lock().unwrap().inner = Some(child);
                 }
                 Err(err) => {
-                    let (object_id, code, message) = parse_post_error(err.what());
-                    post_protocol_error(resource, object_id, code, message);
+                    handle_dispatch_error(resource, err.what());
                 }
             }
         }
@@ -561,8 +537,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // SAFETY: The mutex guard provides the only mutable access while the call is
             // in progress. The pinned reference is used only for this FFI call.
             if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
-                let (object_id, code, message) = parse_post_error(err.what());
-                post_protocol_error(resource, object_id, code, message);
+                handle_dispatch_error(resource, err.what());
             }
         }
     }
@@ -713,9 +688,13 @@ fn generate_dispatch_impl(
                 _state: &mut Self,
                 _client: ClientId,
                 resource: &#namespace_name::#interface_name::#protocol_struct_name,
-                _data: &Arc<Mutex<#wrapper_struct_name>>,
+                data: &Arc<Mutex<#wrapper_struct_name>>,
             ) {
                 unregister_resource(resource);
+                // The C++ object holds the middleware, whose resource handle holds
+                // `data`, whose `inner` holds the C++ object. Break the cycle here
+                // or the whole chain (and the client's session) leaks.
+                data.lock().unwrap_or_else(|e| e.into_inner()).inner.take();
             }
         }
     }
@@ -735,9 +714,9 @@ fn generate_dispatch_implementations(protocol: &WaylandProtocol) -> TokenStream 
         .filter(|interface| interface.name != "wl_output")
         .collect();
 
-    let global_dispatch_impls = global_interfaces.iter().map(|interface| {
-        generate_global_dispatch_impl(interface, &namespace_name, GlobalBindSource::SharedFactory)
-    });
+    let global_dispatch_impls = global_interfaces
+        .iter()
+        .map(|interface| generate_global_dispatch_impl(interface, &namespace_name));
 
     let is_wayland_protocol = protocol.name == "wayland";
     let dispatch_impls = protocol

@@ -30,7 +30,6 @@
 #include <mir/executor.h>
 #include <mir/errno_utils.h>
 #include <mir/fd.h>
-#include <mir/compositor/buffer_stream.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/device.h>
@@ -40,17 +39,18 @@
 #include <mir/input/seat_observer.h>
 #include <mir/log.h>
 #include <mir/observer_registrar.h>
-#include <mir/scene/session_listener.h>
+#include <mir/scene/session.h>
 #include <mir/scene/surface.h>
 #include <mir/server.h>
 
-#include <wayland-server.h>
+#include <wayland-client.h>
 
 #include <fcntl.h>
 #include <sys/eventfd.h>
 
 #include <cstring>
 #include <deque>
+#include <mutex>
 #include <format>
 #include <optional>
 #include <unordered_map>
@@ -194,146 +194,6 @@ private:
 };
 
 
-using ClientFd = int;
-
-class WaylandExecutor : public mir::Executor
-{
-public:
-    void spawn (std::function<void()>&& work) override
-    {
-        {
-            std::lock_guard lock{mutex};
-            workqueue.emplace_back(std::move(work));
-        }
-        if (auto err = eventfd_write(notify_fd, 1))
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{err, std::system_category(), "eventfd_write failed to notify event loop"}));
-        }
-    }
-
-    /**
-     * Get an Executor which dispatches onto a wl_event_loop
-     *
-     * \note    The executor may outlive the wl_event_loop, but no tasks will be dispatched
-     *          after the wl_event_loop is destroyed.
-     *
-     * \param [in]  loop    The event loop to dispatch on
-     * \return              An Executor that queues onto the wl_event_loop
-     */
-    static std::shared_ptr<mir::Executor> executor_for_event_loop(wl_event_loop* loop)
-    {
-        if (auto notifier = wl_event_loop_get_destroy_listener(loop, &on_display_destruction))
-        {
-            DestructionShim* shim;
-            shim = wl_container_of(notifier, shim, destruction_listener);
-
-            return shim->executor;
-        }
-        else
-        {
-            auto const executor = std::shared_ptr<WaylandExecutor>{new WaylandExecutor{loop}};
-            auto shim = std::make_unique<DestructionShim>(executor);
-
-            shim->destruction_listener.notify = &on_display_destruction;
-            wl_event_loop_add_destroy_listener(loop, &(shim.release())->destruction_listener);
-
-            return executor;
-        }
-    }
-
-private:
-    WaylandExecutor(wl_event_loop* loop)
-        : notify_fd{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE | EFD_NONBLOCK)},
-        notify_source{wl_event_loop_add_fd(loop, notify_fd, WL_EVENT_READABLE, &on_notify, this)}
-    {
-        if (notify_fd == mir::Fd::invalid)
-        {
-            BOOST_THROW_EXCEPTION((std::system_error{
-                errno,
-                std::system_category(),
-                "Failed to create IPC pause notification eventfd"}));
-        }
-    }
-
-    std::function<void()> get_work()
-    {
-        std::lock_guard lock{mutex};
-        if (!workqueue.empty())
-        {
-            auto const work = std::move(workqueue.front());
-            workqueue.pop_front();
-            return work;
-        }
-
-        return {};
-    }
-
-    static int on_notify(int fd, uint32_t, void* data)
-    {
-        auto executor = static_cast<WaylandExecutor*>(data);
-
-        eventfd_t unused;
-        if (auto err = eventfd_read(fd, &unused))
-        {
-            mir::log(
-                mir::logging::Severity::error,
-                "wlcs-integration",
-                "eventfd_read failed to consume wakeup notification: %s (%i)",
-                mir::errno_to_cstr(err),
-                err);
-        }
-
-        while (auto work = executor->get_work())
-        {
-            try
-            {
-                work();
-            }
-            catch(...)
-            {
-                mir::log(
-                    mir::logging::Severity::critical,
-                    "wlcs-integration",
-                    std::current_exception(),
-                    "Exception processing Wayland event loop work item");
-            }
-        }
-
-        return 0;
-    }
-
-    static void on_display_destruction(wl_listener* listener, void*)
-    {
-        DestructionShim* shim;
-        shim = wl_container_of(listener, shim, destruction_listener);
-
-        {
-            std::lock_guard lock{shim->executor->mutex};
-            wl_event_source_remove(shim->executor->notify_source);
-        }
-        delete shim;
-    }
-
-    std::mutex mutex;
-    mir::Fd const notify_fd;
-    std::deque<std::function<void()>> workqueue;
-
-    wl_event_source* const notify_source;
-
-    struct DestructionShim
-    {
-        explicit DestructionShim(std::shared_ptr<WaylandExecutor> const& executor)
-            : executor{executor}
-        {
-        }
-
-        std::shared_ptr<WaylandExecutor> const executor;
-        wl_listener destruction_listener;
-    };
-    static_assert(
-        std::is_standard_layout<DestructionShim>::value,
-        "DestructionShim must be Standard Layout for wl_container_of to be defined behaviour");
-};
 }
 
 
@@ -369,212 +229,29 @@ private:
     TestWlcsDisplayServer* const runner;
 };
 
-class miral::TestWlcsDisplayServer::ResourceMapper : public mir::scene::SessionListener
+class miral::TestWlcsDisplayServer::ResourceMapper
 {
 public:
-    ResourceMapper()
-        : listeners{&this->state}
+    /// Record the association between the client socket `client_fd` (as returned
+    /// to WLCS) and the Mir `session` created for that connection.
+    void associate_client_socket(int client_fd, std::shared_ptr<mir::scene::Session> const& session)
     {
+        std::lock_guard lock{mutex};
+        session_for_fd_[client_fd] = session;
     }
 
-    void starting(std::shared_ptr<mir::scene::Session> const&) override
+    /// Look up the Mir session for a client socket, or nullptr if unknown.
+    auto session_for_fd(int client_fd) -> std::shared_ptr<mir::scene::Session>
     {
-    }
-
-    void stopping(std::shared_ptr<mir::scene::Session> const&) override
-    {
-    }
-
-    void focused(std::shared_ptr<mir::scene::Session> const&) override
-    {
-    }
-
-    void unfocused() override
-    {
-    }
-
-    void surface_created(
-        mir::scene::Session&,
-        std::shared_ptr<mir::scene::Surface> const& surface) override
-    {
-        auto state_accessor = state.lock();
-        if (std::this_thread::get_id() == state_accessor->wayland_thread)
-        {
-            if (listeners.last_wl_window == nullptr)
-            {
-                auto message =
-                    "miral::TestWlcsDisplayServer::ResourceMapper::resource_created()"
-                    " did not detect the shell surface used for a wl_surface."
-                    " You might need to add a new protocol to the `is_window` list.";
-                // We printf because Mir logging is suppressed, the exception is not surfaced, and it's a pain to track this down
-                printf("\x1b[31;1mERROR:\x1b[0m %s\n", message);
-                fflush(stdout);
-                BOOST_THROW_EXCEPTION((std::runtime_error{message}));
-            }
-
-            auto const streams = surface->get_streams();
-            if (streams.empty())
-                BOOST_THROW_EXCEPTION(
-                    std::runtime_error{"Surface::get_streams() returned empty list"});
-
-            auto wl_surface = state_accessor->stream_map.at(streams.front().stream);
-
-            state_accessor->surface_map[wl_surface] = surface;
-        }
-    }
-
-    void destroying_surface(
-        mir::scene::Session&,
-        std::shared_ptr<mir::scene::Surface> const&) override
-    {
-        // TODO: Maybe delete from map?
-    }
-
-    void buffer_stream_created(
-        mir::scene::Session&,
-        std::shared_ptr<mir::frontend::BufferStream> const& stream) override
-    {
-        auto state_accessor = state.lock();
-        if (std::this_thread::get_id() == state_accessor->wayland_thread)
-        {
-            if (listeners.last_wl_surface == nullptr)
-            {
-                BOOST_THROW_EXCEPTION((
-                    std::runtime_error{"BufferStream created without first constructing a wl_surface?"}));
-            }
-
-            state_accessor->stream_map[stream] = listeners.last_wl_surface;
-            listeners.last_wl_surface = nullptr;
-        }
-    }
-
-    void buffer_stream_destroyed(
-        mir::scene::Session&,
-        std::shared_ptr<mir::frontend::BufferStream> const& stream) override
-    {
-        state.lock()->stream_map.erase(stream);
-    }
-
-    void init(wl_display* display)
-    {
-        state.lock()->wayland_thread = std::this_thread::get_id();
-
-        listeners.client_listener.notify = &client_created;
-
-        wl_display_add_client_created_listener(display, &listeners.client_listener);
-    }
-
-    std::weak_ptr<mir::scene::Surface> surface_for_resource(wl_resource* surface)
-    {
-        if (std::strcmp(wl_resource_get_class(surface), "wl_surface") != 0)
-        {
-            BOOST_THROW_EXCEPTION((
-                std::logic_error{
-                    std::string{"Expected a wl_surface, got: "} +
-                    wl_resource_get_class(surface)
-                }));
-        }
-
-        auto state_accessor = state.lock();
-        return state_accessor->surface_map.at(surface);
-    }
-
-    wl_client* client_for_fd(int client_socket)
-    {
-        return listeners.state->lock()->client_session_map.at(client_socket);
-    }
-
-    void associate_client_socket(int client_socket)
-    {
-        auto state_accessor = state.wait_for(
-            [](State& state) { return static_cast<bool>(state.latest_client); },
-            std::chrono::seconds{30});
-        state_accessor->client_session_map[client_socket] = state_accessor->latest_client.value();
-        state_accessor->latest_client = {};
+        std::lock_guard lock{mutex};
+        if (auto const iter = session_for_fd_.find(client_fd); iter != session_for_fd_.end())
+            return iter->second;
+        return nullptr;
     }
 
 private:
-    struct Listeners;
-    struct ResourceListener
-    {
-        ResourceListener(Listeners* const listeners)
-            : listeners{listeners}
-        {
-        }
-
-        wl_listener resource_listener;
-        Listeners* const listeners;
-    };
-    struct State
-    {
-        std::thread::id wayland_thread;
-        std::unordered_map<wl_resource*, std::weak_ptr<mir::scene::Surface>> surface_map;
-        std::unordered_map<std::shared_ptr<mir::frontend::BufferStream>, wl_resource*> stream_map;
-
-        std::optional<wl_client*> latest_client;
-        std::unordered_map<ClientFd, wl_client*> client_session_map;
-        std::unordered_map<wl_client*, ResourceListener> resource_listener;
-    };
-    WaitableMutex<State> state;
-
-    struct Listeners
-    {
-        Listeners(WaitableMutex<State>* const state)
-            : state{state}
-        {
-        }
-
-        wl_listener client_listener;
-
-        wl_resource* last_wl_surface{nullptr};
-        wl_resource* last_wl_window{nullptr};
-
-        WaitableMutex<State>* const state;
-    } listeners;
-
-    static void resource_created(wl_listener* listener, void* ctx)
-    {
-        auto resource = static_cast<wl_resource*>(ctx);
-        ResourceListener* resource_listener;
-        resource_listener =
-            wl_container_of(listener, resource_listener, resource_listener);
-
-        bool const is_surface = std::strcmp(wl_resource_get_class(resource), "wl_surface") == 0;
-
-        bool const is_window = std::strcmp(wl_resource_get_class(resource), "wl_shell_surface") == 0 ||
-                               std::strcmp(wl_resource_get_class(resource), "zxdg_surface_v6") == 0 ||
-                               std::strcmp(wl_resource_get_class(resource), "xdg_surface") == 0 ||
-                               std::strcmp(wl_resource_get_class(resource), "zwlr_layer_surface_v1") == 0;
-
-        if (is_surface)
-        {
-            resource_listener->listeners->last_wl_surface = resource;
-        }
-        else if (is_window)
-        {
-            resource_listener->listeners->last_wl_window = resource;
-        }
-    }
-
-    static void client_created(wl_listener* listener, void* ctx)
-    {
-        auto client = static_cast<wl_client*>(ctx);
-        Listeners* listeners;
-        listeners =
-            wl_container_of(listener, listeners, client_listener);
-
-        wl_listener* resource_listener;
-        {
-            auto state_accessor = listeners->state->lock();
-            state_accessor->latest_client = client;
-            auto rl = state_accessor->resource_listener.emplace(client, listeners);
-            rl.first->second.resource_listener.notify = &resource_created;
-            resource_listener = &rl.first->second.resource_listener;
-        }
-        listeners->state->notify_all();
-
-        wl_client_add_resource_created_listener(client, resource_listener);
-    }
+    std::mutex mutex;
+    std::unordered_map<int, std::shared_ptr<mir::scene::Session>> session_for_fd_;
 };
 
 class miral::TestWlcsDisplayServer::InputEventListener : public mir::input::SeatObserver
@@ -854,11 +531,6 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
 
     add_server_init([this](mir::Server& server)
         {
-            server.override_the_session_listener([this]()
-                {
-                    return resource_mapper;
-                });
-
             server.add_init_callback([this, &server]()
                 {
                     cursor_observer = std::make_shared<RunnerCursorObserver>(this);
@@ -877,11 +549,11 @@ void miral::TestWlcsDisplayServer::start_server()
     mir::test::Signal started;
 
     mir_server->run_on_wayland_display(
-        [this, &started](auto wayland_display)
+        [this, &started](mir::Executor& wayland_executor)
             {
-                resource_mapper->init(wayland_display);
-                executor = WaylandExecutor::executor_for_event_loop(
-                    wl_display_get_event_loop(wayland_display));
+                // The executor is owned by the running Wayland backend and
+                // outlives our use of it, so wrap it in a non-owning shared_ptr.
+                executor = std::shared_ptr<mir::Executor>(std::shared_ptr<void>{}, &wayland_executor);
 
                 // Execute all observations on the Wayland event loop…
                 mir_server->the_seat_observer_registrar()->register_interest(event_listener, *executor);
@@ -896,9 +568,23 @@ int miral::TestWlcsDisplayServer::create_client_socket()
 {
     try
     {
-        auto client_fd = fcntl(mir_server->open_wayland_client_socket(), F_DUPFD_CLOEXEC, 3);
+        auto const session_ready = std::make_shared<mir::test::Signal>();
+        auto const session_holder = std::make_shared<std::shared_ptr<mir::scene::Session>>();
 
-        resource_mapper->associate_client_socket(client_fd);
+        auto const raw_fd = mir_server->open_client_wayland(
+            [session_ready, session_holder](std::shared_ptr<mir::scene::Session> const& session)
+            {
+                *session_holder = session;
+                session_ready->raise();
+            });
+
+        auto const client_fd = fcntl(raw_fd, F_DUPFD_CLOEXEC, 3);
+        ::close(raw_fd);
+
+        if (!session_ready->wait_for(a_long_time))
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting for client session"}));
+
+        resource_mapper->associate_client_socket(client_fd, *session_holder);
 
         return client_fd;
     }
@@ -917,16 +603,15 @@ int miral::TestWlcsDisplayServer::create_client_socket()
 void miral::TestWlcsDisplayServer::position_window(wl_display* client_, wl_surface* surface, mir::geometry::Point point)
 {
     auto const fd = wl_display_get_fd(client_);
-    auto const client = resource_mapper->client_for_fd(fd);
+    auto const session = resource_mapper->session_for_fd(fd);
     auto const id = wl_proxy_get_id(reinterpret_cast<wl_proxy*>(surface));
 
-    auto resource = wl_client_get_object(client, id);
+    if (!session)
+        BOOST_THROW_EXCEPTION((std::out_of_range{"No session for client socket"}));
 
-    auto mir_surface = resource_mapper->surface_for_resource(resource);
-
-    if (auto live_surface = mir_surface.lock())
+    if (auto const scene_surface = mir_server->scene_surface_for_wayland_surface(*session, id))
     {
-        live_surface->move_to(point);
+        scene_surface->move_to(point);
     }
     else
     {

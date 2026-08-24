@@ -18,19 +18,23 @@
 
 #include "wl_surface.h"
 #include "wl_seat.h"
+#include "wayland_rs/src/ffi.rs.h"
+
 #include <mir/log.h>
 #include <mir/events/keyboard_event.h>
-#include <mir/wayland/client.h>
 
 #include <xkbcommon/xkbcommon.h>
 #include <cstring> // memcpy
 
 namespace mf = mir::frontend;
-namespace mw = mir::wayland;
-namespace mi = mir::input;
+namespace mwrs = mir::wayland;
 
-mf::WlKeyboard::WlKeyboard(wl_resource* new_resource, WlSeat& seat)
-    : wayland::Keyboard{new_resource, Version<9>()},
+mf::WlKeyboard::WlKeyboard(
+    std::shared_ptr<mwrs::Client> client,
+    rust::Box<mwrs::KeyboardMiddleware> instance,
+    uint32_t object_id,
+    WlSeat& seat)
+    : Keyboard{std::move(client), std::move(instance), object_id},
       helper{seat.make_keyboard_helper(this)}
 {
 }
@@ -42,7 +46,7 @@ void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
 
 void mf::WlKeyboard::focus_on(WlSurface* surface)
 {
-    if (as_nullable_ptr(focused_surface) == surface)
+    if (mwrs::as_nullable_ptr(focused_surface) == surface)
     {
         return;
     }
@@ -50,7 +54,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
     if (focused_surface)
     {
         auto const serial = client->next_serial(nullptr);
-        send_leave_event(serial, focused_surface.value().raw_resource());
+        send_leave_event(serial, as_surface_ptr(&focused_surface.value()));
     }
 
     if (surface)
@@ -58,35 +62,22 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         // TODO: Send the surface's keymap here
 
         auto const pressed_keys = helper->pressed_key_scancodes();
-
-        wl_array key_state;
-        wl_array_init(&key_state);
-
-        auto* const array_storage = wl_array_add(
-            &key_state,
-            pressed_keys.size() * sizeof(decltype(pressed_keys)::value_type));
-
-        if (!array_storage)
-        {
-            wl_resource_post_no_memory(resource);
-            BOOST_THROW_EXCEPTION(std::bad_alloc());
-        }
+        std::vector<uint8_t> key_state(pressed_keys.size() * sizeof(decltype(pressed_keys)::value_type));
 
         if (!pressed_keys.empty())
         {
             std::memcpy(
-                array_storage,
+                key_state.data(),
                 pressed_keys.data(),
                 pressed_keys.size() * sizeof(decltype(pressed_keys)::value_type));
         }
 
         auto const serial = client->next_serial(nullptr);
-        send_enter_event(serial, surface->raw_resource(), &key_state);
-        wl_array_release(&key_state);
+        send_enter_event(serial, as_surface_ptr(surface), key_state);
         helper->refresh_modifiers();
     }
 
-    focused_surface = mw::make_weak(surface);
+    focused_surface = mwrs::make_weak(surface);
 }
 
 void mf::WlKeyboard::send_repeat_info(int32_t rate, int32_t delay)
@@ -96,7 +87,7 @@ void mf::WlKeyboard::send_repeat_info(int32_t rate, int32_t delay)
 
 void mf::WlKeyboard::send_keymap_xkb_v1(mir::Fd const& fd, size_t length)
 {
-    send_keymap_event(KeymapFormat::xkb_v1, fd, length);
+    send_keymap_event(KeymapFormat::xkb_v1, static_cast<int32_t>(fd), static_cast<uint32_t>(length));
 }
 
 void mf::WlKeyboard::send_key(std::shared_ptr<MirKeyboardEvent const> const& event)

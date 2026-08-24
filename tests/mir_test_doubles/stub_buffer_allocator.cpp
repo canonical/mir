@@ -21,7 +21,6 @@
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/test/doubles/null_gl_context.h>
 #include <mir/renderer/sw/pixel_source.h>
-#include <wayland-server.h>
 
 #include <vector>
 #include <memory>
@@ -67,4 +66,9 @@ auto mtd::StubBufferAllocator::buffer_from_shm(
         std::move(on_release));
 
     return buffer;
+}
+
+auto mtd::StubBufferAllocator::dma_buf_provider() -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    return nullptr;
 }

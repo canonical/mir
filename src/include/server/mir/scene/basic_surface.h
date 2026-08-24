@@ -19,7 +19,7 @@
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/scene/surface.h>
-#include <mir/wayland/weak.h>
+#include "weak.h"
 #include <mir/geometry/rectangle.h>
 #include <mir_toolkit/common.h>
 #include <mir/synchronised.h>
