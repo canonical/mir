@@ -437,20 +437,27 @@ impl WaylandServer {
     /// is running. Injections queued before the server starts are applied when
     /// `run` begins; injections made while it is running wake the loop so they
     /// are applied promptly. Injections coalesce onto a single wake.
-    pub fn insert_client(&self, fd: i32) {
-        self.pending_clients
-            .lock()
-            .expect("No recovery from lock poisoning")
-            .push(fd as RawFd);
-        if let Some(signal) = self
-            .client_signal
-            .lock()
-            .expect("No recovery from lock poisoning")
-            .as_ref()
-        {
-            signal.ping();
-        }
+pub fn insert_client(&self, fd: i32) {
+    let fd: RawFd = fd;
+    if fd < 0 {
+        log::error!("insert_client called with invalid fd {}", fd);
+        return;
     }
+
+    self.pending_clients
+        .lock()
+        .expect("No recovery from lock poisoning")
+        .push(fd);
+
+    if let Some(signal) = self
+        .client_signal
+        .lock()
+        .expect("No recovery from lock poisoning")
+        .as_ref()
+    {
+        signal.ping();
+    }
+}
 
     /// Adopt `stream` as a Wayland client: register it with the display's
     /// backend and notify C++ of the new client. Shared by the listening-socket
