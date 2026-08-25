@@ -326,6 +326,8 @@ private:
         reinterpret_cast<void (*)()>(&handle_toplevel_close)};
 
     /// Only the events up to wl_pointer version 5 can arrive, as that is the version bound above.
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmissing-field-initializers"
     static inline wl_pointer_listener const pointer_listener{
         .enter = &handle_enter,
         .leave = &handle_leave,
@@ -338,6 +340,7 @@ private:
         .axis_discrete = [](void*, wl_pointer*, uint32_t, int32_t) {},
         .axis_value120 = [](void*, wl_pointer*, uint32_t, int32_t) {},
         .axis_relative_direction = [](void*, wl_pointer*, uint32_t, uint32_t) {}};
+#pragma GCC diagnostic pop
 
     wl_display* display{nullptr};
     wl_compositor* compositor{nullptr};
