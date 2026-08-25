@@ -723,7 +723,11 @@ fn generate_dispatch_impl(
                 //
                 // This bidirectionality is necessary so that Rust can forward client
                 // requests to C++ and C++ can send server events to Rust.
-                data.lock().unwrap_or_else(|e| e.into_inner()).inner.take();
+                let taken_inner = {
+                    let mut guard = data.lock().unwrap_or_else(|e| e.into_inner());
+                    guard.inner.take()
+                };
+                drop(taken_inner);
             }
         }
     }
