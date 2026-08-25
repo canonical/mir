@@ -150,8 +150,11 @@ struct PointerClient
 
     void stop()
     {
-        std::lock_guard lock{mutex};
-        running = false;
+        {
+            std::lock_guard lock{mutex};
+            running = false;
+        }
+        cv.notify_one();
     }
 
 private:
@@ -201,11 +204,11 @@ private:
     /// has completed.
     void run_on_client_thread(std::function<void()>&& task)
     {
-        mir::test::Signal done;
+        auto const done = std::make_shared<mir::test::Signal>();
         {
             std::lock_guard lock{mutex};
             tasks.push_back(
-                [&]
+                [this, done, task = std::move(task)]
                 {
                     task();
                     wl_display_roundtrip(display);
@@ -217,10 +220,11 @@ private:
                         wl_display_dispatch(display);
                     else
                         wl_display_dispatch_pending(display);
-                    done.raise();
+                    done->raise();
                 });
         }
-        EXPECT_TRUE(done.wait_for(event_timeout));
+        cv.notify_one();
+        EXPECT_TRUE(done->wait_for(event_timeout));
     }
 
     void dispatch_until_stopped()
@@ -229,7 +233,8 @@ private:
         {
             std::vector<std::function<void()>> pending;
             {
-                std::lock_guard lock{mutex};
+                std::unique_lock lock{mutex};
+                cv.wait_for(lock, 10ms, [this]() { return !tasks.empty() || !running; });
                 if (!running)
                     return;
                 pending.swap(tasks);
@@ -348,6 +353,7 @@ private:
     int height{restored_geometry.size.height.as_int()};
 
     std::mutex mutex;
+    std::condition_variable cv;
     std::vector<std::function<void()>> tasks;
     bool running{true};
 };
