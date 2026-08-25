@@ -91,16 +91,7 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
             /// error and must not be dressed up as a client protocol violation.
             fn handle_dispatch_error(resource: &impl Resource, what: &str) {
                 if let Some(encoded) = what.strip_prefix("MIR_PROTOCOL_ERROR:") {
-                    let mut parts = encoded.splitn(3, ':');
-                    let object_id = parts.next()
-                        .and_then(|s| s.trim().parse::<u32>().ok())
-                        .unwrap_or(0);
-                    let code = parts.next()
-                        .and_then(|s| s.trim().parse::<u32>().ok())
-                        .unwrap_or(0);
-                    let message = parts.next()
-                        .map(|s| s.trim().to_string())
-                        .unwrap_or_else(|| encoded.to_string());
+                    let (object_id, code, message) = parse_post_error(encoded);
                     post_protocol_error(resource, object_id, code, message);
                 } else {
                     log::error!("Internal error dispatching Wayland request on {}: {}", resource.id(), what);
