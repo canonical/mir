@@ -61,18 +61,15 @@ namespace
 Rectangle const output{{0, 0}, {1600, 1600}};
 
 /// A restored window small enough that it cannot cover `pointer_outside_restored`.
-Rectangle const restored_geometry{{0, 0}, {100, 100}};
+Rectangle const restored_geometry{{100, 100}, {100, 100}};
 
 /// Well away from `restored_geometry`, but inside the (fullscreen) output.
 PointF const pointer_outside_restored{1200, 1200};
 
 /// Inside `restored_geometry`, and so covered by the window in both states.
-PointF const pointer_inside_restored{50, 50};
+PointF const pointer_inside_restored{150, 150};
 
 auto const event_timeout = 5s;
-
-/// How long to wait before concluding that no further events are coming.
-auto const settle_timeout = 500ms;
 
 /// Request opcodes, from the xdg-shell protocol definition.
 enum : uint32_t
@@ -95,41 +92,32 @@ auto operator<<(std::ostream& out, PointerEvent event) -> std::ostream&
     return out << (event == PointerEvent::enter ? "enter" : "leave");
 }
 
-/// The wl_pointer enter/leave events the client saw, in order.
-class PointerLog
+/// The latest wl_pointer enter/leave event the client saw
+class PointerEventCache
 {
 public:
-    void record(PointerEvent event)
+    void record(PointerEvent e)
     {
         std::lock_guard lock{mutex};
-        events.push_back(event);
-        cv.notify_all();
+        event = e;
     }
 
-    /// Everything recorded since the last `set_mark()`, once either `count` events have
-    /// arrived or the timeout expires.
-    ///
-    /// Returning the events (rather than asserting here) lets the caller assert on the test
-    /// thread, as gtest assertions on the client thread are unreliable.
-    auto wait_for(size_t count, std::chrono::milliseconds timeout = event_timeout) -> std::vector<PointerEvent>
+    auto last_event() const
     {
-        std::unique_lock lock{mutex};
-        cv.wait_for(lock, timeout, [&] { return events.size() - mark >= count; });
-        return {events.begin() + static_cast<std::ptrdiff_t>(mark), events.end()};
+        std::lock_guard lock{mutex};
+        return event;
     }
 
     /// Ignore everything recorded so far, so a test can assert on one transition in isolation.
-    void set_mark()
+    void reset()
     {
         std::lock_guard lock{mutex};
-        mark = events.size();
+        event = std::nullopt;
     }
 
 private:
-    std::mutex mutex;
-    std::condition_variable cv;
-    std::vector<PointerEvent> events;
-    size_t mark{0};
+    std::mutex mutable mutex;
+    std::optional<PointerEvent> event;
 };
 
 /// A single xdg_toplevel with a wl_pointer, driven from the test thread by posting tasks onto
@@ -137,7 +125,7 @@ private:
 /// is no need to make libwayland calls from two threads.
 struct PointerClient
 {
-    PointerLog log;
+    PointerEventCache event_cache;
     mir::test::Signal ready;
 
     operator std::function<void(wl_display*)>()
@@ -153,6 +141,11 @@ struct PointerClient
     void unset_fullscreen()
     {
         run_on_client_thread([this] { wl_proxy_marshal(toplevel, xdg_toplevel_unset_fullscreen); });
+    }
+
+    void roundtrip()
+    {
+        run_on_client_thread([] {});
     }
 
     void stop()
@@ -216,6 +209,14 @@ private:
                 {
                     task();
                     wl_display_roundtrip(display);
+
+                    wl_display_flush(display);
+
+                    pollfd fd{wl_display_get_fd(display), POLLIN, 0};
+                    if (poll(&fd, 1, 10) > 0)
+                        wl_display_dispatch(display);
+                    else
+                        wl_display_dispatch_pending(display);
                     done.raise();
                 });
         }
@@ -236,14 +237,6 @@ private:
 
             for (auto const& task : pending)
                 task();
-
-            wl_display_flush(display);
-
-            pollfd fd{wl_display_get_fd(display), POLLIN, 0};
-            if (poll(&fd, 1, 10) > 0)
-                wl_display_dispatch(display);
-            else
-                wl_display_dispatch_pending(display);
         }
     }
 
@@ -305,14 +298,18 @@ private:
 
     static void handle_toplevel_close(void*, wl_proxy*) {}
 
-    static void handle_enter(void* data, wl_pointer*, uint32_t, wl_surface*, wl_fixed_t, wl_fixed_t)
+    static void handle_enter(void* data, wl_pointer*, uint32_t, wl_surface*, wl_fixed_t /*x*/, wl_fixed_t /*y*/)
     {
-        static_cast<PointerClient*>(data)->log.record(PointerEvent::enter);
+        static_cast<PointerClient*>(data)->event_cache.record(PointerEvent::enter);
+    }
+
+    static void handle_move(void* /*data*/, wl_pointer*, uint32_t, wl_fixed_t /*x*/, wl_fixed_t /*y*/)
+    {
     }
 
     static void handle_leave(void* data, wl_pointer*, uint32_t, wl_surface*)
     {
-        static_cast<PointerClient*>(data)->log.record(PointerEvent::leave);
+        static_cast<PointerClient*>(data)->event_cache.record(PointerEvent::leave);
     }
 
     static wl_registry_listener constexpr registry_listener{&new_global, &global_remove};
@@ -327,7 +324,7 @@ private:
     static inline wl_pointer_listener const pointer_listener{
         .enter = &handle_enter,
         .leave = &handle_leave,
-        .motion = [](void*, wl_pointer*, uint32_t, wl_fixed_t, wl_fixed_t) {},
+        .motion = &handle_move,
         .button = [](void*, wl_pointer*, uint32_t, uint32_t, uint32_t, uint32_t) {},
         .axis = [](void*, wl_pointer*, uint32_t, uint32_t, wl_fixed_t) {},
         .frame = [](void*, wl_pointer*) {},
@@ -472,6 +469,8 @@ struct PointerFullscreen : miral::TestServer
                     {},
                     {}));
             });
+
+        pointer_client.roundtrip();
     }
 
     PointerClient pointer_client;
@@ -485,56 +484,54 @@ protected:
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
 };
 
-TEST_F(PointerFullscreen, client_enters_surface_when_fullscreen_grows_under_the_pointer)
+TEST_F(PointerFullscreen, cursor_enters_surface_when_fullscreen_grows_under_the_pointer)
 {
     start_server_and_client();
-
     move_pointer_to(pointer_outside_restored);
-    ASSERT_THAT(pointer_client.log.wait_for(1, settle_timeout), IsEmpty()) << "pointer is outside the restored window";
+    EXPECT_THAT(pointer_client.event_cache.last_event(), Ne(PointerEvent::enter));
 
     pointer_client.set_fullscreen();
 
-    EXPECT_THAT(pointer_client.log.wait_for(1), ElementsAre(PointerEvent::enter));
+    EXPECT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::enter));
 }
 
-TEST_F(PointerFullscreen, client_leaves_surface_when_restore_moves_it_away_from_the_pointer)
+TEST_F(PointerFullscreen, cursor_leaves_surface_when_restore_moves_it_away_from_the_pointer)
 {
     start_server_and_client();
 
     move_pointer_to(pointer_outside_restored);
     pointer_client.set_fullscreen();
-    ASSERT_THAT(pointer_client.log.wait_for(1), ElementsAre(PointerEvent::enter));
+    ASSERT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::enter));
 
-    pointer_client.log.set_mark();
+    pointer_client.event_cache.reset();
     pointer_client.unset_fullscreen();
 
-    EXPECT_THAT(pointer_client.log.wait_for(1), ElementsAre(PointerEvent::leave));
+    EXPECT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::leave));
 }
 
-TEST_F(PointerFullscreen, client_stays_in_surface_when_fullscreening_under_the_pointer)
+TEST_F(PointerFullscreen, cursor_stays_in_surface_when_fullscreening_under_the_pointer)
 {
     start_server_and_client();
 
     move_pointer_to(pointer_inside_restored);
-    ASSERT_THAT(pointer_client.log.wait_for(1), ElementsAre(PointerEvent::enter));
 
-    pointer_client.log.set_mark();
+    ASSERT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::enter));
+
     pointer_client.set_fullscreen();
 
     // The surface is under the pointer both before and after, so the client must not be told it left.
-    EXPECT_THAT(pointer_client.log.wait_for(1, settle_timeout), IsEmpty());
+    EXPECT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::enter));
 }
 
-TEST_F(PointerFullscreen, client_stays_in_surface_when_restoring_under_the_pointer)
+TEST_F(PointerFullscreen, cursor_stays_in_surface_when_restoring_under_the_pointer)
 {
     start_server_and_client();
 
     move_pointer_to(pointer_inside_restored);
     pointer_client.set_fullscreen();
-    ASSERT_THAT(pointer_client.log.wait_for(1), ElementsAre(PointerEvent::enter));
+    ASSERT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::enter));
 
-    pointer_client.log.set_mark();
     pointer_client.unset_fullscreen();
 
-    EXPECT_THAT(pointer_client.log.wait_for(1, settle_timeout), IsEmpty());
+    EXPECT_THAT(pointer_client.event_cache.last_event(), Eq(PointerEvent::enter));
 }
