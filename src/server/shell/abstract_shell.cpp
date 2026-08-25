@@ -325,7 +325,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
 
     report->update_surface(*session, *surface, wm_relevant_mods);
 
-    auto const streams = std::exchange(wm_relevant_mods.streams, std::nullopt);
+    auto streams = std::exchange(wm_relevant_mods.streams, std::nullopt);
 
     if (!wm_relevant_mods.is_empty())
     {
@@ -339,7 +339,7 @@ void msh::AbstractShell::modify_surface(std::shared_ptr<scene::Session> const& s
      */
     if (streams.has_value())
     {
-        session->configure_streams(*surface, streams.value());
+        session->configure_streams(*surface, std::move(streams.value()));
     }
 
     if (modifications.cursor_image.has_value())
