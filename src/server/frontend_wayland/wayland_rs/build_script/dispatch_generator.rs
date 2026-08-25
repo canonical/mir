@@ -83,6 +83,40 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
                 }
             }
 
+            /// Handle a C++ exception that crossed the FFI boundary during dispatch.
+            ///
+            /// `mir::wayland::ProtocolError` encodes itself as
+            /// "MIR_PROTOCOL_ERROR:<object_id>:<code>: <message>" (only what() survives
+            /// the cxx boundary). Anything without that sentinel is an internal server
+            /// error and must not be dressed up as a client protocol violation.
+            fn handle_dispatch_error(resource: &impl Resource, what: &str) {
+                if let Some(encoded) = what.strip_prefix("MIR_PROTOCOL_ERROR:") {
+                    let mut parts = encoded.splitn(3, ':');
+                    let object_id = parts.next()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let code = parts.next()
+                        .and_then(|s| s.trim().parse::<u32>().ok())
+                        .unwrap_or(0);
+                    let message = parts.next()
+                        .map(|s| s.trim().to_string())
+                        .unwrap_or_else(|| encoded.to_string());
+                    post_protocol_error(resource, object_id, code, message);
+                } else {
+                    log::error!("Internal error dispatching Wayland request on {}: {}", resource.id(), what);
+                    // No protocol-level error code fits an internal failure; what matters
+                    // is that the client sees an honest message rather than a garbled
+                    // pseudo-protocol-error, and the real cause is in the server log.
+                    if let Some(handle) = resource.handle().upgrade() {
+                        handle.post_error(
+                            resource.id(),
+                            0,
+                            CString::new("internal server error").expect("static string"),
+                        );
+                    }
+                }
+            }
+
             #(#generated_dispatch_implementations)*
 
             #server_side_factories
@@ -544,8 +578,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
                     child_wrapper.lock().unwrap().inner = Some(child);
                 }
                 Err(err) => {
-                    let (object_id, code, message) = parse_post_error(err.what());
-                    post_protocol_error(resource, object_id, code, message);
+                    handle_dispatch_error(resource, err.what());
                 }
             }
         }
@@ -561,8 +594,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             // SAFETY: The mutex guard provides the only mutable access while the call is
             // in progress. The pinned reference is used only for this FFI call.
             if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
-                let (object_id, code, message) = parse_post_error(err.what());
-                post_protocol_error(resource, object_id, code, message);
+                handle_dispatch_error(resource, err.what());
             }
         }
     }
