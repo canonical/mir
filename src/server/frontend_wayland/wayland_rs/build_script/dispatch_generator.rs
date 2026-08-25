@@ -713,9 +713,17 @@ fn generate_dispatch_impl(
                 _state: &mut Self,
                 _client: ClientId,
                 resource: &#namespace_name::#interface_name::#protocol_struct_name,
-                _data: &Arc<Mutex<#wrapper_struct_name>>,
+                data: &Arc<Mutex<#wrapper_struct_name>>,
             ) {
                 unregister_resource(resource);
+
+                // The C++ object holds the middleware, whose resource handle holds
+                // `data`, whose `inner` holds the C++ object. Break the cycle here
+                // or the whole chain (and the client's session) leaks.
+                //
+                // This bidirectionality is necessary so that Rust can forward client
+                // requests to C++ and C++ can send server events to Rust.
+                data.lock().unwrap_or_else(|e| e.into_inner()).inner.take();
             }
         }
     }
