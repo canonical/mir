@@ -81,6 +81,15 @@ enum : uint32_t
     xdg_toplevel_unset_fullscreen = 12,
 };
 
+// Helper to avoid the need for C-style casts when adding a listener
+auto wl_proxy_add_listener(struct wl_proxy *proxy, auto* impl, void *data)
+{
+    return wl_proxy_add_listener(
+        proxy,
+        reinterpret_cast<void(**)(void)>(const_cast<std::remove_const_t<std::remove_pointer_t<decltype(impl)>>*>(impl)),
+        data);
+}
+
 enum class PointerEvent
 {
     enter,
@@ -181,11 +190,11 @@ private:
 
         xdg_surface = wl_proxy_marshal_constructor(
             wm_base, xdg_wm_base_get_xdg_surface, &mir::wayland::xdg_surface_interface_data, nullptr, surface);
-        wl_proxy_add_listener(xdg_surface, xdg_surface_listener, this);
+        wl_proxy_add_listener(xdg_surface, &xdg_surface_listener, this);
 
         toplevel = wl_proxy_marshal_constructor(
             xdg_surface, xdg_surface_get_toplevel, &mir::wayland::xdg_toplevel_interface_data);
-        wl_proxy_add_listener(toplevel, xdg_toplevel_listener, this);
+        wl_proxy_add_listener(toplevel, &xdg_toplevel_listener, this);
 
         create_pool();
 
@@ -319,11 +328,16 @@ private:
 
     static wl_registry_listener constexpr registry_listener{&new_global, &global_remove};
 
-    /// xdg_surface has a single event, `configure`; xdg_toplevel v1 has `configure` and `close`.
-    static inline void (*xdg_surface_listener[])(){reinterpret_cast<void (*)()>(&handle_xdg_surface_configure)};
-    static inline void (*xdg_toplevel_listener[])(){
-        reinterpret_cast<void (*)()>(&handle_toplevel_configure),
-        reinterpret_cast<void (*)()>(&handle_toplevel_close)};
+    static inline struct
+    {
+        void (*configure)(void *data, wl_proxy *xdg_surface, uint32_t serial);
+    } constexpr xdg_surface_listener{ .configure = &handle_xdg_surface_configure};
+
+    static inline struct
+    {
+        void (*configure)(void *data, wl_proxy *xdg_toplevel, int32_t width, int32_t height, wl_array *states);
+        void (*close)(void *data, wl_proxy *xdg_toplevel);
+    } constexpr xdg_toplevel_listener{ .configure = &handle_toplevel_configure, .close = &handle_toplevel_close };
 
     /// Only the events up to wl_pointer version 5 can arrive, as that is the version bound above.
 #pragma GCC diagnostic push
