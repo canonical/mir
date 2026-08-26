@@ -189,7 +189,8 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
     // wayland-backend ("Attempting to send an event with objects from wrong client"),
     // e.g. wl_keyboard.leave sent from the focused surface's own destruction path.
     // libwayland tolerated such events (clients ignore ids of zombie objects), so
-    // match that by dropping the event instead.
+    // match that by dropping the event instead. This should not happen, so log loudly
+    // when it does rather than crashing the compositor.
     //
     // TODO: If we want a more "correct" Rust version in the future, we will need
     // to change the behavior of surface focus. The issue here is that we send out
@@ -201,10 +202,15 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
         .filter(|arg| matches!(arg.type_, WaylandArgType::Object))
         .map(|arg| {
             let name = format_ident!("{}", sanitize_identifier(&arg.name));
+            let zombie_object_message = format!(
+                "{}.{}: referenced object '{}' is no longer alive; dropping event",
+                interface_name, event.name, arg.name
+            );
             if arg.allow_null.unwrap_or(false) {
                 quote! {
                     if let Some(__obj) = unsafe { #name.as_ref() } {
                         if !__obj.wrapped.is_alive() {
+                            log::error!("{}", #zombie_object_message);
                             return;
                         }
                     }
@@ -212,6 +218,7 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
             } else {
                 quote! {
                     if !#name.wrapped.is_alive() {
+                        log::error!("{}", #zombie_object_message);
                         return;
                     }
                 }
@@ -221,8 +228,16 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
 
     // Generate the ffi code that will call into the underlying method that is defined on the object
     // The first item is the definition, and the second is the method declaration for the trait.
+    // The object guards call `is_alive`, which is provided by the `Resource` trait, so bring
+    // it into scope when there are any guards to emit.
+    let resource_import = if object_guards.is_empty() {
+        quote! {}
+    } else {
+        quote! { use wayland_server::Resource; }
+    };
     quote! {
         pub fn #event_name(&mut self, #(#ffi_args),*) {
+            #resource_import
             #(#object_guards)*
             self.wrapped.#event_name(#(#rust_args),*)
         }
