@@ -12,6 +12,7 @@ add_dependencies(mir_wayland_rs_tests GMock)
 
 target_link_libraries(mir_wayland_rs_tests
   mirwayland_rs
+  mircore
 
   PkgConfig::WAYLAND_CLIENT
 

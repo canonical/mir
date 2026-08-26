@@ -16,6 +16,8 @@
 
 #include "wayland_rs_server_test.h"
 
+#include <mir/synchronised.h>
+
 #include <mir_test_framework/temporary_environment_value.h>
 
 #include <gtest/gtest.h>
@@ -29,7 +31,6 @@
 #include <cstddef>
 #include <filesystem>
 #include <memory>
-#include <mutex>
 #include <stdexcept>
 #include <string>
 #include <system_error>
@@ -47,8 +48,7 @@ class CountingNotificationHandler : public mrs::WaylandServerNotificationHandler
 public:
     void client_added(rust::Box<mrs::WaylandClient>) override
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        ++count;
+        ++*count.lock();
         cv.notify_all();
     }
 
@@ -58,21 +58,19 @@ public:
     auto wait_for_clients(std::size_t n) -> bool
     {
         using namespace std::chrono_literals;
-        std::unique_lock<std::mutex> lock{mutex};
         auto constexpr timeout = 5s;
-        return cv.wait_for(lock, timeout, [&] { return count >= n; });
+        auto locked = count.lock();
+        return locked.wait_for(cv, timeout, [&] { return *locked >= n; });
     }
 
     auto client_count() -> std::size_t
     {
-        std::lock_guard<std::mutex> lock{mutex};
-        return count;
+        return *count.lock();
     }
 
 private:
-    std::mutex mutex;
+    mir::Synchronised<std::size_t> count{0};
     std::condition_variable cv;
-    std::size_t count{0};
 };
 
 auto make_socket_pair() -> std::pair<int, int>
