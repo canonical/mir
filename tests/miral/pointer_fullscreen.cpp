@@ -107,26 +107,23 @@ class PointerEventCache
 public:
     void record(PointerEvent e)
     {
-        std::lock_guard lock{mutex};
         event = e;
     }
 
     auto last_event() const
     {
-        std::lock_guard lock{mutex};
-        return event;
+        return event.load();
     }
 
     /// Ignore everything recorded so far, so a test can assert on one transition in isolation.
     void reset()
     {
-        std::lock_guard lock{mutex};
         event = std::nullopt;
     }
 
 private:
-    std::mutex mutable mutex;
-    std::optional<PointerEvent> event;
+
+    std::atomic<std::optional<PointerEvent>> event;
 };
 
 /// A single xdg_toplevel with a wl_pointer, driven from the test thread by posting tasks onto
