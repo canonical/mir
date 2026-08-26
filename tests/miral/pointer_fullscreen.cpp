@@ -266,6 +266,7 @@ private:
     {
         auto const stride = width * 4;
         auto* const buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_ARGB8888);
+        wl_buffer_add_listener(buffer, &buffer_listener, this);
         wl_surface_attach(surface, buffer, 0, 0);
         wl_surface_damage(surface, 0, 0, width, height);
         wl_surface_commit(surface);
@@ -288,6 +289,11 @@ private:
     }
 
     static void global_remove(void*, wl_registry*, uint32_t) {}
+
+    static void handle_buffer_release(void*, wl_buffer* buffer)
+    {
+        wl_buffer_destroy(buffer);
+    }
 
     static void handle_xdg_surface_configure(void* data, wl_proxy* xdg_surface, uint32_t serial)
     {
@@ -324,6 +330,8 @@ private:
     }
 
     static wl_registry_listener constexpr registry_listener{&new_global, &global_remove};
+
+    static wl_buffer_listener constexpr buffer_listener{&handle_buffer_release};
 
     static inline struct
     {
