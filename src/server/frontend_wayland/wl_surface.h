@@ -137,6 +137,10 @@ public:
     bool synchronized() const;
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
+    /// True once the surface has begun destruction. Used to suppress leave events that would
+    /// otherwise reference this surface while it is being torn down (the underlying wl_resource is
+    /// still momentarily valid during destroy listeners, but the client no longer cares about it).
+    bool is_being_destroyed() const { return being_destroyed; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
     /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
     /// one exists
@@ -202,6 +206,7 @@ private:
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
+    bool being_destroyed{false};
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
     ptrdiff_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
     /* We might need to resubmit the current buffer, but with different metadata

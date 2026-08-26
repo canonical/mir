@@ -131,6 +131,8 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
+    being_destroyed = true;
+
     // We can't use a function try block as we want to access `client`:
     // "Before any catch clauses of a function-try-block on a destructor are entered,
     // all bases and non-variant members have already been destroyed."

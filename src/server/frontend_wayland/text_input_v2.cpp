@@ -346,8 +346,13 @@ void mf::TextInputV2::focus_on(WlSurface* surface)
 {
     if (current_surface)
     {
-        auto const serial = client->next_serial(nullptr);
-        send_leave_event(serial, current_surface.value().resource);
+        // Don't send a leave event referencing a surface that is being destroyed: the client no
+        // longer cares about it, and doing so would reference a surface that is mid-teardown.
+        if (!current_surface.value().is_being_destroyed())
+        {
+            auto const serial = client->next_serial(nullptr);
+            send_leave_event(serial, current_surface.value().resource);
+        }
     }
     current_surface = mw::make_weak(surface);
     if (surface)
