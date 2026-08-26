@@ -177,15 +177,22 @@ update_spec_file()
 {
     if [ ! -f rpm/mir.spec ];
     then
+        echo "No rpm/mir.spec in this source tree: skipping RPM packaging" >&2
         return
     fi
 
+    local unmapped_vars=""
     for p in $packages;
     do
         local abi_var=$(package_abi_var $p)
         local sover_macro=$(rpm_sover_macro $abi_var)
         if [ -z "$sover_macro" ];
         then
+            case " $unmapped_vars " in
+                *" $abi_var "*) continue ;;
+            esac
+            unmapped_vars="$unmapped_vars $abi_var"
+            report_unmapped_sover $abi_var
             continue
         fi
         local abi=$(eval "echo \$${abi_var}")
@@ -197,6 +204,11 @@ report_abi_mismatch()
 {
     log "ABI mismatch: $1"
     has_check_error=yes
+}
+
+report_unmapped_sover()
+{
+    echo "rpm/mir.spec has no known soversion macro for $1: rpm_sover_macro() in this script needs to be updated" >&2
 }
 
 check_control_file()
@@ -242,16 +254,23 @@ check_spec_file()
 {
     if [ ! -f rpm/mir.spec ];
     then
+        echo "No rpm/mir.spec in this source tree: skipping RPM packaging" >&2
         return
     fi
 
     local seen_macros=""
+    local unmapped_vars=""
     for p in $packages;
     do
         local abi_var=$(package_abi_var $p)
         local sover_macro=$(rpm_sover_macro $abi_var)
         if [ -z "$sover_macro" ];
         then
+            case " $unmapped_vars " in
+                *" $abi_var "*) continue ;;
+            esac
+            unmapped_vars="$unmapped_vars $abi_var"
+            report_unmapped_sover $abi_var
             continue
         fi
         case " $seen_macros " in
