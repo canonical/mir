@@ -41,6 +41,7 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
             use wayland_server::backend::{ClientId, ObjectId};
+            use wayland_server::backend::protocol::Interface;
             use crate::protocols;
             use crate::wayland_server_core::ServerState;
             use crate::ffi;
@@ -83,6 +84,45 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
                 }
             }
 
+            /// Post `wl_display.error` with the `implementation` code against the
+            /// client's `wl_display`, mirroring libwayland's
+            /// `wl_client_post_implementation_error` (and Mir's C++
+            /// `mir::wayland::internal_error_processing_request`). This is the
+            /// correct protocol error for a compositor-side failure.
+            ///
+            /// `wayland-server` special-cases `wl_display` and never exposes it as a
+            /// `Resource`, so we resolve object id 1 (which is always the
+            /// `wl_display`) for this client through the backend handle. This relies
+            /// on the pure-Rust `wayland-backend` that `wayland_rs` uses, where
+            /// `object_for_protocol_id` matches interfaces by name.
+            fn post_implementation_error(resource: &impl Resource, message: &str) {
+                /// `wl_display.error.implementation`: the compositor hit an internal error.
+                const WL_DISPLAY_ERROR_IMPLEMENTATION: u32 = 3;
+
+                static WL_DISPLAY_INTERFACE: Interface = Interface {
+                    name: "wl_display",
+                    version: 1,
+                    requests: &[],
+                    events: &[],
+                    c_ptr: None,
+                };
+
+                let Some(handle) = resource.handle().upgrade() else {
+                    return;
+                };
+                let display = handle
+                    .get_client(resource.id())
+                    .and_then(|client| handle.object_for_protocol_id(client, &WL_DISPLAY_INTERFACE, 1));
+                match display {
+                    Ok(display) => handle.post_error(
+                        display,
+                        WL_DISPLAY_ERROR_IMPLEMENTATION,
+                        CString::new(message).expect("Error message contained null byte"),
+                    ),
+                    Err(_) => log::error!("Failed to resolve wl_display to post an implementation error"),
+                }
+            }
+
             /// Handle a C++ exception that crossed the FFI boundary during dispatch.
             ///
             /// `mir::wayland_rs::ProtocolError` encodes itself as
@@ -95,16 +135,12 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
                     post_protocol_error(resource, object_id, code, message);
                 } else {
                     log::error!("Internal error dispatching Wayland request on {}: {}", resource.id(), what);
-                    // No protocol-level error code fits an internal failure; what matters
-                    // is that the client sees an honest message rather than a garbled
-                    // pseudo-protocol-error, and the real cause is in the server log.
-                    if let Some(handle) = resource.handle().upgrade() {
-                        handle.post_error(
-                            resource.id(),
-                            0,
-                            CString::new("internal server error").expect("static string"),
-                        );
-                    }
+                    // An internal failure is a compositor-side error, so raise
+                    // wl_display.error with the `implementation` code against the
+                    // client's wl_display (as libwayland's
+                    // wl_client_post_implementation_error does). The client sees an
+                    // honest protocol error while the real cause stays in the log.
+                    post_implementation_error(resource, &format!("internal server error: {what}"));
                 }
             }
 
