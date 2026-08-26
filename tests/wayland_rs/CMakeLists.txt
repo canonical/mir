@@ -2,6 +2,7 @@ mir_add_wrapped_executable(mir_wayland_rs_tests NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_executor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client_registry.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_fd_ready_listener.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_client_injection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_weak.cpp
   ${PROJECT_SOURCE_DIR}/tests/mir_test/signal.cpp
   ${PROJECT_SOURCE_DIR}/tests/mir_test_framework/temporary_environment_value.cpp
@@ -11,6 +12,7 @@ add_dependencies(mir_wayland_rs_tests GMock)
 
 target_link_libraries(mir_wayland_rs_tests
   mirwayland_rs
+  mircore
 
   PkgConfig::WAYLAND_CLIENT
 
