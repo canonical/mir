@@ -43,6 +43,16 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
   -DMIR_RUN_WLCS_TESTS=OFF\
 
+# Disable LTO: the Rust components (evdev-rs, wayland-rs) are compiled by rustc
+# and their static archives are not GCC LTO objects. Linking them into
+# libmirserver.so under GCC + ld.bfd's LTO plugin produces spurious
+# "undefined reference" errors for COMDAT template instantiations pulled in
+# from the fat-LTO C++ archives (e.g. boost::throw_exception<>, the
+# std::string move constructor, vtable for boost::exception). Other linkers
+# (mold, lld) and LTO-disabled builds are unaffected, so drop LTO for the
+# whole package now that Rust is always built.
+DEB_BUILD_MAINT_OPTIONS += optimize=-lto
+
 # Disable LTO on broken binutils
 # https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
 ifeq ($(filter arm64,$(DEB_HOST_ARCH)),arm64)
