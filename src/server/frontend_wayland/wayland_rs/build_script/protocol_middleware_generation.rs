@@ -34,8 +34,8 @@ fn build_enum_fallback_map(protocols: &[WaylandProtocol]) -> EnumFallbacks {
                 let InterfaceItem::Enum(e) = item else {
                     return None;
                 };
-                let zero_is_valid = e.bitfield.unwrap_or(false)
-                    || e.entries.iter().any(|entry| entry.value == 0);
+                let zero_is_valid =
+                    e.bitfield.unwrap_or(false) || e.entries.iter().any(|entry| entry.value == 0);
                 let fallback = if zero_is_valid {
                     0
                 } else {
