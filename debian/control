@@ -3,7 +3,7 @@ Section: x11
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
-Build-Depends: cargo,
+Build-Depends: cargo:native,
                cmake,
                debhelper (>= 9),
                eglexternalplatform-dev,
@@ -66,7 +66,7 @@ Build-Depends: cargo,
                python3-dbusmock,
                python3-pil:native,
                python3:native,
-               rustc,
+               rustc:native,
                systemtap-sdt-dev,
                umockdev (>= 0.8.7),
                uuid-dev,
