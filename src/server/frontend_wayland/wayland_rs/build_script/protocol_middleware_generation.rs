@@ -26,27 +26,25 @@ use std::collections::HashMap;
 type EnumFallbacks = HashMap<(String, String), u32>;
 
 fn build_enum_fallback_map(protocols: &[WaylandProtocol]) -> EnumFallbacks {
-    let mut map = EnumFallbacks::new();
-    for protocol in protocols {
-        for interface in &protocol.interfaces {
-            for item in &interface.items {
-                if let InterfaceItem::Enum(e) = item {
-                    let zero_is_valid = e.bitfield.unwrap_or(false)
-                        || e.entries.iter().any(|entry| entry.value == 0);
-                    let fallback = if zero_is_valid {
-                        0
-                    } else {
-                        e.entries
-                            .first()
-                            .map(|entry| entry.value as u32)
-                            .unwrap_or(0)
-                    };
-                    map.insert((interface.name.clone(), e.name.clone()), fallback);
-                }
-            }
-        }
-    }
-    map
+    protocols
+        .iter()
+        .flat_map(|protocol| &protocol.interfaces)
+        .flat_map(|interface| {
+            interface.items.iter().filter_map(move |item| {
+                let InterfaceItem::Enum(e) = item else {
+                    return None;
+                };
+                let zero_is_valid = e.bitfield.unwrap_or(false)
+                    || e.entries.iter().any(|entry| entry.value == 0);
+                let fallback = if zero_is_valid {
+                    0
+                } else {
+                    e.entries.first().map_or(0, |entry| entry.value as u32)
+                };
+                Some(((interface.name.clone(), e.name.clone()), fallback))
+            })
+        })
+        .collect()
 }
 
 pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -> TokenStream {
