@@ -1,9 +1,21 @@
 #!/usr/bin/make -f
 
 include /usr/share/dpkg/default.mk
+include /usr/share/rustc/architecture.mk
 include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
+
+# The Rust components (evdev-rs, wayland-rs) are built by CMake via the Debian
+# cargo wrapper (/usr/share/cargo/bin/cargo), which resolves crates against the
+# archive's system registry (/usr/share/cargo/registry) instead of crates.io.
+# The wrapper only activates when CARGO_HOME ends with debian/cargo_home, and
+# requires the architecture triples below (also used by cmake/RustLibrary.cmake).
+export DEB_HOST_RUST_TYPE
+export DEB_HOST_GNU_TYPE
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
+export DEB_CARGO_CRATE = mir_$(DEB_VERSION_UPSTREAM)
+export PATH := /usr/share/cargo/bin:$(PATH)
 
 # Needed for ccache to work in case the build directory changed
 # (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
@@ -58,6 +70,13 @@ $(info DEB_BUILD_MAINT_OPTIONS: ${DEB_BUILD_MAINT_OPTIONS})
 AVAILABLE_PLATFORMS=atomic-kms\;gbm-kms\;x11\;wayland
 
 override_dh_auto_configure:
+	# Point Cargo at the archive's system crate registry so the Rust
+	# components build offline against packaged crates. The committed
+	# Cargo.lock pins crates.io versions that are absent from the registry,
+	# so drop it and let Cargo re-resolve against the archive.
+	rm -f Cargo.lock
+	CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CPPFLAGS="$(CPPFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	  /usr/share/cargo/bin/cargo prepare-debian $(CURDIR)/debian/cargo_registry --link-from-system
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
 	dh_auto_configure -- \
 	  $(COMMON_CONFIGURE_OPTIONS) \
@@ -98,6 +117,11 @@ override_dh_makeshlibs:
 # Don't try to strip libraries used as test data
 override_dh_strip:
 	dh_strip -Xmir-test-data
+
+# Remove the Cargo registry/home set up for the Rust components
+override_dh_clean:
+	dh_clean
+	rm -rf debian/cargo_home debian/cargo_registry
 
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
