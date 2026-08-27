@@ -33,7 +33,9 @@
 #include <mir/test/doubles/mock_input_device_registry.h>
 #include "src/platforms/evdev/platform.h"
 #include "src/platforms/x11/input/input_platform.h"
+#ifdef MIR_ENABLE_RUST_INPUT
 #include "src/platforms/evdev-rs/platform.h"
+#endif
 #include <mir/test/fake_shared.h>
 
 namespace mt = mir::test;
@@ -41,7 +43,9 @@ namespace mtd = mt::doubles;
 namespace mi = mir::input;
 namespace mr = mir::report;
 namespace mtf = mir_test_framework;
+#ifdef MIR_ENABLE_RUST_INPUT
 namespace miers = mir::input::evdev_rs;
+#endif
 
 using namespace ::testing;
 
@@ -188,6 +192,7 @@ TEST_F(InputPlatformProbe, allows_forcing_stub_input_platform)
     EXPECT_THAT(platform, OfPtrType<mtf::StubInputPlatform>());
 }
 
+#ifdef MIR_ENABLE_RUST_INPUT
 TEST_F(InputPlatformProbe, allows_forcing_of_evdev_rs_platform)
 {
     ON_CALL(mock_options, is_set(StrEq(platform_input_lib))).WillByDefault(Return(true));
@@ -204,3 +209,4 @@ TEST_F(InputPlatformProbe, allows_forcing_of_evdev_rs_platform)
             *stub_prober_report);
     EXPECT_THAT(platform, OfPtrType<miers::Platform>());
 }
+#endif

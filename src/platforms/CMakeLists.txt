@@ -51,4 +51,6 @@ endif()
 
 add_subdirectory(virtual)
 add_subdirectory(evdev/)
-add_subdirectory(evdev-rs/)
+if (MIR_ENABLE_RUST_INPUT)
+  add_subdirectory(evdev-rs/)
+endif()
