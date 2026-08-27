@@ -49,6 +49,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_slow_keys.cpp
     test_hover_click.cpp
     test_locate_pointer.cpp
+    pointer_fullscreen.cpp
     basic_store.cpp
     ini_file_with_overrides.cpp
     override_watcher.cpp
@@ -67,6 +68,7 @@ target_link_libraries(miral-test-internal
     mir-test-doubles-static
     miral-internal
     miral-external
+    PkgConfig::WAYLAND_CLIENT
 )
 
 
