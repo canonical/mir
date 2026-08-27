@@ -9,6 +9,7 @@ add_rust_cxx_library(mirwayland_rs
   CXX_BRIDGE_SOURCE_FILE src/ffi.rs
   DEPENDS
     Cargo.toml
+    ${PROJECT_SOURCE_DIR}/Cargo.lock
     build_script/cpp_builder.rs
     build_script/cpp_protocol_generation.rs
     build_script/dispatch_generator.rs
