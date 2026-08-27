@@ -33,6 +33,7 @@ mw::LifetimeTracker::LifetimeTracker()
 
 mw::LifetimeTracker::~LifetimeTracker()
 {
+    being_destroyed = true;
     mark_destroyed();
 }
 
