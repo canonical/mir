@@ -234,7 +234,6 @@ private:
     WaylandProtocolExtensionFilter const extension_filter;
 
     std::unique_ptr<wl_display, void(*)(wl_display*)> const display;
-    std::unique_ptr<ServerWrapper> server_wrapper;
     mir::Fd const pause_signal;
     std::unique_ptr<WlCompositor> compositor_global;
     std::unique_ptr<WlSubcompositor> subcompositor_global;

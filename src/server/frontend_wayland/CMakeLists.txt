@@ -1,8 +1,6 @@
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
-if (MIR_ENABLE_RUST)
-  add_subdirectory(wayland_rs/)
-endif()
+add_subdirectory(wayland_rs/)
 
 set(
   WAYLAND_SOURCES
@@ -132,9 +130,7 @@ target_link_libraries(mirfrontend-wayland
     PkgConfig::GIOUnix
 )
 
-if (MIR_ENABLE_RUST)
-  target_link_libraries(mirfrontend-wayland
-    PUBLIC
-      mirwayland_rs
-  )
-endif()
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)
