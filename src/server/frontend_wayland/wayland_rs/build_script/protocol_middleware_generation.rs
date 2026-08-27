@@ -149,6 +149,13 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
 
             pub fn destroy_and_delete(&self) {
                 use wayland_server::Resource;
+                // NOTE: `handle.destroy_object` is an inherent method only on
+                // wayland-backend >= 0.3.12. Ubuntu 26.04 ships 0.3.11, which
+                // lacks it, so on that version this call resolves instead to the
+                // no-op fallback in the `HandleDestroyObjectCompat` extension
+                // trait (in scope via `crate::wayland_server_core::*`). See that
+                // trait's documentation for why this is safe and what to do once
+                // the archive ships a newer wayland-backend.
                 if self.wrapped.is_alive() {
                     if let Some(handle) = self.wrapped.handle().upgrade() {
                         let _ = handle.destroy_object::<crate::wayland_server_core::ServerState>(

@@ -33,6 +33,60 @@ use wayland_server::{
     Display, DisplayHandle, ListeningSocket,
 };
 
+/// Compatibility shim providing a best-effort fallback for
+/// [`wayland_server::backend::Handle::destroy_object`].
+///
+/// # Why this exists (the hack)
+///
+/// The generated Wayland middleware needs a `destroy_and_delete()` operation
+/// that destroys a server-created object (the equivalent of `wl_resource_destroy`
+/// in the C API). `wayland-backend` only gained a public `Handle::destroy_object`
+/// in version 0.3.12. The Ubuntu 26.04 archive currently ships
+/// `librust-wayland-backend-dev` 0.3.11, which exposes no public API to destroy
+/// an individual object. Because the Debian packaging resolves crates against the
+/// archive registry rather than crates.io (see `debian/rules`), the generated
+/// `handle.destroy_object::<ServerState>(..)` call fails to compile there with
+/// `E0599: no method named destroy_object found for struct Handle`.
+///
+/// # How the shim works
+///
+/// This trait adds a `destroy_object` method to `Handle`. Rust always prefers an
+/// inherent method over an in-scope trait method of the same name, so the exact
+/// same generated code compiles against both crate versions:
+///   * on wayland-backend >= 0.3.12 the real inherent `Handle::destroy_object`
+///     is selected and this fallback is ignored;
+///   * on wayland-backend 0.3.11 (no inherent method) this fallback is selected.
+///
+/// The fallback is a no-op, which is safe for every current caller: they all send
+/// a *destructor* event immediately before `destroy_and_delete()` (for example
+/// `wl_callback.done` and `zwlr_foreign_toplevel_manager_v1.finished`). In the
+/// pure-Rust backend, sending a destructor event already destroys the object and
+/// emits `wl_display.delete_id`, after which the generated `is_alive()` guard
+/// skips the redundant `destroy_object` call anyway.
+///
+/// # What we should do instead
+///
+/// Once the archive ships wayland-backend >= 0.3.12, raise the `wayland-backend`
+/// requirement in `Cargo.toml`, delete this trait, and rely solely on the real
+/// `Handle::destroy_object`.
+#[allow(dead_code)]
+pub trait HandleDestroyObjectCompat {
+    fn destroy_object<D>(
+        &self,
+        id: &wayland_server::backend::ObjectId,
+    ) -> Result<(), wayland_server::backend::InvalidId>;
+}
+
+#[allow(dead_code)]
+impl HandleDestroyObjectCompat for wayland_server::backend::Handle {
+    fn destroy_object<D>(
+        &self,
+        _id: &wayland_server::backend::ObjectId,
+    ) -> Result<(), wayland_server::backend::InvalidId> {
+        Ok(())
+    }
+}
+
 /// A registration of interest in a file descriptor becoming readable, awaiting
 /// insertion into the running event loop.
 type PendingFdListener = (RawFd, Box<dyn FdReadyListener>);
