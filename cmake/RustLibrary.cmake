@@ -27,9 +27,18 @@ function(add_rust_cxx_library target)
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
   set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
 
+  # The output paths above are nested under the target triple, which Cargo only
+  # emits when built with `--target`. Pass it when DEB_HOST_RUST_TYPE is set (deb
+  # packaging); otherwise Cargo writes to target/{release,debug} and the empty
+  # segment collapses to the same path (local builds, snap).
+  set(cargo_target_flag "")
+  if(NOT "$ENV{DEB_HOST_RUST_TYPE}" STREQUAL "")
+    set(cargo_target_flag "--target" "$ENV{DEB_HOST_RUST_TYPE}")
+  endif()
+
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
-    COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
+    COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} ${cargo_target_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
     DEPENDS ${arg_DEPENDS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Building Rust crate ${arg_CRATE}")

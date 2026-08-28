@@ -25,28 +25,6 @@ Build-Depends: cargo:native,
                libinput-dev (>= 0.21),
                liblttng-ust-dev,
                libpixman-1-dev,
-# Rust crates for the evdev-rs input platform and wayland-rs frontend.
-# These are sourced from the archive's system Cargo registry
-# (/usr/share/cargo/registry) rather than crates.io; see debian/rules.
-               librust-bitflags-dev,
-               librust-calloop-dev,
-               librust-cxx-build-dev,
-               librust-cxx-dev (>= 1.0.167~),
-               librust-input-dev <!cross>,
-               librust-libc-dev,
-               librust-log-dev,
-               librust-nix-dev,
-               librust-prettyplease-dev,
-               librust-proc-macro2-dev,
-               librust-quick-xml-dev,
-               librust-quote-dev,
-               librust-serde-derive-dev,
-               librust-serde-dev,
-               librust-syn-dev,
-               librust-udev-dev,
-               librust-wayland-backend-dev,
-               librust-wayland-scanner-dev,
-               librust-wayland-server-dev,
 # The target-architecture Rust standard library. rustc and cargo run natively
 # (see the :native markers), but cross-compiling the Rust components still needs
 # std for the host architecture, which nothing else in this list pulls in.
