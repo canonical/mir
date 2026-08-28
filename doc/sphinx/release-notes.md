@@ -52,15 +52,14 @@
 
   - Enhancements:
 
-    - [Wayland] Implement xdg-dialog-v1 Wayland protocol [#4790](https://github.com/canonical/mir/pull/4790). - Update DecorationProvider to xdg-shell [#4939](https://github.com/canonical/mir/pull/4939)
-      Disabled by default [#5122](https://github.com/canonical/mir/pull/5122)
+    - [Wayland] Implement xdg-dialog-v1 Wayland protocol [#4790](https://github.com/canonical/mir/pull/4790), [#5122](https://github.com/canonical/mir/pull/5122)
     - [Wayland] Add support for the ext_foreign_toplevel_image_capture_source_manager_v1 extension [#5002](https://github.com/canonical/mir/pull/5002)
-    - [Wayland] Add support for screen-shooting a single surface [#4936](https://github.com/canonical/mir/pull/4936)
+    - [Wayland] Add support for taking a screenshot of a single surface [#4936](https://github.com/canonical/mir/pull/4936)
     - [Wayland] Implement wl_region::subtract and tidy wl_region::add [#5003](https://github.com/canonical/mir/pull/5003)
     - Add a touch emulator to map mouse clicks and drags to touch events [#5091](https://github.com/canonical/mir/pull/5091)
     - Add command-line logging configuration [#4928](https://github.com/canonical/mir/pull/4928)
     - [miral] Add `register_log_filtering_config` convenience helper [#4937](https://github.com/canonical/mir/pull/4937)
-    - [live config] Live config override directory [#4781](https://github.com/canonical/mir/pull/4781)
+    - [live config] Support for override directory [#4781](https://github.com/canonical/mir/pull/4781)
     - [graphics] Add bytes-per-pixel to DRMFormat and use it for SHM stride validation [#5000](https://github.com/canonical/mir/pull/5000)
     - [evdev-rs] Remove the blocking future await when grabbing a device file descriptor [#4960](https://github.com/canonical/mir/pull/4960)
 
