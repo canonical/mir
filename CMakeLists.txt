@@ -227,17 +227,6 @@ foreach(platform IN LISTS MIR_PLATFORM)
   endif()
 endforeach(platform)
 
-# The Rust evdev input platform (evdev-rs) links the `input` crate, whose
-# `input-sys` build step runs bindgen and therefore requires clang. clang cannot
-# be installed for a foreign architecture alongside the native build toolchain,
-# so evdev-rs cannot be cross-compiled. Allow disabling just this platform (the
-# C++ evdev platform still provides input) while keeping the rest of the Rust
-# code, notably the pure-Rust wayland-rs frontend, which cross-compiles fine.
-option(MIR_ENABLE_RUST_INPUT "Build the Rust evdev input platform (requires bindgen/clang; unavailable when cross-compiling)" ON)
-if(MIR_ENABLE_RUST_INPUT)
-  add_compile_definitions(MIR_ENABLE_RUST_INPUT)
-endif()
-
 pkg_check_modules(GLM glm)
 if(NOT GLM_FOUND)
   find_package(glm REQUIRED)  # There's no glm.pc on Fedora, but find_package(glm) fails on Ubuntu...

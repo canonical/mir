@@ -42,16 +42,6 @@ COMMON_CONFIGURE_OPTIONS = \
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
   -DMIR_RUN_WLCS_TESTS=OFF\
 
-# The Rust evdev input platform (evdev-rs) links the `input` crate, whose
-# `input-sys` build step runs bindgen and therefore needs clang. clang cannot be
-# installed for a foreign architecture alongside the native build toolchain, so
-# evdev-rs cannot be cross-compiled. Skip it (and its build-dep, dropped via the
-# `cross` profile in debian/control) when cross-building; the C++ evdev platform
-# still provides input and the pure-Rust wayland-rs frontend is unaffected.
-ifneq ($(DEB_BUILD_ARCH),$(DEB_HOST_ARCH))
-  COMMON_CONFIGURE_OPTIONS += -DMIR_ENABLE_RUST_INPUT=OFF
-endif
-
 # Disable LTO: the Rust components (evdev-rs, wayland-rs) are compiled by rustc
 # and their static archives are not GCC LTO objects. Linking them into
 # libmirserver.so under GCC + ld.bfd's LTO plugin produces spurious
