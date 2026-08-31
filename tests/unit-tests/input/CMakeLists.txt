@@ -29,6 +29,7 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
 list(APPEND UMOCK_UNIT_TEST_REFERENCES
     mirplatforminputevdevobjects
     mirevdevutilsobjects
+    mirplatforminputevdevrsobjects
 )
 if (MIR_BUILD_PLATFORM_X11)
 list(APPEND UMOCK_UNIT_TEST_SOURCES
@@ -38,7 +39,6 @@ list(APPEND UMOCK_UNIT_TEST_SOURCES
 list(APPEND UMOCK_UNIT_TEST_REFERENCES
     mirplatformserverx11sharedresources
     mirplatforminputx11objects
-    mirplatforminputevdevrsobjects
 )
 endif()
 
