@@ -20,8 +20,10 @@
 #include "client.h"
 
 #include <atomic>
+#include <cstdint>
 #include <deque>
 #include <memory>
+#include <optional>
 #include <utility>
 
 struct MirEvent;
