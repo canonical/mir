@@ -212,8 +212,6 @@ public:
     auto get_extension(std::string const& name) const -> std::shared_ptr<void>;
 
 private:
-    struct ServerWrapper;
-
     void for_each_output_binding(
         wayland::Client* client,
         graphics::DisplayConfigurationOutputId output,
