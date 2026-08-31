@@ -87,9 +87,7 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     // boundary. To fix this, we first generate middleware structs that make it easy
     // to copy the data.
     let enum_fallback_impls = generate_enum_fallback_impls(protocols);
-    let extensions = protocols
-        .iter()
-        .flat_map(generate_extensions_for_protocol);
+    let extensions = protocols.iter().flat_map(generate_extensions_for_protocol);
 
     quote! {
         #[allow(dead_code, unused_imports)]
@@ -158,7 +156,7 @@ fn generate_extensions_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .flat_map(|interface| generate_extension_for_interface(interface))
+        .flat_map(generate_extension_for_interface)
         .collect()
 }
 
@@ -167,10 +165,9 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .items
         .iter()
         .filter_map(|item| match item {
-            InterfaceItem::Event(event) => Some(generate_extension_method_for_event(
-                event,
-                &interface.name,
-            )),
+            InterfaceItem::Event(event) => {
+                Some(generate_extension_method_for_event(event, &interface.name))
+            }
             _ => None,
         })
         .collect();
@@ -222,10 +219,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
     })
 }
 
-fn generate_extension_method_for_event(
-    event: &WaylandEvent,
-    interface_name: &str,
-) -> TokenStream {
+fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &str) -> TokenStream {
     let event_name: syn::Ident = format_ident!("{}", sanitize_identifier(&event.name));
     let ffi_args: Vec<TokenStream> = event
         .args
