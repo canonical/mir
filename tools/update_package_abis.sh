@@ -20,6 +20,7 @@ packages="\
     mir-platform-graphics-atomic-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-gbm-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-input-evdev:MIR_SERVER_INPUT_PLATFORM_ABI\
+    mir-platform-input-evdev-rs:MIR_SERVER_INPUT_PLATFORM_ABI\
     libmirwayland:MIRWAYLAND_ABI\
     mir-platform-graphics-wayland:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
     mir-platform-rendering-egl-generic:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
