@@ -18,17 +18,19 @@ use crate::protocol_parser::{
 };
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use std::collections::HashMap;
 
-/// Maps (interface_name, enum_name) to a value that is guaranteed to convert
-/// into the wayland-rs enum: 0 when valid (bitfields accept empty flags, and
-/// many enums have a 0-valued entry), otherwise the enum's first entry.
-type EnumFallbacks<'proto> = HashMap<(&'proto str, &'proto str), u32>;
-
-fn build_enum_fallback_map<'proto>(protocols: &'proto [WaylandProtocol]) -> EnumFallbacks<'proto> {
-    protocols
+/// Generates the `EnumFallback` trait plus one implementation per enum.
+///
+/// The trait provides `fallback()`, which resolves an enum's fallback value at
+/// runtime. Each implementation prefers `0` (valid for bitfields, which accept empty flags,
+/// and for any enum that defines a `0`-valued entry) and otherwise falls back
+/// to the enum's first defined entry.
+fn generate_enum_fallback_impls(protocols: &[WaylandProtocol]) -> TokenStream {
+    let mut seen = std::collections::HashSet::new();
+    let impls = protocols
         .iter()
         .flat_map(|protocol| &protocol.interfaces)
+        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
         .flat_map(|interface| {
             interface.items.iter().filter_map(move |item| {
                 let InterfaceItem::Enum(e) = item else {
@@ -39,17 +41,35 @@ fn build_enum_fallback_map<'proto>(protocols: &'proto [WaylandProtocol]) -> Enum
                     "Found enum '{}' with no entries, which is nonsensical and should never happen",
                     e.name
                 );
-                let zero_is_valid =
-                    e.bitfield.unwrap_or(false) || e.entries.iter().any(|entry| entry.value == 0);
-                let fallback = if zero_is_valid {
-                    0
-                } else {
-                    e.entries.first().unwrap().value as u32
-                };
-                Some(((interface.name.as_str(), e.name.as_str()), fallback))
+                Some((interface.name.as_str(), e))
             })
         })
-        .collect()
+        .filter_map(|(interface_name, e)| {
+            if !seen.insert((interface_name, e.name.as_str())) {
+                return None;
+            }
+            let enum_path: syn::Path =
+                syn::parse_str(&format!("{}::{}", interface_name, snake_to_pascal(&e.name)))
+                    .expect("Failed to parse enum path");
+            let first = e.entries.first().unwrap().value as u32;
+            Some(quote! {
+                impl EnumFallback for #enum_path {
+                    fn fallback() -> Self {
+                        // Prefer 0 when the enum accepts it (bitfields always do; some
+                        // enums define it), otherwise the first defined value.
+                        Self::try_from(0u32).unwrap_or_else(|_| Self::try_from(#first).unwrap())
+                    }
+                }
+            })
+        });
+
+    quote! {
+        trait EnumFallback: Sized {
+            fn fallback() -> Self;
+        }
+
+        #(#impls)*
+    }
 }
 
 pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -> TokenStream {
@@ -66,10 +86,10 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     // Wayland protocol methods take arguments that cannot be sent over the C++ -> Rust
     // boundary. To fix this, we first generate middleware structs that make it easy
     // to copy the data.
-    let enum_fallbacks = build_enum_fallback_map(protocols);
+    let enum_fallback_impls = generate_enum_fallback_impls(protocols);
     let extensions = protocols
         .iter()
-        .flat_map(|protocol| generate_extensions_for_protocol(protocol, &enum_fallbacks));
+        .flat_map(generate_extensions_for_protocol);
 
     quote! {
         #[allow(dead_code, unused_imports)]
@@ -79,6 +99,8 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
             use cxx::{CxxString, CxxVector};
             use std::os::unix::io::BorrowedFd;
             #(#use_imports)*
+
+            #enum_fallback_impls
 
             #(#extensions)*
         }
@@ -131,22 +153,16 @@ fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStr
         .collect()
 }
 
-fn generate_extensions_for_protocol(
-    protocol: &WaylandProtocol,
-    enum_fallbacks: &EnumFallbacks,
-) -> TokenStream {
+fn generate_extensions_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .flat_map(|interface| generate_extension_for_interface(interface, enum_fallbacks))
+        .flat_map(|interface| generate_extension_for_interface(interface))
         .collect()
 }
 
-fn generate_extension_for_interface(
-    interface: &WaylandInterface,
-    enum_fallbacks: &EnumFallbacks,
-) -> Option<TokenStream> {
+fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<TokenStream> {
     let event_extensions: Vec<TokenStream> = interface
         .items
         .iter()
@@ -154,7 +170,6 @@ fn generate_extension_for_interface(
             InterfaceItem::Event(event) => Some(generate_extension_method_for_event(
                 event,
                 &interface.name,
-                enum_fallbacks,
             )),
             _ => None,
         })
@@ -210,7 +225,6 @@ fn generate_extension_for_interface(
 fn generate_extension_method_for_event(
     event: &WaylandEvent,
     interface_name: &str,
-    enum_fallbacks: &EnumFallbacks,
 ) -> TokenStream {
     let event_name: syn::Ident = format_ident!("{}", sanitize_identifier(&event.name));
     let ffi_args: Vec<TokenStream> = event
@@ -227,7 +241,7 @@ fn generate_extension_method_for_event(
         .args
         .iter()
         .map(|arg| {
-            wayland_arg_to_rust_param_str(arg, interface_name, enum_fallbacks)
+            wayland_arg_to_rust_param_str(arg, interface_name)
                 .parse::<TokenStream>()
                 .expect("Failed to parse argument as TokenStream")
         })
@@ -277,11 +291,7 @@ pub fn wayland_arg_to_ffi_rust_str(arg: &WaylandArg) -> String {
     arg_str
 }
 
-fn wayland_arg_to_rust_param_str(
-    arg: &WaylandArg,
-    interface_name: &str,
-    enum_fallbacks: &EnumFallbacks,
-) -> String {
+fn wayland_arg_to_rust_param_str(arg: &WaylandArg, interface_name: &str) -> String {
     let name = sanitize_identifier(&arg.name);
     let mut param = match arg.type_ {
         WaylandArgType::Int | WaylandArgType::Uint | WaylandArgType::Fixed => name.clone(),
@@ -294,17 +304,11 @@ fn wayland_arg_to_rust_param_str(
     if let Some(e) = &arg.enum_ {
         let (enum_interface, enum_name) = e.split_once('.').unwrap_or((interface_name, e.as_str()));
         let rust_enum_path = format!("{}::{}", enum_interface, snake_to_pascal(enum_name));
-        // The fallback must be lazy (`unwrap_or_else`) and use a value that is
-        // actually valid for this enum: not every enum has a 0-valued entry.
-        let Some(fallback) = enum_fallbacks.get(&(enum_interface, enum_name)) else {
-            panic!(
-                "Unknown enum '{}' referenced by argument '{}' of interface '{}'",
-                e, arg.name, interface_name
-            );
-        };
+        // The fallback must be lazy (`unwrap_or_else`) and resolved at runtime by the
+        // enum's own `EnumFallback::fallback()`, since not every enum has a 0-valued entry.
         param = format!(
-            "{}::try_from({}).unwrap_or_else(|_| {}::try_from({}).unwrap())",
-            rust_enum_path, param, rust_enum_path, fallback
+            "{}::try_from({}).unwrap_or_else(|_| <{} as EnumFallback>::fallback())",
+            rust_enum_path, param, rust_enum_path
         );
     }
 
