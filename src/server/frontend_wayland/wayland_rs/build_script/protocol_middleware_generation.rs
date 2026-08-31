@@ -23,9 +23,9 @@ use std::collections::HashMap;
 /// Maps (interface_name, enum_name) to a value that is guaranteed to convert
 /// into the wayland-rs enum: 0 when valid (bitfields accept empty flags, and
 /// many enums have a 0-valued entry), otherwise the enum's first entry.
-type EnumFallbacks = HashMap<(String, String), u32>;
+type EnumFallbacks<'proto> = HashMap<(&'proto str, &'proto str), u32>;
 
-fn build_enum_fallback_map(protocols: &[WaylandProtocol]) -> EnumFallbacks {
+fn build_enum_fallback_map<'proto>(protocols: &'proto [WaylandProtocol]) -> EnumFallbacks<'proto> {
     protocols
         .iter()
         .flat_map(|protocol| &protocol.interfaces)
@@ -34,14 +34,19 @@ fn build_enum_fallback_map(protocols: &[WaylandProtocol]) -> EnumFallbacks {
                 let InterfaceItem::Enum(e) = item else {
                     return None;
                 };
+                assert!(
+                    !e.entries.is_empty(),
+                    "Found enum '{}' with no entries, which is nonsensical and should never happen",
+                    e.name
+                );
                 let zero_is_valid =
                     e.bitfield.unwrap_or(false) || e.entries.iter().any(|entry| entry.value == 0);
                 let fallback = if zero_is_valid {
                     0
                 } else {
-                    e.entries.first().map_or(0, |entry| entry.value as u32)
+                    e.entries.first().unwrap().value as u32
                 };
-                Some(((interface.name.clone(), e.name.clone()), fallback))
+                Some(((interface.name.as_str(), e.name.as_str()), fallback))
             })
         })
         .collect()
@@ -287,22 +292,16 @@ fn wayland_arg_to_rust_param_str(
     };
 
     if let Some(e) = &arg.enum_ {
-        let (enum_interface, enum_name) = if let Some(dot_pos) = e.find('.') {
-            (&e[..dot_pos], &e[dot_pos + 1..])
-        } else {
-            (interface_name, e.as_str())
-        };
+        let (enum_interface, enum_name) = e.split_once('.').unwrap_or((interface_name, e.as_str()));
         let rust_enum_path = format!("{}::{}", enum_interface, snake_to_pascal(enum_name));
         // The fallback must be lazy (`unwrap_or_else`) and use a value that is
         // actually valid for this enum: not every enum has a 0-valued entry.
-        let fallback = enum_fallbacks
-            .get(&(enum_interface.to_string(), enum_name.to_string()))
-            .unwrap_or_else(|| {
-                panic!(
-                    "Unknown enum '{}' referenced by argument '{}' of interface '{}'",
-                    e, arg.name, interface_name
-                )
-            });
+        let Some(fallback) = enum_fallbacks.get(&(enum_interface, enum_name)) else {
+            panic!(
+                "Unknown enum '{}' referenced by argument '{}' of interface '{}'",
+                e, arg.name, interface_name
+            );
+        };
         param = format!(
             "{}::try_from({}).unwrap_or_else(|_| {}::try_from({}).unwrap())",
             rust_enum_path, param, rust_enum_path, fallback
