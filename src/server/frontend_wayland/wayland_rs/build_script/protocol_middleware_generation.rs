@@ -48,9 +48,8 @@ fn generate_enum_fallback_impls(protocols: &[WaylandProtocol]) -> TokenStream {
             if !seen.insert((interface_name, e.name.as_str())) {
                 return None;
             }
-            let enum_path: syn::Path =
-                syn::parse_str(&format!("{}::{}", interface_name, snake_to_pascal(&e.name)))
-                    .expect("Failed to parse enum path");
+            let enum_name = snake_to_pascal(&e.name);
+            let enum_path: syn::Path = syn::parse_quote!(#interface_name::#enum_name);
             let first = e.entries.first().unwrap().value as u32;
             Some(quote! {
                 impl EnumFallback for #enum_path {
