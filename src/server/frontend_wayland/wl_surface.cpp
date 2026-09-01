@@ -134,7 +134,7 @@ mf::WlSurface::~WlSurface()
     // Mark destruction as begun early (the LifetimeTracker base does this too, but its destructor
     // only runs after ours): role->surface_destroyed() below can trigger leave events, which must
     // observe that this surface is being torn down.
-    being_destroyed = true;
+    mark_being_destroyed();
 
     // We can't use a function try block as we want to access `client`:
     // "Before any catch clauses of a function-try-block on a destructor are entered,

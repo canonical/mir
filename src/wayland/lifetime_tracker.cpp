@@ -22,19 +22,17 @@ namespace mw = mir::wayland;
 
 struct mw::LifetimeTracker::Impl
 {
+    bool being_destroyed{false};
     std::shared_ptr<bool> destroyed{nullptr};
     std::map<DestroyListenerId, std::function<void()>> destroy_listeners;
     DestroyListenerId last_id{0};
 };
 
-mw::LifetimeTracker::LifetimeTracker()
-{
-}
+mw::LifetimeTracker::LifetimeTracker() {}
 
 mw::LifetimeTracker::~LifetimeTracker()
 {
-    being_destroyed = true;
-    mark_destroyed();
+    mark_destroyed(); 
 }
 
 auto mw::LifetimeTracker::destroyed_flag() const -> std::shared_ptr<bool const>
@@ -70,10 +68,22 @@ void mw::LifetimeTracker::remove_destroy_listener(DestroyListenerId id) const
     }
 }
 
+bool mw::LifetimeTracker::is_being_destroyed() const
+{
+    return impl->being_destroyed;
+}
+
+void mw::LifetimeTracker::mark_being_destroyed() 
+{
+    if (impl)
+        impl->being_destroyed = true;
+}
+
 void mw::LifetimeTracker::mark_destroyed() const
 {
     if (impl)
     {
+        impl->being_destroyed = true;
         auto const local_listeners = std::move(impl->destroy_listeners);
         impl->destroy_listeners.clear();
         for (auto const& listener : local_listeners)

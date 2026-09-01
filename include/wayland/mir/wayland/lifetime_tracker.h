@@ -52,16 +52,14 @@ public:
     void remove_destroy_listener(DestroyListenerId id) const;
     /// True once destruction of this object has begun. Unlike destroyed_flag(), this is set at the very start of the
     /// destructor, so it can be used from within destroy listeners to detect that this object is being torn down.
-    auto is_being_destroyed() const -> bool { return being_destroyed; }
+    auto is_being_destroyed() const -> bool;
 
 protected:
+    void mark_being_destroyed();
+
     /// Subclasses are not required to call this, but may do so during the destruction process if the object needs to
     /// get marked as destroyed and fire its destroy listeners before some other part of the destructor runs.
     void mark_destroyed() const;
-
-    /// Set to true at the start of the destructor (of this class and optionally earlier by subclasses whose own
-    /// destructor runs first) so that destroy listeners can observe that the object is being torn down.
-    bool being_destroyed{false};
 
 private:
     struct Impl;
