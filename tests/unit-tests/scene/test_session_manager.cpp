@@ -19,6 +19,7 @@
 #include <mir/scene/session.h>
 #include <mir/scene/session_container.h>
 #include <mir/scene/null_session_listener.h>
+#include <mir/frontend/session_credentials.h>
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/scene/null_surface_observer.h>
@@ -123,7 +124,7 @@ TEST_F(SessionManagerSessionListenerSetup, session_listener_is_notified_of_lifec
     EXPECT_CALL(session_listener, starting(_)).Times(1);
     EXPECT_CALL(session_listener, stopping(_)).Times(1);
 
-    auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+    auto session = session_manager.open_session(mf::SessionCredentials{getpid()}, mir::Fd{mir::Fd::invalid}, "XPlane");
     session_manager.close_session(session);
 }
 
@@ -136,7 +137,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_session_
     EXPECT_CALL(*additional_listener, stopping(_)).Times(1);
 
     session_manager.add_listener(additional_listener);
-    auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+    auto session = session_manager.open_session(mf::SessionCredentials{getpid()}, mir::Fd{mir::Fd::invalid}, "XPlane");
     session_manager.close_session(session);
 }
 
@@ -150,7 +151,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_focus_ch
     EXPECT_CALL(*additional_listener, unfocused()).Times(1);
 
     session_manager.add_listener(additional_listener);
-    auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+    auto session = session_manager.open_session(mf::SessionCredentials{getpid()}, mir::Fd{mir::Fd::invalid}, "XPlane");
     session_manager.set_focus_to(session);
     session_manager.unset_focus();
 }
@@ -164,7 +165,7 @@ TEST_F(SessionManagerSessionListenerSetup, additional_listeners_receive_surface_
     EXPECT_CALL(*additional_listener, surface_created(_,_)).Times(1);
 
     session_manager.add_listener(additional_listener);
-    auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
+    auto session = session_manager.open_session(mf::SessionCredentials{getpid()}, mir::Fd{mir::Fd::invalid}, "XPlane");
     auto bs = std::dynamic_pointer_cast<mc::BufferStream>(session->create_buffer_stream(
         mg::BufferProperties{{640, 480}, mir_pixel_format_abgr_8888, mg::BufferUsage::hardware}));
     session->create_surface(nullptr, mt::make_surface_spec(bs), mt::fake_shared(observer), nullptr);
@@ -199,8 +200,8 @@ TEST_F(SessionManagerSessionEventsSetup, session_event_sink_is_notified_of_lifec
 {
     using namespace ::testing;
 
-    auto session = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "XPlane");
-    auto session1 = session_manager.open_session(__LINE__, mir::Fd{mir::Fd::invalid}, "Bla");
+    auto session = session_manager.open_session(mf::SessionCredentials{getpid()}, mir::Fd{mir::Fd::invalid}, "XPlane");
+    auto session1 = session_manager.open_session(mf::SessionCredentials{getpid()}, mir::Fd{mir::Fd::invalid}, "Bla");
 
     Mock::VerifyAndClearExpectations(&session_event_sink);
 

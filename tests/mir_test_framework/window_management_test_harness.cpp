@@ -20,6 +20,7 @@
 #include <mir/test/doubles/stub_buffer_stream.h>
 #include <mir_test_framework/window_management_test_harness.h>
 #include <mir/executor.h>
+#include <mir/frontend/session_credentials.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/shell/surface_specification.h>
@@ -430,7 +431,7 @@ auto mir_test_framework::WindowManagementTestHarness::open_application(
     std::string const& name) const -> miral::Application
 {
     return server.the_shell()->open_session(
-        __LINE__,
+        mf::SessionCredentials(getpid()),
         mir::Fd{mir::Fd::invalid},
         name);
 }

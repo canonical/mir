@@ -145,7 +145,7 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
     }
 
     auto session = construction_context->shell->open_session(
-        creds.pid(),
+        std::move(creds),
         Fd{IntOwnedFd{wl_client_get_fd(client)}},
         "");
 

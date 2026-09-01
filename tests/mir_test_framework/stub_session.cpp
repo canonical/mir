@@ -19,8 +19,14 @@
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;
 
-mtd::StubSession::StubSession(pid_t pid)
-    : pid(pid)
+
+mtd::StubSession::StubSession()
+    : StubSession{frontend::SessionCredentials{getpid()}}
+{
+}
+
+mtd::StubSession::StubSession(frontend::SessionCredentials&& creds)
+    : creds{std::move(creds)}
 {}
 
 std::string mtd::StubSession::name() const
@@ -30,7 +36,7 @@ std::string mtd::StubSession::name() const
 
 pid_t mtd::StubSession::process_id() const
 {
-    return pid;
+    return creds.pid();
 }
 
 mir::Fd mtd::StubSession::socket_fd() const
