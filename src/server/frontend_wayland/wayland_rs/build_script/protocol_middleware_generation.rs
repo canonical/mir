@@ -54,7 +54,11 @@ fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStr
     protocol
         .interfaces
         .iter()
-        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .filter(|interface| {
+            interface.name != "wl_registry"
+                && interface.name != "wl_display"
+                && interface.name != "wl_fixes"
+        })
         .flat_map(|interface| {
             let (interface_struct_path, interface_module_path) = if is_core_wayland {
                 let struct_path: syn::Path = syn::parse_str(&format!(
@@ -99,7 +103,11 @@ fn generate_extensions_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .filter(|interface| {
+            interface.name != "wl_registry"
+                && interface.name != "wl_display"
+                && interface.name != "wl_fixes"
+        })
         .flat_map(generate_extension_for_interface)
         .collect()
 }

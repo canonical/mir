@@ -78,7 +78,11 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .interfaces
             .iter()
             .filter(|interface| interface.is_global)
-            .filter(|interface| interface.name != "wl_display" && interface.name != "wl_registry")
+            .filter(|interface| {
+                interface.name != "wl_display"
+                    && interface.name != "wl_registry"
+                    && interface.name != "wl_fixes"
+            })
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
                 let ext_name =
@@ -225,7 +229,11 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     let classes = protocol
         .interfaces
         .iter()
-        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .filter(|interface| {
+            interface.name != "wl_registry"
+                && interface.name != "wl_display"
+                && interface.name != "wl_fixes"
+        })
         .map(|interface| wayland_interface_to_cpp_class(interface));
 
     for class in classes {

@@ -90,7 +90,7 @@ fn generate_global_dispatch_impl(
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name);
 
-    if interface_name == "wl_display" {
+    if interface_name == "wl_display" || interface_name == "wl_fixes" {
         // wl_display is handled specially in wayland_server crate via the 'Display' struct.
         return quote! {};
     }
@@ -371,7 +371,10 @@ fn generate_dispatch_impl(
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name);
 
-    if interface_name == "wl_display" || interface_name == "wl_registry" {
+    if interface_name == "wl_display"
+        || interface_name == "wl_registry"
+        || interface_name == "wl_fixes"
+    {
         // wl_display and wl_registry are handled specially in wayland_server crate via the 'Display' struct.
         return quote! {};
     }

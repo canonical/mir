@@ -77,7 +77,11 @@ fn generate_rust_types(protocol: &WaylandProtocol) -> Vec<TokenStream> {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .filter(|interface| {
+            interface.name != "wl_registry"
+                && interface.name != "wl_display"
+                && interface.name != "wl_fixes"
+        })
         .map(|interface| {
             let interface_name_ext = format_ident!(
                 "{}",
@@ -92,7 +96,11 @@ fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .filter(|interface| {
+            interface.name != "wl_registry"
+                && interface.name != "wl_display"
+                && interface.name != "wl_fixes"
+        })
         .flat_map(generate_ffi_for_interface)
         .collect()
 }

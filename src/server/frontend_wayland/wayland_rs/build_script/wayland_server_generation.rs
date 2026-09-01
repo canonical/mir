@@ -44,7 +44,7 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
             return None;
         }
 
-        if interface.name == "wl_display" {
+        if interface.name == "wl_display" || interface.name == "wl_fixes"{
             return None;
         }
 
