@@ -137,19 +137,15 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
     ConstructionCtx* construction_context;
     construction_context = wl_container_of(listener, construction_context, client_construction_listener);
 
-    pid_t client_pid;
-    uid_t client_uid;
-    gid_t client_gid;
-    wl_client_get_credentials(client, &client_pid, &client_uid, &client_gid);
-
-    if (!construction_context->session_authorizer->connection_is_allowed({client_pid, client_uid, client_gid}))
+    SessionCredentials creds{client};
+    if (!construction_context->session_authorizer->connection_is_allowed(creds))
     {
         wl_client_destroy(client);
         return;
     }
 
     auto session = construction_context->shell->open_session(
-        client_pid,
+        creds.pid(),
         Fd{IntOwnedFd{wl_client_get_fd(client)}},
         "");
 
