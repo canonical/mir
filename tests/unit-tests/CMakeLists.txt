@@ -133,21 +133,6 @@ target_include_directories(mir_unit_tests PRIVATE
 
 target_link_directories(mir_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-set_property(
-  SOURCE test_udev_wrapper.cpp test_glib_main_loop.cpp
-  SOURCE console/test_logind_console_services.cpp
-  SOURCE input/test_logind_console_services.cpp input/test_input_platform_probing.cpp
-  SOURCE input/evdev/test_evdev_input_platform.cpp
-  SOURCE graphics/test_platform_prober.cpp
-  SOURCE test_udev_wrapper_asan_skip.cpp
-  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
-if(NOT CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
-  set_property(
-    SOURCE test_udev_wrapper_asan_skip.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-endif()
-
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(
     mir_unit_tests

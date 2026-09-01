@@ -74,10 +74,6 @@ target_link_libraries(mirserverobjects
     PkgConfig::GIO
 )
 
-set_property(
-    SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
 set(MIR_SERVER_REFERENCES
   mirserverobjects
   mirinput

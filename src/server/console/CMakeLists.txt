@@ -43,10 +43,6 @@ target_link_libraries(mirconsole
     Boost::iostreams
 )
 
-set_property(
-    SOURCE logind_console_services.cpp default_configuration.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
 add_custom_command(
   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/logind-seat.h
   COMMAND
