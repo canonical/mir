@@ -70,7 +70,7 @@ void mw::LifetimeTracker::remove_destroy_listener(DestroyListenerId id) const
 
 bool mw::LifetimeTracker::is_being_destroyed() const
 {
-    return impl->being_destroyed;
+    return impl != nullptr && impl->being_destroyed;
 }
 
 void mw::LifetimeTracker::mark_being_destroyed()
