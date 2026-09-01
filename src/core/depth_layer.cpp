@@ -15,8 +15,7 @@
  */
 
 #include <mir/depth_layer.h>
-
-#include <utility>
+#include <mir/fatal.h>
 
 auto mir::mir_depth_layer_get_index(MirDepthLayer const depth_layer) -> unsigned int
 {
@@ -30,5 +29,5 @@ auto mir::mir_depth_layer_get_index(MirDepthLayer const depth_layer) -> unsigned
     case mir_depth_layer_overlay:
         return depth_layer;
     }
-    std::unreachable();
+    MIR_FATAL_ERROR("Invalid MirDepthLayer value: {}", static_cast<int>(depth_layer));
 }

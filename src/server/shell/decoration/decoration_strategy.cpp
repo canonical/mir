@@ -671,8 +671,11 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
     {
         glong length{0};
         auto const converted = g_utf8_to_ucs4_fast(text.data(), text.size(), &length);
-        utf32_text.assign(converted, converted + length);
-        g_free(converted);
+        if (converted)
+        {
+            utf32_text.assign(converted, converted + length);
+            g_free(converted);
+        }
     }
     else
     {
@@ -680,7 +683,7 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
         // fall back to ASCII
         for (char const c : text)
         {
-            if (isprint(c))
+            if (isprint(static_cast<unsigned char>(c)))
                 utf32_text += c;
             else
                 utf32_text += 0xFFFD; // REPLACEMENT CHARACTER (�)
