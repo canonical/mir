@@ -101,7 +101,7 @@ endif()
 
 check_cxx_compiler_flag(-Werror=braced-scalar-init HAS_W_BRACED_SCALAR_INIT)
 if(HAS_W_BRACED_SCALAR_INIT)
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=braced-scalar-init>)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-braced-scalar-init>)
 endif()
 
 set(MIR_USE_LD ld CACHE STRING "Linker to use")
