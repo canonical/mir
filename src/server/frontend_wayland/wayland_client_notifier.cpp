@@ -81,7 +81,7 @@ auto mf::WaylandClientNotifier::client_added(rust::Box<mwrs::WaylandClient> wayl
             return;
         }
 
-        auto session = shell->open_session(creds.pid(), session_fd, "");
+        auto session = shell->open_session(std::move(creds), session_fd, "");
 
         auto const client = std::make_shared<WaylandClient>(
             std::move(wayland_client), session, shell, serial_source);
