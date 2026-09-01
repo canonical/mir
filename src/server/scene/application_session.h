@@ -64,6 +64,7 @@ public:
     std::shared_ptr<Surface> default_surface() const override;
 
     std::string name() const override;
+    auto creds() const -> frontend::SessionCredentials const& override;
     pid_t process_id() const override;
     Fd socket_fd() const override;
 
@@ -85,7 +86,7 @@ protected:
 private:
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    frontend::SessionCredentials const creds;
+    frontend::SessionCredentials const creds_;
     Fd socket_fd_;
     std::string const session_name;
     std::shared_ptr<SessionListener> const session_listener;

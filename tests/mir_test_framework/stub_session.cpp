@@ -26,7 +26,7 @@ mtd::StubSession::StubSession()
 }
 
 mtd::StubSession::StubSession(frontend::SessionCredentials&& creds)
-    : creds{std::move(creds)}
+    : creds_{std::move(creds)}
 {}
 
 std::string mtd::StubSession::name() const
@@ -34,9 +34,14 @@ std::string mtd::StubSession::name() const
     return {};
 }
 
+auto mtd::StubSession::creds() const -> frontend::SessionCredentials const&
+{
+    return creds_;
+}
+
 pid_t mtd::StubSession::process_id() const
 {
-    return creds.pid();
+    return creds_.pid();
 }
 
 mir::Fd mtd::StubSession::socket_fd() const
