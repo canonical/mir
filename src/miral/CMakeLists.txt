@@ -45,13 +45,6 @@ set_target_properties(miral-internal
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
 
-check_cxx_compiler_flag(-Wstringop-truncation HAS_W_STRINGOP_TRUNCATION)
-if (HAS_W_STRINGOP_TRUNCATION)
-    set_source_files_properties(xcursor.c PROPERTIES
-        COMPILE_FLAGS "-Wno-error=stringop-truncation"
-    )
-endif()
-
 set(PROTOCOLS_DIR ${CMAKE_SOURCE_DIR}/wayland-protocols)
 set(GENERATED_DIR ${CMAKE_BINARY_DIR}/miral-generated)
 
