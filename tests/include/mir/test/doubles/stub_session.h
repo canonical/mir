@@ -34,6 +34,8 @@ struct StubSession : scene::Session
 
     std::string name() const override;
 
+    auto creds() const -> frontend::SessionCredentials const& override;
+
     pid_t process_id() const override;
 
     Fd socket_fd() const override;
@@ -64,7 +66,7 @@ struct StubSession : scene::Session
         scene::Surface& surface,
         std::vector<shell::StreamSpecification> const& config) override;
 
-    frontend::SessionCredentials const creds;
+    frontend::SessionCredentials const creds_;
 };
 }
 }
