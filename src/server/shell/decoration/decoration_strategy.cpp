@@ -669,7 +669,7 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
     std::u32string utf32_text;
     if (g_utf8_validate(text.data(), text.size(), nullptr))
     {
-        glong length;
+        glong length{0};
         auto const converted = g_utf8_to_ucs4_fast(text.data(), text.size(), &length);
         utf32_text.assign(converted, converted + length);
         g_free(converted);
