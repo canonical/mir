@@ -133,6 +133,11 @@ target_link_libraries(mirfrontend-wayland
 )
 
 if (MIR_ENABLE_RUST)
+  target_sources(mirfrontend-wayland
+    PRIVATE
+      wayland_client.cpp         wayland_client.h
+  )
+
   target_link_libraries(mirfrontend-wayland
     PUBLIC
       mirwayland_rs
