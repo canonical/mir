@@ -83,7 +83,7 @@ auto inline touch_ids_match(
 template<typename T>
 auto inline modifiers_match(T const& expected, int actual, testing::MatchResultListener* result_listener) -> bool
 {
-    if (expected != actual)
+    if (expected != static_cast<T>(actual))
     {
         *result_listener << "Expected modifiers (" << expected << ") do not match actual (" << actual << ")";
         return false;

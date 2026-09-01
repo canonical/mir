@@ -140,7 +140,7 @@ TEST(ThreadPoolExecutor, work_with_dependencies_completes)
     }
 
     // Set up a big chain of work, with each item depending on the one after it.
-    for(auto i = 0; i < promises.size() - 1; ++i)
+    for(decltype(promises)::size_type i = 0; i < promises.size() - 1; ++i)
     {
         mir::thread_pool_executor.spawn(
             [wait_on_promise = promises[i + 1], signal_next = promises[i]]()

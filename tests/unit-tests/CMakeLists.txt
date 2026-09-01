@@ -242,12 +242,6 @@ set_target_properties(loadable_test_dso PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   OUTPUT_NAME this-arch
 )
-set_source_files_properties(
-  ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c
-  PROPERTIES
-    COMPILE_OPTIONS "-Wno-pedantic;-Wno-error=pedantic"
-)
-
 add_dependencies(mir_unit_tests loadable_test_dso)
 
 mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL
