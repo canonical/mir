@@ -29,10 +29,10 @@ namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
 
-mf::XWaylandClientManager::Session::Session(XWaylandClientManager* manager, pid_t client_pid)
+mf::XWaylandClientManager::Session::Session(XWaylandClientManager* manager, SessionCredentials&& creds)
     : manager{manager},
-      client_pid{client_pid},
-      _session{manager->shell->open_session(client_pid, Fd{Fd::invalid}, "")}
+      client_pid{creds.pid()},
+      _session{manager->shell->open_session(std::move(creds), Fd{Fd::invalid}, "")}
 {
 }
 
@@ -92,7 +92,7 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
             log_error("X11 session not authorized for PID %d, rejecting!", client_pid);
             return nullptr;
         }
-        session = std::make_shared<Session>(this, client_pid);
+        session = std::make_shared<Session>(this, std::move(creds));
         sessions_by_pid[client_pid] = session;
         if (verbose_xwayland_logging_enabled())
         {

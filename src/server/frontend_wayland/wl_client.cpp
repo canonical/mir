@@ -146,7 +146,7 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
     }
 
     auto session = construction_context->shell->open_session(
-        creds.pid(), client_sock, "");
+        std::move(creds), client_sock, "");
 
     // Can't use std::make_shared because WlClient constructor is private
     auto shared = std::shared_ptr<mf::WlClient>{
