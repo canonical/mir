@@ -21,6 +21,7 @@
 
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/client.h>
+#include <mir/wayland/wl_array.h>
 #include <mir/frontend/wayland.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
@@ -459,23 +460,16 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
             WmCapabilities::minimize,
             WmCapabilities::fullscreen,
         };
-        wl_array capability_array{};
-        wl_array_init(&capability_array);
+        mw::WlArray capability_array;
         for (auto& capability : capabilities)
         {
-            if (uint32_t *item = static_cast<decltype(item)>(wl_array_add(&capability_array, sizeof *item)))
-            {
-                *item = capability;
-            }
+            capability_array.push_back(capability);
         }
-        send_wm_capabilities_event(&capability_array);
-        wl_array_release(&capability_array);
+        send_wm_capabilities_event(capability_array.data());
     }
 
-    wl_array states{};
-    wl_array_init(&states);
-    send_configure_event(0, 0, &states);
-    wl_array_release(&states);
+    mw::WlArray states;
+    send_configure_event(0, 0, states.data());
     xdg_surface->send_configure();
 }
 
@@ -690,13 +684,11 @@ void mf::XdgToplevelStable::handle_close_request()
 
 void mf::XdgToplevelStable::send_toplevel_configure()
 {
-    wl_array states{};
-    wl_array_init(&states);
+    mw::WlArray states;
 
     if (is_active())
     {
-        if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-            *state = State::activated;
+        states.push_back(State::activated);
     }
 
     auto opt_window_size = requested_window_size();
@@ -711,36 +703,30 @@ void mf::XdgToplevelStable::send_toplevel_configure()
             mir_window_state_horizmaximized,
             mir_window_state_vertmaximized}))
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::maximized;
+            states.push_back(State::maximized);
         }
 
         if (state.has(mir_window_state_fullscreen))
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::fullscreen;
+            states.push_back(State::fullscreen);
         }
 
         auto tiled_edges = s->tiled_edges();
         if (tiled_edges & mir_tiled_edge_north)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_top;
+            states.push_back(State::tiled_top);
         }
         if (tiled_edges & mir_tiled_edge_east)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_right;
+            states.push_back(State::tiled_right);
         }
         if (tiled_edges & mir_tiled_edge_south)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_bottom;
+            states.push_back(State::tiled_bottom);
         }
         if (tiled_edges & mir_tiled_edge_west)
         {
-            if (uint32_t *state = static_cast<decltype(state)>(wl_array_add(&states, sizeof *state)))
-                *state = State::tiled_left;
+            states.push_back(State::tiled_left);
         }
 
         if (state.has_any({
@@ -759,8 +745,7 @@ void mf::XdgToplevelStable::send_toplevel_configure()
     // 0 sizes means default for toplevel configure
     auto size = opt_window_size.value_or(geom::Size{0, 0});
 
-    send_configure_event(size.width.as_int(), size.height.as_int(), &states);
-    wl_array_release(&states);
+    send_configure_event(size.width.as_int(), size.height.as_int(), states.data());
 
     if (xdg_surface) xdg_surface.value().send_configure();
 }
