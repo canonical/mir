@@ -22,6 +22,7 @@
 
 #include <miral/canonical_window_manager.h>
 #include <miral/window.h>
+#include <mir/shell/focus_controller.h>
 #include <mir/shell/surface_specification.h>
 #include <mir/scene/surface.h>
 
@@ -37,6 +38,35 @@ class DisplayConfiguration;
 
 namespace test
 {
+
+struct MockFocusController : mir::shell::FocusController
+{
+    void focus_next_session() override {}
+    void focus_prev_session() override {}
+
+    auto focused_session() const -> std::shared_ptr<mir::scene::Session> override { return {}; }
+
+    void set_popup_grab_tree(std::shared_ptr<mir::scene::Surface> const& /*surface*/) override {}
+
+    void set_focus_to(
+        std::shared_ptr<mir::scene::Session> const& /*focus_session*/,
+        std::shared_ptr<mir::scene::Surface> const& /*focus_surface*/) override {}
+
+    auto focused_surface() const -> std::shared_ptr<mir::scene::Surface> override { return {}; }
+
+    void raise(mir::shell::SurfaceSet const& /*windows*/) override {}
+
+    MOCK_METHOD(std::shared_ptr<mir::scene::Surface>, surface_at, (mir::geometry::Point point), (const override));
+
+    void swap_z_order(mir::shell::SurfaceSet const& /*first*/, mir::shell::SurfaceSet const& /*second*/) override {}
+
+    void send_to_back(mir::shell::SurfaceSet const& /*windows*/) override {}
+
+    auto is_above(std::weak_ptr<mir::scene::Surface> const& /*a*/, std::weak_ptr<mir::scene::Surface> const& /*b*/) const -> bool override
+    {
+        return false;
+    }
+};
 
 struct MockWindowManagerPolicy
     : miral::CanonicalWindowManagerPolicy
@@ -79,6 +109,7 @@ public:
     std::shared_ptr<mir::scene::Session> session;
     MockWindowManagerPolicy* window_manager_policy;
     miral::WindowManagerTools window_manager_tools;
+    MockFocusController focus_controller;
     miral::BasicWindowManager basic_window_manager;
 
     static auto create_surface(
