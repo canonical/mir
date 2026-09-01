@@ -26,12 +26,11 @@
 
 #include <boost/throw_exception.hpp>
 #include <ft2build.h>
+#include <glib.h>
 #include <memory>
 #include FT_FREETYPE_H
 #include <endian.h>
 
-#include <locale>
-#include <codecvt>
 #include <filesystem>
 #include <map>
 #include <mutex>
@@ -667,16 +666,16 @@ auto RendererStrategy::Text::Impl::font_path() -> std::string
 
 auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
 {
-
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> converter;
-#pragma GCC diagnostic pop
-
     std::u32string utf32_text;
-    try {
-        utf32_text = converter.from_bytes(text);
-    } catch(const std::range_error& e) {
+    if (g_utf8_validate(text.data(), text.size(), nullptr))
+    {
+        glong length;
+        auto const converted = g_utf8_to_ucs4_fast(text.data(), text.size(), &length);
+        utf32_text.assign(converted, converted + length);
+        g_free(converted);
+    }
+    else
+    {
         mir::log_warning("Window title %s is not valid UTF-8", text.c_str());
         // fall back to ASCII
         for (char const c : text)
