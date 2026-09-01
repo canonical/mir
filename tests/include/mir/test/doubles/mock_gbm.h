@@ -19,10 +19,7 @@
 
 #include <gmock/gmock.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic warning "-Wall"
 #include <gbm.h>
-#pragma GCC diagnostic pop
 
 namespace mir
 {
