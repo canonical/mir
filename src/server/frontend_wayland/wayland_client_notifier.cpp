@@ -51,14 +51,23 @@ auto mf::WaylandClientNotifier::client_added(rust::Box<mwrs::WaylandClient> wayl
 {
     try
     {
-        auto const pid = wayland_client->pid();
-        auto const uid = wayland_client->uid();
-        auto const gid = wayland_client->gid();
         auto const socket_fd = wayland_client->socket_fd();
 
-        if (!session_authorizer->connection_is_allowed({pid, uid, gid}))
+        // The Rust client owns its socket, so hand the session a duplicate to own.
+        Fd const session_fd{::dup(socket_fd)};
+        if (session_fd == -1)
         {
-            mir::log_info("Wayland client (pid %d) rejected by session authorizer", pid);
+            uint32_t constexpr wl_display_object_id = 1;
+            uint32_t constexpr wl_display_error_implementation = 3;
+            wayland_client->kill(
+                wl_display_object_id, wl_display_error_implementation, "failed to duplicate client socket");
+            return;
+        }
+
+        SessionCredentials creds{session_fd};
+        if (!session_authorizer->connection_is_allowed(creds))
+        {
+            mir::log_info("Wayland client (pid %d) rejected by session authorizer", creds.pid());
 
             // Forcibly disconnect the client by posting a protocol error against its
             // wl_display (object id 1 is always the wl_display). There is no dedicated
@@ -72,18 +81,7 @@ auto mf::WaylandClientNotifier::client_added(rust::Box<mwrs::WaylandClient> wayl
             return;
         }
 
-        // The Rust client owns its socket, so hand the session a duplicate to own.
-        auto const session_fd = ::dup(socket_fd);
-        if (session_fd == -1)
-        {
-            uint32_t constexpr wl_display_object_id = 1;
-            uint32_t constexpr wl_display_error_implementation = 3;
-            wayland_client->kill(
-                wl_display_object_id, wl_display_error_implementation, "failed to duplicate client socket");
-            return;
-        }
-
-        auto session = shell->open_session(pid, Fd{session_fd}, "");
+        auto session = shell->open_session(creds.pid(), session_fd, "");
 
         auto const client = std::make_shared<WaylandClient>(
             std::move(wayland_client), session, shell, serial_source);

@@ -18,16 +18,20 @@
 #ifndef MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
 #define MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
 
+#include <string>
 #include <sys/types.h>
 
 namespace mir
 {
+class Fd;
 namespace frontend
 {
 class SessionCredentials
 {
 public:
-    SessionCredentials(pid_t pid, uid_t uid, gid_t gid);
+    explicit SessionCredentials(Fd const& client_sock);
+    explicit SessionCredentials(pid_t);
+    SessionCredentials(SessionCredentials&& creds);
 
     pid_t pid() const;
     uid_t uid() const;
@@ -35,10 +39,15 @@ public:
 
 private:
     SessionCredentials() = delete;
+    SessionCredentials(pid_t pid, uid_t uid, gid_t gid, std::string&& apparmor_label);
+
+    static auto from_client(Fd const& client_sock) -> SessionCredentials;
+    static auto from_pid(pid_t client_pid) -> SessionCredentials;
 
     pid_t the_pid;
     uid_t the_uid;
     gid_t the_gid;
+    std::string the_apparmor_label;
 };
 }
 }
