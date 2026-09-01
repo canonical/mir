@@ -16,12 +16,7 @@
 
 #include <mir/depth_layer.h>
 
-// GCC and Clang both ensure the switch is exhaustive.
-// GCC, however, gets a "control reaches end of non-void function" warning without this
-#ifndef __clang__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-#endif
+#include <utility>
 
 auto mir::mir_depth_layer_get_index(MirDepthLayer const depth_layer) -> unsigned int
 {
@@ -35,8 +30,5 @@ auto mir::mir_depth_layer_get_index(MirDepthLayer const depth_layer) -> unsigned
     case mir_depth_layer_overlay:
         return depth_layer;
     }
+    std::unreachable();
 }
-
-#ifndef __clang__
-#pragma GCC diagnostic pop
-#endif

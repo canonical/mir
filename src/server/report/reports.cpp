@@ -29,6 +29,7 @@
 #include "null_report_factory.h"
 
 #include <string>
+#include <utility>
 
 namespace mo = mir::options;
 namespace mr = mir::report;
@@ -41,13 +42,6 @@ enum class ReportOutput
     Log,
     LTTNG
 };
-
-// GCC and Clang both ensure the switch is exhaustive.
-// GCC, however, gets a "control reaches end of non-void function" warning without this
-#ifndef __clang__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-#endif
 
 std::unique_ptr<mr::ReportFactory> factory_for_type(
     mir::DefaultServerConfiguration& config,
@@ -62,11 +56,8 @@ std::unique_ptr<mr::ReportFactory> factory_for_type(
     case ReportOutput::LTTNG:
         return std::make_unique<mr::LttngReportFactory>();
     }
+    std::unreachable();
 }
-
-#ifndef __clang__
-#pragma GCC diagnostic push
-#endif
 
 ReportOutput parse_report_option(std::string const& opt)
 {
