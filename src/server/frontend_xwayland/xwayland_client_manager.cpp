@@ -86,19 +86,8 @@ auto mf::XWaylandClientManager::session_for_client(pid_t client_pid) -> std::sha
     }
     else
     {
-        auto const proc = "/proc/" + std::to_string(client_pid);
-
-        struct stat proc_stat{};
-        if (stat(proc.c_str(), &proc_stat) == -1)
-        {
-            log_debug("Failed to get uid & gid for PID %d using stat(%s, ...), falling back to get(uid,gid)",
-                      client_pid, proc.c_str());
-
-            proc_stat.st_uid = getuid();
-            proc_stat.st_gid = getgid();
-        }
-
-        if (!session_authorizer->connection_is_allowed({client_pid, proc_stat.st_uid, proc_stat.st_gid}))
+        SessionCredentials creds{client_pid};
+        if (!session_authorizer->connection_is_allowed(creds))
         {
             log_error("X11 session not authorized for PID %d, rejecting!", client_pid);
             return nullptr;

@@ -220,18 +220,15 @@ public:
 
 TEST_F(WaylandClientNotifierTest, allowed_client_is_authorized_with_its_credentials)
 {
-    std::promise<mf::SessionCredentials> promise;
     EXPECT_CALL(*authorizer, connection_is_allowed(_))
-        .WillOnce(DoAll([&](mf::SessionCredentials const& creds) { promise.set_value(creds); }, Return(true)));
+        .WillOnce([&](mf::SessionCredentials const& creds) {
+            EXPECT_EQ(creds.pid(), ::getpid());
+            EXPECT_EQ(creds.uid(), ::getuid());
+            EXPECT_EQ(creds.gid(), ::getgid());
+            return true;
+        });
 
     inject_client();
-
-    auto future = promise.get_future();
-    ASSERT_TRUE(is_ready(future));
-    auto const creds = future.get();
-    EXPECT_EQ(creds.pid(), ::getpid());
-    EXPECT_EQ(creds.uid(), ::getuid());
-    EXPECT_EQ(creds.gid(), ::getgid());
 }
 
 TEST_F(WaylandClientNotifierTest, allowed_client_opens_a_session_for_its_pid)
