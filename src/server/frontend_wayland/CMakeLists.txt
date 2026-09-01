@@ -74,6 +74,7 @@ set(
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
   input_trigger_registry.cpp        input_trigger_registry.h
+  wayland_client.cpp         wayland_client.h
 )
 
 add_custom_command(
