@@ -70,16 +70,6 @@ function(add_rust_cxx_library target)
     endforeach()
   endif()
 
-  # rust-cxx generates symbols named like "cxxbridge1$foo", which
-  # triggers a warning in Clang.
-  check_cxx_compiler_flag(-Wdollar-in-identifier-extension SUPPORTS_DOLLAR_IN_ID_WARNING)
-  if(SUPPORTS_DOLLAR_IN_ID_WARNING)
-    target_compile_options(${target}-cxxbridge
-      PRIVATE -Wno-error=dollar-in-identifier-extension)
-    target_compile_options(${target}
-      INTERFACE -Wno-error=dollar-in-identifier-extension)
-  endif()
-
   # As described in https://cxx.rs/build/other.html#linking-the-c-and-rust-together
   # the Rust staticlib and cxxbridge generated code are
   # interdependent.  CMake's LINKGROUP:RESCAN generator will produce
