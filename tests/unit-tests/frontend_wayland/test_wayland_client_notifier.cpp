@@ -312,9 +312,8 @@ TEST_F(WaylandClientNotifierTest, rejected_client_is_disconnected)
     auto* const display = inject_client().first;
 
     // The notifier kills a rejected client, which the server observes as a
-    // disconnect. (wayland-rs tears the connection down rather than delivering a
-    // wire `wl_display.error`, so the client sees a connection error, not a
-    // protocol error.)
+    // disconnect. The client should observe a protocol error (wl_display.error)
+    // and the connection closing.
     ASSERT_TRUE(wait_for_server_disconnect(display)) << "The rejected client was not disconnected";
     EXPECT_NE(wl_display_get_error(display), 0);
 }
