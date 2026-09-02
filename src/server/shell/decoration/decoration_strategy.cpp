@@ -27,6 +27,7 @@
 #include <boost/throw_exception.hpp>
 #include <ft2build.h>
 #include <glib.h>
+#include <limits>
 #include <memory>
 #include FT_FREETYPE_H
 #include <endian.h>
@@ -666,21 +667,9 @@ auto RendererStrategy::Text::Impl::font_path() -> std::string
 
 auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std::u32string
 {
-    std::u32string utf32_text;
-    if (g_utf8_validate(text.data(), text.size(), nullptr))
+    auto const ascii_fallback = [&text]()
     {
-        glong length{0};
-        auto const converted = g_utf8_to_ucs4_fast(text.data(), text.size(), &length);
-        if (converted)
-        {
-            utf32_text.assign(converted, converted + length);
-            g_free(converted);
-        }
-    }
-    else
-    {
-        mir::log_warning("Window title %s is not valid UTF-8", text.c_str());
-        // fall back to ASCII
+        std::u32string utf32_text;
         for (char const c : text)
         {
             if (isprint(static_cast<unsigned char>(c)))
@@ -688,8 +677,33 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
             else
                 utf32_text += 0xFFFD; // REPLACEMENT CHARACTER (�)
         }
+        return utf32_text;
+    };
+
+    if (text.size() > std::numeric_limits<gssize>::max() || text.size() > std::numeric_limits<glong>::max())
+    {
+        mir::log_warning("Window title %s is too long to convert from UTF-8", text.c_str());
+        return ascii_fallback();
     }
-    return utf32_text;
+
+    auto const validated_length = static_cast<gssize>(text.size());
+    if (!g_utf8_validate(text.data(), validated_length, nullptr))
+    {
+        mir::log_warning("Window title %s is not valid UTF-8", text.c_str());
+        return ascii_fallback();
+    }
+
+    glong length{0};
+    std::unique_ptr<gunichar, decltype(&g_free)> const converted{
+        g_utf8_to_ucs4_fast(text.data(), static_cast<glong>(validated_length), &length),
+        &g_free};
+    if (!converted)
+    {
+        mir::log_warning("Failed to convert window title %s from UTF-8", text.c_str());
+        return ascii_fallback();
+    }
+
+    return {converted.get(), converted.get() + length};
 }
 
 RendererStrategy::RendererStrategy(
