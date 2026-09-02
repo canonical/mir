@@ -24,7 +24,7 @@ execute: |
         libinput-dev \
         libxcursor-dev \
         libxkbcommon-dev \
-        libxml++-5.0-dev \
+        libxml++-2.6-dev \
         lttng-ust-dev \
         lttng-ust-tools \
         make \
