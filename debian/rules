@@ -11,20 +11,7 @@ export DEB_HOST_GNU_TYPE
 # Build-local Cargo home for the crates.io download cache (removed by dh_clean).
 export CARGO_HOME = $(CURDIR)/debian/cargo_home
 
-# The udev crate pulls in libudev-sys, whose build script uses the Rust
-# pkg-config crate to locate libudev. Two things are needed for cross builds
-# (e.g. arm64/armhf on an amd64 host):
-#
-#  * PKG_CONFIG must point at the host architecture's multiarch pkg-config
-#    wrapper so the correct libudev.pc (and thus arm64 link paths) is found.
-#    debhelper's cmake buildsystem sets this for its own configure/test steps
-#    (which is how the C/C++ libraries locate libudev), but NOT for the build
-#    step that actually runs Cargo, so the crate would otherwise fall back to
-#    the native pkg-config and fail to find the cross libudev. Export it here so
-#    it applies to every step. For native builds this is the ordinary wrapper.
-#  * PKG_CONFIG_ALLOW_CROSS opts past the crate's guard that otherwise aborts
-#    with "pkg-config has not been configured to support cross-compilation".
-#    It is a no-op for native builds (host == target).
+# Needed for cross-compiling Rust
 export PKG_CONFIG = /usr/bin/$(DEB_HOST_GNU_TYPE)-pkg-config
 export PKG_CONFIG_ALLOW_CROSS = 1
 
