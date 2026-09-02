@@ -27,10 +27,8 @@ function(add_rust_cxx_library target)
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
   set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
 
-  # The output paths above are nested under the target triple, which Cargo only
-  # emits when built with `--target`. Pass it when DEB_HOST_RUST_TYPE is set (deb
-  # packaging); otherwise Cargo writes to target/{release,debug} and the empty
-  # segment collapses to the same path (local builds, snap).
+  # DEB_HOST_RUST_TYPE is set in deb builds, which expect the build under
+  # the architecture triplet.
   set(cargo_target_flag "")
   if(NOT "$ENV{DEB_HOST_RUST_TYPE}" STREQUAL "")
     set(cargo_target_flag "--target" "$ENV{DEB_HOST_RUST_TYPE}")
