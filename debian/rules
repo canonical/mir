@@ -6,11 +6,6 @@ include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
-# The Rust components (evdev-rs, wayland-rs) are built by CMake via the real
-# Cargo (/usr/bin/cargo from the `cargo` package), which fetches and compiles
-# their crate dependencies from crates.io, pinned by the committed Cargo.lock.
-# DEB_HOST_RUST_TYPE is the target triple that cmake/RustLibrary.cmake passes to
-# `cargo build --target`, so the crate artifacts land where CMake expects them.
 export DEB_HOST_RUST_TYPE
 export DEB_HOST_GNU_TYPE
 # Build-local Cargo home for the crates.io download cache (removed by dh_clean).
