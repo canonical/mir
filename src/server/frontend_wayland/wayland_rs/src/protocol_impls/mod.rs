@@ -1,4 +1,9 @@
 use crate::wayland_server_core::ServerState;
 
-/// Register protocol implementations as globals.
-pub fn register_globals(state: &ServerState) {}
+mod wl_fixes;
+
+pub fn register_globals(state: &ServerState) {
+    state
+        .handle
+        .create_global::<ServerState, wayland_server::protocol::wl_fixes::WlFixes, ()>(1u32, ());
+}
