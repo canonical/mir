@@ -108,12 +108,12 @@ libinput_device* mtf::LibInputEnvironment::setup_device(std::string const& devic
     ON_CALL(mock_udev, udev_device_get_devnode(u_dev.get()))
         .WillByDefault(Return(entry->second.path.c_str()));
     ON_CALL(mock_udev, udev_device_get_property_value(u_dev.get(), _))
-        .WillByDefault(Invoke(
+        .WillByDefault(
                 [this, device_name](udev_device*, char const* property)
                 {
                     return standard_devices[device_name].properties[property].c_str();
                 }
-                ));
+                );
     ON_CALL(mock_udev, udev_device_get_devnum(u_dev.get()))
         .WillByDefault(Return(devnum));
 

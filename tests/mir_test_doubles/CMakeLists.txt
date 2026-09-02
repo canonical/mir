@@ -76,7 +76,8 @@ if (MIR_BUILD_PLATFORM_X11)
       ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/mock_xkb.cpp
     PROPERTIES
-      INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
+        INCLUDE_DIRECTORIES
+          "${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server;${PROJECT_SOURCE_DIR}/src/platforms/x11"
   )
 endif()
 

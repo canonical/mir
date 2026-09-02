@@ -84,6 +84,17 @@ public:
         void wait(Cv& cv, Predicate stop_waiting)
         { cv.wait(lock, stop_waiting); }
 
+        /**
+         * Allows waiting for a condition variable with a timeout
+         *
+         * The protected data may be accessed both in the predicate and after this method completes.
+         *
+         * \return true if the predicate was satisfied, false if the timeout elapsed.
+         */
+        template<typename Cv, typename Duration, typename Predicate>
+        auto wait_for(Cv& cv, Duration const& timeout, Predicate stop_waiting) -> bool
+        { return cv.wait_for(lock, timeout, stop_waiting); }
+
     private:
         friend class Synchronised;
         LockedImpl(std::unique_lock<std::mutex>&& lock, U& value) : value{&value}, lock{std::move(lock)} {}

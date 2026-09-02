@@ -3,6 +3,7 @@ set(MIROIL_VERSION_MAJOR ${MIROIL_ABI})
 set(MIROIL_VERSION_MINOR 0)
 set(MIROIL_VERSION_PATCH 0)
 set(MIROIL_VERSION ${MIROIL_VERSION_MAJOR}.${MIROIL_VERSION_MINOR}.${MIROIL_VERSION_PATCH})
+set(MIR_VERSION_OF_LAST_ABI_CHANGE "2.29.0")
 
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
@@ -62,7 +63,7 @@ if (MIR_ARCH MATCHES 64  AND  # On 32bit platforms int64_t presents as `long lon
 
     add_custom_target(check-miroil-symbols ALL
         DEPENDS miroil ${PROJECT_SOURCE_DIR}/debian/libmiroil${MIROIL_ABI}.symbols
-        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${PROJECT_VERSION} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
+        COMMAND python3 ${CMAKE_CURRENT_SOURCE_DIR}/check-and-update-debian-symbols.py ${CMAKE_LIBRARY_OUTPUT_DIRECTORY} miroil ${MIR_VERSION_OF_LAST_ABI_CHANGE} ${MIROIL_ABI} ${MIROIL_VERSION_MINOR}
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         VERBATIM)
 endif()

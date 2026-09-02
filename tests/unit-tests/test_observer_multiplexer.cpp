@@ -302,12 +302,12 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback_with_threaded_execut
     TestObserverMultiplexer multiplexer{executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
-        .WillOnce(Invoke(
+        .WillOnce(
             [observer_one = observer_one.get(), &multiplexer, &value](auto)
             {
                 multiplexer.unregister_interest(*observer_one);
                 multiplexer.observation_made(value);
-            }));
+            });
     EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
         .Times(2);
 
@@ -330,12 +330,12 @@ TEST(ObserverMultiplexer, can_remove_observer_from_callback_with_immediate_execu
     TestObserverMultiplexer multiplexer{mir::immediate_executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
-        .WillOnce(Invoke(
+        .WillOnce(
             [observer_one = observer_one.get(), &multiplexer, &value](auto)
             {
                 multiplexer.unregister_interest(*observer_one);
                 multiplexer.observation_made(value);
-            }));
+            });
     EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
         .Times(2);
 
@@ -356,17 +356,17 @@ TEST(ObserverMultiplexer, can_remove_observer_from_recursive_callback_with_immed
     TestObserverMultiplexer multiplexer{mir::immediate_executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](auto)
             {
                 multiplexer.observation_made(value);
-            }))
-        .WillOnce(Invoke(
+            })
+        .WillOnce(
             [&](auto)
             {
                 multiplexer.unregister_interest(*observer_one);
                 multiplexer.observation_made(value);
-            }));
+            });
     EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
         .Times(3);
 
@@ -387,11 +387,11 @@ TEST(ObserverMultiplexer, observer_not_called_after_unregistered_from_other_obse
     TestObserverMultiplexer multiplexer{mir::immediate_executor};
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(value)))
-        .WillOnce(Invoke(
+        .WillOnce(
             [observer_two = observer_two.get(), &multiplexer](auto)
             {
                 multiplexer.unregister_interest(*observer_two);
-            }));
+            });
     EXPECT_CALL(*observer_two, observation_made(StrEq(value)))
         .Times(0);
 
@@ -415,7 +415,6 @@ TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
     auto observer = std::make_shared<NiceMock<MockObserver>>();
     ON_CALL(*observer, observation_made(_))
         .WillByDefault(
-            Invoke(
                 [&values, &values_seen](auto const& value)
                 {
                     for (auto i = 0u; i < values.size(); ++i)
@@ -425,7 +424,7 @@ TEST(ObserverMultiplexer, multiple_threads_can_simultaneously_make_observations)
                             values_seen[i] = true;
                         }
                     }
-                }));
+                });
 
     ThreadedExecutor executor;
     TestObserverMultiplexer multiplexer{executor};
@@ -466,7 +465,6 @@ TEST(ObserverMultiplexer, multiple_threads_registering_unregistering_and_observi
 
     ON_CALL(*observer_one, observation_made(_))
         .WillByDefault(
-            Invoke(
                 [&multiplexer, observer_two](std::string const& value)
                 {
                     if (!value.compare("3"))
@@ -477,17 +475,16 @@ TEST(ObserverMultiplexer, multiple_threads_registering_unregistering_and_observi
                     {
                         multiplexer.register_interest(observer_two);
                     }
-                }));
+                });
     ON_CALL(*observer_one, observation_made(_))
         .WillByDefault(
-            Invoke(
                 [&multiplexer, observer_two](std::string const& value)
                 {
                     if (!value.compare("8"))
                     {
                         multiplexer.unregister_interest(*observer_two);
                     }
-                }));
+                });
 
     multiplexer.register_interest(observer_two);
     multiplexer.register_interest(observer_one);
@@ -529,15 +526,14 @@ TEST(ObserverMultiplexer, multiple_threads_unregistering_same_observer_is_safe)
     std::atomic<int> call_count{0};
     ON_CALL(*observer_one, observation_made(_))
         .WillByDefault(
-            Invoke(
                 [&multiplexer, observer_two, &call_count](auto)
                 {
                     ++call_count;
                     multiplexer.unregister_interest(*observer_two);
-                }));
+                });
     std::atomic<bool> victim_called{false};
     ON_CALL(*observer_two, observation_made(_))
-        .WillByDefault(Invoke([&victim_called](auto) { victim_called = true; }));
+        .WillByDefault([&victim_called](auto) { victim_called = true; });
 
     multiplexer.register_interest(observer_one);
     multiplexer.register_interest(observer_two);
@@ -579,7 +575,7 @@ TEST(ObserverMultiplexer, registering_is_threadsafe)
     {
         observers[i] = std::make_shared<NiceMock<MockObserver>>();
         ON_CALL(*observers[i], observation_made(_))
-            .WillByDefault(Invoke([notified = &observer_notified[i]](auto) { *notified = true; }));
+            .WillByDefault([notified = &observer_notified[i]](auto) { *notified = true; });
     }
     mt::Barrier threads_done(observer_notified.size() + 1);
     std::array<std::jthread, observer_notified.size()> threads;
@@ -623,7 +619,7 @@ TEST(ObserverMultiplexer, unregistering_is_threadsafe)
     {
         observers[i] = std::make_shared<NiceMock<MockObserver>>();
         ON_CALL(*observers[i], observation_made(_))
-            .WillByDefault(Invoke([notified = &observer_notified[i]](auto) { *notified = true; }));
+            .WillByDefault([notified = &observer_notified[i]](auto) { *notified = true; });
     }
 
     mt::Barrier threads_done(observer_notified.size() + 1);
@@ -669,7 +665,7 @@ TEST(ObserverMultiplexer, can_trigger_observers_from_observers)
     TestObserverMultiplexer multiplexer{executor};
 
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
-        .WillOnce(InvokeWithoutArgs([&multiplexer]() { multiplexer.observation_made(second_observation); }));
+        .WillOnce([&multiplexer]() { multiplexer.observation_made(second_observation); });
     EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
 
     multiplexer.register_interest(observer);
@@ -691,13 +687,13 @@ TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thr
     TestObserverMultiplexer multiplexer{executor};
 
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
-        .WillOnce(InvokeWithoutArgs([&]()
+        .WillOnce([&]()
             {
                 std::jthread([&]()
                     {
                         multiplexer.observation_made(second_observation);
                     });
-            }));
+            });
     EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
 
     multiplexer.register_interest(observer);
@@ -718,13 +714,13 @@ TEST(ObserverMultiplexer, can_trigger_observer_during_observation_from_other_thr
     TestObserverMultiplexer multiplexer{mir::immediate_executor};
 
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
-        .WillOnce(InvokeWithoutArgs([&]()
+        .WillOnce([&]()
             {
                 std::jthread([&]()
                     {
                         multiplexer.observation_made(second_observation);
                     });
-            }));
+            });
     EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
 
     multiplexer.register_interest(observer);
@@ -744,13 +740,13 @@ TEST(ObserverMultiplexer, can_trigger_single_observer_during_single_observer_obs
     TestObserverMultiplexer multiplexer{executor};
 
     EXPECT_CALL(*observer, observation_made(StrEq(first_observation)))
-        .WillOnce(InvokeWithoutArgs([&]()
+        .WillOnce([&]()
             {
                 std::jthread([&]()
                     {
                         multiplexer.single_observer_observation(*observer, second_observation);
                     });
-            }));
+            });
     EXPECT_CALL(*observer, observation_made(StrEq(second_observation)));
 
     multiplexer.register_interest(observer);
@@ -773,13 +769,13 @@ TEST(ObserverMultiplexer, can_remove_observer_during_other_observers_observation
     TestObserverMultiplexer multiplexer{executor};
 
     EXPECT_CALL(*observer_a, observation_made(StrEq(first_observation)))
-        .WillOnce(InvokeWithoutArgs([&]()
+        .WillOnce([&]()
             {
                 std::jthread([&]()
                     {
                         multiplexer.unregister_interest(*observer_b);
                     });
-            }));
+            });
     EXPECT_CALL(*observer_a, observation_made(StrEq(second_observation)));
 
     EXPECT_CALL(*observer_b, observation_made(StrEq(first_observation))).Times(AnyNumber()); // May or may not be called
@@ -809,12 +805,11 @@ TEST(ObserverMultiplexer, addition_takes_effect_immediately_even_in_callback)
 
     EXPECT_CALL(*observer_one, observation_made(StrEq(first_observation)))
         .WillOnce(
-            InvokeWithoutArgs(
                 [&multiplexer, observer_two]()
                 {
                     multiplexer.register_interest(observer_two);
                     multiplexer.observation_made(second_observation);
-                }));
+                });
     EXPECT_CALL(*observer_one, observation_made(Not(StrEq(first_observation))))
         .Times(AnyNumber());
     EXPECT_CALL(*observer_two, observation_made(StrEq(second_observation)));
@@ -913,7 +908,6 @@ TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queue
     int call_count{0};
     ON_CALL(*observer, observation_made(_))
         .WillByDefault(
-            Invoke(
                 [&call_count, &multiplexer, observer = std::weak_ptr<MockObserver>{observer}](auto)
                 {
                     ++call_count;
@@ -925,7 +919,7 @@ TEST(ObserverMultiplexer, unregister_interest_prevents_dispatch_of_already_queue
                     {
                         FAIL() << "Observer called after unregister";
                     }
-                }));
+                });
 
     multiplexer.observation_made("Is it wicked when you smile?");
     multiplexer.observation_made("Even though you feel like crying?");

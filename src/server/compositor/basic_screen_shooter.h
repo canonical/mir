@@ -70,6 +70,7 @@ private:
     struct Self
     {
         class OneShotBufferDisplayProvider;
+        class OffscreenDisplaySink;
 
         Self(
             std::shared_ptr<Scene> const& scene,
@@ -86,7 +87,7 @@ std::shared_ptr<graphics::Cursor> const& cursor);
             glm::mat2 const& transform,
             bool overlay_cursor) -> time::Timestamp;
 
-        auto renderer_for_buffer(std::shared_ptr<renderer::software::WriteMappable> buffer)
+        auto renderer_for(geometry::Size buffer_size, MirPixelFormat buffer_format)
             -> renderer::Renderer&;
 
         std::mutex mutex;
@@ -95,14 +96,14 @@ std::shared_ptr<graphics::Cursor> const& cursor);
         std::shared_ptr<graphics::GLRenderingProvider> const render_provider;
         std::shared_ptr<renderer::RendererFactory> const renderer_factory;
 
-        /* The Renderer instantiation is tied to a particular output size, and
-         * requires enough setup to make it worth keeping around as a consumer
-         * is likely to be taking screenshots of consistent size
+        /* The Renderer resizes its output surface to match whatever buffer we're
+         * capturing into, so a single instance serves captures of any size.
+         * Only a change of pixel format requires building a new one.
          */
         std::unique_ptr<renderer::Renderer> current_renderer;
-        geometry::Size last_rendered_size;
+        MirPixelFormat last_rendered_format;
 
-        std::unique_ptr<graphics::DisplaySink> offscreen_sink;
+        std::unique_ptr<OffscreenDisplaySink> offscreen_sink;
         std::shared_ptr<OneShotBufferDisplayProvider> const output;
         std::shared_ptr<mir::graphics::GLConfig> config;
         std::shared_ptr<graphics::OutputFilter> const output_filter;

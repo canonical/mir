@@ -53,12 +53,12 @@ mgg::DisplaySink::DisplaySink(
     std::shared_ptr<struct gbm_device> gbm,
     mgg::BypassOption,
     std::shared_ptr<DisplayReport> const& listener,
-    std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+    std::shared_ptr<KMSOutput> const& output,
     geom::Rectangle const& area,
     glm::mat2 const& transformation)
     : gbm{std::move(gbm)},
       listener(listener),
-      outputs(outputs),
+      output(output),
       area(area),
       transform{transformation},
       needs_set_crtc{false},
@@ -68,13 +68,7 @@ mgg::DisplaySink::DisplaySink(
 
     // If any of the outputs have a CRTC mismatch, we will want to set all of them
     // so that they're all showing the same buffer.
-    bool has_crtc_mismatch = false;
-    for (auto& output : outputs)
-    {
-        has_crtc_mismatch = output->has_crtc_mismatch();
-        if (has_crtc_mismatch)
-            break;
-    }
+    bool has_crtc_mismatch = output->has_crtc_mismatch();
 
     if (has_crtc_mismatch)
     {
@@ -90,9 +84,7 @@ mgg::DisplaySink::DisplaySink(
         ::memset(mapping->data(), 24, mapping->len());
 
         visible_fb = std::move(initial_fb);
-        for (auto &output: outputs) {
-            output->set_crtc(*visible_fb);
-        }
+        output->set_crtc(*visible_fb);
         listener->report_successful_drm_mode_set_crtc_on_construction();
     }
     listener->report_successful_display_construction();
@@ -151,7 +143,7 @@ void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::Displa
     // to all sorts of problems (e.g. an error during eglSwapBuffers
     // because the back buffer is empty). To avoid this, we don't iterate
     // over display sinks that refer to disconnected outputs.
-    if (!outputs.front()->connected())
+    if (!output->connected())
         return;
 
     f(*this);
@@ -159,32 +151,21 @@ void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::Displa
 
 void mgg::DisplaySink::set_crtc(FBHandle const& forced_frame)
 {
-    for (auto& output : outputs)
-    {
-        /*
-         * Note that failure to set the CRTC is not a fatal error. This can
-         * happen under normal conditions when resizing VirtualBox (which
-         * actually removes and replaces the virtual output each time so
-         * sometimes it's really not there). Xorg often reports similar
-         * errors, and it's not fatal.
-         */
-        if (!output->set_crtc(forced_frame))
-            mir::log_error("Failed to set DRM CRTC. "
-                "Screen contents may be incomplete. "
-                "Try plugging the monitor in again.");
-    }
+    /*
+     * Note that failure to set the CRTC is not a fatal error. This can
+     * happen under normal conditions when resizing VirtualBox (which
+     * actually removes and replaces the virtual output each time so
+     * sometimes it's really not there). Xorg often reports similar
+     * errors, and it's not fatal.
+     */
+    if (!output->set_crtc(forced_frame))
+        mir::log_error("Failed to set DRM CRTC. "
+            "Screen contents may be incomplete. "
+            "Try plugging the monitor in again.");
 }
 
 void mgg::DisplaySink::post()
 {
-    /*
-     * We might not have waited for the previous frame to page flip yet.
-     * This is good because it maximizes the time available to spend rendering
-     * each frame. Just remember wait_for_page_flip() must be called at some
-     * point before the next schedule_page_flip().
-     */
-    wait_for_page_flip();
-
     if (!next_swap)
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
@@ -223,50 +204,16 @@ void mgg::DisplaySink::post()
     // Predicted worst case render time for the next frame...
     auto predicted_render_time = 50ms;
 
-    if (holding_client_buffers)
-    {
-        /*
-         * For composited frames we defer wait_for_page_flip till just before
-         * the next frame, but not for bypass frames. Deferring the flip of
-         * bypass frames would increase the time we held
-         * visible_bypass_frame unacceptably, resulting in client stuttering
-         * unless we allocate more buffers (which I'm trying to avoid).
-         * Also, bypass does not need the deferred page flip because it has
-         * no compositing/rendering step for which to save time for.
-         */
-        wait_for_page_flip();
-
-        // It's very likely the next frame will be bypassed like this one so
-        // we only need time for kernel page flip scheduling...
-        predicted_render_time = 5ms;
-    }
-    else
-    {
-        /*
-         * Not in clone mode? We can afford to wait for the page flip then,
-         * making us double-buffered (noticeably less laggy than the triple
-         * buffering that clone mode requires).
-         */
-        if (outputs.size() == 1)
-            wait_for_page_flip();
-
-        /*
-         * TODO: If you're optimistic about your GPU performance and/or
-         *       measure it carefully you may wish to set predicted_render_time
-         *       to a lower value here for lower latency.
-         *
-         *predicted_render_time = 9ms; // e.g. about the same as Weston
-         */
-    }
-
     recommend_sleep = 0ms;
-    if (outputs.size() == 1)
-    {
-        auto const& output = outputs.front();
-        auto const min_frame_interval = 1000ms / output->max_refresh_rate();
-        if (predicted_render_time < min_frame_interval)
-            recommend_sleep = min_frame_interval - predicted_render_time;
-    }
+
+    // Wait for the frame to be displayed
+    // This makes us double-buffered; assuming we can reliably render within the frame deadline
+    // that minimises latency.
+    wait_for_page_flip();
+
+    auto const min_frame_interval = 1000ms / output->max_refresh_rate();
+    if (predicted_render_time < min_frame_interval)
+        recommend_sleep = min_frame_interval - predicted_render_time;
 }
 
 std::chrono::milliseconds mgg::DisplaySink::recommended_sleep() const
@@ -280,11 +227,8 @@ bool mgg::DisplaySink::schedule_page_flip(FBHandle const& bufobj)
      * Schedule the current front buffer object for display. Note that
      * the page flip is asynchronous and synchronized with vertical refresh.
      */
-    for (auto& output : outputs)
-    {
-        if (output->schedule_page_flip(bufobj))
-            page_flips_pending = true;
-    }
+    if (output->schedule_page_flip(bufobj))
+        page_flips_pending = true;
 
     return page_flips_pending;
 }
@@ -293,8 +237,7 @@ void mgg::DisplaySink::wait_for_page_flip()
 {
     if (page_flips_pending)
     {
-        for (auto& output : outputs)
-            output->wait_for_page_flip();
+        output->wait_for_page_flip();
 
         // The previously-scheduled FB has been page-flipped, and is now visible
         visible_fb = std::move(scheduled_fb);
@@ -311,7 +254,7 @@ void mgg::DisplaySink::schedule_set_crtc()
 
 auto mgg::DisplaySink::drm_fd() const -> mir::Fd
 {
-    return mir::Fd{mir::IntOwnedFd{outputs.front()->drm_fd()}};
+    return mir::Fd{mir::IntOwnedFd{output->drm_fd()}};
 }
 
 auto mgg::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
@@ -344,7 +287,7 @@ auto mgg::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
     {
         if (!kms_allocator)
         {
-            kms_allocator = kms::CPUAddressableDisplayAllocator::create_if_supported(drm_fd(), outputs.front()->size());
+            kms_allocator = kms::CPUAddressableDisplayAllocator::create_if_supported(drm_fd(), output->size());
         }
         return kms_allocator.get();
     }
@@ -352,7 +295,7 @@ auto mgg::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
     {
         if (!gbm_allocator)
         {
-            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, outputs.front()->size());
+            gbm_allocator = std::make_unique<GBMDisplayAllocator>(drm_fd(), gbm, output->size());
         }
         return gbm_allocator.get();
     }

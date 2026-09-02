@@ -187,6 +187,7 @@ ppa
 PPAs
 pre
 preprocessor
+predecrement
 preincrement
 preload
 preselects
@@ -198,6 +199,7 @@ radeon
 raspberrypi
 rc
 recomposition
+remediations
 renderables
 renderer
 RenderingPlatform

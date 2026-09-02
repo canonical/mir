@@ -90,12 +90,12 @@ struct InputDeviceHubTest : ::testing::Test
     void capture_input_sink(NiceMock<mtd::MockInputDevice>& dev, mi::InputSink*& sink, mi::EventBuilder*& builder)
     {
         ON_CALL(dev,start(_,_))
-            .WillByDefault(Invoke([&sink,&builder](mi::InputSink* input_sink, mi::EventBuilder* event_builder)
+            .WillByDefault([&sink,&builder](mi::InputSink* input_sink, mi::EventBuilder* event_builder)
                                   {
                                       sink = input_sink;
                                       builder = event_builder;
                                   }
-                                 ));
+                                 );
     }
 
     void expect_and_execute_multiplexer()

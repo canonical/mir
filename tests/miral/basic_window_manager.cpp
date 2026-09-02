@@ -14,6 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-pub fn hello_world() -> &'static str {
-    "Hello, world!"
+#include "test_window_manager_tools.h"
+
+namespace mt = mir::test;
+
+using namespace testing;
+
+struct BasicWindowManager : mt::TestWindowManagerTools
+{
+};
+
+TEST_F(BasicWindowManager, window_at_returns_empty_for_unmanaged_surface)
+{
+    ON_CALL(focus_controller, surface_at(_))
+        .WillByDefault([&](auto) { return create_surface(session, {}); });
+
+    EXPECT_EQ(basic_window_manager.window_at({}), miral::Window{});
 }

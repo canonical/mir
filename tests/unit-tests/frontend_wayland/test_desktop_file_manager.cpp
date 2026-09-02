@@ -87,17 +87,17 @@ struct DesktopFileManager : Test
     {
         session = std::make_shared<mtd::MockSceneSession>();
         ON_CALL(*session, process_id)
-            .WillByDefault(testing::Invoke([this]() {
+            .WillByDefault([this]() {
                 return PID;
-            }));
+            });
 
         ON_CALL(surface, application_id())
-            .WillByDefault(testing::Invoke([this]() { return APPLICATION_ID; }));
+            .WillByDefault([this]() { return APPLICATION_ID; });
 
         ON_CALL(surface, session())
-            .WillByDefault(testing::Invoke([this]() {
+            .WillByDefault([this]() {
                 return session;
-            }));
+            });
 
         cache = std::make_shared<InMemoryDesktopFileCache>();
         file_manager = std::make_shared<mf::DesktopFileManager>(cache);
@@ -115,7 +115,7 @@ TEST_F(DesktopFileManager, can_find_app_when_app_id_matches)
 TEST_F(DesktopFileManager, can_find_gnome_terminal_server)
 {
     ON_CALL(surface, application_id())
-        .WillByDefault(testing::Invoke([]() { return "gnome-terminal-server"; }));
+        .WillByDefault([]() { return "gnome-terminal-server"; });
     auto app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(app_id, "org.gnome.Terminal");
 }
@@ -135,7 +135,7 @@ TEST_F(DesktopFileManager, can_find_app_when_app_id_matches_despite_being_upperc
         ch = std::toupper(ch);
 
     ON_CALL(surface, application_id())
-        .WillByDefault(testing::Invoke([uppercase_app_id]() { return uppercase_app_id; }));
+        .WillByDefault([uppercase_app_id]() { return uppercase_app_id; });
 
     auto new_file = std::make_shared<mf::DesktopFile>(DESKTOP_FILE_APP_ID, nullptr, nullptr);
     cache->files.push_back(new_file);

@@ -278,16 +278,7 @@ public:
 
     auto size() const -> geom::Size override
     {
-        EGLint width{0}, height{0};
-        if (eglQuerySurface(dpy, egl_surf, EGL_WIDTH, &width) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface width")));
-        }
-        if (eglQuerySurface(dpy, egl_surf, EGL_HEIGHT, &height) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface height")));
-        }
-        return geom::Size{width, height};
+        return surface_size;
     }
 
     auto layout() const -> Layout override
@@ -442,6 +433,20 @@ private:
         return std::make_tuple(std::move(surf), egl_ctx, egl_surf);
     }
 
+    static auto query_surface_size(EGLDisplay dpy, EGLSurface surf) -> geom::Size
+    {
+        EGLint width{0}, height{0};
+        if (eglQuerySurface(dpy, surf, EGL_WIDTH, &width) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface width")));
+        }
+        if (eglQuerySurface(dpy, surf, EGL_HEIGHT, &height) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface height")));
+        }
+        return geom::Size{width, height};
+    }
+
     GBMOutputSurface(
         EGLDisplay dpy,
         std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables,
@@ -450,7 +455,8 @@ private:
           egl_surf{std::get<2>(renderables)},
           dpy{dpy},
           ctx{std::get<1>(renderables)},
-          quirks{quirks}
+          quirks{quirks},
+          surface_size{query_surface_size(dpy, egl_surf)}
     {
     }
 
@@ -459,6 +465,10 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
     std::shared_ptr<mgg::GbmQuirks> const quirks;
+    /* The EGL surface is created once, at a fixed size, and lives as long as we
+     * do, so querying EGL for it on every frame is pure overhead.
+     */
+    geom::Size const surface_size;
 };
 }
 

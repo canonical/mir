@@ -16,6 +16,7 @@ add_compile_definitions(MIRAL_ENABLE_DEPRECATIONS=0)
 
 mir_add_wrapped_executable(miral-test-internal NOINSTALL
     render_scene_into_surface.cpp
+    basic_window_manager.cpp
     mru_window_list.cpp
     active_outputs.cpp
     configuration_option.cpp
@@ -49,6 +50,7 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_slow_keys.cpp
     test_hover_click.cpp
     test_locate_pointer.cpp
+    pointer_fullscreen.cpp
     basic_store.cpp
     ini_file_with_overrides.cpp
     override_watcher.cpp
@@ -67,6 +69,7 @@ target_link_libraries(miral-test-internal
     mir-test-doubles-static
     miral-internal
     miral-external
+    PkgConfig::WAYLAND_CLIENT
 )
 
 
@@ -83,6 +86,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     sticky_keys.cpp
     runner.cpp
     wayland_extensions.cpp
+    xdg_dialog.cpp
     zone.cpp
     example_xdg_shell_v6.cpp example_xdg_shell_v6.h
     test_touch_emulator.cpp
