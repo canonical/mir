@@ -30,9 +30,6 @@ Build-Depends: cargo:native,
                libinput-dev (>= 0.21),
                liblttng-ust-dev,
                libpixman-1-dev,
-# The target-architecture Rust standard library. rustc and cargo run natively
-# (see the :native markers), but cross-compiling the Rust components still needs
-# std for the host architecture, which nothing else in this list pulls in.
                libstd-rust-dev,
                libudev-dev,
                libumockdev-dev (>= 0.6),
