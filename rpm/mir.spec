@@ -35,7 +35,7 @@
 %global mirplatforminput_sover 11
 
 Name:           mir
-Version:        2.29.0~rc
+Version:        2.29.0
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -333,6 +333,83 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
+* Wed Sep 02 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.29.0-1
+
+- New upstream release 2.29.0~dev
+
+  - ABI summary:
+
+    - miral ABI bumped to 8
+    - mircommon ABI bumped to 13
+    - mircore ABI bumped to 3
+    - miroil ABI bumped to 10
+    - mirplatform ABI bumped to 35
+    - mirserver ABI bumped to 68
+    - mirwayland ABI bumped to 7
+    - mirplatformgraphics ABI bumped to 24
+    - mirinputplatform ABI bumped to 11
+
+  - Enhancements:
+
+    - [Wayland] Implement xdg-dialog-v1 Wayland protocol [#4790](https://github.com/canonical/mir/pull/4790), [#5122](https://github.com/canonical/mir/pull/5122)
+    - [Wayland] Add support for the ext_foreign_toplevel_image_capture_source_manager_v1 extension [#5002](https://github.com/canonical/mir/pull/5002)
+    - [Wayland] Add support for taking a screenshot of a single surface [#4936](https://github.com/canonical/mir/pull/4936)
+    - [Wayland] Implement wl_region::subtract and tidy wl_region::add [#5003](https://github.com/canonical/mir/pull/5003)
+    - Add a touch emulator to map mouse clicks and drags to touch events [#5091](https://github.com/canonical/mir/pull/5091)
+    - Add command-line logging configuration [#4928](https://github.com/canonical/mir/pull/4928)
+    - [miral] Add `register_log_filtering_config` convenience helper [#4937](https://github.com/canonical/mir/pull/4937)
+    - [live config] Support for override directory [#4781](https://github.com/canonical/mir/pull/4781)
+    - [graphics] Add bytes-per-pixel to DRMFormat and use it for SHM stride validation [#5000](https://github.com/canonical/mir/pull/5000)
+    - [evdev-rs] Remove the blocking future await when grabbing a device file descriptor [#4960](https://github.com/canonical/mir/pull/4960)
+
+  - Renovations:
+
+    - Migrate to C++26 [#5028](https://github.com/canonical/mir/pull/5028)
+    - Rebase on newest distro releases [#4738](https://github.com/canonical/mir/pull/4738)
+    - [miral] Use std::span in interfaces where possible [#5078](https://github.com/canonical/mir/pull/5078)
+    - [miral] Ref qualify WindowSpecification properties [#5081](https://github.com/canonical/mir/pull/5081)
+    - [miral] Tidy up the WindowManagementPolicy hierarchy [#5072](https://github.com/canonical/mir/pull/5072)
+    - Remove prompt sessions [#5045](https://github.com/canonical/mir/pull/5045)
+    - Remove EGLStream support [#5044](https://github.com/canonical/mir/pull/5044)
+    - Remove wl-drm support in favour of DMA-BUF [#5061](https://github.com/canonical/mir/pull/5061)
+    - Remove deprecated APIs [#5018](https://github.com/canonical/mir/pull/5018), [#5021](https://github.com/canonical/mir/pull/5021), [#5057](https://github.com/canonical/mir/pull/5057)
+    - Drop obsolete `WindowManager::{add,remove}_display()` methods [#5023](https://github.com/canonical/mir/pull/5023)
+    - Drop `ServerConfiguration::the_screen_shooter()` [#5085](https://github.com/canonical/mir/pull/5085)
+    - Drop AutoJoinThread [#5066](https://github.com/canonical/mir/pull/5066) and assorted dead code [#5058](https://github.com/canonical/mir/pull/5058), [#5076](https://github.com/canonical/mir/pull/5076), [#5084](https://github.com/canonical/mir/pull/5084)
+    - Update DecorationProvider to xdg-shell [#4939](https://github.com/canonical/mir/pull/4939)
+
+  - Bugs fixed:
+
+    - wayland platform: two fixes for running Mir nested under another compositor [#5020](https://github.com/canonical/mir/pull/5020) (thanks @Azkali!)
+    - miral: fix constrain resizes of windows without a size [#4979](https://github.com/canonical/mir/pull/4979) (thanks @muhammad23012009!)
+    - Validate all inputs to wl_shm_pool::create_buffer [#4885](https://github.com/canonical/mir/pull/4885)
+    - frontend_wayland: raise invalid_fd when an SHM pool fd cannot be mapped [#5010](https://github.com/canonical/mir/pull/5010)
+    - frontend_wayland: reject xdg_toplevel max size smaller than min size [#5008](https://github.com/canonical/mir/pull/5008)
+    - Raise invalid_offset for non-zero wl_surface.attach offset (v5+) [#5004](https://github.com/canonical/mir/pull/5004)
+    - Raise invalid_size from xdg_surface.set_window_geometry [#5006](https://github.com/canonical/mir/pull/5006)
+    - Validate the serial in xdg_surface.ack_configure [#5007](https://github.com/canonical/mir/pull/5007)
+    - Track what type of data offer is being provided and validate requests [#4935](https://github.com/canonical/mir/pull/4935)
+    - Ensure no loops in toplevel parents [#4894](https://github.com/canonical/mir/pull/4894)
+    - [miral] ApplicationSwitcher: use whatever identity we have rather than treating a window as a "ghost" [#5083](https://github.com/canonical/mir/pull/5083). Fix late toplevel identity [#5131](https://github.com/canonical/mir/pull/5131)
+    - Return early from `{add,drop}_input_trigger_event` to avoid logging incorrectly [#5082](https://github.com/canonical/mir/pull/5082)
+    - ShmBacking: fix ignored `std::expected` return values [#5024](https://github.com/canonical/mir/pull/5024) and switch `current_mapping` to `std::atomic` [#5026](https://github.com/canonical/mir/pull/5026)
+    - [miral] add missing `PhysicalSizeMM::operator==` [#5037](https://github.com/canonical/mir/pull/5037) and constructor [#5035](https://github.com/canonical/mir/pull/5035) symbols
+    - Fix FTBFS on amd64v3 [#5060](https://github.com/canonical/mir/pull/5060), [#5127](https://github.com/canonical/mir/pull/5127)
+    - refactor(x11): isolate the xcb XKB include workaround [#5121](https://github.com/canonical/mir/pull/5121)
+
+  - Documentation:
+
+    - doc: update to Sphinx Stack 2 [#5050](https://github.com/canonical/mir/pull/5050)
+    - docs: update documentation for configuring screencasting via ext-image-copy-capture [#5036](https://github.com/canonical/mir/pull/5036)
+    - Document the Mir config override mechanism [#5077](https://github.com/canonical/mir/pull/5077)
+    - How to test Mir for a release [#4992](https://github.com/canonical/mir/pull/4992)
+    - Fix documentation errors in input trigger protocols [#5070](https://github.com/canonical/mir/pull/5070)
+    - doc: fix "Release notes" title and links [#5062](https://github.com/canonical/mir/pull/5062)
+    - doc: use `-dev` version outside of release branches [#5056](https://github.com/canonical/mir/pull/5056)
+    - Spelling fixes and skill [#5011](https://github.com/canonical/mir/pull/5011)
+    - Expand copilot instructions with build, CI, ABI and protocol integration guides [#4913](https://github.com/canonical/mir/pull/4913), and commenting/review guidance [#5094](https://github.com/canonical/mir/pull/5094)
+
+
 * Thu Aug 13 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.29.0~rc-1
 - Begin Release Candidate for 2.29.0 release
 
