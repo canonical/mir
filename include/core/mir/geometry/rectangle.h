@@ -82,6 +82,7 @@ struct Rectangle
     X<T> right() const { return bottom_right().x; }
     Y<T> top() const { return top_left.y; }
     Y<T> bottom() const { return bottom_right().y; }
+    Point<T> centre() const { return top_left + as_displacement(size / static_cast<T>(2)); }
 
     friend bool operator==(Rectangle const& lhs, Rectangle const& rhs) = default;
 
