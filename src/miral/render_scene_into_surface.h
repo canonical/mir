@@ -19,6 +19,7 @@
 
 #include <functional>
 #include <memory>
+#include <mir/compositor/compositor_id.h>
 #include <mir/geometry/rectangle.h>
 
 namespace mir
@@ -50,6 +51,12 @@ public:
 
     /// Set to true if the the cursor should be included in the scene capture.
     RenderSceneIntoSurface& overlay_cursor(bool overlay_cursor);
+
+    /// Returns the compositor ID of the internal screen shooter.
+    /// Companion surfaces that should be excluded from the captured (magnified)
+    /// output can return an empty renderable list when generate_renderables()
+    /// is called with this ID.
+    mir::compositor::CompositorID capture_compositor_id() const;
 
     /// Provides access to the surface when it is ready.
     RenderSceneIntoSurface& on_surface_ready(std::function<void(std::shared_ptr<mir::scene::Surface> const&)>&& callback);
