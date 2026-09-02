@@ -73,9 +73,17 @@ auto mf::WaylandClientNotifier::client_added(rust::Box<mwrs::WaylandClient> wayl
         }
 
         // The Rust client owns its socket, so hand the session a duplicate to own.
-        auto session = shell->open_session(pid, Fd{::dup(socket_fd)}, "");
+        auto const session_fd = ::dup(socket_fd);
+        if (session_fd == -1)
+        {
+            uint32_t constexpr wl_display_object_id = 1;
+            uint32_t constexpr wl_display_error_implementation = 3;
+            wayland_client->kill(
+                wl_display_object_id, wl_display_error_implementation, "failed to duplicate client socket");
+            return;
+        }
 
-        auto client = std::make_shared<WaylandClient>(std::move(wayland_client), session, shell, serial_source);
+        auto session = shell->open_session(pid, Fd{session_fd}, "");
 
         registry.add_client(client);
 
