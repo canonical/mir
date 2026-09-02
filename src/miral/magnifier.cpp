@@ -32,8 +32,10 @@
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/geometry/rectangles.h>
+#include <mir/input/composite_event_filter.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/input/event_filter.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/scene/basic_surface.h>
@@ -302,6 +304,9 @@ public:
         server.add_init_callback(
             [&]
             {
+                input_filter = std::make_shared<InputFilter>(state);
+                server.the_composite_event_filter()->prepend(input_filter);
+
                 server.the_main_loop()->spawn([=, this, &server] { this->post_init(server); });
             });
 
@@ -340,6 +345,7 @@ public:
 
                 local_handles.for_each([](Handle& handle, auto) { handle.reset(); });
 
+                input_filter.reset();
             });
     }
 
@@ -508,6 +514,23 @@ public:
     }
 
 private:
+    class InputFilter : public mi::EventFilter
+    {
+    public:
+        explicit InputFilter(mir::Synchronised<State>& state) : state{state} {}
+
+        auto handle(MirEvent const& event) -> bool override;
+
+    private:
+        void reset_gestures();
+        auto handle_pointer(MirPointerEvent const& event, State const& state) -> bool;
+        auto handle_touch(MirTouchEvent const& event, State const& state) -> bool;
+
+        mir::Synchronised<State>& state;
+        std::optional<bool> pointer_gesture_consumed;
+        std::optional<bool> touch_gesture_consumed;
+    };
+
     class DisplayConfigObserver : public mg::DisplayConfigurationObserver
     {
     public:
@@ -861,10 +884,107 @@ private:
 
     mir::Synchronised<State> state;
 
+    std::shared_ptr<InputFilter> input_filter;
     std::shared_ptr<CursorObserver> cursor_observer;
     std::shared_ptr<DisplayConfigObserver> display_config_observer;
     std::weak_ptr<mi::CursorObserverMultiplexer> cursor_multiplexer;
 };
+
+auto miral::Magnifier::Self::InputFilter::handle(MirEvent const& event) -> bool
+{
+    if (event.type() != mir_event_type_input)
+        return false;
+
+    auto const s = state.lock();
+    if (s->follow_cursor || !s->enabled)
+    {
+        reset_gestures();
+        return false;
+    }
+
+    auto const* input_event = event.to_input();
+    switch (input_event->input_type())
+    {
+    case mir_input_event_type_pointer:
+        return handle_pointer(*input_event->to_pointer(), *s);
+    case mir_input_event_type_touch:
+        return handle_touch(*input_event->to_touch(), *s);
+    default:
+        return false;
+    }
+}
+
+void miral::Magnifier::Self::InputFilter::reset_gestures()
+{
+    pointer_gesture_consumed.reset();
+    touch_gesture_consumed.reset();
+}
+
+auto miral::Magnifier::Self::InputFilter::handle_pointer(MirPointerEvent const& event, State const& state) -> bool
+{
+    if (!state.applied_placement)
+        return false;
+
+    if (!event.position())
+        return false;
+
+    auto const over_magnifier = magnifier_controls::contains_content(
+        *state.applied_placement, state.magnification, geom::PointD{*event.position()});
+
+    // Whether a button gesture is ours is decided where it starts, and the
+    // rest of the gesture follows that decision: a drag that began on the
+    // magnifier keeps being consumed after it leaves, and one that began
+    // outside is never stolen mid-drag.
+    switch (event.action())
+    {
+    case mir_pointer_action_button_down:
+        if (!pointer_gesture_consumed)
+            pointer_gesture_consumed = over_magnifier;
+        break;
+
+    case mir_pointer_action_button_up:
+        if (event.buttons() == 0)
+        {
+            auto const consumed = pointer_gesture_consumed.value_or(over_magnifier);
+            pointer_gesture_consumed.reset();
+            return consumed;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return pointer_gesture_consumed.value_or(over_magnifier);
+}
+
+auto miral::Magnifier::Self::InputFilter::handle_touch(MirTouchEvent const& event, State const& state) -> bool
+{
+    if (!state.applied_placement)
+        return false;
+
+    if (!touch_gesture_consumed)
+    {
+        bool starts_on_magnifier = false;
+        for (auto i = 0u; i != event.pointer_count(); ++i)
+        {
+            starts_on_magnifier = starts_on_magnifier ||
+                                  magnifier_controls::contains_content(
+                                      *state.applied_placement, state.magnification, geom::PointD{event.position(i)});
+        }
+        touch_gesture_consumed = starts_on_magnifier;
+    }
+
+    auto const consumed = *touch_gesture_consumed;
+    bool gesture_ended = event.pointer_count() > 0;
+    for (auto i = 0u; i != event.pointer_count(); ++i)
+        gesture_ended = gesture_ended && event.action(i) == mir_touch_action_up;
+
+    if (gesture_ended)
+        touch_gesture_consumed.reset();
+
+    return consumed;
+}
 
 void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
     std::shared_ptr<mg::DisplayConfiguration const> const& config)
