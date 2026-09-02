@@ -4,10 +4,7 @@ Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
 Build-Depends: cargo:native,
-# Cargo fetches the Rust components' crate dependencies from crates.io over
-# HTTPS, so it needs the system CA bundle. Minimal build chroots don't pull
-# this in otherwise (apt uses a plain-http mirror), leaving cargo to fail with
-# "Problem with the SSL CA cert".
+# Needed for Cargo to fetch crates
                ca-certificates,
                cmake,
                debhelper (>= 9),
