@@ -2,7 +2,7 @@
 //!
 //! This module provides a generator for wayland_server_generated.rs.
 
-use crate::helpers::{generate_namespace, snake_to_pascal};
+use crate::helpers::{generate_namespace, implemented_protocols, snake_to_pascal};
 
 use super::WaylandProtocol;
 use proc_macro2::TokenStream;
@@ -44,9 +44,18 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
             return None;
         }
 
-        if interface.name == "wl_display" || interface.name == "wl_fixes"{
-            return None;
-        }
+    // TODO: Confirm if `wl_registry` should actually be excluded here.
+    if implemented_protocols()
+        .iter()
+        .cloned()
+        .chain(
+            // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+            std::iter::once("wl_display"),
+        )
+        .any(|protocol| interface.name == protocol)
+    {
+        return None;
+    }
 
         let interface_name = format_ident!("{}", interface.name);
         let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));

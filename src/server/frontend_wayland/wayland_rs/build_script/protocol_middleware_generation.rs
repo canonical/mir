@@ -10,9 +10,9 @@
 //! use crate::cpp_builder::CppBuilder;
 
 use crate::cpp_builder::sanitize_identifier;
-use crate::helpers::format_wayland_interface_to_rust_extension_struct;
-
-use super::helpers::snake_to_pascal;
+use crate::helpers::{
+    format_wayland_interface_to_rust_extension_struct, protocol_requires_codegen, snake_to_pascal,
+};
 use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandEvent, WaylandInterface, WaylandProtocol,
 };
@@ -54,11 +54,7 @@ fn generate_use_imports_for_protocol(protocol: &WaylandProtocol) -> Vec<TokenStr
     protocol
         .interfaces
         .iter()
-        .filter(|interface| {
-            interface.name != "wl_registry"
-                && interface.name != "wl_display"
-                && interface.name != "wl_fixes"
-        })
+        .filter(|interface| protocol_requires_codegen(&interface.name))
         .flat_map(|interface| {
             let (interface_struct_path, interface_module_path) = if is_core_wayland {
                 let struct_path: syn::Path = syn::parse_str(&format!(
@@ -103,11 +99,7 @@ fn generate_extensions_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| {
-            interface.name != "wl_registry"
-                && interface.name != "wl_display"
-                && interface.name != "wl_fixes"
-        })
+        .filter(|interface| protocol_requires_codegen(&interface.name))
         .flat_map(generate_extension_for_interface)
         .collect()
 }

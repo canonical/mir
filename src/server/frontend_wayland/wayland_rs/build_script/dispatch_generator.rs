@@ -17,7 +17,8 @@
 use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::{
     dash_to_snake_ident, format_has_arg_ident, format_wayland_interface_to_cpp_class,
-    format_wayland_interface_to_rust_extension_struct, generate_namespace, snake_to_pascal,
+    format_wayland_interface_to_rust_extension_struct, generate_namespace, implemented_protocols,
+    protocol_requires_codegen, snake_to_pascal,
 };
 use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandInterface, WaylandProtocol, WaylandRequest,
@@ -90,8 +91,16 @@ fn generate_global_dispatch_impl(
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name);
 
-    if interface_name == "wl_display" || interface_name == "wl_fixes" {
-        // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+    // TODO: Confirm if `wl_registry` should actually be excluded here.
+    if implemented_protocols()
+        .iter()
+        .cloned()
+        .chain(
+            // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+            std::iter::once("wl_display"),
+        )
+        .any(|protocol| interface_name == protocol)
+    {
         return quote! {};
     }
 
@@ -371,10 +380,7 @@ fn generate_dispatch_impl(
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name);
 
-    if interface_name == "wl_display"
-        || interface_name == "wl_registry"
-        || interface_name == "wl_fixes"
-    {
+    if !protocol_requires_codegen(&interface_name) {
         // wl_display and wl_registry are handled specially in wayland_server crate via the 'Display' struct.
         return quote! {};
     }

@@ -20,7 +20,7 @@ use crate::cpp_builder::{
 };
 use crate::helpers::{
     format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
-    snake_to_pascal,
+    protocol_requires_codegen, snake_to_pascal,
 };
 use crate::protocol_parser::{
     WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -78,11 +78,7 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .interfaces
             .iter()
             .filter(|interface| interface.is_global)
-            .filter(|interface| {
-                interface.name != "wl_display"
-                    && interface.name != "wl_registry"
-                    && interface.name != "wl_fixes"
-            })
+            .filter(|interface| protocol_requires_codegen(&interface.name))
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
                 let ext_name =
@@ -229,11 +225,7 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
     let classes = protocol
         .interfaces
         .iter()
-        .filter(|interface| {
-            interface.name != "wl_registry"
-                && interface.name != "wl_display"
-                && interface.name != "wl_fixes"
-        })
+        .filter(|interface| protocol_requires_codegen(&interface.name))
         .map(|interface| wayland_interface_to_cpp_class(interface));
 
     for class in classes {

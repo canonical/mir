@@ -8,7 +8,9 @@
 //! These requests are sent from C++.
 
 use crate::cpp_builder::{sanitize_identifier, CppBuilder};
-use crate::helpers::format_wayland_interface_to_rust_extension_struct;
+use crate::helpers::{
+    format_wayland_interface_to_rust_extension_struct, protocol_requires_codegen,
+};
 
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
 use crate::protocol_parser::{
@@ -77,11 +79,7 @@ fn generate_rust_types(protocol: &WaylandProtocol) -> Vec<TokenStream> {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| {
-            interface.name != "wl_registry"
-                && interface.name != "wl_display"
-                && interface.name != "wl_fixes"
-        })
+        .filter(|interface| protocol_requires_codegen(&interface.name))
         .map(|interface| {
             let interface_name_ext = format_ident!(
                 "{}",
@@ -96,11 +94,7 @@ fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| {
-            interface.name != "wl_registry"
-                && interface.name != "wl_display"
-                && interface.name != "wl_fixes"
-        })
+        .filter(|interface| protocol_requires_codegen(&interface.name))
         .flat_map(generate_ffi_for_interface)
         .collect()
 }
