@@ -142,11 +142,11 @@ pub fn implemented_protocols() -> &'static [&'static str] {
     &IMPLEMENTED_PROTOCOLS
 }
 
-/// Determine if the provided protocol should be used during code generation. A protocol may be
+/// Determine if the provided protocol should be used during FFI code generation. A protocol may be
 /// skipped if:
 /// - it has an implementation within `src/protocol_impls` (see [`implemented_protocols`])
 /// - it has been manually excluded (eg. `wl_display` and `wl_registry`)
-pub fn protocol_requires_codegen(protocol: impl PartialEq<&'static str>) -> bool {
+pub fn protocol_requires_ffi_codegen(protocol: impl PartialEq<&'static str>) -> bool {
     const EXCLUDED_PROTOCOLS: [&str; 2] = [
         // wl_display is handled specially in wayland_server crate via the 'Display' struct.
         "wl_display",

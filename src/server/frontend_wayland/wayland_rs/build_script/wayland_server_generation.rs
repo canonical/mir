@@ -44,7 +44,6 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
             return None;
         }
 
-    // TODO: Confirm if `wl_registry` should actually be excluded here.
     if implemented_protocols()
         .iter()
         .cloned()

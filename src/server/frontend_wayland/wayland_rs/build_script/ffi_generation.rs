@@ -10,7 +10,7 @@
 use crate::cpp_builder::{sanitize_identifier, CppBuilder};
 use crate::helpers::{
     dash_to_snake, format_wayland_interface_to_cpp_class,
-    format_wayland_interface_to_rust_extension_struct, protocol_requires_codegen,
+    format_wayland_interface_to_rust_extension_struct, protocol_requires_ffi_codegen,
 };
 
 use super::protocol_middleware_generation::wayland_arg_to_ffi_rust_str;
@@ -141,7 +141,7 @@ fn generate_rust_types(protocol: &WaylandProtocol) -> Vec<TokenStream> {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| protocol_requires_codegen(&interface.name))
+        .filter(|interface| protocol_requires_ffi_codegen(&interface.name))
         .map(|interface| {
             let interface_name_ext = format_ident!(
                 "{}",
@@ -156,7 +156,7 @@ fn generate_ffi_for_protocol(protocol: &WaylandProtocol) -> TokenStream {
     protocol
         .interfaces
         .iter()
-        .filter(|interface| protocol_requires_codegen(&interface.name))
+        .filter(|interface| protocol_requires_ffi_codegen(&interface.name))
         .flat_map(generate_ffi_for_interface)
         .collect()
 }
