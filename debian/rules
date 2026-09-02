@@ -119,7 +119,6 @@ override_dh_makeshlibs:
 override_dh_strip:
 	dh_strip -Xmir-test-data
 
-# Remove the Cargo home set up for the Rust components
 override_dh_clean:
 	dh_clean
 	rm -rf debian/cargo_home
