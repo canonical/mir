@@ -40,8 +40,7 @@
         # acquire the token. Either receive it from a remote service...
         token = settings_service.lookup("play/pause")
 
-        # ...or register the action yourself using
-        # ext_input_trigger_registration_v1 and use the token it issues
+        # ...or from an action this client registered itself
         control = registration_manager.get_action_control("play/pause")
         on control.done(token):
             ...

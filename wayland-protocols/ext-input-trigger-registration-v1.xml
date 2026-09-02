@@ -30,9 +30,9 @@
     the action is notified through the `ext_input_trigger_action_v1` protocol.
 
     The registering client reserves a trigger (obtaining an
-    `ext_input_trigger_v1`), creates an action (obtaining an
+    `ext_input_trigger_v1`), creates an action control (obtaining an
     `ext_input_trigger_action_control_v1` and, with it, a token), and associates
-    triggers with the action. The token may then be used with
+    triggers with the action control object. The token may then be used with
     `ext_input_trigger_action_manager_v1.get_input_trigger_action` to subscribe
     to the action. The registering client can use the token itself, or deliver
     it to other interested clients out of band (for example through a desktop
@@ -44,7 +44,7 @@
         manager = registry.bind(ext_input_trigger_registration_manager_v1)
         trigger = manager.register_keyboard_sym_trigger(Meta, XKB_KEY_p)
 
-        # create the action and collect its token
+        # create the action control and collect the action's token
         control = manager.get_action_control("play/pause")
         on control.done(token):
             control.add_input_trigger_event(trigger)
@@ -221,8 +221,8 @@
   </interface>
 
   <interface name="ext_input_trigger_action_control_v1" version="1">
-    <description summary="an input trigger action">
-      This object represents an input trigger action owned by this client. The
+    <description summary="control of an input trigger action">
+      This object controls an input trigger action owned by this client. The
       action associates one or more input triggers with a token that other
       clients can use, via the `ext_input_trigger_action_v1` protocol, to be
       notified when the action fires.
@@ -272,9 +272,10 @@
 
     <request name="cancel_and_destroy" type="destructor">
       <description summary="purge the input trigger action and destroy this object">
-        This purges the input trigger action and destroys this object. It would
-        typically be used when the user deletes the input trigger the action
-        represents.
+        This purges the input trigger action and destroys this object. It is up
+        to the owning client to decide when to do so. For example, a shortcut
+        settings client might issue this request when the user deletes the
+        action, or when the last input trigger associated with it is removed.
 
         The action itself ceases to exist: every `ext_input_trigger_action_v1`
         that was created from this action's token (by this or any other client)
@@ -293,6 +294,10 @@
         action continues to exist: any `ext_input_trigger_action_v1` created
         from its token (by this or any other client) is unaffected and keeps
         receiving `begin` and `end` events.
+
+        This lets the registering client stop managing an action (or exit
+        altogether) without breaking actions that other clients are already
+        subscribed to.
 
         To purge the action and make those objects unavailable, use
         `cancel_and_destroy` instead.
