@@ -154,6 +154,7 @@ public:
         if (!display)
         {
             ::close(server_fd);
+            ::close(client_fd);
             throw std::runtime_error{"Failed to connect Wayland client to injected fd"};
         }
 
