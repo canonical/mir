@@ -42,11 +42,11 @@ mtd::MockGL::MockGL()
     ON_CALL(*this, glGetProgramiv(_,_,_))
         .WillByDefault(SetArgPointee<2>(GL_TRUE));
     ON_CALL(*this, glGenTextures(_, _))
-        .WillByDefault(Invoke(
+        .WillByDefault(
             [] (GLsizei n, GLuint *textures)
             {
                 std::memset(textures, 0, n * sizeof(*textures));
-            }));
+            });
 }
 
 void mtd::MockGL::provide_gles_extensions()

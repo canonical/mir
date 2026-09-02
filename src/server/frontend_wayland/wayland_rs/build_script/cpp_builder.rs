@@ -129,6 +129,15 @@ impl CppBuilder {
                 // Virtual destructor
                 result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
 
+                // Verbatim header-only public declarations (e.g. static templated helpers).
+                for decl in &class.raw_public_decls {
+                    result.push_str(decl);
+                    result.push('\n');
+                }
+                if !class.raw_public_decls.is_empty() {
+                    result.push('\n');
+                }
+
                 // Generate methods
                 for method in &class.methods {
                     let args_str = Self::build_arg_str_for_cpp(method);
@@ -230,6 +239,11 @@ impl CppBuilder {
                 result.push_str("};\n\n");
             }
 
+            // Emit free-function declarations at namespace scope.
+            for free_fn in &namespace.free_functions {
+                result.push_str(&format!("{};\n\n", free_fn.signature));
+            }
+
             // Close namespace(s)
             for _ in &namespace.name {
                 result.push_str("}\n");
@@ -274,6 +288,18 @@ impl CppBuilder {
                     result.push_str(&format!("    {}\n", body));
                     result.push_str("}\n\n");
                 }
+            }
+
+            // Emit free-function definitions inside the (re-opened) namespace so that they
+            // can refer to other declarations in this namespace by their unqualified names.
+            if !namespace.free_functions.is_empty() {
+                result.push_str(&format!("namespace {}\n{{\n", namespace_str));
+                for free_fn in &namespace.free_functions {
+                    result.push_str(&format!("{}\n{{\n", free_fn.signature));
+                    result.push_str(&format!("    {}\n", free_fn.body));
+                    result.push_str("}\n\n");
+                }
+                result.push_str(&format!("}}  // namespace {}\n\n", namespace_str));
             }
         }
 
@@ -360,10 +386,22 @@ impl CppBuilder {
     }
 }
 
+/// A free (non-member) function emitted at namespace scope: declared in the header and
+/// defined in the .cpp source. Unlike `CppClass` methods, these are never emitted to the
+/// generated Rust/cxx bindings, so they are suitable for pure C++ convenience wrappers.
+pub struct CppFreeFunction {
+    /// The full function signature, without a trailing semicolon or body, e.g.
+    /// `auto create_wl_buffer(WaylandClient const& client, uint32_t version) -> std::shared_ptr<Buffer>`.
+    pub signature: String,
+    /// The function body (statements only, without the surrounding braces).
+    pub body: String,
+}
+
 pub struct CppNamespace {
     pub name: Vec<String>,
     pub classes: Vec<CppClass>,
     forward_declarations: Vec<String>,
+    free_functions: Vec<CppFreeFunction>,
 }
 
 impl CppNamespace {
@@ -376,6 +414,7 @@ impl CppNamespace {
             name: name.into_iter().map(Into::into).collect(),
             classes: vec![],
             forward_declarations: vec![],
+            free_functions: vec![],
         }
     }
 
@@ -384,6 +423,15 @@ impl CppNamespace {
         self.classes
             .last_mut()
             .expect("classes cannot be empty after push")
+    }
+
+    /// Add a free function to be emitted at namespace scope (declaration in the header,
+    /// definition in the .cpp source).
+    pub fn add_free_function(&mut self, signature: impl Into<String>, body: impl Into<String>) {
+        self.free_functions.push(CppFreeFunction {
+            signature: signature.into(),
+            body: body.into(),
+        });
     }
 
     pub fn add_forward_declaration_struct(&mut self, name: &str) {
@@ -404,6 +452,10 @@ pub struct CppClass {
     pub protected_constructor_args: Vec<CppArg>,
     pub protected_members: Vec<CppArg>,
     pub private_members: Vec<CppArg>,
+    /// Verbatim header-only declarations emitted in the `public:` section. Unlike `CppMethod`,
+    /// these are never emitted to the .cpp source or the generated Rust/cxx bindings, so they are
+    /// suitable for header-only helpers such as static templated methods.
+    pub raw_public_decls: Vec<String>,
 }
 
 impl CppClass {
@@ -417,11 +469,17 @@ impl CppClass {
             protected_constructor_args: vec![],
             protected_members: vec![],
             private_members: vec![],
+            raw_public_decls: vec![],
         }
     }
 
     pub fn set_superclass(&mut self, name: impl Into<String>) {
         self.superclass = Some(name.into());
+    }
+
+    /// Add a verbatim declaration to the class's `public:` section (header only).
+    pub fn add_raw_public_decl(&mut self, decl: impl Into<String>) {
+        self.raw_public_decls.push(decl.into());
     }
 
     pub fn add_method(&mut self, method: CppMethod) -> &mut CppMethod {
@@ -555,6 +613,10 @@ pub enum CppType {
     Fd,
     Box(String),
     Bool,
+    /// A `std::shared_ptr<T>` to a hand-written C++ type (e.g. the `Client`
+    /// interface). This type never crosses the FFI boundary; it is only used on
+    /// the public C++ surface of generated classes.
+    SharedPtr(String),
     /// A nullable argument exposed on the public C++ surface as `std::optional`.
     /// This type never crosses the FFI boundary; the boundary uses the
     /// `(value, has_value)` representation instead.
@@ -612,6 +674,7 @@ fn cpp_bare_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -
         (CppType::Object(name), _) => format!("std::shared_ptr<{}>", name),
         (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}>", name),
         (CppType::Box(name), _) => format!("rust::Box<{}>", name),
+        (CppType::SharedPtr(name), _) => format!("std::shared_ptr<{}>", name),
         (CppType::String, true) => "rust::String".into(),
         (CppType::String, false) => "std::string".into(),
         (CppType::Str, _) => "rust::Str".into(),
@@ -645,6 +708,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
             quote! { &Box<#type_name> }
         }
         CppType::Bool => quote! { bool },
+        CppType::SharedPtr(_) => unreachable!("SharedPtr type should not generate Rust code"),
         CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }
@@ -689,6 +753,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
             }
         }
         CppType::Bool => quote! { bool },
+        CppType::SharedPtr(_) => unreachable!("SharedPtr type should not generate Rust code"),
         CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }

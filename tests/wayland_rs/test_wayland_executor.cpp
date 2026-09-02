@@ -14,109 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "wayland_rs/src/ffi.rs.h"
-#include "wayland_executor.h"
-
-#include <mir/executor.h>
-#include <mir_test_framework/temporary_environment_value.h>
+#include "wayland_rs_server_test.h"
 
 #include <gtest/gtest.h>
 
 #include <condition_variable>
-#include <cstdlib>
-#include <filesystem>
-#include <memory>
 #include <mutex>
-#include <optional>
-#include <string>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <system_error>
 #include <thread>
-#include <unistd.h>
 #include <vector>
-
-namespace mrs = mir::wayland_rs;
-namespace mtf = mir_test_framework;
 
 using namespace std::chrono_literals;
 
 namespace
 {
-/// A notification handler that ignores everything. The executor tests do not
-/// care about client lifecycle events.
-class StubNotificationHandler : public mrs::WaylandServerNotificationHandler
+class WaylandExecutorTest : public mir::wayland_rs::test::RunningWaylandServerTest
 {
-public:
-    void client_added(rust::Box<mrs::WaylandClient>) override {}
-    void client_removed(rust::Box<mrs::WaylandClientId>) override {}
-};
-
-/// Create a fresh, private temporary directory for use as XDG_RUNTIME_DIR (the
-/// Wayland server binds its listening socket there). Returns its path.
-auto make_temp_runtime_dir() -> std::string
-{
-    char template_path[] = "/tmp/mir-wayland-rs-test-XXXXXX";
-    auto const dir = ::mkdtemp(template_path);
-    if (!dir)
-        throw std::runtime_error{"Failed to create temporary XDG_RUNTIME_DIR"};
-
-    ::chmod(dir, 0700);
-    return dir;
-}
-
-class WaylandExecutorTest : public testing::Test
-{
-public:
-    void SetUp() override
-    {
-        // Always run against a private temporary XDG_RUNTIME_DIR so the test
-        // never pollutes (or collides with) a real runtime directory. It is
-        // removed again in TearDown.
-        runtime_dir = make_temp_runtime_dir();
-        xdg_runtime_dir.emplace("XDG_RUNTIME_DIR", runtime_dir.c_str());
-
-        server.emplace(mrs::create_wayland_server());
-        auto executor_owned = std::make_unique<mrs::WaylandExecutor>(**server);
-        executor = executor_owned.get();
-
-        // A socket name unique to this process so parallel test runs do not collide.
-        auto const socket = "mir-wayland-rs-test-" + std::to_string(::getpid());
-
-        server_thread = std::thread{
-            [this, socket, handler = std::move(executor_owned)]() mutable
-            {
-                (*server)->run(
-                    socket,
-                    nullptr,
-                    std::make_unique<StubNotificationHandler>(),
-                    std::move(handler));
-            }};
-    }
-
-    void TearDown() override
-    {
-        if (server)
-            (*server)->stop();
-        if (server_thread.joinable())
-            server_thread.join();
-
-        // Restore the previous environment and remove the temporary directory
-        // (along with the socket the server bound inside it).
-        xdg_runtime_dir.reset();
-
-        if (!runtime_dir.empty())
-        {
-            std::error_code ec;
-            std::filesystem::remove_all(runtime_dir, ec);
-        }
-    }
-
-    std::string runtime_dir;
-    std::optional<mtf::TemporaryEnvironmentValue> xdg_runtime_dir;
-    std::optional<rust::Box<mrs::WaylandServer>> server;
-    mir::Executor* executor{nullptr};
-    std::thread server_thread;
 };
 }
 

@@ -75,12 +75,12 @@ struct DamageTrackerV1 : Test
 
     void SetUp() override
     {
-        ON_CALL(surface_stack, add_observer(_)).WillByDefault(Invoke([this]
+        ON_CALL(surface_stack, add_observer(_)).WillByDefault([this]
             (std::shared_ptr<ms::Observer>  const& observer)
             {
                 scene_observer = observer;
                 observer->surface_exists(mt::fake_shared(surface));
-            }));
+            });
         ON_CALL(surface, register_interest(_)).WillByDefault(SaveArg<0>(&surface_observer));
     }
 

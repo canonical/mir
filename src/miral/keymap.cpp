@@ -168,7 +168,7 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     {
         std::string model = mi::ParameterKeymap::default_model;
         auto const keyboard_config = keyboard->keyboard_configuration();
-        if (keyboard_config.is_set())
+        if (keyboard_config.has_value())
         {
             model = keyboard_config.value().device_keymap()->model();
         }

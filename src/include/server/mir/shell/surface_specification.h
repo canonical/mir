@@ -18,7 +18,6 @@
 #define MIR_SHELL_SURFACE_SPECIFICATION_H_
 
 #include <mir/flags.h>
-#include <mir/optional_value.h>
 #include <mir_toolkit/common.h>
 #include <mir/frontend/surface_id.h>
 #include <mir/geometry/point.h>
@@ -26,8 +25,9 @@
 #include <mir/graphics/buffer_properties.h>
 #include <mir/graphics/display_configuration.h>
 
-#include <string>
 #include <memory>
+#include <optional>
+#include <string>
 
 namespace mir
 {
@@ -64,66 +64,66 @@ struct SurfaceSpecification
     /// Sets width and height at the same time
     void set_size(geometry::Size size) { width = size.width; height = size.height; }
 
-    optional_value<geometry::Point> top_left;
-    optional_value<geometry::Width> width;
-    optional_value<geometry::Height> height;
-    optional_value<MirPixelFormat> pixel_format;
-    optional_value<graphics::BufferUsage> buffer_usage;
-    optional_value<std::string> name;
-    optional_value<graphics::DisplayConfigurationOutputId> output_id;
-    optional_value<MirWindowType> type;
-    optional_value<MirWindowState> state;
-    optional_value<MirOrientationMode> preferred_orientation;
-    optional_value<frontend::SurfaceId> parent_id;
-    optional_value<geometry::Rectangle> aux_rect;
-    optional_value<MirEdgeAttachment> edge_attachment;
-    optional_value<MirPlacementHints> placement_hints;
-    optional_value<MirPlacementGravity> surface_placement_gravity;
-    optional_value<MirPlacementGravity> aux_rect_placement_gravity;
-    optional_value<int> aux_rect_placement_offset_x;
-    optional_value<int> aux_rect_placement_offset_y;
+    std::optional<geometry::Point> top_left;
+    std::optional<geometry::Width> width;
+    std::optional<geometry::Height> height;
+    std::optional<MirPixelFormat> pixel_format;
+    std::optional<graphics::BufferUsage> buffer_usage;
+    std::optional<std::string> name;
+    std::optional<graphics::DisplayConfigurationOutputId> output_id;
+    std::optional<MirWindowType> type;
+    std::optional<MirWindowState> state;
+    std::optional<MirOrientationMode> preferred_orientation;
+    std::optional<frontend::SurfaceId> parent_id;
+    std::optional<geometry::Rectangle> aux_rect;
+    std::optional<MirEdgeAttachment> edge_attachment;
+    std::optional<MirPlacementHints> placement_hints;
+    std::optional<MirPlacementGravity> surface_placement_gravity;
+    std::optional<MirPlacementGravity> aux_rect_placement_gravity;
+    std::optional<int> aux_rect_placement_offset_x;
+    std::optional<int> aux_rect_placement_offset_y;
     /// The expected size of the parent surface at the time of popup placement.
     /// Used to constrain popup placement when the parent is being resized.
-    optional_value<geometry::Size> parent_size;
-    optional_value<geometry::Width> min_width;
-    optional_value<geometry::Height> min_height;
-    optional_value<geometry::Width> max_width;
-    optional_value<geometry::Height> max_height;
-    optional_value<geometry::DeltaX> width_inc;
-    optional_value<geometry::DeltaY> height_inc;
-    optional_value<SurfaceAspectRatio> min_aspect;
-    optional_value<SurfaceAspectRatio> max_aspect;
-    optional_value<std::vector<StreamSpecification>> streams;
-    optional_value<std::weak_ptr<scene::Surface>> parent;
+    std::optional<geometry::Size> parent_size;
+    std::optional<geometry::Width> min_width;
+    std::optional<geometry::Height> min_height;
+    std::optional<geometry::Width> max_width;
+    std::optional<geometry::Height> max_height;
+    std::optional<geometry::DeltaX> width_inc;
+    std::optional<geometry::DeltaY> height_inc;
+    std::optional<SurfaceAspectRatio> min_aspect;
+    std::optional<SurfaceAspectRatio> max_aspect;
+    std::optional<std::vector<StreamSpecification>> streams;
+    std::optional<std::weak_ptr<scene::Surface>> parent;
 
-    optional_value<std::vector<geometry::Rectangle>> input_shape;
-    optional_value<input::InputReceptionMode> input_mode;
+    std::optional<std::vector<geometry::Rectangle>> input_shape;
+    std::optional<input::InputReceptionMode> input_mode;
 
-    optional_value<MirShellChrome> shell_chrome;
-    optional_value<MirPointerConfinementState> confine_pointer;
-    optional_value<std::shared_ptr<graphics::CursorImage>> cursor_image;
+    std::optional<MirShellChrome> shell_chrome;
+    std::optional<MirPointerConfinementState> confine_pointer;
+    std::optional<std::shared_ptr<graphics::CursorImage>> cursor_image;
 
     /// Child surfaces are by default created on the same layer as their parent, and updating the depth layer of a parent
     /// also updates all children.
-    optional_value<MirDepthLayer> depth_layer;
-    optional_value<bool> visible_on_lock_screen;
+    std::optional<MirDepthLayer> depth_layer;
+    std::optional<bool> visible_on_lock_screen;
 
-    optional_value<MirPlacementGravity> attached_edges;
-    optional_value<optional_value<geometry::Rectangle>> exclusive_rect;
-    optional_value<bool> ignore_exclusion_zones;
-    optional_value<std::string> application_id;
+    std::optional<MirPlacementGravity> attached_edges;
+    std::optional<std::optional<geometry::Rectangle>> exclusive_rect;
+    std::optional<bool> ignore_exclusion_zones;
+    std::optional<std::string> application_id;
 
     /// If to enable server-side decorations for this surface
-    optional_value<bool> server_side_decorated;
+    std::optional<bool> server_side_decorated;
 
     /// How the surface should gain and lose focus
-    optional_value<MirFocusMode> focus_mode;
+    std::optional<MirFocusMode> focus_mode;
 
     /// Describes which edges are touching part of the tiling grid
-    optional_value<Flags<MirTiledEdge>> tiled_edges;
+    std::optional<Flags<MirTiledEdge>> tiled_edges;
 
     /// The opacity of the window.
-    optional_value<float> alpha;
+    std::optional<float> alpha;
 };
 bool operator==(SurfaceSpecification const& lhs, SurfaceSpecification const& rhs);
 }

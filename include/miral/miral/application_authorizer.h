@@ -54,11 +54,6 @@ public:
     ApplicationAuthorizer& operator=(ApplicationAuthorizer const&) = delete;
 
     virtual bool connection_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool configure_display_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool set_base_display_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool screencast_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool configure_input_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool set_base_input_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
 };
 
 class BasicSetApplicationAuthorizer

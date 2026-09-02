@@ -4,9 +4,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::AddInitCallback::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::AddInitCallback::~AddInitCallback()@MIRAL_6.0" 6.0.0
  (c++)"miral::AppendEventFilter::AppendEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::AppendEventFilter::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::AppendEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter(std::function<bool (MirKeyboardEvent const*)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::gid() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::pid() const@MIRAL_6.0" 6.0.0
@@ -19,7 +19,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ApplicationInfo::operator=(miral::ApplicationInfo const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::userdata() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::userdata(std::shared_ptr<void>)@MIRAL_6.0" 6.0.0
- (c++)"miral::ApplicationInfo::windows() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationInfo::windows() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::~ApplicationInfo()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationSwitcher::ApplicationSwitcher()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationSwitcher::ApplicationSwitcher(miral::ApplicationSwitcher const&)@MIRAL_6.0" 6.0.0
@@ -54,8 +54,8 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::CanonicalWindowManagerPolicy::advise_focus_gained(miral::WindowInfo const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::CanonicalWindowManagerPolicy::handle_activate_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::CanonicalWindowManagerPolicy::handle_raise_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::handle_window_ready(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CanonicalWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigFile::ConfigFile(miral::MirRunner&, std::filesystem::__cxx11::path, miral::ConfigFile::Mode, std::function<void (std::basic_istream<char, std::char_traits<char> >&, std::filesystem::__cxx11::path const&)>)@MIRAL_6.0" 6.0.0
@@ -66,11 +66,11 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (bool)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, bool)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (double)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, double)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (int)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, int)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (mir::optional_value<bool> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (mir::optional_value<int> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (mir::optional_value<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, char const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<bool> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<int> const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::optional<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::ConfigurationOption(std::function<void (std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > > const&)>, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&, std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::ConfigurationOption::operator=(miral::ConfigurationOption const&)@MIRAL_6.0" 6.0.0
@@ -129,17 +129,12 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::FloatingWindowManager::begin_pointer_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::begin_touch_move(miral::WindowInfo const&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::handle_window_ready(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
- (c++)"miral::FloatingWindowManager::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::FloatingWindowManager::~FloatingWindowManager()@MIRAL_6.0" 6.0.0
  (c++)"miral::HoverClick::HoverClick(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::HoverClick::HoverClick(std::shared_ptr<miral::HoverClick::Self>)@MIRAL_6.0" 6.0.0
@@ -230,6 +225,15 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::Keymap::set_keymap(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Keymap::system_locale1()@MIRAL_6.0" 6.0.0
  (c++)"miral::Keymap::~Keymap()@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::KioskWindowManagerPolicy(miral::WindowManagerTools const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::KioskWindowManagerPolicy(miral::WindowManagerTools const&, MirWindowState)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_pointer_event(MirPointerEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::handle_touch_event(MirTouchEvent const*)@MIRAL_6.0" 6.0.0
+ (c++)"miral::KioskWindowManagerPolicy::place_new_window(miral::ApplicationInfo const&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::LocatePointer::LocatePointer(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::LocatePointer::LocatePointer(std::shared_ptr<miral::LocatePointer::Self>)@MIRAL_6.0" 6.0.0
  (c++)"miral::LocatePointer::cancel_request()@MIRAL_6.0" 6.0.0
@@ -265,10 +269,10 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::MinimalWindowManager::begin_touch_resize(miral::WindowInfo const&, MirInputEvent const*, MirResizeEdge const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::confirm_inherited_move(miral::WindowInfo const&, mir::geometry::generic::Displacement<int>)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::confirm_placement_on_display(miral::WindowInfo const&, MirWindowState, mir::geometry::generic::Rectangle<int> const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::MinimalWindowManager::handle_activate_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_keyboard_event(MirKeyboardEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_modify_window(miral::WindowInfo&, miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_pointer_event(MirPointerEvent const*)@MIRAL_6.0" 6.0.0
- (c++)"miral::MinimalWindowManager::handle_raise_window(miral::WindowInfo&)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_request_move(miral::WindowInfo&, MirInputEvent const*)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_request_resize(miral::WindowInfo&, MirInputEvent const*, MirResizeEdge)@MIRAL_6.0" 6.0.0
  (c++)"miral::MinimalWindowManager::handle_touch_event(MirTouchEvent const*)@MIRAL_6.0" 6.0.0
@@ -329,16 +333,13 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::OutputFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::OutputFilter::~OutputFilter()@MIRAL_6.0" 6.0.0
  (c++)"miral::PrependEventFilter::PrependEventFilter(std::function<bool (MirEvent const*)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::PrependEventFilter::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::PrependEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::PrintTo(miral::Window const&, std::basic_ostream<char, std::char_traits<char> >*)@MIRAL_6.0" 6.0.0
  (c++)"miral::SessionLockListener::SessionLockListener(std::function<void ()> const&, std::function<void ()> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SessionLockListener::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::SetCommandLineHandler(std::function<void (int, char const* const*)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetCommandLineHandler::~SetCommandLineHandler()@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::SetTerminator(std::function<void (int)> const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
- (c++)"miral::SetTerminator::~SetTerminator()@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::SetWindowManagementPolicy(std::function<std::unique_ptr<miral::WindowManagementPolicy, std::default_delete<miral::WindowManagementPolicy> > (miral::WindowManagerTools const&)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::SetWindowManagementPolicy::~SetWindowManagementPolicy()@MIRAL_6.0" 6.0.0
@@ -376,6 +377,13 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::StickyKeys::on_modifier_clicked(std::function<void (int)>&&)@MIRAL_6.0" 6.0.0
  (c++)"miral::StickyKeys::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
  (c++)"miral::StickyKeys::should_disable_if_two_keys_are_pressed_together(bool)@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::TouchEmulator(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::TouchEmulator(std::shared_ptr<miral::TouchEmulator::Self>)@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::disable()@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::disabled()@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::enable()@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::enabled()@MIRAL_6.0" 6.0.0
+ (c++)"miral::TouchEmulator::operator()(mir::Server&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::app() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::name() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WaylandExtensions::EnableInfo::user_preference() const@MIRAL_6.0" 6.0.0
@@ -432,9 +440,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::attached_edges() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::can_be_active() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::can_morph_to(MirWindowType) const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowInfo::children() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowInfo::children() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::clip_area() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::generic::Rectangle<int> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowInfo::clip_area(std::optional<mir::geometry::generic::Rectangle<int> > const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::confine_pointer() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::constrain_resize(mir::geometry::generic::Point<int>&, mir::geometry::generic::Size<int>&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::depth_layer() const@MIRAL_6.0" 6.0.0
@@ -468,7 +476,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::width_inc() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::window() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_create(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_delete(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_update(miral::Zone const&, miral::Zone const&)@MIRAL_6.0" 6.0.0
@@ -484,8 +492,8 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowManagementPolicy::advise_output_create(miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_output_delete(miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_output_update(miral::Output const&, miral::Output const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_raise(std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::vector<miral::Window, std::allocator<miral::Window> > const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::advise_raise(std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_resize(miral::WindowInfo const&, mir::geometry::generic::Size<int> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_state_change(miral::WindowInfo const&, MirWindowState)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::~WindowManagementPolicy()@MIRAL_6.0" 6.0.0
@@ -531,82 +539,82 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::alpha() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::alpha()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::application_id[abi:cxx11]()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::attached_edges() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::attached_edges()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::aux_rect() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::aux_rect()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::aux_rect_placement_gravity() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::aux_rect_placement_gravity()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::aux_rect_placement_offset() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::aux_rect_placement_offset()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::confine_pointer() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::confine_pointer()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::depth_layer() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::depth_layer()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::exclusive_rect() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::exclusive_rect()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::focus_mode() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::focus_mode()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::height_inc() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::height_inc()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::ignore_exclusion_zones() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::ignore_exclusion_zones()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::input_mode() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::input_mode()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::input_shape() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::input_shape()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::max_aspect() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::max_aspect()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::max_height() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::max_height()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::max_width() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::max_width()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::min_aspect() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::min_aspect()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::min_height() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::min_height()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::min_width() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::min_width()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::name[abi:cxx11]() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::name[abi:cxx11]()@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::alpha() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::alpha() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::application_id[abi:cxx11]() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::application_id[abi:cxx11]() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::attached_edges() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::attached_edges() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::aux_rect() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::aux_rect() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::aux_rect_placement_gravity() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::aux_rect_placement_gravity() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::aux_rect_placement_offset() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::aux_rect_placement_offset() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::confine_pointer() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::confine_pointer() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::depth_layer() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::depth_layer() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::exclusive_rect() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::exclusive_rect() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::focus_mode() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::focus_mode() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::height_inc() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::height_inc() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::ignore_exclusion_zones() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::ignore_exclusion_zones() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::input_mode() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::input_mode() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::input_shape() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::input_shape() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::max_aspect() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::max_aspect() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::max_height() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::max_height() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::max_width() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::max_width() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::min_aspect() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::min_aspect() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::min_height() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::min_height() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::min_width() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::min_width() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::name[abi:cxx11]() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::name[abi:cxx11]() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::operator=(miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::output_id() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::output_id()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::parent() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::parent()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::parent_size() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::parent_size()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::placement_hints() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::placement_hints()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::preferred_orientation() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::preferred_orientation()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::server_side_decorated() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::server_side_decorated()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::shell_chrome() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::shell_chrome()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::size() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::size()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::state() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::state()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::tiled_edges() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::tiled_edges()@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::output_id() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::output_id() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::parent() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::parent() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::parent_size() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::parent_size() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::placement_hints() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::placement_hints() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::preferred_orientation() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::preferred_orientation() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::server_side_decorated() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::server_side_decorated() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::shell_chrome() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::shell_chrome() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::size() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::size() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::state() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::state() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::tiled_edges() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::tiled_edges() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::to_surface_specification() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::top_left() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::top_left()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::type() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::type()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::userdata() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::userdata()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::visible_on_lock_screen() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::visible_on_lock_screen()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::width_inc() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::width_inc()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::window_placement_gravity() const@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowSpecification::window_placement_gravity()@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::top_left() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::top_left() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::type() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::type() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::userdata() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::userdata() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::visible_on_lock_screen() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::visible_on_lock_screen() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::width_inc() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::width_inc() const &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::window_placement_gravity() &@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::window_placement_gravity() const &@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::~WindowSpecification()@MIRAL_6.0" 6.0.0
  (c++)"miral::X11Support::X11Support()@MIRAL_6.0" 6.0.0
  (c++)"miral::X11Support::X11Support(miral::X11Support const&)@MIRAL_6.0" 6.0.0
@@ -706,6 +714,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"typeinfo for miral::ApplicationSwitcher@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::FloatingWindowManager@MIRAL_6.0" 6.0.0
+ (c++)"typeinfo for miral::KioskWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::MinimalWindowManager@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::WaylandExtensions::Context@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::WindowManagementPolicy@MIRAL_6.0" 6.0.0
@@ -714,6 +723,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"typeinfo for miral::live_config::Store@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::FloatingWindowManager@MIRAL_6.0" 6.0.0
+ (c++)"vtable for miral::KioskWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::MinimalWindowManager@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::WindowManagementPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::live_config::IniFile@MIRAL_6.0" 6.0.0

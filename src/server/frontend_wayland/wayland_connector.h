@@ -25,9 +25,9 @@
 #include <mir/frontend/connector.h>
 #include <mir/frontend/drag_icon_controller.h>
 #include <mir/frontend/wayland.h>
-#include <mir/optional_value.h>
 
 #include <wayland-server-core.h>
+#include <optional>
 #include <unordered_map>
 #include <unordered_set>
 #include <thread>

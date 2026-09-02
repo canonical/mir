@@ -41,12 +41,12 @@ public:
             mir_pixel_format_argb_8888);
 
         ON_CALL(*tex_buf, shader(testing::_))
-            .WillByDefault(testing::Invoke(
+            .WillByDefault(
                 [](auto& factory) -> mir::graphics::gl::Program&
                 {
                     static int unused = 1;
                     return factory.compile_fragment_shader(&unused, "extension code", "fragment code");
-                }));
+                });
 
         return tex_buf;
     }

@@ -17,13 +17,10 @@
 #ifndef MIRAL_LAUNCH_APP_H
 #define MIRAL_LAUNCH_APP_H
 
-#include <mir/optional_value.h>
-
 #include <sys/types.h>
 
-#include <optional>
-
 #include <map>
+#include <optional>
 #include <string>
 #include <vector>
 

@@ -71,20 +71,20 @@ auto miral::SystemCompositorWindowManager::add_surface(
 -> std::shared_ptr<ms::Surface>
 {
     mir::geometry::Rectangle rect;
-    if (params.top_left.is_set())
+    if (params.top_left.has_value())
     {
         rect.top_left = params.top_left.value();
     }
-    if (params.width.is_set())
+    if (params.width.has_value())
     {
         rect.size.width = params.width.value();
     }
-    if (params.height.is_set())
+    if (params.height.has_value())
     {
         rect.size.height = params.height.value();
     }
 
-    if (!params.output_id.is_set() || !params.output_id.value().as_value())
+    if (!params.output_id.has_value() || !params.output_id.value().as_value())
         BOOST_THROW_EXCEPTION(std::runtime_error("An output ID must be specified"));
 
     display_layout->place_in_output(params.output_id.value(), rect);
@@ -115,10 +115,10 @@ void miral::SystemCompositorWindowManager::modify_surface(
     std::shared_ptr<ms::Surface> const& surface,
     msh::SurfaceSpecification const& modifications)
 {
-    if (modifications.name.is_set())
+    if (modifications.name.has_value())
         surface->rename(modifications.name.value());
 
-    if (modifications.output_id.is_set())
+    if (modifications.output_id.has_value())
     {
         auto const output_id = modifications.output_id.value();
 
@@ -134,7 +134,7 @@ void miral::SystemCompositorWindowManager::modify_surface(
         output_map[surface] = output_id;
     }
 
-    if (modifications.input_shape.is_set())
+    if (modifications.input_shape.has_value())
     {
         surface->set_input_region(modifications.input_shape.value());
     }

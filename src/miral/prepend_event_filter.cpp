@@ -40,7 +40,7 @@ miral::PrependEventFilter::PrependEventFilter(std::function<bool(MirEvent const*
 {
 }
 
-void miral::PrependEventFilter::operator()(mir::Server& server)
+void miral::PrependEventFilter::operator()(mir::Server& server) const
 {
     server.add_init_callback([this, &server] { server.the_composite_event_filter()->prepend(filter); });
 }

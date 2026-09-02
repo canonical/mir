@@ -9,6 +9,7 @@
 
 use crate::cpp_builder::{sanitize_identifier, CppBuilder};
 use crate::helpers::{
+    dash_to_snake, format_wayland_interface_to_cpp_class,
     format_wayland_interface_to_rust_extension_struct, protocol_requires_codegen,
 };
 
@@ -29,6 +30,8 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
 
     let rust_types = protocols.iter().flat_map(generate_rust_types);
 
+    let server_side_factory_decls = generate_server_side_factory_ffi_decls(protocols);
+
     // Next, generate the Rust -> C++ side.
     let cpp_tokens: Vec<TokenStream> = builders
         .into_iter()
@@ -40,6 +43,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
         use crate::wayland_server_core::*;
         use crate::wayland_client::*;
         use crate::middleware::*;
+        use crate::dispatch::*;
 
         #[cxx::bridge(namespace = "mir::wayland_rs")]
         #[allow(dead_code, unused_imports)]
@@ -47,9 +51,14 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
             extern "Rust" {
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
-                fn run(self: &mut WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
+                fn run(self: &WaylandServer, socket: &str, factory: UniquePtr<GlobalFactory>, notification_handler: UniquePtr<WaylandServerNotificationHandler>, work_callback: UniquePtr<WorkCallback>) -> Result<()>;
                 fn stop(self: &WaylandServer);
-                fn drain_queue(self: &mut WaylandServer) -> bool;
+                fn drain_queue(self: &WaylandServer) -> bool;
+                fn register_fd_ready_listener(self: &WaylandServer, fd: i32, callback: UniquePtr<FdReadyCallback>);
+                fn insert_client(self: &WaylandServer, fd: i32);
+
+                type OutputGlobal;
+                fn create_output_global(self: &WaylandServer, binder: UniquePtr<OutputGlobalBinder>) -> Result<Box<OutputGlobal>>;
 
                 type WaylandClient;
                 fn pid(self: &WaylandClient) -> Result<i32>;
@@ -66,6 +75,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
 
                 #(#rust_types)*
                 #(#rust_tokens)*
+                #(#server_side_factory_decls)*
             }
 
             unsafe extern "C++" {
@@ -73,6 +83,58 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
             }
         }
     }
+}
+
+/// Generate the `extern "Rust"` bridge declarations for the server-side
+/// object-creation helpers produced in `mod dispatch`.
+///
+/// For every interface used as the `new_id` of an event we expose:
+/// * `allocate_<interface>(client, version) -> Box<Middleware>` and
+/// * `set_<interface>_inner(instance, object)`.
+fn generate_server_side_factory_ffi_decls(protocols: &Vec<WaylandProtocol>) -> Vec<TokenStream> {
+    let mut seen: Vec<String> = Vec::new();
+    let mut decls: Vec<TokenStream> = Vec::new();
+
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                let InterfaceItem::Event(event) = item else {
+                    continue;
+                };
+                for arg in &event.args {
+                    if arg.type_ != WaylandArgType::NewId {
+                        continue;
+                    }
+                    let Some(child_name) = arg.interface.as_ref() else {
+                        continue;
+                    };
+                    if child_name == "wl_display" || child_name == "wl_registry" {
+                        continue;
+                    }
+                    if seen.iter().any(|s| s == child_name) {
+                        continue;
+                    }
+                    seen.push(child_name.clone());
+
+                    let create_fn = format_ident!("allocate_{}", dash_to_snake(child_name));
+                    let set_inner_fn = format_ident!("set_{}_inner", dash_to_snake(child_name));
+                    let middleware_struct = format_ident!(
+                        "{}",
+                        format_wayland_interface_to_rust_extension_struct(child_name)
+                    );
+                    let cpp_struct =
+                        format_ident!("{}", format_wayland_interface_to_cpp_class(child_name));
+
+                    decls.push(quote! {
+                        fn #create_fn(client: &WaylandClient, version: u32) -> Result<Box<#middleware_struct>>;
+                        fn #set_inner_fn(instance: &#middleware_struct, object: SharedPtr<#cpp_struct>);
+                    });
+                }
+            }
+        }
+    }
+
+    decls
 }
 
 fn generate_rust_types(protocol: &WaylandProtocol) -> Vec<TokenStream> {
@@ -117,6 +179,7 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
     quote! {
         fn post_error(self: &mut #interface_name_ext, code: u32, message: &CxxString);
         fn version(self: &#interface_name_ext) -> u32;
+        fn object_id(self: &#interface_name_ext) -> u32;
         fn destroy_and_delete(self: &#interface_name_ext);
         #(#events)*
     }

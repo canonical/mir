@@ -77,12 +77,12 @@ private:
     struct Config
     {
         bool  disabled = false;
-        mir::optional_value<mir::geometry::Point>  position;
-        mir::optional_value<mir::geometry::Size>   size;
-        mir::optional_value<double> refresh;
-        mir::optional_value<float>  scale;
-        mir::optional_value<MirOrientation>  orientation;
-        mir::optional_value<int> group_id;
+        std::optional<mir::geometry::Point>  position;
+        std::optional<mir::geometry::Size>   size;
+        std::optional<double> refresh;
+        std::optional<float>  scale;
+        std::optional<MirOrientation>  orientation;
+        std::optional<int> group_id;
         std::map<std::string, std::optional<std::string>> custom_attribute;
     };
 

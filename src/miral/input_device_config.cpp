@@ -386,7 +386,7 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
     if (contains(device.capabilities(), mi::DeviceCapability::touchpad))
     {
         mir::log_debug("Configuring touchpad: '%s'", device.name().c_str());
-        if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
+        if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.has_value())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             if (acceleration) pointer_config.acceleration(*acceleration);
@@ -396,7 +396,7 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
             device.apply_pointer_configuration(pointer_config);
         }
 
-        if (auto const optional_touchpad_config = device.touchpad_configuration(); optional_touchpad_config.is_set())
+        if (auto const optional_touchpad_config = device.touchpad_configuration(); optional_touchpad_config.has_value())
         {
             MirTouchpadConfig touch_config( optional_touchpad_config.value() );
             if (disable_while_typing) touch_config.disable_while_typing(*disable_while_typing);
@@ -416,7 +416,7 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
     if (contains(device.capabilities(), mi::DeviceCapability::pointer))
     {
         mir::log_debug("Configuring pointer: '%s'", device.name().c_str());
-        if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
+        if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.has_value())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             if (handedness) pointer_config.handedness(*handedness);

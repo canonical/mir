@@ -4,6 +4,15 @@ mir_add_wrapped_executable(mir_unit_tests_atomic-kms NOINSTALL
 
 add_dependencies(mir_unit_tests_atomic-kms GMock)
 
+target_include_directories(
+  mir_unit_tests_atomic-kms
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/src/platforms/atomic-kms/server
+    ${PROJECT_SOURCE_DIR}/src/platforms/atomic-kms/server/kms
+)
+
 set_target_properties(
   mir_unit_tests_atomic-kms
   PROPERTIES

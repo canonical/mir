@@ -48,7 +48,7 @@ struct DecorationBasicManager
         manager.init(shell);
         EXPECT_CALL(*this, build_decoration())
             .Times(AnyNumber())
-            .WillRepeatedly(Invoke([](){ return new StubDecoration; }));
+            .WillRepeatedly([](){ return new StubDecoration; });
         EXPECT_CALL(*this, decoration_destroyed(_))
             .Times(AnyNumber());
     }
@@ -99,7 +99,7 @@ TEST_F(DecorationBasicManager, calls_build_decoration)
     auto const surface = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(1)
-        .WillOnce(Invoke([](){ return new StubDecoration; }));
+        .WillOnce([](){ return new StubDecoration; });
     manager.decorate(surface);
 }
 
@@ -116,7 +116,7 @@ TEST_F(DecorationBasicManager, decorating_a_surface_is_idempotent)
     auto const surface = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(1)
-        .WillOnce(Invoke([](){ return new StubDecoration; }));
+        .WillOnce([](){ return new StubDecoration; });
     manager.decorate(surface);
     manager.decorate(surface);
     manager.decorate(surface);
@@ -156,8 +156,8 @@ TEST_F(DecorationBasicManager, undecorate_works)
         .Times(0);
     EXPECT_CALL(*this, build_decoration())
         .Times(2)
-        .WillOnce(Invoke([&](){ return decoration_a.release(); }))
-        .WillOnce(Invoke([&](){ return decoration_b.release(); }));
+        .WillOnce([&](){ return decoration_a.release(); })
+        .WillOnce([&](){ return decoration_b.release(); });
     manager.decorate(surface_a);
     manager.decorate(surface_b);
     manager.undecorate(surface_a);
@@ -178,8 +178,8 @@ TEST_F(DecorationBasicManager, undecorate_all_works)
         .Times(1);
     EXPECT_CALL(*this, build_decoration())
         .Times(2)
-        .WillOnce(Invoke([&](){ return decoration_a.release(); }))
-        .WillOnce(Invoke([&](){ return decoration_b.release(); }));
+        .WillOnce([&](){ return decoration_a.release(); })
+        .WillOnce([&](){ return decoration_b.release(); });
     manager.decorate(surface_a);
     manager.decorate(surface_b);
     manager.undecorate_all();
@@ -194,12 +194,12 @@ TEST_F(DecorationBasicManager, does_not_build_decorations_while_locked)
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(2)
-        .WillOnce(Invoke([&]()
+        .WillOnce([&]()
             {
                 manager.decorate(surface_b);
                 return decoration_a.release();
-            }))
-        .WillOnce(Invoke([&](){ return decoration_b.release(); }));
+            })
+        .WillOnce([&](){ return decoration_b.release(); });
     manager.decorate(surface_a);
 }
 
@@ -211,14 +211,14 @@ TEST_F(DecorationBasicManager, does_not_destroy_decorations_while_locked)
     auto const surface_b = std::make_shared<mtd::StubSurface>();
     EXPECT_CALL(*this, build_decoration())
         .Times(2)
-        .WillOnce(Invoke([&](){ return decoration_a.release(); }))
-        .WillOnce(Invoke([&](){ return decoration_b.release(); }));
+        .WillOnce([&](){ return decoration_a.release(); })
+        .WillOnce([&](){ return decoration_b.release(); });
     EXPECT_CALL(*this, decoration_destroyed(decoration_a.get()))
         .Times(1)
-        .WillOnce(Invoke([&](auto)
+        .WillOnce([&](auto)
             {
                 manager.undecorate(surface_b);
-            }));
+            });
     EXPECT_CALL(*this, decoration_destroyed(decoration_b.get()))
         .Times(1);
     manager.decorate(surface_a);

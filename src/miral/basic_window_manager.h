@@ -282,7 +282,7 @@ private:
 
     auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
     auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
-        -> mir::optional_value<Rectangle>;
+        -> std::optional<Rectangle>;
 
     void move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement);
     void set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer);
@@ -299,7 +299,7 @@ private:
                  std::vector<std::shared_ptr<Workspace>> const& workspaces_containing_window);
     auto workspaces_containing(Window const& window) const -> std::vector<std::shared_ptr<Workspace>>;
     auto active_display_area() const -> std::shared_ptr<DisplayArea>;
-    auto display_area_for_output_id(int output_id) const -> std::shared_ptr<DisplayArea>; ///< returns null if not found
+    auto display_area_for_output_id(int output_id) const -> std::optional<std::shared_ptr<DisplayArea>>; ///< returns null if not found
     auto display_area_for(WindowInfo const& info) const -> std::shared_ptr<DisplayArea>;
     auto display_area_for(Rectangle const& rect) const -> std::optional<std::shared_ptr<DisplayArea>>;
     /// Returns the application zone area after shrinking it for the exclusive zone if needed

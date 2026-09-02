@@ -30,7 +30,6 @@
 #include <mir/raii.h>
 #include <mir/graphics/display.h>
 #include <mir/renderer/gl/context.h>
-#include <mir/graphics/egl_wayland_allocator.h>
 #include <mir/executor.h>
 #include <mir/renderer/gl/gl_surface.h>
 #include <mir/graphics/display_sink.h>
@@ -70,7 +69,6 @@ mgg::BufferAllocator::BufferAllocator(
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider)
     : ctx{std::move(context)},
       egl_delegate{std::move(egl_delegate)},
-      egl_extensions(std::make_shared<mg::EGLExtensions>()),
       dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
@@ -125,20 +123,6 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     try
     {
-        mg::wayland::bind_display(dpy, display, *egl_extensions);
-        egl_display_bound = true;
-    }
-    catch (...)
-    {
-        log(
-            logging::Severity::warning,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Failed to bind EGL Display to Wayland display, falling back to software buffers");
-    }
-
-    try
-    {
         if (dmabuf_provider)
         {
             mg::EGLExtensions::EXTImageDmaBufImportModifiers modifier_ext{dpy};
@@ -160,17 +144,12 @@ void mgg::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
     this->wayland_executor = std::move(wayland_executor);
 }
 
-void mgg::BufferAllocator::unbind_display(wl_display* display)
+void mgg::BufferAllocator::unbind_display(wl_display* /*display*/)
 {
     auto context_guard = mir::raii::paired_calls(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
 
-    if (egl_display_bound)
-    {
-        mg::wayland::unbind_display(dpy, display, *egl_extensions);
-    }
     dmabuf_extension.reset();
 }
 
@@ -183,20 +162,20 @@ std::shared_ptr<mg::Buffer> mgg::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
-    if (auto dmabuf = dmabuf_extension->buffer_from_resource(
-        buffer,
-        std::function<void()>{on_consumed},
-        std::function<void()>{on_release},
-        egl_delegate))
+    if (dmabuf_extension)
     {
-        return dmabuf;
+        if (auto dmabuf = dmabuf_extension->buffer_from_resource(
+            buffer,
+            std::move(on_consumed),
+            std::move(on_release),
+            egl_delegate))
+        {
+            return dmabuf;
+        }
     }
-    return mg::wayland::buffer_from_resource(
-        buffer,
-        std::move(on_consumed),
-        std::move(on_release),
-        *egl_extensions,
-        egl_delegate);
+
+    BOOST_THROW_EXCEPTION(std::runtime_error(
+        "Failed to import client buffer: not a linux-dmabuf buffer"));
 }
 
 auto mgg::BufferAllocator::buffer_from_shm(
@@ -299,16 +278,7 @@ public:
 
     auto size() const -> geom::Size override
     {
-        EGLint width{0}, height{0};
-        if (eglQuerySurface(dpy, egl_surf, EGL_WIDTH, &width) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface width")));
-        }
-        if (eglQuerySurface(dpy, egl_surf, EGL_HEIGHT, &height) != EGL_TRUE)
-        {
-            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface height")));
-        }
-        return geom::Size{width, height};
+        return surface_size;
     }
 
     auto layout() const -> Layout override
@@ -463,6 +433,20 @@ private:
         return std::make_tuple(std::move(surf), egl_ctx, egl_surf);
     }
 
+    static auto query_surface_size(EGLDisplay dpy, EGLSurface surf) -> geom::Size
+    {
+        EGLint width{0}, height{0};
+        if (eglQuerySurface(dpy, surf, EGL_WIDTH, &width) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface width")));
+        }
+        if (eglQuerySurface(dpy, surf, EGL_HEIGHT, &height) != EGL_TRUE)
+        {
+            BOOST_THROW_EXCEPTION((mg::egl_error("Failed to query surface height")));
+        }
+        return geom::Size{width, height};
+    }
+
     GBMOutputSurface(
         EGLDisplay dpy,
         std::tuple<std::unique_ptr<mg::GBMDisplayAllocator::GBMSurface>, EGLContext, EGLSurface> renderables,
@@ -471,7 +455,8 @@ private:
           egl_surf{std::get<2>(renderables)},
           dpy{dpy},
           ctx{std::get<1>(renderables)},
-          quirks{quirks}
+          quirks{quirks},
+          surface_size{query_surface_size(dpy, egl_surf)}
     {
     }
 
@@ -480,6 +465,10 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
     std::shared_ptr<mgg::GbmQuirks> const quirks;
+    /* The EGL surface is created once, at a fixed size, and lives as long as we
+     * do, so querying EGL for it on every frame is pure overhead.
+     */
+    geom::Size const surface_size;
 };
 }
 

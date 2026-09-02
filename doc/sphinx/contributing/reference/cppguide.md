@@ -1498,9 +1498,8 @@ Use `0` for integers, `0.0` for reals, `nullptr` for pointers, and
 
 Use `0` for integers and `0.0` for reals. This is not controversial.
 
-For pointers (address values), C++11 added the `nullptr` construct. This
-allows the compiler to do additional checks, and is the preferred NULL
-pointer value.
+For pointers (address values), use `nullptr`. This allows the compiler
+to do additional checks, and is the preferred null pointer value.
 
 Use `'\0'` for chars. This is the correct type and also makes code more
 readable.
@@ -1525,15 +1524,14 @@ memset(&data, 0, sizeof(data));
 memset(&data, 0, sizeof(Struct));
 ```
 
-### C++11
+### C++26
 
-Use C++11 features wherever appropriate.
+Use C++26 features wherever appropriate.
 
 **Definition:**
 
-C++11 is the current ISO C++ standard. It contains [significant
-changes](https://en.wikipedia.org/wiki/C%2B%2B11) both to the language
-and libraries from the older standard.
+C++26 is the current ISO C++ standard. It contains significant
+changes to both the language and libraries from older standards.
 
 ## Naming
 
@@ -2624,7 +2622,6 @@ Use `{}`.
 You may choose between `=` and `()`; the following are all correct:
 
 ```c++
- //C++11: default initialization using {}
     int n{5}; //zero initialization: n is initialized to 5
     int* p{}; //initialized to nullptr
     double d{}; //initialized to 0.0
@@ -2853,8 +2850,8 @@ y = static_cast<char*>(x);  // brackets (< and >), before
                             // <, or between >( in a cast.
 vector<char*> x;            // Spaces between type and pointer are
                             // okay, but be consistent.
-set<list<string>> x;        // C++11 now allows >> to close templates.
-set<list<string> > x;       // Older C++ requiree a space in > >, and is allowed.
+set<list<string>> x;        // Preferred modern style.
+set<list<string> > x;       // Legacy spacing style; avoid in new code.
 ```
 
 ### Vertical whitespace

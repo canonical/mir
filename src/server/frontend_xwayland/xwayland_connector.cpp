@@ -44,7 +44,7 @@ mf::XWaylandConnector::XWaylandConnector(
 {
     if (access(xwayland_path.c_str(), F_OK | X_OK) != 0)
     {
-        fatal_error("Cannot execute Xwayland: --xwayland-path %s", xwayland_path.c_str());
+        MIR_FATAL_ERROR("Cannot execute Xwayland: --xwayland-path {}", xwayland_path);
     }
 }
 
@@ -52,9 +52,9 @@ mf::XWaylandConnector::~XWaylandConnector()
 {
     if (is_started || spawner || server || wm || wm_event_thread)
     {
-        fatal_error(
+        MIR_FATAL_ERROR(
             "XWaylandConnector was not stopped before being destroyed "
-            "(is_started: %s, spawner: %s, server: %s, wm: %s, wm_event_thread: %s)",
+            "(is_started: {}, spawner: {}, server: {}, wm: {}, wm_event_thread: {})",
             is_started ? "yes" : "no",
             spawner ? "exists" : "null",
             wm ? "exists" : "null",
@@ -119,7 +119,7 @@ void mf::XWaylandConnector::maybe_create_spawner(std::unique_lock<std::mutex> co
 {
     if (!lock.owns_lock())
     {
-        fatal_error("XWaylandConnector::maybe_create_spawner() given unlocked lock");
+        MIR_FATAL_ERROR("XWaylandConnector::maybe_create_spawner() given unlocked lock");
     }
 
     if (is_started && !spawner)
@@ -133,7 +133,7 @@ void mf::XWaylandConnector::clean_up(std::unique_lock<std::mutex> lock)
 {
     if (!lock.owns_lock())
     {
-        fatal_error("XWaylandConnector::clean_up() given unlocked lock");
+        MIR_FATAL_ERROR("XWaylandConnector::clean_up() given unlocked lock");
     }
 
     auto local_server{std::move(server)};

@@ -19,8 +19,8 @@ use crate::cpp_builder::{
     CppNamespace, CppType,
 };
 use crate::helpers::{
-    format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
-    protocol_requires_codegen, snake_to_pascal,
+    dash_to_snake, format_wayland_interface_to_cpp_class,
+    format_wayland_interface_to_rust_extension_struct, protocol_requires_codegen, snake_to_pascal,
 };
 use crate::protocol_parser::{
     WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -43,6 +43,8 @@ pub struct CppProtocolGenerationOutput {
 /// - A global factory builder
 /// - A wayland server notification handler builder
 /// - A work callback builder
+/// - An fd-ready callback builder
+/// - An output global binder builder
 /// - An FFI forward-declaration builder
 pub fn generate_cpp_protocol_builders(
     protocols: &Vec<WaylandProtocol>,
@@ -50,15 +52,25 @@ pub fn generate_cpp_protocol_builders(
     let global_builder = create_global_factory(protocols);
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
     let work_callback_builder = create_work_callback();
+    let fd_ready_callback_builder = create_fd_ready_callback();
+    let output_global_binder_builder = create_output_global_binder();
     let ffi_fwd_builder = create_ffi_fwd_builder(protocols);
+
+    // Interfaces that are created server-side and handed back to the client via an event
+    // carrying a `new_id` (e.g. `wl_buffer` via `zwp_linux_buffer_params_v1.created`). For
+    // each such child interface we emit a `create_<interface>` convenience wrapper in the
+    // protocol that *owns* the interface.
+    let event_created_interfaces = collect_event_created_interfaces(protocols);
 
     let mut builders: Vec<CppBuilder> = protocols
         .iter()
-        .map(|protocol| create_cpp_builder(protocol))
+        .map(|protocol| create_cpp_builder(protocol, &event_created_interfaces))
         .collect();
     builders.push(global_builder);
     builders.push(wayland_server_notification_handler_builder);
     builders.push(work_callback_builder);
+    builders.push(fd_ready_callback_builder);
+    builders.push(output_global_binder_builder);
 
     CppProtocolGenerationOutput {
         ffi_fwd_builder,
@@ -78,7 +90,9 @@ fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
             .interfaces
             .iter()
             .filter(|interface| interface.is_global)
-            .filter(|interface| protocol_requires_codegen(&interface.name))
+            .filter(|interface| {
+                interface.name != "wl_output" && protocol_requires_codegen(&interface.name)
+            })
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
                 let ext_name =
@@ -180,6 +194,89 @@ fn create_work_callback() -> CppBuilder {
     builder.add_namespace(namespace);
     builder
 }
+
+/// Create the `FdReadyCallback` interface.
+///
+/// This is the Rust -> C++ callback used to notify C++ that a file descriptor
+/// it registered (via `WaylandServer::register_fd_ready_listener`) has become
+/// readable. The registration is one-shot: Rust calls `ready()` on the
+/// event-loop thread the first time the descriptor is ready for reading, then
+/// stops watching it.
+fn create_fd_ready_callback() -> CppBuilder {
+    let mut builder: CppBuilder =
+        CppBuilder::new("MIR_WAYLANDRS_FD_READY_CALLBACK", "fd_ready_callback");
+
+    builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    let mut class = CppClass::new("FdReadyCallback");
+
+    let ready_method = CppMethod::new("ready", None, true, false, true, true);
+    class.add_method(ready_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
+
+/// Create the `OutputGlobalBinder` interface.
+///
+/// This is the per-monitor counterpart to the `GlobalFactory` for the
+/// dynamically-created `wl_output` globals. Where `GlobalFactory` owns the
+/// binding logic for every statically-registered global, an
+/// `OutputGlobalBinder` captures the state of a *single* monitor: it is passed
+/// to `WaylandServer::create_output_global` and invoked whenever a client binds
+/// that monitor's `wl_output` global.
+fn create_output_global_binder() -> CppBuilder {
+    let mut builder: CppBuilder =
+        CppBuilder::new("MIR_WAYLANDRS_OUTPUT_GLOBAL_BINDER", "output_global_binder");
+    builder.add_header_include("<memory>");
+    builder.add_header_include("<rust/cxx.h>");
+    let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
+    namespace.add_forward_declaration_class("WaylandClient");
+    namespace.add_forward_declaration_class("WaylandClientId");
+    namespace.add_forward_declaration_class("Output");
+    namespace.add_forward_declaration_struct("OutputMiddleware");
+
+    let mut class = CppClass::new("OutputGlobalBinder");
+
+    // bind: construct the wl_output object for a client that has bound this
+    // monitor's global, mirroring GlobalFactory::create_<interface> for the
+    // statically-registered globals.
+    let mut bind_method = CppMethod::new(
+        "bind",
+        Some(CppType::Object("Output".to_string())),
+        true,
+        false,
+        true,
+        true,
+    );
+    bind_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClient".to_string()),
+        "client",
+        false,
+    ));
+    bind_method.add_arg(CppArg::new(
+        CppType::Box("OutputMiddleware".to_string()),
+        "instance",
+        false,
+    ));
+    bind_method.add_arg(CppArg::new(CppType::CppU32, "object_id", false));
+    class.add_method(bind_method);
+
+    // can_view: whether the given client may see this monitor's global.
+    let mut can_view_method =
+        CppMethod::new("can_view", Some(CppType::Bool), true, false, true, true);
+    can_view_method.add_arg(CppArg::new(
+        CppType::Box("WaylandClientId".to_string()),
+        "client_id",
+        false,
+    ));
+    class.add_method(can_view_method);
+
+    namespace.add_class(class);
+    builder.add_namespace(namespace);
+    builder
+}
 /// type used as `rust::Box<T>` in the protocol headers.
 ///
 /// Protocol headers include this header instead of the CXX-generated ffi.rs.h,
@@ -199,8 +296,14 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     // WaylandServer is declared in ffi.rs but used nowhere in the protocol headers;
     // include it for completeness so all Rust types are forward-declared.
     namespace.add_forward_declaration_class("WaylandServer");
-    // WaylandClient is used in the protected constructor of every generated C++ implementation.
+    // WaylandClient is the raw Rust client passed across the FFI boundary, e.g. to
+    // the GlobalFactory `create_*` methods and the notification handler's
+    // `client_added`. (The generated classes' protected constructor now takes a
+    // `std::shared_ptr<Client>`, resolved from the registry, rather than a raw
+    // WaylandClient.)
     namespace.add_forward_declaration_class("WaylandClient");
+    // WaylandClientId is used by the Client interface (client.h) and registry.
+    namespace.add_forward_declaration_class("WaylandClientId");
 
     for protocol in protocols {
         for interface in &protocol.interfaces {
@@ -217,7 +320,10 @@ fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
     builder
 }
 
-fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
+fn create_cpp_builder(
+    protocol: &WaylandProtocol,
+    event_created_interfaces: &[String],
+) -> CppBuilder {
     let guard = format!("MIR_WAYLANDRS_{}", protocol.name.to_uppercase());
     let mut builder = CppBuilder::new(guard, protocol.name.as_str());
     let mut namespace = CppNamespace::new(vec!["mir", "wayland_rs"]);
@@ -235,28 +341,133 @@ fn create_cpp_builder(protocol: &WaylandProtocol) -> CppBuilder {
         let class_name = format_wayland_interface_to_cpp_class(interface);
         namespace.add_forward_declaration_class(&class_name);
     }
+
+    // For every interface owned by this protocol that is created server-side and delivered
+    // to the client via an event `new_id`, emit a `create_<interface>` convenience wrapper.
+    // It drives the split allocate/attach FFI in one call: allocate the resource, let the
+    // caller build their C++ subclass from the resulting box, attach it to the resource's
+    // wrapper, and return it — ready to be passed to the parent's `send_<event>_event`.
+    let mut needs_functional = false;
+    for interface in &protocol.interfaces {
+        if !event_created_interfaces
+            .iter()
+            .any(|n| n == &interface.name)
+        {
+            continue;
+        }
+        add_server_created_wrapper(&mut namespace, &interface.name);
+        needs_functional = true;
+    }
+
     builder.add_namespace(namespace);
     // Use ffi_fwd.h (generated alongside the protocol headers) instead of the
     // CXX-generated ffi.rs.h to avoid a circular include dependency:
     //   ffi.rs.h  →  include/*.h  →  ffi.rs.h
     builder.add_header_include("\"lifetime_tracker.h\"");
     builder.add_header_include("\"ffi_fwd.h\"");
+    builder.add_header_include("\"client.h\"");
     builder.add_header_include("\"weak.h\"");
     builder.add_header_include("<memory>");
     builder.add_header_include("<cstdint>");
     builder.add_header_include("<string>");
     builder.add_header_include("<optional>");
     builder.add_header_include("<rust/cxx.h>");
+    if needs_functional {
+        builder.add_header_include("<functional>");
+    }
 
     builder.add_cpp_include("\"wayland_rs/src/ffi.rs.h\"");
 
     builder
 }
 
+/// Collect the names of interfaces that are created server-side and returned to the client
+/// through an event carrying a `new_id` argument (e.g. `wl_buffer`). `wl_display` and
+/// `wl_registry` are excluded as they are never created this way.
+fn collect_event_created_interfaces(protocols: &Vec<WaylandProtocol>) -> Vec<String> {
+    let mut seen: Vec<String> = Vec::new();
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                let crate::protocol_parser::InterfaceItem::Event(event) = item else {
+                    continue;
+                };
+                for arg in &event.args {
+                    if arg.type_ != WaylandArgType::NewId {
+                        continue;
+                    }
+                    let Some(child_name) = arg.interface.as_ref() else {
+                        continue;
+                    };
+                    if child_name == "wl_display" || child_name == "wl_registry" {
+                        continue;
+                    }
+                    if !seen.iter().any(|s| s == child_name) {
+                        seen.push(child_name.clone());
+                    }
+                }
+            }
+        }
+    }
+    seen
+}
+
+/// Emit the `create_<interface>` server-side wrapper free function into `namespace`.
+///
+/// The generated function mirrors the Rust-driven `create_immed`/`create_buffer` path but
+/// inverted for the C++-driven case: it allocates the resource (`allocate_<interface>`),
+/// invokes the caller-provided `builder` to construct their C++ subclass from the box and the
+/// freshly-assigned protocol object id, attaches that subclass to the resource's wrapper
+/// (`set_<interface>_inner`) so subsequent requests route to it, and returns it.
+fn add_server_created_wrapper(namespace: &mut CppNamespace, interface_name: &str) {
+    let class_name = format_wayland_interface_to_cpp_class(interface_name);
+    let middleware = snake_to_pascal(&format_wayland_interface_to_rust_extension_struct(
+        interface_name,
+    ));
+    let snake = dash_to_snake(interface_name);
+    let allocate_fn = format!("allocate_{}", snake);
+    let set_inner_fn = format!("set_{}_inner", snake);
+    let fn_name = format!("create_{}", snake);
+
+    let signature = format!(
+        "auto {fn_name}(\n\
+         \x20   WaylandClient const& client,\n\
+         \x20   uint32_t version,\n\
+         \x20   std::function<std::shared_ptr<{class_name}>(::rust::Box<{middleware}>, uint32_t)> const& builder)\n\
+         \x20   -> std::shared_ptr<{class_name}>"
+    );
+
+    let body = format!(
+        "auto instance = {allocate_fn}(client, version);\n\
+         \x20   uint32_t const object_id = instance->object_id();\n\
+         \x20   auto result = builder(std::move(instance), object_id);\n\
+         \x20   {set_inner_fn}(*result->get_box(), result);\n\
+         \x20   return result;"
+    );
+
+    namespace.add_free_function(signature, body);
+}
+
 fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     let class_name = format_wayland_interface_to_cpp_class(&interface.name);
-    let mut class = CppClass::new(class_name);
+    let mut class = CppClass::new(class_name.clone());
     class.set_superclass("LifetimeTracker");
+
+    // Backwards-compatible recovery helper, replacing the legacy `Concrete::from(wl_resource*)`.
+    // The generator only knows this abstract base, not the hand-written concrete subclass, so the
+    // method is templated on the caller's concrete type `Self`. It downcasts the weak's referent
+    // (preserving the destroyed-flag) and returns a `Self*`, or nullptr if the weak is
+    // null/expired or does not refer to a `Self`. Usage: `Surface::from<WlSurfaceImpl>(weak)`.
+    class.add_raw_public_decl(format!(
+        "    template<typename Self>\n\
+         \x20   static auto from(::mir::wayland_rs::Weak<{class_name}> const& weak) -> Self*\n\
+         \x20   {{\n\
+         \x20       return ::mir::wayland_rs::as_nullable_ptr(\n\
+         \x20           ::mir::wayland_rs::weak_cast<Self>(weak));\n\
+         \x20   }}",
+        class_name = class_name
+    ));
+
     let methods = interface
         .items
         .iter()
@@ -332,9 +543,11 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_method(destroy_and_delete_method);
 
     // Add a protected constructor and member so that subclasses know which client
-    // they are serving and can interact with it as they please.
+    // they are serving and can interact with it as they please. The client is the
+    // hand-written `mir::wayland_rs::Client` interface (wrapping the raw Rust
+    // `WaylandClient`), resolved from the registry on the C++ side.
     class.add_protected_constructor_arg(CppArg::new(
-        CppType::Box("WaylandClient".to_string()),
+        CppType::SharedPtr("Client".to_string()),
         "client",
         false,
     ));
@@ -350,7 +563,7 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_protected_constructor_arg(CppArg::new(CppType::CppU32, "object_id_", false));
     class
         .add_public_member(CppArg::new(
-            CppType::Box("WaylandClient".to_string()),
+            CppType::SharedPtr("Client".to_string()),
             "client",
             false,
         ))

@@ -22,7 +22,8 @@
 #include <wayland-server-core.h>
 
 #include <mir/test/fd_utils.h>
-#include <mir/test/auto_unblock_thread.h>
+
+#include <thread>
 
 namespace mt = mir::test;
 namespace mf = mir::frontend;
@@ -138,7 +139,7 @@ TEST_F(WaylandExecutorTest, spawning_is_threadsafe)
 
     int const thread_count{100};
     int counter{0};
-    std::vector<mt::AutoJoinThread> threads;
+    std::vector<std::jthread> threads;
 
     // Spawn the threads from the wayland loop, to ensure it's started…
     executor->spawn(
@@ -147,7 +148,7 @@ TEST_F(WaylandExecutorTest, spawning_is_threadsafe)
             for (auto i = 0u ; i < thread_count ; ++i)
             {
                 threads.emplace_back(
-                    mt::AutoJoinThread{
+                    std::jthread{
                         [executor, &counter]()
                         {
                             // These calls should all be serialised onto the wayland loop,

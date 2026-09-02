@@ -462,31 +462,6 @@ public:
     virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> = 0;
 };
 
-#ifndef EGLStreamKHR
-typedef void* EGLStreamKHR;
-#endif
-
-class EGLStreamDisplayProvider : public DisplayProvider
-{
-public:
-    class Tag : public DisplayProvider::Tag
-    {
-    };
-
-    virtual auto get_egl_display() const -> EGLDisplay = 0;
-};
-
-class EGLStreamDisplayAllocator : public DisplayAllocator
-{
-public:
-    class Tag : public DisplayAllocator::Tag
-    {
-    };
-
-    virtual auto claim_stream() -> EGLStreamKHR = 0;
-    virtual auto output_size() const -> geometry::Size = 0;
-};
-
 class GenericEGLDisplayProvider : public DisplayProvider
 {
 public:

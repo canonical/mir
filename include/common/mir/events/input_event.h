@@ -19,6 +19,8 @@
 
 #include <mir/events/event.h>
 
+#include <format>
+
 struct MirInputEvent : MirEvent
 {
     MirInputEventType input_type() const;
@@ -61,6 +63,14 @@ private:
     MirInputDeviceId device_id_ = 0;
     std::chrono::nanoseconds event_time_ = {};
     MirInputEventModifiers modifiers_ = 0;
+};
+
+template<>
+struct std::formatter<MirInputEventType>
+{
+    constexpr auto parse(std::format_parse_context& ctx) { return ctx.begin(); }
+
+    auto format(MirInputEventType type, std::format_context& ctx) const -> std::format_context::iterator;
 };
 
 #endif /* MIR_COMMON_INPUT_EVENT_H_ */

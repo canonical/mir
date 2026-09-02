@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 
 #include <mir/server.h>
 #include <mir/options/option.h>
@@ -94,14 +94,14 @@ struct miral::ConfigurationOption::Self
     }
 
     template<typename Value_t>
-    Self(std::function<void(mir::optional_value<Value_t> const& value)> callback,
+    Self(std::function<void(std::optional<Value_t> const& value)> callback,
          std::string const& option,
          std::string const& description) :
         setup{[=](mir::Server& server)
                   { server.add_configuration_option(option, description, OptionType<Value_t>::value); }},
         callback{[=](mir::Server& server)
                      {
-                        mir::optional_value<Value_t> optional_value;
+                        std::optional<Value_t> optional_value;
                         auto const options = server.get_options();
                         if (options->is_set(option.c_str()))
                             optional_value = server.get_options()->get<Value_t>(option.c_str());
@@ -174,7 +174,7 @@ miral::ConfigurationOption::ConfigurationOption(
 }
 
 miral::ConfigurationOption::ConfigurationOption(
-    std::function<void(mir::optional_value<int> const& value)> callback,
+    std::function<void(std::optional<int> const& value)> callback,
     std::string const& option,
     std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
@@ -182,7 +182,7 @@ miral::ConfigurationOption::ConfigurationOption(
 }
 
 miral::ConfigurationOption::ConfigurationOption(
-    std::function<void(mir::optional_value<std::string> const& value)> callback,
+    std::function<void(std::optional<std::string> const& value)> callback,
     std::string const& option,
     std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}
@@ -190,7 +190,7 @@ miral::ConfigurationOption::ConfigurationOption(
 }
 
 miral::ConfigurationOption::ConfigurationOption(
-    std::function<void(mir::optional_value<bool> const& value)> callback,
+    std::function<void(std::optional<bool> const& value)> callback,
     std::string const& option,
     std::string const& description) :
     self{std::make_shared<Self>(callback, option, description)}

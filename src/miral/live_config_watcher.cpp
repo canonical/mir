@@ -29,6 +29,7 @@
 #include <cstring>
 #include <format>
 #include <fstream>
+#include <memory>
 #include <ranges>
 #include <span>
 #include <sstream>
@@ -138,9 +139,13 @@ void mlc::Watcher::for_each_inotify_event(std::function<void(inotify_event const
     auto remaining = std::span{buffer}.first(static_cast<std::size_t>(readsize));
     while (remaining.size() >= sizeof(inotify_event))
     {
-        // LEGACY(Clang) Replace with std::start_lifetime_as<inotify_event const> once Clang supports it (C++23, P2590).
+    // TODO: Revisit const-qualified start_lifetime_as once toolchains stop rejecting it in some builds.
+    #if defined(__cpp_lib_start_lifetime_as) && (__cpp_lib_start_lifetime_as >= 202207L)
+        auto const& event = *std::start_lifetime_as<inotify_event>(remaining.data());
+    #else
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
         auto const& event = reinterpret_cast<inotify_event const&>(*remaining.data());
+    #endif
 
         // The kernel guarantees event.len is padded to maintain inotify_event
         // alignment for subsequent events (see inotify(7): "The name field

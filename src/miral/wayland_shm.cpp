@@ -122,7 +122,7 @@ auto miral::tk::WaylandShmBuffer::use() -> wl_buffer*
 {
     if (self_ptr)
     {
-        mir::fatal_error("WaylandShmBuffer used multiple times");
+        MIR_FATAL_ERROR("WaylandShmBuffer used multiple times");
     }
     self_ptr = shared_from_this();
     return buffer;

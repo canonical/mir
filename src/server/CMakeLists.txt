@@ -78,24 +78,6 @@ set_property(
     SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp
     PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
 
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
-  # shm_backing.cpp uses std::expected, which libstdc++ only supports with __cpp_concepts=202002L
-  set_source_files_properties(shm_backing.cpp
-    PROPERTIES COMPILE_FLAGS -Wno-builtin-macro-redefined
-    COMPILE_DEFINITIONS __cpp_concepts=202002L)
-endif()
-
-if(GLIB_VERSION VERSION_GREATER_EQUAL 2.85)
-    # This version fixes the (at least) 11 year old bug we encountered in LP #1401488
-    # Unfortunately, the fix interacts badly with our workaround to the bug
-    # Fortunately, we added the workaround we added a #define to turn it off, and
-    # use the correct code!
-    set_property(
-        SOURCE glib_main_loop_sources.cpp
-        APPEND
-        PROPERTY COMPILE_DEFINITIONS GLIB_HAS_FIXED_LP_1401488)
-endif()
-
 set(MIR_SERVER_REFERENCES
   mirserverobjects
   mirinput

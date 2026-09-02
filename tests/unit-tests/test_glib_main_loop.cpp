@@ -88,7 +88,7 @@ TEST_F(GLibMainLoopTest, stops_from_within_handler)
 {
     mt::Signal loop_finished;
 
-    mt::AutoJoinThread t{
+    std::jthread t{
         [&]
         {
             int const owner{0};
@@ -105,7 +105,7 @@ TEST_F(GLibMainLoopTest, stops_from_outside_handler)
     mt::Signal loop_running;
     mt::Signal loop_finished;
 
-    mt::AutoJoinThread t{
+    std::jthread t{
         [&]
         {
             int const owner{0};
@@ -879,7 +879,7 @@ TEST_F(GLibMainLoopTest, enqueue_with_guaranteed_execution_executes_on_mainloop)
         nullptr,
         [&loop_running]() { loop_running.raise(); });
 
-    mt::AutoJoinThread t{
+    std::jthread t{
         [&]
         {
             ml.run();
@@ -1233,7 +1233,7 @@ TEST_F(GLibMainLoopAlarmTest, rescheduling_alarm_from_within_alarm_callback_does
 
     alarm->reschedule_in(0ms);
 
-    mt::AutoJoinThread rescheduler{
+    std::jthread rescheduler{
         [alarm, &in_alarm, &alarm_rescheduled]()
         {
             ASSERT_TRUE(in_alarm.wait_for(5s));
@@ -1262,7 +1262,7 @@ TEST_F(GLibMainLoopAlarmTest, cancel_blocks_until_definitely_cancelled)
 
     alarm->reschedule_in(0ms);
 
-    mt::AutoJoinThread canceller{
+    std::jthread canceller{
         [waiting_in_lock, has_been_called, alarm, this]()
         {
             waiting_in_lock->ready();

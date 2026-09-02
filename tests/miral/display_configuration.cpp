@@ -23,7 +23,6 @@
 
 using namespace miral;
 using namespace testing;
-namespace mt = mir::test;
 
 struct BaseTestDisplayConfiguration : TestDisplayServer, Test
 {

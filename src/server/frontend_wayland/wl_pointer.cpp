@@ -21,6 +21,7 @@
 #include "wl_seat.h"
 #include "relative-pointer-unstable-v1_wrapper.h"
 
+#include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/frontend/wayland.h>
@@ -121,7 +122,7 @@ auto wayland_axis_source(MirPointerAxisSource mir_source) -> std::optional<uint3
         return mw::Pointer::AxisSource::wheel_tilt;
     }
 
-    mir::fatal_error("Invalid MirPointerAxisSource %d", mir_source);
+    MIR_FATAL_ERROR("Invalid MirPointerAxisSource {}", static_cast<int>(mir_source));
     return std::nullopt;
 }
 }
@@ -502,6 +503,7 @@ void mf::WlPointer::on_commit(WlSurface* surface)
     {
         // No buffer: We should be unmapping the cursor
 
+        cursor.reset(); // clean up old cursor before creating new one
         cursor = std::make_unique<WlHiddenCursor>(surface, commit_handler);
         if (surface_under_cursor)
             cursor->apply_to(&surface_under_cursor.value());
@@ -603,6 +605,8 @@ void WlSurfaceCursor::apply_latest_buffer()
 WlHiddenCursor::WlHiddenCursor(mf::WlSurface* surface, mf::CommitHandler* commit_handler) :
     surface_role{surface, std::move(commit_handler)}
 {
+    if (surface)
+        surface->set_role(&surface_role);
 }
 
 void WlHiddenCursor::apply_to(mf::WlSurface* surface)

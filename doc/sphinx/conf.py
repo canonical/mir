@@ -5,6 +5,7 @@ import textwrap
 import subprocess
 import re
 from pathlib import Path
+from docutils import nodes
 
 # Configuration for the Sphinx documentation builder.
 # All configuration specific to your project should be done in this file.
@@ -28,9 +29,17 @@ from pathlib import Path
 project = "Mir"
 
 try:
-    release = subprocess.check_output(
-        ["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8"
+    branch = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], encoding="utf-8"
     ).strip()
+    if branch.startswith("release/"):
+        release = subprocess.check_output(
+            ["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8"
+        ).strip()
+    else:
+        release = subprocess.check_output(
+            ["git", "describe", "--tags", "--match=*-dev", "--abbrev=0"], encoding="utf-8"
+        ).strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
         match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read())
@@ -393,3 +402,19 @@ mermaid_d3_zoom = True
 
 # MyST
 myst_heading_anchors = 3
+
+
+def _strip_doc_markers(app, doctree, docname):
+    for node in doctree.findall(nodes.literal_block):
+        if not hasattr(node, 'source'):
+            continue
+        text = node.astext()
+        filtered = re.sub(
+            r'^[ \t]*[/#]+ \[.*:.*\n?', '', text, flags=re.MULTILINE
+        )
+        if filtered != text:
+            node.children[0] = nodes.Text(filtered)
+
+
+def setup(app):
+    app.connect('doctree-resolved', _strip_doc_markers)

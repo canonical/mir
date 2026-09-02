@@ -81,11 +81,11 @@ private:
             return info;
         }
 
-        mir::optional_value<mir::input::PointerSettings> get_pointer_settings() const override;
+        std::optional<mir::input::PointerSettings> get_pointer_settings() const override;
         void apply_settings(mir::input::PointerSettings const& settings) override;
-        mir::optional_value<mir::input::TouchpadSettings> get_touchpad_settings() const override;
+        std::optional<mir::input::TouchpadSettings> get_touchpad_settings() const override;
         void apply_settings(mir::input::TouchpadSettings const& settings) override;
-        mir::optional_value<mir::input::TouchscreenSettings> get_touchscreen_settings() const override;
+        std::optional<mir::input::TouchscreenSettings> get_touchscreen_settings() const override;
         void apply_settings(mir::input::TouchscreenSettings const& settings) override;
         void set_apply_settings_callback(std::function<void(mir::input::InputDevice const&)> const& callback);
 

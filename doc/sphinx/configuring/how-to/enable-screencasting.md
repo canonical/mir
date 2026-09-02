@@ -27,7 +27,7 @@ Required packages:
 
 1. The file at `/usr/share/xdg-desktop-portal/<compositor-name>-portals.conf` should contain the following:
 
-```
+```ini
 [preferred]
 default=gtk
 org.freedesktop.impl.portal.Screenshot=wlr
@@ -38,18 +38,18 @@ where `<compositor-name>` is the same value as `XDG_CURRENT_DESKTOP` when your c
 
 2. The file at `/etc/xdg/xdg-desktop-portal-wlr/config` should contain the following:
 
-```
+```ini
 [screencast]
 max_fps=30
 chooser_type=dmenu
-chooser_cmd=wmenu -p 'Select a source to share:' -l 10
+chooser_cmd="wmenu -p 'Select a source to share:' -l 10"
 ```
 
 Where `chooser_type=dmenu` runs the given `chooser_cmd`. `chooser_cmd` in this case should return the name of the output that's going to be shared. In the above case, `wmenu` will display a menu of capture sources at the top of the screen.
 
 As an alternative, `slurp` can be used as a simpler picker:
 
-```
+```ini
 chooser_type=simple
 chooser_cmd=slurp -f %o -or
 ```

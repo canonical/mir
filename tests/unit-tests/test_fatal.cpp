@@ -22,38 +22,29 @@
 
 using namespace testing;
 
-TEST(FatalErrorDeathTest, abort_formats_message_to_stderr)
+TEST(FatalErrorDeathTest, fatal_error_formats_message_to_stderr)
 {
-    mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MIR_EXPECT_DEATH(mir::fatal_error("%s had %d %s %s",
                                       "Mary", 1, "little", "lamb"),
                      "Mary had 1 little lamb");
+#pragma GCC diagnostic pop
 }
 
-TEST(FatalErrorDeathTest, abort_raises_sigabrt)
+TEST(FatalErrorDeathTest, fatal_error_raises_sigabrt)
 {
-    mir::FatalErrorStrategy on_error{mir::fatal_error_abort};
-
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
     MIR_EXPECT_EXIT(mir::fatal_error("Hello world"),
                     KilledBySignal(SIGABRT),
                     "Hello world");
+#pragma GCC diagnostic pop
 }
 
-TEST(FatalErrorTest, throw_formats_message_to_what)
+TEST(FatalErrorDeathTest, mir_fatal_error_formats_message_and_source_location)
 {
-    mir::FatalErrorStrategy on_error{mir::fatal_error_except};
-
-    EXPECT_THROW(
-        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb"),
-        std::runtime_error);
-
-    try
-    {
-        mir::fatal_error("%s had %d %s %s", "Mary", 1, "little", "lamb");
-    }
-    catch (std::exception const& x)
-    {
-        EXPECT_THAT(x.what(), StrEq("Mary had 1 little lamb"));
-    }
+    MIR_EXPECT_EXIT(MIR_FATAL_ERROR("{} had {} {} {}", "Mary", 1, "little", "lamb"),
+                    KilledBySignal(SIGABRT),
+                    "Mary had 1 little lamb .*test_fatal.cpp:[0-9]+ in .*mir_fatal_error_formats_message_and_source_location");
 }

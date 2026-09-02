@@ -113,11 +113,6 @@ struct MockEventBuilder : mi::EventBuilder
 
     MOCK_METHOD(mir::EventUPtr, key_event, (std::optional<Timestamp>, MirKeyboardAction, xkb_keysym_t, int));
 
-    mir::EventUPtr touch_event(std::optional<Timestamp>, std::vector<mir::events::TouchContactV1> const&)
-    {
-        BOOST_THROW_EXCEPTION(std::logic_error{"Deprecated touch_event() called"});
-    }
-
     MOCK_METHOD(mir::EventUPtr, touch_event, (std::optional<Timestamp>, std::vector<mir::events::TouchContactV2> const&));
     MOCK_METHOD(mir::EventUPtr, pointer_event,
                 (std::optional<Timestamp>, MirPointerAction, MirPointerButtons, std::optional<mir::geometry::PointF>,
@@ -925,7 +920,7 @@ TEST_F(LibInputDeviceOnTouchScreen, sends_complete_events)
 TEST_F(LibInputDeviceOnLaptopKeyboard, provides_no_pointer_settings_for_non_pointing_devices)
 {
     auto settings = keyboard.get_pointer_settings();
-    EXPECT_THAT(settings.is_set(), Eq(false));
+    EXPECT_THAT(settings.has_value(), Eq(false));
 }
 
 TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
@@ -933,7 +928,7 @@ TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
     setup_pointer_configuration(mouse.device(), 1, mir_pointer_handedness_right, mir_pointer_acceleration_none);
     auto optional_settings = mouse.get_pointer_settings();
 
-    EXPECT_THAT(optional_settings.is_set(), Eq(true));
+    EXPECT_THAT(optional_settings.has_value(), Eq(true));
 
     auto ptr_settings = optional_settings.value();
     EXPECT_THAT(ptr_settings.handedness, Eq(mir_pointer_handedness_right));
@@ -945,7 +940,7 @@ TEST_F(LibInputDeviceOnMouse, reads_pointer_settings_from_libinput)
     setup_pointer_configuration(mouse.device(), 0.0, mir_pointer_handedness_left, mir_pointer_acceleration_adaptive);
     optional_settings = mouse.get_pointer_settings();
 
-    EXPECT_THAT(optional_settings.is_set(), Eq(true));
+    EXPECT_THAT(optional_settings.has_value(), Eq(true));
 
     ptr_settings = optional_settings.value();
     EXPECT_THAT(ptr_settings.handedness, Eq(mir_pointer_handedness_left));
@@ -1003,9 +998,9 @@ TEST_F(LibInputDeviceOnMouse, scroll_speed_scales_scroll_events)
 TEST_F(LibInputDeviceOnLaptopKeyboardAndMouse, provides_no_touchpad_settings_for_non_touchpad_devices)
 {
     auto val = keyboard.get_touchpad_settings();
-    EXPECT_THAT(val.is_set(), Eq(false));
+    EXPECT_THAT(val.has_value(), Eq(false));
     val = mouse.get_touchpad_settings();
-    EXPECT_THAT(val.is_set(), Eq(false));
+    EXPECT_THAT(val.has_value(), Eq(false));
 }
 
 TEST_F(LibInputDeviceOnTouchpad, process_event_handles_scroll)
