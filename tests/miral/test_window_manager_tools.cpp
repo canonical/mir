@@ -22,7 +22,6 @@
 #include <miral/output.h>
 
 #include <mir/shell/display_layout.h>
-#include <mir/shell/focus_controller.h>
 #include <mir/shell/persistent_surface_store.h>
 #include <mir/graphics/display_configuration_observer.h>
 #include <mir/wayland/weak.h>
@@ -40,36 +39,6 @@
 
 namespace
 {
-
-struct StubFocusController : mir::shell::FocusController
-{
-    void focus_next_session() override {}
-    void focus_prev_session() override {}
-
-    auto focused_session() const -> std::shared_ptr<mir::scene::Session> override { return {}; }
-
-    void set_popup_grab_tree(std::shared_ptr<mir::scene::Surface> const& /*surface*/) override {}
-
-    void set_focus_to(
-        std::shared_ptr<mir::scene::Session> const& /*focus_session*/,
-        std::shared_ptr<mir::scene::Surface> const& /*focus_surface*/) override {}
-
-    auto focused_surface() const -> std::shared_ptr<mir::scene::Surface> override { return {}; }
-
-    void raise(mir::shell::SurfaceSet const& /*windows*/) override {}
-
-    virtual auto surface_at(mir::geometry::Point /*cursor*/) const -> std::shared_ptr<mir::scene::Surface> override
-        { return {}; }
-
-    void swap_z_order(mir::shell::SurfaceSet const& /*first*/, mir::shell::SurfaceSet const& /*second*/) override {}
-
-    void send_to_back(mir::shell::SurfaceSet const& /*windows*/) override {}
-
-    auto is_above(std::weak_ptr<mir::scene::Surface> const& /*a*/, std::weak_ptr<mir::scene::Surface> const& /*b*/) const -> bool override
-    {
-        return false;
-    }
-};
 
 struct StubDisplayLayout : mir::shell::DisplayLayout
 {
@@ -254,7 +223,6 @@ namespace mt = mir::test;
 
 struct mt::TestWindowManagerTools::Self
 {
-    StubFocusController focus_controller;
     StubDisplayLayout display_layout;
     StubPersistentSurfaceStore persistent_surface_store;
     FakeDisplayConfigurationObserverRegistrar display_configuration_observer;
@@ -267,8 +235,9 @@ mt::TestWindowManagerTools::TestWindowManagerTools()
       session{std::make_shared<StubStubSession>()},
       window_manager_policy{nullptr},
       window_manager_tools{nullptr},
+      focus_controller{},
       basic_window_manager{
-        &self->focus_controller,
+        &focus_controller,
         mir::test::fake_shared(self->display_layout),
         mir::test::fake_shared(self->persistent_surface_store),
         self->display_configuration_observer,
