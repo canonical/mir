@@ -226,6 +226,7 @@ struct State
     std::optional<mml::FreePlacement> applied_placement;
     bool enabled{false};
     bool follow_cursor{true};
+    bool user_positioned{false};
     miral::RenderSceneIntoSurface render_scene_into_surface;
 };
 }
@@ -321,6 +322,9 @@ public:
         s->handles.for_each([&](Handle& handle, mmc::HandleKind kind)
             { handle.init(server, kind, capture_compositor_id); });
 
+        if (!s->follow_cursor)
+            attach_observers(*s);
+
         if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
             if (!s->follow_cursor)
@@ -350,6 +354,7 @@ public:
         {
             if (!s->follow_cursor)
             {
+                attach_observers(*s);
                 place_freely(*s);
                 s->show_all_handles();
             }
@@ -402,13 +407,28 @@ public:
 
     void follow_cursor()
     {
-        auto s = state.lock();
-        if (s->follow_cursor)
+        if (state.lock()->follow_cursor)
             return;
 
-        s->follow_cursor = true;
-        s->hide_all_handles();
-        place_at_cursor(*s);
+        auto observers = [this]()
+        {
+            auto s = state.lock();
+            s->follow_cursor = true;
+
+            std::array<Handle::ObserverRegistration, 4> const ret{
+                s->handles.drag.release_observer(),
+                s->handles.resize.release_observer(),
+                s->handles.zoom_in.release_observer(),
+                s->handles.zoom_out.release_observer()};
+
+            s->hide_all_handles();
+            place_at_cursor(*s);
+
+            return ret;
+        }();
+
+        for (auto obs : observers)
+            obs.unregister();
     }
 
     void stop_following_cursor()
@@ -416,7 +436,9 @@ public:
         auto s = state.lock();
         if (!s->follow_cursor)
             return;
+
         s->follow_cursor = false;
+        attach_observers(*s);
 
         if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
@@ -463,6 +485,13 @@ private:
         Self& self;
     };
 
+    /// Creates and registers concrete observers on each handle. Guards against
+    /// missing indicators.
+    void attach_observers(State& state)
+    {
+        state.handles.drag.attach_observer<DragHandleObserver>(this);
+    }
+
     /// Applies visual geometry with the magnifier's logical top-left computed
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
@@ -483,6 +512,11 @@ private:
 
     void place_freely(State& s)
     {
+        place_freely_at(s, s.freely_positioned_center);
+    }
+
+    void place_freely_at(State& s, geom::PointD center)
+    {
         if (!s.has_outputs())
         {
             s.applied_placement.reset();
@@ -490,11 +524,7 @@ private:
         }
 
         s.apply_geometry(
-            mml::place_freely(
-                s.freely_positioned_center,
-                s.requested_visual_size,
-                s.screen_bounds,
-                s.magnification));
+            mml::place_freely(center, s.requested_visual_size, s.screen_bounds, s.magnification));
     }
 
     /// Base for observers that turn a pointer/touch drag on a handle surface
@@ -577,6 +607,35 @@ private:
             else if (action == mir_touch_action_up)
                 drag_active = false;
         }
+    };
+
+    /// Moves the magnifier when its drag handle is dragged.
+    class DragHandleObserver : public HandleObserver
+    {
+    public:
+        using HandleObserver::HandleObserver;
+
+    protected:
+        void on_drag_start(State& s, geom::Point) override
+        {
+            auto const surf = s.surface.lock();
+            if (!surf)
+                return;
+
+            drag_start = s.freely_positioned_center;
+            s.user_positioned = true;
+        }
+
+        void on_drag_move(State& s, geom::Point point) override
+        {
+            auto const new_center = geom::PointD{
+                drag_start.x.as_value() + point.x.as_value() - grab_abs.dx.as_value(),
+                drag_start.y.as_value() + point.y.as_value() - grab_abs.dy.as_value()};
+
+            self->place_freely_at(s, new_center);
+        }
+
+        geom::PointD drag_start{};
     };
 
     class CursorObserver : public mi::CursorObserver
