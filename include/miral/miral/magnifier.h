@@ -58,6 +58,9 @@ public:
     Magnifier& capture_size(mir::geometry::Size const& size);
 
     /// Sets how the magnifier is positioned.
+    ///
+    /// When freely positioned, the magnifier can be dragged with the pointer
+    /// or a single touch contact.
     /// \remark Since MirAL 6.0
     Magnifier& set_behavior(Behavior behavior);
 
