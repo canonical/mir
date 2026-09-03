@@ -125,7 +125,7 @@ pub fn generate_wayland_interface_middleware(protocols: &[WaylandProtocol]) -> T
     let extensions = protocols.iter().flat_map(generate_extensions_for_protocol);
 
     quote! {
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod middleware {
             use crate::wayland_server_core::*;
             use wayland_server::protocol::*;

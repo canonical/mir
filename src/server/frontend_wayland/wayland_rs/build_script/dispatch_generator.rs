@@ -36,7 +36,7 @@ pub fn generate_dispatch_rs(protocols: &[WaylandProtocol]) -> TokenStream {
     let output_dynamic_global = generate_output_dynamic_global(protocols);
 
     quote! {
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
             use wayland_server::backend::{ClientId, ObjectId};
