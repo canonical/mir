@@ -49,8 +49,13 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
 
     if (focused_surface)
     {
-        auto const serial = client->next_serial(nullptr);
-        send_leave_event(serial, focused_surface.value().raw_resource());
+        // Don't send a leave event referencing a surface that is being destroyed: the client no
+        // longer cares about it, and doing so would reference a surface that is mid-teardown.
+        if (!focused_surface.value().is_being_destroyed())
+        {
+            auto const serial = client->next_serial(nullptr);
+            send_leave_event(serial, focused_surface.value().raw_resource());
+        }
     }
 
     if (surface)

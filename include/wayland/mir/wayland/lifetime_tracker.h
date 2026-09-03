@@ -50,8 +50,13 @@ public:
     /// If the given ID maps to a destroy listener, that listener is dropped without being called. If the listener has
     /// already been dropped or never existed, this call is ignored.
     void remove_destroy_listener(DestroyListenerId id) const;
+    /// True once destruction of this object has begun. Unlike destroyed_flag(), this is set at the very start of the
+    /// destructor, so it can be used from within destroy listeners to detect that this object is being torn down.
+    auto is_being_destroyed() const -> bool;
 
 protected:
+    void mark_being_destroyed();
+
     /// Subclasses are not required to call this, but may do so during the destruction process if the object needs to
     /// get marked as destroyed and fire its destroy listeners before some other part of the destructor runs.
     void mark_destroyed() const;

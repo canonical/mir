@@ -212,10 +212,15 @@ void mf::WlPointer::leave(std::optional<std::shared_ptr<MirPointerEvent const>> 
     if (!surface_under_cursor)
         return;
     surface_under_cursor.value().remove_destroy_listener(destroy_listener_id);
-    auto const serial = client->next_serial(event.value_or(nullptr));
-    send_leave_event(
-        serial,
-        surface_under_cursor.value().raw_resource());
+    // Don't send a leave event referencing a surface that is being destroyed: the client no longer
+    // cares about it, and doing so would reference a surface that is mid-teardown.
+    if (!surface_under_cursor.value().is_being_destroyed())
+    {
+        auto const serial = client->next_serial(event.value_or(nullptr));
+        send_leave_event(
+            serial,
+            surface_under_cursor.value().raw_resource());
+    }
     current_position = std::nullopt;
     // Don't clear current_buttons, their state can survive leaving and entering surfaces (note we currently have logic
     // to prevent changing surfaces while buttons are pressed, we wouldn't need to clear current_buttons regardless)
