@@ -17,7 +17,7 @@
 #include <miral/test_server.h>
 
 #include <miral/internal_client.h>
-#include <miral/minimal_window_manager.h>
+#include <miral/floating_window_manager.h>
 #include <miral/window_info.h>
 #include <miral/window_manager_tools.h>
 
@@ -217,16 +217,16 @@ private:
     miral::Window window_;
 };
 
-struct RecordingPolicy : miral::MinimalWindowManager
+struct RecordingPolicy : miral::FloatingWindowManager
 {
     RecordingPolicy(miral::WindowManagerTools const& tools, std::shared_ptr<WindowRecord> record)
-        : MinimalWindowManager{tools}, record{std::move(record)}
+        : FloatingWindowManager{tools}, record{std::move(record)}
     {
     }
 
     void advise_new_window(miral::WindowInfo const& window_info) override
     {
-        MinimalWindowManager::advise_new_window(window_info);
+        FloatingWindowManager::advise_new_window(window_info);
         record->record(window_info.window());
     }
 
