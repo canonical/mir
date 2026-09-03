@@ -137,7 +137,9 @@ target_link_libraries(mirfrontend-wayland
 if (MIR_ENABLE_RUST)
   target_sources(mirfrontend-wayland
     PRIVATE
-      wayland_client.cpp         wayland_client.h
+      wayland_client.cpp          wayland_client.h
+      wayland_client_notifier.cpp wayland_client_notifier.h
+
   )
 
   target_link_libraries(mirfrontend-wayland
