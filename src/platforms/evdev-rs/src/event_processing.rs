@@ -778,6 +778,7 @@ fn process_input_event_for_device(
 /// because `event_builder` wasn't set yet when the KEY event arrived.
 /// See: https://github.com/canonical/mir/pull/4780
 pub fn process_libinput_events(
+    libinput: &mut input::Libinput,
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
@@ -800,13 +801,13 @@ pub fn process_libinput_events(
         }
     }
 
-    if state.libinput.dispatch().is_err() {
+    if libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
         return;
     }
 
     // Process newly arrived events.
-    for event in state.libinput.by_ref() {
+    for event in libinput.by_ref() {
         match event {
             input::Event::Device(device_event) => {
                 let libinput_device = device_event.device();
