@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.26 {
+MIR_SERVER_INTERNAL_2.29 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -43,7 +43,6 @@ global:
     mir::DefaultServerConfiguration::the_drag_icon_controller*;
     mir::DefaultServerConfiguration::the_emergency_cleanup*;
     mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
-    mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     mir::DefaultServerConfiguration::the_focus_controller*;
     mir::DefaultServerConfiguration::the_frontend_display_changer*;
     mir::DefaultServerConfiguration::the_frontend_surface_stack*;
@@ -72,8 +71,6 @@ global:
     mir::DefaultServerConfiguration::the_persistent_surface_store*;
     mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
-    mir::DefaultServerConfiguration::the_prompt_session_listener*;
-    mir::DefaultServerConfiguration::the_prompt_session_manager*;
     mir::DefaultServerConfiguration::the_renderer_factory*;
     mir::DefaultServerConfiguration::the_rendering_platforms*;
     mir::DefaultServerConfiguration::the_scene*;
@@ -176,8 +173,6 @@ global:
     mir::Server::override_the_logger*;
     mir::Server::override_the_persistent_surface_store*;
     mir::Server::override_the_pointer_input_dispatcher*;
-    mir::Server::override_the_prompt_session_listener*;
-    mir::Server::override_the_prompt_session_manager*;
     mir::Server::override_the_renderer_factory*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
@@ -221,8 +216,6 @@ global:
     mir::Server::the_output_filter*;
     mir::Server::the_persistent_surface_store*;
     mir::Server::the_pointer_input_dispatcher*;
-    mir::Server::the_prompt_session_listener*;
-    mir::Server::the_prompt_session_manager*;
     mir::Server::the_renderer_factory*;
     mir::Server::the_rendering_platforms*;
     mir::Server::the_scene*;
@@ -328,9 +321,6 @@ global:
     mir::frontend::PointerInputDispatcher::?PointerInputDispatcher*;
     mir::frontend::PointerInputDispatcher::PointerInputDispatcher*;
     mir::frontend::PointerInputDispatcher::operator*;
-    mir::frontend::PromptSession::?PromptSession*;
-    mir::frontend::PromptSession::PromptSession*;
-    mir::frontend::PromptSession::operator*;
     mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     mir::frontend::SessionAuthorizer::SessionAuthorizer*;
     mir::frontend::SessionAuthorizer::operator*;
@@ -528,6 +518,7 @@ global:
     mir::scene::BasicSurface::set_opaque_region*;
     mir::scene::BasicSurface::set_orientation*;
     mir::scene::BasicSurface::set_reception_mode*;
+    mir::scene::BasicSurface::set_parent*;
     mir::scene::BasicSurface::set_streams*;
     mir::scene::BasicSurface::set_tiled_edges*;
     mir::scene::BasicSurface::set_transformation*;
@@ -564,12 +555,6 @@ global:
     mir::scene::NullObserver::surface_exists*;
     mir::scene::NullObserver::surface_removed*;
     mir::scene::NullObserver::surfaces_reordered*;
-    mir::scene::NullPromptSessionListener::prompt_provider_added*;
-    mir::scene::NullPromptSessionListener::prompt_provider_removed*;
-    mir::scene::NullPromptSessionListener::resuming*;
-    mir::scene::NullPromptSessionListener::starting*;
-    mir::scene::NullPromptSessionListener::stopping*;
-    mir::scene::NullPromptSessionListener::suspending*;
     mir::scene::NullSessionListener::?NullSessionListener*;
     mir::scene::NullSessionListener::NullSessionListener*;
     mir::scene::NullSessionListener::buffer_stream_created*;
@@ -612,12 +597,6 @@ global:
     mir::scene::Observer::operator*;
     mir::scene::OutputPropertiesCache::properties_for*;
     mir::scene::OutputPropertiesCache::update_from*;
-    mir::scene::PromptSessionListener::?PromptSessionListener*;
-    mir::scene::PromptSessionListener::PromptSessionListener*;
-    mir::scene::PromptSessionListener::operator*;
-    mir::scene::PromptSessionManager::?PromptSessionManager*;
-    mir::scene::PromptSessionManager::PromptSessionManager*;
-    mir::scene::PromptSessionManager::operator*;
     mir::scene::SceneChangeNotification::?SceneChangeNotification*;
     mir::scene::SceneChangeNotification::SceneChangeNotification*;
     mir::scene::SceneChangeNotification::end_observation*;
@@ -855,7 +834,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_drag_icon_controller*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_emergency_cleanup*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frontend_display_changer*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_frontend_surface_stack*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_gl_config*;
@@ -881,8 +859,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_persistent_surface_store*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_prompt_session_listener*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_prompt_session_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_renderer_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_rendering_platforms*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_scene*;
@@ -971,7 +947,6 @@ global:
     non-virtual?thunk?to?mir::frontend::EventSink::?EventSink*;
     non-virtual?thunk?to?mir::frontend::InputConfigurationChanger::?InputConfigurationChanger*;
     non-virtual?thunk?to?mir::frontend::PointerInputDispatcher::?PointerInputDispatcher*;
-    non-virtual?thunk?to?mir::frontend::PromptSession::?PromptSession*;
     non-virtual?thunk?to?mir::frontend::SessionAuthorizer::?SessionAuthorizer*;
     non-virtual?thunk?to?mir::frontend::Surface::?Surface*;
     non-virtual?thunk?to?mir::frontend::SurfaceStack::?SurfaceStack*;
@@ -1103,6 +1078,7 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_opaque_region*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_orientation*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_parent*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_streams*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_tiled_edges*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_transformation*;
@@ -1129,12 +1105,6 @@ global:
     non-virtual?thunk?to?mir::scene::NullObserver::surface_exists*;
     non-virtual?thunk?to?mir::scene::NullObserver::surface_removed*;
     non-virtual?thunk?to?mir::scene::NullObserver::surfaces_reordered*;
-    non-virtual?thunk?to?mir::scene::NullPromptSessionListener::prompt_provider_added*;
-    non-virtual?thunk?to?mir::scene::NullPromptSessionListener::prompt_provider_removed*;
-    non-virtual?thunk?to?mir::scene::NullPromptSessionListener::resuming*;
-    non-virtual?thunk?to?mir::scene::NullPromptSessionListener::starting*;
-    non-virtual?thunk?to?mir::scene::NullPromptSessionListener::stopping*;
-    non-virtual?thunk?to?mir::scene::NullPromptSessionListener::suspending*;
     non-virtual?thunk?to?mir::scene::NullSessionListener::?NullSessionListener*;
     non-virtual?thunk?to?mir::scene::NullSessionListener::buffer_stream_created*;
     non-virtual?thunk?to?mir::scene::NullSessionListener::buffer_stream_destroyed*;
@@ -1169,8 +1139,6 @@ global:
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::transformation_set_to*;
     non-virtual?thunk?to?mir::scene::NullSurfaceObserver::window_resized_to*;
     non-virtual?thunk?to?mir::scene::Observer::?Observer*;
-    non-virtual?thunk?to?mir::scene::PromptSessionListener::?PromptSessionListener*;
-    non-virtual?thunk?to?mir::scene::PromptSessionManager::?PromptSessionManager*;
     non-virtual?thunk?to?mir::scene::SceneChangeNotification::?SceneChangeNotification*;
     non-virtual?thunk?to?mir::scene::SceneChangeNotification::end_observation*;
     non-virtual?thunk?to?mir::scene::SceneChangeNotification::scene_changed*;
@@ -1334,7 +1302,6 @@ global:
     typeinfo?for?mir::frontend::EventSink;
     typeinfo?for?mir::frontend::InputConfigurationChanger;
     typeinfo?for?mir::frontend::PointerInputDispatcher;
-    typeinfo?for?mir::frontend::PromptSession;
     typeinfo?for?mir::frontend::SessionAuthorizer;
     typeinfo?for?mir::frontend::SessionCredentials;
     typeinfo?for?mir::frontend::Surface;
@@ -1379,16 +1346,11 @@ global:
     typeinfo?for?mir::scene::IdleHub;
     typeinfo?for?mir::scene::IdleStateObserver;
     typeinfo?for?mir::scene::NullObserver;
-    typeinfo?for?mir::scene::NullPromptSessionListener;
     typeinfo?for?mir::scene::NullSessionListener;
     typeinfo?for?mir::scene::NullSurfaceObserver;
     typeinfo?for?mir::scene::Observer;
     typeinfo?for?mir::scene::OutputProperties;
     typeinfo?for?mir::scene::OutputPropertiesCache;
-    typeinfo?for?mir::scene::PromptSession;
-    typeinfo?for?mir::scene::PromptSessionCreationParameters;
-    typeinfo?for?mir::scene::PromptSessionListener;
-    typeinfo?for?mir::scene::PromptSessionManager;
     typeinfo?for?mir::scene::SceneChangeNotification;
     typeinfo?for?mir::scene::SceneReport;
     typeinfo?for?mir::scene::Session;
@@ -1455,7 +1417,6 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_changer*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_display_platforms*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_emergency_cleanup*;
-    virtual?thunk?to?mir::DefaultServerConfiguration::the_fatal_error_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_idle_handler*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_idle_hub*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_input_dispatcher*;
@@ -1549,7 +1510,6 @@ global:
     vtable?for?mir::frontend::EventSink;
     vtable?for?mir::frontend::InputConfigurationChanger;
     vtable?for?mir::frontend::PointerInputDispatcher;
-    vtable?for?mir::frontend::PromptSession;
     vtable?for?mir::frontend::SessionAuthorizer;
     vtable?for?mir::frontend::Surface;
     vtable?for?mir::frontend::SurfaceStack;
@@ -1590,13 +1550,9 @@ global:
     vtable?for?mir::scene::IdleHub;
     vtable?for?mir::scene::IdleStateObserver;
     vtable?for?mir::scene::NullObserver;
-    vtable?for?mir::scene::NullPromptSessionListener;
     vtable?for?mir::scene::NullSessionListener;
     vtable?for?mir::scene::NullSurfaceObserver;
     vtable?for?mir::scene::Observer;
-    vtable?for?mir::scene::PromptSession;
-    vtable?for?mir::scene::PromptSessionListener;
-    vtable?for?mir::scene::PromptSessionManager;
     vtable?for?mir::scene::SceneChangeNotification;
     vtable?for?mir::scene::SceneReport;
     vtable?for?mir::scene::Session;

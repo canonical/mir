@@ -28,16 +28,16 @@ namespace input
 
 enum class DeviceCapability : uint32_t
 {
-    unknown     = 0,
-    pointer     = 1<<1,
-    keyboard    = 1<<2,
-    touchpad    = 1<<3,
-    touchscreen = 1<<4,
-    gamepad     = 1<<5,
-    joystick    = 1<<6,
-    switch_     = 1<<7,
-    multitouch  = 1<<8,   // multitouch capable
-    alpha_numeric = 1<<9 // enough keys for text entry
+    unknown = 0,
+    pointer = 1 << 1,
+    keyboard = 1 << 2,
+    touchpad = 1 << 3,
+    touchscreen = 1 << 4,
+    gamepad = 1 << 5,
+    joystick = 1 << 6,
+    switch_ = 1 << 7,
+    multitouch = 1 << 8,   // multitouch capable
+    alpha_numeric = 1 << 9 // enough keys for text entry
 };
 
 DeviceCapability mir_enable_enum_bit_operators(DeviceCapability);

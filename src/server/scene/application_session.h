@@ -69,11 +69,6 @@ public:
     void hide() override;
     void show() override;
 
-    void start_prompt_session() override;
-    void stop_prompt_session() override;
-    void suspend_prompt_session() override;
-    void resume_prompt_session() override;
-
     auto create_buffer_stream(graphics::BufferProperties const& params)
         -> std::shared_ptr<compositor::BufferStream> override;
     void destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream) override;

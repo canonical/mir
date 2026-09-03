@@ -360,11 +360,15 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
 
         /* Emit fake DRM page-flip events */
         mock_drm.generate_event_on(drm_device);
+        mock_drm.generate_event_on(drm_device);
     }
 
     /* Handle the events properly */
     EXPECT_CALL(mock_drm, drmHandleEvent(mtd::IsFdOfDevice(drm_device), _))
-        .Times(num_connected_outputs)
+        .Times(num_connected_outputs * 2)
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)))
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
+        .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[0]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[1]), Return(0)))
         .WillOnce(DoAll(InvokePageFlipHandler(&user_data[2]), Return(0)));

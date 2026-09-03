@@ -1,6 +1,6 @@
 (mir-libraries)=
 
-# Libraries
+# Libraries and module architecture
 
 The Mir project is a collection of C++ libraries for writing Wayland
 compositors. This document describes what those libraries are and how they
@@ -28,7 +28,6 @@ input hardware of that platform. The libraries that Mir provides are:
 
 - `graphics-atomic-kms`
 - `graphics-gbm-kms`
-- `graphics-eglstream-kms`
 - `graphics-wayland`
 - `graphics-dummy`
 - `server-x11`

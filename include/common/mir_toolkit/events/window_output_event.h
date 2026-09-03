@@ -20,7 +20,8 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**
@@ -66,7 +67,7 @@ double mir_window_output_event_get_refresh_rate(MirWindowOutputEvent const* ev);
  * \return          The ID of the output the window is currently considered to be on.
  *                  (From MirDisplayOutput::output_id)
  */
-uint32_t mir_window_output_event_get_output_id(MirWindowOutputEvent const *ev);
+uint32_t mir_window_output_event_get_output_id(MirWindowOutputEvent const* ev);
 
 #ifdef __cplusplus
 }

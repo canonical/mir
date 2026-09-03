@@ -106,17 +106,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirPointerAction action)
     }
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirPromptSessionState state)
-{
-    switch (state)
-    {
-    PRINT(mir_prompt_session_state,started);
-    PRINT(mir_prompt_session_state,stopped);
-    PRINT(mir_prompt_session_state,suspended);
-    default:
-        return out << static_cast<int>(state) << "<INVALID>";
-    }
-}
 
 std::ostream& mir::operator<<(std::ostream& out, MirOrientation orientation)
 {
@@ -265,11 +254,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirInputEvent const& event)
     }
 }
 
-std::ostream& mir::operator<<(std::ostream& out, MirPromptSessionEvent const& event)
-{
-    return out << "prompt_session_event(state=" << mir_prompt_session_event_get_state(&event) << ")";
-}
-
 std::ostream& mir::operator<<(std::ostream& out, MirResizeEvent const& event)
 {
     return out << "resize_event(state=" << mir_resize_event_get_width(&event) << "x"
@@ -385,8 +369,6 @@ std::ostream& mir::operator<<(std::ostream& out, MirEvent const& event)
         PRINT_EVENT(window_output);
     case mir_event_type_close_window :
         return out << "close_window_event()";
-    case mir_event_type_prompt_session_state_change:
-        return out << *mir_event_get_prompt_session_event(&event);
     default:
         return out << static_cast<int>(type) << "<INVALID>";
     }

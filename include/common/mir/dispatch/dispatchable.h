@@ -25,11 +25,12 @@ namespace mir
 namespace dispatch
 {
 
-enum FdEvent : uint32_t {
-    readable =      1<<0,
-    writable =      1<<1,
-    remote_closed = 1<<2,
-    error =         1<<3
+enum FdEvent : uint32_t
+{
+    readable = 1 << 0,
+    writable = 1 << 1,
+    remote_closed = 1 << 2,
+    error = 1 << 3
 };
 
 using FdEvents = uint32_t;

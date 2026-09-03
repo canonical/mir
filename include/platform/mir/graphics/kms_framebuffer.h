@@ -34,5 +34,4 @@ public:
 }
 }
 
-
 #endif //MIR_GRAPHICS_GBM_KMS_FRAMEBUFFER_H_

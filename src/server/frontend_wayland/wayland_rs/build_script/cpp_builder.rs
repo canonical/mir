@@ -100,7 +100,11 @@ impl CppBuilder {
 
             // Generate classes
             for class in &namespace.classes {
-                result.push_str(&format!("class {}\n", class.name));
+                if let Some(superclass) = &class.superclass {
+                    result.push_str(&format!("class {} : public {}\n", class.name, superclass));
+                } else {
+                    result.push_str(&format!("class {}\n", class.name));
+                }
                 result.push_str("{\n");
                 result.push_str("public:\n");
 
@@ -124,6 +128,15 @@ impl CppBuilder {
 
                 // Virtual destructor
                 result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
+
+                // Verbatim header-only public declarations (e.g. static templated helpers).
+                for decl in &class.raw_public_decls {
+                    result.push_str(decl);
+                    result.push('\n');
+                }
+                if !class.raw_public_decls.is_empty() {
+                    result.push('\n');
+                }
 
                 // Generate methods
                 for method in &class.methods {
@@ -149,24 +162,86 @@ impl CppBuilder {
                     }
                 }
 
+                for member in &class.public_members {
+                    let const_str = if member.is_const { " const" } else { "" };
+                    result.push_str(&format!(
+                        "    {}{} {};\n",
+                        cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                        const_str,
+                        member.name
+                    ));
+                }
+
+                if !class.protected_constructor_args.is_empty()
+                    || !class.protected_members.is_empty()
+                {
+                    result.push_str("protected:\n");
+
+                    if !class.protected_constructor_args.is_empty() {
+                        let ctor_args_str: Vec<String> = class
+                            .protected_constructor_args
+                            .iter()
+                            .map(|arg| {
+                                format!(
+                                    "{} {}",
+                                    cpp_arg_type_to_cpp_source(&arg.cpp_type, true),
+                                    arg.name
+                                )
+                            })
+                            .collect();
+                        let initialiser_list: Vec<String> = class
+                            .protected_constructor_args
+                            .iter()
+                            .map(|arg| format!("{} ( std::move({}) )", arg.name, arg.name))
+                            .collect();
+                        result.push_str(&format!(
+                            "    {}({}) : {} {{}}\n",
+                            class.name,
+                            ctor_args_str.join(", "),
+                            initialiser_list.join(", ")
+                        ));
+                        result.push_str("\n");
+                    }
+
+                    for member in &class.protected_members {
+                        let const_str = if member.is_const { " const" } else { "" };
+                        result.push_str(&format!(
+                            "    {}{} {};\n",
+                            cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            const_str,
+                            member.name
+                        ));
+                    }
+
+                    result.push_str("\n");
+                }
+
                 result.push_str("private:\n");
                 for member in &class.private_members {
+                    let const_str = if member.is_const { " const" } else { "" };
                     if member.optional {
                         result.push_str(&format!(
-                            "    std::optional<{}> {};\n",
+                            "    std::optional<{}>{} {};\n",
                             cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            const_str,
                             member.name
                         ));
                     } else {
                         result.push_str(&format!(
-                            "    {} {};\n",
+                            "    {}{} {};\n",
                             cpp_arg_type_to_cpp_source(&member.cpp_type, true),
+                            const_str,
                             member.name
                         ));
                     }
                 }
 
                 result.push_str("};\n\n");
+            }
+
+            // Emit free-function declarations at namespace scope.
+            for free_fn in &namespace.free_functions {
+                result.push_str(&format!("{};\n\n", free_fn.signature));
             }
 
             // Close namespace(s)
@@ -213,6 +288,18 @@ impl CppBuilder {
                     result.push_str(&format!("    {}\n", body));
                     result.push_str("}\n\n");
                 }
+            }
+
+            // Emit free-function definitions inside the (re-opened) namespace so that they
+            // can refer to other declarations in this namespace by their unqualified names.
+            if !namespace.free_functions.is_empty() {
+                result.push_str(&format!("namespace {}\n{{\n", namespace_str));
+                for free_fn in &namespace.free_functions {
+                    result.push_str(&format!("{}\n{{\n", free_fn.signature));
+                    result.push_str(&format!("    {}\n", free_fn.body));
+                    result.push_str("}\n\n");
+                }
+                result.push_str(&format!("}}  // namespace {}\n\n", namespace_str));
             }
         }
 
@@ -299,10 +386,22 @@ impl CppBuilder {
     }
 }
 
+/// A free (non-member) function emitted at namespace scope: declared in the header and
+/// defined in the .cpp source. Unlike `CppClass` methods, these are never emitted to the
+/// generated Rust/cxx bindings, so they are suitable for pure C++ convenience wrappers.
+pub struct CppFreeFunction {
+    /// The full function signature, without a trailing semicolon or body, e.g.
+    /// `auto create_wl_buffer(WaylandClient const& client, uint32_t version) -> std::shared_ptr<Buffer>`.
+    pub signature: String,
+    /// The function body (statements only, without the surrounding braces).
+    pub body: String,
+}
+
 pub struct CppNamespace {
     pub name: Vec<String>,
     pub classes: Vec<CppClass>,
     forward_declarations: Vec<String>,
+    free_functions: Vec<CppFreeFunction>,
 }
 
 impl CppNamespace {
@@ -315,6 +414,7 @@ impl CppNamespace {
             name: name.into_iter().map(Into::into).collect(),
             classes: vec![],
             forward_declarations: vec![],
+            free_functions: vec![],
         }
     }
 
@@ -323,6 +423,15 @@ impl CppNamespace {
         self.classes
             .last_mut()
             .expect("classes cannot be empty after push")
+    }
+
+    /// Add a free function to be emitted at namespace scope (declaration in the header,
+    /// definition in the .cpp source).
+    pub fn add_free_function(&mut self, signature: impl Into<String>, body: impl Into<String>) {
+        self.free_functions.push(CppFreeFunction {
+            signature: signature.into(),
+            body: body.into(),
+        });
     }
 
     pub fn add_forward_declaration_struct(&mut self, name: &str) {
@@ -336,19 +445,41 @@ impl CppNamespace {
 
 pub struct CppClass {
     pub name: String,
+    pub superclass: Option<String>,
     pub methods: Vec<CppMethod>,
     pub enums: Vec<CppEnum>,
+    pub public_members: Vec<CppArg>,
+    pub protected_constructor_args: Vec<CppArg>,
+    pub protected_members: Vec<CppArg>,
     pub private_members: Vec<CppArg>,
+    /// Verbatim header-only declarations emitted in the `public:` section. Unlike `CppMethod`,
+    /// these are never emitted to the .cpp source or the generated Rust/cxx bindings, so they are
+    /// suitable for header-only helpers such as static templated methods.
+    pub raw_public_decls: Vec<String>,
 }
 
 impl CppClass {
     pub fn new(name: impl Into<String>) -> CppClass {
         CppClass {
             name: sanitize_identifier(&name.into()),
+            superclass: None,
             methods: vec![],
             enums: vec![],
+            public_members: vec![],
+            protected_constructor_args: vec![],
+            protected_members: vec![],
             private_members: vec![],
+            raw_public_decls: vec![],
         }
+    }
+
+    pub fn set_superclass(&mut self, name: impl Into<String>) {
+        self.superclass = Some(name.into());
+    }
+
+    /// Add a verbatim declaration to the class's `public:` section (header only).
+    pub fn add_raw_public_decl(&mut self, decl: impl Into<String>) {
+        self.raw_public_decls.push(decl.into());
     }
 
     pub fn add_method(&mut self, method: CppMethod) -> &mut CppMethod {
@@ -363,6 +494,20 @@ impl CppClass {
         self.enums
             .last_mut()
             .expect("enums cannot be empty after push")
+    }
+
+    pub fn add_public_member(&mut self, member: CppArg) -> &mut CppArg {
+        self.public_members.push(member);
+        self.public_members
+            .last_mut()
+            .expect("public_members cannot be empty after push")
+    }
+
+    pub fn add_protected_constructor_arg(&mut self, arg: CppArg) -> &mut CppArg {
+        self.protected_constructor_args.push(arg);
+        self.protected_constructor_args
+            .last_mut()
+            .expect("protected_constructor_args cannot be empty after push")
     }
 
     pub fn add_private_member(&mut self, member: CppArg) -> &mut CppArg {
@@ -455,37 +600,39 @@ impl CppMethod {
     }
 }
 
+#[derive(Clone)]
 pub enum CppType {
     CppI32,
     CppU32,
     CppF64,
     String,
+    Str,
     Object(String),
     Weak(String),
     Array,
     Fd,
     Box(String),
+    Bool,
+    /// A `std::shared_ptr<T>` to a hand-written C++ type (e.g. the `Client`
+    /// interface). This type never crosses the FFI boundary; it is only used on
+    /// the public C++ surface of generated classes.
+    SharedPtr(String),
+    /// A nullable argument exposed on the public C++ surface as `std::optional`.
+    /// This type never crosses the FFI boundary; the boundary uses the
+    /// `(value, has_value)` representation instead.
+    Optional(Box<CppType>),
 }
 
 /// Convert a CppType intended as a return value to its corresponding
 /// C++ source code string in the function signature.
 fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
+    // Return types always use the standard-library spelling (never the cxx.rs
+    // wrapper), so `originates_from_rust` is `false`. The only reference-qualified
+    // return type is `rust::Box`, which is returned by `const&`.
+    let bare = cpp_bare_type_to_cpp_source(cpp_type, false);
     match cpp_type {
-        CppType::CppI32 => "int32_t".to_string(),
-        CppType::CppU32 => "uint32_t".to_string(),
-        CppType::CppF64 => "double".to_string(),
-        CppType::String => "std::string".to_string(),
-        CppType::Object(name) => {
-            format!("std::shared_ptr<{}>", name)
-        }
-        CppType::Weak(name) => {
-            format!("wayland_rs::Weak<{}>", name)
-        }
-        CppType::Array => "std::vector<uint8_t>".to_string(),
-        CppType::Fd => "int32_t".to_string(),
-        CppType::Box(name) => {
-            format!("rust::Box<{}> const&", name)
-        }
+        CppType::Box(_) => format!("{} const&", bare),
+        _ => bare,
     }
 }
 
@@ -495,24 +642,48 @@ fn cpp_return_type_to_cpp_source(cpp_type: &CppType) -> String {
 /// If the method is called from Rust, we will use the cxx.rs C++ wrapper
 /// for the type instead of the standard library type.
 fn cpp_arg_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -> String {
+    let bare = cpp_bare_type_to_cpp_source(cpp_type, originates_from_rust);
+    if cpp_type_passed_by_const_ref(cpp_type, originates_from_rust) {
+        format!("{} const&", bare)
+    } else {
+        bare
+    }
+}
+
+/// Whether an argument of this type is passed by `const&` (rather than by value)
+/// in C++ method signatures. The cxx.rs wrapper types (`rust::String`,
+/// `rust::Vec`, `rust::Box`) are passed by value when crossing from Rust.
+fn cpp_type_passed_by_const_ref(cpp_type: &CppType, originates_from_rust: bool) -> bool {
+    match cpp_type {
+        CppType::Object(_) | CppType::Weak(_) | CppType::Optional(_) => true,
+        CppType::Box(_) | CppType::String | CppType::Array => !originates_from_rust,
+        _ => false,
+    }
+}
+
+/// Convert a CppType to its bare (unqualified, non-reference) C++ source type,
+/// e.g. for use as the inner type of a `std::optional<...>`. This is the single
+/// canonical type renderer; `cpp_arg_type_to_cpp_source` and
+/// `cpp_return_type_to_cpp_source` build on it by adding reference qualifiers.
+fn cpp_bare_type_to_cpp_source(cpp_type: &CppType, originates_from_rust: bool) -> String {
     match (cpp_type, originates_from_rust) {
         (CppType::CppI32, _) => "int32_t".into(),
         (CppType::CppU32, _) => "uint32_t".into(),
         (CppType::CppF64, _) => "double".into(),
         (CppType::Fd, _) => "int32_t".into(),
-        (CppType::Object(name), _) => format!("std::shared_ptr<{}> const&", name),
-        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}> const&", name),
-        (CppType::Box(name), _) => {
-            if originates_from_rust {
-                format!("rust::Box<{}>", name)
-            } else {
-                format!("rust::Box<{}> const&", name)
-            }
-        }
+        (CppType::Object(name), _) => format!("std::shared_ptr<{}>", name),
+        (CppType::Weak(name), _) => format!("wayland_rs::Weak<{}>", name),
+        (CppType::Box(name), _) => format!("rust::Box<{}>", name),
+        (CppType::SharedPtr(name), _) => format!("std::shared_ptr<{}>", name),
         (CppType::String, true) => "rust::String".into(),
-        (CppType::String, false) => "std::string const&".into(),
+        (CppType::String, false) => "std::string".into(),
+        (CppType::Str, _) => "rust::Str".into(),
         (CppType::Array, true) => "rust::Vec<uint8_t>".into(),
-        (CppType::Array, false) => "std::vector<uint8_t> const&".into(),
+        (CppType::Array, false) => "std::vector<uint8_t>".into(),
+        (CppType::Bool, _) => "bool".into(),
+        (CppType::Optional(inner), o) => {
+            format!("std::optional<{}>", cpp_bare_type_to_cpp_source(inner, o))
+        }
     }
 }
 
@@ -524,6 +695,7 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
         CppType::CppU32 => quote! { u32 },
         CppType::CppF64 => quote! { f64 },
         CppType::String => quote! { &CxxString },
+        CppType::Str => quote! { &str },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             quote! { SharedPtr<#type_name> }
@@ -535,6 +707,9 @@ fn cpp_return_type_to_rust_source(cpp_type: &CppType) -> TokenStream {
             let type_name = format_ident!("{}", name);
             quote! { &Box<#type_name> }
         }
+        CppType::Bool => quote! { bool },
+        CppType::SharedPtr(_) => unreachable!("SharedPtr type should not generate Rust code"),
+        CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }
 
@@ -555,6 +730,7 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
                 quote! { &CxxString }
             }
         }
+        CppType::Str => quote! { &str },
         CppType::Object(name) => {
             let type_name = format_ident!("{}", name);
             quote! { &SharedPtr<#type_name> }
@@ -576,6 +752,9 @@ fn cpp_arg_type_to_rust_source(cpp_type: &CppType, originates_from_rust: bool) -
                 quote! { &Box<#type_name> }
             }
         }
+        CppType::Bool => quote! { bool },
+        CppType::SharedPtr(_) => unreachable!("SharedPtr type should not generate Rust code"),
+        CppType::Optional(_) => unreachable!("Optional type should not generate Rust code"),
     }
 }
 
@@ -690,11 +869,13 @@ pub fn sanitize_identifier(name: &str) -> String {
     }
 }
 
+#[derive(Clone)]
 pub struct CppArg {
     cpp_type: CppType,
     name: String,
     has_name: Option<String>,
     optional: bool,
+    is_const: bool,
 }
 
 impl CppArg {
@@ -709,7 +890,13 @@ impl CppArg {
                 None
             },
             optional,
+            is_const: false,
         }
+    }
+
+    pub fn set_const(&mut self) -> &mut Self {
+        self.is_const = true;
+        self
     }
 
     pub fn name(&self) -> &str {

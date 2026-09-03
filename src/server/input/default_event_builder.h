@@ -44,50 +44,7 @@ public:
         xkb_keysym_t keysym,
         int scan_code) override;
 
-    EventUPtr touch_event(
-        std::optional<Timestamp> source_timestamp,
-        std::vector<events::TouchContactV1> const& contacts) override;
-
-    EventUPtr pointer_event(
-        std::optional<Timestamp> source_timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) override;
-
-    EventUPtr pointer_event(
-        std::optional<Timestamp> source_timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x, float y,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) override;
-
-    EventUPtr pointer_axis_event(
-        MirPointerAxisSource axis_source,
-        std::optional<Timestamp> source_timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x, float y,
-        float hscroll_value, float vscroll_value,
-        float relative_x_value, float relative_y_value) override;
-
-    EventUPtr pointer_axis_with_stop_event(
-        MirPointerAxisSource axis_source,
-        std::optional<Timestamp> source_timestamp,
-        MirPointerAction action,
-        MirPointerButtons buttons_pressed,
-        float x, float y,
-        float hscroll_value, float vscroll_value,
-        bool hscroll_stop, bool vscroll_stop,
-        float relative_x_value, float relative_y_value) override;
-
-    EventUPtr pointer_axis_discrete_scroll_event(
-        MirPointerAxisSource axis_source, std::optional<Timestamp> timestamp, MirPointerAction action,
-        MirPointerButtons buttons_pressed, float hscroll_value, float vscroll_value, float hscroll_discrete,
-        float vscroll_discrete) override;
-
-    // Intentionally uses ScrollAxisV1* instad of ScrollAxis* as a reminder that a new copy of this function will be
+    // Intentionally uses ScrollAxisV1* instead of ScrollAxis* as a reminder that a new copy of this function will be
     // needed for each ScrollAxis struct version.
     EventUPtr pointer_event(
         std::optional<Timestamp> timestamp,
@@ -99,7 +56,7 @@ public:
         events::ScrollAxisV1H h_scroll,
         events::ScrollAxisV1V v_scroll) override;
 
-    // Intentionally uses TouchContactV2* instad of TouchContact* as a reminder that a new copy of this function will be
+    // Intentionally uses TouchContactV2* instead of TouchContact* as a reminder that a new copy of this function will be
     // needed for each TouchContact struct version.
     EventUPtr touch_event(
         std::optional<Timestamp> timestamp,

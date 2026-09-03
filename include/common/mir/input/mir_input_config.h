@@ -35,8 +35,12 @@ class MirInputDevice
 {
 public:
     MirInputDevice();
-    MirInputDevice(MirInputDeviceId id, mir::input::DeviceCapabilities caps, std::string const& name, std::string const& unique_id);
-    MirInputDevice(MirInputDevice && conf);
+    MirInputDevice(
+        MirInputDeviceId id,
+        mir::input::DeviceCapabilities caps,
+        std::string const& name,
+        std::string const& unique_id);
+    MirInputDevice(MirInputDevice&& conf);
     MirInputDevice(MirInputDevice const& conf);
     MirInputDevice& operator=(MirInputDevice const& conf);
     ~MirInputDevice();
@@ -67,7 +71,7 @@ public:
     void set_touchscreen_config(MirTouchscreenConfig const& conf);
 
     bool operator==(MirInputDevice const& rhs) const;
-    bool operator!=(MirInputDevice const& rhs) const;
+
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;
@@ -79,7 +83,7 @@ struct MirInputConfig
 {
 public:
     MirInputConfig();
-    MirInputConfig(MirInputConfig && conf);
+    MirInputConfig(MirInputConfig&& conf);
     MirInputConfig(MirInputConfig const& conf);
     MirInputConfig& operator=(MirInputConfig const& conf);
     ~MirInputConfig();
@@ -93,10 +97,10 @@ public:
     size_t size() const;
 
     void for_each(std::function<void(MirInputDevice const&)> const& visitor) const;
-    void for_each(std::function<void(MirInputDevice &)> const& visitor);
+    void for_each(std::function<void(MirInputDevice&)> const& visitor);
     bool operator==(MirInputConfig const& rhs) const;
-    bool operator!=(MirInputConfig const& rhs) const;
     using value_type = MirInputDevice;
+
 private:
     struct Implementation;
     std::unique_ptr<Implementation> impl;

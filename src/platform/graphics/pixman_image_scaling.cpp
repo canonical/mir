@@ -52,9 +52,9 @@ mir::graphics::ARGB8Buffer mir::graphics::scale_cursor_image(
     pixman_transform_t transform;
     pixman_transform_init_identity(&transform);
     // Counter-intuitively, you use the INVERSE transform, not the "normal" one
-    pixman_transform_scale(NULL, &transform, pixman_double_to_fixed(new_scale), pixman_double_to_fixed(new_scale));
+    pixman_transform_scale(nullptr, &transform, pixman_double_to_fixed(new_scale), pixman_double_to_fixed(new_scale));
     pixman_image_set_transform(original_image.get(), &transform);
-    pixman_image_set_filter(original_image.get(), PIXMAN_FILTER_BILINEAR, NULL, 0);
+    pixman_image_set_filter(original_image.get(), PIXMAN_FILTER_BILINEAR, nullptr, 0);
 
     // Round the width and height up/down to the nearest integer. If the width
     // stays as a float, the stride might be computed as not a value of 4
@@ -75,7 +75,7 @@ mir::graphics::ARGB8Buffer mir::graphics::scale_cursor_image(
 
     // Copy over the pixels into the larger image
     pixman_image_composite(
-        PIXMAN_OP_SRC, original_image.get(), NULL, scaled_image.get(), 0, 0, 0, 0, 0, 0, scaled_width, scaled_height);
+        PIXMAN_OP_SRC, original_image.get(), nullptr, scaled_image.get(), 0, 0, 0, 0, 0, 0, scaled_width, scaled_height);
 
     return {std::move(buf), {scaled_width, scaled_height}};
 }

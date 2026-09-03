@@ -29,13 +29,13 @@ mtd::MockLibInput* global_libinput = nullptr;
 
 mtd::MockLibInput::MockLibInput()
 {
-    assert(global_libinput == NULL && "Only one mock object per process is allowed");
+    assert(global_libinput == nullptr && "Only one mock object per process is allowed");
     global_libinput = this;
 
     ON_CALL(*this, libinput_device_ref(_)).WillByDefault(ReturnArg<0>());
     ON_CALL(*this, libinput_get_fd(_)).WillByDefault(Return(int(libinput_simulation_queue.watch_fd())));
     ON_CALL(*this, libinput_get_event(_))
-        .WillByDefault(Invoke([this](libinput*) -> libinput_event*
+        .WillByDefault([this](libinput*) -> libinput_event*
                               {
                                   if (events.empty())
                                       return nullptr;
@@ -44,7 +44,7 @@ mtd::MockLibInput::MockLibInput()
                                   events.erase(events.begin());
                                   return ret;
                               }
-                             ));
+                             );
     ON_CALL(*this, libinput_device_config_left_handed_set(_, _))
         .WillByDefault(Return(LIBINPUT_CONFIG_STATUS_SUCCESS));
     ON_CALL(*this, libinput_device_config_accel_set_speed(_, _))
@@ -95,7 +95,7 @@ void mtd::MockLibInput::setup_device(libinput_device* dev, libinput_device_group
     ON_CALL(*this, libinput_device_unref(dev))
         .WillByDefault(Return(nullptr));
     ON_CALL(*this, libinput_device_get_udev_device(dev))
-        .WillByDefault(InvokeWithoutArgs([u_dev]() { return udev_device_ref(u_dev.get());}));
+        .WillByDefault([u_dev]() { return udev_device_ref(u_dev.get());});
 }
 
 mtd::MockLibInput::~MockLibInput() noexcept
@@ -846,20 +846,18 @@ libinput_event* mtd::MockLibInput::setup_pointer_scroll_wheel_event(
         .WillByDefault(Return(horizontal_value120));
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_VERTICAL))
         .WillByDefault(
-            InvokeWithoutArgs(
                 []() -> double
                 {
                     BOOST_THROW_EXCEPTION((
                         std::logic_error{"axis_value_discrete only returns a non-zero value on EVENT_POINTER_AXIS events"}));
-                }));
+                });
     ON_CALL(*this, libinput_event_pointer_get_axis_value_discrete(pointer_event, LIBINPUT_POINTER_AXIS_SCROLL_HORIZONTAL))
         .WillByDefault(
-            InvokeWithoutArgs(
                 []() -> double
                 {
                     BOOST_THROW_EXCEPTION((
                         std::logic_error{"axis_value_discrete only returns a non-zero value on EVENT_POINTER_AXIS events"}));
-                }));
+                });
     ON_CALL(*this, libinput_event_get_pointer_event(event))
         .WillByDefault(Return(pointer_event));
     ON_CALL(*this, libinput_event_get_device(event))

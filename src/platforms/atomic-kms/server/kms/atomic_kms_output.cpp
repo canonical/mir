@@ -28,7 +28,7 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <span>
-#include <string.h> // strcmp
+#include <cstring>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -259,7 +259,7 @@ void mga::AtomicKMSOutput::reset()
     }
     catch (std::exception const& e)
     {
-        fatal_error(e.what());
+        MIR_FATAL_ERROR("{}", e.what());
     }
 
     /* Discard previously current crtc */
@@ -407,8 +407,8 @@ void mga::AtomicKMSOutput::clear_crtc()
         }
         else
         {
-            fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                        mgk::connector_name(conf->connector).c_str(), result);
+            MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
+                        mgk::connector_name(conf->connector), result);
         }
     }
 
@@ -902,7 +902,7 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
         for (int m = 0; m != connector->count_modes; ++m) {
             drmModeModeInfo &mode_info = connector->modes[m];
 
-            if (strcmp(mode_info.name, "preferred") == 0)
+            if (std::strcmp(mode_info.name, "preferred") == 0)
                 current_mode_index = static_cast<uint32_t>(m);
         }
     }

@@ -221,7 +221,7 @@ public:
         void pointer_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
         {
             std::lock_guard lock{config_mutex};
-            mouse.vscroll_speed(opt_val);
+            mouse.hscroll_speed(opt_val);
         }
 
         void touchpad_tap_to_click(live_config::Key const&, std::optional<bool> opt_val)
@@ -283,7 +283,7 @@ public:
         void touchpad_horizontal_scroll_speed(live_config::Key const&, std::optional<float> opt_val)
         {
             std::lock_guard lock{config_mutex};
-            touchpad.vscroll_speed(opt_val);
+            touchpad.hscroll_speed(opt_val);
         }
 
         void touchpad_click_mode(live_config::Key const& key, std::optional<std::string_view> opt_val)
@@ -353,6 +353,10 @@ public:
         config.mouse.merge(mouse());
         config.keyboard.merge(keyboard());
         config.touchpad.merge(touchpad());
+
+        apply(config.mouse);
+        apply(config.touchpad);
+        apply(config.keyboard);
     }
 };
 

@@ -23,6 +23,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <cstdlib>
 #include <vector>
 #include <unordered_set>
 
@@ -243,12 +244,12 @@ void mga::Quirks::add_quirks_option(boost::program_options::options_description&
 
 auto mir::graphics::atomic::Quirks::require_modesetting_support(mir::udev::Device const& device) const -> bool
 {
-    if (getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") != nullptr)
+    if (std::getenv("MIR_MESA_KMS_DISABLE_MODESET_PROBE") != nullptr)
     {
         mir::log_debug("MIR_MESA_KMS_DISABLE_MODESET_PROBE is set");
         return false;
     }
-    else if (getenv("MIR_GBM_KMS_DISABLE_MODESET_PROBE")  != nullptr)
+    else if (std::getenv("MIR_GBM_KMS_DISABLE_MODESET_PROBE")  != nullptr)
     {
         mir::log_debug("MIR_GBM_KMS_DISABLE_MODESET_PROBE is set");
         return false;

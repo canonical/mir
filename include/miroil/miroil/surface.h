@@ -21,13 +21,15 @@
 #include <mir_toolkit/common.h>
 #include <mir/graphics/renderable.h>
 
-namespace mir {
-    namespace scene { class Surface; }
-    namespace graphics { class CursorImage; }
-    namespace compositor { class BufferStream; }
+namespace mir
+{
+namespace scene { class Surface; }
+namespace graphics { class CursorImage; }
+namespace compositor { class BufferStream; }
 }
 
-namespace miroil {
+namespace miroil
+{
 
 class SurfaceObserver;
 class SurfaceObserverImpl;
@@ -40,12 +42,11 @@ public:
     Surface(std::shared_ptr<mir::scene::Surface> wrapped);
     ~Surface() = default;
 
-    mir::scene::Surface *get_wrapped() const;
+    mir::scene::Surface* get_wrapped() const;
     void add_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer);
     void remove_observer(std::shared_ptr<miroil::SurfaceObserver> const& observer);
 
     mir::graphics::RenderableList generate_renderables(miroil::CompositorID id) const;
-
 
     bool is_confined_to_window();
     void set_orientation(MirOrientation orientation);
@@ -62,12 +63,17 @@ public:
     // TODO a legacy of old interactions and needs removing
     int query(MirWindowAttrib attrib) const;
     // TODO a legacy of old interactions and needs removing
-    void set_keymap(MirInputDeviceId id, std::string const& model, std::string const& layout,
-                            std::string const& variant, std::string const& options);
+    void set_keymap(
+        MirInputDeviceId id,
+        std::string const& model,
+        std::string const& layout,
+        std::string const& variant,
+        std::string const& options);
 
 private:
     std::shared_ptr<mir::scene::Surface> wrapped;
-    std::unordered_map<std::shared_ptr<miroil::SurfaceObserver>, std::shared_ptr<miroil::SurfaceObserverImpl>> observers;
+    std::unordered_map<std::shared_ptr<miroil::SurfaceObserver>, std::shared_ptr<miroil::SurfaceObserverImpl>>
+        observers;
 };
 
 }

@@ -68,11 +68,10 @@ private:
     void offer(std::string const& mime_type) override
     {
         if (finalized_)
-            BOOST_THROW_EXCEPTION(
-                wayland::ProtocolError(
-                    resource,
-                    wayland::DataControlSourceV1::Error::invalid_offer,
-                    "Cannot add MIME types after source is set"));
+            throw wayland::ProtocolError{
+                resource,
+                wayland::DataControlSourceV1::Error::invalid_offer,
+                "Cannot add MIME types after source is set"};
         mime_types_.push_back(mime_type);
     }
 
@@ -205,9 +204,8 @@ private:
                 return nullptr;
 
             if (!source->try_finalize())
-                BOOST_THROW_EXCEPTION(
-                    wayland::ProtocolError(
-                        resource, wayland::DataControlDeviceV1::Error::used_source, "Source already used"));
+                throw wayland::ProtocolError{
+                    resource, wayland::DataControlDeviceV1::Error::used_source, "Source already used"};
 
             return std::make_shared<DataExchangeSource>(wayland::Weak{source}, seat);
         }

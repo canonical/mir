@@ -21,14 +21,17 @@
 #include <miral/runner.h>
 #include <miral/window_manager_tools.h>
 
-#include <mir/test/auto_unblock_thread.h>
 #include <mir_test_framework/temporary_environment_value.h>
 
 #include <condition_variable>
 #include <list>
 #include <mutex>
+#include <thread>
 
-namespace mir { namespace shell { class WindowManager; }}
+namespace mir
+{
+namespace shell { class WindowManager; }
+}
 namespace miral
 {
 class WindowManagementPolicy;
@@ -40,7 +43,7 @@ public:
     void add_to_environment(char const* key, char const* value);
 
 private:
-    std::list <mir_test_framework::TemporaryEnvironmentValue> env;
+    std::list<mir_test_framework::TemporaryEnvironmentValue> env;
 };
 
 struct TestDisplayServer : private TestRuntimeEnvironment
@@ -68,8 +71,7 @@ struct TestDisplayServer : private TestRuntimeEnvironment
 
     /// Add a watch on a file descriptor.
     /// The handler will be triggered when there is data to read on the Fd.
-    auto register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler)
-    -> std::unique_ptr<miral::FdHandle>;
+    auto register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler) -> std::unique_ptr<miral::FdHandle>;
 
     /// Set a handler for exceptions caught in run_with().
     /// The default action is to call mir::report_exception(std::cerr)
@@ -92,23 +94,24 @@ struct TestDisplayServer : private TestRuntimeEnvironment
     /// \note Typically called by TestServer::TearDown()
     void stop_server();
 
-    virtual auto
-    build_window_manager_policy(WindowManagerTools const& tools) -> std::unique_ptr<WindowManagementPolicy>;
+    virtual auto build_window_manager_policy(WindowManagerTools const& tools)
+        -> std::unique_ptr<WindowManagementPolicy>;
 
     /// Wrapper to gain access to the MirRunner
     /// \note call after start_server()
     void invoke_runner(std::function<void(MirRunner& runner)> const& f);
 
     mir::Server& server() const { return *server_running; }
+
 private:
     MirRunner runner;
     mir::Server* server_running{nullptr};
 
     WindowManagerTools tools{nullptr};
-    mir::test::AutoJoinThread server_thread;
+    std::jthread server_thread;
     std::mutex mutex;
     std::condition_variable started;
-    std::function<void(mir::Server&)> init_server = [](auto&){};
+    std::function<void(mir::Server&)> init_server = [](auto&) {};
 };
 }
 #endif //MIRAL_TEST_DISPLAY_SERVER_H

@@ -22,8 +22,8 @@ namespace mtf = mir_test_framework;
 
 mtf::TemporaryEnvironmentValue::TemporaryEnvironmentValue(char const* name, char const* value) :
     name{name},
-    has_old_value{getenv(name) != nullptr},
-    old_value{has_old_value ? getenv(name) : ""}
+    has_old_value{std::getenv(name) != nullptr},
+    old_value{has_old_value ? std::getenv(name) : ""}
 {
     if (value)
         setenv(name, value, overwrite);

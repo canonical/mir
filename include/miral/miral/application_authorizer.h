@@ -23,7 +23,10 @@
 #include <type_traits>
 
 namespace mir { class Server; }
-namespace mir { namespace frontend { class SessionCredentials; } }
+namespace mir
+{
+namespace frontend { class SessionCredentials; }
+}
 
 namespace miral
 {
@@ -51,12 +54,6 @@ public:
     ApplicationAuthorizer& operator=(ApplicationAuthorizer const&) = delete;
 
     virtual bool connection_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool configure_display_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool set_base_display_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool screencast_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool prompt_session_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool configure_input_is_allowed(ApplicationCredentials const& creds) = 0;
-    virtual bool set_base_input_configuration_is_allowed(ApplicationCredentials const& creds) = 0;
 };
 
 class BasicSetApplicationAuthorizer
@@ -78,13 +75,14 @@ template<typename Policy>
 class SetApplicationAuthorizer : public BasicSetApplicationAuthorizer
 {
 public:
-    template<typename ...Args>
+    template<typename... Args>
         requires std::is_constructible_v<Policy, Args const&...>
-    explicit SetApplicationAuthorizer(Args const& ...args) :
-        BasicSetApplicationAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }} {}
+    explicit SetApplicationAuthorizer(Args const&... args) :
+        BasicSetApplicationAuthorizer{[&args...]() { return std::make_shared<Policy>(args...); }}
+    {}
 
     auto the_custom_application_authorizer() const -> std::shared_ptr<Policy>
-        { return std::static_pointer_cast<Policy>(the_application_authorizer()); }
+    { return std::static_pointer_cast<Policy>(the_application_authorizer()); }
 };
 }
 

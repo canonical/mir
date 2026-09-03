@@ -46,20 +46,21 @@ struct MockSurface : public scene::BasicSurface
         ON_CALL(*this, parent())
             .WillByDefault(testing::Return(nullptr));
         ON_CALL(*this, set_focus_state(testing::_))
-            .WillByDefault(testing::Invoke([this](MirWindowFocusState focus_state)
+            .WillByDefault([this](MirWindowFocusState focus_state)
                 {
                     BasicSurface::set_focus_state(focus_state);
-                }));
+                });
         ON_CALL(*this, move_to(testing::_))
-            .WillByDefault(testing::Invoke([this](geometry::Point const& top_left)
-               {
+            .WillByDefault([this](geometry::Point const& top_left)
+                {
                     BasicSurface::move_to(top_left);
-               }));
+                });
     }
 
     ~MockSurface() noexcept {}
 
     MOCK_METHOD(MirWindowType, type, (), (const));
+    MOCK_METHOD(MirWindowState, state, (), (const));
     MOCK_METHOD(void, hide, ());
     MOCK_METHOD(void, show, ());
     MOCK_METHOD(bool, visible, (), (const));
@@ -73,6 +74,7 @@ struct MockSurface : public scene::BasicSurface
 
     MOCK_METHOD(void, request_client_surface_close, ());
     MOCK_METHOD(std::shared_ptr<scene::Surface>, parent, (), (const));
+    MOCK_METHOD(void, set_parent, (std::weak_ptr<scene::Surface> const&));
     MOCK_METHOD(int, configure, (MirWindowAttrib, int));
     MOCK_METHOD(void, register_interest, (std::weak_ptr<scene::SurfaceObserver> const&));
     MOCK_METHOD(void, unregister_interest, (scene::SurfaceObserver const&));

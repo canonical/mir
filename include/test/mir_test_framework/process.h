@@ -39,7 +39,6 @@ enum class TerminationReason
     child_resumed_by_signal
 };
 
-
 // Aggregated results of running a process to completion
 struct Result
 {
@@ -71,7 +70,7 @@ public:
     ~Process();
 
     // Wait for the process to terminate, and return the results.
-    Result wait_for_termination(const std::chrono::milliseconds& timeout = std::chrono::minutes(4));
+    Result wait_for_termination(std::chrono::milliseconds const& timeout = std::chrono::minutes(4));
 
     void kill();
     void terminate();
@@ -81,8 +80,8 @@ public:
 
 protected:
     Process() = delete;
-    Process(const Process&) = delete;
-    Process& operator=(const Process&) = delete;
+    Process(Process const&) = delete;
+    Process& operator=(Process const&) = delete;
 
 private:
     pid_t pid;
@@ -91,14 +90,13 @@ private:
 };
 
 // Stream print helper
-std::ostream& operator<<(std::ostream& out, const Result& result);
+std::ostream& operator<<(std::ostream& out, Result const& result);
 
 // Fork a child process to run the supplied main function, calling
 // the exit function when done.
 // Returns the parent process.
 template<typename Callable>
-std::shared_ptr<Process> fork_and_run_in_a_different_process(
-    Callable&& main_fn, std::function<int()> exit_fn)
+std::shared_ptr<Process> fork_and_run_in_a_different_process(Callable&& main_fn, std::function<int()> exit_fn)
 {
     pid_t pid = fork();
 

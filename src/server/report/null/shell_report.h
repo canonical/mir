@@ -49,17 +49,6 @@ class ShellReport : public shell::ShellReport
         scene::Session const& /*session*/,
         scene::Surface const& /*surface*/) override;
 
-    void started_prompt_session(
-        scene::PromptSession const& /*prompt_session*/,
-        scene::Session const& /*session*/) override;
-
-    void added_prompt_provider(
-        scene::PromptSession const& /*prompt_session*/,
-        scene::Session const& /*session*/) override;
-
-    void stopping_prompt_session(
-        scene::PromptSession const& /*prompt_session*/) override;
-
     void adding_display(geometry::Rectangle const& /*area*/) override;
 
     void removing_display(geometry::Rectangle const& /*area*/) override;

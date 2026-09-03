@@ -1,4 +1,4 @@
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="evdev-input")
 
 add_library(mirevdevutilsobjects OBJECT
     button_utils.cpp

@@ -38,5 +38,4 @@ protected:
 };
 }
 
-
 #endif /* MIR_SHARED_LIBRARY_PROBER_REPORT_H_ */

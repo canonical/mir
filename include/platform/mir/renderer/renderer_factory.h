@@ -24,17 +24,11 @@ namespace mir
 namespace graphics
 {
 class GLRenderingProvider;
-namespace gl
-{
-class OutputSurface;
-}
+namespace gl { class OutputSurface; }
 }
 namespace renderer
 {
-namespace gl
-{
-class RenderTarget;
-}
+namespace gl { class RenderTarget; }
 
 class Renderer;
 

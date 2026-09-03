@@ -21,17 +21,11 @@
 #include <functional>
 #include <memory>
 
-namespace mir
-{
-class Server;
-}
+namespace mir { class Server; }
 
 namespace miral
 {
-namespace live_config
-{
-class Store;
-}
+namespace live_config { class Store; }
 /// Enables configuring simulated secondary click at runtime.
 ///
 /// Simulated secondary click is an accessibility method that allows users to

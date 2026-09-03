@@ -2,21 +2,11 @@
 # a way that relies on a gcc extension to support backward-compatible code, So...
 check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
 check_cxx_compiler_flag(-Wno-pedantic MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
-if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments") # clang
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-gnu-zero-variadic-macro-arguments>)
 elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-pedantic") #gcc
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-pedantic>)
 endif()
-
-include_directories(
-    ${GMOCK_INCLUDE_DIR}
-    ${GTEST_INCLUDE_DIR}
-)
-
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_C_FLAGS})
-set(CMAKE_C_FLAGS ${NO_NO_LTO_FLAGS})
-string(REPLACE "-fno-lto" "" NO_NO_LTO_FLAGS ${CMAKE_CXX_FLAGS})
-set(CMAKE_CXX_FLAGS ${NO_NO_LTO_FLAGS})
 
 if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
@@ -26,9 +16,10 @@ add_compile_definitions(MIRAL_ENABLE_DEPRECATIONS=0)
 
 mir_add_wrapped_executable(miral-test-internal NOINSTALL
     render_scene_into_surface.cpp
+    basic_window_manager.cpp
     mru_window_list.cpp
     active_outputs.cpp
-    command_line_option.cpp
+    configuration_option.cpp
     select_active_window.cpp
     popup_window_placement.cpp
     window_placement_anchors_to_parent.cpp
@@ -59,7 +50,11 @@ mir_add_wrapped_executable(miral-test-internal NOINSTALL
     test_slow_keys.cpp
     test_hover_click.cpp
     test_locate_pointer.cpp
+    pointer_fullscreen.cpp
     basic_store.cpp
+    ini_file_with_overrides.cpp
+    override_watcher.cpp
+    version_compare.cpp
     ${MIRAL_TEST_SOURCES}
 )
 
@@ -67,14 +62,17 @@ set_source_files_properties(static_display_config.cpp PROPERTIES COMPILE_FLAGS
     "${CMAKE_CXXFLAGS} -I ${PROJECT_SOURCE_DIR}/src/include/common")
 
 target_include_directories(miral-test-internal
-    PRIVATE ${PROJECT_SOURCE_DIR}/src/miral ${PROJECT_SOURCE_DIR}/tests/include)
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/tests/include)
 
 target_link_libraries(miral-test-internal
+    mir-test-doubles-static
     miral-internal
-    mir-test-assist
-    ${GTEST_BOTH_LIBRARIES}
-    ${GMOCK_LIBRARIES}
+    miral-external
+    PkgConfig::WAYLAND_CLIENT
 )
+
+
 
 find_program(XWAYLAND_EXECUTABLE Xwayland REQUIRED)
 
@@ -88,14 +86,15 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     sticky_keys.cpp
     runner.cpp
     wayland_extensions.cpp
+    xdg_dialog.cpp
     zone.cpp
-    server_example_decoration.cpp server_example_decoration.h
-    org_kde_kwin_server_decoration.c org_kde_kwin_server_decoration.h
+    example_xdg_shell_v6.cpp example_xdg_shell_v6.h
+    test_touch_emulator.cpp
 )
 
-mir_generate_protocol_wrapper(miral-test "org_kde_kwin_" server-decoration.xml)
+mir_generate_protocol_wrapper(miral-test "z" xdg-shell-unstable-v6.xml)
 
-set_source_files_properties(server_example_decoration.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
+set_source_files_properties(example_xdg_shell_v6.cpp wayland_extensions.cpp PROPERTIES COMPILE_FLAGS "-I${CMAKE_CURRENT_BINARY_DIR}")
 
 target_link_libraries(miral-test
     mir-test-assist

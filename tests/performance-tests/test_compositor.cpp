@@ -18,6 +18,7 @@
 
 #include <format>
 #include <fstream>
+#include <cstring>
 #include <string>
 
 using namespace std::literals::chrono_literals;
@@ -61,7 +62,7 @@ struct CompositorPerformance : SystemPerformanceTest
                 out << line;
             }
 
-            if (char const* perf = strstr(line, "averaged "))
+            if (char const* perf = std::strstr(line, "averaged "))
             {
                 float fps, render_time, latency, frames, seconds;
                 if (5 == sscanf(perf, "averaged %f FPS, %f ms/frame, latency %f ms, %f frames over %f sec",
@@ -74,13 +75,13 @@ struct CompositorPerformance : SystemPerformanceTest
                     }
                 }
             }
-            if (char const* renderer = strstr(line, "GL renderer: "))
+            if (char const* renderer = std::strstr(line, "GL renderer: "))
             {
-                server_renderer.assign(renderer + 13, strlen(renderer) - 14);
+                server_renderer.assign(renderer + 13, std::strlen(renderer) - 14);
             }
-            if (char const* mode = strstr(line, "Current mode"))
+            if (char const* mode = std::strstr(line, "Current mode"))
             {
-                server_mode.assign(mode + 13, strlen(mode) - 14);
+                server_mode.assign(mode + 13, std::strlen(mode) - 14);
             }
         }
     }

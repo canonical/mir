@@ -40,7 +40,7 @@ public:
     /**
      * Called when a new cursor image is set
      *
-     * \param [in] new_image    The new cursor image. May be NULL if there is no current cursor image
+     * \param [in] new_image    The new cursor image. May be nullptr if there is no current cursor image
      */
     virtual void image_set_to(std::shared_ptr<graphics::CursorImage> new_image) = 0;
 };

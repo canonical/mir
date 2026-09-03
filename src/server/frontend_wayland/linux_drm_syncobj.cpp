@@ -22,7 +22,6 @@
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/weak.h>
 #include "wl_surface.h"
-#include <boost/throw_exception.hpp>
 #include <drm.h>
 #include <stdexcept>
 #include <system_error>
@@ -127,19 +126,17 @@ auto mf::SyncTimeline::claim_timeline() -> Points
 {
     if (!acquire_point)
     {
-        BOOST_THROW_EXCEPTION((
-            wayland::ProtocolError{
-                resource,
-                Error::no_acquire_point,
-                "Buffer does not have an acquire point set"}));
+        throw wayland::ProtocolError{
+            resource,
+            Error::no_acquire_point,
+            "Buffer does not have an acquire point set"};
     }
     if (!release_point)
     {
-        BOOST_THROW_EXCEPTION((
-            wayland::ProtocolError{
-                resource,
-                Error::no_release_point,
-                "Buffer does not have a release point set"}));
+        throw wayland::ProtocolError{
+            resource,
+            Error::no_release_point,
+            "Buffer does not have a release point set"};
     }
 
     return Points {

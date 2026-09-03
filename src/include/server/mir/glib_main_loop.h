@@ -103,7 +103,7 @@ public:
     template<
         typename Callable,
         typename =
-        std::enable_if_t<!std::is_same<std::invoke_result_t<Callable>, void>::value>
+        std::enable_if_t<!std::is_same_v<std::invoke_result_t<Callable>, void>>
     >
     std::future<std::invoke_result_t<Callable>> run_with_context_as_thread_default(Callable code)
     {
@@ -131,7 +131,7 @@ public:
     template<
         typename Callable,
         typename =
-            std::enable_if_t<std::is_same<std::invoke_result_t<Callable>, void>::value>
+            std::enable_if_t<std::is_same_v<std::invoke_result_t<Callable>, void>>
         >
     std::future<void> run_with_context_as_thread_default(Callable code)
     {

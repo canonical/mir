@@ -29,8 +29,7 @@ namespace mir
 namespace input
 {
 
-class BufferKeymap
-    : public Keymap
+class BufferKeymap : public Keymap
 {
 public:
     BufferKeymap(std::string name, std::vector<char> buffer, xkb_keymap_format format);

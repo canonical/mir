@@ -92,4 +92,7 @@ execute: |
         WAYLAND_DISPLAY=wayland-99 bomber
         # [doc:first-compositor:run-client-end]
     EOF
+
+      bash ${SPREAD_PATH}/doc/sphinx/how-to/configuration-overrides/test.sh
+
     fi

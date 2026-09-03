@@ -22,7 +22,6 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/geometry/point.h>
 #include <mir/graphics/gamma_curves.h>
-#include <mir/optional_value.h>
 #include <mir_toolkit/common.h>
 
 #include <glm/glm.hpp>
@@ -44,9 +43,9 @@ struct GraphicsConfOutputIdTag;
 struct GraphicsConfLogicalGroupId;
 }
 
-typedef IntWrapper<detail::GraphicsConfCardIdTag> DisplayConfigurationCardId;
-typedef IntWrapper<detail::GraphicsConfOutputIdTag> DisplayConfigurationOutputId;
-typedef IntWrapper<detail::GraphicsConfLogicalGroupId> DisplayConfigurationLogicalGroupId;
+using DisplayConfigurationCardId = IntWrapper<detail::GraphicsConfCardIdTag>;
+using DisplayConfigurationOutputId = IntWrapper<detail::GraphicsConfOutputIdTag>;
+using DisplayConfigurationLogicalGroupId = IntWrapper<detail::GraphicsConfLogicalGroupId>;
 
 /**
  * Configuration information for a display card.
@@ -55,6 +54,8 @@ struct DisplayConfigurationCard
 {
     DisplayConfigurationCardId id;
     size_t max_simultaneous_outputs;
+
+    bool operator==(DisplayConfigurationCard const&) const = default;
 };
 
 /**
@@ -62,24 +63,24 @@ struct DisplayConfigurationCard
  */
 enum class DisplayConfigurationOutputType
 {
-    unknown     = mir_output_type_unknown,
-    vga         = mir_output_type_vga,
-    dvii        = mir_output_type_dvii,
-    dvid        = mir_output_type_dvid,
-    dvia        = mir_output_type_dvia,
-    composite   = mir_output_type_composite,
-    svideo      = mir_output_type_svideo,
-    lvds        = mir_output_type_lvds,
-    component   = mir_output_type_component,
-    ninepindin  = mir_output_type_ninepindin,
+    unknown = mir_output_type_unknown,
+    vga = mir_output_type_vga,
+    dvii = mir_output_type_dvii,
+    dvid = mir_output_type_dvid,
+    dvia = mir_output_type_dvia,
+    composite = mir_output_type_composite,
+    svideo = mir_output_type_svideo,
+    lvds = mir_output_type_lvds,
+    component = mir_output_type_component,
+    ninepindin = mir_output_type_ninepindin,
     displayport = mir_output_type_displayport,
-    hdmia       = mir_output_type_hdmia,
-    hdmib       = mir_output_type_hdmib,
-    tv          = mir_output_type_tv,
-    edp         = mir_output_type_edp,
-    virt        = mir_output_type_virtual,
-    dsi         = mir_output_type_dsi,
-    dpi         = mir_output_type_dpi,
+    hdmia = mir_output_type_hdmia,
+    hdmib = mir_output_type_hdmib,
+    tv = mir_output_type_tv,
+    edp = mir_output_type_edp,
+    virt = mir_output_type_virtual,
+    dsi = mir_output_type_dsi,
+    dpi = mir_output_type_dpi,
 };
 
 /**
@@ -89,6 +90,8 @@ struct DisplayConfigurationMode
 {
     geometry::Size size;
     double vrefresh_hz;
+
+    bool operator==(DisplayConfigurationMode const&) const = default;
 };
 
 /**
@@ -155,7 +158,7 @@ struct DisplayConfigurationOutput
     GammaCurves gamma;
     MirOutputGammaSupported gamma_supported;
 
-    mir::optional_value<geometry::Size> custom_logical_size;
+    std::optional<geometry::Size> custom_logical_size;
 
     /** The output's displayable name. */
     // TODO: Better output names that are consistant between sessions
@@ -209,7 +212,7 @@ struct UserDisplayConfigurationOutput
     MirSubpixelArrangement& subpixel_arrangement;
     GammaCurves& gamma;
     MirOutputGammaSupported const& gamma_supported;
-    mir::optional_value<geometry::Size>& custom_logical_size;
+    std::optional<geometry::Size>& custom_logical_size;
     std::string const& name;
     /// Custom attributes (typically set by the .display configuration file
     std::map<std::string, std::optional<std::string>>& custom_attribute;
@@ -220,16 +223,11 @@ struct UserDisplayConfigurationOutput
 };
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationCard const& val);
-bool operator==(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
-bool operator!=(DisplayConfigurationCard const& val1, DisplayConfigurationCard const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationMode const& val);
-bool operator==(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
-bool operator!=(DisplayConfigurationMode const& val1, DisplayConfigurationMode const& val2);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfigurationOutput const& val);
 bool operator==(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
-bool operator!=(DisplayConfigurationOutput const& val1, DisplayConfigurationOutput const& val2);
 
 /**
  * Interface to a configuration of display cards and outputs.
@@ -254,7 +252,6 @@ protected:
 };
 
 bool operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs);
-bool operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs);
 
 std::ostream& operator<<(std::ostream& out, DisplayConfiguration const& val);
 

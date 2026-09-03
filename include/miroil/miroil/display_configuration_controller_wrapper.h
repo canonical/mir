@@ -19,8 +19,14 @@
 
 #include <memory>
 
-namespace mir { namespace shell { class DisplayConfigurationController; } }
-namespace mir { namespace graphics { class DisplayConfiguration; } }
+namespace mir
+{
+namespace shell { class DisplayConfigurationController; }
+}
+namespace mir
+{
+namespace graphics { class DisplayConfiguration; }
+}
 
 namespace miroil
 {
@@ -28,7 +34,7 @@ namespace miroil
 class DisplayConfigurationControllerWrapper
 {
 public:
-    DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const & wrapped);
+    DisplayConfigurationControllerWrapper(std::shared_ptr<mir::shell::DisplayConfigurationController> const& wrapped);
     ~DisplayConfigurationControllerWrapper() = default;
 
     /**
@@ -42,7 +48,7 @@ public:
     void set_base_configuration(std::shared_ptr<mir::graphics::DisplayConfiguration> const& conf);
 
 private:
-    std::shared_ptr<mir::shell::DisplayConfigurationController> const & wrapped;
+    std::shared_ptr<mir::shell::DisplayConfigurationController> const& wrapped;
 };
 
 }

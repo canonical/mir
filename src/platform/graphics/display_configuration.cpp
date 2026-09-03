@@ -24,8 +24,10 @@ extern "C"
 #include <libdisplay-info/info.h>
 }
 
+#include <cstdlib>
 #include <ostream>
 #include <algorithm>
+#include <tuple>
 
 namespace mg = mir::graphics;
 
@@ -125,7 +127,7 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfigurationOutput c
     out << "\tform factor: " << as_string(val.form_factor) << std::endl;
 
     out << "\tcustom logical size: ";
-    if (val.custom_logical_size.is_set())
+    if (val.custom_logical_size.has_value())
     {
         auto const& size = val.custom_logical_size.value();
         out << size.width.as_int() << "x" << size.height.as_int();
@@ -149,63 +151,17 @@ std::ostream& mg::operator<<(std::ostream& out, mg::DisplayConfiguration const& 
     return out;
 }
 
-bool mg::operator==(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return (val1.id == val2.id) &&
-           (val1.max_simultaneous_outputs == val2.max_simultaneous_outputs);
-}
-
-bool mg::operator!=(mg::DisplayConfigurationCard const& val1,
-                    mg::DisplayConfigurationCard const& val2)
-{
-    return !(val1 == val2);
-}
-
-bool mg::operator==(mg::DisplayConfigurationMode const& val1,
-                    mg::DisplayConfigurationMode const& val2)
-{
-    return (val1.size == val2.size) &&
-           (val1.vrefresh_hz == val2.vrefresh_hz);
-}
-
-bool mg::operator!=(mg::DisplayConfigurationMode const& val1,
-                    mg::DisplayConfigurationMode const& val2)
-{
-    return !(val1 == val2);
-}
-
 bool mg::operator==(mg::DisplayConfigurationOutput const& val1,
                     mg::DisplayConfigurationOutput const& val2)
 {
-    bool equal{(val1.id == val2.id) &&
-               (val1.card_id == val2.card_id) &&
-               (val1.logical_group_id == val2.logical_group_id) &&
-               (val1.type == val2.type) &&
-               (val1.physical_size_mm == val2.physical_size_mm) &&
-               (val1.preferred_mode_index == val2.preferred_mode_index) &&
-               (val1.connected == val2.connected) &&
-               (val1.used == val2.used) &&
-               (val1.top_left == val2.top_left) &&
-               (val1.orientation == val2.orientation) &&
-               (val1.current_mode_index == val2.current_mode_index) &&
-               (val1.modes.size() == val2.modes.size()) &&
-               (val1.custom_logical_size == val2.custom_logical_size) &&
-               (val1.scale == val2.scale) &&
-               (val1.form_factor == val2.form_factor)};
-
-    for (auto i = begin(val1.modes), j = begin(val2.modes); i != end(val1.modes) && equal; ++i, ++j)
-    {
-        equal = *i == *j;
-    }
-
-    return equal;
-}
-
-bool mg::operator!=(mg::DisplayConfigurationOutput const& val1,
-                    mg::DisplayConfigurationOutput const& val2)
-{
-    return !(val1 == val2);
+    return std::tie(val1.id, val1.card_id, val1.logical_group_id, val1.type,
+                    val1.physical_size_mm, val1.preferred_mode_index, val1.connected,
+                    val1.used, val1.top_left, val1.orientation, val1.current_mode_index,
+                    val1.modes, val1.custom_logical_size, val1.scale, val1.form_factor) ==
+           std::tie(val2.id, val2.card_id, val2.logical_group_id, val2.type,
+                    val2.physical_size_mm, val2.preferred_mode_index, val2.connected,
+                    val2.used, val2.top_left, val2.orientation, val2.current_mode_index,
+                    val2.modes, val2.custom_logical_size, val2.scale, val2.form_factor);
 }
 
 bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
@@ -221,11 +177,6 @@ bool mg::operator==(DisplayConfiguration const& lhs, DisplayConfiguration const&
     rhs.for_each_output([&rhs_outputs](DisplayConfigurationOutput const& output) { rhs_outputs.emplace_back(output); });
 
     return lhs_cards == rhs_cards && lhs_outputs == rhs_outputs;
-}
-
-bool mg::operator!=(DisplayConfiguration const& lhs, DisplayConfiguration const& rhs)
-{
-    return !(lhs == rhs);
 }
 
 namespace
@@ -270,17 +221,17 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
                                 di_info_parse_edid(edid.data(), edid.size()),
                                 &di_info_destroy})
     {
-        if (auto const di_make = di_info_get_make(info.get()))
+        if (std::unique_ptr<char, decltype(&free)> const di_make{di_info_get_make(info.get()), &free})
         {
-            vendor = di_make;
+            vendor.emplace(di_make.get());
         }
-        if (auto const di_model = di_info_get_model(info.get()))
+        if (std::unique_ptr<char, decltype(&free)> const di_model{di_info_get_model(info.get()), &free})
         {
-            model = di_model;
+            model.emplace(di_model.get());
         }
-        if (auto const di_serial = di_info_get_serial(info.get()))
+        if (std::unique_ptr<char, decltype(&free)> const di_serial{di_info_get_serial(info.get()), &free})
         {
-            serial = di_serial;
+            serial.emplace(di_serial.get());
         }
         if (auto const vendor_product = di_edid_get_vendor_product(di_info_get_edid(info.get())))
         {
@@ -298,7 +249,7 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
 
 mir::geometry::Rectangle mg::DisplayConfigurationOutput::extents() const
 {
-    return custom_logical_size.is_set() ?
+    return custom_logical_size.has_value() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left, scale);
 }
@@ -321,7 +272,7 @@ bool mg::DisplayConfigurationOutput::valid() const
     if (used && current_mode_index >= modes.size())
         return false;
 
-    if (custom_logical_size.is_set())
+    if (custom_logical_size.has_value())
     {
         auto const& logical_size = custom_logical_size.value();
         if (!logical_size.width.as_int() || !logical_size.height.as_int())
@@ -375,7 +326,7 @@ mg::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(
 
 mir::geometry::Rectangle mg::UserDisplayConfigurationOutput::extents() const
 {
-    return custom_logical_size.is_set() ?
+    return custom_logical_size.has_value() ?
            mir::geometry::Rectangle(top_left, custom_logical_size.value()) :
            extents_of(modes, current_mode_index, orientation, top_left, scale);
 }

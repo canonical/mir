@@ -36,12 +36,12 @@ namespace dispatch
  */
 enum class DispatchReentrancy
 {
-    sequential,     /**< The dispatch function is guaranteed not to be called
-                     *   while a thread is currently running it.
-                     */
-    reentrant       /**< The dispatch function may be called on multiple threads
-                     *   simultaneously
-                     */
+    sequential, /**< The dispatch function is guaranteed not to be called
+                 *   while a thread is currently running it.
+                 */
+    reentrant   /**< The dispatch function may be called on multiple threads
+                 *   simultaneously
+                 */
 };
 
 /**
@@ -92,6 +92,7 @@ public:
      * \param [in] fd   File descriptor of watch to remove.
      */
     void remove_watch(Fd const& fd);
+
 private:
     PosixRWMutex lifetime_mutex;
     std::list<std::pair<std::shared_ptr<Dispatchable>, bool>> dispatchee_holder;

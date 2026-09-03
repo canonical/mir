@@ -18,7 +18,9 @@
 #include <mir/renderer/sw/pixel_source.h>
 
 #include <cstddef>
+#include <expected>
 #include <sys/mman.h>
+#include <system_error>
 
 namespace mir
 {
@@ -59,10 +61,10 @@ public:
      * not fatal (although faulting reads will return 0 and faulting writes
      * will not be visible in any other mapping).
      *
-     * \ref access_fault() returns whether or not an access fault has occured
+     * \ref access_fault() returns whether or not an access fault has occurred
      * in the lifetime of this Mapping<T>.
      *
-     * \returns    Whether an access fault has occured on this Mapping<T>
+     * \returns    Whether an access fault has occurred on this Mapping<T>
      */
     virtual auto access_fault() const -> bool = 0;
 
@@ -104,6 +106,18 @@ public:
     }
 };
 
+enum class ResizeError
+{
+    invalid_size,
+};
+
+/// Thrown when the client-provided backing file descriptor cannot be mmap()ed
+class MmapError : public std::system_error
+{
+public:
+    using std::system_error::system_error;
+};
+
 class ReadMappableRange
 {
 public:
@@ -135,7 +149,7 @@ public:
     virtual ~ReadOnlyPool() = default;
 
     virtual auto get_ro_range(size_t start, size_t len) -> std::unique_ptr<ReadMappableRange> = 0;
-    virtual void resize(size_t new_size) = 0;
+    virtual auto resize(size_t new_size) -> std::expected<void, ResizeError> = 0;
 };
 
 class WriteOnlyPool
@@ -145,7 +159,7 @@ public:
     virtual ~WriteOnlyPool() = default;
 
     virtual auto get_wo_range(size_t start, size_t len) -> std::unique_ptr<WriteMappableRange> = 0;
-    virtual void resize(size_t new_size) = 0;
+    virtual auto resize(size_t new_size) -> std::expected<void, ResizeError> = 0;
 };
 
 class ReadWritePool : public ReadOnlyPool, public WriteOnlyPool
@@ -155,7 +169,7 @@ public:
     virtual ~ReadWritePool() = default;
 
     virtual auto get_rw_range(size_t start, size_t len) -> std::unique_ptr<RWMappableRange> = 0;
-    void resize(size_t new_size) override = 0;
+    auto resize(size_t new_size) -> std::expected<void, ResizeError> override = 0;
 };
 
 auto rw_pool_from_fd(mir::Fd backing, size_t claimed_size) -> std::shared_ptr<ReadWritePool>;

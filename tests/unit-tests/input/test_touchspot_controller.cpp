@@ -31,7 +31,7 @@
 
 #include <vector>
 
-#include <assert.h>
+#include <cassert>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;
@@ -98,10 +98,10 @@ struct TestTouchspotController : public ::testing::Test
 
         ON_CALL(*allocator, alloc_software_buffer(_, _))
             .WillByDefault(
-                Invoke([this](auto size, auto pf)
+                [this](auto size, auto pf)
                     {
                         return allocator->mtd::StubBufferAllocator::alloc_software_buffer(size, pf);
-                    }));
+                    });
 
     }
     std::shared_ptr<MockBufferAllocator> const allocator;
@@ -124,14 +124,13 @@ TEST_F(TestTouchspotController, handles_stride_mismatch_in_buffer)
 
     ON_CALL(*allocator, alloc_software_buffer(_, _))
         .WillByDefault(
-            Invoke(
                 [](auto size, auto pf)
                 {
                     mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
                     return std::make_shared<mtd::StubBuffer>(
                         properties,
                         geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 29}); // Return a stride != width
-                }));
+                });
 
     mi::TouchspotController controller{allocator, scene};
     controller.enable();
@@ -270,14 +269,13 @@ TEST_F(TestTouchspotController, renderable_has_normal_orientation)
 
     ON_CALL(*allocator, alloc_software_buffer(_, _))
         .WillByDefault(
-            Invoke(
                 [](auto size, auto pf)
                 {
                     mg::BufferProperties properties{size, pf, mg::BufferUsage::software};
                     return std::make_shared<mtd::StubBuffer>(
                         properties,
                         geom::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 29}); // Return a stride != width
-                }));
+                });
 
     mi::TouchspotController controller{allocator, scene};
     controller.enable();

@@ -1,7 +1,7 @@
 include(RustLibrary)
 
 add_compile_definitions(MIR_ENABLE_RUST)
-add_definitions(-DMIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
+add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
 
 add_library(mirplatforminputevdevrsobjects OBJECT
   platform.cpp
@@ -43,7 +43,16 @@ target_link_libraries(mirplatforminputevdevrs
 
 add_rust_cxx_library(mirplatforminputevdevrs_rust
   CRATE mir_platforms_evdev_rs
-  DEPENDS Cargo.toml src/lib.rs
+  DEPENDS
+    Cargo.toml
+    build.rs
+    src/lib.rs
+    src/device.rs
+    src/event_processing.rs
+    src/ffi.rs
+    src/libinput_interface.rs
+    src/platform.rs
+    src/udev_monitor.rs
   LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT mircommon mirplatform
   INCLUDES
     ${PROJECT_SOURCE_DIR}/src/platforms/evdev-rs

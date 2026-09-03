@@ -43,6 +43,11 @@ mc::BasicScreenShooterFactory::BasicScreenShooterFactory(
 
 auto mc::BasicScreenShooterFactory::create(Executor& executor) -> std::unique_ptr<ScreenShooter>
 {
+    return create_for_scene(executor, scene);
+}
+
+auto mc::BasicScreenShooterFactory::create_for_scene(Executor& executor, std::shared_ptr<Scene> const& scene) -> std::unique_ptr<ScreenShooter>
+{
     return std::make_unique<BasicScreenShooter>(
         scene, clock, executor, providers, renderer_factory, buffer_allocator, config, output_filter, cursor);
 }

@@ -4,6 +4,15 @@ on:
   push:
     branches:
     - main
+    paths-ignore:
+    - ".github/**"
+    - "!.github/workflows/tics.yml"
+    - "*.md"
+    - "COPYING.*"
+    - "doc/**"
+    - "snap/**"
+    - "spread.yaml"
+    - "spread/**"
   pull_request:
   merge_group:
     types: [checks_requested]
@@ -52,13 +61,12 @@ jobs:
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
 
-    runs-on: [self-hosted, reactive, amd64, 2xlarge-tiobe, noble]
+    runs-on: [self-hosted-linux-amd64-resolute-large-tiobe]
 
     permissions:
       checks: write
       contents: read
-      issues: write        # for commenting with TICS results
-      pull-requests: read  # to get the list of changed files
+      pull-requests: write  # for commenting with TICS results
     env:
       PROJECT: mir
       CCACHE_DIR: "/tmp/ccache"
@@ -76,6 +84,37 @@ jobs:
         fetch-depth: 0
         persist-credentials: false
 
+    - name: Install dependencies
+      run: |
+        sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
+        sudo --preserve-env apt-get install --yes --no-install-recommends \
+          cargo \
+          clang \
+          dmz-cursor-theme \
+          flake8 \
+          gcovr \
+          glmark2-es2 \
+          glmark2-es2-wayland \
+          lcov \
+          llvm \
+          libclang-rt-dev \
+          mesa-utils \
+          ninja-build \
+          pylint \
+          rust-clippy \
+          xwayland
+
+        sudo --preserve-env apt-get build-dep --yes ./
+
+        cargo install cargo-files
+
+        mkdir --parents ~/.local/bin
+        cat <<'EOF' > ~/.local/bin/gcov
+        #!/bin/sh
+        exec llvm-cov gcov "$@"
+        EOF
+        chmod +x ~/.local/bin/gcov
+
     - name: Set up CCache
       id: setup-ccache
       run: |
@@ -86,9 +125,11 @@ jobs:
         # and evicting those we care for - from `main`
         echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
 
-    - name: CCache
-      if: ${{ github.event_name == 'push' }}
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+    # CCache is only _saved_ on push/workflow_dispatch, to run a complete build for TiCS analysis (QServer runs)
+    # For PRs and merge groups, on the other hand, we want quicker runs that won't affect cache (QClient runs)
+    - name: Restore CCache
+      if: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
+      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: &ccache_with
         key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
@@ -96,46 +137,20 @@ jobs:
           ccache-coverage-
         path: ${{ env.CCACHE_DIR }}
 
-    - name: Restore CCache
-      if: ${{ github.event_name != 'push' }}
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-      with: *ccache_with
-
     - name: Ensure ccache size
       run: |
         # a full build yielded 180M cache
         echo "max_size = 250M" > "${CCACHE_DIR}/ccache.conf"
-
-    - name: Install dependencies
-      run: |
-        sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
-        sudo --preserve-env apt-get install --yes --no-install-recommends \
-          cargo-1.82 \
-          clang \
-          clang-tools \
-          dmz-cursor-theme \
-          flake8 \
-          gcovr \
-          glmark2-es2 \
-          glmark2-es2-wayland \
-          lcov \
-          libclang-rt-dev \
-          mesa-utils \
-          ninja-build \
-          pylint \
-          rustc-1.82 \
-          xwayland
-
-        sudo --preserve-env apt-get build-dep --yes ./
-
-        echo "PATH=/usr/lib/rust-1.82/bin:${PATH}" >> "$GITHUB_ENV"
 
     - name: Configure
       run: >
         cmake
         -DCMAKE_BUILD_TYPE=Debug
         -DMIR_ENABLE_COVERAGE=ON
+        -DMIR_USE_PRECOMPILED_HEADERS=OFF
         -DMIR_RUN_PERFORMANCE_TESTS=OFF
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER_LAUNCHER=ccache
         -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
         -GNinja
@@ -147,6 +162,11 @@ jobs:
 
     - name: Clear CCache stats
       run: ccache --show-stats --zero-stats
+
+    - name: Store CCache
+      if: ${{ !contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
+      uses: actions/cache/save@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
+      with: *ccache_with
 
     - name: Measure coverage
       timeout-minutes: 45

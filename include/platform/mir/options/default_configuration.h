@@ -34,11 +34,13 @@ public:
     DefaultConfiguration(int argc, char const* argv[]);
     DefaultConfiguration(int argc, char const* argv[], std::string const& config_file);
     DefaultConfiguration(
-        int argc, char const* argv[],
-        std::function <void(int argc, char const* const* argv)> const& handler);
+        int argc,
+        char const* argv[],
+        std::function<void(int argc, char const* const* argv)> const& handler);
     DefaultConfiguration(
-        int argc, char const* argv[],
-        std::function <void(int argc, char const* const* argv)> const& handler,
+        int argc,
+        char const* argv[],
+        std::function<void(int argc, char const* const* argv)> const& handler,
         std::string const& config_file);
     virtual ~DefaultConfiguration() = default;
 
@@ -64,21 +66,24 @@ private:
         int argc,
         char const* argv[]) const;
 
-    virtual void parse_environment(
-        boost::program_options::options_description& desc,
-        ProgramOption& options) const;
+    virtual void parse_environment(boost::program_options::options_description& desc, ProgramOption& options) const;
 
-    virtual void parse_config_file(
-        boost::program_options::options_description& desc,
-        ProgramOption& options) const;
+    virtual void parse_config_file(boost::program_options::options_description& desc, ProgramOption& options) const;
 
     int const argc;
     char const** const argv;
     std::function<void(int argc, char const* const* argv)> const unparsed_arguments_handler;
     std::shared_ptr<boost::program_options::options_description> const program_options;
 
-    std::unordered_map<SharedLibrary::Handle, boost::program_options::options_description, SharedLibrary::Handle::HandleHash> module_options_desc;
-    std::unordered_map<SharedLibrary::Handle, std::shared_ptr<Option>, SharedLibrary::Handle::HandleHash> mutable module_options;
+    std::unordered_map<
+        SharedLibrary::Handle,
+        boost::program_options::options_description,
+        SharedLibrary::Handle::HandleHash>
+        module_options_desc;
+    std::unordered_map<
+        SharedLibrary::Handle,
+        std::shared_ptr<Option>,
+        SharedLibrary::Handle::HandleHash> mutable module_options;
     std::shared_ptr<Option> mutable options;
 };
 }

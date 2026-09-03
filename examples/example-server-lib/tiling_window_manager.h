@@ -60,7 +60,7 @@ public:
     bool handle_keyboard_event(MirKeyboardEvent const* event) override;
     bool handle_touch_event(MirTouchEvent const* event) override;
     bool handle_pointer_event(MirPointerEvent const* event) override;
-    void handle_raise_window(miral::WindowInfo& window_info) override;
+    void handle_activate_window(miral::WindowInfo& window_info) override;
 
     void advise_end() override;
 

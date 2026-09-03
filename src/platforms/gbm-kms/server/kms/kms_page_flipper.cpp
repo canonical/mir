@@ -24,7 +24,6 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <chrono>
-#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgg = mir::graphics::gbm;

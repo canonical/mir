@@ -46,5 +46,4 @@ private:
 }
 }
 
-
 #endif //MIR_PLATFORM_GBM_KMS_ONE_SHOT_DEVICE_OBSERVER_H_

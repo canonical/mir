@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_GRAPHICS_CURSOR_IMAGE_H_
 #define MIR_GRAPHICS_CURSOR_IMAGE_H_
 
@@ -38,7 +37,6 @@ public:
     // location of the pointer.
     virtual geometry::Displacement hotspot() const = 0;
 
-
 protected:
     CursorImage() = default;
     CursorImage(CursorImage const&) = delete;
@@ -46,6 +44,5 @@ protected:
 };
 }
 }
-
 
 #endif /* MIR_GRAPHICS_CURSOR_IMAGE_H_ */

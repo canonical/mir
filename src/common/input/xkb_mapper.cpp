@@ -15,6 +15,7 @@
  */
 
 #include <mir/input/xkb_mapper.h>
+#include <mir/fatal.h>
 
 #include "../events/event_private.h"
 
@@ -23,6 +24,7 @@
 
 #include <linux/input-event-codes.h>
 
+#include <cstdlib>
 #include <unordered_set>
 
 namespace mi = mir::input;
@@ -34,11 +36,11 @@ namespace
 
 char const* get_locale_from_environment()
 {
-    char const* loc = getenv("LC_ALL");
+    char const* loc = std::getenv("LC_ALL");
     if (!loc)
-        loc = getenv("LC_CTYPE");
+        loc = std::getenv("LC_CTYPE");
     if (!loc)
-        loc = getenv("LANG");
+        loc = std::getenv("LANG");
     if (!loc)
         loc = "C";
     return loc;
@@ -121,7 +123,7 @@ mi::XKBContextPtr mi::make_unique_context()
     auto context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!context)
     {
-        fatal_error("Failed to create XKB context");
+        MIR_FATAL_ERROR("Failed to create XKB context");
     }
     return {context, &xkb_context_unref};
 }
@@ -143,7 +145,7 @@ void mircv::XKBMapper::set_key_state(MirInputDeviceId id, std::vector<uint32_t> 
 
 void mircv::XKBMapper::update_modifier()
 {
-    modifier_state = mir::optional_value<MirInputEventModifiers>{};
+    modifier_state = std::optional<MirInputEventModifiers>{};
     xkb_modifiers_ = {};
     if (!device_mapping.empty())
     {
@@ -194,7 +196,7 @@ void mircv::XKBMapper::map_event(MirEvent& ev)
                 key_event.set_xkb_modifiers(xkb_modifiers_);
             }
         }
-        else if (modifier_state.is_set())
+        else if (modifier_state.has_value())
         {
             mev::set_modifier(ev, expand_modifiers(modifier_state.value()));
         }
@@ -274,7 +276,7 @@ void mircv::XKBMapper::clear_keymap_for_device(MirInputDeviceId id)
 MirInputEventModifiers mircv::XKBMapper::modifiers() const
 {
     std::lock_guard lg(guard);
-    if (modifier_state.is_set())
+    if (modifier_state.has_value())
         return expand_modifiers(modifier_state.value());
     return mir_input_event_modifier_none;
 }
@@ -469,13 +471,15 @@ xkb_keysym_t mircv::XKBMapper::ComposeState::update_state(xkb_keysym_t mapped_ke
     }
     else
     {
-        if (last_composed_key.is_set() &&
+        if (last_composed_key.has_value() &&
             mapped_key == std::get<0>(last_composed_key.value()))
         {
             if (action == mir_keyboard_action_up)
             {
                 mapped_text = "";
-                return std::get<1>(last_composed_key.consume());
+                auto const composed_key_sym = std::get<1>(last_composed_key.value());
+                last_composed_key.reset();
+                return composed_key_sym;
             }
             else
             {

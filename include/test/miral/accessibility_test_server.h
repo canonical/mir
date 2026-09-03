@@ -32,15 +32,8 @@ public:
     TestAccessibilityManager()
     {
         start_server_in_setup = false;
-        add_server_init(
-            [this](mir::Server& server)
-            {
-                server.override_the_accessibility_manager(
-                    [&, this]
-                    {
-                        return accessibility_manager;
-                    });
-            });
+        add_server_init([this](mir::Server& server)
+                        { server.override_the_accessibility_manager([&, this] { return accessibility_manager; }); });
     }
 
     std::shared_ptr<testing::NiceMock<mtd::MockAccessibilityManager>> accessibility_manager =

@@ -17,6 +17,9 @@
 #include <mir/console_services.h>
 #include <mir/input/platform.h>
 #include <memory>
+#include <string>
+
+class InputDeviceObserver;
 
 namespace mir
 {
@@ -29,12 +32,6 @@ class InputReport;
 
 namespace evdev_rs
 {
-class DeviceObserverWithFd : public mir::Device::Observer
-{
-public:
-    virtual std::optional<mir::Fd> raw_fd() const = 0;
-};
-
 class Platform : public input::Platform
 {
 public:
@@ -46,12 +43,16 @@ public:
     void stop() override;
     void pause_for_config() override;
     void continue_after_config() override;
-    std::unique_ptr<DeviceObserverWithFd> create_device_observer();
     std::shared_ptr<InputDevice> create_input_device(int device_id) const;
+
+    /// Create a Device::Observer that forwards lifecycle events to the Rust platform.
+    std::unique_ptr<mir::Device::Observer> create_device_observer(
+        std::string const& devnode, uint64_t devnum);
 
 private:
     class Self;
     std::shared_ptr<Self> self;
+    friend class ::InputDeviceObserver;
 };
 }
 }

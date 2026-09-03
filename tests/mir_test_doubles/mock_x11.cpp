@@ -17,7 +17,6 @@
 #include <mir/test/doubles/mock_x11.h>
 #include <gtest/gtest.h>
 
-#include <cstring>
 #include <X11/Xlib-xcb.h>
 #include <xcb/xcb.h>
 
@@ -77,16 +76,16 @@ mtd::MockX11::MockX11()
     .WillByDefault(Return(1));
 
     ON_CALL(*this, XPending(_))
-    .WillByDefault(InvokeWithoutArgs([this]()
+    .WillByDefault([this]()
                                      {
                                          return fake_x11.pending_events;
-                                     }));
+                                     });
 
     ON_CALL(*this, XEventsQueued(_,_))
-    .WillByDefault(InvokeWithoutArgs([this]()
+    .WillByDefault([this]()
                                      {
                                          return fake_x11.pending_events;
-                                     }));
+                                     });
 
     ON_CALL(*this, XGetGeometry(fake_x11.display,_,_,_,_,_,_,_,_))
     .WillByDefault(DoAll(SetArgPointee<5>(fake_x11.screen.width),

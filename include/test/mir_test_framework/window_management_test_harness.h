@@ -50,9 +50,7 @@ public:
     auto open_application(std::string const& name) const -> miral::Application;
 
     /// Create a window with the provided spec
-    auto create_window(
-        miral::Application const&,
-        miral::WindowSpecification const& window_spec) const -> miral::Window;
+    auto create_window(miral::Application const&, miral::WindowSpecification const& window_spec) const -> miral::Window;
 
     void publish_event(MirEvent const& event) const;
     void request_resize(miral::Window const&, MirInputEvent const*, MirResizeEdge) const;
@@ -77,6 +75,7 @@ public:
 
     virtual auto get_builder() -> WindowManagementPolicyBuilder = 0;
     virtual auto get_initial_output_configs() -> std::vector<mir::graphics::DisplayConfigurationOutput> = 0;
+
 private:
     class Self;
     std::unique_ptr<Self> const self;

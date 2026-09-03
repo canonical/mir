@@ -17,6 +17,7 @@
 #include "application_selector.h"
 #include <miral/application_info.h>
 #include <miral/application.h>
+#include <mir/fatal.h>
 #include <mir/log.h>
 #include <mir/scene/session.h>
 
@@ -67,7 +68,7 @@ void ApplicationSelector::select(miral::Window const& window)
         if (restore_state && restore_state != info.state())
         {
             WindowSpecification spec;
-            spec.state() = restore_state.value();
+            spec.state() = restore_state;
             tools.modify_window(selected, spec);
             restore_state.reset();
         }
@@ -82,7 +83,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
     auto window = window_info.window();
     if (!window)
     {
-        mir::fatal_error("advise_focus_gained: window_info did not reference a window");
+        MIR_FATAL_ERROR("advise_focus_gained: window_info did not reference a window");
     }
 
     auto it = find(window);
@@ -92,7 +93,7 @@ void ApplicationSelector::advise_focus_gained(WindowInfo const& window_info)
         if (it != focus_list.end())
             std::rotate(focus_list.begin(), it, it + 1);
         else
-            mir::fatal_error("advise_focus_gained: window was not found in the list");
+            MIR_FATAL_ERROR("advise_focus_gained: window was not found in the list");
     }
 
     select(window);
@@ -103,7 +104,7 @@ void ApplicationSelector::advise_focus_lost(miral::WindowInfo const& window_info
     auto window = window_info.window();
     if (!window)
     {
-        mir::fatal_error("advise_focus_lost: window_info did not reference a window");
+        MIR_FATAL_ERROR("advise_focus_lost: window_info did not reference a window");
         return;
     }
 

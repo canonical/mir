@@ -16,7 +16,7 @@
 
 #include "x11_kiosk_window_manager.h"
 
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/display_configuration.h>
 #include <miral/keymap.h>
 #include <miral/runner.h>

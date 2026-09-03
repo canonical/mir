@@ -72,12 +72,11 @@ private:
         {
             if (action_group_manager->was_revoked(token))
             {
-                BOOST_THROW_EXCEPTION(
-                    mw::ProtocolError(
-                        resource,
-                        Error::invalid_token,
-                        "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) that's no longer valid",
-                        token.c_str()));
+                throw mw::ProtocolError{
+                    resource,
+                    Error::invalid_token,
+                    "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) that's no longer valid",
+                    token.c_str()};
             }
 
             if (auto const& action_group = action_group_manager->get_action_group(token))
@@ -94,13 +93,12 @@ private:
             else
             {
                 // Token is not currently valid, nor was it previously revoked. It must be an invalid token.
-                BOOST_THROW_EXCEPTION(
-                    mw::ProtocolError(
-                        resource,
-                        Error::invalid_token,
-                        "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) we "
-                        "never issued",
-                        token.c_str()));
+                throw mw::ProtocolError{
+                    resource,
+                    Error::invalid_token,
+                    "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) we "
+                    "never issued",
+                    token.c_str()};
             }
         }
 

@@ -42,14 +42,6 @@ struct StubSession : scene::Session
 
     void show() override;
 
-    void start_prompt_session() override;
-
-    void stop_prompt_session() override;
-
-    void suspend_prompt_session() override;
-
-    void resume_prompt_session() override;
-
     auto create_surface(
         std::shared_ptr<Session> const& session,
         shell::SurfaceSpecification const& params,

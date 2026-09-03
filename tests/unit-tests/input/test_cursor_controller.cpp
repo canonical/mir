@@ -40,7 +40,7 @@
 #include <mutex>
 #include <algorithm>
 
-#include <assert.h>
+#include <cassert>
 
 namespace mi = mir::input;
 namespace mg = mir::graphics;

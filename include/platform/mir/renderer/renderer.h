@@ -46,8 +46,8 @@ public:
 
 protected:
     Renderer() = default;
-    Renderer(const Renderer&) = delete;
-    Renderer& operator=(const Renderer&) = delete;
+    Renderer(Renderer const&) = delete;
+    Renderer& operator=(Renderer const&) = delete;
 };
 
 }

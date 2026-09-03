@@ -126,7 +126,7 @@ public:
     void unset_fullscreen() override;
     void set_minimized() override;
 
-    void handle_commit() override {};
+    void handle_commit() override;
     void handle_state_change(MirWindowState /*new_state*/) override;
     void handle_active_change(bool /*is_now_active*/) override;
     void handle_resize(std::optional<geometry::Point> const& new_top_left, geometry::Size const& new_size) override;

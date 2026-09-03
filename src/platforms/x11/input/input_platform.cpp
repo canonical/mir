@@ -27,25 +27,15 @@
 #define MIR_LOG_COMPONENT "x11-input"
 #include <mir/log.h>
 
-#include <inttypes.h>
-#include <signal.h>
+#include <cinttypes>
+#include <csignal>
 #include <chrono>
 
 #include <xcb/xfixes.h>
 #include <xkbcommon/xkbcommon.h>
 #include <xkbcommon/xkbcommon-x11.h>
 
-// xcb/xkb.h has a struct member named "explicit", which C++ does not like
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wkeyword-macro"
-#endif
-#define explicit explicit_
-#include <xcb/xkb.h>
-#undef explicit
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+#include "../xcb_xkb_compat.h"
 
 // Due to a bug in Unity when keyboard is grabbed,
 // client cannot be resized. This helps in debugging.

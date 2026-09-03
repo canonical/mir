@@ -14,10 +14,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_WAYLAND_APP_H
-#define MIRAL_WAYLAND_APP_H
+#ifndef EXAMPLE_SERVER_LIB_WAYLAND_APP_H
+#define EXAMPLE_SERVER_LIB_WAYLAND_APP_H
 
 #include <wayland-client.h>
+#include "xdg-shell.h"
 #include <memory>
 #include <map>
 #include <functional>
@@ -125,7 +126,7 @@ public:
     auto compositor() const -> wl_compositor* { return compositor_; };
     auto shm() const -> wl_shm* { return shm_; };
     auto seat() const -> wl_seat* { return seat_; };
-    auto shell() const -> wl_shell* { return shell_; };
+    auto xdg_wm_base() const -> ::xdg_wm_base* { return xdg_wm_base_; };
 
 protected:
     friend WaylandOutput;
@@ -141,7 +142,7 @@ private:
     WaylandObject<wl_compositor> compositor_;
     WaylandObject<wl_shm> shm_;
     WaylandObject<wl_seat> seat_;
-    WaylandObject<wl_shell> shell_;
+    WaylandObject<::xdg_wm_base> xdg_wm_base_;
 
     static void handle_new_global(
         void* data,
@@ -157,4 +158,4 @@ private:
     std::map<uint32_t, std::function<void()>> global_remove_handlers;
 };
 
-#endif // MIRAL_WAYLAND_APP_H
+#endif // EXAMPLE_SERVER_LIB_WAYLAND_APP_H

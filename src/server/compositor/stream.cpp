@@ -19,9 +19,6 @@
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/buffer.h>
 #include <boost/throw_exception.hpp>
-#include <math.h>
-
-#include <cmath>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;

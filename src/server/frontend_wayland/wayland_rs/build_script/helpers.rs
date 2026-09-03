@@ -48,16 +48,50 @@ pub fn snake_to_pascal(s: &str) -> String {
         .collect()
 }
 
+/// Strips known Wayland protocol/vendor prefixes from an interface name to
+/// produce a type name matching existing C++ conventions.
+///
+/// Only prefixes in [`KNOWN_PREFIXES`] are stripped. Interfaces with
+/// unrecognized prefixes (e.g., `xdg_`, `ext_`) keep their full name.
+fn strip_wayland_interface_prefix(s: &str) -> &str {
+    /// Known Wayland protocol/vendor prefixes and how many characters to strip.
+    /// Ordered longest-first to ensure correct greedy matching.
+    ///
+    /// The strip length may differ from the match length: for `zxdg_` we strip
+    /// only the `z` instability marker, preserving `xdg_` as part of the type
+    /// name (matching existing C++ types like `XdgOutputManagerV1`).
+    ///
+    /// Prefixes NOT listed here (e.g., `xdg_`, `ext_`) are intentionally kept
+    /// as part of the type name (e.g., `XdgActivationV1`, `ExtForeignToplevelListV1`).
+    const KNOWN_PREFIXES: &[(&str, usize)] = &[
+        ("org_kde_kwin_", "org_kde_kwin_".len()),
+        ("zwlr_", "zwlr_".len()),
+        ("zwp_", "zwp_".len()),
+        ("zxdg_", 1), // strip only the 'z' instability marker
+        ("wl_", "wl_".len()),
+        ("wp_", "wp_".len()),
+    ];
+
+    for &(prefix, strip_len) in KNOWN_PREFIXES {
+        if s.starts_with(prefix) {
+            return &s[strip_len..];
+        }
+    }
+    s
+}
+
 /// Formats the Wayland interface name to the name of the class that
 /// provides its C++ implementation.
 pub fn format_wayland_interface_to_cpp_class(s: &str) -> String {
-    format!("{}Impl", snake_to_pascal(s))
+    let s = strip_wayland_interface_prefix(s);
+    format!("{}", snake_to_pascal(s))
 }
 
 /// Formats the Wayland interface name to the name of the struct that
 /// provides its Rust extension implementation.
 pub fn format_wayland_interface_to_rust_extension_struct(s: &str) -> String {
-    format!("{}Ext", snake_to_pascal(s))
+    let s = strip_wayland_interface_prefix(s);
+    format!("{}Middleware", snake_to_pascal(s))
 }
 
 pub fn format_has_arg(s: &str) -> String {

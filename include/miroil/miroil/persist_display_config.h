@@ -20,7 +20,11 @@
 #include <functional>
 #include <memory>
 
-namespace mir { class Server; namespace graphics { class DisplayConfigurationPolicy; }}
+namespace mir
+{
+class Server;
+namespace graphics { class DisplayConfigurationPolicy; }
+}
 
 namespace miroil
 {
@@ -36,10 +40,12 @@ public:
     auto operator=(PersistDisplayConfig const&) -> PersistDisplayConfig&;
 
     // TODO factor this out better
-    using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<DisplayConfigurationPolicy>(std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped)>;
+    using DisplayConfigurationPolicyWrapper = std::function<std::shared_ptr<DisplayConfigurationPolicy>(
+        std::shared_ptr<mir::graphics::DisplayConfigurationPolicy> const& wrapped)>;
 
-    PersistDisplayConfig(std::shared_ptr<DisplayConfigurationStorage> const& storage,
-                         DisplayConfigurationPolicyWrapper const& custom_wrapper);
+    PersistDisplayConfig(
+        std::shared_ptr<DisplayConfigurationStorage> const& storage,
+        DisplayConfigurationPolicyWrapper const& custom_wrapper);
 
     void operator()(mir::Server& server);
 

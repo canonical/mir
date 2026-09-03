@@ -158,12 +158,6 @@ const GLchar* const vertex_shader_src =
     "   v_texcoord = texcoord;\n"
     "}\n"
 };
-
-template<typename Index, typename Range>
-    requires std::integral<Index>
-auto enumerate_with_idx_type(Range&& range) {
-    return std::views::zip(std::views::iota(Index{0}), std::forward<Range>(range));
-}
 }
 
 class mrg::Renderer::ProgramFactory : public mir::graphics::gl::ProgramFactory
@@ -255,14 +249,14 @@ private:
             BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
         }
 
-        glShaderSource(id, 1, &src, NULL);
+        glShaderSource(id, 1, &src, nullptr);
         glCompileShader(id);
         GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
             GLchar log[1024] = "(No log info)";
-            glGetShaderInfoLog(id, sizeof log, NULL, log);
+            glGetShaderInfoLog(id, sizeof log, nullptr, log);
             glDeleteShader(id);
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -284,7 +278,7 @@ private:
         if (!ok)
         {
             GLchar log[1024];
-            glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+            glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
             log[sizeof log - 1] = '\0';
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -323,7 +317,7 @@ public:
     // NOTE: This must be called with a current GL context
     OutputFilter(std::unique_ptr<mg::gl::OutputSurface> output)
      : output{std::move(output)},
-        texture{make_texture(this->output->size())},
+        texture{make_texture()},
         framebuffer{make_framebuffer(texture)},
         filter{mir_output_filter_none},
         program{nullptr},
@@ -362,6 +356,8 @@ public:
             output->bind();
             return;
         }
+
+        ensure_texture_storage_for(output->size());
 
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer);
 
@@ -431,14 +427,14 @@ private:
             BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
         }
 
-        glShaderSource(id, 1, &src, NULL);
+        glShaderSource(id, 1, &src, nullptr);
         glCompileShader(id);
         GLint ok{0};
         glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
         if (!ok)
         {
             GLchar log[1024] = "(No log info)";
-            glGetShaderInfoLog(id, sizeof log, NULL, log);
+            glGetShaderInfoLog(id, sizeof log, nullptr, log);
             glDeleteShader(id);
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -486,7 +482,7 @@ private:
         if (!ok)
         {
             GLchar log[1024];
-            glGetProgramInfoLog(program, sizeof log - 1, NULL, log);
+            glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
             log[sizeof log - 1] = '\0';
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
@@ -496,12 +492,29 @@ private:
         return program;
     }
 
-   static GLuint make_texture(mir::geometry::Size size)
+   static GLuint make_texture()
     {
         GLuint tex{0};
         glGenTextures(1, &tex);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        return tex;
+    }
+
+    /* The output surface can be resized under us, so (re)specify the
+     * intermediate texture storage whenever it no longer matches. This is only
+     * reached with a filter active, so an unfiltered output never allocates
+     * texture storage.
+     */
+    void ensure_texture_storage_for(mir::geometry::Size size)
+    {
+        if (size == texture_size)
+            return;
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture);
         glTexImage2D(GL_TEXTURE_2D, 0,
                      GL_RGBA,
                      size.width.as_value(),
@@ -509,10 +522,8 @@ private:
                      0,
                      GL_RGBA,
                      GL_UNSIGNED_BYTE,
-                     NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        return tex;
+                     nullptr);
+        texture_size = size;
     }
 
     static GLuint make_framebuffer(GLuint tex)
@@ -528,6 +539,7 @@ private:
     std::unique_ptr<mg::gl::OutputSurface> output;
     TextureHandle const texture;
     FramebufferHandle const framebuffer;
+    mir::geometry::Size texture_size;
     MirOutputFilter filter;
     std::unique_ptr<ProgramHandle> program;
     GLint position_attrib;
@@ -540,7 +552,7 @@ mrg::Renderer::Program::Program(GLuint program_id)
     id = program_id;
     position_attr = glGetAttribLocation(id, "position");
     texcoord_attr = glGetAttribLocation(id, "texcoord");
-    for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(tex_uniforms))
+    for (auto const [index, uniform] : tex_uniforms | std::views::enumerate)
     {
         /* You can reference uniform arrays as tex[0], tex[1], tex[2], … until you
          * hit the end of the array, which will return -1 as the location.
@@ -744,11 +756,11 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     {   // Avoid reloading the screen-global uniforms on every renderable
         // TODO: We actually only need to bind these *once*, right? Not once per frame?
         prog->last_used_frameno = frameno;
-        for (auto const [index, uniform] : enumerate_with_idx_type<GLint>(prog->tex_uniforms))
+        for (auto const [index, uniform] : prog->tex_uniforms | std::views::enumerate)
         {
             if (uniform != -1)
             {
-                glUniform1i(uniform, index);
+                glUniform1i(uniform, static_cast<GLint>(index));
             }
         }
         glUniformMatrix4fv(prog->display_transform_uniform, 1, GL_FALSE,
@@ -823,10 +835,10 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
     // if we fail to load the texture, we need to carry on (part of lp:1629275)
     try
     {
-        typedef struct  // Represents parameters of glBlendFuncSeparate()
+        struct BlendSeparate  // Represents parameters of glBlendFuncSeparate()
         {
             GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
-        } BlendSeparate;
+        };
 
         BlendSeparate client_blend;
 
@@ -896,8 +908,16 @@ void mrg::Renderer::draw(mg::Renderable const& renderable) const
 
 void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 {
+    /* The output surface can change size under us (the screen shooter captures
+     * to whatever buffer the client hands us), which changes the GL viewport
+     * even when the logical area is unchanged.
+     */
     if (rect == viewport)
+    {
+        if (output_surface->size() != last_output_size)
+            update_gl_viewport();
         return;
+    }
 
     /*
      * Here we provide a 3D perspective projection with a default 30 degrees
@@ -953,6 +973,7 @@ void mrg::Renderer::update_gl_viewport()
     auto viewport_height = fabs(transformed_viewport[1]);
 
     auto const output_size = output_surface->size();
+    last_output_size = output_size;
     auto const output_width = output_size.width.as_value();
     auto const output_height = output_size.height.as_value();
 

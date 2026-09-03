@@ -19,13 +19,11 @@ execute: |
         --yes \
         --no-install-recommends \
         autopkgtest \
-        binfmt-support \
         debootstrap \
         debhelper \
         dh-python \
         fakeroot \
         nullmailer \
-        qemu-user-static \
         sbuild \
         schroot \
         ubuntu-dev-tools
@@ -41,7 +39,12 @@ execute: |
     EOF
     apparmor_parser -r /etc/apparmor.d/sbuild
 
+    # trick mk-sbuild into making the chroot for us
+    addgroup --system sbuild
     adduser $USER sbuild
+    mkdir --parents /var/lib/sbuild/build
+    chown --recursive :sbuild /var/lib/sbuild
+    chmod --recursive g+w /var/lib/sbuild
     # set host and build environment up
     source <( dpkg-architecture --print-set --host-arch ${ARCH} )
 
@@ -50,11 +53,18 @@ execute: |
     MKSBUILD_OPTS=(
       mk-sbuild
       --distro ${DISTRO}
-      --debootstrap-include=ccache
+      --debootstrap-include=ccache,passwd,qemu-user
       ${RELEASE}
     )
 
+    if [[ "${SPREAD_VARIANT}" == *"ubuntu"* ]]; then
+      MKSBUILD_OPTS+=("--debootstrap-mirror=http://azure.archive.ubuntu.com/ubuntu/")
+      export SOURCES_SECURITY_URL=http://azure.archive.ubuntu.com/ubuntu/
+    fi
+
     SBUILD_OPTS=(
+      --chroot-mode schroot
+      --no-clean-source
       --jobs=$(nproc)
       --verbose
       --dist=${RELEASE}
@@ -84,6 +94,7 @@ execute: |
     # Cross building
     if [ "${DEB_BUILD_ARCH}" != "${DEB_HOST_ARCH}" ]; then
       MKSBUILD_OPTS+=("--arch=${DEB_BUILD_ARCH}" "--target=${DEB_HOST_ARCH}")
+      unset SOURCES_SECURITY_URL
 
       SCHROOT_NAME="${SCHROOT_NAME}-${DEB_HOST_ARCH}"
 
@@ -102,7 +113,6 @@ execute: |
 
     # Build the schroot, if it doesn't already exist
     [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ] || sg sbuild -c "${MKSBUILD_OPTS[*]}"
-
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
     # use ccache
@@ -166,5 +176,7 @@ execute: |
         WAYLAND_DISPLAY=wayland-99 bomber
         # [doc:first-compositor:run-client-end]
     EOF
+
+      bash ${SPREAD_PATH}/doc/sphinx/how-to/configuration-overrides/test.sh
 
     fi

@@ -21,9 +21,7 @@ namespace mir
 {
 struct EmptyDeleter
 {
-    void operator()(void const* )
-    {
-    }
+    void operator()(void const*) {}
 };
 }
 #endif /* MIR_TEST_EMPTY_DELETER_H_ */

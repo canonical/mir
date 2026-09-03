@@ -39,7 +39,7 @@ class Renderable
 public:
     virtual ~Renderable() = default;
 
-    typedef void const* ID; // Mostly opaque, but zero is reserved as "invalid"
+    using ID = void const*; // Mostly opaque, but zero is reserved as "invalid"
 
     /**
      * Return a unique ID for the renderable, which may or may not be based
@@ -90,10 +90,9 @@ public:
      */
     virtual MirMirrorMode mirror_mode() const = 0;
 
-    virtual bool shaped() const = 0;  // meaning the pixel format has alpha
+    virtual bool shaped() const = 0; // meaning the pixel format has alpha
 
-    virtual auto surface_if_any() const
-        -> std::optional<mir::scene::Surface const*> = 0;
+    virtual auto surface_if_any() const -> std::optional<mir::scene::Surface const*> = 0;
 
     /*
      * Opaque region of the potentially transparent surface in absolute
@@ -110,7 +109,7 @@ protected:
     Renderable& operator=(Renderable const&) = delete;
 };
 
-typedef std::vector<std::shared_ptr<Renderable>> RenderableList;
+using RenderableList = std::vector<std::shared_ptr<Renderable>>;
 
 }
 }

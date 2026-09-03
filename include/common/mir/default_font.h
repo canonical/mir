@@ -19,9 +19,6 @@
 
 #include <string>
 
-namespace mir
-{
-auto default_font() -> std::string;
-}
+namespace mir { auto default_font() -> std::string; }
 
 #endif

@@ -39,6 +39,8 @@ public:
 
         // If pressure is zero, the touch-point can be interpreted as a hover.
         float pressure;
+
+        bool operator==(Spot const&) const = default;
     };
 
     // Toggle visualization of touches
@@ -53,12 +55,6 @@ protected:
     TouchVisualizer(const TouchVisualizer&) = delete;
     TouchVisualizer& operator=(const TouchVisualizer&) = delete;
 };
-
-inline bool operator==(TouchVisualizer::Spot const &lhs, TouchVisualizer::Spot const& rhs)
-{
-    return lhs.touch_location == rhs.touch_location &&
-        lhs.pressure == rhs.pressure;
-}
 
 }
 }

@@ -3,4 +3,4 @@ User-agent: *
 # Allow everything
 Disallow:
 
-Sitemap: https://canonical-mir.readthedocs-hosted.com/stable/sitemapindex.xml
+Sitemap: https://canonical.com/mir/docs/stable/sitemapindex.xml

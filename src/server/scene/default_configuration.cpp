@@ -32,7 +32,6 @@
 #include "session_manager.h"
 #include "surface_allocator.h"
 #include "surface_stack.h"
-#include "prompt_session_manager_impl.h"
 #include "basic_clipboard.h"
 #include "basic_text_input_hub.h"
 #include "basic_idle_hub.h"
@@ -181,18 +180,6 @@ mir::DefaultServerConfiguration::the_session_coordinator()
                 the_display(),
                 the_buffer_allocator(),
                 the_display_configuration_observer_registrar());
-        });
-}
-
-std::shared_ptr<ms::PromptSessionManager>
-mir::DefaultServerConfiguration::the_prompt_session_manager()
-{
-    return prompt_session_manager(
-        [this]()
-        {
-            return std::make_shared<ms::PromptSessionManagerImpl>(
-                the_session_container(),
-                the_prompt_session_listener());
         });
 }
 

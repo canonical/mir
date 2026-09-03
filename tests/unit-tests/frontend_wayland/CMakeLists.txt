@@ -3,10 +3,18 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_timespec.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_screencopy_v1_damage_tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_desktop_file_manager.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_foreign_toplevel_handle_creation.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_g_desktop_file_cache.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_keyboard_state_tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_recent_tokens.cpp
 )
+
+if (MIR_ENABLE_RUST)
+  list(
+    APPEND UNIT_TEST_SOURCES
+    ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client.cpp
+  )
+endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

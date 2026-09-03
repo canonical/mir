@@ -26,6 +26,7 @@
 #include <mir/options/configuration.h>
 
 #include <algorithm>
+#include <cstring>
 #include <mutex>
 #include <set>
 #include <map>
@@ -48,6 +49,7 @@ char const* const miral::WaylandExtensions::ext_session_lock_manager_v1{"ext_ses
 char const* const miral::WaylandExtensions::ext_data_control_manager_v1{"ext_data_control_manager_v1"};
 char const* const miral::WaylandExtensions::ext_image_copy_capture_manager_v1{"ext_image_copy_capture_manager_v1"};
 char const* const miral::WaylandExtensions::ext_output_image_capture_source_manager_v1{"ext_output_image_capture_source_manager_v1"};
+char const* const miral::WaylandExtensions::ext_foreign_toplevel_image_capture_source_manager_v1{"ext_foreign_toplevel_image_capture_source_manager_v1"};
 
 namespace
 {
@@ -177,7 +179,7 @@ struct miral::WaylandExtensions::Self
         std::set<std::string> extension;
         extensions += ':';
 
-        for (char const* start = extensions.c_str(); char const* end = strchr(start, ':'); start = end+1)
+        for (char const* start = extensions.c_str(); char const* end = std::strchr(start, ':'); start = end+1)
         {
             if (start != end)
                 extension.insert(std::string{start, end});
@@ -422,10 +424,11 @@ struct miral::WaylandExtensions::Self
             }
         }
         std::string const joiner = "\n - ";
-        return "Default extensions:" + joiner +
-            serialize_list({default_extensions.begin(), default_extensions.end()}, joiner) +
-            "\nAdditional supported extensions:" + joiner +
-            serialize_list(non_default_extensions, joiner);
+        auto description = "Default extensions:" + joiner +
+            serialize_list({default_extensions.begin(), default_extensions.end()}, joiner);
+        if (!non_default_extensions.empty())
+            description += "\nAdditional supported extensions:" + joiner + serialize_list(non_default_extensions, joiner);
+        return description;
     }
 
     std::set<std::string> const recommended_extensions;

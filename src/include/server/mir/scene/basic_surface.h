@@ -136,6 +136,7 @@ public:
     void request_client_surface_close() override;
 
     std::shared_ptr<Surface> parent() const override;
+    void set_parent(std::weak_ptr<Surface> const& parent) override;
 
     int dpi() const;
 
@@ -245,12 +246,13 @@ private:
         mir::geometry::Height min_height{0};
         mir::geometry::Width max_width{std::numeric_limits<int>::max()};
         mir::geometry::Height max_height{std::numeric_limits<int>::max()};
+
+        std::weak_ptr<Surface> parent;
     };
     mir::Synchronised<State> synchronised_state;
 
     std::shared_ptr<Multiplexer> const observers;
     std::shared_ptr<SceneReport> const report;
-    std::weak_ptr<Surface> const parent_;
     std::shared_ptr<ObserverRegistrar<graphics::DisplayConfigurationObserver>> display_config_registrar;
     std::shared_ptr<DisplayConfigurationEarlyListener> const display_config_monitor;
     std::shared_ptr<graphics::DisplayConfiguration const> display_config;

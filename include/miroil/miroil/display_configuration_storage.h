@@ -20,7 +20,7 @@
 #include <miroil/display_id.h>
 
 #include <mir/geometry/rectangle.h>
-#include <mir/optional_value.h>
+#include <optional>
 #include <mir_toolkit/common.h>
 
 #include <sys/types.h>
@@ -30,17 +30,17 @@ namespace miroil
 
 struct DisplayConfigurationOptions
 {
-    mir::optional_value<bool> used;
-    mir::optional_value<uint> clone_output_index;
+    std::optional<bool> used;
+    std::optional<uint> clone_output_index;
     struct DisplayMode
     {
         mir::geometry::Size size;
         double refresh_rate{-1};
     };
-    mir::optional_value<DisplayMode> mode;
-    mir::optional_value<MirOrientation> orientation;
-    mir::optional_value<MirFormFactor> form_factor;
-    mir::optional_value<float> scale;
+    std::optional<DisplayMode> mode;
+    std::optional<MirOrientation> orientation;
+    std::optional<MirFormFactor> form_factor;
+    std::optional<float> scale;
 };
 
 class DisplayConfigurationStorage
@@ -48,8 +48,8 @@ class DisplayConfigurationStorage
 public:
     virtual ~DisplayConfigurationStorage() = default;
 
-    virtual void save(const DisplayId&, const DisplayConfigurationOptions&) = 0;
-    virtual bool load(const DisplayId&, DisplayConfigurationOptions&) const = 0;
+    virtual void save(DisplayId const&, DisplayConfigurationOptions const&) = 0;
+    virtual bool load(DisplayId const&, DisplayConfigurationOptions&) const = 0;
 };
 
 } // namespace miroil

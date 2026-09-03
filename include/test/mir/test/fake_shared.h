@@ -25,8 +25,9 @@ namespace mir
 {
 namespace test
 {
-template <typename Type>
-std::shared_ptr<Type> fake_shared(Type& t) { return {&t, EmptyDeleter()}; }
+template<typename Type>
+std::shared_ptr<Type> fake_shared(Type& t)
+{ return {&t, EmptyDeleter()}; }
 }
 }
 

@@ -18,10 +18,9 @@
 
 #include <mir_test_framework/executable_path.h>
 
-#include <stdlib.h>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 #include <unistd.h>
-#include <cstring>
 #include <unordered_map>
 
 #include <system_error>
@@ -49,8 +48,8 @@ public:
     {
         // Can't use std::string, as mkdtemp mutates its argument.
         auto tmp_name = std::unique_ptr<char[], std::function<void(char*)>>{strdup("/tmp/mir_empty_directory_XXXXXX"),
-                                                                            [](char* data) {free(data);}};
-        if (mkdtemp(tmp_name.get()) == NULL)
+                                                                            [](char* data) {std::free(data);}};
+        if (mkdtemp(tmp_name.get()) == nullptr)
         {
             throw std::system_error{errno, std::system_category(), "Failed to create temporary directory"};
         }
@@ -196,15 +195,15 @@ TEST_F(SharedLibraryProber, logs_failure_for_load_failure)
     std::unordered_map<std::string, bool> probing_map;
 
     ON_CALL(report, loading_library(_))
-        .WillByDefault(Invoke([&probing_map](auto const& filename)
+        .WillByDefault([&probing_map](auto const& filename)
         {
             probing_map[filename.filename().native()] = true;
-        }));
+        });
     ON_CALL(report, loading_failed(_,_))
-        .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
+        .WillByDefault([&probing_map](auto const& filename, auto const&)
         {
             probing_map[filename.filename().native()] = false;
-        }));
+        });
 
     mir::libraries_for_path(library_path, report);
 
@@ -229,15 +228,15 @@ TEST_F(SharedLibraryProber, does_not_log_failure_on_success)
     std::unordered_map<std::string, bool> probing_map;
 
     ON_CALL(report, loading_library(_))
-        .WillByDefault(Invoke([&probing_map](auto const& filename)
+        .WillByDefault([&probing_map](auto const& filename)
         {
             probing_map[filename.filename().native()] = true;
-        }));
+        });
     ON_CALL(report, loading_failed(_,_))
-        .WillByDefault(Invoke([&probing_map](auto const& filename, auto const&)
+        .WillByDefault([&probing_map](auto const& filename, auto const&)
         {
             probing_map[filename.filename().native()] = false;
-        }));
+        });
 
     mir::libraries_for_path(library_path, report);
 

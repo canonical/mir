@@ -5,9 +5,6 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_session_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_the_session_container_implementation.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_mediating_display_changer.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_prompt_session_container.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_prompt_session_manager.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/test_prompt_session_impl.cpp
 
   ${CMAKE_CURRENT_SOURCE_DIR}/test_abstract_shell.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface.cpp

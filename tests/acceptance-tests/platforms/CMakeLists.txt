@@ -18,12 +18,6 @@ if (MIR_BUILD_PLATFORM_X11)
     PUBLIC
       x11_platform.cpp)
 endif()
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  target_sources(
-    mirplatformtest
-    PUBLIC
-      eglstream-kms_platform.cpp)
-endif()
 if (MIR_BUILD_PLATFORM_WAYLAND)
   target_sources(
     mirplatformtest

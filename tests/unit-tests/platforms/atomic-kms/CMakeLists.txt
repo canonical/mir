@@ -1,7 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/platforms/atomic-kms/server
-)
-
 if (MIR_BUILD_PLATFORM_GBM_KMS)
   add_subdirectory(kms/)
 endif()

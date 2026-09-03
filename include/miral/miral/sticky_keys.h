@@ -20,10 +20,7 @@
 #include <memory>
 #include <functional>
 
-namespace mir
-{
-class Server;
-}
+namespace mir { class Server; }
 
 namespace miral
 {

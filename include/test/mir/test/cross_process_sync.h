@@ -27,29 +27,29 @@ namespace test
 // wait-condition-like scenarios.
 class CrossProcessSync
 {
-  public:
+public:
     CrossProcessSync();
-    CrossProcessSync(const CrossProcessSync& rhs);
+    CrossProcessSync(CrossProcessSync const& rhs);
     ~CrossProcessSync() noexcept;
 
-    CrossProcessSync& operator=(const CrossProcessSync& rhs);
+    CrossProcessSync& operator=(CrossProcessSync const& rhs);
 
     // Try to signal the other side that we are ready for at most duration milliseconds.
     // Throws a std::runtime_error if not successful.
-    void try_signal_ready_for(const std::chrono::milliseconds& duration);
+    void try_signal_ready_for(std::chrono::milliseconds const& duration);
 
     void try_signal_ready_for();
 
     // Wait for the other sides to signal readiness for at most duration milliseconds.
     // Returns the number of ready signals that have been collected since creation.
     // Throws std::runtime_error if not successful.
-    unsigned int wait_for_signal_ready_for(const std::chrono::milliseconds& duration);
+    unsigned int wait_for_signal_ready_for(std::chrono::milliseconds const& duration);
     unsigned int wait_for_signal_ready_for();
 
     void signal_ready();
     unsigned int wait_for_signal_ready();
 
-  private:
+private:
     int fds[2];
     unsigned int counter;
 };

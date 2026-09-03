@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_EMERGENCY_CLEANUP_REGISTRY_H_
 #define MIR_EMERGENCY_CLEANUP_REGISTRY_H_
 

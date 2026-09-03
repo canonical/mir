@@ -99,23 +99,6 @@ void mrl::ShellReport::destroying_surface(
     log->log(Severity::informational, out.str(), component);
 }
 
-void mrl::ShellReport::started_prompt_session(
-    scene::PromptSession const& /*prompt_session*/,
-    Session const& /*session*/)
-{
-}
-
-void mrl::ShellReport::added_prompt_provider(
-    scene::PromptSession const& /*prompt_session*/,
-    Session const& /*session*/)
-{
-}
-
-void mrl::ShellReport::stopping_prompt_session(
-    scene::PromptSession const& /*prompt_session*/)
-{
-}
-
 void mrl::ShellReport::adding_display(geometry::Rectangle const& area)
 {
     log->log(Severity::informational, "Adding display area: " + boost::lexical_cast<std::string>(area), component);

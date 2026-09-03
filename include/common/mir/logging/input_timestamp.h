@@ -23,12 +23,7 @@
 
 namespace mir
 {
-namespace logging
-{
-
-std::string input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when);
-
-}
+namespace logging { std::string input_timestamp(mir::time::Clock const& clock, std::chrono::nanoseconds when); }
 }
 
 #endif // MIR_LOGGING_INPUT_TIMESTAMP_H_

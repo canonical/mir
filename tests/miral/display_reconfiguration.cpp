@@ -54,9 +54,8 @@ struct DisplayConfiguration : mt::TestWindowManagerTools
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
-                Invoke(
                     [this](WindowInfo const& window_info)
-                        { window = window_info.window(); }));
+                        { window = window_info.window(); });
 
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
         basic_window_manager.select_active_window(window);
@@ -78,9 +77,5 @@ TEST_F(DisplayConfiguration, given_fullscreen_windows_reconfiguring_displays_doe
     mods.state() = mir_window_state_fullscreen;
     window_manager_tools.modify_window(window, mods);
 
-    Rectangle const new_display{
-        display_area.top_left + Displacement{as_delta(display_width), 0}, display_area.size};
-
     notify_configuration_applied(create_fake_display_configuration({display_area}));
-    basic_window_manager.remove_display(new_display);
 }

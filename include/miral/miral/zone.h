@@ -65,7 +65,7 @@ public:
 
     /// The area of this zone in global display coordinates.
     ///
-    /// \returns the extends of the zone
+    /// \returns the extents of the zone
     auto extents() const -> Rectangle;
 
     /// Set the extents of this zone.
@@ -73,7 +73,7 @@ public:
     /// This does not make this a different zone, meaning that the #miral::Zone::id
     /// will remain the same.
     ///
-    /// \param extents the new extends
+    /// \param extents the new extents
     void extents(Rectangle const& extents);
 
     /// A unique identifier for this zone, which remains the same regardless of

@@ -24,7 +24,6 @@
 
 namespace mir { class Server; }
 
-
 namespace miral
 {
 namespace live_config { class Store; }
@@ -79,12 +78,12 @@ public:
     auto vscroll_speed() const -> std::optional<double>;
     auto hscroll_speed() const -> std::optional<double>;
 
-    void handedness(std::optional<MirPointerHandedness>const& val);
-    void acceleration(std::optional<MirPointerAcceleration>const& val);
+    void handedness(std::optional<MirPointerHandedness> const& val);
+    void acceleration(std::optional<MirPointerAcceleration> const& val);
     /// \note val will be clamped to the range [-1.0, 1.0]
-    void acceleration_bias(std::optional<double>const& val);
-    void vscroll_speed(std::optional<double>const& val);
-    void hscroll_speed(std::optional<double>const& val);
+    void acceleration_bias(std::optional<double> const& val);
+    void vscroll_speed(std::optional<double> const& val);
+    void hscroll_speed(std::optional<double> const& val);
 
     /// Copies the corresponding value from `other` for all unset fields.
     /// \remark Since MirAL 5.3
@@ -120,18 +119,18 @@ public:
     /// \remark Since MirAL 5.3
     auto middle_mouse_button_emulation() const -> std::optional<bool>;
 
-    void disable_while_typing(std::optional<bool>const& val);
-    void disable_with_external_mouse(std::optional<bool>const& val);
-    void acceleration(std::optional<MirPointerAcceleration>const& val);
+    void disable_while_typing(std::optional<bool> const& val);
+    void disable_with_external_mouse(std::optional<bool> const& val);
+    void acceleration(std::optional<MirPointerAcceleration> const& val);
     /// \note val will be clamped to the range [-1.0, 1.0]
-    void acceleration_bias(std::optional<double>const& val);
-    void vscroll_speed(std::optional<double>const& val);
-    void hscroll_speed(std::optional<double>const& val);
-    void click_mode(std::optional<MirTouchpadClickMode>const& val);
-    void scroll_mode(std::optional<MirTouchpadScrollMode>const& val);
-    void tap_to_click(std::optional<bool>const& val);
+    void acceleration_bias(std::optional<double> const& val);
+    void vscroll_speed(std::optional<double> const& val);
+    void hscroll_speed(std::optional<double> const& val);
+    void click_mode(std::optional<MirTouchpadClickMode> const& val);
+    void scroll_mode(std::optional<MirTouchpadScrollMode> const& val);
+    void tap_to_click(std::optional<bool> const& val);
     /// \remark Since MirAL 5.3
-    void middle_mouse_button_emulation(std::optional<bool>const& val);
+    void middle_mouse_button_emulation(std::optional<bool> const& val);
 
     /// Copies the corresponding value from `other` for all unset fields.
     /// \remark Since MirAL 5.3
@@ -159,7 +158,7 @@ public:
     void set_repeat_delay(int new_delay);
 
     auto repeat_rate() const -> std::optional<int>;
-    auto repeat_delay()  const-> std::optional<int>;
+    auto repeat_delay() const -> std::optional<int>;
 
     void merge(InputConfiguration::Keyboard const& other);
 

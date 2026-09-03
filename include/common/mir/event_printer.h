@@ -29,7 +29,6 @@ std::ostream& operator<<(std::ostream& out, MirKeyboardAction action);
 std::ostream& operator<<(std::ostream& out, MirTouchAction action);
 std::ostream& operator<<(std::ostream& out, MirTouchTooltype tool);
 std::ostream& operator<<(std::ostream& out, MirPointerAction action);
-std::ostream& operator<<(std::ostream& out, MirPromptSessionState state);
 std::ostream& operator<<(std::ostream& out, MirOrientation orientation);
 
 std::ostream& operator<<(std::ostream& out, MirWindowAttrib attribute);
@@ -38,7 +37,6 @@ std::ostream& operator<<(std::ostream& out, MirWindowVisibility state);
 std::ostream& operator<<(std::ostream& out, MirWindowType type);
 std::ostream& operator<<(std::ostream& out, MirWindowState state);
 
-std::ostream& operator<<(std::ostream& out, MirPromptSessionEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirResizeEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirOrientationEvent const& event);
 std::ostream& operator<<(std::ostream& out, MirInputEvent const& event);

@@ -67,6 +67,7 @@ public:
      * then resets the signal.
      */
     void wait();
+
 private:
     std::atomic<bool> raised;
 };

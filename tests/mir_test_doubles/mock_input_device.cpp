@@ -31,18 +31,18 @@ mtd::MockInputDevice::MockInputDevice(char const* name, char const* uid, input::
             .WillByDefault(Return(input::PointerSettings()));
     else
         ON_CALL(*this, get_pointer_settings())
-            .WillByDefault(Return(mir::optional_value<input::PointerSettings>()));
+            .WillByDefault(Return(std::optional<input::PointerSettings>()));
     if (contains(caps, input::DeviceCapability::touchpad))
         ON_CALL(*this, get_touchpad_settings())
             .WillByDefault(Return(input::TouchpadSettings()));
     else
         ON_CALL(*this, get_touchpad_settings())
-            .WillByDefault(Return(mir::optional_value<input::TouchpadSettings>()));
+            .WillByDefault(Return(std::optional<input::TouchpadSettings>()));
     if (contains(caps, input::DeviceCapability::touchscreen))
         ON_CALL(*this, get_touchscreen_settings())
             .WillByDefault(Return(input::TouchscreenSettings()));
     else
         ON_CALL(*this, get_touchscreen_settings())
-            .WillByDefault(Return(mir::optional_value<input::TouchscreenSettings>()));
+            .WillByDefault(Return(std::optional<input::TouchscreenSettings>()));
 
 }

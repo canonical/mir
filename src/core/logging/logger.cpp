@@ -14,8 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mir/logging/logger.h>
+
+#include <mir/synchronised.h>
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
+#include <boost/throw_exception.hpp>
+#include <mir/logging/logger.h>
+
+#include <mir/logging/tag.h>
+#include <mir/synchronised.h>
+#include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
 
 #include <iostream>
@@ -26,7 +35,10 @@
 #include <cstdarg>
 #include <cstdio>
 #include <iterator>
+#include <ranges>
 #include <stdexcept>
+#include <string>
+#include <string_view>
 
 namespace ml = mir::logging;
 
@@ -36,11 +48,31 @@ void ml::Logger::log(char const* component, Severity severity, char const* forma
     va_list va;
     va_start(va, format);
     char message[bufsize];
-    vsnprintf(message, bufsize, format, va);
+    std::vsnprintf(message, bufsize, format, va);
     va_end(va);
 
     // Inefficient, but maintains API: Constructing a std::string for message/component.
     log(severity, std::string{message}, std::string{component});
+}
+
+void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
+{
+    // Default implementation uses :-delimited tags as the component
+    // TODO: Remove the log(Severity, std::string, std::string) interface and replace
+    // with this one.
+
+    for (auto const& tag: tags)
+    {
+        if (logging_enabled_for(tag, severity))
+        {
+            std::string component;
+            std::ranges::copy(
+                tags | std::views::transform([](Tag const& tag) { return tag::name(tag); }) | std::views::join_with(':'),
+                std::back_inserter(component));
+            log(severity, std::string{message}, component);
+            return;
+        }
+    }
 }
 
 namespace
@@ -64,6 +96,13 @@ void ml::log(ml::Severity severity, const std::string& message, const std::strin
     auto const logger = get_logger();
 
     logger->log(severity, message, component);
+}
+
+void ml::log(Severity severity, Tags tags, std::string_view message)
+{
+    auto const logger = get_logger();
+
+    logger->log(severity, tags, message);
 }
 
 void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
@@ -104,9 +143,10 @@ void ml::format_message(std::ostream& out, Severity severity, std::string const&
     }
     catch (std::runtime_error const& e)
     {
-        mir::fatal_error_abort("Cannot format log message: %s", e.what());
+        MIR_FATAL_ERROR("Cannot format log message: {}", e.what());
     }
 }
+
 
 namespace mir
 {

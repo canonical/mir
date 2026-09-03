@@ -55,8 +55,6 @@ private:
     virtual auto window_at(mir::geometry::Point cursor) const -> Window override;
     virtual auto active_output() -> mir::geometry::Rectangle const override;
     virtual auto active_application_zone() -> Zone override;
-    virtual auto info_for_window_id(std::string const& id) const -> WindowInfo& override;
-    virtual auto id_for_window(Window const& window) const -> std::string override;
     virtual void place_and_size_for_state(WindowSpecification& modifications, WindowInfo const& window_info) const override;
 
     virtual void drag_active_window(mir::geometry::Displacement movement) override;
@@ -90,7 +88,7 @@ private:
 
     virtual void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
-    virtual void handle_raise_window(WindowInfo& window_info) override;
+    virtual void handle_activate_window(WindowInfo& window_info) override;
 
     virtual bool handle_keyboard_event(MirKeyboardEvent const* event) override;
 
@@ -122,10 +120,10 @@ private:
     void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
 
     void advise_adding_to_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+        std::shared_ptr<Workspace> const& workspace, std::span<Window const> windows) override;
 
     void advise_removing_from_workspace(
-        std::shared_ptr<Workspace> const& workspace, std::vector<Window> const& windows) override;
+        std::shared_ptr<Workspace> const& workspace, std::span<Window const> windows) override;
 
     auto confirm_placement_on_display(
         WindowInfo const& window_info,
@@ -157,7 +155,7 @@ public:
 
     virtual void advise_delete_window(WindowInfo const& window_info) override;
 
-    virtual void advise_raise(std::vector<Window> const& windows) override;
+    virtual void advise_raise(std::span<Window const> windows) override;
 
     void advise_output_create(Output const& output) override;
 

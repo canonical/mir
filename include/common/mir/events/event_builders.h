@@ -35,14 +35,12 @@
 
 namespace mir
 {
-    typedef std::unique_ptr<MirEvent, void(*)(MirEvent*)> EventUPtr;
+using EventUPtr = std::unique_ptr<MirEvent, void (*)(MirEvent*)>;
 
 namespace events
 {
 // Surface orientation change event
 EventUPtr make_surface_orientation_event(frontend::SurfaceId const& surface_id, MirOrientation orientation);
-// Prompt session state change event
-EventUPtr make_prompt_session_state_event(MirPromptSessionState state);
 // Surface resize event
 EventUPtr make_window_resize_event(frontend::SurfaceId const& surface_id, geometry::Size const& size);
 // Window configure event
@@ -76,14 +74,8 @@ void set_cursor_position(MirEvent& event, mir::geometry::Point const& pos);
 void set_cursor_position(MirEvent& event, float x, float y);
 void set_button_state(MirEvent& event, MirPointerButtons button_state);
 
-// Touch event
-EventUPtr make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers);
-
 void add_touch(
-    MirEvent &event,
+    MirEvent& event,
     MirTouchId touch_id,
     MirTouchAction action,
     MirTouchTooltype tooltype,
@@ -121,51 +113,6 @@ EventUPtr make_pointer_event(
     float relative_x_value,
     float relative_y_value);
 
-// Pointer axis event
-EventUPtr make_pointer_axis_event(
-    MirPointerAxisSource axis_source,
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float x_axis_value,
-    float y_axis_value,
-    float hscroll_value,
-    float vscroll_value,
-    float relative_x_value,
-    float relative_y_value);
-
-// Pointer axis with stop event
-EventUPtr make_pointer_axis_with_stop_event(
-    MirPointerAxisSource axis_source,
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float x_axis_value,
-    float y_axis_value,
-    float hscroll_value,
-    float vscroll_value,
-    bool hscroll_stop,
-    bool vscroll_stop,
-    float relative_x_value,
-    float relative_y_value);
-
-// Pointer axis discrete scroll event
-EventUPtr make_pointer_axis_discrete_scroll_event(
-    MirPointerAxisSource axis_source,
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
-    MirPointerAction action,
-    MirPointerButtons buttons_pressed,
-    float hscroll_value,
-    float vscroll_value,
-    float hscroll_discrete,
-    float vscroll_discrete);
-
 // Input configuration event
 EventUPtr make_input_configure_event(
     std::chrono::nanoseconds timestamp,
@@ -179,25 +126,10 @@ EventUPtr make_touch_event(
     MirInputDeviceId device_id,
     std::chrono::nanoseconds timestamp,
     MirInputEventModifiers modifiers,
-    std::vector<TouchContactV1> const& contacts);
-
-EventUPtr make_touch_event(
-    MirInputDeviceId device_id,
-    std::chrono::nanoseconds timestamp,
-    MirInputEventModifiers modifiers,
     std::vector<TouchContact> const& contacts);
 
 EventUPtr clone_event(MirEvent const& event);
 void set_window_id(MirEvent& event, int window_id);
-
-[[deprecated("Not meaningful: legacy of mirclient API")]]
-EventUPtr make_start_drag_and_drop_event(frontend::SurfaceId const& surface_id, std::vector<uint8_t> const& handle);
-[[deprecated("Not meaningful: legacy of mirclient API")]]
-void set_drag_and_drop_handle(MirEvent& event, std::vector<uint8_t> const& handle);
-[[deprecated("Internally functions from event_helpers.h should be used, externally this should not be needed")]]
-void transform_positions(MirEvent& event, mir::geometry::Displacement const& movement);
-[[deprecated("Internally functions from event_helpers.h should be used, externally this should not be needed")]]
-void scale_positions(MirEvent& event, float scale);
 }
 }
 

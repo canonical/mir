@@ -36,6 +36,7 @@
 #include <miral/slow_keys.h>
 #include <miral/hover_click.h>
 #include <miral/append_keyboard_event_filter.h>
+#include <miral/touch_emulator.h>
 
 #include <mir/abnormal_exit.h>
 #include <mir/main_loop.h>
@@ -140,6 +141,7 @@ try
     miral::StickyKeys sticky_keys{config_store};
     miral::Keymap keymap{config_store};
     miral::HoverClick hover_click{config_store};
+    miral::TouchEmulator touch_emulator{config_store};
 
     miral::ConfigFile config_file{
         runner,
@@ -175,6 +177,7 @@ try
         slow_keys,
         sticky_keys,
         hover_click,
+        touch_emulator,
         keymap,
     });
 

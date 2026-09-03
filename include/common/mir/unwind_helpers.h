@@ -26,25 +26,18 @@ class RevertIfUnwinding
 {
 public:
     template<typename Apply>
-    RevertIfUnwinding(Apply && apply, Unwind&& unwind)
-        : unwind{std::move(unwind)},
-          initial_exception_count{std::uncaught_exceptions()}
-    {
-        apply();
-    }
+    RevertIfUnwinding(Apply&& apply, Unwind&& unwind) :
+        unwind{std::move(unwind)},
+        initial_exception_count{std::uncaught_exceptions()}
+    { apply(); }
 
-    RevertIfUnwinding(Unwind&& unwind)
-        : unwind{std::move(unwind)},
-          initial_exception_count{std::uncaught_exceptions()}
-    {
-    }
+    RevertIfUnwinding(Unwind&& unwind) : unwind{std::move(unwind)}, initial_exception_count{std::uncaught_exceptions()}
+    {}
 
-    RevertIfUnwinding(RevertIfUnwinding<Unwind>&& rhs)
-        : unwind{std::move(rhs.unwind)},
-          initial_exception_count{std::uncaught_exceptions()}
-    {
-        rhs.unwind = nullptr;
-    }
+    RevertIfUnwinding(RevertIfUnwinding<Unwind>&& rhs) :
+        unwind{std::move(rhs.unwind)},
+        initial_exception_count{std::uncaught_exceptions()}
+    { rhs.unwind = nullptr; }
 
     ~RevertIfUnwinding()
     {
@@ -61,17 +54,12 @@ private:
 };
 
 template<typename Apply, typename Revert>
-inline auto try_but_revert_if_unwinding(Apply && apply, Revert && reverse) -> RevertIfUnwinding<Revert>
-{
-    return RevertIfUnwinding<Revert>{std::move(apply), std::move(reverse)};
-}
-
+inline auto try_but_revert_if_unwinding(Apply&& apply, Revert&& reverse) -> RevertIfUnwinding<Revert>
+{ return RevertIfUnwinding<Revert>{std::move(apply), std::move(reverse)}; }
 
 template<typename Revert>
-inline auto on_unwind(Revert && action) -> RevertIfUnwinding<Revert>
-{
-    return RevertIfUnwinding<Revert>{std::move(action)};
-}
+inline auto on_unwind(Revert&& action) -> RevertIfUnwinding<Revert>
+{ return RevertIfUnwinding<Revert>{std::move(action)}; }
 
 }
 

@@ -28,6 +28,7 @@ class CachedPtr
     std::weak_ptr<Type> cache;
     CachedPtr(CachedPtr const&) = delete;
     CachedPtr& operator=(CachedPtr const&) = delete;
+
 public:
     CachedPtr() = default;
 
@@ -36,7 +37,7 @@ public:
         auto result = cache.lock();
         if (!result)
         {
-                cache = result = make();
+            cache = result = make();
         }
         return result;
     }

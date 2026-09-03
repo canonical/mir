@@ -33,7 +33,6 @@
 #include "output_manager.h"
 #include "shm.h"
 
-#include <boost/throw_exception.hpp>
 #include <mutex>
 #include <optional>
 
@@ -453,48 +452,48 @@ void mf::WlrScreencopyFrameV1::prepare_target(wl_resource* buffer)
 {
     if (copy_has_been_called)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::already_used,
-            "Attempted to copy frame multiple times"));
+            "Attempted to copy frame multiple times"};
     }
     copy_has_been_called = true;
     auto shm_buffer = mf::ShmBuffer::from(buffer);
     if (!shm_buffer)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_buffer,
-            "Copy target is not a wl_shm buffer"));
+            "Copy target is not a wl_shm buffer"};
     }
     auto shm_data = shm_buffer->data();
     if (shm_data->format() != mir_pixel_format_argb_8888)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_buffer,
             "Invalid pixel format %d",
-            shm_data->format()));
+            shm_data->format()};
     }
     if (shm_data->size() != params.buffer_size)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_buffer,
             "Invalid buffer size %dx%d, should be %dx%d",
             shm_data->size().width.as_int(),
             shm_data->size().height.as_int(),
             params.buffer_size.width.as_int(),
-            params.buffer_size.height.as_int()));
+            params.buffer_size.height.as_int()};
     }
     if (shm_data->stride() != stride)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_buffer,
             "Invalid stride %d, should be %d",
             shm_data->stride().as_int(),
-            stride.as_int()));
+            stride.as_int()};
     }
 
     target = std::shared_ptr<mir::renderer::software::WriteMappable>{

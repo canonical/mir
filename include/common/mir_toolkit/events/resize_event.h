@@ -20,7 +20,8 @@
 #include <mir_toolkit/events/event.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**

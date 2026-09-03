@@ -21,8 +21,10 @@
 #include <miral/window_specification.h>
 
 #include <mir/geometry/rectangles.h>
-#include <mir/optional_value.h>
 #include <mir/flags.h>
+
+#include <optional>
+#include <span>
 
 namespace miral
 {
@@ -77,12 +79,6 @@ struct WindowInfo
     /// \returns `true` if the window is visible, otherwise `false`.
     bool is_visible() const;
 
-    /// \deprecated Obsolete: Window::size() includes decorations
-    /// @{
-    [[deprecated("Obsolete: Window::size() includes decorations")]]
-    static bool needs_titlebar(MirWindowType type);
-    /// @}
-
     void constrain_resize(mir::geometry::Point& requested_pos, mir::geometry::Size& requested_size) const;
 
     /// The #miral::Window that backs this instance
@@ -131,7 +127,7 @@ struct WindowInfo
     /// The children of this window, if any.
     ///
     /// \returns the children of this window
-    auto children() const -> std::vector <Window> const&;
+    auto children() const& -> std::span<Window const>;
 
     /// The minimum width of the window.
     ///
@@ -210,7 +206,7 @@ struct WindowInfo
     ///
     /// Defaults to 1.
     ///
-    /// \returns the width increment
+    /// \returns the height increment
     auto height_inc() const -> mir::geometry::DeltaY;
 
     /// The minimum aspect ratio.
@@ -239,7 +235,7 @@ struct WindowInfo
 
     /// The output id that this window is associated with.
     ///
-    /// If #miral::WindoInfo::has_output_id is false, then this method
+    /// If #miral::WindowInfo::has_output_id is false, then this method
     /// will throw a fatal error when accessed.
     ///
     /// Callers may match this value with an id from #miral::Output::id()
@@ -317,7 +313,7 @@ struct WindowInfo
     /// is set to #mir_window_state_attached.
     ///
     /// \returns the exclusive rect optional
-    auto exclusive_rect() const -> mir::optional_value<mir::geometry::Rectangle>;
+    auto exclusive_rect() const -> std::optional<mir::geometry::Rectangle>;
 
     /// When `true`, this window will ignore the #miral::WindowInfo::exclusive_rect of
     /// other windows.
@@ -332,12 +328,12 @@ struct WindowInfo
     ///
     /// If set, Mir will not render any part of the window that falls outside
     /// of this rectangle. Compositor authors can set this via
-    /// #miral::WindowInfo::clip_area(mir::optional_value<mir::geometry::Rectangle>).
+    /// #miral::WindowInfo::clip_area(std::optional<mir::geometry::Rectangle>).
     ///
     /// This rectangle is in world coordinates.
     ///
     /// \returns the clip area set for the window
-    auto clip_area() const -> mir::optional_value<mir::geometry::Rectangle>;
+    auto clip_area() const -> std::optional<mir::geometry::Rectangle>;
 
     /// Set the clip area of the window.
     ///
@@ -347,7 +343,7 @@ struct WindowInfo
     /// This rectangle is in world coordinates.
     ///
     /// \param area the rectangle for the clip area
-    void clip_area(mir::optional_value<mir::geometry::Rectangle> const& area);
+    void clip_area(std::optional<mir::geometry::Rectangle> const& area);
 
     /// The D-bus service name and basename of the app's .desktop
     ///
@@ -402,13 +398,13 @@ private:
     void height_inc(mir::geometry::DeltaY height_inc);
     void min_aspect(AspectRatio min_aspect);
     void max_aspect(AspectRatio max_aspect);
-    void output_id(mir::optional_value<int> output_id);
+    void output_id(std::optional<int> output_id);
     void preferred_orientation(MirOrientationMode preferred_orientation);
     void confine_pointer(MirPointerConfinementState confinement);
     void shell_chrome(MirShellChrome chrome);
     void depth_layer(MirDepthLayer depth_layer);
     void attached_edges(MirPlacementGravity edges);
-    void exclusive_rect(mir::optional_value<mir::geometry::Rectangle> const& rect);
+    void exclusive_rect(std::optional<mir::geometry::Rectangle> const& rect);
     void application_id(std::string const& application_id);
     void focus_mode(MirFocusMode focus_mode);
     void visible_on_lock_screen(bool visible);
@@ -421,7 +417,9 @@ private:
 
 namespace std
 {
-template<> inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs) { lhs.swap(rhs); }
+template<>
+inline void swap(miral::WindowInfo& lhs, miral::WindowInfo& rhs)
+{ lhs.swap(rhs); }
 }
 
 #endif //MIRAL_WINDOW_INFO_H

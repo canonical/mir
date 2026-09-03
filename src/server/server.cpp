@@ -91,8 +91,6 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(input_targeter)\
     MACRO(logger)\
     MACRO(pointer_input_dispatcher)\
-    MACRO(prompt_session_listener)\
-    MACRO(prompt_session_manager)\
     MACRO(server_status_listener)\
     MACRO(session_authorizer)\
     MACRO(session_listener)\
@@ -117,13 +115,11 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_logger)\
     MACRO(the_main_loop)\
     MACRO(the_output_filter)\
-    MACRO(the_prompt_session_listener)\
     MACRO(the_session_authorizer)\
     MACRO(the_session_coordinator)\
     MACRO(the_session_listener)\
     MACRO(the_surface_factory)\
     MACRO(the_pointer_input_dispatcher)\
-    MACRO(the_prompt_session_manager)\
     MACRO(the_shell)\
     MACRO(the_shell_display_layout)\
     MACRO(the_surface_stack)\
@@ -400,7 +396,7 @@ void mir::Server::run()
 {
     try
     {
-        mir::log_info("Starting");
+        mir::log_info({logging::base()}, "Starting");
         mir::security_log(
             logging::Severity::warning,
             "sys_startup",
@@ -460,7 +456,7 @@ auto mir::Server::supported_pixel_formats() const -> std::vector<MirPixelFormat>
 
 void mir::Server::stop()
 {
-    mir::log_info("Stopping");
+    mir::log_info({logging::base()}, "Stopping");
     if (self->server_config)
         if (auto const main_loop = the_main_loop().get())
         {

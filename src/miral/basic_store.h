@@ -52,6 +52,19 @@ public:
         std::span<std::string const> preset,
         HandleStrings handler) override;
 
+    void add_strings_attribute(
+        Key const& key,
+        std::string_view description,
+        HandleStrings handler,
+        std::span<std::string const> initial_values);
+
+    void add_strings_attribute(
+        Key const& key,
+        std::string_view description,
+        std::span<std::string const> preset,
+        HandleStrings handler,
+        std::span<std::string const> initial_values);
+
     void on_done(HandleDone handler) override;
 
     void update_key(Key const& key, std::string_view value, std::filesystem::path const& modification_path);

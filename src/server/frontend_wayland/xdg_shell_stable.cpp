@@ -29,6 +29,10 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <algorithm>
+#include <iterator>
+#include <vector>
+
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
@@ -64,10 +68,12 @@ public:
     using mw::XdgSurface::resource;
 
 private:
-    void set_window_role(WindowWlSurfaceRole* role);
-
     mw::Weak<WindowWlSurfaceRole> window_role_;
     mw::Weak<WlSurface> const surface;
+    /// Serials of configure events sent on this xdg_surface that have not yet been
+    /// consumed by an ack_configure, in the order they were sent. Acking a serial
+    /// consumes it and every serial sent before it.
+    std::vector<uint32_t> unacked_configure_serials;
 
 public:
     XdgShellStable const& xdg_shell;
@@ -175,13 +181,20 @@ void mf::XdgSurfaceStable::get_toplevel(wl_resource* new_toplevel)
 {
     if (!surface)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::generic_error_code,
-            "Tried to create toplevel after destroying surface"));
+            "Tried to create toplevel after destroying surface"};
+    }
+    if (window_role_)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::already_constructed,
+            "Tried to create toplevel on surface with existing role"};
     }
     auto toplevel = new XdgToplevelStable{new_toplevel, this, &surface.value()};
-    set_window_role(toplevel);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(toplevel);
 }
 
 void mf::XdgSurfaceStable::get_popup(
@@ -210,24 +223,31 @@ void mf::XdgSurfaceStable::get_popup(
 
     if (!surface)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::generic_error_code,
-            "Tried to create popup after destroying surface"));
+            "Tried to create popup after destroying surface"};
+    }
+    if (window_role_)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::already_constructed,
+            "Tried to create popup on surface with existing role"};
     }
 
     auto popup = new XdgPopupStable{new_popup, this, parent_role, *xdg_positioner, &surface.value()};
-    set_window_role(popup);
+    window_role_ = mw::make_weak<WindowWlSurfaceRole>(popup);
 }
 
 void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t width, int32_t height)
 {
     if (width <= 0 || height <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
-            mw::generic_error_code,
-            "Invalid %s size %dx%d", interface_name, width, height));
+            Error::invalid_size,
+            "Invalid %s size %dx%d", interface_name, width, height};
     }
     if (window_role_)
     {
@@ -239,29 +259,28 @@ void mf::XdgSurfaceStable::set_window_geometry(int32_t x, int32_t y, int32_t wid
 
 void mf::XdgSurfaceStable::ack_configure(uint32_t serial)
 {
-    (void)serial;
-    // TODO
+    auto const it = std::find(unacked_configure_serials.begin(), unacked_configure_serials.end(), serial);
+    if (it == unacked_configure_serials.end())
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_serial,
+            "ack_configure with serial %u that was never sent or has already been acked", serial};
+    }
+    // Acking a serial consumes it and every configure serial sent before it.
+    unacked_configure_serials.erase(unacked_configure_serials.begin(), std::next(it));
 }
 
 void mf::XdgSurfaceStable::send_configure()
 {
     auto const serial = client->next_serial(nullptr);
+    unacked_configure_serials.push_back(serial);
     send_configure_event(serial);
 }
 
 mw::Weak<mf::WindowWlSurfaceRole> const& mf::XdgSurfaceStable::window_role()
 {
     return window_role_;
-}
-
-void mf::XdgSurfaceStable::set_window_role(WindowWlSurfaceRole* role)
-{
-    if (window_role_)
-    {
-        log_warning("XdgSurfaceStable::window_role set multiple times");
-    }
-
-    window_role_ = mw::make_weak(role);
 }
 
 // XdgPopupStable
@@ -315,10 +334,10 @@ void mf::XdgPopupStable::set_aux_rect_offset_now(geom::Displacement const& new_a
     auto const scene_surface_{scene_surface()};
     if (scene_surface_)
     {
-        shell->modify_surface(
-            scene_surface_.value()->session().lock(),
-            scene_surface_.value(),
-            spec);
+        if (auto const session = scene_surface_.value()->session().lock())
+        {
+            shell->modify_surface(session, scene_surface_.value(), spec);
+        }
     }
     else
     {
@@ -346,10 +365,10 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     auto const scene_surface_{scene_surface()};
     if (scene_surface_)
     {
-        shell->modify_surface(
-            scene_surface_.value()->session().lock(),
-            scene_surface_.value(),
-            positioner);
+        if (auto const session = scene_surface_.value()->session().lock())
+        {
+            shell->modify_surface(session, scene_surface_.value(), positioner);
+        }
     }
     else
     {
@@ -464,7 +483,32 @@ void mf::XdgToplevelStable::set_parent(std::optional<struct wl_resource*> const&
 {
     if (parent && parent.value())
     {
-        WindowWlSurfaceRole::set_parent(XdgToplevelStable::from(parent.value())->scene_surface());
+        auto parent_toplevel = XdgToplevelStable::from(parent.value());
+
+        if (parent_toplevel == this)
+        {
+            throw mw::ProtocolError{
+                resource,
+                Error::invalid_parent,
+                "A toplevel cannot be its own parent"};
+        }
+
+        // Check that the parent is not a descendant of this toplevel
+        if (auto const this_surface = scene_surface().value_or(nullptr))
+        {
+            for (auto ancestor = parent_toplevel->scene_surface().value_or(nullptr); ancestor; ancestor = ancestor->parent())
+            {
+                if (ancestor == this_surface)
+                {
+                    throw mw::ProtocolError{
+                        resource,
+                        Error::invalid_parent,
+                        "Parent toplevel must not be a descendant of the child toplevel"};
+                }
+            }
+        }
+
+        WindowWlSurfaceRole::set_parent(parent_toplevel->scene_surface());
     }
     else
     {
@@ -536,10 +580,10 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
         break;
 
     default:
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             Error::invalid_resize_edge,
-            "Invalid resize edge %d", edges));
+            "Invalid resize edge %d", edges};
     }
 
     initiate_interactive_resize(edge, serial);
@@ -547,12 +591,44 @@ void mf::XdgToplevelStable::resize(struct wl_resource* /*seat*/, uint32_t serial
 
 void mf::XdgToplevelStable::set_max_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_size,
+            "Invalid maximum size %dx%d", width, height};
+    }
     WindowWlSurfaceRole::set_max_size(width, height);
 }
 
 void mf::XdgToplevelStable::set_min_size(int32_t width, int32_t height)
 {
+    if (width < 0 || height < 0)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_size,
+            "Invalid minimum size %dx%d", width, height};
+    }
     WindowWlSurfaceRole::set_min_size(width, height);
+}
+
+void mf::XdgToplevelStable::handle_commit()
+{
+    auto const min_size = pending_min_size();
+    auto const max_size = pending_max_size();
+
+    // A zero max dimension means "no limit" (stored as the maximum possible size) and a zero min means
+    // "no minimum", so this comparison only triggers when the client has set genuinely conflicting constraints.
+    if (max_size.width < min_size.width || max_size.height < min_size.height)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_size,
+            "Maximum size %dx%d is smaller than minimum size %dx%d",
+            max_size.width.as_int(), max_size.height.as_int(),
+            min_size.width.as_int(), min_size.height.as_int()};
+    }
 }
 
 void mf::XdgToplevelStable::set_maximized()
@@ -715,10 +791,10 @@ void mf::XdgPositionerStable::ensure_complete() const
 {
     if (!width || !height || !aux_rect)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::XdgWmBase::Error::invalid_positioner,
-            "Incomplete positioner"));
+            "Incomplete positioner"};
     }
 }
 
@@ -726,10 +802,10 @@ void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)
 {
     if (width <= 0 || height <= 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::XdgPositioner::Error::invalid_input,
-            "Invalid popup positioner size: %dx%d", width, height));
+            "Invalid popup positioner size: %dx%d", width, height};
     }
     this->width = geom::Width{width};
     this->height = geom::Height{height};
@@ -739,10 +815,10 @@ void mf::XdgPositionerStable::set_anchor_rect(int32_t x, int32_t y, int32_t widt
 {
     if (width < 0 || height < 0)
     {
-        BOOST_THROW_EXCEPTION(mw::ProtocolError(
+        throw mw::ProtocolError{
             resource,
             mw::XdgPositioner::Error::invalid_input,
-            "Invalid popup anchor rect size: %dx%d", width, height));
+            "Invalid popup anchor rect size: %dx%d", width, height};
     }
     aux_rect = geom::Rectangle{{x, y}, {width, height}};
 }
@@ -753,6 +829,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
 
     switch (anchor)
     {
+        case Anchor::none:
+            placement = mir_placement_gravity_center;
+            break;
+
         case Anchor::top:
             placement = mir_placement_gravity_north;
             break;
@@ -786,7 +866,10 @@ void mf::XdgPositionerStable::set_anchor(uint32_t anchor)
             break;
 
         default:
-            placement = mir_placement_gravity_center;
+            throw mw::ProtocolError{
+                resource,
+                mw::XdgPositioner::Error::invalid_input,
+                "Invalid anchor value %u", anchor};
     }
 
     aux_rect_placement_gravity = placement;
@@ -835,10 +918,10 @@ void mf::XdgPositionerStable::set_gravity(uint32_t gravity)
             break;
 
         default:
-            BOOST_THROW_EXCEPTION(mw::ProtocolError(
+            throw mw::ProtocolError{
                 resource,
                 mw::XdgPositioner::Error::invalid_input,
-                "Invalid gravity value %d", gravity));
+                "Invalid gravity value %d", gravity};
     }
 
     surface_placement_gravity = placement;
@@ -859,7 +942,7 @@ void mf::XdgPositionerStable::set_constraint_adjustment(uint32_t constraint_adju
     {
         new_placement_hints |= mir_placement_hints_flip_x;
     }
-    if (constraint_adjustment & ConstraintAdjustment::flip_x)
+    if (constraint_adjustment & ConstraintAdjustment::flip_y)
     {
         new_placement_hints |= mir_placement_hints_flip_y;
     }
@@ -887,15 +970,18 @@ void mf::XdgPositionerStable::set_reactive()
 
 void mf::XdgPositionerStable::set_parent_size(int32_t parent_width, int32_t parent_height)
 {
-    (void)parent_width;
-    (void)parent_height;
-    // TODO
-    log_warning("xdg_positioner.set_parent_size not implemented");
+    if (parent_width <= 0 || parent_height <= 0)
+    {
+        throw mw::ProtocolError{
+            resource,
+            Error::invalid_input,
+            "Invalid popup positioner parent size: %dx%d", parent_width, parent_height};
+    }
+    parent_size = geom::Size{parent_width, parent_height};
 }
 
-void mf::XdgPositionerStable::set_parent_configure(uint32_t serial)
+void mf::XdgPositionerStable::set_parent_configure(uint32_t /*serial*/)
 {
-    (void)serial;
     // TODO
     log_warning("xdg_positioner.set_parent_configure not implemented");
 }

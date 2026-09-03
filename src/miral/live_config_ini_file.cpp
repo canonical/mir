@@ -15,6 +15,7 @@
  */
 
 #include "basic_store.h"
+#include "live_config_ini_file_common.h"
 
 #include <miral/live_config_ini_file.h>
 
@@ -29,46 +30,12 @@ public:
     void load_file(std::istream& istream, std::filesystem::path const& path);
 };
 
-namespace
-{
-auto trim_start_and_end(std::string_view string) -> std::string_view
-{
-    constexpr auto whitespace = " \t\n\r\f\v";
-
-    auto const first_non_space = string.find_first_not_of(whitespace);
-    if (first_non_space == std::string::npos)
-    {
-        return string.substr(0, 0);
-    }
-
-    auto const last_non_space = string.find_last_not_of(whitespace);
-    return string.substr(first_non_space, last_non_space - first_non_space + 1);
-}
-}
-
 void mlc::IniFile::Self::load_file(std::istream& istream, std::filesystem::path const& path)
 {
     do_transaction(
         [&]
         {
-            for (std::string line; std::getline(istream, line);)
-            {
-                auto const line_view = std::string_view{line};
-                if (!line_view.starts_with('#') && line_view.contains("="))
-                    try
-                    {
-                        auto const eq = line_view.find_first_of("=");
-                        auto const key = Key{trim_start_and_end(line_view.substr(0, eq))};
-                        auto const value = trim_start_and_end(line_view.substr(eq + 1));
-
-                        update_key(key, value, path);
-                    }
-                    catch (std::exception const& e)
-                    {
-                        mir::log_warning("Error processing '%s': %s", path.c_str(), e.what());
-                    }
-            }
-
+            parse_ini(istream, path, [this](auto const& key, auto value, auto const& path) { update_key(key, value, path); });
         });
 }
 

@@ -30,8 +30,8 @@ int main()
     action.sa_handler = shutdown;
     sigemptyset(&action.sa_mask);
     action.sa_flags = 0;
-    sigaction(SIGINT, &action, NULL);
-    sigaction(SIGTERM, &action, NULL);
+    sigaction(SIGINT, &action, nullptr);
+    sigaction(SIGTERM, &action, nullptr);
 
     SpinnerSplash spinner;
 

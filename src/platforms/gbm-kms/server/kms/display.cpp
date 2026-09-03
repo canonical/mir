@@ -41,6 +41,8 @@
 
 #include <boost/exception/errinfo_errno.hpp>
 #include <gbm.h>
+#include <cstdlib>
+#include <cstring>
 #include <system_error>
 #include <xf86drm.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
@@ -70,7 +72,7 @@ double calculate_vrefresh_hz(drmModeModeInfo const& mode)
 
     /* mode.clock is in KHz */
     double hz = (mode.clock * 100000LL /
-                 ((long)mode.htotal * (long)mode.vtotal)
+                 (static_cast<long>(mode.htotal) * static_cast<long>(mode.vtotal))
                 ) / 100.0;
 
     return hz;
@@ -379,46 +381,37 @@ void mgg::Display::configure_locked(
             });
     }
 
-    /* Set up used outputs */
-    OverlappingOutputGrouping grouping{kms_conf};
-    auto group_idx = 0;
-
-    grouping.for_each_group(
-        [&](OverlappingOutputGroup const& group)
+    size_t output_idx{0};
+    kms_conf.for_each_output(
+        [&](DisplayConfigurationOutput const& out)
         {
-            auto bounding_rect = group.bounding_rectangle();
-            std::vector<std::shared_ptr<KMSOutput>> kms_outputs;
-            glm::mat2 transformation;
-            geom::Size current_mode_resolution;
+            if (!out.connected || !out.used ||
+                (out.power_mode != mir_power_mode_on) ||
+                (out.current_mode_index >= out.modes.size()))
+            {
+                // We don't need to do anything for unconfigured outputs
+                return;
+            }
 
-            group.for_each_output(
-                [&](DisplayConfigurationOutput const& conf_output)
-                {
-                    auto kms_output = current_display_configuration.get_output_for(conf_output.id);
+            auto kms_output = kms_conf.get_output_for(out.id);
+            auto const mode_index = kms_conf.get_kms_mode_index(out.id, out.current_mode_index);
 
-                    auto const mode_index = kms_conf.get_kms_mode_index(conf_output.id,
-                                                                  conf_output.current_mode_index);
-                    kms_output->configure(conf_output.top_left - bounding_rect.top_left, mode_index);
-                    if (!comp)
-                    {
-                        kms_output->set_power_mode(conf_output.power_mode);
-                        kms_output->set_gamma(conf_output.gamma);
-                        kms_outputs.push_back(std::move(kms_output));
-                    }
+            kms_output->configure({0, 0}, mode_index);
 
-                    /*
-                     * Presently OverlappingOutputGroup guarantees all grouped
-                     * outputs have the same transformation.
-                     */
-                    transformation = conf_output.transformation();
-                    if (conf_output.current_mode_index < conf_output.modes.size())
-                        current_mode_resolution = conf_output.modes[conf_output.current_mode_index].size;
-                });
+            if (!comp)
+            {
+                kms_output->set_power_mode(out.power_mode);
+                kms_output->set_gamma(out.gamma);
+            }
+
+            auto const transform = out.transformation();
 
             if (comp)
             {
-                display_sinks[group_idx++]->set_transformation(transformation,
-                                                                 bounding_rect);
+                display_sinks[output_idx]->set_transformation(
+                    transform,
+                    out.extents());
+                ++output_idx;
             }
             else
             {
@@ -427,9 +420,9 @@ void mgg::Display::configure_locked(
                     gbm,
                     bypass_option,
                     listener,
-                    kms_outputs,
-                    bounding_rect,
-                    transformation);
+                    std::move(kms_output),
+                    out.extents(),
+                    transform);
 
                 display_buffers_new.push_back(std::move(db));
             }
@@ -504,7 +497,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
         {
             if (str)
             {
-                free(str);
+                std::free(str);
             }
         }
     };
@@ -516,7 +509,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
 
     if (primary_node)
     {
-        if (strcmp(primary_node.get(), render_device.devnode()) == 0)
+        if (std::strcmp(primary_node.get(), render_device.devnode()) == 0)
         {
             mir::log_debug("\t...yup.");
             return true;
@@ -524,7 +517,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
     }
     if (render_node)
     {
-        if (strcmp(render_node.get(), render_device.devnode()) == 0)
+        if (std::strcmp(render_node.get(), render_device.devnode()) == 0)
         {
             mir::log_debug("\t...yup.");
             return true;

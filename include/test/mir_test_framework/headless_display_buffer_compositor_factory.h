@@ -39,6 +39,7 @@ struct HeadlessDisplayBufferCompositorFactory : mir::compositor::DisplayBufferCo
 
     std::unique_ptr<mir::compositor::DisplayBufferCompositor> create_compositor_for(
         mir::graphics::DisplaySink& display_sink) override;
+
 private:
     std::shared_ptr<mir::graphics::GLRenderingProvider> const render_platform;
     std::shared_ptr<mir::graphics::GLConfig> const gl_config;

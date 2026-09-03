@@ -92,8 +92,6 @@ class SessionListener;
 class SessionCoordinator;
 class SurfaceStack;
 class SceneReport;
-class PromptSessionListener;
-class PromptSessionManager;
 }
 namespace graphics
 {
@@ -175,7 +173,6 @@ public:
     std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
-    std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() override;
     std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
     std::shared_ptr<MainLoop>               the_main_loop() override;
@@ -203,17 +200,6 @@ public:
     void set_wayland_extension_policy(
         std::string const& interface_name,
         WaylandProtocolExtensionFilter const& policy) override;
-
-    /**
-     * Function to call when a "fatal" error occurs. This implementation allows
-     * the default strategy to be overridden by --on-fatal-error-except to avoid a
-     * core.
-     * To change the default strategy used FatalErrorStrategy. See acceptance test
-     * ServerShutdown.fatal_error_default_can_be_changed_to_abort
-     * for an example.
-     */
-    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
-    /** @} */
 
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics
@@ -280,8 +266,6 @@ public:
     virtual auto the_decoration_manager() -> std::shared_ptr<shell::decoration::Manager>;
     virtual std::shared_ptr<scene::SessionListener>     the_session_listener();
     virtual std::shared_ptr<shell::DisplayLayout>       the_shell_display_layout();
-    virtual std::shared_ptr<scene::PromptSessionListener> the_prompt_session_listener();
-    virtual std::shared_ptr<scene::PromptSessionManager>  the_prompt_session_manager();
 
     virtual std::shared_ptr<shell::PersistentSurfaceStore> the_persistent_surface_store();
     virtual std::shared_ptr<shell::ShellReport>         the_shell_report();
@@ -360,6 +344,7 @@ protected:
     auto the_options_provider() const -> std::shared_ptr<options::Configuration>;
     std::shared_ptr<input::DefaultInputDeviceHub>  the_default_input_device_hub();
     std::shared_ptr<input::SeatObserver> the_seat_observer();
+    std::shared_ptr<graphics::RenderingPlatform> find_pinned_rendering_platform();
 
     virtual std::shared_ptr<scene::MediatingDisplayChanger> the_mediating_display_changer();
 
@@ -381,8 +366,13 @@ protected:
     // which leads to seg faults because those code paths cannot be found. For this
     // reason, we cache pointers to these objects AND make sure that they are destructed
     // after everything else.
+    //
+    // These platforms likely hold `Device`s allocated from `console_services`;
+    // ensure that console_services outlives those `Device`s.
+    std::shared_ptr<ConsoleServices> console_services;
     std::vector<std::shared_ptr<graphics::DisplayPlatform>> display_platforms;
     std::vector<std::shared_ptr<graphics::RenderingPlatform>> rendering_platforms;
+    std::map<graphics::RenderingPlatform*, std::string> rendering_platform_names;
     std::shared_ptr<input::InputManager>    input_manager;
 
     CachedPtr<frontend::Connector>   wayland_connector;
@@ -440,8 +430,6 @@ protected:
     CachedPtr<graphics::DisplayConfigurationPolicy> display_configuration_policy;
     CachedPtr<scene::MediatingDisplayChanger> mediating_display_changer;
     CachedPtr<graphics::GLConfig> gl_config;
-    CachedPtr<scene::PromptSessionListener> prompt_session_listener;
-    CachedPtr<scene::PromptSessionManager> prompt_session_manager;
     CachedPtr<scene::SessionCoordinator> session_coordinator;
     CachedPtr<EmergencyCleanup> emergency_cleanup;
     CachedPtr<shell::PersistentSurfaceStore> persistent_surface_store;
@@ -453,7 +441,6 @@ protected:
     CachedPtr<scene::ApplicationNotRespondingDetector> application_not_responding_detector;
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
-    std::shared_ptr<ConsoleServices> console_services;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
 
 private:

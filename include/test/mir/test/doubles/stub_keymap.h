@@ -32,7 +32,7 @@ struct StubKeymap : public mir::input::Keymap
     auto model() const -> std::string override { return "stub_keymap_model"; }
     auto make_unique_xkb_keymap(xkb_context*) const -> mir::input::XKBKeymapPtr override
     {
-        return {nullptr, [](auto){}};
+        return {nullptr, [](auto) {}};
     }
 };
 

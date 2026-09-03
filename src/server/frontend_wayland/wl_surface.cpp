@@ -238,7 +238,11 @@ bool mf::WlSurface::has_subsurface_with_surface(WlSurface* surface) const
     return std::any_of(
         children.begin(),
         children.end(),
-        [surface](auto const* child) { return child->get_surface() == surface; });
+        [surface](auto const* child)
+        {
+            WlSurface* child_surface = child->get_surface();
+            return child_surface == surface || child_surface->has_subsurface_with_surface(surface);
+        });
 }
 
 void mf::WlSurface::reorder_subsurface(WlSubsurface* child, WlSurface* sibling_surface, SubsurfacePlacement placement)
@@ -372,6 +376,16 @@ void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x,
 {
     if (x != 0 || y != 0)
     {
+        if (wl_resource_get_version(resource) >= 5)
+        {
+            throw wayland::ProtocolError{
+                resource,
+                Error::invalid_offset,
+                "Non-zero offset (%d, %d) given to wl_surface.attach, but since version 5 "
+                "the offset must be set with wl_surface.offset instead",
+                x, y};
+        }
+
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
@@ -796,6 +810,13 @@ void mf::WlSurface::set_buffer_transform(int32_t transform)
 
 void mf::WlSurface::set_buffer_scale(int32_t scale)
 {
+    if (scale <= 0)
+    {
+        throw wayland::ProtocolError{
+            resource,
+            Error::invalid_scale,
+            "Invalid scale %d", scale};
+    }
     pending.scale = scale;
 }
 

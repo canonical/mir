@@ -1,0 +1,823 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+use crate::cpp_builder::sanitize_identifier;
+use crate::helpers::{
+    dash_to_snake, dash_to_snake_ident, format_has_arg_ident,
+    format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
+    generate_namespace, snake_to_pascal,
+};
+use crate::protocol_parser::{
+    InterfaceItem, WaylandArg, WaylandArgType, WaylandInterface, WaylandProtocol, WaylandRequest,
+};
+use proc_macro2::TokenStream;
+use quote::{format_ident, quote};
+use syn::Ident;
+
+pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+    let generated_dispatch_implementations = protocols
+        .iter()
+        .map(|protocol| generate_dispatch_implementations(protocol));
+
+    let server_side_factories = generate_server_side_factories(protocols);
+
+    let output_dynamic_global = generate_output_dynamic_global(protocols);
+
+    quote! {
+        #[allow(dead_code, unused_imports)]
+        mod dispatch {
+            use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
+            use wayland_server::backend::{ClientId, ObjectId};
+            use wayland_server::backend::protocol::Interface;
+            use crate::protocols;
+            use crate::wayland_server_core::ServerState;
+            use crate::ffi;
+            use crate::wayland_client::{WaylandClient, WaylandClientId};
+            use std::os::fd::{AsRawFd, RawFd};
+            use std::sync::{Arc, LazyLock, Mutex, RwLock};
+            use std::collections::HashMap;
+            use std::ffi::CString;
+
+            static OBJECT_REGISTRY: LazyLock<RwLock<HashMap<u32, ObjectId>>> = LazyLock::new(|| RwLock::new(HashMap::new()));
+
+            fn register_resource(resource: &impl Resource) {
+                let id = resource.id();
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).insert(id.protocol_id(), id);
+            }
+
+            fn unregister_resource(resource: &impl Resource) {
+                OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
+            }
+
+            fn parse_post_error(what: &str) -> (u32, u32, String) {
+                let mut parts = what.splitn(3, ':');
+                let object_id = parts.next()
+                    .and_then(|s| s.trim().parse::<u32>().ok())
+                    .unwrap_or(0);
+                let code = parts.next()
+                    .and_then(|s| s.trim().parse::<u32>().ok())
+                    .unwrap_or(0);
+                let message = parts.next()
+                    .map(|s| s.trim().to_string())
+                    .unwrap_or_else(|| what.to_string());
+                (object_id, code, message)
+            }
+
+            fn post_protocol_error(resource: &impl Resource, object_id: u32, code: u32, message: String) {
+                let target_id = OBJECT_REGISTRY.read().unwrap_or_else(|e| e.into_inner()).get(&object_id).cloned();
+                if let Some(handle) = resource.handle().upgrade() {
+                    let id = target_id.unwrap_or_else(|| resource.id());
+                    handle.post_error(id, code, CString::new(message).expect("Error message contained null byte"));
+                }
+            }
+
+            /// Post `wl_display.error` with the `implementation` code against the
+            /// client's `wl_display`, mirroring libwayland's
+            /// `wl_client_post_implementation_error` (and Mir's C++
+            /// `mir::wayland::internal_error_processing_request`). This is the
+            /// correct protocol error for a compositor-side failure.
+            ///
+            /// `wayland-server` special-cases `wl_display` and never exposes it as a
+            /// `Resource`, so we resolve object id 1 (which is always the
+            /// `wl_display`) for this client through the backend handle. This relies
+            /// on the pure-Rust `wayland-backend` that `wayland_rs` uses, where
+            /// `object_for_protocol_id` matches interfaces by name.
+            fn post_implementation_error(resource: &impl Resource, message: &str) {
+                /// `wl_display.error.implementation`: the compositor hit an internal error.
+                const WL_DISPLAY_ERROR_IMPLEMENTATION: u32 = 3;
+
+                static WL_DISPLAY_INTERFACE: Interface = Interface {
+                    name: "wl_display",
+                    version: 1,
+                    requests: &[],
+                    events: &[],
+                    c_ptr: None,
+                };
+
+                let Some(handle) = resource.handle().upgrade() else {
+                    return;
+                };
+                let display = handle
+                    .get_client(resource.id())
+                    .and_then(|client| handle.object_for_protocol_id(client, &WL_DISPLAY_INTERFACE, 1));
+                match display {
+                    Ok(display) => handle.post_error(
+                        display,
+                        WL_DISPLAY_ERROR_IMPLEMENTATION,
+                        CString::new(message).expect("Error message contained null byte"),
+                    ),
+                    Err(_) => log::error!("Failed to resolve wl_display to post an implementation error"),
+                }
+            }
+
+            /// Handle a C++ exception that crossed the FFI boundary during dispatch.
+            ///
+            /// `mir::wayland_rs::ProtocolError` encodes itself as
+            /// "MIR_PROTOCOL_ERROR:<object_id>:<code>: <message>" (only what() survives
+            /// the cxx boundary). Anything without that sentinel is an internal server
+            /// error and must not be dressed up as a client protocol violation.
+            fn handle_dispatch_error(resource: &impl Resource, what: &str) {
+                if let Some(encoded) = what.strip_prefix("MIR_PROTOCOL_ERROR:") {
+                    let (object_id, code, message) = parse_post_error(encoded);
+                    post_protocol_error(resource, object_id, code, message);
+                } else {
+                    log::error!("Internal error dispatching Wayland request on {}: {}", resource.id(), what);
+                    // An internal failure is a compositor-side error, so raise
+                    // wl_display.error with the `implementation` code against the
+                    // client's wl_display (as libwayland's
+                    // wl_client_post_implementation_error does). The client sees an
+                    // honest protocol error while the real cause stays in the log.
+                    post_implementation_error(resource, &format!("internal server error: {what}"));
+                }
+            }
+
+            #(#generated_dispatch_implementations)*
+
+            #server_side_factories
+
+            #output_dynamic_global
+        }
+    }
+}
+
+/// Generate the machinery for dynamically-created `wl_output` globals.
+///
+/// Unlike every other global (which is registered once at startup and bound
+/// through the shared `GlobalFactory`), `wl_output` is advertised per-monitor
+/// and can come and go at runtime. To support this we use a distinct
+/// global-data type ([OutputGlobalData]) carrying a per-monitor C++
+/// [ffi::OutputGlobalBinder], and reuse [generate_global_dispatch_impl] to emit
+/// the `GlobalDispatch` implementation so that binding a `wl_output` follows
+/// exactly the same steps as binding any other global.
+///
+/// The binder is stored behind a `Mutex` because `GlobalDispatch::bind` and
+/// `can_view` only receive a shared reference to the global data, yet the C++
+/// binder methods (like the factory's) require a `Pin<&mut _>` to be invoked.
+fn generate_output_dynamic_global(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+    let (protocol, interface) = protocols
+        .iter()
+        .find_map(|protocol| {
+            protocol
+                .interfaces
+                .iter()
+                .find(|interface| interface.name == "wl_output")
+                .map(|interface| (protocol, interface))
+        })
+        .expect("The wayland protocol must define wl_output");
+
+    let global_dispatch_impl = generate_global_dispatch_impl(
+        interface,
+        &generate_namespace(protocol),
+        GlobalBindSource::PerGlobalBinder,
+    );
+
+    quote! {
+        // A cxx opaque C++ type is not automatically `Send`/`Sync`. The binder
+        // is only ever accessed under the `Mutex` in `OutputGlobalData` (and,
+        // from C++, only on the event-loop thread), so this is sound.
+        unsafe impl Send for ffi::OutputGlobalBinder {}
+        unsafe impl Sync for ffi::OutputGlobalBinder {}
+
+        /// Per-global data for a dynamically-created `wl_output`, carrying the
+        /// C++ binder that builds the `wl_output` object for each client bind.
+        pub(crate) struct OutputGlobalData {
+            binder: Mutex<cxx::UniquePtr<ffi::OutputGlobalBinder>>,
+        }
+
+        impl OutputGlobalData {
+            pub(crate) fn new(binder: cxx::UniquePtr<ffi::OutputGlobalBinder>) -> Self {
+                OutputGlobalData { binder: Mutex::new(binder) }
+            }
+        }
+
+        #global_dispatch_impl
+    }
+}
+
+/// Generate server-side object-creation helpers.
+///
+/// Most Wayland objects are created in response to a client request that carries
+/// a `new_id` argument. A handful of objects, however, are created by the
+/// *server* and handed to the client through an event whose argument is a
+/// `new_id` (for example `zwp_linux_buffer_params_v1.created`, which returns a
+/// server-allocated `wl_buffer`). There is no client-supplied `new_id` and no
+/// `DataInit` available in that flow, so the resource must be allocated
+/// explicitly.
+///
+/// For every interface that appears as the `new_id` of an *event* we generate:
+/// * `allocate_<interface>` — allocates the resource on behalf of the client,
+///   registers it and wraps it in its middleware `Box` so C++ can pass it to the
+///   corresponding `send_<event>_event`.
+/// * `set_<interface>_inner` — stores the fully constructed C++ object into the
+///   resource's wrapper so subsequent requests route to it (and its lifetime is
+///   tied to the resource), mirroring the request-driven `new_id` path.
+fn generate_server_side_factories(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+    let mut seen: Vec<String> = Vec::new();
+    let mut factories: Vec<TokenStream> = Vec::new();
+
+    for protocol in protocols {
+        for interface in &protocol.interfaces {
+            for item in &interface.items {
+                let InterfaceItem::Event(event) = item else {
+                    continue;
+                };
+                for arg in &event.args {
+                    if arg.type_ != WaylandArgType::NewId {
+                        continue;
+                    }
+                    let Some(child_name) = arg.interface.as_ref() else {
+                        continue;
+                    };
+                    if child_name == "wl_display" || child_name == "wl_registry" {
+                        continue;
+                    }
+                    if seen.iter().any(|s| s == child_name) {
+                        continue;
+                    }
+                    seen.push(child_name.clone());
+                    factories.push(generate_server_side_factory(protocols, child_name));
+                }
+            }
+        }
+    }
+
+    quote! {
+        #(#factories)*
+    }
+}
+
+/// Resolve the fully-qualified Rust path of the resource type for `interface_name`.
+fn resolve_resource_path(protocols: &Vec<WaylandProtocol>, interface_name: &str) -> TokenStream {
+    let namespace = protocols
+        .iter()
+        .find(|protocol| {
+            protocol
+                .interfaces
+                .iter()
+                .any(|interface| interface.name == interface_name)
+        })
+        .map(generate_namespace)
+        .unwrap_or_else(|| quote! { wayland_server::protocol });
+
+    let interface_module = dash_to_snake_ident(interface_name);
+    let interface_struct = format_ident!("{}", snake_to_pascal(interface_name));
+    quote! { #namespace::#interface_module::#interface_struct }
+}
+
+/// Generate the `create_<interface>` / `set_<interface>_inner` helper pair for a
+/// single server-created interface.
+fn generate_server_side_factory(
+    protocols: &Vec<WaylandProtocol>,
+    interface_name: &str,
+) -> TokenStream {
+    let create_fn = format_ident!("allocate_{}", dash_to_snake(interface_name));
+    let set_inner_fn = format_ident!("set_{}_inner", dash_to_snake(interface_name));
+    let wrapper_struct = format_ident!("{}Wrapper", snake_to_pascal(interface_name));
+    let middleware_struct = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(interface_name)
+    );
+    let cpp_struct = format_ident!("{}", format_wayland_interface_to_cpp_class(interface_name));
+    let resource_path = resolve_resource_path(protocols, interface_name);
+
+    quote! {
+        /// Allocate a server-created resource of this interface for `client`.
+        ///
+        /// The resource is registered and wrapped in its middleware `Box` so that
+        /// C++ can hand it to the appropriate `send_*_event`. The wrapper is left
+        /// without a C++ object until the matching `set_*_inner` is called.
+        pub fn #create_fn(
+            client: &WaylandClient,
+            version: u32,
+        ) -> Result<Box<crate::middleware::#middleware_struct>, Box<dyn std::error::Error>> {
+            let wrapper = Arc::new(Mutex::new(#wrapper_struct { inner: None }));
+            let instance = client
+                .inner_client()
+                .create_resource::<#resource_path, Arc<Mutex<#wrapper_struct>>, ServerState>(
+                    client.display_handle(),
+                    version,
+                    wrapper.clone(),
+                )?;
+            register_resource(&instance);
+            Ok(Box::new(crate::middleware::#middleware_struct { wrapped: instance }))
+        }
+
+        /// Store the fully-constructed C++ object into the resource's wrapper so
+        /// subsequent requests route to it and its lifetime is tied to the resource.
+        pub fn #set_inner_fn(
+            instance: &crate::middleware::#middleware_struct,
+            object: cxx::SharedPtr<ffi::#cpp_struct>,
+        ) {
+            if let Some(data) = instance.wrapped.data::<Arc<Mutex<#wrapper_struct>>>() {
+                data.lock().unwrap().inner = Some(object);
+            }
+        }
+    }
+}
+
+/// Where a `GlobalDispatch` implementation finds the C++ code that builds the
+/// object a client binds to.
+///
+/// Both variants produce the same `bind` body — create the wrapper, init the
+/// resource, wrap it in middleware, call into C++, store the result — and
+/// differ only in which C++ object is called and how it is reached from the
+/// global data.
+#[derive(Clone, Copy)]
+enum GlobalBindSource {
+    /// The single `GlobalFactory` shared by every statically-registered global.
+    /// Because one factory serves all interfaces, it exposes a
+    /// `create_<interface>` method per global and `can_view` is told which
+    /// interface is being queried.
+    SharedFactory,
+    /// A per-global `OutputGlobalBinder` carried by the global's own data, used
+    /// by the dynamically-created per-monitor `wl_output` globals. The binder
+    /// already *is* the monitor, so its methods need no interface name.
+    PerGlobalBinder,
+}
+
+impl GlobalBindSource {
+    /// The `GlobalDispatch` global-data type.
+    fn global_data_type(&self) -> TokenStream {
+        match self {
+            // An Arc<Mutex<...>> instead of just a UniquePtr because the factory
+            // has to be accessed mutably in order to call methods across the
+            // Rust -> C++ boundary.
+            Self::SharedFactory => quote! { Arc<Mutex<cxx::UniquePtr<ffi::GlobalFactory>>> },
+            Self::PerGlobalBinder => quote! { OutputGlobalData },
+        }
+    }
+
+    /// The expression, in terms of `global_data`, holding the `Mutex` guarding
+    /// the C++ object.
+    fn lock_target(&self) -> TokenStream {
+        match self {
+            Self::SharedFactory => quote! { global_data },
+            Self::PerGlobalBinder => quote! { global_data.binder },
+        }
+    }
+
+    /// The C++ method that builds the bound object.
+    fn bind_method(&self, interface_name: &str) -> Ident {
+        match self {
+            Self::SharedFactory => format_ident!("create_{}", interface_name),
+            Self::PerGlobalBinder => format_ident!("bind"),
+        }
+    }
+
+    /// The arguments passed to the C++ `can_view`, and any bindings they need.
+    fn can_view_args(&self, interface_name: &str) -> (TokenStream, TokenStream) {
+        match self {
+            Self::SharedFactory => (
+                quote! { let interface_name = #interface_name; },
+                quote! { interface_name, client_id },
+            ),
+            Self::PerGlobalBinder => (quote! {}, quote! { client_id }),
+        }
+    }
+}
+
+/// Generate a GlobalDispatch implementation for a single interface.
+fn generate_global_dispatch_impl(
+    interface: &WaylandInterface,
+    namespace_name: &TokenStream,
+    source: GlobalBindSource,
+) -> TokenStream {
+    let interface_name = dash_to_snake_ident(&interface.name);
+
+    if interface_name == "wl_display" {
+        // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+        return quote! {};
+    }
+
+    let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let ext_interface_struct_name = format_ident!(
+        "{}",
+        format_wayland_interface_to_rust_extension_struct(&interface.name)
+    );
+    let wrapper_struct_name = format_ident!("{}Wrapper", snake_to_pascal(&interface.name));
+
+    let global_data_type = source.global_data_type();
+    let lock_target = source.lock_target();
+    let bind_method = source.bind_method(&interface.name);
+    let (can_view_bindings, can_view_args) = source.can_view_args(&interface.name);
+
+    quote! {
+        impl GlobalDispatch<#namespace_name::#interface_name::#interface_struct_name, #global_data_type>
+            for ServerState
+        {
+            fn bind(
+                _state: &mut Self,
+                handle: &wayland_server::DisplayHandle,
+                client: &wayland_server::Client,
+                resource: New<#namespace_name::#interface_name::#interface_struct_name>,
+                global_data: &#global_data_type,
+                data_init: &mut wayland_server::DataInit<'_, Self>,
+            ) {
+                use crate::ffi;
+
+                // Step 1: Create a wrapper with no inner value and register it via data_init.
+                let wrapper = Arc::new(Mutex::new(#wrapper_struct_name { inner: None }));
+                let instance = data_init.init(resource, wrapper.clone());
+                register_resource(&instance);
+                let protocol_id = Resource::id(&instance).protocol_id();
+
+                // Step 2: Create the middleware object wrapping the wayland resource.
+                let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
+
+                // Step 3: Call into C++ with client, middleware, and object_id
+                // so the C++ object is fully initialized from the start.
+                let wayland_client = Box::new(WaylandClient::new(client.clone(), handle.clone()));
+                let mut guard = #lock_target.lock().unwrap();
+                let global = (&mut *guard).pin_mut().#bind_method(wayland_client, boxed, protocol_id);
+
+                // Step 4: Store the fully-initialized C++ object in the wrapper.
+                wrapper.lock().unwrap().inner = Some(global);
+            }
+
+            fn can_view(client: Client, global_data: &#global_data_type) -> bool {
+                #can_view_bindings
+                let client_id = Box::new(WaylandClientId::new(client.id()));
+                let mut guard = #lock_target.lock().unwrap();
+                (&mut *guard).pin_mut().can_view(#can_view_args)
+            }
+        }
+    }
+}
+
+/// Generate a TokenStream that transforms a single argument for crossing the Rust/C++ boundary.
+fn transform_argument_for_cpp(arg: &WaylandArg) -> Option<TokenStream> {
+    let arg_name = format_ident!("{}", arg.name);
+
+    // Enums are provided as WlEnum, so we need to cast them to u32 so that
+    // they can be sent across the barrier.
+    if arg.enum_.is_some() {
+        return match arg.type_ {
+            WaylandArgType::Uint => Some(quote! {
+                let #arg_name = u32::from(#arg_name);
+            }),
+            _ => None,
+        };
+    }
+
+    match arg.type_ {
+        // The Wayland Rust crate will provide us with raw Wayland Rust objects.
+        // C++ expects the shared_ptr data that backs these rust objects to be sent
+        // as parameters for objects. We lock the wrapper and clone the SharedPtr
+        // to avoid holding a mutex guard across the FFI boundary.
+        WaylandArgType::Object => {
+            let arg_type = format_ident!(
+                "{}",
+                format_wayland_interface_to_cpp_class(
+                    arg.interface.as_ref().expect("Object is missing interface"),
+                )
+            );
+            let wrapper_type = format_ident!(
+                "{}Wrapper",
+                snake_to_pascal(arg.interface.as_ref().expect("Object is missing interface"))
+            );
+            if arg.allow_null.unwrap_or(false) {
+                let has_arg_name = format_has_arg_ident(&arg.name);
+                Some(quote! {
+                    let #has_arg_name = #arg_name.is_some();
+                    let #arg_name: cxx::SharedPtr<ffi::#arg_type> = match #arg_name.as_ref() {
+                        Some(o) => {
+                            let guard = o.data::<Arc<Mutex<#wrapper_type>>>().unwrap().lock().unwrap();
+                            guard.inner.clone().unwrap_or_else(|| cxx::SharedPtr::null())
+                        }
+                        None => cxx::SharedPtr::<ffi::#arg_type>::null()
+                    };
+                    let #arg_name = &#arg_name;
+                })
+            } else {
+                Some(quote! {
+                    let #arg_name: cxx::SharedPtr<ffi::#arg_type> = {
+                        let guard = #arg_name.data::<Arc<Mutex<#wrapper_type>>>().unwrap().lock().unwrap();
+                        guard.inner.clone().unwrap_or_else(|| cxx::SharedPtr::null())
+                    };
+                    let #arg_name = &#arg_name;
+                })
+            }
+        }
+        WaylandArgType::Fd => Some(quote! {
+            let #arg_name = #arg_name.as_raw_fd();
+        }),
+        WaylandArgType::String if arg.allow_null.unwrap_or(false) => {
+            let has_arg_name = format_has_arg_ident(&arg.name);
+            Some(quote! {
+                let #has_arg_name = #arg_name.is_some();
+                let #arg_name = match #arg_name {
+                    Some(o) => o,
+                    None => String::new()
+                };
+            })
+        }
+        _ => None,
+    }
+}
+
+/// Generate the body of a request handler arm.
+///
+/// Requests come in two distinct forms:
+/// 1. Regular requests that ferry their data directly into the C++ method.
+/// 2. Resource creation requests which ask the C++ interface to create
+///    the resource for them. These methods MUST call data_init.init()
+///    with the newly created C++ resource.
+fn generate_request_body(request: &WaylandRequest) -> TokenStream {
+    let snake_request_name = dash_to_snake_ident(&sanitize_identifier(request.name.as_str()));
+    let new_id_arg = request
+        .args
+        .iter()
+        .find(|arg| arg.type_ == WaylandArgType::NewId);
+
+    let arg_to_tokens = |arg: &WaylandArg| {
+        let arg_name = format_ident!("{}", arg.name.as_str());
+        if arg.allow_null.unwrap_or(false)
+            && matches!(arg.type_, WaylandArgType::Object | WaylandArgType::String)
+        {
+            let has_arg_name = format_has_arg_ident(&arg.name);
+            vec![quote! { #arg_name }, quote! { #has_arg_name }]
+        } else {
+            vec![quote! { #arg_name }]
+        }
+    };
+
+    if let Some(new_id_arg) = new_id_arg {
+        let new_id_name = format_ident!("{}", new_id_arg.name);
+        let ext_interface_struct_name = format_ident!(
+            "{}",
+            format_wayland_interface_to_rust_extension_struct(
+                new_id_arg
+                    .interface
+                    .as_ref()
+                    .expect("NewId is missing interface")
+            )
+        );
+        let child_wrapper_struct_name = format_ident!(
+            "{}Wrapper",
+            snake_to_pascal(
+                new_id_arg
+                    .interface
+                    .as_ref()
+                    .expect("NewId is missing interface")
+            )
+        );
+        let call_arg_names: Vec<TokenStream> = request
+            .args
+            .iter()
+            .filter(|arg| arg.type_ != WaylandArgType::NewId)
+            .flat_map(arg_to_tokens)
+            .collect();
+
+        quote! {
+            // Step 1: Create a wrapper with no inner value and register it via data_init.
+            let child_wrapper = Arc::new(Mutex::new(#child_wrapper_struct_name { inner: None }));
+            let instance = data_init.init(#new_id_name, child_wrapper.clone());
+            register_resource(&instance);
+            let protocol_id = Resource::id(&instance).protocol_id();
+
+            // Step 2: Create the middleware object wrapping the child resource.
+            let boxed = Box::new(crate::middleware::#ext_interface_struct_name{ wrapped: instance });
+
+            // Step 3: Call the parent's request method with the child middleware so the
+            // child C++ object is fully initialized from the start.
+            let mut guard = data.lock().unwrap();
+            let Some(inner) = guard.inner.as_mut() else {
+                return;
+            };
+            // SAFETY: The mutex guard provides the only mutable access while the call is
+            // in progress. The pinned reference is used only for this FFI call.
+            match unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names, )* boxed, protocol_id) } {
+                Ok(child) => {
+                    // Step 4: Store the fully-initialized child C++ object in the wrapper.
+                    child_wrapper.lock().unwrap().inner = Some(child);
+                }
+                Err(err) => {
+                    handle_dispatch_error(resource, err.what());
+                }
+            }
+        }
+    } else {
+        let call_arg_names: Vec<TokenStream> =
+            request.args.iter().flat_map(arg_to_tokens).collect();
+
+        quote! {
+            let mut guard = data.lock().unwrap();
+            let Some(inner) = guard.inner.as_mut() else {
+                return;
+            };
+            // SAFETY: The mutex guard provides the only mutable access while the call is
+            // in progress. The pinned reference is used only for this FFI call.
+            if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
+                handle_dispatch_error(resource, err.what());
+            }
+        }
+    }
+}
+
+/// Generate request handler arms for an interface's requests.
+fn generate_request_handler_arms(
+    interface: &WaylandInterface,
+    namespace_name: &TokenStream,
+    interface_name: &Ident,
+) -> Vec<TokenStream> {
+    interface
+        .items
+        .iter()
+        .filter_map(|item| {
+            let InterfaceItem::Request(request) = item else {
+                return None;
+            };
+
+            let request_name = format_ident!("{}", snake_to_pascal(&request.name));
+            let arg_names: Vec<TokenStream> = request
+                .args
+                .iter()
+                .map(|arg| {
+                    let arg_name = format_ident!("{}", arg.name.as_str());
+                    quote! { #arg_name }
+                })
+                .collect();
+
+            let transformed_args: Vec<TokenStream> = request
+                .args
+                .iter()
+                .filter_map(transform_argument_for_cpp)
+                .collect();
+
+            let body = generate_request_body(request);
+
+            Some(quote! {
+                #namespace_name::#interface_name::Request::#request_name { #( #arg_names ),* } => {
+                    #( #transformed_args )*
+                    #body
+                }
+            })
+        })
+        .collect()
+}
+
+/// Generate a Dispatch implementation for a single interface.
+fn generate_dispatch_impl(
+    interface: &WaylandInterface,
+    namespace_name: &TokenStream,
+    is_wayland_protocol: bool,
+) -> TokenStream {
+    let interface_name = dash_to_snake_ident(&interface.name);
+
+    if interface_name == "wl_display" || interface_name == "wl_registry" {
+        // wl_display and wl_registry are handled specially in wayland_server crate via the 'Display' struct.
+        return quote! {};
+    }
+
+    let protocol_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let ext_struct_name =
+        format_ident!("{}", format_wayland_interface_to_cpp_class(&interface.name));
+    let wrapper_struct_name = format_ident!("{}Wrapper", snake_to_pascal(&interface.name));
+
+    let mut request_handler_arms =
+        generate_request_handler_arms(interface, namespace_name, &interface_name);
+
+    // If the interface comes from wayland, we need to generate an empty arm because the
+    // enum is marked as non-exhaustive.
+    if is_wayland_protocol {
+        request_handler_arms.push(quote! {
+            _ => {}
+        });
+    }
+
+    // This snippet checks if any request on the interface creates a new Wayland object.
+    // If none do, then we can add the underscore in front of _data_init to show that it is
+    // not used.
+    let interface_creates_wayland_objects = interface.items.iter().any(|item| match item {
+        InterfaceItem::Request(request) => request
+            .args
+            .iter()
+            .any(|arg| arg.type_ == WaylandArgType::NewId),
+        _ => false,
+    });
+
+    let data_init_name = format_ident!(
+        "{}",
+        if interface_creates_wayland_objects {
+            "data_init"
+        } else {
+            "_data_init"
+        }
+    );
+
+    // This snippet checks if the interface has any requests at all. If not, then data
+    // will be prefixed with an underscore.
+    let interface_has_requests = interface.items.iter().any(|item| match item {
+        InterfaceItem::Request(_) => true,
+        _ => false,
+    });
+
+    let data_name = format_ident!(
+        "{}",
+        if interface_has_requests {
+            "data"
+        } else {
+            "_data"
+        }
+    );
+
+    let resource_name = format_ident!(
+        "{}",
+        if interface_has_requests {
+            "resource"
+        } else {
+            "_resource"
+        }
+    );
+
+    quote! {
+        unsafe impl Send for ffi::#ext_struct_name {}
+        unsafe impl Sync for ffi::#ext_struct_name {}
+
+        struct #wrapper_struct_name {
+            inner: Option<cxx::SharedPtr<ffi::#ext_struct_name>>,
+        }
+
+        impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<#wrapper_struct_name>>>
+            for ServerState
+        {
+            fn request(
+                _state: &mut Self,
+                _client: &Client,
+                #resource_name: &#namespace_name::#interface_name::#protocol_struct_name,
+                request: <#namespace_name::#interface_name::#protocol_struct_name as wayland_server::Resource>::Request,
+                #data_name: &Arc<Mutex<#wrapper_struct_name>>,
+                _dhandle: &DisplayHandle,
+                #data_init_name: &mut DataInit<'_, Self>,
+            ) {
+                match request {
+                    #(#request_handler_arms),*
+                }
+            }
+
+            fn destroyed(
+                _state: &mut Self,
+                _client: ClientId,
+                resource: &#namespace_name::#interface_name::#protocol_struct_name,
+                data: &Arc<Mutex<#wrapper_struct_name>>,
+            ) {
+                unregister_resource(resource);
+
+                // The C++ object holds the middleware, whose resource handle holds
+                // `data`, whose `inner` holds the C++ object. Break the cycle here
+                // or the whole chain (and the client's session) leaks.
+                //
+                // This bidirectionality is necessary so that Rust can forward client
+                // requests to C++ and C++ can send server events to Rust.
+                let taken_inner = {
+                    let mut guard = data.lock().unwrap_or_else(|e| e.into_inner());
+                    guard.inner.take()
+                };
+                drop(taken_inner);
+            }
+        }
+    }
+}
+
+/// Generate all dispatch implementations (both GlobalDispatch and Dispatch) for a single protocol.
+fn generate_dispatch_implementations(protocol: &WaylandProtocol) -> TokenStream {
+    let namespace_name = generate_namespace(protocol);
+
+    let global_interfaces: Vec<&WaylandInterface> = protocol
+        .interfaces
+        .iter()
+        .filter(|interface| interface.is_global)
+        // `wl_output` gets its `GlobalDispatch` from `generate_output_dynamic_global`
+        // (per-monitor, `OutputGlobalData`), so it must not also get a static
+        // `SharedFactory` implementation here.
+        .filter(|interface| interface.name != "wl_output")
+        .collect();
+
+    let global_dispatch_impls = global_interfaces.iter().map(|interface| {
+        generate_global_dispatch_impl(interface, &namespace_name, GlobalBindSource::SharedFactory)
+    });
+
+    let is_wayland_protocol = protocol.name == "wayland";
+    let dispatch_impls = protocol
+        .interfaces
+        .iter()
+        .map(|interface| generate_dispatch_impl(interface, &namespace_name, is_wayland_protocol));
+
+    quote! {
+        #(#global_dispatch_impls)*
+        #(#dispatch_impls)*
+    }
+}

@@ -25,6 +25,7 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <cstring>
 #include <sstream>
 
 #include <xf86drm.h>
@@ -105,7 +106,7 @@ std::future<std::unique_ptr<mir::Device>> mir::MinimalConsoleServices::acquire_d
 
         while (uevent.getline(line_buffer, sizeof(line_buffer)))
         {
-            if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
+            if (std::strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
             {
                 return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
             }

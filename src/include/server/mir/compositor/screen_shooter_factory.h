@@ -26,6 +26,8 @@ class Executor;
 
 namespace compositor
 {
+class Scene;
+
 class ScreenShooterFactory
 {
 public:
@@ -36,6 +38,12 @@ public:
     /// \param executor responsible for queuing the screenshot request
     /// \return a new screen shooter
     virtual auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> = 0;
+
+    /// Creates a new screen shooter for a particular scene
+    /// \param executor responsible for queuing the screenshot request
+    /// \param scene that the screen shooter will capture
+    /// \return a new screen shooter
+    virtual auto create_for_scene(Executor& executor, std::shared_ptr<Scene> const& scene) -> std::unique_ptr<ScreenShooter> = 0;
 };
 }
 }

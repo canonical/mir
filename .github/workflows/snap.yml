@@ -43,6 +43,10 @@ jobs:
     needs: [arches]
     if: needs.arches.outputs.should-run == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      amd64: ${{ steps.result.outputs.amd64 }}
+      armhf: ${{ steps.result.outputs.armhf }}
+      arm64: ${{ steps.result.outputs.arm64 }}
     permissions:
       contents: read
 
@@ -65,21 +69,59 @@ jobs:
         git config --global --add safe.directory "$(pwd)"
         sed -i "s@version: testing@version: $(git describe)@" snap/snapcraft.yaml
 
+    - name: Strip git tags to speed up Launchpad remote build indexing
+      if: matrix.architecture != 'amd64'
+      run: git tag -l | xargs -r git tag -d
+
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
+      uses: canonical/actions/build-snap@78e8dd5f693653767f2c60c4a6a421a1ebed35af # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
         publish: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
-        publish-channel: 24/edge/pr${{ github.event.number }}
+        publish-channel: 26/edge/pr${{ github.event.number }}
+
+    - id: result
+      if: always()
+      name: Record architecture result
+      env:
+        MATRIX_ARCHITECTURE: ${{ matrix.architecture }}
+        JOB_STATUS: ${{ job.status }}
+      run: |
+        echo "${MATRIX_ARCHITECTURE}=${JOB_STATUS}" >> "$GITHUB_OUTPUT"
+
+  successful-arches:
+    needs: [arches, mir-libs]
+    if: ${{ !cancelled() && needs.arches.outputs.should-run == 'true' }}
+    runs-on: ubuntu-latest
+    outputs:
+      arches: ${{ steps.collect.outputs.arches }}
+
+    steps:
+    - id: collect
+      name: Collect successful architectures
+      env:
+        RESULTS: ${{ toJSON(needs.mir-libs.outputs) }}
+      run: |
+        jq --compact-output --null-input \
+          --argjson results "${RESULTS}" \
+          '$results | to_entries | map(select(.value == "success") | .key)' \
+          | awk '{ print "arches=" $0 }' >> "$GITHUB_OUTPUT"
 
   snap:
     # Only run if we have access to secrets.
-    if: ${{ github.event_name == 'pull_request' && github.repository == github.event.pull_request.head.repo.full_name }}
+    if: >-
+      ${{
+        !cancelled()
+        && github.event_name == 'pull_request'
+        && github.repository == github.event.pull_request.head.repo.full_name
+        && needs.successful-arches.result == 'success'
+        && needs.successful-arches.outputs.arches != '[]'
+      }}
 
-    needs: [arches, mir-libs]
+    needs: [successful-arches]
 
     runs-on: ubuntu-latest
 
@@ -97,14 +139,14 @@ jobs:
         - canonical/ubuntu-frame
         - Miriway/Miriway
         snapcraft-channel: [stable]
-        architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
+        architecture: ${{ fromJSON(needs.successful-arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
-          track: 24
+          track: 26
         - snap: canonical/confined-shell-wip
           track: latest
         - snap: canonical/ubuntu-frame
-          track: 24
+          track: 26
         - snap: Miriway/Miriway
           track: latest
           review-opts: --allow-classic
@@ -114,7 +156,7 @@ jobs:
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-libs-build
+        ref: 26/mir-libs-build
         fetch-depth: 0  # needed for version determination
         persist-credentials: false
 
@@ -123,7 +165,7 @@ jobs:
         sed -i 's@- mir-libs.*$@\0/pr${{ github.event.number }}@' snap/snapcraft.yaml
 
     - name: Build and publish the snap
-      uses: canonical/actions/build-snap@bd56f0f0934af9edbbd49378645727d7ef7a4571 # release @ 2025.06.05
+      uses: canonical/actions/build-snap@78e8dd5f693653767f2c60c4a6a421a1ebed35af # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
         review-opts: ${{ matrix.review-opts }}

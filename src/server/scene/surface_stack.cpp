@@ -16,6 +16,7 @@
 
 #include "surface_stack.h"
 #include "rendering_tracker.h"
+#include "surface_scene_element.h"
 #include <mir/scene/surface.h>
 #include <mir/scene/null_surface_observer.h>
 #include <mir/scene/scene_report.h>
@@ -42,43 +43,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-
-class SurfaceSceneElement : public mc::SceneElement
-{
-public:
-    SurfaceSceneElement(
-        std::string name,
-        std::shared_ptr<mg::Renderable> const& renderable,
-        std::shared_ptr<ms::RenderingTracker> const& tracker,
-        mc::CompositorID id)
-        : renderable_{renderable},
-          tracker{tracker},
-          cid{id},
-          surface_name(name)
-    {
-    }
-
-    std::shared_ptr<mg::Renderable> renderable() const override
-    {
-        return renderable_;
-    }
-
-    void rendered() override
-    {
-        tracker->rendered_in(cid);
-    }
-
-    void occluded() override
-    {
-        tracker->occluded_in(cid);
-    }
-
-private:
-    std::shared_ptr<mg::Renderable> const renderable_;
-    std::shared_ptr<ms::RenderingTracker> const tracker;
-    mc::CompositorID cid;
-    std::string const surface_name;
-};
 
 //note: something different than a 2D/HWC overlay
 class OverlaySceneElement : public mc::SceneElement

@@ -28,10 +28,7 @@
 
 namespace mir
 {
-namespace input
-{
-class Keymap;
-}
+namespace input { class Keymap; }
 }
 
 struct MirKeyboardEvent : MirInputEvent

@@ -157,7 +157,7 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
 char const* mir_keyboard_event_key_text(MirKeyboardEvent const* event);
 
 /**
- * Retrieve the modifier keys pressed when the key action occured.
+ * Retrieve the modifier keys pressed when the key action occurred.
  *
  *   \param [in] event The key event
  *   \return           The modifier mask
@@ -173,7 +173,7 @@ MirInputEventModifiers mir_keyboard_event_modifiers(MirKeyboardEvent const* even
 MirInputEvent const* mir_keyboard_event_input_event(MirKeyboardEvent const* event);
 
 /**
- * Retrieve the modifier keys pressed when the touch action occured.
+ * Retrieve the modifier keys pressed when the touch action occurred.
  *
  *   \param [in] event The key event
  *   \return           The modifier mask
@@ -199,7 +199,7 @@ unsigned int mir_touch_event_point_count(MirTouchEvent const* event);
 MirTouchId mir_touch_event_id(MirTouchEvent const* event, unsigned int touch_index);
 
 /**
- * Retrieve the action which occured for a touch at given index.
+ * Retrieve the action which occurred for a touch at given index.
  *
  *  \param [in] event       The touch event
  *  \param [in] touch_index The touch index. Must be less than (touch_count - 1).
@@ -215,7 +215,6 @@ MirTouchAction mir_touch_event_action(MirTouchEvent const* event, unsigned int t
  *  \return                 Tooltype used for the touch at index
  */
 MirTouchTooltype mir_touch_event_tooltype(MirTouchEvent const* event, unsigned int touch_index);
-
 
 /**
  * Retrieve the axis value for a given axis on an indexed touch.
@@ -235,9 +234,8 @@ float mir_touch_event_axis_value(MirTouchEvent const* event, unsigned int touch_
  */
 MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
 
-
 /**
- * Retrieve the modifier keys pressed when the pointer action occured.
+ * Retrieve the modifier keys pressed when the pointer action occurred.
  *
  *   \param [in] event The pointer event
  *   \return           The modifier mask
@@ -245,7 +243,7 @@ MirInputEvent const* mir_touch_event_input_event(MirTouchEvent const* event);
 MirInputEventModifiers mir_pointer_event_modifiers(MirPointerEvent const* event);
 
 /**
- * Retrieve the action which occured to generate a given pointer event.
+ * Retrieve the action which occurred to generate a given pointer event.
  *
  *  \param [in] event       The pointer event
  *  \return                 Action performed by the pointer
@@ -260,8 +258,7 @@ MirPointerAction mir_pointer_event_action(MirPointerEvent const* event);
  *
  * \return                   Whether the given button is depressed
  */
-bool mir_pointer_event_button_state(MirPointerEvent const* event,
-    MirPointerButton button);
+bool mir_pointer_event_button_state(MirPointerEvent const* event, MirPointerButton button);
 
 /**
  * Retreive the pointer button state as a masked set of values.
@@ -279,8 +276,7 @@ MirPointerButtons mir_pointer_event_buttons(MirPointerEvent const* event);
  *  \param [in] axis        The axis to retreive a value from
  *  \return                 The value of the given axis
  */
-float mir_pointer_event_axis_value(MirPointerEvent const* event,
-    MirPointerAxis axis);
+float mir_pointer_event_axis_value(MirPointerEvent const* event, MirPointerAxis axis);
 
 /**
  * Retrieve the corresponding input event.

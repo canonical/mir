@@ -23,7 +23,6 @@
 #include <system_error>
 #include <xf86drm.h>
 #include <poll.h>
-#include <cstring>
 #include <fcntl.h>
 #include <algorithm>
 

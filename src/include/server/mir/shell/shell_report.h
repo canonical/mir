@@ -26,7 +26,7 @@
 
 namespace mir
 {
-namespace scene { class PromptSession; class Session; class Surface; }
+namespace scene { class Session; class Surface; }
 
 namespace shell
 {
@@ -59,17 +59,6 @@ public:
     virtual void destroying_surface(
         scene::Session const& session,
         scene::Surface const& surface) = 0;
-
-    virtual void started_prompt_session(
-        scene::PromptSession const& prompt_session,
-        scene::Session const& session) = 0;
-
-    virtual void added_prompt_provider(
-        scene::PromptSession const& prompt_session,
-        scene::Session const& session) = 0;
-
-    virtual void stopping_prompt_session(
-        scene::PromptSession const& prompt_session) = 0;
 
     virtual void adding_display(geometry::Rectangle const& area) = 0;
 

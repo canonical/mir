@@ -52,23 +52,6 @@ void mrn::ShellReport::destroying_surface(
 {
 }
 
-void mrn::ShellReport::started_prompt_session(
-    scene::PromptSession const& /*prompt_session*/,
-    scene::Session const& /*session*/)
-{
-}
-
-void mrn::ShellReport::added_prompt_provider(
-    scene::PromptSession const& /*prompt_session*/,
-    scene::Session const& /*session*/)
-{
-}
-
-void mrn::ShellReport::stopping_prompt_session(
-    scene::PromptSession const& /*prompt_session*/)
-{
-}
-
 void mrn::ShellReport::adding_display(geometry::Rectangle const& /*area*/)
 {
 }

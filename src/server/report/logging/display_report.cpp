@@ -19,7 +19,6 @@
 #include <mir/logging/logger.h>
 #include <EGL/eglext.h>
 #include <sstream>
-#include <cstring>
 #include <cstdlib>
 
 namespace ml=mir::logging;

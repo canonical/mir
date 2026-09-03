@@ -19,6 +19,7 @@
 
 #include <boost/program_options/parsers.hpp>
 
+#include <cstdlib>
 #include <fstream>
 
 namespace mo = mir::options;
@@ -71,12 +72,12 @@ void mo::ProgramOption::parse_file(
 {
     std::string config_roots;
 
-    if (auto config_home = getenv("XDG_CONFIG_HOME"))
+    if (auto config_home = std::getenv("XDG_CONFIG_HOME"))
         (config_roots = config_home) += ":";
-    else if (auto home = getenv("HOME"))
+    else if (auto home = std::getenv("HOME"))
         (config_roots = home) += "/.config:";
 
-    if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+    if (auto config_dirs = std::getenv("XDG_CONFIG_DIRS"))
         config_roots += config_dirs;
     else
         config_roots += "/etc/xdg";

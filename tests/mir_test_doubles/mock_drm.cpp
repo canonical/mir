@@ -21,6 +21,8 @@
 #include <mir/geometry/size.h>
 #include <gtest/gtest.h>
 
+#include <cstdlib>
+#include <cstring>
 #include <stdexcept>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -237,7 +239,7 @@ mtd::MockDRM::MockDRM()
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
-            if (!strncmp(path, drm_prefix, strlen_c(drm_prefix)))
+            if (!std::strncmp(path, drm_prefix, strlen_c(drm_prefix)))
             {
                 // I don't think we need to be able to distinguish based on mode. ppc64el (at least) *does*
                 // call the 3-parameter open()
@@ -275,69 +277,62 @@ mtd::MockDRM::MockDRM()
         })}
 {
     using namespace testing;
-    assert(global_mock == NULL && "Only one mock object per process is allowed");
+    assert(global_mock == nullptr && "Only one mock object per process is allowed");
 
     global_mock = this;
 
     ON_CALL(*this, open(_,_))
         .WillByDefault(
             WithArg<0>(
-                Invoke(
                     [this](char const* device_path)
                     {
                         auto fd = fake_drms[device_path].fd();
                         fd_to_drm.insert({fd, fake_drms[device_path]});
                         return fd;
-                    })));
+                    }));
 
     ON_CALL(*this, drmOpen(_,_))
         .WillByDefault(
-            InvokeWithoutArgs(
                 [this]()
                 {
                     auto fd = fake_drms["/dev/dri/card0"].fd();
                     fd_to_drm.insert({fd, fake_drms["/dev/dri/card0"]});
                     return fd;
-                }));
+                });
 
     ON_CALL(*this, drmModeGetResources(_))
         .WillByDefault(
-            Invoke(
                 [this](int fd)
                 {
                     return fd_to_drm.at(fd).resources_ptr();
-                }));
+                });
 
     ON_CALL(*this, drmModeGetCrtc(_, _))
         .WillByDefault(
-            Invoke(
                 [this](int fd, uint32_t crtc_id)
                 {
                     return fd_to_drm.at(fd).find_crtc(crtc_id);
-                }));
+                });
 
     ON_CALL(*this, drmModeGetEncoder(_, _))
         .WillByDefault(
-            Invoke(
                 [this](int fd, uint32_t encoder_id)
                 {
                     return fd_to_drm.at(fd).find_encoder(encoder_id);
-                }));
+                });
 
     ON_CALL(*this, drmModeGetConnector(_, _))
         .WillByDefault(
-            Invoke(
                 [this](int fd, uint32_t connector_id)
                 {
                     return fd_to_drm.at(fd).find_connector(connector_id);
-                }));
+                });
 
     ON_CALL(*this, drmModeObjectGetProperties(_, _, _))
         .WillByDefault(Return(&empty_object_props));
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
         .WillByDefault(
-            Invoke(
                 [this](auto fd, auto version)
                 {
                     if (version->drm_di_major != 1 || version->drm_di_minor != 4)
@@ -349,11 +344,10 @@ mtd::MockDRM::MockDRM()
 
                     fd_to_drm.at(fd).drm_setversion_called = true;
                     return 0;
-                }));
+                });
 
     ON_CALL(*this, drmGetBusid(_))
         .WillByDefault(
-            Invoke(
                 [this](auto fd) -> char*
                 {
                     if (!fd_to_drm.at(fd).drm_setversion_called)
@@ -361,13 +355,13 @@ mtd::MockDRM::MockDRM()
                         return nullptr;
                     }
                     return static_cast<char*>(malloc(10));
-                }));
+                });
 
     ON_CALL(*this, drmFreeBusid(_))
-        .WillByDefault(WithArg<0>(Invoke([&](const char* busid) { free(const_cast<char*>(busid)); })));
+        .WillByDefault(WithArg<0>([&](const char* busid) { std::free(const_cast<char*>(busid)); }));
 
     ON_CALL(*this, drmGetPrimaryDeviceNameFromFd(_))
-        .WillByDefault(InvokeWithoutArgs([]() { return strdup("/dev/dri/card0"); }));
+        .WillByDefault([]() { return strdup("/dev/dri/card0"); });
 
     static drmVersion const version{
         1,
@@ -390,24 +384,24 @@ mtd::MockDRM::MockDRM()
 
     ON_CALL(*this, mmap(_, _, _, _, _, _))
         .WillByDefault(
-            WithArg<1>(Invoke(
+            WithArg<1>(
                 [this](auto size) -> void*
                 {
                     auto allocation = std::make_unique<char[]>(size);
                     void* const address = allocation.get();
                     mmapings.insert(std::make_pair(std::move(allocation), size));
                     return address;
-                })));
+                }));
 
     ON_CALL(*this, munmap(_, _))
         .WillByDefault(
-            WithArg<0>(Invoke(
+            WithArg<0>(
                 [this](void* addr) -> int
                 {
                     auto iter = mmapings.find(addr);
                     mmapings.erase(iter);
                     return 0;
-                })));
+                }));
 
     ON_CALL(*this, drmGetCap(_, DRM_CAP_DUMB_BUFFER, _))
         .WillByDefault(

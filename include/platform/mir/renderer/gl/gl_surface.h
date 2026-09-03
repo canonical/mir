@@ -46,9 +46,9 @@ public:
 
     enum class Layout
     {
-        TopRowFirst,            //< First row has y-coördinate 0, y increases with each row.
-        BottomRowFirst,         //< First row has y-coördinate $height, y decreases with each row
-        GL = BottomRowFirst     //< GL texture layout is in decreasing-y order.
+        TopRowFirst,        //< First row has y-coördinate 0, y increases with each row.
+        BottomRowFirst,     //< First row has y-coördinate $height, y decreases with each row
+        GL = BottomRowFirst //< GL texture layout is in decreasing-y order.
     };
     virtual auto layout() const -> Layout = 0;
 };

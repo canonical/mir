@@ -16,6 +16,7 @@
 
 #include <mir/input/mir_pointer_config.h>
 #include <ostream>
+#include <tuple>
 
 struct MirPointerConfig::Implementation
 {
@@ -126,15 +127,10 @@ void MirPointerConfig::vertical_scroll_scale(double scale)
 
 bool MirPointerConfig::operator==(MirPointerConfig const& rhs) const
 {
-    return handedness() == rhs.handedness() && acceleration() == rhs.acceleration() &&
-           cursor_acceleration_bias() == rhs.cursor_acceleration_bias() &&
-           horizontal_scroll_scale() == rhs.horizontal_scroll_scale() &&
-           vertical_scroll_scale() == rhs.vertical_scroll_scale();
-}
-
-bool MirPointerConfig::operator!=(MirPointerConfig const& rhs) const
-{
-    return !(*this == rhs);
+    return std::make_tuple(handedness(), acceleration(), cursor_acceleration_bias(),
+                           horizontal_scroll_scale(), vertical_scroll_scale()) ==
+           std::make_tuple(rhs.handedness(), rhs.acceleration(), rhs.cursor_acceleration_bias(),
+                           rhs.horizontal_scroll_scale(), rhs.vertical_scroll_scale());
 }
 
 std::ostream& operator<<(std::ostream& out, MirPointerConfig const& rhs)

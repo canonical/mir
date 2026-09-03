@@ -20,7 +20,8 @@
 #include <xkbcommon/xkbcommon.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**
@@ -73,7 +74,7 @@ int mir_keyboard_event_scan_code(MirKeyboardEvent const* event);
 char const* mir_keyboard_event_key_text(MirKeyboardEvent const* event);
 
 /**
- * Retrieve the modifier keys pressed when the key action occured.
+ * Retrieve the modifier keys pressed when the key action occurred.
  *
  *   \param [in] event The key event
  *   \return           The modifier mask

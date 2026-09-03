@@ -31,6 +31,7 @@ public:
     // Remove a trap for the unwary!
     TemporaryEnvironmentValue(TemporaryEnvironmentValue const&) = delete;
     auto operator=(TemporaryEnvironmentValue const&) -> TemporaryEnvironmentValue& = delete;
+
 private:
     static int const overwrite = 1;
     std::string const name;

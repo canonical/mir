@@ -33,6 +33,7 @@ public:
     // codepaths need to restore EGL state.
     CacheEglState(CacheEglState&& from);
     auto operator=(CacheEglState&& rhs) -> CacheEglState&;
+
 private:
     CacheEglState(CacheEglState const&) = delete;
     auto operator=(CacheEglState const&) -> CacheEglState& = delete;

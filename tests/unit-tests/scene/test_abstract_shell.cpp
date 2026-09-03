@@ -34,7 +34,6 @@
 #include <mir/test/doubles/mock_surface.h>
 #include <mir/test/doubles/stub_surface.h>
 #include <mir/test/doubles/null_event_sink.h>
-#include <mir/test/doubles/null_prompt_session_manager.h>
 #include <mir/test/doubles/stub_input_targeter.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_display.h>
@@ -162,7 +161,6 @@ struct AbstractShell : Test
         mt::fake_shared(input_targeter),
         mt::fake_shared(surface_stack),
         mt::fake_shared(session_manager),
-        std::make_shared<mtd::NullPromptSessionManager>(),
         std::make_shared<mir::report::null::ShellReport>(),
         [this](msh::FocusController*) { return wm = std::make_shared<NiceMockWindowManager>(); },
         mt::fake_shared(seat),
@@ -177,13 +175,13 @@ struct AbstractShell : Test
         ON_CALL(surface_factory, create_surface(_, _, _))
             .WillByDefault(Return(mt::fake_shared(mock_surface)));
         ON_CALL(seat, create_device_state())
-            .WillByDefault(Invoke(
+            .WillByDefault(
                     []()
                     {
                         return mev::make_input_configure_event(
                             0ns, 0, mir_input_event_modifier_none, 0.0f, 0.0f,
                             std::vector<mev::InputDeviceState>());
-                    }));
+                    });
     }
 
     auto create_surface(ms::Surface& surface) -> std::shared_ptr<ms::Surface>
@@ -293,11 +291,11 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_set_create_paramet
 
     EXPECT_CALL(surface_stack, add_surface(_, mi::InputReceptionMode::receives_all_input));
 
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(
         [&](std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const&,
             std::function<std::shared_ptr<ms::Surface>(std::shared_ptr<ms::Session> const& session, msh::SurfaceSpecification const&)> const& build)
-            { return build(session, params); }));
+            { return build(session, params); });
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
@@ -312,7 +310,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(1);
 
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(
         [&](std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& params,
             std::function<std::shared_ptr<ms::Surface>(
@@ -322,7 +320,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_enable_ssd)
                 auto modified_params = params;
                 modified_params.server_side_decorated = true;
                 return build(session, modified_params);
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
@@ -338,7 +336,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
     EXPECT_CALL(decoration_manager, decorate(_))
         .Times(0);
 
-    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(Invoke(
+    EXPECT_CALL(*wm, add_surface(session, params, _)).WillOnce(
         [&](std::shared_ptr<ms::Session> const& session,
             msh::SurfaceSpecification const& params,
             std::function<std::shared_ptr<ms::Surface>(
@@ -348,7 +346,7 @@ TEST_F(AbstractShell, create_surface_allows_window_manager_to_disable_ssd)
                 auto modified_params = params;
                 modified_params.server_side_decorated = false;
                 return build(session, modified_params);
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 }
@@ -381,24 +379,6 @@ TEST_F(AbstractShell, destroy_surface_removes_surface_from_window_manager)
     shell.destroy_surface(session, surface);
 }
 
-TEST_F(AbstractShell, add_display_adds_display_to_window_manager)
-{
-    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
-
-    EXPECT_CALL(*wm, add_display(arbitrary_area));
-
-    shell.add_display(arbitrary_area);
-}
-
-TEST_F(AbstractShell, remove_display_adds_display_to_window_manager)
-{
-    geom::Rectangle const arbitrary_area{{0,0}, {__LINE__,__LINE__}};
-
-    EXPECT_CALL(*wm, remove_display(arbitrary_area));
-
-    shell.remove_display(arbitrary_area);
-}
-
 TEST_F(AbstractShell, key_input_events_are_handled_by_window_manager)
 {
     MirKeyboardAction const action{mir_keyboard_action_down};
@@ -427,7 +407,7 @@ TEST_F(AbstractShell, touch_input_events_are_handled_by_window_manager)
     auto const event = mir::events::make_touch_event(
         mir_input_event_type_touch,
         event_timestamp,
-        modifiers);
+        modifiers, {});
 
     EXPECT_CALL(*wm, handle_touch_event(_))
         .WillOnce(Return(false))
@@ -658,8 +638,8 @@ TEST_F(AbstractShell, size_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.width, Eq(mir::optional_value<geom::Width>(window_size.width)));
-    ASSERT_THAT(wm_modifications.height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+    ASSERT_THAT(wm_modifications.width, Eq(std::optional<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.height, Eq(std::optional<geom::Height>(window_size.height)));
 }
 
 TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
@@ -689,8 +669,8 @@ TEST_F(AbstractShell, max_size_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.max_width, Eq(mir::optional_value<geom::Width>(window_size.width)));
-    ASSERT_THAT(wm_modifications.max_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+    ASSERT_THAT(wm_modifications.max_width, Eq(std::optional<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.max_height, Eq(std::optional<geom::Height>(window_size.height)));
 }
 
 TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
@@ -720,8 +700,8 @@ TEST_F(AbstractShell, min_size_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.min_width, Eq(mir::optional_value<geom::Width>(window_size.width)));
-    ASSERT_THAT(wm_modifications.min_height, Eq(mir::optional_value<geom::Height>(window_size.height)));
+    ASSERT_THAT(wm_modifications.min_width, Eq(std::optional<geom::Width>(window_size.width)));
+    ASSERT_THAT(wm_modifications.min_height, Eq(std::optional<geom::Height>(window_size.height)));
 }
 
 TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
@@ -751,7 +731,7 @@ TEST_F(AbstractShell, aux_rect_gets_adjusted_for_windows_with_margins)
 
     shell.modify_surface(session, surface, modifications);
 
-    ASSERT_THAT(wm_modifications.aux_rect, Eq(mir::optional_value<geom::Rectangle>(adjusted_aux_rect)));
+    ASSERT_THAT(wm_modifications.aux_rect, Eq(std::optional<geom::Rectangle>(adjusted_aux_rect)));
 }
 
 // lp:1625401
@@ -1143,29 +1123,29 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     EXPECT_CALL(decoration_manager, compute_size_with_decorations(_, _, _))
 
         .WillRepeatedly(
-            Invoke([padding](geom::Size const& content, MirWindowType, MirWindowState)
-                   { return geom::Size{content.width + padding.width, content.height + padding.height}; }));
+            [padding](geom::Size const& content, MirWindowType, MirWindowState)
+                   { return geom::Size{content.width + padding.width, content.height + padding.height}; });
 
     msh::SurfaceSpecification captured_spec;
     EXPECT_CALL(*wm, add_surface(session, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](auto, auto spec, auto)
             {
                 captured_spec = spec;
                 return std::make_shared<NiceMock<mtd::MockSurface>>();
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 
     if (p.set_width)
         EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val} + padding.width));
     else
-        EXPECT_FALSE(captured_spec.width.is_set());
+        EXPECT_FALSE(captured_spec.width.has_value());
 
     if (p.set_height)
         EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val} + padding.height));
     else
-        EXPECT_FALSE(captured_spec.height.is_set());
+        EXPECT_FALSE(captured_spec.height.has_value());
 
     if (p.set_min_size)
     {
@@ -1174,8 +1154,8 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     }
     else
     {
-        EXPECT_FALSE(captured_spec.min_width.is_set());
-        EXPECT_FALSE(captured_spec.min_height.is_set());
+        EXPECT_FALSE(captured_spec.min_width.has_value());
+        EXPECT_FALSE(captured_spec.min_height.has_value());
     }
 
     if (p.set_max_size)
@@ -1185,8 +1165,8 @@ TEST_P(SsdSizeConstraintsTest, adjusts_size_constraints_when_ssd_enabled)
     }
     else
     {
-        EXPECT_FALSE(captured_spec.max_width.is_set());
-        EXPECT_FALSE(captured_spec.max_height.is_set());
+        EXPECT_FALSE(captured_spec.max_width.has_value());
+        EXPECT_FALSE(captured_spec.max_height.has_value());
     }
 
 }
@@ -1229,24 +1209,24 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
 
     msh::SurfaceSpecification captured_spec;
     EXPECT_CALL(*wm, add_surface(session, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](auto, auto spec, auto)
             {
                 captured_spec = spec;
                 return std::make_shared<NiceMock<mtd::MockSurface>>();
-            }));
+            });
 
     shell.create_surface(session, params, nullptr, nullptr);
 
     if (p.set_width)
         EXPECT_THAT(captured_spec.width.value(), Eq(geom::Width{w_val}));
     else
-        EXPECT_FALSE(captured_spec.width.is_set());
+        EXPECT_FALSE(captured_spec.width.has_value());
 
     if (p.set_height)
         EXPECT_THAT(captured_spec.height.value(), Eq(geom::Height{h_val}));
     else
-        EXPECT_FALSE(captured_spec.height.is_set());
+        EXPECT_FALSE(captured_spec.height.has_value());
 
     if (p.set_min_size)
     {
@@ -1255,8 +1235,8 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
     }
     else
     {
-        EXPECT_FALSE(captured_spec.min_width.is_set());
-        EXPECT_FALSE(captured_spec.min_height.is_set());
+        EXPECT_FALSE(captured_spec.min_width.has_value());
+        EXPECT_FALSE(captured_spec.min_height.has_value());
     }
 
     if (p.set_max_size)
@@ -1266,8 +1246,8 @@ TEST_P(SsdSizeConstraintsTest, does_not_adjust_size_constraints_when_ssd_disable
     }
     else
     {
-        EXPECT_FALSE(captured_spec.max_width.is_set());
-        EXPECT_FALSE(captured_spec.max_height.is_set());
+        EXPECT_FALSE(captured_spec.max_width.has_value());
+        EXPECT_FALSE(captured_spec.max_height.has_value());
     }
 }
 

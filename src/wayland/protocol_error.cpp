@@ -19,6 +19,8 @@
 
 #include <wayland-server-core.h>
 
+#include <cstdio>
+
 namespace mw = mir::wayland;
 
 mw::ProtocolError::ProtocolError(
@@ -34,7 +36,7 @@ mw::ProtocolError::ProtocolError(
 
     va_start(va, fmt);
     auto const max = sizeof(message) - 1;
-    auto const len = vsnprintf(message, max, fmt, va);
+    auto const len = std::vsnprintf(message, max, fmt, va);
     va_end(va);
 
     error_message = std::string(std::begin(message), std::begin(message) + len);

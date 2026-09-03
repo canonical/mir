@@ -67,6 +67,7 @@ struct StubSurface : scene::Surface
     std::shared_ptr<graphics::CursorImage> cursor_image() const override { return nullptr; }
     void request_client_surface_close() override {}
     std::shared_ptr<Surface> parent() const override { return nullptr; }
+    void set_parent(std::weak_ptr<Surface> const&) override {}
     void register_interest(std::weak_ptr<scene::SurfaceObserver> const&) override {}
     void register_interest(std::weak_ptr<scene::SurfaceObserver> const&, Executor&) override {}
     void register_early_observer(std::weak_ptr<scene::SurfaceObserver> const&, Executor&) override {}

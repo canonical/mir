@@ -14,49 +14,48 @@ check_cxx_compiler_flag(-Winfinite-recursion HAS_W_INFINITE_RECURSION)
 
 if (HAS_W_NULL_DEREFERENCE)
   # Avoid clang complaints about poor quality gmock/gtest headers
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=null-dereference")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=null-dereference>)
 endif()
 if (HAS_W_OVERLOADED_VIRTUAL)
   # Avoid clang complaints about poor quality gmock/gtest headers
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=overloaded-virtual")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=overloaded-virtual>)
 endif()
 if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   # MOCK_METHOD()s cannot be marked as override; we cannot consistently mark overrides
   # in the tests.
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-inconsistent-missing-override")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-inconsistent-missing-override>)
 endif()
 if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
   # INSTANTIATE_TEST_SUITE_P hits this like a slice of lemon wrapped around a large gold brick.
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-gnu-zero-variadic-macro-arguments>)
 else()
   # GCC is a bit less flexible than clang and needs a bigger hammer...
   if (NOT MIR_USE_PRECOMPILED_HEADERS)
     # Work around the Google Test headers not being C++11 friendly (LP: #1658604)
-    string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-pedantic>)
   endif()
 endif()
 if (HAS_W_GNU_SIGN_COMPARE)
   # TODO fix the code
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-sign-compare")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-sign-compare>)
 endif()
 if (HAS_W_MAYBE_UNINITIALIZED)
   # Avoid g++ complaints about gmock/gtest headers
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-error=maybe-uninitialized")
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>)
 endif()
 if (HAS_W_INFINITE_RECURSION)
   # g++-12 doesn't notice that Abort() is going to call a [[noreturn]] function
   # before Invalid<T>() tries to return itself.
-  add_compile_options(-Wno-error=infinite-recursion)
+  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=infinite-recursion>)
 endif()
 
 # we are shipping a static test archive for downstreams and don't want to ship
 # LTO bytecode in there
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fno-lto")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-lto")
+add_compile_options(-fno-lto)
+add_link_options(-fno-lto)
 
 include(CheckSymbolExists)
 list(APPEND CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
-string(REPLACE " -Werror " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})    # This flag breaks check_symbol_exists()
 check_symbol_exists(pthread_getname_np pthread.h HAVE_PTHREAD_GETNAME_NP)
 
 list(APPEND CMAKE_REQUIRED_HEADERS ${GTEST_INCLUDE_DIRECTORIES})
@@ -112,6 +111,9 @@ endif(MIR_BUILD_WINDOW_MANAGEMENT_TESTS)
 
 if (MIR_BUILD_UNIT_TESTS)
   add_subdirectory(unit-tests/)
+  if (MIR_ENABLE_RUST)
+    add_subdirectory(wayland_rs/)
+  endif (MIR_ENABLE_RUST)
 endif (MIR_BUILD_UNIT_TESTS)
 
 if (MIR_BUILD_PLATFORM_TEST_HARNESS)

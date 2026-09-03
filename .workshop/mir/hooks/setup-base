@@ -1,0 +1,64 @@
+set -xeu
+
+add-apt-repository --yes --enable-source --update ppa:mir-team/dev
+apt-get --yes --no-install-recommends install \
+  build-essential \
+  cargo \
+  ccache \
+  clang \
+  dmz-cursor-theme \
+  fonts-ubuntu \
+  gcovr \
+  glmark2-es2 \
+  glmark2-es2-wayland \
+  inotify-tools \
+  lcov \
+  libclang-rt-dev \
+  llvm \
+  mesa-utils \
+  mold \
+  ninja-build \
+  python3-venv \
+  python3-livereload \
+  ripgrep \
+  xterm \
+  yq
+apt-get --no-install-recommends build-dep mir
+
+cat <<'EOF' > /etc/profile.d/mir.sh
+export PATH="$HOME/build/bin:$PATH"
+export CCACHE_SLOPPINESS=include_file_ctime,include_file_mtime,modules,pch_defines,time_macros
+EOF
+
+cat <<'EOF' > /usr/local/bin/gcov
+#!/bin/sh
+exec llvm-cov gcov "$@"
+EOF
+chmod +x /usr/local/bin/gcov
+
+cat <<'EOF' > /etc/systemd/system/mir-coverage.service
+[Unit]
+Description=Mir test coverage report
+After=network.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/bash -c 'until [ -d /home/workshop/build/coverage-html ]; do sleep 2; done'
+# Monitor livereload itself and the folder disappearing
+ExecStart=/bin/bash -c '\
+  /usr/bin/livereload --host 0 --port 8001 /home/workshop/build/coverage-html & \
+  LR_PID=$$!; \
+  inotifywait -qq -e delete_self -e move_self /home/workshop/build/coverage-html & \
+  IN_PID=$$!; \
+  wait -n; \
+  kill $$LR_PID $$IN_PID 2>/dev/null; \
+  exit 1'
+
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable --now --no-block mir-coverage.service

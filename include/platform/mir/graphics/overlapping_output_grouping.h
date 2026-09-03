@@ -33,8 +33,9 @@ struct DisplayConfigurationOutput;
 class OverlappingOutputGroup
 {
 public:
-    template <typename Iterator>
-    OverlappingOutputGroup(Iterator begin, Iterator end) : outputs(begin, end) {}
+    template<typename Iterator>
+    OverlappingOutputGroup(Iterator begin, Iterator end) : outputs(begin, end)
+    {}
     OverlappingOutputGroup(OverlappingOutputGroup const&) = default;
     OverlappingOutputGroup& operator=(OverlappingOutputGroup const&) = default;
 

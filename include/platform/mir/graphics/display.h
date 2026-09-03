@@ -33,9 +33,9 @@ class DisplayConfiguration;
 class Cursor;
 class EventHandlerRegister;
 
-typedef std::function<bool()> DisplayPauseHandler;
-typedef std::function<bool()> DisplayResumeHandler;
-typedef std::function<void()> DisplayConfigurationChangeHandler;
+using DisplayPauseHandler = std::function<bool()>;
+using DisplayResumeHandler = std::function<bool()>;
+using DisplayConfigurationChangeHandler = std::function<void()>;
 
 /**
  * DisplaySyncGroup represents a group of displays that need to be output
@@ -75,6 +75,7 @@ public:
     virtual std::chrono::milliseconds recommended_sleep() const = 0;
 
     virtual ~DisplaySyncGroup() = default;
+
 protected:
     DisplaySyncGroup() = default;
     DisplaySyncGroup(DisplaySyncGroup const&) = delete;
@@ -96,7 +97,6 @@ public:
      * Gets a copy of the current output configuration.
      */
     virtual std::unique_ptr<DisplayConfiguration> configuration() const = 0;
-
 
     class IncompleteConfigurationApplied : public std::runtime_error
     {
@@ -166,6 +166,7 @@ public:
 
     Display() = default;
     virtual ~Display() = default;
+
 private:
     Display(Display const&) = delete;
     Display& operator=(Display const&) = delete;

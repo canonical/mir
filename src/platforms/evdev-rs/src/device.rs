@@ -175,8 +175,8 @@ impl LibinputDevice {
             handedness: handedness,
             cursor_acceleration_bias: acceleration_bias,
             acceleration: acceleration,
-            horizontal_scroll_scale: guard.x_scroll_scale,
-            vertical_scroll_scale: guard.y_scroll_scale,
+            horizontal_scroll_scale: guard.scroll_state.x_scroll_scale,
+            vertical_scroll_scale: guard.scroll_state.y_scroll_scale,
             has_error: false,
         });
     }
@@ -217,19 +217,23 @@ impl LibinputDevice {
         let _ = device_info
             .device
             .config_accel_set_speed(settings.cursor_acceleration_bias as f64);
-        guard.x_scroll_scale = settings.horizontal_scroll_scale;
-        guard.y_scroll_scale = settings.vertical_scroll_scale;
+        guard.scroll_state.x_scroll_scale = settings.horizontal_scroll_scale;
+        guard.scroll_state.y_scroll_scale = settings.vertical_scroll_scale;
     }
+}
+
+pub struct ScrollState {
+    pub x_accum: f64,
+    pub y_accum: f64,
+    pub x_scroll_scale: f64,
+    pub y_scroll_scale: f64,
 }
 
 pub struct LibinputDeviceState {
     pub libinput: input::Libinput,
     pub known_devices: Vec<LibinputDeviceInfo>,
     pub next_device_id: i32,
-    pub scroll_axis_x_accum: f64,
-    pub scroll_axis_y_accum: f64,
-    pub x_scroll_scale: f64,
-    pub y_scroll_scale: f64,
+    pub scroll_state: ScrollState,
 }
 
 impl LibinputDeviceState {
@@ -240,6 +244,9 @@ impl LibinputDeviceState {
 
 pub struct LibinputDeviceInfo {
     pub id: i32,
+    /// The device node path (e.g. `/dev/input/event0`), stored so that
+    /// `path_remove_device` can find this entry by devnode.
+    pub devnode: String,
     pub device: input::Device,
     pub input_device: cxx::SharedPtr<InputDevice>,
     pub input_sink: Option<InputSinkPtr>,
@@ -248,6 +255,10 @@ pub struct LibinputDeviceInfo {
     pub pointer_x: f32,
     pub pointer_y: f32,
     pub touch_properties: HashMap<u32, ContactData>,
+    /// Input events that arrived before device registration completed (before
+    /// `event_builder` was set). These are processed once `start()` is called.
+    /// See: https://github.com/canonical/mir/pull/4780
+    pub deferred_events: Vec<input::Event>,
 }
 
 #[derive(Default, Copy, Clone)]
@@ -289,26 +300,6 @@ impl LibinputDeviceMetadata {
 
     pub fn capabilities(&self) -> u32 {
         self.capabilities
-    }
-}
-
-pub struct LibinputDeviceObserver {
-    fd: Option<i32>,
-}
-
-impl LibinputDeviceObserver {
-    pub fn new() -> Self {
-        LibinputDeviceObserver { fd: None }
-    }
-
-    pub fn activated(&mut self, fd: i32) {
-        self.fd = Some(fd);
-    }
-
-    pub fn suspended(&mut self) {}
-
-    pub fn removed(&mut self) {
-        self.fd = None;
     }
 }
 

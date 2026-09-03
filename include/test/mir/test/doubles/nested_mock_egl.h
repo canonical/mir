@@ -33,7 +33,7 @@ public:
 
 private:
     void egl_initialize(EGLint* major, EGLint* minor);
-    void egl_choose_config(EGLConfig* config, EGLint*  num_config);
+    void egl_choose_config(EGLConfig* config, EGLint* num_config);
 };
 }
 }

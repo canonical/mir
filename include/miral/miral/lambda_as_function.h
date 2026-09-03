@@ -25,20 +25,29 @@ namespace miral
 {
 namespace detail
 {
-template <class F> struct FunctionType;
+template<class F>
+struct FunctionType;
 
 template<typename Lambda, typename Return, typename... Arg>
-struct FunctionType<Return (Lambda::*)(Arg...)> { using type = std::function<Return(Arg...)>; };
+struct FunctionType<Return (Lambda::*)(Arg...)>
+{
+    using type = std::function<Return(Arg...)>;
+};
 
 template<typename Lambda, typename Return, typename... Arg>
-struct FunctionType<Return (Lambda::*)(Arg...) const> { using type = std::function<Return(Arg...)>; };
+struct FunctionType<Return (Lambda::*)(Arg...) const>
+{
+    using type = std::function<Return(Arg...)>;
+};
 }
 
 template<typename Lambda>
     requires requires { &std::remove_reference_t<Lambda>::operator(); }
-auto lambda_as_function(Lambda&& lambda) -> typename detail::FunctionType<decltype(&std::remove_reference_t<Lambda>::operator())>::type
+auto lambda_as_function(Lambda&& lambda) ->
+    typename detail::FunctionType<decltype(&std::remove_reference_t<Lambda>::operator())>::type
 {
-    return typename detail::FunctionType<decltype(&std::remove_reference_t<Lambda>::operator())>::type(std::forward<Lambda>(lambda));
+    return typename detail::FunctionType<decltype(&std::remove_reference_t<Lambda>::operator())>::type(
+        std::forward<Lambda>(lambda));
 }
 }
 

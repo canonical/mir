@@ -21,7 +21,8 @@
 #include <mir_toolkit/mir_input_device_types.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**
@@ -41,8 +42,7 @@ extern "C" {
  * \param[in] ev The input device state event
  * \return       The combined pointer button state
  */
-MirPointerButtons mir_input_device_state_event_pointer_buttons(
-    MirInputDeviceStateEvent const* ev);
+MirPointerButtons mir_input_device_state_event_pointer_buttons(MirInputDeviceStateEvent const* ev);
 
 /**
  * Retrieve the pointer position
@@ -51,8 +51,7 @@ MirPointerButtons mir_input_device_state_event_pointer_buttons(
  * \param[in] axis The pointer axis: mir_pointer_axis_x or mir_pointer_axis_y
  * \return         The pointer position
  */
-float mir_input_device_state_event_pointer_axis(
-    MirInputDeviceStateEvent const* ev, MirPointerAxis axis);
+float mir_input_device_state_event_pointer_axis(MirInputDeviceStateEvent const* ev, MirPointerAxis axis);
 
 /**
  * Retrieve the time associated with a MirInputDeviceStateEvent
@@ -60,8 +59,7 @@ float mir_input_device_state_event_pointer_axis(
  * \param[in] ev The input device state event
  * \return       The time in nanoseconds since epoch
  */
-int64_t mir_input_device_state_event_time(
-    MirInputDeviceStateEvent const* ev);
+int64_t mir_input_device_state_event_time(MirInputDeviceStateEvent const* ev);
 
 /**
  * Retrieve the modifier keys pressed on all input devices.
@@ -69,8 +67,7 @@ int64_t mir_input_device_state_event_time(
  * \param[in] ev The input device state event
  * \return       The modifier mask
  */
-MirInputEventModifiers mir_input_device_state_event_modifiers(
-    MirInputDeviceStateEvent const* ev);
+MirInputEventModifiers mir_input_device_state_event_modifiers(MirInputDeviceStateEvent const* ev);
 
 /**
  * Retrieve the number of attached input devices.
@@ -78,8 +75,7 @@ MirInputEventModifiers mir_input_device_state_event_modifiers(
  * \param[in] ev The input device state event
  * \return       The time in nanoseconds since epoch
  */
-uint32_t mir_input_device_state_event_device_count(
-    MirInputDeviceStateEvent const* ev);
+uint32_t mir_input_device_state_event_device_count(MirInputDeviceStateEvent const* ev);
 
 /**
  * Retrieve the device id
@@ -88,8 +84,7 @@ uint32_t mir_input_device_state_event_device_count(
  * \param[in] index The index of the input device
  * \return    The device id
  */
-MirInputDeviceId mir_input_device_state_event_device_id(
-    MirInputDeviceStateEvent const* ev, uint32_t index);
+MirInputDeviceId mir_input_device_state_event_device_id(MirInputDeviceStateEvent const* ev, uint32_t index);
 
 /*
  * Retrieve a pressed key on the device identified by the \a index.
@@ -101,7 +96,9 @@ MirInputDeviceId mir_input_device_state_event_device_id(
  * \return    The pressed key at index pressed_index
  */
 uint32_t mir_input_device_state_event_device_pressed_keys_for_index(
-    MirInputDeviceStateEvent const* ev, uint32_t index, uint32_t pressed_index);
+    MirInputDeviceStateEvent const* ev,
+    uint32_t index,
+    uint32_t pressed_index);
 
 /**
  * Retrieve the size of scan code array of the device identified by the \a index.
@@ -110,8 +107,7 @@ uint32_t mir_input_device_state_event_device_pressed_keys_for_index(
  * \param[in] index The index of the input device
  * \return    Size of the pressed keys array
  */
-uint32_t mir_input_device_state_event_device_pressed_keys_count(
-    MirInputDeviceStateEvent const* ev, uint32_t index);
+uint32_t mir_input_device_state_event_device_pressed_keys_count(MirInputDeviceStateEvent const* ev, uint32_t index);
 
 /**
  * Retrieve the pointer button state of the device identified by the \a index
@@ -121,7 +117,8 @@ uint32_t mir_input_device_state_event_device_pressed_keys_count(
  * \return    The pointer button state of the device
  */
 MirPointerButtons mir_input_device_state_event_device_pointer_buttons(
-    MirInputDeviceStateEvent const* ev, uint32_t index);
+    MirInputDeviceStateEvent const* ev,
+    uint32_t index);
 
 #ifdef __cplusplus
 }

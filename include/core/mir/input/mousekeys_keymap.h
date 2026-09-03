@@ -22,7 +22,6 @@
 #include <optional>
 #include <functional>
 
-
 namespace mir
 {
 namespace input

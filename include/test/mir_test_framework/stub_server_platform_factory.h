@@ -27,10 +27,7 @@
 
 namespace mir
 {
-namespace input
-{
-struct InputDeviceInfo;
-}
+namespace input { struct InputDeviceInfo; }
 }
 
 namespace mir_test_framework
@@ -40,8 +37,7 @@ class FakeInputDevice;
 auto make_stubbed_display_platform(std::vector<mir::geometry::Rectangle> const& display_rects)
     -> std::shared_ptr<mir::graphics::DisplayPlatform>;
 
-auto make_stubbed_rendering_platform()
-    -> std::shared_ptr<mir::graphics::RenderingPlatform>;
+auto make_stubbed_rendering_platform() -> std::shared_ptr<mir::graphics::RenderingPlatform>;
 
 void set_next_display_rects(std::unique_ptr<std::vector<mir::geometry::Rectangle>>&& display_rects);
 

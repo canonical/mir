@@ -44,8 +44,7 @@ public:
     MOCK_METHOD(void, glBlendColor, (GLfloat red, GLfloat green, GLfloat blue, GLfloat alpha));
     MOCK_METHOD(void, glBlendFunc, (GLenum, GLenum));
     MOCK_METHOD(void, glBlendFuncSeparate, (GLenum, GLenum, GLenum, GLenum));
-    MOCK_METHOD(void, glBufferData,
-                 (GLenum, GLsizeiptr, const GLvoid *, GLenum));
+    MOCK_METHOD(void, glBufferData, (GLenum, GLsizeiptr, GLvoid const*, GLenum));
     MOCK_METHOD(GLenum, glCheckFramebufferStatus, (GLenum));
     MOCK_METHOD(void, glClear, (GLbitfield));
     MOCK_METHOD(void, glClearColor, (GLclampf, GLclampf, GLclampf, GLclampf));
@@ -53,12 +52,12 @@ public:
     MOCK_METHOD(void, glCompileShader, (GLuint));
     MOCK_METHOD(GLuint, glCreateProgram, ());
     MOCK_METHOD(GLuint, glCreateShader, (GLenum));
-    MOCK_METHOD(void, glDeleteBuffers, (GLsizei, const GLuint *));
-    MOCK_METHOD(void, glDeleteFramebuffers, (GLsizei, const GLuint *));
-    MOCK_METHOD(void, glDeleteRenderbuffers, (GLsizei, const GLuint *));
+    MOCK_METHOD(void, glDeleteBuffers, (GLsizei, GLuint const*));
+    MOCK_METHOD(void, glDeleteFramebuffers, (GLsizei, GLuint const*));
+    MOCK_METHOD(void, glDeleteRenderbuffers, (GLsizei, GLuint const*));
     MOCK_METHOD(void, glDeleteProgram, (GLuint));
     MOCK_METHOD(void, glDeleteShader, (GLuint));
-    MOCK_METHOD(void, glDeleteTextures, (GLsizei, const GLuint *));
+    MOCK_METHOD(void, glDeleteTextures, (GLsizei, GLuint const*));
     MOCK_METHOD(void, glDisable, (GLenum));
     MOCK_METHOD(void, glDisableVertexAttribArray, (GLuint));
     MOCK_METHOD(void, glDrawArrays, (GLenum, GLint, GLsizei));
@@ -66,47 +65,37 @@ public:
     MOCK_METHOD(void, glEnableVertexAttribArray, (GLuint));
     MOCK_METHOD(void, glFinish, ());
     MOCK_METHOD(void, glFlush, ());
-    MOCK_METHOD(void, glFramebufferRenderbuffer,
-                 (GLenum, GLenum, GLenum, GLuint));
-    MOCK_METHOD(void, glFramebufferTexture2D,
-                 (GLenum, GLenum, GLenum, GLuint, GLint));
-    MOCK_METHOD(void, glGenBuffers, (GLsizei, GLuint *));
-    MOCK_METHOD(void, glGenFramebuffers, (GLsizei, GLuint *));
+    MOCK_METHOD(void, glFramebufferRenderbuffer, (GLenum, GLenum, GLenum, GLuint));
+    MOCK_METHOD(void, glFramebufferTexture2D, (GLenum, GLenum, GLenum, GLuint, GLint));
+    MOCK_METHOD(void, glGenBuffers, (GLsizei, GLuint*));
+    MOCK_METHOD(void, glGenFramebuffers, (GLsizei, GLuint*));
     MOCK_METHOD(void, glGenRenderbuffers, (GLsizei, GLuint*));
-    MOCK_METHOD(void, glGenTextures, (GLsizei, GLuint *));
-    MOCK_METHOD(GLint, glGetAttribLocation, (GLuint, const GLchar *));
+    MOCK_METHOD(void, glGenTextures, (GLsizei, GLuint*));
+    MOCK_METHOD(GLint, glGetAttribLocation, (GLuint, GLchar const*));
     MOCK_METHOD(GLenum, glGetError, ());
     MOCK_METHOD(void, glGetIntegerv, (GLenum, GLint*));
-    MOCK_METHOD(void, glGetProgramInfoLog,
-                 (GLuint, GLsizei, GLsizei *, GLchar *));
-    MOCK_METHOD(void, glGetProgramiv, (GLuint, GLenum, GLint *));
-    MOCK_METHOD(void, glGetShaderInfoLog,
-                 (GLuint, GLsizei, GLsizei *, GLchar *));
-    MOCK_METHOD(void, glGetShaderiv, (GLuint, GLenum, GLint *));
-    MOCK_METHOD(const GLubyte*, glGetString, (GLenum));
-    MOCK_METHOD(GLint, glGetUniformLocation, (GLuint, const GLchar *));
+    MOCK_METHOD(void, glGetProgramInfoLog, (GLuint, GLsizei, GLsizei*, GLchar*));
+    MOCK_METHOD(void, glGetProgramiv, (GLuint, GLenum, GLint*));
+    MOCK_METHOD(void, glGetShaderInfoLog, (GLuint, GLsizei, GLsizei*, GLchar*));
+    MOCK_METHOD(void, glGetShaderiv, (GLuint, GLenum, GLint*));
+    MOCK_METHOD(GLubyte const*, glGetString, (GLenum));
+    MOCK_METHOD(GLint, glGetUniformLocation, (GLuint, GLchar const*));
     MOCK_METHOD(void, glLinkProgram, (GLuint));
     MOCK_METHOD(void, glPixelStorei, (GLenum, GLint));
-    MOCK_METHOD(void, glReadPixels,
-                 (GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*));
-    MOCK_METHOD(void, glRenderbufferStorage,
-                (GLenum, GLenum, GLsizei, GLsizei));
-    MOCK_METHOD(void, glShaderSource,
-                (GLuint, GLsizei, const GLchar * const *, const GLint *));
-    MOCK_METHOD(void, glTexImage2D,
-                (GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum,const GLvoid*));
+    MOCK_METHOD(void, glReadPixels, (GLint, GLint, GLsizei, GLsizei, GLenum, GLenum, GLvoid*));
+    MOCK_METHOD(void, glRenderbufferStorage, (GLenum, GLenum, GLsizei, GLsizei));
+    MOCK_METHOD(void, glShaderSource, (GLuint, GLsizei, GLchar const* const*, GLint const*));
+    MOCK_METHOD(void, glTexImage2D, (GLenum, GLint, GLint, GLsizei, GLsizei, GLint, GLenum, GLenum, GLvoid const*));
     MOCK_METHOD(void, glTexParameteri, (GLenum, GLenum, GLenum));
     MOCK_METHOD(void, glUniform1f, (GLint, GLfloat));
     MOCK_METHOD(void, glUniform2f, (GLint, GLfloat, GLfloat));
     MOCK_METHOD(void, glUniform1i, (GLint, GLint));
-    MOCK_METHOD(void, glUniformMatrix4fv,
-                 (GLuint, GLsizei, GLboolean, const GLfloat *));
+    MOCK_METHOD(void, glUniformMatrix4fv, (GLuint, GLsizei, GLboolean, GLfloat const*));
     MOCK_METHOD(void, glUseProgram, (GLuint));
-    MOCK_METHOD(void, glVertexAttribPointer,
-                 (GLuint, GLint, GLenum, GLboolean, GLsizei, const GLvoid *));
+    MOCK_METHOD(void, glVertexAttribPointer, (GLuint, GLint, GLenum, GLboolean, GLsizei, GLvoid const*));
     MOCK_METHOD(void, glViewport, (GLint, GLint, GLsizei, GLsizei));
     MOCK_METHOD(void, glGenerateMipmap, (GLenum target));
-    MOCK_METHOD(void, glDrawElements, (GLenum, GLsizei, GLenum, const GLvoid*));
+    MOCK_METHOD(void, glDrawElements, (GLenum, GLsizei, GLenum, GLvoid const*));
     MOCK_METHOD(void, glScissor, (GLint, GLint, GLsizei, GLsizei));
 };
 

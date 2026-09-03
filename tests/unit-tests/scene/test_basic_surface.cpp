@@ -421,7 +421,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     mtd::StubBuffer mock_buffer;
     auto submitted_buffer = false;
     ON_CALL(*mock_buffer_stream, has_submitted_buffer())
-        .WillByDefault(Invoke([&submitted_buffer] { return submitted_buffer; }));
+        .WillByDefault([&submitted_buffer] { return submitted_buffer; });
 
     // Must be a fresh surface to guarantee no frames posted yet...
     ms::BasicSurface surface{
@@ -782,6 +782,70 @@ TEST_F(BasicSurfaceTest, stores_parent)
         display_config_registrar};
 
     EXPECT_EQ(child.parent(), parent);
+}
+
+TEST_F(BasicSurfaceTest, set_parent_changes_parent)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        nullptr,
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        std::weak_ptr<ms::Surface>{},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    EXPECT_EQ(child.parent(), nullptr);
+    child.set_parent(parent);
+    EXPECT_EQ(child.parent(), parent);
+    child.set_parent({});
+    EXPECT_EQ(child.parent(), nullptr);
+}
+
+TEST_F(BasicSurfaceTest, set_parent_detects_direct_cycle)
+{
+    auto parent = mt::fake_shared(surface);
+    ms::BasicSurface child{
+        nullptr,
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        parent,
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    // Setting child as its own parent
+    EXPECT_THROW(child.set_parent(mt::fake_shared(child)), std::runtime_error);
+    // Setting parent's parent to child would create a cycle
+    EXPECT_THROW(surface.set_parent(mt::fake_shared(child)), std::runtime_error);
+}
+
+TEST_F(BasicSurfaceTest, set_parent_detects_indirect_cycle)
+{
+    ms::BasicSurface grandchild{
+        nullptr,
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        std::weak_ptr<ms::Surface>{},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    auto parent = mt::fake_shared(surface);
+    auto child = mt::fake_shared(grandchild);
+
+    // surface -> grandchild (grandchild is child of surface)
+    grandchild.set_parent(parent);
+
+    // Setting surface's parent to grandchild creates a cycle: surface -> grandchild -> surface
+    EXPECT_THROW(surface.set_parent(child), std::runtime_error);
 }
 
 namespace
@@ -1414,9 +1478,9 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     geom::Displacement displacement{3,-2};
     auto mock_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     ON_CALL(*mock_buffer_stream, has_submitted_buffer())
-        .WillByDefault(Invoke([&stream1_visible] { return stream1_visible; }));
+        .WillByDefault([&stream1_visible] { return stream1_visible; });
     ON_CALL(*mock_buffer_stream1, has_submitted_buffer())
-        .WillByDefault(Invoke([&stream2_visible] { return stream2_visible; }));
+        .WillByDefault([&stream2_visible] { return stream2_visible; });
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0}},
         { mock_buffer_stream1, displacement},

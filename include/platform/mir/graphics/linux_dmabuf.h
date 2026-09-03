@@ -32,23 +32,14 @@ namespace mir
 {
 namespace renderer
 {
-namespace gl
-{
-class Context;
-}
+namespace gl { class Context; }
 }
 
 namespace graphics
 {
-namespace gl
-{
-class Texture;
-}
+namespace gl { class Texture; }
 
-namespace common
-{
-class EGLContextExecutor;
-}
+namespace common { class EGLContextExecutor; }
 
 class DmaBufFormatDescriptors;
 class DMABufBuffer;
@@ -73,8 +64,7 @@ public:
     auto import_dma_buf(
         DMABufBuffer const& dma_buf,
         std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release)
-        -> std::shared_ptr<Buffer>;
+        std::function<void()>&& on_release) -> std::shared_ptr<Buffer>;
 
     /**
      * Validate that this provider *can* import this DMA-BUF
@@ -84,11 +74,10 @@ public:
      */
     void validate_import(DMABufBuffer const& dma_buf);
 
-    auto as_texture(
-        std::shared_ptr<NativeBufferBase> buffer)
-        -> std::shared_ptr<gl::Texture>;
+    auto as_texture(std::shared_ptr<NativeBufferBase> buffer) -> std::shared_ptr<gl::Texture>;
 
-     auto supported_formats() const -> DmaBufFormatDescriptors const&;
+    auto supported_formats() const -> DmaBufFormatDescriptors const&;
+
 private:
     EGLDisplay const dpy;
     std::shared_ptr<EGLExtensions> const egl_extensions;
@@ -103,16 +92,14 @@ private:
 class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
 {
 public:
-    LinuxDmaBuf(
-        wl_display* display,
-        std::shared_ptr<DMABufEGLProvider> provider);
+    LinuxDmaBuf(wl_display* display, std::shared_ptr<DMABufEGLProvider> provider);
 
     auto buffer_from_resource(
         wl_resource* buffer,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release,
-        std::shared_ptr<common::EGLContextExecutor> egl_delegate)
-        -> std::shared_ptr<Buffer>;
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate) -> std::shared_ptr<Buffer>;
+
 private:
     class Instance;
     void bind(wl_resource* new_resource) override;

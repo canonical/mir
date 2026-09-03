@@ -20,7 +20,10 @@
 #include <mir/module_deleter.h>
 
 namespace mir { class Server; }
-namespace mir { namespace input { class InputDeviceInfo; } }
+namespace mir
+{
+namespace input { class InputDeviceInfo; }
+}
 
 namespace mir_test_framework
 {

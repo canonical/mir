@@ -50,7 +50,6 @@ auto mir::DefaultServerConfiguration::the_shell() -> std::shared_ptr<msh::Shell>
                 the_input_targeter(),
                 the_surface_stack(),
                 the_session_coordinator(),
-                the_prompt_session_manager(),
                 the_shell_report(),
                 the_window_manager_builder(),
                 the_seat(),

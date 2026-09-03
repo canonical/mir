@@ -29,21 +29,15 @@ namespace graphics
 std::error_category const& egl_category();
 
 inline auto egl_error(std::string const& msg) -> std::system_error
-{
-    return std::system_error{eglGetError(), egl_category(), msg};
-}
+{ return std::system_error{eglGetError(), egl_category(), msg}; }
 
 std::error_category const& gl_category();
 
 inline auto gl_error(std::string const& msg) -> std::system_error
-{
-    return std::system_error{static_cast<int>(glGetError()), gl_category(), msg};
-}
+{ return std::system_error{static_cast<int>(glGetError()), gl_category(), msg}; }
 
 inline auto gl_error(GLint err, std::string const& msg) -> std::system_error
-{
-    return std::system_error{static_cast<int>(err), gl_category(), msg};
-}
+{ return std::system_error{static_cast<int>(err), gl_category(), msg}; }
 
 }
 }

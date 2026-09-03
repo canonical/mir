@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <cstdlib>
 #include <system_error>
 
 namespace geom = mir::geometry;
@@ -35,7 +36,7 @@ mir::Fd open_shm_file()
     // Wayland based toolkits typically use $XDG_RUNTIME_DIR to open shm pools
     // so we try that before "/dev/shm". But confined snaps can't access "/dev/shm"
     // so we try "/tmp" if both of the above fail.
-    for (auto const dir : {const_cast<const char*>(getenv("XDG_RUNTIME_DIR")), "/dev/shm", "/tmp" })
+    for (auto const dir : {const_cast<const char*>(std::getenv("XDG_RUNTIME_DIR")), "/dev/shm", "/tmp" })
     {
         if (dir)
         {
@@ -121,7 +122,7 @@ auto miral::tk::WaylandShmBuffer::use() -> wl_buffer*
 {
     if (self_ptr)
     {
-        mir::fatal_error("WaylandShmBuffer used multiple times");
+        MIR_FATAL_ERROR("WaylandShmBuffer used multiple times");
     }
     self_ptr = shared_from_this();
     return buffer;

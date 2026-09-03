@@ -17,12 +17,12 @@
 #ifndef MIRAL_RUNNER_H
 #define MIRAL_RUNNER_H
 
-#include <mir/optional_value.h>
 #include <mir/fd.h>
 
 #include <functional>
 #include <initializer_list>
 #include <memory>
+#include <optional>
 
 namespace mir { class Server; }
 
@@ -35,7 +35,11 @@ namespace mir { class Server; }
 namespace miral
 {
 /// A handle which keeps a file descriptor registered to the main loop until it is dropped
-struct FdHandle { public: virtual ~FdHandle(); };
+struct FdHandle
+{
+public:
+    virtual ~FdHandle();
+};
 
 /// This class is responsible for managing the lifetime of the core engine
 /// of a Mir compositor.
@@ -80,9 +84,7 @@ public:
     ///
     /// \param signals a list of signals to listen on
     /// \param handler a handler function called when a signal occurs
-    void register_signal_handler(
-        std::initializer_list<int> signals,
-        std::function<void(int)> const& handler);
+    void register_signal_handler(std::initializer_list<int> signals, std::function<void(int)> const& handler);
 
     /// Add a watch on a file descriptor to the server's main loop.
     ///
@@ -91,10 +93,7 @@ public:
     /// \param fd the file descriptor to wait on
     /// \param handler a handler function called when data is available
     /// \returns a handle
-    auto register_fd_handler(
-        mir::Fd fd,
-        std::function<void(int)> const& handler)
-    -> std::unique_ptr<miral::FdHandle>;
+    auto register_fd_handler(mir::Fd fd, std::function<void(int)> const& handler) -> std::unique_ptr<miral::FdHandle>;
 
     /// Set a handler for exceptions caught in #MirRunner::run_with().
     ///
@@ -148,7 +147,7 @@ public:
     /// This will be an empty optional if the server has not yet started.
     ///
     /// \returns the wayland socket, if any
-    auto wayland_display() const -> mir::optional_value<std::string>;
+    auto wayland_display() const -> std::optional<std::string>;
 
     /// Get the X11 socket name.
     ///
@@ -159,7 +158,7 @@ public:
     ///
     /// \returns the X11 socket, if any
     /// \sa miral::X11Support - provides X11 support to a Mir server
-    auto x11_display() const -> mir::optional_value<std::string>;
+    auto x11_display() const -> std::optional<std::string>;
 
 private:
     MirRunner(MirRunner const&) = delete;

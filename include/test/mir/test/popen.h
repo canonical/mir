@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_TEST_POPEN_H_
 #define MIR_TEST_POPEN_H_
 
@@ -44,7 +43,7 @@ private:
     Popen() = delete;
     Popen(Popen const&) = delete;
     Popen& operator=(Popen const&) = delete;
-    std::unique_ptr<std::FILE, void(*)(FILE* f)> raw_stream;
+    std::unique_ptr<std::FILE, void (*)(FILE* f)> raw_stream;
 };
 
 }

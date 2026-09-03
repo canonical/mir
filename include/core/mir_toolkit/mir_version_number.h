@@ -31,7 +31,6 @@
  * This can be useful to conditionally build code depending on new features or
  * specific bugfixes in the Mir client library.
  */
-#define MIR_VERSION_NUMBER(major,minor,micro) \
-    (((major) << 22) + ((minor) << 12) + (micro))
+#define MIR_VERSION_NUMBER(major, minor, micro) (((major) << 22) + ((minor) << 12) + (micro))
 
 #endif /* MIR_VERSION_NUMBER_H_ */

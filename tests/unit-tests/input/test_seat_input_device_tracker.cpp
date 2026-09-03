@@ -136,21 +136,21 @@ TEST_F(SeatInputDeviceTracker, forwards_touch_spots_to_visualizer)
 
     auto touch_event_1 = some_device_builder.touch_event(
         arbitrary_timestamp,
-        {{0, mir_touch_action_down, mir_touch_tooltype_finger, 4.0f, 2.0f, 10.0f, 15.0f, 5.0f, 4.0f}});
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, {4.0f, 2.0f}, 10.0f, 15.0f, 5.0f, 4.0f}});
 
     auto touch_event_2 = some_device_builder.touch_event(
         arbitrary_timestamp,
-        {{0, mir_touch_action_change, mir_touch_tooltype_finger, 10.0f, 10.0f, 30.0f, 15.0f, 5.0f, 4.0f},
-         {1, mir_touch_action_down, mir_touch_tooltype_finger, 100.0f, 34.0f, 0.0f, 15.0f, 5.0f, 4.0f}});
+        {{0, mir_touch_action_change, mir_touch_tooltype_finger, {10.0f, 10.0f}, 30.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_down, mir_touch_tooltype_finger, {100.0f, 34.0f}, 0.0f, 15.0f, 5.0f, 4.0f}});
 
     auto touch_event_3 = some_device_builder.touch_event(
         arbitrary_timestamp,
-        {{0, mir_touch_action_up, mir_touch_tooltype_finger, 100.0f, 34.0f, 0.0f, 15.0f, 5.0f, 4.0f},
-         {1, mir_touch_action_change, mir_touch_tooltype_finger, 70.0f, 10.0f, 30.0f, 15.0f, 5.0f, 4.0f}});
+        {{0, mir_touch_action_up, mir_touch_tooltype_finger, {100.0f, 34.0f}, 0.0f, 15.0f, 5.0f, 4.0f},
+         {1, mir_touch_action_change, mir_touch_tooltype_finger, {70.0f, 10.0f}, 30.0f, 15.0f, 5.0f, 4.0f}});
 
     auto touch_event_4 = some_device_builder.touch_event(
         arbitrary_timestamp,
-        {{1, mir_touch_action_up, mir_touch_tooltype_finger, 70.0f, 10.0f, 30.0f, 15.0f, 5.0f, 4.0f}});
+        {{1, mir_touch_action_up, mir_touch_tooltype_finger, {70.0f, 10.0f}, 30.0f, 15.0f, 5.0f, 4.0f}});
 
     tracker.dispatch(std::move(touch_event_1));
     tracker.dispatch(std::move(touch_event_2));
@@ -169,7 +169,7 @@ TEST_F(SeatInputDeviceTracker, removal_of_touch_device_removes_spots)
 
     auto touch_event_1 = some_device_builder.touch_event(
         arbitrary_timestamp,
-        {{0, mir_touch_action_down, mir_touch_tooltype_finger, 4.0f, 2.0f, 10.0f, 15.0f, 5.0f, 4.0f}});
+        {{0, mir_touch_action_down, mir_touch_tooltype_finger, {4.0f, 2.0f}, 10.0f, 15.0f, 5.0f, 4.0f}});
 
     tracker.dispatch(std::move(touch_event_1));
     tracker.remove_device(some_device);

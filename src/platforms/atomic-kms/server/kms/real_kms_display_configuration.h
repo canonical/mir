@@ -51,7 +51,7 @@ private:
 
     std::shared_ptr<KMSOutputContainer> displays;
     DisplayConfigurationCard card;
-    typedef std::pair<DisplayConfigurationOutput, std::shared_ptr<KMSOutput>> Output;
+    using Output = std::pair<DisplayConfigurationOutput, std::shared_ptr<KMSOutput>>;
     Output const& output(DisplayConfigurationOutputId id) const;
     std::vector<Output> outputs;
 };

@@ -21,8 +21,9 @@
 
 #include <memory>
 
-namespace mir {
-    namespace compositor { class DisplayListener; }
+namespace mir
+{
+namespace compositor { class DisplayListener; }
 }
 
 namespace miroil
@@ -38,7 +39,7 @@ public:
     void remove_display(mir::geometry::Rectangle const& area);
 
 private:
-    std::shared_ptr<mir::compositor::DisplayListener> const& display_listener;
+    std::shared_ptr<mir::compositor::DisplayListener> display_listener;
 };
 
 }

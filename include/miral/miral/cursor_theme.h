@@ -60,5 +60,4 @@ private:
 };
 }
 
-
 #endif //MIRAL_CURSOR_THEME_H

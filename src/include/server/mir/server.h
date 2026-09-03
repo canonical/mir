@@ -61,8 +61,6 @@ class SurfaceStack;
 namespace scene
 {
 class ApplicationNotRespondingDetector;
-class PromptSessionListener;
-class PromptSessionManager;
 class SessionListener;
 class SessionCoordinator;
 class SurfaceFactory;
@@ -283,12 +281,6 @@ public:
     /// Sets an override functor for creating the prompt session listener.
     void override_the_pointer_input_dispatcher(Builder<frontend::PointerInputDispatcher> const& pointer_input_dispatcher_builder);
 
-    /// Sets an override functor for creating the prompt session listener.
-    void override_the_prompt_session_listener(Builder<scene::PromptSessionListener> const& prompt_session_listener_builder);
-
-    /// Sets an override functor for creating the prompt session manager.
-    void override_the_prompt_session_manager(Builder<scene::PromptSessionManager> const& prompt_session_manager_builder);
-
     /// Sets an override functor for creating the status listener.
     void override_the_server_status_listener(Builder<ServerStatusListener> const& server_status_listener_builder);
 
@@ -397,12 +389,6 @@ public:
 
     /// \return the pointer input dispatcher.
     auto the_pointer_input_dispatcher() const -> std::shared_ptr<frontend::PointerInputDispatcher>;
-
-    /// \return the prompt session listener.
-    auto the_prompt_session_listener() const -> std::shared_ptr<scene::PromptSessionListener>;
-
-    /// \return the prompt session manager.
-    auto the_prompt_session_manager() const ->std::shared_ptr<scene::PromptSessionManager>;
 
     /// \return the session authorizer.
     auto the_session_authorizer() const -> std::shared_ptr<frontend::SessionAuthorizer>;

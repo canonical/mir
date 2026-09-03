@@ -32,7 +32,11 @@ namespace doubles
 struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOutput
 {
     StubDisplayConfigurationOutput(
-        geometry::Size px_size, geometry::Size mm_size, MirPixelFormat format, double vrefresh, bool connected);
+        geometry::Size px_size,
+        geometry::Size mm_size,
+        MirPixelFormat format,
+        double vrefresh,
+        bool connected);
 
     StubDisplayConfigurationOutput(
         geometry::Size px_size,
@@ -42,14 +46,16 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
         bool connected,
         MirSubpixelArrangement subpixel_arrangement);
 
-    StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
+    StubDisplayConfigurationOutput(
+        graphics::DisplayConfigurationOutputId id,
         geometry::Size px_size,
         geometry::Size mm_size,
         MirPixelFormat format,
         double vrefresh,
         bool connected);
 
-    StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
+    StubDisplayConfigurationOutput(
+        graphics::DisplayConfigurationOutputId id,
         geometry::Size px_size,
         geometry::Size mm_size,
         MirPixelFormat format,
@@ -57,8 +63,10 @@ struct StubDisplayConfigurationOutput : public graphics::DisplayConfigurationOut
         bool connected,
         MirSubpixelArrangement subpixel_arrangement);
 
-    StubDisplayConfigurationOutput(graphics::DisplayConfigurationOutputId id,
-        std::vector<graphics::DisplayConfigurationMode> modes, std::vector<MirPixelFormat> formats);
+    StubDisplayConfigurationOutput(
+        graphics::DisplayConfigurationOutputId id,
+        std::vector<graphics::DisplayConfigurationMode> modes,
+        std::vector<MirPixelFormat> formats);
 };
 
 class StubDisplayConfig : public graphics::DisplayConfiguration
@@ -72,7 +80,7 @@ public:
 
     StubDisplayConfig(unsigned int num_displays);
 
-    StubDisplayConfig(std::vector<std::pair<bool,bool>> const& connected_used);
+    StubDisplayConfig(std::vector<std::pair<bool, bool>> const& connected_used);
 
     StubDisplayConfig(unsigned int num_displays, std::vector<MirPixelFormat> const& pfs);
 

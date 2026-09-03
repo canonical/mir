@@ -138,7 +138,6 @@ public:
     {
         ON_CALL(*this, shader(_))
             .WillByDefault(
-                Invoke(
                     [](auto& factory) -> mg::gl::Program&
                     {
                         static int yo;
@@ -146,7 +145,7 @@ public:
                             &yo,
                             "extension fragment",
                             "shader code");
-                    }));
+                    });
         ON_CALL(*this, layout)
             .WillByDefault(Return(mg::gl::Texture::Layout::GL));
     }

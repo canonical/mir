@@ -30,14 +30,15 @@
 #include <list>
 #include <map>
 #include <memory>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 using namespace std::literals;
 namespace wayland_runner = mir::client::wayland_runner;
 
 namespace
 {
-bool const tracing = getenv("MIR_SHELL_DEMO_TRACE");
+bool const tracing = std::getenv("MIR_SHELL_DEMO_TRACE");
 
 int32_t main_width = 400;
 int32_t main_height = 400;
@@ -69,7 +70,7 @@ void parse_options(int argc, char* argv[])
             if (option_main_width == long_options[option_index].name)
             {
                 int32_t parsed_value = 0;
-                auto [end, ec] = std::from_chars(optarg, optarg + strlen(optarg), parsed_value);
+                auto [end, ec] = std::from_chars(optarg, optarg + std::strlen(optarg), parsed_value);
                 if (ec == std::errc())
                 {
                     main_width = parsed_value;
@@ -82,7 +83,7 @@ void parse_options(int argc, char* argv[])
             else if (option_main_height == long_options[option_index].name)
             {
                 int32_t parsed_value = 0;
-                auto [end, ec] = std::from_chars(optarg, optarg + strlen(optarg), parsed_value);
+                auto [end, ec] = std::from_chars(optarg, optarg + std::strlen(optarg), parsed_value);
                 if (ec == std::errc())
                 {
                     main_height = parsed_value;
@@ -126,7 +127,7 @@ inline void trace(char const* fmt, ...)
 int const pixel_size = 4;
 int const no_of_buffers = 2;
 
-auto const display = wl_display_connect(NULL);
+auto const display = wl_display_connect(nullptr);
 
 class window;
 class window_register
@@ -384,32 +385,32 @@ void handle_registry_global(
     char const* interface,
     uint32_t version)
 {
-    if (strcmp(interface, "wl_compositor") == 0)
+    if (std::strcmp(interface, "wl_compositor") == 0)
     {
         globals::compositor = static_cast<wl_compositor*>(wl_registry_bind(
             registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
-    else if (strcmp(interface, "wl_shm") == 0)
+    else if (std::strcmp(interface, "wl_shm") == 0)
     {
         globals::shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
-    else if (strcmp(interface, "wl_seat") == 0)
+    else if (std::strcmp(interface, "wl_seat") == 0)
     {
         globals::seat = static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 4u)));
     }
-    else if (strcmp(interface, "wl_output") == 0)
+    else if (std::strcmp(interface, "wl_output") == 0)
     {
         globals::output = static_cast<wl_output*>(wl_registry_bind(
             registry, id, &wl_output_interface, std::min(version, 2u)));
     }
-    else if (strcmp(interface, xdg_wm_base_interface.name) == 0)
+    else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0)
     {
         globals::wm_base = static_cast<xdg_wm_base*>(wl_registry_bind(
             registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
     }
-    else if (strcmp(interface, mir_shell_v1_interface.name) == 0)
+    else if (std::strcmp(interface, mir_shell_v1_interface.name) == 0)
     {
         globals::mir_shell = static_cast<mir_shell_v1*>(wl_registry_bind(
             registry, id, &mir_shell_v1_interface, std::min(version, 1u)));
@@ -431,7 +432,7 @@ void globals::init()
 
     auto const registry = wl_display_get_registry(display);
 
-    wl_registry_add_listener(registry, &registry_listener, NULL);
+    wl_registry_add_listener(registry, &registry_listener, nullptr);
 
     wl_display_roundtrip(display);
 
@@ -468,7 +469,7 @@ void globals::init()
 
     if (fail) abort();
 
-    xdg_wm_base_add_listener(globals::wm_base, &shell_listener, NULL);
+    xdg_wm_base_add_listener(globals::wm_base, &shell_listener, nullptr);
 }
 
 // If building against newer Wayland protocol definitions we may miss trailing fields
@@ -517,7 +518,7 @@ void window::update_free_buffers(wl_buffer* buffer)
 
 void window::prepare_buffer(buffer& b)
 {
-    void* pool_data = NULL;
+    void* pool_data = nullptr;
     wl_shm_pool* shm_pool = make_shm_pool(globals::shm, width * height * pixel_size, &pool_data);
 
     b.buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, width * pixel_size, WL_SHM_FORMAT_ARGB8888);
@@ -682,8 +683,8 @@ void grey_window::draw_new_content(window::buffer* b)
     auto const end_bar = begin + b->width * std::min(title_height, b->height) * pixel_size;
     auto const end_all = begin + b->width * b->height * pixel_size;
 
-    memset(begin, std::max(intensity-intensity_offset, 0), end_bar - begin);
-    memset(end_bar, intensity, end_all - end_bar);
+    std::memset(begin, std::max(intensity-intensity_offset, 0), end_bar - begin);
+    std::memset(end_bar, intensity, end_all - end_bar);
     for (auto* p = begin; p != end_all; p += pixel_size)
     {
         p[3] = alpha;

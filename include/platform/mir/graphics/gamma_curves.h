@@ -25,7 +25,7 @@ namespace mir
 namespace graphics
 {
 
-typedef std::vector<uint16_t> GammaCurve;
+using GammaCurve = std::vector<uint16_t>;
 
 class GammaCurves
 {
@@ -34,9 +34,7 @@ public:
     GammaCurves(GammaCurves const& other) = default;
     GammaCurves(GammaCurves&& other) = default;
 
-    GammaCurves(GammaCurve const& red,
-                GammaCurve const& green,
-                GammaCurve const& blue);
+    GammaCurves(GammaCurve const& red, GammaCurve const& green, GammaCurve const& blue);
 
     GammaCurves& operator=(GammaCurves const& other) = default;
     GammaCurves& operator=(GammaCurves&& other) = default;

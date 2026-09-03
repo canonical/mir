@@ -30,7 +30,7 @@ namespace test
 {
 namespace doubles
 {
-class MockAccessibilityManager: public mir::shell::AccessibilityManager
+class MockAccessibilityManager : public mir::shell::AccessibilityManager
 {
 public:
     MockAccessibilityManager()

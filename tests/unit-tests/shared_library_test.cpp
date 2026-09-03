@@ -36,8 +36,8 @@ public:
         : nonexistent_library{"imma_totally_not_a_library"},
           existing_library{mtf::library_path() + "/libmircore.so"},
           nonexistent_function{"yo_dawg"},
-          existing_function{"_ZN3mir17fatal_error_abortEPKcz"},
-          existent_version{"MIR_CORE_2.9"},
+          existing_function{"_ZN3mir11fatal_errorEPKcz"},
+          existent_version{"MIR_CORE_2.29"},
           nonexistent_version{"GOATS_ON_THE_GREEN"}
     {
     }

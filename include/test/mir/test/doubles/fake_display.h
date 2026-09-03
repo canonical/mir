@@ -53,8 +53,7 @@ public:
     bool apply_if_configuration_preserves_display_buffers(graphics::DisplayConfiguration const&) override;
     void configure(mir::graphics::DisplayConfiguration const&) override;
 
-    void emit_configuration_change_event(
-        std::shared_ptr<mir::graphics::DisplayConfiguration> const& new_config);
+    void emit_configuration_change_event(std::shared_ptr<mir::graphics::DisplayConfiguration> const& new_config);
 
     void wait_for_configuration_change_handler();
 

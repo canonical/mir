@@ -23,3 +23,8 @@ auto mc::NullScreenShooterFactory::create(Executor& executor) -> std::unique_ptr
 {
     return std::make_unique<NullScreenShooter>(executor);
 }
+
+auto mc::NullScreenShooterFactory::create_for_scene(Executor& executor, std::shared_ptr<Scene> const&) -> std::unique_ptr<ScreenShooter>
+{
+    return std::make_unique<NullScreenShooter>(executor);
+}

@@ -21,7 +21,6 @@
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/transformation.h>
 #include "../x11_resources.h"
-#include <cstring>
 
 namespace mg=mir::graphics;
 namespace mgx=mg::X;

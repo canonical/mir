@@ -33,7 +33,7 @@ struct MockWindowManager : shell::WindowManager
     MockWindowManager()
     {
         using namespace ::testing;
-        ON_CALL(*this, add_surface(_,_,_)).WillByDefault(Invoke(add_surface_default));
+        ON_CALL(*this, add_surface(_,_,_)).WillByDefault(add_surface_default);
     }
 
     MOCK_METHOD(void, add_session, (std::shared_ptr<scene::Session> const&), (override));
@@ -49,9 +49,6 @@ struct MockWindowManager : shell::WindowManager
     MOCK_METHOD(void, surface_ready, (std::shared_ptr<scene::Surface> const&), (override));
     MOCK_METHOD(void, modify_surface, (std::shared_ptr<scene::Session> const&, std::shared_ptr<scene::Surface> const&, shell::SurfaceSpecification const&), (override));
     MOCK_METHOD(void, remove_surface, (std::shared_ptr<scene::Session> const&, std::weak_ptr<scene::Surface> const&), (override));
-
-    MOCK_METHOD(void, add_display, (geometry::Rectangle const&), (override));
-    MOCK_METHOD(void, remove_display, (geometry::Rectangle const&), (override));
 
     MOCK_METHOD(bool, handle_keyboard_event, (MirKeyboardEvent const*), (override));
     MOCK_METHOD(bool, handle_touch_event, (MirTouchEvent const*), (override));

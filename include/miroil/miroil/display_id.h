@@ -5,7 +5,13 @@
 
 #include <miroil/edid.h>
 
-namespace mir { namespace graphics { namespace detail { struct GraphicsConfOutputIdTag; } } }
+namespace mir
+{
+namespace graphics
+{
+namespace detail { struct GraphicsConfOutputIdTag; }
+}
+}
 
 namespace miroil
 {

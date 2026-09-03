@@ -22,7 +22,7 @@
 #include <mir/graphics/kms/kms_connector.h>
 #include <mir/fatal.h>
 #include <mir/log.h>
-#include <string.h> // strcmp
+#include <cstring>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -101,7 +101,7 @@ void mgg::RealKMSOutput::reset()
     }
     catch (std::exception const& e)
     {
-        fatal_error(e.what());
+        MIR_FATAL_ERROR("{}", e.what());
     }
 
     // TODO: What if we can't locate the DPMS property?
@@ -110,7 +110,7 @@ void mgg::RealKMSOutput::reset()
         std::unique_ptr<drmModePropertyRes, decltype(&drmModeFreeProperty)>
             prop{drmModeGetProperty(drm_fd_, connector->props[i]), &drmModeFreeProperty};
         if (prop && (prop->flags & DRM_MODE_PROP_ENUM)) {
-            if (!strcmp(prop->name, "DPMS"))
+            if (!std::strcmp(prop->name, "DPMS"))
             {
                 dpms_enum_id = connector->props[i];
                 break;
@@ -219,8 +219,8 @@ void mgg::RealKMSOutput::clear_crtc()
         }
         else
         {
-            fatal_error("Couldn't clear output %s (drmModeSetCrtc = %d)",
-                        mgk::connector_name(connector).c_str(), result);
+            MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
+                        mgk::connector_name(connector), result);
         }
     }
 
@@ -251,8 +251,8 @@ void mgg::RealKMSOutput::wait_for_page_flip()
         return;
     if (!current_crtc)
     {
-        fatal_error("Output %s has no associated CRTC to wait on",
-                   mgk::connector_name(connector).c_str());
+        MIR_FATAL_ERROR("Output {} has no associated CRTC to wait on",
+                   mgk::connector_name(connector));
     }
     page_flipper->wait_for_flip(current_crtc->crtc_id);
 }
@@ -586,7 +586,7 @@ void mgg::RealKMSOutput::update_from_hardware_state(
         for (int m = 0; m != connector->count_modes; ++m) {
             drmModeModeInfo &mode_info = connector->modes[m];
 
-            if (strcmp(mode_info.name, "preferred") == 0)
+            if (std::strcmp(mode_info.name, "preferred") == 0)
                 current_mode_index = m;
         }
     }

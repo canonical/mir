@@ -45,38 +45,20 @@ enum class BufferUsage
  */
 struct BufferProperties
 {
-    BufferProperties() :
-        size(),
-        format(mir_pixel_format_invalid),
-        usage(BufferUsage::undefined)
-    {
-    }
+    BufferProperties() : size(), format(mir_pixel_format_invalid), usage(BufferUsage::undefined) {}
 
-    BufferProperties(const geometry::Size& size,
-                     const MirPixelFormat& format,
-                     BufferUsage usage) :
+    BufferProperties(geometry::Size const& size, MirPixelFormat const& format, BufferUsage usage) :
         size{size},
         format{format},
         usage{usage}
-    {
-    }
+    {}
 
     geometry::Size size;
     MirPixelFormat format;
     BufferUsage usage;
+
+    bool operator==(BufferProperties const&) const = default;
 };
-
-inline bool operator==(BufferProperties const& lhs, BufferProperties const& rhs)
-{
-    return lhs.size == rhs.size &&
-           lhs.format == rhs.format &&
-           lhs.usage == rhs.usage;
-}
-
-inline bool operator!=(BufferProperties const& lhs, BufferProperties const& rhs)
-{
-    return !(lhs == rhs);
-}
 
 }
 }

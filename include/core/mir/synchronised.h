@@ -18,6 +18,8 @@
 #define MIR_SYNCHRONISED_H_
 
 #include <mutex>
+#include <utility>
+#include <type_traits>
 
 namespace mir
 {
@@ -35,10 +37,8 @@ class Synchronised
 {
 public:
     Synchronised() = default;
-    Synchronised(T&& initial_value)
-        : value{std::move(initial_value)}
-    {
-    }
+    Synchronised(T&& initial_value) noexcept(std::is_nothrow_move_constructible_v<T>) : value{std::move(initial_value)}
+    {}
 
     Synchronised(Synchronised const&) = delete;
     Synchronised& operator=(Synchronised const&) = delete;
@@ -55,24 +55,13 @@ public:
     class LockedImpl
     {
     public:
-        LockedImpl(LockedImpl&& from) noexcept
-            : value{from.value},
-              lock{std::move(from.lock)}
-        {
-            from.value = nullptr;
-        }
+        LockedImpl(LockedImpl&& from) noexcept : value{from.value}, lock{std::move(from.lock)} { from.value = nullptr; }
 
         ~LockedImpl() = default;
 
-        auto operator*() const -> U&
-        {
-            return *value;
-        }
+        auto operator*() const -> U& { return *value; }
 
-        auto operator->() const -> U*
-        {
-            return value;
-        }
+        auto operator->() const -> U* { return value; }
 
         /**
          * Relinquish access to the data
@@ -93,17 +82,22 @@ public:
          */
         template<typename Cv, typename Predicate>
         void wait(Cv& cv, Predicate stop_waiting)
-        {
-            cv.wait(lock, stop_waiting);
-        }
+        { cv.wait(lock, stop_waiting); }
+
+        /**
+         * Allows waiting for a condition variable with a timeout
+         *
+         * The protected data may be accessed both in the predicate and after this method completes.
+         *
+         * \return true if the predicate was satisfied, false if the timeout elapsed.
+         */
+        template<typename Cv, typename Duration, typename Predicate>
+        auto wait_for(Cv& cv, Duration const& timeout, Predicate stop_waiting) -> bool
+        { return cv.wait_for(lock, timeout, stop_waiting); }
 
     private:
         friend class Synchronised;
-        LockedImpl(std::unique_lock<std::mutex>&& lock, U& value)
-            : value{&value},
-              lock{std::move(lock)}
-        {
-        }
+        LockedImpl(std::unique_lock<std::mutex>&& lock, U& value) : value{&value}, lock{std::move(lock)} {}
 
         U* value;
         std::unique_lock<std::mutex> lock;
@@ -125,10 +119,7 @@ public:
      *         While code has access to a live Locked instance it is
      *         guaranteed to have unique access to the contained data.
      */
-    auto lock() -> Locked
-    {
-        return LockedImpl<T>{std::unique_lock{mutex}, value};
-    }
+    auto lock() -> Locked { return LockedImpl<T>{std::unique_lock{mutex}, value}; }
 
     /**
      * Lock the data and return an accessor.
@@ -142,10 +133,7 @@ public:
      *         While code has access to a live Locked instance it is
      *         guaranteed to have unique access to the contained data.
      */
-    auto lock_mut() const -> Locked
-    {
-        return LockedImpl<T>{std::unique_lock{mutex}, value};
-    }
+    auto lock_mut() const -> Locked { return LockedImpl<T>{std::unique_lock{mutex}, value}; }
 
     /**
      * Smart-pointer-esque accessor for the protected data.
@@ -158,17 +146,15 @@ public:
      *       they are derived from.
      */
     using LockedView = LockedImpl<T const>;
-     /**
+    /**
      * Lock the data and return an accessor.
      *
      * \return A smart-pointer-esque accessor for the contained data.
      *         While code has access to a live Locked instance it is
      *         guaranteed to have unique access to the contained data.
      */
-    auto lock() const -> LockedView
-    {
-        return LockedImpl<T const>{std::unique_lock{mutex}, value};
-    }
+    auto lock() const -> LockedView { return LockedImpl<T const>{std::unique_lock{mutex}, value}; }
+
 private:
     std::mutex mutable mutex;
     T mutable value;

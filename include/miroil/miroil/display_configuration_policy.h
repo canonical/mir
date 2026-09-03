@@ -17,7 +17,10 @@
 #ifndef MIROIL_DISPLAY_CONDIFIGURATION_POLICY_H
 #define MIROIL_DISPLAY_CONDIFIGURATION_POLICY_H
 
-namespace mir { namespace graphics { class DisplayConfiguration; } }
+namespace mir
+{
+namespace graphics { class DisplayConfiguration; }
+}
 
 namespace miroil
 {
@@ -35,6 +38,5 @@ public:
 };
 
 } // namespace miroil
-
 
 #endif // MIROIL_DISPLAY_CONDIFIGURATION_POLICY_H

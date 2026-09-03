@@ -14,10 +14,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "signal_blocker.h"
+#include <mir/signal_blocker.h>
 
 #include <system_error>
-#include <signal.h>
+#include <csignal>
 #include <boost/exception/all.hpp>
 
 mir::SignalBlocker::SignalBlocker()

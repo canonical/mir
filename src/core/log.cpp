@@ -20,10 +20,8 @@
 #include <cstdio>
 #include <exception>
 #include <format>
-#include <sstream>
 
 #include <boost/exception/diagnostic_information.hpp>
-#include <errno.h>
 
 namespace mir {
 
@@ -32,7 +30,7 @@ void logv(logging::Severity sev, char const* component,
 {
     char message[1024];
     int max = sizeof(message) - 1;
-    int len = vsnprintf(message, max, fmt, va);
+    int len = std::vsnprintf(message, max, fmt, va);
     if (len > max)
         len = max;
     message[len] = '\0';
@@ -88,16 +86,21 @@ void log(
     }
 }
 
+void log(
+    logging::Severity severity,
+    logging::Tags tags,
+    std::string_view message)
+{
+    logging::log(severity, tags, message);
+}
+
 void security_log(
     logging::Severity severity,
     std::string const& event,
     std::string const& description)
 {
-    auto now = std::chrono::system_clock::now();
-    auto time_t = std::chrono::system_clock::to_time_t(now);
-
-    std::stringstream ss;
-    ss << std::put_time(std::gmtime(&time_t), "%FT%TZ");
+    auto const now = std::chrono::system_clock::now();
+    auto const datetime = std::format("{:%FT%TZ}", now);
 
     auto message = std::format(
         "{{"
@@ -107,7 +110,7 @@ void security_log(
             "\"level\": \"{}\", "
             "\"description\": \"{}\" "
         "}}",
-        ss.str(),
+        datetime,
         program_invocation_short_name ? program_invocation_short_name : "<unknown>",
         event,
         (severity == logging::Severity::critical ? "CRITICAL" :

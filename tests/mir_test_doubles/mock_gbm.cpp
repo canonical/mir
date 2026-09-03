@@ -21,7 +21,7 @@ namespace mtd=mir::test::doubles;
 
 namespace
 {
-mtd::MockGBM* global_mock = NULL;
+mtd::MockGBM* global_mock = nullptr;
 }
 
 mtd::FakeGBMResources::FakeGBMResources()
@@ -35,7 +35,7 @@ mtd::FakeGBMResources::FakeGBMResources()
 mtd::MockGBM::MockGBM()
 {
     using namespace testing;
-    assert(global_mock == NULL && "Only one mock object per process is allowed");
+    assert(global_mock == nullptr && "Only one mock object per process is allowed");
 
     global_mock = this;
 
@@ -71,7 +71,7 @@ mtd::MockGBM::~MockGBM()
 {
     // this is probably later than optimal, but at least ensures memory freed
     for (auto i = destroyers.begin(); i != destroyers.end(); ++i) (*i)();
-    global_mock = NULL;
+    global_mock = nullptr;
 }
 
 struct gbm_device* gbm_create_device(int fd)

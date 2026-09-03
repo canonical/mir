@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_OPTIONS_PROGRAM_OPTION_H_
 #define MIR_OPTIONS_PROGRAM_OPTION_H_
 
@@ -32,18 +31,13 @@ class ProgramOption : public Option
 public:
     ProgramOption();
 
-    void parse_arguments(
-        boost::program_options::options_description const& description,
-        int argc,
-        char const* argv[]);
+    void parse_arguments(boost::program_options::options_description const& description, int argc, char const* argv[]);
 
     void parse_environment(
         boost::program_options::options_description const& description,
         std::function<std::string(std::string)> env_var_name_mapper);
 
-    void parse_file(
-        boost::program_options::options_description const& description,
-        std::string const& filename);
+    void parse_file(boost::program_options::options_description const& description, std::string const& filename);
 
     bool is_set(char const* name) const override;
     bool get(char const* name, bool default_) const override;
@@ -60,6 +54,5 @@ private:
 };
 }
 }
-
 
 #endif /* MIR_OPTIONS_PROGRAM_OPTION_H_ */

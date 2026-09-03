@@ -44,9 +44,7 @@ std::string connector_name(DRMModeConnectorUPtr const& connector);
  *              The returned UPtr is guaranteed non-null.
  * \throws      A std::runtime_error if there are no available CRTCs.
  */
-DRMModeCrtcUPtr find_crtc_for_connector(
-    int drm_fd,
-    DRMModeConnectorUPtr const& connector);
+DRMModeCrtcUPtr find_crtc_for_connector(int drm_fd, DRMModeConnectorUPtr const& connector);
 
 std::pair<DRMModeCrtcUPtr, DRMModePlaneUPtr> find_crtc_with_primary_plane(
     int drm_fd,

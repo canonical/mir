@@ -35,11 +35,13 @@
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/stream.hpp>
 
+#include <cstring>
 #include <vector>
 #include <string>
 #include <sstream>
 #include <stdexcept>
 #include <csignal>
+#include <experimental/scope>
 
 #include <linux/vt.h>
 #include <linux/kd.h>
@@ -301,6 +303,28 @@ void restore_vt(
     if (prev_vt_mode.mode == VT_AUTO)
         fops.ioctl(vt_fd, VT_SETMODE, &const_cast<struct vt_mode&>(prev_vt_mode));
 }
+
+void switch_back_to_vt(
+    mir::VTFileOperations& fops,
+    int vt_fd,
+    int prev_active_vt)
+{
+    if (prev_active_vt <= 0)
+        return;
+
+    if (fops.ioctl(vt_fd, VT_ACTIVATE, prev_active_vt) < 0)
+    {
+        mir::log_warning(
+            "Failed to switch back to previously active VT %d: %s (%i)",
+            prev_active_vt, mir::errno_to_cstr(errno), errno);
+    }
+    else if (fops.ioctl(vt_fd, VT_WAITACTIVE, prev_active_vt) < 0)
+    {
+        mir::log_warning(
+            "Failed to wait for VT %d to become active: %s (%i)",
+            prev_active_vt, mir::errno_to_cstr(errno), errno);
+    }
+}
 }
 
 mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
@@ -389,7 +413,8 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
                 saved_kd_mode = prev_kd_mode,
                 saved_vt_mode = prev_vt_mode,
                 saved_tty_mode = prev_tty_mode,
-                saved_tcattr = prev_tcattr
+                saved_tcattr = prev_tcattr,
+                saved_prev_active_vt = prev_active_vt
             ]
             {
                 for (auto const& device : devices->as_iterable())
@@ -403,6 +428,7 @@ mir::LinuxVirtualTerminal::LinuxVirtualTerminal(
                     saved_vt_mode,
                     saved_tty_mode,
                     saved_tcattr);
+                switch_back_to_vt(*fops, vt_fd, saved_prev_active_vt);
             }));
 }
 
@@ -431,8 +457,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                      * Otherwise we leave the VT subsystem in a glorious state of
                      * waiting forever for us to ACK the switch.
                      */
-                    auto ack_when_done = mir::raii::paired_calls(
-                        [](){},
+                    auto ack_when_done = std::experimental::scope_exit(
                         [this]()
                         {
                             fops->ioctl(vt_fd.fd(), VT_RELDISP, VT_ACKACQ);
@@ -466,8 +491,7 @@ void mir::LinuxVirtualTerminal::register_switch_handlers(
                      * Otherwise we leave the VT subsystem in a glorious state of
                      * waiting forever for us to ACK the switch.
                      */
-                    auto ack_when_done = mir::raii::paired_calls(
-                        [](){},
+                    auto ack_when_done = std::experimental::scope_exit(
                         [this, &action]()
                         {
                             fops->ioctl(vt_fd.fd(), VT_RELDISP, action);
@@ -512,6 +536,18 @@ void mir::LinuxVirtualTerminal::restore()
 {
     if (vt_fd.fd() >= 0)
     {
+        /*
+         * Suspend any still-active devices before handing the VT back. This
+         * drops DRM master and revokes input FDs so that the previous VT
+         * owner can re-master the GPU when the kernel signals it on acquire.
+         * Without this, the previous owner stays on a blank framebuffer until
+         * the next chvt forces another acquire round-trip.
+         */
+        for (auto const& device : active_devices->as_iterable())
+        {
+            device->on_suspended();
+        }
+
         restore_vt(
             *fops,
             vt_fd.fd(),
@@ -519,6 +555,10 @@ void mir::LinuxVirtualTerminal::restore()
             prev_vt_mode,
             prev_tty_mode,
             prev_tcattr);
+
+        switch_back_to_vt(*fops, vt_fd.fd(), prev_active_vt);
+        // Ensure the destructor's restore() is a no-op after an explicit call.
+        prev_active_vt = 0;
     }
 }
 
@@ -609,6 +649,15 @@ int mir::LinuxVirtualTerminal::open_vt(int vt_number)
 
     if (activate)
     {
+        try { prev_active_vt = find_active_vt_number(); }
+        catch (std::exception const& e)
+        {
+            mir::log_warning(
+                "Failed to determine active VT before taking over: %s; will not restore previous VT on shutdown",
+                e.what());
+            prev_active_vt = 0;
+        }
+
         auto status = fops->ioctl(vt_fd, VT_ACTIVATE, vt_number);
         if (status < 0)
         {
@@ -661,7 +710,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
 
             while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                if (strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
+                if (std::strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
                 {
                     return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
                 }

@@ -291,8 +291,8 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
                                     mir::OptionType::boolean);
 
     // 25 rate and 600 delay are the default in Weston and Sway
-    server.add_configuration_option(key_repeat_rate_opt, "Number of milliseconds between generated key repeat events.", 25);
-    server.add_configuration_option(key_repeat_delay_opt, "Number of millisecond to hold down a key before generating repeat events.", 600);
+    server.add_configuration_option(key_repeat_rate_opt, "Rate of repeating keys in characters per second.", 25);
+    server.add_configuration_option(key_repeat_delay_opt, "Number of milliseconds to hold down a key before generating repeat events.", 600);
 
     server.add_init_callback(
         [&]()
@@ -386,7 +386,7 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
     if (contains(device.capabilities(), mi::DeviceCapability::touchpad))
     {
         mir::log_debug("Configuring touchpad: '%s'", device.name().c_str());
-        if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
+        if (auto const optional_pointer_config = device.pointer_configuration(); optional_pointer_config.has_value())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             if (acceleration) pointer_config.acceleration(*acceleration);
@@ -396,11 +396,11 @@ void miral::TouchpadInputConfiguration::apply_to(mi::Device& device) const
             device.apply_pointer_configuration(pointer_config);
         }
 
-        if (auto const optional_touchpad_config = device.touchpad_configuration(); optional_touchpad_config.is_set())
+        if (auto const optional_touchpad_config = device.touchpad_configuration(); optional_touchpad_config.has_value())
         {
             MirTouchpadConfig touch_config( optional_touchpad_config.value() );
             if (disable_while_typing) touch_config.disable_while_typing(*disable_while_typing);
-            if (disable_with_external_mouse) touch_config.disable_while_typing(*disable_with_external_mouse);
+            if (disable_with_external_mouse) touch_config.disable_with_external_mouse(*disable_with_external_mouse);
             if (click_mode) touch_config.click_mode(*click_mode);
             if (scroll_mode) touch_config.scroll_mode(*scroll_mode);
             if (tap_to_click) touch_config.tap_to_click(*tap_to_click);
@@ -416,7 +416,7 @@ void miral::MouseInputConfiguration::apply_to(mi::Device& device) const
     if (contains(device.capabilities(), mi::DeviceCapability::pointer))
     {
         mir::log_debug("Configuring pointer: '%s'", device.name().c_str());
-        if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.is_set())
+        if (auto optional_pointer_config = device.pointer_configuration(); optional_pointer_config.has_value())
         {
             MirPointerConfig pointer_config( optional_pointer_config.value() );
             if (handedness) pointer_config.handedness(*handedness);

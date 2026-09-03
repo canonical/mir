@@ -106,19 +106,6 @@ public:
         return tools.info_for(window);
     }
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-    auto info_for_window_id(std::string const& id) const -> miral::WindowInfo& override
-    {
-        return tools.info_for_window_id(id);
-    }
-
-    auto id_for_window(miral::Window const& window) const -> std::string override
-    {
-        return tools.id_for_window(window);
-    }
-#pragma GCC diagnostic pop
-
     void ask_client_to_close(miral::Window const& window) override
     {
         tools.ask_client_to_close(window);

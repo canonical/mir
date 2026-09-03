@@ -19,7 +19,6 @@
 
 #include <mir/shell/shell.h>
 #include <mir/test/doubles/stub_session.h>
-#include <mir/test/doubles/null_prompt_session.h>
 #include <mir/test/doubles/stub_surface.h>
 
 namespace mir
@@ -113,23 +112,6 @@ struct StubShell : public shell::Shell
     }
 
     void close_session(std::shared_ptr<scene::Session> const& /*session*/) override
-    {
-    }
-
-    auto start_prompt_session_for(
-        std::shared_ptr<scene::Session> const& /*session*/,
-        scene::PromptSessionCreationParameters const& /*params*/) -> std::shared_ptr<scene::PromptSession> override
-    {
-        return std::make_shared<NullPromptSession>();
-    }
-
-    void add_prompt_provider_for(
-        std::shared_ptr<scene::PromptSession> const& /*prompt_session*/,
-        std::shared_ptr<scene::Session> const& /*session*/) override
-    {
-    }
-
-    void stop_prompt_session(std::shared_ptr<scene::PromptSession> const& /*prompt_session*/) override
     {
     }
 

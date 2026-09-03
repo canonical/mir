@@ -20,6 +20,7 @@
 #include <mir/log.h>
 
 #include "x11_resources.h"
+#include <cstdlib>
 
 #include <X11/Xlib-xcb.h>
 #include <xcb/randr.h>
@@ -107,7 +108,7 @@ public:
     {
         // I'm assuming we handle xcb errors somewhere with events.
         auto ver_cookie = xcb_randr_query_version_unchecked(conn, 1, 2);
-        free(xcb_randr_query_version_reply(conn, ver_cookie, nullptr));
+        std::free(xcb_randr_query_version_reply(conn, ver_cookie, nullptr));
         auto screen_cookie = xcb_randr_get_screen_info_unchecked(conn,screen_->root);
         auto const screen_reply = mir::make_unique_cptr(xcb_randr_get_screen_info_reply(conn, screen_cookie, nullptr));
         auto refresh_rate = static_cast<double>(screen_reply->rate);

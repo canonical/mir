@@ -84,8 +84,7 @@ public:
     ///
     /// \param predicate the predicate
     /// \returns an application, or a null application if none is found
-    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate)
-    -> Application;
+    auto find_application(std::function<bool(ApplicationInfo const& info)> const& predicate) -> Application;
 
     /// Retrieve information about a \p session.
     ///
@@ -110,24 +109,6 @@ public:
     /// \pre the \p session is valid (not null)
     /// \sa miral::WindowInfo - info about the window
     auto info_for(Window const& window) const -> WindowInfo&;
-
-    /// Retrieve info for a persistent surface id.
-    ///
-    /// \param id the persistent surface id
-    /// \returns the info
-    /// \throws invalid_argument if the id is badly formatted
-    /// \throws runtime_error if the id doesn't identify a current window
-    /// \deprecated 'Persistent' surface IDs were part of mirclient API
-    [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
-    auto info_for_window_id(std::string const& id) const -> WindowInfo&;
-
-    /// Retrieve the persistent surface id for a window
-    ///
-    /// \param window the window
-    /// \returns the persistent surface id
-    /// \deprecated 'Persistent' surface IDs were part of mirclient API
-    [[deprecated("'Persistent' surface IDs were part of mirclient API")]]
-    auto id_for_window(Window const& window) const -> std::string;
 
     /// Send a close request to the window.
     ///
@@ -187,7 +168,7 @@ public:
     /// Returns the window of the given application that should be selected.
     ///
     /// \returns the window to select, or `std::nullopt` if none are found
-    auto window_to_select_application(const Application) const -> std::optional<Window>;
+    auto window_to_select_application(Application const) const -> std::optional<Window>;
 
     /// Check if the provided \p window can be selected.
     ///
@@ -231,13 +212,13 @@ public:
     /// Modify the provided window with the provided \p modifications.
     ///
     /// \param window_info the window to modify
-    /// \param modifications the modification sto make on the window
+    /// \param modifications the modifications to make on the window
     void modify_window(WindowInfo& window_info, WindowSpecification const& modifications);
 
     /// Modify the provided \p window with the provided \p modifications.
     ///
     /// \param window the window to modify
-    /// \param modifications the modification sto make on the window
+    /// \param modifications the modifications to make on the window
     void modify_window(Window const& window, WindowSpecification const& modifications);
 
     /// Set a default size and position to reflect state change.
@@ -280,7 +261,6 @@ public:
         std::shared_ptr<Workspace> const& to_workspace,
         std::shared_ptr<Workspace> const& from_workspace);
 
-
     /// Invoke the \p callback for each workspace that contains the \p window.
     ///
     /// \warning It is unsafe to add or remove windows from workspace from the callback during enumeration.
@@ -310,7 +290,7 @@ public:
     /// \param callback the method to call under lock
     void invoke_under_lock(std::function<void()> const& callback);
 
-    /// Move the cursor to the provided \point.
+    /// Move the cursor to the provided \p point.
     ///
     /// If the point is beyond the range of the outputs, the point is clamped to the output area.
     /// \param point to move the cursor to

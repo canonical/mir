@@ -474,16 +474,6 @@ template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>
 template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator==(iterator const&) const;
 template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator==(iterator const&) const;
 
-template<typename DRMUPtr, DRMUPtr(*object_constructor)(int drm_fd, uint32_t id)>
-bool mgkd::ObjectCollection<DRMUPtr, object_constructor>::iterator::operator!=(iterator const& rhs) const
-{
-    return !(*this == rhs);
-}
-template bool mgkd::ObjectCollection<mgk::DRMModeConnectorUPtr, &mgk::get_connector>::iterator::operator!=(iterator const&) const;
-template bool mgkd::ObjectCollection<mgk::DRMModeEncoderUPtr, &mgk::get_encoder>::iterator::operator!=(iterator const&) const;
-template bool mgkd::ObjectCollection<mgk::DRMModeCrtcUPtr, &mgk::get_crtc>::iterator::operator!=(iterator const&) const;
-template bool mgkd::ObjectCollection<mgk::DRMModePlaneUPtr, &mgk::get_plane>::iterator::operator!=(iterator const&) const;
-
 auto mgk::get_cap_checked(mir::Fd const& drm_node, uint64_t cap) -> uint64_t
 {
     uint64_t result;

@@ -176,7 +176,7 @@ void Printer::printhelp(BackgroundInfo const& region)
             "  o To exit: Ctrl-Alt-BkSp",
         };
 
-    auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35, 20});
+    auto const min_char_width = std::min({region_size.width.as_int()/60, region_size.height.as_int()/35});
     FT_Set_Pixel_Sizes(face, min_char_width, 0);
     Width help_width;
     Height help_height;
@@ -353,7 +353,7 @@ void DecorationProviderClient::draw_background(BackgroundInfo& ctx) const
 
         uint32_t* pixel = (uint32_t*)row;
         for (int i = 0; i < width; i++)
-            memcpy(pixel + i, pattern, sizeof pixel[i]);
+            std::memcpy(pixel + i, pattern, sizeof pixel[i]);
 
         row += stride;
     }

@@ -78,12 +78,11 @@ struct TestSimulatedSecondaryClickTransformer : Test
             std::nullopt,
             mir_pointer_action_button_down,
             buttons,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f);
+            mir::geometry::PointF{0.0f, 0.0f},
+            {0.0f, 0.0f},
+            mir_pointer_axis_source_none,
+            {},
+            {});
     }
 
     auto pointer_up_event(MirPointerButton button) -> mir::EventUPtr
@@ -93,12 +92,11 @@ struct TestSimulatedSecondaryClickTransformer : Test
             std::nullopt,
             mir_pointer_action_button_up,
             buttons,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f);
+            mir::geometry::PointF{0.0f, 0.0f},
+            {0.0f, 0.0f},
+            mir_pointer_axis_source_none,
+            {},
+            {});
     }
 };
 
@@ -279,12 +277,11 @@ TEST_F(TestSimulatedSecondaryClickTransformer, low_displacement_doesnt_cancel_si
             std::nullopt,
             mir_pointer_action_motion,
             buttons,
-            displacement - 1.0f,
-            displacement - 1.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f));
+            mir::geometry::PointF{displacement - 1.0f, displacement - 1.0f},
+            {0.0f, 0.0f},
+            mir_pointer_axis_source_none,
+            {},
+            {}));
 
     clock.advance_by(test_hold_time);
     main_loop->call_queued();
@@ -320,12 +317,11 @@ TEST_F(TestSimulatedSecondaryClickTransformer, high_displacement_cancels_simulat
             std::nullopt,
             mir_pointer_action_motion,
             buttons,
-            displacement + 1.0f,
-            displacement + 1.0f,
-            0.0f,
-            0.0f,
-            0.0f,
-            0.0f));
+            mir::geometry::PointF{displacement + 1.0f, displacement + 1.0f},
+            {0.0f, 0.0f},
+            mir_pointer_axis_source_none,
+            {},
+            {}));
 
     clock.advance_by(test_hold_time);
     main_loop->call_queued();

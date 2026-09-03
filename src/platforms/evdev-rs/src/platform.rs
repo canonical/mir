@@ -14,14 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{LibinputDevice, LibinputDeviceObserver, LibinputDeviceState};
-use crate::event_processing::{
-    drain_initial_events, process_deferred_events, process_libinput_events,
-};
-use crate::libinput_interface::LibinputInterfaceImpl;
+use crate::device::{LibinputDevice, LibinputDeviceState, ScrollState};
+use crate::event_processing::process_libinput_events;
+use crate::fd_store::FdStore;
+use crate::udev_monitor::{UdevEventType, UdevMonitor};
 use cxx;
 use input;
-use std::os::fd::AsRawFd;
+use std::collections::HashSet;
+use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex;
 
@@ -35,6 +36,18 @@ pub struct PlatformRs {
     report: cxx::UniquePtr<crate::InputReport>,
 
     state: Option<Arc<Mutex<LibinputDeviceState>>>,
+
+    /// Whether the platform is currently running. Owned by Rust, queried by C++.
+    running: Arc<AtomicBool>,
+
+    /// Set of devnums we know about (pending or active), to deduplicate udev events.
+    known_devnums: HashSet<u64>,
+
+    /// Rust-owned udev monitor for input device hotplug events.
+    udev_monitor: Option<UdevMonitor>,
+
+    /// Manages pre-acquired and backup file descriptors for device nodes.
+    fd_store: Arc<Mutex<FdStore>>,
 }
 
 impl PlatformRs {
@@ -48,165 +61,124 @@ impl PlatformRs {
             device_registry,
             report,
             state: None,
+            running: Arc::new(AtomicBool::new(false)),
+            known_devnums: HashSet::new(),
+            udev_monitor: None,
+            fd_store: Arc::new(Mutex::new(FdStore::new())),
         }
     }
 
     /// Start the input platform.
     ///
-    /// This method will spawn a thread to handle input events from both
-    /// libinput and Mir. The thread will run until `stop()` is called.
-    ///
-    /// Note: this only creates the libinput context and does NOT call
-    /// `udev_assign_seat()`.  Seat assignment (and therefore device opening)
-    /// is deferred to `assign_seat()`, which must be called after this
-    /// function returns so that the GLib main loop is free to process the
-    /// logind `TakeDevice` D-Bus replies that opening each device requires.
+    /// Creates the libinput context using the path-based API so that device
+    /// acquisition (via `path_add_device`) is driven by the `UdevMonitor`.
+    /// This avoids `udev_assign_seat()`, which would call `open_restricted()`
+    /// synchronously while the GLib main loop still needs to process the logind
+    /// `TakeDevice` D-Bus replies.
     ///
     /// Returns `true` if a fresh context was created, `false` if the platform
-    /// was already started.  The caller must only schedule `assign_seat()` when
-    /// this returns `true` to avoid calling `udev_assign_seat()` on an already-
-    /// assigned libinput context.
+    /// was already started.
     pub fn start(&mut self) -> bool {
         if self.state.is_some() {
-            // Already started; stop() was not called before start(). This is a
-            // programming error, but we handle it gracefully by doing nothing rather
-            // than creating a second libinput context and leaking the existing one.
             return false;
         }
 
         println!("Starting the evdev-rs platform");
 
-        let bridge = self.bridge.clone();
-        let libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
-            bridge: bridge.clone(),
-            fds: Vec::new(),
-        });
+        let libinput =
+            input::Libinput::new_from_path(crate::libinput_interface::LibinputInterfaceImpl {
+                fd_store: self.fd_store.clone(),
+            });
 
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
             libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
-            scroll_axis_x_accum: 0.0,
-            scroll_axis_y_accum: 0.0,
-            x_scroll_scale: 1.0,
-            y_scroll_scale: 1.0,
+            scroll_state: ScrollState {
+                x_accum: 0.0,
+                y_accum: 0.0,
+                x_scroll_scale: 1.0,
+                y_scroll_scale: 1.0,
+            },
         })));
+
+        self.running.store(true, Ordering::Release);
+        self.known_devnums.clear();
+
+        // Create the udev monitor. The closure handles initial device enumeration.
+        let mut initial_devices: Vec<(String, u64, String)> = Vec::new();
+        self.udev_monitor = UdevMonitor::new(|_event_type, devnode, devnum, sysname| {
+            initial_devices.push((devnode.to_string(), devnum, sysname.to_string()));
+        });
+
+        // Process the initially-enumerated devices through on_udev_event.
+        for (devnode, devnum, sysname) in initial_devices {
+            self.on_udev_event(UdevEventType::Added, &devnode, devnum, &sysname);
+        }
 
         true
     }
 
-    /// Assign a udev seat so that libinput begins opening input devices.
+    /// Add a device to the libinput context by path.
     ///
-    /// This must be called after `start()` **and** after `start_platforms()`
-    /// has returned to the caller, so that the GLib main loop is no longer
-    /// blocked and can process the logind `TakeDevice` D-Bus replies that
-    /// opening each input device requires.
-    ///
-    /// After `udev_assign_seat()` returns, `libinput_dispatch()` must be called
-    /// to make the `DEVICE_ADDED` events accessible.  Any input events buffered
-    /// in the kernel device fds while devices were being opened (e.g. a modifier
-    /// key held during a logind `TakeDevice` round-trip) also become available in
-    /// that same `dispatch()` call.  We split these two kinds of events:
-    ///
-    /// - `DEVICE_ADDED` events are processed immediately (registration threads
-    ///   spawned) while the state lock is held.
-    /// - Non-device input events are deferred to a Vec.
-    ///
-    /// The state lock is then released, registration threads are joined (so
-    /// `event_builder` is set for all devices), and only then the deferred input
-    /// events are processed.  This prevents the #4723 drop race where a buffered
-    /// key event would otherwise be processed in the same batch as `DEVICE_ADDED`
-    /// before `event_builder` is set.
-    ///
-    /// # Safety
-    /// This function calls into C++ (via `acquire_device`) while holding the
-    /// Rust state mutex, but no other Rust code that also needs the state
-    /// mutex can run concurrently on the input thread at this point.
-    pub fn assign_seat(&mut self) {
-        // Clone the Arc so we are not borrowing from self.state — this allows
-        // us to call self.state.take() on failure paths below without a
-        // borrow-check conflict.
-        let state_arc = match &self.state {
-            Some(arc) => arc.clone(),
-            None => {
-                return;
-            }
+    /// Called internally after a device fd has been acquired and stored in
+    /// the bridge's pending-fd map. libinput will call `open_restricted()`,
+    /// which retrieves the pre-acquired fd non-blockingly via `claim_pending_fd`.
+    pub fn path_add_device(&mut self, devnode: &str) {
+        let Some(state_arc) = self.state.as_mut() else {
+            println!("PlatformRs::path_add_device: platform not started");
+            return;
         };
-
-        // Phase 1: assign the seat, dispatch once to surface DEVICE_ADDED events,
-        // and split the resulting queue into device events (handled immediately)
-        // and deferred input events.
-        //
-        // The state lock is held for the entire phase.  Registration threads are
-        // spawned but not yet joined — they need the same lock (inside
-        // LibinputDevice::start) so we must release it before joining.
-        // TODO: This does not handle multi-seat. If/when we do multi-seat, this will need to be refactored.
-        let phase1_result = match state_arc.lock() {
+        match state_arc.lock() {
             Ok(mut state) => {
-                // Note: udev_assign_seat returns Result<(), ()> — no error details are available.
-                if state.libinput.udev_assign_seat("seat0").is_err() {
-                    eprintln!("Failed to call udev_assign_seat, not running the libinput loop");
-                    None
-                } else {
-                    Some(drain_initial_events(
-                        &mut *state,
-                        self.device_registry.clone(),
-                        self.bridge.clone(),
-                    ))
-                }
+                println!("evdev-rs: libinput path_add_device({})", devnode);
+                state.libinput.path_add_device(devnode);
             }
             Err(_) => {
-                // A poisoned mutex means another thread panicked while holding it,
-                // leaving the state in an unknown condition.
-                None
-            }
-        };
-        // State lock is released here.
-
-        let (handles, deferred) = match phase1_result {
-            Some(result) => result,
-            None => {
-                // On any failure, reset the platform state so that a subsequent
-                // start() call can create a fresh libinput context and retry.
-                self.state.take();
-                return;
-            }
-        };
-
-        // Phase 2: join registration threads so that event_builder is set for
-        // all devices before we process any input events.
-        for handle in handles {
-            if let Err(err) = handle.join() {
-                // Log panics in registration threads so startup issues are visible.
-                if let Some(message) = err.downcast_ref::<&str>() {
-                    eprintln!(
-                        "evdev-rs platform: device registration thread panicked with message: {}",
-                        message
-                    );
-                } else if let Some(message) = err.downcast_ref::<String>() {
-                    eprintln!(
-                        "evdev-rs platform: device registration thread panicked with message: {}",
-                        message
-                    );
-                } else {
-                    eprintln!(
-                         "evdev-rs platform: device registration thread panicked with non-string payload"
-                     );
-                }
+                println!("PlatformRs::path_add_device: state mutex poisoned");
             }
         }
+    }
 
-        // Phase 3: process any input events (keyboard, pointer, …) that arrived
-        // in the same dispatch() batch as DEVICE_ADDED.  Now that event_builder
-        // is set these events will be handled correctly rather than dropped.
-        if !deferred.is_empty() {
-            match state_arc.lock() {
-                Ok(mut state) => {
-                    process_deferred_events(&mut *state, &self.bridge, deferred, &self.report);
-                }
-                Err(_) => {
-                    self.state.take();
-                }
+    /// Remove a device from the libinput context by path.
+    ///
+    /// Called internally when a device is suspended (VT switch) or
+    /// removed (hotplug disconnect).
+    pub fn path_remove_device(&mut self, devnode: &str) {
+        let Some(state_arc) = self.state.as_mut() else {
+            return;
+        };
+        match state_arc.lock() {
+            Ok(mut state) => {
+                let index = state
+                    .known_devices
+                    .iter()
+                    .position(|d| d.devnode == devnode);
+                let Some(index) = index else {
+                    println!(
+                        "evdev-rs: path_remove_device({}) — not in known_devices",
+                        devnode
+                    );
+                    return;
+                };
+                println!(
+                    "evdev-rs: path_remove_device({}) — removing from libinput",
+                    devnode
+                );
+                let device_info = state.known_devices.swap_remove(index);
+                state.libinput.path_remove_device(device_info.device);
+
+                let input_device = device_info.input_device.clone();
+                let registry = self.device_registry.clone();
+                std::thread::spawn(move || unsafe {
+                    registry
+                        .clone()
+                        .pin_mut_unchecked()
+                        .remove_device(&input_device);
+                });
+            }
+            Err(_) => {
+                println!("PlatformRs::path_remove_device: state mutex poisoned");
             }
         }
     }
@@ -228,6 +200,10 @@ impl PlatformRs {
     ///
     /// This method will signal the input thread to stop and wait for it to finish.
     pub fn stop(&mut self) {
+        self.running.store(false, Ordering::Release);
+        self.known_devnums.clear();
+        self.udev_monitor = None;
+
         // Note: When the main loop exits, we need to remove all devices from the device registry
         // or else Mir will try to free the devices later but we won't have access to the platform
         // code at that point. This results in a segfault.
@@ -277,41 +253,34 @@ impl PlatformRs {
         }
     }
 
-    pub fn create_device_observer(&self) -> Box<LibinputDeviceObserver> {
-        Box::new(LibinputDeviceObserver::new())
-    }
-
     pub fn create_input_device(&mut self, device_id: i32) -> Box<LibinputDevice> {
         let state_arc = match self.state.as_mut() {
             Some(s) => s.clone(),
             None => {
-                println!(
-                    "PlatformRs::create_input_device: state not initialized; creating fallback state"
+                eprintln!(
+                    "PlatformRs::create_input_device: platform not started (device_id={})",
+                    device_id
                 );
-                let mut libinput = input::Libinput::new_with_udev(LibinputInterfaceImpl {
+                // Return a device that will fail gracefully when used.
+                return Box::new(LibinputDevice {
+                    device_id,
+                    state: Arc::new(Mutex::new(LibinputDeviceState {
+                        libinput: input::Libinput::new_from_path(
+                            crate::libinput_interface::LibinputInterfaceImpl {
+                                fd_store: self.fd_store.clone(),
+                            },
+                        ),
+                        known_devices: Vec::new(),
+                        next_device_id: 0,
+                        scroll_state: ScrollState {
+                            x_accum: 0.0,
+                            y_accum: 0.0,
+                            x_scroll_scale: 1.0,
+                            y_scroll_scale: 1.0,
+                        },
+                    })),
                     bridge: self.bridge.clone(),
-                    fds: Vec::new(),
                 });
-
-                let started = match libinput.udev_assign_seat("seat0") {
-                    Err(_) => false,
-                    _ => true,
-                };
-                if !started {
-                    println!(
-                        "PlatformRs::create_input_device: failed to assign seat for fallback state"
-                    );
-                }
-
-                Arc::new(Mutex::new(LibinputDeviceState {
-                    libinput,
-                    known_devices: Vec::new(),
-                    next_device_id: 0,
-                    scroll_axis_x_accum: 0.0,
-                    scroll_axis_y_accum: 0.0,
-                    x_scroll_scale: 1.0,
-                    y_scroll_scale: 1.0,
-                }))
             }
         };
 
@@ -329,8 +298,7 @@ impl PlatformRs {
 
         match self.state.as_mut().unwrap().try_lock() {
             Ok(mut state) => {
-                // Drop handles: runtime hotplug registration is fire-and-forget.
-                let _ = process_libinput_events(
+                process_libinput_events(
                     &mut *state,
                     self.device_registry.clone(),
                     self.bridge.clone(),
@@ -339,5 +307,197 @@ impl PlatformRs {
             }
             _ => {}
         }
+    }
+
+    /// Returns whether the platform is currently running.
+    /// Queried from C++ (InputDeviceObserver) and internally.
+    pub fn is_running(&self) -> bool {
+        self.running.load(Ordering::Acquire)
+    }
+
+    /// Returns the file descriptor for the udev monitor.
+    /// C++ wraps this in a `ReadableFd` dispatchable.
+    /// Returns -1 if the monitor is not available.
+    pub fn udev_monitor_fd(&self) -> i32 {
+        match &self.udev_monitor {
+            Some(monitor) => monitor.fd(),
+            None => -1,
+        }
+    }
+
+    /// Process pending udev monitor events.
+    /// Invoked from C++ when the udev monitor fd becomes readable.
+    pub fn process_udev_events(&mut self) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        // Take the monitor out temporarily to avoid borrow issues with self.
+        let Some(mut monitor) = self.udev_monitor.take() else {
+            return;
+        };
+
+        let mut events: Vec<(UdevEventType, String, u64, String)> = Vec::new();
+        monitor.process_events(|event_type, devnode, devnum, sysname| {
+            events.push((event_type, devnode.to_string(), devnum, sysname.to_string()));
+        });
+
+        // Put the monitor back before processing events (which need &mut self).
+        self.udev_monitor = Some(monitor);
+
+        for (event_type, devnode, devnum, sysname) in events {
+            self.on_udev_event(event_type, &devnode, devnum, &sysname);
+        }
+    }
+
+    /// Handle a udev event. Decides whether to acquire or release a device.
+    ///
+    /// Called internally by `process_udev_events()` (at runtime when the
+    /// udev fd is readable) and by `start()` (during initial enumeration).
+    pub fn on_udev_event(
+        &mut self,
+        event_type: UdevEventType,
+        devnode: &str,
+        devnum: u64,
+        sysname: &str,
+    ) {
+        if !self.running.load(Ordering::Acquire) {
+            return;
+        }
+
+        match event_type {
+            UdevEventType::Added => {
+                // Only process "event" devices (what libinput expects).
+                if !sysname.starts_with("event") {
+                    return;
+                }
+
+                // Deduplicate: skip if already pending or active.
+                if self.known_devnums.contains(&devnum) {
+                    println!(
+                        "evdev-rs: on_udev_event Added devnode={} devnum={} — already known, skipping",
+                        devnode, devnum
+                    );
+                    return;
+                }
+
+                println!(
+                    "evdev-rs: on_udev_event Added devnode={} devnum={} — acquiring",
+                    devnode, devnum
+                );
+
+                // Ask C++ to initiate device acquisition via ConsoleServices.
+                if self.bridge.acquire_device(devnum, devnode) {
+                    self.known_devnums.insert(devnum);
+                }
+            }
+            UdevEventType::Removed => {
+                println!(
+                    "evdev-rs: on_udev_event Removed devnode={} devnum={}",
+                    devnode, devnum
+                );
+
+                if !self.known_devnums.remove(&devnum) {
+                    println!("evdev-rs: on_udev_event Removed — not in known_devnums, skipping");
+                    return;
+                }
+
+                // Release the pending future if activated() never fired.
+                self.bridge.release_pending_device(devnum);
+
+                // If already active, remove from libinput and release.
+                if self.bridge.has_device(devnum) {
+                    if !devnode.is_empty() {
+                        self.path_remove_device(devnode);
+                    }
+                    self.bridge.release_device(devnum);
+                }
+
+                if let Ok(mut store) = self.fd_store.lock() {
+                    store.remove(devnode);
+                }
+            }
+        }
+    }
+
+    /// Handle device activation (fd acquired from ConsoleServices).
+    ///
+    /// Invoked from C++ (on the input dispatch thread via ActionQueue)
+    /// after `Device::Observer::activated()` has fired and the fd has
+    /// been dup'd.
+    pub fn on_device_activated(&mut self, devnode: &str, devnum: u64, fd: i32) {
+        println!(
+            "evdev-rs: on_device_activated devnode={} devnum={} fd={}",
+            devnode, devnum, fd
+        );
+
+        if !self.running.load(Ordering::Acquire) {
+            println!("evdev-rs: on_device_activated ignored — platform not running");
+            return;
+        }
+
+        // Store the fd so that open_restricted() can claim it.
+        match self.fd_store.lock() {
+            Ok(mut store) => store.store(devnode, unsafe { OwnedFd::from_raw_fd(fd) }),
+            Err(_) => {
+                println!("evdev-rs: on_device_activated: fd_store mutex poisoned");
+                return;
+            }
+        }
+
+        // Transfer the Device from pending to active in C++.
+        self.bridge.activate_pending_device(devnum);
+
+        // Tell libinput about the new device.
+        println!(
+            "evdev-rs: on_device_activated calling path_add_device({})",
+            devnode
+        );
+        self.path_add_device(devnode);
+    }
+
+    /// Handle device suspension (e.g. VT switch or lid close).
+    ///
+    /// Invoked from C++ (on the input dispatch thread via ActionQueue).
+    pub fn on_device_suspended(&mut self, devnode: &str, devnum: u64) {
+        println!(
+            "evdev-rs: on_device_suspended devnode={} devnum={}",
+            devnode, devnum
+        );
+
+        if !self.running.load(Ordering::Acquire) {
+            println!("evdev-rs: on_device_suspended ignored — platform not running");
+            return;
+        }
+
+        println!(
+            "evdev-rs: on_device_suspended calling path_remove_device({})",
+            devnode
+        );
+
+        self.bridge.release_device(devnum);
+        self.path_remove_device(devnode);
+    }
+
+    /// Handle device removal (hotplug disconnect via observer).
+    ///
+    /// Invoked from C++ (on the input dispatch thread via ActionQueue).
+    pub fn on_device_removed(&mut self, devnode: &str, devnum: u64) {
+        println!(
+            "evdev-rs: on_device_removed devnode={} devnum={}",
+            devnode, devnum
+        );
+
+        if !self.running.load(Ordering::Acquire) {
+            println!("evdev-rs: on_device_removed ignored — platform not running");
+            return;
+        }
+
+        self.known_devnums.remove(&devnum);
+        self.bridge.release_device(devnum);
+        if let Ok(mut store) = self.fd_store.lock() {
+            store.remove(devnode);
+        }
+        self.path_remove_device(devnode);
     }
 }

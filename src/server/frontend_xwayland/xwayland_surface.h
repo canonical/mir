@@ -99,10 +99,7 @@ private:
             return StateTracker{scene::SurfaceStateTracker(mir_window_state_restored), true};
         }
 
-        auto operator==(StateTracker other) const -> bool
-        {
-            return mir_state == other.mir_state && withdrawn == other.withdrawn;
-        }
+        auto operator==(StateTracker const& other) const -> bool = default;
 
         auto active_mir_state() const -> MirWindowState
         {

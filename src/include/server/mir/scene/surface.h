@@ -22,12 +22,12 @@
 #include <mir/frontend/surface.h>
 #include <mir/compositor/compositor_id.h>
 #include <mir/flags.h>
-#include <mir/optional_value.h>
 #include <mir/observer_registrar.h>
 #include "surface_state_tracker.h"
 
-#include <vector>
 #include <list>
+#include <optional>
+#include <vector>
 
 namespace mir
 {
@@ -108,6 +108,9 @@ public:
 
     virtual void request_client_surface_close() = 0;
     virtual std::shared_ptr<Surface> parent() const = 0;
+    /// Set the parent surface. Pass an empty weak_ptr to unset the parent.
+    /// \throws std::runtime_error if the new parent would create a cycle.
+    virtual void set_parent(std::weak_ptr<Surface> const& parent) = 0;
 
     // TODO a legacy of old interactions and needs removing
     virtual int configure(MirWindowAttrib attrib, int value) = 0;

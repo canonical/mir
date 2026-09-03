@@ -32,10 +32,7 @@ class BufferBasic : public Buffer
 public:
     BufferBasic();
 
-    graphics::BufferID id() const
-    {
-        return buffer_id;
-    }
+    graphics::BufferID id() const { return buffer_id; }
 
 private:
     BufferID const buffer_id;

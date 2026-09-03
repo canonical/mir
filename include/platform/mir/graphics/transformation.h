@@ -20,19 +20,34 @@
 #include <mir_toolkit/common.h>
 #include <glm/glm.hpp>
 
-namespace mir { namespace graphics {
+namespace mir
+{
+namespace graphics
+{
 
 inline glm::mat2 transformation(MirOrientation ori)
 {
     int cos = 0, sin = 0;
     switch (ori)
     {
-    case mir_orientation_normal:   sin =  0; cos =  1; break;
-    case mir_orientation_left:     sin =  1; cos =  0; break;
-    case mir_orientation_inverted: sin =  0; cos = -1; break;
-    case mir_orientation_right:    sin = -1; cos =  0; break;
+    case mir_orientation_normal:
+        sin = 0;
+        cos = 1;
+        break;
+    case mir_orientation_left:
+        sin = 1;
+        cos = 0;
+        break;
+    case mir_orientation_inverted:
+        sin = 0;
+        cos = -1;
+        break;
+    case mir_orientation_right:
+        sin = -1;
+        cos = 0;
+        break;
     }
-    return glm::mat2(cos, sin, -sin, cos);  // column-major order, GL-style
+    return glm::mat2(cos, sin, -sin, cos); // column-major order, GL-style
 }
 
 inline glm::mat2 inverse_transformation(MirOrientation ori)
@@ -40,10 +55,22 @@ inline glm::mat2 inverse_transformation(MirOrientation ori)
     int cos = 0, sin = 0;
     switch (ori)
     {
-        case mir_orientation_normal:   sin =  0; cos =  1; break;
-        case mir_orientation_left:     sin =  1; cos =  0; break;
-        case mir_orientation_inverted: sin =  0; cos = -1; break;
-        case mir_orientation_right:    sin = -1; cos =  0; break;
+    case mir_orientation_normal:
+        sin = 0;
+        cos = 1;
+        break;
+    case mir_orientation_left:
+        sin = 1;
+        cos = 0;
+        break;
+    case mir_orientation_inverted:
+        sin = 0;
+        cos = -1;
+        break;
+    case mir_orientation_right:
+        sin = -1;
+        cos = 0;
+        break;
     }
     return glm::mat2(cos, -sin, sin, cos);
 }
@@ -58,6 +85,7 @@ inline glm::mat2 transformation(MirMirrorMode mode)
     return mat;
 }
 
-} } // namespace mir::graphics
+}
+} // namespace mir::graphics
 
 #endif // MIR_GRAPHICS_TRANSFORMATION_H_

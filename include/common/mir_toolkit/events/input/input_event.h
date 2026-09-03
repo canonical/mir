@@ -28,7 +28,8 @@
 #include <mir_toolkit/events/input/pointer_event.h>
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**

@@ -39,7 +39,7 @@ namespace atomic
 {
 class Quirks;
 
-typedef std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>> GBMSurfaceUPtr;
+using GBMSurfaceUPtr = std::unique_ptr<gbm_surface,std::function<void(gbm_surface*)>>;
 
 namespace helpers
 {

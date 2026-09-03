@@ -27,6 +27,8 @@
 #include <mir/scene/session.h>
 
 #include "ext_image_capture_v1.h"
+#include "ext_foreign_toplevel_image_capture_source_v1.h"
+#include "ext_output_image_capture_source_v1.h"
 #include "foreign_toplevel_manager_v1.h"
 #include "foreign_toplevel_list_v1.h"
 #include "idle_inhibit_v1.h"
@@ -51,9 +53,11 @@
 #include "xdg_activation_v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_decoration_unstable_v1.h"
+#include "xdg_dialog_v1.h"
+#include "server-decoration_wrapper.h"
+#include "server_decoration_manager.h"
 #include "xdg_output_v1.h"
 #include "xdg_shell_stable.h"
-#include "xdg_shell_v6.h"
 #include "xwayland_wm_shell.h"
 #include "data_control_v1.h"
 #include "input_trigger_registration_v1.h"
@@ -79,7 +83,7 @@ auto make_extension_builder(
     std::function<std::shared_ptr<typename T::Global>(mf::WaylandExtensions::Context const& ctx)> build)
 -> ExtensionBuilder
 {
-    static_assert(std::is_base_of<mw::Resource, T>::value, "make_extension_builder() not given a resource");
+    static_assert(std::is_base_of_v<mw::Resource, T>, "make_extension_builder() not given a resource");
     return ExtensionBuilder{T::interface_name, build};
 }
 
@@ -93,16 +97,6 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 *ctx.wayland_executor,
                 ctx.shell,
                 ctx.seat,
-                ctx.output_manager,
-                ctx.surface_registry);
-        }),
-    make_extension_builder<mw::XdgShellV6>([](auto const& ctx)
-        {
-            return std::make_shared<mf::XdgShellV6>(
-                ctx.display,
-                *ctx.wayland_executor,
-                ctx.shell,
-                *ctx.seat,
                 ctx.output_manager,
                 ctx.surface_registry);
         }),
@@ -230,6 +224,14 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.screen_shooter_factory,
                 ctx.surface_stack);
         }),
+    make_extension_builder<mw::ForeignToplevelImageCaptureSourceManagerV1>([](auto const& ctx)
+        {
+            return mf::create_ext_foreign_toplevel_image_capture_source_manager_v1(
+                ctx.display,
+                ctx.wayland_executor,
+                ctx.screen_shooter_factory,
+                ctx.surface_stack);
+        }),
     make_extension_builder<mw::ImageCopyCaptureManagerV1>([](auto const& ctx)
         {
             return mf::create_ext_image_copy_capture_manager_v1(
@@ -261,6 +263,14 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::XdgDecorationManagerV1>([](auto const& ctx)
         {
             return mf::create_xdg_decoration_unstable_v1(ctx.display, ctx.decoration_strategy);
+        }),
+    make_extension_builder<mw::XdgWmDialogV1>([](auto const& ctx)
+        {
+            return mf::create_xdg_dialog_v1(ctx.display);
+        }),
+    make_extension_builder<mw::ServerDecorationManager>([](auto const& ctx)
+        {
+            return mf::create_server_decoration_manager(ctx.display, ctx.decoration_strategy);
         }),
     make_extension_builder<mw::FractionalScaleManagerV1>([](auto const& ctx)
         {
@@ -399,13 +409,15 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
     return std::vector<std::string>{
         mw::Shell::interface_name,
         mw::XdgWmBase::interface_name,
-        mw::XdgShellV6::interface_name,
         mw::XdgOutputManagerV1::interface_name,
         mw::TextInputManagerV1::interface_name,
         mw::TextInputManagerV2::interface_name,
         mw::TextInputManagerV3::interface_name,
         mw::MirShellV1::interface_name,
         mw::XdgDecorationManagerV1::interface_name,
+        // Disable (by default) xdg_wm_dialog_v1. (Works around https://github.com/canonical/mir/issues/5112)
+        // TODO: reinstate this once the implementation is fixed!
+        // mw::XdgWmDialogV1::interface_name,
         mw::XdgActivationV1::interface_name,
         mw::FractionalScaleManagerV1::interface_name,
         mw::XdgExporterV2::interface_name};
@@ -493,9 +505,6 @@ auto mir::frontend::get_window(wl_resource* surface) -> std::shared_ptr<ms::Surf
         return result;
 
     if (auto result = XdgShellStable::get_window(surface))
-        return result;
-
-    if (auto result = XdgShellV6::get_window(surface))
         return result;
 
     if (auto result = LayerShellV1::get_window(surface))

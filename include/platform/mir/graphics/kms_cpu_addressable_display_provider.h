@@ -34,13 +34,12 @@ public:
     static auto create_if_supported(mir::Fd const& drm_fd, geometry::Size size)
         -> std::shared_ptr<CPUAddressableDisplayAllocator>;
 
-    auto supported_formats() const
-        -> std::vector<DRMFormat> override;
+    auto supported_formats() const -> std::vector<DRMFormat> override;
 
-    auto alloc_fb(DRMFormat format)
-        -> std::unique_ptr<MappableFB> override;
+    auto alloc_fb(DRMFormat format) -> std::unique_ptr<MappableFB> override;
 
     auto output_size() const -> geometry::Size override;
+
 private:
     explicit CPUAddressableDisplayAllocator(mir::Fd drm_fd, geometry::Size size);
 

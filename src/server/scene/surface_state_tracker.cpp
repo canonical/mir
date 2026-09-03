@@ -170,7 +170,7 @@ ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindow
         break;
 
     default:
-        fatal_error("Invalid window state: %d", active);
+        MIR_FATAL_ERROR("Invalid window state: {}", static_cast<int>(active));
     }
 }
 
@@ -209,20 +209,10 @@ ms::SurfaceStateTracker::SurfaceStateTracker(SurfaceStateTracker base, MirWindow
         break;
 
     case mir_window_state_restored:
-        fatal_error("Sending mir_window_state_restored to SurfaceStateTracker::with()/without() is not allowed");
+        MIR_FATAL_ERROR("Sending mir_window_state_restored to SurfaceStateTracker::with()/without() is not allowed");
         break;
 
     default:
-        fatal_error("Invalid window state: %d", state);
+        MIR_FATAL_ERROR("Invalid window state: {}", static_cast<int>(state));
     }
-}
-
-auto ms::operator==(ms::SurfaceStateTracker const& lhs, ms::SurfaceStateTracker const& rhs) -> bool
-{
-    return lhs.hidden == rhs.hidden &&
-           lhs.minimized == rhs.minimized &&
-           lhs.fullscreen == rhs.fullscreen &&
-           lhs.attached == rhs.attached &&
-           lhs.horiz_maximized == rhs.horiz_maximized &&
-           lhs.vert_maximized == rhs.vert_maximized;
 }

@@ -17,8 +17,6 @@
 #ifndef MIR_OUTPUT_TYPE_NAMES_H_
 #define MIR_OUTPUT_TYPE_NAMES_H_
 
-namespace mir {
-extern char const* output_type_name(unsigned output_type);
-}
+namespace mir { extern char const* output_type_name(unsigned output_type); }
 
 #endif

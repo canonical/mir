@@ -22,10 +22,6 @@
 
 namespace mir
 {
-namespace graphics
-{
-bool get_gl_pixel_format(MirPixelFormat mir_format,
-                         GLenum& gl_format, GLenum& gl_type);
-}
+namespace graphics { bool get_gl_pixel_format(MirPixelFormat mir_format, GLenum& gl_format, GLenum& gl_type); }
 }
 #endif /* MIR_GRAPHICS_COMMON_GL_FORMAT_H_ */

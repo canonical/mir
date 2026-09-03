@@ -20,28 +20,39 @@
 #include <sys/resource.h>
 #include <gtest/gtest.h>
 
-namespace mir { namespace test {
+namespace mir
+{
+namespace test
+{
 
 inline void disable_core_dump()
 {
-    struct rlimit zeroes{0,0};
+    struct rlimit zeroes{0, 0};
     setrlimit(RLIMIT_CORE, &zeroes);
 }
 
-} } // namespace mir::test
+}
+} // namespace mir::test
 
-#define MIR_EXPECT_DEATH(statement, message) \
-    EXPECT_DEATH( \
-    { \
-        ::mir::test::disable_core_dump(); \
-        { statement ; } \
-    }, message);
+#define MIR_EXPECT_DEATH(statement, message)                                                                           \
+    EXPECT_DEATH(                                                                                                      \
+        {                                                                                                              \
+            ::mir::test::disable_core_dump();                                                                          \
+            {                                                                                                          \
+                statement;                                                                                             \
+            }                                                                                                          \
+        },                                                                                                             \
+        message);
 
-#define MIR_EXPECT_EXIT(statement, how, message) \
-    EXPECT_EXIT( \
-    { \
-        ::mir::test::disable_core_dump(); \
-        { statement ; } \
-    }, how, message);
+#define MIR_EXPECT_EXIT(statement, how, message)                                                                       \
+    EXPECT_EXIT(                                                                                                       \
+        {                                                                                                              \
+            ::mir::test::disable_core_dump();                                                                          \
+            {                                                                                                          \
+                statement;                                                                                             \
+            }                                                                                                          \
+        },                                                                                                             \
+        how,                                                                                                           \
+        message);
 
 #endif /* MIR_TEST_DEATH_H_ */

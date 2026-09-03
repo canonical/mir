@@ -127,11 +127,6 @@ auto miral::Output::attributes_map() const -> std::map<std::string const, std::o
     return {self->custom_attribute.begin(), self->custom_attribute.end()};
 }
 
-bool miral::operator==(Output::PhysicalSizeMM const& lhs, Output::PhysicalSizeMM const& rhs)
-{
-    return lhs.width == rhs.width && lhs.height == rhs.height;
-}
-
 auto miral::equivalent_display_area(Output const& lhs, Output const& rhs) -> bool
 {
     // Eliminate the cases where one or both output isn't available

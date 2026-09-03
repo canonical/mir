@@ -35,36 +35,6 @@ struct SessionAuthorizerAdapter : mf::SessionAuthorizer
         return app_auth->connection_is_allowed(creds);
     }
 
-    virtual bool configure_display_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->configure_display_is_allowed(creds);
-    }
-
-    virtual bool set_base_display_configuration_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->set_base_display_configuration_is_allowed(creds);
-    }
-
-    virtual bool screencast_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->screencast_is_allowed(creds);
-    }
-
-    virtual bool prompt_session_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->prompt_session_is_allowed(creds);
-    }
-
-    bool configure_input_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->configure_input_is_allowed(creds);
-    }
-
-    bool set_base_input_configuration_is_allowed(mf::SessionCredentials const& creds) override
-    {
-        return app_auth->set_base_input_configuration_is_allowed(creds);
-    }
-
     std::shared_ptr<miral::ApplicationAuthorizer> const app_auth;
 };
 }

@@ -49,12 +49,12 @@ geom::Size const max_possible_size{
 /// Clears pending if it holds a value different than cache
 /// sets cache to pending and leaves pending alone if it holds a different value
 template<typename T>
-inline void clear_pending_if_unchanged(mir::optional_value<T>& pending, T& cache)
+inline void clear_pending_if_unchanged(std::optional<T>& pending, T& cache)
 {
     if (pending)
     {
         if (pending.value() == cache)
-            pending.consume();
+            pending.reset();
         else
             cache = pending.value();
     }
@@ -141,9 +141,9 @@ void mf::WindowWlSurfaceRole::refresh_surface_data_now()
 
 void mf::WindowWlSurfaceRole::apply_spec(mir::shell::SurfaceSpecification const& new_spec)
 {
-    if (new_spec.width.is_set())
+    if (new_spec.width.has_value())
         pending_explicit_width = new_spec.width.value();
-    if (new_spec.height.is_set())
+    if (new_spec.height.has_value())
         pending_explicit_height = new_spec.height.value();
 
     spec().update_from(new_spec);
@@ -208,7 +208,7 @@ void mf::WindowWlSurfaceRole::set_parent(std::optional<std::shared_ptr<scene::Su
     }
     else if (mods.parent)
     {
-        mods.parent.consume();
+        mods.parent.reset();
     }
 }
 
@@ -255,6 +255,18 @@ void mir::frontend::WindowWlSurfaceRole::set_type(MirWindowType type)
     spec().type = type;
 }
 
+auto mir::frontend::WindowWlSurfaceRole::pending_type() const -> MirWindowType
+{
+    constexpr MirWindowType default_type = mir_window_type_freestyle;
+    if (pending_changes)
+        return pending_changes->type.value_or(default_type);
+
+    if (auto const scene_surface = weak_scene_surface.lock())
+        return scene_surface->type();
+
+    return default_type;
+}
+
 void mf::WindowWlSurfaceRole::add_state_now(MirWindowState state)
 {
     if (auto const scene_surface = weak_scene_surface.lock())
@@ -292,6 +304,33 @@ auto mf::WindowWlSurfaceRole::pending_size() const -> geom::Size
     if (pending_explicit_height)
         size.height = pending_explicit_height.value();
     return size;
+}
+
+auto mf::WindowWlSurfaceRole::pending_min_size() const -> geom::Size
+{
+    if (pending_changes)
+    {
+        return {
+            pending_changes->min_width.value_or(committed_min_size.width),
+            pending_changes->min_height.value_or(committed_min_size.height)};
+    }
+    else
+    {
+        return committed_min_size;
+    }
+}
+
+auto mf::WindowWlSurfaceRole::pending_max_size() const -> geom::Size
+{
+    if (pending_changes)
+    {
+        return {pending_changes->max_width.value_or(committed_max_size.width),
+                pending_changes->max_height.value_or(committed_max_size.height)};
+    }
+    else
+    {
+        return committed_max_size;
+    }
 }
 
 auto mf::WindowWlSurfaceRole::current_size() const -> geom::Size

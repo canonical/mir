@@ -32,6 +32,7 @@ public:
     RefCountedLibrary(RefCountedLibrary const&);
     ~RefCountedLibrary();
     RefCountedLibrary& operator=(RefCountedLibrary const&);
+
 private:
     std::shared_ptr<mir::SharedLibrary> internal_state;
 };
@@ -42,22 +43,14 @@ struct ModuleDeleter : std::default_delete<T>
 {
     ModuleDeleter() : library(nullptr) {}
     template<typename U>
-    ModuleDeleter(ModuleDeleter<U> const& other)
-        : std::default_delete<T>{other},
-        library{other.get_library()}
-    {
-    }
+    ModuleDeleter(ModuleDeleter<U> const& other) : std::default_delete<T>{other}, library{other.get_library()}
+    {}
 
-    detail::RefCountedLibrary get_library() const
-    {
-        return library;
-    }
+    detail::RefCountedLibrary get_library() const { return library; }
 
 protected:
-    ModuleDeleter(void *address_in_module)
-        : library{address_in_module}
-    {
-    }
+    ModuleDeleter(void* address_in_module) : library{address_in_module} {}
+
 private:
     detail::RefCountedLibrary library;
 };
@@ -78,7 +71,7 @@ private:
  * The default constructor will not try to infer the dynamic library.
  */
 template<typename T>
-using UniqueModulePtr = std::unique_ptr<T,ModuleDeleter<T>>;
+using UniqueModulePtr = std::unique_ptr<T, ModuleDeleter<T>>;
 
 namespace
 {
@@ -86,13 +79,11 @@ namespace
  * \brief make_unique like creation function for UniqueModulePtr
  */
 template<typename Type, typename... Args>
-inline auto make_module_ptr(Args&&... args)
--> UniqueModulePtr<Type>
+inline auto make_module_ptr(Args&&... args) -> UniqueModulePtr<Type>
 {
     struct Deleter : ModuleDeleter<Type>
     {
-        Deleter(void* address)
-            : ModuleDeleter<Type>(address) {}
+        Deleter(void* address) : ModuleDeleter<Type>(address) {}
     } deleter(reinterpret_cast<void*>(&make_module_ptr<Type, Args...>));
 
     return UniqueModulePtr<Type>(new Type(std::forward<Args>(args)...), std::move(deleter));

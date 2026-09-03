@@ -20,7 +20,6 @@
 #include <mir/wayland/protocol_error.h>
 #include "wl_surface.h"
 
-#include <boost/throw_exception.hpp>
 #include <memory>
 
 namespace mir
@@ -77,8 +76,8 @@ void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, 
     auto surf = WlSurface::from(surface);
     if (surf->get_fractional_scale())
     {
-        BOOST_THROW_EXCEPTION(mir::wayland::ProtocolError(
-            resource, Error::fractional_scale_exists, "Surface already has a fractional scale component attached"));
+        throw mir::wayland::ProtocolError{
+            resource, Error::fractional_scale_exists, "Surface already has a fractional scale component attached"};
     }
 
     surf->set_fractional_scale(new FractionalScaleV1{id});

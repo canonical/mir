@@ -20,10 +20,6 @@ if (MIR_BUILD_PLATFORM_WAYLAND)
   add_compile_definitions(MIR_BUILD_PLATFORM_WAYLAND)
 endif()
 
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_compile_definitions(MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-endif()
-
 include_directories(
   ${CMAKE_SOURCE_DIR}
 
@@ -41,7 +37,7 @@ set_target_properties(
 )
 
 # Umockdev uses glib, which uses the deprecated "register" allocation specifier
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Dregister=")
+add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Dregister=>)
 
 if(CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
   set(UMOCK_UNIT_TEST_SOURCES test_udev_wrapper.cpp)
@@ -110,7 +106,7 @@ add_subdirectory(shell/)
 add_subdirectory(wayland/)
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)
-  set_source_files_properties (
+  set_source_files_properties(
     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/test_threaded_dispatcher.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/frontend/test_basic_connector.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/compositor/test_multi_threaded_compositor.cpp
@@ -125,11 +121,17 @@ if (NOT HAVE_PTHREAD_GETNAME_NP)
   message(WARNING "pthread_getname_np() not supported: Disabling test_thread_pool_executor.cpp tests that rely on it")
 endif()
 
-link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-
 mir_add_wrapped_executable(mir_unit_tests NOINSTALL
   ${UNIT_TEST_SOURCES}
 )
+
+target_include_directories(mir_unit_tests PRIVATE
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${CMAKE_BINARY_DIR}/src/server/console
+)
+
+target_link_directories(mir_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 set_property(
   SOURCE test_udev_wrapper.cpp test_glib_main_loop.cpp
@@ -192,6 +194,14 @@ mir_add_wrapped_executable(mir_umock_unit_tests NOINSTALL
   ${UMOCK_UNIT_TEST_SOURCES}
 )
 
+target_include_directories(mir_umock_unit_tests PRIVATE
+  ${CMAKE_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/server
+  ${CMAKE_BINARY_DIR}/src/server/console
+)
+
+target_link_directories(mir_umock_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+
 string(REGEX MATCH "^[0-9]*\.[0-9]*" UMOCKDEV_VERSION_MINOR ${UMOCKDEV_VERSION})
 set_source_files_properties(${UMOCK_UNIT_TEST_SOURCES} PROPERTIES COMPILE_DEFINITIONS UMOCKDEV_VERSION=${UMOCKDEV_VERSION_MINOR})
 
@@ -245,8 +255,12 @@ add_library(loadable_test_dso SHARED ${CMAKE_CURRENT_SOURCE_DIR}/shared-librarie
 
 set_target_properties(loadable_test_dso PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
-  COMPILE_FLAGS "-Wno-pedantic"
   OUTPUT_NAME this-arch
+)
+set_source_files_properties(
+  ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c
+  PROPERTIES
+    COMPILE_OPTIONS "-Wno-pedantic;-Wno-error=pedantic"
 )
 
 add_dependencies(mir_unit_tests loadable_test_dso)

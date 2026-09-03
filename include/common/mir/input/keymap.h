@@ -27,7 +27,7 @@ namespace mir
 {
 namespace input
 {
-using XKBKeymapPtr = std::unique_ptr<xkb_keymap, void(*)(xkb_keymap*)>;
+using XKBKeymapPtr = std::unique_ptr<xkb_keymap, void (*)(xkb_keymap*)>;
 
 class Keymap
 {

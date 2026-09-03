@@ -18,9 +18,8 @@
 
 #include "eglapp.h"
 #include "miregl.h"
-#include <assert.h>
+#include <cassert>
 #include <glib.h>
-#include <string.h>
 #include <GLES2/gl2.h>
 #include <mutex>
 
@@ -33,13 +32,13 @@ static GLuint load_shader(const char *src, GLenum type)
     if (shader)
     {
         GLint compiled;
-        glShaderSource(shader, 1, &src, NULL);
+        glShaderSource(shader, 1, &src, nullptr);
         glCompileShader(shader);
         glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
         if (!compiled)
         {
             GLchar log[1024];
-            glGetShaderInfoLog(shader, sizeof log - 1, NULL, log);
+            glGetShaderInfoLog(shader, sizeof log - 1, nullptr, log);
             log[sizeof log - 1] = '\0';
             printf("load_shader compile failed: %s\n", log);
             glDeleteShader(shader);
@@ -105,7 +104,7 @@ GLuint createShaderProgram(const char* vertexShaderSrc, const char* fragmentShad
     if (!linked)
     {
         GLchar log[1024];
-        glGetProgramInfoLog(progId, sizeof log - 1, NULL, log);
+        glGetProgramInfoLog(progId, sizeof log - 1, nullptr, log);
         log[sizeof log - 1] = '\0';
         printf("Link failed: %s\n", log);
         return 0;
@@ -136,7 +135,7 @@ bool updateAnimation (GTimer* timer, AnimationValues* anim)
     //8.266..:       now spinner can be closed as all its elements are faded out
 
     // Hacked to run three times as fast
-    double elapsed = 3*g_timer_elapsed (timer, NULL);
+    double elapsed = 3*g_timer_elapsed (timer, nullptr);
     double dt = elapsed - anim->lastTimeStamp;
     anim->lastTimeStamp = elapsed;
 

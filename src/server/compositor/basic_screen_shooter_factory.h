@@ -57,6 +57,7 @@ public:
         std::shared_ptr<graphics::OutputFilter> const& output_filter,
         std::shared_ptr<graphics::Cursor> const& cursor);
     auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> override;
+    auto create_for_scene(Executor& executor, std::shared_ptr<Scene> const& scene) -> std::unique_ptr<ScreenShooter> override;
 
 private:
     std::shared_ptr<Scene> const scene;

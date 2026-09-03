@@ -36,18 +36,13 @@ namespace doubles
 class TestSurfaceObserver : public scene::NullSurfaceObserver
 {
 public:
-    TestSurfaceObserver(
-        frontend::SurfaceId surface_id,
-        std::shared_ptr<frontend::EventSink> const& event_sink)
-        : surface_id(surface_id),
-          event_sink(event_sink)
-    {
-    }
+    TestSurfaceObserver(frontend::SurfaceId surface_id, std::shared_ptr<frontend::EventSink> const& event_sink) :
+        surface_id(surface_id),
+        event_sink(event_sink)
+    {}
 
     void content_resized_to(scene::Surface const*, geometry::Size const& content_size) override
-    {
-        event_sink->handle_event(events::make_window_resize_event(surface_id, content_size));
-    }
+    { event_sink->handle_event(events::make_window_resize_event(surface_id, content_size)); }
 
     void input_consumed(scene::Surface const*, std::shared_ptr<MirEvent const> const& event) override
     {
@@ -57,14 +52,10 @@ public:
     }
 
     void attrib_changed(scene::Surface const*, MirWindowAttrib attrib, int value) override
-    {
-        event_sink->handle_event(events::make_window_configure_event(surface_id, attrib, value));
-    }
+    { event_sink->handle_event(events::make_window_configure_event(surface_id, attrib, value)); }
 
     void client_surface_close_requested(scene::Surface const*) override
-    {
-        event_sink->handle_event(events::make_window_close_event(surface_id));
-    }
+    { event_sink->handle_event(events::make_window_close_event(surface_id)); }
 
 private:
     frontend::SurfaceId const surface_id;

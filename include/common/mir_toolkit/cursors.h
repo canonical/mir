@@ -23,19 +23,20 @@
 
 /* This is C code. Not C++. */
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 /**
  * A special cursor name for use with mir_cursor_configuration_from_name
  * representing the system default cursor.
  */
-extern char const *const mir_default_cursor_name;
+extern char const* const mir_default_cursor_name;
 /**
  * A special cursor name for use with mir_cursor_configuration_from_name
  * representing a disabled cursor image.
  */
-extern char const *const mir_disabled_cursor_name;
+extern char const* const mir_disabled_cursor_name;
 
 /**
  * The standard arrow cursor (typically the system default)

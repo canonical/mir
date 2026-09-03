@@ -53,7 +53,7 @@ private:
     std::shared_ptr<mir::logging::Logger> const logger;
     std::shared_ptr<time::Clock> const clock;
 
-    typedef time::Timestamp TimePoint;
+    using TimePoint = time::Timestamp;
     TimePoint now() const;
 
     struct Instance

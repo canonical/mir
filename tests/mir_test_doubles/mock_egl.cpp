@@ -21,7 +21,7 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-mtd::MockEGL* global_mock_egl = NULL;
+mtd::MockEGL* global_mock_egl = nullptr;
 }
 
 
@@ -45,16 +45,6 @@ EGLBoolean extension_eglDestroySyncKHR(EGLDisplay dpy, EGLSyncKHR sync);
 EGLint extension_eglClientWaitSyncKHR(EGLDisplay dpy, EGLSyncKHR sync, EGLint flags, EGLTimeKHR timeout);
 EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
     EGLSurface surface, int64_t *ust, int64_t *msc, int64_t *sbc);
-EGLBoolean extension_eglBindWaylandDisplayWL(
-    EGLDisplay dpy,
-    struct wl_display *display);
-EGLBoolean extension_eglUnbindWaylandDisplayWL(
-    EGLDisplay dpy,
-    struct wl_display *display);
-EGLBoolean extension_eglQueryWaylandBufferWL(
-    EGLDisplay dpy,
-    struct wl_resource *buffer,
-    EGLint attribute, EGLint *value);
 EGLDisplay extension_eglGetPlatformDisplayEXT(
     EGLenum platform,
     void *native_display,
@@ -77,7 +67,7 @@ mtd::MockEGL::MockEGL()
       fake_visual_id(1)
 {
     using namespace testing;
-    assert(global_mock_egl == NULL && "Only one mock object per process is allowed");
+    assert(global_mock_egl == nullptr && "Only one mock object per process is allowed");
 
     global_mock_egl = this;
 
@@ -93,7 +83,7 @@ mtd::MockEGL::MockEGL()
     ON_CALL(*this, eglBindApi(EGL_OPENGL_ES_API))
     .WillByDefault(Return(EGL_TRUE));
 
-    ON_CALL(*this, eglGetConfigs(_,NULL, 0, _))
+    ON_CALL(*this, eglGetConfigs(_,nullptr, 0, _))
     .WillByDefault(DoAll(
                        SetArgPointee<3>(config_size),
                        Return(EGL_TRUE)));
@@ -104,7 +94,7 @@ mtd::MockEGL::MockEGL()
                        Return(EGL_TRUE)));
 
     ON_CALL(*this, eglChooseConfig(_,_,_,_,_))
-    .WillByDefault(Invoke(
+    .WillByDefault(
         [&] (EGLDisplay, const EGLint *, EGLConfig *configs,
              EGLint config_size, EGLint *num_config) -> EGLBoolean
         {
@@ -119,7 +109,7 @@ mtd::MockEGL::MockEGL()
                 *num_config = fake_configs_num;
             }
             return EGL_TRUE;
-        }));
+        });
 
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
         .WillByDefault(Return(fake_egl_surface));
@@ -133,18 +123,18 @@ mtd::MockEGL::MockEGL()
     .WillByDefault(Return(fake_egl_context));
 
     ON_CALL(*this, eglMakeCurrent(_,_,_,_))
-    .WillByDefault(Invoke(
+    .WillByDefault(
         [this] (EGLDisplay, EGLSurface, EGLSurface, EGLContext context)
         {
             (*current_contexts.lock())[std::this_thread::get_id()] = context;
             return EGL_TRUE;
-        }));
+        });
 
     ON_CALL(*this, eglGetCurrentContext())
-    .WillByDefault(Invoke([this]
+    .WillByDefault([this]
         {
             return (*current_contexts.lock())[std::this_thread::get_id()];
-        }));
+        });
 
     ON_CALL(*this, eglSwapBuffers(_,_))
         .WillByDefault(Return(EGL_TRUE));
@@ -172,12 +162,6 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(
             reinterpret_cast<func_ptr_t>(extension_eglGetSyncValuesCHROMIUM)
             ));
-    ON_CALL(*this, eglGetProcAddress(StrEq("eglQueryWaylandBufferWL")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglQueryWaylandBufferWL)));
-    ON_CALL(*this, eglGetProcAddress(StrEq("eglBindWaylandDisplayWL")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglBindWaylandDisplayWL)));
-    ON_CALL(*this, eglGetProcAddress(StrEq("eglUnbindWaylandDisplayWL")))
-        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglUnbindWaylandDisplayWL)));
     ON_CALL(*this, eglGetProcAddress(StrEq("eglGetPlatformDisplayEXT")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglGetPlatformDisplayEXT)));
     ON_CALL(*this, eglGetProcAddress(StrEq("eglCreatePlatformWindowSurfaceEXT")))
@@ -194,7 +178,6 @@ void mtd::MockEGL::provide_egl_extensions()
         "EGL_KHR_image_pixmap "
         "GL_OES_EGL_image "
         "EGL_EXT_image_dma_buf_import "
-        "EGL_WL_bind_wayland_display "
         "EGL_EXT_platform_base "
         "EGL_EXT_device_query";
     ON_CALL(*this, eglQueryString(_,EGL_EXTENSIONS))
@@ -206,11 +189,11 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
     using namespace ::testing;
     // TODO: Comment
     ON_CALL(*this, eglCreateWindowSurface(_,_,_,_))
-        .WillByDefault(Invoke(
+        .WillByDefault(
             [&] (EGLDisplay,EGLConfig,AnyNativeType nw, EGLint const*) -> EGLSurface
             {
                 return reinterpret_cast<EGLSurface>(nw);
-            }));
+            });
 
     ON_CALL(*this, eglSwapBuffers(_,_))
         .WillByDefault(Return(EGL_TRUE));
@@ -218,7 +201,7 @@ void mtd::MockEGL::provide_stub_platform_buffer_swapping()
 
 mtd::MockEGL::~MockEGL()
 {
-    global_mock_egl = NULL;
+    global_mock_egl = nullptr;
 }
 
 #define CHECK_GLOBAL_MOCK(rettype)         \
@@ -463,32 +446,6 @@ EGLBoolean extension_eglGetSyncValuesCHROMIUM(EGLDisplay dpy,
     CHECK_GLOBAL_MOCK(EGLBoolean);
     return global_mock_egl->eglGetSyncValuesCHROMIUM(dpy, surface,
                                                      ust, msc, sbc);
-}
-
-EGLBoolean extension_eglBindWaylandDisplayWL(
-    EGLDisplay dpy,
-    struct wl_display *display)
-{
-    CHECK_GLOBAL_MOCK(EGLBoolean);
-    return global_mock_egl->eglBindWaylandDisplayWL(dpy, display);
-}
-
-EGLBoolean extension_eglUnbindWaylandDisplayWL(
-    EGLDisplay dpy,
-    struct wl_display *display)
-{
-    CHECK_GLOBAL_MOCK(EGLBoolean);
-    return global_mock_egl->eglUnbindWaylandDisplayWL(dpy, display);
-}
-
-EGLBoolean extension_eglQueryWaylandBufferWL(
-    EGLDisplay dpy,
-    struct wl_resource* buffer,
-    EGLint attribute, EGLint* value)
-{
-    CHECK_GLOBAL_MOCK(EGLBoolean);
-    return global_mock_egl->eglQueryWaylandBufferWL(
-        dpy, buffer, attribute, value);
 }
 
 

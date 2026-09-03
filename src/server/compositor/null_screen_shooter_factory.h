@@ -29,6 +29,7 @@ class NullScreenShooterFactory : public ScreenShooterFactory
 {
 public:
     auto create(Executor& executor) -> std::unique_ptr<ScreenShooter> override;
+    auto create_for_scene(Executor& executor, std::shared_ptr<Scene> const& scene) -> std::unique_ptr<ScreenShooter> override;
 };
 }
 }

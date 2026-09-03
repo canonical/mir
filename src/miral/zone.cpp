@@ -17,6 +17,7 @@
 #include <miral/zone.h>
 
 #include <atomic>
+#include <tuple>
 
 class miral::Zone::Self
 {
@@ -60,8 +61,7 @@ miral::Zone::~Zone() = default;
 
 auto miral::Zone::operator==(Zone const& other) const -> bool
 {
-    return self->id == other.self->id
-        && self->extents == other.self->extents;
+    return std::tie(self->id, self->extents) == std::tie(other.self->id, other.self->extents);
 }
 
 auto miral::Zone::is_same_zone(Zone const& other) const -> bool

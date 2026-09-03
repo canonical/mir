@@ -16,14 +16,16 @@
 
 #include <miral/display_configuration.h>
 #include <miral/runner.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include "static_display_config.h"
 
+#include <mir/fatal.h>
 #include <mir/server.h>
 
 #include <yaml-cpp/yaml.h>
 #include <boost/throw_exception.hpp>
 
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 
@@ -59,18 +61,18 @@ public:
     {
         std::string config_roots;
 
-        if (auto config_home = getenv("XDG_CONFIG_HOME"))
+        if (auto config_home = std::getenv("XDG_CONFIG_HOME"))
         {
             (config_roots = config_home) += ":";
             config_path(config_home);
         }
-        else if (auto home = getenv("HOME"))
+        else if (auto home = std::getenv("HOME"))
         {
             (config_roots = home) += "/.config:";
             config_path(home + "/.config"s);
         }
 
-        if (auto config_dirs = getenv("XDG_CONFIG_DIRS"))
+        if (auto config_dirs = std::getenv("XDG_CONFIG_DIRS"))
             config_roots += config_dirs;
         else
             config_roots += "/etc/xdg";
@@ -207,7 +209,7 @@ auto miral::DisplayConfiguration::Node::type() const -> Type
 auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 {
     if (type() != Type::string)
-        mir::fatal_error("Attempting to access a Node of type %s as a string", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as a string", node_type_to_string(type()));
 
     return self->as<std::string>();
 }
@@ -215,7 +217,7 @@ auto miral::DisplayConfiguration::Node::as_string() const -> std::string
 auto miral::DisplayConfiguration::Node::as_int() const -> int
 {
     if (type() != Type::integer)
-        mir::fatal_error("Attempting to access a Node of type %s as an integer", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as an integer", node_type_to_string(type()));
 
     return self->as<int>();
 }
@@ -223,7 +225,7 @@ auto miral::DisplayConfiguration::Node::as_int() const -> int
 void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)> const& f) const
 {
     if (type() != Type::sequence)
-        mir::fatal_error("Attempting to access a Node of type %s as a sequence", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as a sequence", node_type_to_string(type()));
 
     for (auto const& item : self->node)
         f(Node(std::make_unique<Self>(item)));
@@ -232,7 +234,7 @@ void miral::DisplayConfiguration::Node::for_each(std::function<void(Node const&)
 auto miral::DisplayConfiguration::Node::has(std::string const& key) const -> bool
 {
     if (type() != Type::map)
-        mir::fatal_error("Attempting to access a Node of type %s as a map", node_type_to_string(type()));
+        MIR_FATAL_ERROR("Attempting to access a Node of type {} as a map", node_type_to_string(type()));
 
     if (self->node[key])
         return true;

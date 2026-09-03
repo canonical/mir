@@ -28,7 +28,7 @@
 #include <miral/window_management_options.h>
 #include <miral/append_keyboard_event_filter.h>
 #include <miral/internal_client.h>
-#include <miral/command_line_option.h>
+#include <miral/configuration_option.h>
 #include <miral/cursor_theme.h>
 #include <miral/decorations.h>
 #include <miral/keymap.h>
@@ -42,9 +42,12 @@
 #include <miral/sticky_keys.h>
 #include <miral/magnifier.h>
 #include <miral/cursor_scale.h>
+#include <miral/touch_emulator.h>
+#include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
+#include <cstdlib>
 #include <cstring>
 #include <linux/input-event-codes.h>
 
@@ -54,11 +57,11 @@ struct ConfigureDecorations
 {
     miral::Decorations const decorations{[]
         {
-            if (auto const strategy = getenv("MIRAL_SHELL_DECORATIONS"))
+            if (auto const strategy = std::getenv("MIRAL_SHELL_DECORATIONS"))
             {
-                if (strcmp(strategy, "always-ssd") == 0) return miral::Decorations::always_ssd();
-                if (strcmp(strategy, "prefer-ssd") == 0) return miral::Decorations::prefer_ssd();
-                if (strcmp(strategy, "always-csd") == 0) return miral::Decorations::always_csd();
+                if (std::strcmp(strategy, "always-ssd") == 0) return miral::Decorations::always_ssd();
+                if (std::strcmp(strategy, "prefer-ssd") == 0) return miral::Decorations::prefer_ssd();
+                if (std::strcmp(strategy, "always-csd") == 0) return miral::Decorations::always_csd();
             }
             return miral::Decorations::prefer_csd();
         }()};
@@ -124,7 +127,7 @@ int main(int argc, char const* argv[])
             };
         };
 
-    Keymap config_keymap = getenv("MIRAL_SHELL_SYSTEM_LOCALE1") ? Keymap::system_locale1() : Keymap{};
+    Keymap config_keymap = std::getenv("MIRAL_SHELL_SYSTEM_LOCALE1") ? Keymap::system_locale1() : Keymap{};
 
     auto run_startup_apps = [&](std::string const& apps)
     {
@@ -152,16 +155,16 @@ int main(int argc, char const* argv[])
 
     auto toggle_mousekeys_filter = [mousekeys_on = initial_mousekeys_state, &mousekeys_config](MirKeyboardEvent const* key_event) mutable {
         auto const modifiers = mir_keyboard_event_modifiers(key_event);
+        auto const keysym = mir_keyboard_event_keysym(key_event);
+        auto const action = mir_keyboard_event_action(key_event);
 
-        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) &&
-            (modifiers & mir_input_event_modifier_num_lock))
+        if ((modifiers & mir_input_event_modifier_ctrl) && (modifiers & mir_input_event_modifier_shift) && (keysym == XKB_KEY_F12))
         {
-            if (mir_keyboard_event_action(key_event) == mir_keyboard_action_down ||
-                mir_keyboard_event_action(key_event) == mir_keyboard_action_repeat)
+            if (action != mir_keyboard_action_down)
                 return true;
 
             mousekeys_on = !mousekeys_on;
-            if(mousekeys_on)
+            if (mousekeys_on)
                 mousekeys_config.enable();
             else
                 mousekeys_config.disable();
@@ -357,6 +360,28 @@ int main(int argc, char const* argv[])
         return false;
     };
 
+    auto touch_emulator = TouchEmulator::disabled();
+    auto toggle_touch_emulator_filter = [&touch_emulator, touch_emulator_enabled = false](MirKeyboardEvent const* key_event) mutable
+    {
+        auto const modifiers = mir_keyboard_event_modifiers(key_event);
+
+        if (mir_keyboard_event_action(key_event) != mir_keyboard_action_down ||
+            !(modifiers & mir_input_event_modifier_ctrl) ||
+            !(modifiers & mir_input_event_modifier_alt) ||
+            !(modifiers & mir_input_event_modifier_shift) ||
+            mir_keyboard_event_keysym(key_event) != XKB_KEY_E)
+            return false;
+
+        touch_emulator_enabled = !touch_emulator_enabled;
+        if (touch_emulator_enabled)
+            touch_emulator.enable();
+        else
+            touch_emulator.disable();
+
+        return true;
+    };
+
+
     return runner.run_with(
         {
             CursorTheme{"default:DMZ-White"},
@@ -391,6 +416,8 @@ int main(int argc, char const* argv[])
             cursor_scale,
             locate_pointer,
             AppendKeyboardEventFilter{locate_pointer_filter},
-            BasicApplicationSwitcher{}
+            BasicApplicationSwitcher{},
+            touch_emulator,
+            AppendKeyboardEventFilter{toggle_touch_emulator_filter},
         });
 }

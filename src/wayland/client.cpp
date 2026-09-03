@@ -59,12 +59,11 @@ auto mw::Client::shared_from(wl_client const* client) -> std::shared_ptr<Client>
             }
             else
             {
-                // The client should remove itself from the map in it's destructor and should be destroyed/accessed on a
+                // The client should remove itself from the map in its destructor and should be destroyed/accessed on a
                 // single thread, so this should never happen
-                mir::fatal_error("client_map has stale entry for wl_client %p", static_cast<void const*>(client));
+                MIR_FATAL_ERROR("client_map has stale entry for wl_client {}", static_cast<void const*>(client));
             }
         }
     }
-    mir::fatal_error("wl_client %p is %s", static_cast<void const*>(client), client ? "unknown" : "null");
-    abort(); // Make compiler happy
+    MIR_FATAL_ERROR("wl_client {} is {}", static_cast<void const*>(client), client ? "unknown" : "null");
 }

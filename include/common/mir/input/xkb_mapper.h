@@ -19,7 +19,6 @@
 
 #include <mir/input/key_mapper.h>
 #include <mir/input/keymap.h>
-#include <mir/optional_value.h>
 #include <mir/events/xkb_modifiers.h>
 
 #include <xkbcommon/xkbcommon.h>
@@ -34,14 +33,14 @@ namespace mir
 namespace input
 {
 
-using XKBContextPtr = std::unique_ptr<xkb_context, void(*)(xkb_context*)>;
+using XKBContextPtr = std::unique_ptr<xkb_context, void (*)(xkb_context*)>;
 XKBContextPtr make_unique_context();
 
 auto expand_modifiers(MirInputEventModifiers modifiers) -> MirInputEventModifiers;
 
-using XKBStatePtr = std::unique_ptr<xkb_state, void(*)(xkb_state*)>;
-using XKBComposeTablePtr = std::unique_ptr<xkb_compose_table, void(*)(xkb_compose_table*)>;
-using XKBComposeStatePtr = std::unique_ptr<xkb_compose_state, void(*)(xkb_compose_state*)>;
+using XKBStatePtr = std::unique_ptr<xkb_state, void (*)(xkb_state*)>;
+using XKBComposeTablePtr = std::unique_ptr<xkb_compose_table, void (*)(xkb_compose_table*)>;
+using XKBComposeStatePtr = std::unique_ptr<xkb_compose_state, void (*)(xkb_compose_state*)>;
 
 namespace receiver
 {
@@ -76,10 +75,11 @@ private:
     {
         ComposeState(XKBComposeTablePtr const& table);
         xkb_keysym_t update_state(xkb_keysym_t mapped_key, MirKeyboardAction action, std::string& text);
+
     private:
         XKBComposeStatePtr state;
         std::unordered_set<xkb_keysym_t> consumed_keys;
-        mir::optional_value<std::tuple<xkb_keysym_t,xkb_keysym_t>> last_composed_key;
+        std::optional<std::tuple<xkb_keysym_t, xkb_keysym_t>> last_composed_key;
     };
 
     struct XkbMappingState
@@ -90,6 +90,7 @@ private:
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
         MirInputEventModifiers modifiers() const;
         auto xkb_modifiers() const -> MirXkbModifiers;
+
     private:
         /// Returns a pair containing the keysym for the given scancode and if any XKB modifiers have been changed
         auto update_state(
@@ -116,7 +117,7 @@ private:
     MirXkbModifiers xkb_modifiers_;
     std::optional<MirInputDeviceId> last_device_id;
 
-    mir::optional_value<MirInputEventModifiers> modifier_state;
+    std::optional<MirInputEventModifiers> modifier_state;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<ComposeState>> device_composing;
 };

@@ -14,7 +14,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_GRAPHICS_EVENT_HANDLER_REGISTER_H_
 #define MIR_GRAPHICS_EVENT_HANDLER_REGISTER_H_
 
@@ -58,6 +57,5 @@ protected:
 };
 }
 }
-
 
 #endif /* MIR_GRAPHICS_EVENT_HANDLER_REGISTER_H_ */

@@ -1,5 +1,3 @@
-include_directories(../frontend_xwayland ${CMAKE_CURRENT_BINARY_DIR})
-
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
 if (MIR_ENABLE_RUST)
@@ -31,7 +29,6 @@ set(
   wl_pointer.cpp                wl_pointer.h
   wl_touch.cpp                  wl_touch.h
   wl_shell.cpp                  wl_shell.h
-  xdg_shell_v6.cpp              xdg_shell_v6.h
   xdg_shell_stable.cpp          xdg_shell_stable.h
   xdg_output_v1.cpp             xdg_output_v1.h
   layer_shell_v1.cpp            layer_shell_v1.h
@@ -53,10 +50,14 @@ set(
   idle_inhibit_v1.cpp           idle_inhibit_v1.h
   wlr_screencopy_v1.cpp         wlr_screencopy_v1.h
   ext_image_capture_v1.cpp      ext_image_capture_v1.h
+  ext_foreign_toplevel_image_capture_source_v1.cpp ext_foreign_toplevel_image_capture_source_v1.h
+  ext_output_image_capture_source_v1.cpp ext_output_image_capture_source_v1.h
   text_input_v1.cpp             text_input_v1.h
   primary_selection_v1.cpp      primary_selection_v1.h
   session_lock_v1.cpp           session_lock_v1.h
   xdg_decoration_unstable_v1.cpp           xdg_decoration_unstable_v1.h
+  xdg_dialog_v1.cpp                        xdg_dialog_v1.h
+  server_decoration_manager.cpp            server_decoration_manager.h
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/frontend/wayland.h
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
   ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.h
@@ -77,13 +78,6 @@ set(
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
   input_trigger_registry.cpp        input_trigger_registry.h
 )
-
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
-  # ext_image_capture_v1.cpp uses std::expected, which libstdc++ only supports with __cpp_concepts=202002L
-  set_source_files_properties(ext_image_capture_v1.cpp
-    PROPERTIES COMPILE_FLAGS -Wno-builtin-macro-redefined
-    COMPILE_DEFINITIONS __cpp_concepts=202002L)
-endif()
 
 add_custom_command(
   OUTPUT
@@ -112,9 +106,17 @@ set_source_files_properties(
         COMPILE_FLAGS "${TRACEPOINT_COMPILE_FLAGS}"
 )
 
+mir_disable_tsan_for_sources(${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c)
+
 add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
+)
+
+target_include_directories(mirfrontend-wayland
+  PRIVATE
+    ../frontend_xwayland
+    ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 target_include_directories(mirfrontend-wayland
@@ -134,6 +136,11 @@ target_link_libraries(mirfrontend-wayland
 )
 
 if (MIR_ENABLE_RUST)
+  target_sources(mirfrontend-wayland
+    PRIVATE
+      wayland_client.cpp         wayland_client.h
+  )
+
   target_link_libraries(mirfrontend-wayland
     PUBLIC
       mirwayland_rs

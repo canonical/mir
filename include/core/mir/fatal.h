@@ -23,54 +23,48 @@
 #ifndef MIR_FATAL_H_
 #define MIR_FATAL_H_
 
+#include <format>
+#include <source_location>
+#include <string_view>
+#include <utility>
+
 namespace mir
 {
 /**
- * fatal_error() is strictly for "this should never happen" situations that
- * you cannot recover from. By default it points at fatal_error_abort().
- * Note the reason parameter is a simple char* so its value is clearly visible
- * in stack trace output.
- * \remark There is no attempt to make this thread-safe, if it needs to be changed
- * that should be done before spinning up the Mir server.
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dumps core as cleanly as possible.
  *   \param [in] reason  A printf-style format string.
  */
-extern void (*fatal_error)(char const* reason, ...);
+[[noreturn, deprecated("Use MIR_FATAL_ERROR() instead")]]
+void fatal_error(char const* reason, ...) noexcept __attribute__((format(printf, 1, 2)));
 
 /**
- * Throws an exception that will typically kill the Mir server and propagate from
- * mir::run_mir.
- *   \param [in] reason  A printf-style format string.
- */
-void fatal_error_except(char const* reason, ...);
-
-/**
- * An alternative to fatal_error_except() that kills the program and dump core
- * as cleanly as possible.
- *   \param [in] reason  A printf-style format string.
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dumps core as cleanly as possible.
+ *   \param [in] loc  The source location where the fatal error occurred.
+ *   \param [in] message  A message describing the fatal error.
  */
 [[noreturn]]
-void fatal_error_abort(char const* reason, ...);
+void fatal_error(std::source_location const loc, std::string_view message) noexcept;
 
-// Utility class to override & restore existing error handler
-class FatalErrorStrategy
-{
-public:
-    explicit FatalErrorStrategy(void (*fatal_error_handler)(char const* reason, ...)) :
-        old_fatal_error_handler(fatal_error)
-    {
-        fatal_error = fatal_error_handler;
-    }
+/**
+ * fatal_error() is strictly for "this should never happen" situations that you
+ * cannot recover from. Kills the program and dumps core as cleanly as possible.
+ *   \param [in] fmt  A std::format-style format string.
+ *   \param [in] args  Type-erased format arguments.
+ *   \param [in] loc  The source location where the fatal error occurred.
+ */
+[[noreturn]]
+void fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc) noexcept;
 
-    ~FatalErrorStrategy()
-    {
-        fatal_error = old_fatal_error_handler;
-    }
-
-private:
-    void (*old_fatal_error_handler)(char const* reason, ...);
-    FatalErrorStrategy(FatalErrorStrategy const&) = delete;
-    FatalErrorStrategy& operator=(FatalErrorStrategy const&) = delete;
-};
+template<typename... Args>
+[[noreturn]] inline void fatal_error(
+    std::source_location const loc,
+    std::format_string<Args...> reason,
+    Args const&... args) noexcept
+{ fatal_error(reason.get(), std::make_format_args(args...), loc); }
 } // namespace mir
+
+#define MIR_FATAL_ERROR(...) ::mir::fatal_error(::std::source_location::current(), __VA_ARGS__)
 
 #endif // MIR_FATAL_H_

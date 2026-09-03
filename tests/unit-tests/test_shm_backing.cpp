@@ -426,7 +426,7 @@ TEST(ShmBacking, can_resize_pool)
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize shm fd"}));
     }
-    backing->resize(new_size);
+    ASSERT_TRUE(backing->resize(new_size).has_value());
 
     auto range = backing->get_rw_range(0, new_size);
     auto map = range->map_rw();
@@ -458,7 +458,7 @@ TEST(ShmBacking, ranges_remain_valid_after_resize)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize shm fd"}));
     }
     // ...then resize the pool...
-    backing->resize(new_size);
+    ASSERT_TRUE(backing->resize(new_size).has_value());
 
     // ...and map the range.
     auto map = range->map_rw();
@@ -492,7 +492,7 @@ TEST(ShmBacking, mapping_remains_valid_after_resize)
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize shm fd"}));
     }
     // ...*then* resize the pool...
-    backing->resize(new_size);
+    ASSERT_TRUE(backing->resize(new_size).has_value());
 
     std::byte const expected_content{0xfa};
     ::memset(map->data(), std::to_integer<int>(expected_content), map->len());
@@ -532,7 +532,7 @@ TEST(ShmBacking, resize_rechecks_backing_size)
         }
     }
     // ...and then lie that we're now bigger...
-    backing->resize(shm_size * 2);
+    ASSERT_TRUE(backing->resize(shm_size * 2).has_value());
 
     // ...now, check that our lies can't crash the process.
     auto range = backing->get_rw_range(0, shm_size * 2);
@@ -584,7 +584,7 @@ TEST(ShmBacking, resize_doesnt_install_sigbus_handler_when_safe)
     {
         BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to resize memfd"}));
     }
-    backing->resize(bigger_size);
+    ASSERT_TRUE(backing->resize(bigger_size).has_value());
 
     range = backing->get_rw_range(0, bigger_size);
     map = range->map_rw();

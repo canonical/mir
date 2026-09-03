@@ -29,6 +29,7 @@
 
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/egl_helpers.h>
+#include <cstring>
 
 namespace mg = mir::graphics;
 namespace mgc = mg::common;
@@ -88,7 +89,7 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     };
 
     auto egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (strstr(egl_extensions, "EGL_KHR_no_config_context") == nullptr)
+    if (std::strstr(egl_extensions, "EGL_KHR_no_config_context") == nullptr)
     {
         // We do not *strictly* need this, but it means I don't need to thread a GLConfig all the way through to here.
         BOOST_THROW_EXCEPTION((std::runtime_error{"EGL implementation missing necessary EGL_KHR_no_config_context extension"}));
@@ -156,6 +157,12 @@ public:
     auto layout() const -> Layout;
 
 private:
+    /* The size of the target buffer can change between commits (notably, the
+     * screen shooter captures to whatever buffer the client provides), so
+     * (re)specify our storage whenever it no longer matches.
+     */
+    void ensure_storage_for_size();
+
     mg::CPUAddressableDisplayAllocator& allocator;
     EGLDisplay const dpy;
     EGLContext ctx;
@@ -163,6 +170,7 @@ private:
     RenderbufferHandle colour_buffer;
     std::shared_ptr<RenderbufferHandle> depth_stencil_buffer;
     FramebufferHandle fbo;
+    geom::Size allocated_size;
 };
 
 mgc::CPUCopyOutputSurface::CPUCopyOutputSurface(
@@ -214,16 +222,30 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
     : allocator{allocator},
       dpy{dpy},
       ctx{create_current_context(dpy, share_ctx)},
-      format{select_format_from(allocator)}
+      format{select_format_from(allocator)},
+      depth_stencil_buffer{
+          (config.depth_buffer_bits() || config.stencil_buffer_bits())
+              ? std::make_shared<RenderbufferHandle>()
+              : nullptr}
 {
-    glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
-    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size().width.as_int(), size().height.as_int());
+    ensure_storage_for_size();
+}
 
-    if (config.depth_buffer_bits() || config.stencil_buffer_bits())
+void mgc::CPUCopyOutputSurface::Impl::ensure_storage_for_size()
+{
+    auto const next_size = size();
+    if (next_size == allocated_size)
     {
-        depth_stencil_buffer = std::make_shared<RenderbufferHandle>();
+        return;
+    }
+
+    glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer);
+    glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, next_size.width.as_int(), next_size.height.as_int());
+
+    if (depth_stencil_buffer)
+    {
         glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer->operator GLuint());
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, size().width.as_int(), size().height.as_int());
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, next_size.width.as_int(), next_size.height.as_int());
     }
 
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
@@ -266,6 +288,8 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
                         std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
         }
     }
+
+    allocated_size = next_size;
 }
 
 mgc::CPUCopyOutputSurface::Impl::~Impl()
@@ -290,6 +314,7 @@ mgc::CPUCopyOutputSurface::Impl::~Impl()
     // We're the current EGL context; destroy our GL resources...
     fbo.reset();
     colour_buffer.reset();
+    depth_stencil_buffer.reset();
 
     // Now release our context, and delete it.
     release_current();
@@ -298,6 +323,7 @@ mgc::CPUCopyOutputSurface::Impl::~Impl()
 
 void mgc::CPUCopyOutputSurface::Impl::bind()
 {
+    ensure_storage_for_size();
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 }
 

@@ -26,6 +26,7 @@
 #include <mir/udev/wrapper.h>
 
 #include <algorithm>
+#include <cstring>
 #include <boost/throw_exception.hpp>
 #include <dlfcn.h>
 
@@ -203,14 +204,9 @@ auto mg::modules_for_device(
                      * We want at most one of these
                      */
 
-                    // This could be more elegant with std::optional<>::transform(), but not C++23 for me!
-                    auto const current_best_support = [&best_nested]() {
-                        if (best_nested)
-                        {
-                            return best_nested->first.support_level;
-                        }
-                        return mg::probe::unsupported;
-                    }();
+                    auto const current_best_support = best_nested
+                        .transform([](auto const& candidate) { return candidate.first.support_level; })
+                        .value_or(mg::probe::unsupported);
                     if (device.support_level > current_best_support)
                     {
                         best_nested = std::make_pair(std::move(device), module);
@@ -387,7 +383,7 @@ auto dso_filename_alphabetically_before(mir::SharedLibrary const& a, mir::Shared
 
     dladdr(reinterpret_cast<void const*>(describe_a), &info_a);
     dladdr(reinterpret_cast<void const*>(describe_b), &info_b);
-    return strcmp(info_a.dli_fname, info_b.dli_fname) < 0;
+    return std::strcmp(info_a.dli_fname, info_b.dli_fname) < 0;
 }
 }
 
@@ -461,7 +457,7 @@ auto mg::select_display_modules(
             auto describe = module->template load_function<mir::graphics::DescribeModule>(
                 "describe_graphics_module",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            return strcmp("mir:virtual", describe()->name) == 0;
+            return std::strcmp("mir:virtual", describe()->name) == 0;
         });
     auto virtual_platform = virtual_platform_pos != platforms.end() ? *virtual_platform_pos : std::shared_ptr<SharedLibrary>{};
 

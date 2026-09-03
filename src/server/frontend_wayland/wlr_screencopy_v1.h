@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <glm/glm.hpp>
+#include <tuple>
 
 namespace mir
 {
@@ -65,10 +66,8 @@ public:
 
         auto operator==(FrameParams const& other) const -> bool
         {
-            return output == other.output &&
-                   output_space_area == other.output_space_area &&
-                   buffer_size == other.buffer_size &&
-                   transform == other.transform;
+            return std::tie(output, output_space_area, buffer_size, transform) ==
+                   std::tie(other.output, other.output_space_area, other.buffer_size, other.transform);
         }
 
         auto full_buffer_space_damage() const -> geometry::Rectangle

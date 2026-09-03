@@ -103,12 +103,6 @@ void miral::WindowManagerTools::modify_window(WindowInfo& window_info, WindowSpe
 void miral::WindowManagerTools::modify_window(Window const& window, WindowSpecification const& modifications)
 { tools->modify_window(tools->info_for(window), modifications); }
 
-auto miral::WindowManagerTools::info_for_window_id(std::string const& id) const -> WindowInfo&
-{ return tools->info_for_window_id(id); }
-
-auto miral::WindowManagerTools::id_for_window(Window const& window) const -> std::string
-{ return tools->id_for_window(window); }
-
 void miral::WindowManagerTools::invoke_under_lock(std::function<void()> const& callback)
 { tools->invoke_under_lock(callback); }
 

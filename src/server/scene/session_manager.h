@@ -43,7 +43,6 @@ class SessionContainer;
 class SessionEventSink;
 class SessionListener;
 class SurfaceStack;
-class PromptSessionManager;
 class SurfaceFactory;
 class ApplicationNotRespondingDetector;
 

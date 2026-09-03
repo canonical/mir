@@ -42,9 +42,7 @@ namespace common
 {
 class EGLContextExecutor;
 
-class ShmBuffer :
-    public BufferBasic,
-    public NativeBufferBase
+class ShmBuffer : public BufferBasic, public NativeBufferBase
 {
 public:
     ~ShmBuffer() noexcept override;
@@ -55,32 +53,26 @@ public:
     MirPixelFormat pixel_format() const override;
     NativeBufferBase* native_buffer_base() override;
 
-    auto texture_for_provider(
-        std::shared_ptr<EGLContextExecutor> const& egl_delegate,
-        RenderingProvider* provider) -> std::shared_ptr<gl::Texture>;
+    auto texture_for_provider(std::shared_ptr<EGLContextExecutor> const& egl_delegate, RenderingProvider* provider)
+        -> std::shared_ptr<gl::Texture>;
 
 protected:
-    ShmBuffer(
-        geometry::Size const& size,
-        MirPixelFormat const& format);
+    ShmBuffer(geometry::Size const& size, MirPixelFormat const& format);
     class ShmBufferTexture;
 
     virtual void on_texture_accessed(std::shared_ptr<ShmBufferTexture> const&) = 0;
 
     Synchronised<std::map<RenderingProvider*, std::shared_ptr<ShmBufferTexture>>> provider_to_texture_map;
+
 private:
     geometry::Size const size_;
     MirPixelFormat const pixel_format_;
 };
 
-class MemoryBackedShmBuffer :
-    public ShmBuffer,
-    public renderer::software::RWMappable
+class MemoryBackedShmBuffer : public ShmBuffer, public renderer::software::RWMappable
 {
 public:
-    MemoryBackedShmBuffer(
-        geometry::Size const& size,
-        MirPixelFormat const& pixel_format);
+    MemoryBackedShmBuffer(geometry::Size const& size, MirPixelFormat const& pixel_format);
 
     auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
 
@@ -109,13 +101,10 @@ private:
     std::unique_ptr<std::byte[]> const pixels;
 };
 
-class MappableBackedShmBuffer :
-    public ShmBuffer,
-    public renderer::software::RWMappable
+class MappableBackedShmBuffer : public ShmBuffer, public renderer::software::RWMappable
 {
 public:
-    MappableBackedShmBuffer(
-        std::shared_ptr<RWMappable> data);
+    MappableBackedShmBuffer(std::shared_ptr<RWMappable> data);
 
     auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
 
@@ -146,7 +135,7 @@ public:
 
     ~NotifyingMappableBackedShmBuffer() override;
 
-    auto map_readable() const  -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
+    auto map_readable() const -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
     auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
     auto map_rw() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override;
 

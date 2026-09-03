@@ -1,6 +1,8 @@
+<img src="assets/logo.png" alt="Canonical Mir logo"/>
+
 # Mir - Wayland compositor
 
-**Mir** is set of libraries for building Wayland based shells. Mir
+**Mir** is a set of libraries for building Wayland based shells. Mir
 simplifies the complexity that shell authors need to deal with: it
 provides a stable, well tested and performant platform with touch,
 mouse and tablet input, multi-display capability and secure
@@ -17,7 +19,7 @@ API.
 
 ## Resources
 
-- For information on how to use Mir, refer to [the official documentation](https://canonical-mir.readthedocs-hosted.com).
+- For information on how to use Mir, refer to [the official documentation](https://canonical.com/mir/docs).
 - For data sheets and whitepapers, check out [the Mir website](https://canonical.com/mir).
 - Mir is [hosted on GitHub](https://github.com/canonical/mir).
 - For announcements and other discussions on Mir see [Ubuntu Discourse](https://discourse.ubuntu.com/c/mir/15) or join

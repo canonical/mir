@@ -1,11 +1,5 @@
 include(CMakeDependentOption)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}
-  ${CMAKE_CURRENT_BINARY_DIR}
-  ${PROJECT_SOURCE_DIR}/src/include/server
-)
-
 set(
   INTEGRATION_TESTS_SRCS
   test_custom_input_dispatcher.cpp
@@ -19,10 +13,17 @@ add_subdirectory(compositor/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 
-link_directories(${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 mir_add_wrapped_executable(mir_integration_tests NOINSTALL
   ${INTEGRATION_TESTS_SRCS}
 )
+
+target_include_directories(mir_integration_tests PRIVATE
+  ${CMAKE_SOURCE_DIR}
+  ${CMAKE_CURRENT_BINARY_DIR}
+  ${PROJECT_SOURCE_DIR}/src/include/server
+)
+
+target_link_directories(mir_integration_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(

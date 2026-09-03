@@ -39,6 +39,7 @@ public:
 
     bool dispatch(FdEvents events) override;
     FdEvents relevant_events() const override;
+
 private:
     bool consume();
     void wake();

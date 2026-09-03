@@ -30,6 +30,8 @@
 #include <mir/graphics/platform.h>
 #include <mir/options/configuration.h>
 
+#include <cstdlib>
+
 namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace mg = mir::graphics;
@@ -52,6 +54,22 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
             if (providers.empty())
             {
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
+            }
+
+            if (auto pinned = find_pinned_rendering_platform())
+            {
+                if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
+                {
+                    mir::log_info("Pinning all compositing to provider: %s", std::getenv("MIR_PIN_COMPOSITING_TO"));
+                    providers = {gl_provider};
+                }
+                else
+                {
+                    mir::log_warning(
+                        "MIR_PIN_COMPOSITING_TO is set to '%s', but that rendering platform does not support GL "
+                        "compositing",
+                        std::getenv("MIR_PIN_COMPOSITING_TO"));
+                }
             }
 
             return wrap_display_buffer_compositor_factory(
@@ -94,50 +112,6 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
         []()
         {
             return std::make_shared<mir::renderer::gl::RendererFactory>();
-        });
-}
-
-auto mir::DefaultServerConfiguration::the_screen_shooter() -> std::shared_ptr<compositor::ScreenShooter>
-{
-    return screen_shooter(
-        [this]() -> std::shared_ptr<compositor::ScreenShooter>
-        {
-            try
-            {
-                std::vector<std::shared_ptr<mg::GLRenderingProvider>> providers;
-                providers.reserve(the_rendering_platforms().size());
-                for (auto& platform : the_rendering_platforms())
-                {
-                    if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(platform))
-                    {
-                        providers.push_back(gl_provider);
-                    }
-                }
-                if (providers.empty())
-                {
-                    BOOST_THROW_EXCEPTION((std::runtime_error{"No platform provides GL rendering support"}));
-                }
-
-                return std::make_shared<compositor::BasicScreenShooter>(
-                    the_scene(),
-                    the_clock(),
-                    thread_pool_executor,
-                    providers,
-                    the_renderer_factory(),
-                    the_buffer_allocator(),
-                    the_gl_config(),
-                    the_output_filter(),
-                    the_cursor());
-            }
-            catch (...)
-            {
-                mir::log(
-                    ::mir::logging::Severity::error,
-                    "",
-                    std::current_exception(),
-                    "failed to create BasicScreenShooter");
-                return std::make_shared<compositor::NullScreenShooter>(thread_pool_executor);
-            }
         });
 }
 

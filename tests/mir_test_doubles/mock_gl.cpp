@@ -25,13 +25,13 @@ namespace mtd = mir::test::doubles;
 
 namespace
 {
-mtd::MockGL* global_mock_gl = NULL;
+mtd::MockGL* global_mock_gl = nullptr;
 }
 
 mtd::MockGL::MockGL()
 {
     using namespace testing;
-    assert(global_mock_gl == NULL && "Only one mock object per process is allowed");
+    assert(global_mock_gl == nullptr && "Only one mock object per process is allowed");
 
     global_mock_gl = this;
 
@@ -42,11 +42,11 @@ mtd::MockGL::MockGL()
     ON_CALL(*this, glGetProgramiv(_,_,_))
         .WillByDefault(SetArgPointee<2>(GL_TRUE));
     ON_CALL(*this, glGenTextures(_, _))
-        .WillByDefault(Invoke(
+        .WillByDefault(
             [] (GLsizei n, GLuint *textures)
             {
                 std::memset(textures, 0, n * sizeof(*textures));
-            }));
+            });
 }
 
 void mtd::MockGL::provide_gles_extensions()
@@ -60,7 +60,7 @@ void mtd::MockGL::provide_gles_extensions()
 
 mtd::MockGL::~MockGL()
 {
-    global_mock_gl = NULL;
+    global_mock_gl = nullptr;
 }
 
 #define CHECK_GLOBAL_VOID_MOCK()            \
