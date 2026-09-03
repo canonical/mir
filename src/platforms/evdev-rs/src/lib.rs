@@ -292,9 +292,9 @@ mod ffi_bridge {
         /// Check whether a device is already pending or active.
         pub fn has_device(self: &PlatformBridge, devnum: u64) -> bool;
 
-        // # Safety
-        //
-        // This is unsafe because it receives a raw C++ pointer as an argument.
+        /// # Safety
+        ///
+        /// This is unsafe because it receives a raw C++ pointer as an argument.
         pub unsafe fn create_event_builder_wrapper(
             self: &PlatformBridge,
             event_builder: *mut EventBuilder,
