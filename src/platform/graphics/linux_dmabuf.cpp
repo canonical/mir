@@ -26,6 +26,7 @@
 #include "wayland_wrapper.h"
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/client.h>
+#include <mir/wayland/wl_array.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/texture.h>
@@ -60,17 +61,6 @@ namespace mgc = mg::common;
 namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mrs = mir::renderer::software;
-
-namespace
-{
-    template <typename T>
-    void wl_array_add(wl_array *array, T value)
-    {
-        if (auto d = static_cast<T*>(wl_array_add(array, sizeof(T))))
-            *d = value;
-    }
-}
-
 
 class mg::DmaBufFormatDescriptors
 {
@@ -921,33 +911,26 @@ public:
 
         {
             send_format_table_event(mir::Fd{mir::IntOwnedFd{shm_buffer.fd()}}, format_table_length * sizeof(Format));
-            wl_array main_device = {};
-            wl_array_init(&main_device);
-            wl_array_add<dev_t>(&main_device, this->provider->devnum());
-            send_main_device_event(&main_device);
-            wl_array_release(&main_device);
+            mw::WlArray main_device;
+            main_device.push_back<dev_t>(this->provider->devnum());
+            send_main_device_event(main_device.data());
         }
 
         {
             // We only currently support one device, which accessess all formats.
-            wl_array device = {};
-            wl_array_init(&device);
-            wl_array_add<dev_t>(&device, this->provider->devnum());
-            send_tranche_target_device_event(&device);
-            wl_array_release(&device);
+            mw::WlArray device;
+            device.push_back<dev_t>(this->provider->devnum());
+            send_tranche_target_device_event(device.data());
         }
         send_tranche_flags_event(0);
 
         {
-            wl_array indicies = {};
-            wl_array_init(&indicies);
+            mw::WlArray indicies;
             for (auto i = 0u; i < format_table_length; ++i)
             {
-                uint32_t *index = static_cast<uint32_t*>(wl_array_add(&indicies, sizeof(uint32_t)));
-                *index = i;
+                indicies.push_back(i);
             }
-            send_tranche_formats_event(&indicies);
-            wl_array_release(&indicies);
+            send_tranche_formats_event(indicies.data());
         }
         send_tranche_done_event();
 

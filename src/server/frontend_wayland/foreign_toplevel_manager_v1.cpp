@@ -32,6 +32,7 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/shell/shell.h>
 #include <mir/wayland/weak.h>
+#include <mir/wayland/wl_array.h>
 
 #include <limits.h>
 #include <unistd.h>
@@ -678,35 +679,29 @@ mf::ForeignToplevelHandleV1::ForeignToplevelHandleV1(
 
 void mf::ForeignToplevelHandleV1::send_state(MirWindowFocusState focused, ms::SurfaceStateTracker state)
 {
-    wl_array states{};
-    wl_array_init(&states);
+    mw::WlArray states;
 
     if (focused == mir_window_focus_state_focused)
     {
-        if (uint32_t* state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::activated;
+        states.push_back(State::activated);
     }
 
     if (state.has(mir_window_state_horizmaximized) || state.has(mir_window_state_vertmaximized))
     {
-        if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::maximized;
+        states.push_back(State::maximized);
     }
 
     if (state.has(mir_window_state_fullscreen))
     {
-        if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::fullscreen;
+        states.push_back(State::fullscreen);
     }
 
     if (state.has(mir_window_state_minimized))
     {
-        if (uint32_t *state = static_cast<uint32_t*>(wl_array_add(&states, sizeof(uint32_t))))
-            *state = State::minimized;
+        states.push_back(State::minimized);
     }
 
-    send_state_event(&states);
-    wl_array_release(&states);
+    send_state_event(states.data());
 }
 
 void mf::ForeignToplevelHandleV1::should_close()
