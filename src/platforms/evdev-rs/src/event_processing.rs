@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState};
+use crate::device::{
+    InputDevicePtr, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState,
+};
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
@@ -129,8 +131,8 @@ fn handle_device_event(
             known_devices.push(LibinputDeviceInfo {
                 id: *next_device_id,
                 devnode,
-                device: libinput_device,
-                input_device: bridge.create_input_device(*next_device_id),
+                device: libinput_device.into(),
+                input_device: InputDevicePtr(bridge.create_input_device(*next_device_id)),
                 input_sink: None,
                 event_builder: None,
                 button_state: 0,
@@ -794,7 +796,7 @@ pub fn process_libinput_events(
                     device_info,
                     &mut state.scroll_state,
                     &bridge,
-                    event,
+                    event.into_inner(),
                     report,
                 );
             }
@@ -842,7 +844,7 @@ pub fn process_libinput_events(
                     );
                 } else {
                     // Device not yet registered, defer the event.
-                    device_info.deferred_events.push(other);
+                    device_info.deferred_events.push(other.into());
                 }
             }
         }
