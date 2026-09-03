@@ -112,7 +112,7 @@ pub fn generate_protocols_rs(protocols: &[WaylandProtocol]) -> TokenStream {
     });
 
     quote! {
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod protocols {
             use wayland_server;
 

@@ -46,7 +46,7 @@ pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> T
         use crate::dispatch::*;
 
         #[cxx::bridge(namespace = "mir::wayland_rs")]
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod ffi {
             extern "Rust" {
                 type WaylandServer;
