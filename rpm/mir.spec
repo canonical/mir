@@ -81,7 +81,7 @@ BuildRequires:  pkgconfig(libdrm)
 BuildRequires:  pkgconfig(libevdev)
 BuildRequires:  pkgconfig(libinput)
 BuildRequires:  pkgconfig(libudev)
-BuildRequires:  pkgconfig(libxml++-2.6)
+BuildRequires:  pkgconfig(libxml++-5.0)
 BuildRequires:  pkgconfig(nettle)
 BuildRequires:  pkgconfig(umockdev-1.0) >= 0.6
 BuildRequires:  pkgconfig(uuid)

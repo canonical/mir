@@ -105,6 +105,8 @@ set_source_files_properties(
         COMPILE_FLAGS "${TRACEPOINT_COMPILE_FLAGS}"
 )
 
+mir_disable_tsan_for_sources(${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c)
+
 add_library(mirfrontend-wayland OBJECT
 
   ${WAYLAND_SOURCES}
