@@ -33,6 +33,8 @@ pub struct PlatformRs {
 
     report: cxx::UniquePtr<crate::InputReport>,
 
+    libinput: Option<input::Libinput>,
+
     state: Option<Arc<Mutex<LibinputDeviceState>>>,
 
     /// Whether the platform is currently running. Owned by Rust, queried by C++.
@@ -58,6 +60,7 @@ impl PlatformRs {
             bridge,
             device_registry,
             report,
+            libinput: None,
             state: None,
             running: Arc::new(AtomicBool::new(false)),
             known_devnums: HashSet::new(),
@@ -77,19 +80,19 @@ impl PlatformRs {
     /// Returns `true` if a fresh context was created, `false` if the platform
     /// was already started.
     pub fn start(&mut self) -> bool {
-        if self.state.is_some() {
+        if self.state.is_some() || self.libinput.is_some() {
             return false;
         }
 
         println!("Starting the evdev-rs platform");
 
-        let libinput =
-            input::Libinput::new_from_path(crate::libinput_interface::LibinputInterfaceImpl {
+        self.libinput = Some(input::Libinput::new_from_path(
+            crate::libinput_interface::LibinputInterfaceImpl {
                 fd_store: self.fd_store.clone(),
-            });
+            },
+        ));
 
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
-            libinput,
             known_devices: Vec::new(),
             next_device_id: 0,
             scroll_state: ScrollState {
@@ -123,19 +126,11 @@ impl PlatformRs {
     /// the bridge's pending-fd map. libinput will call `open_restricted()`,
     /// which retrieves the pre-acquired fd non-blockingly via `claim_pending_fd`.
     pub fn path_add_device(&mut self, devnode: &str) {
-        let Some(state_arc) = self.state.as_mut() else {
-            println!("PlatformRs::path_add_device: platform not started");
+        let Some(libinput) = self.libinput.as_mut() else {
             return;
         };
-        match state_arc.lock() {
-            Ok(mut state) => {
-                println!("evdev-rs: libinput path_add_device({})", devnode);
-                state.libinput.path_add_device(devnode);
-            }
-            Err(_) => {
-                println!("PlatformRs::path_add_device: state mutex poisoned");
-            }
-        }
+        println!("evdev-rs: libinput path_add_device({})", devnode);
+        libinput.path_add_device(devnode);
     }
 
     /// Remove a device from the libinput context by path.
@@ -144,6 +139,9 @@ impl PlatformRs {
     /// removed (hotplug disconnect).
     pub fn path_remove_device(&mut self, devnode: &str) {
         let Some(state_arc) = self.state.as_mut() else {
+            return;
+        };
+        let Some(libinput) = self.libinput.as_mut() else {
             return;
         };
         match state_arc.lock() {
@@ -164,7 +162,7 @@ impl PlatformRs {
                     devnode
                 );
                 let device_info = state.known_devices.swap_remove(index);
-                state.libinput.path_remove_device(device_info.device);
+                libinput.path_remove_device(device_info.device);
 
                 let input_device = device_info.input_device.clone();
                 let registry = self.device_registry.clone();
@@ -182,13 +180,9 @@ impl PlatformRs {
     }
 
     pub unsafe fn libinput_fd(&mut self) -> i32 {
-        match self.state.as_mut() {
-            Some(state_arc) => match state_arc.lock() {
-                Ok(state) => state.libinput.as_raw_fd(),
-                Err(_) => -1,
-            },
-            None => -1,
-        }
+        self.libinput
+            .as_mut()
+            .map_or(-1, |libinput| libinput.as_raw_fd())
     }
 
     pub fn continue_after_config(&self) {}
@@ -207,6 +201,7 @@ impl PlatformRs {
         // code at that point. This results in a segfault.
         let Some(state_arc) = self.state.take() else {
             // Platform not started or already stopped.
+            self.libinput.take();
             return;
         };
 
@@ -249,6 +244,8 @@ impl PlatformRs {
                     .remove_device(input_device);
             }
         }
+
+        self.libinput.take();
     }
 
     pub fn create_input_device(&mut self, device_id: i32) -> Box<LibinputDevice> {
@@ -263,11 +260,6 @@ impl PlatformRs {
                 return Box::new(LibinputDevice {
                     device_id,
                     state: Arc::new(Mutex::new(LibinputDeviceState {
-                        libinput: input::Libinput::new_from_path(
-                            crate::libinput_interface::LibinputInterfaceImpl {
-                                fd_store: self.fd_store.clone(),
-                            },
-                        ),
                         known_devices: Vec::new(),
                         next_device_id: 0,
                         scroll_state: ScrollState {
@@ -290,12 +282,16 @@ impl PlatformRs {
     }
 
     pub fn process(&mut self) {
-        if self.state.is_none() {
+        let Some(libinput) = self.libinput.as_mut() else {
             return;
-        }
+        };
+        let Some(state_arc) = self.state.as_mut() else {
+            return;
+        };
 
-        if let Ok(mut state) = self.state.as_mut().unwrap().try_lock() {
+        if let Ok(mut state) = state_arc.try_lock() {
             process_libinput_events(
+                libinput,
                 &mut state,
                 self.device_registry.clone(),
                 self.bridge.clone(),

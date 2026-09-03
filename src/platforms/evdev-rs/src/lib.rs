@@ -13,6 +13,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#![expect(
+    clippy::missing_safety_doc,
+    reason = "clippy struggles with `cxx` proc macro"
+)]
 
 // TODO: Report errors to Mir's logging facilities. We should do this following Mir's logging refactor.
 // TODO: Implement continue_after_config and pause_for_config

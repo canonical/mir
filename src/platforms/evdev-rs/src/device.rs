@@ -230,7 +230,6 @@ pub struct ScrollState {
 }
 
 pub struct LibinputDeviceState {
-    pub libinput: input::Libinput,
     pub known_devices: Vec<LibinputDeviceInfo>,
     pub next_device_id: i32,
     pub scroll_state: ScrollState,
