@@ -4,49 +4,12 @@ if (NOT UMOCKDEV_FOUND)
 endif()
 
 include(CheckCXXCompilerFlag)
-check_cxx_compiler_flag(-Wnull-dereference HAS_W_NULL_DEREFERENCE)
-check_cxx_compiler_flag(-Woverloaded-virtual HAS_W_OVERLOADED_VIRTUAL)
 check_cxx_compiler_flag(-Winconsistent-missing-override HAS_W_INCONSISTENT_MISSING_OVERRIDE)
-check_cxx_compiler_flag(-Wgnu-zero-variadic-macro-arguments HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-check_cxx_compiler_flag(-Wno-sign-compare HAS_W_GNU_SIGN_COMPARE)
-check_cxx_compiler_flag(-Wmaybe-uninitialized HAS_W_MAYBE_UNINITIALIZED)
-check_cxx_compiler_flag(-Winfinite-recursion HAS_W_INFINITE_RECURSION)
 
-if (HAS_W_NULL_DEREFERENCE)
-  # Avoid clang complaints about poor quality gmock/gtest headers
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=null-dereference>)
-endif()
-if (HAS_W_OVERLOADED_VIRTUAL)
-  # Avoid clang complaints about poor quality gmock/gtest headers
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=overloaded-virtual>)
-endif()
 if (HAS_W_INCONSISTENT_MISSING_OVERRIDE)
   # MOCK_METHOD()s cannot be marked as override; we cannot consistently mark overrides
   # in the tests.
   add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-inconsistent-missing-override>)
-endif()
-if (HAS_W_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-  # INSTANTIATE_TEST_SUITE_P hits this like a slice of lemon wrapped around a large gold brick.
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-gnu-zero-variadic-macro-arguments>)
-else()
-  # GCC is a bit less flexible than clang and needs a bigger hammer...
-  if (NOT MIR_USE_PRECOMPILED_HEADERS)
-    # Work around the Google Test headers not being C++11 friendly (LP: #1658604)
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-pedantic>)
-  endif()
-endif()
-if (HAS_W_GNU_SIGN_COMPARE)
-  # TODO fix the code
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-sign-compare>)
-endif()
-if (HAS_W_MAYBE_UNINITIALIZED)
-  # Avoid g++ complaints about gmock/gtest headers
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=maybe-uninitialized>)
-endif()
-if (HAS_W_INFINITE_RECURSION)
-  # g++-12 doesn't notice that Abort() is going to call a [[noreturn]] function
-  # before Invalid<T>() tries to return itself.
-  add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-error=infinite-recursion>)
 endif()
 
 # we are shipping a static test archive for downstreams and don't want to ship

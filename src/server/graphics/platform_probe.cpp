@@ -27,6 +27,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <utility>
 #include <boost/throw_exception.hpp>
 #include <dlfcn.h>
 
@@ -151,13 +152,6 @@ bool is_same_device(
 }
 
 
-// GCC and Clang both ensure the switch is exhaustive.
-// GCC, however, gets a "control reaches end of non-void function" warning without this
-#ifndef __clang__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-#endif
-
 auto mg::modules_for_device(
     std::function<std::vector<mg::SupportedDevice>(mir::SharedLibrary const&)> const& probe,
     std::vector<std::shared_ptr<mir::SharedLibrary>> const& modules,
@@ -270,11 +264,8 @@ auto mg::modules_for_device(
         nested_vec.push_back(std::move(best_nested.value()));
         return nested_vec;
     }
+    std::unreachable();
 }
-
-#ifndef __clang__
-#pragma GCC diagnostic push
-#endif
 
 auto mir::graphics::display_modules_for_device(
     std::vector<std::shared_ptr<SharedLibrary>> const& modules,
