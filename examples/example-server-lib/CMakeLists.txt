@@ -26,6 +26,8 @@ add_library(example-shell-lib STATIC
     ${XDG_SHELL_C}              ${XDG_SHELL_H}
 )
 
+mir_disable_tsan_for_sources("${XDG_SHELL_C}")
+
 target_include_directories(example-shell-lib
     PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}

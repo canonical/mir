@@ -35,7 +35,7 @@ build:
   - libxcb-res0-dev
   - libxcursor-dev
   - libxkbcommon-dev
-  - libxml++2.6-dev
+  - libxml++-5.0-dev
   - libyaml-cpp-dev
   - xsltproc
   jobs:
