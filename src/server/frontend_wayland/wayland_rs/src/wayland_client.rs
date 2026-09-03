@@ -119,7 +119,7 @@ impl WaylandClientId {
     }
 
     /// Check if this id is the same as the other id.
-    pub fn equals(&self, id: &Box<WaylandClientId>) -> bool {
+    pub fn equals(&self, id: &WaylandClientId) -> bool {
         self.id == id.id
     }
 }
