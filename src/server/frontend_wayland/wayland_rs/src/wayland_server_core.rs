@@ -22,7 +22,6 @@ use calloop::{
     EventLoop, Interest, LoopHandle, Mode, PostAction, RegistrationToken,
 };
 use cxx::UniquePtr;
-use log;
 use std::error;
 use std::option::Option;
 use std::os::fd::{AsRawFd, FromRawFd, RawFd};
@@ -157,12 +156,10 @@ impl WaylandServer {
         loop_handle.insert_source(
             Generic::new(listener, Interest::READ, Mode::Level),
             move |_, listener, state: &mut ServerState| {
-                if let Ok(stream) = listener.accept() {
-                    if let Some(stream) = stream {
-                        // Insert the client into the display. This registers the
-                        // client's socket with the Display's internal backend.
-                        WaylandServer::insert_stream_client(state, &listener_disconnect_tx, stream);
-                    }
+                if let Ok(Some(stream)) = listener.accept() {
+                    // Insert the client into the display. This registers the
+                    // client's socket with the Display's internal backend.
+                    WaylandServer::insert_stream_client(state, &listener_disconnect_tx, stream);
                 }
                 Ok(PostAction::Continue)
             },

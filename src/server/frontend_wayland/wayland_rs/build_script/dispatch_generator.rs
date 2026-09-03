@@ -719,10 +719,10 @@ fn generate_dispatch_impl(
 
     // This snippet checks if the interface has any requests at all. If not, then data
     // will be prefixed with an underscore.
-    let interface_has_requests = interface.items.iter().any(|item| match item {
-        InterfaceItem::Request(_) => true,
-        _ => false,
-    });
+    let interface_has_requests = interface
+        .items
+        .iter()
+        .any(|item| matches!(item, InterfaceItem::Request(_)));
 
     let data_name = format_ident!(
         "{}",
