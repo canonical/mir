@@ -45,6 +45,8 @@ public:
     auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
         -> std::unique_ptr<EGLFramebuffer> override;
 
+    void resize(geometry::Size new_size);
+
     struct SurfaceState;
     class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
     {
@@ -76,7 +78,7 @@ public:
 private:
     EGLDisplay const dpy;
     std::shared_ptr<SurfaceState> const surface_state;
-    geometry::Size const size;
+    geometry::Size size;
 };
 }
 
