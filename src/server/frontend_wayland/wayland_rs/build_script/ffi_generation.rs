@@ -24,7 +24,7 @@ use quote::{format_ident, quote};
 //
 // This includes Rust -> C++ with the help of the provided builders
 // and C++ -> Rust.
-pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>) -> TokenStream {
+pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> TokenStream {
     // First, generate the C++ -> Rust FFI code.
     let rust_tokens = protocols.iter().flat_map(generate_ffi_for_protocol);
 
@@ -91,7 +91,7 @@ pub fn generate_ffi(protocols: &Vec<WaylandProtocol>, builders: &Vec<CppBuilder>
 /// For every interface used as the `new_id` of an event we expose:
 /// * `allocate_<interface>(client, version) -> Box<Middleware>` and
 /// * `set_<interface>_inner(instance, object)`.
-fn generate_server_side_factory_ffi_decls(protocols: &Vec<WaylandProtocol>) -> Vec<TokenStream> {
+fn generate_server_side_factory_ffi_decls(protocols: &[WaylandProtocol]) -> Vec<TokenStream> {
     let mut seen: Vec<String> = Vec::new();
     let mut decls: Vec<TokenStream> = Vec::new();
 
