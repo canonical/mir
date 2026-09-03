@@ -101,11 +101,11 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
 
     // Write the protocol headers
     for builder in &output.builders {
-        write_cpp_header(&builder);
-        write_cpp_source(&builder);
+        write_cpp_header(builder);
+        write_cpp_source(builder);
     }
 
-    let ffi = generate_ffi(&protocols, &output.builders);
+    let ffi = generate_ffi(protocols, &output.builders);
     write_generated_rust_file(ffi, "ffi.rs");
 }
 
@@ -130,6 +130,6 @@ fn write_cpp_source(builder: &CppBuilder) {
 }
 
 fn write_wayland_server_generated(protocols: &Vec<WaylandProtocol>) {
-    let tokens = generate_wayland_server_generated_rs(&protocols);
+    let tokens = generate_wayland_server_generated_rs(protocols);
     write_generated_rust_file(tokens, "wayland_server_generated.rs");
 }

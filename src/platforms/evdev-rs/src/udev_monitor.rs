@@ -15,7 +15,6 @@
  */
 
 use std::os::fd::AsRawFd;
-use udev;
 
 /// Type of udev device event.
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]

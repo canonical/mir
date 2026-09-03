@@ -350,7 +350,7 @@ pub fn evdev_rs_create(
     device_registry: cxx::SharedPtr<InputDeviceRegistry>,
     report: cxx::UniquePtr<InputReport>,
 ) -> Box<PlatformRs> {
-    return Box::new(PlatformRs::new(bridge, device_registry, report));
+    Box::new(PlatformRs::new(bridge, device_registry, report))
 }
 
 // # Safety
