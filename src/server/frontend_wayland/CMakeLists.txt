@@ -1,8 +1,6 @@
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
-if (MIR_ENABLE_RUST)
-  add_subdirectory(wayland_rs/)
-endif()
+add_subdirectory(wayland_rs/)
 
 set(
   WAYLAND_SOURCES
@@ -76,6 +74,7 @@ set(
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
   input_trigger_registry.cpp        input_trigger_registry.h
+  wayland_client.cpp         wayland_client.h
 )
 
 add_custom_command(
@@ -134,14 +133,7 @@ target_link_libraries(mirfrontend-wayland
     PkgConfig::GIOUnix
 )
 
-if (MIR_ENABLE_RUST)
-  target_sources(mirfrontend-wayland
-    PRIVATE
-      wayland_client.cpp         wayland_client.h
-  )
-
-  target_link_libraries(mirfrontend-wayland
-    PUBLIC
-      mirwayland_rs
-  )
-endif()
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)

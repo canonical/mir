@@ -3,7 +3,10 @@ Section: x11
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
-Build-Depends: cmake,
+Build-Depends: cargo:native,
+# Needed for Cargo to fetch crates
+               ca-certificates,
+               cmake,
                debhelper (>= 9),
                eglexternalplatform-dev,
                libapparmor-dev,
@@ -24,6 +27,7 @@ Build-Depends: cmake,
                libinput-dev (>= 0.21),
                liblttng-ust-dev,
                libpixman-1-dev,
+               libstd-rust-dev,
                libudev-dev,
                libumockdev-dev (>= 0.6),
                libwayland-dev,
@@ -42,6 +46,8 @@ Build-Depends: cmake,
                pkg-config,
                python3-dbusmock,
                python3-pil:native,
+               python3:native,
+               rustc:native,
                systemtap-sdt-dev,
                umockdev (>= 0.8.7),
                uuid-dev,
@@ -415,6 +421,21 @@ Description: Display server for Ubuntu - input platform library
  .
  Contains the shared libraries required for the Mir server to interact with
  the input hardware using the evdev interface.
+
+Package: mir-platform-input-evdev-rs11
+Section: libs
+Architecture: linux-any
+Multi-Arch: same
+Pre-Depends: ${misc:Pre-Depends}
+Depends: ${misc:Depends},
+         ${shlibs:Depends},
+Description: Display server for Ubuntu - Rust evdev input platform library
+ Mir is a display server running on linux systems, with a focus on efficiency,
+ robust operation and a well-defined driver model.
+ .
+ Contains the experimental Rust implementation of the evdev input platform for
+ the Mir server. It probes at experimental priority and is never selected ahead
+ of the C++ evdev platform; it is available for explicit opt-in.
 
 Package: mir-graphics-drivers-desktop
 Section: libs

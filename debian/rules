@@ -1,9 +1,19 @@
 #!/usr/bin/make -f
 
 include /usr/share/dpkg/default.mk
+include /usr/share/rustc/architecture.mk
 include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
+
+export DEB_HOST_RUST_TYPE
+export DEB_HOST_GNU_TYPE
+# Build-local Cargo home for the crates.io download cache (removed by dh_clean).
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
+
+# Needed for cross-compiling Rust
+export PKG_CONFIG = /usr/bin/$(DEB_HOST_GNU_TYPE)-pkg-config
+export PKG_CONFIG_ALLOW_CROSS = 1
 
 # Needed for ccache to work in case the build directory changed
 # (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
@@ -27,18 +37,19 @@ else
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DMIR_ENABLE_RUST=OFF\
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
   -DMIR_RUN_WLCS_TESTS=OFF\
 
-# Disable LTO on broken binutils
-# https://bugs.launchpad.net/ubuntu/+source/binutils/+bug/2070302
-ifeq ($(filter arm64,$(DEB_HOST_ARCH)),arm64)
-	ifneq ($(shell ld --version | grep -E '(2.43.1|2.44|2.44.50.20250707)$$'),)
-		DEB_BUILD_MAINT_OPTIONS += optimize=-lto
-	endif
-endif
+# Disable LTO: the Rust components (evdev-rs, wayland-rs) are compiled by rustc
+# and their static archives are not GCC LTO objects. Linking them into
+# libmirserver.so under GCC + ld.bfd's LTO plugin produces spurious
+# "undefined reference" errors for COMDAT template instantiations pulled in
+# from the fat-LTO C++ archives (e.g. boost::throw_exception<>, the
+# std::string move constructor, vtable for boost::exception). Other linkers
+# (mold, lld) and LTO-disabled builds are unaffected, so drop LTO for the
+# whole package now that Rust is always built.
+DEB_BUILD_MAINT_OPTIONS += optimize=-lto
 
 # Disable tests on Launchpad riscv64 (canonical/mir#3443, canonical/mir#3470)
 ifeq ($(USER) $(DEB_HOST_ARCH),buildd riscv64)
@@ -99,6 +110,10 @@ override_dh_makeshlibs:
 # Don't try to strip libraries used as test data
 override_dh_strip:
 	dh_strip -Xmir-test-data
+
+override_dh_clean:
+	dh_clean
+	rm -rf debian/cargo_home
 
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
