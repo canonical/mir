@@ -17,6 +17,7 @@
 #ifndef MIR_TEST_DOUBLES_NULL_LOGGER_H_
 #define MIR_TEST_DOUBLES_NULL_LOGGER_H_
 
+#include "mir/logging/event.h"
 #include <mir/logging/logger.h>
 
 namespace mir
@@ -31,7 +32,7 @@ extern char const* const logging_descr;
 
 class NullLogger : public mir::logging::Logger
 {
-    void log(mir::logging::Severity, std::string const&, std::string const&) override;
+    void log(logging::Event const& log_event) override;
 };
 }
 }

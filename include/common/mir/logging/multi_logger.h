@@ -33,7 +33,7 @@ public:
     MultiLogger(std::initializer_list<std::shared_ptr<Logger>> loggers);
 
 protected:
-    void log(mir::logging::Severity severity, std::string const& message, std::string const& component) override;
+    void log(Event const& log_event) override;
 
 private:
     std::vector<std::shared_ptr<mir::logging::Logger>> const loggers;
