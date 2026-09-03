@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use crate::device::{LibinputDevice, LibinputDeviceState, ScrollState};
+use crate::device::{InputDevicePtr, LibinputDevice, LibinputDeviceState, ScrollState};
 use crate::event_processing::process_libinput_events;
 use crate::fd_store::FdStore;
 use crate::udev_monitor::{UdevEventType, UdevMonitor};
@@ -162,7 +162,7 @@ impl PlatformRs {
                     devnode
                 );
                 let device_info = state.known_devices.swap_remove(index);
-                libinput.path_remove_device(device_info.device);
+                libinput.path_remove_device(device_info.device.into_inner());
 
                 let input_device = device_info.input_device.clone();
                 let registry = self.device_registry.clone();
@@ -211,7 +211,7 @@ impl PlatformRs {
         //   - This thread: holds Rust state mutex, waiting for InputDeviceHub mutex (in remove_device)
         //   - A spawned add_device thread: holds InputDeviceHub mutex, waiting for Rust state mutex
         //     (in LibinputDevice::start)
-        let devices_to_remove: Vec<cxx::SharedPtr<crate::InputDevice>> = {
+        let devices_to_remove: Vec<InputDevicePtr> = {
             match state_arc.lock() {
                 Ok(mut state_guard) => state_guard
                     .known_devices
