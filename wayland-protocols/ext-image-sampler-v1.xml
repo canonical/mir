@@ -136,7 +136,10 @@
 
     <request name="destroy" type="destructor">
       <description summary="destroy the ext_image_sampler_v1 object">
-        Signals that the sampler should be destroyed.
+        Destroys the sampler. This request can be sent at any time by the
+        client.
+
+        This does not affect the wl_buffer objects created by this object.
       </description>
     </request>
 
