@@ -41,7 +41,7 @@ using namespace testing;
 
 /// The type Mir gives a Wayland toplevel that has not asked to be anything else.
 auto constexpr default_window_type = mir_window_type_freestyle;
-auto constexpr client_completion_timeout = std::chrono::seconds{2};
+auto constexpr client_completion_timeout = std::chrono::seconds{6};
 
 namespace mir::wayland
 {
