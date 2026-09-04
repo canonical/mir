@@ -116,6 +116,9 @@
 
         Calling this while a buffer already exists for this embedding raises a buffer_active
         error.
+
+        If supported, the wp_viewporter and wp_alpha_modifier_v1 protocols should behave
+        correctly on the surface to which this buffer has been attached.
       </description>
     </request>
 
