@@ -18,7 +18,8 @@ use crate::cpp_builder::sanitize_identifier;
 use crate::helpers::{
     dash_to_snake, dash_to_snake_ident, format_has_arg_ident,
     format_wayland_interface_to_cpp_class, format_wayland_interface_to_rust_extension_struct,
-    generate_namespace, implemented_protocols, protocol_requires_ffi_codegen, snake_to_pascal,
+    generate_namespace, natively_implemented_protocols, protocol_requires_ffi_codegen,
+    snake_to_pascal,
 };
 use crate::protocol_parser::{
     InterfaceItem, WaylandArg, WaylandArgType, WaylandInterface, WaylandProtocol, WaylandRequest,
@@ -397,7 +398,7 @@ fn generate_global_dispatch_impl(
 ) -> TokenStream {
     let interface_name = dash_to_snake_ident(&interface.name);
 
-    if implemented_protocols()
+    if natively_implemented_protocols()
         .iter()
         .cloned()
         .chain(

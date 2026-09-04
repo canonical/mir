@@ -118,8 +118,8 @@ pub fn generate_namespace(protocol: &WaylandProtocol) -> TokenStream {
 /// `src/protocol_impls/wl_fixes.rs`), and declare the module in `src/protocol_impls/mod.rs`.
 ///
 /// This list is computed once on initial access, and leaked for the remainder of the program.
-pub fn implemented_protocols() -> &'static [&'static str] {
-    static IMPLEMENTED_PROTOCOLS: LazyLock<Box<[&'static str]>> = LazyLock::new(|| {
+pub fn natively_implemented_protocols() -> &'static [&'static str] {
+    static NATIVELY_IMPLEMENTED_PROTOCOLS: LazyLock<Box<[&'static str]>> = LazyLock::new(|| {
         let protocol_impls_mod = "src/protocol_impls/mod.rs";
         let mod_contents =
             fs::read_to_string(protocol_impls_mod).expect("protocol_impls module file");
@@ -139,7 +139,7 @@ pub fn implemented_protocols() -> &'static [&'static str] {
             .into_boxed_slice()
     });
 
-    &IMPLEMENTED_PROTOCOLS
+    &NATIVELY_IMPLEMENTED_PROTOCOLS
 }
 
 /// Determine if the provided protocol should be used during FFI code generation. A protocol may be
@@ -155,6 +155,6 @@ pub fn protocol_requires_ffi_codegen(protocol: impl PartialEq<&'static str>) -> 
 
     EXCLUDED_PROTOCOLS
         .iter()
-        .chain(implemented_protocols())
+        .chain(natively_implemented_protocols())
         .all(|excluded_protocol| protocol != *excluded_protocol)
 }

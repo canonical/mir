@@ -2,7 +2,7 @@
 //!
 //! This module provides a generator for wayland_server_generated.rs.
 
-use crate::helpers::{generate_namespace, implemented_protocols, snake_to_pascal};
+use crate::helpers::{generate_namespace, natively_implemented_protocols, snake_to_pascal};
 
 use super::WaylandProtocol;
 use proc_macro2::TokenStream;
@@ -47,7 +47,7 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
                 return None;
             }
 
-            if implemented_protocols()
+            if natively_implemented_protocols()
                 .iter()
                 .cloned()
                 .chain(
