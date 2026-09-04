@@ -13,6 +13,10 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+#![expect(
+    clippy::missing_safety_doc,
+    reason = "clippy struggles with `cxx` proc macro"
+)]
 
 // TODO: Report errors to Mir's logging facilities. We should do this following Mir's logging refactor.
 // TODO: Implement continue_after_config and pause_for_config
@@ -292,9 +296,9 @@ mod ffi_bridge {
         /// Check whether a device is already pending or active.
         pub fn has_device(self: &PlatformBridge, devnum: u64) -> bool;
 
-        // # Safety
-        //
-        // This is unsafe because it receives a raw C++ pointer as an argument.
+        /// # Safety
+        ///
+        /// This is unsafe because it receives a raw C++ pointer as an argument.
         pub unsafe fn create_event_builder_wrapper(
             self: &PlatformBridge,
             event_builder: *mut EventBuilder,
@@ -350,7 +354,7 @@ pub fn evdev_rs_create(
     device_registry: cxx::SharedPtr<InputDeviceRegistry>,
     report: cxx::UniquePtr<InputReport>,
 ) -> Box<PlatformRs> {
-    return Box::new(PlatformRs::new(bridge, device_registry, report));
+    Box::new(PlatformRs::new(bridge, device_registry, report))
 }
 
 // # Safety

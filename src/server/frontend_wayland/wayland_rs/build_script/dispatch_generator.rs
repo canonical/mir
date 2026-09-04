@@ -27,17 +27,16 @@ use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
 use syn::Ident;
 
-pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
-    let generated_dispatch_implementations = protocols
-        .iter()
-        .map(|protocol| generate_dispatch_implementations(protocol));
+pub fn generate_dispatch_rs(protocols: &[WaylandProtocol]) -> TokenStream {
+    let generated_dispatch_implementations =
+        protocols.iter().map(generate_dispatch_implementations);
 
     let server_side_factories = generate_server_side_factories(protocols);
 
     let output_dynamic_global = generate_output_dynamic_global(protocols);
 
     quote! {
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod dispatch {
             use wayland_server::{Client, DataInit, Dispatch, GlobalDispatch, New, DisplayHandle, Resource};
             use wayland_server::backend::{ClientId, ObjectId};
@@ -166,7 +165,7 @@ pub fn generate_dispatch_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
 /// The binder is stored behind a `Mutex` because `GlobalDispatch::bind` and
 /// `can_view` only receive a shared reference to the global data, yet the C++
 /// binder methods (like the factory's) require a `Pin<&mut _>` to be invoked.
-fn generate_output_dynamic_global(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+fn generate_output_dynamic_global(protocols: &[WaylandProtocol]) -> TokenStream {
     let (protocol, interface) = protocols
         .iter()
         .find_map(|protocol| {
@@ -224,7 +223,7 @@ fn generate_output_dynamic_global(protocols: &Vec<WaylandProtocol>) -> TokenStre
 /// * `set_<interface>_inner` — stores the fully constructed C++ object into the
 ///   resource's wrapper so subsequent requests route to it (and its lifetime is
 ///   tied to the resource), mirroring the request-driven `new_id` path.
-fn generate_server_side_factories(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+fn generate_server_side_factories(protocols: &[WaylandProtocol]) -> TokenStream {
     let mut seen: Vec<String> = Vec::new();
     let mut factories: Vec<TokenStream> = Vec::new();
 
@@ -260,7 +259,7 @@ fn generate_server_side_factories(protocols: &Vec<WaylandProtocol>) -> TokenStre
 }
 
 /// Resolve the fully-qualified Rust path of the resource type for `interface_name`.
-fn resolve_resource_path(protocols: &Vec<WaylandProtocol>, interface_name: &str) -> TokenStream {
+fn resolve_resource_path(protocols: &[WaylandProtocol], interface_name: &str) -> TokenStream {
     let namespace = protocols
         .iter()
         .find(|protocol| {
@@ -280,7 +279,7 @@ fn resolve_resource_path(protocols: &Vec<WaylandProtocol>, interface_name: &str)
 /// Generate the `create_<interface>` / `set_<interface>_inner` helper pair for a
 /// single server-created interface.
 fn generate_server_side_factory(
-    protocols: &Vec<WaylandProtocol>,
+    protocols: &[WaylandProtocol],
     interface_name: &str,
 ) -> TokenStream {
     let create_fn = format_ident!("allocate_{}", dash_to_snake(interface_name));
@@ -720,10 +719,10 @@ fn generate_dispatch_impl(
 
     // This snippet checks if the interface has any requests at all. If not, then data
     // will be prefixed with an underscore.
-    let interface_has_requests = interface.items.iter().any(|item| match item {
-        InterfaceItem::Request(_) => true,
-        _ => false,
-    });
+    let interface_has_requests = interface
+        .items
+        .iter()
+        .any(|item| matches!(item, InterfaceItem::Request(_)));
 
     let data_name = format_ident!(
         "{}",

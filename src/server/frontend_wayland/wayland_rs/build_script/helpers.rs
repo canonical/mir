@@ -24,7 +24,7 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
 pub fn write_generated_cpp_file(content: &str, out_dir: &str, filename: &str) {
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
-    fs::create_dir_all(&out_dir).unwrap();
+    fs::create_dir_all(out_dir).unwrap();
     fs::write(dest_path, content).unwrap();
 }
 
@@ -84,7 +84,7 @@ fn strip_wayland_interface_prefix(s: &str) -> &str {
 /// provides its C++ implementation.
 pub fn format_wayland_interface_to_cpp_class(s: &str) -> String {
     let s = strip_wayland_interface_prefix(s);
-    format!("{}", snake_to_pascal(s))
+    snake_to_pascal(s).to_string()
 }
 
 /// Formats the Wayland interface name to the name of the struct that

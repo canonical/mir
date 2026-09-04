@@ -107,7 +107,7 @@ fn generate_enum_fallback_impls(protocols: &[WaylandProtocol]) -> TokenStream {
     }
 }
 
-pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+pub fn generate_wayland_interface_middleware(protocols: &[WaylandProtocol]) -> TokenStream {
     // First, generate the imports.
     let use_imports: Vec<TokenStream> = protocols
         .iter()
@@ -125,7 +125,7 @@ pub fn generate_wayland_interface_middleware(protocols: &Vec<WaylandProtocol>) -
     let extensions = protocols.iter().flat_map(generate_extensions_for_protocol);
 
     quote! {
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod middleware {
             use crate::wayland_server_core::*;
             use wayland_server::protocol::*;

@@ -15,12 +15,11 @@
  */
 
 use crate::device::{
-    ContactData, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState,
+    InputDevicePtr, InputSinkPtr, LibinputDeviceInfo, LibinputDeviceState, ScrollState,
 };
 use crate::ffi::PointerEventData;
 use crate::MirTouchAction;
 use cxx::{self, UniquePtr};
-use input;
 use input::event;
 use input::event::keyboard;
 use input::event::keyboard::KeyboardEventTrait;
@@ -88,7 +87,7 @@ fn get_scroll_axis(value120: f64, value: f64, scale: f64, accum: &mut f64) -> Sc
 }
 
 fn get_device_info_from_libinput_device<'a>(
-    known_devices: &'a mut Vec<LibinputDeviceInfo>,
+    known_devices: &'a mut [LibinputDeviceInfo],
     libinput_device: &input::Device,
 ) -> Option<&'a mut LibinputDeviceInfo> {
     known_devices
@@ -132,8 +131,8 @@ fn handle_device_event(
             known_devices.push(LibinputDeviceInfo {
                 id: *next_device_id,
                 devnode,
-                device: libinput_device,
-                input_device: bridge.create_input_device(*next_device_id),
+                device: libinput_device.into(),
+                input_device: InputDevicePtr(bridge.create_input_device(*next_device_id)),
                 input_sink: None,
                 event_builder: None,
                 button_state: 0,
@@ -164,12 +163,9 @@ fn handle_device_event(
         }
         event::DeviceEvent::Removed(removed_event) => {
             let dev = removed_event.device();
-            let Some(index) = known_devices
+            let index = known_devices
                 .iter()
-                .position(|x| x.device.as_raw() == dev.as_raw())
-            else {
-                return None;
-            };
+                .position(|x| x.device.as_raw() == dev.as_raw())?;
 
             // Remove from known_devices immediately (while holding the state lock), but
             // spawn a thread to call remove_device() on the registry.  Calling remove_device()
@@ -395,7 +391,7 @@ fn handle_pointer_button(
         button_event.time_usec(),
         EV_KEY,
         mir_button.repr as i32,
-        action.repr as i32,
+        action.repr,
     );
 
     let pointer_event = PointerEventData {
@@ -567,7 +563,7 @@ fn handle_keyboard_event(
         key_event.time_usec(),
         EV_KEY,
         key_event.key() as i32,
-        keyboard_action.repr as i32,
+        keyboard_action.repr,
     );
 
     let created = event_builder.pin_mut().key_event(&key_event_data);
@@ -600,10 +596,7 @@ fn handle_touch_event(
 
             // We make sure that we only notify of "down" touch events once. Everything
             // after that is considered a simple "change".
-            let data = device_info
-                .touch_properties
-                .entry(slot)
-                .or_insert(ContactData::default());
+            let data = device_info.touch_properties.entry(slot).or_default();
             data.action = if data.down_notified {
                 MirTouchAction::mir_touch_action_change
             } else {
@@ -624,10 +617,7 @@ fn handle_touch_event(
                 return false;
             }
 
-            let data = device_info
-                .touch_properties
-                .entry(slot)
-                .or_insert(ContactData::default());
+            let data = device_info.touch_properties.entry(slot).or_default();
             data.action = MirTouchAction::mir_touch_action_change;
 
             // Set coordinates. In normal operation, bounding rectangle should always be valid.
@@ -741,20 +731,14 @@ fn handle_touch_frame(
 /// This is called when we already have the device_info reference (e.g., for deferred events).
 fn process_input_event_for_device(
     device_info: &mut LibinputDeviceInfo,
-    mut scroll_state: &mut ScrollState,
+    scroll_state: &mut ScrollState,
     bridge: &cxx::SharedPtr<crate::PlatformBridge>,
     event: input::Event,
     report: &crate::InputReport,
 ) {
     match event {
         input::Event::Pointer(pointer_event) => {
-            handle_pointer_event(
-                device_info,
-                &mut scroll_state,
-                bridge,
-                pointer_event,
-                report,
-            );
+            handle_pointer_event(device_info, scroll_state, bridge, pointer_event, report);
         }
 
         input::Event::Keyboard(keyboard_event) => {
@@ -796,6 +780,7 @@ fn process_input_event_for_device(
 /// because `event_builder` wasn't set yet when the KEY event arrived.
 /// See: https://github.com/canonical/mir/pull/4780
 pub fn process_libinput_events(
+    libinput: &mut input::Libinput,
     state: &mut LibinputDeviceState,
     device_registry: cxx::SharedPtr<crate::InputDeviceRegistry>,
     bridge: cxx::SharedPtr<crate::PlatformBridge>,
@@ -811,20 +796,20 @@ pub fn process_libinput_events(
                     device_info,
                     &mut state.scroll_state,
                     &bridge,
-                    event,
+                    event.into_inner(),
                     report,
                 );
             }
         }
     }
 
-    if state.libinput.dispatch().is_err() {
+    if libinput.dispatch().is_err() {
         println!("Error dispatching libinput events");
         return;
     }
 
     // Process newly arrived events.
-    while let Some(event) = state.libinput.next() {
+    for event in libinput.by_ref() {
         match event {
             input::Event::Device(device_event) => {
                 let libinput_device = device_event.device();
@@ -859,7 +844,7 @@ pub fn process_libinput_events(
                     );
                 } else {
                     // Device not yet registered, defer the event.
-                    device_info.deferred_events.push(other);
+                    device_info.deferred_events.push(other.into());
                 }
             }
         }
