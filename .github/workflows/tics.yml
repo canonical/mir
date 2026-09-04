@@ -102,7 +102,8 @@ jobs:
           ninja-build \
           pylint \
           rust-clippy \
-          xwayland
+          xwayland \
+          libudev-dev
 
         sudo --preserve-env apt-get build-dep --yes ./
 

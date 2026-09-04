@@ -38,6 +38,7 @@ use crate::wayland_server_generation::generate_wayland_server_generated_rs;
 
 fn main() {
     let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+    #[cfg_attr(clippy, expect(unused_variables))]
     let include_path = Path::new(&manifest_dir).join(".");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
@@ -71,6 +72,7 @@ fn main() {
     // Finally, declare the bridges.
     // This must happen last because `src/ffi.rs` is built by this script and
     // it may not exist before the build is run.
+    #[cfg(not(clippy))]
     cxx_build::bridges(vec!["src/ffi.rs"])
         .include(&include_path)
         .compile("wayland_rs");
