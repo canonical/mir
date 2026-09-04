@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="ext_image_sampler_v1">
+  <copyright>
+    Copyright © 2026 Canonical Ltd.
+
+    Permission to use, copy, modify, distribute, and sell this
+    software and its documentation for any purpose is hereby granted
+    without fee, provided that the above copyright notice appear in
+    all copies and that both that copyright notice and this permission
+    notice appear in supporting documentation, and that the name of
+    the copyright holders not be used in advertising or publicity
+    pertaining to distribution of the software without specific,
+    written prior permission.  The copyright holders make no
+    representations about the suitability of this software for any
+    purpose.  It is provided "as is" without express or implied
+    warranty.
+
+    THE COPYRIGHT HOLDERS DISCLAIM ALL WARRANTIES WITH REGARD TO THIS
+    SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+    FITNESS, IN NO EVENT SHALL THE COPYRIGHT HOLDERS BE LIABLE FOR ANY
+    SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+    WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN
+    AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+    ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+    THIS SOFTWARE.
+  </copyright>
+
+  <description summary="sample image capture sources into a client surface">
+    This protocol enables clients to ask the compositor for a buffer
+    that contains the contents of an image capture source. This buffer can
+    then be attached to a surface that the client owns.
+
+    Instead of the client capturing and rendering the contents into its own buffer,
+    this protocol moves the heavy work of rendering a captured image source to the
+    compositor. The client requests a new sampler, gets an opaque buffer
+    for that sampler, and attaches that buffer to a surface that it owns.
+    The compositor then fills in the contents of that buffer with the requested
+    image. The compositor is responsible for keeping the content of
+    that source up to date in the buffer as it changes.
+
+    The contents of the buffer are never sent to the client. Only
+    the compositor sees the image.
+
+    The protocol relies on ext_image_capture_source_v1.
+
+    The compositor may choose to restrict this protocol to a special client
+    launched by the compositor itself or expose it to all clients,
+    this is compositor policy.
+
+    The key words "must", "must not", "required", "shall", "shall not",
+    "should", "should not", "recommended", "may", and "optional" in this
+    document are to be interpreted as described in IETF RFC 2119.
+
+    Warning! The protocol described in this file is currently in the testing
+    phase. Backward compatible changes may be added together with the
+    corresponding interface version bump. Backward incompatible changes can
+    only be done by creating a new major version of the extension.
+  </description>
+
+  <interface name="ext_image_sampler_manager_v1" version="1">
+    <description summary="manages image samplers">
+      A client uses the image sampler manager to request a new image sampler.
+
+      A sampler is created from an ext_image_capture_source_v1. This source can be
+      backed by any source, including outputs, groups of surfaces, an individual surface,
+      and more.
+    </description>
+
+    <request name="create_sampler">
+      <description summary="create sampler for image capture source">
+        Creates a sampler for the image capture source.
+      </description>
+      <arg name="sampler" type="new_id" interface="ext_image_sampler_v1"/>
+      <arg name="source" type="object" interface="ext_image_capture_source_v1"/>
+    </request>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the ext_image_sampler_manager_v1 object">
+        This request should be called when the client will no longer
+        use the ext_image_sampler_manager_v1.
+
+        Afterward, new samplers must not be created by this manager,
+        but existing samplers must remain valid up until the point of their destruction.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="ext_image_sampler_v1" version="1">
+    <description summary="a sampler for an image capture source">
+      An ext_image_sampler_v1 object is used to retrieve a buffer that is backed
+      by the contents of the image capture source that it was created with.
+
+      The image capture source is not mapped to a surface when the object is created. The
+      client must obtain the buffer via get_buffer, attach the buffer to a surface,
+      and commit the surface for the mapping to occur. The surface of the client is
+      subject to the wl_subsurface synchronization model.
+    </description>
+
+    <request name="get_buffer">
+      <description summary="retrieve buffer for image capture source">
+        Retrieve an opaque buffer backed by the image capture source that this sampler was created
+        with.
+
+        This buffer must be attached to a surface and that surface must be committed for
+        the mapping to be finalized.
+
+        The client must make this request following a size event in order to update the buffer
+        to the new size.
+
+        Only one buffer may be active for a sampler at a time. The active buffer remains
+        active until the client destroys it, after which a new buffer may be requested.
+        Calling this while a buffer is already active for this sampler raises a buffer_active
+        error.
+
+        If supported, the wp_viewporter and wp_alpha_modifier_v1 protocols should behave
+        correctly on the surface to which this buffer has been attached.
+      </description>
+      <arg name="buffer" type="new_id" interface="wl_buffer"/>
+    </request>
+
+    <event name="size">
+      <description summary="sent when the size of the image capture source changes">
+        The size event must be sent by the compositor when the size of the backing image
+        capture source changes. The dimensions are expressed in buffer pixel coordinates.
+
+        The compositor must send this event once when the sampler is created, so that the
+        client knows the initial size and can make its first get_buffer request.
+
+        The client should destroy any buffer that they are already holding and make
+        the get_buffer request in response to this event. If the client does not request
+        a new buffer, the compositor may no longer update the buffer that the client is holding.
+      </description>
+      <arg name="width" type="uint" summary="buffer width"/>
+      <arg name="height" type="uint" summary="buffer height"/>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the ext_image_sampler_v1 object">
+        Destroys the sampler. This request can be sent at any time by the
+        client.
+
+        This does not affect the wl_buffer objects created by this object.
+      </description>
+    </request>
+
+    <enum name="error">
+      <entry name="buffer_active" value="0" summary="client already has an active buffer and cannot request a new one"/>
+    </enum>
+  </interface>
+</protocol>
