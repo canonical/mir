@@ -121,7 +121,7 @@
     <event name="size">
       <description summary="sent when the size of the image capture source changes">
         The size event must be sent by the compositor when the size of the backing image
-        capture source changes.
+        capture source changes. The dimensions are expressed in buffer pixel coordinates.
 
         The compositor must send this event once when the sampler is created, so that the
         client knows the initial size and can make its first get_buffer request.
@@ -130,6 +130,8 @@
         the get_buffer request in response to this event. If the client does not request
         a new buffer, the compositor may no longer update the buffer that the client is holding.
       </description>
+      <arg name="width" type="uint" summary="buffer width"/>
+      <arg name="height" type="uint" summary="buffer height"/>
     </event>
 
     <request name="destroy" type="destructor">
