@@ -325,6 +325,16 @@ TEST_F(WaylandExtensions, client_sees_default_extensions)
     }
 }
 
+TEST_F(WaylandExtensions, client_sees_xdg_foreign_globals)
+{
+    start_server();
+
+    auto const interfaces = run_client_enumerator(server());
+
+    EXPECT_THAT(interfaces, Contains(Eq("zxdg_exporter_v2")));
+    EXPECT_THAT(interfaces, Contains(Eq("zxdg_importer_v2")));
+}
+
 TEST_F(WaylandExtensions, add_extension_adds_protocol_to_supported_enabled_extensions)
 {
     miral::WaylandExtensions extensions;

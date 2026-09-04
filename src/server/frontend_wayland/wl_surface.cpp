@@ -17,6 +17,7 @@
 #include "wl_surface.h"
 #include "output_manager.h"
 #include "fractional_scale_v1.h"
+#include "window_wl_surface_role.h"
 #include <mir/wayland/weak.h>
 #include "viewporter_wrapper.h"
 #include "wayland_connector.h"
@@ -177,6 +178,11 @@ auto mf::WlSurface::subsurface_at(geom::Point point) -> std::optional<WlSurface*
 auto mf::WlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>
 {
     return role->scene_surface();
+}
+
+auto mf::WlSurface::is_window_role() const -> bool
+{
+    return dynamic_cast<WindowWlSurfaceRole const*>(role) != nullptr;
 }
 
 void mf::WlSurface::on_scene_surface_created(SceneSurfaceCreatedCallback&& callback)
