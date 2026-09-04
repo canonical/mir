@@ -45,6 +45,7 @@ function(add_rust_cxx_library target)
 
   add_library(${target}-cxxbridge STATIC
     ${cxxbridge_source} ${cxxbridge_header})
+  set_source_files_properties(${cxxbridge_source} PROPERTIES CXX_SCAN_FOR_MODULES OFF)
   add_dependencies(${target}-cxxbridge ${target}-rust-build)
   target_include_directories(${target}-cxxbridge PRIVATE ${cxxbridge_include_dir})
 
