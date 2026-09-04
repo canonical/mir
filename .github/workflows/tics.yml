@@ -87,7 +87,8 @@ jobs:
         sudo apt-get install --yes --no-install-recommends \
           flake8 \
           pylint \
-          rust-clippy
+          rust-clippy \
+          libudev-dev
 
     - name: Launch the Workshop
       uses: canonical/launch-workshop@b9e184e38f49808ced78e25de19483fe02484c46 # v1.0.1
