@@ -22,14 +22,13 @@
 #include <mir/wayland/weak.h>
 #include <mir/scene/surface.h>
 
+#include <algorithm>
 #include <memory>
 #include <mutex>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <random>
-#include <sstream>
-#include <iomanip>
+#include <uuid.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -40,16 +39,14 @@ namespace
 {
 std::string generate_handle()
 {
-    static std::mt19937_64 gen{std::random_device{}()};
-    static std::uniform_int_distribution<uint64_t> dist;
-    static std::mutex gen_mutex;
+    uuid_t uuid;
+    uuid_generate(uuid);
 
-    std::lock_guard lock{gen_mutex};
-    std::ostringstream ss;
-    ss << std::hex << std::setfill('0')
-       << std::setw(16) << dist(gen)
-       << std::setw(16) << dist(gen);
-    return ss.str();
+    std::string unparsed(UUID_STR_LEN, '\0');
+    uuid_unparse(uuid, unparsed.data());
+
+    uuid_clear(uuid);
+    return unparsed.substr(0, UUID_STR_LEN - 1);
 }
 
 class ZxdgImportedV2;
@@ -146,17 +143,20 @@ public:
           handle{std::move(handle)},
           registry{registry}
     {
+        weak_self = mw::make_weak(this);
         registry->add_importer(this->handle, this);
     }
 
     ~ZxdgImportedV2() override
     {
+        clear_parent_relationships();
         registry->remove_importer(handle, this);
     }
 
     /// Called when the exported surface is destroyed.
     void notify_destroyed()
     {
+        clear_parent_relationships();
         registry->remove_importer(handle, this);
         send_destroyed_event();
     }
@@ -165,8 +165,13 @@ private:
     void set_parent_of(struct wl_resource* surface) override
     {
         auto* child = mf::WlSurface::from(surface);
-        if (!child)
-            return;
+        if (!child || !child->is_window_role())
+        {
+            throw mw::ProtocolError{
+                resource,
+                Error::invalid_surface,
+                "surface is not an xdg_toplevel"};
+        }
 
         auto exported = registry->get_export(handle);
         if (!exported)
@@ -176,6 +181,13 @@ private:
             return;
 
         auto& exported_surface = exported->value();
+        auto weak_child = mw::make_weak(child);
+        auto existing = std::find(children.begin(), children.end(), weak_child);
+        if (existing == children.end())
+        {
+            children.push_back(weak_child);
+        }
+
         if (auto scene_surf = exported_surface.scene_surface())
         {
             msh::SurfaceSpecification spec;
@@ -185,11 +197,10 @@ private:
         else
         {
             // Defer setting the parent until the exported surface has a scene surface.
-            mw::Weak<mf::WlSurface> weak_child{child};
             exported_surface.on_scene_surface_created(
-                [weak_child](std::shared_ptr<ms::Surface> scene_surf)
+                [weak_child, weak_self = weak_self](std::shared_ptr<ms::Surface> scene_surf)
                 {
-                    if (weak_child)
+                    if (weak_child && weak_self)
                     {
                         msh::SurfaceSpecification spec;
                         spec.parent = std::move(scene_surf);
@@ -199,8 +210,23 @@ private:
         }
     }
 
+    void clear_parent_relationships()
+    {
+        for (auto child : children)
+        {
+            if (!child)
+                continue;
+            msh::SurfaceSpecification spec;
+            spec.parent = std::nullopt;
+            child.value().update_surface_spec(spec);
+        }
+        children.clear();
+    }
+
     std::string const handle;
     std::shared_ptr<XdgForeignV2Registry> const registry;
+    std::vector<mw::Weak<mf::WlSurface>> children;
+    mw::Weak<ZxdgImportedV2> weak_self;
 };
 
 /// Per-export object: holds the handle and sends it to the client.
@@ -280,8 +306,13 @@ private:
     void export_toplevel(struct wl_resource* id, struct wl_resource* surface) override
     {
         auto* wl_surface = mf::WlSurface::from(surface);
-        if (!wl_surface)
-            return;
+        if (!wl_surface || !wl_surface->is_window_role())
+        {
+            throw mw::ProtocolError{
+                resource,
+                mw::XdgExporterV2::Error::invalid_surface,
+                "surface is not an xdg_toplevel"};
+        }
         new ZxdgExportedV2{id, wl_surface, registry, wayland_executor};
     }
 
