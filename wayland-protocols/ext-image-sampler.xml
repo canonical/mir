@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<protocol name="ext_image_render_capture">
+<protocol name="ext_image_sampler_v1">
   <copyright>
     Copyright © 2026 Canonical Ltd.
 
@@ -25,21 +25,21 @@
     THIS SOFTWARE.
   </copyright>
 
-  <description summary="render captured sources into ">
-    This protocol allows clients to ask the compositor to provide a buffer
-    containing the contents of capture image sources so that it can attach
-    them to its own surfaces.
+  <description summary="sample image capture sources into a client surface">
+    This protocol enables clients to ask the compositor for a buffer
+    that contains the contents of an image capture source. This buffer can
+    then be attached to a surface that the client owns.
 
     Instead of the client capturing and rendering the contents into its own buffer,
-    this protocol moves the heavy work of rendering a capture source to the
-    compositor. The client requests a render, gets the buffer
-    for that render, and attaches that buffer to a surface that it owns.
+    this protocol moves the heavy work of rendering a captured image source to the
+    compositor. The client requests a new sampler, gets the buffer
+    for that sampler, and attaches that buffer to a surface that it owns.
     The compositor then fills in the contents of that buffer with the requested
-    capture source. The compositor is responsible for keeping the content of
+    image. The compositor is responsible for keeping the content of
     that source up to date in the buffer as it changes.
 
     The contents of the buffer are never sent to the host client. Only
-    the compositor sees these contents.
+    the compositor sees the image.
 
     The protocol relies on ext_image_capture_source_v1.
 
@@ -57,21 +57,18 @@
     only be done by creating a new major version of the extension.
   </description>
 
-  <interface name="ext_image_render_capture_manager_v1" version="1">
+  <interface name="ext_image_sampler_manager_v1" version="1">
     <description summary="manages embeddings">
-      A client uses the image capture embedding manager to request a new embedding.
+      A client uses the image sampler manager to request a new image sampler.
 
-      An embedding is created from an ext_image_capture_source_v1. This source can be
-      backed by anything including outputs, groups of surfaces, an individual surface,
-      etc.
-
-      If the manager is destroyed, new embeddings will not be created, but existing
-      embeddings remain valid up until the point of their destruction.
+      A sampler is created from an ext_image_capture_source_v1. This source can be
+      backed by any source, including outputs, groups of surfaces, an individual surface,
+      and more.
     </description>
 
-    <request name="create_embedding">
+    <request name="create_sampler">
       <description summary="create embedding for image capture source">
-        Creates an embedding for the image capture source.
+        Creates a sampler for the image capture source.
       </description>
       <arg name="embedding" type="new_id" interface="ext_image_render_capture"/>
       <arg name="source" type="object" interface="ext_image_capture_source_v1"/>
@@ -80,24 +77,27 @@
     <request name="destroy" type="destructor">
       <description summary="destroy the ext_image_render_capture_manager object">
         This request should be called when the client will no longer
-        use the ext_image_render_capture_manager. Afterward, no new embeddings can be created,
-        but existing embeddings remain valid up until the point of their destruction.
+        use the ext_image_sampler_manager_v1.
+
+        Afterward, new samplers must not be created by this manager,
+        but existing samplers must remain valid up until the point of their destruction.
       </description>
     </request>
   </interface>
 
-  <interface name="ext_image_render_capture_v1" version="1">
+  <interface name="ext_image_sampler_v1" version="1">
     <description summary="a mapped toplevel">
-      An ext_image_render_capture_v1 object is used to render the the image
-      capture source that it was created with inside of a surface owned by the client.
+      An ext_image_sampler_v1 object is used to retrieve a buffer that is backed
+      by the contents of the image  capture source that it was created with.
 
       The image capture source is not mapped to a surface when the object is created. The
       client must call obtain the buffer via get_buffer, attach the buffer to a surface,
       and commit the surface for the mapping to occur. The surface of the client is
       subject to the wl_subsurface synchronization model.
 
-      The client itself never sees the contents of this surface. Instead, the content
-      is entirely rendered into the provided buffer by the compositor.
+      The client itself never sees the contents of this buffer. Instead, the content
+      is entirely rendered into the opaque wl_buffer object that is provided by the
+      compositor.
 
       The content of the buffer must automatically be updated by the compositor as the source
       image changes.
@@ -105,13 +105,13 @@
 
     <request name="get_buffer">
       <description summary="retrieve buffer for image capture source">
-        Retrieve a buffer for the image capture source that this embedding was created
+        Retrieve an opaque buffer backed by the image capture source that this sampler was created
         with.
 
         This buffer must be attached to a surface and that surface must be committed for
         the mapping to be finalized.
 
-        This must be called by the client following a size event in order to update the buffer
+        The client must make this request following a size event in order to update the buffer
         to the new size.
 
         Calling this while a buffer already exists for this embedding raises a buffer_active
@@ -121,18 +121,23 @@
 
     <event name="size">
       <description summary="send when the size of the image capture source changes">
-        This is sent when the size of the image capture source changes.
+        The size event must be sent by the compositor when the size of the backing image
+        capture source changes.
 
         The client should destroy any buffer that they are already holding and make
-        the get_buffer request in response to this event. If the client does not do
-        this, then their embedding will cease updating.
+        the get_buffer request in response to this event. If the client does not request
+        a new buffer, the compositor may no longer update the buffer that the client is holding.
       </description>
     </event>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the ext_image_render_capture_v1 object">
-        Signals that the embedding should be destroyed.
+      <description summary="destroy the ext_image_sampler_v1 object">
+        Signals that the sampler should be destroyed.
       </description>
     </request>
+
+    <enum name="error">
+      <entry name="buffer_active" value="1" summary="client already has an active buffer and cannot request a new one"/>
+    </enum>
   </interface>
 </protocol>
