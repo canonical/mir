@@ -27,6 +27,7 @@
 #include "wl_data_device_manager.h"
 #include "wayland_utils.h"
 #include "wl_subcompositor.h"
+#include "wl_fixes.h"
 #include "wl_seat.h"
 #include "wl_region.h"
 #include "shm.h"
@@ -316,6 +317,7 @@ mf::WaylandConnector::WaylandConnector(
         std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
+    fixes_global = std::make_unique<mf::WlFixes>(display.get());
     auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
     auto const action_group_manager =

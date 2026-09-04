@@ -15,6 +15,7 @@
  */
 
 use crate::ffi::{FdReadyCallback, GlobalFactory, WaylandServerNotificationHandler, WorkCallback};
+use crate::protocol_impls;
 use crate::wayland_client::{WaylandClient, WaylandClientId};
 use calloop::ping::Ping;
 use calloop::{
@@ -258,6 +259,7 @@ impl WaylandServer {
             .map_err(|_| "Failed to insert fd listener signal into event loop")?;
 
         WaylandServer::register_globals(&state, Arc::new(Mutex::new(factory)));
+        protocol_impls::register_globals(&state);
 
         // Drain any work the C++ side queued before the work signal was ready.
         // Such a signal would have been dropped (the queue is owned by C++ and

@@ -20,6 +20,7 @@ set(
   pointer_constraints_unstable_v1.cpp pointer_constraints_unstable_v1.h
   relative_pointer_unstable_v1.cpp    relative_pointer_unstable_v1.h
   wl_subcompositor.cpp          wl_subcompositor.h
+  wl_fixes.cpp                  wl_fixes.h
                                 wl_surface_role.h
   window_wl_surface_role.cpp    window_wl_surface_role.h
   wl_surface.cpp                wl_surface.h

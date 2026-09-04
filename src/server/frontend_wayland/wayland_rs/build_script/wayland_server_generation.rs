@@ -2,7 +2,7 @@
 //!
 //! This module provides a generator for wayland_server_generated.rs.
 
-use crate::helpers::{generate_namespace, snake_to_pascal};
+use crate::helpers::{generate_namespace, natively_implemented_protocols, snake_to_pascal};
 
 use super::WaylandProtocol;
 use proc_macro2::TokenStream;
@@ -39,27 +39,46 @@ pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) ->
 /// file.
 fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream> {
     let namespace_name = generate_namespace(protocol);
-    protocol.interfaces.iter().filter_map(|interface| {
-        if !interface.is_global {
-            return None;
-        }
+    protocol
+        .interfaces
+        .iter()
+        .filter_map(|interface| {
+            if !interface.is_global {
+                return None;
+            }
 
-        if interface.name == "wl_display" {
-            return None;
-        }
+            if natively_implemented_protocols()
+                .iter()
+                .cloned()
+                .chain(
+                    // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+                    std::iter::once("wl_display"),
+                )
+                .any(|protocol| interface.name == protocol)
+            {
+                return None;
+            }
 
-        // `wl_output` is advertised dynamically (one global per monitor) via
-        // `WaylandServer::create_output_global`, so it must not be registered
-        // statically here. See `generate_output_dynamic_global`.
-        if interface.name == "wl_output" {
-            return None;
-        }
+            // `wl_output` is advertised dynamically (one global per monitor) via
+            // `WaylandServer::create_output_global`, so it must not be registered
+            // statically here. See `generate_output_dynamic_global`.
+            if interface.name == "wl_output" {
+                return None;
+            }
 
-        let interface_name = format_ident!("{}", interface.name);
-        let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
-        let version = interface.version;
-        Some(quote! {
-            state.handle.create_global::<ServerState, #namespace_name::#interface_name::#interface_struct_name, Arc<Mutex<UniquePtr<GlobalFactory>>>>(#version, factory.clone());
+            let interface_name = format_ident!("{}", interface.name);
+            let interface_struct_name = format_ident!("{}", snake_to_pascal(&interface.name));
+            let version = interface.version;
+
+            Some(quote! {
+                state
+                    .handle
+                    .create_global::<
+                        ServerState,
+                        #namespace_name::#interface_name::#interface_struct_name,
+                        Arc<Mutex<UniquePtr<GlobalFactory>>>,
+                    >(#version, factory.clone());
+            })
         })
-    }).collect()
+        .collect()
 }
