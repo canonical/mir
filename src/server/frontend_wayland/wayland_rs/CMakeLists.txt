@@ -72,3 +72,6 @@ target_link_libraries(mirwayland_rs-demo
   PRIVATE
   mirwayland_rs
   PkgConfig::WAYLAND_CLIENT)
+
+# The Rust static archive (via mirwayland_rs) is not a GCC LTO object.
+target_link_options(mirwayland_rs-demo PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)

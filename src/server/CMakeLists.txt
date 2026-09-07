@@ -102,6 +102,9 @@ add_library(mirserver-static STATIC) # Internal-only use: For linking into test 
 target_link_libraries(mirserver PUBLIC ${MIR_SERVER_REFERENCES})
 target_link_libraries(mirserver-static PUBLIC ${MIR_SERVER_REFERENCES})
 
+# The Rust static archives (via mirwayland_rs) are not GCC LTO objects.
+target_link_options(mirserver PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)
+
 if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)
   target_link_libraries(mirserver-static PUBLIC PkgConfig::APPARMOR)
