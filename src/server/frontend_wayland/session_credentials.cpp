@@ -19,6 +19,10 @@
 #include <mir/fd.h>
 #include <mir/log.h>
 
+#include <gio/gdesktopappinfo.h>
+
+#include <string>
+#include <cstring>
 #ifdef MIR_USE_APPARMOR
 #include <sys/apparmor.h>
 #endif
@@ -28,46 +32,29 @@
 
 namespace mf = mir::frontend;
 
-mf::SessionCredentials::SessionCredentials(pid_t pid, uid_t uid, gid_t gid, std::string&& apparmor_label) :
-    the_pid{pid},
-    the_uid{uid},
-    the_gid{gid},
-    the_apparmor_label{std::move(apparmor_label)}
-{
-}
-
 mf::SessionCredentials::SessionCredentials(SessionCredentials&&) = default;
 
-mf::SessionCredentials::SessionCredentials(Fd const& client_sock) :
-    SessionCredentials{from_client(client_sock)}
+mf::SessionCredentials::SessionCredentials(Fd const& client_sock)
 {
-}
-
-mf::SessionCredentials::SessionCredentials(pid_t pid) :
-    SessionCredentials{from_pid(pid)}
-{
-}
-
-auto mf::SessionCredentials::from_client(Fd const& client_sock) -> SessionCredentials
-{
-    struct ucred cred = {
-        .pid = 0,
-        .uid = static_cast<uid_t>(-1),
-        .gid = static_cast<gid_t>(-1),
-    };
+    struct ucred cred;
     socklen_t cred_len = sizeof cred;
-    std::string apparmor_label;
 
     if (getsockopt(client_sock, SOL_SOCKET, SO_PEERCRED, &cred, &cred_len) < 0)
     {
-        mir::log_info("Unable to read socket peer credentials");
+        mir::log_debug("Failed to read socket peer credentials, falling back to get(uid,gid)");
+        cred.pid = 0;
+        cred.uid = getuid();
+        cred.gid = getgid();
     }
+    the_pid = cred.pid;
+    the_uid = cred.uid;
+    the_gid = cred.gid;
 
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
     if (aa_getpeercon(client_sock, &label_cstr, nullptr) >= 0)
     {
-        apparmor_label = label_cstr;
+        the_apparmor_label = label_cstr;
         std::free(label_cstr);
     }
     else
@@ -76,10 +63,10 @@ auto mf::SessionCredentials::from_client(Fd const& client_sock) -> SessionCreden
     }
 #endif
 
-    return {cred.pid, cred.uid, cred.gid, std::move(apparmor_label)};
+    detect_sandbox_info();
 }
 
-auto mf::SessionCredentials::from_pid(pid_t client_pid) -> SessionCredentials
+mf::SessionCredentials::SessionCredentials(pid_t client_pid)
 {
     auto const proc = "/proc/" + std::to_string(client_pid);
 
@@ -92,13 +79,15 @@ auto mf::SessionCredentials::from_pid(pid_t client_pid) -> SessionCredentials
         proc_stat.st_uid = getuid();
         proc_stat.st_gid = getgid();
     }
+    the_pid = client_pid;
+    the_uid = proc_stat.st_uid;
+    the_gid = proc_stat.st_gid;
 
-    std::string apparmor_label;
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
     if (aa_gettaskcon(client_pid, &label_cstr, nullptr) >= 0)
     {
-        apparmor_label = label_cstr;
+        the_apparmor_label = label_cstr;
         std::free(label_cstr);
     }
     else
@@ -107,7 +96,53 @@ auto mf::SessionCredentials::from_pid(pid_t client_pid) -> SessionCredentials
     }
 #endif
 
-    return {client_pid, proc_stat.st_uid, proc_stat.st_gid, std::move(apparmor_label)};
+    detect_sandbox_info();
+}
+
+void mf::SessionCredentials::detect_sandbox_info()
+{
+    if (resolve_if_snap())
+        return;
+    resolve_if_flatpak();
+}
+
+bool mf::SessionCredentials::resolve_if_snap()
+{
+    // We are reading the security profile here, which comes to us in the form:
+    //      snap.name-space.binary-name
+    char const* const snap_security_label_prefix = "snap.";
+    if (the_apparmor_label.starts_with(snap_security_label_prefix))
+    {
+        // Get the contents after snap. and before the security annotation (denoted by a space)
+        auto const snap_start_index = std::strlen (snap_security_label_prefix);
+        auto snap_end_index = the_apparmor_label.find_first_of('.', snap_start_index);
+        if (snap_end_index != std::string::npos)
+        {
+            sandbox_info = SnapInfo{
+                the_apparmor_label.substr(snap_start_index, snap_end_index - snap_start_index),
+                the_apparmor_label.substr(snap_end_index+1),
+            };
+            return true;
+        }
+    }
+    return false;
+}
+
+bool mf::SessionCredentials::resolve_if_flatpak() {
+    g_autoptr(GKeyFile) key_file = g_key_file_new();
+    g_autofree char * info_filename = g_strdup_printf ("/proc/%d/root/.flatpak-info", the_pid);
+
+    if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, nullptr))
+        return false;
+
+    char* flatpak_id = g_key_file_get_string(key_file, "Application", "name", nullptr);
+    if (flatpak_id)
+    {
+        sandbox_info = FlatpakInfo{flatpak_id};
+        return true;
+    }
+
+    return false;
 }
 
 pid_t mf::SessionCredentials::pid() const
@@ -123,4 +158,32 @@ uid_t mf::SessionCredentials::uid() const
 gid_t mf::SessionCredentials::gid() const
 {
     return the_gid;
+}
+
+auto mf::SessionCredentials::apparmor_label() const -> std::string
+{
+    return the_apparmor_label;
+}
+
+auto mf::SessionCredentials::is_sandboxed() const -> bool
+{
+    return !std::holds_alternative<std::monostate>(sandbox_info);
+}
+
+auto mf::SessionCredentials::snap_info() const -> std::optional<SnapInfo>
+{
+    if (auto snap_info = std::get_if<SnapInfo>(&sandbox_info))
+    {
+        return *snap_info;
+    }
+    return std::nullopt;
+}
+
+auto mf::SessionCredentials::flatpak_info() const -> std::optional<FlatpakInfo>
+{
+    if (auto flatpak_info = std::get_if<FlatpakInfo>(&sandbox_info))
+    {
+        return *flatpak_info;
+    }
+    return std::nullopt;
 }
