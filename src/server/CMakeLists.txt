@@ -104,6 +104,7 @@ target_link_libraries(mirserver-static PUBLIC ${MIR_SERVER_REFERENCES})
 
 # The Rust static archives (via mirwayland_rs) are not GCC LTO objects.
 target_link_options(mirserver PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)
+target_link_options(mirserver-static PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)
 
 if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)
