@@ -138,11 +138,11 @@ jobs:
         import json, os
 
         entries = json.load(open("build/compile_commands.json"))
+        if not entries:
+            raise SystemExit("the compilation database is empty")
+
         sources = [os.path.join(entry["directory"], entry["file"]) for entry in entries]
         missing = [source for source in sources if not os.path.isfile(source)]
-
-        if not sources:
-            raise SystemExit("the compilation database is empty")
 
         print(f"{len(sources)} entries, first source: {sources[0]}")
 
