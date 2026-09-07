@@ -18,19 +18,13 @@
 
 #include <mir/main_loop.h>
 #include <mir/log.h>
+#include <mir/frontend/session_credentials.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/session.h>
 
-#include <gio/gdesktopappinfo.h>
-
-#include <cstdlib>
 #include <cstring>
 #include <fstream>
 #include <filesystem>
-
-#ifdef MIR_USE_APPARMOR
-#include <sys/apparmor.h>
-#endif
 
 namespace mf = mir::frontend;
 
@@ -76,18 +70,17 @@ std::string mf::DesktopFileManager::resolve_app_id(scene::Surface const& surface
     // https://github.com/canonical/mir/issues/4954#issuecomment-4510527223
     if (auto session = surface.session().lock())
     {
-        auto pid = session->process_id();
-        auto socket_fd = session->socket_fd();
+        auto& creds = session->creds();
 
         // First, check if the window belongs to snap
-        if (auto const found = resolve_if_snap(pid, socket_fd))
+        if (auto const found = resolve_if_snap(creds))
         {
             mir::log_info("Successfully resolved app id from snap, id=%s", found->id.c_str());
             return found->id;
         }
 
         // Second, check if the window belongs to flatpak
-        if (auto const found = resolve_if_flatpak(pid))
+        if (auto const found = resolve_if_flatpak(creds))
         {
             mir::log_info("Successfully resolved app id from flatpak, id=%s", found->id.c_str());
             return found->id;
@@ -134,10 +127,10 @@ std::string mf::DesktopFileManager::resolve_app_id(scene::Surface const& surface
 
     if (auto session = surface.session().lock())
     {
-        auto pid = session->process_id();
+        auto& creds = session->creds();
 
         // Sixth, get the exec command from our pid and see if we can match it to a GAppInfo's Exec
-        if (auto const found = resolve_if_executable_matches(pid))
+        if (auto const found = resolve_if_executable_matches(creds))
         {
             mir::log_info("Successfully resolved app id from executable, id=%s", found->id.c_str());
             return found->id;
@@ -197,88 +190,32 @@ std::string mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id(st
     return sandboxed_app_id;
 }
 
-std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(int pid, mir::Fd const& socket_fd)
+std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(SessionCredentials const& creds)
 {
-#ifdef MIR_USE_APPARMOR
-    // First, try to resolve the AppArmor profile
-    char* label_cstr;
-    char* mode_cstr;
-
-    if (aa_getpeercon(socket_fd, &label_cstr, &mode_cstr) >= 0)
+    if (auto snap_info = creds.snap_info())
     {
-        mir::log_info("Attempting to resolve desktop file via AppArmor for pid: %d", pid);
-        std::string const label{label_cstr};
-        std::free(label_cstr);
-        // mode_cstr should NOT be freed, as it's from the same buffer as label_cstr
-
-        auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(label);
-        if (!sandboxed_app_id.empty())
-        {
-            if (auto file = cache->lookup_by_app_id(sandboxed_app_id))
-            {
-                mir::log_info("Successfully resolved desktop file via AppArmor for pid: %d", pid);
-                return file;
-            }
-        }
-    }
-    else
-    {
-        mir::log_info("Unable to connect to AppArmor while resolving snap desktop file");
-    }
-#else
-    (void)socket_fd;
-    mir::log_warning("Unable to use AppArmor to resolve snap desktop file");
-#endif
-
-    // If that fails, try to read /proc/<PID>/attr/current
-    mir::log_info("Attempting to resolve desktop file via proc directory for pid: %d", pid);
-    std::string attr_file = "/proc/" + std::to_string(pid) + "/attr/current";
-    if (!std::filesystem::exists(attr_file))
-    {
-        mir::log_warning("Failed to resolve desktop file via proc directory for pid %d: %s does not exist", pid, attr_file.c_str());
-        return nullptr;
-    }
-
-    std::string contents;
-    std::getline(std::ifstream(attr_file), contents, '\0');
-
-    auto sandboxed_app_id = parse_snap_security_profile_to_desktop_id(contents);
-    if (sandboxed_app_id.empty())
-    {
-        mir::log_info("Failed to resolve desktop file from sandboxed_app_id  for pid %d", pid);
-        return nullptr;
-    }
-
-    // Now we will have something like firefox_firefox, for example.
-    // This should match something in the app ID map.
-    auto file = cache->lookup_by_app_id(sandboxed_app_id);
-    if (file)
-    {
-        mir::log_info("Successfully resolved desktop file via proc directory for pid: %d", pid);
-        return file;
+        auto sandboxed_app_id = snap_info.value().snap_name + "_" + snap_info.value().app_name;
+        // Now we will have something like firefox_firefox, for example.
+        // This should match something in the app ID map.
+        return cache->lookup_by_app_id(sandboxed_app_id);
     }
 
     return nullptr;
 }
 
-std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(int pid)
+std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_flatpak(SessionCredentials const& creds)
 {
-    g_autoptr(GKeyFile) key_file = g_key_file_new();
-    g_autofree char * info_filename = g_strdup_printf ("/proc/%d/root/.flatpak-info", pid);
+    if (auto flatpak_info = creds.flatpak_info())
+    {
+        return cache->lookup_by_app_id(flatpak_info.value().app_id);
+    }
 
-    if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, nullptr))
-        return nullptr;
-
-    char* sandboxed_app_id = g_key_file_get_string(key_file, "Application", "name", nullptr);
-    if (!sandboxed_app_id)
-        return nullptr;
-
-    return cache->lookup_by_app_id(std::string(sandboxed_app_id));
+    return nullptr;
 }
 
-std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_executable_matches(int pid)
+std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_executable_matches(SessionCredentials const& creds)
 {
-    std::string proc_file = "/proc/" + std::to_string(pid) + "/cmdline";
+    std::string proc_file = "/proc/" + std::to_string(creds.pid()) + "/cmdline";
     if (!std::filesystem::exists(proc_file))
         return nullptr;
 

@@ -29,6 +29,7 @@ namespace scene { class Surface; }
 
 namespace frontend
 {
+class SessionCredentials;
 
 struct DesktopFile
 {
@@ -61,9 +62,9 @@ private:
     std::shared_ptr<DesktopFileCache> cache;
     std::shared_ptr<DesktopFile> resolve_from_wayland_app_id(std::string& app_id);
     std::shared_ptr<DesktopFile> lookup_basename(std::string& name);
-    std::shared_ptr<DesktopFile> resolve_if_snap(int pid, mir::Fd const& socket_fd);
-    std::shared_ptr<DesktopFile> resolve_if_flatpak(int pid);
-    std::shared_ptr<DesktopFile> resolve_if_executable_matches(int pid);
+    std::shared_ptr<DesktopFile> resolve_if_snap(SessionCredentials const& creds);
+    std::shared_ptr<DesktopFile> resolve_if_flatpak(SessionCredentials const& creds);
+    std::shared_ptr<DesktopFile> resolve_if_executable_matches(SessionCredentials const& creds);
 };
 }
 }
