@@ -137,7 +137,7 @@ jobs:
         workshop exec -- python3 - <<'EOF'
         import json, os
 
-        entries = json.load(open(os.path.expanduser("~/build/compile_commands.json")))
+        entries = json.load(open("build/compile_commands.json"))
         missing = [entry["file"] for entry in entries if not os.path.isfile(entry["file"])]
 
         print(f"{len(entries)} entries, first source: {entries[0]['file']}")

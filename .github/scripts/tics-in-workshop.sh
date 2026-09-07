@@ -17,10 +17,13 @@ set -euo pipefail
 
 tool="$( basename "$0" )"
 
-# The action refers to files (like the changed files list) by their host path
+: "${GITHUB_WORKSPACE:?the host path of the checkout is needed to translate paths}"
+
+# The action refers to files (like the changed files list) by their host path;
+# quoting the pattern keeps it from being taken as a glob
 args=()
 for arg in "$@"; do
-  args+=( "${arg//${GITHUB_WORKSPACE}//project}" )
+  args+=( "${arg//"${GITHUB_WORKSPACE}"//project}" )
 done
 
 # Only variable names are passed to `workshop exec`, so the values - including
@@ -51,8 +54,12 @@ exec workshop exec \
       python3 -c "import json, sys; print(json.load(sys.stdin)[\"links\"][\"installTics\"])"
     )"
 
+    script="$( mktemp )"
+    curl --silent --show-error --fail --output "${script}" "${base}${install}"
+
     # shellcheck source=/dev/null
-    source <( curl --silent --show-error --fail "${base}${install}" )
+    source "${script}"
+    rm --force "${script}"
 
     "${TICS_TOOL}" "$@"
   ' -- "${args[@]}"
