@@ -104,8 +104,8 @@ public:
         // session creation get a working, allowed client. Tests override these
         // with `EXPECT_CALL` where they need to observe or change the behaviour.
         ON_CALL(*shell, open_session(_, _, _))
-            .WillByDefault(Invoke([](pid_t pid, mir::Fd, std::string const&)
-                                  { return std::make_shared<mtd::StubSession>(pid); }));
+            .WillByDefault([](pid_t pid, mir::Fd, std::string const&)
+                           { return std::make_shared<mtd::StubSession>(pid); });
         ON_CALL(*authorizer, connection_is_allowed(_)).WillByDefault(Return(true));
 
         RunningWaylandServerTest::SetUp();
@@ -222,7 +222,7 @@ TEST_F(WaylandClientNotifierTest, allowed_client_is_authorized_with_its_credenti
 {
     std::promise<mf::SessionCredentials> promise;
     EXPECT_CALL(*authorizer, connection_is_allowed(_))
-        .WillOnce(DoAll(Invoke([&](mf::SessionCredentials const& creds) { promise.set_value(creds); }), Return(true)));
+        .WillOnce(DoAll([&](mf::SessionCredentials const& creds) { promise.set_value(creds); }, Return(true)));
 
     inject_client();
 
@@ -238,12 +238,12 @@ TEST_F(WaylandClientNotifierTest, allowed_client_opens_a_session_for_its_pid)
 {
     std::promise<pid_t> promise;
     EXPECT_CALL(*shell, open_session(_, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](pid_t pid, mir::Fd, std::string const&)
             {
                 promise.set_value(pid);
                 return std::make_shared<mtd::StubSession>(pid);
-            }));
+            });
 
     inject_client();
 
@@ -256,13 +256,13 @@ TEST_F(WaylandClientNotifierTest, allowed_client_triggers_on_client_connected_wi
 {
     std::promise<std::shared_ptr<ms::Session>> opened;
     EXPECT_CALL(*shell, open_session(_, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](pid_t pid, mir::Fd, std::string const&)
             {
                 auto session = std::make_shared<mtd::StubSession>(pid);
                 opened.set_value(session);
                 return session;
-            }));
+            });
 
     auto connection = next_connection();
     auto const server_fd = inject_client().second;
@@ -290,7 +290,7 @@ TEST_F(WaylandClientNotifierTest, rejected_client_is_not_opened_or_registered)
 {
     std::promise<void> authorized;
     EXPECT_CALL(*authorizer, connection_is_allowed(_))
-        .WillOnce(DoAll(InvokeWithoutArgs([&] { authorized.set_value(); }), Return(false)));
+        .WillOnce(DoAll([&] { authorized.set_value(); }, Return(false)));
     EXPECT_CALL(*shell, open_session(_, _, _)).Times(0);
 
     std::atomic<bool> connected{false};
@@ -322,12 +322,12 @@ TEST_F(WaylandClientNotifierNoCallbackTest, allowed_client_is_still_opened_witho
 {
     std::promise<void> opened;
     EXPECT_CALL(*shell, open_session(_, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](pid_t pid, mir::Fd, std::string const&)
             {
                 opened.set_value();
                 return std::make_shared<mtd::StubSession>(pid);
-            }));
+            });
 
     auto* const display = inject_client().first;
 
@@ -343,7 +343,7 @@ TEST_F(WaylandClientNotifierTest, removed_client_closes_its_session_and_is_dereg
 {
     std::promise<std::shared_ptr<ms::Session>> closed;
     EXPECT_CALL(*shell, close_session(_))
-        .WillOnce(Invoke([&](std::shared_ptr<ms::Session> const& session) { closed.set_value(session); }));
+        .WillOnce([&](std::shared_ptr<ms::Session> const& session) { closed.set_value(session); });
 
     auto connection = next_connection();
     auto* const display = inject_client().first;
