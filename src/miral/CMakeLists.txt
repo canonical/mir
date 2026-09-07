@@ -100,6 +100,8 @@ add_library(protocols STATIC ${GENERATED_PROTOCOL_SOURCES})
 target_include_directories(protocols PUBLIC ${GENERATED_DIR})
 target_link_libraries(protocols PUBLIC PkgConfig::WAYLAND_CLIENT)
 
+mir_disable_tsan_for_sources(${GENERATED_PROTOCOL_SOURCES} xcursor.c)
+
 add_library(miral-external OBJECT
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h

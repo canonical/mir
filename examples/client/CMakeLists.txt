@@ -25,6 +25,9 @@ add_library(mir_demo_wayland_extensions STATIC
         ${MIR_SHELL_C} ${MIR_SHELL_H}
         make_shm_pool.c make_shm_pool.h
 )
+
+mir_disable_tsan_for_sources("${XDG_SHELL_C}" "${MIR_SHELL_C}" make_shm_pool.c wayland_client.c)
+
 set_target_properties     (mir_demo_wayland_extensions PROPERTIES COMPILE_FLAGS "${CMAKE_CFLAGS}  -fvisibility=hidden")
 target_include_directories(mir_demo_wayland_extensions PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 target_link_libraries     (mir_demo_wayland_extensions PUBLIC PkgConfig::WAYLAND_CLIENT)
