@@ -20,7 +20,6 @@ packages="\
     mir-platform-graphics-atomic-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-graphics-gbm-kms:MIR_SERVER_GRAPHICS_PLATFORM_ABI \
     mir-platform-input-evdev:MIR_SERVER_INPUT_PLATFORM_ABI\
-    mir-platform-input-evdev-rs:MIR_SERVER_INPUT_PLATFORM_ABI\
     libmirwayland:MIRWAYLAND_ABI\
     mir-platform-graphics-wayland:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
     mir-platform-rendering-egl-generic:MIR_SERVER_GRAPHICS_PLATFORM_ABI\
@@ -194,10 +193,10 @@ check_install_files()
         then
             report_abi_mismatch "$current_file found, but $pkg ABI is $abi"
         else
-            local suffix=$(grep -o ".so.[[:digit:]]\+" $expected_file)
-            if [ "$suffix" != "$expected_suffix" ];
+            local bad_suffixes=$(grep -o ".so.[[:digit:]]\+" $expected_file | grep -vFx "$expected_suffix" | sort -u | tr '\n' ' ')
+            if [ -n "$bad_suffixes" ];
             then
-                report_abi_mismatch "$current_file contains $suffix, but $pkg ABI is $abi"
+                report_abi_mismatch "$current_file contains $bad_suffixes but $pkg ABI is $abi"
             fi
         fi
     done
