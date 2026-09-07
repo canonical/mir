@@ -4,7 +4,7 @@
 file(GLOB wayland_rs_protocols CONFIGURE_DEPENDS
   ${PROJECT_SOURCE_DIR}/wayland-protocols/*.xml)
 
-# Cargo.lock is a genuine build input, but downstream packaging can remove it
+# Cargo.lock is a build input, but downstream packaging can remove it
 # before the build (Fedora's %cargo_prep deletes it to force an offline,
 # distro-provided crate resolution). Only depend on it when it is actually
 # present, otherwise Ninja aborts with a missing, unbuildable dependency.
