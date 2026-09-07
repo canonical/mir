@@ -71,7 +71,8 @@ jobs:
       PROJECT: mir
       CCACHE_DIR: "${{ github.workspace }}/../ccache"
       TICS_CHANGED_LIST: tics_changed.list
-      TICS_TMPDIR: /tmp/tics-tmpdir
+      # inside the checkout, so it's shared with the Workshop
+      TICS_TMPDIR: ${{ github.workspace }}/tics-tmpdir
 
     timeout-minutes: 360
     steps:
@@ -129,6 +130,22 @@ jobs:
     - name: Build
       run: workshop run -- build
 
+    # The compilation database is generated inside the Workshop, so TICS has to
+    # analyze the sources there, too - see `.github/scripts/tics-in-workshop.sh`
+    - name: Verify the compilation database resolves inside the Workshop
+      run: |
+        workshop exec -- python3 - <<'EOF'
+        import json, os
+
+        entries = json.load(open(os.path.expanduser("~/build/compile_commands.json")))
+        missing = [entry["file"] for entry in entries if not os.path.isfile(entry["file"])]
+
+        print(f"{len(entries)} entries, first source: {entries[0]['file']}")
+
+        if missing:
+            raise SystemExit(f"{len(missing)} sources not found, e.g.: {missing[:3]}")
+        EOF
+
     - name: Clear CCache stats
       run: workshop exec -- ccache --show-stats --zero-stats
 
@@ -156,6 +173,18 @@ jobs:
         source ~/.profile
         TICSMaintenance -project "${PROJECT}" -detach
 
+    - name: Install the TICS wrappers
+      # The action cannot be nested in `workshop exec`, so put wrappers that do
+      # that on the PATH, under the names of the tools the action invokes
+      run: |
+        mkdir --parents "${RUNNER_TEMP}/tics-bin"
+        for tool in TICS TICSQServer; do
+          ln --force --symbolic \
+            "${GITHUB_WORKSPACE}/.github/scripts/tics-in-workshop.sh" \
+            "${RUNNER_TEMP}/tics-bin/${tool}"
+        done
+        echo "${RUNNER_TEMP}/tics-bin" >> "${GITHUB_PATH}"
+
     - name: Run TICS analysis
       uses: tiobe/tics-github-action@a53037a6bb9f71b6a97cdeb0ac41632266804b9e # v3.8.0
       timeout-minutes: 300  # avoid global job timeout to perform cleanup below
@@ -166,7 +195,8 @@ jobs:
         project: ${{ env.PROJECT }}
         viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
         ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
-        installTics: true
+        # the wrappers install TICS inside the Workshop instead
+        installTics: false
         filelist: ${{ github.event_name == 'merge_group' && env.TICS_CHANGED_LIST || '' }}
         # FIXME: workaround for a TICS bug
         additionalFlags: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) && '-resultdir build' || '' }}
