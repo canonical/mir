@@ -81,9 +81,9 @@ public:
     /// is what synchronises with the magnifier's DisplayConfigObserver.
     void flush_main_loop(char const* context)
     {
-        mir::test::Signal flushed;
-        server().the_main_loop()->spawn([&flushed] { flushed.raise(); });
-        ASSERT_TRUE(flushed.wait_for(2s)) << "timed out waiting for " << context;
+auto flushed = std::make_shared<mir::test::Signal>();
+server().the_main_loop()->spawn([flushed] { flushed->raise(); });
+ASSERT_TRUE(flushed->wait_for(2s)) << "timed out waiting for " << context;
     }
 
     void wait_for_magnifier_initialization()
