@@ -69,7 +69,9 @@ jobs:
       pull-requests: write  # for commenting with TICS results
     env:
       PROJECT: mir
-      CCACHE_DIR: "${{ github.workspace }}/../ccache"
+      CCACHE_DIR: "/tmp/ccache"
+      NEEDRESTART_SUSPEND: yes
+      DEBIAN_FRONTEND: noninteractive
       TICS_CHANGED_LIST: tics_changed.list
       TICS_TMPDIR: /tmp/tics-tmpdir
 
@@ -84,19 +86,40 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get install --yes --no-install-recommends \
+        sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
+        sudo --preserve-env apt-get install --yes --no-install-recommends \
+          cargo \
+          clang \
+          dmz-cursor-theme \
           flake8 \
+          gcovr \
+          glmark2-es2 \
+          glmark2-es2-wayland \
+          lcov \
+          llvm \
+          libclang-rt-dev \
+          mesa-utils \
+          ninja-build \
           pylint \
-          rust-clippy
+          rust-clippy \
+          xwayland
 
-    - name: Launch the Workshop
-      uses: canonical/launch-workshop@b9e184e38f49808ced78e25de19483fe02484c46 # v1.0.1
+        sudo --preserve-env apt-get build-dep --yes ./
 
-    - name: Set up CCache and mounts
+        cargo install cargo-files
+
+        mkdir --parents ~/.local/bin
+        cat <<'EOF' > ~/.local/bin/gcov
+        #!/bin/sh
+        exec llvm-cov gcov "$@"
+        EOF
+        chmod +x ~/.local/bin/gcov
+
+    - name: Set up CCache
       id: setup-ccache
       run: |
-        workshop remount dev/mir:build build
-        workshop remount dev/mir:ccache "${CCACHE_DIR}"
+        sudo apt-get --yes install ccache
+        mkdir --parents "${CCACHE_DIR}"
 
         # Find the merge base to avoid populating the cache with short lived cache entries
         # and evicting those we care for - from `main`
@@ -108,10 +131,10 @@ jobs:
       if: ${{ contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
       uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
       with: &ccache_with
-        key: ccache-tics-${{ steps.setup-ccache.outputs.merge-base }}
+        key: ccache-coverage-${{ steps.setup-ccache.outputs.merge-base }}
         # if exact match isn't found, use the most recent entry for the task
         restore-keys: |
-          ccache-tics-
+          ccache-coverage-
         path: ${{ env.CCACHE_DIR }}
 
     - name: Ensure ccache size
@@ -121,16 +144,24 @@ jobs:
 
     - name: Configure
       run: >
-        workshop run -- configure
+        cmake
+        -DCMAKE_BUILD_TYPE=Debug
         -DMIR_ENABLE_COVERAGE=ON
         -DMIR_USE_PRECOMPILED_HEADERS=OFF
         -DMIR_RUN_PERFORMANCE_TESTS=OFF
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+        -GNinja
+        -B build
+        ${{ github.workspace }}
 
     - name: Build
-      run: workshop run -- build
+      run: cmake --build build
 
     - name: Clear CCache stats
-      run: workshop exec -- ccache --show-stats --zero-stats
+      run: ccache --show-stats --zero-stats
 
     - name: Store CCache
       if: ${{ !contains(fromJSON('["pull_request", "merge_group"]'), github.event_name) }}
@@ -139,7 +170,8 @@ jobs:
 
     - name: Measure coverage
       timeout-minutes: 45
-      run: workshop run -- coverage
+      run: |
+        cmake --build build --target coverage-html
 
     - name: Get changed files
       if: github.event_name == 'merge_group'
