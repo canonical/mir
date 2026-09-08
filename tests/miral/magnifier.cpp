@@ -31,6 +31,9 @@
 #include <gmock/gmock.h>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <limits>
+#include <string>
+
 namespace geom = mir::geometry;
 namespace mi = mir::input;
 namespace mtd = mir::test::doubles;
@@ -107,6 +110,19 @@ ASSERT_TRUE(flushed->wait_for(2s)) << "timed out waiting for " << context;
     Magnifier magnifier;
 };
 
+struct MagnificationTestCase
+{
+    char const* name;
+    float requested;
+    float expected;
+};
+
+class MagnificationTest :
+    public MagnifierTest,
+    public WithParamInterface<MagnificationTestCase>
+{
+};
+
 TEST_F(MagnifierTest, magnifier_disabled_by_default)
 {
     add_start_callback([&]
@@ -138,6 +154,38 @@ TEST_F(MagnifierTest, changing_magnification_preserves_visual_size)
     EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
     EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(225, 225)));
 }
+
+TEST_P(MagnificationTest, accepts_supported_and_rejects_unsupported_magnifications)
+{
+    magnifier.magnification(2.0f);
+    magnifier.enable(true);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    auto const& test_case = GetParam();
+    magnifier.magnification(test_case.requested);
+
+    auto const expected =
+        glm::scale(glm::mat4(1.0), glm::vec3(test_case.expected, test_case.expected, 1));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    SupportedRange,
+    MagnificationTest,
+    Values(
+        MagnificationTestCase{"minimum", 1.25f, 1.25f},
+        MagnificationTestCase{"maximum", 8.0f, 8.0f},
+        MagnificationTestCase{"below_minimum", 1.0f, 2.0f},
+        MagnificationTestCase{"above_maximum", 8.25f, 2.0f},
+        MagnificationTestCase{"negative_infinity", -std::numeric_limits<float>::infinity(), 2.0f},
+        MagnificationTestCase{"positive_infinity", std::numeric_limits<float>::infinity(), 2.0f},
+        MagnificationTestCase{"nan", std::numeric_limits<float>::quiet_NaN(), 2.0f}),
+    [](TestParamInfo<MagnificationTestCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
 
 TEST_F(MagnifierTest, can_set_capture_size)
 {
