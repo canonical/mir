@@ -79,7 +79,7 @@
         This request should be called when the client will no longer
         use the ext_image_sampler_manager_v1.
 
-        Afterward, new samplers must not be created by this manager,
+        Afterward, new samplers can not be created by this manager,
         but existing samplers must remain valid up until the point of their destruction.
       </description>
     </request>
@@ -92,8 +92,9 @@
 
       The image capture source is not mapped to a surface when the object is created. The
       client must obtain the buffer via get_buffer, attach the buffer to a surface,
-      and commit the surface for the mapping to occur. The surface of the client is
-      subject to the wl_subsurface synchronization model.
+      and commit the surface for the mapping to occur. Once mapped, the compositor
+      keeps the buffer contents up to date without requiring the client to attach
+      and commit again.
     </description>
 
     <request name="get_buffer">
@@ -101,37 +102,51 @@
         Retrieve an opaque buffer backed by the image capture source that this sampler was created
         with.
 
-        This buffer must be attached to a surface and that surface must be committed for
-        the mapping to be finalized.
+        This buffer must be attached to a surface and that surface must be committed.
 
-        The client must make this request following a size event in order to update the buffer
-        to the new size.
+        Whereas the backing store of a wl_buffer must remain constant between submission and
+        wl_buffer.release, the backing store of this wl_buffer is a compositor-internal that
+        contains the most current representation of the source.
+
+        The client must make this request following a buffer_changed event. A failure to
+        respond to that event may cause the compositor ot no longer update the contents
+        of the buffer.
 
         Only one buffer may be active for a sampler at a time. The active buffer remains
         active until the client destroys it, after which a new buffer may be requested.
         Calling this while a buffer is already active for this sampler raises a buffer_active
         error.
-
-        If supported, the wp_viewporter and wp_alpha_modifier_v1 protocols should behave
-        correctly on the surface to which this buffer has been attached.
       </description>
       <arg name="buffer" type="new_id" interface="wl_buffer"/>
     </request>
 
     <event name="size">
       <description summary="sent when the size of the image capture source changes">
-        The size event must be sent by the compositor when the size of the backing image
-        capture source changes. The dimensions are expressed in buffer pixel coordinates.
+        The size event must be sent by the compositor in response to a get_buffer request.
 
-        The compositor must send this event once when the sampler is created, so that the
-        client knows the initial size and can make its first get_buffer request.
-
-        The client should destroy any buffer that they are already holding and make
-        the get_buffer request in response to this event. If the client does not request
-        a new buffer, the compositor may no longer update the buffer that the client is holding.
+        The buffer width and buffer height express the size of the image buffer, while
+        the logical width and logical height express the size of what is being rendered.
+        For example, the buffer may have a width of 200 and a height of 100, while the logical
+        size has a width of 100 and a height of 50, meaning that the image was scaled up by
+        a factor of 2.
       </description>
-      <arg name="width" type="uint" summary="buffer width"/>
-      <arg name="height" type="uint" summary="buffer height"/>
+      <arg name="buffer_width" type="uint" summary="buffer width"/>
+      <arg name="buffer_height" type="uint" summary="buffer height"/>
+      <arg name="logical_width" type="uint" summary="logical width"/>
+      <arg name="logical_height" type="uint" summary="logical height"/>
+    </event>
+
+    <event name="buffer_changed">
+      <description summary="sent when the client should reallocate its buffer">
+        The compositor must send this event to signal that the client should make the
+        get_buffer request again.
+
+        The client should destroy any buffer that they are holding and make
+        the get_buffer request in response to this event.
+
+        If the client does not request a new buffer, the compositor may no longer update
+        the buffer that the client is holding.
+      </description>
     </event>
 
     <request name="destroy" type="destructor">
