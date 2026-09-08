@@ -160,7 +160,7 @@ public:
     {
         auto const s = state.lock();
         s->magnification = new_magnification;
-        if (!s->surface.lock() || !s->has_outputs())
+        if (!s->surface.lock())
             return;
 
         place_at_cursor(*s);
@@ -173,8 +173,10 @@ public:
         auto const capture_top_left = s->render_scene_into_surface.capture_area().top_left;
         s->render_scene_into_surface.capture_area({capture_top_left, size});
 
-        if (s->surface.lock() && s->has_outputs())
-            place_at_cursor(*s);
+        if (!s->surface.lock())
+            return;
+
+        place_at_cursor(*s);
     }
 
     geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
