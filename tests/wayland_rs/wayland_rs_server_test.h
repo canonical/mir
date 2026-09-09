@@ -107,7 +107,7 @@ public:
     }
 
     /// The factory the server creates globals with. Override (typically with a
-    /// `test::StubGlobalFactory` subclass) to advertise globals; defaults to
+    /// `test::MockGlobalFactory` subclass) to advertise globals; defaults to
     /// null, so the server advertises none.
     virtual auto make_global_factory() -> std::unique_ptr<GlobalFactory>
     {

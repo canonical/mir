@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "stub_global_factory.h"
+#include "mock_global_factory.h"
 #include "wayland_rs_server_test.h"
 
 #include "client.h"
@@ -46,7 +46,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrs = mir::wayland_rs;
+namespace mwrs = mir::wayland_rs;
 
 using namespace testing;
 using namespace std::chrono_literals;
@@ -57,11 +57,11 @@ namespace
 /// can be sure the event it observes is the one sent from `~TestShm`. It has to
 /// be a value the protocol's format enum knows, because the generated event
 /// setter maps anything else onto the enum's fallback.
-uint32_t constexpr sentinel_format = mrs::Shm::Format::yvu444;
+uint32_t constexpr sentinel_format = mwrs::Shm::Format::yvu444;
 
 /// Collects everything libwayland's client library logs. libwayland reports
-/// several classes of server misbehaviour — notably a `wl_display.delete_id`
-/// for an id it has already released — as a log line rather than a protocol
+/// several classes of server misbehaviour (notably a `wl_display.delete_id`
+/// for an id it has already released) as a log line rather than a protocol
 /// error, so an empty log is part of what these tests assert.
 mir::Synchronised<std::vector<std::string>>& client_log()
 {
@@ -76,17 +76,20 @@ void record_client_log(char const* fmt, va_list args)
     client_log().lock()->push_back(buffer);
 }
 
-/// A minimal concrete `Client`. These tests exercise object lifetimes, not
-/// client state, so every member beyond `raw_client()` returns an inert value.
-class TestClient : public mrs::Client
+void print_client_log(char const* fmt, va_list args)
+{
+    std::vfprintf(stderr, fmt, args);
+}
+
+class TestClient : public mwrs::Client
 {
 public:
-    explicit TestClient(mrs::RawWlClient raw) :
+    explicit TestClient(mwrs::RawWlClient raw) :
         raw{std::move(raw)}
     {
     }
 
-    auto raw_client() const -> mrs::RawWlClient const& override { return raw; }
+    auto raw_client() const -> mwrs::RawWlClient const& override { return raw; }
     auto is_being_destroyed() const -> bool override { return false; }
     auto client_session() const -> std::shared_ptr<mir::scene::Session> override { return nullptr; }
     auto next_serial(std::shared_ptr<MirEvent const>) -> uint32_t override { return 0; }
@@ -95,12 +98,9 @@ public:
     auto output_geometry_scale() -> float override { return 1.0f; }
 
 private:
-    mrs::RawWlClient raw;
+    mwrs::RawWlClient raw;
 };
 
-/// What the server-side objects record for the test thread to inspect. Written
-/// from the Wayland thread, read from the test thread once the corresponding
-/// signal has been raised.
 struct ServerObservations
 {
     mir::Synchronised<int> shm_destructions{0};
@@ -111,15 +111,15 @@ struct ServerObservations
     mir::test::Signal pool_destroyed;
 
     /// Only touched on the Wayland thread.
-    mrs::Weak<mrs::ShmPool> pool;
+    mwrs::Weak<mwrs::ShmPool> pool;
 };
 
-class TestShmPool : public mrs::ShmPool
+class TestShmPool : public mwrs::ShmPool
 {
 public:
     TestShmPool(
-        std::shared_ptr<mrs::Client> client,
-        rust::Box<mrs::ShmPoolMiddleware> instance,
+        std::shared_ptr<mwrs::Client> client,
+        rust::Box<mwrs::ShmPoolMiddleware> instance,
         uint32_t object_id,
         ServerObservations& observations) :
         ShmPool{std::move(client), std::move(instance), object_id},
@@ -133,8 +133,8 @@ public:
         observations.pool_destroyed.raise();
     }
 
-    auto create_buffer(int32_t, int32_t, int32_t, int32_t, uint32_t, rust::Box<mrs::BufferMiddleware>, uint32_t)
-        -> std::shared_ptr<mrs::Buffer> override
+    auto create_buffer(int32_t, int32_t, int32_t, int32_t, uint32_t, rust::Box<mwrs::BufferMiddleware>, uint32_t)
+        -> std::shared_ptr<mwrs::Buffer> override
     {
         return nullptr;
     }
@@ -145,12 +145,12 @@ private:
     ServerObservations& observations;
 };
 
-class TestShm : public mrs::Shm
+class TestShm : public mwrs::Shm
 {
 public:
     TestShm(
-        std::shared_ptr<mrs::Client> client,
-        rust::Box<mrs::ShmMiddleware> instance,
+        std::shared_ptr<mwrs::Client> client,
+        rust::Box<mwrs::ShmMiddleware> instance,
         uint32_t object_id,
         ServerObservations& observations) :
         Shm{std::move(client), std::move(instance), object_id},
@@ -169,11 +169,11 @@ public:
     }
 
     /// `fd` is borrowed for the duration of the call, so it is not closed here.
-    auto create_pool(int32_t, int32_t, rust::Box<mrs::ShmPoolMiddleware> child_instance, uint32_t child_object_id)
-        -> std::shared_ptr<mrs::ShmPool> override
+    auto create_pool(int32_t, int32_t, rust::Box<mwrs::ShmPoolMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mwrs::ShmPool> override
     {
         auto pool = std::make_shared<TestShmPool>(client, std::move(child_instance), child_object_id, observations);
-        observations.pool = mrs::Weak<mrs::ShmPool>{pool};
+        observations.pool = mwrs::Weak<mwrs::ShmPool>{pool};
         observations.pool_created.raise();
         return pool;
     }
@@ -182,34 +182,35 @@ private:
     ServerObservations& observations;
 };
 
-class TestGlobalFactory : public mrs::test::StubGlobalFactory
+class TestGlobalFactory : public NiceMock<mwrs::test::MockGlobalFactory>
 {
 public:
     explicit TestGlobalFactory(ServerObservations& observations) :
         observations{observations}
     {
+        ON_CALL(*this, can_view(_, _))
+            .WillByDefault([](rust::Str interface_name, rust::Box<mwrs::WaylandClientId>)
+                { return interface_name == "wl_shm"; });
+
+        ON_CALL(*this, create_wl_shm(_, _, _))
+            .WillByDefault(
+                [this](rust::Box<mwrs::WaylandClient> client, rust::Box<mwrs::ShmMiddleware> instance, uint32_t object_id)
+                {
+                    auto shm = std::make_shared<TestShm>(
+                        std::make_shared<TestClient>(std::move(client)),
+                        std::move(instance),
+                        object_id,
+                        this->observations);
+
+                    shm_weak = mwrs::Weak<mwrs::Shm>{shm};
+                    shm_shared = shm;
+                    this->observations.shm_created.raise();
+                    return shm;
+                });
     }
 
-    auto can_view(rust::Str interface_name, rust::Box<mrs::WaylandClientId>) -> bool override
-    {
-        return interface_name == "wl_shm";
-    }
-
-    auto create_wl_shm(rust::Box<mrs::WaylandClient> client, rust::Box<mrs::ShmMiddleware> instance, uint32_t object_id)
-        -> std::shared_ptr<mrs::Shm> override
-    {
-        auto shm = std::make_shared<TestShm>(
-            std::make_shared<TestClient>(std::move(client)), std::move(instance), object_id, observations);
-
-        shm_weak = mrs::Weak<mrs::Shm>{shm};
-        shm_shared = shm;
-        observations.shm_created.raise();
-        return shm;
-    }
-
-    /// Both are only touched on the Wayland thread.
-    mrs::Weak<mrs::Shm> shm_weak;
-    std::weak_ptr<mrs::Shm> shm_shared;
+    mwrs::Weak<mwrs::Shm> shm_weak;
+    std::weak_ptr<mwrs::Shm> shm_shared;
 
 private:
     ServerObservations& observations;
@@ -224,10 +225,10 @@ auto make_socket_pair() -> std::pair<int, int>
     return {fds[0], fds[1]};
 }
 
-class DestroyOrderingTest : public mrs::test::RunningWaylandServerTest
+class DestroyOrderingTest : public mwrs::test::RunningWaylandServerTest
 {
 public:
-    auto make_global_factory() -> std::unique_ptr<mrs::GlobalFactory> override
+    auto make_global_factory() -> std::unique_ptr<mwrs::GlobalFactory> override
     {
         auto owned = std::make_unique<TestGlobalFactory>(observations);
         factory = owned.get();
@@ -271,6 +272,9 @@ public:
             wl_display_disconnect(display);
 
         RunningWaylandServerTest::TearDown();
+
+        wl_log_set_handler_client(&print_client_log);
+        client_log().lock()->clear();
     }
 
     /// Run `work` on the Wayland event loop and wait for it to complete.
@@ -332,9 +336,6 @@ private:
 };
 }
 
-// Server-initiated destruction where Rust holds the only reference: the C++
-// destructor must run — and be able to send events — before the Wayland
-// resource is destroyed.
 TEST_F(DestroyOrderingTest, event_sent_from_destructor_reaches_client_on_server_initiated_destroy)
 {
     on_wayland_thread([this] { factory->shm_weak.value().destroy_and_delete(); });
@@ -348,12 +349,11 @@ TEST_F(DestroyOrderingTest, event_sent_from_destructor_reaches_client_on_server_
     EXPECT_THAT(client_log_contents(), IsEmpty());
 }
 
-// The same, but with another strong reference alive across the call — the
-// pattern of an object destroying itself from inside one of its own request
-// handlers, where the dispatch holds a reference. The destructor then runs
-// after `destroy_and_delete()` returns, and must still find a live resource.
 TEST_F(DestroyOrderingTest, event_sent_from_destructor_reaches_client_when_destroy_is_deferred_by_a_strong_reference)
 {
+    // This test is similar to the previous one, with the caveat that the C++
+    // object is dropped after destroy_and_delete() returns. We are asserting
+    // here that we still have a "live" resource to send events on in this case.
     on_wayland_thread(
         [this]
         {
@@ -374,9 +374,6 @@ TEST_F(DestroyOrderingTest, event_sent_from_destructor_reaches_client_when_destr
     EXPECT_THAT(client_log_contents(), IsEmpty());
 }
 
-// Client-initiated destruction: the backend already owns the id, so the C++
-// destructor must not destroy the resource a second time (which would send a
-// duplicate wl_display.delete_id).
 TEST_F(DestroyOrderingTest, client_initiated_destroy_destroys_the_object_exactly_once)
 {
     auto const fd = make_pool_fd();

@@ -243,14 +243,17 @@ impl WaylandServer {
             .lock()
             .expect("No recovery from lock poisoning") = Some(fd_listener_pinger);
 
-        let fd_listener_loop_handle = loop_handle.clone();
+        // A weak handle: the callback is owned by the loop, so a strong clone
+        // here would be a reference cycle keeping the loop — and every source in
+        // it, including the display and the globals holding `factory` — alive
+        // after `run` returns.
+        let fd_listener_loop_handle = loop_handle.downgrade();
         let fd_listener_queue = &self.pending_fd_listeners;
         loop_handle
             .insert_source(fd_listener_ping_source, move |_, _, _: &mut ServerState| {
-                WaylandServer::drain_pending_fd_listeners(
-                    &fd_listener_loop_handle,
-                    fd_listener_queue,
-                );
+                if let Some(handle) = fd_listener_loop_handle.upgrade() {
+                    WaylandServer::drain_pending_fd_listeners(&handle, fd_listener_queue);
+                }
             })
             .map_err(|_| "Failed to insert fd listener signal into event loop")?;
 
