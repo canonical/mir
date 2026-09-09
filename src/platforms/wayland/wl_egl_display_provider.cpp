@@ -43,7 +43,7 @@ private:
     struct ::wl_egl_window* const wl_window;
 };
 
-class mgw::WlDisplayAllocator::Framebuffer::EGLState
+class mgw::WlDisplayAllocator::EGLState
 {
 public:
     EGLState(EGLDisplay dpy, EGLContext ctx, EGLSurface surf, std::shared_ptr<SurfaceState> ss)
@@ -158,6 +158,7 @@ mgw::WlDisplayAllocator::~WlDisplayAllocator()
 
 void mgw::WlDisplayAllocator::resize(geometry::Size new_size)
 {
+    std::lock_guard lock{mutex};
     surface_state->resize(new_size);
     size = new_size;
 }
@@ -166,6 +167,13 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
     GLConfig const& config,
     EGLContext share_context) -> std::unique_ptr<EGLFramebuffer>
 {
+    std::lock_guard lock{mutex};
+
+    if (auto const state = current_state.lock())
+    {
+        return std::unique_ptr<EGLFramebuffer>{new Framebuffer(state, size)};
+    }
+
     EGLint const config_attr[] = {
         EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
         EGL_RED_SIZE, 8,
@@ -201,7 +209,9 @@ auto mgw::WlDisplayAllocator::alloc_framebuffer(
 
     auto surface = surface_state->create_surface(egl_config);
 
-    return std::make_unique<Framebuffer>(dpy, egl_context, surface, surface_state, size);
+    auto const state = std::make_shared<EGLState>(dpy, egl_context, surface, surface_state);
+    current_state = state;
+    return std::unique_ptr<EGLFramebuffer>{new Framebuffer(state, size)};
 }
 
 mgw::WlDisplayProvider::WlDisplayProvider(EGLDisplay dpy)

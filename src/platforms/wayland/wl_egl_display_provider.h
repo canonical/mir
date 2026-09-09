@@ -21,6 +21,9 @@
 
 #include <wayland-client.h>
 
+#include <memory>
+#include <mutex>
+
 struct wl_egl_window;
 
 namespace mir::graphics::wayland
@@ -48,6 +51,7 @@ public:
     void resize(geometry::Size new_size);
 
     struct SurfaceState;
+    class EGLState;
     class Framebuffer : public GenericEGLDisplayAllocator::EGLFramebuffer
     {
     public:
@@ -68,7 +72,7 @@ public:
 
         void swap_buffers();
     private:
-        class EGLState;
+        friend class WlDisplayAllocator;
         Framebuffer(std::shared_ptr<EGLState const> state, geometry::Size size);
         Framebuffer(Framebuffer const& that);
 
@@ -78,6 +82,8 @@ public:
 private:
     EGLDisplay const dpy;
     std::shared_ptr<SurfaceState> const surface_state;
+    std::mutex mutable mutex;
+    std::weak_ptr<EGLState const> current_state;
     geometry::Size size;
 };
 }
