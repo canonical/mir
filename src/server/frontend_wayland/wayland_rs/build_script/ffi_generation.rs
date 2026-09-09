@@ -181,6 +181,7 @@ fn generate_ffi_for_interface(interface: &WaylandInterface) -> TokenStream {
         fn version(self: &#interface_name_ext) -> u32;
         fn object_id(self: &#interface_name_ext) -> u32;
         fn destroy_and_delete(self: &#interface_name_ext);
+        fn notify_destroyed(self: &#interface_name_ext);
         #(#events)*
     }
 }
