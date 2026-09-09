@@ -30,6 +30,8 @@ public:
     CPUAddressableFB(mir::Fd const& drm_fd, bool supports_modifiers, DRMFormat format, mir::geometry::Size const& size);
     ~CPUAddressableFB() override;
 
+    auto as_dmabuf() -> DMABufBuffer const* override;
+
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>> override;
 
     auto format() const -> MirPixelFormat override;
