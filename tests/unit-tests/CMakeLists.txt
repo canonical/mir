@@ -235,6 +235,13 @@ target_link_libraries(mir_unit_tests
   mir-test-doubles-platform-static
   )
 
+if (MIR_ENABLE_RUST)
+  target_link_libraries(mir_unit_tests
+    mirwayland_rs
+    PkgConfig::WAYLAND_CLIENT
+  )
+endif()
+
 target_link_libraries(mir_umock_unit_tests
 
   mir-test-doubles-static
