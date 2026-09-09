@@ -24,11 +24,7 @@
 
 namespace mir
 {
-namespace graphics
-{
-class Framebuffer;
-
-}
+namespace graphics { class Framebuffer; }
 
 namespace renderer
 {
