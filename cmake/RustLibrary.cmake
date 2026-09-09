@@ -34,9 +34,22 @@ function(add_rust_cxx_library target)
     set(cargo_target_flag "--target" "$ENV{DEB_HOST_RUST_TYPE}")
   endif()
 
+  # Forward the pkg-config CMake resolved to cargo, so build scripts using the
+  # pkg-config crate find the same libraries CMake does. When cross-compiling,
+  # that crate refuses to run unless PKG_CONFIG_ALLOW_CROSS is set, so set it
+  # too.
+  set(cargo_env)
+  if(PKG_CONFIG_EXECUTABLE)
+    list(APPEND cargo_env "PKG_CONFIG=${PKG_CONFIG_EXECUTABLE}")
+  endif()
+  if(CMAKE_CROSSCOMPILING)
+    list(APPEND cargo_env "PKG_CONFIG_ALLOW_CROSS=1")
+  endif()
+
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
-    COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} ${cargo_target_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
+    COMMAND ${CMAKE_COMMAND} -E env ${cargo_env}
+            ${CARGO_EXECUTABLE} build ${cargo_release_flag} ${cargo_target_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
     DEPENDS ${arg_DEPENDS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Building Rust crate ${arg_CRATE}")
