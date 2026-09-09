@@ -17,6 +17,7 @@
 #include "platform.h"
 #include "display.h"
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/log.h>
 #include <mir/graphics/options_parsing_helpers.h>

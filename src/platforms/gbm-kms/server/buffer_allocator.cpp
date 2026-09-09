@@ -485,7 +485,7 @@ auto mgg::GLRenderingProvider::suitability_for_allocator(
 }
 
 auto mgg::GLRenderingProvider::suitability_for_display(
-    DisplaySink& sink) -> probe::Result
+    graphics::DisplaySink& sink) -> probe::Result
 {
     if (bound_display)
     {
@@ -508,7 +508,7 @@ auto mgg::GLRenderingProvider::suitability_for_display(
 }
 
 auto mgg::GLRenderingProvider::surface_for_sink(
-    DisplaySink& sink,
+    graphics::DisplaySink& sink,
     GLConfig const& config)
     -> std::unique_ptr<gl::OutputSurface>
 {
@@ -552,7 +552,7 @@ auto mgg::GLRenderingProvider::import_syncobj(Fd const& syncobj_fd)
     return std::make_unique<drm::Syncobj>(drm_fd, handle);
 }
 
-auto mgg::GLRenderingProvider::make_framebuffer_provider(DisplaySink& sink)
+auto mgg::GLRenderingProvider::make_framebuffer_provider(graphics::DisplaySink& sink)
     -> std::unique_ptr<FramebufferProvider>
 {
     if(auto* allocator = sink.acquire_compatible_allocator<DmaBufDisplayAllocator>())

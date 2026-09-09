@@ -33,6 +33,7 @@
 #include <mir/options/configuration.h>
 #include <mir/options/option.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 
 #include <boost/throw_exception.hpp>
 

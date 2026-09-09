@@ -18,6 +18,7 @@
 #define MIR_PLATFORM_WAYLAND_DISPLAY_PROVIDER_H_
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 
 #include <wayland-client.h>
 

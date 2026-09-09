@@ -30,6 +30,7 @@ class CompositorReport;
 namespace graphics
 {
 class DisplaySink;
+class GLRenderingProvider;
 class OutputFilter;
 }
 namespace renderer
