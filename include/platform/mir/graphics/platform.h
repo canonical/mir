@@ -27,6 +27,7 @@
 #include <mir/module_deleter.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/fd.h>
+#include <mir_toolkit/common.h>
 
 #include <EGL/egl.h>
 
@@ -230,6 +231,7 @@ public:
      */
     virtual auto import_syncobj(mir::Fd const& syncobj_fd) -> std::unique_ptr<drm::Syncobj> = 0;
 };
+
 
 /**
  * \defgroup platform_enablement Mir platform enablement
@@ -489,6 +491,121 @@ public:
 
     virtual auto alloc_framebuffer(GLConfig const& config, EGLContext share_context)
         -> std::unique_ptr<EGLFramebuffer> = 0;
+};
+
+class BlitterRenderingProvider : public RenderingProvider
+{
+public:
+    class Tag : public RenderingProvider::Tag
+    {
+    };
+
+    /**
+     * Abstract handle for a group of rendering operations.
+     *
+     * Some hardware APIs have an asynchronous rendering mode,
+     * where a group of operations can be submitted and processed
+     * in order which then need to be waited on for completion.
+     *
+     * This is an abstract handle for any bookkeeping needed for such
+     * an API.
+     *
+     * If uses of this rendering API need to be interleaved with
+     * other rendering to a Surface then a Task must be created
+     * after the other rendering is complete and then this Task
+     * must be consumed by `wait_complete` before any further
+     * access to the Surface.
+     */
+    class Task;
+
+    /**
+     * Handle to a target surface for the blitter
+     */
+    class Surface;
+
+    /**
+     * Set up any required bookkeeping for rendering.
+     *
+     * The returned Task holds the provided Surface.
+     */
+    virtual auto create_task(std::unique_ptr<Surface> surf) -> std::unique_ptr<Task> = 0;
+
+    /**
+     * Consume a Task and wait for all operations associated with it to complete.
+     *
+     * The returned Surface is the same one that was provided to `create_task`.
+     */
+    virtual auto wait_complete(std::unique_ptr<Task> task) -> std::unique_ptr<Surface> = 0;
+
+    /**
+     * Blit a source buffer to a target surface.
+     *
+     * \param task          The Task that holds the target Surface
+     * \param source        A mir::Buffer the blit should read from.
+     *                        Whether a specific buffer can be used as a source
+     *                        depends on allocation-specific information.
+     *                        If the blitter cannot use the provided buffer as
+     *                        a source, this function will return false.
+     * \param source_rect  The rectangle of the source buffer to read from.
+     * \param target_rect  The rectangle of the target surface to write to.
+     * \param rotation      The rotation to apply to the source buffer before writing to the target
+     * \param mirror_mode The mirroring to apply to the source buffer before writing to the target
+     * \return               true if the operation was successfully submitted.
+     *                        If the operation was not submitted for any reason
+     *                        (either the source buffer is not usable or some combination
+     *                        of parameters are unsupported) then this function
+     *                        will return `false` and will have had no effect on
+     *                        the target surface or any previous operations.
+     *                        `wait_complete` should be called on `task` to flush
+     *                        any previous rendering and perform direct fallback rendering.
+     */
+    virtual auto blit(
+        Task& task,
+        Buffer const& source,
+        geometry::Rectangle const& source_rect,
+        geometry::Rectangle const& target_rect,
+        MirOrientation rotation,
+        MirMirrorMode mirror_mode) -> bool = 0;
+
+    /**
+     * Fill a rectangle of a target surface with a solid color, possibly alpha-blended.
+     *
+     * \param task          The Task that holds the target Surface
+     * \param target_rect  The rectangle of the target surface to fill.
+     * \param r             The red component of the fill color (0-255)
+     * \param g             The green component of the fill color (0-255)
+     * \param b             The blue component of the fill color (0-255)
+     * \param a             The alpha component of the fill color (0-255)
+     * \return               true if the operation was successfully submitted.
+     *                        If the operation was not submitted for any reason
+     *                        (either the source buffer is not usable or some combination
+     *                        of parameters are unsupported) then this function
+     *                        will return `false` and will have had no effect on
+     *                        the target surface or any previous operations..
+     *                        `wait_complete` should be called on `task` to flush
+     *                        any previous rendering and perform direct fallback rendering.
+     */
+    virtual auto fill(
+        Task& task,
+        geometry::Rectangle const& target_rect,
+        uint8_t r,
+        uint8_t g,
+        uint8_t b,
+        uint8_t a) -> bool = 0;
+
+    /**
+     * Create a Surface that can be used as a target for blitting.
+     *
+     * Direct CPU access to the provided framebuffer remains possible,
+     * but while a `Task` is active reads from and writes to the framebuffer
+     * are undefined behaviour.
+     */
+    virtual auto surface_for_fb(CPUAddressableDisplayAllocator::MappableFB const& fb) -> std::unique_ptr<Surface> = 0;
+
+    /**
+     * Get a mapping of the provided buffer for CPU access.
+     */
+    virtual auto map_buffer(Buffer const& buffer) -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
 };
 
 class DisplayPlatform
