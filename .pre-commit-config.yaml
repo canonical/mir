@@ -52,7 +52,7 @@ repos:
     args: ["--", "-D", "warnings"]
   - id: cargo-clippy
     alias: clippy-fix
-    args: ["--fix", "--", "-D", "warnings"]
+    args: ["--fix", "--allow-dirty", "--allow-staged", "--", "-D", "warnings"]
   - id: cargo-fmt
 
 - repo: https://github.com/pre-commit/mirrors-clang-format
