@@ -185,13 +185,7 @@ public:
      *                        `wait_complete` should be called on `task` to flush
      *                        any previous rendering and perform direct fallback rendering.
      */
-    auto fill(
-        Task& task,
-        geometry::Rectangle const& target_rect,
-        uint8_t r,
-        uint8_t g,
-        uint8_t b,
-        uint8_t a) -> bool;
+    auto fill(Task& task, geometry::Rectangle const& target_rect, uint8_t r, uint8_t g, uint8_t b, uint8_t a) -> bool;
 
     /**
      * Create a Surface that can be used as a target for blitting.

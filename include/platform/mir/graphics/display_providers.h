@@ -23,7 +23,6 @@
 #include <span>
 #include <cstdint>
 
-
 namespace mir::graphics
 {
 class CPUAddressableDisplayProvider : public DisplayProvider

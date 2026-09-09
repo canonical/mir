@@ -285,7 +285,6 @@ public:
     virtual auto size() const -> geometry::Size = 0;
 };
 
-
 class DisplayPlatform
 {
 public:
