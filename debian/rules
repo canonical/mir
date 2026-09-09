@@ -11,7 +11,11 @@ export DEB_HOST_GNU_TYPE
 # Build-local Cargo home for the crates.io download cache (removed by dh_clean).
 export CARGO_HOME = $(CURDIR)/debian/cargo_home
 
-# Needed for cross-compiling Rust
+# Needed for cross-compiling the Rust components.
+# debhelper's cmake buildsystem already points CMake at the target pkg-config,
+# but cargo/build.rs get no such wiring, so we set it here. PKG_CONFIG_ALLOW_CROSS
+# is a guard in the Rust pkg-config crate, which otherwise refuses to run on a
+# cross build (CMake's FindPkgConfig has no equivalent and doesn't need it).
 export PKG_CONFIG = /usr/bin/$(DEB_HOST_GNU_TYPE)-pkg-config
 export PKG_CONFIG_ALLOW_CROSS = 1
 
