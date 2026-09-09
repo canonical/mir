@@ -20,6 +20,7 @@
 #define MIR_TEST_DOUBLES_STUB_GL_RENDERING_PROVIDER_H_
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/test/doubles/mock_gl_buffer.h>
 #include <mir/test/doubles/mock_output_surface.h>
 

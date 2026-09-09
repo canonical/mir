@@ -24,6 +24,7 @@
 #include <EGL/egl.h>
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 
 typedef struct _XDisplay Display;
 

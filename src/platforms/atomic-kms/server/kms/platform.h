@@ -30,6 +30,8 @@ class ConsoleServices;
 
 namespace graphics
 {
+class GBMDisplayProvider;
+
 namespace atomic
 {
 

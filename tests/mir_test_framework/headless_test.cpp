@@ -21,6 +21,7 @@
 #include <mir/shared_library.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/display.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir_test_framework/executable_path.h>
 
 #include <boost/throw_exception.hpp>

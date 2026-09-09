@@ -27,7 +27,7 @@ namespace mir
 namespace graphics
 {
 class Framebuffer;
-class OutputFilter;
+
 }
 
 namespace renderer

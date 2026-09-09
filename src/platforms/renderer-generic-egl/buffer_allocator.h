@@ -20,6 +20,7 @@
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 
 #include <EGL/egl.h>
 #include <wayland-server-core.h>

@@ -19,6 +19,7 @@
 #include <mir/graphics/display.h>
 #include <mir/log.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/options/configuration.h>
 #include <mir/shared_library.h>
 #include <mir/shared_library_prober.h>

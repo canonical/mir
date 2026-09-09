@@ -17,8 +17,10 @@
 #ifndef MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_FACTORY_H
 #define MIR_COMPOSITOR_BASIC_SCREEN_SHOOTER_FACTORY_H
 
+#include <mir/graphics/rendering_providers.h>
 #include <mir/compositor/screen_shooter_factory.h>
-#include <mir/graphics/platform.h>
+#include <vector>
+#include <memory>
 
 namespace mir
 {
@@ -32,6 +34,7 @@ class RendererFactory;
 namespace graphics
 {
 class Cursor;
+class GLRenderingProvider;
 class OutputFilter;
 }
 

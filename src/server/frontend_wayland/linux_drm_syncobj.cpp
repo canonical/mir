@@ -18,6 +18,7 @@
 #include "linux_drm_syncobj.h"
 #include "linux-drm-syncobj-v1_wrapper.h"
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/graphics/drm_syncobj.h>
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/weak.h>

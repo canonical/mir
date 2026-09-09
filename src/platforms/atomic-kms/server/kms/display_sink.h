@@ -22,6 +22,7 @@
 #include "display_helpers.h"
 #include "egl_helper.h"
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 #include "platform_common.h"
 #include <mir/graphics/kms_framebuffer.h>
 

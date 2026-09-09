@@ -20,6 +20,7 @@
 #include <mir/graphics/display_sink.h>
 #include <mir/renderer/gl/render_target.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/renderer/gl/gl_surface.h>
 #include <mir/graphics/gl_config.h>
 

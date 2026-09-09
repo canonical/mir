@@ -16,6 +16,7 @@
 
 #include <miroil/set_compositor.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <miroil/compositor.h>
 #include <stdexcept>
 

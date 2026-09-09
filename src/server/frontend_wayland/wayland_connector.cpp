@@ -45,6 +45,7 @@
 #include <mir/thread_name.h>
 #include <mir/log.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/frontend/wayland.h>
 
 #include <future>

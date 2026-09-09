@@ -23,7 +23,7 @@
 #include <mir/log.h>
 #include <mir/report_exception.h>
 #include <mir/graphics/egl_error.h>
-#include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/graphics/texture.h>
 #include <mir/graphics/program_factory.h>
 #include <mir/graphics/program.h>

@@ -18,6 +18,7 @@
 #include <gmock/gmock.h>
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 #include "src/platforms/virtual/platform.h"
 #include <mir/test/doubles/mock_egl.h>
 
