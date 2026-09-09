@@ -227,3 +227,10 @@ MIR_PLATFORM_2.29 {
  };
  local: *;
 };
+
+MIR_PLATFORM_2.30 {
+  global:
+  extern "C++" {
+    mir::renderer::gl::Renderer::set_output_filter*;
+  };
+} MIR_PLATFORM_2.29;
