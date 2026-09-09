@@ -8,7 +8,7 @@ myst:
 
 # Roadmap
 
-This page summarizes planned improvements for Mir for the given Ubuntu release cycles.
+This page summarizes planned improvements for Mir across upcoming Ubuntu release cycles.
 The roadmap is exploratory and may change as priorities, designs, and implementation details develop.
 
 (cycle-26-10)=
