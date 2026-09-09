@@ -31,7 +31,7 @@ spec changelog and the final GitHub release body are all generated from it by
    scope and user-visible impact, not just commit titles.
 
    ```bash
-   git diff "${PREV_TAG}..<release-branch>" -- include/ src/
+   git diff "${PREV_TAG}..<release-branch>"
    ```
 
 ## Steps
