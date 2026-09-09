@@ -19,7 +19,7 @@ use crate::protocol_parser::WaylandProtocol;
 use proc_macro2::TokenStream;
 use quote::quote;
 
-pub fn generate_protocols_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+pub fn generate_protocols_rs(protocols: &[WaylandProtocol]) -> TokenStream {
     let generated_protocols = protocols.iter().map(|protocol| {
         // We rely on the wayland_server crate for the core Wayland protocol.
         if protocol.name == "wayland" {
@@ -112,7 +112,7 @@ pub fn generate_protocols_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
     });
 
     quote! {
-        #[allow(dead_code, unused_imports)]
+        #[allow(dead_code, unused_imports, clippy::all)]
         mod protocols {
             use wayland_server;
 

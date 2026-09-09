@@ -9,6 +9,7 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_keyboard_state_tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_recent_tokens.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client_notifier.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

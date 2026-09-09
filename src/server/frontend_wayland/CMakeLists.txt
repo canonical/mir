@@ -74,7 +74,8 @@ set(
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
   input_trigger_registry.cpp        input_trigger_registry.h
-  wayland_client.cpp         wayland_client.h
+  wayland_client.cpp          wayland_client.h
+  wayland_client_notifier.cpp wayland_client_notifier.h
 )
 
 add_custom_command(
@@ -131,6 +132,11 @@ target_link_libraries(mirfrontend-wayland
     mircore
   PRIVATE
     PkgConfig::GIOUnix
+)
+
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
 )
 
 target_link_libraries(mirfrontend-wayland
