@@ -25,7 +25,7 @@
     THIS SOFTWARE.
   </copyright>
 
-  <description summary="sample image capture sources into a client surface">
+  <description summary="get buffers from image capture sourcese">
     This protocol enables clients to ask the compositor for a buffer
     that contains the contents of an image capture source. This buffer can
     then be attached to a surface that the client owns.
@@ -102,14 +102,14 @@
         Retrieve an opaque buffer backed by the image capture source that this sampler was created
         with.
 
-        This buffer must be attached to a surface and that surface must be committed.
+        The compositor should send the size event after a successful get_buffer request.
 
-        Whereas the backing store of a wl_buffer must remain constant between submission and
+        Whereas the backing store of most `wl_buffer`s must remain constant between submission and
         wl_buffer.release, the backing store of this wl_buffer is a compositor-internal that
-        contains the most current representation of the source.
+        always contains the most current representation of the source.
 
         The client must make this request following a buffer_changed event. A failure to
-        respond to that event may cause the compositor ot no longer update the contents
+        respond to that event may cause the compositor to no longer update the contents
         of the buffer.
 
         Only one buffer may be active for a sampler at a time. The active buffer remains
