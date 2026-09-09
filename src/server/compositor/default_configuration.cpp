@@ -28,6 +28,7 @@
 #include "null_screen_shooter_factory.h"
 #include <mir/main_loop.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/options/configuration.h>
 
 #include <cstdlib>

@@ -20,6 +20,7 @@
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 
 #include <EGL/egl.h>
 #include <wayland-server-core.h>
@@ -47,7 +48,6 @@ class EGLContextExecutor;
 namespace gbm
 {
 
-class GLRenderingProvider;
 class SurfacelessEGLContext;
 class GbmQuirks;
 
@@ -89,31 +89,31 @@ class GLRenderingProvider : public graphics::DRMRenderingProvider
 public:
     GLRenderingProvider(
         Fd drm_fd,
-        std::shared_ptr<GBMDisplayProvider> associated_display,
+        std::shared_ptr<graphics::GBMDisplayProvider> associated_display,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate,
         std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
         EGLDisplay dpy,
         EGLContext ctx,
         std::shared_ptr<GbmQuirks> const& quirks);
 
-    auto make_framebuffer_provider(DisplaySink& sink)
+    auto make_framebuffer_provider(graphics::DisplaySink& sink)
         -> std::unique_ptr<FramebufferProvider> override;
 
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
 
     auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
 
-    auto suitability_for_display(DisplaySink& sink) -> probe::Result override;
+    auto suitability_for_display(graphics::DisplaySink& sink) -> probe::Result override;
 
     auto surface_for_sink(
-        DisplaySink& sink,
+        graphics::DisplaySink& sink,
         GLConfig const& config) -> std::unique_ptr<gl::OutputSurface> override;
 
     auto import_syncobj(Fd const& syncobj_fd) -> std::unique_ptr<drm::Syncobj> override;
 
 private:
     Fd const drm_fd;
-    std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display provider (if any - null is valid)
+    std::shared_ptr<graphics::GBMDisplayProvider> const bound_display;    ///< Associated Display provider (if any - null is valid)
     EGLDisplay const dpy;
     EGLContext const ctx;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;

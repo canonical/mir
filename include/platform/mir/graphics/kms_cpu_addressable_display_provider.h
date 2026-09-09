@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_BASIC_CPU_ADDRESSABLE_DISPLAY_PROVIDER_H
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 #include <mir/fd.h>
 
 namespace mir

@@ -27,6 +27,7 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_logger.h>
+#include <mir/graphics/display_providers.h>
 
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>

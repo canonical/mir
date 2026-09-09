@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_GBM_PLATFORM_H_
 
 #include <mir/graphics/platform.h>
+#include "kms/display.h"
 #include "platform_common.h"
 #include "display_helpers.h"
 
@@ -32,6 +33,7 @@ class ConsoleServices;
 namespace graphics
 {
 class DMABufEGLProvider;
+class GBMDisplayProvider;
 
 namespace common
 {
@@ -106,7 +108,7 @@ protected:
 
 private:
     RenderingPlatform(
-        std::variant<std::shared_ptr<GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw,
+        std::variant<std::shared_ptr<graphics::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw,
         std::shared_ptr<GbmQuirks> quirks);
 
     class EGLDisplayHandle
@@ -132,7 +134,7 @@ private:
 
     std::shared_ptr<gbm_device> const device;                   ///< gbm_device this platform is created on, always valid.
     EGLDisplayHandle dpy;
-    std::shared_ptr<GBMDisplayProvider> const bound_display;    ///< Associated Display, if any (nullptr is valid)
+    std::shared_ptr<graphics::GBMDisplayProvider> const bound_display;    ///< Associated Display, if any (nullptr is valid)
     std::unique_ptr<SurfacelessEGLContext> const share_ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
