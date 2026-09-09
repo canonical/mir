@@ -3,7 +3,10 @@ Section: x11
 Priority: optional
 Maintainer: Ubuntu Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 XSBC-Original-Maintainer: Thomas Voß <thomas.voss@canonical.com>
-Build-Depends: cmake,
+Build-Depends: cargo:native,
+# Needed for Cargo to fetch crates
+               ca-certificates,
+               cmake,
                debhelper (>= 9),
                eglexternalplatform-dev,
                libapparmor-dev,
@@ -24,6 +27,7 @@ Build-Depends: cmake,
                libinput-dev (>= 0.21),
                liblttng-ust-dev,
                libpixman-1-dev,
+               libstd-rust-dev,
                libudev-dev,
                libumockdev-dev (>= 0.6),
                libwayland-dev,
@@ -42,6 +46,8 @@ Build-Depends: cmake,
                pkg-config,
                python3-dbusmock,
                python3-pil:native,
+               python3:native,
+               rustc:native,
                systemtap-sdt-dev,
                umockdev (>= 0.8.7),
                uuid-dev,
