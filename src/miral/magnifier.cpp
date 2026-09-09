@@ -53,17 +53,6 @@ auto const max_magnification = 8.0f;
 
 struct State
 {
-    void apply_geometry(mml::Placement const& new_placement)
-    {
-        render_scene_into_surface.capture_area(new_placement.capture_area);
-
-        if (auto const surf = surface.lock())
-        {
-            surf->move_to(new_placement.capture_area.top_left);
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
-        }
-    }
-
     auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
 
     std::weak_ptr<ms::Surface> surface;
@@ -74,7 +63,6 @@ struct State
         default_capture_width * static_cast<double>(default_magnification),
         default_capture_height * static_cast<double>(default_magnification)};
     bool default_enabled{false};
-    miral::RenderSceneIntoSurface render_scene_into_surface;
 };
 }
 
@@ -83,16 +71,14 @@ class miral::Magnifier::Self
 public:
     Self()
     {
-        state.lock()
-            ->render_scene_into_surface
+        render_scene_into_surface
             .capture_area(geom::Rectangle{{300, 300}, geom::Size(default_capture_width, default_capture_height)})
             .overlay_cursor(false);
     }
 
     void init(mir::Server& server)
     {
-        auto const s = state.lock();
-        s->render_scene_into_surface.on_surface_ready(
+        render_scene_into_surface.on_surface_ready(
             [this](auto const& surf)
             {
                 auto s = state.lock();
@@ -109,7 +95,7 @@ public:
                 s->surface = surf;
             });
 
-        s->render_scene_into_surface(server);
+        render_scene_into_surface(server);
 
         server.add_init_callback(
             [&]
@@ -170,8 +156,8 @@ public:
     {
         auto s = state.lock();
         s->requested_visual_size = geom::SizeD{size} * s->magnification;
-        auto const capture_top_left = s->render_scene_into_surface.capture_area().top_left;
-        s->render_scene_into_surface.capture_area({capture_top_left, size});
+        auto const capture_top_left = render_scene_into_surface.capture_area().top_left;
+        render_scene_into_surface.capture_area({capture_top_left, size});
 
         if (!s->surface.lock())
             return;
@@ -179,7 +165,7 @@ public:
         place_at_cursor(*s);
     }
 
-    geom::Size current_size() const { return state.lock()->render_scene_into_surface.capture_area().size; }
+    geom::Size current_size() const { return render_scene_into_surface.capture_area().size; }
 
 private:
     class DisplayConfigObserver : public mg::NullDisplayConfigurationObserver
@@ -198,6 +184,20 @@ private:
         Self& self;
     };
 
+    void apply_geometry(
+        mml::Placement const& new_placement,
+        miral::RenderSceneIntoSurface& render_scene_into_surface,
+        State& state)
+    {
+        render_scene_into_surface.capture_area(new_placement.capture_area);
+
+        if (auto const surf = state.surface.lock())
+        {
+            surf->move_to(new_placement.capture_area.top_left);
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(state.magnification, state.magnification, 1)));
+        }
+    }
+
     /// Applies visual geometry with the magnifier's logical top-left computed
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
@@ -205,12 +205,13 @@ private:
         if (!s.has_outputs())
             return;
 
-        s.apply_geometry(
-            mml::place_following_cursor(
-                geom::PointD{s.cursor_pos},
-                s.requested_visual_size,
-                s.screen_bounds,
-                s.magnification));
+        auto const new_placement = mml::place_following_cursor(
+            geom::PointD{s.cursor_pos}, s.requested_visual_size, s.screen_bounds, s.magnification);
+
+        apply_geometry(
+            new_placement,
+            render_scene_into_surface,
+            s);
     }
 
     class CursorObserver : public mi::CursorObserver
@@ -239,6 +240,7 @@ private:
     };
 
     mir::Synchronised<State> state;
+    miral::RenderSceneIntoSurface render_scene_into_surface;
     std::shared_ptr<CursorObserver> cursor_observer;
     std::shared_ptr<DisplayConfigObserver> display_config_observer;
 };
