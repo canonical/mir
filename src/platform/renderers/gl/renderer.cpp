@@ -49,6 +49,64 @@ namespace geom = mir::geometry;
 
 namespace
 {
+template<typename Surface>
+void release_current_after_exception(Surface& surface)
+{
+    try
+    {
+        surface.release_current();
+    }
+    catch (...)
+    {
+        mir::log(
+            mir::logging::Severity::warning,
+            MIR_LOG_COMPONENT,
+            std::current_exception(),
+            "Failed to release current GL context");
+    }
+}
+
+template<typename Surface, typename Work>
+auto with_current(Surface& surface, Work&& work) -> decltype(work())
+{
+    using Result = decltype(work());
+
+    surface.make_current();
+
+    if constexpr (std::is_void_v<Result>)
+    {
+        try
+        {
+            work();
+        }
+        catch (...)
+        {
+            release_current_after_exception(surface);
+            throw;
+        }
+
+        surface.release_current();
+    }
+    else
+    {
+        auto result = [&]() -> Result
+            {
+                try
+                {
+                    return work();
+                }
+                catch (...)
+                {
+                    release_current_after_exception(surface);
+                    throw;
+                }
+            }();
+
+        surface.release_current();
+        return result;
+    }
+}
+
 template<void (* deleter)(GLuint)>
 class GLHandle
 {
@@ -314,11 +372,13 @@ GLchar const* const invert_src =
 class mrg::Renderer::OutputFilter : public mg::gl::OutputSurface
 {
 public:
-    // NOTE: This must be called with a current GL context
-    OutputFilter(std::unique_ptr<mg::gl::OutputSurface> output)
+    OutputFilter(
+        std::unique_ptr<mg::gl::OutputSurface> output,
+        TextureHandle texture,
+        FramebufferHandle framebuffer)
      : output{std::move(output)},
-        texture{make_texture()},
-        framebuffer{make_framebuffer(texture)},
+        texture{std::move(texture)},
+        framebuffer{std::move(framebuffer)},
         filter{mir_output_filter_none},
         program{nullptr},
         position_attrib{0},
@@ -335,6 +395,32 @@ public:
 
         // Clear existing filter
         program = nullptr;
+    }
+
+    auto current_filter() const -> MirOutputFilter
+    {
+        return filter;
+    }
+
+    static GLuint make_texture()
+    {
+        GLuint tex{0};
+        glGenTextures(1, &tex);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, tex);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        return tex;
+    }
+
+    static GLuint make_framebuffer(GLuint tex)
+    {
+        GLuint fb{0};
+        glGenFramebuffers(1, &fb);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        return fb;
     }
 
     void bind() override
@@ -492,20 +578,9 @@ private:
         return program;
     }
 
-   static GLuint make_texture()
-    {
-        GLuint tex{0};
-        glGenTextures(1, &tex);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tex);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        return tex;
-    }
-
-    /* The output surface can be resized under us, so (re)specify the
-     * intermediate texture storage whenever it no longer matches. This is only
-     * reached with a filter active, so an unfiltered output never allocates
+   /* The output surface can be resized under us, so (re)specify the
+    * intermediate texture storage whenever it no longer matches. This is only
+    * reached with a filter active, so an unfiltered output never allocates
      * texture storage.
      */
     void ensure_texture_storage_for(mir::geometry::Size size)
@@ -524,16 +599,6 @@ private:
                      GL_UNSIGNED_BYTE,
                      nullptr);
         texture_size = size;
-    }
-
-    static GLuint make_framebuffer(GLuint tex)
-    {
-        GLuint fb{0};
-        glGenFramebuffers(1, &fb);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fb);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-        return fb;
     }
 
     std::unique_ptr<mg::gl::OutputSurface> output;
@@ -569,74 +634,86 @@ mrg::Renderer::Program::Program(GLuint program_id)
     alpha_uniform = glGetUniformLocation(id, "alpha");
 }
 
-namespace
-{
-auto make_output_current(std::unique_ptr<mg::gl::OutputSurface> output) -> std::unique_ptr<mg::gl::OutputSurface>
-{
-    output->make_current();
-    return output;
-}
-}
-
 mrg::Renderer::Renderer(
     std::shared_ptr<graphics::GLRenderingProvider> gl_interface,
     std::unique_ptr<graphics::gl::OutputSurface> output)
-    : output_surface{std::make_unique<OutputFilter>(make_output_current(std::move(output)))},
-      clear_color{0.0f, 0.0f, 0.0f, 1.0f},
-      program_factory{std::make_unique<ProgramFactory>()},
+    : clear_color{0.0f, 0.0f, 0.0f, 1.0f},
       screen_to_gl_coords(0),
       display_transform(1),
       gl_interface{std::move(gl_interface)}
 {
-    eglBindAPI(EGL_OPENGL_ES_API);
-    EGLDisplay disp = eglGetCurrentDisplay();
-    if (disp != EGL_NO_DISPLAY)
+    struct RenderSetup
     {
-        struct {GLint id; char const* label;} const eglstrings[] =
-        {
-            {EGL_VENDOR,      "EGL vendor"},
-            {EGL_VERSION,     "EGL version"},
-            {EGL_CLIENT_APIS, "EGL client APIs"},
-            {EGL_EXTENSIONS,  "EGL extensions"},
-        };
-        for (auto& s : eglstrings)
-        {
-            auto val = eglQueryString(disp, s.id);
-            mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
-        }
-    }
-
-    struct {GLenum id; char const* label;} const glstrings[] =
-    {
-        {GL_VENDOR,   "GL vendor"},
-        {GL_RENDERER, "GL renderer"},
-        {GL_VERSION,  "GL version"},
-        {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
-        {GL_EXTENSIONS, "GL extensions"},
+        std::unique_ptr<ProgramFactory> program_factory;
+        TextureHandle texture;
+        FramebufferHandle framebuffer;
     };
 
-    for (auto& s : glstrings)
-    {
-        auto val = reinterpret_cast<char const*>(glGetString(s.id)); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: glGetString returns an ASCII string, guaranteed not to have the high-bit set, so it's representationally-identical to signed char
-        mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
-    }
+    auto const raw_output = output.get();
+    auto setup = with_current(*raw_output, [&]() -> RenderSetup
+        {
+            auto local_program_factory = std::make_unique<ProgramFactory>();
 
-    GLint max_texture_size = 0;
-    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
-    mir::log_info("GL max texture size = %d", max_texture_size);
+            eglBindAPI(EGL_OPENGL_ES_API);
+            EGLDisplay disp = eglGetCurrentDisplay();
+            if (disp != EGL_NO_DISPLAY)
+            {
+                struct {GLint id; char const* label;} const eglstrings[] =
+                {
+                    {EGL_VENDOR,      "EGL vendor"},
+                    {EGL_VERSION,     "EGL version"},
+                    {EGL_CLIENT_APIS, "EGL client APIs"},
+                    {EGL_EXTENSIONS,  "EGL extensions"},
+                };
+                for (auto& s : eglstrings)
+                {
+                    auto val = eglQueryString(disp, s.id);
+                    mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
+                }
+            }
 
-    GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
-    glGetIntegerv(GL_RED_BITS, &rbits);
-    glGetIntegerv(GL_GREEN_BITS, &gbits);
-    glGetIntegerv(GL_BLUE_BITS, &bbits);
-    glGetIntegerv(GL_ALPHA_BITS, &abits);
-    glGetIntegerv(GL_DEPTH_BITS, &dbits);
-    glGetIntegerv(GL_STENCIL_BITS, &sbits);
-    mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
-                  rbits, gbits, bbits, abits, dbits, sbits);
+            struct {GLenum id; char const* label;} const glstrings[] =
+            {
+                {GL_VENDOR,   "GL vendor"},
+                {GL_RENDERER, "GL renderer"},
+                {GL_VERSION,  "GL version"},
+                {GL_SHADING_LANGUAGE_VERSION,  "GLSL version"},
+                {GL_EXTENSIONS, "GL extensions"},
+            };
 
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    output_surface->release_current();
+            for (auto& s : glstrings)
+            {
+                auto val = reinterpret_cast<char const*>(glGetString(s.id)); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: glGetString returns an ASCII string, guaranteed not to have the high-bit set, so it's representationally-identical to signed char
+                mir::log_info(std::string(s.label) + ": " + (val ? val : ""));
+            }
+
+            GLint max_texture_size = 0;
+            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &max_texture_size);
+            mir::log_info("GL max texture size = %d", max_texture_size);
+
+            GLint rbits = 0, gbits = 0, bbits = 0, abits = 0, dbits = 0, sbits = 0;
+            glGetIntegerv(GL_RED_BITS, &rbits);
+            glGetIntegerv(GL_GREEN_BITS, &gbits);
+            glGetIntegerv(GL_BLUE_BITS, &bbits);
+            glGetIntegerv(GL_ALPHA_BITS, &abits);
+            glGetIntegerv(GL_DEPTH_BITS, &dbits);
+            glGetIntegerv(GL_STENCIL_BITS, &sbits);
+            mir::log_info("GL framebuffer bits: RGBA=%d%d%d%d, depth=%d, stencil=%d",
+                          rbits, gbits, bbits, abits, dbits, sbits);
+
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            auto texture = TextureHandle{OutputFilter::make_texture()};
+            auto framebuffer = FramebufferHandle{OutputFilter::make_framebuffer(texture)};
+            return {
+                std::move(local_program_factory),
+                std::move(texture),
+                std::move(framebuffer)};
+        });
+
+    output_surface = std::unique_ptr<OutputFilter>{
+        new OutputFilter(std::move(output), std::move(setup.texture), std::move(setup.framebuffer))};
+    program_factory = std::move(setup.program_factory);
 }
 
 mrg::Renderer::~Renderer()
@@ -674,27 +751,28 @@ void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
 
 auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
 {
-    output_surface->make_current();
-    output_surface->bind();
-
-    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    ++frameno;
-    for (auto const& r : renderables)
+    return with_current(*output_surface, [&]() -> std::unique_ptr<mg::Framebuffer>
     {
-        draw(*r);
-    }
+        output_surface->bind();
 
-    auto output = output_surface->commit();
+        glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        glClear(GL_COLOR_BUFFER_BIT);
 
-    // Report any GL errors after commit, to catch any *during* commit
-    while (auto const gl_error = glGetError())
-        mir::log_debug("GL error: %d", gl_error);
+        ++frameno;
+        for (auto const& r : renderables)
+        {
+            draw(*r);
+        }
 
-    output_surface->release_current();
-    return output;
+        auto output = output_surface->commit();
+
+        // Report any GL errors after commit, to catch any *during* commit
+        while (auto const gl_error = glGetError())
+            mir::log_debug("GL error: %d", gl_error);
+
+        return output;
+    });
 }
 
 namespace
@@ -966,35 +1044,36 @@ void mrg::Renderer::update_gl_viewport()
      * the logical viewport aspect ratio doesn't match the display aspect.
      * This keeps pixels square. Note "black"-bars are really glClearColor.
      */
-    output_surface->make_current();
-    output_surface->bind();
-    auto transformed_viewport = display_transform *
-                                glm::vec4(viewport.size.width.as_int(),
-                                          viewport.size.height.as_int(), 0, 1);
-    auto viewport_width = fabs(transformed_viewport[0]);
-    auto viewport_height = fabs(transformed_viewport[1]);
-
-    auto const output_size = output_surface->size();
-    last_output_size = output_size;
-    auto const output_width = output_size.width.as_value();
-    auto const output_height = output_size.height.as_value();
-
-    if (viewport_width > 0.0f && viewport_height > 0.0f &&
-        output_width > 0 && output_height > 0)
+    with_current(*output_surface, [this]
     {
-        GLint reduced_width = output_width, reduced_height = output_height;
-        // if viewport_aspect_ratio >= output_aspect_ratio
-        if (viewport_width * output_height >= output_width * viewport_height)
-            reduced_height = static_cast<GLint>(output_width * viewport_height / viewport_width);
-        else
-            reduced_width = static_cast<GLint>(output_height * viewport_width / viewport_height);
+        output_surface->bind();
+        auto transformed_viewport = display_transform *
+                                    glm::vec4(viewport.size.width.as_int(),
+                                              viewport.size.height.as_int(), 0, 1);
+        auto viewport_width = fabs(transformed_viewport[0]);
+        auto viewport_height = fabs(transformed_viewport[1]);
 
-        GLint offset_x = (output_width - reduced_width) / 2;
-        GLint offset_y = (output_height - reduced_height) / 2;
+        auto const output_size = output_surface->size();
+        last_output_size = output_size;
+        auto const output_width = output_size.width.as_value();
+        auto const output_height = output_size.height.as_value();
 
-        glViewport(offset_x, offset_y, reduced_width, reduced_height);
-    }
-    output_surface->release_current();
+        if (viewport_width > 0.0f && viewport_height > 0.0f &&
+            output_width > 0 && output_height > 0)
+        {
+            GLint reduced_width = output_width, reduced_height = output_height;
+            // if viewport_aspect_ratio >= output_aspect_ratio
+            if (viewport_width * output_height >= output_width * viewport_height)
+                reduced_height = static_cast<GLint>(output_width * viewport_height / viewport_width);
+            else
+                reduced_width = static_cast<GLint>(output_height * viewport_width / viewport_height);
+
+            GLint offset_x = (output_width - reduced_width) / 2;
+            GLint offset_y = (output_height - reduced_height) / 2;
+
+            glViewport(offset_x, offset_y, reduced_width, reduced_height);
+        }
+    });
 }
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
@@ -1026,7 +1105,15 @@ void mrg::Renderer::set_output_transform(glm::mat2 const& t)
 
 void mrg::Renderer::set_output_filter(MirOutputFilter filter)
 {
-    output_surface->set_filter(filter);
+    if (output_surface->current_filter() == filter)
+    {
+        return;
+    }
+
+    with_current(*output_surface, [this, filter]
+    {
+        output_surface->set_filter(filter);
+    });
 }
 
 void mrg::Renderer::suspend()

@@ -418,6 +418,23 @@ TEST_F(GLRenderer, releases_current_output_after_updating_viewport)
     renderer.set_viewport(mir::geometry::Rectangle{{0, 0}, {2, 3}});
 }
 
+TEST_F(GLRenderer, releases_current_output_when_changing_filter)
+{
+    auto mock_output_surface = make_output_surface();
+    auto const raw_surface = mock_output_surface.get();
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, release_current());
+
+    mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, release_current());
+
+    renderer.set_output_filter(mir_output_filter_invert);
+}
+
 TEST_F(GLRenderer, dont_set_scissor_test_when_unnecessary)
 {
     EXPECT_CALL(mock_gl, glEnable(GL_SCISSOR_TEST)).Times(0);
