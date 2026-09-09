@@ -349,6 +349,41 @@ TEST_F(GLRenderer, swaps_buffers_after_rendering)
     renderer.render(renderable_list);
 }
 
+TEST_F(GLRenderer, releases_current_output_after_construction)
+{
+    auto mock_output_surface = make_output_surface();
+    auto const raw_surface = mock_output_surface.get();
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, release_current());
+
+    mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
+}
+
+TEST_F(GLRenderer, releases_current_output_after_rendering)
+{
+    auto mock_output_surface = make_output_surface();
+    auto const raw_surface = mock_output_surface.get();
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, release_current());
+    EXPECT_CALL(*raw_surface, bind()).Times(AnyNumber());
+    EXPECT_CALL(*raw_surface, commit())
+        .WillRepeatedly(testing::Invoke([]() { return std::unique_ptr<mg::Framebuffer>(); }));
+
+    mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, bind());
+    EXPECT_CALL(*raw_surface, commit());
+    EXPECT_CALL(*raw_surface, release_current());
+
+    renderer.render(renderable_list);
+}
+
 TEST_F(GLRenderer, sets_scissor_test)
 {
     EXPECT_CALL(*renderable, clip_area())
@@ -361,6 +396,26 @@ TEST_F(GLRenderer, sets_scissor_test)
     renderer.set_viewport({{1, 2}, {3, 4}});
 
     renderer.render(renderable_list);
+}
+
+TEST_F(GLRenderer, releases_current_output_after_updating_viewport)
+{
+    auto mock_output_surface = make_output_surface();
+    auto const raw_surface = mock_output_surface.get();
+    ON_CALL(*raw_surface, size()).WillByDefault(Return(mir::geometry::Size{2, 3}));
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, release_current());
+
+    mrg::Renderer renderer(gl_platform, std::move(mock_output_surface));
+    testing::Mock::VerifyAndClearExpectations(raw_surface);
+
+    EXPECT_CALL(*raw_surface, make_current());
+    EXPECT_CALL(*raw_surface, bind());
+    EXPECT_CALL(*raw_surface, size());
+    EXPECT_CALL(*raw_surface, release_current());
+
+    renderer.set_viewport(mir::geometry::Rectangle{{0, 0}, {2, 3}});
 }
 
 TEST_F(GLRenderer, dont_set_scissor_test_when_unnecessary)

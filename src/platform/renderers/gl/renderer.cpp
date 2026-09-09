@@ -636,6 +636,7 @@ mrg::Renderer::Renderer(
                   rbits, gbits, bbits, abits, dbits, sbits);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    output_surface->release_current();
 }
 
 mrg::Renderer::~Renderer()
@@ -692,6 +693,7 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
     while (auto const gl_error = glGetError())
         mir::log_debug("GL error: %d", gl_error);
 
+    output_surface->release_current();
     return output;
 }
 
@@ -992,6 +994,7 @@ void mrg::Renderer::update_gl_viewport()
 
         glViewport(offset_x, offset_y, reduced_width, reduced_height);
     }
+    output_surface->release_current();
 }
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
