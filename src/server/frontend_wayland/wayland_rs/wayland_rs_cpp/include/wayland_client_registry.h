@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 /// A registry of connected Wayland clients, mapping the per-connection raw Rust
 /// client to a single shared `Client`.

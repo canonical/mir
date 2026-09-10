@@ -23,7 +23,6 @@
 #include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
-#include <mir/raii.h>
 #include <mir/graphics/display.h>
 #include <mir/renderer/gl/context.h>
 #include <mir/executor.h>
@@ -48,8 +47,6 @@
 #include <stdexcept>
 #include <system_error>
 #include <fcntl.h>
-
-#include <wayland-server.h>
 
 #define MIR_LOG_COMPONENT "generic-egl-buffer-allocator"
 #include <mir/log.h>
@@ -168,8 +165,15 @@ mge::BufferAllocator::BufferAllocator(
     : ctx{std::make_unique<SurfacelessEGLContext>(dpy, share_with)},
       egl_delegate{
           std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context())},
-      dmabuf_provider{std::move(dmabuf_provider)}
+      linux_dmabuf_{
+          dmabuf_provider ?
+              std::make_shared<LinuxDmaBuf>(std::move(dmabuf_provider), ctx->make_share_context()) :
+              nullptr}
 {
+    if (linux_dmabuf_)
+    {
+        mir::log_info("Enabled linux-dmabuf import support");
+    }
 }
 
 mge::BufferAllocator::~BufferAllocator() = default;
@@ -213,64 +217,23 @@ std::vector<MirPixelFormat> mge::BufferAllocator::supported_pixel_formats()
     return pixel_formats;
 }
 
-void mge::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Executor> wayland_executor)
+void mge::BufferAllocator::bind_display(wl_display* /*display*/, std::shared_ptr<Executor> wayland_executor)
 {
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-
-    try
-    {
-        if (dmabuf_provider)
-        {
-            dmabuf_extension = std::make_unique<LinuxDmaBuf>(display, dmabuf_provider);
-            mir::log_info("Enabled linux-dmabuf import support");
-        }
-    }
-    catch (std::runtime_error const& error)
-    {
-        mir::log_info(
-            "Cannot enable linux-dmabuf import support: %s", error.what());
-        mir::log(
-            mir::logging::Severity::debug,
-            MIR_LOG_COMPONENT,
-            std::current_exception(),
-            "Detailed error: ");
-    }
-
+    // linux-dmabuf support is offered to the Wayland frontend through linux_dmabuf()
     this->wayland_executor = std::move(wayland_executor);
 }
 
 void mge::BufferAllocator::unbind_display(wl_display* /*display*/)
 {
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-
-    dmabuf_extension.reset();
 }
 
 std::shared_ptr<mg::Buffer> mge::BufferAllocator::buffer_from_resource(
-    wl_resource* buffer,
-    std::function<void()>&& on_consumed,
-    std::function<void()>&& on_release)
+    wl_resource* /*buffer*/,
+    std::function<void()>&& /*on_consumed*/,
+    std::function<void()>&& /*on_release*/)
 {
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { ctx->make_current(); },
-        [this]() { ctx->release_current(); });
-
-    if (dmabuf_extension)
-    {
-        if (auto dmabuf = dmabuf_extension->buffer_from_resource(
-            buffer,
-            std::move(on_consumed),
-            std::move(on_release),
-            egl_delegate))
-        {
-            return dmabuf;
-        }
-    }
-
+    // linux-dmabuf buffers are imported through linux_dmabuf(); there is no
+    // wl_resource-based import path in the platform any more.
     BOOST_THROW_EXCEPTION(std::runtime_error(
         "Failed to import client buffer: not a linux-dmabuf buffer"));
 }
@@ -289,6 +252,11 @@ auto mge::BufferAllocator::buffer_from_shm(
 auto mge::BufferAllocator::shared_egl_context() -> EGLContext
 {
     return static_cast<EGLContext>(*ctx);
+}
+
+auto mge::BufferAllocator::linux_dmabuf() -> std::shared_ptr<LinuxDmaBuf>
+{
+    return linux_dmabuf_;
 }
 
 auto mge::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture>

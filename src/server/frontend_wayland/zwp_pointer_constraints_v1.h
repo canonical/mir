@@ -17,11 +17,9 @@
 #ifndef MIR_FRONTEND_ZWP_POINTER_CONSTRAINTS_V1_H
 #define MIR_FRONTEND_ZWP_POINTER_CONSTRAINTS_V1_H
 
-#include "pointer-constraints-unstable-v1_wrapper.h"
+#include "pointer_constraints_unstable_v1.h"
 
 #include <memory>
-
-struct wl_display;
 
 namespace mir
 {
@@ -30,13 +28,36 @@ namespace shell { class Shell; }
 
 namespace frontend
 {
-class WlSeat;
+class PointerConstraintsV1 : public wayland::PointerConstraintsV1
+{
+public:
+    PointerConstraintsV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::PointerConstraintsV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<Executor> wayland_executor,
+        std::shared_ptr<shell::Shell> shell);
 
-auto create_pointer_constraints_unstable_v1(
-    wl_display* display,
-    Executor& wayland_executor,
-    std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<wayland::PointerConstraintsV1::Global>;
+private:
+    std::shared_ptr<Executor> const wayland_executor;
+    std::shared_ptr<shell::Shell> const shell;
+
+    auto lock_pointer(
+        wayland::Weak<wayland::Surface> const& surface,
+        wayland::Weak<wayland::Pointer> const& pointer,
+        std::optional<wayland::Weak<wayland::Region>> const& region,
+        uint32_t lifetime,
+        rust::Box<wayland::LockedPointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::LockedPointerV1> override;
+
+    auto confine_pointer(
+        wayland::Weak<wayland::Surface> const& surface,
+        wayland::Weak<wayland::Pointer> const& pointer,
+        std::optional<wayland::Weak<wayland::Region>> const& region,
+        uint32_t lifetime,
+        rust::Box<wayland::ConfinedPointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::ConfinedPointerV1> override;
+};
 
 }
 }

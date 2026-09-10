@@ -19,7 +19,7 @@
 #include <map>
 #include <mutex>
 
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 
 struct mrs::LifetimeTracker::Impl
 {
