@@ -19,8 +19,9 @@
 
 #include <mir/executor.h>
 #include <mir/shell/surface_specification.h>
-#include <mir/wayland/weak.h>
 #include <mir/scene/surface.h>
+#include <mir/wayland/protocol_error.h>
+#include <mir/wayland/weak.h>
 
 #include <algorithm>
 #include <memory>
@@ -28,7 +29,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <uuid.h>
+#include <uuid/uuid.h>
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -165,7 +166,7 @@ private:
     void set_parent_of(struct wl_resource* surface) override
     {
         auto* child = mf::WlSurface::from(surface);
-        if (!child || !child->is_window_role())
+        if (!child || !child->is_xdg_toplevel())
         {
             throw mw::ProtocolError{
                 resource,
@@ -306,7 +307,7 @@ private:
     void export_toplevel(struct wl_resource* id, struct wl_resource* surface) override
     {
         auto* wl_surface = mf::WlSurface::from(surface);
-        if (!wl_surface || !wl_surface->is_window_role())
+        if (!wl_surface || !wl_surface->is_xdg_toplevel())
         {
             throw mw::ProtocolError{
                 resource,
