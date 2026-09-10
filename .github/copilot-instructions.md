@@ -8,16 +8,15 @@ This file holds repository-wide essentials. **Detailed, area-specific guidance l
 [`.github/instructions/`](instructions/)** and is applied automatically when you touch matching
 files:
 
-| File                               | Applies to                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------------- |
-| `cpp.instructions.md`              | `**/*.h`, `**/*.cpp` — C++ style, common patterns, logging                      |
-| `abi-symbols.instructions.md`      | `symbols.map`, library `CMakeLists.txt`, debian symbols — ABI/symbol management |
-| `wayland-protocol.instructions.md` | `src/server/frontend_wayland/**`, `src/wayland/**`, `wayland-protocols/**`      |
-| `testing.instructions.md`          | `tests/**` — gtest/gmock, flaky tests, WLCS                                     |
-| `rust.instructions.md`             | `src/platforms/evdev-rs/**` — Rust/CXX safety                                   |
-| `cmake.instructions.md`            | `**/CMakeLists.txt`, `cmake/**`                                                 |
-| `docs.instructions.md`             | `doc/**` — Sphinx docs                                                          |
-| `live-config.instructions.md`      | MirAL live-config headers/sources                                               |
+| File                          | Applies to                                                                      |
+| ----------------------------- | ------------------------------------------------------------------------------- |
+| `cpp.instructions.md`         | `**/*.h`, `**/*.cpp` — C++ style, common patterns, logging                      |
+| `abi-symbols.instructions.md` | `symbols.map`, library `CMakeLists.txt`, debian symbols — ABI/symbol management |
+| `testing.instructions.md`     | `tests/**` — gtest/gmock, flaky tests, WLCS                                     |
+| `rust.instructions.md`        | `src/platforms/evdev-rs/**` — Rust/CXX safety                                   |
+| `cmake.instructions.md`       | `**/CMakeLists.txt`, `cmake/**`                                                 |
+| `docs.instructions.md`        | `doc/**` — Sphinx docs                                                          |
+| `live-config.instructions.md` | MirAL live-config headers/sources                                               |
 
 ## Architecture
 
