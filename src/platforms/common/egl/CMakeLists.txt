@@ -14,7 +14,6 @@ target_link_libraries(
     mirplatform
     PkgConfig::EGL
     PkgConfig::GLESv2
-    PkgConfig::WAYLAND_SERVER
 )
 
 target_include_directories(
