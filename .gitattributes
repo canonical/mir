@@ -1,4 +1,5 @@
 .gitattributes export-ignore
+.gitconfig     export-ignore
 .gitignore     export-ignore
 debian         export-ignore
 .github        export-ignore
@@ -6,3 +7,7 @@ spread         export-ignore
 spread.yaml    export-ignore
 tools/make_release_tarball    export-ignore
 tools/ppa-upload.sh           export-ignore
+
+debian/changelog                merge=release-notes
+doc/sphinx/release-notes.md     merge=release-notes
+rpm/mir.spec                    merge=release-notes
