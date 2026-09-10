@@ -28,6 +28,7 @@
 #include "shm.h"
 #include "resource_lifetime_tracker.h"
 #include "linux_drm_syncobj.h"
+#include "xdg_shell_stable.h"
 
 #include "wayland_wrapper.h"
 
@@ -183,6 +184,11 @@ auto mf::WlSurface::scene_surface() const -> std::optional<std::shared_ptr<scene
 auto mf::WlSurface::is_window_role() const -> bool
 {
     return dynamic_cast<WindowWlSurfaceRole const*>(role) != nullptr;
+}
+
+auto mf::WlSurface::is_xdg_toplevel() const -> bool
+{
+    return dynamic_cast<XdgToplevelStable const*>(role) != nullptr;
 }
 
 void mf::WlSurface::on_scene_surface_created(SceneSurfaceCreatedCallback&& callback)

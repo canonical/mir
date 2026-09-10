@@ -139,6 +139,7 @@ public:
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
     auto is_window_role() const -> bool;
+    auto is_xdg_toplevel() const -> bool;
     /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
     /// one exists
     void on_scene_surface_created(SceneSurfaceCreatedCallback&& callback);
