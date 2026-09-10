@@ -17,6 +17,7 @@
 #include "egl_helper.h"
 
 #include <mir/c_memory.h>
+#include <mir/graphics/egl_helpers.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/egl_error.h>
 
@@ -24,6 +25,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mg = mir::graphics;
+namespace mgc = mg::common;
 namespace mgx = mg::X;
 namespace mgxh = mgx::helpers;
 
@@ -87,6 +89,9 @@ void mgxh::Framebuffer::release_current()
 
 void mgxh::Framebuffer::swap_buffers()
 {
+    mgc::CacheEglState stash;
+
+    make_current();
     if (eglSwapBuffers(state->dpy, state->surf) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));

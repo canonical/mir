@@ -88,6 +88,9 @@ public:
 
     void swap_buffers() const
     {
+        mgc::CacheEglState stash;
+
+        make_current();
         if (eglSwapBuffers(dpy, surf) != EGL_TRUE)
         {
             BOOST_THROW_EXCEPTION((mg::egl_error("eglSwapBuffers failed")));
