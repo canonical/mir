@@ -17,7 +17,7 @@
 #include <ranges>
 
 #include "fractional-scale-v1_wrapper.h"
-#include "fractional_scale_v1.h"
+#include "wp_fractional_scale_v1.h"
 #include <mir/default_server_configuration.h>
 
 #include <mir/frontend/wayland.h>
@@ -37,9 +37,9 @@
 #include "layer_shell_v1.h"
 #include <mir/shell/accessibility_manager.h>
 #include "mir_shell.h"
-#include "pointer_constraints_unstable_v1.h"
+#include "zwp_pointer_constraints_v1.h"
 #include "primary_selection_v1.h"
-#include "relative_pointer_unstable_v1.h"
+#include "zwp_relative_pointer_v1.h"
 #include "session_lock_v1.h"
 #include "text_input_v1.h"
 #include "text_input_v2.h"
@@ -50,10 +50,10 @@
 #include "wl_seat.h"
 #include "wl_shell.h"
 #include "wlr_screencopy_v1.h"
-#include "xdg_activation_v1.h"
+#include "xdg_activation_unstable_v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
-#include "xdg_decoration_unstable_v1.h"
-#include "xdg_dialog_v1.h"
+#include "xdg_decoration_manager_v1.h"
+#include "xdg_wm_dialog_v1.h"
 #include "server-decoration_wrapper.h"
 #include "server_decoration_manager.h"
 #include "xdg_output_v1.h"

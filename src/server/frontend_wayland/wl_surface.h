@@ -17,7 +17,7 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_H
 #define MIR_FRONTEND_WL_SURFACE_H
 
-#include "fractional_scale_v1.h"
+#include "wp_fractional_scale_v1.h"
 #include <mir/geometry/forward.h>
 #include "wayland_wrapper.h"
 #include <mir/wayland/weak.h>

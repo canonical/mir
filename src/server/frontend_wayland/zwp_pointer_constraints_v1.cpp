@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "pointer_constraints_unstable_v1.h"
+#include "zwp_pointer_constraints_v1.h"
 #include "wl_region.h"
 #include "wl_surface.h"
 

@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xdg_dialog_v1.h"
+#include "xdg_wm_dialog_v1.h"
 
 #include <mir/wayland/protocol_error.h>
 
