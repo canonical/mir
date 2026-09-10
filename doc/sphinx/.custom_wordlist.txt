@@ -232,6 +232,7 @@ Stroustrup
 subclassed
 subgraph
 subprocess
+subsurfaces
 swaybg
 swaylock
 sys
@@ -246,6 +247,7 @@ toolchain
 toolchains
 toolkits
 Tooltip
+toplevel
 tracepoint
 tracepoints
 TSan
