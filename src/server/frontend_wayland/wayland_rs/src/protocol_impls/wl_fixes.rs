@@ -30,7 +30,7 @@ impl Dispatch<wayland_server::protocol::wl_fixes::WlFixes, ()> for ServerState {
                     .backend_handle()
                     .destroy_object::<crate::wayland_server_core::ServerState>(&registry.id());
             }
-            wayland_server::protocol::wl_fixes::Request::Destroy {} => {}
+            wayland_server::protocol::wl_fixes::Request::Destroy => {}
             _ => {}
         }
     }
