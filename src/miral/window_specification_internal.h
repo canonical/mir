@@ -25,15 +25,6 @@ namespace miral
 
 struct WindowSpecification::Self
 {
-    enum class BufferUsage
-    {
-        undefined,
-        /** rendering using GL */
-        hardware,
-        /** rendering using direct pixel access */
-        software
-    };
-
     Self() = default;
     Self(Self const&) = default;
     Self(mir::shell::SurfaceSpecification const& spec);
@@ -41,7 +32,6 @@ struct WindowSpecification::Self
     std::optional<Point> top_left;
     std::optional<Size> size;
     std::optional<MirPixelFormat> pixel_format;
-    std::optional<BufferUsage> buffer_usage;
     std::optional<std::string> name;
     std::optional<int> output_id;
     std::optional<MirWindowType> type;

@@ -33,8 +33,8 @@ namespace mg = mir::graphics;
 
 auto mtd::StubBufferAllocator::alloc_software_buffer(geometry::Size sz, MirPixelFormat pf) -> std::shared_ptr<mg::Buffer>
 {
-    graphics::BufferProperties properties{sz, pf, graphics::BufferUsage::software};
-    return std::make_shared<StubBuffer>(properties, geometry::Stride{sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf)});
+    return std::make_shared<StubBuffer>(
+        sz, pf, geometry::Stride{sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf)});
 }
 
 auto mtd::StubBufferAllocator::supported_pixel_formats() -> std::vector<MirPixelFormat>

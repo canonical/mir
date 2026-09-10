@@ -70,8 +70,7 @@ auto mtd::StubSession::surface_after(
     return {};
 }
 
-auto mtd::StubSession::create_buffer_stream(
-    mir::graphics::BufferProperties const& /*props*/) -> std::shared_ptr<compositor::BufferStream>
+auto mtd::StubSession::create_buffer_stream() -> std::shared_ptr<compositor::BufferStream>
 {
     return {};
 }
