@@ -45,6 +45,7 @@ ENTRY_START = {
 
 # e.g. "* Thu Aug 13 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0~dev-1"
 SPEC_ENTRY_HEADER = re.compile(r"^\* (\w{3} \w{3} \d{1,2} \d{4}) (.*~dev.*)$")
+SPEC_VERSION = re.compile(r"^Version:.*$", re.MULTILINE)
 
 
 def split_preamble(path_key, text):
@@ -131,6 +132,11 @@ def merge(path_key, base_text, ours_text, theirs_text):
     base_pre, base_body = split_preamble(path_key, base_text)
     ours_pre, ours_body = split_preamble(path_key, ours_text)
     theirs_pre, theirs_body = split_preamble(path_key, theirs_text)
+
+    if path_key == "rpm/mir.spec":
+        ours_version = SPEC_VERSION.search(ours_pre)
+        if ours_version:
+            theirs_pre = SPEC_VERSION.sub(ours_version.group(), theirs_pre)
 
     preamble, conflict = merge_preamble(base_pre, ours_pre, theirs_pre)
 
