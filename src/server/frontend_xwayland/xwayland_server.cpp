@@ -140,13 +140,15 @@ auto connect_xwayland_wl_client(
 
     auto const ctx = std::make_shared<CreateClientContext>();
 
-    wayland_connector->run_on_wayland_display(
-        [ctx, wayland_fd, scale](wl_display* display)
+    wayland_connector->create_wayland_client(
+        wayland_fd,
+        [ctx, scale](wl_client* client)
         {
             {
                 std::lock_guard lock{ctx->mutex};
-                ctx->client = wl_client_create(display, wayland_fd);
-                mw::Client::from(ctx->client).set_output_geometry_scale(scale);
+                ctx->client = client;
+                if (client)
+                    mw::Client::from(client).set_output_geometry_scale(scale);
                 ctx->ready = true;
             }
             ctx->condition_variable.notify_one();
