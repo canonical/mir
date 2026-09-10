@@ -63,6 +63,34 @@ After it completes, verify:
 Finally, manually merge and push the release branch into `main`,
 resolving conflicts to ensure the correct ordering and dates in {ref}`release-notes`, `debian/changelog` and `rpm/mir.spec`.
 
+### Back out a release
+
+If a release is wrong or incomplete, didn't reach `main` and the team decides to abandon it, remove it entirely before starting again.
+This is a destructive cleanup step: remove the release tags from Git, release from GitHub, and from release-notes and packaging so the repository no longer points at a non-existent or invalid release.
+
+1. Delete the temporary branch and any tags that were created for the release:
+
+   ```sh
+   git checkout main
+   git tag -d vX.Y.Z vX.Y.Z-rc
+   git push origin --delete vX.Y.Z
+   git push origin --delete vX.Y.Z-rc
+
+   # If this was a new MAJOR.MINOR series
+   git branch -D release/X.Y
+   git push origin --delete release/X.Y
+   ```
+
+1. Delete any corresponding GitHub release from the repository's Releases page.
+   This removes the published release entry and keeps the repository history aligned with the deleted tags and branch.
+
+1. Update {ref}`release-notes` to remove the release entry and any references to the abandoned version.
+   This includes removing the section for that release, and any release notes or PR comments that mention it so main does not retain stale references after the burn.
+
+1. Update `debian/control` and `rpm/mir.spec` to remove references to the removed release.
+
+After the removal is complete, start a new release with a higher patch number within the series, or a higher minor number for a new series.
+
 ## Versions before 2.26
 
 Before these workflows were introduced, releases were performed manually.
