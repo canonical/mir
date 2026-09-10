@@ -410,9 +410,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
     - Expand copilot instructions with build, CI, ABI and protocol integration guides [#4913](https://github.com/canonical/mir/pull/4913), and commenting/review guidance [#5094](https://github.com/canonical/mir/pull/5094)
 
 
-* Thu Aug 13 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.29.0~rc-1
-- Begin Release Candidate for 2.29.0 release
-
 * Fri Jun 05 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.28.0-1
 
 - New upstream release 2.28.0
