@@ -14,15 +14,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ext_foreign_buffer_v1.h"
+#include "ext_foreign_buffer_manager_v1.h"
 #include "ext_image_capture_v1.h"
-#include "wayland_executor.h"
 #include "wl_surface.h"
+#include "protocol_error.h"
 
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
+#include <mir/executor.h>
 #include <mir/renderer/sw/pixel_source.h>
-#include <mir/wayland/protocol_error.h>
 
 #include <algorithm>
 #include <optional>
@@ -77,57 +77,51 @@ private:
     geom::Size current_size;
 };
 
-class ExtForeignBufferManagerV1Global : public mw::ForeignBufferManagerV1::Global
-{
-public:
-    ExtForeignBufferManagerV1Global(
-        wl_display* display,
-        std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<mf::WaylandExecutor> const& executor);
-
-private:
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mf::WaylandExecutor> executor;
-};
-
-class ExtForeignBufferManagerV1 : public mw::ForeignBufferManagerV1
+class ExtForeignBufferManagerV1 : public mw::ExtForeignBufferManagerV1
 {
 public:
     ExtForeignBufferManagerV1(
-        wl_resource* resource,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtForeignBufferManagerV1Middleware> instance,
+        uint32_t object_id,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<mf::WaylandExecutor> const& executor) :
-        mw::ForeignBufferManagerV1(resource, Version<1>()),
+        std::shared_ptr<mir::Executor> const& executor) :
+        mw::ExtForeignBufferManagerV1(std::move(client), std::move(instance), object_id),
         allocator{allocator},
         executor{executor}
     {
     }
 
 private:
-    void get_session(wl_resource* session, wl_resource* source) override;
+    auto get_session(
+        mw::Weak<mw::ExtImageCaptureSourceV1> const& source,
+        rust::Box<mw::ExtForeignBufferSessionV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::ExtForeignBufferSessionV1> override;
 
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<mf::WaylandExecutor> executor;
+    std::shared_ptr<mir::Executor> executor;
 };
 
-class ExtForeignBufferSessionV1 : public mw::ForeignBufferSessionV1, public mf::ExtImageCopyBackendSession
+class ExtForeignBufferSessionV1 : public mw::ExtForeignBufferSessionV1, public mf::ExtImageCopyBackendSession
 {
 public:
     ExtForeignBufferSessionV1(
-        wl_resource* resource,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtForeignBufferSessionV1Middleware> instance,
+        uint32_t object_id,
         mf::ExtImageCopyBackendFactory const& factory,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-        std::shared_ptr<mf::WaylandExecutor> const& executor) :
-        mw::ForeignBufferSessionV1(resource, Version<1>()),
+        std::shared_ptr<mir::Executor> const& executor) :
+        mw::ExtForeignBufferSessionV1(std::move(client), std::move(instance), object_id),
         pool{allocator},
         backend{factory(this, false)},
         executor{executor}
     {
     }
 
-    void get_buffer(wl_resource* buffer) override;
+    auto get_buffer(
+        rust::Box<mw::BufferMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::Buffer> override;
 
     void maybe_capture_frame() override;
 
@@ -185,28 +179,31 @@ private:
     bool invalidated{false};
     bool stopped{false};
     std::shared_ptr<mf::ExtImageCopyBackend> backend;
-    std::shared_ptr<mf::WaylandExecutor> executor;
+    std::shared_ptr<mir::Executor> executor;
 };
 
-void ExtForeignBufferSessionV1::get_buffer(wl_resource* buffer)
+auto ExtForeignBufferSessionV1::get_buffer(
+    rust::Box<mw::BufferMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Buffer>
 {
     if (foreign_buffer)
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             Error::buffer_active,
             "get_buffer requested while a buffer is still active for this session"};
     }
 
-    auto const created = new mf::ExtForeignBufferV1{buffer};
+    auto const created = std::make_shared<mf::ExtForeignBufferV1>(client, std::move(child_instance), child_object_id);
     invalidated = false;
     reported_metadata.reset();
-    foreign_buffer = mw::make_weak(created);
+    foreign_buffer = mw::make_weak(created.get());
     if (latest_frame)
     {
         publish(*latest_frame);
     }
     capture_frame();
+    return created;
 }
 
 void ExtForeignBufferSessionV1::maybe_capture_frame()
@@ -357,39 +354,23 @@ void ExtForeignBufferSessionV1::set_stopped()
     send_stopped_event();
 }
 
-ExtForeignBufferManagerV1Global::ExtForeignBufferManagerV1Global(
-    wl_display* display,
-    std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<mf::WaylandExecutor> const& executor) :
-    Global(display, Version<1>()),
-    allocator{allocator},
-    executor{executor}
+auto ExtForeignBufferManagerV1::get_session(
+    mw::Weak<mw::ExtImageCaptureSourceV1> const& source,
+    rust::Box<mw::ExtForeignBufferSessionV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtForeignBufferSessionV1>
 {
-}
-
-void ExtForeignBufferManagerV1Global::bind(wl_resource* new_resource)
-{
-    new ExtForeignBufferManagerV1{new_resource, allocator, executor};
-}
-
-void ExtForeignBufferManagerV1::get_session(wl_resource* session, wl_resource* source)
-{
-    auto const source_instance = mf::ExtImageCaptureSourceV1::from_or_throw(source);
-    new ExtForeignBufferSessionV1{session, source_instance->backend_factory, allocator, executor};
+    auto& source_instance = mf::ExtImageCaptureSourceV1::from_or_throw(source);
+    return std::make_shared<ExtForeignBufferSessionV1>(
+        client, std::move(child_instance), child_object_id, source_instance.backend_factory, allocator, executor);
 }
 }
 
-mf::ExtForeignBufferV1::ExtForeignBufferV1(wl_resource* resource) : mw::Buffer(resource, Version<1>())
+mf::ExtForeignBufferV1::ExtForeignBufferV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::BufferMiddleware> instance,
+    uint32_t object_id)
+    : mw::Buffer(std::move(client), std::move(instance), object_id)
 {
-}
-
-auto mf::ExtForeignBufferV1::from(wl_resource* resource) -> ExtForeignBufferV1*
-{
-    if (auto const buffer = mw::Buffer::from(resource))
-    {
-        return dynamic_cast<ExtForeignBufferV1*>(buffer);
-    }
-    return nullptr;
 }
 
 auto mf::ExtForeignBufferV1::content() const -> std::shared_ptr<mg::Buffer>
@@ -424,10 +405,13 @@ void mf::ExtForeignBufferV1::set_content(std::shared_ptr<mg::Buffer> buffer)
 }
 
 auto mf::create_ext_foreign_buffer_manager_v1(
-    wl_display* display,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtForeignBufferManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<WaylandExecutor> const& executor)
-    -> std::shared_ptr<mw::ForeignBufferManagerV1::Global>
+    std::shared_ptr<Executor> const& wayland_executor)
+    -> std::shared_ptr<mw::ExtForeignBufferManagerV1>
 {
-    return std::make_shared<ExtForeignBufferManagerV1Global>(display, allocator, executor);
+    return std::make_shared<ExtForeignBufferManagerV1>(
+        std::move(client), std::move(instance), object_id, allocator, wayland_executor);
 }

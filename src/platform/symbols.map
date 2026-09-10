@@ -63,9 +63,6 @@ MIR_PLATFORM_2.30 {
     mir::graphics::FramebufferDeleter::?FramebufferDeleter*;
     mir::graphics::FramebufferDeleter::FramebufferDeleter*;
     mir::graphics::FramebufferDeleter::operator*;
-    mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
-    mir::graphics::LinuxDmaBuf::buffer_from_resource*;
     mir::graphics::OverlappingOutputGroup::bounding_rectangle*;
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;

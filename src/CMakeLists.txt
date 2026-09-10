@@ -14,6 +14,11 @@ execute_process(
 
 # Add the core and platform implementations before exposing any private APIs
 add_subdirectory(core)
+
+# The Rust-backed Wayland library is a foundational dependency of the graphics
+# subproject (platforms and platform/), so it must be defined before them.
+add_subdirectory(server/frontend_wayland/wayland_rs)
+
 add_subdirectory(platforms/)
 
 # the src/include/... directories should be private to the implementation
