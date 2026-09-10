@@ -25,7 +25,6 @@
 #include "output_manager.h"
 #include "window_wl_surface_role.h"
 #include "input_method_common.h"
-#include <cstddef>
 #include <deque>
 #include <ranges>
 
@@ -329,7 +328,8 @@ private:
 
         void modifiers_map(struct wl_array *map) override
         {
-            change.pending_change.modifier_map = mw::WlArray<std::byte>(map);
+            auto const* const bytes = static_cast<std::uint8_t const*>(map->data);
+            change.pending_change.modifier_map = std::vector<std::uint8_t>(bytes, bytes + map->size);
             change.waiting_status = InputMethodV1ChangeWaitingStatus::none;
         }
 
