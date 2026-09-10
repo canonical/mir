@@ -1,0 +1,3 @@
+[merge "release-notes"]
+	name = Merge driver for release-artifact changelogs
+	driver = tools/merge_release_entries.py %O %A %B %P

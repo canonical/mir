@@ -255,7 +255,7 @@ jobs:
             in_target {
               # At next release section, print the collected buffers
               if ($0 ~ /^## Mir /) {
-                print "## Mir " next_version
+                print "## Mir " next_version "~dev"
                 print ""
                 print "- New upstream release " next_version
                 print ""
