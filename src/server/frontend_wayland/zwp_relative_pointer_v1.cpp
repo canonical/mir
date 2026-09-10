@@ -21,7 +21,7 @@
 #include <mir/shell/shell.h>
 #include <mir/shell/surface_specification.h>
 
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -98,7 +98,7 @@ mir::frontend::RelativePointerV1::RelativePointerV1(
     uint32_t object_id,
     WlPointer* pointer) :
     wayland::RelativePointerV1{std::move(client), std::move(instance), object_id},
-    pointer{mwrs::make_weak(pointer)}
+    pointer{mw::make_weak(pointer)}
 {
     if (pointer)
         pointer->set_relative_pointer(this);

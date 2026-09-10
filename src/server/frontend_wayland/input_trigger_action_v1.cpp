@@ -24,7 +24,7 @@
 #include <string>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 using ActivationToken = mf::InputTriggerRegistry::ActivationToken;
 using Action = mf::InputTriggerRegistry::Action;
@@ -35,14 +35,14 @@ namespace
 
 class InputTriggerActionV1 :
     public virtual Action,
-    public mwrs::ExtInputTriggerActionV1
+    public mw::ExtInputTriggerActionV1
 {
 public:
     InputTriggerActionV1(
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::ExtInputTriggerActionV1Middleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtInputTriggerActionV1Middleware> instance,
         uint32_t object_id) :
-        mwrs::ExtInputTriggerActionV1{std::move(client), std::move(instance), object_id}
+        mw::ExtInputTriggerActionV1{std::move(client), std::move(instance), object_id}
     {
     }
 
@@ -52,14 +52,14 @@ public:
 };
 
 // Used when a client provides a revoked token to call `send_unavailable_event`.
-class NullInputTriggerActionV1 : public mwrs::ExtInputTriggerActionV1
+class NullInputTriggerActionV1 : public mw::ExtInputTriggerActionV1
 {
 public:
     NullInputTriggerActionV1(
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::ExtInputTriggerActionV1Middleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtInputTriggerActionV1Middleware> instance,
         uint32_t object_id) :
-        mwrs::ExtInputTriggerActionV1{std::move(client), std::move(instance), object_id}
+        mw::ExtInputTriggerActionV1{std::move(client), std::move(instance), object_id}
     {
         send_unavailable_event();
     }
@@ -84,25 +84,25 @@ void InputTriggerActionV1::unavailable() const
 }
 
 mf::InputTriggerActionManagerV1::InputTriggerActionManagerV1(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ExtInputTriggerActionManagerV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtInputTriggerActionManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<ActionGroupManager> action_group_manager) :
-    mwrs::ExtInputTriggerActionManagerV1{std::move(client), std::move(instance), object_id},
+    mw::ExtInputTriggerActionManagerV1{std::move(client), std::move(instance), object_id},
     action_group_manager{std::move(action_group_manager)}
 {
 }
 
 auto mf::InputTriggerActionManagerV1::get_input_trigger_action(
     rust::String token,
-    rust::Box<mwrs::ExtInputTriggerActionV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtInputTriggerActionV1>
+    rust::Box<mw::ExtInputTriggerActionV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtInputTriggerActionV1>
 {
     std::string const token_str{token};
 
     if (action_group_manager->was_revoked(token_str))
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
             Error::invalid_token,
             "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) that's no longer valid",
@@ -122,7 +122,7 @@ auto mf::InputTriggerActionManagerV1::get_input_trigger_action(
     }
 
     // Token is not currently valid, nor was it previously revoked. It must be an invalid token.
-    throw mwrs::ProtocolError{
+    throw mw::ProtocolError{
         object_id(),
         Error::invalid_token,
         "ext_input_trigger_action_manager_v1.get_input_trigger_action: trying to use a token (%s) we never issued",

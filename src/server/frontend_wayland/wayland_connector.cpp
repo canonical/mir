@@ -60,7 +60,7 @@ namespace mc = mir::compositor;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mi = mir::input;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 void mf::WaylandExtensions::init(Context const& context)
 {
@@ -91,7 +91,7 @@ void mf::WaylandExtensions::run_builders(std::function<void(std::function<void()
 
 struct mf::WaylandConnector::ServerWrapper
 {
-    rust::Box<mwrs::WaylandServer> server;
+    rust::Box<mw::WaylandServer> server;
 };
 
 namespace
@@ -170,7 +170,7 @@ mf::WaylandConnector::WaylandConnector(
     std::vector<std::shared_ptr<mg::RenderingPlatform>> const& render_platforms,
     std::shared_ptr<input::CursorObserverMultiplexer> const& cursor_observer_multiplexer)
     : extension_filter{extension_filter},
-      server_wrapper{std::make_unique<ServerWrapper>(mwrs::create_wayland_server())},
+      server_wrapper{std::make_unique<ServerWrapper>(mw::create_wayland_server())},
       allocator{allocator},
       shell{shell},
       extensions{std::move(extensions_)},
@@ -178,12 +178,12 @@ mf::WaylandConnector::WaylandConnector(
 {
     auto& server = *server_wrapper->server;
 
-    registry = std::make_unique<mwrs::WaylandClientRegistry>();
+    registry = std::make_unique<mw::WaylandClientRegistry>();
 
     // The executor doubles as the server's WorkCallback. Ownership is handed to
     // WaylandServer::run() in start(); until then we keep a non-owning view so
     // the factory and output manager can queue work onto the event loop.
-    executor = std::make_shared<mwrs::WaylandExecutor>(server);
+    executor = std::make_shared<mw::WaylandExecutor>(server);
 
     output_manager = std::make_unique<OutputManager>(
         server,

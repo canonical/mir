@@ -25,7 +25,7 @@
 #include <mir/log.h>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -285,7 +285,7 @@ auto mf::create_wl_shell(
     WlSeat* seat,
     OutputManager* const output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
--> std::shared_ptr<mwrs::Shell>
+-> std::shared_ptr<mw::Shell>
 {
     return std::make_shared<mf::WlShell>(
         std::move(client),
@@ -299,9 +299,9 @@ auto mf::create_wl_shell(
 }
 
 auto mf::get_wl_shell_window(
-    mwrs::Weak<mwrs::ShellSurface> const& surface) -> std::shared_ptr<ms::Surface>
+    mw::Weak<mw::ShellSurface> const& surface) -> std::shared_ptr<ms::Surface>
 {
-    if (auto const shell_surface = mwrs::ShellSurface::from<WlShellSurface>(surface))
+    if (auto const shell_surface = mw::ShellSurface::from<WlShellSurface>(surface))
     {
         if (auto const scene_surface = shell_surface->scene_surface())
         {

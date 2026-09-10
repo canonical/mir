@@ -30,7 +30,7 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 using Trigger = mf::InputTriggerRegistry::Trigger;
 using ActionGroup = mf::InputTriggerRegistry::ActionGroup;
@@ -76,14 +76,14 @@ private:
     MirInputEventModifiers const allowed;
 };
 
-class KeyboardTrigger : public Trigger, public mwrs::ExtInputTriggerV1
+class KeyboardTrigger : public Trigger, public mw::ExtInputTriggerV1
 {
 public:
     KeyboardTrigger(
         InputTriggerModifiers modifiers,
         std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::ExtInputTriggerV1Middleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtInputTriggerV1Middleware> instance,
         uint32_t object_id);
 
     InputTriggerModifiers const modifiers;
@@ -93,7 +93,7 @@ public:
     // by the InputTriggerRegistry) and wayland::LifetimeTracker (via
     // ExtInputTriggerV1, used by the Rust backend). Disambiguate the inherited
     // destroyed_flag() to the wayland_rs one so wayland::Weak<> resolves it.
-    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mwrs::ExtInputTriggerV1::destroyed_flag(); }
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::ExtInputTriggerV1::destroyed_flag(); }
 
 private:
     virtual auto is_active() const -> bool override;
@@ -186,8 +186,8 @@ public:
         InputTriggerModifiers modifiers,
         uint32_t keysym,
         std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::ExtInputTriggerV1Middleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtInputTriggerV1Middleware> instance,
         uint32_t object_id);
 
     bool is_same_trigger(Trigger const* other) const override;
@@ -207,8 +207,8 @@ public:
         InputTriggerModifiers modifiers,
         uint32_t scancode,
         std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::ExtInputTriggerV1Middleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtInputTriggerV1Middleware> instance,
         uint32_t object_id);
 
     bool is_same_trigger(Trigger const* other) const override;
@@ -225,8 +225,8 @@ mf::KeyboardSymTrigger::KeyboardSymTrigger(
     InputTriggerModifiers modifiers,
     uint32_t keysym,
     std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ExtInputTriggerV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtInputTriggerV1Middleware> instance,
     uint32_t object_id) :
     KeyboardTrigger{modifiers, keyboard_state_tracker, std::move(client), std::move(instance), object_id},
     keysym{keysym}
@@ -257,8 +257,8 @@ mf::KeyboardCodeTrigger::KeyboardCodeTrigger(
     InputTriggerModifiers modifiers,
     uint32_t scancode,
     std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ExtInputTriggerV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtInputTriggerV1Middleware> instance,
     uint32_t object_id) :
     KeyboardTrigger{modifiers, keyboard_state_tracker, std::move(client), std::move(instance), object_id},
     scancode{scancode}
@@ -356,7 +356,7 @@ auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods) -> InputTrigge
 
 auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers
 {
-    using PM = mwrs::ExtInputTriggerRegistrationManagerV1::Modifiers;
+    using PM = mw::ExtInputTriggerRegistrationManagerV1::Modifiers;
 
     if (protocol_mods == 0 && !shift_adjustment)
         return InputTriggerModifiers{mir_input_event_modifier_none, mir_input_event_modifier_none};
@@ -470,26 +470,26 @@ bool InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers m
 KeyboardTrigger::KeyboardTrigger(
     InputTriggerModifiers modifiers,
     std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ExtInputTriggerV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtInputTriggerV1Middleware> instance,
     uint32_t object_id) :
-    mwrs::ExtInputTriggerV1{std::move(client), std::move(instance), object_id},
+    mw::ExtInputTriggerV1{std::move(client), std::move(instance), object_id},
     modifiers{modifiers},
     keyboard_state_tracker{keyboard_state_tracker}
 {
 }
 
-class InputTriggerActionControlV1 : public mwrs::ExtInputTriggerActionControlV1
+class InputTriggerActionControlV1 : public mw::ExtInputTriggerActionControlV1
 {
 public:
     InputTriggerActionControlV1(
         std::shared_ptr<ActionGroup> const& action_group,
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::ExtInputTriggerActionControlV1Middleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtInputTriggerActionControlV1Middleware> instance,
         uint32_t object_id);
 
-    void add_input_trigger_event(mwrs::Weak<mwrs::ExtInputTriggerV1> const& trigger) override;
-    void drop_input_trigger_event(mwrs::Weak<mwrs::ExtInputTriggerV1> const& trigger) override;
+    void add_input_trigger_event(mw::Weak<mw::ExtInputTriggerV1> const& trigger) override;
+    void drop_input_trigger_event(mw::Weak<mw::ExtInputTriggerV1> const& trigger) override;
 
     void cancel_and_destroy() override;
     void destroy() override;
@@ -500,17 +500,17 @@ private:
 
 InputTriggerActionControlV1::InputTriggerActionControlV1(
     std::shared_ptr<ActionGroup> const& action_group,
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ExtInputTriggerActionControlV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtInputTriggerActionControlV1Middleware> instance,
     uint32_t object_id) :
-    mwrs::ExtInputTriggerActionControlV1{std::move(client), std::move(instance), object_id},
+    mw::ExtInputTriggerActionControlV1{std::move(client), std::move(instance), object_id},
     action_group{action_group}
 {
 }
 
-void InputTriggerActionControlV1::add_input_trigger_event(mwrs::Weak<mwrs::ExtInputTriggerV1> const& trigger)
+void InputTriggerActionControlV1::add_input_trigger_event(mw::Weak<mw::ExtInputTriggerV1> const& trigger)
 {
-    if (auto* keyboard_trigger = mwrs::ExtInputTriggerV1::from<KeyboardTrigger>(trigger))
+    if (auto* keyboard_trigger = mw::ExtInputTriggerV1::from<KeyboardTrigger>(trigger))
     {
         keyboard_trigger->associate_with_action_group(action_group);
         return;
@@ -520,9 +520,9 @@ void InputTriggerActionControlV1::add_input_trigger_event(mwrs::Weak<mwrs::ExtIn
         "input_trigger_action_control_v1.add_input_trigger_event: Unsupported trigger type");
 }
 
-void InputTriggerActionControlV1::drop_input_trigger_event(mwrs::Weak<mwrs::ExtInputTriggerV1> const& trigger)
+void InputTriggerActionControlV1::drop_input_trigger_event(mw::Weak<mw::ExtInputTriggerV1> const& trigger)
 {
-    if (auto* keyboard_trigger = mwrs::ExtInputTriggerV1::from<KeyboardTrigger>(trigger))
+    if (auto* keyboard_trigger = mw::ExtInputTriggerV1::from<KeyboardTrigger>(trigger))
     {
         keyboard_trigger->unassociate_with_action_group(action_group);
         return;
@@ -543,13 +543,13 @@ void InputTriggerActionControlV1::destroy()
 }
 
 mf::InputTriggerRegistrationManagerV1::InputTriggerRegistrationManagerV1(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ExtInputTriggerRegistrationManagerV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtInputTriggerRegistrationManagerV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<ActionGroupManager> action_group_manager,
     std::shared_ptr<mf::InputTriggerRegistry> input_trigger_registry,
     std::shared_ptr<mf::KeyboardStateTracker> keyboard_state_tracker) :
-    mwrs::ExtInputTriggerRegistrationManagerV1{std::move(client), std::move(instance), object_id},
+    mw::ExtInputTriggerRegistrationManagerV1{std::move(client), std::move(instance), object_id},
     action_group_manager{std::move(action_group_manager)},
     input_trigger_registry{std::move(input_trigger_registry)},
     keyboard_state_tracker{std::move(keyboard_state_tracker)}
@@ -560,8 +560,8 @@ mf::InputTriggerRegistrationManagerV1::InputTriggerRegistrationManagerV1(
 // TODO: Store the description string
 auto mf::InputTriggerRegistrationManagerV1::get_action_control(
     rust::String,
-    rust::Box<mwrs::ExtInputTriggerActionControlV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtInputTriggerActionControlV1>
+    rust::Box<mw::ExtInputTriggerActionControlV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtInputTriggerActionControlV1>
 {
     auto const [token, action_group] = action_group_manager->create_new_action_group();
     auto const action_control = std::make_shared<InputTriggerActionControlV1>(
@@ -573,8 +573,8 @@ auto mf::InputTriggerRegistrationManagerV1::get_action_control(
 auto mf::InputTriggerRegistrationManagerV1::register_keyboard_sym_trigger(
     uint32_t modifiers,
     uint32_t keysym,
-    rust::Box<mwrs::ExtInputTriggerV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtInputTriggerV1>
+    rust::Box<mw::ExtInputTriggerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtInputTriggerV1>
 {
     auto const shift_adjustment = (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z);
     auto const protocol_modifiers = InputTriggerModifiers::from_protocol(modifiers, shift_adjustment);
@@ -605,8 +605,8 @@ auto mf::InputTriggerRegistrationManagerV1::register_keyboard_sym_trigger(
 auto mf::InputTriggerRegistrationManagerV1::register_keyboard_code_trigger(
     uint32_t modifiers,
     uint32_t keycode,
-    rust::Box<mwrs::ExtInputTriggerV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::ExtInputTriggerV1>
+    rust::Box<mw::ExtInputTriggerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtInputTriggerV1>
 {
     auto const protocol_modifiers = InputTriggerModifiers::from_protocol(modifiers);
     auto const keyboard_trigger = std::make_shared<mf::KeyboardCodeTrigger>(

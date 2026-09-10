@@ -27,11 +27,11 @@
 #include <cstring> // memcpy
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 mf::WlKeyboard::WlKeyboard(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::KeyboardMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::KeyboardMiddleware> instance,
     uint32_t object_id,
     WlSeat& seat)
     : Keyboard{std::move(client), std::move(instance), object_id},
@@ -46,7 +46,7 @@ void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
 
 void mf::WlKeyboard::focus_on(WlSurface* surface)
 {
-    if (mwrs::as_nullable_ptr(focused_surface) == surface)
+    if (mw::as_nullable_ptr(focused_surface) == surface)
     {
         return;
     }
@@ -77,7 +77,7 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         helper->refresh_modifiers();
     }
 
-    focused_surface = mwrs::make_weak(surface);
+    focused_surface = mw::make_weak(surface);
 }
 
 void mf::WlKeyboard::send_repeat_info(int32_t rate, int32_t delay)

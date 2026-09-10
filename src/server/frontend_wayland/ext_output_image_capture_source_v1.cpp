@@ -31,7 +31,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
 namespace
@@ -284,7 +284,7 @@ auto mf::ExtOutputImageCaptureSourceManagerV1::create_source(
     rust::Box<wayland::ExtImageCaptureSourceV1Middleware> child_instance,
     uint32_t child_object_id) -> std::shared_ptr<wayland::ExtImageCaptureSourceV1>
 {
-    auto& output_global = OutputGlobal::from_or_throw(mwrs::as_nullable_ptr(output));
+    auto& output_global = OutputGlobal::from_or_throw(mw::as_nullable_ptr(output));
     ExtImageCopyBackendFactory backend_factory =
         [output = mw::make_weak(&output_global), ctx = ctx](auto* session, bool overlay_cursor)
     {

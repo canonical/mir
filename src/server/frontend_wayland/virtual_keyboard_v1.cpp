@@ -37,7 +37,7 @@
 #include <boost/throw_exception.hpp>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace mi = mir::input;
 
 namespace
@@ -46,9 +46,9 @@ auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
 {
     switch (wayland_state)
     {
-    case mwrs::Keyboard::KeyState::pressed:
+    case mw::Keyboard::KeyState::pressed:
         return mir_keyboard_action_down;
-    case mwrs::Keyboard::KeyState::released:
+    case mw::Keyboard::KeyState::released:
         return mir_keyboard_action_up;
     default:
         // Protocol does not provide an appropriate error code, so throw a generic runtime_error. This will be expressed
@@ -60,7 +60,7 @@ auto mir_keyboard_action(uint32_t wayland_state) -> MirKeyboardAction
 
 auto load_keymap(uint32_t format, mir::Fd fd, size_t size) -> std::shared_ptr<mi::Keymap>
 {
-    if (format != mwrs::Keyboard::KeymapFormat::xkb_v1)
+    if (format != mw::Keyboard::KeymapFormat::xkb_v1)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("invalid keymap format " + std::to_string(format)));
     }

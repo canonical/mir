@@ -45,7 +45,7 @@
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace mev = mir::events;
 
 template<class T>
@@ -58,12 +58,12 @@ public:
     ListenerList(ListenerList const&) = delete;
     ListenerList& operator=(ListenerList const&) = delete;
 
-    void register_listener(mwrs::Client* client, T* listener)
+    void register_listener(mw::Client* client, T* listener)
     {
         listeners[client].push_back(listener);
     }
 
-    void unregister_listener(mwrs::Client* client, T const* listener)
+    void unregister_listener(mw::Client* client, T const* listener)
     {
         std::vector<T*>& client_listeners = listeners[client];
         client_listeners.erase(
@@ -76,7 +76,7 @@ public:
             listeners.erase(client);
     }
 
-    void for_each(mwrs::Client* client, std::function<void(T*)> func)
+    void for_each(mw::Client* client, std::function<void(T*)> func)
     {
         for (auto listener: listeners[client])
             func(listener);
@@ -241,24 +241,24 @@ private:
     ConsumedKeyTracker consumed_key_tracker;
 };
 
-class mf::WlSeat::Instance : public mwrs::Seat
+class mf::WlSeat::Instance : public mw::Seat
 {
 public:
     Instance(
-        std::shared_ptr<mwrs::Client> client,
-        rust::Box<mwrs::SeatMiddleware> instance,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::SeatMiddleware> instance,
         uint32_t object_id,
         mf::WlSeat* seat);
 
     mf::WlSeat* const seat;
 
 private:
-    auto get_pointer(rust::Box<mwrs::PointerMiddleware> child_instance, uint32_t child_object_id)
-        -> std::shared_ptr<mwrs::Pointer> override;
-    auto get_keyboard(rust::Box<mwrs::KeyboardMiddleware> child_instance, uint32_t child_object_id)
-        -> std::shared_ptr<mwrs::Keyboard> override;
-    auto get_touch(rust::Box<mwrs::TouchMiddleware> child_instance, uint32_t child_object_id)
-        -> std::shared_ptr<mwrs::Touch> override;
+    auto get_pointer(rust::Box<mw::PointerMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::Pointer> override;
+    auto get_keyboard(rust::Box<mw::KeyboardMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::Keyboard> override;
+    auto get_touch(rust::Box<mw::TouchMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::Touch> override;
 };
 
 mf::WlSeat::WlSeat(
@@ -304,31 +304,31 @@ mf::WlSeat::~WlSeat()
     }
 }
 
-auto mf::WlSeat::from(mwrs::Weak<mwrs::Seat> const& seat) -> WlSeat*
+auto mf::WlSeat::from(mw::Weak<mw::Seat> const& seat) -> WlSeat*
 {
-    auto const instance = mwrs::Seat::from<mf::WlSeat::Instance>(seat);
+    auto const instance = mw::Seat::from<mf::WlSeat::Instance>(seat);
     return instance ? instance->seat : nullptr;
 }
 
 auto mf::WlSeat::create_instance(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::SeatMiddleware> instance,
-    uint32_t object_id) -> std::shared_ptr<mwrs::Seat>
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::SeatMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<mw::Seat>
 {
     return std::make_shared<Instance>(std::move(client), std::move(instance), object_id, this);
 }
 
-void mf::WlSeat::for_each_listener(mwrs::Client* client, std::function<void(PointerEventDispatcher*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(PointerEventDispatcher*)> func)
 {
     pointer_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::for_each_listener(mwrs::Client* client, std::function<void(WlKeyboard*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlKeyboard*)> func)
 {
     keyboard_listeners->for_each(client, func);
 }
 
-void mf::WlSeat::for_each_listener(mwrs::Client* client, std::function<void(WlTouch*)> func)
+void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(WlTouch*)> func)
 {
     touch_listeners->for_each(client, func);
 }
@@ -364,7 +364,7 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
         focused_surface.value().remove_destroy_listener(focused_surface_destroy_listener_id);
     }
     focused_client = new_client;
-    focused_surface = mwrs::make_weak(new_surface);
+    focused_surface = mw::make_weak(new_surface);
     if (new_surface)
     {
         // This listener will be removed when either the focus changes or the seat is destroyed
@@ -388,11 +388,11 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 }
 
 mf::WlSeat::Instance::Instance(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::SeatMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::SeatMiddleware> instance,
     uint32_t object_id,
     mf::WlSeat* seat)
-    : mwrs::Seat(std::move(client), std::move(instance), object_id),
+    : mw::Seat(std::move(client), std::move(instance), object_id),
       seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
@@ -401,8 +401,8 @@ mf::WlSeat::Instance::Instance(
 }
 
 auto mf::WlSeat::Instance::get_pointer(
-    rust::Box<mwrs::PointerMiddleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::Pointer>
+    rust::Box<mw::PointerMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Pointer>
 {
     auto pointer = std::make_shared<WlPointer>(client, std::move(child_instance), child_object_id);
     auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer.get());
@@ -417,8 +417,8 @@ auto mf::WlSeat::Instance::get_pointer(
 }
 
 auto mf::WlSeat::Instance::get_keyboard(
-    rust::Box<mwrs::KeyboardMiddleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::Keyboard>
+    rust::Box<mw::KeyboardMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Keyboard>
 {
     auto keyboard = std::make_shared<WlKeyboard>(client, std::move(child_instance), child_object_id, *seat);
 
@@ -432,8 +432,8 @@ auto mf::WlSeat::Instance::get_keyboard(
 }
 
 auto mf::WlSeat::Instance::get_touch(
-    rust::Box<mwrs::TouchMiddleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::Touch>
+    rust::Box<mw::TouchMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Touch>
 {
     auto touch = std::make_shared<WlTouch>(client, std::move(child_instance), child_object_id, seat->clock);
     seat->touch_listeners->register_listener(client.get(), touch.get());
@@ -445,12 +445,12 @@ auto mf::WlSeat::Instance::get_touch(
     return touch;
 }
 
-void mf::WlSeat::add_focus_listener(mwrs::Client* client, FocusListener* listener)
+void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->register_listener(client, listener);
     if (focused_client == client)
     {
-        listener->focus_on(mwrs::as_nullable_ptr(focused_surface));
+        listener->focus_on(mw::as_nullable_ptr(focused_surface));
     }
     else
     {
@@ -458,7 +458,7 @@ void mf::WlSeat::add_focus_listener(mwrs::Client* client, FocusListener* listene
     }
 }
 
-void mf::WlSeat::remove_focus_listener(mwrs::Client* client, FocusListener* listener)
+void mf::WlSeat::remove_focus_listener(mw::Client* client, FocusListener* listener)
 {
     focus_listeners->unregister_listener(client, listener);
 }

@@ -20,13 +20,13 @@
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 mf::WlRegion::WlRegion(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::RegionMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::RegionMiddleware> instance,
     uint32_t object_id)
-    : mwrs::Region(std::move(client), std::move(instance), object_id)
+    : mw::Region(std::move(client), std::move(instance), object_id)
 {}
 
 mf::WlRegion::~WlRegion()

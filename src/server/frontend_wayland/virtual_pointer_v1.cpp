@@ -36,7 +36,7 @@
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace mi = mir::input;
 namespace mg = mir::graphics;
 namespace mev = mir::events;
@@ -186,7 +186,7 @@ mf::VirtualPointerV1::VirtualPointerV1(
       ctx{ctx},
       pointer_device{std::make_shared<mi::VirtualInputDevice>("virtual-pointer", mi::DeviceCapability::pointer)},
       output{ctx->output_manager->output_for(
-          OutputManager::output_id_for(output ? mwrs::as_nullable_ptr(output.value()) : nullptr).value_or(
+          OutputManager::output_id_for(output ? mw::as_nullable_ptr(output.value()) : nullptr).value_or(
               mg::DisplayConfigurationOutputId{})).value_or(nullptr)}
 {
     update_absolute_motion_area();
@@ -215,7 +215,7 @@ void mf::VirtualPointerV1::motion_absolute(uint32_t time, uint32_t x, uint32_t y
     if (x > x_extent || y > y_extent)
     {
         // FIXME: Specific error proposed in https://gitlab.freedesktop.org/wlroots/wlr-protocols/-/merge_requests/143
-        throw mwrs::ProtocolError{object_id(), 0, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent};
+        throw mw::ProtocolError{object_id(), 0, "Absolute motion coordinates %u,%u out of bounds %u,%u", x, y, x_extent, y_extent};
     }
 
     pending.timestamp = std::chrono::milliseconds{time};
@@ -238,16 +238,16 @@ void mf::VirtualPointerV1::button(uint32_t time, uint32_t button, uint32_t state
     {
         switch (state)
         {
-        case mwrs::Pointer::ButtonState::pressed:
+        case mw::Pointer::ButtonState::pressed:
             pending.buttons_pressed |= mir_button.value();
             break;
 
-        case mwrs::Pointer::ButtonState::released:
+        case mw::Pointer::ButtonState::released:
             pending.buttons_pressed &= ~mir_button.value();
             break;
 
         default:
-            throw mwrs::ProtocolError{object_id(), 0, "Invalid button state %d", state};
+            throw mw::ProtocolError{object_id(), 0, "Invalid button state %d", state};
         }
     }
     else
@@ -262,16 +262,16 @@ void mf::VirtualPointerV1::axis(uint32_t time, uint32_t axis, double value)
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mwrs::Pointer::Axis::horizontal_scroll:
+    case mw::Pointer::Axis::horizontal_scroll:
         pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
-    case mwrs::Pointer::Axis::vertical_scroll:
+    case mw::Pointer::Axis::vertical_scroll:
         pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
     default:
-        throw mwrs::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
+        throw mw::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 
@@ -343,12 +343,12 @@ void mf::VirtualPointerV1::axis_source(uint32_t axis_source)
 {
     switch (axis_source)
     {
-    case mwrs::Pointer::AxisSource::wheel: pending.axis_source = mir_pointer_axis_source_wheel; break;
-    case mwrs::Pointer::AxisSource::finger: pending.axis_source = mir_pointer_axis_source_finger; break;
-    case mwrs::Pointer::AxisSource::continuous: pending.axis_source = mir_pointer_axis_source_continuous; break;
-    case mwrs::Pointer::AxisSource::wheel_tilt: pending.axis_source = mir_pointer_axis_source_wheel_tilt; break;
+    case mw::Pointer::AxisSource::wheel: pending.axis_source = mir_pointer_axis_source_wheel; break;
+    case mw::Pointer::AxisSource::finger: pending.axis_source = mir_pointer_axis_source_finger; break;
+    case mw::Pointer::AxisSource::continuous: pending.axis_source = mir_pointer_axis_source_continuous; break;
+    case mw::Pointer::AxisSource::wheel_tilt: pending.axis_source = mir_pointer_axis_source_wheel_tilt; break;
     default:
-        throw mwrs::ProtocolError{object_id(), Error::invalid_axis_source, "Unknown axis source %d", axis_source};
+        throw mw::ProtocolError{object_id(), Error::invalid_axis_source, "Unknown axis source %d", axis_source};
     }
 }
 
@@ -357,10 +357,10 @@ void mf::VirtualPointerV1::axis_stop(uint32_t time, uint32_t axis)
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mwrs::Pointer::Axis::horizontal_scroll: pending.scroll_h.stop = true; break;
-    case mwrs::Pointer::Axis::vertical_scroll: pending.scroll_v.stop = true; break;
+    case mw::Pointer::Axis::horizontal_scroll: pending.scroll_h.stop = true; break;
+    case mw::Pointer::Axis::vertical_scroll: pending.scroll_v.stop = true; break;
     default:
-        throw mwrs::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
+        throw mw::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 
@@ -369,20 +369,20 @@ void mf::VirtualPointerV1::axis_discrete(uint32_t time, uint32_t axis, double va
     pending.timestamp = std::chrono::milliseconds{time};
     switch (axis)
     {
-    case mwrs::Pointer::Axis::horizontal_scroll:
+    case mw::Pointer::Axis::horizontal_scroll:
         pending.scroll_h.discrete += geom::DeltaX{discrete};
         pending.scroll_h.value120 += geom::DeltaX{discrete * 120};
         pending.scroll_h.precise += geom::DeltaXF{value};
         break;
 
-    case mwrs::Pointer::Axis::vertical_scroll:
+    case mw::Pointer::Axis::vertical_scroll:
         pending.scroll_v.discrete += geom::DeltaY{discrete};
         pending.scroll_v.value120 += geom::DeltaY{discrete * 120};
         pending.scroll_v.precise += geom::DeltaYF{value};
         break;
 
     default:
-        throw mwrs::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
+        throw mw::ProtocolError{object_id(), Error::invalid_axis, "Unknown axis %d", axis};
     }
 }
 

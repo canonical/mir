@@ -35,11 +35,11 @@
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace mrs = mir::renderer::software;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 mf::ShmBuffer::ShmBuffer(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::BufferMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::BufferMiddleware> instance,
     uint32_t object_id,
     std::shared_ptr<mir::Executor> wayland_executor,
     std::shared_ptr<shm::RWMappableRange> data,
@@ -47,7 +47,7 @@ mf::ShmBuffer::ShmBuffer(
     geometry::Stride stride,
     graphics::DRMFormat format)
     : Buffer{std::move(client), std::move(instance), object_id},
-      weak_me{mwrs::make_weak(this)},
+      weak_me{mw::make_weak(this)},
       wayland_executor{std::move(wayland_executor)},
       data_{std::move(data)},
       size_{std::move(size)},
@@ -62,7 +62,7 @@ class ErrorNotifyingRWMappableBuffer : public mrs::RWMappable
 {
 public:
     ErrorNotifyingRWMappableBuffer(
-        mwrs::Weak<mf::ShmBuffer> buffer,
+        mw::Weak<mf::ShmBuffer> buffer,
         std::shared_ptr<mir::Executor> wayland_executor,
         std::shared_ptr<mir::shm::RWMappableRange> data,
         mir::geometry::Size size,
@@ -78,7 +78,7 @@ public:
 
     void notify_access_error() const;
 private:
-    mwrs::Weak<mf::ShmBuffer> const weak_buffer;
+    mw::Weak<mf::ShmBuffer> const weak_buffer;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::shm::RWMappableRange> const data;
     mir::geometry::Size const size_;
@@ -137,7 +137,7 @@ private:
 };
 
 ErrorNotifyingRWMappableBuffer::ErrorNotifyingRWMappableBuffer(
-    mwrs::Weak<mf::ShmBuffer> buffer,
+    mw::Weak<mf::ShmBuffer> buffer,
     std::shared_ptr<mir::Executor> wayland_executor,
     std::shared_ptr<mir::shm::RWMappableRange> data,
     mir::geometry::Size size,
@@ -160,7 +160,7 @@ void ErrorNotifyingRWMappableBuffer::notify_access_error() const
             if (buffer)
             {
                 buffer.value().post_error(
-                    mwrs::Shm::Error::invalid_fd,
+                    mw::Shm::Error::invalid_fd,
                     "Error accessing SHM buffer");
             }
             else
@@ -211,8 +211,8 @@ auto mf::ShmBuffer::data() -> std::shared_ptr<mrs::RWMappable>
 }
 
 mf::ShmPool::ShmPool(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ShmPoolMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ShmPoolMiddleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats,
@@ -265,28 +265,28 @@ auto mf::ShmPool::create_buffer(
     int32_t width, int32_t height,
     int32_t stride,
     uint32_t format,
-    rust::Box<mwrs::BufferMiddleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::Buffer>
+    rust::Box<mw::BufferMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Buffer>
 {
     if (offset < 0)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Invalid SHM buffer offset %d", offset};
     }
     if (width <= 0 || height <= 0)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Invalid SHM buffer size %dx%d", width, height};
     }
     if (stride <= 0)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Invalid SHM buffer stride %d", stride};
     }
 
@@ -297,18 +297,18 @@ auto mf::ShmPool::create_buffer(
         [&drm_format](auto supported) { return supported == drm_format; });
     if (!format_supported)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_format,
+            mw::Shm::Error::invalid_format,
             "Invalid SHM format %u", format};
     }
 
     auto const format_info = drm_format.info();
     if (!format_info)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_format,
+            mw::Shm::Error::invalid_format,
             "Missing pixel-size information for SHM format requested"};
     }
     // Casting to stop the below calculations being unsigned and then comparing against signed width/height.
@@ -319,18 +319,18 @@ auto mf::ShmPool::create_buffer(
     auto const max_height = max_size / stride;
     if (width > max_width || height > max_height)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Requested SHM buffer size %dx%d (stride %d) is too large", width, height, stride};
     }
 
     auto const min_stride = width * bytes_per_pixel;
     if (stride < min_stride)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Invalid stride %d (too small for width %d. Did you specify stride in pixels?)",
             stride, width};
     }
@@ -346,9 +346,9 @@ auto mf::ShmPool::create_buffer(
         /* get_*_range throws a logic error when attempting to access outside the backing
          * store. This should be translated into a ProtocolError.
          */
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Attempt to create_buffer outside the range of the backing store"};
     }
 
@@ -367,9 +367,9 @@ void mf::ShmPool::resize(int32_t new_size)
 {
     if (new_size < 0)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Invalid new size %d", new_size};
     }
 
@@ -378,9 +378,9 @@ void mf::ShmPool::resize(int32_t new_size)
         switch(result.error())
         {
         case shm::ResizeError::invalid_size:
-            throw mwrs::ProtocolError{
+            throw mw::ProtocolError{
                 object_id(),
-                mwrs::Shm::Error::invalid_stride,
+                mw::Shm::Error::invalid_stride,
                 "New size %d is smaller than the current size of the backing store", new_size};
             break;
         }
@@ -388,8 +388,8 @@ void mf::ShmPool::resize(int32_t new_size)
 }
 
 mf::Shm::Shm(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::ShmMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ShmMiddleware> instance,
     uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<std::vector<mg::DRMFormat> const> supported_formats)
@@ -406,14 +406,14 @@ mf::Shm::Shm(
 auto mf::Shm::create_pool(
     int32_t fd,
     int32_t size,
-    rust::Box<mwrs::ShmPoolMiddleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::ShmPool>
+    rust::Box<mw::ShmPoolMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ShmPool>
 {
     if (size <= 0)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_stride,
+            mw::Shm::Error::invalid_stride,
             "Invalid requested size"};
     }
 
@@ -425,9 +425,9 @@ auto mf::Shm::create_pool(
     mir::Fd owned_fd{::dup(fd)};
     if (owned_fd == mir::Fd::invalid)
     {
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_fd,
+            mw::Shm::Error::invalid_fd,
             "Failed to dup() client-provided SHM pool fd"};
     }
 
@@ -446,9 +446,9 @@ auto mf::Shm::create_pool(
     {
         // The pool is backed by mmap()ing the client-provided file descriptor. Per the wl_shm spec a
         // failure to mmap the file descriptor must be reported with the invalid_fd error.
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(),
-            mwrs::Shm::Error::invalid_fd,
+            mw::Shm::Error::invalid_fd,
             "%s",
             err.what()};
     }

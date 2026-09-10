@@ -37,12 +37,12 @@
 
 namespace mf = mir::frontend;
 namespace mg = mir::graphics;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
 mf::LinuxDmaBufBuffer::LinuxDmaBufBuffer(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::BufferMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::BufferMiddleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider,
     geom::Size size,
@@ -82,7 +82,7 @@ auto mf::LinuxDmaBufBuffer::size() const -> geom::Size
 
 auto mf::LinuxDmaBufBuffer::layout() const -> mg::gl::Texture::Layout
 {
-    if (flags & mwrs::LinuxBufferParamsV1::Flags::y_invert)
+    if (flags & mw::LinuxBufferParamsV1::Flags::y_invert)
         return mg::gl::Texture::Layout::TopRowFirst;
     return mg::gl::Texture::Layout::GL;
 }
@@ -103,8 +103,8 @@ auto mf::LinuxDmaBufBuffer::planes() const -> std::vector<DmaBufPlaneInfo> const
 }
 
 mf::LinuxBufferParamsV1::LinuxBufferParamsV1(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::LinuxBufferParamsV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::LinuxBufferParamsV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
     : wayland::LinuxBufferParamsV1(std::move(client), std::move(instance), object_id),
@@ -126,17 +126,17 @@ void mf::LinuxBufferParamsV1::add(
     mir::Fd owned_fd{::dup(fd)};
 
     if (consumed)
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::already_used, "Params already used to create a buffer"};
 
     if (plane_idx >= planes.size())
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::plane_idx,
             "Plane index %u higher than maximum number of planes, %zu",
             plane_idx, planes.size()};
 
     if (planes[plane_idx].dma_buf != mir::Fd::invalid)
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::plane_set, "Plane %u already has a dmabuf", plane_idx};
 
     planes[plane_idx].dma_buf = std::move(owned_fd);
@@ -147,7 +147,7 @@ void mf::LinuxBufferParamsV1::add(
     if (modifier)
     {
         if (*modifier != new_modifier)
-            throw mwrs::ProtocolError{
+            throw mw::ProtocolError{
                 object_id(), Error::invalid_format,
                 "Modifier for plane %u doesn't match previously set modifier -"
                 " all planes must use the same modifier", plane_idx};
@@ -161,7 +161,7 @@ void mf::LinuxBufferParamsV1::add(
 auto mf::LinuxBufferParamsV1::validate_and_collect_planes() -> std::vector<mf::DmaBufPlaneInfo>
 {
     if (consumed)
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::already_used, "Params already used to create a buffer"};
 
     auto const plane_count = std::count_if(
@@ -169,13 +169,13 @@ auto mf::LinuxBufferParamsV1::validate_and_collect_planes() -> std::vector<mf::D
         [](auto const& plane) { return plane.dma_buf != mir::Fd::invalid; });
 
     if (plane_count == 0)
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::incomplete, "No dmabuf has been added to the params"};
 
     for (auto i = 0; i != plane_count; ++i)
     {
         if (planes[i].dma_buf == mir::Fd::invalid)
-            throw mwrs::ProtocolError{
+            throw mw::ProtocolError{
                 object_id(), Error::incomplete, "Missing dmabuf for plane %u", i};
     }
 
@@ -186,12 +186,12 @@ void mf::LinuxBufferParamsV1::validate_params(
     int32_t width, int32_t height, uint32_t format, uint32_t /*flags*/)
 {
     if (width < 1 || height < 1)
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::invalid_dimensions,
             "Width %i or height %i invalid; both must be >= 1!", width, height};
 
     if (!provider || !provider->is_importable(mg::DRMFormat{format}, modifier.value()))
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::invalid_format,
             "Client requested unsupported format/modifier combination %s/%s",
             mg::DRMFormat{format}.name(),
@@ -208,10 +208,10 @@ void mf::LinuxBufferParamsV1::create(
     mg::DRMFormat const drm_format{format};
     std::shared_ptr<LinuxDmaBufBuffer> created;
     // Ownership of the newly-created wl_buffer passes to the Rust server.
-    mwrs::create_wl_buffer(
+    mw::create_wl_buffer(
         *client->raw_client(), 1,
-        [&](rust::Box<mwrs::BufferMiddleware> box, uint32_t buffer_object_id)
-            -> std::shared_ptr<mwrs::Buffer>
+        [&](rust::Box<mw::BufferMiddleware> box, uint32_t buffer_object_id)
+            -> std::shared_ptr<mw::Buffer>
         {
             created = std::make_shared<LinuxDmaBufBuffer>(
                 client, std::move(box), buffer_object_id, provider,
@@ -237,8 +237,8 @@ void mf::LinuxBufferParamsV1::create(
 
 auto mf::LinuxBufferParamsV1::create_immed(
     int32_t width, int32_t height, uint32_t format, uint32_t flags,
-    rust::Box<mwrs::BufferMiddleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::Buffer>
+    rust::Box<mw::BufferMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Buffer>
 {
     auto plane_infos = validate_and_collect_planes();
     validate_params(width, height, format, flags);
@@ -264,7 +264,7 @@ auto mf::LinuxBufferParamsV1::create_immed(
          * and not disconnecting the client. Both Weston and GNOME Shell choose to
          * disconnect; follow their lead.
          */
-        throw mwrs::ProtocolError{
+        throw mw::ProtocolError{
             object_id(), Error::invalid_wl_buffer, "Failed to import dmabuf: %s", err.what()};
     }
 
@@ -272,8 +272,8 @@ auto mf::LinuxBufferParamsV1::create_immed(
 }
 
 mf::LinuxDmabufFeedbackV1::LinuxDmabufFeedbackV1(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::LinuxDmabufFeedbackV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::LinuxDmabufFeedbackV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
     : wayland::LinuxDmabufFeedbackV1(std::move(client), std::move(instance), object_id)
@@ -337,8 +337,8 @@ mf::LinuxDmabufFeedbackV1::LinuxDmabufFeedbackV1(
 }
 
 mf::LinuxDmabufV1::LinuxDmabufV1(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::LinuxDmabufV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::LinuxDmabufV1Middleware> instance,
     uint32_t object_id,
     std::shared_ptr<mg::DMABufEGLProvider> provider)
     : wayland::LinuxDmabufV1(std::move(client), std::move(instance), object_id),
@@ -367,25 +367,25 @@ void mf::LinuxDmabufV1::send_formats()
 }
 
 auto mf::LinuxDmabufV1::create_params(
-    rust::Box<mwrs::LinuxBufferParamsV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::LinuxBufferParamsV1>
+    rust::Box<mw::LinuxBufferParamsV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::LinuxBufferParamsV1>
 {
     return std::make_shared<LinuxBufferParamsV1>(
         client, std::move(child_instance), child_object_id, provider);
 }
 
 auto mf::LinuxDmabufV1::get_default_feedback(
-    rust::Box<mwrs::LinuxDmabufFeedbackV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::LinuxDmabufFeedbackV1>
+    rust::Box<mw::LinuxDmabufFeedbackV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::LinuxDmabufFeedbackV1>
 {
     return std::make_shared<LinuxDmabufFeedbackV1>(
         client, std::move(child_instance), child_object_id, provider);
 }
 
 auto mf::LinuxDmabufV1::get_surface_feedback(
-    mwrs::Weak<mwrs::Surface> const& /*surface*/,
-    rust::Box<mwrs::LinuxDmabufFeedbackV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::LinuxDmabufFeedbackV1>
+    mw::Weak<mw::Surface> const& /*surface*/,
+    rust::Box<mw::LinuxDmabufFeedbackV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::LinuxDmabufFeedbackV1>
 {
     // We have the same feedback regardless of surface.
     return std::make_shared<LinuxDmabufFeedbackV1>(

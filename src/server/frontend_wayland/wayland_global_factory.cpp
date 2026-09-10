@@ -67,16 +67,16 @@
 #include <string>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace mg = mir::graphics;
 
 mf::WaylandGlobalFactory::WaylandGlobalFactory(
-    mwrs::WaylandClientRegistry& registry,
+    mw::WaylandClientRegistry& registry,
     WaylandProtocolExtensionFilter extension_filter,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<Executor> frame_callback_executor,
     std::shared_ptr<mg::GraphicBufferAllocator> allocator,
-    mwrs::WaylandServer& server,
+    mw::WaylandServer& server,
     std::shared_ptr<std::vector<std::shared_ptr<mg::DRMRenderingProvider>> const> drm_providers,
     std::shared_ptr<scene::IdleHub> idle_hub,
     std::shared_ptr<DecorationStrategy> decoration_strategy,
@@ -165,7 +165,7 @@ mf::WaylandGlobalFactory::WaylandGlobalFactory(
 {
 }
 
-auto mf::WaylandGlobalFactory::can_view(rust::Str interface_name, rust::Box<mwrs::WaylandClientId> client_id) -> bool
+auto mf::WaylandGlobalFactory::can_view(rust::Str interface_name, rust::Box<mw::WaylandClientId> client_id) -> bool
 {
     auto const client = registry.from(client_id);
     if (!client)

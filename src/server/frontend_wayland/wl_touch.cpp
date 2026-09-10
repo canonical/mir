@@ -26,12 +26,12 @@
 #include <mir/time/clock.h>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 
 mf::WlTouch::WlTouch(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::TouchMiddleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::TouchMiddleware> instance,
     uint32_t object_id,
     std::shared_ptr<time::Clock> const& clock)
     : Touch(std::move(client), std::move(instance), object_id),
@@ -111,7 +111,7 @@ void mf::WlTouch::down(
             up(serial, timestamp, touch_id);
             maybe_frame();
         });
-    touch_id_to_surface[touch_id] = {mwrs::make_weak(target_surface), listener_id};
+    touch_id_to_surface[touch_id] = {mw::make_weak(target_surface), listener_id};
 
     send_down_event(
         serial,

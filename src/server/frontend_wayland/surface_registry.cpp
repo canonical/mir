@@ -20,10 +20,10 @@
 #include "weak.h"
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 void mf::SurfaceRegistry::add_surface(
-    std::shared_ptr<input::Surface const> const& surf, mwrs::Weak<mf::WlSurface> const& wl_surf)
+    std::shared_ptr<input::Surface const> const& surf, mw::Weak<mf::WlSurface> const& wl_surf)
 {
     scene_surface_to_wayland_surface.insert({surf, wl_surf});
 
@@ -49,7 +49,7 @@ void mf::SurfaceRegistry::remove_surface(std::shared_ptr<input::Surface const> c
 }
 
 auto mf::SurfaceRegistry::lookup_wayland_surface(std::shared_ptr<input::Surface const> const& surf)
-    -> std::optional<mwrs::Weak<mf::WlSurface>>
+    -> std::optional<mw::Weak<mf::WlSurface>>
 {
     if (auto const iter = scene_surface_to_wayland_surface.find(surf); iter != scene_surface_to_wayland_surface.end())
     {

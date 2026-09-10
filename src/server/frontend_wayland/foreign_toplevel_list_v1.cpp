@@ -35,7 +35,7 @@
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -200,7 +200,7 @@ mf::ForeignSceneObserver::ForeignSceneObserver(
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
     std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
     : wayland_executor{wayland_executor},
-      manager{mwrs::make_weak(manager)},
+      manager{mw::make_weak(manager)},
       desktop_file_manager{desktop_file_manager},
       id_map{id_map}
 {
@@ -357,7 +357,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             ExtForeignToplevelHandleV1* handle_ptr = nullptr;
             // Remember Wayland objects manage their own lifetime: ownership of
             // the returned handle passes to the Rust server.
-            mwrs::create_ext_foreign_toplevel_handle_v1(
+            mw::create_ext_foreign_toplevel_handle_v1(
                 *list.client->raw_client(),
                 list.get_box()->version(),
                 [&](rust::Box<wayland::ExtForeignToplevelHandleV1Middleware> box, uint32_t object_id)
@@ -368,7 +368,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
                     handle_ptr = created.get();
                     return created;
                 });
-            handle = mwrs::make_weak(handle_ptr);
+            handle = mw::make_weak(handle_ptr);
 
             list.send_toplevel_event(handle_ptr->get_box());
             handle_ptr->send_identifier_event(toplevel_id);

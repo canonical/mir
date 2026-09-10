@@ -28,22 +28,22 @@ namespace mf = mir::frontend;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 namespace
 {
-class XdgOutputV1 : public mwrs::XdgOutputV1, public mf::OutputConfigListener
+class XdgOutputV1 : public mw::XdgOutputV1, public mf::OutputConfigListener
 {
 public:
     XdgOutputV1(
-        std::shared_ptr<mwrs::Client> const& client,
-        rust::Box<mwrs::XdgOutputV1Middleware> instance,
+        std::shared_ptr<mw::Client> const& client,
+        rust::Box<mw::XdgOutputV1Middleware> instance,
         uint32_t object_id,
         mf::OutputGlobal& output_global,
-        mwrs::Output* wl_output);
+        mw::Output* wl_output);
     ~XdgOutputV1();
 
-    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mwrs::XdgOutputV1::destroyed_flag(); }
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::XdgOutputV1::destroyed_flag(); }
 
 private:
     auto output_config_changed(mg::DisplayConfigurationOutput const& config) -> bool override;
@@ -55,12 +55,12 @@ private:
 };
 
 XdgOutputV1::XdgOutputV1(
-    std::shared_ptr<mwrs::Client> const& client,
-    rust::Box<mwrs::XdgOutputV1Middleware> instance,
+    std::shared_ptr<mw::Client> const& client,
+    rust::Box<mw::XdgOutputV1Middleware> instance,
     uint32_t object_id,
     mf::OutputGlobal& output_global,
-    mwrs::Output* wl_output)
-    : mwrs::XdgOutputV1{client, std::move(instance), object_id},
+    mw::Output* wl_output)
+    : mw::XdgOutputV1{client, std::move(instance), object_id},
       geometry_scale{client->output_geometry_scale()},
       output_global{mw::make_weak(&output_global)}
 {
@@ -126,19 +126,19 @@ auto XdgOutputV1::output_config_changed(mg::DisplayConfigurationOutput const& co
 }
 
 mf::XdgOutputManagerV1::XdgOutputManagerV1(
-    std::shared_ptr<mwrs::Client> client,
-    rust::Box<mwrs::XdgOutputManagerV1Middleware> instance,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::XdgOutputManagerV1Middleware> instance,
     uint32_t object_id)
     : wayland::XdgOutputManagerV1{std::move(client), std::move(instance), object_id}
 {
 }
 
 auto mf::XdgOutputManagerV1::get_xdg_output(
-    mwrs::Weak<mwrs::Output> const& output,
-    rust::Box<mwrs::XdgOutputV1Middleware> child_instance,
-    uint32_t child_object_id) -> std::shared_ptr<mwrs::XdgOutputV1>
+    mw::Weak<mw::Output> const& output,
+    rust::Box<mw::XdgOutputV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::XdgOutputV1>
 {
-    auto* const wl_output = mwrs::Output::from<mwrs::Output>(output);
+    auto* const wl_output = mw::Output::from<mw::Output>(output);
     auto& output_global = OutputGlobal::from_or_throw(wl_output);
     return std::make_shared<XdgOutputV1>(client, std::move(child_instance), child_object_id, output_global, wl_output);
 }

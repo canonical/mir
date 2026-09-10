@@ -50,7 +50,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 
 namespace mir
 {
@@ -225,7 +225,7 @@ mf::ForeignSceneObserver::ForeignSceneObserver(
     ForeignToplevelManagerV1* manager,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
     : wayland_executor{wayland_executor},
-      manager{mwrs::make_weak(manager)},
+      manager{mw::make_weak(manager)},
       desktop_file_manager{desktop_file_manager}
 {
 }
@@ -357,7 +357,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
             ForeignToplevelHandleV1* handle_ptr = nullptr;
             // Remember Wayland objects manage their own lifetime: ownership of
             // the returned handle passes to the Rust server.
-            mwrs::create_zwlr_foreign_toplevel_handle_v1(
+            mw::create_zwlr_foreign_toplevel_handle_v1(
                 *mgr.client->raw_client(),
                 mgr.get_box()->version(),
                 [&](rust::Box<wayland::ForeignToplevelHandleV1Middleware> box, uint32_t object_id)
@@ -368,7 +368,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed(std::
                     handle_ptr = created.get();
                     return created;
                 });
-            *handle = mwrs::make_weak(handle_ptr);
+            *handle = mw::make_weak(handle_ptr);
 
             mgr.send_toplevel_event(handle_ptr->get_box());
 

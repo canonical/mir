@@ -36,7 +36,7 @@
 #include <algorithm>
 
 namespace mf = mir::frontend;
-namespace mwrs = mir::wayland;
+namespace mw = mir::wayland;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -70,7 +70,7 @@ mf::WindowWlSurfaceRole::WindowWlSurfaceRole(
     std::shared_ptr<msh::Shell> const& shell,
     OutputManager* output_manager,
     std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : surface{mwrs::make_weak(surface)},
+    : surface{mw::make_weak(surface)},
       client{client},
       shell{shell},
       session{client->client_session()},
@@ -229,7 +229,7 @@ void mf::WindowWlSurfaceRole::set_min_size(int32_t width, int32_t height)
 
 void mf::WindowWlSurfaceRole::set_fullscreen(std::optional<wayland::Weak<wayland::Output>> const& output)
 {
-    wayland::Output* const output_ptr = output ? mwrs::as_nullable_ptr(output.value()) : nullptr;
+    wayland::Output* const output_ptr = output ? mw::as_nullable_ptr(output.value()) : nullptr;
 
     // We must process this request immediately (i.e. don't defer until commit())
     if (auto const scene_surface = weak_scene_surface.lock())
