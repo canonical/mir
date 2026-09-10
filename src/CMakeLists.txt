@@ -25,7 +25,6 @@ add_subdirectory(platforms/)
 add_subdirectory(common/)
 
 add_subdirectory(platform/)
-add_subdirectory(wayland/)
 add_subdirectory(server/)
 add_subdirectory(miral/)
 add_subdirectory(miroil/)
