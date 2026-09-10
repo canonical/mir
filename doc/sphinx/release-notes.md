@@ -50,22 +50,6 @@
     - mirplatformgraphics ABI unchanged at 24
     - mirinputplatform ABI unchanged at 11
 
-## Mir 2.29.0~dev
-
-- New upstream release 2.29.0~dev
-
-  - ABI summary:
-
-    - miral ABI bumped to 8
-    - mircommon ABI bumped to 13
-    - mircore ABI bumped to 3
-    - miroil ABI bumped to 10
-    - mirplatform ABI bumped to 35
-    - mirserver ABI bumped to 68
-    - mirwayland ABI bumped to 7
-    - mirplatformgraphics ABI bumped to 24
-    - mirinputplatform ABI bumped to 11
-
 ## Mir 2.28.0
 
 - New upstream release 2.28.0
