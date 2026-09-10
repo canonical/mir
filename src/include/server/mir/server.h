@@ -27,7 +27,6 @@
 #include <optional>
 #include <vector>
 
-struct wl_display;
 struct wl_resource;
 namespace mir::wayland { class Client; }
 
@@ -495,7 +494,6 @@ public:
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
-            wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder);
 
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value

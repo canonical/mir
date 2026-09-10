@@ -17,7 +17,7 @@
 #include "surface_registry.h"
 #include "wl_surface.h"
 
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -53,7 +53,7 @@ auto mf::SurfaceRegistry::scene_surface_for(scene::Session const& session, uint3
             continue;
 
         auto& surface = wl_surf.value();
-        if (surface.session.get() == &session && wl_resource_get_id(surface.raw_resource()) == id)
+        if (surface.session.get() == &session && surface.object_id() == id)
             return surface.scene_surface().value_or(nullptr);
     }
 

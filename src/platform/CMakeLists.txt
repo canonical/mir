@@ -30,7 +30,6 @@ target_link_libraries(mirplatform
   PRIVATE
     mircommon
   PUBLIC
-    mirwayland
     mirplatformgraphicscommon
     graphics_platform_common
     miroptions
@@ -41,6 +40,8 @@ target_link_libraries(mirplatform
     mirrendererblitter
     mirgl
 )
+
+target_link_libraries(mirplatform PUBLIC mirwayland_rs)
 
 set_target_properties(
   mirplatform

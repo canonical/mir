@@ -27,7 +27,7 @@ using namespace std::chrono_literals;
 
 namespace
 {
-class WaylandExecutorTest : public mir::wayland_rs::test::RunningWaylandServerTest
+class WaylandExecutorTest : public mir::wayland::test::RunningWaylandServerTest
 {
 };
 }

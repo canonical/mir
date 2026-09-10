@@ -39,15 +39,15 @@ namespace
 /// A real frontend would back these methods with an actual Mir session and
 /// serial bookkeeping; here they are stubbed since the example only exercises
 /// registration and removal.
-class ExampleClient : public mir::wayland_rs::Client
+class ExampleClient : public mir::wayland::Client
 {
 public:
-    explicit ExampleClient(mir::wayland_rs::RawWlClient client) :
+    explicit ExampleClient(mir::wayland::RawWlClient client) :
         client{std::move(client)}
     {
     }
 
-    auto raw_client() const -> mir::wayland_rs::RawWlClient const& override
+    auto raw_client() const -> mir::wayland::RawWlClient const& override
     {
         return client;
     }
@@ -83,19 +83,19 @@ public:
     }
 
 private:
-    mir::wayland_rs::RawWlClient client;
+    mir::wayland::RawWlClient client;
     float geometry_scale{1.0f};
 };
 
-class WaylandServerNotificationHandler : public mir::wayland_rs::WaylandServerNotificationHandler
+class WaylandServerNotificationHandler : public mir::wayland::WaylandServerNotificationHandler
 {
 public:
-    explicit WaylandServerNotificationHandler(mir::wayland_rs::WaylandClientRegistry& registry) :
+    explicit WaylandServerNotificationHandler(mir::wayland::WaylandClientRegistry& registry) :
         registry{registry}
     {
     }
 
-    auto client_added(rust::Box<mir::wayland_rs::WaylandClient> wayland_client) -> void override
+    auto client_added(rust::Box<mir::wayland::WaylandClient> wayland_client) -> void override
     {
         try
         {
@@ -109,20 +109,20 @@ public:
         registry.add_client(std::make_shared<ExampleClient>(std::move(wayland_client)));
     }
 
-    auto client_removed(rust::Box<mir::wayland_rs::WaylandClientId> client_id) -> void override
+    auto client_removed(rust::Box<mir::wayland::WaylandClientId> client_id) -> void override
     {
         std::cout << "Client disconnected." << std::endl;
         registry.remove_client(client_id);
     }
 
 private:
-    mir::wayland_rs::WaylandClientRegistry& registry;
+    mir::wayland::WaylandClientRegistry& registry;
 };
 
 /// Prints when the descriptor it watches becomes readable. The registration is
 /// one-shot, so this fires at most once; it reads the pending byte purely to
 /// consume it.
-class ExampleFdReadyCallback : public mir::wayland_rs::FdReadyCallback
+class ExampleFdReadyCallback : public mir::wayland::FdReadyCallback
 {
 public:
     explicit ExampleFdReadyCallback(int fd)
@@ -142,11 +142,29 @@ public:
 private:
     int fd;
 };
+
+class WaylandWorkCallback : public mir::wayland::WorkCallback
+{
+public:
+    explicit WaylandWorkCallback(std::shared_ptr<mir::wayland::WaylandExecutor> const& executor)
+        : executor(executor)
+    {
+    }
+
+    void execute() override
+    {
+        if (auto const locked = executor.lock())
+            locked->execute();
+    }
+
+private:
+    std::weak_ptr<mir::wayland::WaylandExecutor> executor;
+};
 }
 
 void run_server(
-    rust::Box<mir::wayland_rs::WaylandServer>& server,
-    std::unique_ptr<mir::wayland_rs::WaylandExecutor> executor)
+    rust::Box<mir::wayland::WaylandServer>& server,
+    std::shared_ptr<mir::wayland::WaylandExecutor> const& executor)
 {
     try
     {
@@ -155,7 +173,7 @@ void run_server(
         // raw box to its shared Client (via registry.from(...)) when creating objects.
         // `run` blocks until the server stops, so this local outlives the handler the
         // server owns.
-        mir::wayland_rs::WaylandClientRegistry registry;
+        mir::wayland::WaylandClientRegistry registry;
 
         // TODO: Add a real GlobalFactory here, but we will keep it nullptr for the time being
         //  as that task is involved.
@@ -163,7 +181,7 @@ void run_server(
             wayland_socket,
             nullptr,
             std::make_unique<WaylandServerNotificationHandler>(registry),
-            std::move(executor));
+            std::make_unique<WaylandWorkCallback>(executor));
     }
     catch (rust::Error const& error)
     {
@@ -197,13 +215,12 @@ int main()
     std::cout << "    5) The server stops." << std::endl;
     std::cout << "    6) We exit with exit code 0." << std::endl << std::endl;
 
-    auto server = mir::wayland_rs::create_wayland_server();
+    auto server = mir::wayland::create_wayland_server();
 
     // The executor lets us schedule arbitrary work onto the server's event loop.
     // Ownership is handed to the server (via run), but it remains valid for the
     // server's lifetime, so we keep a non-owning reference to spawn work with.
-    auto executor = std::make_unique<mir::wayland_rs::WaylandExecutor>(*server);
-    mir::Executor& work_executor = *executor;
+    auto executor = std::make_shared<mir::wayland::WaylandExecutor>(*server);
 
     // A pipe whose read end we ask the server to watch. Writing to the write end
     // makes the read end readable, which the server reports via FdReadyCallback.
@@ -219,18 +236,18 @@ int main()
     server->register_fd_ready_listener(read_fd, std::make_unique<ExampleFdReadyCallback>(read_fd));
 
     std::thread server_thread(
-        [&server, executor = std::move(executor)]() mutable
+        [&server, executor]() mutable
         {
-            run_server(server, std::move(executor));
+            run_server(server, executor);
         });
 
     run_client();
 
     // Queue several functions from this (non event-loop) thread. They are run,
     // in order, on the event-loop thread.
-    work_executor.spawn([] { std::cout << "    Scheduled work 1 ran on the event loop." << std::endl; });
-    work_executor.spawn([] { std::cout << "    Scheduled work 2 ran on the event loop." << std::endl; });
-    work_executor.spawn([] { std::cout << "    Scheduled work 3 ran on the event loop." << std::endl; });
+    executor->spawn([] { std::cout << "    Scheduled work 1 ran on the event loop." << std::endl; });
+    executor->spawn([] { std::cout << "    Scheduled work 2 ran on the event loop." << std::endl; });
+    executor->spawn([] { std::cout << "    Scheduled work 3 ran on the event loop." << std::endl; });
 
     // Make the watched descriptor readable; the server's FdReadyCallback fires
     // on the event-loop thread.

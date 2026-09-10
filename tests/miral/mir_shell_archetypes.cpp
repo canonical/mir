@@ -41,19 +41,18 @@ using namespace testing;
 
 auto constexpr client_completion_timeout = std::chrono::seconds{6};
 
-namespace mir::wayland
+// Provided by the `protocols` library, generated from wayland-protocols/mir-shell-unstable-v1.xml and xdg-shell.xml
+// by wayland-scanner.
+extern "C"
 {
-extern struct wl_interface const wl_compositor_interface_data;
-extern struct wl_interface const wl_surface_interface_data;
-extern struct wl_interface const wl_shm_interface_data;
-extern struct wl_interface const xdg_wm_base_interface_data;
-extern struct wl_interface const xdg_surface_interface_data;
-extern struct wl_interface const xdg_toplevel_interface_data;
-extern struct wl_interface const mir_shell_v1_interface_data;
-extern struct wl_interface const mir_positioner_v1_interface_data;
-extern struct wl_interface const mir_regular_surface_v1_interface_data;
-extern struct wl_interface const mir_floating_regular_surface_v1_interface_data;
-extern struct wl_interface const mir_dialog_surface_v1_interface_data;
+extern struct wl_interface const xdg_wm_base_interface;
+extern struct wl_interface const xdg_surface_interface;
+extern struct wl_interface const xdg_toplevel_interface;
+extern struct wl_interface const mir_shell_v1_interface;
+extern struct wl_interface const mir_positioner_v1_interface;
+extern struct wl_interface const mir_regular_surface_v1_interface;
+extern struct wl_interface const mir_floating_regular_surface_v1_interface;
+extern struct wl_interface const mir_dialog_surface_v1_interface;
 }
 
 namespace
@@ -116,12 +115,12 @@ struct ArchetypeClient
         ASSERT_THAT(mir_shell, NotNull());
 
         auto* const surface = wl_proxy_marshal_constructor(
-            compositor, wl_compositor_create_surface, &mir::wayland::wl_surface_interface_data, nullptr);
+            compositor, wl_compositor_create_surface, &wl_surface_interface, nullptr);
 
         auto* const xdg_surface = wl_proxy_marshal_constructor(
-            wm_base, xdg_wm_base_get_xdg_surface, &mir::wayland::xdg_surface_interface_data, nullptr, surface);
+            wm_base, xdg_wm_base_get_xdg_surface, &xdg_surface_interface, nullptr, surface);
 
-        wl_proxy_marshal_constructor(xdg_surface, xdg_surface_get_toplevel, &mir::wayland::xdg_toplevel_interface_data);
+        wl_proxy_marshal_constructor(xdg_surface, xdg_surface_get_toplevel, &xdg_toplevel_interface);
 
         wl_proxy_add_listener(xdg_surface, xdg_surface_listener, this);
 
@@ -152,10 +151,10 @@ struct ArchetypeClient
                     wl_registry_bind(registry, id, &iface, version));
         };
 
-        bind(mir::wayland::wl_compositor_interface_data, self->compositor);
-        bind(mir::wayland::wl_shm_interface_data, self->shm);
-        bind(mir::wayland::xdg_wm_base_interface_data, self->wm_base);
-        bind(mir::wayland::mir_shell_v1_interface_data, self->mir_shell);
+        bind(wl_compositor_interface, self->compositor);
+        bind(wl_shm_interface, self->shm);
+        bind(xdg_wm_base_interface, self->wm_base);
+        bind(mir_shell_v1_interface, self->mir_shell);
     }
 
     static void global_remove(void*, wl_registry*, uint32_t) {}
@@ -329,7 +328,7 @@ TEST_F(MirShellArchetypes, regular_surface_is_a_normal_window)
                 wl_proxy_marshal_constructor(
                     mir_shell,
                     mir_shell_v1_get_regular_surface,
-                    &mir::wayland::mir_regular_surface_v1_interface_data,
+                    &mir_regular_surface_v1_interface,
                     nullptr,
                     surface);
             }),
@@ -348,7 +347,7 @@ TEST_F(MirShellArchetypes, floating_regular_surface_is_a_utility_window_that_is_
                 wl_proxy_marshal_constructor(
                     mir_shell,
                     mir_shell_v1_get_floating_regular_surface,
-                    &mir::wayland::mir_floating_regular_surface_v1_interface_data,
+                    &mir_floating_regular_surface_v1_interface,
                     nullptr,
                     surface);
             }),
@@ -366,7 +365,7 @@ TEST_F(MirShellArchetypes, dialog_surface_is_a_dialog_window)
                 wl_proxy_marshal_constructor(
                     mir_shell,
                     mir_shell_v1_get_dialog_surface,
-                    &mir::wayland::mir_dialog_surface_v1_interface_data,
+                    &mir_dialog_surface_v1_interface,
                     nullptr,
                     surface);
             }),
@@ -387,7 +386,7 @@ TEST_F(MirShellArchetypes, archetype_assigned_after_mapping_retypes_the_window)
                 wl_proxy_marshal_constructor(
                     mir_shell,
                     mir_shell_v1_get_floating_regular_surface,
-                    &mir::wayland::mir_floating_regular_surface_v1_interface_data,
+                    &mir_floating_regular_surface_v1_interface,
                     nullptr,
                     surface);
             }),

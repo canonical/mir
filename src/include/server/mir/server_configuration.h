@@ -20,8 +20,6 @@
 #include <memory>
 #include <vector>
 
-struct wl_display;
-
 namespace mir
 {
 namespace cookie
@@ -105,7 +103,6 @@ public:
     virtual void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
-            wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) = 0;
     virtual std::shared_ptr<scene::SessionLock> the_session_lock() = 0;
 

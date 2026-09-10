@@ -19,7 +19,7 @@
 
 #include <algorithm>
 
-namespace mwr = mir::wayland_rs;
+namespace mwr = mir::wayland;
 
 void mwr::WaylandClientRegistry::add_client(std::shared_ptr<Client> const& client)
 {
