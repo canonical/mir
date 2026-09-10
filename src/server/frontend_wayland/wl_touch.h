@@ -17,10 +17,11 @@
 #ifndef MIR_FRONTEND_WL_TOUCH_H
 #define MIR_FRONTEND_WL_TOUCH_H
 
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
 #include <mir/geometry/point.h>
 
+#include <cstdint>
 #include <unordered_map>
 #include <functional>
 #include <chrono>
@@ -37,6 +38,7 @@ class Clock;
 namespace wayland
 {
 class Client;
+class TouchMiddleware;
 }
 
 namespace frontend
@@ -46,7 +48,11 @@ class WlSurface;
 class WlTouch : public wayland::Touch
 {
 public:
-    WlTouch(wl_resource* new_resource, std::shared_ptr<time::Clock> const& clock);
+    WlTouch(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::TouchMiddleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<time::Clock> const& clock);
 
     ~WlTouch();
 
@@ -58,7 +64,7 @@ private:
     struct TouchedSurface
     {
         wayland::Weak<WlSurface> surface;
-        wayland::DestroyListenerId destroy_listener_id;
+        uint64_t destroy_listener_id;
     };
 
     std::shared_ptr<time::Clock> const clock;

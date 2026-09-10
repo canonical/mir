@@ -22,8 +22,11 @@ namespace mf = mir::frontend;
 namespace geom = mir::geometry;
 namespace mw = mir::wayland;
 
-mf::WlRegion::WlRegion(wl_resource* new_resource)
-    : mw::Region(new_resource, Version<1>())
+mf::WlRegion::WlRegion(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::RegionMiddleware> instance,
+    uint32_t object_id)
+    : mw::Region(std::move(client), std::move(instance), object_id)
 {}
 
 mf::WlRegion::~WlRegion()
@@ -32,12 +35,6 @@ mf::WlRegion::~WlRegion()
 std::vector<geom::Rectangle> mf::WlRegion::rectangle_vector()
 {
     return rects;
-}
-
-mf::WlRegion* mf::WlRegion::from(wl_resource* resource)
-{
-    void* raw = wl_resource_get_user_data(resource);
-    return static_cast<WlRegion*>(static_cast<wayland::Region*>(raw));
 }
 
 void mf::WlRegion::add(int32_t x, int32_t y, int32_t width, int32_t height)

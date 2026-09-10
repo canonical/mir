@@ -27,7 +27,6 @@
 #include <optional>
 #include <vector>
 
-struct wl_display;
 struct wl_resource;
 namespace mir::wayland { class Client; }
 
@@ -483,10 +482,10 @@ public:
     /// test/integration tooling to map a client-side surface to its Mir surface.
     auto scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
         -> std::shared_ptr<scene::Surface>;
+
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
-            wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder);
 
     /// Get the name of the Wayland endpoint (if any) usable as a $WAYLAND_DISPLAY value

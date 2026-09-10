@@ -180,7 +180,6 @@ global:
     mir::Server::override_the_shell*;
     mir::Server::override_the_window_manager_builder*;
     mir::Server::run*;
-    mir::Server::run_on_wayland_display*;
     mir::Server::scene_surface_for_wayland_surface*;
     mir::Server::set_command_line*;
     mir::Server::set_command_line_handler*;

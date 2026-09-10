@@ -67,7 +67,6 @@ target_link_libraries(
     PkgConfig::GBM
     PkgConfig::EGL
     PkgConfig::GLESv2
-    PkgConfig::WAYLAND_SERVER
 )
 
 set_target_properties(

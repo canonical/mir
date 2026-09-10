@@ -17,16 +17,19 @@
 #ifndef MIR_FRONTEND_XDG_WM_DIALOG_V1_H
 #define MIR_FRONTEND_XDG_WM_DIALOG_V1_H
 
-#include "xdg-dialog-v1_wrapper.h"
+#include "xdg_dialog_v1.h"
 
-struct wl_display;
+#include <memory>
 
 namespace mir
 {
 namespace frontend
 {
-auto create_xdg_dialog_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgWmDialogV1::Global>;
+auto create_xdg_wm_dialog_v1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::XdgWmDialogV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<wayland::XdgWmDialogV1>;
 }
-}
+} // namespace mir
 
 #endif // MIR_FRONTEND_XDG_WM_DIALOG_V1_H

@@ -157,7 +157,7 @@ class RendererFactory;
 struct WaylandExtensionHook
 {
     std::string name;
-    std::function<std::shared_ptr<void>(wl_display*, std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop)> builder;
+    std::function<std::shared_ptr<void>(std::function<void(std::function<void()>&& work)> const& run_on_wayland_mainloop)> builder;
 };
 
 class DefaultServerConfiguration : public virtual ServerConfiguration
@@ -194,7 +194,6 @@ public:
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
-            wl_display*,
             std::function<void(std::function<void()>&& work)> const&)> builder) override;
 
     void set_wayland_extension_policy(

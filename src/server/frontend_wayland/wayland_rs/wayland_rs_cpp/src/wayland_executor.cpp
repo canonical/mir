@@ -18,7 +18,7 @@
 
 #include "wayland_rs/src/ffi.rs.h"
 
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 
 mrs::WaylandExecutor::WaylandExecutor(mrs::WaylandServer& server)
     : server{server}

@@ -16,75 +16,50 @@
 
 #include "wp_fractional_scale_v1.h"
 
+#include "wayland.h"
+#include "weak.h"
+#include "client.h"
+#include "protocol_error.h"
 #include <mir/graphics/display_configuration.h>
-#include <mir/wayland/protocol_error.h>
 #include "wl_surface.h"
 
+#include <algorithm>
 #include <memory>
 
-namespace mir
-{
-namespace frontend
-{
-
-class FractionalScaleManagerV1: public wayland::FractionalScaleManagerV1
-{
-    public:
-        FractionalScaleManagerV1(struct wl_resource* resource);
-
-        class Global: public wayland::FractionalScaleManagerV1::Global
-        {
-            public:
-                Global(wl_display* display);
-
-            private:
-                virtual void bind(wl_resource* new_wp_fractional_scale_manager_v1) override;
-        };
-
-    private:
-        virtual void get_fractional_scale(struct wl_resource* id, struct wl_resource* surface) override;
-};
-
-}
-}
-
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 
-auto mf::create_fractional_scale_v1(wl_display* display)
-    -> std::shared_ptr<wayland::FractionalScaleManagerV1::Global>
-{
-    return std::make_shared<FractionalScaleManagerV1::Global>(display);
-}
-
-mf::FractionalScaleManagerV1::FractionalScaleManagerV1(struct wl_resource* resource)
-    : mir::wayland::FractionalScaleManagerV1{resource, Version<1>{}}
+mf::FractionalScaleManagerV1::FractionalScaleManagerV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::FractionalScaleManagerV1Middleware> instance,
+    uint32_t object_id)
+    : mw::FractionalScaleManagerV1{std::move(client), std::move(instance), object_id}
 {
 }
 
-mf::FractionalScaleManagerV1::Global::Global(wl_display* display)
-    : wayland::FractionalScaleManagerV1::Global{display, Version<1>{}}
+auto mf::FractionalScaleManagerV1::get_fractional_scale(
+    mw::Weak<mw::Surface> const& surface,
+    rust::Box<mw::FractionalScaleV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::FractionalScaleV1>
 {
-}
-
-void mf::FractionalScaleManagerV1::Global::bind(wl_resource* new_wp_fractional_scale_manager_v1)
-{
-    new FractionalScaleManagerV1{new_wp_fractional_scale_manager_v1};
-}
-
-void mf::FractionalScaleManagerV1::get_fractional_scale(struct wl_resource* id, struct wl_resource* surface)
-{
-    auto surf = WlSurface::from(surface);
-    if (surf->get_fractional_scale())
+    auto surf = mw::Surface::from<WlSurface>(surface);
+    if (surf && surf->get_fractional_scale())
     {
-        throw mir::wayland::ProtocolError{
-            resource, Error::fractional_scale_exists, "Surface already has a fractional scale component attached"};
+        throw mw::ProtocolError{
+            object_id(), Error::fractional_scale_exists, "Surface already has a fractional scale component attached"};
     }
 
-    surf->set_fractional_scale(new FractionalScaleV1{id});
+    auto fractional_scale = std::make_shared<FractionalScaleV1>(client, std::move(child_instance), child_object_id);
+    if (surf)
+        surf->set_fractional_scale(fractional_scale.get());
+    return fractional_scale;
 }
 
-mf::FractionalScaleV1::FractionalScaleV1(struct wl_resource* resource)
-    : mir::wayland::FractionalScaleV1{resource, Version<1>{}},
+mf::FractionalScaleV1::FractionalScaleV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::FractionalScaleV1Middleware> instance,
+    uint32_t object_id)
+    : mw::FractionalScaleV1{std::move(client), std::move(instance), object_id},
         surface_outputs()
 {
 }
