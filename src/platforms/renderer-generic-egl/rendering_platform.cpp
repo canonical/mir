@@ -166,7 +166,8 @@ private:
 auto maybe_make_dmabuf_provider(
     EGLDisplay dpy,
     std::shared_ptr<mg::EGLExtensions> egl_extensions,
-    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
+    std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::unique_ptr<mir::renderer::gl::Context> import_context)
     -> std::shared_ptr<mg::DMABufEGLProvider>
 {
     try
@@ -177,6 +178,7 @@ auto maybe_make_dmabuf_provider(
             std::move(egl_extensions),
             modifier_ext,
             std::move(egl_delegate),
+            std::move(import_context),
             [](mg::DRMFormat, std::span<uint64_t const>, geom::Size) -> std::shared_ptr<mg::DMABufBuffer>
             {
                 return nullptr;    // We can't (portably) allocate dmabufs, but we also shouldn't need to
@@ -208,7 +210,8 @@ mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
           maybe_make_dmabuf_provider(
               dpy,
               std::make_shared<mg::EGLExtensions>(),
-              std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context()))},
+              std::make_shared<mgc::EGLContextExecutor>(ctx->make_share_context()),
+              ctx->make_share_context())},
       egl_delegate{std::make_shared<mg::common::EGLContextExecutor>(ctx->make_share_context())}
 {
 }

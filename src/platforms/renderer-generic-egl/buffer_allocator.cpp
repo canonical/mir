@@ -279,6 +279,11 @@ auto mge::BufferAllocator::buffer_from_shm(
         std::move(on_release));
 }
 
+auto mge::BufferAllocator::dma_buf_provider() -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    return dmabuf_provider;
+}
+
 auto mge::BufferAllocator::shared_egl_context() -> EGLContext
 {
     return static_cast<EGLContext>(*ctx);

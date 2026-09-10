@@ -35,6 +35,8 @@ namespace renderer::software { class RWMappable; }
 namespace graphics
 {
 
+class DMABufEGLProvider;
+
 /**
  * Interface to graphic buffer allocation.
  */
@@ -87,6 +89,16 @@ public:
         std::shared_ptr<renderer::software::RWMappable> shm_data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> = 0;
+
+    /**
+     * The linux-dmabuf import provider for this allocator, if any.
+     *
+     * The (Rust-backed) Wayland frontend uses this to implement the zwp_linux_dmabuf_v1
+     * protocol directly, rather than going through the old libwayland bind_display path.
+     *
+     * \return the provider, or nullptr if this allocator does not support dmabuf import.
+     */
+    virtual auto dma_buf_provider() -> std::shared_ptr<DMABufEGLProvider> = 0;
 
 protected:
     GraphicBufferAllocator() = default;
