@@ -46,12 +46,16 @@ public:
     }
 
 private:
+    void configured() override;
+
     void egl_make_current();
 
     void swap_buffers();
 
     std::shared_ptr<MirEglApp> const mir_egl_app;
 
+    bool size_configured{false};
+    struct wl_egl_window* eglwindow{nullptr};
     EGLSurface eglsurface;
     int width_{0};
     int height_{0};
