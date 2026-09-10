@@ -103,7 +103,7 @@ jobs:
             { print }
           ' debian/changelog
 
-          dch --newversion "${VERSION}-0ubuntu24.04" \
+          dch --newversion "${VERSION}-0ubuntu26.04" \
               --distribution noble \
               --force-distribution \
               ""
@@ -178,42 +178,26 @@ jobs:
           echo "sha=$(git rev-parse --verify HEAD)" | tee --append "$GITHUB_OUTPUT"
           git push --tags origin "${INPUTS_RELEASE_BRANCH}"
 
-      - name: Finalize GitHub release
+      - name: Create GitHub release
         uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
         env:
           VERSION: ${{ steps.version.outputs.version }}
           SHA: ${{ steps.release.outputs.sha }}
         with:
           script: |
-            const tag = `v${process.env.VERSION}`;
-
             const fs = require('fs');
             const releaseNotes = fs.readFileSync('/tmp/release-notes-section.md', 'utf8');
 
-            // Get the release by iterating over releases (drafts aren't returned by tag)
-            let release;
-            const releases = await github.rest.repos.listReleases({
+            const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              per_page: 10
-            });
-
-            release = releases.data.find(r => r.tag_name === tag);
-
-            if (!release) {
-              console.error(`:error: No draft release found with tag ${tag}`);
-              process.exit(1);
-            }
-
-            const updatedRelease = await github.rest.repos.updateRelease({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: release.id,
+              tag_name: `v${process.env.VERSION}`,
               target_commitish: process.env.SHA,
+              name: `Mir ${process.env.VERSION}`,
               body: releaseNotes,
               draft: false,
               prerelease: false
             });
             await core.summary
-              .addRaw(`- Release: [Mir v${process.env.VERSION}](${updatedRelease.data.html_url})`, true)
+              .addRaw(`- Release: [Mir v${process.env.VERSION}](${release.data.html_url})`, true)
               .write();

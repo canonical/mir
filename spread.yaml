@@ -18,7 +18,6 @@ environment:
     DISTRO/debian_sid: debian
     RELEASE: resolute
     RELEASE/ubuntu: resolute
-    RELEASE/ubuntu_resolute: resolute
     RELEASE/ubuntu_devel: stonking
     RELEASE/debian_sid: sid
     RELEASE/fedora_44: 44

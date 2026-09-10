@@ -154,6 +154,4 @@ target_link_libraries(
     PkgConfig::LIBDISPLAY_INFO
 )
 
-if (MIR_ENABLE_RUST)
-  target_link_libraries(mirplatformgraphicscommon PUBLIC mirwayland_rs)
-endif()
+target_link_libraries(mirplatformgraphicscommon PUBLIC mirwayland_rs)

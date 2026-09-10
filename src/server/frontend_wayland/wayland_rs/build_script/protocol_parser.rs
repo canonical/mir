@@ -279,23 +279,20 @@ pub fn parse_protocols() -> Vec<WaylandProtocol> {
                 let mut is_global = true;
                 for other_interface in &protocol.interfaces {
                     for item in &other_interface.items {
-                        match item {
-                            InterfaceItem::Request(req) => {
-                                for arg in &req.args {
-                                    if let Some(interface_name) = &arg.interface {
-                                        if interface_name == &interface.name
-                                            && arg.type_ == WaylandArgType::NewId
-                                        {
-                                            is_global = false;
-                                            break;
-                                        }
+                        if let InterfaceItem::Request(req) = item {
+                            for arg in &req.args {
+                                if let Some(interface_name) = &arg.interface {
+                                    if interface_name == &interface.name
+                                        && arg.type_ == WaylandArgType::NewId
+                                    {
+                                        is_global = false;
+                                        break;
                                     }
                                 }
                             }
-                            _ => {}
                         }
 
-                        if is_global == false {
+                        if !is_global {
                             break;
                         }
                     }

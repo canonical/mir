@@ -40,9 +40,7 @@ target_link_libraries(mirplatform
     mirgl
 )
 
-if (MIR_ENABLE_RUST)
-  target_link_libraries(mirplatform PUBLIC mirwayland_rs)
-endif()
+target_link_libraries(mirplatform PUBLIC mirwayland_rs)
 
 set_target_properties(
   mirplatform

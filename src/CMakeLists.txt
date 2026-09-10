@@ -17,9 +17,7 @@ add_subdirectory(core)
 
 # The Rust-backed Wayland library is a foundational dependency of the graphics
 # subproject (platforms and platform/), so it must be defined before them.
-if (MIR_ENABLE_RUST)
-  add_subdirectory(server/frontend_wayland/wayland_rs)
-endif()
+add_subdirectory(server/frontend_wayland/wayland_rs)
 
 add_subdirectory(platforms/)
 

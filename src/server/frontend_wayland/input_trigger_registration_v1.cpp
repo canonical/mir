@@ -491,7 +491,7 @@ public:
     void add_input_trigger_event(mwrs::Weak<mwrs::ExtInputTriggerV1> const& trigger) override;
     void drop_input_trigger_event(mwrs::Weak<mwrs::ExtInputTriggerV1> const& trigger) override;
 
-    void cancel() override;
+    void cancel_and_destroy() override;
     void destroy() override;
 
 private:
@@ -532,7 +532,7 @@ void InputTriggerActionControlV1::drop_input_trigger_event(mwrs::Weak<mwrs::ExtI
         "input_trigger_action_control_v1.drop_input_trigger_event: Unsupported trigger type");
 }
 
-void InputTriggerActionControlV1::cancel()
+void InputTriggerActionControlV1::cancel_and_destroy()
 {
     action_group->cancel();
 }

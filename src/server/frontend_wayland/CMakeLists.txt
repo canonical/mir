@@ -132,16 +132,12 @@ target_link_libraries(mirfrontend-wayland
     PkgConfig::GIOUnix
 )
 
-if (MIR_ENABLE_RUST)
-  target_sources(mirfrontend-wayland
-    PRIVATE
-      wayland_client.cpp          wayland_client.h
-      wayland_client_notifier.cpp wayland_client_notifier.h
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)
 
-  )
-
-  target_link_libraries(mirfrontend-wayland
-    PUBLIC
-      mirwayland_rs
-  )
-endif()
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)

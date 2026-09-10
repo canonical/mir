@@ -47,7 +47,6 @@ jobs:
         - lxd:...:ubuntu_armhf
         - lxd:...:ubuntu_devel
         - lxd:...:ubuntu_proposed
-        - lxd:...:ubuntu_resolute
         - lxd:alpine-3.24:...:amd64
         - lxd:alpine-edge:...:amd64
 
