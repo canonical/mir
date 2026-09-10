@@ -1,3 +1,5 @@
+include(RustLibrary)
+
 # The Rust build script parses every protocol XML in this directory, so a change
 # to any of them must trigger a rebuild. CONFIGURE_DEPENDS re-globs at build time
 # so that adding or removing a protocol is picked up.
@@ -101,3 +103,6 @@ target_link_libraries(mirwayland_rs-demo
   PRIVATE
   mirwayland_rs
   PkgConfig::WAYLAND_CLIENT)
+
+# The Rust static archive (via mirwayland_rs) is not a GCC LTO object.
+target_link_options(mirwayland_rs INTERFACE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)

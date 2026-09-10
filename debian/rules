@@ -1,9 +1,15 @@
 #!/usr/bin/make -f
 
 include /usr/share/dpkg/default.mk
+include /usr/share/rustc/architecture.mk
 include debian/opts.mk
 
 export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
+
+export DEB_HOST_RUST_TYPE
+export DEB_HOST_GNU_TYPE
+# Build-local Cargo home for the crates.io download cache (removed by dh_clean).
+export CARGO_HOME = $(CURDIR)/debian/cargo_home
 
 # Needed for ccache to work in case the build directory changed
 # (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
@@ -27,7 +33,6 @@ else
 endif
 
 COMMON_CONFIGURE_OPTIONS = \
-  -DMIR_ENABLE_RUST=OFF\
   -DCMAKE_INSTALL_LIBEXECDIR="lib/$(DEB_HOST_MULTIARCH)/mir"\
   -DMIR_BUILD_INTERPROCESS_TESTS=OFF\
   -DMIR_RUN_WLCS_TESTS=OFF\
@@ -99,6 +104,10 @@ override_dh_makeshlibs:
 # Don't try to strip libraries used as test data
 override_dh_strip:
 	dh_strip -Xmir-test-data
+
+override_dh_clean:
+	dh_clean
+	rm -rf debian/cargo_home
 
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
