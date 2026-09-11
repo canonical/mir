@@ -19,19 +19,16 @@
 #include <mir/decoration_strategy.h>
 #include <mir/log.h>
 #include <mir/shell/surface_specification.h>
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
 
+#include "protocol_error.h"
 #include "wl_surface.h"
 
 #include <boost/throw_exception.hpp>
 
 #include <cstdint>
 #include <memory>
-#include <stdexcept>
 #include <unordered_set>
 #include <utility>
-#include <unistd.h>
 
 namespace mir
 {
@@ -45,55 +42,33 @@ public:
     SurfacesWithDecorations(SurfacesWithDecorations const&) = delete;
     SurfacesWithDecorations& operator=(SurfacesWithDecorations const&) = delete;
 
-    bool register_surface(wl_resource* surface)
+    bool register_surface(WlSurface* surface)
     {
         auto [_, inserted] = surfaces_with_decorations.insert(surface);
         return inserted;
     }
 
-    bool unregister_surface(wl_resource* surface)
+    bool unregister_surface(WlSurface* surface)
     {
         return surfaces_with_decorations.erase(surface) > 0;
     }
 
 private:
-    std::unordered_set<wl_resource*> surfaces_with_decorations;
+    std::unordered_set<WlSurface*> surfaces_with_decorations;
 };
 
-class ServerDecorationManager : public wayland::ServerDecorationManager
+namespace
 {
-public:
-    ServerDecorationManager(
-        wl_resource* resource,
-        std::shared_ptr<DecorationStrategy> strategy);
+namespace mw = mir::wayland;
 
-    class Global : public wayland::ServerDecorationManager::Global
-    {
-    public:
-        Global(
-            wl_display* display,
-            std::shared_ptr<DecorationStrategy> strategy);
-
-    private:
-        std::shared_ptr<DecorationStrategy> const decoration_strategy;
-
-        void bind(wl_resource* new_server_decoration_manager) override;
-    };
-
-private:
-    void create(wl_resource* id, wl_resource* surface) override;
-
-    std::shared_ptr<SurfacesWithDecorations> const surfaces_with_decorations;
-    std::shared_ptr<DecorationStrategy> const decoration_strategy;
-};
-
-class ServerSurfaceDecoration : public wayland::ServerDecoration
+class ServerSurfaceDecoration : public mw::ServerDecoration
 {
 public:
     ServerSurfaceDecoration(
-        wl_resource* id,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ServerDecorationMiddleware> instance,
+        uint32_t object_id,
         WlSurface* surface,
-        wl_resource* surface_resource,
         std::shared_ptr<DecorationStrategy> strategy,
         std::shared_ptr<SurfacesWithDecorations> bookkeeping);
 
@@ -110,152 +85,93 @@ private:
         -> uint32_t;
 
     WlSurface* surface_;
-    wl_resource* const surface_resource_;
     std::shared_ptr<DecorationStrategy> const decoration_strategy_;
     std::shared_ptr<SurfacesWithDecorations> bookkeeping_;
     uint32_t current_mode_;
 };
-
-auto create_server_decoration_manager(
-    wl_display* display,
-    std::shared_ptr<DecorationStrategy> strategy)
-    -> std::shared_ptr<wayland::ServerDecorationManager::Global>
-{
-    return std::make_shared<ServerDecorationManager::Global>(
-        display,
-        std::move(strategy));
-}
-
-ServerDecorationManager::Global::Global(
-    wl_display* display,
-    std::shared_ptr<DecorationStrategy> strategy)
-    : wayland::ServerDecorationManager::Global::Global{
-          display,
-          Version<1>()},
-      decoration_strategy{std::move(strategy)}
-{
-}
-
-void ServerDecorationManager::Global::bind(
-    wl_resource* new_server_decoration_manager)
-{
-    new ServerDecorationManager{
-        new_server_decoration_manager,
-        decoration_strategy};
 }
 
 ServerDecorationManager::ServerDecorationManager(
-    wl_resource* resource,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ServerDecorationManagerMiddleware> instance,
+    uint32_t object_id,
     std::shared_ptr<DecorationStrategy> strategy)
-    : mir::wayland::ServerDecorationManager{
-          resource,
-          Version<1>()},
-      surfaces_with_decorations{
-          std::make_shared<SurfacesWithDecorations>()},
+    : mw::ServerDecorationManager{std::move(client), std::move(instance), object_id},
+      surfaces_with_decorations{std::make_shared<SurfacesWithDecorations>()},
       decoration_strategy{std::move(strategy)}
 {
     auto const default_mode =
         decoration_strategy->default_style() ==
                 DecorationStrategy::DecorationsType::ssd
-            ? wayland::ServerDecorationManager::Mode::Server
-            : wayland::ServerDecorationManager::Mode::Client;
+            ? mw::ServerDecorationManager::Mode::Server
+            : mw::ServerDecorationManager::Mode::Client;
 
-    send_default_mode_event(static_cast<uint32_t>(default_mode));
+    send_default_mode_event(default_mode);
 }
 
-void ServerDecorationManager::create(
-    wl_resource* id,
-    wl_resource* surface)
+auto ServerDecorationManager::create(
+    mw::Weak<mw::Surface> const& surface,
+    rust::Box<mw::ServerDecorationMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ServerDecoration>
 {
-    if (!id)
-        return;
-
-    if (!surface)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid surface pointer"));
-    }
-
-    auto* wl_surface = WlSurface::from(surface);
+    auto* const wl_surface = mw::Surface::from<WlSurface>(surface);
     if (!wl_surface)
     {
-        BOOST_THROW_EXCEPTION(
-            std::runtime_error("Invalid surface pointer"));
+        throw mw::ProtocolError{object_id(), 0, "Invalid surface"};
     }
 
-    if (!surfaces_with_decorations->register_surface(surface))
+    if (!surfaces_with_decorations->register_surface(wl_surface))
     {
-        BOOST_THROW_EXCEPTION(
-            wayland::ProtocolError(
-                resource,
-                0,
-                "Decoration already constructed for this surface"));
+        throw mw::ProtocolError{
+            object_id(), 0, "Decoration already constructed for this surface"};
     }
 
-    try
-    {
-        auto* decoration = new ServerSurfaceDecoration{
-            id,
-            wl_surface,
-            surface,
-            decoration_strategy,
-            surfaces_with_decorations};
+    auto decoration = std::make_shared<ServerSurfaceDecoration>(
+        client,
+        std::move(child_instance),
+        child_object_id,
+        wl_surface,
+        decoration_strategy,
+        surfaces_with_decorations);
 
-        decoration->add_destroy_listener(
-            [bookkeeping = surfaces_with_decorations, surface]()
-            {
-                bookkeeping->unregister_surface(surface);
-            });
-
-        wl_surface->add_destroy_listener(
-            [bookkeeping = surfaces_with_decorations, surface]()
-            {
-                bookkeeping->unregister_surface(surface);
-            });
-    }
-    catch (std::bad_alloc const&)
-    {
-        surfaces_with_decorations->unregister_surface(surface);
-
-        if (wl_resource_get_client(id))
+    wl_surface->add_destroy_listener(
+        [bookkeeping = surfaces_with_decorations, wl_surface]()
         {
-            wl_client_post_no_memory(
-                wl_resource_get_client(id));
-        }
+            bookkeeping->unregister_surface(wl_surface);
+        });
 
-        wl_resource_destroy(id);
-    }
+    return decoration;
 }
 
 ServerSurfaceDecoration::ServerSurfaceDecoration(
-    wl_resource* id,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ServerDecorationMiddleware> instance,
+    uint32_t object_id,
     WlSurface* surface,
-    wl_resource* surface_resource,
     std::shared_ptr<DecorationStrategy> strategy,
     std::shared_ptr<SurfacesWithDecorations> bookkeeping)
-    : wayland::ServerDecoration{id, Version<1>()},
+    : mw::ServerDecoration{std::move(client), std::move(instance), object_id},
       surface_{surface},
-      surface_resource_{surface_resource},
       decoration_strategy_{std::move(strategy)},
       bookkeeping_{std::move(bookkeeping)},
       current_mode_{
           decoration_strategy_->default_style() ==
                   DecorationStrategy::DecorationsType::ssd
-              ? wayland::ServerDecoration::Mode::Server
-              : wayland::ServerDecoration::Mode::Client}
+              ? mw::ServerDecoration::Mode::Server
+              : mw::ServerDecoration::Mode::Client}
 {
     shell::SurfaceSpecification spec;
     spec.server_side_decorated =
-        current_mode_ == wayland::ServerDecoration::Mode::Server;
+        current_mode_ == mw::ServerDecoration::Mode::Server;
     surface_->update_surface_spec(spec);
     send_mode_event(current_mode_);
 }
 
 ServerSurfaceDecoration::~ServerSurfaceDecoration()
 {
-    if (surface_resource_)
+    if (surface_)
     {
-        bookkeeping_->unregister_surface(surface_resource_);
+        bookkeeping_->unregister_surface(surface_);
     }
 }
 
@@ -271,10 +187,10 @@ auto ServerSurfaceDecoration::to_mode(
     switch (type)
     {
     case DecorationStrategy::DecorationsType::ssd:
-        return wayland::ServerDecoration::Mode::Server;
+        return mw::ServerDecoration::Mode::Server;
 
     case DecorationStrategy::DecorationsType::csd:
-        return wayland::ServerDecoration::Mode::Client;
+        return mw::ServerDecoration::Mode::Client;
     }
 
     std::unreachable();
@@ -285,29 +201,19 @@ auto ServerSurfaceDecoration::to_decorations_type(uint32_t mode) const
 {
     switch (mode)
     {
-    case wayland::ServerDecoration::Mode::Server:
+    case mw::ServerDecoration::Mode::Server:
         return DecorationStrategy::DecorationsType::ssd;
 
-    case wayland::ServerDecoration::Mode::Client:
-    case wayland::ServerDecoration::Mode::None:
+    case mw::ServerDecoration::Mode::Client:
+    case mw::ServerDecoration::Mode::None:
         return DecorationStrategy::DecorationsType::csd;
 
     default:
-    {
-        pid_t pid{};
-        wl_client_get_credentials(
-            client->raw_client(),
-            &pid,
-            nullptr,
-            nullptr);
-
         mir::log_warning(
-            "Client PID: %d requested invalid KDE decoration mode %u",
-            pid,
+            "Client requested invalid KDE decoration mode %u",
             mode);
 
         return DecorationStrategy::DecorationsType::csd;
-    }
     }
 }
 
@@ -318,7 +224,7 @@ void ServerSurfaceDecoration::request_mode(uint32_t mode)
 
     shell::SurfaceSpecification spec;
     spec.server_side_decorated =
-        requested_mode == wayland::ServerDecoration::Mode::Server;
+        requested_mode == mw::ServerDecoration::Mode::Server;
 
     surface_->update_surface_spec(spec);
 

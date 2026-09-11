@@ -31,14 +31,14 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mwrs = mir::wayland_rs;
+namespace mw = mir::wayland;
 
 mf::WaylandClientNotifier::WaylandClientNotifier(
     std::shared_ptr<msh::Shell> const& shell,
     std::shared_ptr<mf::SessionAuthorizer> const& session_authorizer,
-    mwrs::WaylandClientRegistry& registry,
+    mw::WaylandClientRegistry& registry,
     mf::WaylandSerialSource const& serial_source,
-    std::function<void(int, std::shared_ptr<ms::Session> const&, std::shared_ptr<mwrs::Client> const&)>&&
+    std::function<void(int, std::shared_ptr<ms::Session> const&, std::shared_ptr<mw::Client> const&)>&&
         on_client_connected) :
     shell{shell},
     session_authorizer{session_authorizer},
@@ -47,7 +47,7 @@ mf::WaylandClientNotifier::WaylandClientNotifier(
     on_client_connected{std::move(on_client_connected)}
 {}
 
-auto mf::WaylandClientNotifier::client_added(rust::Box<mwrs::WaylandClient> wayland_client) -> void
+auto mf::WaylandClientNotifier::client_added(rust::Box<mw::WaylandClient> wayland_client) -> void
 {
     try
     {
@@ -101,7 +101,7 @@ auto mf::WaylandClientNotifier::client_added(rust::Box<mwrs::WaylandClient> wayl
     }
 }
 
-auto mf::WaylandClientNotifier::client_removed(rust::Box<mwrs::WaylandClientId> id) -> void
+auto mf::WaylandClientNotifier::client_removed(rust::Box<mw::WaylandClientId> id) -> void
 {
     if (auto const client = registry.from(id))
     {

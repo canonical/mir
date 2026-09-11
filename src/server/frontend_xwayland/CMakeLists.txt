@@ -53,3 +53,8 @@ target_link_libraries(mirfrontend-xwayland
     PkgConfig::XCB_RES
     PkgConfig::X11_XCURSOR
 )
+
+target_link_libraries(mirfrontend-xwayland
+  PUBLIC
+    mirwayland_rs
+)

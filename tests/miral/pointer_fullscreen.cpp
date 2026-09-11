@@ -48,11 +48,13 @@ using namespace testing;
 using namespace std::chrono_literals;
 using namespace mir::geometry;
 
-namespace mir::wayland
+// Provided by the `protocols` library, generated from wayland-protocols/xdg-shell.xml
+// by wayland-scanner.
+extern "C"
 {
-extern struct wl_interface const xdg_wm_base_interface_data;
-extern struct wl_interface const xdg_surface_interface_data;
-extern struct wl_interface const xdg_toplevel_interface_data;
+extern struct wl_interface const xdg_wm_base_interface;
+extern struct wl_interface const xdg_surface_interface;
+extern struct wl_interface const xdg_toplevel_interface;
 }
 
 namespace
@@ -186,11 +188,11 @@ private:
         surface = wl_compositor_create_surface(compositor);
 
         xdg_surface = wl_proxy_marshal_constructor(
-            wm_base, xdg_wm_base_get_xdg_surface, &mir::wayland::xdg_surface_interface_data, nullptr, surface);
+            wm_base, xdg_wm_base_get_xdg_surface, &xdg_surface_interface, nullptr, surface);
         wl_proxy_add_listener(xdg_surface, &xdg_surface_listener, this);
 
         toplevel = wl_proxy_marshal_constructor(
-            xdg_surface, xdg_surface_get_toplevel, &mir::wayland::xdg_toplevel_interface_data);
+            xdg_surface, xdg_surface_get_toplevel, &xdg_toplevel_interface);
         wl_proxy_add_listener(toplevel, &xdg_toplevel_listener, this);
 
         create_pool();
@@ -283,9 +285,9 @@ private:
         else if (std::strcmp(interface, wl_seat_interface.name) == 0)
             self->seat =
                 static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 5u)));
-        else if (std::strcmp(interface, mir::wayland::xdg_wm_base_interface_data.name) == 0)
+        else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0)
             self->wm_base =
-                static_cast<wl_proxy*>(wl_registry_bind(registry, id, &mir::wayland::xdg_wm_base_interface_data, 1));
+                static_cast<wl_proxy*>(wl_registry_bind(registry, id, &xdg_wm_base_interface, 1));
     }
 
     static void global_remove(void*, wl_registry*, uint32_t) {}

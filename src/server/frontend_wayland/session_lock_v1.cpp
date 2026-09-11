@@ -16,58 +16,83 @@
 
 #include "session_lock_v1.h"
 
+#include "client.h"
+#include "output_manager.h"
+#include "protocol_error.h"
+#include "weak.h"
 #include "wl_surface.h"
 #include "window_wl_surface_role.h"
-#include "output_manager.h"
 
 #include <mir/shell/surface_specification.h>
-#include <mir/fatal.h>
-#include <mir/wayland/client.h>
-#include <mir/wayland/protocol_error.h>
 #include <mir/scene/session_lock.h>
-#include <mir/frontend/surface_stack.h>
 #include <mir/log.h>
 
+#include <boost/throw_exception.hpp>
+
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
-namespace mw = mir::wayland;
 namespace ms = mir::scene;
 
 namespace mir
 {
 namespace frontend
 {
-class SessionLockManagerV1::Instance : wayland::SessionLockManagerV1
+class SessionLockManagerV1 : public mw::ExtSessionLockManagerV1
 {
 public:
-    Instance(
-        wl_resource* new_resource,
-        mf::SessionLockManagerV1& manager,
-        std::shared_ptr<SurfaceRegistry> const& surface_registry)
-        : SessionLockManagerV1{new_resource, Version<1>()},
-          manager{manager},
-          surface_registry{surface_registry}
+    SessionLockManagerV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtSessionLockManagerV1Middleware> instance,
+        uint32_t object_id,
+        Executor& wayland_executor,
+        std::shared_ptr<msh::Shell> const& shell,
+        std::shared_ptr<ms::SessionLock> const& session_lock,
+        WlSeat& seat,
+        OutputManager* output_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry,
+        std::shared_ptr<SessionLockState> const& state)
+        : ExtSessionLockManagerV1{std::move(client), std::move(instance), object_id},
+          wayland_executor{wayland_executor},
+          shell{shell},
+          session_lock{session_lock},
+          seat{seat},
+          output_manager{output_manager},
+          surface_registry{surface_registry},
+          state{state}
     {
     }
 
-private:
-    void lock(wl_resource* lock) override;
-    mf::SessionLockManagerV1& manager;
+    Executor& wayland_executor;
+    std::shared_ptr<msh::Shell> const shell;
+    std::shared_ptr<ms::SessionLock> const session_lock;
+    WlSeat& seat;
+    OutputManager* const output_manager;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
+    std::shared_ptr<SessionLockState> const state;
+
+private:
+    auto lock(
+        rust::Box<mw::ExtSessionLockV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::ExtSessionLockV1> override;
 };
 
-class SessionLockV1 : wayland::SessionLockV1
+class SessionLockV1 : public mw::ExtSessionLockV1
 {
 public:
-    SessionLockV1(wl_resource* new_resource, mf::SessionLockManagerV1& manager);
+    SessionLockV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtSessionLockV1Middleware> instance,
+        uint32_t object_id,
+        SessionLockManagerV1& manager);
     ~SessionLockV1();
 
 private:
     class SessionLockV1Observer : public mir::scene::SessionLockObserver
     {
     public:
-        explicit SessionLockV1Observer (mf::SessionLockV1& lock);
+        explicit SessionLockV1Observer(SessionLockV1& lock);
         void on_lock() override;
         void on_unlock() override;
 
@@ -75,11 +100,15 @@ private:
         SessionLockV1& lock;
     };
 
-    void get_lock_surface(wl_resource* id, wl_resource* surface, wl_resource* output) override;
+    auto get_lock_surface(
+        mw::Weak<mw::Surface> const& surface,
+        mw::Weak<mw::Output> const& output,
+        rust::Box<mw::ExtSessionLockSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::ExtSessionLockSurfaceV1> override;
     void destroy() override;
     void unlock_and_destroy() override;
 
-    mf::SessionLockManagerV1& manager;
+    SessionLockManagerV1& manager;
     /* Lifetime annotation:
      * This is safe even though `SessionLockV1Observer` keeps a reference to `this`
      * because the `shared_ptr` is only only shared with the `ObserverRegistrar<>`
@@ -89,18 +118,22 @@ private:
     std::shared_ptr<SessionLockV1Observer> const observer;
 };
 
-class SessionLockSurfaceV1 : wayland::SessionLockSurfaceV1, public WindowWlSurfaceRole
+class SessionLockSurfaceV1 : public mw::ExtSessionLockSurfaceV1, public WindowWlSurfaceRole
 {
 public:
+    auto destroyed_flag() const -> std::shared_ptr<bool const> { return mw::ExtSessionLockSurfaceV1::destroyed_flag(); }
+
     SessionLockSurfaceV1(
-        wl_resource* new_resource,
-        mf::SessionLockManagerV1& manager,
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::ExtSessionLockSurfaceV1Middleware> instance,
+        uint32_t object_id,
+        SessionLockManagerV1& manager,
         WlSurface* surface,
         graphics::DisplayConfigurationOutputId output_id);
     ~SessionLockSurfaceV1() = default;
 
 private:
-    // From wayland::SessionLockSurfaceV1
+    // From wayland::ExtSessionLockSurfaceV1
     void ack_configure(uint32_t serial) override;
 
     // From WindowWlSurfaceRole
@@ -113,36 +146,21 @@ private:
 
     void destroy_role() const override
     {
-        wl_resource_destroy(resource);
+        const_cast<SessionLockSurfaceV1*>(this)->destroy_and_delete();
     }
 };
 
 }
 }
 
-// SessionLockManagerV1
+// SessionLockState
 
-mf::SessionLockManagerV1::SessionLockManagerV1(
-    struct wl_display* display,
-    Executor& wayland_executor,
-    std::shared_ptr<msh::Shell> const& shell,
-    std::shared_ptr<ms::SessionLock> const& session_lock,
-    WlSeat& seat,
-    OutputManager* output_manager,
-    std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<SurfaceRegistry> const& surface_registry)
-    : Global(display, Version<1>()),
-      wayland_executor{wayland_executor},
-      shell{std::move(shell)},
-      session_lock{std::move(session_lock)},
-      seat{seat},
-      output_manager{output_manager},
-      surface_stack{surface_stack},
-      surface_registry{surface_registry}
+mf::SessionLockState::SessionLockState(std::shared_ptr<ms::SessionLock> session_lock)
+    : session_lock{std::move(session_lock)}
 {
 }
 
-bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
+bool mf::SessionLockState::try_lock(SessionLockV1* lock)
 {
     if (active_lock == nullptr)
     {
@@ -156,7 +174,7 @@ bool mf::SessionLockManagerV1::try_lock(SessionLockV1* lock)
     return false;
 }
 
-bool mf::SessionLockManagerV1::try_relinquish_locking_privilege(mir::frontend::SessionLockV1 *lock)
+bool mf::SessionLockState::try_relinquish_locking_privilege(SessionLockV1* lock)
 {
     if (active_lock == lock)
     {
@@ -167,7 +185,7 @@ bool mf::SessionLockManagerV1::try_relinquish_locking_privilege(mir::frontend::S
     return false;
 }
 
-bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
+bool mf::SessionLockState::try_unlock(SessionLockV1* lock)
 {
     if (try_relinquish_locking_privilege(lock))
     {
@@ -180,31 +198,60 @@ bool mf::SessionLockManagerV1::try_unlock(SessionLockV1* lock)
     return false;
 }
 
-bool mf::SessionLockManagerV1::is_active_lock(SessionLockV1* lock)
+bool mf::SessionLockState::is_active_lock(SessionLockV1* lock) const
 {
     return lock == active_lock;
 }
 
-void mf::SessionLockManagerV1::bind(wl_resource* new_resource)
+// create_session_lock_manager_v1
+
+auto mf::create_session_lock_manager_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtSessionLockManagerV1Middleware> instance,
+    uint32_t object_id,
+    Executor& wayland_executor,
+    std::shared_ptr<msh::Shell> const& shell,
+    std::shared_ptr<ms::SessionLock> const& session_lock,
+    WlSeat& seat,
+    OutputManager* output_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry,
+    std::shared_ptr<SessionLockState> const& state)
+    -> std::shared_ptr<mw::ExtSessionLockManagerV1>
 {
-    new Instance{new_resource, *this, surface_registry};
+    return std::make_shared<SessionLockManagerV1>(
+        std::move(client),
+        std::move(instance),
+        object_id,
+        wayland_executor,
+        shell,
+        session_lock,
+        seat,
+        output_manager,
+        surface_registry,
+        state);
 }
 
-// SessionLockManagerV1::Instance
+// SessionLockManagerV1
 
-void mf::SessionLockManagerV1::Instance::lock(wl_resource* lock)
+auto mf::SessionLockManagerV1::lock(
+    rust::Box<mw::ExtSessionLockV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtSessionLockV1>
 {
-    new SessionLockV1(lock, manager);
+    return std::make_shared<SessionLockV1>(client, std::move(child_instance), child_object_id, *this);
 }
 
 // SessionLockV1
 
-mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1& manager)
-    : mw::SessionLockV1(new_resource, Version<1>()),
+mf::SessionLockV1::SessionLockV1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtSessionLockV1Middleware> instance,
+    uint32_t object_id,
+    SessionLockManagerV1& manager)
+    : ExtSessionLockV1{std::move(client), std::move(instance), object_id},
       manager{manager},
       observer{std::make_shared<SessionLockV1Observer>(*this)}
 {
-    if (manager.try_lock(this))
+    if (manager.state->try_lock(this))
     {
         mir::log_debug("SessionLockV1 successfully acquired the lock");
         send_locked_event();
@@ -220,34 +267,45 @@ mf::SessionLockV1::SessionLockV1(wl_resource* new_resource, SessionLockManagerV1
 mf::SessionLockV1::~SessionLockV1()
 {
     mir::log_debug("SessionLockV1 is dying");
-    manager.try_relinquish_locking_privilege(this);
+    manager.state->try_relinquish_locking_privilege(this);
 }
 
-void mf::SessionLockV1::get_lock_surface(wl_resource* id, wl_resource* surface_resource, wl_resource* output)
+auto mf::SessionLockV1::get_lock_surface(
+    mw::Weak<mw::Surface> const& surface,
+    mw::Weak<mw::Output> const& output,
+    rust::Box<mw::ExtSessionLockSurfaceV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::ExtSessionLockSurfaceV1>
 {
-    auto const output_id = OutputManager::output_id_for(output);
+    auto* const output_ptr = mw::as_nullable_ptr(output);
+    auto const output_id = OutputManager::output_id_for(output_ptr);
     if (!output_id)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "wl_output@" +
-            std::to_string(wl_resource_get_id(output)) +
+            std::to_string(output_ptr ? output_ptr->object_id() : 0) +
             " does not map to a valid Mir output ID"));
     }
 
-    new SessionLockSurfaceV1{id, manager, WlSurface::from(surface_resource), output_id.value()};
+    return std::make_shared<SessionLockSurfaceV1>(
+        client,
+        std::move(child_instance),
+        child_object_id,
+        manager,
+        mw::Surface::from<WlSurface>(surface),
+        output_id.value());
 }
 
 void mf::SessionLockV1::destroy()
 {
-    if (manager.is_active_lock(this))
+    if (manager.state->is_active_lock(this))
     {
-        manager.try_relinquish_locking_privilege(this);
+        manager.state->try_relinquish_locking_privilege(this);
         mir::log_debug("SessionLockV1 successfully destroyed itself");
     }
     else
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             Error::invalid_destroy,
             "Destroy requested but session is still locked"};
     }
@@ -255,21 +313,21 @@ void mf::SessionLockV1::destroy()
 
 void mf::SessionLockV1::unlock_and_destroy()
 {
-    if (!manager.try_unlock(this))
+    if (!manager.state->try_unlock(this))
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             Error::invalid_unlock,
             "Unlock requested but locked event was never sent"};
     }
     else
     {
-        manager.try_relinquish_locking_privilege(this);
+        manager.state->try_relinquish_locking_privilege(this);
         mir::log_debug("SessionLockV1 successfully unlocked_and_destroyed itself");
     }
 }
 
-mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(mf::SessionLockV1& lock)
+mf::SessionLockV1::SessionLockV1Observer::SessionLockV1Observer(SessionLockV1& lock)
     : lock{lock}
 {
 }
@@ -284,15 +342,17 @@ void mf::SessionLockV1::SessionLockV1Observer::on_unlock()
 // SessionLockSurfaceV1
 
 mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
-    wl_resource* new_resource,
-    mf::SessionLockManagerV1& manager,
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ExtSessionLockSurfaceV1Middleware> instance,
+    uint32_t object_id,
+    SessionLockManagerV1& manager,
     WlSurface* surface,
     graphics::DisplayConfigurationOutputId output_id)
-    : mw::SessionLockSurfaceV1(new_resource, Version<1>()),
+    : ExtSessionLockSurfaceV1{std::move(client), std::move(instance), object_id},
       WindowWlSurfaceRole(
           manager.wayland_executor,
           &manager.seat,
-          mw::SessionLockSurfaceV1::client,
+          mw::ExtSessionLockSurfaceV1::client,
           surface,
           manager.shell,
           manager.output_manager,
@@ -307,7 +367,7 @@ mf::SessionLockSurfaceV1::SessionLockSurfaceV1(
     spec.visible_on_lock_screen = true;
     spec.ignore_exclusion_zones = true;
     apply_spec(spec);
-    auto const serial = Resource::client->next_serial(nullptr);
+    auto const serial = mw::ExtSessionLockSurfaceV1::client->next_serial(nullptr);
     send_configure_event(serial, 100, 100);
 }
 
@@ -320,6 +380,6 @@ void mf::SessionLockSurfaceV1::handle_resize(std::optional<geom::Point> const&, 
 {
     set_pending_width(new_size.width);
     set_pending_height(new_size.height);
-    auto const serial = Resource::client->next_serial(nullptr);
+    auto const serial = mw::ExtSessionLockSurfaceV1::client->next_serial(nullptr);
     send_configure_event(serial, new_size.width.as_int(), new_size.height.as_int());
 }
