@@ -30,7 +30,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
-#include <cstring>
+#include <string_view>
 #include <latch>
 #include <stdexcept>
 
@@ -1234,7 +1234,7 @@ void mir::scene::BasicSurface::linearised_track_outputs()
             static size_t const max_thread_name_size = 16;
             char thread_name[max_thread_name_size];
             pthread_getname_np(pthread_self(), thread_name, sizeof thread_name);
-            return std::strcmp("Mir/Wayland", thread_name) == 0;
+            return std::string_view(thread_name) == "Mir/Wayland";
         }();
 
     if (on_wayland_thread)
