@@ -40,6 +40,7 @@ namespace frontend
 {
 class WlSurface;
 class BufferStream;
+class SessionCredentials;
 }
 namespace shell
 {
@@ -62,6 +63,7 @@ class Session
 public:
     virtual ~Session() = default;
 
+    virtual auto creds() const -> frontend::SessionCredentials const& = 0;
     virtual auto process_id() const -> pid_t = 0;
     virtual auto socket_fd() const -> Fd = 0;
     virtual auto name() const -> std::string = 0;

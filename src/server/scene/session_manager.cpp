@@ -122,14 +122,14 @@ ms::SessionManager::~SessionManager() noexcept
 }
 
 std::shared_ptr<ms::Session> ms::SessionManager::open_session(
-    pid_t client_pid,
+    mf::SessionCredentials&& creds,
     Fd socket_fd,
     std::string const& name)
 {
     std::shared_ptr<Session> new_session = std::make_shared<ApplicationSession>(
         surface_stack,
         surface_factory,
-        client_pid,
+        std::move(creds),
         socket_fd,
         name,
         observers,
