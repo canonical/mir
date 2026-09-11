@@ -51,7 +51,6 @@ HIDDEN_SYMBOLS = {
     "miral::Keymap::Keymap*;",
     "miral::InputConfiguration::InputConfiguration*;",
     "miral::OutputFilter::OutputFilter*;",
-
     "mir::input::Transformer::?Transformer*;",
     "non-virtual?thunk?to?mir::input::Transformer::?Transformer*;",
     "typeinfo?for?mir::input::Transformer;",
@@ -68,6 +67,7 @@ HIDDEN_SYMBOLS = {
     "miral::TouchEmulator::operator*;",
 }
 
+
 class HeaderDirectory(TypedDict):
     path: str
     is_internal: bool
@@ -76,6 +76,7 @@ class HeaderDirectory(TypedDict):
 class LibraryInfo(TypedDict):
     header_directories: list[HeaderDirectory]
     map_file: str
+
 
 def get_version_from_library_version_str(version: str) -> str:
     """
@@ -89,7 +90,7 @@ def get_major_version_from_str(version: str) -> int:
     """
     Given a string like 5.0.0, returns the major version (e.g. 5).
     """
-    return int(version.split('.')[0])
+    return int(version.split(".")[0])
 
 
 class Symbol:
@@ -106,16 +107,16 @@ class Symbol:
         return self.version.startswith("INTERNAL_")
 
 
-
 def should_generate_as_class_or_struct(node: clang.cindex.Cursor):
-    return ((node.kind == clang.cindex.CursorKind.CLASS_DECL
-          or node.kind == clang.cindex.CursorKind.STRUCT_DECL)
-          and node.is_definition())
+    return (
+        node.kind == clang.cindex.CursorKind.CLASS_DECL
+        or node.kind == clang.cindex.CursorKind.STRUCT_DECL
+    ) and node.is_definition()
 
 
 def is_operator(node: clang.cindex.Cursor) -> bool:
     if node.spelling.startswith("operator"):
-        remainder = node.spelling[len("operator"):]
+        remainder = node.spelling[len("operator") :]
         if any(not c.isalnum() for c in remainder):
             return True
 
@@ -134,11 +135,12 @@ def create_node_symbol_name(node: clang.cindex.Cursor) -> str:
 def has_vtable(node: clang.cindex.Cursor):
     # This method assumes that the node is a class/struct
     for child in node.get_children():
-        if ((child.kind == clang.cindex.CursorKind.CXX_METHOD
+        if (
+            child.kind == clang.cindex.CursorKind.CXX_METHOD
             or child.kind == clang.cindex.CursorKind.DESTRUCTOR
             or child.kind == clang.cindex.CursorKind.CONSTRUCTOR
-            or child.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
-            and child.is_virtual_method()):
+            or child.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
+        ) and child.is_virtual_method():
             return True
 
     # Otherwise, look up the tree
@@ -171,7 +173,9 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
         if clang.cindex.conf.lib.clang_isVirtualBase(child):
             result = True
         else:
-            class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+            class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(
+                child
+            )
             if class_or_struct_node is None:
                 continue
 
@@ -208,7 +212,10 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
     spelling = node.spelling
     n_template_args = node.type.get_num_template_arguments()
     if n_template_args != -1:
-        template_types = [node.type.get_template_argument_type(i).spelling for i in range(n_template_args)]
+        template_types = [
+            node.type.get_template_argument_type(i).spelling
+            for i in range(n_template_args)
+        ]
         spelling += "<" + ",".join(template_types) + ">"
     if is_operator(node):
         spelling = "operator"
@@ -218,53 +225,68 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
     return get_namespace_str(node.semantic_parent) + [spelling]
 
 
-def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> set[str]:
+def traverse_ast(
+    node: clang.cindex.Cursor, filename: str, result: set[str]
+) -> set[str]:
     # Ignore private and protected variables
-    if (node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE):
+    if node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE:
         return result
 
     # Check if we need to output a symbol
-    if ((node.location.file is not None and node.location.file.name == filename)
-        and ((node.kind == clang.cindex.CursorKind.FUNCTION_DECL and not is_function_inline(node))
-          or node.kind == clang.cindex.CursorKind.CXX_METHOD
-          or node.kind == clang.cindex.CursorKind.VAR_DECL
-          or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
-          or node.kind == clang.cindex.CursorKind.DESTRUCTOR
-          or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
-          or should_generate_as_class_or_struct(node))
-          and not node.is_pure_virtual_method()
-          and not node.is_anonymous()):
-
+    if (
+        (node.location.file is not None and node.location.file.name == filename)
+        and (
+            (
+                node.kind == clang.cindex.CursorKind.FUNCTION_DECL
+                and not is_function_inline(node)
+            )
+            or node.kind == clang.cindex.CursorKind.CXX_METHOD
+            or node.kind == clang.cindex.CursorKind.VAR_DECL
+            or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
+            or node.kind == clang.cindex.CursorKind.DESTRUCTOR
+            or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
+            or should_generate_as_class_or_struct(node)
+        )
+        and not node.is_pure_virtual_method()
+        and not node.is_anonymous()
+    ):
         namespace_str = "::".join(get_namespace_str(node))
-        _logger.debug(f"Emitting node {namespace_str} in file {node.location.file.name}")
+        _logger.debug(
+            f"Emitting node {namespace_str} in file {node.location.file.name}"
+        )
 
         def add_symbol_str(s: str):
-            if '<' in s or '>' in s:
-                s = s.replace('<', '?').replace('>', '?').replace(',', '*')
-            s += ';'
-            if not s in HIDDEN_SYMBOLS:
+            if "<" in s or ">" in s:
+                s = s.replace("<", "?").replace(">", "?").replace(",", "*")
+            s += ";"
+            if s not in HIDDEN_SYMBOLS:
                 result.add(s)
 
         # Classes and structs have a specific output
-        if (node.kind == clang.cindex.CursorKind.CLASS_DECL
-            or node.kind == clang.cindex.CursorKind.STRUCT_DECL):
+        if (
+            node.kind == clang.cindex.CursorKind.CLASS_DECL
+            or node.kind == clang.cindex.CursorKind.STRUCT_DECL
+        ):
             if has_vtable(node):
                 add_symbol_str(f"vtable?for?{namespace_str}")
             if has_virtual_base_class(node):
                 add_symbol_str(f"VTT?for?{namespace_str}")
             add_symbol_str(f"typeinfo?for?{namespace_str}")
         else:
+
             def add_internal(s: str):
                 add_symbol_str(f"{s}*")
+
             add_internal(namespace_str)
 
             # Check if we're marked virtual
             is_virtual = False
-            if ((node.kind == clang.cindex.CursorKind.CXX_METHOD
+            if (
+                node.kind == clang.cindex.CursorKind.CXX_METHOD
                 or node.kind == clang.cindex.CursorKind.DESTRUCTOR
                 or node.kind == clang.cindex.CursorKind.CONSTRUCTOR
-                or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION)
-                and node.is_virtual_method()):
+                or node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION
+            ) and node.is_virtual_method():
                 add_internal(f"non-virtual?thunk?to?{namespace_str}")
                 is_virtual = True
             else:
@@ -279,11 +301,16 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
             # classes.. If we find find the provided method in those classes
             # we need to generate a a virtual?thunk?to? for the method/constructor/deconstructor.
             if is_virtual:
-                def search_class_hierarchy_for_virtual_thunk(derived: clang.cindex.Cursor):
-                    assert (derived.kind == clang.cindex.CursorKind.CLASS_DECL
-                            or derived.kind == clang.cindex.CursorKind.STRUCT_DECL
-                            or derived.kind == clang.cindex.CursorKind.CLASS_TEMPLATE
-                            or derived.kind == clang.cindex.CursorKind.TYPEDEF_DECL)
+
+                def search_class_hierarchy_for_virtual_thunk(
+                    derived: clang.cindex.Cursor,
+                ):
+                    assert (
+                        derived.kind == clang.cindex.CursorKind.CLASS_DECL
+                        or derived.kind == clang.cindex.CursorKind.STRUCT_DECL
+                        or derived.kind == clang.cindex.CursorKind.CLASS_TEMPLATE
+                        or derived.kind == clang.cindex.CursorKind.TYPEDEF_DECL
+                    )
 
                     # Find the base classes for the derived class
                     base_classes: list[clang.cindex.Cursor] = []
@@ -291,7 +318,9 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
                         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
                             continue
 
-                        class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+                        class_or_struct_node = (
+                            clang.cindex.conf.lib.clang_getCursorDefinition(child)
+                        )
                         if class_or_struct_node is None:
                             continue
 
@@ -301,7 +330,7 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
 
                         # Search the immediate base classes for the function name
                         for other_child in class_or_struct_node.get_children():
-                            if (other_child.displayname == node.displayname):
+                            if other_child.displayname == node.displayname:
                                 add_internal(f"virtual?thunk?to?{namespace_str}")
                                 return True
 
@@ -315,14 +344,17 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
 
                 search_class_hierarchy_for_virtual_thunk(node.semantic_parent)
     elif node.location.file is not None:
-        _logger.debug(f"NOT emitting node {node.spelling} in file {node.location.file.name}")
-
+        _logger.debug(
+            f"NOT emitting node {node.spelling} in file {node.location.file.name}"
+        )
 
     # Traverse down the tree if we can
     is_file = node.kind == clang.cindex.CursorKind.TRANSLATION_UNIT
-    is_containing_node = (node.kind == clang.cindex.CursorKind.CLASS_DECL
+    is_containing_node = (
+        node.kind == clang.cindex.CursorKind.CLASS_DECL
         or node.kind == clang.cindex.CursorKind.STRUCT_DECL
-        or node.kind == clang.cindex.CursorKind.NAMESPACE)
+        or node.kind == clang.cindex.CursorKind.NAMESPACE
+    )
     if is_file or is_containing_node:
         if clang.cindex.conf.lib.clang_Location_isInSystemHeader(node.location):
             _logger.debug(f"Node is in a system header={node.location.file.name}")
@@ -331,10 +363,11 @@ def traverse_ast(node: clang.cindex.Cursor, filename: str, result: set[str]) -> 
         for child in node.get_children():
             traverse_ast(child, filename, result)
     else:
-        _logger.debug(f"Nothing to process for node={node.spelling} in file={node.location.file.name}")
+        _logger.debug(
+            f"Nothing to process for node={node.spelling} in file={node.location.file.name}"
+        )
 
     return result
-
 
 
 def _parse_single_header(file_path: str, parse_args: list[str]) -> set[str]:
@@ -355,9 +388,9 @@ def _parse_single_header(file_path: str, parse_args: list[str]) -> set[str]:
 
 
 def process_directory(directory: Path, search_dirs: list[str]) -> set[str]:
-    files = list(directory.rglob('*.h'))
+    files = list(directory.rglob("*.h"))
 
-    args = ['-std=c++26', '-x', 'c++-header']
+    args = ["-std=c++26", "-x", "c++-header"]
     for dir in search_dirs:
         args.append(f"-I{dir}")
 
@@ -366,8 +399,7 @@ def process_directory(directory: Path, search_dirs: list[str]) -> set[str]:
     combined: set[str] = set()
     with concurrent.futures.ProcessPoolExecutor() as executor:
         futures = [
-            executor.submit(_parse_single_header, f.as_posix(), args)
-            for f in files
+            executor.submit(_parse_single_header, f.as_posix(), args) for f in files
         ]
         for future in concurrent.futures.as_completed(futures):
             combined |= future.result()
@@ -388,23 +420,30 @@ def read_symbols_from_file(f: argparse.FileType, library_name: str) -> list[Symb
     for line in f.readlines():
         if line.startswith(library_name):
             # This denotes that a new version
-            version_str = line[len(library_name):].split()[0]
+            version_str = line[len(library_name) :].split()[0]
         elif line.startswith("    "):
             line = line.strip()
-            assert line.endswith(';')
+            assert line.endswith(";")
             retval.append(Symbol(line, version_str, False))
         elif line.startswith("  "):
             line = line.strip()
-            if line.startswith("global:") or line.startswith("local:") or line == 'extern "C++" {' or line.startswith("}"):
+            if (
+                line.startswith("global:")
+                or line.startswith("local:")
+                or line == 'extern "C++" {'
+                or line.startswith("}")
+            ):
                 continue
 
             # This is a c-symbol
-            assert line.endswith(';')
+            assert line.endswith(";")
             retval.append(Symbol(line, version_str, True))
     return retval
 
 
-def get_added_symbols(previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool) -> list[str]:
+def get_added_symbols(
+    previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool
+) -> list[str]:
     if new_symbols is None:
         return []
     added_symbols: set[str] = new_symbols.copy()
@@ -416,7 +455,9 @@ def get_added_symbols(previous_symbols: list[Symbol], new_symbols: Optional[set[
     return added_symbols
 
 
-def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool) -> bool:
+def report_symbols_diff(
+    previous_symbols: list[Symbol], new_symbols: Optional[set[str]], is_internal: bool
+) -> bool:
     """
     Prints the diff between the previous symbols and the new symbols.
     When new_symbols is None (no headers directory was provided), no diff is performed.
@@ -441,10 +482,12 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[se
     # cannot be compared against new_symbols.
     deleted_symbols = set()
     for symbol in previous_symbols:
-        if (is_internal == symbol.is_internal()
-                and not symbol.is_c_symbol
-                and not symbol.name.startswith('"')
-                and symbol.name not in new_symbols):
+        if (
+            is_internal == symbol.is_internal()
+            and not symbol.is_c_symbol
+            and not symbol.name.startswith('"')
+            and symbol.name not in new_symbols
+        ):
             deleted_symbols.add(symbol.name)
     deleted_symbols = list(deleted_symbols)
     deleted_symbols.sort()
@@ -465,37 +508,59 @@ def report_symbols_diff(previous_symbols: list[Symbol], new_symbols: Optional[se
 
 
 def main():
-    parser = argparse.ArgumentParser(description="This tool parses the header files of a provided in the Mir project "
-                                        "and creates a list of new internal and external symbols.\n"
-                                        "By default, the script updates the corresponding symbols.map file automatically. "
-                                        "To view this diff only, the user may provide the --diff option.\n"
-                                        "Please install libclang-19-dev and python3-clang-19 before using this tool.\n"
-                                        "You must also specify the 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' and 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH'"
-                                        " environment variables, for example:"
-                                        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
-                                        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib"
-                                        , formatter_class=argparse.RawTextHelpFormatter)
-    parser.add_argument('--library-name', type=str,
-                    help='name of library',
-                    dest="library_name",
-                    required=True)
-    parser.add_argument('--symbols-map-path', type=argparse.FileType('r+', encoding='latin-1'),
-                    help='absolute path to a symbols map',
-                    dest="symbols_map_path",
-                    required=True)
-    parser.add_argument('--external-headers-directory', type=Path,
-                    help=f'absolute path to the directory containing the public-facing headers of this library',
-                    dest="external_headers")
-    parser.add_argument('--internal-headers-directory', type=Path,
-                    help=f'absolute path to the directory containing private headers of this library',
-                    dest="internal_headers")
-    parser.add_argument('--version', type=str,
-                    help='current version of the library',
-                    required=True)
-    parser.add_argument('--diff', action='store_true',
-                    help='if true a diff should be output to the console')
-    parser.add_argument('--include-dirs', type=str, help="colon separated list of directories to search for symbols",
-                        required=True, dest='include_dirs')
+    parser = argparse.ArgumentParser(
+        description="This tool parses the header files of a provided in the Mir project "
+        "and creates a list of new internal and external symbols.\n"
+        "By default, the script updates the corresponding symbols.map file automatically. "
+        "To view this diff only, the user may provide the --diff option.\n"
+        "Please install libclang-19-dev and python3-clang-19 before using this tool.\n"
+        "You must also specify the 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' and 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH'"
+        " environment variables, for example:"
+        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
+        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "--library-name",
+        type=str,
+        help="name of library",
+        dest="library_name",
+        required=True,
+    )
+    parser.add_argument(
+        "--symbols-map-path",
+        type=argparse.FileType("r+", encoding="latin-1"),
+        help="absolute path to a symbols map",
+        dest="symbols_map_path",
+        required=True,
+    )
+    parser.add_argument(
+        "--external-headers-directory",
+        type=Path,
+        help="absolute path to the directory containing the public-facing headers of this library",
+        dest="external_headers",
+    )
+    parser.add_argument(
+        "--internal-headers-directory",
+        type=Path,
+        help="absolute path to the directory containing private headers of this library",
+        dest="internal_headers",
+    )
+    parser.add_argument(
+        "--version", type=str, help="current version of the library", required=True
+    )
+    parser.add_argument(
+        "--diff",
+        action="store_true",
+        help="if true a diff should be output to the console",
+    )
+    parser.add_argument(
+        "--include-dirs",
+        type=str,
+        help="colon separated list of directories to search for symbols",
+        required=True,
+        dest="include_dirs",
+    )
 
     args = parser.parse_args()
 
@@ -505,8 +570,8 @@ def main():
         _logger.info("symbols_map_generator is running in 'output symbols' mode")
 
     # Point libclang to a file on the system
-    if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' in os.environ:
-        file_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH']
+    if "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH" in os.environ:
+        file_path = os.environ["MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH"]
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH is {file_path}")
         clang.cindex.Config.set_library_file(file_path)
     else:
@@ -533,13 +598,15 @@ def main():
             clang.cindex.Config.set_library_file(found_so)
             _logger.info(f"Using found libclang.so.1 at: {found_so}")
         else:
-            _logger.error("Could not find libclang.so.1 in the environment. "
-                          "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH "
-                          "if libclang.so.1 is manually installed in a non-standard directory.")
+            _logger.error(
+                "Could not find libclang.so.1 in the environment. "
+                "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH "
+                "if libclang.so.1 is manually installed in a non-standard directory."
+            )
             exit(1)
 
-    if 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH' in os.environ:
-        library_path = os.environ['MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH']
+    if "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH" in os.environ:
+        library_path = os.environ["MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH"]
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH is {library_path}")
         clang.cindex.Config.set_library_path(library_path)
     else:
@@ -557,7 +624,7 @@ def main():
             if os.path.isdir(lib_dir):
                 # Check if directory contains libclang files
                 for file in os.listdir(lib_dir):
-                    if file.startswith('libclang') and '.so' in file:
+                    if file.startswith("libclang") and ".so" in file:
                         found_lib = lib_dir
                         _logger.debug(f"Found clang library directory at: {lib_dir}")
                         break
@@ -567,9 +634,11 @@ def main():
             clang.cindex.Config.set_library_path(found_lib)
             _logger.info(f"Using found clang library directory at: {found_lib}")
         else:
-            _logger.error("Could not find clang library directory. "
-                          "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH "
-                          "if clang is not installed in the standard directory.")
+            _logger.error(
+                "Could not find clang library directory. "
+                "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH "
+                "if clang is not installed in the standard directory."
+            )
             exit(1)
 
     include_dirs = args.include_dirs.split(":")
@@ -579,39 +648,39 @@ def main():
     version = args.version
 
     # Remove the patch version since we're not interested in it
-    split_version = version.split('.')
+    split_version = version.split(".")
     if len(split_version) == 3:
         version = f"{split_version[0]}.{split_version[1]}"
 
-    _logger.info(f"Symbols map generation is beginning for library={library} with version={version}")
+    _logger.info(
+        f"Symbols map generation is beginning for library={library} with version={version}"
+    )
 
     # Create a set that includes all of the available symbols.
     # None means "no headers directory was provided" — diff checks are skipped for that type.
     external_symbols: Optional[set[str]] = None
     if args.external_headers:
         _logger.info(f"Processing external headers directory: {args.external_headers}")
-        external_symbols = process_directory(
-            args.external_headers,
-            include_dirs
-        )
+        external_symbols = process_directory(args.external_headers, include_dirs)
 
     internal_symbols: Optional[set[str]] = None
     if args.internal_headers:
         _logger.info(f"Processing internal headers directory: {args.internal_headers}")
-        internal_symbols = process_directory(
-            args.internal_headers,
-            include_dirs
-        )
+        internal_symbols = process_directory(args.internal_headers, include_dirs)
 
     previous_symbols = read_symbols_from_file(args.symbols_map_path, library)
 
     if args.diff:
         print("External Symbols Diff:")
-        has_changed_external_symbols = report_symbols_diff(previous_symbols, external_symbols, False)
+        has_changed_external_symbols = report_symbols_diff(
+            previous_symbols, external_symbols, False
+        )
 
         print("")
         print("Internal Symbols Diff:")
-        has_changed_internal_symbols = report_symbols_diff(previous_symbols, internal_symbols, True)
+        has_changed_internal_symbols = report_symbols_diff(
+            previous_symbols, internal_symbols, True
+        )
         print("")
         if has_changed_external_symbols or has_changed_internal_symbols:
             exit(1)
@@ -619,8 +688,12 @@ def main():
         _logger.info(f"Outputting the symbols file to: {args.symbols_map_path.name}")
 
         # We now have a list of new external and internal symbols. Our goal now is to add them to the correct stanzas
-        new_external_symbols = get_added_symbols(previous_symbols, external_symbols, False)
-        new_internal_symbols = get_added_symbols(previous_symbols, internal_symbols, True)
+        new_external_symbols = get_added_symbols(
+            previous_symbols, external_symbols, False
+        )
+        new_internal_symbols = get_added_symbols(
+            previous_symbols, internal_symbols, True
+        )
 
         next_major = get_major_version_from_str(version)
         next_version = f"{library.upper()}_{version}"
@@ -629,7 +702,9 @@ def main():
 
         # Remake the stanzas for the previous symbols
         for symbol in previous_symbols:
-            major = get_major_version_from_str(get_version_from_library_version_str(symbol.version))
+            major = get_major_version_from_str(
+                get_version_from_library_version_str(symbol.version)
+            )
 
             # If we are going up by a major version, then we should add
             # all existing symbols to the new stanza
@@ -638,11 +713,8 @@ def main():
             else:
                 symbol_version = f"{library.upper()}_{version}"
 
-            if not symbol_version in data_to_output:
-                data_to_output[symbol_version] = {
-                    "c": [],
-                    "c++": []
-                }
+            if symbol_version not in data_to_output:
+                data_to_output[symbol_version] = {"c": [], "c++": []}
             if symbol.is_c_symbol:
                 bisect.insort(data_to_output[symbol_version]["c"], symbol.name)
             else:
@@ -650,20 +722,14 @@ def main():
 
         # Add the external symbols
         for symbol in new_external_symbols:
-            if not next_version in data_to_output:
-                data_to_output[next_version] = {
-                    "c": [],
-                    "c++": []
-                }
+            if next_version not in data_to_output:
+                data_to_output[next_version] = {"c": [], "c++": []}
             bisect.insort(data_to_output[next_version]["c++"], symbol)
 
         # Add the internal symbols
         for symbol in new_internal_symbols:
-            if not next_internal_version in data_to_output:
-                data_to_output[next_internal_version] = {
-                    "c": [],
-                    "c++": []
-                }
+            if next_internal_version not in data_to_output:
+                data_to_output[next_internal_version] = {"c": [], "c++": []}
             bisect.insort(data_to_output[next_internal_version]["c++"], symbol)
 
         # Finally, output them to the file
@@ -698,22 +764,23 @@ def main():
             else:
                 c_symbols_str = "\n  " + "\n  ".join(symbols_dict["c"]) + "\n"
             cpp_symbols_str = "\n    ".join(symbols_dict["c++"])
-            output_str = f'''{version} {"{"}
+            output_str = f"""{version} {"{"}
 global:{c_symbols_str}
   extern "C++" {"{"}
     {cpp_symbols_str}
-  {'};'}
+  {"};"}
 {closing_line}
 
-'''
+"""
 
             f.write(output_str)
 
         f.truncate()
 
+
 if __name__ == "__main__":
     try:
         main()
-    except Exception as e:
+    except Exception:
         _logger.exception(LIBRARY_NOT_FOUND_ERROR_MSG)
         sys.exit(1)
