@@ -78,10 +78,10 @@ auto inline touch_ids_match(
     return true;
 }
 
-/// Takes in a Mir*EventModifiers and an int bitmask and determines if they are the same.
+/// Takes in two Mir*EventModifiers and determines if they are the same.
 /// If not, the discrepancy is logged to the MatchResultListener.
 template<typename T>
-auto inline modifiers_match(T const& expected, int actual, testing::MatchResultListener* result_listener) -> bool
+auto inline modifiers_match(T const& expected, T const& actual, testing::MatchResultListener* result_listener) -> bool
 {
     if (expected != actual)
     {
@@ -306,7 +306,8 @@ MATCHER_P(KeyWithModifiers, modifiers, "")
     if (event_is_nullptr(kev, result_listener))
         return false;
 
-    if (!modifiers_match(modifiers, mir_keyboard_event_modifiers(kev), result_listener))
+    if (!modifiers_match(
+            static_cast<MirInputEventModifiers>(modifiers), mir_keyboard_event_modifiers(kev), result_listener))
         return false;
 
     return true;
@@ -681,7 +682,8 @@ MATCHER_P(PointerEventWithModifiers, modifiers, "")
     if (event_is_nullptr(pev, result_listener))
         return false;
 
-    if (!modifiers_match(modifiers, mir_pointer_event_modifiers(pev), result_listener))
+    if (!modifiers_match(
+            static_cast<MirInputEventModifiers>(modifiers), mir_pointer_event_modifiers(pev), result_listener))
         return false;
 
     return true;

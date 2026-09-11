@@ -34,10 +34,6 @@ set(
   ${PROJECT_SOURCE_DIR}/src/include/server/mir/input/cursor_observer_multiplexer.h
 )
 
-set_property(
-    SOURCE default_configuration.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
 add_library(
   mirinput OBJECT
 

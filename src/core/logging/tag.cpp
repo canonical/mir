@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <utility>
 
 
 namespace ml = mir::logging;
@@ -267,13 +268,6 @@ void ml::tag::set_severity(std::string_view name, Severity sev)
     for_each_child(tag, locked_tags, [sev](ml::Tag& tag) { tag.logging_severity = sev; });
 }
 
-// GCC and Clang both ensure the switch is exhaustive.
-// GCC, however, gets a "control reaches end of non-void function" warning without this
-#ifndef __clang__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wreturn-type"
-#endif
-
 auto std::formatter<ml::Severity>::format(ml::Severity sev, std::format_context& ctx) const
     -> std::format_context::iterator
 {
@@ -292,10 +286,7 @@ auto std::formatter<ml::Severity>::format(ml::Severity sev, std::format_context&
                 case ml::Severity::debug:
                     return "debug";
             }
+            std::unreachable();
         };
     return std::formatter<std::string>::format(sev_to_str(sev), ctx);
 }
-
-#ifndef __clang__
-#pragma GCC diagnostic pop
-#endif

@@ -121,7 +121,7 @@ TEST(ShmBacking, can_get_rw_range_covering_whole_pool)
 
     constexpr std::byte const fill_value{0xab};
     ::memset(mapping->data(), std::to_integer<int>(fill_value), shm_size);
-    for(auto i = 0; i < shm_size; ++i)
+    for(std::size_t i = 0; i < shm_size; ++i)
     {
         EXPECT_THAT((*mapping)[i], Eq(fill_value));
     }
@@ -223,7 +223,7 @@ TEST(ShmBacking, two_rw_ranges_see_each_others_changes)
         EXPECT_THAT(a, Eq(mapping_two_fill));
     }
 
-    for (auto i = 0; i < shm_size / 2; ++i)
+    for (std::size_t i = 0; i < shm_size / 2; ++i)
     {
         EXPECT_THAT((*map_one)[i], Eq(mapping_one_fill));
     }
@@ -538,7 +538,7 @@ TEST(ShmBacking, resize_rechecks_backing_size)
     auto range = backing->get_rw_range(0, shm_size * 2);
     auto map = range->map_rw();
 
-    for (auto i = 0; i < shm_size; ++i)
+    for (std::size_t i = 0; i < shm_size; ++i)
     {
         EXPECT_THAT((*map)[i], Eq(fill));
     }

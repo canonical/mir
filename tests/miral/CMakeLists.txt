@@ -1,13 +1,3 @@
-# We can't tell which version of gtest we're building against and INSTANTIATE_TEST_SUITE_P changed in
-# a way that relies on a gcc extension to support backward-compatible code, So...
-check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-check_cxx_compiler_flag(-Wno-pedantic MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
-if (CMAKE_CXX_COMPILER_ID MATCHES "Clang" AND MIRAL_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-gnu-zero-variadic-macro-arguments>)
-elseif(MIRAL_COMPILE_WITH_W_NO_PEDANTIC)
-    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-Wno-pedantic>)
-endif()
-
 if (MIR_BUILD_INTERPROCESS_TESTS)
     list(APPEND MIRAL_TEST_SOURCES window_info.cpp)
 endif()
