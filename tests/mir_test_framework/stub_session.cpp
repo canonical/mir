@@ -16,6 +16,8 @@
 
 #include <mir/test/doubles/stub_session.h>
 
+#include <unistd.h>
+
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;
 

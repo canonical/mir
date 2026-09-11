@@ -43,6 +43,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <unistd.h>
+
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 namespace mi = mir::input;

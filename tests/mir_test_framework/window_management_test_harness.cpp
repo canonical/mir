@@ -38,6 +38,8 @@
 #include <miral/output.h>
 #include "src/miral/window_manager_tools_implementation.h"
 
+#include <unistd.h>
+
 namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mf = mir::frontend;

@@ -48,6 +48,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <unistd.h>
+
 namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace ms = mir::scene;
