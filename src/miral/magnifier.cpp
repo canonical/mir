@@ -100,7 +100,16 @@ public:
         server.add_init_callback(
             [&]
             {
-                server.the_main_loop()->spawn([=, this, &server] { this->post_init(server); });
+                cursor_observer = std::make_shared<CursorObserver>(this);
+                server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
+
+                display_config_observer = std::make_shared<DisplayConfigObserver>(*this);
+                server.the_display_configuration_observer_registrar()->register_interest(display_config_observer);
+
+                auto s = state.lock();
+
+                if (auto const surf = s->surface.lock(); surf && s->default_enabled)
+                    place_at_cursor(*s);
             });
 
         server.add_stop_callback(
@@ -115,19 +124,6 @@ public:
             });
     }
 
-    void post_init(mir::Server& server)
-    {
-        cursor_observer = std::make_shared<CursorObserver>(this);
-        server.the_cursor_observer_multiplexer()->register_interest(cursor_observer);
-
-        display_config_observer = std::make_shared<DisplayConfigObserver>(*this);
-        server.the_display_configuration_observer_registrar()->register_interest(display_config_observer);
-
-        auto s = state.lock();
-
-        if (auto const surf = s->surface.lock(); surf && s->default_enabled)
-            place_at_cursor(*s);
-    }
 
     void set_enable(bool enable)
     {
