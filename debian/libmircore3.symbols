@@ -64,3 +64,22 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, char*)@MIR_CORE_2.29" 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, std::__va_list)@MIR_CORE_2.29" 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, void*)@MIR_CORE_2.29" 2.29.0
+ MIR_CORE_2.30@MIR_CORE_2.30 2.30.0
+ (c++)"mir::graphics::DisplayConfiguration::valid() const@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::DisplayConfigurationOutput::extents() const@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::DisplayConfigurationOutput::transformation() const@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::DisplayConfigurationOutput::valid() const@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::DisplayInfo::DisplayInfo(std::vector<unsigned char, std::allocator<unsigned char> > const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::GammaCurves::GammaCurves(std::vector<unsigned short, std::allocator<unsigned short> > const&, std::vector<unsigned short, std::allocator<unsigned short> > const&, std::vector<unsigned short, std::allocator<unsigned short> > const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::LinearGammaLUTs::LinearGammaLUTs(int)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput(mir::graphics::DisplayConfigurationOutput&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::UserDisplayConfigurationOutput::extents() const@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::graphics::DisplayConfiguration const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::graphics::DisplayConfigurationCard const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::graphics::DisplayConfigurationMode const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::operator<<(std::basic_ostream<char, std::char_traits<char> >&, mir::graphics::DisplayConfigurationOutput const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::operator==(mir::graphics::DisplayConfiguration const&, mir::graphics::DisplayConfiguration const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::graphics::operator==(mir::graphics::DisplayConfigurationOutput const&, mir::graphics::DisplayConfigurationOutput const&)@MIR_CORE_2.30" 2.30.0
+ (c++)"mir::output_type_name(unsigned int)@MIR_CORE_2.30" 2.30.0
+ (c++)"typeinfo for mir::graphics::DisplayConfiguration@MIR_CORE_2.30" 2.30.0
+ (c++)"vtable for mir::graphics::DisplayConfiguration@MIR_CORE_2.30" 2.30.0

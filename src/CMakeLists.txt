@@ -1,5 +1,5 @@
 # We need MIRPLATFORM_ABI in both libmirplatform and the platform implementations.
-set(MIRPLATFORM_ABI 35)
+set(MIRPLATFORM_ABI 36)
 
 set(MIRAL_VERSION_MAJOR 6)
 set(MIRAL_VERSION_MINOR 0)

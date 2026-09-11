@@ -71,3 +71,29 @@ MIR_CORE_2.29 {
   };
 local: *;
 };
+
+MIRCORE_2.30 {
+  global:
+  extern "C++" {
+    mir::graphics::DisplayConfiguration::operator*;
+    mir::graphics::DisplayConfigurationOutput::extents*;
+    mir::graphics::DisplayConfigurationOutput::transformation*;
+    mir::graphics::DisplayConfigurationOutput::valid*;
+    mir::graphics::DisplayConfigurationPolicy::apply_to*;
+    mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
+    mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
+    mir::graphics::DisplayConfigurationPolicy::operator*;
+    mir::graphics::DisplayConfiguration::valid*;
+    mir::graphics::DisplayInfo::?DisplayInfo*;
+    mir::graphics::DisplayInfo::DisplayInfo*;
+    mir::graphics::DisplayInfo::operator*;
+    mir::graphics::GammaCurves::GammaCurves*;
+    mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
+    mir::graphics::UserDisplayConfigurationOutput::extents*;
+    mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
+    mir::output_type_name*;
+    typeinfo?for?mir::graphics::DisplayConfiguration;
+    vtable?for?mir::graphics::DisplayConfiguration;
+    mir::graphics::operator*;
+  };
+} MIR_CORE_2.29;
