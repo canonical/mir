@@ -1,8 +1,8 @@
 use crate::protocol_parser::WaylandProtocol;
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
-use std::fs;
-use syn::Ident;
+use std::{fs, sync::LazyLock};
+use syn::{parse_file, Ident, Item};
 
 /// Write the generated Rust code to a file with proper formatting.
 pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
@@ -109,4 +109,52 @@ pub fn generate_namespace(protocol: &WaylandProtocol) -> TokenStream {
         let protocol_module = dash_to_snake_ident(&protocol.name);
         quote! { protocols::#protocol_module }
     }
+}
+
+/// Produce a list of protocol names that are implemented by `wayland_rs`.
+///
+/// An implemented protocol is any module declaration within `src/protocol_impls/mod.rs`. To
+/// implement a new protocol, create a corresponding module within `src/protocol_impls` (eg.
+/// `src/protocol_impls/wl_fixes.rs`), and declare the module in `src/protocol_impls/mod.rs`.
+///
+/// This list is computed once on initial access, and leaked for the remainder of the program.
+pub fn natively_implemented_protocols() -> &'static [&'static str] {
+    static NATIVELY_IMPLEMENTED_PROTOCOLS: LazyLock<Box<[&'static str]>> = LazyLock::new(|| {
+        let protocol_impls_mod = "src/protocol_impls/mod.rs";
+        let mod_contents =
+            fs::read_to_string(protocol_impls_mod).expect("protocol_impls module file");
+        parse_file(&mod_contents)
+            .expect("valid protocol_impls module file")
+            .items
+            .iter()
+            .filter_map(|item| {
+                if let Item::Mod(item_mod) = item {
+                    Some(item_mod)
+                } else {
+                    None
+                }
+            })
+            .map(|item_mod| item_mod.ident.to_string().leak() as &'static str)
+            .collect::<Vec<_>>()
+            .into_boxed_slice()
+    });
+
+    &NATIVELY_IMPLEMENTED_PROTOCOLS
+}
+
+/// Determine if the provided protocol should be used during FFI code generation. A protocol may be
+/// skipped if:
+/// - it has an implementation within `src/protocol_impls` (see [`implemented_protocols`])
+/// - it has been manually excluded (eg. `wl_display` and `wl_registry`)
+pub fn protocol_requires_ffi_codegen(protocol: impl PartialEq<&'static str>) -> bool {
+    const EXCLUDED_PROTOCOLS: [&str; 2] = [
+        // wl_display is handled specially in wayland_server crate via the 'Display' struct.
+        "wl_display",
+        "wl_registry",
+    ];
+
+    EXCLUDED_PROTOCOLS
+        .iter()
+        .chain(natively_implemented_protocols())
+        .all(|excluded_protocol| protocol != *excluded_protocol)
 }

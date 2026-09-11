@@ -2,7 +2,7 @@
  * Copyright © Canonical Ltd.
  *
  * This program is free software: you can redistribute it and/or modify it
- * under the terms of the GNU General Public License version 2 or 3,
+ * under the terms of the GNU General Public License version 3,
  * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -14,14 +14,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-// We use include! here so that "rustfmt" does not get angry with us if
-// we just mod libraries.
+#ifndef MIR_FRONTEND_WL_FIXES_H
+#define MIR_FRONTEND_WL_FIXES_H
 
-include!("dispatch.rs");
-include!("protocols.rs");
-include!("middleware.rs");
-include!("ffi.rs");
-include!("wayland_server_generated.rs");
-mod protocol_impls;
-mod wayland_client;
-mod wayland_server_core;
+#include "wayland_wrapper.h"
+
+namespace mir::frontend
+{
+class WlFixes : public wayland::Fixes::Global
+{
+public:
+    explicit WlFixes(wl_display* display);
+
+private:
+    void bind(wl_resource* new_wl_fixes) override;
+};
+}
+
+#endif // MIR_FRONTEND_WL_FIXES_H

@@ -20,7 +20,8 @@ use crate::cpp_builder::{
 };
 use crate::helpers::{
     dash_to_snake, format_wayland_interface_to_cpp_class,
-    format_wayland_interface_to_rust_extension_struct, snake_to_pascal,
+    format_wayland_interface_to_rust_extension_struct, protocol_requires_ffi_codegen,
+    snake_to_pascal,
 };
 use crate::protocol_parser::{
     WaylandArg, WaylandArgType, WaylandEnum, WaylandEvent, WaylandInterface, WaylandProtocol,
@@ -91,9 +92,7 @@ fn create_global_factory(protocols: &[WaylandProtocol]) -> CppBuilder {
             .iter()
             .filter(|interface| interface.is_global)
             .filter(|interface| {
-                interface.name != "wl_display"
-                    && interface.name != "wl_registry"
-                    && interface.name != "wl_output"
+                interface.name != "wl_output" && protocol_requires_ffi_codegen(&interface.name)
             })
             .for_each(|global_interface| {
                 let class_name = format_wayland_interface_to_cpp_class(&global_interface.name);
@@ -333,7 +332,7 @@ fn create_cpp_builder(
     let classes = protocol
         .interfaces
         .iter()
-        .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
+        .filter(|interface| protocol_requires_ffi_codegen(&interface.name))
         .map(wayland_interface_to_cpp_class);
 
     for class in classes {

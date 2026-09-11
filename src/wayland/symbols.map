@@ -51,6 +51,13 @@ global:
     typeinfo?for?mir::wayland::DataSource::Global;
     vtable?for?mir::wayland::DataSource::Global;
 
+    mir::wayland::Fixes::*;
+    non-virtual?thunk?to?mir::wayland::Fixes::*;
+    typeinfo?for?mir::wayland::Fixes;
+    vtable?for?mir::wayland::Fixes;
+    typeinfo?for?mir::wayland::Fixes::Global;
+    vtable?for?mir::wayland::Fixes::Global;
+
     mir::wayland::Keyboard::*;
     non-virtual?thunk?to?mir::wayland::Keyboard::*;
     typeinfo?for?mir::wayland::Keyboard;
