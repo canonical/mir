@@ -28,7 +28,7 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <span>
-#include <cstring>
+#include <string_view>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -902,7 +902,7 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
         for (int m = 0; m != connector->count_modes; ++m) {
             drmModeModeInfo &mode_info = connector->modes[m];
 
-            if (std::strcmp(mode_info.name, "preferred") == 0)
+            if (std::string_view(mode_info.name) == "preferred")
                 current_mode_index = static_cast<uint32_t>(m);
         }
     }

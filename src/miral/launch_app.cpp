@@ -20,6 +20,7 @@
 #include <mir/log.h>
 
 #include <string>
+#include <string_view>
 #include <spawn.h>
 #include <unistd.h>
 #include <csignal>
@@ -50,7 +51,7 @@ Environment::Environment()
     for (auto var = environ; *var; ++var)
     {
         auto const var_begin = *var;
-        if (std::strncmp(var_begin, mir_prefix, sizeof(mir_prefix) - 1) != 0)
+        if (!std::string_view{var_begin}.starts_with(mir_prefix))
         {
             env_strings.emplace_back(var_begin);
         }
@@ -59,7 +60,7 @@ Environment::Environment()
 
 auto env_string_has_name(std::string const& entry, std::string const& name) -> bool
 {
-    return std::strncmp(entry.c_str(), name.c_str(), name.size()) == 0 && entry[name.size()] == '=';
+    return entry.starts_with(name) && entry[name.size()] == '=';
 }
 
 void Environment::setenv(std::string const& name, std::string const& value)

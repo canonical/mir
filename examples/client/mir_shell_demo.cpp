@@ -32,6 +32,7 @@
 #include <memory>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
 using namespace std::literals;
 namespace wayland_runner = mir::client::wayland_runner;
@@ -385,32 +386,32 @@ void handle_registry_global(
     char const* interface,
     uint32_t version)
 {
-    if (std::strcmp(interface, "wl_compositor") == 0)
+    if (std::string_view(interface) == "wl_compositor")
     {
         globals::compositor = static_cast<wl_compositor*>(wl_registry_bind(
             registry, id, &wl_compositor_interface, std::min(version, 3u)));
     }
-    else if (std::strcmp(interface, "wl_shm") == 0)
+    else if (std::string_view(interface) == "wl_shm")
     {
         globals::shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, std::min(version, 1u)));
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
-    else if (std::strcmp(interface, "wl_seat") == 0)
+    else if (std::string_view(interface) == "wl_seat")
     {
         globals::seat = static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 4u)));
     }
-    else if (std::strcmp(interface, "wl_output") == 0)
+    else if (std::string_view(interface) == "wl_output")
     {
         globals::output = static_cast<wl_output*>(wl_registry_bind(
             registry, id, &wl_output_interface, std::min(version, 2u)));
     }
-    else if (std::strcmp(interface, xdg_wm_base_interface.name) == 0)
+    else if (std::string_view(interface) == xdg_wm_base_interface.name)
     {
         globals::wm_base = static_cast<xdg_wm_base*>(wl_registry_bind(
             registry, id, &xdg_wm_base_interface, std::min(version, 1u)));
     }
-    else if (std::strcmp(interface, mir_shell_v1_interface.name) == 0)
+    else if (std::string_view(interface) == mir_shell_v1_interface.name)
     {
         globals::mir_shell = static_cast<mir_shell_v1*>(wl_registry_bind(
             registry, id, &mir_shell_v1_interface, std::min(version, 1u)));

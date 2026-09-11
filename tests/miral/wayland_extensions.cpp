@@ -28,6 +28,8 @@
 #include <memory>
 #include <mutex>
 #include <vector>
+#include <cstring>
+#include <string_view>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
@@ -259,12 +261,12 @@ struct ClientXdgShellV6Creator
     {
         auto* self = static_cast<ClientXdgShellV6Creator*>(data);
 
-        if (std::strcmp(interface, wl_compositor_interface.name) == 0)
+        if (std::string_view(interface) == std::string_view(wl_compositor_interface.name))
         {
             self->compositor = static_cast<decltype(self->compositor)>(
                 wl_registry_bind(registry, id, &mir::wayland::wl_compositor_interface_data, version));
         }
-        else if (std::strcmp(interface, mir::wayland::zxdg_shell_v6_interface_data.name) == 0)
+        else if (std::string_view(interface) == std::string_view(mir::wayland::zxdg_shell_v6_interface_data.name))
         {
             self->shell = static_cast<decltype(self->shell)>(
                 wl_registry_bind(registry, id, &mir::wayland::zxdg_shell_v6_interface_data, version));

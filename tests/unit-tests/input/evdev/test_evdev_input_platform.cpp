@@ -30,7 +30,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <cstring>
+#include <string_view>
 #include <memory>
 #include <vector>
 
@@ -61,7 +61,7 @@ std::shared_ptr<udev_device> device_for_path(char const* devnode)
 
     for (auto const& device : devices)
     {
-        if (device.devnode() && std::strcmp(device.devnode(), devnode) == 0)
+        if (device.devnode() && std::string_view(device.devnode()) == std::string_view(devnode))
         {
             return device.as_raw();
         }

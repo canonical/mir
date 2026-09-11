@@ -28,7 +28,7 @@
 #include <mir/logging/tag.h>
 
 #include <algorithm>
-#include <cstring>
+#include <string_view>
 #include <format>
 #include <ranges>
 
@@ -469,7 +469,7 @@ auto compare_library_names(std::shared_ptr<mir::SharedLibrary> const& lhs, std::
     auto const lhs_desc = lhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
     auto const rhs_desc = rhs->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
 
-    return std::strcmp(rhs_desc()->name, lhs_desc()->name) > 0;
+    return std::string_view(rhs_desc()->name) > std::string_view(lhs_desc()->name);
 }
 
 auto option_default_to_string(boost::shared_ptr<boost::program_options::option_description> const& desc) -> std::string

@@ -15,7 +15,7 @@
  */
 
 #include <cinttypes>
-#include <cstring>
+#include <string_view>
 #include <boost/throw_exception.hpp>
 #include <boost/current_function.hpp>
 #include <boost/exception/info.hpp>
@@ -27,7 +27,6 @@
 
 #include "logind-session.h"
 
-#include <mir/constexpr_utils.h>
 #include <mir/fd.h>
 #include <mir/glib_main_loop.h>
 #include <mir/main_loop.h>
@@ -181,7 +180,7 @@ std::string object_path_for_current_session(LogindSeat* seat_proxy)
      * Because logind couldn't be bothered using the *perfectly functional* DBus optional
      * type, we detect this by the ActiveSession property having an object-path of "/"
      */
-    if (!object_path || (std::strcmp(object_path, "/") == 0))
+    if (!object_path || (std::string_view(object_path) == "/"))
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Seat has no active session"}));
     }
@@ -266,7 +265,7 @@ mir::LogindConsoleServices::LogindConsoleServices(
             session_path.c_str())},
       switch_away{[](){ return true; }},
       switch_to{[](){ return true; }},
-      active{std::strncmp("active", logind_session_get_state(session_proxy.get()), strlen_c("active")) == 0}
+      active{std::string_view{logind_session_get_state(session_proxy.get())}.starts_with("active")}
 {
     GErrorPtr error;
 
@@ -790,7 +789,7 @@ GDBusMessage* mir::LogindConsoleServices::resume_device_dbus_filter(
         return message;
 
     // …if it's a signal, but it's not ResumeDevice, we don't need to process it.
-    if (std::strncmp(g_dbus_message_get_member(message), "ResumeDevice", strlen_c("ResumeDevice")) != 0)
+    if (!std::string_view{g_dbus_message_get_member(message)}.starts_with("ResumeDevice"))
         return message;
 
     // We've definitely got a ResumeDevice signal! Now to extract the parameters, and

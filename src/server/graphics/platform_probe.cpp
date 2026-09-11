@@ -26,7 +26,7 @@
 #include <mir/udev/wrapper.h>
 
 #include <algorithm>
-#include <cstring>
+#include <string_view>
 #include <boost/throw_exception.hpp>
 #include <dlfcn.h>
 
@@ -383,7 +383,7 @@ auto dso_filename_alphabetically_before(mir::SharedLibrary const& a, mir::Shared
 
     dladdr(reinterpret_cast<void const*>(describe_a), &info_a);
     dladdr(reinterpret_cast<void const*>(describe_b), &info_b);
-    return std::strcmp(info_a.dli_fname, info_b.dli_fname) < 0;
+    return std::string_view(info_a.dli_fname) < std::string_view(info_b.dli_fname);
 }
 }
 
@@ -457,7 +457,7 @@ auto mg::select_display_modules(
             auto describe = module->template load_function<mir::graphics::DescribeModule>(
                 "describe_graphics_module",
                 MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
-            return std::strcmp("mir:virtual", describe()->name) == 0;
+            return std::string_view("mir:virtual") == describe()->name;
         });
     auto virtual_platform = virtual_platform_pos != platforms.end() ? *virtual_platform_pos : std::shared_ptr<SharedLibrary>{};
 

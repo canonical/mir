@@ -42,7 +42,7 @@
 #include <boost/exception/errinfo_errno.hpp>
 #include <gbm.h>
 #include <cstdlib>
-#include <cstring>
+#include <string_view>
 #include <system_error>
 #include <xf86drm.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
@@ -518,7 +518,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
 
     if (primary_node)
     {
-        if (std::strcmp(primary_node.get(), render_device.devnode()) == 0)
+        if (std::string_view(primary_node.get()) == std::string_view(render_device.devnode()))
         {
             mir::log_debug("\t...yup.");
             return true;
@@ -526,7 +526,7 @@ auto mgg::GBMDisplayProvider::is_same_device(mir::udev::Device const& render_dev
     }
     if (render_node)
     {
-        if (std::strcmp(render_node.get(), render_device.devnode()) == 0)
+        if (std::string_view(render_node.get()) == std::string_view(render_device.devnode()))
         {
             mir::log_debug("\t...yup.");
             return true;

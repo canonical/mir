@@ -38,6 +38,7 @@
 #include <cstring>
 #include <vector>
 #include <string>
+#include <string_view>
 #include <sstream>
 #include <stdexcept>
 #include <csignal>
@@ -710,7 +711,7 @@ std::future<std::unique_ptr<mir::Device>> mir::LinuxVirtualTerminal::acquire_dev
 
             while (uevent.getline(line_buffer, sizeof(line_buffer)))
             {
-                if (std::strncmp(line_buffer, "DEVNAME=", strlen_c("DEVNAME=")) == 0)
+                if (std::string_view{line_buffer}.starts_with("DEVNAME="))
                 {
                     return std::string{"/dev/"} + std::string{line_buffer + strlen_c("DEVNAME=")};
                 }

@@ -16,7 +16,7 @@
 
 #include <mir/udev/wrapper.h>
 #include <libudev.h>
-#include <cstring>
+#include <string_view>
 #include <boost/throw_exception.hpp>
 
 #include <stdexcept>
@@ -148,7 +148,7 @@ auto DeviceImpl::clone() const -> std::unique_ptr<Device>
 bool mu::operator==(mu::Device const& lhs, mu::Device const& rhs)
 {
     // The device path is unique
-    return std::strcmp(lhs.devpath(), rhs.devpath()) == 0;
+    return std::string_view(lhs.devpath()) == std::string_view(rhs.devpath());
 }
 
 
@@ -326,11 +326,11 @@ void mu::Monitor::enable(void)
 
 static mu::Monitor::EventType action_to_event_type(const char* action)
 {
-    if (std::strcmp(action, "add") == 0)
+    if (std::string_view(action) == "add")
         return mu::Monitor::EventType::ADDED;
-    if (std::strcmp(action, "remove") == 0)
+    if (std::string_view(action) == "remove")
         return mu::Monitor::EventType::REMOVED;
-    if (std::strcmp(action, "change") == 0)
+    if (std::string_view(action) == "change")
         return mu::Monitor::EventType::CHANGED;
     BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Unknown udev action encountered: ") + action));
 }

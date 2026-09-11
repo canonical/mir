@@ -48,7 +48,7 @@
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 #include <cstdlib>
-#include <cstring>
+#include <string_view>
 #include <linux/input-event-codes.h>
 
 namespace
@@ -59,9 +59,9 @@ struct ConfigureDecorations
         {
             if (auto const strategy = std::getenv("MIRAL_SHELL_DECORATIONS"))
             {
-                if (std::strcmp(strategy, "always-ssd") == 0) return miral::Decorations::always_ssd();
-                if (std::strcmp(strategy, "prefer-ssd") == 0) return miral::Decorations::prefer_ssd();
-                if (std::strcmp(strategy, "always-csd") == 0) return miral::Decorations::always_csd();
+                if (std::string_view(strategy) == "always-ssd") return miral::Decorations::always_ssd();
+                if (std::string_view(strategy) == "prefer-ssd") return miral::Decorations::prefer_ssd();
+                if (std::string_view(strategy) == "always-csd") return miral::Decorations::always_csd();
             }
             return miral::Decorations::prefer_csd();
         }()};

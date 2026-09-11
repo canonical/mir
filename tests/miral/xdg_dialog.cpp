@@ -31,7 +31,7 @@
 #include <condition_variable>
 #include <chrono>
 #include <optional>
-#include <cstring>
+#include <string_view>
 #include <mutex>
 
 #include <gmock/gmock.h>
@@ -134,7 +134,7 @@ struct DialogClient
 
         auto bind = [&](wl_interface const& iface, auto& out)
         {
-            if (std::strcmp(interface, iface.name) == 0)
+            if (std::string_view(interface) == std::string_view(iface.name))
                 out = static_cast<std::remove_reference_t<decltype(out)>>(
                     wl_registry_bind(registry, id, &iface, version));
         };
