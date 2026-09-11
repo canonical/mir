@@ -24,7 +24,7 @@
 #include <cmath>
 #include <memory>
 #include <mutex>
-#include <uuid.h>
+#include <uuid/uuid.h>
 
 namespace
 {

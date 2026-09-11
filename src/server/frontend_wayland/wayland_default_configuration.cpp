@@ -62,6 +62,7 @@
 #include "data_control_v1.h"
 #include "input_trigger_registration_v1.h"
 #include "input_trigger_action_v1.h"
+#include "xdg_foreign_unstable_v2.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
@@ -88,6 +89,19 @@ auto make_extension_builder(
 
 /// Extensions that are not in the set returned by mf::get_standard_extensions() should generally be listed in
 /// include/miral/miral/wayland_extensions.h for easy access by shells.
+auto const create_xdg_foreign_v2 = [](mf::WaylandExtensions::Context const& ctx) -> std::shared_ptr<void>
+    {
+        static std::weak_ptr<void> shared_xdg_foreign_v2;
+        if (auto shared = shared_xdg_foreign_v2.lock())
+        {
+            return shared;
+        }
+
+        auto shared = mf::create_xdg_foreign_unstable_v2(ctx.display, ctx.wayland_executor);
+        shared_xdg_foreign_v2 = shared;
+        return shared;
+    };
+
 std::vector<ExtensionBuilder> const internal_extension_builders = {
     make_extension_builder<mw::Shell>([](auto const& ctx)
         {
@@ -307,6 +321,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                     ctx.display,
                     ctx.action_group_manager);
         }),
+    ExtensionBuilder{mw::XdgExporterV2::interface_name, create_xdg_foreign_v2},
+    ExtensionBuilder{mw::XdgImporterV2::interface_name, create_xdg_foreign_v2},
 };
 
 ExtensionBuilder const xwayland_builder {
@@ -412,7 +428,8 @@ auto mf::get_standard_extensions() -> std::vector<std::string>
         // TODO: reinstate this once the implementation is fixed!
         // mw::XdgWmDialogV1::interface_name,
         mw::XdgActivationV1::interface_name,
-        mw::FractionalScaleManagerV1::interface_name};
+        mw::FractionalScaleManagerV1::interface_name,
+        mw::XdgExporterV2::interface_name};
 }
 
 auto mf::get_supported_extensions() -> std::vector<std::string>

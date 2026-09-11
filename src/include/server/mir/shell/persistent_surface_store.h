@@ -20,7 +20,7 @@
 #include <memory>
 #include <vector>
 #include <array>
-#include <uuid.h>
+#include <uuid/uuid.h>
 
 
 namespace mir

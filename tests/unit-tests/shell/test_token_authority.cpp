@@ -27,7 +27,7 @@
 #include <memory>
 #include <string>
 #include <unistd.h>
-#include <uuid.h>
+#include <uuid/uuid.h>
 
 struct TestTokenAuthority : testing::Test
 {
