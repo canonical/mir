@@ -223,8 +223,13 @@ TEST_F(MagnifierTest, reapplies_layout_after_outputs_are_restored)
     server().the_display_configuration_observer()->configuration_applied(no_outputs);
     flush_main_loop("display removal");
 
+    // Resize while no outputs are available, the requested size is saved, and
+    // the code exits early because placement cannot be done without any
+    // outputs. When an output is restored, the size previously saved is
+    // constrained.
     magnifier.capture_size(Size(1200, 1200));
     magnifier_renderable()->buffer();
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(1200, 1200)));
 
     auto const restored_output = std::make_shared<mtd::StubDisplayConfig>(
         std::vector<geom::Rectangle>{{{0, 0}, {800, 600}}});
