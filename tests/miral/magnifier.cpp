@@ -206,8 +206,10 @@ TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
     magnifier_renderable()->buffer();
 
     auto const capture_size = magnifier_renderable()->screen_position().size;
-    EXPECT_THAT(capture_size.width, Lt(Width{1000}));
-    EXPECT_THAT(capture_size.height, Lt(Height{1000}));
+    // The output cap is a visual size of 640x480. The capture surface is
+    // rendered at 1.5x, so its width is floor(640 / 1.5) = 426 pixels.
+    EXPECT_THAT(capture_size.width, Eq(Width{426}));
+    EXPECT_THAT(capture_size.height, Eq(Height{320}));
 }
 
 TEST_F(MagnifierTest, reapplies_layout_after_outputs_are_restored)
