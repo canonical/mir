@@ -122,5 +122,5 @@ void mrl::InputReport::received_event_from_kernel(std::chrono::nanoseconds when,
        << " code=" << print_evdev_code(type, code)
        << " value=" << value;
 
-    logger->log(ml::Severity::informational, ss.str(), component());
+    logger->log(ml::Event{ml::Severity::informational, component(), ss.str()});
 }

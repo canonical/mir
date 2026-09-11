@@ -16,19 +16,16 @@
 
 #include <mir_test_framework/headless_test.h>
 #include <mir/log.h>
+#include <mir/logging/tag.h>
 #include <mir/logging/logger.h>
+#include <mir/test/doubles/mock_logger.h>
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <sys/ucontext.h>
 
 using namespace testing;
-
-class MockLogger : public mir::logging::Logger
-{
-public:
-    MOCK_METHOD(void, log, (mir::logging::Severity severity, std::string const&message, std::string const& component), (override));
-};
+namespace mtd = mir::test::doubles;
 
 struct CommandLineHandling : mir_test_framework::HeadlessTest
 {
@@ -119,13 +116,14 @@ TEST_F(CommandLineHandling, invalid_log_levels_are_ignored)
 
 TEST_F(CommandLineHandling, can_set_multiple_different_log_levels)
 {
-    using namespace testing;
+    using mtd::LogMatching;
+    using mtd::IsTag;
     char const* argv[] =
      { "dummy-exe-name", "--log-level=input=error", "--log-level=wayland=info"};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    auto const logger = std::make_shared<testing::NiceMock<MockLogger>>();
+    auto const logger = std::make_shared<testing::NiceMock<mtd::MockLogger>>();
     server.override_the_logger([logger]() { return logger; });
     server.set_command_line(argc, argv);
     server.apply_settings();
@@ -134,10 +132,10 @@ TEST_F(CommandLineHandling, can_set_multiple_different_log_levels)
 
     std::string message = "hello";
 
-    EXPECT_CALL(*logger, log(ml::Severity::error, message, "input")).Times(1);
-    EXPECT_CALL(*logger, log(ml::Severity::warning, message, "input")).Times(0);
-    EXPECT_CALL(*logger, log(ml::Severity::informational, message, "wayland")).Times(1);
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "wayland")).Times(0);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::error), Eq(message), ElementsAre(IsTag(ml::input()))))).Times(1);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::warning), Eq(message), ElementsAre(IsTag(ml::input()))))).Times(0);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::informational), Eq(message), ElementsAre(IsTag(ml::wayland()))))).Times(1);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::debug), Eq(message), ElementsAre(IsTag(ml::wayland()))))).Times(0);
 
     mir::log_error({ml::input()}, message);
     mir::log_warning({ml::input()}, message);
@@ -147,12 +145,12 @@ TEST_F(CommandLineHandling, can_set_multiple_different_log_levels)
 
     // Replace Mir's logger so that we own the last references to our MockLogger
     // allowing it to be destroyed and verified after the test finishes.
-    mir::logging::set_logger(std::make_shared<MockLogger>());
+    mir::logging::set_logger(std::make_shared<mtd::MockLogger>());
 }
 
 TEST_F(CommandLineHandling, setting_parent_severity_sets_child_severities)
 {
-    using namespace testing;
+    using mtd::LogMatching;
     char const* argv[] =
      { "dummy-exe-name", "--log-level=parent=error"};
 
@@ -162,7 +160,7 @@ TEST_F(CommandLineHandling, setting_parent_severity_sets_child_severities)
     auto const& child1 = ml::create_tag(parent, "dick");
     auto const& child2 = ml::create_tag(parent, "jane");
 
-    auto const logger = std::make_shared<testing::NiceMock<MockLogger>>();
+    auto const logger = std::make_shared<testing::NiceMock<mtd::MockLogger>>();
     server.override_the_logger([logger]() { return logger; });
     server.set_command_line(argc, argv);
     server.apply_settings();
@@ -170,8 +168,8 @@ TEST_F(CommandLineHandling, setting_parent_severity_sets_child_severities)
     server.get_options();
 
     std::string message = "hello";
-    EXPECT_CALL(*logger, log(ml::Severity::error, _, _)).Times(3);
-    EXPECT_CALL(*logger, log(ml::Severity::warning, _, _)).Times(0);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::error), _, _))).Times(3);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::warning), _, _))).Times(0);
 
     mir::log_error({parent}, message);
     mir::log_error({child1}, message);
@@ -183,12 +181,13 @@ TEST_F(CommandLineHandling, setting_parent_severity_sets_child_severities)
 
     // Replace Mir's logger so that we own the last references to our MockLogger
     // allowing it to be destroyed and verified after the test finishes.
-    mir::logging::set_logger(std::make_shared<MockLogger>());
+    mir::logging::set_logger(std::make_shared<mtd::MockLogger>());
 }
 
 TEST_F(CommandLineHandling, subsequent_log_level_overrides_previous)
 {
-    using namespace testing;
+    using mtd::LogMatching;
+    using mtd::IsTag;
     char const* argv[] =
      { "dummy-exe-name", "--log-level=base=critical", "--log-level=test_tag=debug"};
 
@@ -196,7 +195,7 @@ TEST_F(CommandLineHandling, subsequent_log_level_overrides_previous)
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    auto const logger = std::make_shared<testing::NiceMock<MockLogger>>();
+    auto const logger = std::make_shared<testing::NiceMock<mtd::MockLogger>>();
     server.override_the_logger([logger]() { return logger; });
     server.set_command_line(argc, argv);
     server.apply_settings();
@@ -205,26 +204,27 @@ TEST_F(CommandLineHandling, subsequent_log_level_overrides_previous)
 
 
     std::string message = "hello";
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "test_tag")).Times(1);
-    EXPECT_CALL(*logger, log(_, _, "base")).Times(0);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::debug), Eq(message), ElementsAre(IsTag(tag))))).Times(1);
+    EXPECT_CALL(*logger, log(LogMatching(_, _, ElementsAre(IsTag(ml::base()))))).Times(0);
 
     mir::log_debug({tag}, message);
     mir::log_error({ml::base()}, message);
 
     // Replace Mir's logger so that we own the last references to our MockLogger
     // allowing it to be destroyed and verified after the test finishes.
-    mir::logging::set_logger(std::make_shared<MockLogger>());
+    mir::logging::set_logger(std::make_shared<mtd::MockLogger>());
 }
 
 TEST_F(CommandLineHandling, can_set_log_level_by_full_path)
 {
-    using namespace testing;
+    using mtd::LogMatching;
+    using mtd::IsTag;
     char const* argv[] =
      { "dummy-exe-name", "--log-level", "base/graphics=debug"};
 
     int const argc = std::distance(std::begin(argv), std::end(argv));
 
-    auto const logger = std::make_shared<testing::NiceMock<MockLogger>>();
+    auto const logger = std::make_shared<testing::NiceMock<mtd::MockLogger>>();
     server.override_the_logger([logger]() { return logger; });
     server.set_command_line(argc, argv);
     server.apply_settings();
@@ -234,8 +234,8 @@ TEST_F(CommandLineHandling, can_set_log_level_by_full_path)
 
     std::string message = "hello";
 
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, "graphics")).Times(1);
-    EXPECT_CALL(*logger, log(_, _, "wayland")).Times(0);
+    EXPECT_CALL(*logger, log(LogMatching(Eq(ml::Severity::debug), Eq(message), ElementsAre(IsTag(ml::graphics()))))).Times(1);
+    EXPECT_CALL(*logger, log(LogMatching(_, _, ElementsAre(IsTag(ml::wayland()))))).Times(0);
 
     mir::log_debug({ml::graphics()}, message);
     // Validate that our default log level does produce output at debug level.
@@ -243,5 +243,5 @@ TEST_F(CommandLineHandling, can_set_log_level_by_full_path)
 
     // Replace Mir's logger so that we own the last references to our MockLogger
     // allowing it to be destroyed and verified after the test finishes.
-    mir::logging::set_logger(std::make_shared<MockLogger>());
+    mir::logging::set_logger(std::make_shared<mtd::MockLogger>());
 }

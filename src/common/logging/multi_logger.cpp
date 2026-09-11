@@ -24,12 +24,10 @@ ml::MultiLogger::MultiLogger(std::initializer_list<std::shared_ptr<Logger>> logg
 {
 }
 
-void ml::MultiLogger::log(Severity severity,
-                          std::string const& message,
-                          std::string const& component)
+void ml::MultiLogger::log(Event const& log_event)
 {
     for (auto const& logger : loggers)
     {
-        logger->log(severity, message, component);
+        logger->log(log_event);
     }
 }
