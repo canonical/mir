@@ -18,13 +18,20 @@
 #include <mir/server.h>
 #include <mir/compositor/scene.h>
 #include <mir/compositor/scene_element.h>
-#include <mir/graphics/display_configuration_observer.h>
 #include <mir/graphics/renderable.h>
+#include <mir/graphics/display_configuration_observer.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
+#include <mir/input/event_builder.h>
+#include <mir/input/input_device_hub.h>
+#include <mir/input/input_device_registry.h>
+#include <mir/input/input_sink.h>
+#include <mir/input/virtual_input_device.h>
 #include <mir/main_loop.h>
-#include <mir/test/doubles/stub_display_configuration.h>
 #include <mir/test/signal.h>
+#include <mir/test/doubles/stub_display_configuration.h>
+#include <mir/executor.h>
+#include "add_virtual_device.h"
 
 #include <miral/test_server.h>
 #include <gtest/gtest.h>
@@ -77,6 +84,9 @@ public:
     auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
     { return server().the_scene()->scene_elements_for(this).at(magnifier_index)->renderable(); }
 
+    auto magnifier_top_left() const -> geom::Point
+    { return magnifier_renderable()->screen_position().top_left; }
+
     auto scene_element_count() const -> size_t { return server().the_scene()->scene_elements_for(this).size(); }
 
     /// Waits for work already queued on the main loop to complete. The display
@@ -103,6 +113,23 @@ ASSERT_TRUE(flushed->wait_for(2s)) << "timed out waiting for " << context;
         auto const sentinel = std::make_shared<SentinelCursorObserver>();
         mux->register_interest(sentinel);
         ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+        mux->unregister_interest(*sentinel);
+    }
+
+    /// Moves the cursor and returns once the move has been dispatched to every
+    /// observer. Magnifier registers its observer from a main-loop task, so
+    /// callers wanting the magnifier to have seen the move must have called
+    /// wait_for_magnifier_initialization() first.
+    void move_cursor_to(float x, float y)
+    {
+        auto const mux = server().the_cursor_observer_multiplexer();
+        auto const sentinel = std::make_shared<SentinelCursorObserver>();
+        mux->register_interest(sentinel);
+        ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
+        sentinel->signal.reset();
+
+        mux->cursor_moved_to(x, y);
+        ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for cursor event";
         mux->unregister_interest(*sentinel);
     }
 
@@ -152,7 +179,7 @@ TEST_F(MagnifierTest, changing_magnification_preserves_visual_size)
 
     auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2, 2, 1));
     EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
-    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(225, 225)));
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(187, 187)));
 }
 
 TEST_P(MagnificationTest, accepts_supported_and_rejects_unsupported_magnifications)
@@ -216,7 +243,7 @@ TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
 
 TEST_F(MagnifierTest, reapplies_layout_after_outputs_are_restored)
 {
-    magnifier.capture_size(Size(1000, 1000)).enable(true);
+    magnifier.capture_size(Size(1000, 1000)).enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
     wait_for_magnifier_initialization();
     wait_for_initial_cursor_state();
@@ -234,5 +261,475 @@ TEST_F(MagnifierTest, reapplies_layout_after_outputs_are_restored)
     flush_main_loop("display restoration");
     magnifier_renderable()->buffer();
 
-    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(426, 320)));
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(512, 384)));
+}
+
+TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    add_start_callback([&]
+    {
+        // 4 indicators + 1 magnifier surface
+        EXPECT_THAT(scene_element_count(), Eq(5));
+    });
+    start_server();
+}
+
+TEST_F(MagnifierTest, handles_hidden_when_disabled_in_decoupled_mode)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    add_start_callback([&]
+    {
+        magnifier.enable(false);
+        EXPECT_THAT(scene_element_count(), Eq(0));
+    });
+    start_server();
+}
+
+TEST_F(MagnifierTest, toggling_to_coupled_hides_handles)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    add_start_callback([&]
+    {
+        EXPECT_THAT(scene_element_count(), Eq(5));
+        magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+        EXPECT_THAT(scene_element_count(), Eq(1));
+    });
+    start_server();
+}
+
+TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
+{
+    magnifier.enable(true);
+    add_start_callback([&]
+    {
+        EXPECT_THAT(scene_element_count(), Eq(1));
+        magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
+        EXPECT_THAT(scene_element_count(), Eq(5));
+    });
+    start_server();
+}
+
+// These tests run in the test body (after start_server() returns) rather than
+// inside add_start_callback. Start callbacks are enqueued on the main loop via
+// main_loop->enqueue, so blocking inside one waiting for more main-loop work
+// would deadlock. The test body runs on a separate thread while the main loop
+// runs in the background.
+//
+// Synchronisation: Magnifier registers its cursor observer from a main-loop
+// task. Wait for that task before registering a sentinel, so the sentinel is
+// ordered after Magnifier when cursor events are dispatched.
+
+TEST_F(MagnifierTest, decoupled_magnifier_starts_centred_on_the_output)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    auto const rect = magnifier_renderable()->screen_position();
+    auto const center = rect.top_left + geom::Displacement{
+        geom::as_delta(rect.size.width / 2), geom::as_delta(rect.size.height / 2)};
+
+    EXPECT_THAT(center, Eq(geom::Point{400, 300}));
+}
+
+TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    auto const before = magnifier_top_left();
+
+    move_cursor_to(400, 300);
+
+    EXPECT_THAT(magnifier_top_left(), Eq(before));
+}
+
+TEST_F(MagnifierTest, capture_size_change_does_not_recenter_on_cursor_in_decoupled_mode)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    // Move the cursor away from the magnifier, then re-apply the capture size
+    // (as happens on a live config reload).
+    move_cursor_to(700, 500);
+
+    auto const centre = [this]
+    {
+        auto const rect = magnifier_renderable()->screen_position();
+        return rect.top_left +
+               geom::Displacement{geom::as_delta(rect.size.width / 2), geom::as_delta(rect.size.height / 2)};
+    };
+
+    auto const before = centre();
+    magnifier.capture_size(Size(200, 200));
+    // Claim the stale frame so the next scene read receives the resized one.
+    magnifier_renderable()->buffer();
+    auto const after = centre();
+
+    EXPECT_THAT(after, Eq(before));
+    EXPECT_THAT(after, Ne(geom::Point{700, 500}));
+}
+
+TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
+{
+    magnifier.enable(true);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    auto const before = magnifier_top_left();
+
+    move_cursor_to(400, 300);
+
+    EXPECT_THAT(magnifier_top_left(), Ne(before));
+}
+
+// Input events are dispatched synchronously through SurfaceInputDispatcher into
+// the handle surface observers, but the observers run via BasicSurface::Multiplexer
+// which uses linearising_executor (deferred background thread). State changes
+// (move_to, resize, set_transformation) are applied asynchronously. We flush
+// the executor before reading scene state.
+//
+// Handle positions depend on the initial surface placement (at {0,0} from the
+// BasicSurface constructor). We read positions dynamically from the live scene
+// elements to avoid brittle hardcoded coordinates.
+//
+// Scene element ordering (fixed, determined by creation order in add_init_callback):
+//   [0] magnifier surface  (size 300×300)
+//   [1] drag handle        (size 48×48)
+//   [2] resize handle      (size 48×48)
+//   [3] zoom-in handle     (size 48×48)
+//   [4] zoom-out handle    (size 48×48)
+
+struct MagnifierHandleTest : MagnifierTest
+{
+    MagnifierHandleTest()
+    {
+        magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+
+        add_server_init(
+            [this](mir::Server& server)
+            {
+                server.add_init_callback(
+                    [&server, this]
+                    {
+                        input_device_registry = server.the_input_device_registry();
+                        input_device_hub = server.the_input_device_hub();
+                    });
+            });
+    }
+
+    void SetUp() override
+    {
+        MagnifierTest::SetUp();
+        start_server();
+        pointer_device = miral::test::add_test_device(
+            input_device_registry.lock(), input_device_hub.lock(), mi::DeviceCapability::pointer);
+    }
+
+    /// Returns the centre of the scene element at `index` as a float point.
+    geom::PointF element_center(int index)
+    {
+        auto const pos = element_rectangle(index);
+        return geom::PointF{
+            static_cast<float>(pos.top_left.x.as_int() + pos.size.width.as_int() / 2.0f),
+            static_cast<float>(pos.top_left.y.as_int() + pos.size.height.as_int() / 2.0f)};
+    }
+
+    geom::Rectangle element_rectangle(int index)
+    {
+        auto const elements = server().the_scene()->scene_elements_for(this);
+        return elements.at(static_cast<std::size_t>(index))->renderable()->screen_position();
+    }
+
+    // Scene-element indices matching add_init_callback creation order.
+    static constexpr auto drag_handle_index = 1;
+    static constexpr auto resize_handle_index = 2;
+    static constexpr auto zoom_in_handle_index = 3;
+    static constexpr auto zoom_out_handle_index = 4;
+    /// centre, dragging to `target`.
+    ///
+    /// Input observers run on the linearising_executor (deferred background
+    /// thread), so we flush it before returning to ensure surface state is
+    /// fully updated when the caller checks it.
+    void drag(geom::PointF from, geom::PointF to)
+    {
+        pointer_device->if_started_then(
+            [&](mi::InputSink* sink, mi::EventBuilder* builder)
+            {
+                sink->handle_input(builder->pointer_event(
+                    std::nullopt,
+                    mir_pointer_action_button_down,
+                    mir_pointer_button_primary,
+                    from,
+                    geom::DisplacementF{0, 0},
+                    mir_pointer_axis_source_none,
+                    {}, {}));
+                sink->handle_input(builder->pointer_event(
+                    std::nullopt,
+                    mir_pointer_action_motion,
+                    mir_pointer_button_primary,
+                    to,
+                    geom::DisplacementF{to.x.as_value() - from.x.as_value(),
+                                       to.y.as_value() - from.y.as_value()},
+                    mir_pointer_axis_source_none,
+                    {}, {}));
+                sink->handle_input(builder->pointer_event(
+                    std::nullopt,
+                    mir_pointer_action_button_up,
+                    MirPointerButtons{0},
+                    to,
+                    geom::DisplacementF{0, 0},
+                    mir_pointer_axis_source_none,
+                    {}, {}));
+            });
+        flush_observer_callbacks();
+    }
+
+    /// Emit a button-down then button-up at `pos` (a tap / click).
+    void click(geom::PointF pos)
+    {
+        pointer_device->if_started_then(
+            [&](mi::InputSink* sink, mi::EventBuilder* builder)
+            {
+                sink->handle_input(builder->pointer_event(
+                    std::nullopt,
+                    mir_pointer_action_button_down,
+                    mir_pointer_button_primary,
+                    pos,
+                    geom::DisplacementF{0, 0},
+                    mir_pointer_axis_source_none,
+                    {}, {}));
+                sink->handle_input(builder->pointer_event(
+                    std::nullopt,
+                    mir_pointer_action_button_up,
+                    MirPointerButtons{0},
+                    pos,
+                    geom::DisplacementF{0, 0},
+                    mir_pointer_axis_source_none,
+                    {}, {}));
+            });
+        flush_observer_callbacks();
+    }
+
+    std::weak_ptr<mi::InputDeviceRegistry> input_device_registry;
+    std::weak_ptr<mi::InputDeviceHub> input_device_hub;
+    std::shared_ptr<mi::VirtualInputDevice> pointer_device;
+
+private:
+    /// Surface input observers use BasicSurface::Multiplexer which dispatches
+    /// via linearising_executor (a non-blocking deferred executor backed by a
+    /// thread pool). Spawn a sentinel task AFTER the input events so that when
+    /// it fires, all earlier callbacks — including the handle observer state
+    /// updates (move_to, resize, set_transformation) — have already run.
+    void flush_observer_callbacks()
+    {
+        mir::test::Signal done;
+        mir::linearising_executor.spawn([&done]() { done.raise(); });
+        ASSERT_TRUE(done.wait_for(2s)) << "linearising_executor timed out";
+    }
+};
+
+struct MagnifierInitiallyDisabledHandleTest : MagnifierHandleTest
+{
+    MagnifierInitiallyDisabledHandleTest()
+    {
+        magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+        magnifier.enable(false).set_behavior(Magnifier::Behavior::freely_positioned);
+    }
+
+    void SetUp() override
+    {
+        MagnifierHandleTest::SetUp();
+        magnifier.enable(true);
+    }
+};
+
+TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier)
+{
+    auto const before = magnifier_top_left();
+
+    auto const from = element_center(drag_handle_index);
+    drag(from, geom::PointF{from.x.as_value() + 20, from.y.as_value()});
+
+    auto const after = magnifier_top_left();
+
+    EXPECT_THAT(after.x.as_int(), Eq(before.x.as_int() + 20));
+    EXPECT_THAT(after.y.as_int(), Eq(before.y.as_int()));
+}
+
+TEST_F(MagnifierHandleTest, returns_to_last_free_position_after_behavior_toggle)
+{
+    auto const from = element_center(drag_handle_index);
+    drag(from, geom::PointF{from.x.as_value() + 100, from.y.as_value() + 50});
+    auto const last_free_position = magnifier_top_left();
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
+
+    EXPECT_THAT(magnifier_top_left(), Eq(last_free_position));
+}
+
+TEST_F(MagnifierInitiallyDisabledHandleTest, handles_are_functional_after_enabling)
+{
+    auto const before = magnifier_top_left();
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 20, drag_from.y.as_value()});
+
+    EXPECT_THAT(magnifier_top_left().x.as_int(), Eq(before.x.as_int() + 20));
+
+    auto const before_zoom = magnifier_renderable()->transformation();
+    click(element_center(zoom_in_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before_zoom));
+}
+
+
+TEST_F(MagnifierHandleTest, drag_handle_keeps_magnifier_controls_within_screen_bounds)
+{
+    auto from = element_center(drag_handle_index);
+    auto visual_top_left = element_rectangle(resize_handle_index).top_left;
+    drag(
+        from,
+        geom::PointF{
+            from.x.as_value() - visual_top_left.x.as_int(),
+            from.y.as_value() - visual_top_left.y.as_int()});
+
+    auto const resize_rect = element_rectangle(resize_handle_index);
+    EXPECT_THAT(resize_rect.left(), Ge(geom::X{0}));
+    EXPECT_THAT(resize_rect.top(), Ge(geom::Y{0}));
+
+    from = element_center(drag_handle_index);
+    auto const drag_rect = element_rectangle(drag_handle_index);
+    int const visual_right = drag_rect.top_left.x.as_int() + drag_rect.size.width.as_int();
+    int const visual_bottom = drag_rect.top_left.y.as_int() + drag_rect.size.height.as_int();
+    drag(
+        from,
+        geom::PointF{
+            from.x.as_value() + 800 - visual_right,
+            from.y.as_value() + 600 - visual_bottom});
+
+    auto const final_drag_rect = element_rectangle(drag_handle_index);
+    EXPECT_THAT(
+        final_drag_rect.top_left.x.as_int() + final_drag_rect.size.width.as_int(),
+        Le(800));
+    EXPECT_THAT(
+        final_drag_rect.top_left.y.as_int() + final_drag_rect.size.height.as_int(),
+        Le(600));
+}
+
+TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_their_output)
+{
+    wait_for_magnifier_initialization();
+
+    auto const wide_configuration = std::make_shared<mtd::StubDisplayConfig>(
+        std::vector<geom::Rectangle>{{{0, 0}, {1600, 600}}});
+    server().the_display_configuration_observer()->configuration_applied(wide_configuration);
+    flush_main_loop("the wide display configuration to be applied");
+
+    auto const from = element_center(drag_handle_index);
+    drag(from, geom::PointF{1300.0f, from.y.as_value()});
+    EXPECT_THAT(magnifier_top_left().x, Gt(geom::X{800}));
+
+    auto const remaining_output = std::make_shared<mtd::StubDisplayConfig>(
+        std::vector<geom::Rectangle>{{{0, 0}, {800, 600}}});
+    server().the_display_configuration_observer()->configuration_applied(remaining_output);
+    flush_main_loop("the reduced display configuration to be applied");
+
+    EXPECT_THAT(magnifier_top_left().x, Le(geom::X{800}));
+    for (auto const index : {drag_handle_index, resize_handle_index, zoom_in_handle_index, zoom_out_handle_index})
+    {
+        auto const rect = element_rectangle(index);
+        EXPECT_THAT(rect.left(), Ge(geom::X{0}));
+        EXPECT_THAT(rect.right(), Le(geom::X{800}));
+        EXPECT_THAT(rect.top(), Ge(geom::Y{0}));
+        EXPECT_THAT(rect.bottom(), Le(geom::Y{600}));
+    }
+}
+
+TEST_F(MagnifierHandleTest, zoom_in_handle_increases_magnification)
+{
+    auto const before = magnifier_renderable()->transformation();
+
+    click(element_center(zoom_in_handle_index));
+
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(1.5f, 1.5f, 1.0f));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before));
+}
+
+TEST_F(MagnifierHandleTest, zoom_out_handle_decreases_magnification)
+{
+    auto const initial = magnifier_renderable()->transformation();
+    click(element_center(zoom_in_handle_index));
+    ASSERT_THAT(magnifier_renderable()->transformation(), Ne(initial));
+
+    click(element_center(zoom_out_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(initial));
+}
+
+TEST_F(MagnifierHandleTest, zoom_out_handle_clamps_at_minimum_magnification)
+{
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(1.25f, 1.25f, 1.0f));
+    ASSERT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+
+    click(element_center(zoom_out_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+}
+
+// Dragging the resize handle away from the magnifier centre must increase the
+// capture size, visible as the enlarged screen_position().size of the surface.
+//
+// screen_position().size comes from the buffer stream's TrackingSubmission. The
+// MultiMonitorArbiter only advances to a newly-submitted buffer once the
+// previous submission has been "claimed" (i.e. buffer() called on the
+// Renderable). We trigger that manually here, mimicking what a real compositor
+// render pass would do, to flush the stale pre-resize submission and expose the
+// post-resize buffer with the new size.
+TEST_F(MagnifierHandleTest, resize_handle_changes_capture_size)
+{
+    // The magnifier starts flush against the top left corner of the output,
+    // where the resize handle cannot be dragged any further out, so move it
+    // clear of the corner first.
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 100, drag_from.y.as_value() + 100});
+
+    auto const before = magnifier_renderable()->screen_position().size;
+    auto const pinned_corner = element_rectangle(drag_handle_index).bottom_right();
+
+    // Move the resize handle away from the magnifier to enlarge it.
+    auto const from = element_center(resize_handle_index);
+    drag(from, geom::PointF{from.x.as_value() - 30, from.y.as_value() - 30});
+
+    // Advance the arbiter: claim the stale current frame so the next
+    // scene_elements_for call receives the new post-resize submission.
+    magnifier_renderable()->buffer();
+
+    auto const size = magnifier_renderable()->screen_position().size;
+
+    EXPECT_THAT(size.width, Gt(before.width));
+    EXPECT_THAT(size.height, Gt(before.height));
+    EXPECT_THAT(element_rectangle(drag_handle_index).bottom_right(), Eq(pinned_corner));
+}
+
+TEST_F(MagnifierHandleTest, resize_handle_preserves_grab_offset)
+{
+    auto const drag_from = element_center(drag_handle_index);
+    drag(drag_from, geom::PointF{drag_from.x.as_value() + 100, drag_from.y.as_value() + 100});
+
+    auto const from = element_center(resize_handle_index);
+    auto const before = element_rectangle(resize_handle_index).top_left;
+    drag(from, geom::PointF{from.x.as_value() - 20, from.y.as_value() - 20});
+
+    EXPECT_THAT(
+        element_rectangle(resize_handle_index).top_left,
+        Eq(before + geom::Displacement{-20, -20}));
 }
