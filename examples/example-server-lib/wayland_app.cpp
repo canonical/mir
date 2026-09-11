@@ -16,8 +16,8 @@
 
 #include "wayland_app.h"
 
-#include <cstring>
 #include <algorithm>
+#include <string_view>
 
 // If building against newer Wayland protocol definitions we may miss trailing fields
 #pragma GCC diagnostic push
@@ -162,15 +162,16 @@ void WaylandApp::handle_new_global(
     uint32_t version)
 {
     auto const self = static_cast<WaylandApp*>(data);
+    std::string_view const interface_view{interface};
 
-    if (std::strcmp(interface, "wl_compositor") == 0)
+    if (interface_view == "wl_compositor")
     {
         self->compositor_ = {
             static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 4u))),
             wl_compositor_destroy};
         self->global_remove_handlers[id] = [self](){ self->compositor_ = {}; };
     }
-    else if (std::strcmp(interface, "wl_shm") == 0)
+    else if (interface_view == "wl_shm")
     {
         self->shm_ = {
             static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, 1)),
@@ -179,14 +180,14 @@ void WaylandApp::handle_new_global(
         // Normally we'd add a listener to pick up the supported formats here
         // As luck would have it, I know that argb8888 is the only format we support :)
     }
-    else if (std::strcmp(interface, "wl_seat") == 0)
+    else if (interface_view == "wl_seat")
     {
         self->seat_ = {
             static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, 4)),
             wl_seat_destroy};
         self->global_remove_handlers[id] = [self](){ self->seat_ = {}; };
     }
-    else if (std::strcmp(interface, "xdg_wm_base") == 0)
+    else if (interface_view == "xdg_wm_base")
     {
         self->xdg_wm_base_ = {
             static_cast<::xdg_wm_base*>(wl_registry_bind(registry, id, &xdg_wm_base_interface, std::min(version, 1u))),
@@ -197,7 +198,7 @@ void WaylandApp::handle_new_global(
         xdg_wm_base_add_listener(self->xdg_wm_base_, &wm_base_listener, nullptr);
         self->global_remove_handlers[id] = [self](){ self->xdg_wm_base_ = {}; };
     }
-    else if (std::strcmp(interface, "wl_output") == 0)
+    else if (interface_view == "wl_output")
     {
         auto const output_resource = static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 3u)));
         // shared_ptr instead of unique_ptr only so it can be captured by the lambda
