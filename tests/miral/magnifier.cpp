@@ -42,22 +42,6 @@ using namespace testing;
 using namespace miral;
 using namespace std::chrono_literals;
 
-namespace
-{
-/// Raises a signal each time cursor_moved_to() fires. Used by cursor-tracking
-/// tests to wait for cursor events to propagate through the main loop before
-/// inspecting surface state.
-struct SentinelCursorObserver : public mi::CursorObserver
-{
-    void cursor_moved_to(float, float) override { signal.raise(); }
-    void pointer_usable() override {}
-    void pointer_unusable() override {}
-    void image_set_to(std::shared_ptr<mir::graphics::CursorImage>) override {}
-    mir::test::Signal signal;
-};
-
-}
-
 class MagnifierTest : public TestServer
 {
 public:
@@ -99,8 +83,20 @@ ASSERT_TRUE(flushed->wait_for(2s)) << "timed out waiting for " << context;
     /// has settled.
     void wait_for_initial_cursor_state()
     {
+        /// Raises a signal each time cursor_moved_to() fires. Used by cursor-tracking
+        /// tests to wait for cursor events to propagate through the main loop before
+        /// inspecting surface state.
+        struct CursorMovementObserver : public mi::CursorObserver
+        {
+            void cursor_moved_to(float, float) override { signal.raise(); }
+            void pointer_usable() override {}
+            void pointer_unusable() override {}
+            void image_set_to(std::shared_ptr<mir::graphics::CursorImage>) override {}
+            mir::test::Signal signal;
+        };
+
         auto const mux = server().the_cursor_observer_multiplexer();
-        auto const sentinel = std::make_shared<SentinelCursorObserver>();
+        auto const sentinel = std::make_shared<CursorMovementObserver>();
         mux->register_interest(sentinel);
         ASSERT_TRUE(sentinel->signal.wait_for(2s)) << "timed out waiting for initial cursor state";
         mux->unregister_interest(*sentinel);
