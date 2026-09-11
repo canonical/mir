@@ -302,7 +302,7 @@ fn generate_server_side_factory(
             client: &WaylandClient,
             version: u32,
         ) -> Result<Box<crate::middleware::#middleware_struct>, Box<dyn std::error::Error>> {
-            let wrapper = Arc::new(Mutex::new(#wrapper_struct { inner: None }));
+            let wrapper = Arc::new(Mutex::new(#wrapper_struct::default()));
             let instance = client
                 .inner_client()
                 .create_resource::<#resource_path, Arc<Mutex<#wrapper_struct>>, ServerState>(
@@ -428,7 +428,7 @@ fn generate_global_dispatch_impl(
                 use crate::ffi;
 
                 // Step 1: Create a wrapper with no inner value and register it via data_init.
-                let wrapper = Arc::new(Mutex::new(#wrapper_struct_name { inner: None }));
+                let wrapper = Arc::new(Mutex::new(#wrapper_struct_name::default()));
                 let instance = data_init.init(resource, wrapper.clone());
                 register_resource(&instance);
                 let protocol_id = Resource::id(&instance).protocol_id();
@@ -582,7 +582,7 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
         quote! {
             // Step 1: Create a wrapper with no inner value and register it via data_init.
-            let child_wrapper = Arc::new(Mutex::new(#child_wrapper_struct_name { inner: None }));
+            let child_wrapper = Arc::new(Mutex::new(#child_wrapper_struct_name::default()));
             let instance = data_init.init(#new_id_name, child_wrapper.clone());
             register_resource(&instance);
             let protocol_id = Resource::id(&instance).protocol_id();
@@ -592,12 +592,21 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
 
             // Step 3: Call the parent's request method with the child middleware so the
             // child C++ object is fully initialized from the start.
-            let mut guard = data.lock().unwrap();
-            let Some(inner) = guard.inner.as_mut() else {
+            //
+            // The wrapper lock is released before entering C++: the call can re-enter
+            // Rust (`destroy_and_delete`, event sending, ...) and would otherwise
+            // deadlock on this non-reentrant mutex. Holding a strong reference for the
+            // duration of the call also keeps the object alive if it destroys itself.
+            let inner = {
+                let guard = data.lock().unwrap_or_else(|e| e.into_inner());
+                guard.inner.clone()
+            };
+            let Some(mut inner) = inner else {
                 return;
             };
-            // SAFETY: The mutex guard provides the only mutable access while the call is
-            // in progress. The pinned reference is used only for this FFI call.
+            // SAFETY: `inner` is a local strong reference, so the object outlives the
+            // call. The pinned reference is used only for this FFI call, and Wayland
+            // objects are only ever touched on the event-loop thread.
             match unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names, )* boxed, protocol_id) } {
                 Ok(child) => {
                     // Step 4: Store the fully-initialized child C++ object in the wrapper.
@@ -613,12 +622,20 @@ fn generate_request_body(request: &WaylandRequest) -> TokenStream {
             request.args.iter().flat_map(arg_to_tokens).collect();
 
         quote! {
-            let mut guard = data.lock().unwrap();
-            let Some(inner) = guard.inner.as_mut() else {
+            // The wrapper lock is released before entering C++: the call can re-enter
+            // Rust (`destroy_and_delete`, event sending, ...) and would otherwise
+            // deadlock on this non-reentrant mutex. Holding a strong reference for the
+            // duration of the call also keeps the object alive if it destroys itself.
+            let inner = {
+                let guard = data.lock().unwrap_or_else(|e| e.into_inner());
+                guard.inner.clone()
+            };
+            let Some(mut inner) = inner else {
                 return;
             };
-            // SAFETY: The mutex guard provides the only mutable access while the call is
-            // in progress. The pinned reference is used only for this FFI call.
+            // SAFETY: `inner` is a local strong reference, so the object outlives the
+            // call. The pinned reference is used only for this FFI call, and Wayland
+            // objects are only ever touched on the event-loop thread.
             if let Err(err) = unsafe { inner.pin_mut_unchecked().#snake_request_name(#( #call_arg_names ),*) } {
                 handle_dispatch_error(resource, err.what());
             }
@@ -746,8 +763,15 @@ fn generate_dispatch_impl(
         unsafe impl Send for ffi::#ext_struct_name {}
         unsafe impl Sync for ffi::#ext_struct_name {}
 
-        struct #wrapper_struct_name {
-            inner: Option<cxx::SharedPtr<ffi::#ext_struct_name>>,
+        /// Owns the C++ object that backs a resource of this interface.
+        ///
+        /// `backend_owns_destroy` records that `wayland-backend` is already tearing
+        /// the resource down (a client-sent destructor request, or a disconnect), so
+        /// the C++ destructor must not ask it to destroy the resource a second time.
+        #[derive(Default)]
+        pub(crate) struct #wrapper_struct_name {
+            pub(crate) inner: Option<cxx::SharedPtr<ffi::#ext_struct_name>>,
+            pub(crate) backend_owns_destroy: bool,
         }
 
         impl Dispatch<#namespace_name::#interface_name::#protocol_struct_name, Arc<Mutex<#wrapper_struct_name>>>
@@ -783,6 +807,9 @@ fn generate_dispatch_impl(
                 // requests to C++ and C++ can send server events to Rust.
                 let taken_inner = {
                     let mut guard = data.lock().unwrap_or_else(|e| e.into_inner());
+                    // The backend is destroying the resource itself on this path, so
+                    // the C++ destructor must not destroy it again.
+                    guard.backend_owns_destroy = true;
                     guard.inner.take()
                 };
                 drop(taken_inner);

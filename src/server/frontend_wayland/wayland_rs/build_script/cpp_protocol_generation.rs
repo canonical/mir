@@ -536,13 +536,21 @@ fn wayland_interface_to_cpp_class(interface: &WaylandInterface) -> CppClass {
     class.add_method(post_error_method);
 
     // Add a destroy_and_delete method for server-initiated resource destruction.
-    // This is the equivalent of wl_resource_destroy() in the old C API: it destroys the
-    // underlying Wayland resource, which triggers the Dispatch::destroyed() callback,
-    // unregisters the resource, and allows the C++ object to be dropped once all shared owners release it.
+    // This is the equivalent of wl_resource_destroy() in the old C API: it releases the
+    // Rust-held reference to this object, and the Wayland resource is destroyed from this
+    // class's destructor once every shared owner has released it. Destroying the resource
+    // last means destructors (and destroy listeners) can still send events on it.
     let mut destroy_and_delete_method =
         CppMethod::new("destroy_and_delete", None, false, false, false, true);
     destroy_and_delete_method.set_body("instance_->destroy_and_delete();");
     class.add_method(destroy_and_delete_method);
+
+    // Destroy the Wayland resource only once the whole C++ destructor chain has run.
+    // `mark_destroyed()` is called first (it is idempotent, so `~LifetimeTracker` will
+    // not repeat it) so that destroy listeners fire while the resource is still alive
+    // and any events they send remain valid. This mirrors libwayland, where
+    // `wl_resource_destroy()` emits `destroy_signal` before unmapping the object id.
+    class.set_destructor_body("mark_destroyed();\n    instance_->notify_destroyed();");
 
     // Add a protected constructor and member so that subclasses know which client
     // they are serving and can interact with it as they please. The client is the

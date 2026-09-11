@@ -208,9 +208,14 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
         .collect();
 
     let interface_name = format_ident!("{}", snake_to_pascal(&interface.name));
+    let wrapper_struct_name = format_ident!("{}Wrapper", snake_to_pascal(&interface.name));
     let interface_name_ext = format_ident!(
         "{}",
         format_wayland_interface_to_rust_extension_struct(&interface.name)
+    );
+    let already_destroyed_message = format!(
+        "{}.notify_destroyed: resource was already destroyed: {{}}",
+        interface.name
     );
     Some(quote! {
         pub struct #interface_name_ext {
@@ -238,14 +243,63 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
                 self.wrapped.id().protocol_id()
             }
 
-            pub fn destroy_and_delete(&self) {
+            /// The wrapper owning the C++ object that backs this resource.
+            fn wrapper_data(&self) -> Option<&std::sync::Arc<std::sync::Mutex<crate::dispatch::#wrapper_struct_name>>> {
                 use wayland_server::Resource;
-                if self.wrapped.is_alive() {
-                    if let Some(handle) = self.wrapped.handle().upgrade() {
-                        let _ = handle.destroy_object::<crate::wayland_server_core::ServerState>(
-                            &self.wrapped.id(),
-                        );
-                    }
+                self.wrapped.data()
+            }
+
+            /// Release the Rust-held reference to the C++ object.
+            ///
+            /// That reference is what keeps this resource alive; the resource itself
+            /// is destroyed from the C++ destructor (see `notify_destroyed`) so that
+            /// destructors and destroy listeners can still send events on it.
+            pub fn destroy_and_delete(&self) {
+                // The data `Arc` is cloned out first: dropping the C++ object frees the
+                // `Box` holding this middleware, so `self` must not be touched again
+                // once the drop below may have run.
+                let Some(data) = self.wrapper_data().cloned() else {
+                    return;
+                };
+                let taken_inner = {
+                    let mut guard = data.lock().unwrap_or_else(|e| e.into_inner());
+                    guard.inner.take()
+                };
+                if taken_inner.is_none() {
+                    // No C++ object to run destructors for, so there is nothing to wait
+                    // for. Destroy the resource directly. `self` is still valid here
+                    // because nothing was dropped.
+                    self.notify_destroyed();
+                    return;
+                }
+                drop(taken_inner);
+            }
+
+            /// Destroy the Wayland resource, called from the generated C++ destructor
+            /// once the whole destructor chain (including destroy listeners) has run.
+            ///
+            /// Does nothing when `wayland-backend` is already tearing the resource down
+            /// — a client-sent destructor request, or a disconnect — since destroying it
+            /// again would send `wl_display.delete_id` twice.
+            pub fn notify_destroyed(&self) {
+                use wayland_server::Resource;
+                let backend_owns_destroy = self.wrapper_data().is_some_and(|data| {
+                    data.lock().unwrap_or_else(|e| e.into_inner()).backend_owns_destroy
+                });
+                if backend_owns_destroy {
+                    return;
+                }
+                // Upgrading only fails once the display itself is gone, taking every
+                // resource with it.
+                let Some(handle) = self.wrapped.handle().upgrade() else {
+                    return;
+                };
+                // `destroy_object` reports `InvalidId` for a resource that is already
+                // dead, which is the state this method is trying to reach anyway.
+                if let Err(error) = handle
+                    .destroy_object::<crate::wayland_server_core::ServerState>(&self.wrapped.id())
+                {
+                    log::debug!(#already_destroyed_message, error);
                 }
             }
 
@@ -280,13 +334,8 @@ fn generate_extension_method_for_event(event: &WaylandEvent, interface_name: &st
     // wayland-backend ("Attempting to send an event with objects from wrong client"),
     // e.g. wl_keyboard.leave sent from the focused surface's own destruction path.
     // libwayland tolerated such events (clients ignore ids of zombie objects), so
-    // match that by dropping the event instead. This should not happen, so log loudly
-    // when it does rather than crashing the compositor.
-    //
-    // TODO: If we want a more "correct" Rust version in the future, we will need
-    // to change the behavior of surface focus. The issue here is that we send out
-    // a surface "leave" event on a surface that lost focus due to its own destruction.
-    // This is not necessarily wrong (libwayland tolerates it!).
+    // match that by dropping the event instead. This can happen when a client abruptly
+    // disconnects.
     let object_guards: Vec<TokenStream> = event
         .args
         .iter()
