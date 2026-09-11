@@ -295,7 +295,8 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
     }
     if (change.modifier_map)
     {
-        send_modifiers_map_event(change.modifier_map.value().data());
+        auto const* modifier_map = static_cast<wl_array const*>(change.modifier_map.value());
+        send_modifiers_map_event(const_cast<wl_array*>(modifier_map)); // NOLINT(cppcoreguidelines-pro-type-const-cast)
     }
     if (change.direction)
     {

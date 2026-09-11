@@ -21,9 +21,9 @@
 #include <mir/log.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/wayland/client.h>
+#include <mir/wayland/wl_array.h>
 
 #include <xkbcommon/xkbcommon.h>
-#include <cstring> // memcpy
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -58,31 +58,9 @@ void mf::WlKeyboard::focus_on(WlSurface* surface)
         // TODO: Send the surface's keymap here
 
         auto const pressed_keys = helper->pressed_key_scancodes();
-
-        wl_array key_state;
-        wl_array_init(&key_state);
-
-        auto* const array_storage = wl_array_add(
-            &key_state,
-            pressed_keys.size() * sizeof(decltype(pressed_keys)::value_type));
-
-        if (!array_storage)
-        {
-            wl_resource_post_no_memory(resource);
-            BOOST_THROW_EXCEPTION(std::bad_alloc());
-        }
-
-        if (!pressed_keys.empty())
-        {
-            std::memcpy(
-                array_storage,
-                pressed_keys.data(),
-                pressed_keys.size() * sizeof(decltype(pressed_keys)::value_type));
-        }
-
+        mw::WlArray<uint32_t> key_state(pressed_keys.data(), pressed_keys.size());
         auto const serial = client->next_serial(nullptr);
-        send_enter_event(serial, surface->raw_resource(), &key_state);
-        wl_array_release(&key_state);
+        send_enter_event(serial, surface->raw_resource(), key_state);
         helper->refresh_modifiers();
     }
 
