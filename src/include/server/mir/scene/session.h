@@ -46,10 +46,6 @@ namespace shell
 struct StreamSpecification;
 struct SurfaceSpecification;
 }
-namespace graphics
-{
-struct BufferProperties;
-}
 namespace scene
 {
 class Surface;
@@ -84,8 +80,7 @@ public:
     virtual void destroy_surface(std::shared_ptr<Surface> const& surface) = 0;
     virtual auto surface_after(std::shared_ptr<Surface> const& surface) const -> std::shared_ptr<Surface> = 0;
 
-    virtual auto create_buffer_stream(graphics::BufferProperties const& props)
-        -> std::shared_ptr<compositor::BufferStream> = 0;
+    virtual auto create_buffer_stream() -> std::shared_ptr<compositor::BufferStream> = 0;
     virtual void destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream) = 0;
     virtual void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) = 0;
 

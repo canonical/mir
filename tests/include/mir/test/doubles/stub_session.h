@@ -53,8 +53,7 @@ struct StubSession : scene::Session
     auto surface_after(
         std::shared_ptr<scene::Surface> const&) const -> std::shared_ptr<scene::Surface> override;
 
-    auto create_buffer_stream(
-        graphics::BufferProperties const& props) -> std::shared_ptr<compositor::BufferStream> override;
+    auto create_buffer_stream() -> std::shared_ptr<compositor::BufferStream> override;
 
     void destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream) override;
 

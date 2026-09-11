@@ -22,7 +22,6 @@
 #include <mir/frontend/surface_id.h>
 #include <mir/geometry/point.h>
 #include <mir/geometry/displacement.h>
-#include <mir/graphics/buffer_properties.h>
 #include <mir/graphics/display_configuration.h>
 
 #include <memory>
@@ -68,7 +67,6 @@ struct SurfaceSpecification
     std::optional<geometry::Width> width;
     std::optional<geometry::Height> height;
     std::optional<MirPixelFormat> pixel_format;
-    std::optional<graphics::BufferUsage> buffer_usage;
     std::optional<std::string> name;
     std::optional<graphics::DisplayConfigurationOutputId> output_id;
     std::optional<MirWindowType> type;

@@ -34,7 +34,6 @@ bool msh::SurfaceSpecification::is_empty() const
         !width.has_value() &&
         !height.has_value() &&
         !pixel_format.has_value() &&
-        !buffer_usage.has_value() &&
         !name.has_value() &&
         !output_id.has_value() &&
         !type.has_value() &&
@@ -78,8 +77,6 @@ void msh::SurfaceSpecification::update_from(SurfaceSpecification const& that)
         height = that.height;
     if (that.pixel_format.has_value())
         pixel_format = that.pixel_format;
-    if (that.buffer_usage.has_value())
-        buffer_usage = that.buffer_usage;
     if (that.name.has_value())
         name = that.name;
     if (that.output_id.has_value())
@@ -170,7 +167,7 @@ bool msh::operator==(
 
     return parents_equal &&
         std::tie(lhs.name, lhs.width, lhs.height, lhs.top_left,
-                 lhs.buffer_usage, lhs.pixel_format, lhs.output_id,
+                 lhs.pixel_format, lhs.output_id,
                  lhs.state, lhs.type, lhs.preferred_orientation,
                  lhs.parent_id, lhs.aux_rect, lhs.edge_attachment,
                  lhs.placement_hints, lhs.surface_placement_gravity,
@@ -184,7 +181,7 @@ bool msh::operator==(
                  lhs.application_id, lhs.server_side_decorated, lhs.focus_mode,
                  lhs.visible_on_lock_screen, lhs.tiled_edges, lhs.alpha, lhs.parent_size) ==
         std::tie(rhs.name, rhs.width, rhs.height, rhs.top_left,
-                 rhs.buffer_usage, rhs.pixel_format, rhs.output_id,
+                 rhs.pixel_format, rhs.output_id,
                  rhs.state, rhs.type, rhs.preferred_orientation,
                  rhs.parent_id, rhs.aux_rect, rhs.edge_attachment,
                  rhs.placement_hints, rhs.surface_placement_gravity,

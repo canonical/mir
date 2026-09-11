@@ -31,12 +31,6 @@ void copy_if_set(std::optional<Dest>& dest, std::optional<Source> const& source)
 }
 
 template<typename Source>
-void copy_if_set(std::optional<mir::graphics::BufferUsage>& dest, std::optional<Source> const& source)
-{
-    if (source.has_value()) dest = static_cast<mir::graphics::BufferUsage>(source.value());
-}
-
-template<typename Source>
 void copy_if_set(
     std::optional<mir::graphics::DisplayConfigurationOutputId>& dest,
     std::optional<Source> const& source)
@@ -68,7 +62,6 @@ auto miral::make_surface_spec(WindowSpecification const& miral_spec) -> mir::she
     mir::shell::SurfaceSpecification result;
     copy_if_set(result.top_left, spec.top_left);
     copy_if_set(result.pixel_format, spec.pixel_format);
-    copy_if_set(result.buffer_usage, spec.buffer_usage);
     copy_if_set(result.name, spec.name);
     copy_if_set(result.output_id, spec.output_id);
     copy_if_set(result.type, spec.type);
