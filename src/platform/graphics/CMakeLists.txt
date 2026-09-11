@@ -43,8 +43,6 @@ add_library(mirplatformgraphicscommon OBJECT
   egl_extensions.cpp
   egl_resources.cpp
   egl_error.cpp
-  display_configuration.cpp
-  gamma_curves.cpp
   buffer_basic.cpp
   pixel_format_utils.cpp
   overlapping_output_grouping.cpp
@@ -155,5 +153,4 @@ target_link_libraries(
     PkgConfig::GLESv2
   PRIVATE
     PkgConfig::PIXMAN
-    PkgConfig::LIBDISPLAY_INFO
 )
