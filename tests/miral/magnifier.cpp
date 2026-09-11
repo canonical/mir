@@ -66,7 +66,7 @@ public:
     /// Waits for work already queued on the main loop to complete. The display
     /// configuration observer multiplexer dispatches on the main loop, so this
     /// is what synchronises with the magnifier's DisplayConfigObserver.
-    void flush_main_loop(char const* context)
+    void flush_main_loop(std::string_view context)
     {
         auto flushed = std::make_shared<mir::test::Signal>();
         server().the_main_loop()->spawn([flushed] { flushed->raise(); });
@@ -108,7 +108,7 @@ public:
 
 struct MagnificationTestCase
 {
-    char const* name;
+    std::string_view name;
     float requested;
     float expected;
 };
