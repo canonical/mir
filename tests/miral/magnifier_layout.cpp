@@ -32,7 +32,7 @@ namespace controls = miral::magnifier_controls;
 namespace layout = miral::magnifier_layout;
 using namespace testing;
 
-namespace
+namespace expected_edges
 {
 enum class ExpectedEdge
 {
@@ -42,11 +42,12 @@ enum class ExpectedEdge
     bottom = 1 << 3,
 };
 
-constexpr auto mir_enable_enum_bit_operators(ExpectedEdge edge) -> ExpectedEdge
-{
-    return edge;
+auto mir_enable_enum_bit_operators(ExpectedEdge) -> ExpectedEdge;
 }
 
+namespace
+{
+using ExpectedEdge = expected_edges::ExpectedEdge;
 using ExpectedEdges = mir::Flags<ExpectedEdge>;
 
 constexpr std::array test_magnifications{1.25, 1.5, 2.0, 3.5, 8.0};
