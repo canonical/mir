@@ -13,3 +13,8 @@ cmake \
   -B $HOME/build \
   -G Ninja \
   .
+
+cat <<'EOF' >> ~/.profile
+export WAYLAND_DISPLAY=wayland-99
+export MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:x11
+EOF
