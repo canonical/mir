@@ -1,5 +1,15 @@
 # Mir hacking guide
 
+## Merging release branches
+
+`debian/changelog`, `rpm/mir.spec` and `doc/sphinx/release-notes.md` use a custom git merge
+driver, defined in `.gitconfig`, to auto-resolve the conflicts that come from merging a release
+branch into `main`. Enable it once per clone with:
+
+```sh
+git config --local include.path ../.gitconfig
+```
+
 ## Building & running
 
 For build instructions, and a brief guide describing how to run the *Mir binaries* please see:

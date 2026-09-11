@@ -243,7 +243,7 @@ jobs:
           awk --include=inplace \
             -v current_pat="^## Mir ${INPUTS_VERSION}~dev$" \
             -v current_version="${INPUTS_VERSION}~dev" \
-            -v next_version="${NEXT_VERSION}~dev" '
+            -v next_version="${NEXT_VERSION}" '
 
             # Find the current release section
             !in_target && $0 ~ current_pat {
@@ -255,7 +255,7 @@ jobs:
             in_target {
               # At next release section, print the collected buffers
               if ($0 ~ /^## Mir /) {
-                print "## Mir " next_version
+                print "## Mir " next_version "~dev"
                 print ""
                 print "- New upstream release " next_version
                 print ""
@@ -293,7 +293,11 @@ jobs:
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
 
-          debchange --newversion "${NEXT_VERSION}" ''
+          debchange --newversion "${NEXT_VERSION}" "Begin development for ${NEXT_VERSION} release"
+          awk --include=inplace \
+            -v previous_begin="Begin development for ${INPUTS_VERSION} release" '
+            index($0, previous_begin) == 0 { print }
+          ' debian/changelog
           git add debian/changelog
 
       - name: Update the RPM changelog
