@@ -32,5 +32,4 @@ target_link_libraries(mirshelldecoration
     mircore
   PRIVATE
     PkgConfig::FREETYPE
-    PkgConfig::GLIB
 )
