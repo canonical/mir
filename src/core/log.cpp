@@ -17,52 +17,39 @@
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
-#include <cstdio>
 #include <exception>
 #include <format>
 
 #include <boost/exception/diagnostic_information.hpp>
+#include <source_location>
 
 namespace mir {
 
-void logv(
+log<logging::Severity, logging::Tags, std::string_view, std::format_args>::log(
     logging::Severity sev,
-    char const* component,
-    char const* fmt,
-    va_list va)
+    logging::Tags tags,
+    std::string_view fmt,
+    std::format_args args,
+    std::source_location loc)
 {
-    char message[1024];
-    int max = sizeof(message) - 1;
-    int len = std::vsnprintf(message, max, fmt, va);
-    if (len > max)
-        len = max;
-    message[len] = '\0';
-
-    // Suboptimal: Constructing a std::string for message/component.
-    logging::log(sev, message, component);
+    logging::log(sev, tags, fmt, args, loc);
 }
 
-void log(logging::Severity sev, char const* component,
-         char const* fmt, ...)
+log<logging::Severity, std::string const&, std::string const&>::log(
+    logging::Severity sev,
+    std::string const& component,
+    std::string const& message,
+    std::source_location loc)
 {
-    va_list va;
-    va_start(va, fmt);
-    logv(sev, component, fmt, va);
-    va_end(va);
+    logging::log(sev, component, message, loc);
 }
 
-void log(logging::Severity sev, char const* component,
-         std::string const& message)
-{
-    logging::log(sev, message, component);
-}
-
-
-void log(
+log<logging::Severity, char const*, std::exception_ptr const&, std::string const&>::log(
     logging::Severity severity,
     char const* component,
     std::exception_ptr const& ex,
-    std::string const& message)
+    std::string const& message,
+    std::source_location loc)
 {
     try
     {
@@ -72,29 +59,23 @@ void log(
     {
         // TODO: We can probably format this better by pulling out
         // the boost::errinfo's ourselves.
-        mir::log(
+        mir::log<logging::Severity, char const*, char const*, char const*, char const*>(
             severity,
             component,
             "%s: %s",
             message.c_str(),
-            boost::diagnostic_information(err).c_str());
+            boost::diagnostic_information(err).c_str(),
+            loc);
     }
     catch(...)
     {
-        mir::log(
+        mir::log<logging::Severity, char const*, char const*, char const*>(
             severity,
             component,
             "%s: unknown exception",
-            message.c_str());
+            message.c_str(),
+            loc);
     }
-}
-
-void log(
-    logging::Severity severity,
-    logging::Tags tags,
-    std::string_view message)
-{
-    logging::log(severity, tags, message, std::make_format_args());
 }
 
 void security_log(

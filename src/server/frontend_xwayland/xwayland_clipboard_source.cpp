@@ -388,7 +388,7 @@ void mf::XWaylandClipboardSource::create_source(xcb_timestamp_t timestamp, std::
         {
             msg += "\n    " + pair.first + ": " + connection.query_name(pair.second);
         }
-        log_info(msg);
+        log_info(std::string{msg});
     }
 
     auto const source = std::make_shared<ClipboardSource>(std::move(mime_types), this);
