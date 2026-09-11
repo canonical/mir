@@ -1,5 +1,5 @@
 #include <miral/runner.h>
-#include <miral/minimal_window_manager.h>
+#include <miral/floating_window_manager.h>
 #include <miral/set_window_management_policy.h>
 
 using namespace miral;
@@ -10,6 +10,6 @@ int main(int argc, char const* argv[])
 
     return runner.run_with(
         {
-            set_window_management_policy<MinimalWindowManager>()
+            set_window_management_policy<FloatingWindowManager>()
         });
 }

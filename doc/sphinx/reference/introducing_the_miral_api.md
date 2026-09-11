@@ -16,7 +16,7 @@ This example uses three components of MirAL:
 | ------------------------------------------- | --------------------------------------------------------- |
 | {class}`miral::MirRunner`                   | This allows you to configure and run a Wayland compositor |
 | {func}`miral::set_window_management_policy` | This integrates your chosen window management policy      |
-| {class}`miral::MinimalWindowManager`        | This is one of the supplied window management policies    |
+| {class}`miral::FloatingWindowManager`       | This is one of the supplied window management policies    |
 
 There are a lot of other components provided, but the {class}`miral::MirRunner`,
 is the heart of any compositor.
@@ -50,7 +50,7 @@ provides a hooks for co-ordinating other processing you need by running code:
 This is an important way to customise your compositor. Changing the
 way that windows are managed affects the way users interact with your compositor.
 
-The "Hello World" example uses {class}`miral::MinimalWindowManager` which is an
+The "Hello World" example uses {class}`miral::FloatingWindowManager` which is an
 implementation of the {class}`miral::WindowManagementPolicy` interface. This
 interface is how you can specify your chosen window management approach.
 

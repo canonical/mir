@@ -15,7 +15,6 @@
  */
 
 #include <miral/locate_pointer.h>
-#include <miral/minimal_window_manager.h>
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
 #include "wallpaper_config.h"

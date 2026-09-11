@@ -94,7 +94,7 @@ compositor.
 compositor. To run the compositor you call `runner.run_with(...)`, passing in
 different components to customize the behavior of the compositor. In this
 example, `run_with()` is passed a function `set_window_management_policy` that
-applies a `MinimalWindowManager` policy to the compositor. The compositor is
+applies a `FloatingWindowManager` policy to the compositor. The compositor is
 therefore created with basic window management capabilities such as controlling
 multiple windows, minimizing and maximizing, and handling mouse input.
 
