@@ -28,7 +28,6 @@ input hardware of that platform. The libraries that Mir provides are:
 
 - `graphics-atomic-kms`
 - `graphics-gbm-kms`
-- `graphics-eglstream-kms`
 - `graphics-wayland`
 - `graphics-dummy`
 - `server-x11`

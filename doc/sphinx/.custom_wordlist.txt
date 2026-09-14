@@ -15,6 +15,7 @@ AUR
 backend
 backends
 barebones
+basename
 Binutils
 boolean
 BounceKeys
@@ -53,21 +54,22 @@ dispatchable
 dispmanx
 Dispmanx
 DispmanX
+distro
 distros
 dlopen
 dma
 dmabuf
 don'ts
 Doxygen
-drm
 DRM
+DRMFormat
+drm
 DSO
 DSOs
 EGL
+EGLStream
 EGL_WL_bind_wayland_display
 eglinfo
-eglstream
-EGLStreams
 egmde
 enablement
 EndToEnd
@@ -78,6 +80,7 @@ Etnaviv
 evdev
 evdi
 Fedora
+fd
 filesystem
 FloatingWindowManagerPolicy
 Frame
@@ -114,6 +117,7 @@ initializer
 inlined
 inlining
 Inlining
+inotify
 InputDispatcher
 InputPlatform
 intel
@@ -186,7 +190,9 @@ postincrement
 ppa
 PPAs
 pre
+predecrement
 preprocessor
+predecrement
 preincrement
 preload
 preselects
@@ -197,7 +203,9 @@ Qtmir
 radeon
 raspberrypi
 rc
+remediations
 recomposition
+remediations
 renderables
 renderer
 RenderingPlatform
@@ -230,6 +238,7 @@ Stroustrup
 subclassed
 subgraph
 subprocess
+subsurfaces
 swaybg
 swaylock
 sys
@@ -244,6 +253,7 @@ toolchain
 toolchains
 toolkits
 Tooltip
+toplevel
 tracepoint
 tracepoints
 TSan

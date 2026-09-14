@@ -68,14 +68,21 @@ TEST_F(InputEventBuilder, makes_valid_touch_event)
     float touch_minor_values[] = {13, 3, 9.13};
     float size_values[] = {13, 9, 14};
 
-   auto ev = mev::make_touch_event(
+    std::vector<mev::TouchContact> contacts;
+
+    for (unsigned i = 0; i < touch_count; i++)
+    {
+        contacts.emplace_back(
+            touch_ids[i], actions[i], tooltypes[i],
+            mir::geometry::PointF{x_axis_values[i], y_axis_values[i]},
+            pressure_values[i], touch_major_values[i],
+            touch_minor_values[i], 0);
+    }
+
+    auto ev = mev::make_touch_event(
        device_id, timestamp,
-       modifiers);
-   for (unsigned i = 0; i < touch_count; i++)
-   {
-       mev::add_touch(*ev, touch_ids[i], actions[i], tooltypes[i], x_axis_values[i], y_axis_values[i],
-           pressure_values[i], touch_major_values[i], touch_minor_values[i], size_values[i]);
-   }
+       modifiers, contacts);
+
    auto e = ev.get();
 
    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
@@ -127,60 +134,6 @@ TEST_F(InputEventBuilder, makes_valid_pointer_event)
     EXPECT_EQ(y_axis_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_y));
     EXPECT_EQ(hscroll_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_hscroll));
     EXPECT_EQ(vscroll_value, mir_pointer_event_axis_value(pev, mir_pointer_axis_vscroll));
-}
-
-// The following three requirements can be removed as soon as we remove android::InputDispatcher, which is the
-// only remaining part that relies on the difference between mir_motion_action_pointer_{up,down} and
-// mir_motion_action_{up,down} and the difference between mir_motion_action_move and mir_motion_action_hover_move.
-TEST_F(InputEventBuilder, maps_single_touch_down_to_motion_down)
-{
-    MirTouchAction action =  mir_touch_action_down;
-
-    auto ev = mev::make_touch_event(device_id, timestamp, modifiers);
-    mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
-    auto e = ev.get();
-
-    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
-    auto ie = mir_event_get_input_event(e);
-    EXPECT_EQ(mir_input_event_type_touch, mir_input_event_get_type(ie));
-    auto tev = mir_input_event_get_touch_event(ie);
-
-    EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-}
-
-TEST_F(InputEventBuilder, maps_single_touch_up_to_motion_up)
-{
-    MirTouchAction action =  mir_touch_action_up;
-
-    auto ev = mev::make_touch_event(device_id, timestamp, modifiers);
-    mev::add_touch(*ev, 0, action, mir_touch_tooltype_finger, 0, 0, 0, 0, 0, 0);
-    auto e = ev.get();
-
-    EXPECT_EQ(mir_event_type_input, mir_event_get_type(e));
-    auto ie = mir_event_get_input_event(e);
-    EXPECT_EQ(mir_input_event_type_touch, mir_input_event_get_type(ie));
-    auto tev = mir_input_event_get_touch_event(ie);
-
-    EXPECT_EQ(action, mir_touch_event_action(tev, 0));
-}
-
-TEST_F(InputEventBuilder, map_to_hover_if_no_button_pressed)
-{
-    float x_axis_value = 3.9, y_axis_value = 7.4, hscroll_value = .9, vscroll_value = .3;
-    auto const relative_x_value = 0.0;
-    auto const relative_y_value = 0.0;
-    MirPointerAction action = mir_pointer_action_motion;
-    auto ev = mev::make_pointer_event(
-        device_id, timestamp, modifiers,
-        action, 0, x_axis_value, y_axis_value,
-        hscroll_value, vscroll_value, relative_x_value, relative_y_value);
-    auto e = ev.get();
-
-    auto ie = mir_event_get_input_event(e);
-    EXPECT_EQ(mir_input_event_type_pointer, mir_input_event_get_type(ie));
-    auto pev = mir_input_event_get_pointer_event(ie);
-    EXPECT_EQ(modifiers, mir_pointer_event_modifiers(pev));
-    EXPECT_EQ(action, mir_pointer_event_action(pev));
 }
 
 TEST_F(InputEventBuilder, when_creating_input_device_state_event_it_has_supplied_properties)

@@ -421,7 +421,7 @@ TEST_F(BasicSurfaceTest, test_surface_visibility)
     mtd::StubBuffer mock_buffer;
     auto submitted_buffer = false;
     ON_CALL(*mock_buffer_stream, has_submitted_buffer())
-        .WillByDefault(Invoke([&submitted_buffer] { return submitted_buffer; }));
+        .WillByDefault([&submitted_buffer] { return submitted_buffer; });
 
     // Must be a fresh surface to guarantee no frames posted yet...
     ms::BasicSurface surface{
@@ -1478,9 +1478,9 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     geom::Displacement displacement{3,-2};
     auto mock_buffer_stream1 = std::make_shared<NiceMock<mtd::MockBufferStream>>();
     ON_CALL(*mock_buffer_stream, has_submitted_buffer())
-        .WillByDefault(Invoke([&stream1_visible] { return stream1_visible; }));
+        .WillByDefault([&stream1_visible] { return stream1_visible; });
     ON_CALL(*mock_buffer_stream1, has_submitted_buffer())
-        .WillByDefault(Invoke([&stream2_visible] { return stream2_visible; }));
+        .WillByDefault([&stream2_visible] { return stream2_visible; });
     std::list<ms::StreamInfo> streams = {
         { mock_buffer_stream, {0,0}},
         { mock_buffer_stream1, displacement},

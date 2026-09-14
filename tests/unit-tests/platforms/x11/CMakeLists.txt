@@ -3,11 +3,14 @@ mir_add_wrapped_executable(mir_unit_tests_x11 NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display.cpp
 )
 
-set_property(
-  SOURCE test_platform.cpp
-  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
 add_dependencies(mir_unit_tests_x11 GMock)
+
+target_include_directories(
+  mir_unit_tests_x11
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 set_target_properties(
   mir_unit_tests_x11

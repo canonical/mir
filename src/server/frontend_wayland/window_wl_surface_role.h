@@ -98,6 +98,10 @@ public:
 
     void set_type(MirWindowType type);
 
+    /// The window type the surface will have after the next commit (the value requested
+    /// this cycle if any, otherwise the committed value).
+    auto pending_type() const -> MirWindowType;
+
     void add_state_now(MirWindowState state);
     void remove_state_now(MirWindowState state);
     void create_scene_surface();

@@ -95,7 +95,7 @@ mf::KeyboardStateTracker::KeyboardStateTracker()
     : context{xkb_context_new(XKB_CONTEXT_NO_FLAGS), xkb_context_unref}
 {
     if (!context)
-        fatal_error("KeyboardStateTracker: failed to create XKB context");
+        MIR_FATAL_ERROR("KeyboardStateTracker: failed to create XKB context");
 }
 
 bool mf::KeyboardStateTracker::process(MirEvent const& event)

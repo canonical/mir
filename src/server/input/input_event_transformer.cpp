@@ -71,30 +71,30 @@ mi::InputEventTransformer::InputEventTransformer(
         {
             return unique_id_;
         }
-        mir::optional_value<MirPointerConfig> pointer_configuration() const override
+        std::optional<MirPointerConfig> pointer_configuration() const override
         {
-            return mir::optional_value<MirPointerConfig>{};
+            return std::optional<MirPointerConfig>{};
         }
         void apply_pointer_configuration(MirPointerConfig const&) override
         {
         }
-        mir::optional_value<MirTouchpadConfig> touchpad_configuration() const override
+        std::optional<MirTouchpadConfig> touchpad_configuration() const override
         {
-            return mir::optional_value<MirTouchpadConfig>{};
+            return std::optional<MirTouchpadConfig>{};
         }
         void apply_touchpad_configuration(MirTouchpadConfig const&) override
         {
         }
-        optional_value<MirKeyboardConfig> keyboard_configuration() const override
+        std::optional<MirKeyboardConfig> keyboard_configuration() const override
         {
-            return mir::optional_value<MirKeyboardConfig>{};
+            return std::optional<MirKeyboardConfig>{};
         }
         void apply_keyboard_configuration(MirKeyboardConfig const&) override
         {
         }
-        optional_value<MirTouchscreenConfig> touchscreen_configuration() const override
+        std::optional<MirTouchscreenConfig> touchscreen_configuration() const override
         {
-            return mir::optional_value<MirTouchscreenConfig>{};
+            return std::optional<MirTouchscreenConfig>{};
         }
         void apply_touchscreen_configuration(MirTouchscreenConfig const&) override
         {

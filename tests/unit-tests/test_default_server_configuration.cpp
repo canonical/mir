@@ -49,17 +49,17 @@ struct DefaultServerConfigurationTest : testing::Test
     DefaultServerConfigurationTest()
     {
         EXPECT_CALL(*mock_option, get(mir::options::scene_report_opt))
-            .WillOnce(Invoke(
+            .WillOnce(
                     [this](char const*) -> boost::any const&
                     {
                         return any_off;
-                    }));
+                    });
         EXPECT_CALL(*mock_option, get(mir::options::vt_switching_option_name))
-            .WillOnce(Invoke(
+            .WillOnce(
                     [this](char const*) -> boost::any const&
                     {
                         return vt_switching;
-                    }));
+                    });
         ON_CALL(*mock_configuration, global_options())
             .WillByDefault(Return(mock_option));
     }

@@ -16,15 +16,12 @@
 
 #include <mir/fatal.h>
 
-#include <boost/throw_exception.hpp>
-
-#include <stdexcept>
 #include <cstdlib>
 #include <cstdio>
 #include <cstdarg>
 
 [[noreturn]]
-void mir::fatal_error_abort(char const* reason, ...)
+void mir::fatal_error(char const* reason, ...) noexcept
 {
     va_list args;
 
@@ -40,16 +37,28 @@ void mir::fatal_error_abort(char const* reason, ...)
     std::abort();
 }
 
-void mir::fatal_error_except(char const* reason, ...)
+[[noreturn]]
+void mir::fatal_error(std::source_location const loc, std::string_view message) noexcept
 {
-    char buffer[1024];
-    va_list args;
+    // Use fprintf(), avoiding any object construction and minimizing the
+    // potential for heap operations between the error location and the abort().
+    std::fprintf(stderr, "Mir fatal error: %.*s (%s:%u in %s)\n",
+        static_cast<int>(message.size()), message.data(),
+        loc.file_name(), loc.line(), loc.function_name());
 
-    va_start(args, reason);
-    std::vsnprintf(buffer, sizeof buffer, reason, args);
-    va_end(args);
-
-    BOOST_THROW_EXCEPTION(std::runtime_error(buffer));
+    std::abort();
 }
 
-void (*mir::fatal_error)(char const* reason, ...){&mir::fatal_error_abort};
+[[noreturn]]
+void mir::fatal_error(std::string_view fmt, std::format_args args, std::source_location const loc) noexcept
+{
+    try
+    {
+        fatal_error(loc, std::vformat(fmt, args));
+    }
+    catch (...)
+    {
+        // Formatting failed with an exception! Just report what we can
+        fatal_error(loc, fmt);
+    }
+}

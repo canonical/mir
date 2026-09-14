@@ -163,7 +163,7 @@ void miral::MinimalWindowManager::handle_modify_window(
     tools.modify_window(window_info, modifications);
 }
 
-void miral::MinimalWindowManager::handle_raise_window(WindowInfo& window_info)
+void miral::MinimalWindowManager::handle_activate_window(WindowInfo& window_info)
 {
     tools.select_active_window(window_info.window());
 }

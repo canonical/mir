@@ -1,0 +1,48 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <miral/configuration_option.h>
+
+#include <gtest/gtest.h>
+
+using namespace miral;
+using namespace testing;
+
+TEST(ConfigurationOption, can_take_lambdas)
+{
+    // ambiguous between all four possible 3-parameter overloads
+    auto bool_flag = miral::ConfigurationOption(
+        [](bool /*is_set*/) {}, "bool", "Set a boolean flag");
+
+    // ambiguous between `void(bool)`, `void(std::optional<bool> const&)`
+    // and `void(std::optional<int> const&)`
+    auto optional_bool_flag = miral::ConfigurationOption(
+        [](std::optional<bool> const& /*value*/) {}, "optional-bool", "Set an optional boolean flag");
+
+    // ambiguous between `void(bool)` vs. `void(std::optional<int> const&)`
+    auto optional_int_flag = miral::ConfigurationOption(
+        [](std::optional<int> const& /*value*/) {}, "optional-int", "Set an optional int flag");
+
+    // works
+    auto optional_string_flag = miral::ConfigurationOption(
+        [](std::optional<std::string> const& /*value*/) {}, "optional-string", "Set an optional string flag");
+}
+
+TEST(ConfigurationOption, can_take_repeated_strings)
+{
+    auto foo = miral::ConfigurationOption(
+        [](std::vector<std::string> const&) {}, "option", "can be repeated");
+}

@@ -480,7 +480,7 @@ std::vector<Request> Interface::get_requests(xmlpp::Element const& node, std::st
     std::vector<Request> requests;
     for (auto method_node : node.get_children("request"))
     {
-        auto elem = dynamic_cast<xmlpp::Element*>(method_node);
+        auto elem = dynamic_cast<const xmlpp::Element*>(method_node);
         requests.emplace_back(Request{std::ref(*elem), generated_name});
     }
     return requests;
@@ -492,7 +492,7 @@ std::vector<Event> Interface::get_events(xmlpp::Element const& node, std::string
     int opcode = 0;
     for (auto method_node : node.get_children("event"))
     {
-        auto elem = dynamic_cast<xmlpp::Element*>(method_node);
+        auto elem = dynamic_cast<const xmlpp::Element*>(method_node);
         events.emplace_back(Event{std::ref(*elem), generated_name, opcode});
         opcode++;
     }
@@ -504,7 +504,7 @@ std::vector<Enum> Interface::get_enums(xmlpp::Element const& node, std::string g
     std::vector<Enum> enums;
     for (auto method_node : node.get_children("enum"))
     {
-        auto elem = dynamic_cast<xmlpp::Element*>(method_node);
+        auto elem = dynamic_cast<const xmlpp::Element*>(method_node);
         enums.emplace_back(Enum{std::ref(*elem), generated_name});
     }
     return enums;

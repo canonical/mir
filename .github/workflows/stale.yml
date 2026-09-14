@@ -1,0 +1,34 @@
+name: Stale Questions and PRs
+
+on:
+  schedule:
+    - cron: "15 6 * * *" # Daily at 06:15 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+      pull-requests: write
+    steps:
+    - uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
+      with:
+        days-before-issue-stale: 7
+        days-before-issue-close: 7
+        days-before-pr-stale: 7
+        days-before-pr-close: 7
+        only-issue-labels: question
+        stale-issue-message: >-
+          This question issue has had no activity for a week, so it is being marked stale.
+          It will be closed after another week without updates unless someone comments or otherwise updates it.
+        close-issue-message: >-
+          Closing this question issue because it had no activity for another week after being marked stale.
+        stale-pr-message: >-
+          This pull request has had no activity for a week, so it is being marked stale.
+          It will be closed after another week without updates unless someone comments or otherwise updates it.
+        close-pr-message: >-
+          Closing this pull request because it had no activity for another week after being marked stale.
+        operations-per-run: 100

@@ -203,7 +203,7 @@ void PersistDisplayConfigPolicy::apply_to(
         miroil::DisplayConfigurationOptions config;
         if (storage->load(display_id, config)) {
 
-            if (config.mode.is_set()) {
+            if (config.mode.has_value()) {
                 int mode_index = output.current_mode_index;
                 int i = 0;
                 // Find the mode index which supports the saved size.
@@ -220,16 +220,16 @@ void PersistDisplayConfigPolicy::apply_to(
 
             uint output_index = 0;
             conf.for_each_output([&output, config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-                if (config.clone_output_index.is_set() && output_index == config.clone_output_index.value()) {
+                if (config.clone_output_index.has_value() && output_index == config.clone_output_index.value()) {
                     output.top_left = find_output.top_left;
                 }
                 output_index++;
             });
 
-            if (config.orientation.is_set()) {output.orientation = config.orientation.value(); }
-            if (config.used.is_set()) {output.used = config.used.value(); }
-            if (config.form_factor.is_set()) {output.form_factor = config.form_factor.value(); }
-            if (config.scale.is_set()) {output.scale = config.scale.value(); }
+            if (config.orientation.has_value()) {output.orientation = config.orientation.value(); }
+            if (config.used.has_value()) {output.used = config.used.value(); }
+            if (config.form_factor.has_value()) {output.form_factor = config.form_factor.value(); }
+            if (config.scale.has_value()) {output.scale = config.scale.value(); }
         }
     });
 }
@@ -252,7 +252,7 @@ void PersistDisplayConfigPolicy::save_config(mg::DisplayConfiguration const& con
 
         uint output_index = 0;
         conf.for_each_output([output, &config, &output_index](mg::DisplayConfigurationOutput const& find_output) {
-            if (!config.clone_output_index.is_set() && output.top_left == find_output.top_left) {
+            if (!config.clone_output_index.has_value() && output.top_left == find_output.top_left) {
                 config.clone_output_index = output_index;
             }
             output_index++;

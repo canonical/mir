@@ -42,9 +42,8 @@ struct OutputUpdates : mt::TestWindowManagerTools
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
-                Invoke(
                     [&result](WindowInfo const& window_info)
-                        { result = window_info.window(); }));
+                        { result = window_info.window(); });
 
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
         basic_window_manager.select_active_window(result);
@@ -63,7 +62,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_creation)
     auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
-        .WillOnce(Invoke([&](Output const& output){ output_a = output; }));
+        .WillOnce([&](Output const& output){ output_a = output; });
 
     notify_configuration_applied(display_config_a);
 
@@ -78,8 +77,8 @@ TEST_F(OutputUpdates, policy_notified_of_multiple_outputs)
     auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
-        .WillOnce(Invoke([&](Output const& output){ output_a = output; }))
-        .WillOnce(Invoke([&](Output const& output){ output_b = output; }));
+        .WillOnce([&](Output const& output){ output_a = output; })
+        .WillOnce([&](Output const& output){ output_b = output; });
 
     notify_configuration_applied(display_config_a_b);
 
@@ -98,7 +97,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
     auto display_config_b = create_fake_display_configuration({display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
-        .WillOnce(Invoke([&](Output const& output){ output_initial = output; }));
+        .WillOnce([&](Output const& output){ output_initial = output; });
 
     notify_configuration_applied(display_config_a);
 
@@ -106,10 +105,10 @@ TEST_F(OutputUpdates, policy_notified_of_output_update)
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_output_update(_, _))
-        .WillOnce(Invoke([&](Output const& updated, Output const& original){
+        .WillOnce([&](Output const& updated, Output const& original){
             output_original = original;
             output_updated = updated;
-        }));
+        });
 
     notify_configuration_applied(display_config_b);
 
@@ -131,8 +130,8 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
     auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_output_create(_))
-        .WillOnce(Invoke([&](Output const& output){ output_a = output; }))
-        .WillOnce(Invoke([&](Output const& output){ output_b = output; }));
+        .WillOnce([&](Output const& output){ output_a = output; })
+        .WillOnce([&](Output const& output){ output_b = output; });
 
     notify_configuration_applied(display_config_a_b);
 
@@ -140,7 +139,7 @@ TEST_F(OutputUpdates, policy_notified_of_output_delete)
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_output_delete(_))
-        .WillOnce(Invoke([&](Output const& output){ output_b_deleted = output; }));
+        .WillOnce([&](Output const& output){ output_b_deleted = output; });
 
     notify_configuration_applied(display_config_a);
 
@@ -188,17 +187,17 @@ TEST_F(OutputUpdates, maximized_window_moved_with_its_output)
     ASSERT_THAT(window.size(), Eq(display_area_a.size));
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, _))
-        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
+        .WillOnce([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
             {
                 EXPECT_THAT(window_info.window(), Eq(window));
                 EXPECT_THAT(top_left, Eq(display_area_b.top_left));
-            }));
+            });
     EXPECT_CALL(*window_manager_policy, advise_resize(_, _))
-        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
+        .WillOnce([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
             {
                 EXPECT_THAT(window_info.window(), Eq(window));
                 EXPECT_THAT(size, Eq(display_area_b.size));
-            }));
+            });
 
     notify_configuration_applied(display_config_b);
     Mock::VerifyAndClearExpectations(window_manager_policy);
@@ -254,17 +253,17 @@ TEST_F(OutputUpdates, maximized_window_moved_with_its_logical_output_group)
     ASSERT_THAT(window.size(), Eq(logical_area_a.size));
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, _))
-        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
+        .WillOnce([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
             {
                 EXPECT_THAT(window_info.window(), Eq(window));
                 EXPECT_THAT(top_left, Eq(logical_area_b.top_left));
-            }));
+            });
     EXPECT_CALL(*window_manager_policy, advise_resize(_, _))
-        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
+        .WillOnce([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
             {
                 EXPECT_THAT(window_info.window(), Eq(window));
                 EXPECT_THAT(size, Eq(logical_area_b.size));
-            }));
+            });
 
     notify_configuration_applied(display_config_b);
     Mock::VerifyAndClearExpectations(window_manager_policy);
@@ -291,17 +290,17 @@ TEST_F(OutputUpdates, maximized_window_moved_when_outputs_become_logical_group)
     Window window = create_window(creation_parameters);
 
     EXPECT_CALL(*window_manager_policy, advise_move_to(_, _))
-        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
+        .WillOnce([&](miral::WindowInfo const& window_info, mir::geometry::Point top_left)
             {
                 EXPECT_THAT(window_info.window(), Eq(window));
                 EXPECT_THAT(top_left, Eq(logical_area_b.top_left));
-            }));
+            });
     EXPECT_CALL(*window_manager_policy, advise_resize(_, _))
-        .WillOnce(Invoke([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
+        .WillOnce([&](miral::WindowInfo const& window_info, mir::geometry::Size size)
             {
                 EXPECT_THAT(window_info.window(), Eq(window));
                 EXPECT_THAT(size, Eq(logical_area_b.size));
-            }));
+            });
 
     notify_configuration_applied(display_config_b);
     Mock::VerifyAndClearExpectations(window_manager_policy);

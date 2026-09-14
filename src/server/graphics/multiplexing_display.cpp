@@ -26,6 +26,7 @@
 #include <stdexcept>
 #include <sstream>
 #include <functional>
+#include <ranges>
 
 namespace mg = mir::graphics;
 
@@ -216,15 +217,14 @@ private:
             std::vector<OutputInfo> outputs;
             std::map<mg::DisplayConfigurationCardId, std::map<mg::DisplayConfigurationOutputType, unsigned>> output_type_counts;
             int next_id = 1;
-            int card_index = 0;   // Really, I want std::views::enumerate here, but that's C++23
-            for (auto const& conf : confs)
+            for (auto&& [card_index, conf] : confs | std::views::enumerate)
             {
                 conf->for_each_output(
                     [&, component = conf.get()](mg::DisplayConfigurationOutput const& output)
                     {
                         backing_store.push_back(output);
                         backing_store.back().id = mg::DisplayConfigurationOutputId{next_id};
-                        backing_store.back().card_id = mg::DisplayConfigurationCardId{card_index};
+                        backing_store.back().card_id = mg::DisplayConfigurationCardId{static_cast<int>(card_index)};
                         backing_store.back().name = name_for_output(backing_store.back(), output_type_counts);
                         next_id++;
                         outputs.emplace_back(
@@ -232,7 +232,6 @@ private:
                             output.id,
                             backing_store.size() - 1);
                     });
-                ++card_index;
             }
             return outputs;
         }

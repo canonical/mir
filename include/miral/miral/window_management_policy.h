@@ -27,6 +27,12 @@ struct MirPointerEvent;
 struct MirInputEvent;
 
 #include <memory>
+#include <span>
+
+#define MIR_WINDOW_MANAGEMENT_POLICY_USE_SPAN
+
+// This allows downstreams to detect the method rename
+#define MIRAL_USE_HANDLE_RAISE_WINDOW_IS_DEAD
 
 namespace miral
 {
@@ -107,14 +113,14 @@ public:
     /// \sa miral::WindowManagerTools::modify_window - the method used to modify a window
     virtual void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) = 0;
 
-    /// Request from the client to raise the window.
+    /// Request from the client to activate the window.
     ///
     /// The compositor author may use #miral::WindowManagerTools::raise_tree in response,
     /// or they may choose to do anything else.
     ///
     /// \param window_info the window
     /// \sa miral::WindowManagerTools::raise_tree - the method used to raise a window
-    virtual void handle_raise_window(WindowInfo& window_info) = 0;
+    virtual void handle_activate_window(WindowInfo& window_info) = 0;
 
     /// Confirm and optionally adjust the placement of a window on the display.
     ///
@@ -206,7 +212,7 @@ public:
     ///
     /// \param windows the windows being raised
     /// \note The relative Z-order of these windows will be maintained, they will be raised en bloc.
-    virtual void advise_raise(std::vector<Window> const& windows);
+    virtual void advise_raise(std::span<Window const> windows);
 
     /// Notification that windows are being added to a workspace.
     ///
@@ -219,7 +225,7 @@ public:
     /// \sa miral::WindowManagerTools::add_tree_to_workspace - called to add windows to a workspace
     virtual void advise_adding_to_workspace(
         std::shared_ptr<Workspace> const& workspace,
-        std::vector<Window> const& windows);
+        std::span<Window const> windows);
 
     /// Notification that windows are being removed from a workspace.
     ///
@@ -232,7 +238,7 @@ public:
     /// \sa miral::WindowManagerTools::remove_tree_from_workspace - called to remove windows from a workspace
     virtual void advise_removing_from_workspace(
         std::shared_ptr<Workspace> const& workspace,
-        std::vector<Window> const& windows);
+        std::span<Window const> windows);
 
     /// Request from the client to initiate a move.
     ///

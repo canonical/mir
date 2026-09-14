@@ -50,7 +50,7 @@ miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter(std::function<bool(M
 {
 }
 
-void miral::AppendKeyboardEventFilter::operator()(mir::Server& server)
+void miral::AppendKeyboardEventFilter::operator()(mir::Server& server) const
 {
     server.add_init_callback([this, &server] { server.the_composite_event_filter()->append(filter); });
 }

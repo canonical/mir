@@ -70,9 +70,8 @@ struct WindowPlacementAttached : mt::TestWindowManagerTools, WithParamInterface<
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
             .WillOnce(
-                Invoke(
                     [&result](WindowInfo const& window_info)
-                        { result = window_info.window(); }));
+                        { result = window_info.window(); });
 
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
         basic_window_manager.select_active_window(result);
@@ -606,7 +605,7 @@ TEST_P(WindowPlacementAttached, exclusive_zone_is_cleared_when_exclusive_rect_cl
     }
 
     mir::shell::SurfaceSpecification spec;
-    spec.exclusive_rect = mir::optional_value<mir::optional_value<Rectangle>>{{}};
+    spec.exclusive_rect = std::optional<Rectangle>{std::nullopt};
     basic_window_manager.modify_surface(session, attached, spec);
 
     EXPECT_THAT(normal.top_left(), Eq(display_area.top_left));

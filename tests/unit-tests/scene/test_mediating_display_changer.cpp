@@ -65,7 +65,7 @@ struct MockDisplay : public mtd::MockDisplay
         : config{std::make_unique<mtd::StubDisplayConfig>()}
     {
         ON_CALL(*this, configure(_))
-            .WillByDefault(Invoke([this](auto& conf) { config = conf.clone(); }));
+            .WillByDefault([this](auto& conf) { config = conf.clone(); });
     }
 
     std::unique_ptr<mg::DisplayConfiguration> configuration() const override
@@ -262,7 +262,7 @@ TEST_F(MediatingDisplayChangerTest, reapplies_old_config_when_applying_new_confi
 
     InSequence s;
     EXPECT_CALL(mock_display, configure(Ref(conf)))
-        .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"}); }));
+        .WillOnce([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Ducks!"}); });
     EXPECT_CALL(mock_display, configure(mt::DisplayConfigMatches(std::cref(*existing_configuration))));
 
     session_event_sink.handle_focus_change(session);
@@ -317,7 +317,7 @@ TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
 
 
     EXPECT_CALL(mock_display, configure(Ref(conf)))
-        .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+        .WillOnce([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); });
     EXPECT_CALL(mock_display, configure(Not(Ref(conf))))
         .Times(AnyNumber());
 
@@ -430,7 +430,7 @@ TEST_F(MediatingDisplayChangerTest, notifies_all_sessions_when_hardware_config_c
     session_container.insert_session(mt::fake_shared(mock_session2));
 
     EXPECT_CALL(mock_display, configure(Ref(conf)))
-        .WillOnce(InvokeWithoutArgs([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); }));
+        .WillOnce([]() { BOOST_THROW_EXCEPTION(std::runtime_error{"Avocado!"}); });
 
     EXPECT_CALL(mock_display, configure(Not(Ref(conf))))
         .Times(AnyNumber());

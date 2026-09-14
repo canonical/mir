@@ -115,32 +115,6 @@ mir::DefaultServerConfiguration::the_session_authorizer()
         {
             return true;
         }
-
-        bool configure_display_is_allowed(mf::SessionCredentials const& /* creds */) override
-        {
-            return true;
-        }
-
-        bool set_base_display_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
-        {
-            return true;
-        }
-
-        bool screencast_is_allowed(mf::SessionCredentials const& /* creds */) override
-        {
-            return true;
-        }
-
-        bool configure_input_is_allowed(mf::SessionCredentials const& /* creds */) override
-        {
-            return true;
-        }
-
-        bool set_base_input_configuration_is_allowed(mf::SessionCredentials const& /* creds */) override
-        {
-            return true;
-        }
-
     };
     return session_authorizer(
         [&]()
@@ -193,15 +167,6 @@ std::shared_ptr<mir::EmergencyCleanup> mir::DefaultServerConfiguration::the_emer
 std::function<void()> mir::DefaultServerConfiguration::the_stop_callback()
 {
     return []{};
-}
-
-auto mir::DefaultServerConfiguration::the_fatal_error_strategy()
--> void (*)(char const* reason, ...)
-{
-    if (the_options()->is_set(options::fatal_except_opt))
-        return &fatal_error_except;
-    else
-        return fatal_error;
 }
 
 auto mir::DefaultServerConfiguration::the_logger()

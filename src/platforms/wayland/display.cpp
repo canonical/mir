@@ -163,7 +163,7 @@ void mgw::Display::set_keyboard_sink(std::shared_ptr<input::wayland::KeyboardInp
 {
 
     std::lock_guard display_lock{the_display_mtx};
-    if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
+    if (!the_display) MIR_FATAL_ERROR("mir::graphics::wayland::Display not initialized");
 
     std::lock_guard lock{the_display->sink_mutex};
     if (keyboard_sink)
@@ -279,7 +279,7 @@ try
 }
 catch (std::exception const& e)
 {
-    fatal_error("Critical error in Wayland platform: %s\n", boost::diagnostic_information(e).c_str());
+    MIR_FATAL_ERROR("Critical error in Wayland platform: {}", boost::diagnostic_information(e));
 }
 
 void mir::graphics::wayland::Display::flush_wl() const
@@ -317,7 +317,7 @@ mir::graphics::wayland::Display::~Display()
 void mgw::Display::set_pointer_sink(std::shared_ptr<input::wayland::PointerInput> const& pointer_sink)
 {
     std::lock_guard display_lock{the_display_mtx};
-    if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
+    if (!the_display) MIR_FATAL_ERROR("mir::graphics::wayland::Display not initialized");
 
     std::lock_guard lock{the_display->sink_mutex};
     if (pointer_sink)
@@ -517,7 +517,7 @@ void mir::graphics::wayland::Display::touch_orientation(wl_touch* touch, int32_t
 void mir::graphics::wayland::Display::set_touch_sink(std::shared_ptr<input::wayland::TouchInput> const& touch_sink)
 {
     std::lock_guard display_lock{the_display_mtx};
-    if (!the_display) fatal_error("mir::graphics::wayland::Display not initialized");
+    if (!the_display) MIR_FATAL_ERROR("mir::graphics::wayland::Display not initialized");
 
     std::lock_guard lock{the_display->sink_mutex};
     if (touch_sink)

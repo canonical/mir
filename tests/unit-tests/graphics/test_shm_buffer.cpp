@@ -355,13 +355,13 @@ TEST_F(ShmBufferTest, texture_is_destroyed_on_thread_with_current_context)
     ON_CALL(mock_gl, glGenTextures(1,_))
         .WillByDefault(SetArgPointee<1>(tex_id));
     ON_CALL(mock_gl, glDeleteTextures(1,Pointee(Eq(tex_id))))
-        .WillByDefault(InvokeWithoutArgs(
+        .WillByDefault(
             []()
             {
                 EXPECT_THAT(
                     eglGetCurrentContext(),
                     Ne(EGL_NO_CONTEXT));
-            }));
+            });
 
     EGLContext const dummy_ctx{reinterpret_cast<EGLContext>(0x66221144)};
     EGLDisplay const dummy_dpy{reinterpret_cast<EGLDisplay>(0xaabbccdd)};

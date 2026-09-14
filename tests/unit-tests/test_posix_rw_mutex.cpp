@@ -38,7 +38,7 @@ TEST(PosixRWMutex, exclusive_locks_are_exclusive)
     std::unique_lock exclusive_lock{mutex};
 
     bool lock_taken_in_thread{false};
-    mt::AutoJoinThread thread_which_should_block{
+    std::jthread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
             std::lock_guard lock{mutex};
@@ -79,7 +79,7 @@ TEST(PosixRWMutex, exclusive_locks_exclude_read_locks)
     std::unique_lock exclusive_lock{mutex};
 
     bool lock_taken_in_thread{false};
-    mt::AutoJoinThread thread_which_should_block{
+    std::jthread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
             std::shared_lock<decltype(mutex)> lock{mutex};
@@ -112,7 +112,7 @@ TEST(PosixRWMutex, read_locks_exclude_exclusive_locks)
     std::shared_lock<decltype(mutex)> read_lock{mutex};
 
     bool lock_taken_in_thread{false};
-    mt::AutoJoinThread thread_which_should_block{
+    std::jthread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
             std::lock_guard lock{mutex};
@@ -145,7 +145,7 @@ TEST(PosixRWMutex, successful_read_trylock_excludes_write_lock)
     std::shared_lock<decltype(mutex)> read_lock{mutex, std::try_to_lock};
 
     bool lock_taken_in_thread{false};
-    mt::AutoJoinThread thread_which_should_block{
+    std::jthread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
             std::lock_guard lock{mutex};
@@ -178,7 +178,7 @@ TEST(PosixRWMutex, successful_trylock_excludes_read_lock)
     std::unique_lock exclusive_lock{mutex, std::try_to_lock};
 
     bool lock_taken_in_thread{false};
-    mt::AutoJoinThread thread_which_should_block{
+    std::jthread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
             std::shared_lock<decltype(mutex)> lock{mutex};
@@ -199,7 +199,7 @@ TEST(PosixRWMutex, successful_trylock_excludes_exclusive_lock)
     std::unique_lock exclusive_lock{mutex, std::try_to_lock};
 
     bool lock_taken_in_thread{false};
-    mt::AutoJoinThread thread_which_should_block{
+    std::jthread thread_which_should_block{
         [&mutex, &lock_taken_in_thread]()
         {
             std::lock_guard lock{mutex};
@@ -269,7 +269,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
             i};
     }
 
-    mt::AutoJoinThread watchdog{
+    std::jthread watchdog{
         [&]()
         {
             using namespace std::chrono_literals;
@@ -287,7 +287,7 @@ TEST(PosixRWMutex, prefer_writer_nonrecursive_prevents_writer_starvation)
             shutdown_readers = true;
 
             // Ensure that each reader has a chance to run...
-            for (auto i = 0u; i < readers.size() ; ++i)
+            for (auto i = 0u; i < readers.size(); ++i)
             {
                 {
                     std::lock_guard lock{reader_mutex};

@@ -18,9 +18,12 @@ parts:
     cmake-parameters:
     - -DCMAKE_INSTALL_PREFIX=/usr
     - -DMIR_ENABLE_WLCS_TESTS=OFF
-    - -DMIR_PLATFORM='atomic-kms;gbm-kms;eglstream-kms;x11;wayland'
+    - -DMIR_PLATFORM='atomic-kms;gbm-kms;x11;wayland'
+    build-environment:
+    - PATH: $PATH:/usr/lib/rust-1.82/bin
     build-packages:
     - build-essential
+    - ca-certificates
     - cargo
     - eglexternalplatform-dev
     - git
@@ -37,7 +40,6 @@ parts:
     - libgtest-dev
     - libinput-dev
     - liblttng-ust-dev
-    - libnvidia-egl-wayland-dev
     - libudev-dev
     - libumockdev-dev
     - libwayland-dev
@@ -78,7 +80,6 @@ parts:
     - liblttng-ust1t64
     - libmtdev1t64
     - libnuma1
-    - libnvidia-egl-wayland1
     - libpng16-16t64
     - libsigc++-2.0-0v5
     - liburcu8t64

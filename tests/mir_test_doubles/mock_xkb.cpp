@@ -17,17 +17,7 @@
 #include <mir/test/doubles/mock_xkb.h>
 #include <gtest/gtest.h>
 
-// xcb/xkb.h has a struct member named "explicit", which C++ does not like
-#ifdef __clang__
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wkeyword-macro"
-#endif
-#define explicit explicit_
-#include <xcb/xkb.h>
-#undef explicit
-#ifdef __clang__
-#pragma clang diagnostic pop
-#endif
+#include <xcb_xkb_compat.h>
 
 namespace mtd=mir::test::doubles;
 

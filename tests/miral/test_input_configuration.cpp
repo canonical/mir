@@ -592,6 +592,28 @@ TEST_F(TestLiveInputConfigurationAtStartup, touchpad_live_config_is_applied_when
     EXPECT_THAT(input_config.touchpad().tap_to_click(), Eq(std::optional<bool>{true}));
 }
 
+TEST_F(TestLiveInputConfigurationAtStartup, horizontal_and_vertical_scroll_speeds_are_configured_independently)
+{
+    auto const config_path = std::filesystem::temp_directory_path() /
+        "mir-test-input-configuration-scroll-settings.settings";
+
+    config_store.do_transaction([&]
+    {
+        config_store.update_key({"pointer", "vertical_scroll_speed"}, "2", config_path);
+        config_store.update_key({"pointer", "horizontal_scroll_speed"}, "3", config_path);
+        config_store.update_key({"touchpad", "vertical_scroll_speed"}, "4", config_path);
+        config_store.update_key({"touchpad", "horizontal_scroll_speed"}, "5", config_path);
+    });
+
+    add_server_init(input_config);
+    start_server();
+
+    EXPECT_THAT(input_config.mouse().vscroll_speed(), Eq(std::optional<double>{2}));
+    EXPECT_THAT(input_config.mouse().hscroll_speed(), Eq(std::optional<double>{3}));
+    EXPECT_THAT(input_config.touchpad().vscroll_speed(), Eq(std::optional<double>{4}));
+    EXPECT_THAT(input_config.touchpad().hscroll_speed(), Eq(std::optional<double>{5}));
+}
+
 struct TestLiveKeyboardInputConfigurationAtStartup : miral::TestAccessibilityManager
 {
     mlc::BasicStore config_store;

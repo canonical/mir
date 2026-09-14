@@ -44,7 +44,7 @@ public:
     ///               Returning `true` prevents later filters from seeing the event.
     explicit PrependEventFilter(std::function<bool(MirEvent const* event)> const& filter);
 
-    void operator()(mir::Server& server);
+    void operator()(mir::Server& server) const;
 
 private:
     class Filter;

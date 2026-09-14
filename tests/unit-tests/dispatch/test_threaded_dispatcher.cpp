@@ -165,7 +165,7 @@ TEST_F(ThreadedDispatcherTest, only_calls_dispatch_with_remote_closed_when_relev
     auto dispatched_writable = std::make_shared<mt::Signal>();
     auto dispatched_closed = std::make_shared<mt::Signal>();
 
-    ON_CALL(*dispatchable, dispatch(_)).WillByDefault(Invoke([=](md::FdEvents events)
+    ON_CALL(*dispatchable, dispatch(_)).WillByDefault([=](md::FdEvents events)
     {
         if (events & md::FdEvent::writable)
         {
@@ -176,7 +176,7 @@ TEST_F(ThreadedDispatcherTest, only_calls_dispatch_with_remote_closed_when_relev
             dispatched_closed->raise();
         }
         return true;
-    }));
+    });
 
     md::ThreadedDispatcher dispatcher{"Implacable iguana", dispatchable};
 

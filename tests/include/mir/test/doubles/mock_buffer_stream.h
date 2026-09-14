@@ -64,7 +64,7 @@ struct MockBufferStream : public compositor::BufferStream
         ON_CALL(*this, has_submitted_buffer())
             .WillByDefault(testing::Return(true));
         ON_CALL(*this, set_frame_posted_callback(testing::_))
-            .WillByDefault(testing::Invoke([&](auto const& callback){ frame_posted_callback = callback; }));
+            .WillByDefault([&](auto const& callback){ frame_posted_callback = callback; });
         ON_CALL(*this, next_submission_for_compositor(testing::_))
             .WillByDefault(testing::Return(submission));
     }

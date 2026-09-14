@@ -15,6 +15,7 @@
  */
 
 #include <mir/display_server.h>
+#include <mir/fatal.h>
 #include <mir/server_configuration.h>
 #include <mir/main_loop.h>
 #include <mir/server_status_listener.h>
@@ -149,7 +150,7 @@ struct mir::DisplayServer::Private
                     catch(std::runtime_error const& e)
                     {
                         if (std::chrono::steady_clock::now() > deadline)
-                            fatal_error(("Failed to resume display:\n" + boost::diagnostic_information(e)).c_str());
+                            MIR_FATAL_ERROR("Failed to resume display:\n{}", boost::diagnostic_information(e));
 
                         std::this_thread::sleep_for(std::chrono::milliseconds{50});
                         goto retry;

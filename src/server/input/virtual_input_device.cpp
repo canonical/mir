@@ -58,16 +58,16 @@ void mi::VirtualInputDevice::stop()
     *state.lock() = std::nullopt;
 }
 
-auto mi::VirtualInputDevice::get_pointer_settings() const -> optional_value<PointerSettings>
+auto mi::VirtualInputDevice::get_pointer_settings() const -> std::optional<PointerSettings>
 {
     return {};
 }
 
-auto mi::VirtualInputDevice::get_touchpad_settings() const -> optional_value<TouchpadSettings>
+auto mi::VirtualInputDevice::get_touchpad_settings() const -> std::optional<TouchpadSettings>
 {
     return {};
 }
-auto mi::VirtualInputDevice::get_touchscreen_settings() const -> optional_value<TouchscreenSettings>
+auto mi::VirtualInputDevice::get_touchscreen_settings() const -> std::optional<TouchscreenSettings>
 {
     return {};
 }

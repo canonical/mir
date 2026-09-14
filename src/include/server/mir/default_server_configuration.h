@@ -173,7 +173,6 @@ public:
     std::shared_ptr<frontend::Connector>    the_xwayland_connector() override;
     std::shared_ptr<graphics::Display>      the_display() override;
     std::shared_ptr<compositor::Compositor> the_compositor() override;
-    std::shared_ptr<compositor::ScreenShooter> the_screen_shooter() override;
     std::shared_ptr<compositor::ScreenShooterFactory> the_screen_shooter_factory() override;
     std::shared_ptr<input::InputManager>    the_input_manager() override;
     std::shared_ptr<MainLoop>               the_main_loop() override;
@@ -201,17 +200,6 @@ public:
     void set_wayland_extension_policy(
         std::string const& interface_name,
         WaylandProtocolExtensionFilter const& policy) override;
-
-    /**
-     * Function to call when a "fatal" error occurs. This implementation allows
-     * the default strategy to be overridden by --on-fatal-error-except to avoid a
-     * core.
-     * To change the default strategy used FatalErrorStrategy. See acceptance test
-     * ServerShutdown.fatal_error_default_can_be_changed_to_abort
-     * for an example.
-     */
-    auto the_fatal_error_strategy() -> void (*)(char const* reason, ...) override final;
-    /** @} */
 
     /** @name graphics configuration - customization
      * configurable interfaces for modifying graphics

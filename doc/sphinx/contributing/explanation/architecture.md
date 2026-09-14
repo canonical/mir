@@ -61,7 +61,7 @@ For example, a compositor's window manager may respond to a key press event by o
 
 We briefly hinted at the existence of so-called "platforms" previously, but they are deserving of a dedicated section. A **Platform** is an adapter that allows the system to work across different graphics, input, and rendering stacks. They come in three flavors:
 
-- **Display Platform**: Determines what the compositor is rendering to. This may be a physical monitor via GBM/KMS (or EGLStreams for Nvidia), an X11 or Wayland window, or a completely virtual buffer.
+- **Display Platform**: Determines what the compositor is rendering to. This may be a physical monitor via GBM/KMS, an X11 or Wayland window, or a completely virtual buffer.
 - **Input Platform**: Determines where the compositor is getting input from. This could be native event via `libinput`, X input events, or Wayland input events.
 - **Rendering Platform**: Determines how the compositor renders the final image. For now, only a GL backend is supported.
 

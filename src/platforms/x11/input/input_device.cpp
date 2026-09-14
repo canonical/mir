@@ -91,9 +91,9 @@ mi::InputDeviceInfo mix::XInputDevice::get_device_info()
     return info;
 }
 
-mir::optional_value<mi::PointerSettings> mix::XInputDevice::get_pointer_settings() const
+std::optional<mi::PointerSettings> mix::XInputDevice::get_pointer_settings() const
 {
-    mir::optional_value<PointerSettings> ret;
+    std::optional<PointerSettings> ret;
     if (contains(info.capabilities, DeviceCapability::pointer))
         ret = PointerSettings();
 
@@ -104,9 +104,9 @@ void mix::XInputDevice::apply_settings(PointerSettings const&)
 {
 }
 
-mir::optional_value<mi::TouchpadSettings> mix::XInputDevice::get_touchpad_settings() const
+std::optional<mi::TouchpadSettings> mix::XInputDevice::get_touchpad_settings() const
 {
-    optional_value<TouchpadSettings> ret;
+    std::optional<TouchpadSettings> ret;
     if (contains(info.capabilities, DeviceCapability::touchpad))
         ret = TouchpadSettings();
 
@@ -117,9 +117,9 @@ void mix::XInputDevice::apply_settings(TouchpadSettings const&)
 {
 }
 
-mir::optional_value<mi::TouchscreenSettings> mix::XInputDevice::get_touchscreen_settings() const
+std::optional<mi::TouchscreenSettings> mix::XInputDevice::get_touchscreen_settings() const
 {
-    optional_value<TouchscreenSettings> ret;
+    std::optional<TouchscreenSettings> ret;
     if (contains(info.capabilities, DeviceCapability::touchscreen))
         ret = TouchscreenSettings();
 

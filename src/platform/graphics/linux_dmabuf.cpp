@@ -356,6 +356,9 @@ private:
     geom::Size const size_;
 };
 
+#if !defined(__clang__) && (__GNUC__ == 16) && (__GNUC_MINOR__ == 2)
+    __attribute__((noinline))  // g++16.2 has trouble inlining this correctly
+#endif
 auto export_egl_image(
     mg::EGLExtensions::MESADmaBufExport const& ext,
     EGLDisplay dpy,

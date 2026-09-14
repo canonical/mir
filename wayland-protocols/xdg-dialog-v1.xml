@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="xdg_dialog_v1">
+
+  <copyright>
+    Copyright © 2023 Carlos Garnacho
+
+    Permission is hereby granted, free of charge, to any person obtaining a
+    copy of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice (including the next
+    paragraph) shall be included in all copies or substantial portions of the
+    Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+    THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+    DEALINGS IN THE SOFTWARE.
+  </copyright>
+
+  <interface name="xdg_wm_dialog_v1" version="1">
+    <description summary="create dialogs related to other toplevels">
+      The xdg_wm_dialog_v1 interface is exposed as a global object allowing
+      to create xdg_dialog_v1 objects. These objects can be used to
+      coordinate the creation of dialogs relative to another toplevel.
+
+      Warning! The protocol described in this file is currently in the testing
+      phase. Backward compatible changes may be added together with the
+      corresponding interface version bump. Backward incompatible changes can
+      only be done by creating a new major version of the extension.
+    </description>
+
+    <enum name="error">
+      <description summary="error values for this object"/>
+      <entry name="already_used" value="0"
+             summary="the xdg_toplevel object has already been used to create a xdg_dialog_v1"/>
+    </enum>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the dialog manager object">
+        Destroys the xdg_wm_dialog_v1 object. This does not affect
+        the xdg_dialog_v1 objects created from it.
+      </description>
+    </request>
+
+    <request name="get_xdg_dialog">
+      <description summary="create a dialog object">
+        Create a new dialog object associated with the given toplevel, to
+        allow managing dialogs.
+
+        Only one xdg_dialog_v1 may exist for each xdg_toplevel. If an
+        xdg_dialog_v1 already exists for the given xdg_toplevel, the
+        already_used error is raised.
+      </description>
+      <arg name="id" type="new_id" interface="xdg_dialog_v1"/>
+      <arg name="toplevel" type="object" interface="xdg_toplevel"/>
+    </request>
+  </interface>
+
+  <interface name="xdg_dialog_v1" version="1">
+    <description summary="dialog object">
+      A dialog object is associated to a xdg_toplevel. It allows the
+      compositor to treat the toplevel as a dialog and apply dialog-specific
+      policies.
+
+      Compositors may treat dialogs differently from regular windows in many
+      ways, e.g. refusing to iconify or maximize them. The user can usually
+      dismiss a dialog by pressing a dedicated key (e.g. Escape).
+    </description>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the dialog object">
+        Destroys the xdg_dialog_v1 object. This does not affect
+        the dialog state on the associated xdg_toplevel.
+      </description>
+    </request>
+
+    <request name="set_modal">
+      <description summary="mark dialog as modal">
+        Hint that the dialog has modal behavior. See the description of
+        xdg_dialog_v1 for more details about what is expected from
+        modal dialogs.
+
+        This request does not take effect for an unmapped toplevel.
+      </description>
+    </request>
+
+    <request name="unset_modal">
+      <description summary="mark dialog as not modal">
+        Hint that the dialog does not have modal behavior. See the description
+        of xdg_dialog_v1 for more details.
+
+        This request does not take effect for an unmapped toplevel.
+      </description>
+    </request>
+  </interface>
+
+</protocol>

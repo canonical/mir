@@ -100,7 +100,6 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
         ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
             .WillByDefault(
                 WithArgs<1>(
-                    Invoke(
                         [&](char const* path)
                         {
                             auto const device = get_unique_device_ptr();
@@ -114,15 +113,14 @@ struct EvdevInputPlatform : public ::testing::TestWithParam<std::string>
                                 44);
                             li_mock.setup_device_add_event(device);
                             return device;
-                        })));
+                        }));
 
         ON_CALL(li_mock, libinput_path_remove_device(_))
             .WillByDefault(
-                Invoke(
                     [this](auto device)
                     {
                         li_mock.setup_device_remove_event(device);
-                    }));
+                    });
 
     }
 
@@ -254,7 +252,6 @@ TEST_F(EvdevInputPlatform, devices_from_same_group)
     ON_CALL(li_mock, libinput_path_add_device(fake_context, _))
         .WillByDefault(
             WithArgs<1>(
-                Invoke(
                     [&](char const* path)
                     {
                         auto device = get_unique_device_ptr();
@@ -268,7 +265,7 @@ TEST_F(EvdevInputPlatform, devices_from_same_group)
                             44);
                         li_mock.setup_device_add_event(device);
                         return device;
-                    })));
+                    }));
 
     platform->start();
 

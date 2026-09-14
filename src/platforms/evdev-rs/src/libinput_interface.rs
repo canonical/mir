@@ -15,8 +15,6 @@
  */
 
 use crate::fd_store::FdStore;
-use input;
-use libc;
 use std::os::unix::io;
 use std::sync::{Arc, Mutex};
 

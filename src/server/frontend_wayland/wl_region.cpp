@@ -16,7 +16,7 @@
 
 #include "wl_region.h"
 
-#include <mir/log.h>
+#include <algorithm>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -42,14 +42,66 @@ mf::WlRegion* mf::WlRegion::from(wl_resource* resource)
 
 void mf::WlRegion::add(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    rects.push_back(geom::Rectangle{{x, y}, {width, height}});
+    geom::Rectangle const rect{{x, y}, {width, height}};
+
+    // A degenerate rectangle adds no area.
+    if (rect.size.width.as_int() <= 0 || rect.size.height.as_int() <= 0)
+        return;
+
+    // Any existing rectangle wholly covered by the new one is now redundant.
+    std::erase_if(rects, [&](geom::Rectangle const& existing) { return rect.contains(existing); });
+
+    rects.push_back(rect);
 }
 
 void mf::WlRegion::subtract(int32_t x, int32_t y, int32_t width, int32_t height)
 {
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    log_warning("WlRegion::subtract not implemented. ignoring.");
+    geom::Rectangle const hole{{x, y}, {width, height}};
+
+    // A degenerate hole subtracts nothing.
+    if (hole.size.width.as_int() <= 0 || hole.size.height.as_int() <= 0)
+        return;
+
+    std::vector<geom::Rectangle> result;
+    result.reserve(rects.size());
+
+    for (auto const& rect : rects)
+    {
+        if (!rect.overlaps(hole))
+        {
+            result.push_back(rect);
+            continue;
+        }
+
+        auto const rx1 = rect.left().as_int();
+        auto const rx2 = rect.right().as_int();
+        auto const ry1 = rect.top().as_int();
+        auto const ry2 = rect.bottom().as_int();
+
+        // The portion of the hole that actually intersects this rectangle:
+        //  rx1      hx1     hx2     rx2
+        //   +---------+-------+-------+  ry1
+        //   |         |       |       |
+        //   |         +-------+       |  hy1
+        //   |         | (hole)|       |
+        //   |         +-------+       |  hy2
+        //   |         |       |       |
+        //   +---------+-------+-------+  ry2
+        auto const hx1 = std::max(rx1, hole.left().as_int());
+        auto const hx2 = std::min(rx2, hole.right().as_int());
+        auto const hy1 = std::max(ry1, hole.top().as_int());
+        auto const hy2 = std::min(ry2, hole.bottom().as_int());
+
+        // Decompose rect minus hole into up to four non-overlapping slices.
+        if (ry1 < hy1) // above the hole
+            result.push_back(geom::Rectangle{{rx1, ry1}, {rx2 - rx1, hy1 - ry1}});
+        if (hy2 < ry2) // below the hole
+            result.push_back(geom::Rectangle{{rx1, hy2}, {rx2 - rx1, ry2 - hy2}});
+        if (rx1 < hx1) // left of the hole
+            result.push_back(geom::Rectangle{{rx1, hy1}, {hx1 - rx1, hy2 - hy1}});
+        if (hx2 < rx2) // right of the hole
+            result.push_back(geom::Rectangle{{hx2, hy1}, {rx2 - hx2, hy2 - hy1}});
+    }
+
+    rects = std::move(result);
 }

@@ -61,7 +61,7 @@ public:
     void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
 
     /// Gives focus to the requesting window (tree)
-    void handle_raise_window(WindowInfo& window_info) override;
+    void handle_activate_window(WindowInfo& window_info) override;
 
     /// Honours the requested placement
     auto confirm_placement_on_display(

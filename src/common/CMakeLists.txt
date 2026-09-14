@@ -41,6 +41,7 @@ target_include_directories(mircommon
 
 target_link_libraries(mircommon
   PUBLIC
+    Threads::Threads
     mircommondispatch
     mircommoninput
     mirsharedlogging

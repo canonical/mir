@@ -255,9 +255,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::emit_key_state(std::vector<uint32_t>
     sink->key_state(scan_codes);
 }
 
-mir::optional_value<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
+std::optional<mi::PointerSettings> mtf::FakeInputDeviceImpl::InputDevice::get_pointer_settings() const
 {
-    mir::optional_value<mi::PointerSettings> ret;
+    std::optional<mi::PointerSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::pointer))
         return ret;
 
@@ -273,9 +273,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::apply_settings(mi::PointerSettings c
     trigger_callback();
 }
 
-mir::optional_value<mi::TouchpadSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchpad_settings() const
+std::optional<mi::TouchpadSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchpad_settings() const
 {
-    mir::optional_value<mi::TouchpadSettings> ret;
+    std::optional<mi::TouchpadSettings> ret;
     if (contains(info.capabilities, mi::DeviceCapability::touchpad))
         ret = mi::TouchpadSettings();
 
@@ -299,9 +299,9 @@ void mtf::FakeInputDeviceImpl::InputDevice::trigger_callback() const
     stored_callback(*this);
 }
 
-mir::optional_value<mi::TouchscreenSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchscreen_settings() const
+std::optional<mi::TouchscreenSettings> mtf::FakeInputDeviceImpl::InputDevice::get_touchscreen_settings() const
 {
-    mir::optional_value<mi::TouchscreenSettings> ret;
+    std::optional<mi::TouchscreenSettings> ret;
     if (!contains(info.capabilities, mi::DeviceCapability::touchscreen))
         return ret;
 

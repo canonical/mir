@@ -12,7 +12,7 @@ use quote::{format_ident, quote};
 /// At the moment this includes:
 ///
 /// - The global registration method.
-pub fn generate_wayland_server_generated_rs(protocols: &Vec<WaylandProtocol>) -> TokenStream {
+pub fn generate_wayland_server_generated_rs(protocols: &[WaylandProtocol]) -> TokenStream {
     let registration_impls = protocols.iter().flat_map(generate_register_globals_impl);
 
     quote! {
@@ -45,6 +45,13 @@ fn generate_register_globals_impl(protocol: &WaylandProtocol) -> Vec<TokenStream
         }
 
         if interface.name == "wl_display" {
+            return None;
+        }
+
+        // `wl_output` is advertised dynamically (one global per monitor) via
+        // `WaylandServer::create_output_global`, so it must not be registered
+        // statically here. See `generate_output_dynamic_global`.
+        if interface.name == "wl_output" {
             return None;
         }
 

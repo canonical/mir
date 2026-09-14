@@ -1,16 +1,3 @@
-include_directories(
-    ${server_common_include_dirs}
-    ..
-)
-
-include_directories(
-    ${CMAKE_CURRENT_BINARY_DIR}/../
-)
-
-# gbm-kms.h and drm.h have trailing commas at the end of enum definitions
-# This is valid C99, but g++ 4.4 flags it as an error with -pedantic
-string(REPLACE "-pedantic" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
-
 add_compile_definitions(
   __GBM__
 )
@@ -36,6 +23,14 @@ add_library(
   quirks.h
 )
 
+target_include_directories(
+  mirplatformgraphicsatomickmsobjects
+  PRIVATE
+    ${server_common_include_dirs}
+    ..
+    ${CMAKE_CURRENT_BINARY_DIR}/../
+)
+
 target_link_libraries(
   mirplatformgraphicsatomickmsobjects
 
@@ -51,6 +46,12 @@ set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 add_library(mirplatformgraphicsatomickms MODULE
   platform_symbols.cpp
+)
+
+target_include_directories(
+  mirplatformgraphicsatomickms
+  PRIVATE
+    ..
 )
 
 target_link_libraries(

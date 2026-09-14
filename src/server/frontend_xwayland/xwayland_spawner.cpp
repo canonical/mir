@@ -152,7 +152,7 @@ mf::XWaylandSpawner::XWaylandSpawner(
     if (dispatcher_fd.empty())
     {
         // To get here, we were configured with "enable-x11". So this is fatal.
-        mir::fatal_error("Cannot open any X11 socket (abstract or not)");
+        MIR_FATAL_ERROR("Cannot open any X11 socket (abstract or not)");
     }
 
     for (auto const& fd_dispatcher : dispatcher_fd)
@@ -205,7 +205,7 @@ auto mf::XWaylandSpawner::choose_display() -> XDisplayPaths
         if (create_lockfile(xp) == 0) return xp;
     }
 
-    mir::fatal_error("Cannot create X11 lockfile!");
+    MIR_FATAL_ERROR("Cannot create X11 lockfile!");
     return XDisplayPaths();
 }
 
@@ -223,7 +223,7 @@ bool mf::XWaylandSpawner::set_cloexec(mir::Fd const& fd, bool cloexec)
 {
     int flags = fcntl(fd, F_GETFD);
     if (flags == -1) {
-        mir::fatal_error("fcntl failed");
+        MIR_FATAL_ERROR("fcntl failed");
         return false;
     }
     if (cloexec) {
@@ -232,7 +232,7 @@ bool mf::XWaylandSpawner::set_cloexec(mir::Fd const& fd, bool cloexec)
         flags = flags & ~FD_CLOEXEC;
     }
     if (fcntl(fd, F_SETFD, flags) == -1) {
-        mir::fatal_error("fcntl failed");
+        MIR_FATAL_ERROR("fcntl failed");
         return false;
     }
     return true;

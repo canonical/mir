@@ -111,7 +111,7 @@ auto msd::WindowState::titlebar_width() const -> geom::Width
         return {};
     }
 
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    MIR_FATAL_ERROR("should be unreachable");
     return {};
 }
 
@@ -126,7 +126,7 @@ auto msd::WindowState::titlebar_height() const -> geom::Height
         return {};
     }
 
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    MIR_FATAL_ERROR("should be unreachable");
     return {};
 }
 
@@ -141,7 +141,7 @@ auto msd::WindowState::side_border_width() const -> geom::Width
         return {};
     }
 
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    MIR_FATAL_ERROR("should be unreachable");
     return {};
 }
 
@@ -156,7 +156,7 @@ auto msd::WindowState::side_border_height() const -> geom::Height
         return {};
     }
 
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    MIR_FATAL_ERROR("should be unreachable");
     return {};
 }
 
@@ -176,7 +176,7 @@ auto msd::WindowState::bottom_border_height() const -> geom::Height
         return {};
     }
 
-    mir::fatal_error("%s:%d: should be unreachable", __FILE__, __LINE__);
+    MIR_FATAL_ERROR("should be unreachable");
     return {};
 }
 

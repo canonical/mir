@@ -869,7 +869,7 @@ TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_adding_dis
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
     ON_CALL(*mock_display_listener, add_display(_))
-        .WillByDefault(InvokeWithoutArgs([&]{ stub_scene->emit_change_event(); }));
+        .WillByDefault([&]{ stub_scene->emit_change_event(); });
 
     mc::MultiThreadedCompositor compositor{
         display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, stub_cursor, default_delay, true};
@@ -887,7 +887,7 @@ TEST(MultiThreadedCompositor, can_schedule_from_display_observer_when_removing_d
     auto mock_report = std::make_shared<testing::NiceMock<mtd::MockCompositorReport>>();
 
     ON_CALL(*mock_display_listener, remove_display(_))
-        .WillByDefault(InvokeWithoutArgs([&]{ stub_scene->emit_change_event(); }));
+        .WillByDefault([&]{ stub_scene->emit_change_event(); });
 
     mc::MultiThreadedCompositor compositor{
         display, db_compositor_factory, stub_scene, mock_display_listener, mock_report, stub_cursor, default_delay, true};

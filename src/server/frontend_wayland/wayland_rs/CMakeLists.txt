@@ -1,7 +1,40 @@
+include(RustLibrary)
+
+# The Rust build script parses every protocol XML in this directory, so a change
+# to any of them must trigger a rebuild. CONFIGURE_DEPENDS re-globs at build time
+# so that adding or removing a protocol is picked up.
+file(GLOB wayland_rs_protocols CONFIGURE_DEPENDS
+  ${PROJECT_SOURCE_DIR}/wayland-protocols/*.xml)
+
+# Cargo.lock is a build input, but downstream packaging can remove it
+# before the build (Fedora's %cargo_prep deletes it to force an offline,
+# distro-provided crate resolution). Only depend on it when it is actually
+# present, otherwise Ninja aborts with a missing, unbuildable dependency.
+set(wayland_rs_cargo_lock)
+if(EXISTS ${PROJECT_SOURCE_DIR}/Cargo.lock)
+  set(wayland_rs_cargo_lock ${PROJECT_SOURCE_DIR}/Cargo.lock)
+endif()
+
 add_rust_cxx_library(mirwayland_rs
   CRATE wayland_rs
   CXX_BRIDGE_SOURCE_FILE src/ffi.rs
-  DEPENDS Cargo.toml build_script/main.rs build_script/protocol_parser.rs build_script/wayland_server_generation.rs src/lib.rs src/wayland_server_core.rs
+  DEPENDS
+    Cargo.toml
+    ${wayland_rs_cargo_lock}
+    build_script/cpp_builder.rs
+    build_script/cpp_protocol_generation.rs
+    build_script/dispatch_generator.rs
+    build_script/ffi_generation.rs
+    build_script/helpers.rs
+    build_script/main.rs
+    build_script/protocol_generator.rs
+    build_script/protocol_middleware_generation.rs
+    build_script/protocol_parser.rs
+    build_script/wayland_server_generation.rs
+    src/lib.rs
+    src/wayland_client.rs
+    src/wayland_server_core.rs
+    ${wayland_rs_protocols}
   INCLUDES
     ${CMAKE_CURRENT_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/include
@@ -43,6 +76,7 @@ set(wayland_rs_generated_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_output_unstable_v1.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_shell.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_shell_unstable_v6.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/xdg_dialog_v1.cpp
 )
 
 set_source_files_properties(${wayland_rs_generated_sources} PROPERTIES GENERATED TRUE)
@@ -52,6 +86,7 @@ target_sources(mirwayland_rs-cxxbridge
     ${wayland_rs_generated_sources}
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/lifetime_tracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/protocol_error.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/wayland_client_registry.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/wayland_executor.cpp
 )
 
@@ -68,3 +103,6 @@ target_link_libraries(mirwayland_rs-demo
   PRIVATE
   mirwayland_rs
   PkgConfig::WAYLAND_CLIENT)
+
+# The Rust static archive (via mirwayland_rs) is not a GCC LTO object.
+target_link_options(mirwayland_rs INTERFACE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)

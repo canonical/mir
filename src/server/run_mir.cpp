@@ -67,7 +67,7 @@ public:
                 return handlers[i];
             }
         }
-        mir::fatal_error_abort("Attempted to access signal handler for signal %i not in intercepted list", sig);
+        MIR_FATAL_ERROR("Attempted to access signal handler for signal {} not in intercepted list", sig);
     }
 
     /**
@@ -114,7 +114,7 @@ public:
                 return AtomicOutPtr{handlers[i]};
             }
         }
-        mir::fatal_error_abort("Attempted to access signal handler for signal %i not in intercepted list", sig);
+        MIR_FATAL_ERROR("Attempted to access signal handler for signal {} not in intercepted list", sig);
     }
 
 private:
@@ -198,18 +198,21 @@ extern "C" [[noreturn]] void fatal_signal_cleanup(int sig, siginfo_t* info, void
          * Re-raising the signal will destroy this context, so call the handler directly.
          */
         (*old_handler->sa_sigaction)(sig, info, ucontext);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
         /* We don't *expect* to get here - fatal signal handlers will *generally* re-raise the signal,
          * and so don't return.
          *
          * However, we've just performed emergency cleanup, so if the handler was trying to fix things up
          * and continue we unfortunately can't let them.
          */
-        mir::fatal_error_abort("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
+        mir::fatal_error("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
     }
     // The handler doesn't care about fancy context, we can just call it via raise()
     std::raise(sig);
     // We definitely can't continue, though, even if their handler tries.
-    mir::fatal_error_abort("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
+    mir::fatal_error("Unsupported attempt to continue after a fatal signal: %s", signum_to_string(sig).c_str());
+#pragma GCC diagnostic pop
 }
 }
 
@@ -233,7 +236,7 @@ void mir::run_mir(
         [&server_ptr](int)
         {
             if (!server_ptr)
-                fatal_error_abort("Logic error in mir::run_mir() server_ptr is nullptr");
+                MIR_FATAL_ERROR("Logic error in mir::run_mir() server_ptr is nullptr");
             server_ptr->stop();
         };
 
@@ -247,8 +250,6 @@ void mir::run_mir(
     {
         main_loop->register_signal_handler({SIGINT, SIGHUP, SIGTERM}, terminator);
     }
-
-    FatalErrorStrategy fatal_error_strategy{config.the_fatal_error_strategy()};
 
     DisplayServer server(config);
     server_ptr = &server;

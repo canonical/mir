@@ -79,20 +79,20 @@ TEST_F(LifetimeTrackerTest, is_still_alive_when_destroy_listener_called)
 {
     mw::Weak<MockTracker> weak{&tracker};
     tracker.add_destroy_listener([&](){ listener.callback(); });
-    EXPECT_CALL(listener, callback()).Times(1).WillOnce(Invoke([weak]()
+    EXPECT_CALL(listener, callback()).Times(1).WillOnce([weak]()
         {
             EXPECT_THAT(weak, IsTrue());
-        }));
+        });
 }
 
 TEST_F(LifetimeTrackerTest, can_be_marked_as_destroyed_from_within_listener)
 {
     tracker.add_destroy_listener([&](){ listener.callback(); });
-    EXPECT_CALL(listener, callback()).Times(1).WillOnce(Invoke([&]()
+    EXPECT_CALL(listener, callback()).Times(1).WillOnce([&]()
         {
             // why would you want to do this? idk, but you can!
             tracker.mark_destroyed();
-        }));
+        });
 }
 
 TEST_F(LifetimeTrackerTest, removing_invalid_destroy_listener_ids_does_not_cause_problem)

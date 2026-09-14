@@ -25,7 +25,6 @@
 
 #include <mir/test/pipe.h>
 #include <mir/test/signal.h>
-#include <mir/test/auto_unblock_thread.h>
 #include <mir_test_framework/testing_server_configuration.h>
 #include <mir_test_framework/temporary_environment_value.h>
 #include <mir/test/doubles/mock_input_manager.h>
@@ -387,7 +386,7 @@ struct DisplayServerMainLoopEvents : testing::Test
     template<typename Functor>
     void start_server_and_run_once_started(mir::DefaultServerConfiguration& config, Functor functor)
     {
-        mt::AutoJoinThread functor_thread;
+        std::jthread functor_thread;
         mir::run_mir(config,
                      [&, this](mir::DisplayServer&)
                      {
@@ -396,7 +395,7 @@ struct DisplayServerMainLoopEvents : testing::Test
                             this,
                             [server_started]() { server_started->raise(); });
 
-                        functor_thread = mt::AutoJoinThread{
+                        functor_thread = std::jthread{
                             [&functor, server_started]
                             {
                                 if (!server_started->wait_for(std::chrono::seconds{60}))

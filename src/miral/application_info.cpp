@@ -62,7 +62,7 @@ auto miral::ApplicationInfo::application() const -> Application
     return self->app;
 }
 
-auto miral::ApplicationInfo::windows() const -> std::vector <Window>&
+auto miral::ApplicationInfo::windows() const& -> std::span<Window>
 {
     return self->windows;
 }

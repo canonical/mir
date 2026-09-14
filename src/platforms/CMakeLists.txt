@@ -45,16 +45,10 @@ if (MIR_BUILD_PLATFORM_X11)
     add_subdirectory(x11/)
 endif()
 
-if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
-  add_subdirectory(eglstream-kms)
-endif()
-
 if (MIR_BUILD_PLATFORM_WAYLAND)
   add_subdirectory(wayland)
 endif()
 
 add_subdirectory(virtual)
 add_subdirectory(evdev/)
-if (MIR_ENABLE_RUST)
-  add_subdirectory(evdev-rs/)
-endif()
+add_subdirectory(evdev-rs/)

@@ -20,30 +20,19 @@
 
 #include <mir_toolkit/common.h>
 
-#ifdef __cplusplus
-extern "C"
+enum MirEventType
 {
-#endif
-
-typedef enum
-{
-    mir_event_type_key [[deprecated("UNUSED since Mir 0.26")]],
-    mir_event_type_motion [[deprecated("UNUSED since Mir 0.26")]],
     mir_event_type_window,
     mir_event_type_resize,
-    mir_event_type_prompt_session_state_change [[deprecated("UNUSED since Mir 2.29")]],
     mir_event_type_orientation,
     mir_event_type_close_window,
-    /* Type for new style input event will be returned from mir_event_get_type
-       when old style event type was mir_event_type_key or mir_event_type_motion */
     mir_event_type_input,
-    mir_event_type_input_configuration [[deprecated("UNUSED since Mir 0.26")]],
     mir_event_type_window_output,
     mir_event_type_input_device_state,
     mir_event_type_window_placement,
-} MirEventType;
+};
 
-typedef enum
+enum MirInputEventType
 {
     mir_input_event_type_key = 0,
     mir_input_event_type_touch = 1,
@@ -51,12 +40,12 @@ typedef enum
     mir_input_event_type_keyboard_resync = 3,
 
     mir_input_event_types
-} MirInputEventType;
+};
 
 /**
  * Description of key modifier state.
  */
-typedef enum
+enum MirInputEventModifier
 {
     mir_input_event_modifier_none = 1 << 0,
     mir_input_event_modifier_alt = 1 << 1,
@@ -76,13 +65,13 @@ typedef enum
     mir_input_event_modifier_caps_lock = 1 << 15,
     mir_input_event_modifier_num_lock = 1 << 16,
     mir_input_event_modifier_scroll_lock = 1 << 17
-} MirInputEventModifier;
+};
 typedef unsigned int MirInputEventModifiers;
 
 /**
  * Possible actions for changing key state
  */
-typedef enum
+enum MirKeyboardAction
 {
     /* A key has come up (released) */
     mir_keyboard_action_up,
@@ -95,12 +84,12 @@ typedef enum
     mir_keyboard_action_modifiers,
 
     mir_keyboard_actions
-} MirKeyboardAction;
+};
 
 /**
  * Possible per touch actions for state changing
  */
-typedef enum
+enum MirTouchAction
 {
     /* This touch point is going up */
     mir_touch_action_up = 0,
@@ -110,12 +99,12 @@ typedef enum
     mir_touch_action_change = 2,
 
     mir_touch_actions
-} MirTouchAction;
+};
 
 /**
  * Identifiers for touch axis
  */
-typedef enum
+enum MirTouchAxis
 {
     /* Axis representing the x coordinate for the touch */
     mir_touch_axis_x = 0,
@@ -134,12 +123,12 @@ typedef enum
     mir_touch_axis_size = 5,
 
     mir_touch_axes
-} MirTouchAxis;
+};
 
 /**
  * Identifiers for per-touch tool types
  */
-typedef enum
+enum MirTouchTooltype
 {
     // Tool type could not be determined
     mir_touch_tooltype_unknown = 0,
@@ -149,12 +138,12 @@ typedef enum
     mir_touch_tooltype_stylus = 2,
 
     mir_touch_tooltypes
-} MirTouchTooltype;
+};
 
 /**
  * Possible pointer actions
  */
-typedef enum
+enum MirPointerAction
 {
     /* A pointer button has come up */
     mir_pointer_action_button_up = 0,
@@ -168,12 +157,12 @@ typedef enum
     mir_pointer_action_motion = 4,
 
     mir_pointer_actions
-} MirPointerAction;
+};
 
 /**
  * Identifiers for pointer axis
  */
-typedef enum
+enum MirPointerAxis
 {
     /* Absolute axis containing the x coordinate of the pointer */
     mir_pointer_axis_x = 0,
@@ -199,12 +188,12 @@ typedef enum
     mir_pointer_axis_hscroll_value120 = 9,
 
     mir_pointer_axes
-} MirPointerAxis;
+};
 
 /*
  * Identifiers for pointer buttons
  */
-typedef enum
+enum MirPointerButton
 {
     mir_pointer_button_primary = 1 << 0,
     mir_pointer_button_secondary = 1 << 1,
@@ -214,23 +203,19 @@ typedef enum
     mir_pointer_button_side = 1 << 5,
     mir_pointer_button_extra = 1 << 6,
     mir_pointer_button_task = 1 << 7
-} MirPointerButton;
+};
 typedef unsigned int MirPointerButtons;
 
 /**
  * Identifiers for pointer event source
  */
-typedef enum
+enum MirPointerAxisSource
 {
     mir_pointer_axis_source_none,
     mir_pointer_axis_source_wheel,
     mir_pointer_axis_source_finger,
     mir_pointer_axis_source_continuous,
     mir_pointer_axis_source_wheel_tilt
-} MirPointerAxisSource;
-
-#ifdef __cplusplus
-}
-#endif
+};
 
 #endif /* MIR_TOOLKIT_EVENT_ENUMS_H_ */

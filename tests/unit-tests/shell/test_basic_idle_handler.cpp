@@ -105,10 +105,10 @@ struct BasicIdleHandler: Test
     void SetUp()
     {
         EXPECT_CALL(idle_hub, register_interest(_, _))
-            .WillRepeatedly(Invoke([this](auto observer, auto timeout)
+            .WillRepeatedly([this](auto observer, auto timeout)
                 {
                     observers.insert(std::make_pair(timeout, observer));
-                }));
+                });
     }
 
     auto observer_for(mir::time::Duration timeout) -> std::shared_ptr<ms::IdleStateObserver>

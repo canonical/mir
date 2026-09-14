@@ -17,7 +17,7 @@
 #ifndef MIRAL_FLOATING_WINDOW_MANAGER_H
 #define MIRAL_FLOATING_WINDOW_MANAGER_H
 
-#include <miral/window_management_policy.h>
+#include <miral/canonical_window_manager.h>
 #include <miral/window_manager_tools.h>
 #include <mir_toolkit/events/enums.h>
 
@@ -39,7 +39,7 @@ namespace miral
 /// This class is the successor to #miral::MinimalWindowManager.
 ///
 /// \remark Since MirAL 5.6
-class FloatingWindowManager : public WindowManagementPolicy
+class FloatingWindowManager : public CanonicalWindowManagerPolicy
 {
 public:
     explicit FloatingWindowManager(WindowManagerTools const& tools);
@@ -49,34 +49,10 @@ public:
         MirInputEventModifier pointer_drag_modifier);
     ~FloatingWindowManager() override;
 
-    auto place_new_window(ApplicationInfo const& app_info, WindowSpecification const& requested_specification)
-        -> WindowSpecification override;
-
     /// Focuses the window if it can receive focus.
     ///
     /// \param window_info the ready window
     void handle_window_ready(WindowInfo& window_info) override;
-
-    /// Honors the modifications requested by the client.
-    ///
-    /// \param window_info the window being modified
-    /// \param modifications the modifications to the window
-    void handle_modify_window(WindowInfo& window_info, WindowSpecification const& modifications) override;
-
-    /// Gives focus to the window being raised.
-    ///
-    /// \param window_info the window being raised
-    void handle_raise_window(WindowInfo& window_info) override;
-
-    /// Honors the requested placement of the window.
-    ///
-    /// \param window_info the window being placed
-    /// \param new_state the new state of the window
-    /// \param new_placement the new rectangle of the window
-    auto confirm_placement_on_display(
-        WindowInfo const& window_info,
-        MirWindowState new_state,
-        Rectangle const& new_placement) -> Rectangle override;
 
     /// Handles Alt-F4 to close the active window.
     ///
@@ -113,12 +89,6 @@ public:
     /// \param edge the edge from which the resize happens
     void handle_request_resize(WindowInfo& window_info, MirInputEvent const* input_event, MirResizeEdge edge) override;
 
-    /// Honors the requested inherited move.
-    ///
-    /// \param window_info the window being moved
-    /// \param movement the displacement of the window
-    auto confirm_inherited_move(WindowInfo const& window_info, Displacement movement) -> Rectangle override;
-
     /// Raises the provided window on focus.
     ///
     /// \param window_info the window receiving focus
@@ -130,8 +100,6 @@ public:
     void advise_new_window(WindowInfo const& window_info) override;
 
 protected:
-    WindowManagerTools tools;
-
     bool begin_pointer_move(WindowInfo const& window_info, MirInputEvent const* input_event);
     bool begin_pointer_resize(
         WindowInfo const& window_info,

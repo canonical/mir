@@ -33,29 +33,6 @@ target_link_libraries(mir-protected-test-doubles
     PkgConfig::LIBINPUT
 )
 
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-  check_cxx_compiler_flag("-Wno-attributes=clang::" SUPPORTS_SCOPED_W_NO_ATTRIBUTES)
-  if (SUPPORTS_SCOPED_W_NO_ATTRIBUTE)
-    set_source_files_properties(
-      stub_buffer_allocator.cpp
-      PROPERTIES
-        COMPILE_OPTIONS "-Wno-attributes=clang::"
-    )
-  else()
-    set_source_files_properties(
-      stub_buffer_allocator.cpp
-      PROPERTIES
-        COMPILE_OPTIONS "-Wno-attributes"
-    )
-  endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-  set_source_files_properties(
-    stub_buffer_allocator.cpp
-    PROPERTIES
-      COMPILE_OPTIONS "-Wno-unknown-attributes"
-  )
-endif()
-
 set(MIR_TEST_DOUBLES_UDEV_SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mock_udev.cpp)
 
 set(
@@ -76,7 +53,8 @@ if (MIR_BUILD_PLATFORM_X11)
       ${CMAKE_CURRENT_SOURCE_DIR}/mock_x11.cpp
       ${CMAKE_CURRENT_SOURCE_DIR}/mock_xkb.cpp
     PROPERTIES
-      INCLUDE_DIRECTORIES ${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server
+        INCLUDE_DIRECTORIES
+          "${PROJECT_SOURCE_DIR}/src/platforms/gbm-kms/server;${PROJECT_SOURCE_DIR}/src/platforms/x11"
   )
 endif()
 
@@ -92,12 +70,11 @@ if (MIR_BUILD_PLATFORM_GBM_KMS OR MIR_BUILD_PLATFORM_ATOMIC_KMS)
 endif()
 
 # We don't want LTO objects in a published archive (libmir-test-assist.a)
-string (REPLACE " -flto " " " CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-string (REPLACE " -flto " " " CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
+add_compile_options(-fno-lto)
+add_link_options(-fno-lto)
 
 add_library(mir-public-test-doubles OBJECT
   nested_mock_egl.cpp
-  null_logger.cpp
   stub_display_configuration.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/stub_display_configuration.h
   fake_display.cpp ${CMAKE_SOURCE_DIR}/include/test/mir/test/doubles/fake_display.h
 )

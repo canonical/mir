@@ -83,7 +83,7 @@ Use these standard aliases in `.cpp` files for brevity:
 
 - **Use C++23 features** where appropriate
 - **Constructors**: Use `explicit` for single-argument constructors
-- **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`)
+- **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`). This includes default member initializers — write `bool ready{false};`, not `bool ready = false;`
 - **Null pointers**: Use `nullptr` instead of `NULL` or `0`
 - **Const correctness**: Use `const` wherever possible; prefer `int const*` over `const int*`
 - **Smart pointers**: Prefer smart pointers over raw pointers for ownership
@@ -116,8 +116,8 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Class comments**: Describe purpose and usage; include Doxygen-style documentation in headers. When adding a new class, mention what version of MirAL it was added in (e.g., "\\remark Since MirAL X.Y").
 - **Function comments**: Describe what the function does, not how (unless complex)
 - **TODO comments**: Use format `// TODO: Description`
-- **Code documentation**: Comment tricky or non-obvious code
-- **Avoid obvious comments**: Don't state what the code clearly does
+- **Code documentation**: Comment only tricky or non-obvious code; prefer expressive names and structure over explanatory comments
+- **Avoid obvious comments**: Don't state what the code clearly does; remove redundant comments when code is self-explanatory
 
 ## Best practices
 

@@ -18,7 +18,6 @@
 #define MIR_EVENTS_TOUCH_CONTACT_H_
 
 #include <mir_toolkit/event.h>
-#include "contact_state.h"
 #include <mir/geometry/point.h>
 
 #include <optional>
@@ -27,8 +26,6 @@ namespace mir
 {
 namespace events
 {
-
-using TouchContactV1 = ContactState;
 
 struct TouchContactV2
 {
@@ -60,17 +57,6 @@ struct TouchContactV2
         touch_major{touch_major},
         touch_minor{touch_minor},
         orientation{orientation}
-    {}
-
-    TouchContactV2(TouchContactV1 contact) :
-        touch_id{contact.touch_id},
-        action{contact.action},
-        tooltype{contact.tooltype},
-        position{contact.x, contact.y},
-        pressure{contact.pressure},
-        touch_major{contact.touch_major},
-        touch_minor{contact.touch_minor},
-        orientation{contact.orientation}
     {}
 
     auto operator==(TouchContactV2 const& rhs) const -> bool = default;

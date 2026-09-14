@@ -65,8 +65,8 @@ struct PopupWindowPlacement : mt::TestWindowManagerTools
         basic_window_manager.add_session(session);
 
         EXPECT_CALL(*window_manager_policy, advise_new_window(_))
-            .WillOnce(Invoke([this](WindowInfo const& window_info){ parent = window_info.window(); }))
-            .WillOnce(Invoke([this](WindowInfo const& window_info){ child = window_info.window(); }));
+            .WillOnce([this](WindowInfo const& window_info){ parent = window_info.window(); })
+            .WillOnce([this](WindowInfo const& window_info){ child = window_info.window(); });
 
         creation_parameters.set_size(initial_parent_size);
         basic_window_manager.add_surface(session, creation_parameters, &create_surface);
@@ -616,7 +616,7 @@ TEST_F(PopupWindowPlacement, place_new_surface_uses_provided_parent_size)
 {
     Window new_child;
     EXPECT_CALL(*window_manager_policy, advise_new_window(_))
-        .WillOnce(Invoke([&new_child](WindowInfo const& window_info){ new_child = window_info.window(); }));
+        .WillOnce([&new_child](WindowInfo const& window_info){ new_child = window_info.window(); });
 
     mir::shell::SurfaceSpecification params;
     params.type = mir_window_type_menu;

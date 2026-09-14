@@ -74,28 +74,6 @@ target_link_libraries(mirserverobjects
     PkgConfig::GIO
 )
 
-set_property(
-    SOURCE glib_main_loop.cpp glib_main_loop_sources.cpp default_server_configuration.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
-if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 18.2)
-  # shm_backing.cpp uses std::expected, which libstdc++ only supports with __cpp_concepts=202002L
-  set_source_files_properties(shm_backing.cpp
-    PROPERTIES COMPILE_FLAGS -Wno-builtin-macro-redefined
-    COMPILE_DEFINITIONS __cpp_concepts=202002L)
-endif()
-
-if(GLIB_VERSION VERSION_GREATER_EQUAL 2.85)
-    # This version fixes the (at least) 11 year old bug we encountered in LP #1401488
-    # Unfortunately, the fix interacts badly with our workaround to the bug
-    # Fortunately, we added the workaround we added a #define to turn it off, and
-    # use the correct code!
-    set_property(
-        SOURCE glib_main_loop_sources.cpp
-        APPEND
-        PROPERTY COMPILE_DEFINITIONS GLIB_HAS_FIXED_LP_1401488)
-endif()
-
 set(MIR_SERVER_REFERENCES
   mirserverobjects
   mirinput
@@ -119,6 +97,10 @@ add_library(mirserver-static STATIC) # Internal-only use: For linking into test 
 
 target_link_libraries(mirserver PUBLIC ${MIR_SERVER_REFERENCES})
 target_link_libraries(mirserver-static PUBLIC ${MIR_SERVER_REFERENCES})
+
+# The Rust static archives (via mirwayland_rs) are not GCC LTO objects.
+target_link_options(mirserver PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)
+target_link_options(mirserver-static PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)
 
 if (MIR_USE_APPARMOR)
   target_link_libraries(mirserver PUBLIC PkgConfig::APPARMOR)

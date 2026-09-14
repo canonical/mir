@@ -50,7 +50,7 @@ auto mpw::connection(options::Option const& options) -> struct wl_display*
 {
     if (!options.is_set(wayland_host_option_name))
     {
-        fatal_error("%s option required for Wayland platform", wayland_host_option_name);
+        MIR_FATAL_ERROR("{} option required for Wayland platform", wayland_host_option_name);
     }
 
     auto const wayland_host = options.get<std::string>(wayland_host_option_name);

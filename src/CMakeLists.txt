@@ -26,6 +26,9 @@ add_subdirectory(miral/)
 add_subdirectory(miroil/)
 
 add_executable(wrapper wrapper.c)
+
+mir_disable_tsan_for_sources(wrapper.c)
+
 target_compile_definitions(wrapper PUBLIC
     EXECUTABLE_FORMAT=\"%s.bin\"
     _DEFAULT_SOURCE

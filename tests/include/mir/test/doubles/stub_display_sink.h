@@ -42,6 +42,11 @@ class DummyCPUAddressableDisplayAllocator : public graphics::CPUAddressableDispl
         {
         }
 
+        auto as_dmabuf() -> graphics::DMABufBuffer const* override
+        {
+            return nullptr;
+        }
+
         auto map_writeable() -> std::unique_ptr<renderer::software::Mapping<std::byte>> override
         {
             return buffer->map_writeable();

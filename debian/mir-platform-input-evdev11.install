@@ -1,1 +1,2 @@
 usr/lib/*/mir/server-platform/input-evdev.so.11
+usr/lib/*/mir/server-platform/input-evdev-rs.so.11

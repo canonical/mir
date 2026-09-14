@@ -44,14 +44,14 @@ public:
     ~ThreadsafeAccess()
     {
         if (target)
-            fatal_error("ThreadsafeAccess never invalidated");
+            MIR_FATAL_ERROR("ThreadsafeAccess never invalidated");
     }
 
     void initialize(T* t)
     {
         std::lock_guard lock{mutex};
         if (target)
-            fatal_error("ThreadsafeAccess initialized multiple times");
+            MIR_FATAL_ERROR("ThreadsafeAccess initialized multiple times");
         target = t;
     }
 

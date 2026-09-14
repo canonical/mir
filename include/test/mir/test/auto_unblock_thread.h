@@ -24,49 +24,24 @@
 #ifndef MIR_TEST_AUTO_UNBLOCK_THREAD_H_
 #define MIR_TEST_AUTO_UNBLOCK_THREAD_H_
 
-#include <thread>
 #include <functional>
+#include <memory>
+#include <stop_token>
+#include <thread>
 
 namespace mir
 {
 namespace test
 {
-
-class AutoJoinThread
-{
-public:
-    AutoJoinThread() = default;
-    template<typename Callable, typename... Args>
-    explicit AutoJoinThread(Callable&& f, Args&&... args) :
-        thread{std::forward<Callable>(f), std::forward<Args>(args)...}
-    {}
-
-    ~AutoJoinThread() { stop(); }
-
-    void stop()
-    {
-        if (thread.joinable())
-            thread.join();
-    }
-
-    std::thread::native_handle_type native_handle() { return thread.native_handle(); }
-
-    AutoJoinThread(AutoJoinThread&& t) = default;
-    AutoJoinThread& operator=(AutoJoinThread&& t) = default;
-
-private:
-    std::thread thread;
-};
-
-class AutoUnblockThread : public AutoJoinThread
+class AutoUnblockThread
 {
 public:
     AutoUnblockThread() = default;
 
     template<typename Callable, typename... Args>
-    explicit AutoUnblockThread(std::function<void(void)> const& unblock, Callable&& f, Args&&... args) :
-        AutoJoinThread{std::forward<Callable>(f), std::forward<Args>(args)...},
-        unblock{unblock}
+    explicit AutoUnblockThread(std::function<void(void)> unblock, Callable&& f, Args&&... args) :
+        jthread{std::forward<Callable>(f), std::forward<Args>(args)...},
+        unblock_on_stop{std::make_unique<UnblockCallback>(jthread.get_stop_token(), std::move(unblock))}
     {}
 
     ~AutoUnblockThread() { stop(); }
@@ -76,13 +51,16 @@ public:
 
     void stop()
     {
-        if (unblock)
-            unblock();
-        AutoJoinThread::stop();
+        jthread.request_stop();
+        if (jthread.joinable())
+            jthread.join();
     }
 
 private:
-    std::function<void(void)> unblock;
+    using UnblockCallback = std::stop_callback<std::function<void(void)>>;
+
+    std::jthread jthread;
+    std::unique_ptr<UnblockCallback> unblock_on_stop;
 };
 
 }

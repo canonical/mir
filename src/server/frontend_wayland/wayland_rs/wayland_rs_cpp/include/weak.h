@@ -18,58 +18,124 @@
 #define MIR_WAYLANDRS_WEAK
 
 #include <memory>
+#include <string>
+#include <typeinfo>
 #include <boost/throw_exception.hpp>
 
 namespace mir
 {
 namespace wayland_rs
 {
+/// A weak handle to a Wayland object (any LifetimeTracker subclass).
+///
+/// Unlike a std::weak_ptr, a Weak does not require the pointed-at object to be owned by a
+/// std::shared_ptr, and creating one never requires std::enable_shared_from_this: the object's
+/// own destroyed-flag (provided by LifetimeTracker) is used as the control block. This means an
+/// object can hand out a weak reference to itself with `make_weak(this)`.
+///
+/// May only be safely used from the Wayland thread.
 template<typename T>
 class Weak
 {
 public:
-    Weak() = default;
+    Weak() : resource{nullptr}, destroyed_flag{nullptr} {}
 
-    explicit Weak(std::shared_ptr<T> const& ptr)
-        : ptr_{ptr}
+    explicit Weak(T* resource)
+        : resource{resource},
+          destroyed_flag{resource ? resource->destroyed_flag() : nullptr}
     {
     }
 
-    Weak(Weak const& weak) = default;
-
-    T& value() const
+    /// Convenience overload: the dispatch layer owns objects via std::shared_ptr. The Weak does
+    /// not keep the object alive; it only borrows the raw pointer and the object's destroyed-flag.
+    explicit Weak(std::shared_ptr<T> const& resource)
+        : Weak{resource.get()}
     {
-        if (ptr_.expired())
+    }
+
+    Weak(Weak<T> const&) = default;
+    auto operator=(Weak<T> const&) -> Weak<T>& = default;
+
+    auto operator==(Weak<T> const& other) const -> bool
+    {
+        if (*this && other)
         {
-            BOOST_THROW_EXCEPTION(
-                std::logic_error(
-                    std::string{"Attempted access of null wayland_rs::Weak<"} +
-                    typeid(T).name() + ">"));
+            return resource == other.resource;
         }
-        return *ptr_.lock();
+        else
+        {
+            return (!*this && !other);
+        }
     }
 
-    operator bool() const
+    auto operator!=(Weak<T> const& other) const -> bool
     {
-        return !ptr_.expired();
+        return !(*this == other);
     }
 
     auto is(T const& other) const -> bool
     {
-        auto locked = ptr_.lock();
-        return locked && locked.get() == &other;
+        if (*this)
+        {
+            return resource == &other;
+        }
+        else
+        {
+            return false;
+        }
     }
 
-    auto operator==(Weak<T> const& other) const -> bool
+    operator bool() const { return resource && !*destroyed_flag; }
+
+    auto value() const -> T&
     {
-        return !ptr_.owner_before(other.ptr_) && !other.ptr_.owner_before(ptr_);
+        if (!*this)
+        {
+            BOOST_THROW_EXCEPTION(
+                std::logic_error(
+                    std::string{"Attempted access of "} + (resource ? "destroyed" : "null") +
+                    " wayland_rs::Weak<" + typeid(T).name() + ">"));
+        }
+        return *resource;
     }
 
-    auto operator=(Weak<T> const&) -> Weak<T>& = default;
+    /// Returns a Weak to the same object viewed as U (a base or derived class), or an empty Weak
+    /// if this Weak is null/expired or the dynamic_cast fails. The destroyed-flag is preserved
+    /// because the resulting Weak is re-derived from the very same (live) object.
+    template<typename U>
+    auto as() const -> Weak<U>
+    {
+        if (!*this)
+        {
+            return Weak<U>{};
+        }
+        return Weak<U>{dynamic_cast<U*>(resource)};
+    }
 
 private:
-    std::weak_ptr<T> ptr_;
+    T* resource;
+    /// Is null if and only if resource is null.
+    /// If the target bool is true then resource has been freed and should not be used.
+    std::shared_ptr<bool const> destroyed_flag;
 };
+
+template<typename T>
+auto make_weak(T* resource) -> Weak<T>
+{ return Weak<T>{resource}; }
+
+template<typename T>
+auto make_weak(std::shared_ptr<T> const& resource) -> Weak<T>
+{ return Weak<T>{resource}; }
+
+template<typename T>
+auto as_nullable_ptr(Weak<T> const& weak) -> T*
+{ return weak ? &weak.value() : nullptr; }
+
+/// Casts a Weak<T> to a Weak<U> between related (base/derived) types, preserving the
+/// destroyed-flag. Yields an empty Weak<U> when the source is null/expired or the cast fails.
+template<typename U, typename T>
+auto weak_cast(Weak<T> const& weak) -> Weak<U>
+{ return weak.template as<U>(); }
 }
 }
 

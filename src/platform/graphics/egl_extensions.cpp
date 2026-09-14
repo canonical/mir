@@ -94,50 +94,6 @@ mg::EGLExtensions::BaseExtensions::BaseExtensions(EGLDisplay dpy) :
     }
 }
 
-mg::EGLExtensions::WaylandExtensions::WaylandExtensions(EGLDisplay dpy) :
-    eglBindWaylandDisplayWL{
-        reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglBindWaylandDisplayWL"))
-    },
-    eglUnbindWaylandDisplayWL{
-        reinterpret_cast<PFNEGLBINDWAYLANDDISPLAYWL>(eglGetProcAddress("eglUnbindWaylandDisplayWL"))
-    },
-    eglQueryWaylandBufferWL{
-        reinterpret_cast<PFNEGLQUERYWAYLANDBUFFERWL>(eglGetProcAddress("eglQueryWaylandBufferWL"))
-    }
-{
-    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (!egl_extensions || !std::strstr(egl_extensions, "EGL_WL_bind_wayland_display"))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_WL_bind_wayland_display"));
-    }
-
-    if (!eglBindWaylandDisplayWL || !eglUnbindWaylandDisplayWL || !eglQueryWaylandBufferWL)
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL_WL_bind_wayland_display functions are null"));
-    }
-}
-
-mg::EGLExtensions::NVStreamAttribExtensions::NVStreamAttribExtensions(EGLDisplay dpy) :
-    eglCreateStreamAttribNV{
-        reinterpret_cast<PFNEGLCREATESTREAMATTRIBNVPROC>(eglGetProcAddress("eglCreateStreamAttribNV"))
-    },
-    eglStreamConsumerAcquireAttribNV{
-        reinterpret_cast<PFNEGLSTREAMCONSUMERACQUIREATTRIBNVPROC>(
-            eglGetProcAddress("eglStreamConsumerAcquireAttribNV"))
-    }
-{
-    auto const egl_extensions = eglQueryString(dpy, EGL_EXTENSIONS);
-    if (!egl_extensions || !std::strstr(egl_extensions, "EGL_NV_stream_attrib"))
-    {
-        BOOST_THROW_EXCEPTION(std::runtime_error("EGL display doesn't support EGL_NV_stream_attrib"));
-    }
-
-    if (!eglCreateStreamAttribNV || !eglStreamConsumerAcquireAttribNV)
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"EGL_NV_stream_attrib functions are null"}));
-    }
-}
-
 mg::EGLExtensions::PlatformBaseEXT::PlatformBaseEXT()
     : eglGetPlatformDisplay{
         reinterpret_cast<PFNEGLGETPLATFORMDISPLAYEXTPROC>(eglGetProcAddress("eglGetPlatformDisplayEXT"))

@@ -54,6 +54,38 @@ function (list_to_string LIST_VAR PREFIX STR_VAR)
   set(${STR_VAR} "${tmp_str}" PARENT_SCOPE)
 endfunction()
 
+# Keep ThreadSanitizer enabled globally and only disable it for known-problematic
+# generated/borrowed C sources via the helpers below.
+
+function(mir_clang_tsan_enabled OUT_VAR)
+  string(TOLOWER "${CMAKE_BUILD_TYPE}" cmake_build_type_lower)
+  if(cmake_build_type_lower MATCHES "threadsanitizer" AND CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(${OUT_VAR} TRUE PARENT_SCOPE)
+  else()
+    set(${OUT_VAR} FALSE PARENT_SCOPE)
+  endif()
+endfunction()
+
+function(mir_disable_tsan_for_sources)
+  if(NOT ARGN)
+    return()
+  endif()
+
+  mir_clang_tsan_enabled(mir_disable_tsan)
+  if(mir_disable_tsan)
+    set_property(SOURCE ${ARGN} APPEND PROPERTY COMPILE_OPTIONS -fno-sanitize=thread)
+  endif()
+endfunction()
+
+function(mir_disable_tsan_for_c_target TARGET)
+  mir_clang_tsan_enabled(mir_disable_tsan)
+  if(mir_disable_tsan)
+    target_compile_options(${TARGET} PRIVATE
+      $<$<COMPILE_LANGUAGE:C>:-fno-sanitize=thread>
+    )
+  endif()
+endfunction()
+
 function (mir_discover_tests_internal EXECUTABLE TEST_ENV_OPTIONS DETECT_FD_LEAKS )
   # Set vars
   set(test_cmd_no_memcheck "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${EXECUTABLE}")

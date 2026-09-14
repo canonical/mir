@@ -80,6 +80,17 @@ TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_applicatio
     EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
+// Dialogs are deliberately excluded: they are not applications in their own right.
+// See https://github.com/canonical/mir/issues/4944
+// The corollary is that retyping a mapped window to a dialog tears down its foreign toplevel
+// handle, hiding it from taskbars and app switchers, so dialog typing must track genuine modality.
+TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_dialog_windows)
+{
+    ON_CALL(surface, type())
+        .WillByDefault(Return(mir_window_type_dialog));
+    EXPECT_FALSE(mf::should_create_foreign_toplevel_handle(surface));
+}
+
 TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_focusable_windows)
 {
     surface.set_focus_mode(mir_focus_mode_disabled);

@@ -1,27 +1,3 @@
-# Don't treat missing-field-initializers as an error, since
-# the LTTng macros contain code that triggers this (but it's
-# harmless; it concerns a padding field)
-add_compile_options(
-  -Wno-error=missing-field-initializers
-  -Wno-error=unused-function
-  -Wno-error=unused-parameter
-)
-
-# lttng relies on a gcc extension to support backward-compatible code, So...
-check_cxx_compiler_flag(-Wno-gnu-zero-variadic-macro-arguments MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-if ("${CMAKE_CXX_COMPILER}" MATCHES ".*clang.*" AND MIR_COMPILE_WITH_W_NO_GNU_ZERO_VARIADIC_MACRO_ARGUMENTS)
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-zero-variadic-macro-arguments")
-endif()
-
-# lttng-ust uses urcu headers which contain code blocks inside expressions
-# this is a gnu extension.
-string(REPLACE "-pedantic" "" NO_PEDANTIC_CHECK_FLAGS ${CMAKE_CXX_FLAGS})
-if("${CMAKE_CXX_COMPILER}" MATCHES "clang")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-gnu-statement-expression")
-else()
-    set(CMAKE_CXX_FLAGS "${NO_PEDANTIC_CHECK_FLAGS}")
-endif()
-
 add_library(mirlttng OBJECT
 
     compositor_report.cpp
@@ -50,6 +26,8 @@ target_link_libraries(mirlttng
 )
 
 add_library(mirserverlttng SHARED tracepoints.c)
+
+mir_disable_tsan_for_sources(tracepoints.c)
 
 target_include_directories(mirserverlttng
   PRIVATE

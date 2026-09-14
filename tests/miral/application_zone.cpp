@@ -45,7 +45,7 @@ TEST_F(ApplicationZone, application_zone_created_for_output)
     auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a = zone; });
 
     notify_configuration_applied(display_config_a);
 
@@ -60,8 +60,8 @@ TEST_F(ApplicationZone, multiple_outputs_lead_to_multiple_application_zones)
     auto display_config_a_b = create_fake_display_configuration({display_area_a, display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a = zone; }))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_b = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a = zone; })
+        .WillOnce([&](Zone const& zone){ zone_b = zone; });
 
     notify_configuration_applied(display_config_a_b);
 
@@ -80,7 +80,7 @@ TEST_F(ApplicationZone, updating_output_updates_application_zone)
     auto display_config_b = create_fake_display_configuration({display_area_b});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a_initial = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a_initial = zone; });
 
     notify_configuration_applied(display_config_a);
 
@@ -88,10 +88,10 @@ TEST_F(ApplicationZone, updating_output_updates_application_zone)
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _))
-        .WillOnce(Invoke([&](Zone const& updated, Zone const& original){
+        .WillOnce([&](Zone const& updated, Zone const& original){
             zone_a_original = original;
             zone_b = updated;
-        }));
+        });
 
     notify_configuration_applied(display_config_b);
 
@@ -115,15 +115,15 @@ TEST_F(ApplicationZone, removing_output_deletes_application_zone)
     auto display_config_a = create_fake_display_configuration({display_area_a});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a = zone; }))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_b = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a = zone; })
+        .WillOnce([&](Zone const& zone){ zone_b = zone; });
 
     notify_configuration_applied(display_config_a_b);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_))
-        .WillOnce(Invoke([&](Zone const& zone){ deleted_zone = zone; }));
+        .WillOnce([&](Zone const& zone){ deleted_zone = zone; });
 
     notify_configuration_applied(display_config_a);
 
@@ -141,7 +141,7 @@ TEST_F(ApplicationZone, multiple_outputs_in_the_same_logical_group_lead_to_one_a
         std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_b)});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a = zone; });
 
     notify_configuration_applied(display_config);
 
@@ -162,8 +162,8 @@ TEST_F(ApplicationZone, multiple_logical_output_groups_lead_to_multiple_applicat
         std::make_pair(mg::DisplayConfigurationLogicalGroupId{2}, display_area_d)});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a_b = zone; }))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_c_d = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a_b = zone; })
+        .WillOnce([&](Zone const& zone){ zone_c_d = zone; });
 
     notify_configuration_applied(display_config);
 
@@ -189,17 +189,17 @@ TEST_F(ApplicationZone, adding_output_to_logical_group_resizes_application_zone)
         std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_a)});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ initial_zone = zone; }));
+        .WillOnce([&](Zone const& zone){ initial_zone = zone; });
 
     notify_configuration_applied(display_config_a);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _))
-        .WillOnce(Invoke([&](Zone const& updated, Zone const& original){
+        .WillOnce([&](Zone const& updated, Zone const& original){
             EXPECT_THAT(original, Eq(initial_zone));
             updated_zone = updated;
-        }));
+        });
 
     notify_configuration_applied(display_config_a_b);
 
@@ -221,17 +221,17 @@ TEST_F(ApplicationZone, removing_output_in_logical_group_resizes_application_zon
         std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_a)});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ initial_zone = zone; }));
+        .WillOnce([&](Zone const& zone){ initial_zone = zone; });
 
     notify_configuration_applied(display_config_a_b);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _))
-        .WillOnce(Invoke([&](Zone const& updated, Zone const& original){
+        .WillOnce([&](Zone const& updated, Zone const& original){
             EXPECT_THAT(original, Eq(initial_zone));
             updated_zone = updated;
-        }));
+        });
 
     notify_configuration_applied(display_config_a);
 
@@ -253,7 +253,7 @@ TEST_F(ApplicationZone, updating_output_in_logical_group_updates_application_zon
         std::make_pair(mg::DisplayConfigurationLogicalGroupId{1}, display_area_c)});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a_b = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a_b = zone; });
 
     notify_configuration_applied(display_config_a_b);
 
@@ -261,10 +261,10 @@ TEST_F(ApplicationZone, updating_output_in_logical_group_updates_application_zon
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _))
-        .WillOnce(Invoke([&](Zone const& updated, Zone const& original){
+        .WillOnce([&](Zone const& updated, Zone const& original){
             EXPECT_THAT(original, Eq(zone_a_b));
             zone_a_c = updated;
-        }));
+        });
 
     notify_configuration_applied(display_config_a_c);
 
@@ -289,15 +289,15 @@ TEST_F(ApplicationZone, removing_all_outputs_in_logical_group_deletes_applicatio
         std::make_pair(mg::DisplayConfigurationLogicalGroupId{0}, display_area_a)});
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_create(_))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_a = zone; }))
-        .WillOnce(Invoke([&](Zone const& zone){ zone_b_c = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_a = zone; })
+        .WillOnce([&](Zone const& zone){ zone_b_c = zone; });
 
     notify_configuration_applied(display_config_a_b_c);
 
     Mock::VerifyAndClearExpectations(window_manager_policy);
 
     EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_))
-        .WillOnce(Invoke([&](Zone const& zone){ deleted_zone = zone; }));
+        .WillOnce([&](Zone const& zone){ deleted_zone = zone; });
 
     notify_configuration_applied(display_config_a);
 
@@ -356,7 +356,7 @@ TEST_F(ApplicationZone, readding_single_output_after_two_removed_removes_second_
     EXPECT_CALL(*window_manager_policy, advise_application_zone_update(_, _)).Times(0);
     EXPECT_CALL(*window_manager_policy, advise_application_zone_delete(_))
         .Times(1)
-        .WillOnce(Invoke([&](Zone const& zone){ zone_b = zone; }));
+        .WillOnce([&](Zone const& zone){ zone_b = zone; });
     notify_configuration_applied(create_fake_display_configuration({display_area_a}));
     EXPECT_THAT(zone_b.extents(), Eq(display_area_b));
 }

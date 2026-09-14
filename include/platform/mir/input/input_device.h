@@ -18,7 +18,7 @@
 #define MIR_INPUT_INPUT_DEVICE_H_
 
 #include <mir/module_deleter.h>
-#include <mir/optional_value.h>
+#include <optional>
 
 namespace mir
 {
@@ -53,13 +53,13 @@ public:
 
     virtual InputDeviceInfo get_device_info() = 0;
 
-    virtual optional_value<PointerSettings> get_pointer_settings() const = 0;
+    virtual std::optional<PointerSettings> get_pointer_settings() const = 0;
     virtual void apply_settings(PointerSettings const&) = 0;
 
-    virtual optional_value<TouchpadSettings> get_touchpad_settings() const = 0;
+    virtual std::optional<TouchpadSettings> get_touchpad_settings() const = 0;
     virtual void apply_settings(TouchpadSettings const&) = 0;
 
-    virtual optional_value<TouchscreenSettings> get_touchscreen_settings() const = 0;
+    virtual std::optional<TouchscreenSettings> get_touchscreen_settings() const = 0;
     virtual void apply_settings(TouchscreenSettings const&) = 0;
 
 protected:

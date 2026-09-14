@@ -37,6 +37,7 @@
 #include <thread>
 #include <chrono>
 #include <future>
+#include <experimental/scope>
 #include <boost/throw_exception.hpp>
 
 using namespace std::literals::chrono_literals;
@@ -106,8 +107,7 @@ public:
     try
     {
         mir::set_thread_name("Mir/Comp");
-        auto const signal_when_stopped = mir::raii::paired_calls(
-            [](){},
+        auto const signal_when_stopped = std::experimental::scope_exit(
             [this]()
             {
                 stopped.set_value();

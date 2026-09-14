@@ -55,6 +55,7 @@ class Display;
 class DisplaySink;
 class DisplayReport;
 class DisplayConfigurationPolicy;
+class DMABufBuffer;
 class GraphicBufferAllocator;
 class GLConfig;
 
@@ -372,6 +373,14 @@ public:
         MappableFB() = default;
         virtual ~MappableFB() override = default;
 
+        /**
+         * Return a DMABufBuffer of this framebuffer, if one exists.
+         *
+         * \return A pointer to a DMABufBuffer valid for the lifetime of this MappableFB,
+         *         or nullptr if this framebuffer cannot be exported as a DMA-Buf.
+         */
+        virtual auto as_dmabuf() -> DMABufBuffer const* = 0;
+
         using renderer::software::WriteMappable::size;
     };
 
@@ -450,8 +459,6 @@ public:
     virtual auto make_surface(DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
 };
 
-class DMABufBuffer;
-
 class DmaBufDisplayAllocator : public DisplayAllocator
 {
 public:
@@ -460,31 +467,6 @@ public:
     };
 
     virtual auto framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer> = 0;
-};
-
-#ifndef EGLStreamKHR
-typedef void* EGLStreamKHR;
-#endif
-
-class EGLStreamDisplayProvider : public DisplayProvider
-{
-public:
-    class Tag : public DisplayProvider::Tag
-    {
-    };
-
-    virtual auto get_egl_display() const -> EGLDisplay = 0;
-};
-
-class EGLStreamDisplayAllocator : public DisplayAllocator
-{
-public:
-    class Tag : public DisplayAllocator::Tag
-    {
-    };
-
-    virtual auto claim_stream() -> EGLStreamKHR = 0;
-    virtual auto output_size() const -> geometry::Size = 0;
 };
 
 class GenericEGLDisplayProvider : public DisplayProvider

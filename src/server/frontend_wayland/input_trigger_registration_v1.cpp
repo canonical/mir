@@ -480,7 +480,7 @@ public:
     void add_input_trigger_event(struct wl_resource* trigger) override;
     void drop_input_trigger_event(struct wl_resource* trigger) override;
 
-    void cancel() override;
+    void cancel_and_destroy() override;
     void destroy() override;
 
 private:
@@ -499,6 +499,7 @@ void InputTriggerActionControlV1::add_input_trigger_event(struct wl_resource* tr
     if (auto* keyboard_trigger = KeyboardTrigger::from(trigger))
     {
         keyboard_trigger->associate_with_action_group(action_group);
+        return;
     }
 
     mir::log_warning(
@@ -511,6 +512,7 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
     if (auto* keyboard_trigger = KeyboardTrigger::from(trigger))
     {
         keyboard_trigger->unassociate_with_action_group(action_group);
+        return;
     }
 
     mir::log_warning(
@@ -518,7 +520,7 @@ void InputTriggerActionControlV1::drop_input_trigger_event(struct wl_resource* t
         (void*)trigger);
 }
 
-void InputTriggerActionControlV1::cancel()
+void InputTriggerActionControlV1::cancel_and_destroy()
 {
     action_group->cancel();
 }

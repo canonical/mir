@@ -42,7 +42,7 @@ public:
     {
         if (!locked)
         {
-            mir::fatal_error("AlarmCallback called while unlocked");
+            MIR_FATAL_ERROR("AlarmCallback called while unlocked");
         }
         func(*locked.value());
     }

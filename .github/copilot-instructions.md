@@ -1,6 +1,6 @@
 # Mir Copilot Instructions
 
-Mir is a Wayland compositor library written in C++23 (with some Rust components). It provides a
+Mir is a Wayland compositor library written in C++26 (with some Rust components). It provides a
 stable ABI layer (MirAL) for building shells, plus graphics/input hardware abstraction and window
 management.
 
@@ -26,7 +26,7 @@ files:
 - **include/**: Public API headers with minimal implementation details. Interfaces here should not expose platform-specific types.
 - **src/**: Implementation organized by component. Internal headers stay within their component directory.
 - **miral/** (Mir Abstraction Layer): ABI-stable layer in `include/miral/miral/` providing shell-building APIs like `MirRunner`, `WindowManagementPolicy`, window managers, and accessibility features.
-- **Platform backends**: `src/platforms/{gbm-kms,atomic-kms,x11,wayland,eglstream-kms,virtual}` — hardware abstraction layers for different graphics/input systems.
+- **Platform backends**: `src/platforms/{gbm-kms,atomic-kms,x11,wayland,virtual}` - hardware abstraction layers for different graphics/input systems.
 - **Input platforms**: `evdev` (C++), `evdev-rs` (Rust with CXX bindings)
 
 ### Key components
@@ -83,7 +83,15 @@ Markdown formatting (mdformat), and a large-files check. Run `pre-commit run --a
 - **Consistency is paramount**: Follow the existing style of the files you're modifying. When in doubt, local consistency wins.
 - **Readability over cleverness**: Write code that is easy to understand and maintain.
 - **Minimal changes**: Make the smallest change that fully solves the problem — no incidental reformatting, whitespace normalization, or unrelated comment tweaks. If a formatter touches untouched lines, revert those hunks or commit them separately.
+- **Comments are for non-obvious intent**: Do not add comments that merely restate code. Add comments only when they capture rationale, invariants, caveats, or constraints that are not clear from the code itself.
+- **Evaluate specialization early**: When a task arrives, consider whether it is a good candidate for a dedicated skill or specialized agent before proceeding with general-purpose implementation.
 - **Ask to align**: Ask the user questions to align and ground yourself often. When requirements are ambiguous, scope is unclear, or multiple reasonable approaches exist, confirm with the user rather than guessing.
+
+## Communication and evidence
+
+- In commentary (status updates, summaries, and recommendations), when asserting facts about external codebases, standards/specs, tools, or other non-local sources, include a precise reference so the claim is verifiable.
+- Prefer primary sources and stable pointers: repository/file/line, commit SHA, official docs URL, specification section, or release notes.
+- If you cannot provide a reliable reference for an external factual claim, qualify it as uncertain and avoid presenting it as established fact.
 
 The full C++ style guide is `doc/sphinx/contributing/reference/cppguide.md`; day-to-day highlights
 are in `cpp.instructions.md`.
@@ -108,6 +116,13 @@ give test steps, and complete the checklist. Reviewers focus on:
 - **Exception safety**: Does the change maintain at least basic exception safety?
 - **Test coverage**: Are new behaviors covered? Are existing tests still valid?
 - **Simplicity**: Prefer `value_or()` over conditionals, `std::erase_if` over manual loops, clear names over clever tricks.
+- **PR metadata quality**: When reviewing a pull request, evaluate whether the current title and description accurately reflect the actual content and scope; suggest concrete improvements when they do not.
+
+## Commit and session hygiene
+
+- Run `pre-commit run` after `git add` and before `git commit` to surface linting, formatting, and static-check issues in the staged change set.
+- If `pre-commit run` reports failures or applies fixes, restage as needed and re-run checks before committing.
+- At the end of a session, briefly consider whether user guidance revealed gaps in these LLM instructions and, when it did, propose or apply focused instruction improvements.
 
 ## Additional resources
 

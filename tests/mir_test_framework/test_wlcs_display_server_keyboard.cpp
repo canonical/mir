@@ -130,6 +130,8 @@ WlcsKeyboard* miral::TestWlcsDisplayServer::create_keyboard()
 
 #else
 
+#include <utility>
+
 // Just so the compiler doesn't complain about `create_keyboard` not being
 // defined.
 WlcsKeyboard* miral::TestWlcsDisplayServer::create_keyboard()

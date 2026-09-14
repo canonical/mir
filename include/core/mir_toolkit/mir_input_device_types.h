@@ -20,18 +20,13 @@
 
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-
 typedef int64_t MirInputDeviceId;
 
-typedef enum MirPointerHandedness
+enum MirPointerHandedness
 {
     mir_pointer_handedness_right = 0,
     mir_pointer_handedness_left = 1
-} MirPointerHandedness;
+};
 
 /**
  * MirPointerAcceleration describes the way pointer movement is filtered:
@@ -42,11 +37,11 @@ typedef enum MirPointerHandedness
  *   acceleration function based on the current velocity that usually consists
  *   of two linear inclines separated by a plateau.
  */
-typedef enum MirPointerAcceleration
+enum MirPointerAcceleration
 {
     mir_pointer_acceleration_none = 1,
     mir_pointer_acceleration_adaptive = 2
-} MirPointerAcceleration;
+};
 
 /**
  * MirTouchpadClickMode configures how the touchpad itself should generate
@@ -58,12 +53,12 @@ typedef enum MirPointerAcceleration
  * - mir_touchpad_click_mode_finger_count: simulate pointer buttons using the
  *   number of fingers down
  */
-typedef enum MirTouchpadClickMode
+enum MirTouchpadClickMode
 {
     mir_touchpad_click_mode_none = 0,
     mir_touchpad_click_mode_area_to_click = 1 << 0,
     mir_touchpad_click_mode_finger_count = 1 << 1
-} MirTouchpadClickMode;
+};
 
 /**
  * MirTouchpadScrollMode configures how the touchpad should generate scroll
@@ -76,13 +71,13 @@ typedef enum MirTouchpadClickMode
  * - mir_touchpad_scroll_mode_button_down_scroll: movement on the touchpad
  *   generates scroll events when a button is held down simultaneously
  */
-typedef enum MirTouchpadScrollMode
+enum MirTouchpadScrollMode
 {
     mir_touchpad_scroll_mode_none = 0,
     mir_touchpad_scroll_mode_two_finger_scroll = 1 << 0,
     mir_touchpad_scroll_mode_edge_scroll = 1 << 1,
     mir_touchpad_scroll_mode_button_down_scroll = 1 << 2
-} MirTouchpadScrollMode;
+};
 
 /**
  * Mapping modes for touchscreen devices. The mode defines how coordinates
@@ -93,7 +88,7 @@ typedef enum MirTouchpadScrollMode
  * i.e handheld devices with builtin touchscreens or external graphic tablets or
  * external monitors with touchscreen capabilities.
  */
-typedef enum MirTouchscreenMappingMode
+enum MirTouchscreenMappingMode
 {
     /**
      * Map the device coordinates onto specific output.
@@ -103,9 +98,5 @@ typedef enum MirTouchscreenMappingMode
      * Map the device coordinates onto the whole wall of outputs.
      */
     mir_touchscreen_mapping_mode_to_display_wall
-} MirTouchscreenMappingMode;
-
-#ifdef __cplusplus
-}
-#endif
+};
 #endif

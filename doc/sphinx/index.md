@@ -45,7 +45,8 @@ reverse:
 
 Mir is a member of the Ubuntu family. It’s an open source project that warmly welcomes community projects, contributions, suggestions, fixes and constructive feedback.
 
-- [Release Notes](https://github.com/canonical/mir/releases)
+- {doc}`release-notes`
+- {doc}`roadmap`
 - [Code of conduct](https://ubuntu.com/community/docs/ethos/code-of-conduct)
 - [Get support](https://discourse.ubuntu.com/c/project/mir/15)
 - [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
@@ -64,4 +65,5 @@ reference/index
 configuring/index
 contributing/index
 release-notes
+roadmap
 ```

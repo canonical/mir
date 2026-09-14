@@ -98,11 +98,10 @@ public:
             .WillByDefault(Return(std::vector<MirPixelFormat>{ mir_pixel_format_argb_8888 }));
         ON_CALL(*this, alloc_software_buffer(_, _))
             .WillByDefault(
-                Invoke(
                     [this](auto sz, auto pf)
                     {
                         return this->mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
-                    }));
+                    });
     }
 
     MOCK_METHOD(std::shared_ptr<mg::Buffer>, alloc_software_buffer, (geom::Size, MirPixelFormat), (override));
@@ -159,10 +158,10 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_shown)
 
     InSequence s;
     EXPECT_CALL(mock_input_scene, emit_scene_changed())
-        .WillOnce(Invoke([&]
+        .WillOnce([&]
             {
                 cursor.hide();
-            }));
+            });
     EXPECT_CALL(mock_input_scene, emit_scene_changed());
 
     cursor.show(stub_cursor_image);
@@ -178,10 +177,10 @@ TEST_F(SoftwareCursor, tolerates_being_hidden_while_being_reshown)
     EXPECT_CALL(mock_input_scene, emit_scene_changed()); // Show
     EXPECT_CALL(mock_input_scene, emit_scene_changed()); // Hide
     EXPECT_CALL(mock_input_scene, emit_scene_changed()) // Reshow
-        .WillOnce(Invoke([&]
+        .WillOnce([&]
             {
                 cursor.hide();
-            }));
+            });
     EXPECT_CALL(mock_input_scene, emit_scene_changed()); // Rehide
 
     cursor.show(stub_cursor_image);
@@ -331,13 +330,12 @@ TEST_F(SoftwareCursor, handles_argb_8888_cursor_surface)
     EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
         .Times(1)
         .WillOnce(
-            Invoke(
                 [this, &cursor_buffer](auto sz, auto pf)
                 {
                    auto buffer = mock_buffer_allocator.mtd::StubBufferAllocator::alloc_software_buffer(sz, pf);
                    cursor_buffer = buffer;
                    return buffer;
-                }));
+                });
 
 
     mg::SoftwareCursor cursor{
@@ -384,7 +382,6 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
     EXPECT_CALL(mock_buffer_allocator, alloc_software_buffer(_,mir_pixel_format_argb_8888))
         .Times(1)
         .WillOnce(
-            Invoke(
                 [&cursor_buffer](auto sz, auto pf)
                 {
                     // Set a stride that's not a multiple of the pixel width,
@@ -401,7 +398,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
                         stride);
                     cursor_buffer = buffer;
                     return buffer;
-                }));
+                });
 
     mg::SoftwareCursor cursor{
         mt::fake_shared(mock_buffer_allocator),

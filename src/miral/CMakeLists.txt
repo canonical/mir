@@ -1,7 +1,3 @@
-include_directories(
-  ${PROJECT_SOURCE_DIR}/src/include/server
-)
-
 set(MIRAL_ABI 8)
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
 set(miral_include ${PROJECT_SOURCE_DIR}/include/miral)
@@ -24,6 +20,7 @@ add_library(miral-internal STATIC
     live_config_overrides_list_builder.cpp    live_config_overrides_list_builder.h
     override_watcher.cpp                 override_watcher.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
+    software_buffer_pool.cpp             software_buffer_pool.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
     static_display_config.cpp            static_display_config.h
@@ -41,6 +38,8 @@ add_library(miral-internal STATIC
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
     live_config_watcher.cpp               live_config_watcher.h
     version_compare.cpp                   version_compare.h
+    magnifier_layout.cpp                 magnifier_layout.h magnifier_geometry.h
+    magnifier_controls.cpp               magnifier_controls.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -48,13 +47,6 @@ set_target_properties(miral-internal
     PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
-
-check_cxx_compiler_flag(-Wstringop-truncation HAS_W_STRINGOP_TRUNCATION)
-if (HAS_W_STRINGOP_TRUNCATION)
-    set_source_files_properties(xcursor.c PROPERTIES
-        COMPILE_FLAGS "-Wno-error=stringop-truncation"
-    )
-endif()
 
 set(PROTOCOLS_DIR ${CMAKE_SOURCE_DIR}/wayland-protocols)
 set(GENERATED_DIR ${CMAKE_BINARY_DIR}/miral-generated)
@@ -104,6 +96,8 @@ add_library(protocols STATIC ${GENERATED_PROTOCOL_SOURCES})
 target_include_directories(protocols PUBLIC ${GENERATED_DIR})
 target_link_libraries(protocols PUBLIC PkgConfig::WAYLAND_CLIENT)
 
+mir_disable_tsan_for_sources(${GENERATED_PROTOCOL_SOURCES} xcursor.c)
+
 add_library(miral-external OBJECT
     add_init_callback.cpp               ${miral_include}/miral/add_init_callback.h
     application.cpp                     ${miral_include}/miral/application.h
@@ -113,9 +107,9 @@ add_library(miral-external OBJECT
     application_authorizer.cpp          ${miral_include}/miral/application_authorizer.h
     application_info.cpp                ${miral_include}/miral/application_info.h
     canonical_window_manager.cpp        ${miral_include}/miral/canonical_window_manager.h
+    kiosk_window_manager.cpp            ${miral_include}/miral/kiosk_window_manager.h
     config_file.cpp                     ${miral_include}/miral/config_file.h
     configuration_option.cpp            ${miral_include}/miral/configuration_option.h
-    ${miral_include}/miral/command_line_option.h
     cursor_theme.cpp                    ${miral_include}/miral/cursor_theme.h
     custom_renderer.cpp                 ${miral_include}/miral/custom_renderer.h
     display_configuration.cpp           ${miral_include}/miral/display_configuration.h
@@ -140,7 +134,6 @@ add_library(miral-external OBJECT
     runner.cpp                          ${miral_include}/miral/runner.h
     session_lock_listener.cpp           ${miral_include}/miral/session_lock_listener.h
     set_command_line_handler.cpp        ${miral_include}/miral/set_command_line_handler.h
-    set_terminator.cpp                  ${miral_include}/miral/set_terminator.h
     set_window_management_policy.cpp    ${miral_include}/miral/set_window_management_policy.h
     toolkit_event.cpp                   ${miral_include}/miral/toolkit_event.h
     window_management_policy.cpp        ${miral_include}/miral/window_management_policy.h
@@ -164,30 +157,23 @@ add_library(miral-external OBJECT
     sticky_keys.cpp                     ${miral_include}/miral/sticky_keys.h
     locate_pointer.cpp                  ${miral_include}/miral/locate_pointer.h
     logging_config.cpp                  ${miral_include}/miral/logging_config.h
+    touch_emulator.cpp                  ${miral_include}/miral/touch_emulator.h
 )
 
 add_library(miral SHARED
     ${miral_include}/miral/runner.h # Syntactically, we need something here
 )
 
-check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)
-if(HAS_W_NO_ATTRIBUTE_ALIAS)
-    set_source_files_properties(
-            canonical_window_manager.cpp
-            internal_client.cpp
-            set_window_management_policy.cpp
-            window_info.cpp
-            window_management_policy.cpp
-            window_manager_tools.cpp
-            PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} -Wno-attribute-alias")
-endif()
-
 target_include_directories(miral-internal
-    PRIVATE "${miral_include}"
+    PUBLIC
+        "${miral_include}"
+        ${CMAKE_CURRENT_SOURCE_DIR}
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-internal
-    PRIVATE
+    PUBLIC
         mirserver
         PkgConfig::WAYLAND_CLIENT
         PkgConfig::YAML
@@ -197,10 +183,12 @@ target_link_libraries(miral-internal
 
 target_include_directories(miral-external
     PUBLIC  "${miral_include}"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_include_directories(miral
     PUBLIC  "${miral_include}"
+    PRIVATE ${PROJECT_SOURCE_DIR}/src/include/server
 )
 
 target_link_libraries(miral-external
@@ -218,8 +206,6 @@ target_link_libraries(miral
     PUBLIC
         miral-external
         PkgConfig::XKBCOMMON
-    PRIVATE
-        miral-internal
 )
 
 set_target_properties(miral
@@ -230,10 +216,7 @@ set_target_properties(miral
 )
 
 find_program(MIR_DPKG_GENSYMBOLS dpkg-gensymbols)
-if (CMAKE_COMPILER_IS_GNUCXX   AND  # clang generates slightly different symbols (but we don't care)
-    MIR_USE_LD EQUAL "ld"      AND  # lld on 22.04 generates slightly different symbols (but we don't care)
-    MIR_DPKG_GENSYMBOLS)
-
+if (MIR_DPKG_GENSYMBOLS)
     set(MIR_CHECK_MIRAL_SYMBOLS_DEFAULT ALL)
 endif()
 

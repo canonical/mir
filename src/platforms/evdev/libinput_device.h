@@ -53,11 +53,11 @@ public:
     void start(InputSink* sink, EventBuilder* builder) override;
     void stop() override;
     InputDeviceInfo get_device_info() override;
-    optional_value<PointerSettings> get_pointer_settings() const override;
+    std::optional<PointerSettings> get_pointer_settings() const override;
     void apply_settings(PointerSettings const&) override;
-    optional_value<TouchpadSettings> get_touchpad_settings() const override;
+    std::optional<TouchpadSettings> get_touchpad_settings() const override;
     void apply_settings(TouchpadSettings const&) override;
-    optional_value<TouchscreenSettings> get_touchscreen_settings() const override;
+    std::optional<TouchscreenSettings> get_touchscreen_settings() const override;
     void apply_settings(TouchscreenSettings const&) override;
 
     void leds_set(KeyboardLeds leds) override;
@@ -93,7 +93,7 @@ private:
     mir::geometry::DeltaXF horizontal_scroll_scale{1.0};
     mir::geometry::DeltaY vertical_scroll_value120_accum;
     mir::geometry::DeltaX horizontal_scroll_value120_accum;
-    mir::optional_value<TouchscreenSettings> touchscreen;
+    std::optional<TouchscreenSettings> touchscreen;
 
     struct ContactData
     {

@@ -85,7 +85,7 @@ struct ActiveOutputs : mtf::HeadlessTest
     void update_outputs(std::vector<Rectangle> const& displays)
     {
         mt::Signal signal;
-        EXPECT_CALL(active_outputs_listener, advise_output_end()).WillOnce(Invoke([&]{signal.raise(); }));
+        EXPECT_CALL(active_outputs_listener, advise_output_end()).WillOnce([&]{signal.raise(); });
 
         mtd::StubDisplayConfig changed_stub_display_config{displays};
         display->emit_configuration_change_event(mt::fake_shared(changed_stub_display_config));
@@ -97,7 +97,7 @@ struct ActiveOutputs : mtf::HeadlessTest
     void invert_outputs_in_base_configuration()
     {
         mt::Signal signal;
-        EXPECT_CALL(active_outputs_listener, advise_output_end()).WillOnce(Invoke([&]{signal.raise(); }));
+        EXPECT_CALL(active_outputs_listener, advise_output_end()).WillOnce([&]{signal.raise(); });
 
         auto configuration = server.the_display()->configuration();
         configuration->for_each_output([](mg::UserDisplayConfigurationOutput& output)

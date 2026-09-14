@@ -170,7 +170,7 @@ public:
     /// Enable a custom output attribute in the configuration file.
     ///
     /// The value of this attribute will be made available through
-    /// #miral::UserDisplayConfigurationOutput::custom_attribute at the
+    /// #miral::Output::attribute and #miral::Output::attributes_map at the
     /// \p key.
     ///
     /// The value in the YAML file is expected to be a string.

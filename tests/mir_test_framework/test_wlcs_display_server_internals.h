@@ -46,7 +46,7 @@ void emit_mir_event(
     emitter->emit_event(event.with_event_time(event_time));
 
     if (!event_sent->wait_for(a_long_time))
-        mir::fatal_error("fake event failed to go through");
+        MIR_FATAL_ERROR("fake event failed to go through");
 }
 
 } // namespace

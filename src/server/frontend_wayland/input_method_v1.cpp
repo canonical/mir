@@ -490,7 +490,7 @@ private:
                 return;
 
             mir::shell::SurfaceSpecification spec;
-            spec.exclusive_rect = mir::optional_value<mir::geometry::Rectangle>(next_bounds);
+            spec.exclusive_rect = std::optional<mir::geometry::Rectangle>(next_bounds);
             last_bounds = next_bounds;
             apply_spec(spec);
         };

@@ -52,7 +52,7 @@ public:
         std::shared_ptr<struct gbm_device> gbm,
         BypassOption bypass_options,
         std::shared_ptr<DisplayReport> const& listener,
-        std::vector<std::shared_ptr<KMSOutput>> const& outputs,
+        std::shared_ptr<KMSOutput> const& output,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation);
     ~DisplaySink();
@@ -86,11 +86,10 @@ private:
     void set_crtc(FBHandle const&);
 
     std::shared_ptr<struct gbm_device> const gbm;
-    bool holding_client_buffers{false};
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
 
-    std::vector<std::shared_ptr<KMSOutput>> outputs;
+    std::shared_ptr<KMSOutput> const output;
 
     std::shared_ptr<CPUAddressableDisplayAllocator> kms_allocator;
     std::unique_ptr<GBMDisplayAllocator> gbm_allocator;

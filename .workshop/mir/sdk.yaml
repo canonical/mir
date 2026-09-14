@@ -10,7 +10,3 @@ plugs:
     workshop-target: /home/workshop/.cache/ccache
   gpu:
     interface: gpu
-slots:
-  doc:
-    interface: tunnel
-    endpoint: localhost:8000

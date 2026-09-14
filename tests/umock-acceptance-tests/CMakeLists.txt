@@ -1,17 +1,14 @@
 include(CMakeDependentOption)
 
-include_directories(
-  ${CMAKE_SOURCE_DIR}/tests/include/
-)
-
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL
 
   test_libinput.cpp
   )
 
-set_property(
-  SOURCE test_libinput.cpp
-  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
+target_include_directories(mir_umock_acceptance_tests
+  PRIVATE
+    ${CMAKE_SOURCE_DIR}/tests/include/
+)
 
 add_dependencies(mir_umock_acceptance_tests GMock)
 

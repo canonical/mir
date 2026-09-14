@@ -27,9 +27,29 @@ function(add_rust_cxx_library target)
   set(cxxbridge_source "${cxxbridge_include_dir}/${arg_CRATE}/${arg_CXX_BRIDGE_SOURCE_FILE}.cc")
   set(crate_staticlib "${rust_binary_dir}/lib${arg_CRATE}.a")
 
+  # DEB_HOST_RUST_TYPE is set in deb builds, which expect the build under
+  # the architecture triplet.
+  set(cargo_target_flag "")
+  if(NOT "$ENV{DEB_HOST_RUST_TYPE}" STREQUAL "")
+    set(cargo_target_flag "--target" "$ENV{DEB_HOST_RUST_TYPE}")
+  endif()
+
+  # Forward the pkg-config CMake resolved to cargo, so build scripts using the
+  # pkg-config crate find the same libraries CMake does. When cross-compiling,
+  # that crate refuses to run unless PKG_CONFIG_ALLOW_CROSS is set, so set it
+  # too.
+  set(cargo_env)
+  if(PKG_CONFIG_EXECUTABLE)
+    list(APPEND cargo_env "PKG_CONFIG=${PKG_CONFIG_EXECUTABLE}")
+  endif()
+  if(CMAKE_CROSSCOMPILING)
+    list(APPEND cargo_env "PKG_CONFIG_ALLOW_CROSS=1")
+  endif()
+
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
-    COMMAND ${CARGO_EXECUTABLE} build ${cargo_release_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
+    COMMAND ${CMAKE_COMMAND} -E env ${cargo_env}
+            ${CARGO_EXECUTABLE} build ${cargo_release_flag} ${cargo_target_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
     DEPENDS ${arg_DEPENDS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     COMMENT "Building Rust crate ${arg_CRATE}")
@@ -68,16 +88,6 @@ function(add_rust_cxx_library target)
     foreach(inc_dir IN LISTS arg_INCLUDES)
       target_include_directories(${target} INTERFACE "${inc_dir}")
     endforeach()
-  endif()
-
-  # rust-cxx generates symbols named like "cxxbridge1$foo", which
-  # triggers a warning in Clang.
-  check_cxx_compiler_flag(-Wdollar-in-identifier-extension SUPPORTS_DOLLAR_IN_ID_WARNING)
-  if(SUPPORTS_DOLLAR_IN_ID_WARNING)
-    target_compile_options(${target}-cxxbridge
-      PRIVATE -Wno-error=dollar-in-identifier-extension)
-    target_compile_options(${target}
-      INTERFACE -Wno-error=dollar-in-identifier-extension)
   endif()
 
   # As described in https://cxx.rs/build/other.html#linking-the-c-and-rust-together
