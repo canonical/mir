@@ -19,6 +19,7 @@
 
 #include <mir/scene/session.h>
 
+#include <mir/frontend/session_credentials.h>
 #include <mir/observer_registrar.h>
 
 #include <set>
@@ -44,7 +45,7 @@ public:
     ApplicationSession(
         std::shared_ptr<shell::SurfaceStack> const& surface_stack,
         std::shared_ptr<SurfaceFactory> const& surface_factory,
-        pid_t pid,
+        frontend::SessionCredentials&& creds,
         Fd socket_fd,
         std::string const& session_name,
         std::shared_ptr<SessionListener> const& session_listener,
@@ -63,6 +64,7 @@ public:
     std::shared_ptr<Surface> default_surface() const override;
 
     std::string name() const override;
+    auto creds() const -> frontend::SessionCredentials const& override;
     pid_t process_id() const override;
     Fd socket_fd() const override;
 
@@ -84,7 +86,7 @@ protected:
 private:
     std::shared_ptr<shell::SurfaceStack> const surface_stack;
     std::shared_ptr<SurfaceFactory> const surface_factory;
-    pid_t const pid;
+    frontend::SessionCredentials const creds_;
     Fd socket_fd_;
     std::string const session_name;
     std::shared_ptr<SessionListener> const session_listener;

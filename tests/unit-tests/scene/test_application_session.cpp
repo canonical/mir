@@ -108,7 +108,7 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            stub_surface_stack,
            stub_surface_factory,
-           pid,
+           mf::SessionCredentials{pid},
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
@@ -121,7 +121,7 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            stub_surface_stack,
            surface_factory,
-           pid,
+           mf::SessionCredentials{pid},
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
@@ -135,7 +135,7 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            surface_stack,
            surface_factory,
-           pid,
+           mf::SessionCredentials{pid},
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
@@ -147,7 +147,7 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            surface_stack,
            stub_surface_factory,
-           pid,
+           mf::SessionCredentials{pid},
            mir::Fd{mir::Fd::invalid},
            name,
            stub_session_listener,
@@ -160,7 +160,7 @@ struct ApplicationSession : public testing::Test
         return std::make_shared<ms::ApplicationSession>(
            stub_surface_stack,
            stub_surface_factory,
-           pid,
+           mf::SessionCredentials{pid},
            mir::Fd{mir::Fd::invalid},
            name,
            session_listener,
@@ -412,7 +412,7 @@ TEST_F(ApplicationSession, process_id)
     ms::ApplicationSession app_session(
         stub_surface_stack,
         stub_surface_factory,
-        session_pid,
+        mf::SessionCredentials{session_pid},
         mir::Fd{mir::Fd::invalid},
         name,
         std::make_shared<ms::NullSessionListener>(),
