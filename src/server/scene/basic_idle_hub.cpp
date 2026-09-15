@@ -171,7 +171,8 @@ void ms::BasicIdleHub::register_interest(
         // In case this changes the first timeout
         state->first_timeout = state->timeouts.begin()->first;
         // Check if the current alarm will overshoot the new timeout (or there isn't an alarm at all)
-        if (state->wake_lock.expired() && (!state->alarm_timeout || state->alarm_timeout.value() > timeout))
+        if ((!state->idle_inhibition_enabled || state->wake_lock.expired()) &&
+            (!state->alarm_timeout || state->alarm_timeout.value() > timeout))
         {
             // The alarm will not be fired before we hit our timeout
             auto const current_time = clock->now() - state->poke_time;
