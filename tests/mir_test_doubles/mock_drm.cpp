@@ -23,6 +23,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 #include <stdexcept>
 #include <unistd.h>
 #include <dlfcn.h>
@@ -239,7 +240,7 @@ mtd::MockDRM::MockDRM()
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
-            if (!std::strncmp(path, drm_prefix, strlen_c(drm_prefix)))
+            if (std::string_view{path}.starts_with(drm_prefix))
             {
                 // I don't think we need to be able to distinguish based on mode. ppc64el (at least) *does*
                 // call the 3-parameter open()
