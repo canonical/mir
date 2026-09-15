@@ -30,7 +30,6 @@
 %global miroil_sover 10
 %global mirplatform_sover 35
 %global mirserver_sover 68
-%global mirwayland_sover 7
 %global mirplatformgraphics_sover 24
 %global mirplatforminput_sover 11
 
@@ -263,7 +262,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 %files devel
 %license COPYING.*
-%{_bindir}/mir_wayland_generator
 %{_libdir}/libmir*.so
 %{_libdir}/pkgconfig/mir*.pc
 %exclude %{_libdir}/pkgconfig/mir*internal.pc
@@ -293,7 +291,6 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %doc README.md
 %{_libdir}/libmiral.so.%{miral_sover}
 %{_libdir}/libmirserver.so.%{mirserver_sover}
-%{_libdir}/libmirwayland.so.%{mirwayland_sover}
 %dir %{_libdir}/%{name}/server-platform
 %{_libdir}/%{name}/server-platform/graphics-atomic-kms.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/graphics-gbm-kms.so.%{mirplatformgraphics_sover}
