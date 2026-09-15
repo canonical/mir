@@ -241,7 +241,7 @@ fn generate_extension_for_interface(interface: &WaylandInterface) -> Option<Toke
             pub fn destroy_and_delete(&self) {
                 use wayland_server::Resource;
                 if self.wrapped.is_alive() {
-                    if let Some(handle) = self.wrapped.handle().upgrade() {
+                    if let Some(handle) = wayland_server::Resource::handle(&self.wrapped).upgrade() {
                         let _ = handle.destroy_object::<crate::wayland_server_core::ServerState>(
                             &self.wrapped.id(),
                         );
