@@ -25,7 +25,7 @@
     THIS SOFTWARE.
   </copyright>
 
-  <description summary="get buffers from image capture sourcese">
+  <description summary="get buffers from image capture sources">
     This protocol enables clients to ask the compositor for a buffer
     that contains the contents of an image capture source. This buffer can
     then be attached to a surface that the client owns.
@@ -79,7 +79,7 @@
         This request should be called when the client will no longer
         use the ext_image_sampler_manager_v1.
 
-        Afterward, new samplers can not be created by this manager,
+        Afterward, new samplers cannot be created by this manager,
         but existing samplers must remain valid up until the point of their destruction.
       </description>
     </request>
@@ -105,10 +105,10 @@
         The compositor should send the size event after a successful get_buffer request.
 
         Whereas the backing store of most `wl_buffer`s must remain constant between submission and
-        wl_buffer.release, the backing store of this wl_buffer is a compositor-internal that
-        always contains the most current representation of the source.
+        wl_buffer.release, this wl_buffer has compositor-internal backing storage that always
+        contains the most current representation of the source.
 
-        The client must make this request following a buffer_changed event. A failure to
+        The client must make this request following a buffer_invalidated event. A failure to
         respond to that event may cause the compositor to no longer update the contents
         of the buffer.
 
@@ -121,8 +121,8 @@
     </request>
 
     <event name="size">
-      <description summary="sent when the size of the image capture source changes">
-        The size event must be sent by the compositor in response to a get_buffer request.
+      <description summary="report the image capture source size">
+        The size event should be sent by the compositor in response to a get_buffer request.
 
         The buffer width and buffer height express the size of the image buffer, while
         the logical width and logical height express the size of what is being rendered.
@@ -136,7 +136,7 @@
       <arg name="logical_height" type="uint" summary="logical height"/>
     </event>
 
-    <event name="buffer_changed">
+    <event name="buffer_invalidated">
       <description summary="sent when the client should reallocate its buffer">
         The compositor must send this event to signal that the client should make the
         get_buffer request again.
@@ -146,6 +146,16 @@
 
         If the client does not request a new buffer, the compositor may no longer update
         the buffer that the client is holding.
+      </description>
+    </event>
+
+    <event name="stopped">
+      <description summary="sampler is no longer available">
+        This event indicates that the sampler session has stopped and is no
+        longer available. This can happen in a number of cases, e.g. when the
+        underlying source is destroyed or an unrecoverable runtime error has occurred.
+
+        The client should destroy the sampler after receiving this event.
       </description>
     </event>
 
