@@ -145,15 +145,12 @@ jobs:
             /%changelog/ {
               print
               getline
-              dev_pat = "^\\*.*" version "~dev-"
-              if ($0 ~ dev_pat) {
-                # Replace existing ~dev entry
+              rc_pat = "^\\*.*" version "~rc-"
+              if ($0 ~ rc_pat) {
+                # Replace existing ~rc entry
                 print_header()
                 getline
-                while ($0 !~ /^\* /) {
-                  if ($0 !~ /^$/ && $0 !~ /Begin development/) {
-                    print
-                  }
+                while ($0 !~ /^\\* /) {
                   getline
                 }
                 print_notes()
