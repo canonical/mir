@@ -22,7 +22,6 @@
 #include <mir/graphics/platform.h>
 
 #include <EGL/egl.h>
-#include <wayland-server-core.h>
 
 #include <memory>
 
@@ -82,7 +81,6 @@ private:
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
-    std::unique_ptr<LinuxDmaBuf> dmabuf_extension;
     std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 

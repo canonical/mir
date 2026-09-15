@@ -22,7 +22,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 
 using namespace testing;
 

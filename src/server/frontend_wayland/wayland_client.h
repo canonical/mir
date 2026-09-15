@@ -42,28 +42,28 @@ namespace frontend
 /// so that serials stay unique across the whole frontend.
 using WaylandSerialSource = std::shared_ptr<std::atomic<uint32_t>>;
 
-/// A concrete `mir::wayland_rs::Client` backed by a Mir session.
+/// A concrete `mir::wayland::Client` backed by a Mir session.
 ///
-/// A `mir::wayland_rs::RawWlClient` gets created by the rust side whenever
+/// A `mir::wayland::RawWlClient` gets created by the rust side whenever
 /// a new Wayland client connects. C++ is notified via
-/// `mir::wayland_rs::WaylandServerNotificationHandler` when this happens.
+/// `mir::wayland::WaylandServerNotificationHandler` when this happens.
 /// The concrete implementation of the notification handler registers a
-/// concrete implementation of `mir::wayland_rs::Client` in the
-/// `mir::wayland_rs::WaylandClientRegistry` whenever that happens.
+/// concrete implementation of `mir::wayland::Client` in the
+/// `mir::wayland::WaylandClientRegistry` whenever that happens.
 /// Afterward, the client instance is provided to every Wayland object that is
 /// associated with it.
-class WaylandClient : public wayland_rs::Client
+class WaylandClient : public wayland::Client
 {
 public:
     WaylandClient(
-        wayland_rs::RawWlClient raw_client,
+        wayland::RawWlClient raw_client,
         std::shared_ptr<scene::Session> session,
         std::shared_ptr<shell::Shell> shell,
         WaylandSerialSource serial_source);
 
     ~WaylandClient() override;
 
-    auto raw_client() const -> wayland_rs::RawWlClient const& override;
+    auto raw_client() const -> wayland::RawWlClient const& override;
     auto is_being_destroyed() const -> bool override;
     auto client_session() const -> std::shared_ptr<scene::Session> override;
     auto next_serial(std::shared_ptr<MirEvent const> event) -> uint32_t override;
@@ -77,7 +77,7 @@ public:
     void mark_being_destroyed();
 
 private:
-    wayland_rs::RawWlClient const raw;
+    wayland::RawWlClient const raw;
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<shell::Shell> const shell;
     WaylandSerialSource const serial_source;

@@ -17,9 +17,8 @@
 #ifndef MIR_FRONTEND_WL_POINTER_H
 #define MIR_FRONTEND_WL_POINTER_H
 
-
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
 #include <mir/geometry/point.h>
 #include <mir/geometry/displacement.h>
 #include <mir/events/scroll_axis.h>
@@ -40,6 +39,7 @@ namespace wayland
 {
 class RelativePointerV1;
 class Client;
+class PointerMiddleware;
 }
 
 class Executor;
@@ -65,7 +65,10 @@ class WlPointer : public wayland::Pointer, private CommitHandler
 public:
     static auto linux_button_to_mir_button(int linux_button) -> std::optional<MirPointerButtons>;
 
-    WlPointer(wl_resource* new_resource);
+    WlPointer(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::PointerMiddleware> instance,
+        uint32_t object_id);
 
     ~WlPointer();
 
@@ -100,14 +103,14 @@ private:
     ///@{
     void set_cursor(
         uint32_t serial,
-        std::optional<wl_resource*> const& surface,
+        std::optional<wayland::Weak<wayland::Surface>> const& surface,
         int32_t hotspot_x,
         int32_t hotspot_y) override;
     ///@}
 
     wayland::Weak<WlSurface> surface_under_cursor;
     std::optional<uint32_t> enter_serial;
-    wayland::DestroyListenerId destroy_listener_id; ///< ID of this pointer's destroy listener on surface_under_cursor
+    uint64_t destroy_listener_id{}; ///< ID of this pointer's destroy listener on surface_under_cursor
     bool needs_frame{false};
     MirPointerButtons current_buttons{0};
     std::optional<geometry::PointF> current_position;

@@ -17,10 +17,9 @@
 #ifndef MIR_FRONTEND_WL_KEYBOARD_H
 #define MIR_FRONTEND_WL_KEYBOARD_H
 
-#include <mir/wayland/weak.h>
-
-#include "wayland_wrapper.h"
 #include "keyboard_helper.h"
+#include "wayland.h"
+#include "weak.h"
 #include "wl_seat.h"
 
 namespace mir
@@ -28,6 +27,7 @@ namespace mir
 namespace wayland
 {
 class Client;
+class KeyboardMiddleware;
 }
 namespace frontend
 {
@@ -38,7 +38,11 @@ class WlKeyboard
       private KeyboardCallbacks
 {
 public:
-    WlKeyboard(wl_resource* new_resource, WlSeat& seat);
+    WlKeyboard(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::KeyboardMiddleware> instance,
+        uint32_t object_id,
+        WlSeat& seat);
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
     void focus_on(WlSurface* surface);

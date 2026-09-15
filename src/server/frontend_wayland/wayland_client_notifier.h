@@ -28,7 +28,7 @@ namespace mir
 namespace scene { class Session; }
 namespace shell { class Shell; }
 
-namespace wayland_rs
+namespace wayland
 {
 class Client;
 class WaylandClientRegistry;
@@ -41,31 +41,31 @@ class SessionAuthorizer;
 /// Bridges the Rust server's client lifecycle notifications onto Mir.
 ///
 /// All callbacks run on the Wayland event-loop thread.
-class WaylandClientNotifier : public wayland_rs::WaylandServerNotificationHandler
+class WaylandClientNotifier : public wayland::WaylandServerNotificationHandler
 {
 public:
     WaylandClientNotifier(
         std::shared_ptr<shell::Shell> const& shell,
         std::shared_ptr<SessionAuthorizer> const& session_authorizer,
-        wayland_rs::WaylandClientRegistry& registry,
+        wayland::WaylandClientRegistry& registry,
         WaylandSerialSource const& serial_source,
         std::function<void(
             int socket_fd,
             std::shared_ptr<scene::Session> const& session,
-            std::shared_ptr<wayland_rs::Client> const& client)>&& on_client_connected);
+            std::shared_ptr<wayland::Client> const& client)>&& on_client_connected);
 
-    auto client_added(rust::Box<wayland_rs::WaylandClient> wayland_client) -> void override;
-    auto client_removed(rust::Box<wayland_rs::WaylandClientId> id) -> void override;
+    auto client_added(rust::Box<wayland::WaylandClient> wayland_client) -> void override;
+    auto client_removed(rust::Box<wayland::WaylandClientId> id) -> void override;
 
 private:
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<SessionAuthorizer> const session_authorizer;
-    wayland_rs::WaylandClientRegistry& registry;
+    wayland::WaylandClientRegistry& registry;
     WaylandSerialSource const serial_source;
     std::function<void(
         int socket_fd,
         std::shared_ptr<scene::Session> const& session,
-        std::shared_ptr<wayland_rs::Client> const& client)> const on_client_connected;
+        std::shared_ptr<wayland::Client> const& client)> const on_client_connected;
 };
 }
 }

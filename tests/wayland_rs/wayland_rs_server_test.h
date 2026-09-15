@@ -37,7 +37,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 namespace test
 {

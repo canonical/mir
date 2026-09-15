@@ -17,10 +17,10 @@
 #ifndef MIR_FRONTEND_INPUT_METHOD_GRAB_KEYBOARD_V2_H
 #define MIR_FRONTEND_INPUT_METHOD_GRAB_KEYBOARD_V2_H
 
-#include <mir/wayland/weak.h>
-
-#include "input-method-unstable-v2_wrapper.h"
+#include "input_method_unstable_v2.h"
 #include "keyboard_helper.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -29,25 +29,22 @@ namespace input
 {
 class CompositeEventFilter;
 }
-namespace wayland
-{
-class Client;
-}
 namespace frontend
 {
 class WlSeat;
-class WlClient;
 
-/// A keyboard that sends all key events to it's client without ever entering a surface
+/// A keyboard that sends all key events to its client without ever entering a surface
 class InputMethodGrabKeyboardV2
     : public wayland::InputMethodKeyboardGrabV2,
       public KeyboardCallbacks
 {
 public:
     InputMethodGrabKeyboardV2(
-        wl_resource* resource,
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::InputMethodKeyboardGrabV2Middleware> instance,
+        uint32_t object_id,
         WlSeat& seat,
-        std::shared_ptr<Executor> const& wayland_executor,
+        std::shared_ptr<Executor> wayland_executor,
         input::CompositeEventFilter& event_filter);
 
 private:
@@ -55,7 +52,6 @@ private:
 
     std::shared_ptr<Handler> const handler;
     std::shared_ptr<KeyboardHelper> const helper;
-    wayland::Weak<wayland::Client> wl_client;
 
     /// KeyboardImpl overrides
     /// @{

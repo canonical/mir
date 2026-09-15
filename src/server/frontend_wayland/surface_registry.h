@@ -17,12 +17,13 @@
 #ifndef MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 #define MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 
+#include "weak.h"
+
 #include <cstdint>
 #include <map>
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <utility>
 
 namespace mir
 {
@@ -34,10 +35,6 @@ class Surface;
 namespace input
 {
 class Surface;
-}
-namespace wayland
-{
-template <typename T> class Weak;
 }
 namespace frontend
 {

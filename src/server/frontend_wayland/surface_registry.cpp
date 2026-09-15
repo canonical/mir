@@ -17,7 +17,7 @@
 #include "surface_registry.h"
 #include "wl_surface.h"
 
-#include <mir/wayland/weak.h>
+#include "weak.h"
 
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
@@ -30,7 +30,7 @@ void mf::SurfaceRegistry::add_surface(
     if (wl_surf)
     {
         auto& surface = wl_surf.value();
-        ObjectKey const key{surface.session.get(), wl_resource_get_id(surface.raw_resource())};
+        ObjectKey const key{surface.session.get(), surface.object_id()};
         wayland_surface_by_object[key] = wl_surf;
         object_key_by_scene_surface[surf.get()] = key;
     }

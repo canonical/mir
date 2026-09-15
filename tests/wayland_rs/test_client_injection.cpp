@@ -39,7 +39,7 @@
 #include <utility>
 #include <vector>
 
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 
 namespace
 {

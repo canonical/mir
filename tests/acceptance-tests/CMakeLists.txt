@@ -1,5 +1,7 @@
 include(CMakeDependentOption)
 
+# WLCS integration module: exercises the ported WLCS harness
+# (test_wlcs_display_server) against the Rust Wayland frontend.
 if (MIR_ENABLE_WLCS_TESTS)
   add_subdirectory(wayland)
 endif()
@@ -64,5 +66,4 @@ CMAKE_DEPENDENT_OPTION(
 
 if (MIR_RUN_ACCEPTANCE_TESTS)
   mir_discover_tests_with_fd_leak_detection(mir_acceptance_tests)
-  add_subdirectory(wayland-generator)
 endif (MIR_RUN_ACCEPTANCE_TESTS)

@@ -34,7 +34,7 @@
 #include <optional>
 
 namespace mf = mir::frontend;
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 namespace ms = mir::scene;
 namespace mev = mir::events;
 namespace mtd = mir::test::doubles;

@@ -15,7 +15,6 @@
  */
 
 #include "input_method_common.h"
-#include "text-input-unstable-v3_wrapper.h"
 #include <boost/throw_exception.hpp>
 
 namespace ms = mir::scene;

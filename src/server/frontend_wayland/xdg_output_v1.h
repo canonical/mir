@@ -17,16 +17,28 @@
 #ifndef MIR_FRONTEND_XDG_OUTPUT_V1_H
 #define MIR_FRONTEND_XDG_OUTPUT_V1_H
 
-#include "xdg-output-unstable-v1_wrapper.h"
-#include <memory>
+#include "xdg_output_unstable_v1.h"
 
-struct wl_display;
+#include <memory>
 
 namespace mir
 {
 namespace frontend
 {
-auto create_xdg_output_manager_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgOutputManagerV1::Global>;
+class XdgOutputManagerV1 : public wayland::XdgOutputManagerV1
+{
+public:
+    XdgOutputManagerV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::XdgOutputManagerV1Middleware> instance,
+        uint32_t object_id);
+
+private:
+    auto get_xdg_output(
+        wayland::Weak<wayland::Output> const& output,
+        rust::Box<wayland::XdgOutputV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::XdgOutputV1> override;
+};
 }
 }
 
