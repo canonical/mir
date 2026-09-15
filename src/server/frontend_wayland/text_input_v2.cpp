@@ -304,7 +304,10 @@ void mf::TextInputV2::send_text_change(ms::TextInputChange const& change)
     }
     if (change.modifier_map)
     {
-        send_modifiers_map_event(change.modifier_map.value().data());
+        // The generated send_*_event functions always take non-const wl_array* regardless of
+        // direction, so casting away const here is required and safe: nothing mutates the array.
+        auto const* modifier_map = static_cast<wl_array const*>(change.modifier_map.value());
+        send_modifiers_map_event(const_cast<wl_array*>(modifier_map)); // NOLINT(cppcoreguidelines-pro-type-const-cast)
     }
     if (change.direction)
     {
