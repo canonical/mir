@@ -276,7 +276,7 @@ void mf::LayerShellV1::Instance::get_layer_surface(
     }
 
     auto* const wl_surface = WlSurface::from(surface);
-    if (wl_surface->has_role())
+    if (!wl_surface->can_set_role<LayerSurfaceV1>())
     {
         throw wayland::ProtocolError{
             resource,

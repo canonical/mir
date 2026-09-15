@@ -248,7 +248,7 @@ void mf::WlDataDevice::start_drag(
     {
         auto const icon_surface = WlSurface::from(icon.value());
 
-        if (icon_surface->has_role())
+        if (!icon_surface->can_set_role<DragIconSurface>())
         {
             throw mw::ProtocolError{resource, Error::role, "Drag-and-drop icon surface already has a role"};
         }

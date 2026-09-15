@@ -483,18 +483,13 @@ void mf::WlPointer::set_cursor(
             // cursor surface is handled above. Per the Wayland spec, giving a surface
             // the cursor role again is allowed, so only a surface with a *different*
             // (non-cursor) role must raise a protocol error.
-            auto const existing_role = wl_surface->current_role();
-            if (existing_role && !dynamic_cast<CursorSurfaceRole*>(existing_role))
+            if (!wl_surface->can_set_role<CursorSurfaceRole>())
             {
                 throw mw::ProtocolError{
                     resource,
                     Error::role,
                     "Surface already has a non-cursor role"};
             }
-            // The surface may already hold a cursor role from a previous (or another
-            // pointer's) cursor; clear it so the new cursor can take the role.
-            if (existing_role)
-                wl_surface->clear_role();
             cursor.reset(); // clean up old cursor before creating new one
             cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot, commit_handler);
             if (surface_under_cursor)

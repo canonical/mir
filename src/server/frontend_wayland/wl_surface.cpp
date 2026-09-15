@@ -125,7 +125,8 @@ mf::WlSurface::WlSurface(
         wayland_executor{wayland_executor},
         frame_callback_executor{frame_callback_executor},
         null_role{this},
-        role{&null_role}
+        role{&null_role},
+        previous_role_type{&typeid(null_role)}
 {
 }
 
@@ -193,14 +194,21 @@ void mf::WlSurface::on_scene_surface_created(SceneSurfaceCreatedCallback&& callb
 
 void mf::WlSurface::set_role(WlSurfaceRole* role_)
 {
-    if (role != &null_role)
-        BOOST_THROW_EXCEPTION(std::runtime_error("Surface already has a role"));
+    // It is valid to re-assign the same role in most wayland protocols.
+    if (!can_set_role_type(&typeid(*role_)))
+        BOOST_THROW_EXCEPTION(std::runtime_error("Surface already has a different role"));
     role = role_;
+    previous_role_type = &typeid(*role_);
 }
 
 void mf::WlSurface::clear_role()
 {
     role = &null_role;
+}
+
+auto mf::WlSurface::can_set_role_type(std::type_info const* role_) const -> bool
+{
+    return previous_role_type == &typeid(null_role) || *previous_role_type == *role_;
 }
 
 void mf::WlSurface::set_pending_offset(std::optional<geom::Displacement> const& offset)

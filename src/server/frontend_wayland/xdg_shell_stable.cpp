@@ -154,6 +154,8 @@ void mf::XdgShellStable::Instance::create_positioner(wl_resource* new_positioner
 void mf::XdgShellStable::Instance::get_xdg_surface(wl_resource* new_shell_surface, wl_resource* surface)
 {
     auto* const wl_surface = WlSurface::from(surface);
+    // `xdg_shell` spec states any existing role is invalid:
+    // It is illegal to create an xdg_surface for a wl_surface which already has an assigned role...
     if (wl_surface->has_role())
     {
         throw mw::ProtocolError{

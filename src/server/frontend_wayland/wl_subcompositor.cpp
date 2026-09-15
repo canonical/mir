@@ -72,7 +72,11 @@ void mf::WlSubcompositorInstance::get_subsurface(
     }
     WlSurface* child_surface = WlSurface::from(surface);
     WlSurface* parent_surface = WlSurface::from(parent);
-    if (child_surface->has_role())
+    // From the spec:
+    //   The to-be sub-surface must not already have another role, and it must not have an existing wl_subsurface object.
+    // - `can_set_role`: child surface hasn't had a role, or was `wl_subsurface`
+    // - `has_role`: if child surface has a role, it's an existing `wl_subsurface` object
+    if (!child_surface->can_set_role<WlSubsurface>() || child_surface->has_role())
     {
         throw wayland::ProtocolError{
             resource,
