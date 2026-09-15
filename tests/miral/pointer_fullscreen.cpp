@@ -38,7 +38,7 @@
 
 #include <algorithm>
 #include <condition_variable>
-#include <cstring>
+#include <string_view>
 #include <mutex>
 #include <vector>
 
@@ -276,14 +276,14 @@ private:
     {
         auto* const self = static_cast<PointerClient*>(data);
 
-        if (std::strcmp(interface, wl_compositor_interface.name) == 0)
+        if (std::string_view(interface) == wl_compositor_interface.name)
             self->compositor = static_cast<wl_compositor*>(wl_registry_bind(registry, id, &wl_compositor_interface, 1));
-        else if (std::strcmp(interface, wl_shm_interface.name) == 0)
+        else if (std::string_view(interface) == wl_shm_interface.name)
             self->shm = static_cast<wl_shm*>(wl_registry_bind(registry, id, &wl_shm_interface, 1));
-        else if (std::strcmp(interface, wl_seat_interface.name) == 0)
+        else if (std::string_view(interface) == wl_seat_interface.name)
             self->seat =
                 static_cast<wl_seat*>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 5u)));
-        else if (std::strcmp(interface, mir::wayland::xdg_wm_base_interface_data.name) == 0)
+        else if (std::string_view(interface) == mir::wayland::xdg_wm_base_interface_data.name)
             self->wm_base =
                 static_cast<wl_proxy*>(wl_registry_bind(registry, id, &mir::wayland::xdg_wm_base_interface_data, 1));
     }
