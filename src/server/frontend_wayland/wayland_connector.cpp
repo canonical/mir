@@ -299,7 +299,7 @@ mf::WaylandConnector::WaylandConnector(
         std::make_shared<FrameExecutor>(*main_loop),
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
-    auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
+    surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
     auto const action_group_manager =
         std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
@@ -575,9 +575,26 @@ int mf::WaylandConnector::client_socket_fd(
     return socket_fd[client];
 }
 
-void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
+void mf::WaylandConnector::run_on_wayland_display(std::function<void(Executor&)> const& functor)
 {
-    executor->spawn([display_ref = display.get(), functor]() { functor(display_ref); });
+    executor->spawn([executor = executor, functor]() { functor(*executor); });
+}
+
+void mf::WaylandConnector::create_wayland_client(
+    Fd const& client_fd,
+    std::function<void(wl_client*)> const& callback)
+{
+    executor->spawn(
+        [display_ref = display.get(), client_fd, callback]()
+        {
+            callback(wl_client_create(display_ref, client_fd));
+        });
+}
+
+auto mf::WaylandConnector::scene_surface_for(scene::Session const& session, uint32_t id) const
+    -> std::shared_ptr<scene::Surface>
+{
+    return surface_registry->scene_surface_for(session, id);
 }
 
 void mf::WaylandConnector::on_surface_created(
