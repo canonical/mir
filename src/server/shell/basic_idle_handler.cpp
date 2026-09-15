@@ -268,12 +268,12 @@ void  msh::BasicIdleHandler::on_session_lock()
 {
     std::lock_guard lock{mutex};
     session_locked = true;
-    idle_hub->set_idle_inhibition_enabled(false);
     if (current_off_timeout_when_locked != current_off_timeout)
     {
         clear_observers(lock);
         register_observers(lock);
     }
+    idle_hub->set_idle_inhibition_enabled(false);
 }
 
 void  msh::BasicIdleHandler::on_session_unlock()
