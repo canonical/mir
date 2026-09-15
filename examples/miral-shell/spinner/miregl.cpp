@@ -34,7 +34,7 @@ public:
     void output_ready(WaylandOutput const* output) override;
     void output_gone(WaylandOutput const* output) override;
 
-    EGLSurface create_eglsurface(wl_surface* surface, int width, int height);
+    EGLSurface create_eglsurface(wl_egl_window* eglwindow);
     void make_current(EGLSurface eglsurface) const;
     void swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface) const;
     void destroy_surface(EGLSurface eglsurface) const;
@@ -79,17 +79,43 @@ MirEglSurface::MirEglSurface(
 {
     set_fullscreen(wl_output);
     commit();
-    mir_egl_app->roundtrip(); // get initial configure
 
-    eglsurface = mir_egl_app->create_eglsurface(
+    // The compositor delivers the fullscreen size via a configure event that is
+    // not guaranteed to arrive within a single roundtrip (it is driven by
+    // asynchronous window management). Wait for it so the EGL window is created at
+    // the correct size rather than the default; otherwise the splash would render
+    // in a small top-left region of the output.
+    mir_egl_app->roundtrip();
+    while (!size_configured)
+    {
+        if (wl_display_dispatch(mir_egl_app->display()) < 0)
+            break;
+    }
+
+    eglwindow = wl_egl_window_create(
         surface(),
         configured_size().width.as_int(),
         configured_size().height.as_int());
+
+    eglsurface = mir_egl_app->create_eglsurface(eglwindow);
 }
 
 MirEglSurface::~MirEglSurface()
 {
     mir_egl_app->destroy_surface(eglsurface);
+}
+
+void MirEglSurface::configured()
+{
+    size_configured = true;
+
+    // Handle later size changes (e.g. output reconfiguration) by resizing the EGL
+    // window so subsequent paints continue to fill the output.
+    if (eglwindow)
+    {
+        auto const size = configured_size();
+        wl_egl_window_resize(eglwindow, size.width.as_int(), size.height.as_int(), 0, 0);
+    }
 }
 
 void MirEglSurface::egl_make_current()
@@ -174,12 +200,12 @@ void MirEglApp::output_gone(WaylandOutput const* output)
     outputs.erase(output->wl());
 }
 
-EGLSurface MirEglApp::create_eglsurface(wl_surface* surface, int width, int height)
+EGLSurface MirEglApp::create_eglsurface(wl_egl_window* eglwindow)
 {
     auto const eglsurface = eglCreateWindowSurface(
         egldisplay,
         eglconfig,
-        (EGLNativeWindowType)wl_egl_window_create(surface, width, height), nullptr);
+        (EGLNativeWindowType)eglwindow, nullptr);
 
     if (eglsurface == EGL_NO_SURFACE)
         throw std::runtime_error("eglCreateWindowSurface failed");
