@@ -171,7 +171,8 @@ void ms::BasicIdleHub::register_interest(
         // In case this changes the first timeout
         state->first_timeout = state->timeouts.begin()->first;
         // Check if the current alarm will overshoot the new timeout (or there isn't an alarm at all)
-        if (state->wake_lock.expired() && (!state->alarm_timeout || state->alarm_timeout.value() > timeout))
+        if ((!state->idle_inhibition_enabled || state->wake_lock.expired()) &&
+            (!state->alarm_timeout || state->alarm_timeout.value() > timeout))
         {
             // The alarm will not be fired before we hit our timeout
             auto const current_time = clock->now() - state->poke_time;
@@ -216,7 +217,7 @@ void ms::BasicIdleHub::unregister_interest(IdleStateObserver const& observer)
 
 void ms::BasicIdleHub::poke_locked(State& state)
 {
-    if (!state.wake_lock.expired())
+    if (state.idle_inhibition_enabled && !state.wake_lock.expired())
     {
         return;
     }
@@ -281,20 +282,17 @@ void ms::BasicIdleHub::schedule_alarm(State& state, time::Timestamp current_time
 
 struct ms::IdleHub::WakeLock
 {
-    WakeLock(std::weak_ptr<IdleHub> idle_hub) : idle_hub{std::move(idle_hub)}
+    explicit WakeLock(std::function<void()> on_release) : on_release{std::move(on_release)}
     {
     }
 
     ~WakeLock()
     {
-        if (auto const shared_hub = idle_hub.lock())
-        {
-            shared_hub->poke();
-        }
+        on_release();
     }
 
 private:
-    std::weak_ptr<IdleHub> const idle_hub;
+    std::function<void()> const on_release;
 };
 
 auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
@@ -307,9 +305,54 @@ auto ms::BasicIdleHub::inhibit_idle() -> std::shared_ptr<WakeLock>
     else // wake_lock is not being held
     {
         poke_locked(*state);
-        auto result = std::make_shared<WakeLock>(shared_from_this());
-        alarm->cancel();
+        auto const weak_self = weak_from_this();
+        auto result = std::make_shared<WakeLock>([weak_self]
+            {
+                if (auto const self = weak_self.lock())
+                {
+                    self->wake_lock_released();
+                }
+            });
+        if (state->idle_inhibition_enabled)
+        {
+            alarm->cancel();
+        }
         state->wake_lock = result;
         return result;
+    }
+}
+
+void ms::BasicIdleHub::set_idle_inhibition_enabled(bool enabled)
+{
+    auto state = synchronised_state.lock();
+    if (state->idle_inhibition_enabled == enabled)
+    {
+        return;
+    }
+
+    if (!enabled)
+    {
+        state->idle_inhibition_enabled = false;
+        if (!state->wake_lock.expired())
+        {
+            poke_locked(*state);
+        }
+        return;
+    }
+
+    if (!state->wake_lock.expired())
+    {
+        poke_locked(*state);
+        alarm->cancel();
+    }
+    state->idle_inhibition_enabled = true;
+}
+
+void ms::BasicIdleHub::wake_lock_released()
+{
+    auto state = synchronised_state.lock();
+    if (state->idle_inhibition_enabled)
+    {
+        poke_locked(*state);
     }
 }
