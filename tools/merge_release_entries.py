@@ -66,18 +66,11 @@ def split_entries(path_key, text):
     preamble from the first entry) is discarded, not treated as an entry.
     """
     pattern = ENTRY_START[path_key]
-    entries = []
-    current = []
-    for line in text.split("\n"):
-        if pattern.match(line):
-            if current:
-                entries.append("\n".join(current).strip("\n"))
-            current = [line]
-        elif current:
-            current.append(line)
-    if current:
-        entries.append("\n".join(current).strip("\n"))
-    return entries
+    starts = [match.start() for match in pattern.finditer(text)]
+    return [
+        text[start:end].strip("\n")
+        for start, end in zip(starts, [*starts[1:], len(text)])
+    ]
 
 
 def merge_entries(base_entries, ours_entries, theirs_entries):
