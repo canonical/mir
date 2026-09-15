@@ -73,13 +73,6 @@ target_link_libraries(mir-public-test-framework
     PkgConfig::LIBINPUT
 )
 
-set_property(
-    SOURCE udev_environment.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
-# Umockdev uses glib, which uses the deprecated "register" storage qualifier
-add_compile_definitions($<$<COMPILE_LANGUAGE:CXX>:register=>)
-
 add_library(mir-protected-test-framework OBJECT
 
   fake_input_server_configuration.cpp

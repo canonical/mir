@@ -1,0 +1,1 @@
+typedef int mir_nonempty_translation_unit;

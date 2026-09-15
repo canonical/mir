@@ -20,6 +20,7 @@ add_library(miral-internal STATIC
     live_config_overrides_list_builder.cpp    live_config_overrides_list_builder.h
     override_watcher.cpp                 override_watcher.h
     render_scene_into_surface.cpp        render_scene_into_surface.h
+    software_buffer_pool.cpp             software_buffer_pool.h
     mru_window_list.cpp                  mru_window_list.h
     open_desktop_entry.cpp               open_desktop_entry.h
     static_display_config.cpp            static_display_config.h
@@ -37,6 +38,8 @@ add_library(miral-internal STATIC
     live_config_ini_file_common.cpp      live_config_ini_file_common.h
     live_config_watcher.cpp               live_config_watcher.h
     version_compare.cpp                   version_compare.h
+    magnifier_layout.cpp                 magnifier_layout.h magnifier_geometry.h
+    magnifier_controls.cpp               magnifier_controls.h
 )
 
 # Already implied by the linker's symbol version script, but can avoid accidents
@@ -44,13 +47,6 @@ set_target_properties(miral-internal
     PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS}  -fvisibility=hidden")
 
 set_source_files_properties(xcursor.c PROPERTIES COMPILE_DEFINITIONS _GNU_SOURCE)
-
-check_cxx_compiler_flag(-Wstringop-truncation HAS_W_STRINGOP_TRUNCATION)
-if (HAS_W_STRINGOP_TRUNCATION)
-    set_source_files_properties(xcursor.c PROPERTIES
-        COMPILE_FLAGS "-Wno-error=stringop-truncation"
-    )
-endif()
 
 set(PROTOCOLS_DIR ${CMAKE_SOURCE_DIR}/wayland-protocols)
 set(GENERATED_DIR ${CMAKE_BINARY_DIR}/miral-generated)
@@ -167,18 +163,6 @@ add_library(miral-external OBJECT
 add_library(miral SHARED
     ${miral_include}/miral/runner.h # Syntactically, we need something here
 )
-
-check_cxx_compiler_flag(-Wno-attribute-alias HAS_W_NO_ATTRIBUTE_ALIAS)
-if(HAS_W_NO_ATTRIBUTE_ALIAS)
-    set_source_files_properties(
-            canonical_window_manager.cpp
-            internal_client.cpp
-            set_window_management_policy.cpp
-            window_info.cpp
-            window_management_policy.cpp
-            window_manager_tools.cpp
-            PROPERTIES COMPILE_FLAGS "${CMAKE_CXXFLAGS} -Wno-attribute-alias")
-endif()
 
 target_include_directories(miral-internal
     PUBLIC

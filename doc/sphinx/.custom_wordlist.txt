@@ -54,17 +54,20 @@ dispatchable
 dispmanx
 Dispmanx
 DispmanX
+distro
 distros
 dlopen
 dma
 dmabuf
 don'ts
 Doxygen
-drm
 DRM
+DRMFormat
+drm
 DSO
 DSOs
 EGL
+EGLStream
 EGL_WL_bind_wayland_display
 eglinfo
 egmde
@@ -77,6 +80,7 @@ Etnaviv
 evdev
 evdi
 Fedora
+fd
 filesystem
 FloatingWindowManagerPolicy
 Frame
@@ -186,6 +190,7 @@ postincrement
 ppa
 PPAs
 pre
+predecrement
 preprocessor
 predecrement
 preincrement
@@ -198,6 +203,7 @@ Qtmir
 radeon
 raspberrypi
 rc
+remediations
 recomposition
 remediations
 renderables
