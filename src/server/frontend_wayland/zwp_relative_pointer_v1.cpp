@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "relative_pointer_unstable_v1.h"
+#include "zwp_relative_pointer_v1.h"
 #include "wl_pointer.h"
 
 #include <mir/scene/surface.h>

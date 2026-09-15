@@ -16,7 +16,7 @@
 
 #include "wl_surface.h"
 #include "output_manager.h"
-#include "fractional_scale_v1.h"
+#include "wp_fractional_scale_v1.h"
 #include <mir/wayland/weak.h>
 #include "viewporter_wrapper.h"
 #include "wayland_connector.h"
