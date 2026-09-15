@@ -143,6 +143,15 @@ TEST_F(BasicIdleHandler, does_not_register_observers_by_default)
         mt::fake_shared(session_lock)};
 }
 
+TEST_F(BasicIdleHandler, idle_inhibition_is_disabled_while_session_is_locked)
+{
+    EXPECT_CALL(idle_hub, set_idle_inhibition_enabled(false));
+    session_lock.lock();
+
+    EXPECT_CALL(idle_hub, set_idle_inhibition_enabled(true));
+    session_lock.unlock();
+}
+
 TEST_F(BasicIdleHandler, off_timeout_when_locked_is_used_when_session_is_locked)
 {
     handler.set_display_off_timeout(30s);
