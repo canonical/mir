@@ -36,6 +36,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include <typeinfo>
 
 namespace mir
 {
@@ -135,6 +136,12 @@ public:
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
     bool synchronized() const;
+    /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
+    /// drag-and-drop icon, or a window role such as xdg_toplevel). Used to raise the
+    /// appropriate protocol error when a client tries to assign a second role.
+    bool has_role() const { return role != &null_role; }
+    template<typename Role>
+    auto can_set_role() const -> bool { return can_set_role_type(&typeid(Role)); }
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
@@ -202,6 +209,7 @@ private:
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
+    std::type_info const* previous_role_type;
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
     ptrdiff_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
     /* We might need to resubmit the current buffer, but with different metadata
@@ -241,6 +249,7 @@ private:
     wayland::Weak<SyncTimeline> sync_timeline;
 
     void send_frame_callbacks(CallbackList& list);
+    auto can_set_role_type(std::type_info const* role_) const -> bool;
 
     void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;

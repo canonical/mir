@@ -66,16 +66,27 @@ void mf::WlSubcompositorInstance::get_subsurface(
     if (surface == parent)
     {
         throw wayland::ProtocolError{
-            new_subsurface,
+            resource,
             mw::Subcompositor::Error::bad_parent,
             "Surface cannot be its own parent"};
     }
     WlSurface* child_surface = WlSurface::from(surface);
     WlSurface* parent_surface = WlSurface::from(parent);
+    // From the spec:
+    //   The to-be sub-surface must not already have another role, and it must not have an existing wl_subsurface object.
+    // - `can_set_role`: child surface hasn't had a role, or was `wl_subsurface`
+    // - `has_role`: if child surface has a role, it's an existing `wl_subsurface` object
+    if (!child_surface->can_set_role<WlSubsurface>() || child_surface->has_role())
+    {
+        throw wayland::ProtocolError{
+            resource,
+            mw::Subcompositor::Error::bad_surface,
+            "Surface already has a role"};
+    }
     if (child_surface->has_subsurface_with_surface(parent_surface))
     {
         throw wayland::ProtocolError{
-            new_subsurface,
+            resource,
             mw::Subcompositor::Error::bad_parent,
             "Parent surface cannot be a descendant of the child surface"};
     }
