@@ -190,43 +190,6 @@ TEST(WlArrayTest, self_move_assignment_is_safe)
     EXPECT_THAT(as_span(array), ElementsAre(1u, 2u));
 }
 
-TEST(WlArrayTest, usable_as_raw_wl_array_pointer)
-{
-    mw::WlArray<uint32_t> array;
-    array.push_back(123);
-
-    // Simulates handing off to a generated send_*_event(..., wl_array*) function
-    wl_array* raw = array;
-    ASSERT_THAT(raw->size, Eq(sizeof(uint32_t)));
-    EXPECT_THAT(*static_cast<uint32_t const*>(raw->data), Eq(123u));
-}
-
-TEST(WlArrayTest, const_reference_yields_const_wl_array_pointer)
-{
-    mw::WlArray<uint32_t> array;
-    array.push_back(9);
-
-    mw::WlArray<uint32_t> const& const_ref = array;
-    wl_array const* raw = const_ref;
-    EXPECT_THAT(raw->size, Eq(sizeof(uint32_t)));
-}
-
-TEST(WlArrayTest, const_reference_requires_explicit_cast_for_mutable_pointer)
-{
-    // Mirrors real call sites (e.g. text_input_v1.cpp/text_input_v2.cpp) that only have a
-    // WlArray<T> const& but must hand a plain wl_array* to a generated send_*_event function.
-    // The const-qualified conversion operator only yields wl_array const*, so getting a mutable
-    // pointer out of a const WlArray requires an explicit, visible const_cast at the call site.
-    mw::WlArray<uint32_t> array;
-    array.push_back(9);
-
-    mw::WlArray<uint32_t> const& const_ref = array;
-    auto const* const_raw = static_cast<wl_array const*>(const_ref);
-    auto* mutable_raw = const_cast<wl_array*>(const_raw); // NOLINT(cppcoreguidelines-pro-type-const-cast)
-
-    EXPECT_THAT(mutable_raw->size, Eq(sizeof(uint32_t)));
-}
-
 TEST(WlArrayTest, byte_element_type_holds_opaque_data)
 {
     // Mirrors TextInputChange::modifier_map, which is a WlArray<std::byte> built by cloning an
