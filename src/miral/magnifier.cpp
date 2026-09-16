@@ -293,6 +293,9 @@ public:
                 s->handles.for_each([&](Handle& handle, mmc::HandleKind kind)
                                     { handle.init(server, kind, capture_compositor_id); });
 
+                if (!s->follow_cursor)
+                    attach_observers(*s);
+
                 if (auto const surf = s->surface.lock(); surf && s->enabled)
                 {
                     if (!s->follow_cursor)
@@ -357,6 +360,7 @@ public:
         {
             if (!s->follow_cursor)
             {
+                attach_observers(*s);
                 place_freely(*s);
                 s->show_all_handles();
             }
@@ -443,6 +447,7 @@ public:
             return;
 
         s->follow_cursor = false;
+        attach_observers(*s);
 
         if (auto const surf = s->surface.lock(); surf && s->enabled)
         {
@@ -467,6 +472,13 @@ private:
         void update_bounds(std::shared_ptr<mg::DisplayConfiguration const> const& config);
         Self& self;
     };
+
+    /// Creates and registers concrete observers on each handle. Guards against
+    /// missing indicators.
+    void attach_observers(State& state)
+    {
+        state.handles.drag.attach_observer<DragHandleObserver>(this);
+    }
 
     void place(State& s)
     {
@@ -494,6 +506,11 @@ private:
 
     void place_freely(State& s)
     {
+        place_freely_at(s, s.free_placement_center());
+    }
+
+    void place_freely_at(State& s, geom::PointD center)
+    {
         if (!s.has_outputs())
         {
             s.applied_placement.reset();
@@ -502,11 +519,7 @@ private:
 
         s.apply_geometry(
             render_scene_into_surface,
-            mml::place_freely(
-                s.free_placement_center(),
-                s.requested_visual_size,
-                s.screen_bounds,
-                s.magnification));
+            mml::place_freely(center, s.requested_visual_size, s.screen_bounds, s.magnification));
     }
 
     /// Base for observers that turn a pointer/touch drag on a handle surface
@@ -618,6 +631,35 @@ private:
                 touch_drag_id.reset();
             }
         }
+    };
+
+    /// Moves the magnifier when its drag handle is dragged.
+    class DragHandleObserver : public HandleObserver
+    {
+    public:
+        using HandleObserver::HandleObserver;
+
+    protected:
+        void on_drag_start(State& s, geom::Point) override
+        {
+            auto const surf = s.surface.lock();
+            if (!surf)
+                return;
+
+            drag_start = s.freely_positioned_center;
+            s.user_positioned = true;
+        }
+
+        void on_drag_move(State& s, geom::Point point) override
+        {
+            auto const new_center = geom::PointD{
+                drag_start.x.as_value() + point.x.as_value() - grab_abs.dx.as_value(),
+                drag_start.y.as_value() + point.y.as_value() - grab_abs.dy.as_value()};
+
+            self->place_freely_at(s, new_center);
+        }
+
+        geom::PointD drag_start{};
     };
 
     class CursorObserver : public mi::CursorObserver
