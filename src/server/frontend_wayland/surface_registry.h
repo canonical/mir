@@ -17,12 +17,20 @@
 #ifndef MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 #define MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 
+#include <cstdint>
+#include <map>
 #include <memory>
 #include <optional>
 #include <unordered_map>
+#include <utility>
 
 namespace mir
 {
+namespace scene
+{
+class Session;
+class Surface;
+}
 namespace input
 {
 class Surface;
@@ -44,9 +52,20 @@ public:
     auto lookup_wayland_surface(std::shared_ptr<input::Surface const> const& surf)
         -> std::optional<wayland::Weak<frontend::WlSurface>>;
 
+    /// Resolve the `scene::Surface` for the Wayland surface identified by
+    /// (`session`, protocol object `id`), or nullptr if unknown. Intended for
+    /// test/integration tooling that needs to map a client-side surface to its
+    /// Mir scene surface.
+    auto scene_surface_for(scene::Session const& session, uint32_t id) const
+        -> std::shared_ptr<scene::Surface>;
+
 private:
     std::unordered_map<std::shared_ptr<input::Surface const>, wayland::Weak<frontend::WlSurface> const>
         scene_surface_to_wayland_surface;
+
+    using ObjectKey = std::pair<scene::Session const*, uint32_t>;
+    std::map<ObjectKey, wayland::Weak<frontend::WlSurface>> wayland_surface_by_object;
+    std::unordered_map<input::Surface const*, ObjectKey> object_key_by_scene_surface;
 };
 
 }
