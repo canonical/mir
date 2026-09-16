@@ -70,6 +70,9 @@ public:
     auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
     { return server().the_scene()->scene_elements_for(this).at(magnifier_index)->renderable(); }
 
+    auto magnifier_transform(float magnification) const
+    { return glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1.0f)); }
+
     auto magnifier_top_left() const -> geom::Point
     { return magnifier_renderable()->screen_position().top_left; }
 
@@ -537,6 +540,14 @@ struct MagnifierHandleTest : MagnifierTest
         flush_observer_callbacks();
     }
 
+    /// Emit a button-down then button-up at `pos` (a tap / click).
+    void click(geom::PointF pos)
+    {
+        send_pointer_events({
+            {mir_pointer_action_button_down, mir_pointer_button_primary, pos},
+            {mir_pointer_action_button_up, MirPointerButtons{0}, pos}});
+    }
+
     static auto touch_contact(MirTouchId id, MirTouchAction action, geom::PointF position) -> mev::TouchContact
     {
         return {id, action, mir_touch_tooltype_finger, position, 1.0f, 8.0f, 5.0f, 0.0f};
@@ -576,6 +587,21 @@ private:
         auto done = std::make_shared<mir::test::Signal>();
         mir::linearising_executor.spawn([done]() { done->raise(); });
         ASSERT_TRUE(done->wait_for(2s)) << "linearising_executor timed out";
+    }
+};
+
+struct MagnifierInitiallyDisabledHandleTest : MagnifierHandleTest
+{
+    MagnifierInitiallyDisabledHandleTest()
+    {
+        magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+        magnifier.enable(false).set_behavior(Magnifier::Behavior::freely_positioned);
+    }
+
+    void SetUp() override
+    {
+        MagnifierHandleTest::SetUp();
+        magnifier.enable(true);
     }
 };
 
@@ -691,6 +717,27 @@ TEST_F(MagnifierHandleTest, drag_handle_does_not_resume_after_multitouch_cancels
     EXPECT_THAT(magnifier_top_left().x, Eq(position_after_single_touch_drag.x + geom::DeltaX{20}));
 }
 
+TEST_F(MagnifierHandleTest, returns_to_last_free_position_after_behavior_toggle)
+{
+    auto const from = element_center(drag_handle_index);
+    drag(from, geom::PointF{from.x.as_value() + 100, from.y.as_value() + 50});
+    auto const last_free_position = magnifier_top_left();
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
+
+    EXPECT_THAT(magnifier_top_left(), Eq(last_free_position));
+}
+
+TEST_F(MagnifierInitiallyDisabledHandleTest, handles_are_functional_after_enabling)
+{
+    auto const before_zoom = magnifier_renderable()->transformation();
+    click(element_center(zoom_in_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before_zoom));
+}
+
+
 TEST_F(MagnifierHandleTest, drag_handle_keeps_magnifier_controls_within_screen_bounds)
 {
     auto from = element_center(drag_handle_index);
@@ -751,6 +798,67 @@ TEST_F(MagnifierHandleTest, clamps_handles_after_display_configuration_removes_t
         EXPECT_THAT(rect.top(), Ge(geom::Y{0}));
         EXPECT_THAT(rect.bottom(), Le(geom::Y{600}));
     }
+}
+
+TEST_F(MagnifierHandleTest, zoom_in_handle_increases_magnification)
+{
+    auto const before = magnifier_renderable()->transformation();
+
+    click(element_center(zoom_in_handle_index));
+
+    auto const expected = magnifier_transform(1.75f);
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Ne(before));
+}
+
+TEST_F(MagnifierHandleTest, zoom_handle_ignores_secondary_button_chords)
+{
+    auto const from = element_center(zoom_in_handle_index);
+
+    send_pointer_events({
+        {mir_pointer_action_button_down, mir_pointer_button_primary, from},
+        {
+            mir_pointer_action_button_down,
+            MirPointerButtons{mir_pointer_button_primary | mir_pointer_button_secondary},
+            from},
+        {mir_pointer_action_button_up, mir_pointer_button_primary, from},
+        {mir_pointer_action_button_up, MirPointerButtons{0}, from}});
+
+    auto const expected = magnifier_transform(1.75f);
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+}
+
+TEST_F(MagnifierHandleTest, zoom_out_handle_decreases_magnification)
+{
+    auto const initial = magnifier_renderable()->transformation();
+    click(element_center(zoom_in_handle_index));
+    ASSERT_THAT(magnifier_renderable()->transformation(), Ne(initial));
+
+    click(element_center(zoom_out_handle_index));
+
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(initial));
+}
+
+TEST_F(MagnifierHandleTest, zoom_out_handle_clamps_at_minimum_magnification)
+{
+    auto const minimum_magnification = 1.25f;
+    magnifier.magnification(minimum_magnification);
+
+    click(element_center(zoom_out_handle_index));
+
+    auto const minimum = magnifier_transform(minimum_magnification);
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(minimum));
+}
+
+TEST_F(MagnifierHandleTest, zoom_in_handle_clamps_at_maximum_magnification)
+{
+    auto const maximum_magnification = 8.0f;
+    magnifier.magnification(maximum_magnification);
+
+    click(element_center(zoom_in_handle_index));
+
+    auto const maximum = magnifier_transform(maximum_magnification);
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(maximum));
 }
 
 // Dragging the resize handle away from the magnifier centre must increase the
