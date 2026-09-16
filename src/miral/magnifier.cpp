@@ -21,6 +21,10 @@
 #include "render_scene_into_surface.h"
 
 #include <miral/live_config.h>
+#include <mir/events/event.h>
+#include <mir/events/input_event.h>
+#include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 #include <mir/log.h>
 #include <mir/server.h>
 #include <mir/synchronised.h>
@@ -31,6 +35,7 @@
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
 #include <mir/scene/basic_surface.h>
 #include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
@@ -39,6 +44,8 @@
 #include <algorithm>
 #include <optional>
 #include <concepts>
+#include <array>
+#include <utility>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
@@ -64,6 +71,18 @@ auto const max_magnification = 8.0f;
 class Handle
 {
 public:
+    struct ObserverRegistration
+    {
+        std::shared_ptr<miral::HandleIndicator> indicator;
+        std::shared_ptr<ms::NullSurfaceObserver> observer;
+
+        void unregister()
+        {
+            if (observer)
+                indicator->unregister_interest(*observer);
+        }
+    };
+
     Handle() = default;
 
     void init(mir::Server& server, mmc::HandleKind kind, mc::CompositorID capture_compositor_id)
@@ -83,9 +102,26 @@ public:
 
     void reset()
     {
+        release_observer().unregister();
+
         if (auto const surface_stack = handle_surface_stack.lock())
             surface_stack->remove_surface(indicator);
         indicator.reset();
+    }
+
+    template<typename ObserverType, typename... Args>
+    void attach_observer(Args&&... args)
+    {
+        if (!indicator || observer)
+            return;
+
+        observer = std::make_shared<ObserverType>(std::forward<Args>(args)...);
+        indicator->register_interest(observer);
+    }
+
+    auto release_observer() -> ObserverRegistration
+    {
+        return {indicator, std::exchange(observer, {})};
     }
 
     void move_to(geom::Point const& pos)
@@ -115,6 +151,7 @@ private:
 
     std::shared_ptr<miral::HandleIndicator> indicator;
     std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
+    std::shared_ptr<ms::NullSurfaceObserver> observer;
 };
 
 struct Handles
@@ -375,13 +412,28 @@ public:
 
     void follow_cursor()
     {
-        auto s = state.lock();
-        if (s->follow_cursor)
+        if (state.lock()->follow_cursor)
             return;
 
-        s->follow_cursor = true;
-        s->hide_all_handles();
-        place_at_cursor(*s);
+        auto observers = [this]()
+        {
+            auto s = state.lock();
+            s->follow_cursor = true;
+
+            std::array<Handle::ObserverRegistration, 4> const ret{
+                s->handles.drag.release_observer(),
+                s->handles.resize.release_observer(),
+                s->handles.zoom_in.release_observer(),
+                s->handles.zoom_out.release_observer()};
+
+            s->hide_all_handles();
+            place_at_cursor(*s);
+
+            return ret;
+        }();
+
+        for (auto obs : observers)
+            obs.unregister();
     }
 
     void stop_following_cursor()
@@ -456,6 +508,117 @@ private:
                 s.screen_bounds,
                 s.magnification));
     }
+
+    /// Base for observers that turn a pointer/touch drag on a handle surface
+    /// into on_drag_start()/on_drag_move() callbacks. Both callbacks are invoked
+    /// with the magnifier mutex held; grab_abs holds the drag's grab position.
+    class HandleObserver : public ms::NullSurfaceObserver
+    {
+    public:
+        explicit HandleObserver(Self* self) : self(self) {}
+
+        void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
+        {
+            if (mir_event_get_type(event.get()) != mir_event_type_input)
+                return;
+            auto const* input_ev = mir_event_get_input_event(event.get());
+            switch (mir_input_event_get_type(input_ev))
+            {
+            case mir_input_event_type_pointer:
+                handle_pointer(mir_input_event_get_pointer_event(input_ev));
+                break;
+            case mir_input_event_type_touch:
+                handle_touch(
+                    mir_input_event_get_device_id(input_ev),
+                    mir_input_event_get_touch_event(input_ev));
+                break;
+            default:
+                break;
+            }
+        }
+
+    protected:
+        virtual void on_drag_start(State& s, geom::Point point) = 0;
+        virtual void on_drag_move(State& s, geom::Point point) = 0;
+
+        Self* self;
+        bool pointer_drag_active{false};
+        bool pointer_primary_down{false};
+        std::optional<std::pair<MirInputDeviceId, MirTouchId>> touch_drag_id;
+        geom::Displacement grab_abs{};
+
+    private:
+        void begin_drag(State& s, geom::Point point)
+        {
+            grab_abs = {geom::as_delta(point.x), geom::as_delta(point.y)};
+            on_drag_start(s, point);
+        }
+
+        void handle_pointer(MirPointerEvent const* pev)
+        {
+            auto const action = mir_pointer_event_action(pev);
+            auto const primary_down = mir_pointer_event_button_state(pev, mir_pointer_button_primary);
+            auto const point = geom::Point{
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_x)),
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_y)),
+            };
+
+            auto s = self->state.lock();
+            if (action == mir_pointer_action_button_down && primary_down && !pointer_primary_down)
+            {
+                touch_drag_id.reset();
+                pointer_drag_active = true;
+                begin_drag(*s, point);
+            }
+            else if (action == mir_pointer_action_motion && pointer_drag_active && primary_down)
+            {
+                on_drag_move(*s, point);
+            }
+            else if (action == mir_pointer_action_button_up && !primary_down)
+            {
+                pointer_drag_active = false;
+                pointer_primary_down = false;
+                return;
+            }
+
+            if (action == mir_pointer_action_button_down && primary_down)
+                pointer_primary_down = true;
+        }
+
+        void handle_touch(MirInputDeviceId device_id, MirTouchEvent const* tev)
+        {
+            if (mir_touch_event_point_count(tev) != 1)
+            {
+                if (touch_drag_id && touch_drag_id->first == device_id)
+                    touch_drag_id.reset();
+                return;
+            }
+
+            auto const id = mir_touch_event_id(tev, 0);
+            auto const touch_id = std::pair{device_id, id};
+            auto const action = mir_touch_event_action(tev, 0);
+            auto const point = geom::Point{
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x)),
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)),
+            };
+
+            auto s = self->state.lock();
+            if (action == mir_touch_action_down)
+            {
+                pointer_drag_active = false;
+                touch_drag_id = touch_id;
+                begin_drag(*s, point);
+            }
+            else if (action == mir_touch_action_change && touch_drag_id == touch_id)
+            {
+                on_drag_move(*s, point);
+            }
+            else if (action == mir_touch_action_up && touch_drag_id == touch_id)
+            {
+                touch_drag_id.reset();
+            }
+        }
+    };
 
     class CursorObserver : public mi::CursorObserver
     {
