@@ -34,6 +34,7 @@
 #include <mir/graphics/buffer_basic.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
+#include <mir/renderer/gl/context.h>
 #include <mir/renderer/sw/pixel_source.h>
 
 #include <EGL/egl.h>
@@ -1479,6 +1480,7 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
     std::shared_ptr<EGLExtensions> egl_extensions,
     mg::EGLExtensions::EXTImageDmaBufImportModifiers const& dmabuf_ext,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+    std::unique_ptr<renderer::gl::Context> import_context,
     EGLImageAllocator allocate_importable_image)
     : dpy{dpy},
       egl_extensions{std::move(egl_extensions)},
@@ -1486,12 +1488,18 @@ mg::DMABufEGLProvider::DMABufEGLProvider(
       devnum_{get_devnum(dpy)},
       formats{std::make_unique<DmaBufFormatDescriptors>(dpy, dmabuf_ext)},
       egl_delegate{std::move(egl_delegate)},
+      import_context{std::move(import_context)},
       allocate_importable_image{std::move(allocate_importable_image)},
       blitter{std::make_unique<mg::EGLBufferCopier>(this->egl_delegate)}
 {
 }
 
 mg::DMABufEGLProvider::~DMABufEGLProvider() = default;
+
+auto mg::DMABufEGLProvider::context() const -> mir::renderer::gl::Context&
+{
+    return *import_context;
+}
 
 auto mg::DMABufEGLProvider::devnum() const -> dev_t
 {
@@ -1501,6 +1509,26 @@ auto mg::DMABufEGLProvider::devnum() const -> dev_t
 auto mg::DMABufEGLProvider::supported_formats() const -> mg::DmaBufFormatDescriptors const&
 {
     return *formats;
+}
+
+auto mg::DMABufEGLProvider::is_importable(mg::DRMFormat format, uint64_t modifier) const -> bool
+{
+    return descriptor_for_format_and_modifiers(format, modifier, *this) != nullptr;
+}
+
+auto mg::DMABufEGLProvider::supported_format_modifiers() const
+    -> std::vector<std::pair<mg::DRMFormat, std::vector<uint64_t>>>
+{
+    std::vector<std::pair<mg::DRMFormat, std::vector<uint64_t>>> result;
+    auto const& descriptors = supported_formats();
+    for (auto i = 0u; i < descriptors.num_formats(); ++i)
+    {
+        auto const& [format, modifiers, external_only] = descriptors[i];
+        result.emplace_back(
+            mg::DRMFormat{static_cast<uint32_t>(format)},
+            std::vector<uint64_t>{modifiers.begin(), modifiers.end()});
+    }
+    return result;
 }
 
 auto mg::DMABufEGLProvider::import_dma_buf(
@@ -1513,6 +1541,13 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         dma_buf.format(),
         dma_buf.modifier().value_or(DRM_FORMAT_MOD_INVALID),
         *this);
+
+    /* Constructing a DmabufTexBuffer creates a GL texture bound to the imported
+     * dma-buf's EGLImage, which requires a current EGL context. It is a precondition
+     * of this method that the caller has made a suitable context (for example,
+     * context()) current on the calling thread. Without a current context the texture
+     * is never bound to the EGLImage and samples as black.
+     */
     return std::make_shared<DmabufTexBuffer>(
         dpy,
         *egl_extensions,
