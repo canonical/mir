@@ -72,9 +72,7 @@ public:
     template<std::forward_iterator Iterator>
         requires std::same_as<std::iter_value_t<Iterator>, ValueType>
     WlArray(Iterator begin, Iterator end) : WlArray{}
-    {
-        append(begin, end);
-    }
+    { append(begin, end); }
 
     WlArray(std::initializer_list<ValueType> init) : WlArray(init.begin(), init.end()) {}
 
