@@ -32,7 +32,9 @@ namespace live_config { class Store; }
 /// magnification preserves the visual area and adjusts the captured region.
 ///
 /// In the freely positioned mode, the magnifier is initially centred on the
-/// primary output. The magnifier does not follow the cursor.
+/// primary output. The magnifier does not follow the cursor. A handle is
+/// displayed in the bottom-right corner that allows the user to drag the
+/// magnifier around the screen via the pointer or a touch point.
 /// \remark Since MirAL 5.5
 class Magnifier
 {
@@ -62,6 +64,9 @@ public:
     Magnifier& capture_size(mir::geometry::Size const& size);
 
     /// Sets how the magnifier is positioned.
+    ///
+    /// When freely positioned, the magnifier can be dragged with the pointer
+    /// or a single touch contact.
     /// \remark Since MirAL 6.0
     Magnifier& set_behavior(Behavior behavior);
 
