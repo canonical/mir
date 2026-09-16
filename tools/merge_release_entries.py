@@ -67,6 +67,9 @@ def split_entries(path_key, text):
     """
     pattern = ENTRY_START[path_key]
     starts = [match.start() for match in pattern.finditer(text)]
+    # For each entry start, slice from that start to the next entry start (or
+    # the end of the file), then strip only the trailing newline so each item is
+    # a complete entry block without the leading separator whitespace.
     return [
         text[start:end].strip("\n")
         for start, end in zip(starts, [*starts[1:], len(text)])
