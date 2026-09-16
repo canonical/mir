@@ -27,6 +27,8 @@ namespace mir { class Server; }
 namespace miral
 {
 
+/// Customization of the output configuration applied to the server. The default is to do nothing.
+/// \remark Since MirAL 6.1
 class OutputConfiguration
 {
 public:
@@ -48,19 +50,29 @@ private:
     std::shared_ptr<Self> self;
 };
 
+/// Interface for customization of the output configuration applied to the server. The default is to do nothing.
+/// \remark Since MirAL 6.1
 class OutputConfiguration::Strategy
 {
 public:
-
-    virtual ~Strategy() = default;
+    Strategy();
     virtual void apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput> outputs) = 0;
     virtual void confirm_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput const> outputs) = 0;
+    virtual ~Strategy();
+
+private:
+    Strategy(Strategy const&) = delete;
+    Strategy& operator=(Strategy const&) = delete;
 };
+
+/// A strategy that does nothing.
+/// \remark Since MirAL 6.1
 class OutputConfiguration::NullStrategy : public Strategy
 {
 public:
     void apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput> outputs) override;
     void confirm_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput const> outputs) override;
+    ~NullStrategy() override;
 };
 
 }

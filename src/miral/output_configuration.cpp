@@ -98,6 +98,9 @@ private:
     std::weak_ptr<ms::DisplayConfigurationController> dcc_weak{};
 };
 
+miral::OutputConfiguration::Strategy::Strategy() = default;
+miral::OutputConfiguration::Strategy::~Strategy() = default;
+
 void miral::OutputConfiguration::NullStrategy::apply_configuration(std::span<mg::UserDisplayConfigurationOutput>)
 {
     // Do nothing
@@ -107,6 +110,8 @@ void miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<m
 {
     // Do nothing
 }
+
+miral::OutputConfiguration::NullStrategy::~NullStrategy() = default;
 
 miral::OutputConfiguration::OutputConfiguration()
     : self{std::make_shared<Self>(std::make_shared<NullStrategy>())}
@@ -131,3 +136,7 @@ void miral::OutputConfiguration::update_strategy(std::shared_ptr<Strategy> strat
 {
     self->update_strategy(std::move(strategy));
 }
+
+miral::OutputConfiguration::~OutputConfiguration() = default;
+miral::OutputConfiguration::OutputConfiguration(OutputConfiguration const&) = default;
+auto miral::OutputConfiguration::operator=(OutputConfiguration const&) -> OutputConfiguration& = default;
