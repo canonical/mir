@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
-#define MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
+#ifndef MIR_FRONTEND_ZWP_POINTER_CONSTRAINTS_V1_H
+#define MIR_FRONTEND_ZWP_POINTER_CONSTRAINTS_V1_H
 
 #include "pointer-constraints-unstable-v1_wrapper.h"
 
@@ -41,4 +41,4 @@ auto create_pointer_constraints_unstable_v1(
 }
 }
 
-#endif  // MIR_FRONTEND_POINTER_CONSTRAINTS_UNSTABLE_V1_H
+#endif  // MIR_FRONTEND_ZWP_POINTER_CONSTRAINTS_V1_H
