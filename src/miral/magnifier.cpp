@@ -18,6 +18,7 @@
 
 #include "magnifier_layout.h"
 #include "render_scene_into_surface.h"
+
 #include <miral/live_config.h>
 #include <mir/log.h>
 #include <mir/server.h>
@@ -33,6 +34,7 @@
 #include <mir/main_loop.h>
 
 #include <algorithm>
+#include <optional>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
@@ -53,14 +55,70 @@ auto const max_magnification = 8.0f;
 
 struct State
 {
+    void apply_geometry(
+        miral::RenderSceneIntoSurface& render_scene_into_surface,
+        geom::Rectangle const& new_capture_area,
+        geom::Point const& new_surface_top_left)
+    {
+        applied_placement.reset();
+        render_scene_into_surface.capture_area(new_capture_area);
+
+        if (auto const surf = surface.lock())
+        {
+            surf->move_to(new_surface_top_left);
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+        }
+    }
+
+    void apply_geometry(
+        miral::RenderSceneIntoSurface& render_scene_into_surface,
+        mml::FreePlacement const& new_placement)
+    {
+        if (applied_placement && *applied_placement == new_placement)
+            return;
+
+        freely_positioned_center =
+            geom::RectangleD{geom::PointD{new_placement.surface_top_left}, new_placement.capture_area.size}.centre();
+
+        apply_geometry(render_scene_into_surface, new_placement.capture_area, new_placement.surface_top_left);
+        applied_placement = new_placement;
+    }
+
+    auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
+
+    auto free_placement_center() const -> geom::PointD
+    {
+        return user_positioned ? freely_positioned_center : geom::PointD{primary_output_center()};
+    }
+
+    /// The centre of the primary output, i.e. the first usable one.
+    auto primary_output_center() const -> geom::Point
+    {
+        auto const primary = std::ranges::find_if(
+            screen_bounds,
+            [](geom::Rectangle const& output)
+            { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
+
+        if (primary == std::ranges::end(screen_bounds))
+            return {};
+
+        return primary->centre();
+    }
+
     std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
+    geom::PointD freely_positioned_center;
     geom::Rectangles screen_bounds;
     float magnification{default_magnification};
     geom::SizeD requested_visual_size{
         default_capture_width * static_cast<double>(default_magnification),
         default_capture_height * static_cast<double>(default_magnification)};
-    bool default_enabled{false};
+    std::optional<mml::FreePlacement> applied_placement;
+    bool enabled{false};
+    bool follow_cursor{true};
+   /// Whether freely_positioned_center should be reused instead of the
+   /// primary-output centre.
+    bool user_positioned{false};
 };
 }
 
@@ -85,7 +143,7 @@ public:
                 surf->set_depth_layer(mir_depth_layer_always_on_top);
                 surf->set_focus_mode(mir_focus_mode_disabled);
 
-                if (s->default_enabled)
+                if (s->enabled)
                     surf->show();
                 else
                     surf->hide();
@@ -106,8 +164,17 @@ public:
 
                 auto s = state.lock();
 
-                if (auto const surf = s->surface.lock(); surf && s->default_enabled)
-                    place_at_cursor(*s);
+                if (auto const surf = s->surface.lock(); surf && s->enabled)
+                {
+                    if (!s->follow_cursor)
+                    {
+                        place_freely(*s);
+                    }
+                    else
+                    {
+                        place(*s);
+                    }
+                }
             });
 
         server.add_stop_callback(
@@ -126,40 +193,87 @@ public:
     void set_enable(bool enable)
     {
         auto s = state.lock();
-        s->default_enabled = enable;
-        if (auto const surf = s->surface.lock())
+        s->enabled = enable;
+        auto const surf = s->surface.lock();
+        if (!surf)
+            return;
+
+        if (enable)
         {
-            if (enable)
-                surf->show();
-            else
-                surf->hide();
+            if (!s->follow_cursor)
+                place_freely(*s);
+            surf->show();
         }
+        else
+        {
+            surf->hide();
+        }
+    }
+
+    void set_magnification(State& s, float new_magnification)
+    {
+        s.magnification = new_magnification;
+        s.applied_placement.reset();
+        if (!s.surface.lock())
+            return;
+
+        place(s);
     }
 
     void set_magnification(float new_magnification)
     {
         auto const s = state.lock();
         s->magnification = new_magnification;
+        s->applied_placement.reset();
         if (!s->surface.lock())
             return;
 
-        place_at_cursor(*s);
+        if (s->follow_cursor)
+            place_at_cursor(*s);
+        else
+            place_freely(*s);
     }
 
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
+
         s->requested_visual_size = geom::SizeD{size} * s->magnification;
+        s->applied_placement.reset();
         auto const capture_top_left = render_scene_into_surface.capture_area().top_left;
         render_scene_into_surface.capture_area({capture_top_left, size});
 
         if (!s->surface.lock())
             return;
 
-        place_at_cursor(*s);
+        place(*s);
     }
 
     geom::Size current_size() const { return render_scene_into_surface.capture_area().size; }
+
+    void follow_cursor()
+    {
+        auto s = state.lock();
+        if (s->follow_cursor)
+            return;
+
+        s->follow_cursor = true;
+        place_at_cursor(*s);
+    }
+
+    void stop_following_cursor()
+    {
+        auto s = state.lock();
+        if (!s->follow_cursor)
+            return;
+
+        s->follow_cursor = false;
+
+        if (auto const surf = s->surface.lock(); surf && s->enabled)
+        {
+            place_freely(*s);
+        }
+    }
 
 private:
     class DisplayConfigObserver : public mg::NullDisplayConfigurationObserver
@@ -178,35 +292,45 @@ private:
         Self& self;
     };
 
-    void apply_geometry(
-        mml::Placement const& new_placement,
-        miral::RenderSceneIntoSurface& render_scene_into_surface,
-        State& state)
+    void place(State& s)
     {
-        render_scene_into_surface.capture_area(new_placement.capture_area);
-
-        if (auto const surf = state.surface.lock())
-        {
-            surf->move_to(new_placement.capture_area.top_left);
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(state.magnification, state.magnification, 1)));
-        }
+        if (s.follow_cursor)
+            place_at_cursor(s);
+        else
+            place_freely(s);
     }
 
     /// Applies visual geometry with the magnifier's logical top-left computed
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
     {
-        auto const has_outputs = s.screen_bounds.size() != 0;
-        if (!has_outputs)
+        if (!s.has_outputs())
+        {
+            s.applied_placement.reset();
             return;
+        }
 
         auto const new_placement = mml::place_following_cursor(
             geom::PointD{s.cursor_pos}, s.requested_visual_size, s.screen_bounds, s.magnification);
 
-        apply_geometry(
-            new_placement,
+        s.apply_geometry(render_scene_into_surface, new_placement.capture_area, new_placement.capture_area.top_left);
+    }
+
+    void place_freely(State& s)
+    {
+        if (!s.has_outputs())
+        {
+            s.applied_placement.reset();
+            return;
+        }
+
+        s.apply_geometry(
             render_scene_into_surface,
-            s);
+            mml::place_freely(
+                s.free_placement_center(),
+                s.requested_visual_size,
+                s.screen_bounds,
+                s.magnification));
     }
 
     class CursorObserver : public mi::CursorObserver
@@ -218,6 +342,9 @@ private:
         {
             auto s = self->state.lock();
             s->cursor_pos = geom::Point{abs_x, abs_y};
+
+            if (!s->follow_cursor)
+                return;
 
             auto const surf = s->surface.lock();
             if (!surf)
@@ -253,9 +380,16 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
 
     auto s = self.state.lock();
     s->screen_bounds = rects;
+    if (!s->has_outputs())
+    {
+        s->applied_placement.reset();
+        return;
+    }
 
-    if (s->surface.lock())
-        self.place_at_cursor(*s);
+    if (auto const surf = s->surface.lock())
+    {
+        self.place(*s);
+    }
 }
 
 miral::Magnifier::Magnifier()
@@ -349,6 +483,20 @@ miral::Magnifier& miral::Magnifier::magnification(float magnification)
 miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size)
 {
     self->set_capture_size(size);
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::set_behavior(Behavior behavior)
+{
+    switch (behavior)
+    {
+    case Behavior::follow_cursor:
+        self->follow_cursor();
+        break;
+    case Behavior::freely_positioned:
+        self->stop_following_cursor();
+        break;
+    }
     return *this;
 }
 
