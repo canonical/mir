@@ -23,7 +23,7 @@
     DEALINGS IN THE SOFTWARE.
   </copyright>
 
-  <interface name="zxdg_decoration_manager_v1" version="1">
+  <interface name="zxdg_decoration_manager_v1" version="2">
     <description summary="window decoration manager">
       This interface allows a compositor to announce support for server-side
       decorations.
@@ -71,7 +71,7 @@
     </request>
   </interface>
 
-  <interface name="zxdg_toplevel_decoration_v1" version="1">
+  <interface name="zxdg_toplevel_decoration_v1" version="2">
     <description summary="decoration object for a toplevel surface">
       The decoration object allows the compositor to toggle server-side window
       decorations for a toplevel surface. The client can request to switch to
