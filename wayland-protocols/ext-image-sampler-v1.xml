@@ -102,15 +102,17 @@
         Retrieve an opaque buffer backed by the image capture source that this sampler was created
         with.
 
-        The compositor should send the size event after a successful get_buffer request.
+        The compositor will send a size event after a get_buffer request. This event describes the `wl_buffer`
+        created here.
 
         Whereas the backing store of most `wl_buffer`s must remain constant between submission and
-        wl_buffer.release, this wl_buffer has compositor-internal backing storage that always
-        contains the most current representation of the source.
+        wl_buffer.release, this wl_buffer represents a compositor-internal backing storage that always
+        contains the most current content of the source.
 
-        The client must make this request following a buffer_invalidated event. A failure to
-        respond to that event may cause the compositor to no longer update the contents
-        of the buffer.
+        The compositor will send a buffer_invalidated event if the metadata provided by the `size` event
+        following this `get_buffer` request changes (for example, if the source window has resized). When
+        this happens this buffer will remain valid, and the content of the buffer will continue to resolve
+        to the last content with that metadata.
 
         Only one buffer may be active for a sampler at a time. The active buffer remains
         active until the client destroys it, after which a new buffer may be requested.
@@ -122,7 +124,7 @@
 
     <event name="size">
       <description summary="report the image capture source size">
-        The size event should be sent by the compositor in response to a get_buffer request.
+        The size event is sent by the compositor in response to a get_buffer request.
 
         The buffer width and buffer height express the size of the image buffer, while
         the logical width and logical height express the size of what is being rendered.
@@ -151,9 +153,13 @@
 
     <event name="stopped">
       <description summary="sampler is no longer available">
-        This event indicates that the sampler session has stopped and is no
+        This event indicates that the sampler source has stopped and is no
         longer available. This can happen in a number of cases, e.g. when the
         underlying source is destroyed or an unrecoverable runtime error has occurred.
+
+        The `wl_buffer` remains valid with the last available content.
+
+        Calling `get_buffer` after this event will always return the same buffer.
 
         The client should destroy the sampler after receiving this event.
       </description>
