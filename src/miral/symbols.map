@@ -777,3 +777,27 @@ global:
   };
 local: *;
 };
+
+MIRAL_6.1 {
+global:
+  extern "C++" {
+    miral::OutputConfiguration::?OutputConfiguration*;
+    miral::OutputConfiguration::NullStrategy::?NullStrategy*;
+    miral::OutputConfiguration::NullStrategy::apply_configuration*;
+    miral::OutputConfiguration::NullStrategy::confirm_configuration*;
+    miral::OutputConfiguration::OutputConfiguration*;
+    miral::OutputConfiguration::Strategy::?Strategy*;
+    miral::OutputConfiguration::Strategy::Strategy*;
+    miral::OutputConfiguration::operator*;
+    miral::OutputConfiguration::update_strategy*;
+    non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::?NullStrategy*;
+    non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::apply_configuration*;
+    non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::confirm_configuration*;
+    non-virtual?thunk?to?miral::OutputConfiguration::Strategy::?Strategy*;
+    typeinfo?for?miral::OutputConfiguration::NullStrategy;
+    typeinfo?for?miral::OutputConfiguration::Strategy;
+    typeinfo?for?miral::OutputConfiguration;
+    vtable?for?miral::OutputConfiguration::NullStrategy;
+    vtable?for?miral::OutputConfiguration::Strategy;
+  };
+} MIRAL_6.0;
