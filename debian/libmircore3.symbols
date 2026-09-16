@@ -66,7 +66,7 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, char*)@MIR_CORE_2.29" 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, std::__va_list)@MIR_CORE_2.29" 2.29.0
  (c++|optional)"mir::logv(mir::logging::Severity, char const*, char const*, void*)@MIR_CORE_2.29" 2.29.0
- MIR_CORE_2.30@MIR_CORE_2.30 2.30.0
+ (optional)MIR_CORE_2.30@MIR_CORE_2.30 2.30.0
  (c++)"mir::graphics::DisplayConfiguration::valid() const@MIR_CORE_2.30" 2.30.0
  (c++)"mir::graphics::DisplayConfigurationOutput::extents() const@MIR_CORE_2.30" 2.30.0
  (c++)"mir::graphics::DisplayConfigurationOutput::transformation() const@MIR_CORE_2.30" 2.30.0

@@ -219,6 +219,7 @@ struct UserDisplayConfigurationOutput
     DisplayInfo const& display_info;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
+    UserDisplayConfigurationOutput(UserDisplayConfigurationOutput const&) = default;
     geometry::Rectangle extents() const;
 };
 
