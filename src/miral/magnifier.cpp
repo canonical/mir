@@ -53,8 +53,6 @@ auto const max_magnification = 8.0f;
 
 struct State
 {
-    auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
-
     std::weak_ptr<ms::Surface> surface;
     geom::Point cursor_pos;
     geom::Rectangles screen_bounds;
@@ -198,7 +196,8 @@ private:
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
     {
-        if (!s.has_outputs())
+        auto const has_outputs = s.screen_bounds.size() != 0;
+        if (!has_outputs)
             return;
 
         auto const new_placement = mml::place_following_cursor(
@@ -254,8 +253,6 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
 
     auto s = self.state.lock();
     s->screen_bounds = rects;
-    if (!s->has_outputs())
-        return;
 
     if (s->surface.lock())
         self.place_at_cursor(*s);
