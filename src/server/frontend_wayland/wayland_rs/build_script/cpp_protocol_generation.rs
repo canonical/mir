@@ -47,7 +47,7 @@ pub struct CppProtocolGenerationOutput {
 /// - An output global binder builder
 /// - An FFI forward-declaration builder
 pub fn generate_cpp_protocol_builders(
-    protocols: &Vec<WaylandProtocol>,
+    protocols: &[WaylandProtocol],
 ) -> CppProtocolGenerationOutput {
     let global_builder = create_global_factory(protocols);
     let wayland_server_notification_handler_builder = create_wayland_server_notification_handler();
@@ -78,7 +78,7 @@ pub fn generate_cpp_protocol_builders(
     }
 }
 
-fn create_global_factory(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
+fn create_global_factory(protocols: &[WaylandProtocol]) -> CppBuilder {
     let mut builder: CppBuilder = CppBuilder::new("MIR_WAYLANDRS_GLOBALS", "global_factory");
     builder.add_header_include("<memory>");
     builder.add_header_include("<rust/cxx.h>");
@@ -288,7 +288,7 @@ fn create_output_global_binder() -> CppBuilder {
 /// Plain `struct Foo;` forward declarations are sufficient because rust::Box<T>
 /// only stores a T* internally and does not require T to be a complete type at
 /// the point of a virtual function declaration.
-fn create_ffi_fwd_builder(protocols: &Vec<WaylandProtocol>) -> CppBuilder {
+fn create_ffi_fwd_builder(protocols: &[WaylandProtocol]) -> CppBuilder {
     let mut builder = CppBuilder::new("MIR_WAYLANDRS_FFI_FWD", "ffi_fwd");
     // <rust/cxx.h> is included here so that protocol headers pulling in ffi_fwd.h
     // have access to rust::Box, rust::String, etc. without a direct dependency on ffi.rs.h.
@@ -334,7 +334,7 @@ fn create_cpp_builder(
         .interfaces
         .iter()
         .filter(|interface| interface.name != "wl_registry" && interface.name != "wl_display")
-        .map(|interface| wayland_interface_to_cpp_class(interface));
+        .map(wayland_interface_to_cpp_class);
 
     for class in classes {
         namespace.add_class(class);
@@ -386,7 +386,7 @@ fn create_cpp_builder(
 /// Collect the names of interfaces that are created server-side and returned to the client
 /// through an event carrying a `new_id` argument (e.g. `wl_buffer`). `wl_display` and
 /// `wl_registry` are excluded as they are never created this way.
-fn collect_event_created_interfaces(protocols: &Vec<WaylandProtocol>) -> Vec<String> {
+fn collect_event_created_interfaces(protocols: &[WaylandProtocol]) -> Vec<String> {
     let mut seen: Vec<String> = Vec::new();
     for protocol in protocols {
         for interface in &protocol.interfaces {
@@ -719,7 +719,7 @@ fn wayland_request_to_cpp_method(method: &WaylandRequest) -> Vec<CppMethod> {
     let return_prefix = if has_retval { "return " } else { "" };
     let mut all_delegation_args: Vec<String> = cpp_args
         .iter()
-        .map(|arg| delegation_argument_expression(arg))
+        .map(delegation_argument_expression)
         .collect();
 
     // Forward child_instance and child_object_id to the virtual method

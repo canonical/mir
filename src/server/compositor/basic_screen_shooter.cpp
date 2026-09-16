@@ -50,6 +50,11 @@ public:
         {
         }
 
+        auto as_dmabuf() -> mg::DMABufBuffer const* override
+        {
+            return nullptr;
+        }
+
         auto map_writeable() -> std::unique_ptr<mrs::Mapping<std::byte>> override
         {
             return buffer->map_writeable();

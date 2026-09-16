@@ -1,6 +1,5 @@
 include(RustLibrary)
 
-add_compile_definitions(MIR_ENABLE_RUST)
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="evdev-input-rs")
 
 add_library(mirplatforminputevdevrsobjects OBJECT
@@ -40,6 +39,9 @@ target_link_libraries(mirplatforminputevdevrs
   PRIVATE
   mirplatforminputevdevrsobjects
 )
+
+# The Rust static archive (mirplatforminputevdevrs_rust) is not a GCC LTO object.
+target_link_options(mirplatforminputevdevrs PRIVATE $<$<CXX_COMPILER_ID:GNU>:-fno-lto>)
 
 add_rust_cxx_library(mirplatforminputevdevrs_rust
   CRATE mir_platforms_evdev_rs

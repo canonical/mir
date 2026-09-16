@@ -133,21 +133,6 @@ target_include_directories(mir_unit_tests PRIVATE
 
 target_link_directories(mir_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
-set_property(
-  SOURCE test_udev_wrapper.cpp test_glib_main_loop.cpp
-  SOURCE console/test_logind_console_services.cpp
-  SOURCE input/test_logind_console_services.cpp input/test_input_platform_probing.cpp
-  SOURCE input/evdev/test_evdev_input_platform.cpp
-  SOURCE graphics/test_platform_prober.cpp
-  SOURCE test_udev_wrapper_asan_skip.cpp
-  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
-if(NOT CMAKE_BUILD_TYPE STREQUAL "AddressSanitizer")
-  set_property(
-    SOURCE test_udev_wrapper_asan_skip.cpp
-    PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-endif()
-
 if (MIR_USE_PRECOMPILED_HEADERS)
   target_precompile_headers(
     mir_unit_tests
@@ -235,6 +220,13 @@ target_link_libraries(mir_unit_tests
   mir-test-doubles-platform-static
   )
 
+if (MIR_ENABLE_RUST)
+  target_link_libraries(mir_unit_tests
+    mirwayland_rs
+    PkgConfig::WAYLAND_CLIENT
+  )
+endif()
+
 target_link_libraries(mir_umock_unit_tests
 
   mir-test-doubles-static
@@ -257,12 +249,6 @@ set_target_properties(loadable_test_dso PROPERTIES
   LIBRARY_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/test-data/shared-libraries
   OUTPUT_NAME this-arch
 )
-set_source_files_properties(
-  ${CMAKE_CURRENT_SOURCE_DIR}/shared-libraries/empty_input.c
-  PROPERTIES
-    COMPILE_OPTIONS "-Wno-pedantic;-Wno-error=pedantic"
-)
-
 add_dependencies(mir_unit_tests loadable_test_dso)
 
 mir_add_test(NAME unit-tests-do-not-link-with-GL-or-EGL

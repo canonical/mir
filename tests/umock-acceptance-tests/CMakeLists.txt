@@ -10,10 +10,6 @@ target_include_directories(mir_umock_acceptance_tests
     ${CMAKE_SOURCE_DIR}/tests/include/
 )
 
-set_property(
-  SOURCE test_libinput.cpp
-  PROPERTY COMPILE_OPTIONS -Wno-variadic-macros)
-
 add_dependencies(mir_umock_acceptance_tests GMock)
 
 target_link_libraries(mir_umock_acceptance_tests

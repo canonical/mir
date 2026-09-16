@@ -1,8 +1,6 @@
 pkg_check_modules(GIOUnix REQUIRED IMPORTED_TARGET gio-unix-2.0)
 
-if (MIR_ENABLE_RUST)
-  add_subdirectory(wayland_rs/)
-endif()
+add_subdirectory(wayland_rs/)
 
 set(
   WAYLAND_SOURCES
@@ -76,6 +74,8 @@ set(
   input_trigger_registration_v1.cpp input_trigger_registration_v1.h
   input_trigger_action_v1.cpp       input_trigger_action_v1.h
   input_trigger_registry.cpp        input_trigger_registry.h
+  wayland_client.cpp          wayland_client.h
+  wayland_client_notifier.cpp wayland_client_notifier.h
 )
 
 add_custom_command(
@@ -92,11 +92,6 @@ add_custom_command(
   DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_frontend.tp
 )
-
-check_cxx_compiler_flag(-Wgnu-empty-initializer HAS_W_GNU_EMPTY_INITIALIZER)
-if (HAS_W_GNU_EMPTY_INITIALIZER)
-  set(TRACEPOINT_COMPILE_FLAGS "${TRACEPOINT_COMPILE_FLAGS} -Wno-error=gnu-empty-initializer")
-endif()
 
 set_source_files_properties(
         ${CMAKE_CURRENT_BINARY_DIR}/wayland_frontend.tp.c
@@ -134,14 +129,12 @@ target_link_libraries(mirfrontend-wayland
     PkgConfig::GIOUnix
 )
 
-if (MIR_ENABLE_RUST)
-  target_sources(mirfrontend-wayland
-    PRIVATE
-      wayland_client.cpp         wayland_client.h
-  )
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)
 
-  target_link_libraries(mirfrontend-wayland
-    PUBLIC
-      mirwayland_rs
-  )
-endif()
+target_link_libraries(mirfrontend-wayland
+  PUBLIC
+    mirwayland_rs
+)

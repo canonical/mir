@@ -15,6 +15,7 @@
  */
 
 #include <mir/graphics/cpu_addressable_fb.h>
+#include <mir/graphics/dmabuf_buffer.h>
 
 #include <mir/errno_utils.h>
 #include <mir/log.h>
@@ -24,6 +25,8 @@
 #include <xf86drmMode.h>
 #include <xf86drm.h>
 #include <drm_fourcc.h>
+#include <fcntl.h>
+#include <drm/drm.h>
 
 namespace mg = mir::graphics;
 
@@ -94,6 +97,56 @@ class mg::CPUAddressableFB::Buffer : public mir::renderer::software::RWMappable
         size_t const len_;
     };
 
+    class DMABuf: public mg::DMABufBuffer
+    {
+    public:
+        DMABuf(
+            mg::DRMFormat format,
+            std::optional<uint64_t> modifier,
+            std::vector<PlaneDescriptor> planes,
+            mg::gl::Texture::Layout layout,
+            mir::geometry::Size size)
+            : format_{format},
+              modifier_{std::move(modifier)},
+              planes_{std::move(planes)},
+              layout_{layout},
+              size_{size}
+        {
+        }
+
+        auto format() const -> mg::DRMFormat override
+        {
+            return format_;
+        }
+
+        auto modifier() const -> std::optional<uint64_t> override
+        {
+            return modifier_;
+        }
+
+        auto planes() const -> std::vector<PlaneDescriptor> const& override
+        {
+            return planes_;
+        }
+
+        auto layout() const -> mg::gl::Texture::Layout override
+        {
+            return layout_;
+        }
+
+        auto size() const -> mir::geometry::Size override
+        {
+            return size_;
+        }
+
+    private:
+        mg::DRMFormat const format_;
+        std::optional<uint64_t> const modifier_;
+        std::vector<PlaneDescriptor> const planes_;
+        mg::gl::Texture::Layout const layout_;
+        mir::geometry::Size const size_;
+    };
+
 public:
     ~Buffer()
     {
@@ -123,8 +176,39 @@ public:
                     "Failed to allocate CPU-accessible buffer"}));
         }
 
+        struct drm_prime_handle prime = {};
+        prime.handle = params.handle;
+        prime.flags = DRM_CLOEXEC | DRM_RDWR;
+
+        std::unique_ptr<DMABuf> dmabuf;
+        if (drmIoctl(drm_fd, DRM_IOCTL_PRIME_HANDLE_TO_FD, &prime) == 0)
+        {
+            dmabuf = std::make_unique<DMABuf>(
+                format,
+                DRM_FORMAT_MOD_LINEAR,
+                std::vector<DMABuf::PlaneDescriptor>{
+                    DMABuf::PlaneDescriptor {
+                        .dma_buf = mir::Fd{prime.fd},
+                        .stride = params.pitch,
+                        .offset = 0,
+                    }
+                },
+                mg::gl::Texture::Layout::TopRowFirst,
+                size
+            );
+        }
+        else
+        {
+            log_error("Failed to export GEM handle to dma-buf: %s (%i)", mir::errno_to_cstr(errno), errno);
+        }
+
         return std::unique_ptr<Buffer>{
-            new Buffer{std::move(drm_fd), params, format}};
+            new Buffer{std::move(drm_fd), std::move(dmabuf), params, format}};
+    }
+
+    auto as_dmabuf() -> DMABufBuffer const*
+    {
+        return dmabuf_.get();
     }
 
     auto map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>> override
@@ -187,9 +271,11 @@ public:
 private:
     Buffer(
         mir::Fd fd,
+        std::unique_ptr<DMABuf> dmabuf,
         struct drm_mode_create_dumb const& params,
         DRMFormat format)
         : drm_fd{std::move(fd)},
+          dmabuf_{std::move(dmabuf)},
           width_{params.width},
           height_{params.height},
           pitch_{params.pitch},
@@ -231,6 +317,7 @@ private:
     }
 
     mir::Fd const drm_fd;
+    std::unique_ptr<DMABuf> const dmabuf_;
     uint32_t const width_;
     uint32_t const height_;
     uint32_t const pitch_;
@@ -262,6 +349,11 @@ mg::CPUAddressableFB::CPUAddressableFB(
       fb_id{fb_id_for_buffer(this->drm_fd, supports_modifiers, format, *buffer)},
       buffer{std::move(buffer)}
 {
+}
+
+auto mg::CPUAddressableFB::as_dmabuf() -> DMABufBuffer const*
+{
+    return buffer->as_dmabuf();
 }
 
 auto mg::CPUAddressableFB::map_writeable() -> std::unique_ptr<mir::renderer::software::Mapping<std::byte>>

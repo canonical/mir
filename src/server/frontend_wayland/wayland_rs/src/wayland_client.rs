@@ -119,6 +119,7 @@ impl WaylandClientId {
     }
 
     /// Check if this id is the same as the other id.
+    #[expect(clippy::borrowed_box, reason = "opaque type for FFI")]
     pub fn equals(&self, id: &Box<WaylandClientId>) -> bool {
         self.id == id.id
     }

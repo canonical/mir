@@ -8,13 +8,8 @@ list(
   ${CMAKE_CURRENT_SOURCE_DIR}/test_output_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_keyboard_state_tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_recent_tokens.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client_notifier.cpp
 )
-
-if (MIR_ENABLE_RUST)
-  list(
-    APPEND UNIT_TEST_SOURCES
-    ${CMAKE_CURRENT_SOURCE_DIR}/test_wayland_client.cpp
-  )
-endif()
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

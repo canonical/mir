@@ -23,6 +23,7 @@ parts:
     - PATH: $PATH:/usr/lib/rust-1.82/bin
     build-packages:
     - build-essential
+    - ca-certificates
     - cargo
     - eglexternalplatform-dev
     - git

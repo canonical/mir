@@ -29,20 +29,12 @@ from docutils import nodes
 project = "Mir"
 
 try:
-    branch = subprocess.check_output(
-        ["git", "rev-parse", "--abbrev-ref", "HEAD"], encoding="utf-8"
+    release = subprocess.check_output(
+        ["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8"
     ).strip()
-    if branch.startswith("release/"):
-        release = subprocess.check_output(
-            ["git", "describe", "--tags", "--abbrev=0"], encoding="utf-8"
-        ).strip()
-    else:
-        release = subprocess.check_output(
-            ["git", "describe", "--tags", "--match=*-dev", "--abbrev=0"], encoding="utf-8"
-        ).strip()
 except (FileNotFoundError, subprocess.CalledProcessError):
     with open(Path(__file__).parents[2] / "CMakeLists.txt", encoding="utf-8") as cmake:
-        match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read())
+        match = re.search(r"^\s*VERSION (\d+\.\d+\.\d+)$", cmake.read(), re.MULTILINE)
     release = f"v{match.group(1)}" if match else "unknown"
 
 # Author name; used in the default copyright statement in the page footer

@@ -55,6 +55,7 @@ class Display;
 class DisplaySink;
 class DisplayReport;
 class DisplayConfigurationPolicy;
+class DMABufBuffer;
 class GraphicBufferAllocator;
 class GLConfig;
 
@@ -372,6 +373,14 @@ public:
         MappableFB() = default;
         virtual ~MappableFB() override = default;
 
+        /**
+         * Return a DMABufBuffer of this framebuffer, if one exists.
+         *
+         * \return A pointer to a DMABufBuffer valid for the lifetime of this MappableFB,
+         *         or nullptr if this framebuffer cannot be exported as a DMA-Buf.
+         */
+        virtual auto as_dmabuf() -> DMABufBuffer const* = 0;
+
         using renderer::software::WriteMappable::size;
     };
 
@@ -449,8 +458,6 @@ public:
 
     virtual auto make_surface(DRMFormat format, std::span<uint64_t> modifiers) -> std::unique_ptr<GBMSurface> = 0;
 };
-
-class DMABufBuffer;
 
 class DmaBufDisplayAllocator : public DisplayAllocator
 {

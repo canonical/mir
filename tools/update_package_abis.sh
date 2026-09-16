@@ -241,10 +241,10 @@ check_install_files()
         then
             report_abi_mismatch "$current_file found, but $pkg ABI is $abi"
         else
-            local suffix=$(grep -o ".so.[[:digit:]]\+" $expected_file)
-            if [ "$suffix" != "$expected_suffix" ];
+            local bad_suffixes=$(grep -o ".so.[[:digit:]]\+" $expected_file | grep -vFx "$expected_suffix" | sort -u | tr '\n' ' ')
+            if [ -n "$bad_suffixes" ];
             then
-                report_abi_mismatch "$current_file contains $suffix, but $pkg ABI is $abi"
+                report_abi_mismatch "$current_file contains $bad_suffixes but $pkg ABI is $abi"
             fi
         fi
     done

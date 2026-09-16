@@ -76,23 +76,23 @@ fn main() {
         .compile("wayland_rs");
 }
 
-fn write_protocols_rs(protocols: &Vec<WaylandProtocol>) {
+fn write_protocols_rs(protocols: &[WaylandProtocol]) {
     let tokens = generate_protocols_rs(protocols);
     write_generated_rust_file(tokens, "protocols.rs");
 }
 
-fn write_dispatch_rs(protocols: &Vec<WaylandProtocol>) {
+fn write_dispatch_rs(protocols: &[WaylandProtocol]) {
     let tokens = generate_dispatch_rs(protocols);
     write_generated_rust_file(tokens, "dispatch.rs");
 }
 
-fn write_protocol_middleware(protocols: &Vec<WaylandProtocol>) {
+fn write_protocol_middleware(protocols: &[WaylandProtocol]) {
     let middleware = generate_wayland_interface_middleware(protocols);
     write_generated_rust_file(middleware, "middleware.rs");
 }
 
 /// Write a header file for each protocol containing abstract classes per-interface.
-fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
+fn write_cpp_protocol_implementations(protocols: &[WaylandProtocol]) {
     let output = generate_cpp_protocol_builders(protocols);
 
     // Generate ffi_fwd.h first so that protocol headers can include it without
@@ -101,11 +101,11 @@ fn write_cpp_protocol_implementations(protocols: &Vec<WaylandProtocol>) {
 
     // Write the protocol headers
     for builder in &output.builders {
-        write_cpp_header(&builder);
-        write_cpp_source(&builder);
+        write_cpp_header(builder);
+        write_cpp_source(builder);
     }
 
-    let ffi = generate_ffi(&protocols, &output.builders);
+    let ffi = generate_ffi(protocols, &output.builders);
     write_generated_rust_file(ffi, "ffi.rs");
 }
 
@@ -129,7 +129,7 @@ fn write_cpp_source(builder: &CppBuilder) {
     );
 }
 
-fn write_wayland_server_generated(protocols: &Vec<WaylandProtocol>) {
-    let tokens = generate_wayland_server_generated_rs(&protocols);
+fn write_wayland_server_generated(protocols: &[WaylandProtocol]) {
+    let tokens = generate_wayland_server_generated_rs(protocols);
     write_generated_rust_file(tokens, "wayland_server_generated.rs");
 }
