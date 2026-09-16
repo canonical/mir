@@ -124,3 +124,32 @@ corresponding source requires manually specifying a directory to find
 them in. Following these instructions,
 `directory $A_TEMPORARY_DIRECTORY/mesa-$UPSTREAM_VERSION/build`
 will direct `gdb` to find the source files correctly.
+
+## Running `wlcs` with workshop
+
+[`wlcs`](https://github.com/canonical/wlcs) is a compositor-agnostic test suite
+verifying Wayland conformance. To run it:
+
+```sh
+# Navigate to wlcs source
+cd ~/code/wlcs
+
+# Start wlcs workshop
+workshop launch
+workshop run configure
+workshop run build
+
+# Capture wlcs build directory location on host
+wlcs_build="$(workshop info | yq '.sdks.wlcs.mounts.build.host-source')"
+
+# Navigate to mir source
+cd ~/code/mir
+
+# Mount wlcs build directory
+workshop stop
+workshop remount dev/mir:wlcs-build "$wlcs_build"
+workshop start
+
+# Run test suite
+workshop run wlcs
+```
