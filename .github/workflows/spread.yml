@@ -44,13 +44,12 @@ jobs:
         - lxd:...:spread/ubuntu:ubsan_clang
         - lxd:...:ubuntu
         - lxd:...:ubuntu_arm64
-        - lxd:...:ubuntu_armhf
         - lxd:...:ubuntu_devel
         - lxd:...:ubuntu_proposed
         - lxd:alpine-3.24:...:amd64
         - lxd:alpine-edge:...:amd64
 
-    runs-on: ubuntu-26.04
+    runs-on: ${{ contains(matrix.spread-task, 'arm64') && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
 
     permissions:
       contents: read
@@ -93,7 +92,6 @@ jobs:
         EOF
 
         sudo apt-get update
-        sudo apt-get install --yes binfmt-support qemu-user-binfmt
         echo "LXD_DIR=/var/snap/lxd/common/lxd" >> "$GITHUB_ENV"
 
     - name: Check out code
