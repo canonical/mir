@@ -18,7 +18,6 @@
 #define MIR_TEST_DOUBLES_STUB_BUFFER_H_
 
 #include <mir/graphics/buffer_basic.h>
-#include <mir/graphics/buffer_properties.h>
 #include <mir/geometry/size.h>
 #include <mir/graphics/buffer_id.h>
 #include <mir/renderer/sw/pixel_source.h>
@@ -40,10 +39,8 @@ class StubBuffer :
 public:
     StubBuffer()
         : StubBuffer{
-              graphics::BufferProperties{
-                  geometry::Size{},
-                  mir_pixel_format_abgr_8888,
-                  graphics::BufferUsage::hardware},
+              geometry::Size{},
+              mir_pixel_format_abgr_8888,
               geometry::Stride{}}
 
     {
@@ -51,10 +48,8 @@ public:
 
     StubBuffer(geometry::Size const& size)
         : StubBuffer{
-              graphics::BufferProperties{
-                  size,
-                  mir_pixel_format_abgr_8888,
-                  graphics::BufferUsage::hardware},
+              size,
+              mir_pixel_format_abgr_8888,
               geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(mir_pixel_format_abgr_8888)}}
 
     {
@@ -62,23 +57,10 @@ public:
 
     StubBuffer(geometry::Size const& size, MirPixelFormat const pixel_format)
         : StubBuffer{
-              graphics::BufferProperties{
-                  size,
-                  pixel_format,
-                  graphics::BufferUsage::hardware},
-                  geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pixel_format)}}
+              size,
+              pixel_format,
+              geometry::Stride{size.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pixel_format)}}
     {
-    }
-
-    StubBuffer(graphics::BufferProperties const& properties)
-        : StubBuffer{properties, geometry::Stride{properties.size.width.as_int() * MIR_BYTES_PER_PIXEL(properties.format)}}
-    {
-        written_pixels.resize(buf_size.height.as_uint32_t() * buf_stride.as_uint32_t());
-        if (written_pixels.size())
-        {
-            // vector<>::data() is permitted to return nullptr if size() == 0
-            ::memset(written_pixels.data(), 0, written_pixels.size());
-        }
     }
 
     StubBuffer(graphics::BufferID id)
@@ -89,10 +71,11 @@ public:
     {
     }
 
-    StubBuffer(graphics::BufferProperties const& properties,
+    StubBuffer(geometry::Size const& size,
+               MirPixelFormat format,
                geometry::Stride stride)
-        : buf_size{properties.size},
-          buf_pixel_format{properties.format},
+        : buf_size{size},
+          buf_pixel_format{format},
           buf_stride{stride},
           buf_id{graphics::BufferBasic::id()}
     {

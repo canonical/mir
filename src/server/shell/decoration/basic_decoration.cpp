@@ -25,7 +25,6 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/scene/surface.h>
 #include <mir/scene/session.h>
-#include <mir/graphics/buffer_properties.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/input/cursor_images.h>
 #include <mir/wayland/weak.h>
@@ -102,7 +101,7 @@ class msd::BasicDecoration::BufferStreams
     std::shared_ptr<scene::Session> const session;
 
 public:
-    BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format);
+    explicit BufferStreams(std::shared_ptr<scene::Session> const& session);
     ~BufferStreams();
 
     auto create_buffer_stream() -> std::shared_ptr<mc::BufferStream>;
@@ -115,17 +114,14 @@ public:
 private:
     BufferStreams(BufferStreams const&) = delete;
     BufferStreams& operator=(BufferStreams const&) = delete;
-
-    MirPixelFormat const buffer_format;
 };
 
-msd::BasicDecoration::BufferStreams::BufferStreams(std::shared_ptr<scene::Session> const& session, MirPixelFormat buffer_format)
+msd::BasicDecoration::BufferStreams::BufferStreams(std::shared_ptr<scene::Session> const& session)
     : session{session},
       titlebar{create_buffer_stream()},
       left_border{create_buffer_stream()},
       right_border{create_buffer_stream()},
-      bottom_border{create_buffer_stream()},
-      buffer_format{buffer_format}
+      bottom_border{create_buffer_stream()}
 {
 }
 
@@ -149,7 +145,7 @@ msd::BasicDecoration::BasicDecoration(
       shell{shell},
       cursor_images{cursor_images},
       session{window_surface->session().lock()},
-      buffer_streams{std::make_unique<BufferStreams>(session, decoration_strategy->buffer_format())},
+      buffer_streams{std::make_unique<BufferStreams>(session)},
       window_surface{window_surface},
       decoration_surface{create_surface()},
       window_state{decoration_strategy->new_window_state(window_surface, scale)},
@@ -177,10 +173,7 @@ msd::BasicDecoration::BasicDecoration(
 
 auto msd::BasicDecoration::BufferStreams::create_buffer_stream() -> std::shared_ptr<mc::BufferStream>
 {
-    auto const stream = session->create_buffer_stream(mg::BufferProperties{
-        geom::Size{1, 1},
-        buffer_format,
-        mg::BufferUsage::software});
+    auto const stream = session->create_buffer_stream();
     return stream;
 }
 
@@ -278,10 +271,7 @@ auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surf
     params.placement_hints = MirPlacementHints(0);
     // Will be replaced by initial update
     params.streams = {{
-        session->create_buffer_stream(mg::BufferProperties{
-            geom::Size{1, 1},
-            decoration_strategy->buffer_format(),
-            mg::BufferUsage::software}),
+        session->create_buffer_stream(),
         {},
         }};
     return shell->create_surface(session, params, nullptr, nullptr);

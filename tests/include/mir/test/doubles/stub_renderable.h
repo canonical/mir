@@ -115,9 +115,7 @@ public:
 private:
     std::shared_ptr<graphics::Buffer> make_stub_buffer(geometry::Rectangle const& rect)
     {
-        graphics::BufferProperties prop{
-            rect.size, mir_pixel_format_abgr_8888, graphics::BufferUsage::hardware};
-        return std::make_shared<StubBuffer>(prop);
+        return std::make_shared<StubBuffer>(rect.size, mir_pixel_format_abgr_8888);
     }
 
     glm::mat4 trans;

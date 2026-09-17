@@ -186,7 +186,7 @@ struct DecorationBasicDecoration
                     decoration_surface.register_interest(observer);
                     return mt::fake_shared(decoration_surface);
                 });
-        ON_CALL(*session, create_buffer_stream(_))
+        ON_CALL(*session, create_buffer_stream())
             .WillByDefault(Return(mt::fake_shared(buffer_stream)));
         window_surface.resize(default_window_size);
         basic_decoration = std::make_shared<msd::BasicDecoration>(

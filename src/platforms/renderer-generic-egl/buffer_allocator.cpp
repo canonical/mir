@@ -23,7 +23,6 @@
 #include <mir/graphics/shm_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
-#include <mir/graphics/buffer_properties.h>
 #include <mir/raii.h>
 #include <mir/graphics/display.h>
 #include <mir/renderer/gl/context.h>

@@ -35,7 +35,6 @@
 
 namespace ms = mir::scene;
 namespace msh = mir::shell;
-namespace mg = mir::graphics;
 namespace mc = mir::compositor;
 
 ms::ApplicationSession::ApplicationSession(
@@ -251,7 +250,7 @@ void ms::ApplicationSession::show()
     }
 }
 
-auto ms::ApplicationSession::create_buffer_stream(mg::BufferProperties const& /*props*/)
+auto ms::ApplicationSession::create_buffer_stream()
     -> std::shared_ptr<compositor::BufferStream>
 {
     auto stream = std::make_shared<mc::Stream>();

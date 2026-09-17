@@ -53,8 +53,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD(void, hide, (), (override));
     MOCK_METHOD(void, show, (), (override));
 
-    MOCK_METHOD(std::shared_ptr<compositor::BufferStream>, create_buffer_stream, (
-        graphics::BufferProperties const&), (override));
+    MOCK_METHOD(std::shared_ptr<compositor::BufferStream>, create_buffer_stream, (), (override));
     MOCK_METHOD(void, destroy_buffer_stream, (std::shared_ptr<frontend::BufferStream> const&), (override));
 
     MOCK_METHOD(void, configure_streams, (scene::Surface&, std::vector<shell::StreamSpecification> const&), (override));

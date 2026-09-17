@@ -389,13 +389,7 @@ TEST_F(SoftwareCursor, handles_argb_8888_buffer_with_stride)
                     geom::Stride const stride{
                         sz.width.as_uint32_t() * MIR_BYTES_PER_PIXEL(pf) + 41
                     };
-                    auto buffer = std::make_shared<mtd::StubBuffer>(
-                        mg::BufferProperties{
-                            sz,
-                            pf,
-                            mg::BufferUsage::hardware
-                        },
-                        stride);
+                    auto buffer = std::make_shared<mtd::StubBuffer>(sz, pf, stride);
                     cursor_buffer = buffer;
                     return buffer;
                 });

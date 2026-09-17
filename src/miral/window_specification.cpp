@@ -23,7 +23,6 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
     top_left(spec.top_left),
     size(),
     pixel_format(spec.pixel_format),
-    buffer_usage(),
     name(spec.name),
     output_id(),
     type(spec.type),
@@ -91,9 +90,6 @@ miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& s
 
     if (spec.width.has_value() && spec.height.has_value())
         size = Size(spec.width.value(), spec.height.value());
-
-    if (spec.buffer_usage.has_value())
-        buffer_usage = BufferUsage(spec.buffer_usage.value());
 
     if (spec.output_id.has_value())
         output_id = spec.output_id.value().as_value();

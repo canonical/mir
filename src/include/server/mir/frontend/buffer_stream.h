@@ -27,7 +27,6 @@ namespace mir
 namespace graphics
 {
 class Buffer;
-struct BufferProperties;
 }
 
 namespace frontend

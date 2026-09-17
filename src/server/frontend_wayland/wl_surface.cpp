@@ -34,7 +34,6 @@
 
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/client.h>
-#include <mir/graphics/buffer_properties.h>
 #include <mir/scene/session.h>
 #include <mir/frontend/wayland.h>
 #include <mir/compositor/buffer_stream.h>
@@ -120,7 +119,7 @@ mf::WlSurface::WlSurface(
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator)
     : Surface(new_resource, Version<6>()),
         session{client->client_session()},
-        stream{session->create_buffer_stream({{}, mir_pixel_format_invalid, graphics::BufferUsage::undefined})},
+        stream{session->create_buffer_stream()},
         allocator{allocator},
         wayland_executor{wayland_executor},
         frame_callback_executor{frame_callback_executor},

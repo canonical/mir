@@ -69,8 +69,7 @@ public:
     void hide() override;
     void show() override;
 
-    auto create_buffer_stream(graphics::BufferProperties const& params)
-        -> std::shared_ptr<compositor::BufferStream> override;
+    auto create_buffer_stream() -> std::shared_ptr<compositor::BufferStream> override;
     void destroy_buffer_stream(std::shared_ptr<frontend::BufferStream> const& stream) override;
     void configure_streams(Surface& surface, std::vector<shell::StreamSpecification> const& config) override;
 

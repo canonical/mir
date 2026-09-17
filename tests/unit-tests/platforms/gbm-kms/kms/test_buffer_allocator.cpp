@@ -20,7 +20,6 @@
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "src/platforms/gbm-kms/server/buffer_allocator.h"
-#include <mir/graphics/buffer_properties.h>
 #include <mir/graphics/display.h>
 #include <mir/options/program_option.h>
 #include <mir/renderer/gl/context.h>
