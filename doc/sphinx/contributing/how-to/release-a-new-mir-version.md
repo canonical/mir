@@ -32,6 +32,10 @@ After it completes, verify:
 1. A `vX.Y.Z-rc` tag exists.
 1. The release PR was created when run from `main`, with a comment containing the GitHub-generated release notes.
 
+The release PR should have minimal changes on top of `main`. But if bugs or
+features are deemed to fit the release, they can be cherry-picked into the
+release branch.
+
 Then run the release testing in [](how-to-test-mir-for-a-release).
 
 ### Prepare the release notes
