@@ -777,3 +777,11 @@ global:
   };
 local: *;
 };
+
+MIRAL_6.1 {
+global:
+  extern "C++" {
+    miral::Decorations::with_renderer*;
+  };
+} MIRAL_6.0;
+

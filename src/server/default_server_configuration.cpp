@@ -187,6 +187,7 @@ auto mir::DefaultServerConfiguration::the_decoration_strategy() -> std::shared_p
         {
             DecorationsType default_style() const override { return DecorationsType::csd; }
             DecorationsType request_style(DecorationsType type) const override { return type; }
+            Renderer renderer() const override { return Renderer::internal; }
         };
 
         decoration_strategy = std::make_shared<DefaultDecorationStrategy>();
