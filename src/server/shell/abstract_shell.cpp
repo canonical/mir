@@ -35,6 +35,7 @@
 #include <vector>
 
 namespace ms = mir::scene;
+namespace mf = mir::frontend;
 namespace mi = mir::input;
 namespace msh = mir::shell;
 namespace geom = mir::geometry;
@@ -181,11 +182,11 @@ msh::AbstractShell::~AbstractShell() noexcept
 }
 
 std::shared_ptr<ms::Session> msh::AbstractShell::open_session(
-    pid_t client_pid,
+    mf::SessionCredentials&& creds,
     Fd socket_fd,
     std::string const& name)
 {
-    auto const result = session_coordinator->open_session(client_pid, socket_fd, name);
+    auto const result = session_coordinator->open_session(std::move(creds), socket_fd, name);
     window_manager->add_session(result);
     report->opened_session(*result);
     return result;

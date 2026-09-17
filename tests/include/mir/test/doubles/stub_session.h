@@ -18,6 +18,7 @@
 #define MIR_TEST_DOUBLES_STUB_SESSION_H
 
 #include <mir/scene/session.h>
+#include <mir/frontend/session_credentials.h>
 
 namespace mir
 {
@@ -28,9 +29,12 @@ namespace doubles
 
 struct StubSession : scene::Session
 {
-    StubSession(pid_t pid = -1);
+    StubSession();
+    StubSession(frontend::SessionCredentials&& creds);
 
     std::string name() const override;
+
+    auto creds() const -> frontend::SessionCredentials const& override;
 
     pid_t process_id() const override;
 
@@ -62,7 +66,7 @@ struct StubSession : scene::Session
         scene::Surface& surface,
         std::vector<shell::StreamSpecification> const& config) override;
 
-    pid_t pid;
+    frontend::SessionCredentials const creds_;
 };
 }
 }

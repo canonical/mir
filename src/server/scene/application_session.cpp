@@ -37,18 +37,19 @@ namespace ms = mir::scene;
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace mc = mir::compositor;
+namespace mf = mir::frontend;
 
 ms::ApplicationSession::ApplicationSession(
     std::shared_ptr<msh::SurfaceStack> const& surface_stack,
     std::shared_ptr<SurfaceFactory> const& surface_factory,
-    pid_t pid,
+    mf::SessionCredentials&& creds,
     Fd socket_fd,
     std::string const& session_name,
     std::shared_ptr<SessionListener> const& session_listener,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& gralloc) :
     surface_stack(surface_stack),
     surface_factory(surface_factory),
-    pid(pid),
+    creds_(std::move(creds)),
     socket_fd_(socket_fd),
     session_name(session_name),
     session_listener(session_listener),
@@ -223,9 +224,14 @@ std::string ms::ApplicationSession::name() const
     return session_name;
 }
 
+auto ms::ApplicationSession::creds() const -> frontend::SessionCredentials const&
+{
+    return creds_;
+}
+
 pid_t ms::ApplicationSession::process_id() const
 {
-    return pid;
+    return creds_.pid();
 }
 
 mir::Fd ms::ApplicationSession::socket_fd() const
