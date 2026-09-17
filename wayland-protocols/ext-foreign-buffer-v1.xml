@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<protocol name="ext_image_sampler_v1">
+<protocol name="ext_foreign_buffer_v1">
   <copyright>
     Copyright © 2026 Canonical Ltd.
 
@@ -32,11 +32,11 @@
 
     Instead of the client capturing and rendering the contents into its own buffer,
     this protocol moves the heavy work of rendering a captured image source to the
-    compositor. The client requests a new sampler, gets an opaque buffer
-    for that sampler, and attaches that buffer to a surface that it owns.
-    The compositor then fills in the contents of that buffer with the requested
-    image. The compositor is responsible for keeping the content of
-    that source up to date in the buffer as it changes.
+    compositor. The client requests a new foreign buffer, gets an opaque buffer,
+    and attaches that buffer to a surface that it owns. The compositor then fills
+    in the contents of that buffer with the requested image. The compositor is
+    responsible for keeping the content of that source up to date in the buffer as
+    it changes.
 
     The contents of the buffer are never sent to the client. Only
     the compositor sees the image.
@@ -57,37 +57,38 @@
     only be done by creating a new major version of the extension.
   </description>
 
-  <interface name="ext_image_sampler_manager_v1" version="1">
-    <description summary="manages image samplers">
-      A client uses the image sampler manager to request a new image sampler.
+  <interface name="ext_foreign_buffer_manager_v1" version="1">
+    <description summary="manages foreign buffers">
+      A client uses the foreign buffer manager to request a new foreign buffer.
 
-      A sampler is created from an ext_image_capture_source_v1. This source can be
+      A foreign buffer is created from an ext_image_capture_source_v1. This source can be
       backed by any source, including outputs, groups of surfaces, an individual surface,
       and more.
     </description>
 
-    <request name="create_sampler">
-      <description summary="create sampler for image capture source">
-        Creates a sampler for the image capture source.
+    <request name="create_buffer">
+      <description summary="create foreign buffer for image capture source">
+        Creates a foreign buffer for the image capture source.
       </description>
-      <arg name="sampler" type="new_id" interface="ext_image_sampler_v1"/>
+      <arg name="buffer" type="new_id" interface="ext_foreign_buffer_v1"/>
       <arg name="source" type="object" interface="ext_image_capture_source_v1"/>
     </request>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the ext_image_sampler_manager_v1 object">
+      <description summary="destroy the ext_foreign_buffer_manager_v1 object">
         This request should be called when the client will no longer
-        use the ext_image_sampler_manager_v1.
+        use the ext_foreign_buffer_manager_v1.
 
-        Afterward, new samplers cannot be created by this manager,
-        but existing samplers must remain valid up until the point of their destruction.
+        Afterward, new foreign buffers cannot be created by this manager,
+        but existing foreign buffers must remain valid up until the point of
+        their destruction.
       </description>
     </request>
   </interface>
 
-  <interface name="ext_image_sampler_v1" version="1">
-    <description summary="a sampler for an image capture source">
-      An ext_image_sampler_v1 object is used to retrieve a buffer that is backed
+  <interface name="ext_foreign_buffer_v1" version="1">
+    <description summary="a foreign buffer for an image capture source">
+      An ext_foreign_buffer_v1 object is used to retrieve a opaque buffer that is backed
       by the contents of the image capture source that it was created with.
 
       The image capture source is not mapped to a surface when the object is created. The
@@ -99,7 +100,7 @@
 
     <request name="get_buffer">
       <description summary="retrieve buffer for image capture source">
-        Retrieve an opaque buffer backed by the image capture source that this sampler was created
+        Retrieve an opaque buffer backed by the image capture source that this foreign buffer was created
         with.
 
         The compositor will send a size event after a get_buffer request. This event describes the `wl_buffer`
@@ -114,9 +115,9 @@
         this happens this buffer will remain valid, and the content of the buffer will continue to resolve
         to the last content with that metadata.
 
-        Only one buffer may be active for a sampler at a time. The active buffer remains
+        Only one buffer may be active for a foreign buffer at a time. The active buffer remains
         active until the client destroys it, after which a new buffer may be requested.
-        Calling this while a buffer is already active for this sampler raises a buffer_active
+        Calling this while a buffer is already active for this foreign buffer raises a buffer_active
         error.
       </description>
       <arg name="buffer" type="new_id" interface="wl_buffer"/>
@@ -126,11 +127,15 @@
       <description summary="report the image capture source size">
         The size event is sent by the compositor in response to a get_buffer request.
 
-        The buffer width and buffer height express the size of the image buffer, while
-        the logical width and logical height express the size of what is being rendered.
+        The buffer width and buffer height express the size of the image buffer in pixels, while
+        the logical width and logical height express the size of what is being rendered in
+        logical coordinates.
+
         For example, the buffer may have a width of 200 and a height of 100, while the logical
-        size has a width of 100 and a height of 50, meaning that the image was scaled up by
-        a factor of 2.
+        size has a width of 100 and a height of 50, meaning that the content has a scale of 2,
+        as you would get by submitting a scale 2 buffer on a scale 2 output. A buffer size of
+        100 by 50 with the same logical size would instead mean that the content has a scale of
+        1, and that the compositor would scale it up by a factor of 2 on a scale 2 output.
       </description>
       <arg name="buffer_width" type="uint" summary="buffer width"/>
       <arg name="buffer_height" type="uint" summary="buffer height"/>
@@ -152,8 +157,8 @@
     </event>
 
     <event name="stopped">
-      <description summary="sampler is no longer available">
-        This event indicates that the sampler source has stopped and is no
+      <description summary="foreign buffer is no longer available">
+        This event indicates that the foreign buffer source has stopped and is no
         longer available. This can happen in a number of cases, e.g. when the
         underlying source is destroyed or an unrecoverable runtime error has occurred.
 
@@ -161,13 +166,13 @@
 
         Calling `get_buffer` after this event will always return the same buffer.
 
-        The client should destroy the sampler after receiving this event.
+        The client should destroy the foreign buffer after receiving this event.
       </description>
     </event>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the ext_image_sampler_v1 object">
-        Destroys the sampler. This request can be sent at any time by the
+      <description summary="destroy the ext_foreign_buffer_v1 object">
+        Destroys the foreign buffer. This request can be sent at any time by the
         client.
 
         This does not affect the wl_buffer objects created by this object.
