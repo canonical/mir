@@ -50,6 +50,36 @@
     - mirplatformgraphics ABI unchanged at 24
     - mirinputplatform ABI unchanged at 11
 
+  - Enhancements:
+
+    - [Wayland] Advertise `wl_output` as a dynamic global for each monitor [#5117](https://github.com/canonical/mir/pull/5117)
+    - [Wayland] Add `wl_fixes` support [#5193](https://github.com/canonical/mir/pull/5193)
+    - workshop: add `run nest <shell>` [#5089](https://github.com/canonical/mir/pull/5089)
+    - Allow mappable DMA-BUF framebuffers to expose their DMA-BUF [#5217](https://github.com/canonical/mir/pull/5217)
+    - Require Rust when building Mir and package the Rust evdev input platform [#5185](https://github.com/canonical/mir/pull/5185)
+    - Build with libxml++ 5.0 where available, with a libxml++ 2.6 fallback for older distributions [#5182](https://github.com/canonical/mir/pull/5182), [#5201](https://github.com/canonical/mir/pull/5201)
+    - Remove the obsolete `BufferProperties` API [#5218](https://github.com/canonical/mir/pull/5218)
+    - Rework the magnifier around reusable layout geometry, with output-bound placement, cursor following, and updated defaults [#5133](https://github.com/canonical/mir/pull/5133), [#5134](https://github.com/canonical/mir/pull/5134), [#5206](https://github.com/canonical/mir/pull/5206)
+    - Add a typed wrapper for `wl_array` [#5194](https://github.com/canonical/mir/pull/5194)
+
+  - Bugs fixed:
+
+    - Fix horizontal scroll-speed configuration [#5151](https://github.com/canonical/mir/pull/5151)
+    - Do not treat attached surfaces, such as on-screen keyboards, as kiosk windows [#5157](https://github.com/canonical/mir/pull/5157)
+    - Report wl_surface role conflicts using the correct Wayland protocol error [#5005](https://github.com/canonical/mir/pull/5005)
+    - Ensure pointer enter and leave events see the final surface geometry after window-management changes [#5165](https://github.com/canonical/mir/pull/5165)
+    - Safely handle unmanaged surfaces in `window_at()` [#5187](https://github.com/canonical/mir/pull/5187)
+    - Set the cursor role on hidden cursor surfaces [#5168](https://github.com/canonical/mir/pull/5168)
+    - Reuse the screen-shooter renderer and handle output resizing correctly [#5119](https://github.com/canonical/mir/pull/5119)
+    - Fix GBM/KMS multi-display configurations that do not use clone mode [#5126](https://github.com/canonical/mir/pull/5126)
+
+  - Documentation:
+
+    - Clarify input-trigger protocol descriptions [#5074](https://github.com/canonical/mir/pull/5074)
+    - Add a project roadmap [#5179](https://github.com/canonical/mir/pull/5179)
+    - Document the release-burning process [#5211](https://github.com/canonical/mir/pull/5211)
+    - Update the supported environments for release testing [#5140](https://github.com/canonical/mir/pull/5140)
+
 ## Mir 2.29.0
 
 - New upstream release 2.29.0~dev
