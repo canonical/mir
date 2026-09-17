@@ -614,3 +614,10 @@ global:
     vtable?for?mir::wayland::MirPositionerV1;
   };
 };
+
+MIRWAYLAND_2.30 {
+  global:
+  extern "C++" {
+    mir::wayland::WlArrayBase::*;
+  };
+} MIRWAYLAND_2.29;
