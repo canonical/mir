@@ -325,7 +325,7 @@ public:
                 //  - lock self->state
                 //  - on another thread, the observer gets called into, attempts to lock self->state and blocks
                 //  - unregistering the observer waits until the observer returns,
-                //    which it will not since its waiting on the lock
+                //    which it will not since it's waiting on the lock
                 //  - deadlock: unregister waiting on observer, observer waiting on lock held to unregister
                 //
                 //  The lock is only required to grab references to the observers
