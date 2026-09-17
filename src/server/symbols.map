@@ -517,8 +517,8 @@ global:
     mir::scene::BasicSurface::set_mirror_mode*;
     mir::scene::BasicSurface::set_opaque_region*;
     mir::scene::BasicSurface::set_orientation*;
-    mir::scene::BasicSurface::set_reception_mode*;
     mir::scene::BasicSurface::set_parent*;
+    mir::scene::BasicSurface::set_reception_mode*;
     mir::scene::BasicSurface::set_streams*;
     mir::scene::BasicSurface::set_tiled_edges*;
     mir::scene::BasicSurface::set_transformation*;
@@ -1073,8 +1073,8 @@ global:
     non-virtual?thunk?to?mir::scene::BasicSurface::set_mirror_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_opaque_region*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_orientation*;
-    non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_parent*;
+    non-virtual?thunk?to?mir::scene::BasicSurface::set_reception_mode*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_streams*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_tiled_edges*;
     non-virtual?thunk?to?mir::scene::BasicSurface::set_transformation*;
@@ -1592,3 +1592,4 @@ global:
   };
 local: *;
 };
+
