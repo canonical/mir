@@ -15,8 +15,10 @@
  */
 
 #include <mir/logging/file_logger.h>
+#include <mir/logging/event.h>
 
 #include <iostream>
+#include <ranges>
 
 namespace ml = mir::logging;
 
@@ -25,13 +27,18 @@ ml::FileLogger::FileLogger(std::ofstream stream)
 {
 }
 
-void ml::FileLogger::log(Severity severity,
-                         std::string const& message,
-                         std::string const& component)
+void ml::FileLogger::log(Event const& log_event)
 {
     if (file.good())
     {
-        format_message(file, severity, message, component);
+        format_message(
+            file,
+            log_event.severity(),
+            log_event.message(),
+            log_event.tags() |
+                std::views::transform([](Tag const& tag) { return tag::name(tag); }) |
+                std::views::join_with(':') |
+                std::ranges::to<std::string>());
     }
     else if (!file_bad.load())
     {

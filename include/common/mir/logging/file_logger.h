@@ -33,7 +33,7 @@ public:
     FileLogger(std::ofstream stream);
 
 protected:
-    void log(mir::logging::Severity severity, std::string const& message, std::string const& component) override;
+    void log(Event const& log_event) override;
 
 private:
     std::ofstream file;

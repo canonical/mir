@@ -19,8 +19,8 @@
 
 #include <format>
 #include <functional>
-#include <initializer_list>
 #include <string_view>
+#include <span>
 #include <vector>
 
 namespace mir::logging
@@ -50,7 +50,7 @@ Tag const& wayland();
 Tag const& graphics();
 Tag const& window_management();
 
-using Tags = std::initializer_list<std::reference_wrapper<Tag const> const>;
+using Tags = std::span<std::reference_wrapper<Tag const> const>;
 
 enum class Severity
 {

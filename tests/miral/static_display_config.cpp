@@ -17,8 +17,10 @@
 #include "static_display_config.h"
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/logging/logger.h>
+#include <mir/logging/event.h>
 
 #include <mir/test/doubles/mock_display_configuration.h>
+#include <mir/test/doubles/mock_logger.h>
 
 #include <filesystem>
 #include <gtest/gtest.h>
@@ -48,9 +50,15 @@ static const std::vector<uint8_t> basic_edid{
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x93,
 };
 
+MATCHER_P2(LogMatching, severity_matcher, message_matcher, "")
+{
+    return ExplainMatchResult(severity_matcher, arg.severity(), result_listener) &&
+           ExplainMatchResult(message_matcher, std::string{arg.message()}, result_listener);
+}
+
 struct MockLogger : ml::Logger
 {
-    MOCK_METHOD(void, log, (ml::Severity severity, const std::string& message, const std::string& component), (override));
+    MOCK_METHOD(void, log, (ml::Event const& log_event), (override));
 };
 
 struct StaticDisplayConfig : Test
@@ -61,7 +69,7 @@ struct StaticDisplayConfig : Test
 
     miral::YamlFileDisplayConfig sdc;
 
-    std::shared_ptr<MockLogger> const mock_logger{std::make_shared<NiceMock<MockLogger>>()};
+    std::shared_ptr<mtd::MockLogger> const mock_logger{std::make_shared<NiceMock<mtd::MockLogger>>()};
 
     void SetUp() override
     {
@@ -99,6 +107,8 @@ struct StaticDisplayConfig : Test
             InvokeArgument<0>(mg::UserDisplayConfigurationOutput{vga1}),
             InvokeArgument<0>(mg::UserDisplayConfigurationOutput{hdmi1})));
 
+        // Ensure that our logger actually receives messages
+        mir::logging::tag::set_severity("base", ml::Severity::debug);
         Test::SetUp();
     }
 
@@ -373,7 +383,9 @@ TEST_F(StaticDisplayConfig, selecting_layout_works)
 
 TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_default_strategy_used)
 {
-    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+    using mtd::LogMatching;
+
+    EXPECT_CALL(*mock_logger, log(LogMatching(Ne(ml::Severity::warning), _))).Times(AnyNumber());
 
     std::istringstream stream{
         "layouts:\n"
@@ -381,7 +393,7 @@ TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_default_strat
         "    cards:\n"
         "    - HDMI-A-1:\n"};
 
-    EXPECT_CALL(*mock_logger, log(ml::Severity::debug, HasSubstr("Display config using layout strategy: 'default'"), _));
+    EXPECT_CALL(*mock_logger, log(LogMatching(Eq(ml::Severity::debug), HasSubstr("Display config using layout strategy: 'default'"))));
 
     sdc.load_config(stream, "");
     sdc.apply_to(dc);
@@ -391,7 +403,9 @@ TEST_F(StaticDisplayConfig, missing_default_layout_is_reported_and_default_strat
 
 TEST_F(StaticDisplayConfig, missing_side_by_side_layout_is_reported_and_side_by_side_strategy_used)
 {
-    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+    using mtd::LogMatching;
+
+    EXPECT_CALL(*mock_logger, log(LogMatching(Ne(ml::Severity::warning), _))).Times(AnyNumber());
 
     std::istringstream stream{
         "layouts:\n"
@@ -399,7 +413,7 @@ TEST_F(StaticDisplayConfig, missing_side_by_side_layout_is_reported_and_side_by_
         "    cards:\n"
         "    - HDMI-A-1:\n"};
 
-    EXPECT_CALL(*mock_logger, log(ml::Severity::debug, HasSubstr("Display config using layout strategy: 'side_by_side'"), _));
+    EXPECT_CALL(*mock_logger, log(LogMatching(Eq(ml::Severity::debug), HasSubstr("Display config using layout strategy: 'side_by_side'"))));
 
     sdc.load_config(stream, "");
     sdc.select_layout("side_by_side");
@@ -411,7 +425,9 @@ TEST_F(StaticDisplayConfig, missing_side_by_side_layout_is_reported_and_side_by_
 
 TEST_F(StaticDisplayConfig, missing_foo_layout_is_reported_and_default_strategy_used)
 {
-    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+    using mtd::LogMatching;
+
+    EXPECT_CALL(*mock_logger, log(LogMatching(Ne(ml::Severity::warning), _))).Times(AnyNumber());
 
     std::istringstream stream{
         "layouts:\n"
@@ -419,8 +435,8 @@ TEST_F(StaticDisplayConfig, missing_foo_layout_is_reported_and_default_strategy_
         "    cards:\n"
         "    - HDMI-A-1:\n"};
 
-    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("Display config does not contain layout 'foo'"), _));
-    EXPECT_CALL(*mock_logger, log(ml::Severity::debug, HasSubstr("Display config using layout strategy: 'default"), _));
+    EXPECT_CALL(*mock_logger, log(LogMatching(Eq(ml::Severity::warning), HasSubstr("Display config does not contain layout 'foo'"))));
+    EXPECT_CALL(*mock_logger, log(LogMatching(Eq(ml::Severity::debug), HasSubstr("Display config using layout strategy: 'default"))));
 
     sdc.load_config(stream, "");
     sdc.select_layout("foo");
@@ -432,7 +448,9 @@ TEST_F(StaticDisplayConfig, missing_foo_layout_is_reported_and_default_strategy_
 
 TEST_F(StaticDisplayConfig, missing_selected_layout_is_reported_and_ignored)
 {
-    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+    using mtd::LogMatching;
+
+    EXPECT_CALL(*mock_logger, log(LogMatching(Ne(ml::Severity::warning), _))).Times(AnyNumber());
 
     std::istringstream stream{
         "layouts:\n"
@@ -440,7 +458,7 @@ TEST_F(StaticDisplayConfig, missing_selected_layout_is_reported_and_ignored)
         "    cards:\n"
         "    - HDMI-A-1:\n"};
 
-    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("unknown"), _));
+    EXPECT_CALL(*mock_logger, log(LogMatching(Eq(ml::Severity::warning), HasSubstr("unknown"))));
 
     sdc.select_layout("unknown");
     sdc.load_config(stream, "");
@@ -464,7 +482,9 @@ TEST_F(StaticDisplayConfig, ill_formed_orientation_causes_AbnormalExit)
 
 TEST_F(StaticDisplayConfig, unknown_mode_is_reported_and_ignored)
 {
-    EXPECT_CALL(*mock_logger, log(Ne(ml::Severity::warning), _, _)).Times(AnyNumber());
+    using mtd::LogMatching;
+
+    EXPECT_CALL(*mock_logger, log(LogMatching(Ne(ml::Severity::warning), _))).Times(AnyNumber());
 
     std::istringstream stream{
         "layouts:\n"
@@ -473,7 +493,7 @@ TEST_F(StaticDisplayConfig, unknown_mode_is_reported_and_ignored)
         "    - HDMI-A-1:\n"
         "        mode: 11640x480@59.9\n"};
 
-    EXPECT_CALL(*mock_logger, log(ml::Severity::warning, HasSubstr("11640x480@59.9"), _));
+    EXPECT_CALL(*mock_logger, log(LogMatching(Eq(ml::Severity::warning), HasSubstr("11640x480@59.9"))));
 
     sdc.load_config(stream, "");
     sdc.apply_to(dc);

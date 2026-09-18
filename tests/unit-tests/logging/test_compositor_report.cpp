@@ -16,6 +16,7 @@
 
 #include "src/server/report/logging/compositor_report.h"
 #include <mir/logging/logger.h>
+#include <mir/logging/event.h>
 #include <mir/test/doubles/advanceable_clock.h>
 
 #include <gtest/gtest.h>
@@ -34,9 +35,9 @@ namespace
 class Recorder : public ml::Logger
 {
 public:
-    void log(ml::Severity, string const& message, string const&)
+    void log(ml::Event const& log_event)
     {
-        last = message;
+        last = log_event.message();
     }
     string const& last_message() const
     {
@@ -48,7 +49,7 @@ public:
     }
     bool scrape(float& fps, float& frame_time) const
     {
-        return sscanf(last.c_str(), "Display %*s averaged %f FPS, %f ms/frame",
+        return sscanf(last.c_str(), "%*s Display %*s averaged %f FPS, %f ms/frame",
                       &fps, &frame_time) == 2;
     }
 private:

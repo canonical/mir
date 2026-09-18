@@ -43,27 +43,27 @@ const char* mrl::DisplayReport::component()
 
 void mrl::DisplayReport::report_successful_setup_of_native_resources()
 {
-    logger->log(ml::Severity::informational, "Successfully setup native resources.", component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully setup native resources."});
 }
 
 void mrl::DisplayReport::report_successful_egl_make_current_on_construction()
 {
-    logger->log(ml::Severity::informational, "Successfully made egl context current on construction.", component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully made egl context current on construction."});
 }
 
 void mrl::DisplayReport::report_successful_egl_buffer_swap_on_construction()
 {
-    logger->log(ml::Severity::informational, "Successfully performed egl buffer swap on construction.", component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully performed egl buffer swap on construction."});
 }
 
 void mrl::DisplayReport::report_successful_drm_mode_set_crtc_on_construction()
 {
-    logger->log(ml::Severity::informational, "Successfully performed drm mode setup on construction.", component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully performed drm mode setup on construction."});
 }
 
 void mrl::DisplayReport::report_successful_display_construction()
 {
-    logger->log(ml::Severity::informational, "Successfully finished construction.", component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully finished construction."});
 }
 
 void mrl::DisplayReport::report_drm_master_failure(int error)
@@ -73,34 +73,34 @@ void mrl::DisplayReport::report_drm_master_failure(int error)
     if (error == EPERM || error == EACCES)
         ss << " Try running Mir with root privileges.";
 
-    logger->log(ml::Severity::warning, ss.str(), component());
+    logger->log(ml::Event{ml::Severity::warning, component(), ss.str()});
 }
 
 void mrl::DisplayReport::report_vt_switch_away_failure()
 {
-    logger->log(ml::Severity::warning, "Failed to switch away from Mir VT.", component());
+    logger->log(ml::Event{ml::Severity::warning, component(), "Failed to switch away from Mir VT."});
 }
 
 void mrl::DisplayReport::report_vt_switch_back_failure()
 {
-    logger->log(ml::Severity::warning, "Failed to switch back to Mir VT.", component());
+    logger->log(ml::Event{ml::Severity::warning, component(), "Failed to switch back to Mir VT."});
 }
 
 void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig config)
 {
     auto ext = eglQueryString(disp, EGL_EXTENSIONS);
     std::string extensions { ext ? ext : "" };
-    logger->log(ml::Severity::informational, "Display EGL Extensions: " + extensions, component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Display EGL Extensions: " + extensions});
 
     auto client_ext = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     if (client_ext)
     {
-        logger->log(ml::Severity::informational,
-            "EGL_EXT_client_extensions: " + std::string{client_ext}, component());
+        logger->log(ml::Event{ml::Severity::informational,
+            component(), "EGL_EXT_client_extensions: " + std::string{client_ext}});
     }
     else
     {
-        logger->log(ml::Severity::informational, "EGL_EXT_client_extensions not supported", component());
+        logger->log(ml::Event{ml::Severity::informational, component(), "EGL_EXT_client_extensions not supported"});
         //clear out error
         eglGetError();
     }
@@ -150,13 +150,13 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     };
     #undef STRMACRO
 
-    logger->log(ml::Severity::informational, "Display EGL Configuration:", component());
+    logger->log(ml::Event{ml::Severity::informational, component(), "Display EGL Configuration:"});
     for( auto &i : egl_string_mapping)
     {
         EGLint value;
         if (eglGetConfigAttrib(disp, config, i.val, &value))
-            logger->log(ml::Severity::informational,
-                "    [" + i.name + "] : " + std::to_string(value), component());
+            logger->log(ml::Event{ml::Severity::informational,
+                component(), "    [" + i.name + "] : " + std::to_string(value)});
     }
 }
 

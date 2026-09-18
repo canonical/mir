@@ -22,6 +22,7 @@
 
 #include <miral/test_server.h>
 #include <mir/test/doubles/null_logger.h>
+#include <mir/test/doubles/mock_logger.h>
 #include <mir/test/fake_shared.h>
 
 #include <gmock/gmock.h>
@@ -29,7 +30,6 @@
 #include <format>
 
 using namespace testing;
-using mir::logging::Logger;
 
 namespace
 {
@@ -62,12 +62,8 @@ struct TestOutputFilterConfigFilter : public OutputFilter, public WithParamInter
         mir::logging::set_logger(std::make_shared<mir::test::doubles::NullLogger>());
     }
 
-    struct MockLogger : Logger
-    {
-        MOCK_METHOD(void, log, (mir::logging::Severity severity, const std::string& message, const std::string& component), (override));
-    };
-    MockLogger mock_logger;
-    mir::Server::Builder<Logger> const logger_builder = [this]() -> std::shared_ptr<Logger> { return mir::test::fake_shared(mock_logger); };
+    mir::test::doubles::MockLogger mock_logger;
+    mir::Server::Builder<mir::logging::Logger> const logger_builder = [this]() -> std::shared_ptr<mir::logging::Logger> { return mir::test::fake_shared(mock_logger); };
 };
 }
 
@@ -103,10 +99,12 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_P(TestOutputFilterConfigFilter, live_config_can_set_none_without_warning)
 {
+    using mir::test::doubles::LogMatching;
+
     auto const [option, output_filter_log_occurences] = GetParam();
-    EXPECT_CALL(mock_logger, log(mir::logging::Severity::warning, HasSubstr("output_filter"), _))
+    EXPECT_CALL(mock_logger, log(LogMatching(Eq(mir::logging::Severity::warning), HasSubstr("output_filter"))))
         .Times(output_filter_log_occurences);
-    EXPECT_CALL(mock_logger, log(_, Not(HasSubstr("output_filter")), _)).Times(AnyNumber());
+    EXPECT_CALL(mock_logger, log(LogMatching(_, Not(HasSubstr("output_filter"))))).Times(AnyNumber());
 
     miral::live_config::IniFile ini_file;
     miral::OutputFilter output_filter{ini_file};

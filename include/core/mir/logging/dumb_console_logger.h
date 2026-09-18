@@ -29,7 +29,7 @@ public:
     ~DumbConsoleLogger() override;
 
 protected:
-    void log(Severity severity, std::string const& message, std::string const& component) override;
+    void log(Event const& log_event) override;
 };
 }
 }

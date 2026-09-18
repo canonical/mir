@@ -63,7 +63,7 @@ void mrl::SeatReport::seat_add_device(uint64_t id)
     ss << "Add device"
        << " device_id=" << id;
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_remove_device(uint64_t id)
@@ -72,7 +72,7 @@ void mrl::SeatReport::seat_remove_device(uint64_t id)
     ss << "Remove device"
        << " device_id=" << id;
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_dispatch_event(std::shared_ptr<MirEvent const> const& event)
@@ -81,7 +81,7 @@ void mrl::SeatReport::seat_dispatch_event(std::shared_ptr<MirEvent const> const&
     ss << "Dispatch event"
        << " event_type=" << event->type();
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_set_key_state(uint64_t id, std::vector<uint32_t> const& scan_codes)
@@ -91,7 +91,7 @@ void mrl::SeatReport::seat_set_key_state(uint64_t id, std::vector<uint32_t> cons
        << " device_id="  << id
        << " scan_codes=" << scan_codes_to_string(scan_codes);
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_set_pointer_state(uint64_t id, unsigned buttons)
@@ -101,7 +101,7 @@ void mrl::SeatReport::seat_set_pointer_state(uint64_t id, unsigned buttons)
        << " devie_id=" << id
        << " buttons="  << buttons;
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_set_cursor_position(float cursor_x, float cursor_y)
@@ -111,7 +111,7 @@ void mrl::SeatReport::seat_set_cursor_position(float cursor_x, float cursor_y)
        << " cursor_x=" << cursor_x
        << " cursor_y=" << cursor_y;
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_set_confinement_region_called(geom::Rectangles const& regions)
@@ -122,7 +122,7 @@ void mrl::SeatReport::seat_set_confinement_region_called(geom::Rectangles const&
     ss << "Set confinement region"
        << " regions=" << bound_rect;
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
 
 void mrl::SeatReport::seat_reset_confinement_regions()
@@ -130,5 +130,5 @@ void mrl::SeatReport::seat_reset_confinement_regions()
     std::stringstream ss;
     ss << "Reset confinement regions";
 
-    log->log(ml::Severity::informational, ss.str(), component);
+    log->log(ml::Event{ml::Severity::informational, component, ss.str()});
 }
