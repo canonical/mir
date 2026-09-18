@@ -13,7 +13,6 @@ backends:
 environment:
     ARCH: amd64
     ARCH/ubuntu_arm64: arm64
-    ARCH/ubuntu_armhf: armhf
     DISTRO: ubuntu
     DISTRO/debian_sid: debian
     RELEASE: resolute

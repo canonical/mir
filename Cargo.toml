@@ -24,7 +24,7 @@ log = "0.4"
 serde = { version = "1", features = ["derive"] }
 quick-xml = { version = ">=0.38", features = ["serialize"] }
 wayland-scanner = { version = ">=0.31" }
-wayland-backend = { version = ">=0.3" }
+wayland-backend = { version = ">=0.3.12" }
 bitflags = "2"
 quote = "1"
 proc-macro2 = "1"
