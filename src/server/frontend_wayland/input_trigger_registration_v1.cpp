@@ -417,7 +417,7 @@ bool mf::InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifie
         return false;
 
     // On top of the required modifiers, the event must contain at least one
-    // modifier group that the trigger doesn't for it to be a superset.
+    // modifier group that the trigger doesn't use to be a superset.
     return std::ranges::any_of(
         groups,
         [&](auto const group)
