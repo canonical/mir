@@ -32,6 +32,8 @@
 namespace mf = mir::frontend;
 namespace mw = mir::wayland;
 
+using mf::InputTriggerModifiers;
+
 using Trigger = mf::InputTriggerRegistry::Trigger;
 using ActionGroup = mf::InputTriggerRegistry::ActionGroup;
 using ActionGroupManager = mf::InputTriggerRegistry::ActionGroupManager;
@@ -40,42 +42,6 @@ using ActionGroupManager = mf::InputTriggerRegistry::ActionGroupManager;
 // KeyboardCodeTrigger need to use them.
 namespace
 {
-/// Strong type representing modifier flags used internally by Mir.
-class InputTriggerModifiers
-{
-public:
-    /// Convert to string for debugging
-    auto to_string() const -> std::string;
-
-    /// Explicit conversion from ProtocolModifiers
-    static auto from_protocol(uint32_t protocol_mods) -> InputTriggerModifiers;
-
-    /// Explicit conversion from ProtocolModifiers with keysym for shift
-    /// adjustment.
-    ///
-    /// `protocol_mods` is a mask containing the protocol modifier flags (e.g.
-    /// Shift, Ctrl, Alt) as defined in ext_input_trigger_registration_v1. A
-    /// client could request a trigger with an uppercase letter keysym, but not
-    /// provide a shift modifier. "Ctrl + E" for example. The keysym
-    /// corresponding to "E" only appears in input events if Shift is pressed.
-    /// But since the client did not specify Shift in their original request,
-    /// the protocol modifier mask will not contain Shift, and the event
-    /// modifier mask will contain Shift, and the trigger won't match. To
-    /// account for this, we patch the protocol modifiers at registration time.
-    static auto from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers;
-
-    bool operator==(InputTriggerModifiers const& other) const = default;
-
-    static auto modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods) -> bool;
-    static auto event_modifiers_are_superset(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods) -> bool;
-
-private:
-    explicit InputTriggerModifiers(MirInputEventModifiers required, MirInputEventModifiers allowed);
-
-    MirInputEventModifiers const required;
-    MirInputEventModifiers const allowed;
-};
-
 class KeyboardTrigger : public Trigger, public mw::InputTriggerV1
 {
 public:
@@ -274,12 +240,6 @@ bool mf::KeyboardCodeTrigger::is_same_trigger(KeyboardCodeTrigger const* other) 
 
 namespace
 {
-InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers required, MirInputEventModifiers allowed) :
-    required{required},
-    allowed{allowed}
-{
-}
-
 auto to_string(MirInputEventModifiers value) -> std::string
 {
     if (value == mir_input_event_modifier_none)
@@ -329,18 +289,25 @@ auto to_string(MirInputEventModifiers value) -> std::string
     }
     return result;
 }
+} // namespace
 
-auto InputTriggerModifiers::to_string() const -> std::string
+mf::InputTriggerModifiers::InputTriggerModifiers(MirInputEventModifiers required, MirInputEventModifiers allowed) :
+    required{required},
+    allowed{allowed}
+{
+}
+
+auto mf::InputTriggerModifiers::to_string() const -> std::string
 {
     return "required=" + ::to_string(required) + " allowed=" + ::to_string(allowed);
 }
 
-auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods) -> InputTriggerModifiers
+auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods) -> InputTriggerModifiers
 {
     return from_protocol(protocol_mods, false);
 }
 
-auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers
+auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift_adjustment) -> InputTriggerModifiers
 {
     using PM = mw::InputTriggerRegistrationManagerV1::Modifiers;
 
@@ -420,7 +387,7 @@ auto InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift_adj
     return InputTriggerModifiers{required, allowed};
 }
 
-bool InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
+bool mf::InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
 {
     // All required modifier bits must be present in the event.
     bool const all_required_present = (event_mods & modifiers.required) == modifiers.required;
@@ -431,7 +398,7 @@ bool InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, Mir
     return all_required_present && no_extra_modifiers;
 }
 
-bool InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
+bool mf::InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
 {
     // Superset check per modifier group
     constexpr std::array<MirInputEventModifiers, 4> groups = {
@@ -442,7 +409,15 @@ bool InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers m
     };
 
 
-    // If the event contains any modifier group that the trigger doesn't, it's a superset
+    // A superset requires that all of the trigger's required modifiers are
+    // present in the event. Otherwise an unrelated combination (e.g. "Shift +
+    // d" when the trigger is "Super + d") could be mistaken for a superset and
+    // wrongly consumed.
+    if ((event_mods & modifiers.required) != modifiers.required)
+        return false;
+
+    // On top of the required modifiers, the event must contain at least one
+    // modifier group that the trigger doesn't use to be a superset.
     return std::ranges::any_of(
         groups,
         [&](auto const group)
@@ -453,6 +428,8 @@ bool InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers m
         });
 }
 
+namespace
+{
 KeyboardTrigger::KeyboardTrigger(
     InputTriggerModifiers modifiers,
     std::shared_ptr<mf::KeyboardStateTracker const> const& keyboard_state_tracker,
