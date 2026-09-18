@@ -87,12 +87,13 @@ public:
 
         server_thread = std::thread{
             [this,
+             global_factory = make_global_factory(),
              notification_handler = make_notification_handler(),
              handler = std::move(executor_owned)]() mutable
             {
                 (*server)->run(
                     socket,
-                    nullptr,
+                    std::move(global_factory),
                     std::move(notification_handler),
                     std::move(handler));
             }};
@@ -103,6 +104,14 @@ public:
     virtual auto make_notification_handler() -> std::unique_ptr<WaylandServerNotificationHandler>
     {
         return std::make_unique<StubNotificationHandler>();
+    }
+
+    /// The factory the server creates globals with. Override (typically with a
+    /// `test::MockGlobalFactory` subclass) to advertise globals; defaults to
+    /// null, so the server advertises none.
+    virtual auto make_global_factory() -> std::unique_ptr<GlobalFactory>
+    {
+        return nullptr;
     }
 
     void TearDown() override

@@ -127,7 +127,11 @@ impl CppBuilder {
                 }
 
                 // Virtual destructor
-                result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
+                if class.destructor_body.is_some() {
+                    result.push_str(&format!("    virtual ~{}();\n\n", class.name));
+                } else {
+                    result.push_str(&format!("    virtual ~{}() = default;\n\n", class.name));
+                }
 
                 // Verbatim header-only public declarations (e.g. static templated helpers).
                 for decl in &class.raw_public_decls {
@@ -268,6 +272,16 @@ impl CppBuilder {
         for namespace in &self.namespaces {
             let namespace_str = namespace.name.join("::");
             for class in &namespace.classes {
+                if let Some(destructor_body) = &class.destructor_body {
+                    result.push_str(&format!(
+                        "{}::{}::~{}()\n",
+                        namespace_str, class.name, class.name
+                    ));
+                    result.push_str("{\n");
+                    result.push_str(&format!("    {}\n", destructor_body));
+                    result.push_str("}\n\n");
+                }
+
                 for method in &class.methods {
                     if method.body.is_none() {
                         continue;
@@ -454,6 +468,8 @@ pub struct CppClass {
     /// these are never emitted to the .cpp source or the generated Rust/cxx bindings, so they are
     /// suitable for header-only helpers such as static templated methods.
     pub raw_public_decls: Vec<String>,
+    /// Body of the virtual destructor. When `None` the destructor is defaulted in the header.
+    pub destructor_body: Option<String>,
 }
 
 impl CppClass {
@@ -468,11 +484,17 @@ impl CppClass {
             protected_members: vec![],
             private_members: vec![],
             raw_public_decls: vec![],
+            destructor_body: None,
         }
     }
 
     pub fn set_superclass(&mut self, name: impl Into<String>) {
         self.superclass = Some(name.into());
+    }
+
+    /// Give the class an out-of-line virtual destructor with the given body.
+    pub fn set_destructor_body(&mut self, body: impl Into<String>) {
+        self.destructor_body = Some(body.into());
     }
 
     /// Add a verbatim declaration to the class's `public:` section (header only).
