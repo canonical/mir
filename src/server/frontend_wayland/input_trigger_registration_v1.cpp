@@ -442,7 +442,15 @@ bool InputTriggerModifiers::event_modifiers_are_superset(InputTriggerModifiers m
     };
 
 
-    // If the event contains any modifier group that the trigger doesn't, it's a superset
+    // A superset requires that all of the trigger's required modifiers are
+    // present in the event. Otherwise an unrelated combination (e.g. "Shift +
+    // d" when the trigger is "Super + d") could be mistaken for a superset and
+    // wrongly consumed.
+    if ((event_mods & modifiers.required) != modifiers.required)
+        return false;
+
+    // On top of the required modifiers, the event must contain at least one
+    // modifier group that the trigger doesn't for it to be a superset.
     return std::ranges::any_of(
         groups,
         [&](auto const group)
