@@ -128,14 +128,14 @@ public:
      *
      * The returned Task holds the provided Surface.
      */
-    auto create_task(std::unique_ptr<Surface> surf) -> std::unique_ptr<Task>;
+    virtual auto create_task(std::unique_ptr<Surface> surf) -> std::unique_ptr<Task> = 0;
 
     /**
      * Consume a Task and wait for all operations associated with it to complete.
      *
      * The returned Surface is the same one that was provided to `create_task`.
      */
-    auto wait_complete(std::unique_ptr<Task> task) -> std::unique_ptr<Surface>;
+    virtual auto wait_complete(std::unique_ptr<Task> task) -> std::unique_ptr<Surface> = 0;
 
     /**
      * Blit a source buffer to a target surface.
@@ -159,13 +159,13 @@ public:
      *                        `wait_complete` should be called on `task` to flush
      *                        any previous rendering and perform direct fallback rendering.
      */
-    auto blit(
+    virtual auto blit(
         Task& task,
         Buffer const& source,
         geometry::Rectangle const& source_rect,
         geometry::Rectangle const& target_rect,
         MirOrientation rotation,
-        MirMirrorMode mirror_mode) -> bool;
+        MirMirrorMode mirror_mode) -> bool = 0;
 
     /**
      * Fill a rectangle of a target surface with a solid color, possibly alpha-blended.
@@ -185,7 +185,7 @@ public:
      *                        `wait_complete` should be called on `task` to flush
      *                        any previous rendering and perform direct fallback rendering.
      */
-    auto fill(Task& task, geometry::Rectangle const& target_rect, uint8_t r, uint8_t g, uint8_t b, uint8_t a) -> bool;
+    virtual auto fill(Task& task, geometry::Rectangle const& target_rect, uint8_t r, uint8_t g, uint8_t b, uint8_t a) -> bool = 0;
 
     /**
      * Create a Surface that can be used as a target for blitting.
@@ -194,12 +194,12 @@ public:
      * but while a `Task` is active reads from and writes to the framebuffer
      * are undefined behaviour.
      */
-    auto surface_for_fb(CPUAddressableDisplayAllocator::MappableFB const& fb) -> std::unique_ptr<Surface>;
+    virtual auto surface_for_fb(CPUAddressableDisplayAllocator::MappableFB const& fb) -> std::unique_ptr<Surface> = 0;
 
     /**
      * Get a mapping of the provided buffer for CPU access.
      */
-    auto map_buffer(Buffer const& buffer) -> std::unique_ptr<renderer::software::Mapping<std::byte const>>;
+    virtual auto map_buffer(Buffer const& buffer) -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
 };
 
 }
