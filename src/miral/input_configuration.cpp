@@ -136,6 +136,8 @@ public:
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
                 else if (value == "button_down")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
+                else if (value == "circular")
+                    touchpad.scroll_mode(mir_touchpad_scroll_mode_circular_scroll);
                 else
                     mir::log_warning(
                         "Config key '%s' has invalid value: %s",

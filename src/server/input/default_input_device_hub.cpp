@@ -388,6 +388,11 @@ struct std::formatter<MirTouchpadConfig>
             write_delim();
             out = std::format_to(out, "scroll-mode=button-down,touchpad-scroll-button={},", c.button_down_scroll_button());
             break;
+
+        case mir_touchpad_scroll_mode_circular_scroll:
+            write_delim();
+            out = std::format_to(out, "scroll-mode=circular");
+            break;
         }
 
         if (c.tap_to_click())
