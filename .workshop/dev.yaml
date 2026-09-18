@@ -6,6 +6,10 @@ description: |
   as well as documentation generation (doc), exposed via a tunnel on `localhost:8000`.
 
   Connect the `desktop` interface (`workshop connect dev/mir:desktop`) to run the built server with `workshop exec <executable>` displayed on the host.
+
+  Mount the `wlcs-build` plug to the build directory of `wlcs`, so that the `wlcs` binary
+  is available at `/home/workshop/wlcs-build/wlcs`, then run `workshop run wlcs` to run
+  the test suite.
 base: ubuntu@26.04
 sdks:
 - name: vscode-remote
@@ -59,6 +63,20 @@ actions:
     set -xeu
     cmake --build ~/build
     VERBOSE=1 ARGS="-V" cmake --build ~/build --target ptest "$@"
+
+  wlcs: |
+    set -xeu
+    cmake --build ~/build --target miral_wlcs_integration
+
+    wlcs_binary=/home/workshop/wlcs-build/wlcs
+
+    if [ ! -f "$wlcs_binary" ]; then
+      echo 'wlcs binary not found'
+      echo 'ensure `wlcs-build` plug is mounted to the wlcs build directory'
+      exit 1
+    fi
+
+    "$wlcs_binary" ~/build/lib/miral_wlcs_integration.so "$@"
 
   doc: |
     set -xeu
