@@ -21,6 +21,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/options/program_option.h>
 #include <mir/emergency_cleanup_registry.h>

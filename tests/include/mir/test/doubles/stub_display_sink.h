@@ -19,6 +19,7 @@
 
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 #include <mir/test/doubles/null_display_sink.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/test/doubles/stub_buffer.h>

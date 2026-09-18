@@ -19,6 +19,7 @@
 
 #include <mir/fd.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 
 #include <mir/graphics/kms_framebuffer.h>
 

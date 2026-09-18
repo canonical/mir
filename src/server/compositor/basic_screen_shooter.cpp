@@ -25,6 +25,8 @@
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/raii.h>
 #include <mir/renderer/renderer_factory.h>
 #include <mir/renderer/sw/pixel_source.h>

@@ -25,6 +25,7 @@
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/output_filter.h>
 #include <mir/graphics/platform.h>
+#include <mir/graphics/rendering_providers.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/renderer/renderer.h>
 #include "occlusion.h"
