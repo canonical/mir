@@ -74,6 +74,7 @@ char const* const touchpad_scroll_mode_opt = "touchpad-scroll-mode";
 char const* const touchpad_scroll_mode_two_finger = "two-finger";
 char const* const touchpad_scroll_mode_button_down_scroll = "button-down";
 char const* const touchpad_scroll_mode_edge = "edge";
+char const* const touchpad_scroll_mode_circular = "circular";
 char const* const touchpad_scroll_mode_none = "none";
 
 char const* const touchpad_click_mode_opt= "touchpad-click-mode";
@@ -112,6 +113,10 @@ auto convert_to_scroll_mode(std::optional<std::string> const& opt_val)
         else if (*opt_val == touchpad_scroll_mode_button_down_scroll)
         {
             return mir_touchpad_scroll_mode_button_down_scroll;
+        }
+        else if (*opt_val == touchpad_scroll_mode_circular)
+        {
+            return mir_touchpad_scroll_mode_circular_scroll;
         }
         else
         {
