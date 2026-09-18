@@ -25,14 +25,13 @@ using namespace testing;
 
 namespace
 {
-// A "Super + d" trigger: Meta is both required and allowed, nothing else.
-auto const super_trigger = mf::InputTriggerModifiers{
-    mir_input_event_modifier_meta, mir_input_event_modifier_meta};
-
-// An "Alt + s" trigger: Alt is both required and allowed, nothing else.
-auto const alt_trigger = mf::InputTriggerModifiers{
-    mir_input_event_modifier_alt, mir_input_event_modifier_alt};
+auto const super_trigger = mf::InputTriggerModifiers{mir_input_event_modifier_meta, mir_input_event_modifier_meta};
+auto const alt_trigger = mf::InputTriggerModifiers{mir_input_event_modifier_alt, mir_input_event_modifier_alt};
 }
+
+struct InputTriggerModifiersTest : Test
+{
+};
 
 // Regression test for https://github.com/canonical/mir/issues/5248
 //
@@ -40,46 +39,44 @@ auto const alt_trigger = mf::InputTriggerModifiers{
 // "D"). Previously event_modifiers_are_superset() only checked for an extra
 // modifier group and ignored whether the trigger's required modifiers were
 // present, so a lone Shift satisfied the "superset consume" path.
-TEST(InputTriggerModifiersTest, shift_only_is_not_a_superset_of_super_trigger)
+TEST_F(InputTriggerModifiersTest, shift_only_is_not_a_superset_of_super_trigger)
 {
-    EXPECT_FALSE(mf::InputTriggerModifiers::event_modifiers_are_superset(
-        super_trigger, mir_input_event_modifier_shift));
+    EXPECT_FALSE(
+        mf::InputTriggerModifiers::event_modifiers_are_superset(super_trigger, mir_input_event_modifier_shift));
 }
 
-TEST(InputTriggerModifiersTest, shift_only_does_not_match_super_trigger)
+TEST_F(InputTriggerModifiersTest, shift_only_does_not_match_super_trigger)
 {
-    EXPECT_FALSE(mf::InputTriggerModifiers::modifiers_match(
-        super_trigger, mir_input_event_modifier_shift));
+    EXPECT_FALSE(mf::InputTriggerModifiers::modifiers_match(super_trigger, mir_input_event_modifier_shift));
 }
 
-TEST(InputTriggerModifiersTest, super_plus_extra_modifier_is_a_superset)
+TEST_F(InputTriggerModifiersTest, super_plus_extra_modifier_is_a_superset)
 {
-    EXPECT_TRUE(mf::InputTriggerModifiers::event_modifiers_are_superset(
-        super_trigger, mir_input_event_modifier_meta | mir_input_event_modifier_shift));
+    EXPECT_TRUE(
+        mf::InputTriggerModifiers::event_modifiers_are_superset(
+            super_trigger, mir_input_event_modifier_meta | mir_input_event_modifier_shift));
 }
 
-TEST(InputTriggerModifiersTest, exact_super_is_not_a_superset)
+TEST_F(InputTriggerModifiersTest, exact_super_is_not_a_superset)
 {
-    EXPECT_FALSE(mf::InputTriggerModifiers::event_modifiers_are_superset(
-        super_trigger, mir_input_event_modifier_meta));
+    EXPECT_FALSE(mf::InputTriggerModifiers::event_modifiers_are_superset(super_trigger, mir_input_event_modifier_meta));
 }
 
-TEST(InputTriggerModifiersTest, exact_super_matches_super_trigger)
+TEST_F(InputTriggerModifiersTest, exact_super_matches_super_trigger)
 {
-    EXPECT_TRUE(mf::InputTriggerModifiers::modifiers_match(
-        super_trigger, mir_input_event_modifier_meta));
+    EXPECT_TRUE(mf::InputTriggerModifiers::modifiers_match(super_trigger, mir_input_event_modifier_meta));
 }
 
 // The superset path still exists to gracefully consume events for a held combo
 // when an unrelated modifier is added (e.g. "Alt + s" held, then Shift pressed).
-TEST(InputTriggerModifiersTest, held_combo_with_added_modifier_is_a_superset)
+TEST_F(InputTriggerModifiersTest, held_combo_with_added_modifier_is_a_superset)
 {
-    EXPECT_TRUE(mf::InputTriggerModifiers::event_modifiers_are_superset(
-        alt_trigger, mir_input_event_modifier_alt | mir_input_event_modifier_shift));
+    EXPECT_TRUE(
+        mf::InputTriggerModifiers::event_modifiers_are_superset(
+            alt_trigger, mir_input_event_modifier_alt | mir_input_event_modifier_shift));
 }
 
-TEST(InputTriggerModifiersTest, added_modifier_without_required_is_not_a_superset)
+TEST_F(InputTriggerModifiersTest, added_modifier_without_required_is_not_a_superset)
 {
-    EXPECT_FALSE(mf::InputTriggerModifiers::event_modifiers_are_superset(
-        alt_trigger, mir_input_event_modifier_shift));
+    EXPECT_FALSE(mf::InputTriggerModifiers::event_modifiers_are_superset(alt_trigger, mir_input_event_modifier_shift));
 }
