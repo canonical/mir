@@ -52,15 +52,11 @@
 
   - Enhancements:
 
-    - [Wayland] Advertise `wl_output` as a dynamic global for each monitor [#5117](https://github.com/canonical/mir/pull/5117)
-    - [Wayland] Add `wl_fixes` support [#5193](https://github.com/canonical/mir/pull/5193)
+    - [Wayland] Add `wl_fixes` support [#5193](https://github.com/canonical/mir/pull/5193) (@andogq's first contribution!)
+    - Add a typed wrapper for `wl_array` [#5194](https://github.com/canonical/mir/pull/5194) (@yashsolctl's first contribution!)
     - workshop: add `run nest <shell>` [#5089](https://github.com/canonical/mir/pull/5089)
-    - Allow mappable DMA-BUF framebuffers to expose their DMA-BUF [#5217](https://github.com/canonical/mir/pull/5217)
     - Require Rust when building Mir and package the Rust evdev input platform [#5185](https://github.com/canonical/mir/pull/5185)
     - Build with libxml++ 5.0 where available, with a libxml++ 2.6 fallback for older distributions [#5182](https://github.com/canonical/mir/pull/5182), [#5201](https://github.com/canonical/mir/pull/5201)
-    - Remove the obsolete `BufferProperties` API [#5218](https://github.com/canonical/mir/pull/5218)
-    - Rework the magnifier around reusable layout geometry, with output-bound placement, cursor following, and updated defaults [#5133](https://github.com/canonical/mir/pull/5133), [#5134](https://github.com/canonical/mir/pull/5134), [#5206](https://github.com/canonical/mir/pull/5206)
-    - Add a typed wrapper for `wl_array` [#5194](https://github.com/canonical/mir/pull/5194)
 
   - Bugs fixed:
 
