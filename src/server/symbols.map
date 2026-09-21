@@ -328,6 +328,10 @@ global:
     mir::frontend::SessionCredentials::gid*;
     mir::frontend::SessionCredentials::pid*;
     mir::frontend::SessionCredentials::uid*;
+    mir::frontend::SessionCredentials::apparmor_label*;
+    mir::frontend::SessionCredentials::is_sandboxed*;
+    mir::frontend::SessionCredentials::snap_info*;
+    mir::frontend::SessionCredentials::flatpak_info*;
     mir::frontend::Surface::?Surface*;
     mir::frontend::Surface::Surface*;
     mir::frontend::Surface::operator*;
