@@ -130,11 +130,11 @@ public:
                 auto const& value = *val;
                 if (value == "none")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_none);
-                else if (value == "two_finger")
+                else if (value == "two_finger" || value == "two-finger")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_two_finger_scroll);
                 else if (value == "edge")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_edge_scroll);
-                else if (value == "button_down")
+                else if (value == "button_down" || value == "button-down")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_button_down_scroll);
                 else if (value == "circular")
                     touchpad.scroll_mode(mir_touchpad_scroll_mode_circular_scroll);
@@ -459,7 +459,7 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
 
     config_store.add_string_attribute(
         {"touchpad", "scroll_mode"},
-        "Touchpad scroll mode [{none, two_finger, edge, button_down}]",
+        "Touchpad scroll mode [{none, two-finger, edge, button-down, circular}]",
         [self=self](auto... args) { self->config.touchpad_scroll_mode(args...); });
 
     config_store.add_bool_attribute(
