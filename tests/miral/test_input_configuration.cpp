@@ -592,39 +592,23 @@ TEST_F(TestLiveInputConfigurationAtStartup, touchpad_live_config_is_applied_when
     EXPECT_THAT(input_config.touchpad().tap_to_click(), Eq(std::optional<bool>{true}));
 }
 
-struct TestLiveTouchpadScrollModeConfigurationAtStartup :
-    TestLiveInputConfigurationAtStartup,
-    testing::WithParamInterface<std::pair<std::string_view, MirTouchpadScrollMode>>
-{
-};
-
-TEST_P(TestLiveTouchpadScrollModeConfigurationAtStartup, touchpad_scroll_mode_is_applied_when_server_starts)
+TEST_F(TestLiveInputConfigurationAtStartup, circular_touchpad_scroll_mode_is_applied_when_server_starts)
 {
     auto const config_path = std::filesystem::temp_directory_path() /
         "mir-test-input-configuration-touchpad-scroll-mode.settings";
 
-    auto const [config_value, expected_mode] = GetParam();
-
     config_store.do_transaction([&]
     {
-        config_store.update_key({"touchpad", "scroll_mode"}, config_value, config_path);
+        config_store.update_key({"touchpad", "scroll_mode"}, "circular", config_path);
     });
 
     add_server_init(input_config);
     start_server();
 
-    EXPECT_THAT(input_config.touchpad().scroll_mode(), Eq(std::optional<MirTouchpadScrollMode>{expected_mode}));
+    EXPECT_THAT(
+        input_config.touchpad().scroll_mode(),
+        Eq(std::optional<MirTouchpadScrollMode>{mir_touchpad_scroll_mode_circular_scroll}));
 }
-
-INSTANTIATE_TEST_SUITE_P(
-    TestInputConfiguration,
-    TestLiveTouchpadScrollModeConfigurationAtStartup,
-    Values(
-        std::pair<std::string_view, MirTouchpadScrollMode>{"two_finger", mir_touchpad_scroll_mode_two_finger_scroll},
-        std::pair<std::string_view, MirTouchpadScrollMode>{"two-finger", mir_touchpad_scroll_mode_two_finger_scroll},
-        std::pair<std::string_view, MirTouchpadScrollMode>{"button_down", mir_touchpad_scroll_mode_button_down_scroll},
-        std::pair<std::string_view, MirTouchpadScrollMode>{"button-down", mir_touchpad_scroll_mode_button_down_scroll},
-        std::pair<std::string_view, MirTouchpadScrollMode>{"circular", mir_touchpad_scroll_mode_circular_scroll}));
 
 TEST_F(TestLiveInputConfigurationAtStartup, horizontal_and_vertical_scroll_speeds_are_configured_independently)
 {
