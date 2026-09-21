@@ -57,29 +57,29 @@
     only be done by creating a new major version of the extension.
   </description>
 
-  <interface name="ext_foreign_buffer_factory_v1" version="1">
-    <description summary="creates foreign buffer sessions">
-      A client uses the foreign buffer factory to request a new foreign buffer session.
+  <interface name="ext_foreign_buffer_manager_v1" version="1">
+    <description summary="manages foreign buffer sessions">
+      A client uses the foreign buffer manager to request a new foreign buffer session.
 
       A foreign buffer session is created from an ext_image_capture_source_v1. This source can be
       backed by any source, including outputs, groups of surfaces, an individual surface,
       and more.
     </description>
 
-    <request name="create_buffer">
+    <request name="get_session">
       <description summary="create foreign buffer session for image capture source">
         Creates a foreign buffer session for the image capture source.
       </description>
-      <arg name="buffer" type="new_id" interface="ext_foreign_buffer_session_v1"/>
+      <arg name="session" type="new_id" interface="ext_foreign_buffer_session_v1"/>
       <arg name="source" type="object" interface="ext_image_capture_source_v1"/>
     </request>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the ext_foreign_buffer_factory_v1 object">
+      <description summary="destroy the ext_foreign_buffer_manager_v1 object">
         This request should be called when the client will no longer
-        use the ext_foreign_buffer_factory_v1.
+        use the ext_foreign_buffer_manager_v1.
 
-        Afterward, new foreign buffer sessions cannot be created by this factory,
+        Afterward, new foreign buffer sessions cannot be created by this manager,
         but existing foreign buffer sessions must remain valid up until the point of
         their destruction.
       </description>
