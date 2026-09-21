@@ -39,7 +39,7 @@
 
 #include <libinput.h>
 
-#include <cstring>
+#include <string_view>
 #include <version>
 #include <format>
 #include <string>
@@ -321,7 +321,7 @@ void mie::Platform::start()
 
                         std::string devnode{workaround_device->devnode()};
                         // Libinput filters out anything without “event” as its name
-                        if (std::strncmp(workaround_device->sysname(), "event", strlen_c("event")) != 0)
+                        if (!std::string_view{workaround_device->sysname()}.starts_with("event"))
                         {
                             return;
                         }
@@ -357,7 +357,7 @@ void mie::Platform::start()
 
                         if (device_udev)
                         {
-                            if (std::strcmp(device.syspath(), udev_device_get_syspath(device_udev)) == 0)
+                            if (std::string_view(device.syspath()) == std::string_view(udev_device_get_syspath(device_udev)))
                             {
                                 libinput_path_remove_device(input_device->device());
                             }
