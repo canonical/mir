@@ -620,7 +620,9 @@ INSTANTIATE_TEST_SUITE_P(
     TestInputConfiguration,
     TestLiveTouchpadScrollModeConfigurationAtStartup,
     Values(
+        std::pair<std::string_view, MirTouchpadScrollMode>{"two_finger", mir_touchpad_scroll_mode_two_finger_scroll},
         std::pair<std::string_view, MirTouchpadScrollMode>{"two-finger", mir_touchpad_scroll_mode_two_finger_scroll},
+        std::pair<std::string_view, MirTouchpadScrollMode>{"button_down", mir_touchpad_scroll_mode_button_down_scroll},
         std::pair<std::string_view, MirTouchpadScrollMode>{"button-down", mir_touchpad_scroll_mode_button_down_scroll},
         std::pair<std::string_view, MirTouchpadScrollMode>{"circular", mir_touchpad_scroll_mode_circular_scroll}));
 
