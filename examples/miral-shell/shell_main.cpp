@@ -18,11 +18,11 @@
 #include <miral/minimal_window_manager.h>
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
+#include "output_configuration_options.h"
 #include "wallpaper_config.h"
 #include "spinner/splash.h"
 
 #include <miral/application_switcher.h>
-#include <miral/display_configuration_option.h>
 #include <miral/external_client.h>
 #include <miral/runner.h>
 #include <miral/window_management_options.h>
@@ -392,7 +392,7 @@ int main(int argc, char const* argv[])
                     { focus_stealing_prevention = to_focus_stealing(is_set); },
                     "focus-stealing-prevention", "Prevent newly opened windows from taking keyboard focus from an active window.", false}),
             window_managers,
-            display_configuration_options,
+            OutputConfigurationOptions{},
             external_client_launcher,
             launcher,
             config_keymap,

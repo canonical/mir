@@ -20,6 +20,9 @@
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/server.h>
 
+#include <algorithm>
+#include <vector>
+
 namespace mg = mir::graphics;
 namespace ms = mir::shell;
 
@@ -31,21 +34,33 @@ public:
     {
     }
 
-    void init(mir::Server& server, std::shared_ptr<mg::DisplayConfigurationPolicy> wrapped)
+    void set_wrapped(std::shared_ptr<mg::DisplayConfigurationPolicy> wrapped)
     {
         std::lock_guard lock(mutex);
-        this->wrapped = wrapped;
-        dcc_weak = server.the_display_configuration_controller();
+        this->wrapped = std::move(wrapped);
+    }
+
+    void set_display_configuration_controller(std::weak_ptr<ms::DisplayConfigurationController> dcc)
+    {
+        std::lock_guard lock(mutex);
+        dcc_weak = std::move(dcc);
     }
 
     void update_strategy(std::shared_ptr<Strategy> strategy)
     {
-        std::lock_guard lock(mutex);
-        this->strategy = std::move(strategy);
-        if (auto dcc = dcc_weak.lock())
+        std::shared_ptr<ms::DisplayConfigurationController> dcc;
+
+        {
+            std::lock_guard lock(mutex);
+            this->strategy = std::move(strategy);
+            dcc = dcc_weak.lock();
+        }
+
+        // Don't hold the lock while reapplying: the controller calls back into apply_to()
+        if (dcc)
         {
             auto config = dcc->base_configuration();
-            apply_to_locked(*config);
+            apply_to(*config);
             dcc->set_base_configuration(config);
         }
     }
@@ -53,7 +68,48 @@ public:
     void apply_to(mg::DisplayConfiguration& conf) override
     {
         std::lock_guard lock(mutex);
-        apply_to_locked(conf);
+
+        if (wrapped)
+        {
+            wrapped->apply_to(conf);
+        }
+
+        // The strategy gets to see all the outputs at once, so work on a snapshot...
+        std::vector<mg::DisplayConfigurationOutput> snapshot;
+        conf.for_each_output([&](mg::DisplayConfigurationOutput const& output) { snapshot.push_back(output); });
+
+        std::vector<mg::UserDisplayConfigurationOutput> outputs;
+        outputs.reserve(snapshot.size());
+        for (auto& output : snapshot)
+        {
+            outputs.emplace_back(output);
+        }
+
+        strategy->apply_configuration(outputs);
+
+        // ...and write the result back one output at a time, as some DisplayConfiguration
+        // implementations only propagate changes made during the for_each_output() callback
+        conf.for_each_output([&](mg::UserDisplayConfigurationOutput& output)
+            {
+                auto const updated = std::ranges::find(snapshot, output.id, &mg::DisplayConfigurationOutput::id);
+
+                if (updated == snapshot.end())
+                    return;
+
+                output.logical_group_id = updated->logical_group_id;
+                output.used = updated->used;
+                output.top_left = updated->top_left;
+                output.current_mode_index = updated->current_mode_index;
+                output.current_format = updated->current_format;
+                output.power_mode = updated->power_mode;
+                output.orientation = updated->orientation;
+                output.scale = updated->scale;
+                output.form_factor = updated->form_factor;
+                output.subpixel_arrangement = updated->subpixel_arrangement;
+                output.gamma = updated->gamma;
+                output.custom_logical_size = updated->custom_logical_size;
+                output.custom_attribute = updated->custom_attribute;
+            });
     }
 
     void confirm(mg::DisplayConfiguration const& conf) override
@@ -75,23 +131,6 @@ public:
     }
 
 private:
-    void apply_to_locked(mg::DisplayConfiguration& conf)
-    {
-        if (wrapped)
-        {
-            wrapped->apply_to(conf);
-        }
-
-        std::vector<mir::graphics::UserDisplayConfigurationOutput> outputs;
-
-        conf.for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-        {
-            outputs.emplace_back(output);
-        });
-
-        strategy->apply_configuration(outputs);
-    }
-
     std::mutex mutex;
     std::shared_ptr<Strategy> strategy;
     std::shared_ptr<mg::DisplayConfigurationPolicy> wrapped{};
@@ -125,10 +164,17 @@ miral::OutputConfiguration::OutputConfiguration(std::shared_ptr<Strategy> strate
 
 void miral::OutputConfiguration::operator()(mir::Server& server) const
 {
-    server.wrap_display_configuration_policy([self=self,&server](auto wrapped)
+    server.wrap_display_configuration_policy([self=self](auto wrapped)
         {
-            self->init(server, wrapped);
+            self->set_wrapped(std::move(wrapped));
             return self;
+        });
+
+    // The controller can only be obtained once the display exists: asking for it while the
+    // display configuration policy is being built would re-enter display construction
+    server.add_init_callback([self=self, &server]
+        {
+            self->set_display_configuration_controller(server.the_display_configuration_controller());
         });
 }
 
