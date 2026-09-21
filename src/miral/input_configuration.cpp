@@ -459,7 +459,7 @@ miral::InputConfiguration::InputConfiguration(live_config::Store& config_store) 
 
     config_store.add_string_attribute(
         {"touchpad", "scroll_mode"},
-        "Touchpad scroll mode [{none, two-finger, edge, button-down, circular}]",
+        "Touchpad scroll mode [{none, two-finger|two_finger, edge, button-down|button_down, circular}]",
         [self=self](auto... args) { self->config.touchpad_scroll_mode(args...); });
 
     config_store.add_bool_attribute(
