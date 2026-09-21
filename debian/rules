@@ -98,4 +98,4 @@ override_dh_gencontrol:
 	dh_gencontrol -plibmiral8 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral8:Version=$(MIRAL_VERSION)'
 
 execute_after_dh_auto_clean:
-	rm -rf $(CARGO_REGISTRY)
+	rm -rf $(CARGO_REGISTRY) $(CARGO_HOME)
