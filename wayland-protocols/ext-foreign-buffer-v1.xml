@@ -32,7 +32,7 @@
 
     Instead of the client capturing and rendering the contents into its own buffer,
     this protocol moves the heavy work of rendering a captured image source to the
-    compositor. The client requests a new foreign buffer, gets an opaque buffer,
+    compositor. The client requests a new foreign buffer session, gets an opaque buffer,
     and attaches that buffer to a surface that it owns. The compositor then fills
     in the contents of that buffer with the requested image. The compositor is
     responsible for keeping the content of that source up to date in the buffer as
@@ -57,38 +57,38 @@
     only be done by creating a new major version of the extension.
   </description>
 
-  <interface name="ext_foreign_buffer_manager_v1" version="1">
-    <description summary="manages foreign buffers">
-      A client uses the foreign buffer manager to request a new foreign buffer.
+  <interface name="ext_foreign_buffer_factory_v1" version="1">
+    <description summary="creates foreign buffer sessions">
+      A client uses the foreign buffer factory to request a new foreign buffer session.
 
-      A foreign buffer is created from an ext_image_capture_source_v1. This source can be
+      A foreign buffer session is created from an ext_image_capture_source_v1. This source can be
       backed by any source, including outputs, groups of surfaces, an individual surface,
       and more.
     </description>
 
     <request name="create_buffer">
-      <description summary="create foreign buffer for image capture source">
-        Creates a foreign buffer for the image capture source.
+      <description summary="create foreign buffer session for image capture source">
+        Creates a foreign buffer session for the image capture source.
       </description>
-      <arg name="buffer" type="new_id" interface="ext_foreign_buffer_v1"/>
+      <arg name="buffer" type="new_id" interface="ext_foreign_buffer_session_v1"/>
       <arg name="source" type="object" interface="ext_image_capture_source_v1"/>
     </request>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the ext_foreign_buffer_manager_v1 object">
+      <description summary="destroy the ext_foreign_buffer_factory_v1 object">
         This request should be called when the client will no longer
-        use the ext_foreign_buffer_manager_v1.
+        use the ext_foreign_buffer_factory_v1.
 
-        Afterward, new foreign buffers cannot be created by this manager,
-        but existing foreign buffers must remain valid up until the point of
+        Afterward, new foreign buffer sessions cannot be created by this factory,
+        but existing foreign buffer sessions must remain valid up until the point of
         their destruction.
       </description>
     </request>
   </interface>
 
-  <interface name="ext_foreign_buffer_v1" version="1">
-    <description summary="a foreign buffer for an image capture source">
-      An ext_foreign_buffer_v1 object is used to retrieve a opaque buffer that is backed
+  <interface name="ext_foreign_buffer_session_v1" version="1">
+    <description summary="a foreign buffer session for an image capture source">
+      An ext_foreign_buffer_session_v1 object is used to retrieve a opaque buffer that is backed
       by the contents of the image capture source that it was created with.
 
       The image capture source is not mapped to a surface when the object is created. The
@@ -100,8 +100,8 @@
 
     <request name="get_buffer">
       <description summary="retrieve buffer for image capture source">
-        Retrieve an opaque buffer backed by the image capture source that this foreign buffer was created
-        with.
+        Retrieve an opaque buffer backed by the image capture source that this foreign buffer session
+        was created with.
 
         The compositor will send a size event after a get_buffer request. This event describes the `wl_buffer`
         created here.
@@ -115,9 +115,9 @@
         this happens this buffer will remain valid, and the content of the buffer will continue to resolve
         to the last content with that metadata.
 
-        Only one buffer may be active for a foreign buffer at a time. The active buffer remains
+        Only one buffer may be active for a foreign buffer session at a time. The active buffer remains
         active until the client destroys it, after which a new buffer may be requested.
-        Calling this while a buffer is already active for this foreign buffer raises a buffer_active
+        Calling this while a buffer is already active for this foreign buffer session raises a buffer_active
         error.
       </description>
       <arg name="buffer" type="new_id" interface="wl_buffer"/>
@@ -157,8 +157,8 @@
     </event>
 
     <event name="stopped">
-      <description summary="foreign buffer is no longer available">
-        This event indicates that the foreign buffer source has stopped and is no
+      <description summary="foreign buffer session is no longer available">
+        This event indicates that the foreign buffer session source has stopped and is no
         longer available. This can happen in a number of cases, e.g. when the
         underlying source is destroyed or an unrecoverable runtime error has occurred.
 
@@ -166,13 +166,13 @@
 
         Calling `get_buffer` after this event will always return the same buffer.
 
-        The client should destroy the foreign buffer after receiving this event.
+        The client should destroy the foreign buffer session after receiving this event.
       </description>
     </event>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the ext_foreign_buffer_v1 object">
-        Destroys the foreign buffer. This request can be sent at any time by the
+      <description summary="destroy the ext_foreign_buffer_session_v1 object">
+        Destroys the foreign buffer session. This request can be sent at any time by the
         client.
 
         This does not affect the wl_buffer objects created by this object.
