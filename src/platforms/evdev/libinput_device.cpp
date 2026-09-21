@@ -648,12 +648,11 @@ void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollMode scroll_mode)
 #ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
         set_method(LIBINPUT_CONFIG_CIRCULAR_SCROLL);
 #else
-        auto const default_method = libinput_device_config_scroll_get_default_method(dev);
+        auto const current_method = libinput_device_config_scroll_get_method(dev);
         mir::log_info(
-            "On device '%s': Requested circular scroll, but libinput is too old to support that mode. Using default (%d)",
+            "On device '%s': Requested circular scroll, but libinput is too old to support that mode. Keeping current method (%d)",
             libinput_device_get_name(dev),
-            default_method);
-        libinput_device_config_scroll_set_method(dev, default_method);
+            current_method);
 #endif
         break;
     }
