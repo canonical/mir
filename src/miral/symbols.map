@@ -777,3 +777,14 @@ global:
   };
 local: *;
 };
+
+MIRAL_6.1 {
+global:
+  extern "C++" {
+    miral::ApplicationCredentials::apparmor_label*;
+    miral::ApplicationCredentials::flatpak_id*;
+    miral::ApplicationCredentials::is_sandboxed*;
+    miral::ApplicationCredentials::snap_app_name*;
+    miral::ApplicationCredentials::snap_name*;
+  };
+} MIRAL_6.0;

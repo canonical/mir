@@ -10,8 +10,13 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ApplicationAuthorizer::ApplicationAuthorizer()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationAuthorizer::~ApplicationAuthorizer()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const&)@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationCredentials::apparmor_label[abi:cxx11]() const@MIRAL_6.1" 6.0.0
+ (c++)"miral::ApplicationCredentials::flatpak_id[abi:cxx11]() const@MIRAL_6.1" 6.0.0
  (c++)"miral::ApplicationCredentials::gid() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationCredentials::is_sandboxed() const@MIRAL_6.1" 6.0.0
  (c++)"miral::ApplicationCredentials::pid() const@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationCredentials::snap_app_name[abi:cxx11]() const@MIRAL_6.1" 6.0.0
+ (c++)"miral::ApplicationCredentials::snap_name[abi:cxx11]() const@MIRAL_6.1" 6.0.0
  (c++)"miral::ApplicationCredentials::uid() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::ApplicationInfo()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::ApplicationInfo(miral::ApplicationInfo const&)@MIRAL_6.0" 6.0.0
