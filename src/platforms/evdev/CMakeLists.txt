@@ -26,6 +26,12 @@ target_link_libraries(mirplatforminputevdevobjects
     PkgConfig::LIBINPUT
 )
 
+if (LIBINPUT_VERSION VERSION_GREATER_EQUAL 1.32)
+  target_compile_definitions(mirplatforminputevdevobjects
+    PRIVATE
+      LIBINPUT_HAS_CIRCULAR_SCROLL)
+endif()
+
 add_library(mirplatforminputevdev MODULE
   platform_factory.cpp
 )

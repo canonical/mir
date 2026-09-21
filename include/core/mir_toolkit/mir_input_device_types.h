@@ -76,7 +76,8 @@ enum MirTouchpadScrollMode
     mir_touchpad_scroll_mode_none = 0,
     mir_touchpad_scroll_mode_two_finger_scroll = 1 << 0,
     mir_touchpad_scroll_mode_edge_scroll = 1 << 1,
-    mir_touchpad_scroll_mode_button_down_scroll = 1 << 2
+    mir_touchpad_scroll_mode_button_down_scroll = 1 << 2,
+    mir_touchpad_scroll_mode_circular_scroll = 1 << 3
 };
 
 /**
