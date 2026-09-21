@@ -595,6 +595,10 @@ std::optional<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings()
     case LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN:
         settings.scroll_mode = mir_touchpad_scroll_mode_button_down_scroll;
         break;
+#ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
+    case LIBINPUT_CONFIG_CIRCULAR_SCROLL:
+        settings.scroll_mode = mir_touchpad_scroll_mode_circular_scroll;
+#endif
     }
 
     settings.tap_to_click = libinput_device_config_tap_get_enabled(dev) == LIBINPUT_CONFIG_TAP_ENABLED;
@@ -637,6 +641,19 @@ void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollMode scroll_mode)
 
     case mir_touchpad_scroll_mode_two_finger_scroll:
         set_method(LIBINPUT_CONFIG_SCROLL_2FG);
+        break;
+
+    case mir_touchpad_scroll_mode_circular_scroll:
+#ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
+        set_method(LIBINPUT_CONFIG_CIRCULAR_SCROLL);
+#else
+        auto const default_method = libinput_device_config_scroll_get_default_method(dev);
+        mir::log_info(
+            "On device '%s': Requested circular scroll, but libinput is too old to support that mode. Using default (%d)",
+            libinput_device_get_name(dev),
+            default_method);
+        libinput_device_config_scroll_set_method(dev, default_method);
+#endif
         break;
     }
 }
