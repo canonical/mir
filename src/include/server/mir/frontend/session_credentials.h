@@ -31,10 +31,6 @@ namespace frontend
 class SessionCredentials
 {
 public:
-    explicit SessionCredentials(Fd const& client_sock);
-    explicit SessionCredentials(pid_t);
-    SessionCredentials(SessionCredentials&& creds);
-
     struct SnapInfo
     {
         std::string snap_name;
@@ -44,6 +40,15 @@ public:
     {
         std::string app_id;
     };
+    using SandboxInfo = std::variant<std::monostate,SnapInfo,FlatpakInfo>;
+
+    explicit SessionCredentials(Fd const& client_sock);
+    explicit SessionCredentials(pid_t client_pid);
+    SessionCredentials(pid_t pid, uid_t uid, gid_t gid,
+                       std::string apparmor_label,
+                       SandboxInfo const& sandbox_info = std::monostate{});
+    SessionCredentials(SessionCredentials&& creds);
+    SessionCredentials& operator=(SessionCredentials&& creds);
 
     pid_t pid() const;
     uid_t uid() const;
@@ -54,19 +59,20 @@ public:
     auto snap_info() const -> std::optional<SnapInfo>;
     auto flatpak_info() const -> std::optional<FlatpakInfo>;
 
+    static auto detect_sandbox_info(pid_t pid, std::string const& apparmor_label) -> SandboxInfo;
+
 private:
     SessionCredentials() = delete;
 
-    void detect_sandbox_info();
-    bool resolve_if_snap();
-    bool resolve_if_flatpak();
+    static auto resolve_if_snap(std::string const& apparmor_label) -> SandboxInfo;
+    static auto resolve_if_flatpak(pid_t pid) -> SandboxInfo;
 
     pid_t the_pid;
     uid_t the_uid;
     gid_t the_gid;
     std::string the_apparmor_label;
 
-    std::variant<std::monostate,SnapInfo,FlatpakInfo> sandbox_info;
+    SandboxInfo sandbox_info;
 };
 }
 }
