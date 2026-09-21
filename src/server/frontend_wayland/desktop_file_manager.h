@@ -57,7 +57,6 @@ public:
     ~DesktopFileManager() = default;
 
     std::string resolve_app_id(scene::Surface const&);
-    static std::string parse_snap_security_profile_to_desktop_id(std::string const& contents);
 private:
     std::shared_ptr<DesktopFileCache> cache;
     std::shared_ptr<DesktopFile> resolve_from_wayland_app_id(std::string& app_id);

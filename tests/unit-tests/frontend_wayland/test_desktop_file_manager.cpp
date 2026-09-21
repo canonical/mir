@@ -18,22 +18,13 @@
 #include <mir/test/doubles/mock_surface.h>
 #include <mir/test/doubles/mock_scene_session.h>
 #include <mir/scene/surface_observer.h>
+#include <mir/frontend/session_credentials.h>
 #include <mir/test/doubles/explicit_executor.h>
-#include <mir_test_framework/open_wrapper.h>
 
-#include <filesystem>
-#include <fcntl.h>
 #include <gmock/gmock.h>
-#include <format>
-#include <fstream>
-#include <cstdlib>
 
 namespace mf = mir::frontend;
-namespace ms = mir::scene;
-namespace geom = mir::geometry;
-namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
-namespace mtf = mir_test_framework;
 
 using namespace testing;
 
@@ -82,10 +73,15 @@ struct DesktopFileManager : Test
     const char* APPLICATION_ID = "test_app_id";
     const char* DESKTOP_FILE_APP_ID = "test_app_id";
     const int PID = -12345; // Negative so it never accidentally works
+    mf::SessionCredentials creds{PID, getuid(), getgid(), ""};
 
     void SetUp() override
     {
         session = std::make_shared<mtd::MockSceneSession>();
+        ON_CALL(*session, creds)
+            .WillByDefault([this]() -> mf::SessionCredentials const& {
+                return creds;
+            });
         ON_CALL(*session, process_id)
             .WillByDefault([this]() {
                 return PID;
@@ -169,98 +165,25 @@ INSTANTIATE_TEST_SUITE_P(DesktopFileManager, DesktopFileManagerParameterizedTest
     "debian-"
 ));
 
-TEST_F(DesktopFileManager, when_security_profile_does_not_start_with_prefix_then_empty_string_is_returned)
+TEST_F(DesktopFileManager, can_resolve_from_snap_info)
 {
-    auto result = mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id("firefox.firefox (current");
-    EXPECT_TRUE(result.empty());
-}
+    const char* desktop_app_id = "firefox_firefox";
 
-TEST_F(DesktopFileManager, when_security_profile_is_valid_then_desktop_id_is_returned)
-{
-    auto result = mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id("snap.firefox.firefox (enforce)");
-    EXPECT_EQ(result, "firefox_firefox");
-}
-
-TEST_F(DesktopFileManager, when_security_profile_is_valid_and_lacks_protection_indication_then_desktop_id_is_returned)
-{
-    auto result = mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id("snap.firefox.firefox");
-    EXPECT_EQ(result, "firefox_firefox");
-}
-
-TEST_F(DesktopFileManager, can_resolve_from_valid_flatpak_info)
-{
-    const char* app_id = "test.application.name";
-    const char* desktop_app_id = "test.application.name";
-
-    auto const flatpak_info = std::format("/proc/{}/root/.flatpak-info", PID);
-    char tmp_file_name[] = "/tmp/mir_test_dtp_fmgr_can_XXXXXX";
-    {
-        auto fd_rw = ::mkstemp(tmp_file_name);
-        ASSERT_GE(fd_rw, 0);
-        ::close(fd_rw);
-    }
-    {
-        std::ofstream tmp_file;
-        tmp_file.open(tmp_file_name);
-        tmp_file << "[Application]\nname=" << app_id;
-    }
-
-    auto fd = mir::Fd{::open(tmp_file_name, O_RDONLY)};
-    auto open_handler = mtf::add_open_handler([flatpak_info, fd](
-        const char* path,
-        int,
-        std::optional<mode_t>) -> std::optional<int>
-        {
-            if (flatpak_info != path)
-            {
-                return std::nullopt;
-            }
-
-            return static_cast<int>(fd);
-        });
-
+    creds = mf::SessionCredentials{PID, getuid(), getgid(), "", mf::SessionCredentials::SnapInfo{"firefox", "firefox"}};
     auto new_file = std::make_shared<mf::DesktopFile>(desktop_app_id, nullptr, nullptr);
     cache->files.push_back(new_file);
     auto found_app_id = file_manager->resolve_app_id(surface);
     EXPECT_THAT(found_app_id, Eq(desktop_app_id));
-    ::unlink(tmp_file_name);
 }
 
-TEST_F(DesktopFileManager, app_id_will_not_resolve_from_flatpak_info_when_name_is_missing)
+TEST_F(DesktopFileManager, can_resolve_from_flatpak_info)
 {
+    const char* app_id = "test.application.name";
     const char* desktop_app_id = "test.application.name";
 
-    auto const flatpak_info = std::format("/proc/{}/root/.flatpak-info", PID);
-    char tmp_file_name[] = "/tmp/mir_test_dtp_fmgr_wont_XXXXXX";
-    {
-        auto fd_rw = ::mkstemp(tmp_file_name);
-        ASSERT_GE(fd_rw, 0);
-        ::close(fd_rw);
-    }
-    {
-        std::ofstream tmp_file;
-        tmp_file.open(tmp_file_name);
-        tmp_file << "[Application]";
-    }
-
-    auto fd = mir::Fd{::open(tmp_file_name, O_RDONLY)};
-    auto open_handler = mtf::add_open_handler([flatpak_info, fd](
-        const char* path,
-        int,
-        std::optional<mode_t>) -> std::optional<int>
-        {
-            if (flatpak_info != path)
-            {
-               return std::nullopt;
-            }
-
-            return static_cast<int>(fd);
-        });
-
+    creds = mf::SessionCredentials{PID, getuid(), getgid(), "", mf::SessionCredentials::FlatpakInfo{app_id}};
     auto new_file = std::make_shared<mf::DesktopFile>(desktop_app_id, nullptr, nullptr);
     cache->files.push_back(new_file);
     auto found_app_id = file_manager->resolve_app_id(surface);
-    EXPECT_NE(found_app_id, desktop_app_id);
-    EXPECT_EQ(found_app_id, APPLICATION_ID);
-    ::unlink(tmp_file_name);
+    EXPECT_THAT(found_app_id, Eq(desktop_app_id));
 }

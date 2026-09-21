@@ -22,7 +22,6 @@
 #include <mir/scene/surface.h>
 #include <mir/scene/session.h>
 
-#include <cstring>
 #include <fstream>
 #include <filesystem>
 
@@ -167,27 +166,6 @@ std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::lookup_basename(std::st
     }
 
     return nullptr;
-}
-
-std::string mf::DesktopFileManager::parse_snap_security_profile_to_desktop_id(std::string const& contents)
-{
-    // We are reading the security profile here, which comes to us in the form:
-    //      snap.name-space.binary-name (current).
-    char const* const snap_security_label_prefix = "snap.";
-    if (!contents.starts_with(snap_security_label_prefix))
-        return "";
-
-    // Get the contents after snap. and before the security annotation (denoted by a space)
-    auto const contents_start_index = std::strlen (snap_security_label_prefix);
-    auto contents_end_index = contents.find_first_of(' ', contents_start_index);
-    if (contents_end_index == std::string::npos)
-        contents_end_index = contents.size();
-    std::string sandboxed_app_id = contents.substr(contents_start_index, contents_end_index - contents_start_index);
-    for (auto& c : sandboxed_app_id)
-        if (c == '.')
-            c = '_';
-
-    return sandboxed_app_id;
 }
 
 std::shared_ptr<mf::DesktopFile> mf::DesktopFileManager::resolve_if_snap(SessionCredentials const& creds)
