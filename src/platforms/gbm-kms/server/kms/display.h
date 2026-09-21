@@ -24,6 +24,7 @@
 #include "egl_helper.h"
 #include "platform_common.h"
 #include <mir/graphics/platform.h>
+#include <mir/graphics/display_providers.h>
 
 #include <atomic>
 #include <mutex>
