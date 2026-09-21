@@ -131,6 +131,10 @@ target_include_directories(mir_unit_tests PRIVATE
   ${CMAKE_BINARY_DIR}/src/server/console
 )
 
+if (LIBINPUT_VERSION VERSION_GREATER_EQUAL 1.32)
+  target_compile_definitions(mir_unit_tests PRIVATE LIBINPUT_HAS_CIRCULAR_SCROLL)
+endif()
+
 target_link_directories(mir_unit_tests PRIVATE ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
 
 if (MIR_USE_PRECOMPILED_HEADERS)

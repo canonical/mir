@@ -1098,6 +1098,55 @@ TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
     touchpad.apply_settings(settings);
 }
 
+#ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
+TEST_F(LibInputDeviceOnTouchpad, applies_circular_touchpad_scroll_mode_when_supported)
+{
+    setup_touchpad_configuration(
+        fake_device, mir_touchpad_click_mode_finger_count, mir_touchpad_scroll_mode_two_finger_scroll, 0, true, false, true, false);
+
+    mi::TouchpadSettings settings(touchpad.get_touchpad_settings().value());
+    settings.scroll_mode = mir_touchpad_scroll_mode_circular_scroll;
+
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_scroll_set_method(touchpad.device(), LIBINPUT_CONFIG_CIRCULAR_SCROLL));
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_click_set_method(touchpad.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_tap_set_enabled(touchpad.device(), LIBINPUT_CONFIG_TAP_ENABLED));
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_dwt_set_enabled(touchpad.device(), LIBINPUT_CONFIG_DWT_DISABLED));
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_send_events_set_mode(
+                                       touchpad.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_middle_emulation_set_enabled(
+                                       touchpad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
+
+    touchpad.apply_settings(settings);
+}
+#else
+TEST_F(LibInputDeviceOnTouchpad, preserves_current_scroll_mode_when_circular_mode_is_unsupported)
+{
+    setup_touchpad_configuration(
+        fake_device, mir_touchpad_click_mode_finger_count, mir_touchpad_scroll_mode_two_finger_scroll, 0, true, false, true, false);
+
+    mi::TouchpadSettings settings(touchpad.get_touchpad_settings().value());
+    settings.scroll_mode = mir_touchpad_scroll_mode_circular_scroll;
+
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_scroll_set_method(touchpad.device(), _)).Times(0);
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_click_set_method(touchpad.device(), LIBINPUT_CONFIG_CLICK_METHOD_CLICKFINGER));
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_tap_set_enabled(touchpad.device(), LIBINPUT_CONFIG_TAP_ENABLED));
+    EXPECT_CALL(env.mock_libinput,
+                libinput_device_config_dwt_set_enabled(touchpad.device(), LIBINPUT_CONFIG_DWT_DISABLED));
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_send_events_set_mode(
+                                       touchpad.device(), LIBINPUT_CONFIG_SEND_EVENTS_DISABLED_ON_EXTERNAL_MOUSE));
+    EXPECT_CALL(env.mock_libinput, libinput_device_config_middle_emulation_set_enabled(
+                                       touchpad.device(), LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED));
+
+    touchpad.apply_settings(settings);
+}
+#endif
+
 TEST_F(LibInputDevice, device_ptr_keeps_libinput_context_alive)
 {
     auto fake_dev = setup_touchpad();
