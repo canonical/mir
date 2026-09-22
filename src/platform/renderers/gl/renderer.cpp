@@ -17,283 +17,45 @@
 
 #include <mir/renderers/gl/renderer.h>
 #include <mir/graphics/renderable.h>
-#include <mir/graphics/transformation.h>
 #include <mir/graphics/display_sink.h>
-#include <mir/gl/tessellation_helpers.h>
 #include <mir/log.h>
-#include <mir/report_exception.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/rendering_providers.h>
 #include <mir/graphics/texture.h>
-#include <mir/graphics/program_factory.h>
-#include <mir/graphics/program.h>
 #include <mir/renderer/gl/gl_surface.h>
 
-#define GLM_FORCE_RADIANS
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include "common/gl_handles.h"
+#include "common/gl_program_factory.h"
+#include "common/gl_scene_drawing.h"
+
 #include <EGL/egl.h>
 
 #include <boost/throw_exception.hpp>
 #include <stdexcept>
-#include <cmath>
 #include <sstream>
-#include <mutex>
 #include <ranges>
-#include <type_traits>
 
 namespace mg = mir::graphics;
 namespace mgl = mir::gl;
+namespace mrc = mir::renderer::common;
 namespace mrg = mir::renderer::gl;
 namespace geom = mir::geometry;
 
 namespace
 {
-template<void (* deleter)(GLuint)>
-class GLHandle
-{
-public:
-    explicit GLHandle(GLuint id)
-        : id{id}
-    {
-    }
+using mrc::ProgramHandle;
+using mrc::ShaderHandle;
+using mrc::TextureHandle;
+using mrc::FramebufferHandle;
 
-    ~GLHandle()
-    {
-        if (id)
-            (*deleter)(id);
-    }
-
-    GLHandle(GLHandle const&) = delete;
-
-    GLHandle& operator=(GLHandle const&) = delete;
-
-    GLHandle(GLHandle&& from)
-        : id{from.id}
-    {
-        from.id = 0;
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-using ProgramHandle = GLHandle<&glDeleteProgram>;
-using ShaderHandle = GLHandle<&glDeleteShader>;
-
-template<void (* deleter)(GLsizei, const GLuint*)>
-class GLMultiHandle
-{
-public:
-    explicit GLMultiHandle(GLuint id)
-        : id{id}
-    {
-    }
-
-    ~GLMultiHandle()
-    {
-        if (id)
-            (*deleter)(1, &id);
-    }
-
-    GLMultiHandle(GLMultiHandle const&) = delete;
-
-    GLMultiHandle& operator=(GLMultiHandle const&) = delete;
-
-    GLMultiHandle(GLMultiHandle&& from)
-        : id{from.id}
-    {
-        from.id = 0;
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-using TextureHandle = GLMultiHandle<&glDeleteTextures>;
-using FramebufferHandle = GLMultiHandle<&glDeleteFramebuffers>;
-
-struct Program : public mir::graphics::gl::Program
-{
-public:
-    Program(ProgramHandle&& opaque_shader, ProgramHandle&& alpha_shader)
-        : opaque_handle(std::move(opaque_shader)),
-          alpha_handle(std::move(alpha_shader)),
-          opaque{opaque_handle},
-          alpha{alpha_handle}
-    {
-    }
-
-    ProgramHandle opaque_handle, alpha_handle;
-    mir::renderer::gl::Renderer::Program opaque, alpha;
-};
-
-const GLchar* const vertex_shader_src =
-{
-    "attribute vec3 position;\n"
-    "attribute vec2 texcoord;\n"
-    "uniform mat4 screen_to_gl_coords;\n"
-    "uniform mat4 display_transform;\n"
-    "uniform mat4 transform;\n"
-    "uniform mat4 orientation_transform;\n"
-    "uniform vec2 centre;\n"
-    "uniform vec2 oriented_centre;\n"
-    "varying vec2 v_texcoord;\n"
-    "void main() {\n"
-    "   vec4 mid = vec4(centre, 0.0, 0.0);\n"
-    "   vec4 oriented_mid = vec4(oriented_centre, 0.0, 0.0);"
-    "   vec4 transformed = (orientation_transform * (vec4(position, 1.0) - mid)) + oriented_mid;\n"
-    "   transformed = (transform * (transformed - oriented_mid)) + oriented_mid;\n"
-    "   gl_Position = display_transform * screen_to_gl_coords * transformed;\n"
-    "   v_texcoord = texcoord;\n"
-    "}\n"
-};
 }
 
-class mrg::Renderer::ProgramFactory : public mir::graphics::gl::ProgramFactory
+class mrg::Renderer::ProgramFactory : public mrc::GLProgramFactory
 {
-public:
-    // NOTE: This must be called with a current GL context
-    ProgramFactory()
-        : vertex_shader{compile_shader(GL_VERTEX_SHADER, vertex_shader_src)}
-    {
-    }
-
-    mir::graphics::gl::Program&
-        compile_fragment_shader(
-            void const* id,
-            char const* extension_fragment,
-            char const* fragment_fragment) override
-    {
-        /* NOTE: This does not lock the programs vector as there is one ProgramFactory instance
-         * per rendering thread.
-         */
-
-        for (auto const& pair : programs)
-        {
-            if (pair.first == id)
-            {
-                return *pair.second;
-            }
-        }
-
-        std::stringstream opaque_fragment;
-        opaque_fragment
-            << extension_fragment
-            << "\n"
-            <<
-            "#ifdef GL_ES\n"
-            "precision mediump float;\n"
-            "#endif\n"
-            << "\n"
-            << fragment_fragment
-            << "\n"
-            <<
-            "varying vec2 v_texcoord;\n"
-            "void main() {\n"
-            "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
-            "}\n";
-
-        std::stringstream alpha_fragment;
-        alpha_fragment
-            << extension_fragment
-            << "\n"
-            <<
-            "#ifdef GL_ES\n"
-            "precision mediump float;\n"
-            "#endif\n"
-            << "\n"
-            << fragment_fragment
-            << "\n"
-            <<
-            "varying vec2 v_texcoord;\n"
-            "uniform float alpha;\n"
-            "void main() {\n"
-            "    gl_FragColor = alpha * sample_to_rgba(v_texcoord);\n"
-            "}\n";
-
-        // GL shader compilation is *not* threadsafe, and requires external synchronisation
-        std::lock_guard lock{compilation_mutex};
-
-        ShaderHandle const opaque_shader{
-            compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};
-        ShaderHandle const alpha_shader{
-            compile_shader(GL_FRAGMENT_SHADER, alpha_fragment.str().c_str())};
-
-        programs.emplace_back(id, std::make_unique<::Program>(
-            link_shader(vertex_shader, opaque_shader),
-            link_shader(vertex_shader, alpha_shader)));
-
-        return *programs.back().second;
-
-        // We delete opaque_shader and alpha_shader here. This is fine; it only marks them
-        // for deletion. GL will only delete them once the GL Program they're linked in is destroyed.
-    }
-
-private:
-    static GLuint compile_shader(GLenum type, GLchar const* src)
-    {
-        GLuint id = glCreateShader(type);
-        if (!id)
-        {
-            BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
-        }
-
-        glShaderSource(id, 1, &src, nullptr);
-        glCompileShader(id);
-        GLint ok{0};
-        glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
-        if (!ok)
-        {
-            GLchar log[1024] = "(No log info)";
-            glGetShaderInfoLog(id, sizeof log, nullptr, log);
-            glDeleteShader(id);
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(
-                    std::string("Compile failed: ") + log + " for:\n" + src));
-        }
-        return id;
-    }
-
-    static ProgramHandle link_shader(
-        ShaderHandle const& vertex_shader,
-        ShaderHandle const& fragment_shader)
-    {
-        ProgramHandle program{glCreateProgram()};
-        glAttachShader(program, fragment_shader);
-        glAttachShader(program, vertex_shader);
-        glLinkProgram(program);
-        GLint ok{0};
-        glGetProgramiv(program, GL_LINK_STATUS, &ok);
-        if (!ok)
-        {
-            GLchar log[1024];
-            glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
-            log[sizeof log - 1] = '\0';
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(
-                    std::string("Linking GL shader failed: ") + log));
-        }
-
-        return program;
-    }
-
-    ShaderHandle const vertex_shader;
-    std::vector<std::pair<void const*, std::unique_ptr<::Program>>> programs;
-    // GL requires us to synchronise multi-threaded access to the shader APIs.
-    std::mutex compilation_mutex;
 };
 
+namespace
+{
 // Shader that converts colors to grayscale.
 GLchar const* const grayscale_src =
     "uniform sampler2D tex;\n"
@@ -310,6 +72,7 @@ GLchar const* const invert_src =
     "   vec4 col = texture2D(tex, texcoord);\n"
     "   return vec4(1.0 - col[0], 1.0 - col[1], 1.0 - col[2], col[3]);\n"
     "}\n";
+}
 
 class mrg::Renderer::OutputFilter : public mg::gl::OutputSurface
 {
@@ -419,30 +182,6 @@ public:
     }
 
 private:
-    static GLuint compile_shader(GLenum type, GLchar const* src)
-    {
-        GLuint id = glCreateShader(type);
-        if (!id)
-        {
-            BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
-        }
-
-        glShaderSource(id, 1, &src, nullptr);
-        glCompileShader(id);
-        GLint ok{0};
-        glGetShaderiv(id, GL_COMPILE_STATUS, &ok);
-        if (!ok)
-        {
-            GLchar log[1024] = "(No log info)";
-            glGetShaderInfoLog(id, sizeof log, nullptr, log);
-            glDeleteShader(id);
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(
-                    std::string("Compile failed: ") + log + " for:\n" + src));
-        }
-        return id;
-    }
-
     static ProgramHandle compile_program(GLchar const* src)
     {
         const GLchar* vertex_src =
@@ -454,7 +193,7 @@ private:
             "   v_texcoord = texcoord;\n"
             "}\n";
 
-        ShaderHandle vertex_shader{compile_shader(GL_VERTEX_SHADER, vertex_src)};
+        ShaderHandle const vertex_shader{mrc::compile_shader(GL_VERTEX_SHADER, vertex_src)};
 
         std::stringstream fragment_src;
         fragment_src
@@ -471,25 +210,10 @@ private:
             "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
             "}\n";
 
-        ShaderHandle fragment_shader{compile_shader(GL_FRAGMENT_SHADER, fragment_src.str().c_str())};
+        ShaderHandle const fragment_shader{
+            mrc::compile_shader(GL_FRAGMENT_SHADER, fragment_src.str().c_str())};
 
-        ProgramHandle program{glCreateProgram()};
-        glAttachShader(program, fragment_shader);
-        glAttachShader(program, vertex_shader);
-        glLinkProgram(program);
-        GLint ok{0};
-        glGetProgramiv(program, GL_LINK_STATUS, &ok);
-        if (!ok)
-        {
-            GLchar log[1024];
-            glGetProgramInfoLog(program, sizeof log - 1, nullptr, log);
-            log[sizeof log - 1] = '\0';
-            BOOST_THROW_EXCEPTION(
-                std::runtime_error(
-                    std::string("Linking GL shader failed: ") + log));
-        }
-
-        return program;
+        return mrc::link_shader(vertex_shader, fragment_shader);
     }
 
    static GLuint make_texture()
@@ -667,8 +391,7 @@ mrg::Renderer::~Renderer()
 void mrg::Renderer::tessellate(std::vector<mgl::Primitive>& primitives,
                                 mg::Renderable const& renderable) const
 {
-    primitives.resize(1);
-    primitives[0] = mgl::tessellate_renderable_into_rectangle(renderable, geom::Displacement{0,0});
+    mrc::tessellate(primitives, renderable);
 }
 
 auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
@@ -676,9 +399,7 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
     output_surface->make_current();
     output_surface->bind();
 
-    glClearColor(clear_color[0], clear_color[1], clear_color[2], clear_color[3]);
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glClear(GL_COLOR_BUFFER_BIT);
+    mrc::clear(clear_color);
 
     ++frameno;
     for (auto const& r : renderables)
@@ -695,215 +416,24 @@ auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::
     return output;
 }
 
-namespace
-{
-template<typename T>
-auto calc_scale(T logical, T physical) -> double
-    requires requires{ logical.as_int(); physical.as_int(); }
-{
-    auto const l = logical.as_int();
-    auto const p = physical.as_int();
-    return (l > 0 && p > 0) ? static_cast<double>(p) / l : 1.0;
-};
-}
-
 void mrg::Renderer::draw(mg::Renderable const& renderable) const
 {
     auto const texture = gl_interface->as_texture(renderable.buffer());
-    auto const clip_area = renderable.clip_area();
-    if (clip_area)
-    {
-        glEnable(GL_SCISSOR_TEST);
-        auto clip_x = clip_area.value().top_left.x.as_int();
-        // The Y-coordinate is always relative to the top, so we make it relative to the bottom.
-        auto clip_y = viewport.top_left.y.as_int() +
-          viewport.size.height.as_int() -
-          clip_area.value().top_left.y.as_int() -
-          clip_area.value().size.height.as_int();
-        glm::vec4 clip_pos(clip_x, clip_y, 0, 1);
-        clip_pos = display_transform * clip_pos;
-
-        // Calculate scale factor from logical viewport to physical output
-        // When output has a scale factor (e.g., HiDPI), the viewport is in logical coordinates
-        // but glScissor needs physical/framebuffer coordinates
-        auto const output_size = output_surface->size();
-        double const scale_x = calc_scale(viewport.size.width, output_size.width);
-        double const scale_y = calc_scale(viewport.size.height, output_size.height);
-
-        glScissor(
-            static_cast<int>((clip_pos.x - static_cast<float>(viewport.top_left.x.as_int())) * scale_x),
-            static_cast<int>(clip_pos.y * scale_y),
-            static_cast<int>(clip_area.value().size.width.as_int() * scale_x),
-            static_cast<int>(clip_area.value().size.height.as_int() * scale_y)
-        );
-    }
-
-    // All the programs are held by program_factory through its lifetime. Using pointers avoids
-    // -Wdangling-reference.
-    auto const* const prog =
-        [this, &texture](bool alpha) -> Program const*
-        {
-                auto const& family = static_cast<::Program const&>(texture->shader(*program_factory));
-                if (alpha)
-                {
-                    return &family.alpha;
-                }
-                return &family.opaque;
-        }(renderable.alpha() < 1.0f);
-
-    glUseProgram(prog->id);
-    if (prog->last_used_frameno != frameno)
-    {   // Avoid reloading the screen-global uniforms on every renderable
-        // TODO: We actually only need to bind these *once*, right? Not once per frame?
-        prog->last_used_frameno = frameno;
-        for (auto const [index, uniform] : prog->tex_uniforms | std::views::enumerate)
-        {
-            if (uniform != -1)
-            {
-                glUniform1i(uniform, static_cast<GLint>(index));
-            }
-        }
-        glUniformMatrix4fv(prog->display_transform_uniform, 1, GL_FALSE,
-                           glm::value_ptr(display_transform));
-        glUniformMatrix4fv(prog->screen_to_gl_coords_uniform, 1, GL_FALSE,
-                           glm::value_ptr(screen_to_gl_coords));
-    }
-
-    glActiveTexture(GL_TEXTURE0);
-
-    auto const& rect = renderable.screen_position();
-    GLfloat centrex = rect.top_left.x.round_to<GLfloat>() +
-                      rect.size.width.round_to<GLfloat>() / 2.0f;
-    GLfloat centrey = rect.top_left.y.round_to<GLfloat>() +
-                      rect.size.height.round_to<GLfloat>() / 2.0f;
-    glUniform2f(prog->centre_uniform, centrex, centrey);
-
-    // Wayland surfaces may specify an orientation that matches the output
-    // orientation. However, the surface is already rotated by the output's
-    // orientation when we render it. To solve this, we need to unrotate the
-    // surface using the inverse of its transform so that it appears upright.
-    //
-    // The inverse transformation is applied around the center of the rotated
-    // buffer (e.g. if we have a 500x100 buffer that is rotated to the left,
-    // then the renderable's dimensions will be 100x500 so we're rotating around
-    // [50, 250]). Applying the inverse transformation unrotates the buffer,
-    // but it fails to place it at the right position. Hence, we also need to
-    // provid the "oriented centre" which represents the new centre after rotation.
-    auto const orientation = renderable.orientation();
-    if (orientation == mir_orientation_left || orientation == mir_orientation_right)
-    {
-        centrex = rect.top_left.x.round_to<GLfloat>() +
-                        rect.size.height.round_to<GLfloat>() / 2.0f;
-        centrey = rect.top_left.y.round_to<GLfloat>() +
-                        rect.size.width.round_to<GLfloat>() / 2.0f;
-    }
-    glUniform2f(prog->oriented_centre, centrex, centrey);
-
-    auto orientation_transform = glm::mat4(mg::inverse_transformation(orientation));
-    glUniformMatrix4fv(prog->orientation_transform_uniform,
-        1,
-        GL_FALSE,
-        glm::value_ptr(orientation_transform));
-
-    auto const mirror_mode = renderable.mirror_mode();
-    glm::mat4 transform = renderable.transformation()
-        * glm::mat4(mg::transformation(mirror_mode)); // Unflip the buffer
-    if (texture->layout() == mg::gl::Texture::Layout::TopRowFirst)
-    {
-        // GL textures have (0,0) at bottom-left rather than top-left
-        // We have to invert this texture to get it the way up GL expects.
-        transform *= glm::mat4{
-            1.0, 0.0, 0.0, 0.0,
-            0.0, -1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        };
-    }
-
-    glUniformMatrix4fv(prog->transform_uniform, 1, GL_FALSE,
-                       glm::value_ptr(transform));
-
-    if (prog->alpha_uniform >= 0)
-        glUniform1f(prog->alpha_uniform, renderable.alpha());
-
-    glEnableVertexAttribArray(prog->position_attr);
-    glEnableVertexAttribArray(prog->texcoord_attr);
 
     primitives.clear();
     tessellate(primitives, renderable);
 
-    // if we fail to load the texture, we need to carry on (part of lp:1629275)
-    try
-    {
-        struct BlendSeparate  // Represents parameters of glBlendFuncSeparate()
-        {
-            GLenum src_rgb, dst_rgb, src_alpha, dst_alpha;
-        };
-
-        BlendSeparate client_blend;
-
-        // These renderable method names could be better (see LP: #1236224)
-        if (renderable.shaped())  // Client is RGBA:
-        {
-            client_blend = {GL_ONE, GL_ONE_MINUS_SRC_ALPHA,
-                            GL_ONE, GL_ONE_MINUS_SRC_ALPHA};
-        }
-        else if (renderable.alpha() == 1.0f)  // RGBX and no window translucency:
-        {
-            client_blend = {GL_ONE,  GL_ZERO,
-                            GL_ZERO, GL_ONE};  // Avoid using src_alpha!
-        }
-        else
-        {   // Client is RGBX but we also have window translucency.
-            // The texture alpha channel is possibly uninitialized so we must be
-            // careful and avoid using SRC_ALPHA (LP: #1423462).
-            client_blend = {GL_ONE,  GL_ONE_MINUS_CONSTANT_ALPHA,
-                            GL_ZERO, GL_ONE};
-            glBlendColor(0.0f, 0.0f, 0.0f, renderable.alpha());
-        }
-
-        for (auto const& p : primitives)
-        {
-            BlendSeparate blend;
-
-            blend = client_blend;
-            texture->bind();
-
-            glVertexAttribPointer(prog->position_attr, 3, GL_FLOAT,
-                                  GL_FALSE, sizeof(mgl::Vertex),
-                                  &p.vertices[0].position);
-            glVertexAttribPointer(prog->texcoord_attr, 2, GL_FLOAT,
-                                  GL_FALSE, sizeof(mgl::Vertex),
-                                  &p.vertices[0].texcoord);
-
-            if (blend.dst_rgb == GL_ZERO)
-            {
-                glDisable(GL_BLEND);
-            }
-            else
-            {
-                glEnable(GL_BLEND);
-                glBlendFuncSeparate(blend.src_rgb,   blend.dst_rgb,
-                                    blend.src_alpha, blend.dst_alpha);
-            }
-
-            glDrawArrays(p.type, 0, p.nvertices);
-
-            // We're done with the texture for now
-            texture->add_syncpoint();
-        }
-    }
-    catch (std::exception const& ex)
-    {
-        report_exception();
-    }
-
-    glDisableVertexAttribArray(prog->texcoord_attr);
-    glDisableVertexAttribArray(prog->position_attr);
-    if (renderable.clip_area())
-    {
-        glDisable(GL_SCISSOR_TEST);
-    }
+    mrc::draw(
+        mrc::SceneContext{
+            .viewport = viewport,
+            .output_size = output_surface->size(),
+            .display_transform = display_transform,
+            .screen_to_gl_coords = screen_to_gl_coords,
+            .frameno = frameno},
+        renderable,
+        *texture,
+        *program_factory,
+        primitives);
 }
 
 void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
@@ -919,39 +449,7 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
         return;
     }
 
-    /*
-     * Here we provide a 3D perspective projection with a default 30 degrees
-     * vertical field of view. This projection matrix is carefully designed
-     * such that any vertices at depth z=0 will fit the screen coordinates. So
-     * client texels will fit screen pixels perfectly as long as the surface is
-     * at depth zero. But if you want to do anything fancy, you can also choose
-     * a different depth and it will appear to come out of or go into the
-     * screen.
-     */
-    screen_to_gl_coords = glm::translate(glm::mat4(1.0f), glm::vec3{-1.0f, 1.0f, 0.0f});
-
-    /*
-     * Perspective division is one thing that can't be done in a matrix
-     * multiplication. It happens after the matrix multiplications. GL just
-     * scales {x,y} by 1/w. So modify the final part of the projection matrix
-     * to set w ([3]) to be the incoming z coordinate ([2]).
-     */
-    screen_to_gl_coords[2][3] = -1.0f;
-
-    float const vertical_fov_degrees = 30.0f;
-    float const near =
-        (rect.size.height.round_to<float>() / 2.0f) /
-        std::tan((vertical_fov_degrees * M_PI / 180.0f) / 2.0f);
-    float const far = -near;
-
-    screen_to_gl_coords = glm::scale(screen_to_gl_coords,
-            glm::vec3{2.0f / rect.size.width.round_to<float>(),
-                      -2.0f / rect.size.height.round_to<float>(),
-                      2.0f / (near - far)});
-    screen_to_gl_coords = glm::translate(screen_to_gl_coords,
-            glm::vec3{-rect.top_left.x.round_to<float>(),
-                      -rect.top_left.y.round_to<float>(),
-                      0.0f});
+    screen_to_gl_coords = mrc::screen_to_gl_coords_for(rect);
 
     viewport = rect;
     update_gl_viewport();
@@ -959,39 +457,11 @@ void mrg::Renderer::set_viewport(geometry::Rectangle const& rect)
 
 void mrg::Renderer::update_gl_viewport()
 {
-    /*
-     * Letterboxing: Move the glViewport to add black bars in the case that
-     * the logical viewport aspect ratio doesn't match the display aspect.
-     * This keeps pixels square. Note "black"-bars are really glClearColor.
-     */
     output_surface->make_current();
     output_surface->bind();
-    auto transformed_viewport = display_transform *
-                                glm::vec4(viewport.size.width.as_int(),
-                                          viewport.size.height.as_int(), 0, 1);
-    auto viewport_width = fabs(transformed_viewport[0]);
-    auto viewport_height = fabs(transformed_viewport[1]);
 
-    auto const output_size = output_surface->size();
-    last_output_size = output_size;
-    auto const output_width = output_size.width.as_value();
-    auto const output_height = output_size.height.as_value();
-
-    if (viewport_width > 0.0f && viewport_height > 0.0f &&
-        output_width > 0 && output_height > 0)
-    {
-        GLint reduced_width = output_width, reduced_height = output_height;
-        // if viewport_aspect_ratio >= output_aspect_ratio
-        if (viewport_width * output_height >= output_width * viewport_height)
-            reduced_height = static_cast<GLint>(output_width * viewport_height / viewport_width);
-        else
-            reduced_width = static_cast<GLint>(output_height * viewport_width / viewport_height);
-
-        GLint offset_x = (output_width - reduced_width) / 2;
-        GLint offset_y = (output_height - reduced_height) / 2;
-
-        glViewport(offset_x, offset_y, reduced_width, reduced_height);
-    }
+    last_output_size = output_surface->size();
+    mrc::set_letterboxed_gl_viewport(viewport, display_transform, last_output_size);
 }
 
 void mrg::Renderer::set_output_transform(glm::mat2 const& t)
