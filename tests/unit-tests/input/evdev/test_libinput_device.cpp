@@ -204,6 +204,10 @@ struct LibInputDevice : public ::testing::Test
             scroll_method |= LIBINPUT_CONFIG_SCROLL_EDGE;
         if (scroll_mode & mir_touchpad_scroll_mode_button_down_scroll)
             scroll_method |= LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
+#ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
+        if (scroll_mode & mir_touchpad_scroll_mode_circular_scroll)
+            scroll_method |= MIR_LIBINPUT_CIRCULAR_SCROLL_METHOD;
+#endif
 
         ON_CALL(env.mock_libinput, libinput_device_config_click_get_method(dev))
             .WillByDefault(Return(static_cast<libinput_config_click_method>(click_method.value())));
@@ -1067,6 +1071,17 @@ TEST_F(LibInputDeviceOnTouchpad, reads_touchpad_settings_from_libinput)
     EXPECT_THAT(settings.middle_mouse_button_emulation, Eq(false));
 }
 
+#ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
+TEST_F(LibInputDeviceOnTouchpad, reads_circular_scroll_touchpad_settings_from_libinput)
+{
+    setup_touchpad_configuration(fake_device, mir_touchpad_click_mode_finger_count,
+                                  mir_touchpad_scroll_mode_circular_scroll, 0, true, false, true, false);
+
+    auto settings = touchpad.get_touchpad_settings().value();
+    EXPECT_THAT(settings.scroll_mode, Eq(mir_touchpad_scroll_mode_circular_scroll));
+}
+#endif
+
 TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
 {
     setup_touchpad_configuration(fake_device, mir_touchpad_click_mode_finger_count,
@@ -1097,6 +1112,23 @@ TEST_F(LibInputDeviceOnTouchpad, applies_touchpad_settings)
 
     touchpad.apply_settings(settings);
 }
+
+#ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
+TEST_F(LibInputDeviceOnTouchpad, applies_circular_scroll_touchpad_settings)
+{
+    setup_touchpad_configuration(fake_device, mir_touchpad_click_mode_finger_count,
+                                  mir_touchpad_scroll_mode_two_finger_scroll, 0, true, false, true, false);
+
+    mi::TouchpadSettings settings(touchpad.get_touchpad_settings().value());
+    settings.scroll_mode = mir_touchpad_scroll_mode_circular_scroll;
+
+    EXPECT_CALL(
+        env.mock_libinput,
+        libinput_device_config_scroll_set_method(touchpad.device(), MIR_LIBINPUT_CIRCULAR_SCROLL_METHOD));
+
+    touchpad.apply_settings(settings);
+}
+#endif
 
 TEST_F(LibInputDevice, device_ptr_keeps_libinput_context_alive)
 {

@@ -596,7 +596,7 @@ std::optional<mi::TouchpadSettings> mie::LibInputDevice::get_touchpad_settings()
         settings.scroll_mode = mir_touchpad_scroll_mode_button_down_scroll;
         break;
 #ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
-    case LIBINPUT_CONFIG_CIRCULAR_SCROLL:
+    case MIR_LIBINPUT_CIRCULAR_SCROLL_METHOD:
         settings.scroll_mode = mir_touchpad_scroll_mode_circular_scroll;
 #endif
     }
@@ -645,7 +645,7 @@ void apply_scroll_mode(libinput_device* dev, MirTouchpadScrollMode scroll_mode)
 
     case mir_touchpad_scroll_mode_circular_scroll:
 #ifdef LIBINPUT_HAS_CIRCULAR_SCROLL
-        set_method(LIBINPUT_CONFIG_CIRCULAR_SCROLL);
+        set_method(MIR_LIBINPUT_CIRCULAR_SCROLL_METHOD);
 #else
         auto const default_method = libinput_device_config_scroll_get_default_method(dev);
         mir::log_info(

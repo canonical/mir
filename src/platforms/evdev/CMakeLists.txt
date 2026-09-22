@@ -27,9 +27,37 @@ target_link_libraries(mirplatforminputevdevobjects
 )
 
 if (LIBINPUT_VERSION VERSION_GREATER_EQUAL 1.32)
-  target_compile_definitions(mirplatforminputevdevobjects
-    PRIVATE
-      LIBINPUT_HAS_CIRCULAR_SCROLL)
+  include(CheckCXXSourceCompiles)
+  set(CMAKE_REQUIRED_INCLUDES ${LIBINPUT_INCLUDE_DIRS})
+  check_cxx_source_compiles(
+    "#include <libinput.h>
+     int main()
+     {
+         auto method = LIBINPUT_CONFIG_CIRCULAR_SCROLL;
+         return method == LIBINPUT_CONFIG_CIRCULAR_SCROLL;
+     }"
+    LIBINPUT_HAS_CONFIG_CIRCULAR_SCROLL)
+  check_cxx_source_compiles(
+    "#include <libinput.h>
+     int main()
+     {
+         auto method = LIBINPUT_CONFIG_SCROLL_CIRCULAR;
+         return method == LIBINPUT_CONFIG_SCROLL_CIRCULAR;
+     }"
+    LIBINPUT_HAS_CONFIG_SCROLL_CIRCULAR)
+  unset(CMAKE_REQUIRED_INCLUDES)
+
+  if (LIBINPUT_HAS_CONFIG_CIRCULAR_SCROLL)
+    target_compile_definitions(mirplatforminputevdevobjects
+      PUBLIC
+        LIBINPUT_HAS_CIRCULAR_SCROLL
+        MIR_LIBINPUT_CIRCULAR_SCROLL_METHOD=LIBINPUT_CONFIG_CIRCULAR_SCROLL)
+  elseif (LIBINPUT_HAS_CONFIG_SCROLL_CIRCULAR)
+    target_compile_definitions(mirplatforminputevdevobjects
+      PUBLIC
+        LIBINPUT_HAS_CIRCULAR_SCROLL
+        MIR_LIBINPUT_CIRCULAR_SCROLL_METHOD=LIBINPUT_CONFIG_SCROLL_CIRCULAR)
+  endif()
 endif()
 
 add_library(mirplatforminputevdev MODULE
