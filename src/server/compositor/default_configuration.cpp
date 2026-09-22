@@ -21,6 +21,7 @@
 #include "default_display_buffer_compositor_factory.h"
 #include <mir/executor.h>
 #include "multi_threaded_compositor.h"
+#include <mir/renderers/blitter/renderer_factory.h>
 #include <mir/renderers/gl/renderer_factory.h>
 #include "basic_screen_shooter.h"
 #include "basic_screen_shooter_factory.h"
@@ -73,9 +74,23 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 }
             }
 
+            /* A blitter provider is optional: where one can drive an output we
+             * prefer it, but the GL providers above remain the fallback.
+             */
+            std::vector<std::shared_ptr<mg::BlitterRenderingProvider>> blitter_providers;
+            for (auto const& platform : the_rendering_platforms())
+            {
+                if (auto blitter = mg::RenderingPlatform::acquire_provider<mg::BlitterRenderingProvider>(platform))
+                {
+                    blitter_providers.push_back(blitter);
+                }
+            }
+
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report(), the_output_filter()));
+                    std::move(providers), std::move(blitter_providers), the_gl_config(), the_renderer_factory(),
+                    the_blitter_renderer_factory(), the_buffer_allocator(), the_compositor_report(),
+                    the_output_filter()));
         });
 }
 
@@ -113,6 +128,15 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
         []()
         {
             return std::make_shared<mir::renderer::gl::RendererFactory>();
+        });
+}
+
+std::shared_ptr<mir::renderer::BlitterRendererFactory> mir::DefaultServerConfiguration::the_blitter_renderer_factory()
+{
+    return blitter_renderer_factory(
+        []()
+        {
+            return std::make_shared<mir::renderer::blitter::RendererFactory>();
         });
 }
 

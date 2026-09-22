@@ -1592,3 +1592,10 @@ global:
   };
 local: *;
 };
+MIR_SERVER_INTERNAL_2.31 {
+global:
+  extern "C++" {
+    mir::DefaultServerConfiguration::the_blitter_renderer_factory*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_blitter_renderer_factory*;
+  };
+} MIR_SERVER_INTERNAL_2.30;

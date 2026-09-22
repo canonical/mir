@@ -40,14 +40,14 @@ namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,
-    graphics::GLRenderingProvider& gl_provider,
+    graphics::RenderingProvider& provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<mir::graphics::OutputFilter> const& output_filter,
     std::shared_ptr<CompositorReport> const& report) :
     display_sink(display_sink),
     renderer(renderer),
     output_filter(output_filter),
-    fb_adaptor{gl_provider.make_framebuffer_provider(display_sink)},
+    fb_adaptor{provider.make_framebuffer_provider(display_sink)},
     report(report)
 {
 }

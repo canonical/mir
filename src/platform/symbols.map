@@ -165,6 +165,15 @@ MIR_PLATFORM_2.29 {
     mir::options::wayland_extensions_opt;
     mir::options::x11_display_opt;
     mir::options::x11_scale_opt;
+    mir::renderer::blitter::RendererFactory::RendererFactory*;
+    mir::renderer::blitter::RendererFactory::create_renderer_for*;
+    mir::renderer::blitter::Renderer::Renderer*;
+    mir::renderer::blitter::Renderer::render*;
+    mir::renderer::blitter::Renderer::set_output_filter*;
+    mir::renderer::blitter::Renderer::set_output_transform*;
+    mir::renderer::blitter::Renderer::set_viewport*;
+    mir::renderer::blitter::Renderer::suspend*;
+    mir::renderer::blitter::Renderer::?Renderer*;
     mir::renderer::gl::RendererFactory::RendererFactory*;
     mir::renderer::gl::Renderer::Renderer*;
     mir::renderer::gl::Renderer::render*;
@@ -223,6 +232,12 @@ MIR_PLATFORM_2.29 {
     vtable?for?mir::options::DefaultConfiguration;
     vtable?for?mir::options::Option;
     vtable?for?mir::options::ProgramOption;
+    typeinfo?for?mir::renderer::BlitterRendererFactory;
+    typeinfo?for?mir::renderer::blitter::Renderer;
+    typeinfo?for?mir::renderer::blitter::RendererFactory;
+    vtable?for?mir::renderer::BlitterRendererFactory;
+    vtable?for?mir::renderer::blitter::Renderer;
+    vtable?for?mir::renderer::blitter::RendererFactory;
     vtable?for?mir::renderer::gl::RendererFactory;
  };
  local: *;

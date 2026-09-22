@@ -204,8 +204,10 @@ struct SurfaceStackCompositor : public Test
 
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingProvider>()},
+        std::vector<std::shared_ptr<mg::BlitterRenderingProvider>>{},
         std::make_shared<mtd::NullGLConfig>(),
         mt::fake_shared(renderer_factory),
+        nullptr,
         std::make_shared<mtd::StubBufferAllocator>(),
         null_comp_report,
         std::make_shared<mtd::StubOutputFilter>()};

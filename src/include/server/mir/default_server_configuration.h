@@ -152,6 +152,7 @@ class ReportFactory;
 namespace renderer
 {
 class RendererFactory;
+class BlitterRendererFactory;
 }
 
 struct WaylandExtensionHook
@@ -205,6 +206,7 @@ public:
      * configurable interfaces for modifying graphics
      *  @{ */
     virtual std::shared_ptr<renderer::RendererFactory>   the_renderer_factory();
+    virtual std::shared_ptr<renderer::BlitterRendererFactory> the_blitter_renderer_factory();
     virtual std::shared_ptr<shell::DisplayConfigurationController> the_display_configuration_controller();
     virtual std::shared_ptr<graphics::DisplayConfigurationPolicy> the_display_configuration_policy();
 
@@ -403,6 +405,7 @@ protected:
 
     CachedPtr<frontend::SessionAuthorizer> session_authorizer;
     CachedPtr<renderer::RendererFactory> renderer_factory;
+    CachedPtr<renderer::BlitterRendererFactory> blitter_renderer_factory;
     CachedPtr<scene::SurfaceStack> scene_surface_stack;
     CachedPtr<shell::SurfaceStack> surface_stack;
     CachedPtr<scene::SceneReport> scene_report;
