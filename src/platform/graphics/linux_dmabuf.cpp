@@ -15,6 +15,7 @@
  */
 
 #include <mir/graphics/linux_dmabuf.h>
+#include "egl_dmabuf_import.h"
 #include <mir/anonymous_shm_file.h>
 #include <mir/fd.h>
 #include <mir/graphics/drm_formats.h>
@@ -261,46 +262,6 @@ BufferGLDescription const ExternalOES = {
 
 namespace
 {
-struct EGLPlaneAttribs
-{
-    EGLint fd;
-    EGLint offset;
-    EGLint pitch;
-    EGLint modifier_lo;
-    EGLint modifier_hi;
-};
-
-static constexpr std::array<EGLPlaneAttribs, 4> egl_attribs = {
-    EGLPlaneAttribs {
-        EGL_DMA_BUF_PLANE0_FD_EXT,
-        EGL_DMA_BUF_PLANE0_OFFSET_EXT,
-        EGL_DMA_BUF_PLANE0_PITCH_EXT,
-        EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
-        EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT
-    },
-    EGLPlaneAttribs {
-        EGL_DMA_BUF_PLANE1_FD_EXT,
-        EGL_DMA_BUF_PLANE1_OFFSET_EXT,
-        EGL_DMA_BUF_PLANE1_PITCH_EXT,
-        EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT,
-        EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT
-    },
-    EGLPlaneAttribs {
-        EGL_DMA_BUF_PLANE2_FD_EXT,
-        EGL_DMA_BUF_PLANE2_OFFSET_EXT,
-        EGL_DMA_BUF_PLANE2_PITCH_EXT,
-        EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT,
-        EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT
-    },
-    EGLPlaneAttribs {
-        EGL_DMA_BUF_PLANE3_FD_EXT,
-        EGL_DMA_BUF_PLANE3_OFFSET_EXT,
-        EGL_DMA_BUF_PLANE3_PITCH_EXT,
-        EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT,
-        EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT
-    }
-};
-
 class DMABuf : public mg::DMABufBuffer
 {
 public:
@@ -425,71 +386,6 @@ auto export_egl_image(
         std::move(planes),
         mg::gl::Texture::Layout::TopRowFirst,
         size);
-}
-
-/**
- * Reimport dmabufs into EGL
- *
- * This is necessary to call each time the buffer is re-submitted by the client,
- * to ensure any state is properly synchronised.
- *
- * \return  An EGLImageKHR handle to the imported
- * \throws  A std::system_error containing the EGL error on failure.
- */
-auto import_egl_image(
-    int32_t width,
-    int32_t height,
-    mg::DRMFormat format,
-    std::optional<uint64_t> modifier,
-    std::vector<PlaneInfo> const& planes,
-    EGLDisplay dpy,
-    mg::EGLExtensions const& egl_extensions) -> EGLImageKHR
-{
-    std::vector<EGLint> attributes;
-
-    attributes.push_back(EGL_WIDTH);
-    attributes.push_back(width);
-    attributes.push_back(EGL_HEIGHT);
-    attributes.push_back(height);
-    attributes.push_back(EGL_LINUX_DRM_FOURCC_EXT);
-    attributes.push_back(format);
-
-    for(auto i = 0u; i < planes.size(); ++i)
-    {
-        auto const& attrib_names = egl_attribs[i];
-        auto const& plane = planes[i];
-
-        attributes.push_back(attrib_names.fd);
-        attributes.push_back(static_cast<int>(plane.dma_buf));
-        attributes.push_back(attrib_names.offset);
-        attributes.push_back(plane.offset);
-        attributes.push_back(attrib_names.pitch);
-        attributes.push_back(plane.stride);
-        if (auto modifier_present = modifier)
-        {
-            attributes.push_back(attrib_names.modifier_lo);
-            attributes.push_back(modifier_present.value() & 0xFFFFFFFF);
-            attributes.push_back(attrib_names.modifier_hi);
-            attributes.push_back(modifier_present.value() >> 32);
-        }
-    }
-    attributes.push_back(EGL_NONE);
-    EGLImage image = egl_extensions.base(dpy).eglCreateImageKHR(
-        dpy,
-        EGL_NO_CONTEXT,
-        EGL_LINUX_DMA_BUF_EXT,
-        nullptr,
-        attributes.data());
-
-    if (image == EGL_NO_IMAGE_KHR)
-    {
-        auto const msg = planes.size() > 1 ?
-                         "Failed to import supplied dmabufs" :
-                         "Failed to import supplied dmabuf";
-        BOOST_THROW_EXCEPTION((mg::egl_error(msg)));
-    }
-
-    return image;
 }
 
 /**
@@ -966,14 +862,7 @@ public:
 
         auto const target = descriptor.target;
 
-        EGLImage image = import_egl_image(
-            dma_buf.size().width.as_int(),
-            dma_buf.size().height.as_int(),
-            dma_buf.format(),
-            dma_buf.modifier(),
-            dma_buf.planes(),
-            dpy,
-            extensions);
+        EGLImage image = mg::import_dmabuf_to_egl_image(dpy, extensions, dma_buf);
 
         glBindTexture(target, tex);
         extensions.base(dpy).glEGLImageTargetTexture2DOES(target, image);
@@ -1509,13 +1398,7 @@ auto mg::DMABufEGLProvider::import_dma_buf(
 
 void mg::DMABufEGLProvider::validate_import(DMABufBuffer const& dma_buf)
 {
-    auto image = import_egl_image(
-        dma_buf.size().width.as_int(), dma_buf.size().height.as_int(),
-        dma_buf.format(),
-        dma_buf.modifier(),
-        dma_buf.planes(),
-        dpy,
-        *egl_extensions);
+    auto image = import_dmabuf_to_egl_image(dpy, *egl_extensions, dma_buf);
     if (image != EGL_NO_IMAGE_KHR)
     {
         // We can throw this image away immediately
@@ -1594,20 +1477,14 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
             return nullptr;
         }
 
-        auto src_image = import_egl_image(
-            dmabuf_tex->size().width.as_int(), dmabuf_tex->size().height.as_int(),
-            dmabuf_tex->format(),
-            dmabuf_tex->modifier(),
-            dmabuf_tex->planes(),
+        auto src_image = mg::import_dmabuf_to_egl_image(
             importing_provider->dpy,
-            *importing_provider->egl_extensions);
-        auto importable_image = import_egl_image(
-            importable_buf->size().width.as_int(), importable_buf->size().height.as_int(),
-            importable_buf->format(),
-            importable_buf->modifier(),
-            importable_buf->planes(),
+            *importing_provider->egl_extensions,
+            *dmabuf_tex);
+        auto importable_image = mg::import_dmabuf_to_egl_image(
             importing_provider->dpy,
-            *importing_provider->egl_extensions);
+            *importing_provider->egl_extensions,
+            *importable_buf);
         auto sync = importing_provider->blitter->blit(src_image, importable_image, dmabuf_tex->size());
         if (sync)
         {

@@ -6,6 +6,8 @@ add_library(graphics_platform_common STATIC
     one_shot_device_observer.cpp
     cpu_copy_output_surface.cpp
     ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/cpu_copy_output_surface.h
+    display_format_selection.cpp
+    display_format_selection.h
     kms_cpu_addressable_display_provider.cpp
     ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/kms_cpu_addressable_display_provider.h
     cpu_addressable_fb.cpp
@@ -41,6 +43,8 @@ set(DRM_FORMATS_BIG_ENDIAN_FILE ${CMAKE_CURRENT_BINARY_DIR}/drm-formats-big-endi
 add_library(mirplatformgraphicscommon OBJECT
 
   egl_extensions.cpp
+  egl_dmabuf_import.cpp
+  egl_dmabuf_import.h
   egl_resources.cpp
   egl_error.cpp
   display_configuration.cpp

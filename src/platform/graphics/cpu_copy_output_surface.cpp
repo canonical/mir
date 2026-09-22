@@ -28,6 +28,8 @@
 #include <mir/log.h>
 
 #include <mir/graphics/cpu_copy_output_surface.h>
+
+#include "display_format_selection.h"
 #include <mir/graphics/egl_helpers.h>
 #include <cstring>
 
@@ -103,35 +105,6 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make context current"));
     }
     return ctx;
-}
-
-auto select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> mg::DRMFormat
-{
-    std::optional<mg::DRMFormat> best_format;
-    for (auto const format : provider.supported_formats())
-    {
-        switch(static_cast<uint32_t>(format))
-        {
-        case DRM_FORMAT_ARGB8888:
-        case DRM_FORMAT_XRGB8888:
-            // ?RGB8888 is the easiest for us
-            return format;
-        case DRM_FORMAT_RGBA8888:
-        case DRM_FORMAT_RGBX8888:
-            // RGB?8888 requires an EGL extension, but is OK
-            best_format = format;
-            break;
-        default:
-            // We only care about the above two; include a default case to
-            // make this clear.
-            break;
-        }
-    }
-    if (best_format)
-    {
-        return *best_format;
-    }
-    BOOST_THROW_EXCEPTION((std::runtime_error{"Non-?RGB8888 formats not yet supported for display"}));
 }
 }
 
