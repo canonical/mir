@@ -32,6 +32,7 @@ set(server_symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/common/server/symbols.map)
 add_subdirectory(common/)
 
 add_subdirectory(renderer-generic-egl/)
+add_subdirectory(software-blitter/)
 
 if (MIR_BUILD_PLATFORM_GBM_KMS)
     add_subdirectory(gbm-kms/)
