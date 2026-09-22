@@ -18,6 +18,7 @@
 #define MIR_RENDERER_COMMON_GL_HANDLES_H_
 
 #include <GLES2/gl2.h>
+#include <utility>
 
 namespace mir::renderer::common
 {
@@ -48,6 +49,12 @@ public:
         : id{from.id}
     {
         from.id = 0;
+    }
+
+    GLHandle& operator=(GLHandle&& from)
+    {
+        std::swap(id, from.id);
+        return *this;
     }
 
     operator GLuint() const
@@ -88,6 +95,12 @@ public:
         : id{from.id}
     {
         from.id = 0;
+    }
+
+    GLMultiHandle& operator=(GLMultiHandle&& from)
+    {
+        std::swap(id, from.id);
+        return *this;
     }
 
     operator GLuint() const

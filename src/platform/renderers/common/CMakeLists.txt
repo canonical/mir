@@ -1,5 +1,7 @@
 ADD_LIBRARY(mirrenderercommon OBJECT
 
+  gl_output_filter.cpp
+  gl_output_filter.h
   gl_program_factory.cpp
   gl_scene_drawing.cpp
 )
