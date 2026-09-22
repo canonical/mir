@@ -29,6 +29,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <sys/un.h>
+#include <unistd.h>
 
 namespace mf = mir::frontend;
 
@@ -148,7 +149,7 @@ auto mf::SessionCredentials::resolve_if_flatpak(pid_t pid) -> SandboxInfo {
     if (!g_key_file_load_from_file(key_file, info_filename, G_KEY_FILE_NONE, nullptr))
         return std::monostate{};
 
-    char* flatpak_id = g_key_file_get_string(key_file, "Application", "name", nullptr);
+    g_autofree char* flatpak_id = g_key_file_get_string(key_file, "Application", "name", nullptr);
     if (flatpak_id)
     {
         return FlatpakInfo{flatpak_id};
