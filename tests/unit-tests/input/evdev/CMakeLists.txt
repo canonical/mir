@@ -2,6 +2,9 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_evdev_device_detection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_libinput_device.cpp
 )
+set_source_files_properties(${CMAKE_CURRENT_SOURCE_DIR}/test_libinput_device.cpp
+  PROPERTIES
+    COMPILE_DEFINITIONS "${MIR_EVDEV_LIBINPUT_CIRCULAR_SCROLL_DEFINITIONS}")
 list(APPEND UNIT_TEST_REFERENCES
   mirevdevutilsobjects
   mirplatforminputevdevobjects
