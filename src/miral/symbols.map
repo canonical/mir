@@ -787,6 +787,7 @@ global:
     miral::ApplicationCredentials::is_sandboxed*;
     miral::ApplicationCredentials::snap_app_name*;
     miral::ApplicationCredentials::snap_name*;
+    miral::WaylandExtensions::EnableInfo::creds*;
     miral::OutputConfiguration::?OutputConfiguration*;
     miral::OutputConfiguration::NullStrategy::?NullStrategy*;
     miral::OutputConfiguration::NullStrategy::apply_configuration*;
