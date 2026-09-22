@@ -109,12 +109,12 @@ public:
     /**
      * Check a framebuffer out of the pool, creating one if none are free
      *
+     * Framebuffers left over from a previous output size are discarded rather
+     * than handed out.
+     *
      * \throws std::runtime_error on failure to build a new entry
      */
     auto acquire() -> Checkout;
-
-    /// The size of the framebuffers in this pool
-    auto size() const -> geometry::Size;
 
 private:
     FramebufferPool(
@@ -123,6 +123,7 @@ private:
         graphics::CPUAddressableDisplayAllocator& allocator,
         graphics::DRMFormat format,
         bool with_depth_stencil);
+
 
     class PooledFB;
 
@@ -134,8 +135,8 @@ private:
     graphics::CPUAddressableDisplayAllocator& allocator;
     graphics::DRMFormat const format;
     bool const with_depth_stencil;
-    geometry::Size const output_size;
-    std::mutex mutable free_entries_mutex;
+    std::mutex free_entries_mutex;
+    geometry::Size output_size;
     std::vector<std::unique_ptr<Entry>> free_entries;
 };
 

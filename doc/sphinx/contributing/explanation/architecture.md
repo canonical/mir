@@ -45,6 +45,17 @@ For example, the **Frontend** would ask the **Shell** to initiate dragging a win
 Knowing that the **Scene** holds the state of what is to be displayed, we can talk about the **Compositor**. The **Compositor** gets the collection of items to render from the **Scene**,
 renders them with the help of the [rendering platform](#platforms), and sends them off to the [display platform](#platforms) to be displayed.
 
+There are two ways the **Compositor** can do that rendering. Usually it textures each item with
+OpenGL. But some hardware — embedded devices in particular — has a dedicated 2D blit engine and
+little or no useful GPU, and on those it is cheaper to copy each item straight into the scanout
+buffer. A rendering platform advertises that ability with a **BlitterRenderingProvider**, and
+where one can drive an output the **Compositor** uses it in preference to OpenGL.
+
+A blit engine is not a general-purpose compositor, though: it will refuse anything it cannot
+express, such as blending a translucent window. When that happens the blitter renderer draws
+that one item with OpenGL instead and then hands the buffer back to the blit engine, so a scene
+that mixes the two costs more than either on its own.
+
 ### From interaction to shell
 
 As stated previously, the **Shell** handles requests from the system and updates the state of the **Scene** accordingly. These requests come from a variety of sources, which we will investigate now.
@@ -63,7 +74,7 @@ We briefly hinted at the existence of so-called "platforms" previously, but they
 
 - **Display Platform**: Determines what the compositor is rendering to. This may be a physical monitor via GBM/KMS, an X11 or Wayland window, or a completely virtual buffer.
 - **Input Platform**: Determines where the compositor is getting input from. This could be native event via `libinput`, X input events, or Wayland input events.
-- **Rendering Platform**: Determines how the compositor renders the final image. For now, only a GL backend is supported.
+- **Rendering Platform**: Determines how the compositor renders the final image. This is usually OpenGL, but a platform may instead (or additionally) offer a 2D blit engine.
 
 The GBM/KMS platform is most typically what will be used, as it is the native platform. The X11 platform is useful for development. The Wayland platform is specifically useful for Ubuntu Touch, where they are hosting *Mir* in another Wayland compositor.
 

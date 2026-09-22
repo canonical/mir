@@ -17,6 +17,8 @@ backends
 barebones
 basename
 Binutils
+blit
+blitter
 boolean
 BounceKeys
 Broadcom
@@ -219,6 +221,7 @@ sanitizers
 Sanitizers
 SBCs
 Sbuild
+scanout
 SceneChangeNotifiers
 screencast
 screencasting

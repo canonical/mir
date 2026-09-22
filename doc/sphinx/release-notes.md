@@ -45,10 +45,14 @@
     - mircore ABI unchanged at 3
     - miroil ABI unchanged at 10
     - mirplatform ABI unchanged at 35
-    - mirserver ABI unchanged at 68
+    - mirserver ABI bumped to 70
     - mirwayland ABI unchanged at 7
     - mirplatformgraphics ABI unchanged at 24
     - mirinputplatform ABI unchanged at 11
+
+  - Enhancements:
+
+    - [compositor] Composite with a blitter engine where the rendering platform provides one, falling back to OpenGL per-renderable when the blitter cannot express an operation
 
 ## Mir 2.30.0~dev
 

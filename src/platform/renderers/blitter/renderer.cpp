@@ -198,7 +198,7 @@ private:
     {
         return !filter->active()
             && output_transform == glm::mat2{1}
-            && viewport.size == pool->size();
+            && viewport.size == scene.output_size;
     }
 
     /// Where in the target framebuffer `area` of the scene lands

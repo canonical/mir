@@ -227,6 +227,16 @@ auto mrb::FramebufferPool::acquire() -> Checkout
         [this]() -> std::unique_ptr<Entry>
         {
             std::lock_guard lock{free_entries_mutex};
+
+            /* The output can be reconfigured under us; framebuffers of the old
+             * size are no longer any use to the display.
+             */
+            if (auto const current_size = allocator.output_size(); current_size != output_size)
+            {
+                output_size = current_size;
+                free_entries.clear();
+            }
+
             if (free_entries.empty())
             {
                 return nullptr;
@@ -248,10 +258,8 @@ auto mrb::FramebufferPool::acquire() -> Checkout
 void mrb::FramebufferPool::release(std::unique_ptr<Entry> entry)
 {
     std::lock_guard lock{free_entries_mutex};
-    free_entries.push_back(std::move(entry));
-}
-
-auto mrb::FramebufferPool::size() const -> geom::Size
-{
-    return output_size;
+    if (entry->size() == output_size)
+    {
+        free_entries.push_back(std::move(entry));
+    }
 }
