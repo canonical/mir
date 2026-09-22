@@ -48,8 +48,8 @@ private:
 class ApplicationAuthorizer
 {
 public:
-    ApplicationAuthorizer() = default;
-    virtual ~ApplicationAuthorizer() = default;
+    ApplicationAuthorizer();
+    virtual ~ApplicationAuthorizer();
     ApplicationAuthorizer(ApplicationAuthorizer const&) = delete;
     ApplicationAuthorizer& operator=(ApplicationAuthorizer const&) = delete;
 

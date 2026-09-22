@@ -36,4 +36,5 @@ void miral::WindowManagementPolicy::advise_output_delete(Output const& /*output*
 void miral::WindowManagementPolicy::advise_application_zone_create(Zone const& /*application_zone*/) {}
 void miral::WindowManagementPolicy::advise_application_zone_update(Zone const& /*updated*/, Zone const& /*original*/) {}
 void miral::WindowManagementPolicy::advise_application_zone_delete(Zone const& /*application_zone*/) {}
+miral::WindowManagementPolicy::WindowManagementPolicy() = default;
 miral::WindowManagementPolicy::~WindowManagementPolicy() = default;

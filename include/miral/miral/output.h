@@ -53,7 +53,7 @@ public:
         int width;
         int height;
 
-        bool operator==(PhysicalSizeMM const&) const = default;
+        bool operator==(PhysicalSizeMM const&) const;
     };
 
     /// Display connector types.

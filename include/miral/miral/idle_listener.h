@@ -31,7 +31,7 @@ public:
     using Callback = std::function<void()>;
 
     IdleListener();
-    ~IdleListener() = default;
+    ~IdleListener();
     IdleListener& on_dim(Callback const&);
     IdleListener& on_off(Callback const&);
     IdleListener& on_wake(Callback const&);

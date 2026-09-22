@@ -18,6 +18,8 @@
 #include <mir/server.h>
 #include <mir/shell/idle_handler.h>
 
+miral::IdleListener::~IdleListener() = default;
+
 class miral::IdleListener::Impl : public mir::shell::IdleHandlerObserver
 {
 public:

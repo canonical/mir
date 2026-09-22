@@ -30,8 +30,8 @@ class Decorations
 {
 public:
     Decorations() = delete;
-    Decorations(Decorations const&) = default;
-    auto operator=(Decorations const&) -> Decorations& = default;
+    Decorations(Decorations const&);
+    auto operator=(Decorations const&) -> Decorations&;
 
     void operator()(mir::Server&) const;
 
