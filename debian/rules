@@ -8,8 +8,12 @@ export DPKG_GENSYMBOLS_CHECK_LEVEL = 4
 
 export DEB_HOST_RUST_TYPE
 export DEB_HOST_GNU_TYPE
-# Build-local Cargo home for the crates.io download cache (removed by dh_clean).
-export CARGO_HOME = $(CURDIR)/debian/cargo_home
+export PATH := /usr/share/cargo/bin:$(PATH)
+export CARGO=/usr/share/cargo/bin/cargo
+export CARGO_HOME=$(CURDIR)/debian/cargo_home
+export CARGO_REGISTRY=$(CURDIR)/debian/cargo_registry
+export DEB_CARGO_CRATE=$(DEB_SOURCE)_$(DEB_VERSION_UPSTREAM)
+export DEB_BUILD_MAINT_OPTIONS=hardening=+bindnow
 
 # Needed for ccache to work in case the build directory changed
 # (https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=810871)
@@ -38,6 +42,10 @@ $(info COMMON_CONFIGURE_OPTIONS: ${COMMON_CONFIGURE_OPTIONS})
 $(info DEB_BUILD_MAINT_OPTIONS: ${DEB_BUILD_MAINT_OPTIONS})
 
 AVAILABLE_PLATFORMS=atomic-kms\;gbm-kms\;x11\;wayland
+
+execute_before_dh_auto_configure:
+	$(CARGO) prepare-debian debian/cargo_registry --link-from-system
+	rm -f Cargo.lock
 
 override_dh_auto_configure:
 ifneq ($(filter armhf,$(DEB_HOST_ARCH)),)
@@ -81,10 +89,6 @@ override_dh_makeshlibs:
 override_dh_strip:
 	dh_strip -Xmir-test-data
 
-override_dh_clean:
-	dh_clean
-	rm -rf debian/cargo_home
-
 # Don't try to find dependencies of libraries used as test data
 override_dh_shlibdeps:
 	dh_shlibdeps -Xmir-test-data
@@ -92,3 +96,6 @@ override_dh_shlibdeps:
 override_dh_gencontrol:
 	dh_gencontrol -Nlibmiral8 -Nlibmiral-dev
 	dh_gencontrol -plibmiral8 -plibmiral-dev -- -v$(MIRAL_VERSION) -V'libmiral8:Version=$(MIRAL_VERSION)'
+
+execute_after_dh_auto_clean:
+	rm -rf $(CARGO_REGISTRY) $(CARGO_HOME)
