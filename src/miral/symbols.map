@@ -786,5 +786,6 @@ global:
     miral::ApplicationCredentials::is_sandboxed*;
     miral::ApplicationCredentials::snap_app_name*;
     miral::ApplicationCredentials::snap_name*;
+    miral::WaylandExtensions::EnableInfo::creds*;
   };
 } MIRAL_6.0;
