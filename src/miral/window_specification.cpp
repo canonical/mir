@@ -19,6 +19,8 @@
 
 #include <mir/shell/surface_specification.h>
 
+bool miral::WindowSpecification::AspectRatio::operator==(AspectRatio const&) const = default;
+
 miral::WindowSpecification::Self::Self(mir::shell::SurfaceSpecification const& spec) :
     top_left(spec.top_left),
     size(),

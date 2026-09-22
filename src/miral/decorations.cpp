@@ -23,6 +23,10 @@
 #include <mir/decoration_strategy.h>
 
 
+miral::Decorations::Decorations(Decorations const&) = default;
+auto miral::Decorations::operator=(Decorations const&) -> Decorations& = default;
+
+
 struct miral::Decorations::Self : mir::DecorationStrategy
 {
 };

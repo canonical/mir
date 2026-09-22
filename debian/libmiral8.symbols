@@ -7,6 +7,8 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::AppendEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::AppendKeyboardEventFilter::AppendKeyboardEventFilter(std::function<bool (MirKeyboardEvent const*)> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::AppendKeyboardEventFilter::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationAuthorizer::ApplicationAuthorizer()@MIRAL_6.0" 6.0.0
+ (c++)"miral::ApplicationAuthorizer::~ApplicationAuthorizer()@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::ApplicationCredentials(mir::frontend::SessionCredentials const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::gid() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::pid() const@MIRAL_6.0" 6.0.0
@@ -86,10 +88,12 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::CursorTheme::~CursorTheme()@MIRAL_6.0" 6.0.0
  (c++)"miral::CustomRenderer::CustomRenderer(std::function<std::unique_ptr<mir::renderer::Renderer, std::default_delete<mir::renderer::Renderer> > (std::unique_ptr<mir::graphics::gl::OutputSurface, std::default_delete<mir::graphics::gl::OutputSurface> >, std::shared_ptr<mir::graphics::GLRenderingProvider>)>&&)@MIRAL_6.0" 6.0.0
  (c++)"miral::CustomRenderer::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
+ (c++)"miral::Decorations::Decorations(miral::Decorations const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Decorations::Decorations(std::shared_ptr<miral::Decorations::Self>)@MIRAL_6.0" 6.0.0
  (c++)"miral::Decorations::always_csd()@MIRAL_6.0" 6.0.0
  (c++)"miral::Decorations::always_ssd()@MIRAL_6.0" 6.0.0
  (c++)"miral::Decorations::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
+ (c++)"miral::Decorations::operator=(miral::Decorations const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::Decorations::prefer_csd()@MIRAL_6.0" 6.0.0
  (c++)"miral::Decorations::prefer_ssd()@MIRAL_6.0" 6.0.0
  (c++)"miral::DisplayConfiguration::DisplayConfiguration(miral::DisplayConfiguration const&)@MIRAL_6.0" 6.0.0
@@ -153,6 +157,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::IdleListener::on_off(std::function<void ()> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::IdleListener::on_wake(std::function<void ()> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::IdleListener::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
+ (c++)"miral::IdleListener::~IdleListener()@MIRAL_6.0" 6.0.0
  (c++)"miral::InputConfiguration::InputConfiguration()@MIRAL_6.0" 6.0.0
  (c++)"miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)@MIRAL_6.0" 6.0.0
  (c++)"miral::InputConfiguration::Keyboard::Keyboard()@MIRAL_6.0" 6.0.0
@@ -476,6 +481,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::width_inc() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::window() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowManagementPolicy::WindowManagementPolicy()@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_create(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_delete(miral::Zone const&)@MIRAL_6.0" 6.0.0
@@ -536,6 +542,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowManagerTools::window_at(mir::geometry::generic::Point<int>) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::window_to_select_application(std::shared_ptr<mir::scene::Session>) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagerTools::~WindowManagerTools()@MIRAL_6.0" 6.0.0
+ (c++)"miral::WindowSpecification::AspectRatio::operator==(miral::WindowSpecification::AspectRatio const&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::WindowSpecification()@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(mir::shell::SurfaceSpecification const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowSpecification::WindowSpecification(miral::WindowSpecification const&)@MIRAL_6.0" 6.0.0
@@ -711,6 +718,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::toolkit::mir_touch_event_tooltype(MirTouchEvent const*, unsigned int)@MIRAL_6.0" 6.0.0
  (c++)"miral::window_for(wl_resource*)@MIRAL_6.0" 6.0.0
  (c++)"std::formatter<miral::live_config::Key, char>::format(miral::live_config::Key const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const@MIRAL_6.0" 6.0.0
+ (c++)"typeinfo for miral::ApplicationAuthorizer@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::ApplicationSwitcher@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::CanonicalWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::FloatingWindowManager@MIRAL_6.0" 6.0.0
@@ -721,6 +729,7 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"typeinfo for miral::live_config::IniFile@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::live_config::IniFileWithOverrides@MIRAL_6.0" 6.0.0
  (c++)"typeinfo for miral::live_config::Store@MIRAL_6.0" 6.0.0
+ (c++)"vtable for miral::ApplicationAuthorizer@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::CanonicalWindowManagerPolicy@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::FloatingWindowManager@MIRAL_6.0" 6.0.0
  (c++)"vtable for miral::KioskWindowManagerPolicy@MIRAL_6.0" 6.0.0

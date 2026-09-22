@@ -28,6 +28,8 @@ miral::Output::Output(Output const&) = default;
 miral::Output& miral::Output::operator=(Output const&) = default;
 miral::Output::~Output() = default;
 
+bool miral::Output::PhysicalSizeMM::operator==(PhysicalSizeMM const&) const = default;
+
 auto miral::Output::type() const -> Type
 {
     return Type(self->type);

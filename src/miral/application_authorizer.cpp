@@ -39,6 +39,9 @@ struct SessionAuthorizerAdapter : mf::SessionAuthorizer
 };
 }
 
+miral::ApplicationAuthorizer::ApplicationAuthorizer() = default;
+miral::ApplicationAuthorizer::~ApplicationAuthorizer() = default;
+
 struct miral::BasicSetApplicationAuthorizer::Self
 {
     Self(std::function<std::shared_ptr<ApplicationAuthorizer>()> const& builder) :
