@@ -681,7 +681,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::live_config::Store::~Store()@MIRAL_6.0" 6.0.0
  (c++)"miral::name_of[abi:cxx11](std::shared_ptr<mir::scene::Session> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator<(miral::Window const&, miral::Window const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::operator==(miral::Output::PhysicalSizeMM const&, miral::Output::PhysicalSizeMM const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator==(miral::Window const&, miral::Window const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator==(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)@MIRAL_6.0" 6.0.0
