@@ -370,6 +370,23 @@ TEST_F(MagnifierTest, decoupled_magnifier_starts_centred_on_the_output)
     EXPECT_THAT(magnifier_renderable()->screen_position().centre(), Eq(geom::Point{400, 300}));
 }
 
+TEST_F(MagnifierTest, freely_positioned_magnifier_recenters_when_primary_output_changes)
+{
+    magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().centre(), Eq(geom::Point{400, 300}));
+
+    auto const new_configuration = std::make_shared<mtd::StubDisplayConfig>(
+        std::vector<geom::Rectangle>{{{100, 50}, {1000, 700}}});
+    server().the_display_configuration_observer()->configuration_applied(new_configuration);
+    flush_main_loop("the new primary output configuration to be applied");
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().centre(), Eq(geom::Point{600, 400}));
+}
+
 TEST_F(MagnifierTest, switching_to_freely_positioned_centres_on_the_output)
 {
     magnifier.enable(true);
@@ -614,6 +631,22 @@ TEST_F(MagnifierHandleTest, drag_handle_moves_magnifier)
 
     EXPECT_THAT(after.x.as_int(), Eq(before.x.as_int() + 20));
     EXPECT_THAT(after.y.as_int(), Eq(before.y.as_int()));
+}
+
+TEST_F(MagnifierHandleTest, dragged_magnifier_recenters_when_primary_output_changes)
+{
+    wait_for_magnifier_initialization();
+
+    auto const from = element_center(drag_handle_index);
+    drag(from, from + geom::DisplacementF{100, 50});
+    EXPECT_THAT(magnifier_renderable()->screen_position().centre(), Eq(geom::Point{500, 350}));
+
+    auto const new_configuration = std::make_shared<mtd::StubDisplayConfig>(
+        std::vector<geom::Rectangle>{{{100, 50}, {1000, 700}}});
+    server().the_display_configuration_observer()->configuration_applied(new_configuration);
+    flush_main_loop("the new primary output configuration to be applied");
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().centre(), Eq(geom::Point{600, 400}));
 }
 
 TEST_F(MagnifierHandleTest, dragging_with_primary_button_ignores_secondary_button_chords)

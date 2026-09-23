@@ -213,25 +213,6 @@ struct State
 
     auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
 
-    auto free_placement_center() const -> geom::PointD
-    {
-        return user_positioned ? freely_positioned_center : geom::PointD{primary_output_center()};
-    }
-
-    /// The centre of the primary output, i.e. the first usable one.
-    auto primary_output_center() const -> geom::Point
-    {
-        auto const primary = std::ranges::find_if(
-            screen_bounds,
-            [](geom::Rectangle const& output)
-            { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
-
-        if (primary == std::ranges::end(screen_bounds))
-            return {};
-
-        return primary->centre();
-    }
-
     std::weak_ptr<ms::Surface> surface;
     Handles handles;
     geom::Point cursor_pos;
@@ -244,9 +225,6 @@ struct State
     std::optional<mml::FreePlacement> applied_placement;
     bool enabled{false};
     bool follow_cursor{true};
-   /// Whether freely_positioned_center should be reused instead of the
-   /// primary-output centre.
-    bool user_positioned{false};
 };
 }
 
@@ -497,7 +475,7 @@ private:
 
     void place_freely(State& s)
     {
-        place_freely_at(s, s.free_placement_center());
+        place_freely_at(s, s.freely_positioned_center);
     }
 
     void place_freely_at(State& s, geom::PointD center)
@@ -638,7 +616,6 @@ private:
                 return;
 
             drag_start = s.freely_positioned_center;
-            s.user_positioned = true;
         }
 
         void on_drag_move(State& s, geom::Point point) override
@@ -693,7 +670,6 @@ private:
                 s.magnification);
             resize_start_visual_top_left = {bounds.left().as_value(), bounds.top().as_value()};
             pinned_visual_corner = {bounds.right().as_value(), bounds.bottom().as_value()};
-            s.user_positioned = true;
         }
 
         void on_drag_move(State& s, geom::Point point) override
@@ -830,7 +806,7 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
                 rects.add(output.extents());
         });
 
-    auto s = self.state.lock();
+    auto const s = self.state.lock();
     s->screen_bounds = rects;
     if (!s->has_outputs())
     {
@@ -838,10 +814,19 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
         return;
     }
 
-    if (auto const surf = s->surface.lock())
+    /// The centre of the primary output, i.e. the first usable one.
+    s->freely_positioned_center = [&screen_bounds = s->screen_bounds]
     {
+        auto const primary = std::ranges::find_if(
+            screen_bounds,
+            [](geom::Rectangle const& output)
+            { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
+
+        return geom::PointD{primary->centre()};
+    }();
+
+    if (auto const surf = s->surface.lock())
         self.place(*s);
-    }
 }
 
 miral::Magnifier::Magnifier()
