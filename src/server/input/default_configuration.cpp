@@ -48,6 +48,7 @@
 #include <mir/main_loop.h>
 #include <mir/abnormal_exit.h>
 #include <mir/glib_main_loop.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::input() }
 #include <mir/log.h>
 #include <mir/shared_library.h>
 #include <mir/dispatch/action_queue.h>
@@ -94,10 +95,8 @@ mir::DefaultServerConfiguration::the_event_filter_chain_dispatcher()
                     }
                     catch (std::exception const& err)
                     {
-                        mir::log(
-                            mir::logging::Severity::informational,
-                            "VT switch key handler",
-                            "No VT switching support available: %s",
+                        mir::log_info(
+                            "No VT switching support available: {}",
                             err.what());
                         return {};
                     }

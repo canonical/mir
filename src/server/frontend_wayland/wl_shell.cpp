@@ -20,6 +20,7 @@
 #include "window_wl_surface_role.h"
 #include <mir/shell/surface_specification.h>
 #include <mir/frontend/surface.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 namespace mf = mir::frontend;

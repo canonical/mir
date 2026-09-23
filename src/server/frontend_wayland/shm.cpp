@@ -17,6 +17,7 @@
 #include "shm.h"
 #include <mir/graphics/drm_formats.h>
 #include "../shm_backing.h"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics(), mir::logging::wayland() }
 #include <mir/log.h>
 #include <mir/wayland/protocol_error.h>
 
@@ -164,10 +165,7 @@ void ErrorNotifyingRWMappableBuffer::notify_access_error() const
             }
             else
             {
-                mir::log(
-                    mir::logging::Severity::warning,
-                    "Client SHM Buffer",
-                    "Client submitted invalid SHM buffer; rendering will be incomplete");
+                mir::log_warning("Client submitted invalid SHM buffer; rendering will be incomplete");
             }
         });
 }

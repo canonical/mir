@@ -46,18 +46,6 @@ public:
         std::format_args args,
         std::source_location location = std::source_location::current());
 
-    /**
-     * Transitional Event constructor for call-sites that have not yet migrated to Tags
-     *
-     * These Events are all categorised in a catch-all "uncategorised" tag;
-     * the `category` included here is added to the message
-     */
-    Event(
-        Severity sev,
-        std::string_view component,
-        std::string_view message,
-        std::source_location location = std::source_location::current());
-
     ~Event();
 
     auto severity() const -> Severity;

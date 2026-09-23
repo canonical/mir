@@ -16,7 +16,7 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics() }
 
 #include <mir/graphics/platform.h>
 #include <drm.h>
@@ -304,7 +304,7 @@ auto probe_display_platform(
         {
             mir::log(
                 mir::logging::Severity::informational,
-                "uncategorised",
+                { mir::logging::graphics() },
                 std::current_exception(),
                 "Failed to probe DRM device");
         }

@@ -140,8 +140,12 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     }
     catch (...)
     {
-        mir::log(mir::logging::Severity::warning, "uncategorised", std::current_exception(),
-                 "problem adding device (" + device->name() + ")");
+        mir::log(
+            mir::logging::Severity::warning,
+            { mir::logging::uncategorised() },
+            std::current_exception(),
+            "problem adding device ({})",
+            device->name());
     }
 
     void device_changed(std::shared_ptr<mir::input::Device> const& device) override
@@ -190,8 +194,12 @@ struct miral::Keymap::Self : mir::input::InputDeviceObserver
     }
     catch (...)
     {
-        mir::log(mir::logging::Severity::warning, "uncategorised", std::current_exception(),
-            "problem removing device (" + device->name() + ")");
+        mir::log(
+            mir::logging::Severity::warning,
+            { mir::logging::uncategorised() },
+            std::current_exception(),
+            "problem removing device ({})",
+            device->name());
     }
 
     void changes_complete() override

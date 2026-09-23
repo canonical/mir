@@ -15,7 +15,7 @@
  */
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics() }
 
 #include "buffer_allocator.h"
 #include <mir/graphics/gl_config.h>
@@ -228,7 +228,7 @@ void mge::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
             "Cannot enable linux-dmabuf import support: {}", error.what());
         mir::log(
             mir::logging::Severity::debug,
-            "uncategorised",
+            MIR_LOG_DEFAULT_TAGS,
             std::current_exception(),
             "Detailed error: ");
     }

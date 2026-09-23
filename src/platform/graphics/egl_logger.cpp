@@ -16,7 +16,7 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics() }
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
@@ -66,12 +66,12 @@ void egl_debug_logger(
 
     mir::log(
         severity,
-        "uncategorised",
-        "[%s] on [%s]: %s (%s): %s",
+        MIR_LOG_DEFAULT_TAGS,
+        "[{}] on [{}]: {} ({}): {}",
         thread_id,
         object_id,
         command,
-        mg::egl_category().message(error).c_str(),
+        mg::egl_category().message(error),
         message);
 }
 

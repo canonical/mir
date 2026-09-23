@@ -16,6 +16,7 @@
 
 #include <mir/input/input_event_transformer.h>
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include "default_event_builder.h"
 #include <mir/events/event_builders.h>

@@ -18,6 +18,7 @@
 
 #include "wl_surface.h"
 #include "xdg-output-unstable-v1_wrapper.h"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include "output_manager.h"
 #include <mir/wayland/client.h>

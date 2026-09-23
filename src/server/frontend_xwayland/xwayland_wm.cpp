@@ -300,7 +300,7 @@ void mf::XWaylandWM::handle_events()
         {
             log(
                 logging::Severity::warning,
-                "uncategorised",
+                MIR_LOG_DEFAULT_TAGS,
                 std::current_exception(),
                 "Error processing XCB event");
         }

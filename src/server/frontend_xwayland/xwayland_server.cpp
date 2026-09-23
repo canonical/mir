@@ -18,8 +18,8 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include "xwayland_server.h"
 #include "xwayland_spawner.h"
 #include "wayland_connector.h"

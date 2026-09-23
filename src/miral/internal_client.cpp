@@ -23,7 +23,10 @@
 #include <mir/raii.h>
 #include <wayland-client-core.h>
 
-#define MIR_LOG_COMPONENT "miral::Internal Client"
+#include <mir/logging/tag.h>
+static auto const& tag = mir::logging::create_tag(mir::logging::base(), "miral-internal-client");
+
+#define MIR_LOG_DEFAULT_TAGS { tag }
 #include <mir/log.h>
 
 #include <wayland-client.h>
@@ -142,7 +145,7 @@ void WlInternalClientRunner<Base>::run(mir::Server& server)
             }
             catch (std::exception const&)
             {
-                mir::log(mir::logging::Severity::informational, "uncategorised",
+                mir::log(mir::logging::Severity::informational, { tag },
                          std::current_exception(), "internal client failed to connect to server");
             }
         }};

@@ -22,6 +22,7 @@
 #include <mir/report_exception.h>
 #include <mir/run_mir.h>
 #include <mir/main_loop.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>

@@ -28,6 +28,7 @@
 #include <mir/shell/shell.h>
 #include <mir/scene/surface.h>
 #include <mir/events/input_event.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>

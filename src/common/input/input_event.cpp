@@ -20,6 +20,7 @@
 
 #include <mir/events/event_type_to_string.h>
 #include <mir/fatal.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir_toolkit/events/input/pointer_event.h>
 

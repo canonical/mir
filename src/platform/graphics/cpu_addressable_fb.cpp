@@ -17,6 +17,8 @@
 #include <mir/graphics/cpu_addressable_fb.h>
 
 #include <mir/errno_utils.h>
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics() }
 #include <mir/log.h>
 #include <mir_toolkit/common.h>
 

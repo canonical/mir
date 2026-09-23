@@ -16,7 +16,7 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::wayland() }
 
 #include "wayland_executor.h"
 
@@ -256,7 +256,7 @@ int mf::WaylandExecutor::State::on_notify(int fd, uint32_t, void* data)
         {
             mir::log(
                 mir::logging::Severity::critical,
-                "uncategorised",
+                MIR_LOG_DEFAULT_TAGS,
                 std::current_exception(),
                 "Exception processing Wayland event loop work item");
         }

@@ -20,6 +20,7 @@
 #include <mir/shell/shell.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include "wl_surface.h"
 #include "output_manager.h"

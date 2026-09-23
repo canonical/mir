@@ -23,6 +23,7 @@
 #include <mir/executor.h>
 #include <mir_toolkit/events/event.h>
 #include <mir/events/touch_event.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/time/clock.h>
 #include <mir/wayland/client.h>

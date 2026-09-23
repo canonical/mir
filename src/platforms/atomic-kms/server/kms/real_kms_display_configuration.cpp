@@ -18,6 +18,7 @@
 #include "kms_output.h"
 #include "kms_output_container.h"
 #include <mir/graphics/pixel_format_utils.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/output_type_names.h>
 

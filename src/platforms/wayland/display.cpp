@@ -23,6 +23,7 @@
 #include <mir/fatal.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/graphics/egl_error.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/renderer/gl/context.h>
 #include <mir/signal_blocker.h>

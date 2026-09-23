@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::wayland() }
+#include <mir/log.h>
+
 #include "xwayland_surface_role.h"
 #include "xwayland_surface_role_surface.h"
 #include "scaled_buffer_stream.h"

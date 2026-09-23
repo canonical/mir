@@ -38,11 +38,17 @@
 #include <mir/input/input_device_info.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/seat_observer.h>
+
+#include <mir/logging/tag.h>
+static auto const& wlcs_tag = mir::logging::create_tag(mir::logging::base(), "wlcs-integration");
+
+#define MIR_LOG_DEFAULT_TAGS { wlcs_tag }
 #include <mir/log.h>
 #include <mir/observer_registrar.h>
 #include <mir/scene/session_listener.h>
 #include <mir/scene/surface.h>
 #include <mir/server.h>
+
 
 #include <wayland-server.h>
 
@@ -275,10 +281,8 @@ private:
         eventfd_t unused;
         if (auto err = eventfd_read(fd, &unused))
         {
-            mir::log(
-                mir::logging::Severity::error,
-                "wlcs-integration",
-                "eventfd_read failed to consume wakeup notification: %s (%i)",
+            mir::log_error(
+                "eventfd_read failed to consume wakeup notification: {} ({})",
                 mir::errno_to_cstr(err),
                 err);
         }
@@ -293,7 +297,7 @@ private:
             {
                 mir::log(
                     mir::logging::Severity::critical,
-                    "wlcs-integration",
+                    MIR_LOG_DEFAULT_TAGS,
                     std::current_exception(),
                     "Exception processing Wayland event loop work item");
             }
@@ -906,7 +910,7 @@ int miral::TestWlcsDisplayServer::create_client_socket()
     {
         mir::log(
             mir::logging::Severity::critical,
-            "wlcs-bindings",
+            MIR_LOG_DEFAULT_TAGS,
             std::current_exception(),
             "Failed to create Wayland client socket");
     }

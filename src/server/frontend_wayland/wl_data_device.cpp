@@ -23,6 +23,7 @@
 #include <mir/executor.h>
 #include <mir/frontend/drag_icon_controller.h>
 #include <mir/frontend/pointer_input_dispatcher.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/scene/clipboard.h>
 #include <mir/scene/session.h>

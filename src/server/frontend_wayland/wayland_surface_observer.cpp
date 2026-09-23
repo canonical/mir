@@ -20,6 +20,7 @@
 #include "wl_surface.h"
 
 #include <mir/executor.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/events/input_event.h>
 #include <mir/wayland/client.h>

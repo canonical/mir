@@ -22,6 +22,7 @@
 #include "relative-pointer-unstable-v1_wrapper.h"
 
 #include <mir/fatal.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/frontend/wayland.h>

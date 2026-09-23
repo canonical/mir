@@ -16,6 +16,7 @@
  *
  */
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include "xcb_connection.h"
 
 #include "xwayland_log.h"
@@ -317,7 +318,7 @@ auto mf::XCBConnection::read_property(
             {
                 log(
                     logging::Severity::warning,
-                    "uncategorised",
+                    MIR_LOG_DEFAULT_TAGS,
                     "Exception thrown processing reply for property " +
                     window_debug_string(window) + "." + query_name(prop));
             }
@@ -471,7 +472,7 @@ auto mf::XCBConnection::query_client_pid(
             {
                 log(
                     logging::Severity::warning,
-                    "uncategorised",
+                    MIR_LOG_DEFAULT_TAGS,
                     "Exception thrown processing reply for querying pid of " +
                     window_debug_string(window));
             }

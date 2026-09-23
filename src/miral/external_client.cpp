@@ -21,6 +21,7 @@
 
 #include <mir/options/option.h>
 #include <mir/server.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <algorithm>

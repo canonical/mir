@@ -15,6 +15,8 @@
  */
 
 #include <mir/options/program_option.h>
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::base() }
 #include <mir/log.h>
 
 #include <boost/program_options/parsers.hpp>

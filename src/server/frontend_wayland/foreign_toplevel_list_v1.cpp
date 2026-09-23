@@ -26,6 +26,8 @@
 #include "mir/scene/null_surface_observer.h"
 #include "mir/scene/surface.h"
 #include "mir/scene/session.h"
+
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::wayland() }
 #include "mir/log.h"
 #include "mir/executor.h"
 

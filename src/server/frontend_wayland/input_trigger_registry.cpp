@@ -19,6 +19,7 @@
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/input/xkb_mapper.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir_toolkit/events/enums.h>
 

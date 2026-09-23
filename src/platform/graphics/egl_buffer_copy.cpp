@@ -31,6 +31,7 @@
 #include <boost/throw_exception.hpp>
 
 #define MIR_LOG_COMPONENT "egl-buffer-copy"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 namespace mg = mir::graphics;

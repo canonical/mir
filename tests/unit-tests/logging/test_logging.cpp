@@ -280,7 +280,7 @@ TEST_F(TestLog, logging_captures_source_location)
         auto prev_line = std::source_location::current();
         mir::log(
             ml::Severity::debug,
-            "uncategorised",
+            { ml::uncategorised() },
             std::current_exception(),
             "The exception_ptr API works");
 
@@ -297,7 +297,7 @@ TEST_F(TestLog, logging_captures_source_location)
         auto prev_line = std::source_location::current();
         mir::log(
             ml::Severity::debug,
-            "uncategorised",
+            { ml::uncategorised() },
             std::current_exception(),
             "The exception_ptr API works");
 

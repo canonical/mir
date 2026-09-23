@@ -16,7 +16,7 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::wayland() }
 
 #include "wayland_connector.h"
 #ifdef MIR_ENABLE_RUST
@@ -469,7 +469,7 @@ catch (...)
 {
     mir::log(
         mir::logging::Severity::warning,
-        "uncategorised",
+        MIR_LOG_DEFAULT_TAGS,
         std::current_exception(),
         "Failed to unbind EGL display");
 }

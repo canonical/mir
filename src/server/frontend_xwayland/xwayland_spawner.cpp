@@ -18,8 +18,8 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include "xwayland_spawner.h"
 
 #include <mir/dispatch/multiplexing_dispatchable.h>
@@ -147,7 +147,7 @@ mf::XWaylandSpawner::XWaylandSpawner(
           {
               log(
                 logging::Severity::error,
-                "uncategorised",
+                MIR_LOG_DEFAULT_TAGS,
                 std::current_exception(),
                 "Failed to spawn XWayland server.");
           })},

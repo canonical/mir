@@ -17,6 +17,7 @@
 #include <mir/input/vt_filter.h>
 #include <mir_toolkit/event.h>
 #include <mir/console_services.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <linux/input.h>

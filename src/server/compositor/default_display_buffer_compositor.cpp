@@ -31,6 +31,7 @@
 #include <memory>
 
 #define MIR_LOG_COMPONENT "compositor"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 namespace mc = mir::compositor;

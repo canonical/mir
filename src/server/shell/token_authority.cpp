@@ -18,6 +18,7 @@
 
 #include <mir/main_loop.h>
 #include <mir/time/alarm.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <chrono>

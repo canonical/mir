@@ -28,6 +28,7 @@
 #include <mir/events/event.h>
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <cstring>

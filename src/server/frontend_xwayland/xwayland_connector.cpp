@@ -18,8 +18,8 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include "xwayland_connector.h"
 
 #include "wayland_connector.h"
@@ -187,7 +187,7 @@ void mf::XWaylandConnector::spawn()
 
                 log(
                     logging::Severity::error,
-                    "uncategorised",
+                    MIR_LOG_DEFAULT_TAGS,
                     std::current_exception(),
                     "X11 window manager error");
 
@@ -215,7 +215,7 @@ void mf::XWaylandConnector::spawn()
     {
         log(
             logging::Severity::error,
-            "uncategorised",
+            MIR_LOG_DEFAULT_TAGS,
             std::current_exception(),
             "Spawning XWayland failed");
 

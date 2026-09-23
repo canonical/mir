@@ -18,6 +18,7 @@
 
 #include "wl_surface.h"
 #include "wl_seat.h"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/wayland/client.h>

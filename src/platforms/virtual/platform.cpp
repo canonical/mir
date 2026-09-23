@@ -18,6 +18,7 @@
 #include "display.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/egl_error.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/graphics/options_parsing_helpers.h>
 #include <drm_fourcc.h>

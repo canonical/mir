@@ -27,6 +27,7 @@
 #include <mir/input/input_device_registry.h>
 #include <mir/input/input_sink.h>
 #include <mir/input/virtual_input_device.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/wayland/protocol_error.h>
 #include <mir/wayland/weak.h>

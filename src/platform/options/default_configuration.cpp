@@ -20,6 +20,7 @@
 #include <mir/constexpr_utils.h>
 #include <mir/graphics/platform.h>
 #include <mir/logging/null_shared_library_prober_report.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/options/program_option.h>
 #include <mir/shared_library.h>

@@ -15,6 +15,7 @@
  *
  */
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/default_server_configuration.h>
 #include <mir/fatal.h>
 #include <mir/log.h>

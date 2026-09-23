@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/logging/tag.h"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
@@ -35,20 +37,12 @@ log<logging::Severity, logging::Tags, std::string_view, std::format_args>::log(
     logging::log(sev, tags, fmt, args, loc);
 }
 
-log<logging::Severity, std::string const&, std::string const&>::log(
-    logging::Severity sev,
-    std::string const& component,
-    std::string const& message,
-    std::source_location loc)
-{
-    logging::log(sev, component, message, loc);
-}
-
-log<logging::Severity, char const*, std::exception_ptr const&, std::string const&>::log(
+log<logging::Severity, logging::Tags, std::exception_ptr const&, std::string_view, std::format_args>::log(
     logging::Severity severity,
-    char const* component,
+    logging::Tags tags,
     std::exception_ptr const& ex,
-    std::string const& message,
+    std::string_view fmt,
+    std::format_args args,
     std::source_location loc)
 {
     try
@@ -59,21 +53,21 @@ log<logging::Severity, char const*, std::exception_ptr const&, std::string const
     {
         // TODO: We can probably format this better by pulling out
         // the boost::errinfo's ourselves.
-        mir::log<logging::Severity, char const*, char const*, char const*, char const*>(
+        mir::log<logging::Severity, logging::Tags, std::format_string<std::string const&, std::string const&>, std::string const&, std::string const&>(
             severity,
-            component,
-            "%s: %s",
-            message.c_str(),
-            boost::diagnostic_information(err).c_str(),
+            tags,
+            "{}: {}",
+            std::vformat(fmt, args),
+            boost::diagnostic_information(err),
             loc);
     }
     catch(...)
     {
-        mir::log<logging::Severity, char const*, char const*, char const*>(
+        mir::log<logging::Severity, logging::Tags, std::format_string<std::string const&>, std::string const&>(
             severity,
-            component,
-            "%s: unknown exception",
-            message.c_str(),
+            tags,
+            "{}: unknown exception",
+            std::vformat(fmt, args),
             loc);
     }
 }

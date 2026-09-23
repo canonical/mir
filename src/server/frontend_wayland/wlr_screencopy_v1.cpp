@@ -16,6 +16,7 @@
 
 #include "wlr_screencopy_v1.h"
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/compositor/screen_shooter.h>
 #include <mir/compositor/screen_shooter_factory.h>

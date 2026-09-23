@@ -17,6 +17,7 @@
 #include "display.h"
 #include <mir/graphics/display_configuration.h>
 #include "display_configuration.h"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <utility>

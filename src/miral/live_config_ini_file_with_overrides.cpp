@@ -19,6 +19,7 @@
 #include "basic_store.h"
 #include "live_config_ini_file_common.h"
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <memory>

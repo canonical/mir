@@ -32,6 +32,7 @@
 #include <mir/fd.h>
 #include <mir/raii.h>
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::input() }
 #include <mir/log.h>
 
 #include <boost/exception/errinfo_errno.hpp>
@@ -375,8 +376,13 @@ void mie::Platform::start()
             }
             catch (std::exception const&)
             {
-                auto const message = "Failed to handle UDev " + event_type + " event for " + device.syspath();
-                log(logging::Severity::warning, "uncategorised", std::current_exception(), message);
+                log(
+                    logging::Severity::warning,
+                    { logging::input() },
+                    std::current_exception(),
+                    "Failed to handle UDev {} event for {}",
+                    event_type,
+                    device.syspath());
             }
         });
 

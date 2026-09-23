@@ -20,6 +20,7 @@
 #include <mir/server.h>
 #include <mir/main_loop.h>
 #include <mir/logging/logger.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 #include <mir/options/option.h>
 

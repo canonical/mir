@@ -15,9 +15,8 @@
  */
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
-
 #include <mir/log.h>
+#include <mir/logging/tag.h>
 
 #define MIR_HANDLE_EVENT_EXCEPTION(expr) \
     try                                  \
@@ -26,6 +25,6 @@
     }                                    \
     catch(std::exception const& e)       \
     {                                    \
-        mir::log_critical("{}", e.what());     \
+        mir::log_critical({mir::logging::input()}, "{}", e.what());     \
         abort();                         \
     }

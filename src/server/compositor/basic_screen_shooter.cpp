@@ -22,6 +22,7 @@
 #include <mir/renderer/gl/gl_surface.h>
 #include <mir/compositor/scene_element.h>
 #include <mir/compositor/scene.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics() }
 #include <mir/log.h>
 #include <mir/executor.h>
 #include <mir/graphics/platform.h>
@@ -304,7 +305,7 @@ void mc::BasicScreenShooter::capture(
                 {
                     mir::log(
                         ::mir::logging::Severity::error,
-                        "BasicScreenShooter",
+                        MIR_LOG_DEFAULT_TAGS,
                         std::current_exception(),
                         "failed to capture screen");
                 }

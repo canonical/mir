@@ -109,9 +109,6 @@ private:
     std::string const component;
 };
 
-static auto const& uncategorised_tag = ml::create_tag(ml::base(), "uncategorised");
-std::reference_wrapper<ml::Tag const> const ImplWithComponentAndMessage::uncategorised_ref = std::cref(uncategorised_tag);
-
 ml::Event::Event(
     Severity sev,
     Tags tags,
@@ -126,21 +123,6 @@ ml::Event::Event(
     static_assert(alignof(std::max_align_t) >= alignof(DeferredFormattingImpl));
 
     new(storage.data()) DeferredFormattingImpl{sev, tags, fmt, args, location};
-}
-
-ml::Event::Event(
-    Severity sev,
-    std::string_view component,
-    std::string_view message,
-    std::source_location location)
-{
-    static_assert(sizeof(ImplWithComponentAndMessage) < sizeof(decltype(storage)));
-    /* Sadly we can't do `alignof(storage)`; we need to manually keep the alignas
-     * on the declaration of storage and the alignof check here in sync.
-     */
-    static_assert(alignof(std::max_align_t) >= alignof(ImplWithComponentAndMessage));
-
-    new(storage.data()) ImplWithComponentAndMessage{sev, component, message, location};
 }
 
 ml::Event::~Event()

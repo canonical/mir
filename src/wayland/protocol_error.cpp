@@ -14,7 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "mir/logging/tag.h"
 #include <mir/wayland/protocol_error.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <wayland-server-core.h>
@@ -63,9 +65,10 @@ void mw::internal_error_processing_request(wl_client* client, char const* method
 
     ::mir::log(
         ::mir::logging::Severity::warning,
-        "frontend:Wayland",
+        { mir::logging::wayland() },
         std::current_exception(),
-        std::string() + "Exception processing " + method_name + " request");
+        "Exception processing {} request",
+        method_name);
 }
 
 void mw::tried_to_send_unsupported_event(wl_client* client, wl_resource* resource, char const* event, int required_version)
@@ -80,6 +83,7 @@ void mw::tried_to_send_unsupported_event(wl_client* client, wl_resource* resourc
         required_version);
 
     log_critical(
+        { mir::logging::wayland() },
         "Tried to send {}@{}.{} to object with version {} (requires version {})",
         wl_resource_get_class(resource),
         wl_resource_get_id(resource),

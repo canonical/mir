@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include "xwayland_client_manager.h"
 #include "xwayland_log.h"
 #include <mir/shell/shell.h>

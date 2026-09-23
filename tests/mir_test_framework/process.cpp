@@ -15,6 +15,7 @@
  */
 
 #include <mir_test_framework/process.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <cerrno>
@@ -95,9 +96,9 @@ mtf::Process::~Process()
         {
             mir::log(
                 mir::logging::Severity::error,
-               "mir_test_framework",
-               std::current_exception(),
-               "Failed to signal process");
+                MIR_LOG_DEFAULT_TAGS,
+                std::current_exception(),
+                "Failed to signal process");
         }
     }
 }

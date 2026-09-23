@@ -16,6 +16,7 @@
 
 #include <mir/graphics/egl_extensions.h>
 #define MIR_LOG_COMPONENT "gbm-kms"
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include "rendering_platform.h"

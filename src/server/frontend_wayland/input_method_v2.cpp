@@ -21,6 +21,7 @@
 #include "input_method_common.h"
 
 #include <mir/scene/text_input_hub.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <deque>

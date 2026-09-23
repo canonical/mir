@@ -41,22 +41,6 @@
 
 namespace ml = mir::logging;
 
-void ml::Logger::log(char const* component, Severity severity, char const* format, ...)
-{
-    auto const bufsize = 4096;
-    va_list va;
-    va_start(va, format);
-    char message[bufsize];
-    std::vsnprintf(message, bufsize, format, va);
-    va_end(va);
-
-    Event const ev{severity, std::string{component}, std::string{message}};
-    if (ev.should_log())
-    {
-        log(ev);
-    }
-}
-
 namespace
 {
 std::mutex log_mutex;
@@ -71,18 +55,6 @@ std::shared_ptr<ml::Logger> get_logger()
 
     return the_logger;
 }
-}
-
-void ml::log(ml::Severity severity, const std::string& message, const std::string& component, std::source_location location)
-{
-    Event const ev{severity, component, message, location};
-
-    if (ev.should_log())
-    {
-        auto const logger = get_logger();
-
-        logger->log(ev);
-    }
 }
 
 void ml::log(Severity severity, Tags tags, std::string_view fmt, std::format_args args, std::source_location location)

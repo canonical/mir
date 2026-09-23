@@ -23,6 +23,7 @@
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/observer_registrar.h>
 #include <mir/server.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>

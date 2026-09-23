@@ -417,7 +417,7 @@ auto mlc::OverrideWatcher::apply_events(BatchSummary const& summary) -> std::opt
     {
         mir::log(
             mir::logging::Severity::warning,
-            "uncategorised",
+            MIR_LOG_DEFAULT_TAGS,
             std::current_exception(),
             "Failed to reload configuration");
     }

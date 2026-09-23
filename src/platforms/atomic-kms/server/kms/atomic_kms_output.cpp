@@ -16,7 +16,7 @@
 
 
 
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::graphics() }
 
 #include "atomic_kms_output.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
@@ -880,7 +880,7 @@ void mga::AtomicKMSOutput::update_from_hardware_state(
         }
         catch (...)
         {
-            log(logging::Severity::warning, "uncategorised", std::current_exception(), "Failed to get gamma curves");
+            log(logging::Severity::warning, { mir::logging::graphics() }, std::current_exception(), "Failed to get gamma curves");
         }
     }
 

@@ -17,6 +17,7 @@
 #include "minimal_console_services.h"
 
 #include <mir/constexpr_utils.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <boost/exception/errinfo_errno.hpp>
