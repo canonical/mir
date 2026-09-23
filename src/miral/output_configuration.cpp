@@ -17,6 +17,8 @@
 #include <miral/output_configuration.h>
 
 #include <mir/graphics/display_configuration_policy.h>
+#include <mir/log.h>
+#include <mir/logging/tag.h>
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/server.h>
 
@@ -25,6 +27,69 @@
 
 namespace mg = mir::graphics;
 namespace ms = mir::shell;
+
+namespace
+{
+static mir::logging::Tag const& output_config_tag =
+mir::logging::create_tag(mir::logging::graphics(), "output-config");
+
+auto power_mode_name(MirPowerMode power_mode) -> char const*
+{
+    switch (power_mode)
+    {
+    case mir_power_mode_on:      return "on";
+    case mir_power_mode_standby: return "standby";
+    case mir_power_mode_suspend: return "suspend";
+    case mir_power_mode_off:     return "off";
+    default:                     return "unknown";
+    }
+}
+
+void log_configuration(char const* source, std::span<mg::UserDisplayConfigurationOutput const> outputs)
+{
+    if (outputs.empty())
+    {
+        mir::log_debug({output_config_tag}, "{}: no outputs configured", source);
+        return;
+    }
+
+    for (auto const& output : outputs)
+    {
+        if (!output.used)
+        {
+            mir::log_debug(
+                {output_config_tag},
+                "{}: output {}: unused (connected {}, power {})",
+                source,
+                output.name,
+                output.connected,
+                power_mode_name(output.power_mode));
+            continue;
+        }
+
+        auto const& mode = output.modes[output.current_mode_index];
+        auto const extents = output.extents();
+
+        mir::log_debug(
+            {output_config_tag},
+            "{}: output {}: used (connected {}, power {}), mode {}x{}@{:.2f}Hz, scale {}, rotation {} degrees, "
+            "extents {}x{}+{}+{}",
+            source,
+            output.name,
+            output.connected,
+            power_mode_name(output.power_mode),
+            mode.size.width.as_int(),
+            mode.size.height.as_int(),
+            mode.vrefresh_hz,
+            output.scale,
+            static_cast<int>(output.orientation),
+            extents.size.width.as_int(),
+            extents.size.height.as_int(),
+            extents.top_left.x.as_int(),
+            extents.top_left.y.as_int());
+    }
+}
+}
 
 class miral::OutputConfiguration::Self : public mg::DisplayConfigurationPolicy
 {
@@ -85,6 +150,7 @@ public:
             outputs.emplace_back(output);
         }
 
+        log_configuration("before", outputs);
         strategy->apply_configuration(outputs);
 
         // ...and write the result back one output at a time, as some DisplayConfiguration
@@ -127,6 +193,7 @@ public:
             outputs.emplace_back(const_cast<mg::DisplayConfigurationOutput&>(output));
         });
 
+        log_configuration("after ", outputs);
         strategy->confirm_configuration(outputs);
     }
 
