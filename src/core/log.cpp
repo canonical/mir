@@ -14,8 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "mir/logging/tag.h"
-#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+#include <mir/logging/tag.h>
 #include <mir/log.h>
 #include <mir/logging/logger.h>
 #include <chrono>
@@ -81,23 +80,24 @@ log<logging::Severity, logging::Tags, std::string_view>::log(
     logging::log(severity, tags, message, std::make_format_args(), loc);
 }
 
+
 void security_log(
     logging::Severity severity,
     std::string const& event,
     std::string const& description)
 {
-    auto const now = std::chrono::system_clock::now();
-    auto const datetime = std::format("{:%FT%TZ}", now);
-
-    auto message = std::format(
+    static auto const& security_tag = logging::create_tag(mir::logging::base(), "security");
+    log(
+        severity,
+        { security_tag },
         "{{"
-            "\"datetime\": \"{}\", "
+            "\"datetime\": \"{:%FT%TZ}\", "
             "\"appid\": \"{}\", "
             "\"event\": \"{}\", "
             "\"level\": \"{}\", "
             "\"description\": \"{}\" "
         "}}",
-        datetime,
+        std::chrono::system_clock::now(),
         program_invocation_short_name ? program_invocation_short_name : "<unknown>",
         event,
         (severity == logging::Severity::critical ? "CRITICAL" :
@@ -107,7 +107,6 @@ void security_log(
          severity == logging::Severity::debug ? "DEBUG" : "UNKNOWN"),
         description
     );
-    logging::log(severity, message, "security");
 }
 
 } // namespace mir
