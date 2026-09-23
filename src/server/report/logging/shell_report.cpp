@@ -48,12 +48,22 @@ mrl::ShellReport::ShellReport(std::shared_ptr<mir::logging::Logger> const& log) 
 
 void mrl::ShellReport::opened_session(Session const& session)
 {
-    log->log(mrl::Event{Severity::informational, component, "session \"" + session.name() + "\" opened"});
+    auto const message = std::format("session \"{}\" opened", session.name());
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::closing_session(Session const& session)
 {
-    log->log(mrl::Event{Severity::informational, component, "session \"" + session.name() + "\" closing"});
+    auto const message = std::format("session \"{}\" closing", session.name());
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::created_surface(
@@ -67,7 +77,12 @@ void mrl::ShellReport::created_surface(
     if (auto const parent = surface.parent())
         out << ", parent=\"" << parent->name() << "\"";
 
-    log->log(mrl::Event{Severity::informational, component, out.str()});
+    auto const message = out.str();
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::update_surface(
@@ -77,7 +92,12 @@ void mrl::ShellReport::update_surface(
 {
     std::ostringstream out;
     log_basics(out, session, surface, "update");
-    log->log(mrl::Event{Severity::informational, component, out.str()});
+    auto const message = out.str();
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::update_surface(
@@ -87,7 +107,12 @@ void mrl::ShellReport::update_surface(
 {
     std::ostringstream out;
     log_basics(out, session, surface, "update");
-    log->log(mrl::Event{Severity::informational, component, out.str()});
+    auto const message = out.str();
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::destroying_surface(
@@ -96,17 +121,32 @@ void mrl::ShellReport::destroying_surface(
 {
     std::ostringstream out;
     log_basics(out, session, surface, "destroying");
-    log->log(mrl::Event{Severity::informational, component, out.str()});
+    auto const message = out.str();
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::adding_display(geometry::Rectangle const& area)
 {
-    log->log(mrl::Event{Severity::informational, component, "Adding display area: " + boost::lexical_cast<std::string>(area)});
+    auto const message = std::format("Adding display area: {}", boost::lexical_cast<std::string>(area));
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::removing_display(geometry::Rectangle const& area)
 {
-    log->log(mrl::Event{Severity::informational, component, "Removing display area: " + boost::lexical_cast<std::string>(area)});
+    auto const message = std::format("Removing display area: {}", boost::lexical_cast<std::string>(area));
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::input_focus_set_to(
@@ -127,10 +167,22 @@ void mrl::ShellReport::input_focus_set_to(
         out << '\"' << session_name << "\" input focus surface[" << focus_surface << "] \"" << surface_name;
     }
 
-    log->log(mrl::Event{Severity::informational, component, out.str()});
+    auto const message = out.str();
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::ShellReport::surfaces_raised(shell::SurfaceSet const& surfaces)
 {
-    log->log(mrl::Event{Severity::informational, component, "Raising " + boost::lexical_cast<std::string>(surfaces.size()) + " surfaces"});
+    auto const message = std::format(
+        "Raising {} surfaces",
+        boost::lexical_cast<std::string>(surfaces.size()));
+    log->log(mrl::Event{
+        Severity::informational,
+        {mir::logging::window_management()},
+        "{}",
+        std::make_format_args(message)});
 }

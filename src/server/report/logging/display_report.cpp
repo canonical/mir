@@ -43,27 +43,47 @@ const char* mrl::DisplayReport::component()
 
 void mrl::DisplayReport::report_successful_setup_of_native_resources()
 {
-    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully setup native resources."});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Successfully setup native resources.")});
 }
 
 void mrl::DisplayReport::report_successful_egl_make_current_on_construction()
 {
-    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully made egl context current on construction."});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Successfully made egl context current on construction.")});
 }
 
 void mrl::DisplayReport::report_successful_egl_buffer_swap_on_construction()
 {
-    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully performed egl buffer swap on construction."});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Successfully performed egl buffer swap on construction.")});
 }
 
 void mrl::DisplayReport::report_successful_drm_mode_set_crtc_on_construction()
 {
-    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully performed drm mode setup on construction."});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Successfully performed drm mode setup on construction.")});
 }
 
 void mrl::DisplayReport::report_successful_display_construction()
 {
-    logger->log(ml::Event{ml::Severity::informational, component(), "Successfully finished construction."});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Successfully finished construction.")});
 }
 
 void mrl::DisplayReport::report_drm_master_failure(int error)
@@ -73,34 +93,62 @@ void mrl::DisplayReport::report_drm_master_failure(int error)
     if (error == EPERM || error == EACCES)
         ss << " Try running Mir with root privileges.";
 
-    logger->log(ml::Event{ml::Severity::warning, component(), ss.str()});
+    auto const message = ss.str();
+    logger->log(ml::Event{
+        ml::Severity::warning,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args(message)});
 }
 
 void mrl::DisplayReport::report_vt_switch_away_failure()
 {
-    logger->log(ml::Event{ml::Severity::warning, component(), "Failed to switch away from Mir VT."});
+    logger->log(ml::Event{
+        ml::Severity::warning,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Failed to switch away from Mir VT.")});
 }
 
 void mrl::DisplayReport::report_vt_switch_back_failure()
 {
-    logger->log(ml::Event{ml::Severity::warning, component(), "Failed to switch back to Mir VT."});
+    logger->log(ml::Event{
+        ml::Severity::warning,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Failed to switch back to Mir VT.")});
 }
 
 void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig config)
 {
     auto ext = eglQueryString(disp, EGL_EXTENSIONS);
     std::string extensions { ext ? ext : "" };
-    logger->log(ml::Event{ml::Severity::informational, component(), "Display EGL Extensions: " + extensions});
+    auto const extensions_message = std::format("Display EGL Extensions: {}", extensions);
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args(extensions_message)});
 
     auto client_ext = eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS);
     if (client_ext)
     {
-        logger->log(ml::Event{ml::Severity::informational,
-            component(), "EGL_EXT_client_extensions: " + std::string{client_ext}});
+        auto const client_extensions_message = std::format(
+            "EGL_EXT_client_extensions: {}",
+            std::string{client_ext});
+        logger->log(ml::Event{
+            ml::Severity::informational,
+            {ml::graphics()},
+            "{}",
+            std::make_format_args(client_extensions_message)});
     }
     else
     {
-        logger->log(ml::Event{ml::Severity::informational, component(), "EGL_EXT_client_extensions not supported"});
+        logger->log(ml::Event{
+            ml::Severity::informational,
+            {ml::graphics()},
+            "{}",
+            std::make_format_args("EGL_EXT_client_extensions not supported")});
         //clear out error
         eglGetError();
     }
@@ -150,13 +198,23 @@ void mrl::DisplayReport::report_egl_configuration(EGLDisplay disp, EGLConfig con
     };
     #undef STRMACRO
 
-    logger->log(ml::Event{ml::Severity::informational, component(), "Display EGL Configuration:"});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Display EGL Configuration:")});
     for( auto &i : egl_string_mapping)
     {
         EGLint value;
         if (eglGetConfigAttrib(disp, config, i.val, &value))
-            logger->log(ml::Event{ml::Severity::informational,
-                component(), "    [" + i.name + "] : " + std::to_string(value)});
+        {
+            auto const config_message = std::format("    [{}] : {}", i.name, value);
+            logger->log(ml::Event{
+                ml::Severity::informational,
+                {ml::graphics()},
+                "{}",
+                std::make_format_args(config_message)});
+        }
     }
 }
 

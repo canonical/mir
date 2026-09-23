@@ -47,7 +47,11 @@ void mrl::CompositorReport::added_display(int width, int height, int x, int y, S
 {
     auto const msg = std::format("Added display {}: {}x{} {:+d}{:+d}",
              static_cast<const void*>(id), width, height, x, y);
-    logger->log(ml::Event{ml::Severity::informational, component, msg});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args(msg)});
 }
 
 void mrl::CompositorReport::began_frame(SubCompositorId id)
@@ -121,7 +125,11 @@ void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id
                  bypass_percent
                  );
 
-        logger.log(ml::Event{ml::Severity::informational, component, msg});
+        logger.log(ml::Event{
+            ml::Severity::informational,
+            {ml::graphics()},
+            "{}",
+            std::make_format_args(msg)});
     }
 
     last_reported_total_time_sum = total_time_sum;
@@ -159,19 +167,31 @@ void mrl::CompositorReport::finished_frame(SubCompositorId id)
     {
         auto const msg = std::format("Display {} bypass {}",
                  static_cast<const void*>(id), inst.bypassed ? "ON" : "OFF");
-        logger->log(ml::Event{ml::Severity::informational, component, msg});
+        logger->log(ml::Event{
+            ml::Severity::informational,
+            {ml::graphics()},
+            "{}",
+            std::make_format_args(msg)});
     }
     inst.prev_bypassed = inst.bypassed;
 }
 
 void mrl::CompositorReport::started()
 {
-    logger->log(ml::Event{ml::Severity::informational, component, "Started"});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Started")});
 }
 
 void mrl::CompositorReport::stopped()
 {
-    logger->log(ml::Event{ml::Severity::informational, component, "Stopped"});
+    logger->log(ml::Event{
+        ml::Severity::informational,
+        {ml::graphics()},
+        "{}",
+        std::make_format_args("Stopped")});
 
     std::lock_guard lock(mutex);
     instance.clear();
