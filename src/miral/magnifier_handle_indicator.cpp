@@ -293,7 +293,7 @@ auto create_always_has_submitted_buffer_stream_info() -> std::list<ms::StreamInf
 }
 }
 
-miral::HandleIndicator::HandleIndicator(
+miral::MagnifierHandleIndicator::MagnifierHandleIndicator(
     mir::geometry::Rectangle const& initial_rect,
     controls::HandleKind kind,
     mir::compositor::CompositorID capture_compositor_id,
@@ -337,7 +337,7 @@ miral::HandleIndicator::HandleIndicator(
     hide();
 }
 
-auto miral::HandleIndicator::generate_renderables(mir::compositor::CompositorID id) const
+auto miral::MagnifierHandleIndicator::generate_renderables(mir::compositor::CompositorID id) const
     -> mir::graphics::RenderableList
 {
     if (id == capture_compositor_id)

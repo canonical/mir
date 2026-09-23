@@ -77,7 +77,7 @@ class Handle
 public:
     struct ObserverRegistration
     {
-        std::shared_ptr<miral::HandleIndicator> indicator;
+        std::shared_ptr<miral::MagnifierHandleIndicator> indicator;
         std::shared_ptr<ms::SurfaceObserver> observer;
 
         void unregister()
@@ -91,7 +91,7 @@ public:
 
     void init(mir::Server& server, mmc::HandleKind kind, mc::CompositorID capture_compositor_id)
     {
-        indicator = std::make_shared<miral::HandleIndicator>(
+        indicator = std::make_shared<miral::MagnifierHandleIndicator>(
             handle_rect,
             kind,
             capture_compositor_id,
@@ -152,7 +152,7 @@ private:
             geom::Width{mmc::handle_diameter},
             geom::Height{mmc::handle_diameter}}};
 
-    std::shared_ptr<miral::HandleIndicator> indicator;
+    std::shared_ptr<miral::MagnifierHandleIndicator> indicator;
     std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
     std::shared_ptr<ms::SurfaceObserver> observer;
 };
