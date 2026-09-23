@@ -36,8 +36,6 @@ using namespace std::chrono_literals;
 
 namespace
 {
-static auto const component = "server_example_test_client.cpp";
-
 struct Self
 {
     std::unique_ptr<mir::time::Alarm> server_stop_action;
@@ -60,14 +58,14 @@ void check_exit_status(pid_t pid, mir::Server& server, Self* self, int& countdow
         }
         else
         {
-            ml::log(ml::Severity::warning, "Client has not exited: Terminating client", component);
+            mir::log(ml::Severity::warning, {ml::uncategorised()}, "Client has not exited: Terminating client");
             kill(pid, SIGKILL);
             self->test_failed = true;
         }
     }
     else if (wait_rc != pid)
     {
-        ml::log(ml::Severity::informational, "No status available for client", component);
+        mir::log(ml::Severity::informational, {ml::uncategorised()}, "No status available for client");
         self->test_failed = true;
     }
     else if (WIFEXITED(status))
@@ -75,27 +73,24 @@ void check_exit_status(pid_t pid, mir::Server& server, Self* self, int& countdow
         auto const exit_status = WEXITSTATUS(status);
         if (exit_status == EXIT_SUCCESS)
         {
-            ml::log(ml::Severity::informational, "Client exited successfully", component);
+            mir::log(ml::Severity::informational, {ml::uncategorised()}, "Client exited successfully");
             self->test_failed = false;
         }
         else
         {
-            auto const msg =
-                std::format("Client has exited with status {}", exit_status);
-            ml::log(ml::Severity::informational, msg, component);
+            mir::log(ml::Severity::informational, {ml::uncategorised()}, "Client has exited with status {}", exit_status);
             self->test_failed = true;
         }
     }
     else if (WIFSIGNALED(status))
     {
         auto const signal = WTERMSIG(status);
-        auto const msg = std::format("Client terminated by signal {}", signal);
-        ml::log(ml::Severity::informational, msg, component);
+        mir::log(ml::Severity::informational, {ml::uncategorised()}, "Client terminated by signal {}", signal);
         self->test_failed = true;
     }
     else
     {
-        ml::log(ml::Severity::informational, "Client died mysteriously", component);
+        mir::log(ml::Severity::informational, {ml::uncategorised()}, "Client died mysteriously");
         self->test_failed = true;
     }
 
@@ -142,11 +137,12 @@ void me::TestClientRunner::operator()(mir::Server& server)
                 setenv("SDL_VIDEODRIVER", "wayland", true);         // configure SDL to use Wayland
 
                 auto const client = options1->get<std::string>(test_client_opt);
-                log(logging::Severity::informational, "mir::examples", "Starting test client: %s", client.c_str());
+                mir::log(logging::Severity::informational, {ml::uncategorised()},
+                    "Starting test client: {}", client);
                 execlp(client.c_str(), client.c_str(), static_cast<char const*>(nullptr));
                 // If execl() returns then something is badly wrong
-                log(logging::Severity::critical, "mir::examples",
-                    "Failed to execute client (%s) error: %s", client.c_str(), mir::errno_to_cstr(errno));
+                mir::log(logging::Severity::critical, {ml::uncategorised()},
+                    "Failed to execute client ({}) error: {}", client, mir::errno_to_cstr(errno));
                 abort();
             }
             else if (pid > 0)
