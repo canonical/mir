@@ -316,6 +316,13 @@ public:
         server.add_stop_callback(
             [&]
             {
+                if (cursor_observer)
+                    server.the_cursor_observer_multiplexer()->unregister_interest(*cursor_observer);
+
+                if (display_config_observer)
+                    server.the_display_configuration_observer_registrar()->unregister_interest(
+                        *display_config_observer);
+
                 // The naive way to do this would be:
                 //  - lock self->state
                 //  - unregister observers
@@ -330,21 +337,7 @@ public:
                 //  The lock is only required to grab references to the observers
                 //  and handles, so we lock, copy, then unregister without holding
                 //  the lock.
-
-                Handles local_handles;
-                {
-                    auto s = state.lock();
-
-                    local_handles = std::exchange(s->handles, {});
-                }
-
-                if (cursor_observer)
-                    server.the_cursor_observer_multiplexer()->unregister_interest(*cursor_observer);
-
-                if (display_config_observer)
-                    server.the_display_configuration_observer_registrar()->unregister_interest(
-                        *display_config_observer);
-
+                Handles local_handles = [&state = this->state] { return std::exchange(state.lock()->handles, {}); }();
                 local_handles.for_each([](Handle& handle, auto) { handle.reset(); });
 
             });
