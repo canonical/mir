@@ -21,7 +21,7 @@
 #include <mir/thread_name.h>
 
 #include <mir/raii.h>
-#include <mir/logging/logger.h>
+#include <mir/log.h>
 
 #include <poll.h>
 #include <system_error>
@@ -255,9 +255,11 @@ md::ThreadedDispatcher::~ThreadedDispatcher() noexcept
             //
             // The std::thread destructor will call std::terminate() for us, let's
             // leave a useful message.
-            mir::logging::log(mir::logging::Severity::critical,
-                              "Destroying ThreadedDispatcher from within a dispatch callback. This is a programming error.",
-                              "Dispatch");
+            mir::log(
+                mir::logging::Severity::critical,
+                { mir::logging::base() },
+                "Destroying ThreadedDispatcher from within a dispatch callback. This is a programming error."
+            );
         }
         else
         {
