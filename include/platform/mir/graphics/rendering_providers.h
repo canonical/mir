@@ -161,7 +161,7 @@ public:
      */
     virtual auto blit(
         Task& task,
-        Buffer const& source,
+        std::shared_ptr<Buffer> const& source,
         geometry::Rectangle const& source_rect,
         geometry::Rectangle const& target_rect,
         MirOrientation rotation,
@@ -195,7 +195,8 @@ public:
      * but while a `Task` is active reads from and writes to the framebuffer
      * are undefined behaviour.
      */
-    virtual auto surface_for_fb(CPUAddressableDisplayAllocator::MappableFB const& fb) -> std::unique_ptr<Surface> = 0;
+    virtual auto surface_for_fb(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> const& fb)
+        -> std::unique_ptr<Surface> = 0;
 
     /**
      * Get a mapping of the provided buffer for CPU access.

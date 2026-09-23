@@ -14,10 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H
-#define MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H
+#ifndef MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H_
+#define MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H_
 
-#include <mir/graphics/platform.h>
+#include "renderer-generic-egl/rendering_platform.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -26,15 +28,10 @@ namespace graphics
 namespace software_blitter
 {
 
-class SoftwareBlitterRenderingPlatform : public graphics::RenderingPlatform
+class SoftwareBlitterRenderingPlatform : public graphics::egl::generic::RenderingPlatform
 {
 public:
-    explicit SoftwareBlitterRenderingPlatform();
-
-    ~SoftwareBlitterRenderingPlatform();
-
-    auto create_buffer_allocator(graphics::Display const& output)
-        -> UniqueModulePtr<graphics::GraphicBufferAllocator> override;
+    using graphics::egl::generic::RenderingPlatform::RenderingPlatform;
 
 protected:
     auto maybe_create_provider(RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
@@ -44,4 +41,4 @@ protected:
 }
 }
 
-#endif // MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H
+#endif // MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H_

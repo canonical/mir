@@ -201,6 +201,11 @@ mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayPla
 {
 }
 
+auto mge::probe_display_support(std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays)
+    -> graphics::probe::Result
+{
+}
+
 mge::RenderingPlatform::RenderingPlatform(std::tuple<EGLDisplay, bool> display)
     : dpy{std::get<0>(display), std::get<1>(display)},
       ctx{std::make_unique<SurfacelessEGLContext>(dpy)},
@@ -233,6 +238,26 @@ auto mge::RenderingPlatform::maybe_create_provider(RenderingProvider::Tag const&
             egl_delegate);
     }
     return nullptr;
+}
+
+auto mge::RenderingPlatform::egl_display() const -> EGLDisplay
+{
+    return dpy;
+}
+
+auto mge::RenderingPlatform::egl_context() const -> EGLContext
+{
+    return static_cast<EGLContext>(*ctx);
+}
+
+auto mge::RenderingPlatform::dma_buf_provider() const -> std::shared_ptr<DMABufEGLProvider>
+{
+    return dmabuf_provider;
+}
+
+auto mge::RenderingPlatform::egl_context_executor() const -> std::shared_ptr<common::EGLContextExecutor>
+{
+    return egl_delegate;
 }
 
 mge::RenderingPlatform::EGLDisplayHandle::EGLDisplayHandle(EGLDisplay dpy, bool owns_dpy)
