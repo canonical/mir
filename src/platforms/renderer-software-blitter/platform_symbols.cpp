@@ -16,11 +16,14 @@
 
 #include "rendering_platform.h"
 
-#include <mir/module_deleter.h>
 #include <mir/assert_module_entry_point.h>
-#include <mir/libname.h>
-#include <mir/udev/wrapper.h>
 #include <mir/graphics/platform.h>
+#include <mir/libname.h>
+#include <mir/module_deleter.h>
+#include <mir/udev/wrapper.h>
+
+#include <span>
+#include <vector>
 
 namespace mg = mir::graphics;
 namespace mgsb = mg::software_blitter;
@@ -28,13 +31,13 @@ namespace mo = mir::options;
 
 auto create_rendering_platform(
     mg::SupportedDevice const&,
-    std::vector<std::shared_ptr<mg::DisplayPlatform>> const&,
+    std::vector<std::shared_ptr<mg::DisplayPlatform>> const& displays,
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mgsb::SoftwareBlitterRenderingPlatform>();
+    return mir::make_module_ptr<mgsb::SoftwareBlitterRenderingPlatform>(displays);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description&)
