@@ -113,14 +113,13 @@ public:
         indicator.reset();
     }
 
-    template<typename ObserverType, typename... Args>
-    void attach_observer(Args&&... args)
+    void attach_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)
     {
-        if (!indicator || observer)
+        if (!indicator || this->observer)
             return;
 
-        observer = std::make_shared<ObserverType>(std::forward<Args>(args)...);
         indicator->register_interest(observer);
+        this->observer = observer;
     }
 
     auto release_observer() -> ObserverRegistration
@@ -473,10 +472,10 @@ private:
     /// missing indicators.
     void attach_observers(State& state)
     {
-        state.handles.drag.attach_observer<DragHandleObserver>(this);
-        state.handles.resize.attach_observer<ResizeDragObserver>(this);
-        state.handles.zoom_in.attach_observer<ZoomButtonObserver>(this, +zoom_step);
-        state.handles.zoom_out.attach_observer<ZoomButtonObserver>(this, -zoom_step);
+        state.handles.drag.attach_observer(std::make_shared<DragHandleObserver>(this));
+        state.handles.resize.attach_observer(std::make_shared<ResizeDragObserver>(this));
+        state.handles.zoom_in.attach_observer(std::make_shared<ZoomButtonObserver>(this, zoom_step));
+        state.handles.zoom_out.attach_observer(std::make_shared<ZoomButtonObserver>(this, -zoom_step));
     }
 
     void place(State& s)
