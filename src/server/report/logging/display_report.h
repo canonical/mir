@@ -41,8 +41,6 @@ class DisplayReport : public graphics::DisplayReport
 {
   public:
 
-    static const char* component();
-
     DisplayReport(
         std::shared_ptr<mir::logging::Logger> const& logger);
 

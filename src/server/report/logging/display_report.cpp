@@ -34,13 +34,6 @@ mrl::DisplayReport::~DisplayReport()
 {
 }
 
-const char* mrl::DisplayReport::component()
-{
-    static const char* s = "graphics";
-    return s;
-}
-
-
 void mrl::DisplayReport::report_successful_setup_of_native_resources()
 {
     logger->log(ml::Event{
@@ -237,8 +230,8 @@ void mrl::DisplayReport::report_vsync(unsigned int output_id,
                                       (1000*(frame.msc - prev->second.msc)),
                         hz100 = 100000000LL / interval_us;
 
-        logger->log(component(), ml::Severity::informational,
-            "vsync on %u: #%lld, %lld.%03lldms %s, interval %lld.%03lldms (%lld.%02lldHz)",
+        logger->log(ml::Severity::informational, {ml::graphics()},
+            "vsync on {}: #{}, {}.{:03}ms {}, interval {}.{:03}ms ({}.{:02}Hz)",
             output_id,
             msc,
             llabs(age_us/1000), llabs(age_us%1000),
