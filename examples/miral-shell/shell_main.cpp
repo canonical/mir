@@ -18,11 +18,11 @@
 #include <miral/minimal_window_manager.h>
 #include "tiling_window_manager.h"
 #include "floating_window_manager.h"
-#include "output_configuration_options.h"
 #include "wallpaper_config.h"
 #include "spinner/splash.h"
 
 #include <miral/application_switcher.h>
+#include <miral/display_configuration_option.h>
 #include <miral/external_client.h>
 #include <miral/runner.h>
 #include <miral/window_management_options.h>
@@ -43,8 +43,6 @@
 #include <miral/magnifier.h>
 #include <miral/cursor_scale.h>
 #include <miral/touch_emulator.h>
-#include <miral/config_file.h>
-#include <miral/live_config_ini_file.h>
 #include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -94,16 +92,6 @@ int main(int argc, char const* argv[])
     MirRunner runner{argc, argv};
 
     runner.add_stop_callback([&] { shutdown_hook(); });
-
-    miral::live_config::IniFile config_store;
-
-    OutputConfigurationOptions output_configuration_options{config_store};
-
-    ConfigFile const config_file{
-        runner,
-        "miral-shell.live-config",
-        ConfigFile::Mode::reload_on_change,
-        [&config_store](auto&... args) { config_store.load_file(args...); }};
 
     ExternalClientLauncher external_client_launcher;
 
@@ -404,7 +392,7 @@ int main(int argc, char const* argv[])
                     { focus_stealing_prevention = to_focus_stealing(is_set); },
                     "focus-stealing-prevention", "Prevent newly opened windows from taking keyboard focus from an active window.", false}),
             window_managers,
-            output_configuration_options,
+            display_configuration_options,
             external_client_launcher,
             launcher,
             config_keymap,
