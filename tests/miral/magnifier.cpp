@@ -578,10 +578,8 @@ struct MagnifierHandleTest : MagnifierTest
 
 private:
     /// Surface input observers use BasicSurface::Multiplexer which dispatches
-    /// via linearising_executor (a non-blocking deferred executor backed by a
-    /// thread pool). Spawn a sentinel task AFTER the input events so that when
-    /// it fires, all earlier callbacks — including the handle observer state
-    /// updates (move_to, resize, set_transformation) — have already run.
+    /// via linearising_executor. We queue an action on that same dispatcher
+    /// and wait for it to complete before proceeding.
     void flush_observer_callbacks()
     {
         auto done = std::make_shared<mir::test::Signal>();
