@@ -109,7 +109,6 @@ public:
     /// has settled.
     void wait_for_initial_cursor_state()
     {
-
         auto const mux = server().the_cursor_observer_multiplexer();
         auto const sentinel = std::make_shared<CursorMovementObserver>();
         mux->register_interest(sentinel);
