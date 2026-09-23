@@ -14,13 +14,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_SOFTWARE_BLITTER_PROVIDER_H
-#define MIR_GRAPHICS_SOFTWARE_BLITTER_PROVIDER_H
+#ifndef MIR_GRAPHICS_SOFTWARE_BLITTER_PROVIDER_H_
+#define MIR_GRAPHICS_SOFTWARE_BLITTER_PROVIDER_H_
 
 #include <mir/geometry/rectangle.h>
+#include <mir/graphics/linux_dmabuf.h>
 #include <mir/graphics/platform.h>
 #include <mir/graphics/rendering_providers.h>
 #include <mir/renderer/sw/pixel_source.h>
+#include <renderer-generic-egl/buffer_allocator.h>
+
+#include <EGL/egl.h>
 
 #include <memory>
 
@@ -28,13 +32,22 @@ namespace mir
 {
 namespace graphics
 {
+namespace common { class EGLContextExecutor; }
+
 namespace software_blitter
 {
 
 class SoftwareBlitterRenderingProvider : public graphics::BlitterRenderingProvider
 {
 public:
-    SoftwareBlitterRenderingProvider();
+    SoftwareBlitterRenderingProvider(
+        EGLDisplay dpy,
+        EGLContext ctx,
+        UniqueModulePtr<mir::graphics::egl::generic::BufferAllocator> allocator,
+        std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
+        std::shared_ptr<common::EGLContextExecutor> egl_delegate);
+
+    ~SoftwareBlitterRenderingProvider() override = default;
 
     auto create_task(std::unique_ptr<Surface> surf) -> std::unique_ptr<Task> override;
 
@@ -42,7 +55,7 @@ public:
 
     auto blit(
         Task& task,
-        Buffer const& source,
+        std::shared_ptr<Buffer> const& source,
         geometry::Rectangle const& source_rect,
         geometry::Rectangle const& target_rect,
         MirOrientation rotation,
@@ -51,7 +64,8 @@ public:
     auto fill(Task& task, geometry::Rectangle const& target_rect, uint8_t r, uint8_t g, uint8_t b, uint8_t a)
         -> bool override;
 
-    auto surface_for_fb(CPUAddressableDisplayAllocator::MappableFB const& fb) -> std::unique_ptr<Surface> override;
+    auto surface_for_fb(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> const& fb)
+        -> std::unique_ptr<Surface> override;
 
     auto map_buffer(Buffer const& buffer) -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
 
@@ -60,10 +74,16 @@ public:
     auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
 
     auto make_framebuffer_provider(DisplaySink& sink) -> std::unique_ptr<FramebufferProvider> override;
+
+private:
+    UniqueModulePtr<GraphicBufferAllocator> allocator;
+    std::shared_ptr<mir::graphics::egl::generic::GLRenderingProvider> gl_rendering_provider;
+    EGLDisplay const dpy;
+    EGLContext const ctx;
 };
 
 }
 }
 }
 
-#endif // MIR_GRAPHICS_SOFTWARE_BLITTER_PROVIDER_H
+#endif // MIR_GRAPHICS_SOFTWARE_BLITTER_PROVIDER_H_
