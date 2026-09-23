@@ -109,7 +109,7 @@ private:
         auto const x = point.x.as_value();
         auto const y = point.y.as_value();
         if (x < 0 || x >= size.width.as_value() || y < 0 || y >= size.height.as_value())
-            return;
+            MIR_FATAL_ERROR("Attempt to set pixel outside buffer bounds");
 
         // For mir_pixel_format_argb_8888 on little-endian: memory layout [B, G, R, A].
         // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
