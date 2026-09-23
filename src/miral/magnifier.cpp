@@ -78,7 +78,7 @@ public:
     struct ObserverRegistration
     {
         std::shared_ptr<miral::HandleIndicator> indicator;
-        std::shared_ptr<ms::NullSurfaceObserver> observer;
+        std::shared_ptr<ms::SurfaceObserver> observer;
 
         void unregister()
         {
@@ -155,7 +155,7 @@ private:
 
     std::shared_ptr<miral::HandleIndicator> indicator;
     std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
-    std::shared_ptr<ms::NullSurfaceObserver> observer;
+    std::shared_ptr<ms::SurfaceObserver> observer;
 };
 
 struct Handles
