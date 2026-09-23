@@ -303,7 +303,7 @@ TEST_F(MagnifierTest, reapplies_freely_positioned_layout_after_outputs_are_resto
     EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(426, 320)));
 }
 
-TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
+TEST_F(MagnifierTest, freely_positioned_mode_shows_handle_indicators)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     add_start_callback([&]
@@ -314,7 +314,7 @@ TEST_F(MagnifierTest, decoupled_mode_shows_handle_indicators)
     start_server();
 }
 
-TEST_F(MagnifierTest, handles_hidden_when_disabled_in_decoupled_mode)
+TEST_F(MagnifierTest, handles_hidden_when_disabled_in_freely_positioned_mode)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     add_start_callback([&]
@@ -359,7 +359,7 @@ TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
 // task. Wait for that task before registering a sentinel, so the sentinel is
 // ordered after Magnifier when cursor events are dispatched.
 
-TEST_F(MagnifierTest, decoupled_magnifier_starts_centred_on_the_output)
+TEST_F(MagnifierTest, freely_positioned_magnifier_starts_centred_on_the_output)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
@@ -398,7 +398,7 @@ TEST_F(MagnifierTest, switching_to_freely_positioned_centres_on_the_output)
     EXPECT_THAT(magnifier_renderable()->screen_position().centre(), Eq(geom::Point{400, 300}));
 }
 
-TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
+TEST_F(MagnifierTest, cursor_not_tracked_in_freely_positioned_mode)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
@@ -412,7 +412,7 @@ TEST_F(MagnifierTest, cursor_not_tracked_in_decoupled_mode)
     EXPECT_THAT(magnifier_top_left(), Eq(before));
 }
 
-TEST_F(MagnifierTest, capture_size_change_does_not_recenter_on_cursor_in_decoupled_mode)
+TEST_F(MagnifierTest, capture_size_change_does_not_recenter_on_cursor_in_freely_positioned_mode)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     start_server();
