@@ -43,6 +43,7 @@ add_rust_cxx_library(mirwayland_rs
 
 set(wayland_rs_generated_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/ext_data_control_v1.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/ext_foreign_buffer_v1.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/ext_foreign_toplevel_list_v1.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/ext_image_capture_source_v1.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/ext_image_copy_capture_v1.cpp
