@@ -15,6 +15,7 @@
  */
 
 #include <mir/terminate_with_current_exception.h>
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
 #include <mir/log.h>
 
 #include <unistd.h>

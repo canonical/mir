@@ -18,6 +18,8 @@
  *
  */
 
+#define MIR_LOG_DEFAULT_TAGS { mir::logging::uncategorised() }
+
 #include "xcb_connection.h"
 #include "xwayland_cursors.h"
 #include "xwayland_log.h"
