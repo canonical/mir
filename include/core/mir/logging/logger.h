@@ -39,22 +39,12 @@ class Logger
 public:
     virtual void log(Event const& log_event) = 0;
 
-    /*
-     * Those playing at home may wonder why we're saying the 4th argument is the format string,
-     * when it's the 3rd argument in the signature.
-     *
-     * The answer, of course, is that the attribute doesn't know about the implicit
-     * 'this' first parameter of C++!
-     */
-    virtual void log(char const* component, Severity severity, char const* format, ...)
-        __attribute__((format(printf, 4, 5)));
-
     template<typename... Args>
-    void log(Severity severity, Tags tags, std::format_string<Args...> fmt, Args&&... args)
-    { log(Event{severity, tags, std::format(fmt, std::forward<Args>(args)...)}); }
+    void log(Severity severity, Tags tags, std::format_string<Args...> fmt, Args const&... args)
+    { log(Event{severity, tags, fmt.get(), std::make_format_args(args...)}); }
 
 protected:
-    Logger() {}
+    Logger() = default;
     virtual ~Logger() = default;
     Logger(Logger const&) = delete;
     Logger& operator=(Logger const&) = delete;
