@@ -43,6 +43,8 @@
 #include <miral/magnifier.h>
 #include <miral/cursor_scale.h>
 #include <miral/touch_emulator.h>
+#include <miral/config_file.h>
+#include <miral/live_config_ini_file.h>
 #include <mir/log.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
@@ -92,6 +94,16 @@ int main(int argc, char const* argv[])
     MirRunner runner{argc, argv};
 
     runner.add_stop_callback([&] { shutdown_hook(); });
+
+    miral::live_config::IniFile config_store;
+
+    OutputConfigurationOptions output_configuration_options{config_store};
+
+    ConfigFile const config_file{
+        runner,
+        "miral-shell.live-config",
+        ConfigFile::Mode::reload_on_change,
+        [&config_store](auto&... args) { config_store.load_file(args...); }};
 
     ExternalClientLauncher external_client_launcher;
 
@@ -392,7 +404,7 @@ int main(int argc, char const* argv[])
                     { focus_stealing_prevention = to_focus_stealing(is_set); },
                     "focus-stealing-prevention", "Prevent newly opened windows from taking keyboard focus from an active window.", false}),
             window_managers,
-            OutputConfigurationOptions{},
+            output_configuration_options,
             external_client_launcher,
             launcher,
             config_keymap,

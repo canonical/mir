@@ -17,34 +17,36 @@
 #ifndef MIRAL_SHELL_OUTPUT_CONFIGURATION_OPTIONS_H
 #define MIRAL_SHELL_OUTPUT_CONFIGURATION_OPTIONS_H
 
-#include <miral/configuration_option.h>
 #include <miral/output_configuration.h>
 
 #include <memory>
-#include <vector>
 
 namespace mir { class Server; }
+namespace miral::live_config { class Store; }
 
-/// Provides the `--display-config`, `--translucent`, `--display-scale` and
-/// `--display-autoscale` options that `miral::display_configuration_options()`
-/// supports, but implemented here, in the shell, using `miral::OutputConfiguration`.
+/// Provides the `display` configuration (`layout`, `translucent`, `scale` and
+/// `autoscale`) that `miral::display_configuration_options()` supports as
+/// command-line options, but implemented here, in the shell, using
+/// `miral::live_config` and `miral::OutputConfiguration`.
 ///
 /// This demonstrates that a downstream shell no longer needs the legacy MirAL
 /// option handling (nor the mirserver display configuration policies it wraps)
-/// to customize the output configuration.
+/// to customize the output configuration. As the configuration is live, changes
+/// are applied to a running server.
 class OutputConfigurationOptions
 {
 public:
-    OutputConfigurationOptions();
+    explicit OutputConfigurationOptions(miral::live_config::Store& config_store);
 
     void operator()(mir::Server& server) const;
 
 private:
+    struct Settings;
     class Strategy;
+    class State;
 
-    std::shared_ptr<Strategy> strategy;
+    std::shared_ptr<State> state;
     miral::OutputConfiguration output_configuration;
-    std::vector<miral::ConfigurationOption> options;
 };
 
 #endif //MIRAL_SHELL_OUTPUT_CONFIGURATION_OPTIONS_H

@@ -16,40 +16,36 @@
 
 #include "output_configuration_options.h"
 
+#include <miral/live_config.h>
+
 #include <mir/graphics/display_configuration.h>
+#include <mir/log.h>
+#include <mir/logging/tag.h>
+#include <mir/synchronised.h>
 
 #include <algorithm>
 #include <cmath>
 #include <format>
-#include <functional>
 #include <optional>
-#include <stdexcept>
 #include <string>
+#include <string_view>
 
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
+namespace mlc = miral::live_config;
 
 namespace
 {
-char const* const display_config_opt = "display-config";
-char const* const clone_opt_val = "clone";
-char const* const sidebyside_opt_val = "sidebyside";
-char const* const single_opt_val = "single";
+mir::logging::Tag const& display_config_tag =
+    mir::logging::create_tag(mir::logging::graphics(), "display-config");
 
-char const* const display_alpha_opt = "translucent";
-char const* const display_alpha_descr = "Select a display mode with alpha channel. [{on,off}]";
-char const* const display_alpha_off = "off";
-char const* const display_alpha_on = "on";
+char const* const clone_val = "clone";
+char const* const sidebyside_val = "sidebyside";
+char const* const single_val = "single";
 
-char const* const display_scale_opt = "display-scale";
-char const* const display_scale_descr = "Pixel scale for all displays, e.g. 2.0.";
-auto const display_scale_default = 1.0;
-auto const display_scale_min = 0.01;
-auto const display_scale_max = 100.0;
-
-char const* const display_autoscale_opt = "display-autoscale";
-char const* const display_autoscale_descr =
-    "Automatically set pixel scale for displays so they have specified logical height in pixels, e.g. 1080.";
+auto const display_scale_default = 1.0f;
+auto const display_scale_min = 0.01f;
+auto const display_scale_max = 100.0f;
 
 auto contains_alpha(MirPixelFormat format) -> bool
 {
@@ -62,67 +58,46 @@ auto select_mode_index(uint32_t mode_index, std::vector<mg::DisplayConfiguration
 }
 }
 
+struct OutputConfigurationOptions::Settings
+{
+    enum class Layout { clone, sidebyside, single };
+
+    Layout layout{Layout::sidebyside};
+    bool with_alpha{false};
+    float scale{display_scale_default};
+    std::optional<int> autoscale_target{};
+};
+
+/// Settings are accumulated as the individual attributes are updated and only applied
+/// (as a new, immutable, Strategy) once the update transaction completes
+class OutputConfigurationOptions::State
+{
+public:
+    template<typename Update>
+    void update(Update&& update) { std::forward<Update>(update)(*settings.lock()); }
+
+    auto get() const -> Settings { return *settings.lock(); }
+
+private:
+    mir::Synchronised<Settings> mutable settings;
+};
+
 class OutputConfigurationOptions::Strategy : public miral::OutputConfiguration::Strategy
 {
 public:
-    enum class Layout { clone, sidebyside, single };
-
-    void set_layout(std::string const& value);
-    void set_with_alpha(std::string const& value);
-    void set_scale(double value);
-    void set_autoscale(std::optional<int> const& value);
+    explicit Strategy(Settings const& settings) : settings{settings} {}
 
     void apply_configuration(std::span<mg::UserDisplayConfigurationOutput> outputs) override;
     void confirm_configuration(std::span<mg::UserDisplayConfigurationOutput const> outputs) override;
 
 private:
+    using Layout = Settings::Layout;
+
     void apply_scale_to(mg::UserDisplayConfigurationOutput& output) const;
     void apply_format_to(mg::UserDisplayConfigurationOutput& output) const;
 
-    Layout layout{Layout::sidebyside};
-    bool with_alpha{false};
-    double scale{display_scale_default};
-    std::optional<int> autoscale_target{};
+    Settings const settings;
 };
-
-void OutputConfigurationOptions::Strategy::set_layout(std::string const& value)
-{
-    if (value == clone_opt_val)
-        layout = Layout::clone;
-    else if (value == sidebyside_opt_val)
-        layout = Layout::sidebyside;
-    else if (value == single_opt_val)
-        layout = Layout::single;
-    else
-        throw std::runtime_error{std::format("Unrecognised {} value: {}", display_config_opt, value)};
-}
-
-void OutputConfigurationOptions::Strategy::set_with_alpha(std::string const& value)
-{
-    if (value != display_alpha_on && value != display_alpha_off)
-        throw std::runtime_error{std::format("Unrecognised {} value: {}", display_alpha_opt, value)};
-
-    with_alpha = (value == display_alpha_on);
-}
-
-void OutputConfigurationOptions::Strategy::set_scale(double value)
-{
-    if (value < display_scale_min || value > display_scale_max)
-    {
-        throw std::runtime_error{
-            std::format("Invalid scale {}, must be between {} and {}", value, display_scale_min, display_scale_max)};
-    }
-
-    scale = value;
-}
-
-void OutputConfigurationOptions::Strategy::set_autoscale(std::optional<int> const& value)
-{
-    if (value && scale != display_scale_default)
-        throw std::runtime_error{std::format("{} can't be used with {}", display_scale_opt, display_autoscale_opt)};
-
-    autoscale_target = value;
-}
 
 void OutputConfigurationOptions::Strategy::apply_configuration(std::span<mg::UserDisplayConfigurationOutput> outputs)
 {
@@ -131,7 +106,7 @@ void OutputConfigurationOptions::Strategy::apply_configuration(std::span<mg::Use
 
     for (auto& output : outputs)
     {
-        if (!output.connected || output.modes.empty() || (output_in_use && layout == Layout::single))
+        if (!output.connected || output.modes.empty() || (output_in_use && settings.layout == Layout::single))
         {
             output.used = false;
             output.power_mode = mir_power_mode_off;
@@ -145,7 +120,7 @@ void OutputConfigurationOptions::Strategy::apply_configuration(std::span<mg::Use
         apply_format_to(output);
         apply_scale_to(output);
 
-        output.top_left = geom::Point{layout == Layout::sidebyside ? next_x : geom::X{0}, geom::Y{0}};
+        output.top_left = geom::Point{settings.layout == Layout::sidebyside ? next_x : geom::X{0}, geom::Y{0}};
         next_x = output.top_left.x + as_delta(output.extents().size.width);
         output_in_use = true;
     }
@@ -158,7 +133,8 @@ void OutputConfigurationOptions::Strategy::confirm_configuration(std::span<mg::U
 void OutputConfigurationOptions::Strategy::apply_format_to(mg::UserDisplayConfigurationOutput& output) const
 {
     auto const format = std::ranges::find_if(
-        output.pixel_formats, [this](MirPixelFormat format) { return contains_alpha(format) == with_alpha; });
+        output.pixel_formats,
+        [this](MirPixelFormat format) { return contains_alpha(format) == settings.with_alpha; });
 
     // keep the default setting if nothing was found
     if (format != output.pixel_formats.end())
@@ -167,9 +143,9 @@ void OutputConfigurationOptions::Strategy::apply_format_to(mg::UserDisplayConfig
 
 void OutputConfigurationOptions::Strategy::apply_scale_to(mg::UserDisplayConfigurationOutput& output) const
 {
-    if (!autoscale_target)
+    if (!settings.autoscale_target)
     {
-        output.scale = static_cast<float>(scale);
+        output.scale = settings.scale;
         return;
     }
 
@@ -179,43 +155,88 @@ void OutputConfigurationOptions::Strategy::apply_scale_to(mg::UserDisplayConfigu
         mode_size.height.as_int() : mode_size.width.as_int();
 
     static auto constexpr steps = 4.0f;
-    output.scale = std::round((steps * output_height) / *autoscale_target) / steps;
+    output.scale = std::round((steps * output_height) / *settings.autoscale_target) / steps;
 }
 
-OutputConfigurationOptions::OutputConfigurationOptions() :
-    strategy{std::make_shared<Strategy>()},
-    output_configuration{strategy}
+OutputConfigurationOptions::OutputConfigurationOptions(mlc::Store& config_store) :
+    state{std::make_shared<State>()},
+    output_configuration{std::make_shared<Strategy>(Settings{})}
 {
-    options.push_back(miral::pre_init(miral::ConfigurationOption{
-        std::function<void(std::string const&)>{[strategy=strategy](std::string const& value)
-            { strategy->set_layout(value); }},
-        display_config_opt,
+    config_store.add_string_attribute(
+        {"display", "layout"},
         std::format("Display configuration:\n"
                     " - `{}`: all screens show the same content.\n"
                     " - `{}`: each screen placed to the right of the previous one.\n"
                     " - `{}`: only the first screen used.",
-                    clone_opt_val, sidebyside_opt_val, single_opt_val),
-        sidebyside_opt_val}));
+                    clone_val, sidebyside_val, single_val),
+        sidebyside_val,
+        [state=state](mlc::Key const& key, std::optional<std::string_view> value)
+        {
+            auto const layout = value.value_or(sidebyside_val);
 
-    options.push_back(miral::pre_init(miral::ConfigurationOption{
-        std::function<void(std::string const&)>{[strategy=strategy](std::string const& value)
-            { strategy->set_with_alpha(value); }},
-        display_alpha_opt, display_alpha_descr, display_alpha_off}));
+            if (layout == clone_val)
+                state->update([](Settings& s) { s.layout = Settings::Layout::clone; });
+            else if (layout == sidebyside_val)
+                state->update([](Settings& s) { s.layout = Settings::Layout::sidebyside; });
+            else if (layout == single_val)
+                state->update([](Settings& s) { s.layout = Settings::Layout::single; });
+            else
+                mir::log_warning({display_config_tag}, "Config key '{}' has invalid value: {}", key, layout);
+        });
 
-    options.push_back(miral::pre_init(miral::ConfigurationOption{
-        std::function<void(double)>{[strategy=strategy](double value) { strategy->set_scale(value); }},
-        display_scale_opt, display_scale_descr, display_scale_default}));
+    config_store.add_bool_attribute(
+        {"display", "translucent"},
+        "Select a display mode with alpha channel.",
+        false,
+        [state=state](mlc::Key const&, std::optional<bool> value)
+        {
+            state->update([with_alpha=value.value_or(false)](Settings& s) { s.with_alpha = with_alpha; });
+        });
 
-    options.push_back(miral::pre_init(miral::ConfigurationOption{
-        std::function<void(std::optional<int> const&)>{[strategy=strategy](std::optional<int> const& value)
-            { strategy->set_autoscale(value); }},
-        display_autoscale_opt, display_autoscale_descr}));
+    config_store.add_float_attribute(
+        {"display", "scale"},
+        std::format("Pixel scale for all displays, e.g. 2.0. (Between {} and {})",
+                    display_scale_min, display_scale_max),
+        display_scale_default,
+        [state=state](mlc::Key const& key, std::optional<float> value)
+        {
+            auto const scale = value.value_or(display_scale_default);
+
+            if (scale < display_scale_min || scale > display_scale_max)
+            {
+                mir::log_warning({display_config_tag}, "Config key '{}' has invalid value: {}", key, scale);
+                return;
+            }
+
+            state->update([scale](Settings& s) { s.scale = scale; });
+        });
+
+    config_store.add_int_attribute(
+        {"display", "autoscale"},
+        "Automatically set pixel scale for displays so they have specified logical height in pixels, e.g. 1080.",
+        [state=state](mlc::Key const& key, std::optional<int> value)
+        {
+            if (value && *value <= 0)
+            {
+                mir::log_warning({display_config_tag}, "Config key '{}' has invalid value: {}", key, *value);
+                return;
+            }
+
+            state->update([value](Settings& s) { s.autoscale_target = value; });
+        });
+
+    config_store.on_done([state=state, output_configuration=output_configuration]() mutable
+        {
+            auto const settings = state->get();
+
+            if (settings.autoscale_target && settings.scale != display_scale_default)
+                mir::log_warning({display_config_tag}, "'display_scale' is ignored when 'display_autoscale' is set");
+
+            output_configuration.update_strategy(std::make_shared<Strategy>(settings));
+        });
 }
 
 void OutputConfigurationOptions::operator()(mir::Server& server) const
 {
-    for (auto const& option : options)
-        option(server);
-
     output_configuration(server);
 }
