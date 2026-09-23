@@ -382,15 +382,17 @@ public:
 
     void follow_cursor()
     {
-        if (state.lock()->follow_cursor)
-            return;
-
-        auto observers = [this]()
+        // Unregistering can wait for an in-flight observer callback, which may
+        // be waiting for the state lock. Detach the observers under the lock,
+        // then unregister them after releasing it to avoid a deadlock.
+        std::array<Handle::ObserverRegistration, 4> observers;
         {
             auto s = state.lock();
-            s->follow_cursor = true;
+            if (s->follow_cursor)
+                return;
 
-            std::array<Handle::ObserverRegistration, 4> const ret{
+            s->follow_cursor = true;
+            observers = {
                 s->handles.drag.release_observer(),
                 s->handles.resize.release_observer(),
                 s->handles.zoom_in.release_observer(),
@@ -398,11 +400,9 @@ public:
 
             s->hide_all_handles();
             place_at_cursor(*s);
+        }
 
-            return ret;
-        }();
-
-        for (auto obs : observers)
+        for (auto& obs : observers)
             obs.unregister();
     }
 
