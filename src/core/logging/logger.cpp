@@ -109,16 +109,3 @@ void ml::format_message(std::ostream& out, Severity severity, std::string_view m
         mir::fatal_error_abort("Cannot format log message: %s", e.what());
     }
 }
-
-
-namespace mir
-{
-namespace logging
-{
-// For backwards compatibility (avoid breaking ABI)
-void log(ml::Severity severity, std::string const& message)
-{
-    ml::log(severity, message, "");
-}
-}
-}

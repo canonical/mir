@@ -62,11 +62,6 @@ protected:
 
 void log(
     Severity severity,
-    std::string const& message,
-    std::string const& component,
-    std::source_location location = std::source_location::current());
-void log(
-    Severity severity,
     Tags tags,
     std::string_view fmt,
     std::format_args args,
