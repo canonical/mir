@@ -32,10 +32,10 @@ namespace scene { class SceneReport; }
 
 namespace miral
 {
-class HandleIndicator : public mir::scene::BasicSurface
+class MagnifierHandleIndicator : public mir::scene::BasicSurface
 {
 public:
-    HandleIndicator(
+    MagnifierHandleIndicator(
         mir::geometry::Rectangle const& initial_rect,
         magnifier_controls::HandleKind kind,
         mir::compositor::CompositorID capture_compositor_id,

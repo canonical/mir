@@ -34,7 +34,7 @@ TEST(HandleIndicator, excludes_itself_from_the_capture_compositor)
 {
     int capture_compositor{};
     int display_compositor{};
-    miral::HandleIndicator indicator{
+    miral::MagnifierHandleIndicator indicator{
         {{0, 0}, {48, 48}},
         mmc::HandleKind::drag,
         mc::CompositorID{&capture_compositor},
