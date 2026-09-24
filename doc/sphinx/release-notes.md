@@ -36,7 +36,7 @@
 
 ## Mir 2.30.0
 
-- New upstream release 2.30.0~dev
+- New upstream release 2.30.0
 
   - ABI summary:
 

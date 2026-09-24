@@ -335,7 +335,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %changelog
 * Thu Sep 24 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0-1
 
-- New upstream release 2.30.0~dev
+- New upstream release 2.30.0
 
   - ABI summary:
 
