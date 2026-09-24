@@ -17,6 +17,7 @@
 #include <miral/floating_window_manager.h>
 #include <miral/toolkit_event.h>
 #include <linux/input.h>
+#include <cmath>
 
 using namespace miral::toolkit;
 
@@ -28,6 +29,8 @@ unsigned int constexpr shift_states =
     mir_input_event_modifier_sym |
     mir_input_event_modifier_ctrl |
     mir_input_event_modifier_meta;
+
+int constexpr pointer_motion_tolerance_px_for_click = 1;
 
 enum class Gesture
 {
@@ -98,6 +101,11 @@ struct miral::FloatingWindowManager::Impl
     Size resize_size;
     Point old_cursor{};
     Point old_touch{};
+    MirPointerButtons old_buttons{};
+    Window primary_press_window;
+    Point primary_press_cursor{};
+    bool pointer_moved_since_primary_press = false;
+    bool wm_gesture_using_primary_press = false;
     MirInputEventModifier pointer_drag_modifier;
     FocusStealing focus_stealing;
 };
@@ -342,8 +350,19 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
     auto const action = mir_pointer_event_action(event);
     auto const shift_keys = mir_pointer_event_modifiers(event) & shift_states;
     auto const new_cursor = pointer_position(event);
+    auto const buttons = mir_pointer_event_buttons(event);
 
     bool consumes_event = false;
+
+    if (action == mir_pointer_action_motion &&
+        (old_buttons & mir_pointer_button_primary) &&
+        (buttons & mir_pointer_button_primary) &&
+        primary_press_window &&
+        (std::abs((new_cursor - primary_press_cursor).dx.as_int()) > pointer_motion_tolerance_px_for_click ||
+         std::abs((new_cursor - primary_press_cursor).dy.as_int()) > pointer_motion_tolerance_px_for_click))
+    {
+        pointer_moved_since_primary_press = true;
+    }
 
     switch (gesture)
     {
@@ -386,17 +405,48 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
         break;
     }
 
-    if (!consumes_event && action == mir_pointer_action_button_up)
+    auto const primary_button_no_longer_held =
+        !(buttons & mir_pointer_button_primary) &&
+        (old_buttons & mir_pointer_button_primary);
+
+    if (primary_button_no_longer_held && !consumes_event)
     {
-        if (auto const window = tools.window_at(new_cursor))
+        if (primary_press_window && !wm_gesture_using_primary_press)
         {
-            tools.select_active_window(window);
+            auto window = primary_press_window;
+            if (pointer_moved_since_primary_press)
+            {
+                if (auto const release_window = tools.window_at(new_cursor))
+                {
+                    window = release_window;
+                }
+            }
+            if (window)
+            {
+                tools.select_active_window(window);
+            }
         }
+
+    }
+
+    if (primary_button_no_longer_held)
+    {
+        primary_press_window = {};
+        pointer_moved_since_primary_press = false;
+        wm_gesture_using_primary_press = false;
     }
 
     if (!consumes_event && action == mir_pointer_action_button_down)
     {
-        if (auto const window = tools.window_at(new_cursor))
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        {
+            primary_press_window = tools.window_at(new_cursor);
+            primary_press_cursor = new_cursor;
+            pointer_moved_since_primary_press = false;
+            wm_gesture_using_primary_press = false;
+        }
+
+        if (auto const window = primary_press_window ? primary_press_window : tools.active_window())
         {
             if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
             {
@@ -406,12 +456,14 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
                         tools.info_for(window),
                         mir_pointer_event_input_event(event),
                         Gesture::pointer_moving, mir_resize_edge_none);
+                    wm_gesture_using_primary_press = true;
                     consumes_event = true;
                 }
             }
         }
     }
 
+    old_buttons = buttons;
     old_cursor = new_cursor;
     return consumes_event;
 }

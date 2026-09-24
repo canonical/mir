@@ -329,6 +329,194 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)
     EXPECT_TRUE(focused(window1));
 }
 
+TEST_F(MinimalWindowManagerTest, small_pointer_motion_keeps_pressed_window_as_focus_target)
+{
+    auto const app1 = open_application("test");
+    miral::WindowSpecification spec1;
+    spec1.top_left() = geom::Point{0, 0};
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec1);
+
+    auto const app2 = open_application("test-1");
+    miral::WindowSpecification spec2;
+    spec2.top_left() = geom::Point{95, 0};
+    spec2.size() = { geom::Width {100}, geom::Height{100} };
+    spec2.depth_layer() = mir_depth_layer_application;
+    auto window2 = create_window(app2, spec2);
+
+    auto const app3 = open_application("test-2");
+    miral::WindowSpecification spec3;
+    spec3.top_left() = geom::Point{250, 0};
+    spec3.size() = { geom::Width {50}, geom::Height{50} };
+    spec3.depth_layer() = mir_depth_layer_application;
+    auto window3 = create_window(app3, spec3);
+
+    ASSERT_TRUE(focused(window3));
+
+    auto const press_position = geom::PointF{95, 50};
+    auto const release_position = geom::PointF{94, 50};
+
+    auto const press_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_down,
+        mir_pointer_button_primary,
+        press_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*press_event);
+
+    auto const motion_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_motion,
+        mir_pointer_button_primary,
+        release_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*motion_event);
+
+    auto const release_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_up,
+        MirPointerButtons{},
+        release_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*release_event);
+
+    EXPECT_TRUE(focused(window2));
+}
+
+TEST_F(MinimalWindowManagerTest, pointer_drag_focuses_window_under_release)
+{
+    auto const app1 = open_application("test");
+    miral::WindowSpecification spec1;
+    spec1.top_left() = geom::Point{0, 0};
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec1);
+
+    auto const app2 = open_application("test-1");
+    miral::WindowSpecification spec2;
+    spec2.top_left() = geom::Point{95, 0};
+    spec2.size() = { geom::Width {100}, geom::Height{100} };
+    spec2.depth_layer() = mir_depth_layer_application;
+    auto window2 = create_window(app2, spec2);
+
+    auto const app3 = open_application("test-2");
+    miral::WindowSpecification spec3;
+    spec3.top_left() = geom::Point{250, 0};
+    spec3.size() = { geom::Width {50}, geom::Height{50} };
+    spec3.depth_layer() = mir_depth_layer_application;
+    create_window(app3, spec3);
+
+    auto const press_position = geom::PointF{95, 50};
+    auto const release_position = geom::PointF{50, 50};
+
+    auto const press_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_down,
+        mir_pointer_button_primary,
+        press_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*press_event);
+
+    auto const motion_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_motion,
+        mir_pointer_button_primary,
+        release_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*motion_event);
+
+    auto const release_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_up,
+        MirPointerButtons{},
+        release_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*release_event);
+
+    EXPECT_TRUE(focused(window1));
+    EXPECT_FALSE(focused(window2));
+}
+
+TEST_F(MinimalWindowManagerTest, primary_button_state_edge_can_complete_pointer_selection)
+{
+    auto const app1 = open_application("test");
+    miral::WindowSpecification spec1;
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec1);
+
+    auto const app2 = open_application("test-1");
+    miral::WindowSpecification spec2;
+    spec2.size() = { geom::Width {50}, geom::Height{50} };
+    spec2.depth_layer() = mir_depth_layer_application;
+    auto window2 = create_window(app2, spec2);
+
+    ASSERT_TRUE(focused(window2));
+
+    auto const release_position = geom::PointF{
+        window1.top_left().x.as_int() + window1.size().width.as_int() - 1,
+        window1.top_left().y.as_int() + window1.size().height.as_int() - 1};
+
+    auto const press_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_down,
+        mir_pointer_button_primary,
+        release_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*press_event);
+
+    auto const release_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_motion,
+        MirPointerButtons{},
+        release_position,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*release_event);
+
+    EXPECT_TRUE(focused(window1));
+}
+
 TEST_F(MinimalWindowManagerTest, can_move_inactive_window_with_pointer)
 {
     auto const app1 = open_application("test");
@@ -378,6 +566,22 @@ TEST_F(MinimalWindowManagerTest, can_move_inactive_window_with_pointer)
     EXPECT_EQ(
         window1.top_left(),
         geom::Point(initial_window_position.x.as_int() + 50, initial_window_position.y.as_int() + 50));
+    EXPECT_TRUE(focused(window2));
+
+    auto const release_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_alt,
+        mir_pointer_action_button_up,
+        MirPointerButtons{},
+        end_ptr_pos,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*release_event);
+
+    EXPECT_TRUE(focused(window2));
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)
