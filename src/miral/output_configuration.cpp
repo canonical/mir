@@ -191,7 +191,9 @@ public:
 
         conf.for_each_output([&](mg::DisplayConfigurationOutput const& output)
         {
-            outputs.emplace_back(const_cast<mg::DisplayConfigurationOutput&>(output));
+            // We need to populate the vector with non-const references to the outputs,
+            // but we never share non-const references to the outputs outside this function
+            outputs.emplace_back(const_cast<mg::DisplayConfigurationOutput&>(output)); //TICS !cppcoreguidelines-pro-type-const-cast
         });
 
         log_configuration("after ", outputs);
