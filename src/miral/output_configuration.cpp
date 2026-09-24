@@ -23,6 +23,7 @@
 #include <mir/server.h>
 
 #include <algorithm>
+#include <mutex>
 #include <vector>
 
 namespace mg = mir::graphics;

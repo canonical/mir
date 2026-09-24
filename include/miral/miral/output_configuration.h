@@ -20,6 +20,7 @@
 #include <mir/graphics/display_configuration.h>
 
 #include <memory>
+#include <span>
 #include <utility>
 
 namespace mir { class Server; }
