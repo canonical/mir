@@ -48,6 +48,16 @@ namespace
 constexpr int exclusive_surface_size = 50;
 typedef std::function<miral::WindowSpecification(geom::Size const& output_size)> CreateSurfaceSpecFunc;
 
+void move_window_to(
+    mir_test_framework::WindowManagementTestHarness& harness,
+    miral::Window const& window,
+    geom::Point top_left)
+{
+    miral::WindowSpecification spec;
+    spec.top_left() = top_left;
+    harness.request_modify(window, spec);
+}
+
 CreateSurfaceSpecFunc create_top_attached()
 {
     return [](geom::Size const& output_size)
@@ -252,25 +262,30 @@ TEST_F(FloatingWindowManagerTest, small_pointer_motion_keeps_pressed_window_as_f
     spec1.size() = { geom::Width {100}, geom::Height{100} };
     spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
+    move_window_to(*this, window1, {0, 0});
 
     auto const app2 = open_application("test-1");
     miral::WindowSpecification spec2;
-    spec2.top_left() = geom::Point{95, 0};
     spec2.size() = { geom::Width {100}, geom::Height{100} };
     spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app2, spec2);
+    move_window_to(*this, window2, {95, 0});
 
     auto const app3 = open_application("test-2");
     miral::WindowSpecification spec3;
-    spec3.top_left() = geom::Point{250, 0};
     spec3.size() = { geom::Width {50}, geom::Height{50} };
     spec3.depth_layer() = mir_depth_layer_application;
     auto window3 = create_window(app3, spec3);
+    move_window_to(*this, window3, {250, 0});
+
+    ASSERT_EQ(window1.top_left(), geom::Point(0, 0));
+    ASSERT_EQ(window2.top_left(), geom::Point(95, 0));
+    ASSERT_EQ(window3.top_left(), geom::Point(250, 0));
 
     ASSERT_TRUE(focused(window3));
 
-    auto const press_position = geom::PointF{95, 50};
-    auto const release_position = geom::PointF{94, 50};
+    auto const press_position = geom::PointF{window2.top_left().x.as_int() + 2, window2.top_left().y.as_int() + 50};
+    auto const release_position = geom::PointF{window2.top_left().x.as_int() - 1, window2.top_left().y.as_int() + 50};
 
     auto const press_event = mir::events::make_pointer_event(
         0,
@@ -322,23 +337,28 @@ TEST_F(FloatingWindowManagerTest, pointer_drag_focuses_window_under_release)
     spec1.size() = { geom::Width {100}, geom::Height{100} };
     spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
+    move_window_to(*this, window1, {0, 0});
 
     auto const app2 = open_application("test-1");
     miral::WindowSpecification spec2;
-    spec2.top_left() = geom::Point{95, 0};
     spec2.size() = { geom::Width {100}, geom::Height{100} };
     spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app2, spec2);
+    move_window_to(*this, window2, {95, 0});
 
     auto const app3 = open_application("test-2");
     miral::WindowSpecification spec3;
-    spec3.top_left() = geom::Point{250, 0};
     spec3.size() = { geom::Width {50}, geom::Height{50} };
     spec3.depth_layer() = mir_depth_layer_application;
-    create_window(app3, spec3);
+    auto window3 = create_window(app3, spec3);
+    move_window_to(*this, window3, {250, 0});
 
-    auto const press_position = geom::PointF{95, 50};
-    auto const release_position = geom::PointF{50, 50};
+    ASSERT_EQ(window1.top_left(), geom::Point(0, 0));
+    ASSERT_EQ(window2.top_left(), geom::Point(95, 0));
+    ASSERT_EQ(window3.top_left(), geom::Point(250, 0));
+
+    auto const press_position = geom::PointF{window2.top_left().x.as_int() + 2, window2.top_left().y.as_int() + 50};
+    auto const release_position = geom::PointF{window1.top_left().x.as_int() + 50, window1.top_left().y.as_int() + 50};
 
     auto const press_event = mir::events::make_pointer_event(
         0,
@@ -439,14 +459,18 @@ TEST_F(FloatingWindowManagerTest, can_move_inactive_window_with_pointer)
     spec1.size() = { geom::Width {100}, geom::Height{100} };
     spec1.depth_layer() = mir_depth_layer_application;
     auto window1 = create_window(app1, spec1);
+    move_window_to(*this, window1, {0, 0});
 
     auto const app2 = open_application("test-1");
     miral::WindowSpecification spec2;
     spec2.size() = { geom::Width {50}, geom::Height{50} };
     spec2.depth_layer() = mir_depth_layer_application;
     auto window2 = create_window(app2, spec2);
+    move_window_to(*this, window2, {200, 0});
 
     ASSERT_TRUE(focused(window2));
+    ASSERT_EQ(window1.top_left(), geom::Point(0, 0));
+    ASSERT_EQ(window2.top_left(), geom::Point(200, 0));
 
     auto const initial_window_position = window1.top_left();
     geom::PointF const start_ptr_pos{window1.top_left().x.as_int() + 50, window1.top_left().y.as_int() + 50};
