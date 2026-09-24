@@ -307,6 +307,7 @@ TEST_F(MediatingDisplayChangerTest, handles_hardware_change_when_display_buffers
     EXPECT_CALL(mock_compositor, stop());
     EXPECT_CALL(mock_display, configure(Ref(conf)));
     EXPECT_CALL(mock_compositor, start());
+    EXPECT_CALL(mock_conf_policy, confirm(Ref(conf)));
 
     changer->configure(mt::fake_shared(conf));
 }
@@ -323,6 +324,10 @@ TEST_F(MediatingDisplayChangerTest, handles_error_when_applying_hardware_change)
 
     auto const previous_base_config = changer->base_configuration();
     ASSERT_THAT(conf, Not(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
+
+    EXPECT_CALL(
+        mock_conf_policy,
+        confirm(mt::DisplayConfigMatches(std::cref(*previous_base_config))));
 
     changer->configure(mt::fake_shared(conf));
 

@@ -241,6 +241,9 @@ void ms::MediatingDisplayChanger::configure(std::shared_ptr<graphics::DisplayCon
                 }
             }
 
+            // Notify the policy of the change
+            display_configuration_policy->confirm(*base_configuration_);
+
             /*
              * Clear all the per-session configurations, since they may have become
              * invalid due to the hardware change.
