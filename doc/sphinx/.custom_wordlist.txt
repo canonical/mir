@@ -297,6 +297,7 @@ XCB
 xdg
 xfce
 Xlib
+XTerm
 Xwayland
 yaml
 zwp
