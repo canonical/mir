@@ -309,7 +309,75 @@ TEST_F(MinimalWindowManagerTest, can_select_window_with_pointer)
         {});
     publish_event(*select_event);
 
+    EXPECT_TRUE(focused(window2));
+
+    auto const release_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_up,
+        MirPointerButtons{},
+        geom::PointF{
+            window1.top_left().x.as_int() + window1.size().width.as_int() - 1,
+            window1.top_left().y.as_int() + window1.size().height.as_int() - 1},
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*release_event);
+
     EXPECT_TRUE(focused(window1));
+}
+
+TEST_F(MinimalWindowManagerTest, can_move_inactive_window_with_pointer)
+{
+    auto const app1 = open_application("test");
+    miral::WindowSpecification spec1;
+    spec1.size() = { geom::Width {100}, geom::Height{100} };
+    spec1.depth_layer() = mir_depth_layer_application;
+    auto window1 = create_window(app1, spec1);
+
+    auto const app2 = open_application("test-1");
+    miral::WindowSpecification spec2;
+    spec2.size() = { geom::Width {50}, geom::Height{50} };
+    spec2.depth_layer() = mir_depth_layer_application;
+    auto window2 = create_window(app2, spec2);
+
+    ASSERT_TRUE(focused(window2));
+
+    auto const initial_window_position = window1.top_left();
+    geom::PointF const start_ptr_pos{window1.top_left().x.as_int() + 50, window1.top_left().y.as_int() + 50};
+    geom::PointF const end_ptr_pos{window1.top_left().x.as_int() + 100, window1.top_left().y.as_int() + 100};
+
+    auto const start_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_alt,
+        mir_pointer_action_button_down,
+        mir_pointer_button_primary,
+        start_ptr_pos,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*start_event);
+
+    auto const move_event = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_alt,
+        mir_pointer_action_motion,
+        mir_pointer_button_primary,
+        end_ptr_pos,
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+    publish_event(*move_event);
+
+    EXPECT_EQ(
+        window1.top_left(),
+        geom::Point(initial_window_position.x.as_int() + 50, initial_window_position.y.as_int() + 50));
 }
 
 TEST_F(MinimalWindowManagerTest, can_select_window_with_touch)

@@ -491,14 +491,17 @@ bool miral::MinimalWindowManager::Impl::handle_pointer_event(MirPointerEvent con
         break;
     }
 
-    if (!consumes_event && action == mir_pointer_action_button_down)
+    if (!consumes_event && action == mir_pointer_action_button_up)
     {
         if (auto const window = tools.window_at(new_cursor))
         {
             tools.select_active_window(window);
         }
+    }
 
-        if (auto const window = tools.active_window())
+    if (!consumes_event && action == mir_pointer_action_button_down)
+    {
+        if (auto const window = tools.window_at(new_cursor))
         {
             if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
             {
