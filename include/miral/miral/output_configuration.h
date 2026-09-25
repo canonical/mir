@@ -30,8 +30,6 @@ namespace miral
 
 /// Provides customization of the output configuration.
 ///
-/// The default strategy does nothing.
-///
 /// \remark Since MirAL 6.1
 class OutputConfiguration
 {
@@ -40,9 +38,13 @@ public:
     class NullStrategy;
     void operator()(mir::Server& server) const;
 
+    /// Creates an output configuration with a default strategy that does nothing.
     OutputConfiguration();
+
+    /// Creates an output configuration with the specified strategy.
     OutputConfiguration(std::shared_ptr<Strategy> strategy);
 
+    /// Updates the strategy used to customize the output configuration and applies it.
     void update_strategy(std::shared_ptr<Strategy> strategy);
 
     ~OutputConfiguration();
@@ -54,7 +56,10 @@ private:
     std::shared_ptr<Self> self;
 };
 
-/// Interface for customization of the output configuration applied to the server. The default is to do nothing.
+/// Interface for customization of the output configuration applied to the server.
+///
+/// The default implementation does nothing.
+///
 /// \remark Since MirAL 6.1
 class OutputConfiguration::Strategy
 {
