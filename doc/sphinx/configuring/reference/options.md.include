@@ -143,6 +143,8 @@ Possible tags to filter on are:
  - base/wayland
  - base/graphics
  - base/window-management
+ - base/miral
+ - base/miral/magnifier
 
 (global-mouse-cursor-acceleration)=
 ### `mouse-cursor-acceleration`
