@@ -63,7 +63,7 @@ auto constexpr timeout = 5s;
 
 struct MockShell : mtd::StubShell
 {
-    MOCK_METHOD((std::shared_ptr<ms::Session>), open_session, (pid_t, mir::Fd, std::string const&), (override));
+    MOCK_METHOD((std::shared_ptr<ms::Session>), open_session, (mf::SessionCredentials&&, mir::Fd, std::string const&), (override));
     MOCK_METHOD(void, close_session, (std::shared_ptr<ms::Session> const&), (override));
 };
 
@@ -104,8 +104,8 @@ public:
         // session creation get a working, allowed client. Tests override these
         // with `EXPECT_CALL` where they need to observe or change the behaviour.
         ON_CALL(*shell, open_session(_, _, _))
-            .WillByDefault([](pid_t pid, mir::Fd, std::string const&)
-                           { return std::make_shared<mtd::StubSession>(pid); });
+            .WillByDefault([](mf::SessionCredentials&& creds, mir::Fd, std::string const&)
+                { return std::make_shared<mtd::StubSession>(std::move(creds)); });
         ON_CALL(*authorizer, connection_is_allowed(_)).WillByDefault(Return(true));
 
         RunningWaylandServerTest::SetUp();
@@ -220,18 +220,15 @@ public:
 
 TEST_F(WaylandClientNotifierTest, allowed_client_is_authorized_with_its_credentials)
 {
-    std::promise<mf::SessionCredentials> promise;
     EXPECT_CALL(*authorizer, connection_is_allowed(_))
-        .WillOnce(DoAll([&](mf::SessionCredentials const& creds) { promise.set_value(creds); }, Return(true)));
+        .WillOnce([&](mf::SessionCredentials const& creds) {
+            EXPECT_EQ(creds.pid(), ::getpid());
+            EXPECT_EQ(creds.uid(), ::getuid());
+            EXPECT_EQ(creds.gid(), ::getgid());
+            return true;
+        });
 
     inject_client();
-
-    auto future = promise.get_future();
-    ASSERT_TRUE(is_ready(future));
-    auto const creds = future.get();
-    EXPECT_EQ(creds.pid(), ::getpid());
-    EXPECT_EQ(creds.uid(), ::getuid());
-    EXPECT_EQ(creds.gid(), ::getgid());
 }
 
 TEST_F(WaylandClientNotifierTest, allowed_client_opens_a_session_for_its_pid)
@@ -239,10 +236,10 @@ TEST_F(WaylandClientNotifierTest, allowed_client_opens_a_session_for_its_pid)
     std::promise<pid_t> promise;
     EXPECT_CALL(*shell, open_session(_, _, _))
         .WillOnce(
-            [&](pid_t pid, mir::Fd, std::string const&)
+            [&](mf::SessionCredentials&& creds, mir::Fd, std::string const&)
             {
-                promise.set_value(pid);
-                return std::make_shared<mtd::StubSession>(pid);
+                promise.set_value(creds.pid());
+                return std::make_shared<mtd::StubSession>(std::move(creds));
             });
 
     inject_client();
@@ -257,9 +254,9 @@ TEST_F(WaylandClientNotifierTest, allowed_client_triggers_on_client_connected_wi
     std::promise<std::shared_ptr<ms::Session>> opened;
     EXPECT_CALL(*shell, open_session(_, _, _))
         .WillOnce(
-            [&](pid_t pid, mir::Fd, std::string const&)
+            [&](mf::SessionCredentials&& creds, mir::Fd, std::string const&)
             {
-                auto session = std::make_shared<mtd::StubSession>(pid);
+                auto session = std::make_shared<mtd::StubSession>(std::move(creds));
                 opened.set_value(session);
                 return session;
             });
@@ -323,10 +320,10 @@ TEST_F(WaylandClientNotifierNoCallbackTest, allowed_client_is_still_opened_witho
     std::promise<void> opened;
     EXPECT_CALL(*shell, open_session(_, _, _))
         .WillOnce(
-            [&](pid_t pid, mir::Fd, std::string const&)
+            [&](mf::SessionCredentials&& creds, mir::Fd, std::string const&)
             {
                 opened.set_value();
-                return std::make_shared<mtd::StubSession>(pid);
+                return std::make_shared<mtd::StubSession>(std::move(creds));
             });
 
     auto* const display = inject_client().first;
