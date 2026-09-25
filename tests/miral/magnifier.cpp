@@ -325,7 +325,7 @@ TEST_F(MagnifierTest, handles_hidden_when_disabled_in_freely_positioned_mode)
     start_server();
 }
 
-TEST_F(MagnifierTest, toggling_to_coupled_hides_handles)
+TEST_F(MagnifierTest, toggling_to_follow_cursor_hides_handles)
 {
     magnifier.enable(true).set_behavior(Magnifier::Behavior::freely_positioned);
     add_start_callback([&]
@@ -337,7 +337,7 @@ TEST_F(MagnifierTest, toggling_to_coupled_hides_handles)
     start_server();
 }
 
-TEST_F(MagnifierTest, decoupling_after_start_shows_handles)
+TEST_F(MagnifierTest, freely_positioning_after_start_shows_handles)
 {
     magnifier.enable(true);
     add_start_callback([&]
@@ -434,7 +434,7 @@ TEST_F(MagnifierTest, capture_size_change_does_not_recenter_on_cursor_in_freely_
     EXPECT_THAT(after, Ne(geom::Point{700, 500}));
 }
 
-TEST_F(MagnifierTest, cursor_tracked_in_coupled_mode)
+TEST_F(MagnifierTest, cursor_tracked_in_follow_cursor_mode)
 {
     magnifier.enable(true);
     start_server();
