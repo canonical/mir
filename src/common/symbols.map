@@ -1,4 +1,4 @@
-MIR_COMMON_2.29 {
+MIR_COMMON_2.30 {
 global:
   mir_arrow_cursor_name;
   mir_busy_cursor_name;
@@ -480,7 +480,6 @@ global:
     mir::logging::set_logger*;
     mir::logv*;
     mir::operator*;
-    mir::output_type_name*;
     mir::receive_data*;
     mir::report::lttng::TracepointProvider::?TracepointProvider*;
     mir::report::lttng::TracepointProvider::TracepointProvider*;

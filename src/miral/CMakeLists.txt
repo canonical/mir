@@ -121,6 +121,7 @@ add_library(miral-external OBJECT
     floating_window_manager.cpp         ${miral_include}/miral/floating_window_manager.h
     display_configuration_option.cpp    ${miral_include}/miral/display_configuration_option.h
     output.cpp                          ${miral_include}/miral/output.h
+    output_configuration.cpp            ${miral_include}/miral/output_configuration.h
     append_event_filter.cpp             ${miral_include}/miral/append_event_filter.h
     append_keyboard_event_filter.cpp    ${miral_include}/miral/append_keyboard_event_filter.h
     wayland_extensions.cpp              ${miral_include}/miral/wayland_extensions.h

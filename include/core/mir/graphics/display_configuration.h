@@ -52,8 +52,8 @@ using DisplayConfigurationLogicalGroupId = IntWrapper<detail::GraphicsConfLogica
  */
 struct DisplayConfigurationCard
 {
-    DisplayConfigurationCardId id;
-    size_t max_simultaneous_outputs;
+    DisplayConfigurationCardId id{};
+    size_t max_simultaneous_outputs{};
 
     bool operator==(DisplayConfigurationCard const&) const = default;
 };
@@ -219,6 +219,7 @@ struct UserDisplayConfigurationOutput
     DisplayInfo const& display_info;
 
     UserDisplayConfigurationOutput(DisplayConfigurationOutput& main);
+    UserDisplayConfigurationOutput(UserDisplayConfigurationOutput const&) = default;
     geometry::Rectangle extents() const;
 };
 
