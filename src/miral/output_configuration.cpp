@@ -22,7 +22,6 @@
 #include <mir/shell/display_configuration_controller.h>
 #include <mir/server.h>
 
-#include <algorithm>
 #include <mutex>
 #include <vector>
 
@@ -140,43 +139,16 @@ public:
             wrapped->apply_to(conf);
         }
 
-        // The strategy gets to see all the outputs at once, so work on a snapshot...
-        std::vector<mg::DisplayConfigurationOutput> snapshot;
-        conf.for_each_output([&](mg::DisplayConfigurationOutput const& output) { snapshot.push_back(output); });
-
         std::vector<mg::UserDisplayConfigurationOutput> outputs;
-        outputs.reserve(snapshot.size());
-        for (auto& output : snapshot)
-        {
-            outputs.emplace_back(output);
-        }
+        conf.for_each_output([&](mg::UserDisplayConfigurationOutput& output){ outputs.emplace_back(output); });
 
         log_configuration("before", outputs);
         strategy->apply_configuration(outputs);
 
-        // ...and write the result back one output at a time, as some DisplayConfiguration
-        // implementations only propagate changes made during the for_each_output() callback
-        conf.for_each_output([&](mg::UserDisplayConfigurationOutput& output)
-            {
-                auto const updated = std::ranges::find(snapshot, output.id, &mg::DisplayConfigurationOutput::id);
-
-                if (updated == snapshot.end())
-                    return;
-
-                output.logical_group_id = updated->logical_group_id;
-                output.used = updated->used;
-                output.top_left = updated->top_left;
-                output.current_mode_index = updated->current_mode_index;
-                output.current_format = updated->current_format;
-                output.power_mode = updated->power_mode;
-                output.orientation = updated->orientation;
-                output.scale = updated->scale;
-                output.form_factor = updated->form_factor;
-                output.subpixel_arrangement = updated->subpixel_arrangement;
-                output.gamma = updated->gamma;
-                output.custom_logical_size = updated->custom_logical_size;
-                output.custom_attribute = updated->custom_attribute;
-            });
+        // The outputs have been updated in place, but CompositeDisplayConfiguration only
+        // propagates those updates to the per-platform configurations it aggregates while
+        // iterating, so we need this otherwise pointless pass.
+        conf.for_each_output([](mg::UserDisplayConfigurationOutput&) {});
     }
 
     void confirm(mg::DisplayConfiguration const& conf) override
