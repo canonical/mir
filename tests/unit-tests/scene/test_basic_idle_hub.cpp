@@ -428,3 +428,59 @@ TEST_F(BasicIdleHub, when_wakelock_is_held_new_observer_marked_initially_active)
     hub->register_interest(observer, executor, 5s);
     executor.execute();
 }
+
+TEST_F(BasicIdleHub, disabling_idle_inhibition_allows_timeout_while_wake_lock_is_held)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    auto const wake_lock = hub->inhibit_idle();
+
+    hub->set_idle_inhibition_enabled(false);
+
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+}
+
+TEST_F(BasicIdleHub, registering_timeout_while_idle_inhibition_is_disabled_schedules_alarm)
+{
+    auto const wake_lock = hub->inhibit_idle();
+    hub->set_idle_inhibition_enabled(false);
+
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+
+    EXPECT_CALL(*observer, idle());
+    advance_by(6s);
+    executor.execute();
+}
+
+TEST_F(BasicIdleHub, releasing_ignored_wake_lock_does_not_restart_timeout)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    auto wake_lock = hub->inhibit_idle();
+    hub->set_idle_inhibition_enabled(false);
+
+    advance_by(4s);
+    wake_lock.reset();
+
+    EXPECT_CALL(*observer, idle());
+    advance_by(2s);
+    executor.execute();
+}
+
+TEST_F(BasicIdleHub, reenabling_idle_inhibition_suspends_timeout_while_wake_lock_is_held)
+{
+    auto const observer = std::make_shared<NiceMock<MockObserver>>();
+    hub->register_interest(observer, executor, 5s);
+    auto const wake_lock = hub->inhibit_idle();
+    hub->set_idle_inhibition_enabled(false);
+
+    advance_by(4s);
+    hub->set_idle_inhibition_enabled(true);
+
+    EXPECT_CALL(*observer, idle()).Times(0);
+    advance_by(6s);
+    executor.execute();
+}
