@@ -41,6 +41,7 @@
 #include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
 #include <mir/main_loop.h>
+#include <mir/fatal.h>
 
 #include <algorithm>
 #include <optional>
@@ -58,6 +59,9 @@ namespace mc = mir::compositor;
 
 namespace mmc = miral::magnifier_controls;
 namespace mml = miral::magnifier_layout;
+
+mir::logging::Tag const& miral_tag{mir::logging::create_tag(mir::logging::base(), "miral")};
+mir::logging::Tag const& magnifier_tag{mir::logging::create_tag(miral_tag, "magnifier")};
 
 namespace
 {
@@ -116,7 +120,12 @@ public:
     void attach_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)
     {
         if (!indicator || this->observer)
+        {
+            mir::log_warning(
+                {magnifier_tag},
+                "Cannot attach observer to handle: either indicator is null or observer already attached");
             return;
+        }
 
         indicator->register_interest(observer);
         this->observer = observer;
