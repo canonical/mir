@@ -74,6 +74,7 @@ class OutputConfigurationOptions::State
 {
 public:
     template<typename Update>
+    requires std::invocable<Update&, Settings&>
     void update(Update&& update) { std::forward<Update>(update)(*settings.lock()); }
 
     auto get() const -> Settings { return *settings.lock(); }
