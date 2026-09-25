@@ -46,12 +46,17 @@ function(add_rust_cxx_library target)
     list(APPEND cargo_env "PKG_CONFIG_ALLOW_CROSS=1")
   endif()
 
+  # JOB_SERVER_AWARE lets cargo (a job server client) take tokens from the
+  # Makefile generators' job server, so `-j N` limits the whole build rather
+  # than just the C++ part. It is ignored by generators without a job server.
+  # For those, set CARGO_BUILD_JOBS to limit cargo's parallelism
   add_custom_command(
     OUTPUT ${cxxbridge_header} ${cxxbridge_source} ${crate_staticlib}
     COMMAND ${CMAKE_COMMAND} -E env ${cargo_env}
             ${CARGO_EXECUTABLE} build ${cargo_release_flag} ${cargo_target_flag} --target-dir ${rust_target_dir} -p ${arg_CRATE}
     DEPENDS ${arg_DEPENDS}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    JOB_SERVER_AWARE TRUE
     COMMENT "Building Rust crate ${arg_CRATE}")
 
   # We build the Rust target first as it could potentially output C++ code
