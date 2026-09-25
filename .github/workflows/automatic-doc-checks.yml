@@ -38,6 +38,7 @@ jobs:
     uses: canonical/documentation-workflows/.github/workflows/spelling-check.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
     with:
       working-directory: doc/sphinx
+      runs-on: '["ubuntu-26.04"]'
 
   inclusive-language-check:
     name: ${{ needs.check-paths.outputs.should-run == 'true' && 'Documentation inclusive language check' || 'Documentation inclusive language check / Check for inclusive language in the documentation' }}
@@ -48,6 +49,7 @@ jobs:
     uses: canonical/documentation-workflows/.github/workflows/inclusive-language-check.yaml@aaeaf091e8f55145184ad897cb9834f224bd31de # main @ 2026.02.11
     with:
       working-directory: doc/sphinx
+      runs-on: '["ubuntu-26.04"]'
 
   link-check:
     name: ${{ needs.check-paths.outputs.should-run == 'true' && 'Documentation link check' || 'Documentation link check / Check links in the documentation' }}
@@ -59,3 +61,4 @@ jobs:
     with:
       working-directory: doc/sphinx
       linkcheck-target: linkcheck-with-dependencies
+      runs-on: '["ubuntu-26.04"]'
