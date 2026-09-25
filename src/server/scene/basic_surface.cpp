@@ -365,11 +365,11 @@ bool ms::BasicSurface::input_area_contains(geom::Point const& point) const
     if (!visible(*state))
         return false;
 
-    if (state->clip_area)
-    {
-        if (!state->clip_area.value().contains(point))
-            return false;
-    }
+    // The window margins are where the window's drag edges live. They are relative to the
+    // visible (i.e. clipped) extents of the window, so that clipping a window does not
+    // swallow the drag edges of the clipped sides.
+    if (state->clip_area && !visible_content_rect(*state).contains(point))
+        return false;
 
     if (state->custom_input_rectangles.empty())
     {
@@ -1192,6 +1192,19 @@ auto mir::scene::BasicSurface::content_size(State const& state) const -> geometr
 auto mir::scene::BasicSurface::content_top_left(State const& state) const -> geometry::Point
 {
     return state.surface_rect.top_left + geom::Displacement{state.margins.left, state.margins.top};
+}
+
+auto mir::scene::BasicSurface::visible_content_rect(State const& state) const -> geometry::Rectangle
+{
+    auto const visible_rect = state.clip_area ?
+        intersection_of(state.surface_rect, state.clip_area.value()) :
+        state.surface_rect;
+
+    return geom::Rectangle{
+        visible_rect.top_left + geom::Displacement{state.margins.left, state.margins.top},
+        geom::Size{
+            std::max(visible_rect.size.width - state.margins.left - state.margins.right, geom::Width{0}),
+            std::max(visible_rect.size.height - state.margins.top - state.margins.bottom, geom::Height{0})}};
 }
 
 void mir::scene::BasicSurface::track_outputs()
