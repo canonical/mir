@@ -415,7 +415,7 @@ public:
             obs.unregister();
     }
 
-    void stop_following_cursor()
+    void freely_positioned()
     {
         auto s = state.lock();
         if (!s->follow_cursor)
@@ -940,7 +940,7 @@ miral::Magnifier& miral::Magnifier::set_behavior(Behavior behavior)
         self->follow_cursor();
         break;
     case Behavior::freely_positioned:
-        self->stop_following_cursor();
+        self->freely_positioned();
         break;
     }
     return *this;
