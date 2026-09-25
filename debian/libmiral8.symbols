@@ -681,7 +681,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::live_config::Store::~Store()@MIRAL_6.0" 6.0.0
  (c++)"miral::name_of[abi:cxx11](std::shared_ptr<mir::scene::Session> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator<(miral::Window const&, miral::Window const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::operator==(miral::Output::PhysicalSizeMM const&, miral::Output::PhysicalSizeMM const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator==(miral::Window const&, miral::Window const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator==(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)@MIRAL_6.0" 6.0.0
@@ -774,3 +773,5 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<int const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
+ MIRAL_6.1@MIRAL_6.1 6.1.0
+ (c++)"miral::Decorations::with_renderer(miral::Decorations::Renderer) const@MIRAL_6.1" 6.1.0

@@ -17,11 +17,27 @@
 #include <miral/decorations.h>
 
 #include <memory>
+#include <utility>
 
 #include <mir/default_server_configuration.h>
 #include <mir/server.h>
 #include <mir/decoration_strategy.h>
 
+namespace
+{
+auto to_decoration_renderer(miral::Decorations::Renderer renderer) -> mir::DecorationStrategy::Renderer
+{
+    switch (renderer)
+    {
+    case miral::Decorations::Renderer::none:
+        return mir::DecorationStrategy::Renderer::none;
+    case miral::Decorations::Renderer::internal:
+        return mir::DecorationStrategy::Renderer::internal;
+    }
+
+    std::unreachable();
+}
+}
 
 miral::Decorations::Decorations(Decorations const&) = default;
 auto miral::Decorations::operator=(Decorations const&) -> Decorations& = default;
@@ -51,6 +67,7 @@ auto miral::Decorations::always_ssd() -> Decorations
     {
         DecorationsType default_style() const override { return DecorationsType::ssd; }
         DecorationsType request_style(DecorationsType) const override { return DecorationsType::ssd; }
+        Renderer renderer() const override { return Renderer::internal; }
     };
 
     return Decorations(std::make_shared<AlwaysServerSide>());
@@ -62,6 +79,7 @@ auto miral::Decorations::always_csd() -> Decorations
     {
         DecorationsType default_style() const override { return DecorationsType::csd; }
         DecorationsType request_style(DecorationsType) const override { return DecorationsType::csd; }
+        Renderer renderer() const override { return Renderer::internal; }
     };
 
     return Decorations(std::make_shared<AlwaysClientSide>());
@@ -73,6 +91,7 @@ auto miral::Decorations::prefer_ssd() -> Decorations
     {
         DecorationsType default_style() const override { return DecorationsType::ssd; }
         DecorationsType request_style(DecorationsType type) const override { return type; }
+        Renderer renderer() const override { return Renderer::internal; }
     };
 
     return Decorations(std::make_shared<PreferServerSide>());
@@ -84,7 +103,29 @@ auto miral::Decorations::prefer_csd() -> Decorations
     {
         DecorationsType default_style() const override { return DecorationsType::csd; }
         DecorationsType request_style(DecorationsType type) const override { return type; }
+        Renderer renderer() const override { return Renderer::internal; }
     };
 
     return Decorations(std::make_shared<PreferClientSide>());
+}
+
+auto miral::Decorations::with_renderer(Renderer renderer) const -> Decorations
+{
+    struct WithRenderer : Self
+    {
+        WithRenderer(std::shared_ptr<Self> wrapped, mir::DecorationStrategy::Renderer renderer) :
+            wrapped_{std::move(wrapped)},
+            renderer_{renderer}
+        {
+        }
+
+        DecorationsType default_style() const override { return wrapped_->default_style(); }
+        DecorationsType request_style(DecorationsType type) const override { return wrapped_->request_style(type); }
+        mir::DecorationStrategy::Renderer renderer() const override { return renderer_; }
+
+        std::shared_ptr<Self> const wrapped_;
+        mir::DecorationStrategy::Renderer const renderer_;
+    };
+
+    return Decorations(std::make_shared<WithRenderer>(self, to_decoration_renderer(renderer)));
 }

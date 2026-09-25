@@ -20,6 +20,7 @@
 #include "basic_idle_handler.h"
 #include "decoration/basic_decoration.h"
 #include "decoration/basic_manager.h"
+#include "decoration/null_manager.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "basic_mousekeys_transformer.h"
@@ -29,6 +30,7 @@
 #include "basic_sticky_keys_transformer.h"
 
 #include <mir/abnormal_exit.h>
+#include <mir/decoration_strategy.h>
 #include <mir/input/composite_event_filter.h>
 #include <mir/main_loop.h>
 #include <mir/options/configuration.h>
@@ -76,6 +78,9 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
     return decoration_manager(
         [this]()->std::shared_ptr<msd::Manager>
         {
+            if (the_decoration_strategy()->renderer() == mir::DecorationStrategy::Renderer::none)
+                return std::make_shared<msd::NullManager>();
+
             return std::make_shared<msd::BasicManager>(
                 msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
                 *the_display_configuration_observer_registrar(),
