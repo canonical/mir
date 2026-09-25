@@ -431,6 +431,31 @@ public:
         }
     }
 
+    void on_display_configuration_changed(geom::Rectangles const& screen_bounds)
+    {
+        auto const s = state.lock();
+        s->screen_bounds = screen_bounds;
+        if (!s->has_outputs())
+        {
+            s->applied_placement.reset();
+            return;
+        }
+
+        /// The centre of the primary output, i.e. the first usable one.
+        s->freely_positioned_center = [&screen_bounds = s->screen_bounds]
+        {
+            auto const primary = std::ranges::find_if(
+                screen_bounds,
+                [](geom::Rectangle const& output)
+                { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
+
+            return geom::PointD{primary->centre()};
+        }();
+
+        if (auto const surf = s->surface.lock())
+            place(*s);
+    }
+
 private:
     class DisplayConfigObserver : public mg::NullDisplayConfigurationObserver
     {
@@ -815,27 +840,7 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
                 rects.add(output.extents());
         });
 
-    auto const s = self.state.lock();
-    s->screen_bounds = rects;
-    if (!s->has_outputs())
-    {
-        s->applied_placement.reset();
-        return;
-    }
-
-    /// The centre of the primary output, i.e. the first usable one.
-    s->freely_positioned_center = [&screen_bounds = s->screen_bounds]
-    {
-        auto const primary = std::ranges::find_if(
-            screen_bounds,
-            [](geom::Rectangle const& output)
-            { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
-
-        return geom::PointD{primary->centre()};
-    }();
-
-    if (auto const surf = s->surface.lock())
-        self.place(*s);
+    self.on_display_configuration_changed(rects);
 }
 
 miral::Magnifier::Magnifier()
