@@ -333,27 +333,37 @@ public:
 
     void set_enable(bool enable)
     {
-        auto s = state.lock();
-        s->enabled = enable;
-        auto const surf = s->surface.lock();
-        if (!surf)
-            return;
+        std::array<Handle::ObserverRegistration, 4> observers_to_unregister;
+        {
+            auto const s = state.lock();
+            s->enabled = enable;
+            auto const surf = s->surface.lock();
+            if (!surf)
+                return;
 
-        if (enable)
-        {
-            if (!s->follow_cursor)
+            if (enable)
             {
-                attach_observers(*s);
-                place_freely(*s);
-                s->show_all_handles();
+                if (!s->follow_cursor)
+                {
+                    attach_observers(*s);
+                    place_freely(*s);
+                    s->show_all_handles();
+                }
+                surf->show();
             }
-            surf->show();
+            else
+            {
+                if (!s->follow_cursor)
+                {
+                    s->hide_all_handles();
+                    observers_to_unregister = detach_observers(*s);
+                }
+                surf->hide();
+            }
         }
-        else
-        {
-            surf->hide();
-            s->hide_all_handles();
-        }
+
+        for (auto& obs : observers_to_unregister)
+            obs.unregister();
     }
 
     void set_magnification(State& s, float new_magnification)
