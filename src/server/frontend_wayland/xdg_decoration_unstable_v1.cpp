@@ -28,13 +28,17 @@
 
 #include <cstdint>
 #include <memory>
-#include <unordered_set>
+#include <optional>
+#include <unordered_map>
 #include <utility>
 
 namespace mir
 {
 namespace frontend
 {
+/// Tracks, per toplevel, whether a decoration object is currently attached and the last mode that was
+/// negotiated. An entry outlives any single decoration object so the mode can be retained across a
+/// destroy+recreate that happens without an intervening commit (xdg-decoration v2 semantics).
 class ToplevelsWithDecorations
 {
 public:
@@ -42,21 +46,68 @@ public:
     ToplevelsWithDecorations(ToplevelsWithDecorations const&) = delete;
     ToplevelsWithDecorations& operator=(ToplevelsWithDecorations const&) = delete;
 
-    /// \return true if no duplicates existed before insertion, false otherwise.
+    /// \return true if no decoration was already live for this toplevel, false otherwise.
     bool register_toplevel(wl_resource* toplevel)
     {
-        auto [_, inserted] = toplevels_with_decorations.insert(toplevel);
-        return inserted;
+        auto& state = toplevels[toplevel];
+        if (state.live)
+        {
+            return false;
+        }
+        state.live = true;
+        return true;
     }
 
-    /// \return true if the toplevel was still registered, false otherwise.
+    /// \return true if the toplevel still had a live decoration registered, false otherwise.
     bool unregister_toplevel(wl_resource* toplevel)
     {
-        return toplevels_with_decorations.erase(toplevel) > 0;
+        auto const it = toplevels.find(toplevel);
+        if (it == toplevels.end() || !it->second.live)
+        {
+            return false;
+        }
+        it->second.live = false;
+        return true;
+    }
+
+    /// The toplevel itself is gone; nothing about it is worth remembering any more.
+    void forget_toplevel(wl_resource* toplevel)
+    {
+        toplevels.erase(toplevel);
+    }
+
+    /// The mode last negotiated for this toplevel, if any decoration has ever set one and it hasn't
+    /// since been forgotten by forget_mode_if_orphaned().
+    auto retained_mode(wl_resource* toplevel) const -> std::optional<DecorationStrategy::DecorationsType>
+    {
+        auto const it = toplevels.find(toplevel);
+        return it == toplevels.end() ? std::nullopt : it->second.mode;
+    }
+
+    void set_retained_mode(wl_resource* toplevel, DecorationStrategy::DecorationsType mode)
+    {
+        toplevels[toplevel].mode = mode;
+    }
+
+    /// Called on every commit of a toplevel that has ever had a decoration. A commit while no decoration
+    /// is attached means the retained mode must be forgotten (falls back to the compositor's default).
+    void forget_mode_if_orphaned(wl_resource* toplevel)
+    {
+        auto const it = toplevels.find(toplevel);
+        if (it != toplevels.end() && !it->second.live)
+        {
+            it->second.mode.reset();
+        }
     }
 
 private:
-    std::unordered_set<wl_resource*> toplevels_with_decorations;
+    struct State
+    {
+        bool live{false};
+        std::optional<DecorationStrategy::DecorationsType> mode;
+    };
+
+    std::unordered_map<wl_resource*, State> toplevels;
 };
 
 class XdgDecorationManagerV1 : public wayland::XdgDecorationManagerV1
@@ -85,7 +136,11 @@ class XdgToplevelDecorationV1 : public wayland::XdgToplevelDecorationV1
 {
 public:
     XdgToplevelDecorationV1(
-        wl_resource* id, mir::frontend::XdgToplevelStable* toplevel, std::shared_ptr<DecorationStrategy> strategy);
+        wl_resource* id,
+        mir::frontend::XdgToplevelStable* toplevel,
+        wl_resource* toplevel_resource,
+        std::shared_ptr<DecorationStrategy> strategy,
+        std::shared_ptr<ToplevelsWithDecorations> toplevels_with_decorations);
 
     void set_mode(uint32_t mode) override;
     void unset_mode() override;
@@ -96,7 +151,9 @@ private:
     void update_mode(uint32_t new_mode);
 
     mir::frontend::XdgToplevelStable* toplevel;
+    wl_resource* const toplevel_resource;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
+    std::shared_ptr<ToplevelsWithDecorations> const toplevels_with_decorations;
 };
 } // namespace frontend
 } // namespace mir
@@ -109,7 +166,7 @@ auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display, std::
 
 mir::frontend::XdgDecorationManagerV1::Global::Global(
     wl_display* display, std::shared_ptr<DecorationStrategy> strategy) :
-    wayland::XdgDecorationManagerV1::Global::Global{display, Version<1>{}},
+    wayland::XdgDecorationManagerV1::Global::Global{display, Version<2>{}},
     decoration_strategy{std::move(strategy)}
 {
 }
@@ -121,7 +178,7 @@ void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_d
 
 mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(
     wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy) :
-    mir::wayland::XdgDecorationManagerV1{resource, Version<1>{}},
+    mir::wayland::XdgDecorationManagerV1{resource, Version<2>{}},
     toplevels_with_decorations{std::make_shared<ToplevelsWithDecorations>()},
     decoration_strategy{std::move(strategy)}
 {
@@ -137,7 +194,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         BOOST_THROW_EXCEPTION(std::runtime_error("Invalid toplevel pointer"));
     }
 
-    auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
+    auto decoration = new XdgToplevelDecorationV1{id, tl, toplevel, decoration_strategy, toplevels_with_decorations};
     if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
         throw mir::wayland::ProtocolError{
@@ -148,6 +205,14 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
         {
             toplevels_with_decorations->unregister_toplevel(toplevel);
+        });
+
+    // A bare commit while no decoration is attached means the retained mode (if any) is no longer
+    // valid, per xdg-decoration v2: it must be re-negotiated from the compositor's default.
+    tl->set_commit_hook(
+        [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
+        {
+            toplevels_with_decorations->forget_mode_if_orphaned(toplevel);
         });
 
     tl->add_destroy_listener(
@@ -169,14 +234,21 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
                 /* throw mir::wayland::ProtocolError{ */
                 /*     resource, Error::orphaned, "Toplevel destroyed before its attached decoration"}; */
             }
+            toplevels_with_decorations->forget_toplevel(toplevel);
         });
 }
 
 mir::frontend::XdgToplevelDecorationV1::XdgToplevelDecorationV1(
-    wl_resource* id, mir::frontend::XdgToplevelStable* toplevel, std::shared_ptr<DecorationStrategy> strategy) :
-    wayland::XdgToplevelDecorationV1{id, Version<1>{}},
+    wl_resource* id,
+    mir::frontend::XdgToplevelStable* toplevel,
+    wl_resource* toplevel_resource,
+    std::shared_ptr<DecorationStrategy> strategy,
+    std::shared_ptr<ToplevelsWithDecorations> toplevels_with_decorations) :
+    wayland::XdgToplevelDecorationV1{id, Version<2>{}},
     toplevel{toplevel},
-    decoration_strategy{std::move(strategy)}
+    toplevel_resource{toplevel_resource},
+    decoration_strategy{std::move(strategy)},
+    toplevels_with_decorations{std::move(toplevels_with_decorations)}
 {
 }
 
@@ -230,6 +302,7 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
     }
 
     this->toplevel->apply_spec(spec);
+    toplevels_with_decorations->set_retained_mode(toplevel_resource, new_type);
 
     auto const strategy_new_mode = to_mode(new_type);
     send_configure_event(strategy_new_mode);
@@ -242,6 +315,10 @@ void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
 
 void mir::frontend::XdgToplevelDecorationV1::unset_mode()
 {
-    auto const protocol_mode = to_mode(decoration_strategy->default_style());
+    // Retain whatever mode was last negotiated for this toplevel (e.g. across a destroy+recreate with
+    // no intervening commit, per xdg-decoration v2); otherwise fall back to the compositor's default.
+    auto const default_type =
+        toplevels_with_decorations->retained_mode(toplevel_resource).value_or(decoration_strategy->default_style());
+    auto const protocol_mode = to_mode(default_type);
     update_mode(protocol_mode);
 }
