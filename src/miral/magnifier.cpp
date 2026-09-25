@@ -401,14 +401,10 @@ public:
                 return;
 
             s->follow_cursor = true;
-            observers = {
-                s->handles.drag.release_observer(),
-                s->handles.resize.release_observer(),
-                s->handles.zoom_in.release_observer(),
-                s->handles.zoom_out.release_observer()};
-
             s->hide_all_handles();
             place_at_cursor(*s);
+
+            observers = detach_observers(*s);
         }
 
         for (auto& obs : observers)
@@ -481,6 +477,15 @@ private:
         state.handles.resize.attach_observer(std::make_shared<ResizeDragObserver>(this));
         state.handles.zoom_in.attach_observer(std::make_shared<ZoomButtonObserver>(this, zoom_step));
         state.handles.zoom_out.attach_observer(std::make_shared<ZoomButtonObserver>(this, -zoom_step));
+    }
+
+    auto detach_observers(State& state) -> std::array<Handle::ObserverRegistration, 4>
+    {
+        return {
+            state.handles.drag.release_observer(),
+            state.handles.resize.release_observer(),
+            state.handles.zoom_in.release_observer(),
+            state.handles.zoom_out.release_observer()};
     }
 
     void place(State& s)
