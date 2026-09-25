@@ -28,7 +28,10 @@ namespace mir { class Server; }
 namespace miral
 {
 
-/// Customization of the output configuration applied to the server. The default is to do nothing.
+/// Provides customization of the output configuration.
+///
+/// The default strategy does nothing.
+///
 /// \remark Since MirAL 6.1
 class OutputConfiguration
 {
@@ -57,7 +60,13 @@ class OutputConfiguration::Strategy
 {
 public:
     Strategy();
+
+    /// Called when the server is about to apply a new configuration. The strategy can modify the
+    /// configuration before it is applied
     virtual void apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput> outputs) = 0;
+
+    /// Called after the server has applied a new configuration. The strategy can record the configuration
+    /// that was applied, for example to write it to a log or a file.
     virtual void confirm_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput const> outputs) = 0;
     virtual ~Strategy();
 
