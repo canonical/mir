@@ -1,0 +1,21 @@
+name: PPA Upload merges
+
+on:
+  push:
+    branches:
+    - main
+    paths:
+    - "debian/changelog"
+
+permissions: {}
+
+jobs:
+  trigger:
+    permissions:
+      actions: read
+      contents: read
+    uses: ./.github/workflows/ppa-upload.yml
+    secrets:
+      MIR_BOT_GPG_PRIVATE_KEY: ${{ secrets.MIR_BOT_GPG_PRIVATE_KEY }}
+      MIR_BOT_GPG_PASSPHRASE: ${{ secrets.MIR_BOT_GPG_PASSPHRASE }}
+      LAUNCHPAD_CREDENTIALS: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
