@@ -576,7 +576,10 @@ global:
     miral::live_config::Store::Store*;
     miral::live_config::Store::operator*;
     miral::name_of*;
-    miral::operator*;
+    "miral::operator<(miral::Window const&, miral::Window const&)";
+    "miral::operator==(miral::Window const&, miral::Window const&)";
+    "miral::operator==(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)";
+    "miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)";
     miral::pid_of*;
     miral::pre_init*;
     miral::register_log_filtering_config*;
