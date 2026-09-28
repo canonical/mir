@@ -450,12 +450,6 @@ auto mgsb::SoftwareBlitterRenderingProvider::surface_for_fb(
     return std::make_unique<Surface>(fb);
 }
 
-auto mgsb::SoftwareBlitterRenderingProvider::map_buffer(Buffer const& buffer)
-    -> std::unique_ptr<renderer::software::Mapping<std::byte const>>
-{
-    return buffer.map_readable();
-}
-
 auto mgsb::SoftwareBlitterRenderingProvider::suitability_for_display(DisplaySink& sink) -> probe::Result
 {
     return gl_rendering_provider->suitability_for_display(sink);
