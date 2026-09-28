@@ -42,7 +42,7 @@ auto create_rendering_platform(
     mo::Option const&,
     mir::EmergencyCleanupRegistry&) -> mir::UniqueModulePtr<mg::RenderingPlatform>
 {
-   mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
+    mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
     return mir::make_module_ptr<mge::RenderingPlatform>(displays);
 }
@@ -60,54 +60,7 @@ auto probe_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
-    mg::probe::Result maximum_suitability = mg::probe::unsupported;
-    // First check if there are any displays we can possibly drive
-    for (auto const& display_provider : displays)
-    {
-        if (display_provider->acquire_provider<mg::GenericEGLDisplayProvider>())
-        {
-            maximum_suitability = mg::probe::nested;
-            break;
-        }
-        if (display_provider->acquire_provider<mg::CPUAddressableDisplayProvider>())
-        {
-            // Check if the surfaceless platform is available
-            if (mg::has_egl_client_extension("EGL_EXT_platform_base") &&
-                mg::has_egl_client_extension("EGL_MESA_platform_surfaceless"))
-            {
-                // Check that we can actually initialise the EGL display
-                mg::EGLExtensions ext;
-                auto dpy=
-                    ext.platform_base->eglGetPlatformDisplay(
-                        EGL_PLATFORM_SURFACELESS_MESA,
-                        EGL_DEFAULT_DISPLAY,
-                        nullptr);
-                EGLint major, minor;
-                if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
-                {
-                    if (std::make_pair(major, minor) >= std::make_pair(1, 4))
-                    {
-                        // OK, EGL will somehow provide us with a usable display
-                        maximum_suitability = mg::probe::supported;
-                    }
-                    eglTerminate(dpy);
-                }
-                continue;
-            }
-            // Check that EGL_DEFAULT_DISPLAY is something we can use...
-            auto dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-            EGLint major, minor;
-            if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
-            {
-                if (std::make_pair(major, minor) >= std::make_pair(1, 4))
-                {
-                    // OK, EGL will somehow provide us with a usable display
-                    maximum_suitability = mg::probe::supported;
-                }
-                eglTerminate(dpy);
-            }
-        }
-    }
+    auto const maximum_suitability = mge::probe_display_support(displays);
 
     std::vector<mg::SupportedDevice> supported_devices;
     supported_devices.push_back(

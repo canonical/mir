@@ -46,15 +46,17 @@ void add_graphics_platform_options(boost::program_options::options_description&)
 }
 
 auto probe_rendering_platform(
-    std::span<std::shared_ptr<mg::DisplayPlatform>> const&,
+    std::span<std::shared_ptr<mg::DisplayPlatform>> const& displays,
     mir::ConsoleServices&,
     std::shared_ptr<mir::udev::Context> const&,
     mo::Option const&) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
+    auto const maximum_suitability = mir::graphics::egl::generic::probe_display_support(displays);
+
     std::vector<mg::SupportedDevice> supported_devices;
-    supported_devices.push_back(mg::SupportedDevice{nullptr, mg::probe::supported, nullptr});
+    supported_devices.push_back(mg::SupportedDevice{nullptr, maximum_suitability, nullptr});
     return supported_devices;
 }
 
