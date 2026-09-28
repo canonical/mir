@@ -39,13 +39,21 @@ namespace frontend
 {
 class ExtImageCopyCaptureSessionV1;
 
+class ExtImageCopyBackendSession
+{
+public:
+    virtual ~ExtImageCopyBackendSession() = default;
+    virtual void maybe_capture_frame() = 0;
+    virtual void set_buffer_constraints(geometry::Size const& size) = 0;
+};
+
 class ExtImageCopyBackend
 {
 public:
     using CaptureResult = std::expected<std::tuple<time::Timestamp, geometry::Rectangle>, uint32_t>;
     using CaptureCallback = std::function<void(CaptureResult const&)>;
 
-    ExtImageCopyBackend(ExtImageCopyCaptureSessionV1* session, bool overlay_cursor);
+    ExtImageCopyBackend(ExtImageCopyBackendSession* session, bool overlay_cursor);
     virtual ~ExtImageCopyBackend() = default;
 
     ExtImageCopyBackend(ExtImageCopyBackend const&) = delete;
@@ -67,7 +75,7 @@ protected:
         full,
     };
 
-    ExtImageCopyCaptureSessionV1* const session;
+    ExtImageCopyBackendSession* const session;
     bool const overlay_cursor;
 
     geometry::Rectangle output_space_area;
@@ -78,7 +86,7 @@ protected:
 };
 
 using ExtImageCopyBackendFactory =
-    std::function<std::shared_ptr<ExtImageCopyBackend>(ExtImageCopyCaptureSessionV1*, bool)>;
+    std::function<std::shared_ptr<ExtImageCopyBackend>(ExtImageCopyBackendSession*, bool)>;
 using ExtImageCopyCursorMapPosition = std::function<std::optional<geometry::Point>(float abs_x, float abs_y)>;
 
 class ExtImageCaptureSourceV1 : public wayland::ImageCaptureSourceV1
@@ -97,7 +105,7 @@ public:
 
 class ExtImageCopyCaptureFrameV1;
 
-class ExtImageCopyCaptureSessionV1 : public wayland::ImageCopyCaptureSessionV1
+class ExtImageCopyCaptureSessionV1 : public wayland::ImageCopyCaptureSessionV1, public ExtImageCopyBackendSession
 {
 public:
     ExtImageCopyCaptureSessionV1(
@@ -106,9 +114,9 @@ public:
         ExtImageCopyBackendFactory const& backend_factory);
     ~ExtImageCopyCaptureSessionV1();
 
-    void set_buffer_constraints(geometry::Size const& buffer_size);
+    void set_buffer_constraints(geometry::Size const& buffer_size) override;
     void set_stopped();
-    void maybe_capture_frame();
+    void maybe_capture_frame() override;
 
 private:
     void create_frame(wl_resource* new_resource) override;

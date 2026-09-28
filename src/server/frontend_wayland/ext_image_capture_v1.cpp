@@ -138,7 +138,7 @@ private:
 /* Image copy backends */
 
 mf::ExtImageCopyBackend::ExtImageCopyBackend(
-    ExtImageCopyCaptureSessionV1 *session,
+    ExtImageCopyBackendSession *session,
     bool overlay_cursor)
     : session{session},
       overlay_cursor{overlay_cursor}
@@ -489,7 +489,7 @@ class mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend
     : public ExtImageCopyBackend, public mi::CursorObserver
 {
 public:
-    ImageCopyBackend(ExtImageCopyCaptureSessionV1*session,
+    ImageCopyBackend(ExtImageCopyBackendSession*session,
                      ExtImageCopyCaptureCursorSessionV1& cursor_session,
                      std::shared_ptr<time::Clock> const& clock);
 
@@ -511,7 +511,7 @@ private:
 };
 
 mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::ImageCopyBackend(
-    ExtImageCopyCaptureSessionV1* session,
+    ExtImageCopyBackendSession* session,
     ExtImageCopyCaptureCursorSessionV1& cursor_session,
     std::shared_ptr<time::Clock> const& clock)
     : ExtImageCopyBackend{session, false},
