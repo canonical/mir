@@ -67,11 +67,15 @@ public:
     Strategy();
 
     /// Called when the server is about to apply a new configuration. The strategy can modify the
-    /// configuration before it is applied
+    /// configuration before it is applied.
+    ///
+    /// \param outputs the modifiable output configuration data
     virtual void apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput> outputs) = 0;
 
     /// Called after the server has applied a new configuration. The strategy can record the configuration
     /// that was applied, for example to write it to a log or a file.
+    ///
+    /// \param outputs the new configuration
     virtual void confirm_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput const> outputs) = 0;
     virtual ~Strategy();
 
