@@ -95,6 +95,18 @@ $ cd build
 $ cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DMIR_USE_PRECOMPILED_HEADERS=OFF -DMIR_USE_LD=mold ..
 ```
 
+## Limiting build parallelism
+
+The Rust parts of *Mir* are built by `cargo`, which schedules its own compile
+jobs. With the *Makefile* generators `cargo` joins `make`'s job server, so
+`-j N` limits the whole build. Other generators (notably *Ninja*) have no job
+server, so `cargo` would use one job per CPU on top of the C++ compiles, which
+can exhaust memory on machines with little RAM per core. Cap it with:
+
+```
+$ export CARGO_BUILD_JOBS=4
+```
+
 ## Mesa/GBM debugging
 
 *Mir* interacts heavily with GL, GBM, and KMS, and sometimes debugging is
