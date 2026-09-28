@@ -37,6 +37,9 @@ class EGLContextExecutor;
 namespace graphics::egl::generic
 {
 
+auto probe_display_support(std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays)
+    -> graphics::probe::Result;
+
 class RenderingPlatform : public graphics::RenderingPlatform
 {
 public:
