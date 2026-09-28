@@ -126,6 +126,7 @@ Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircore3 (= ${binary:Version}),
          ${misc:Depends},
+         libglm-dev,
 Description: Display server for Ubuntu - development headers
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
