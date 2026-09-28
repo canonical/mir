@@ -21,11 +21,15 @@
 #include <mir/graphics/display.h>
 #include <mir/server.h>
 
+#include <mir/test/signal.h>
+
 #include <gmock/gmock.h>
 
 #include <atomic>
+#include <chrono>
 
 using namespace testing;
+using namespace std::chrono_literals;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
 
@@ -33,27 +37,38 @@ namespace
 {
 auto const test_scale{2.0f};
 auto const test_position{geom::Point{100, 200}};
+auto const updated_scale{3.0f};
+auto const updated_position{geom::Point{300, 400}};
 
 struct TestStrategy : miral::OutputConfiguration::Strategy
 {
+    TestStrategy(float scale, geom::Point position) : scale{scale}, position{position} {}
+
     void apply_configuration(std::span<mg::UserDisplayConfigurationOutput> outputs) override
     {
         applied_outputs = outputs.size();
 
         for (auto& output : outputs)
         {
-            output.scale = test_scale;
-            output.top_left = test_position;
+            output.scale = scale;
+            output.top_left = position;
         }
+
+        applied.raise();
     }
 
     void confirm_configuration(std::span<mg::UserDisplayConfigurationOutput const> outputs) override
     {
         confirmed_outputs = outputs.size();
+        confirmed.raise();
     }
 
+    float const scale;
+    geom::Point const position;
     std::atomic<size_t> applied_outputs{0};
     std::atomic<size_t> confirmed_outputs{0};
+    mir::test::Signal applied;
+    mir::test::Signal confirmed;
 };
 
 struct OutputConfigurationTest : miral::TestServer
@@ -63,7 +78,7 @@ struct OutputConfigurationTest : miral::TestServer
         add_server_init([this](mir::Server& server) { output_configuration(server); });
     }
 
-    std::shared_ptr<TestStrategy> const strategy{std::make_shared<TestStrategy>()};
+    std::shared_ptr<TestStrategy> const strategy{std::make_shared<TestStrategy>(test_scale, test_position)};
     miral::OutputConfiguration output_configuration{strategy};
 };
 }
@@ -85,6 +100,41 @@ TEST_F(OutputConfigurationTest, changes_made_by_the_strategy_reach_the_display_c
             ++outputs;
             EXPECT_THAT(output.scale, Eq(test_scale));
             EXPECT_THAT(output.top_left, Eq(test_position));
+        });
+
+    EXPECT_THAT(outputs, Gt(0));
+}
+
+TEST_F(OutputConfigurationTest, update_strategy_applies_the_new_strategy)
+{
+    auto const updated_strategy{std::make_shared<TestStrategy>(updated_scale, updated_position)};
+
+    output_configuration.update_strategy(updated_strategy);
+
+    ASSERT_TRUE(updated_strategy->applied.wait_for(2s));
+    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+
+    EXPECT_THAT(updated_strategy->applied_outputs.load(), Gt(0));
+    EXPECT_THAT(updated_strategy->confirmed_outputs.load(), Eq(updated_strategy->applied_outputs.load()));
+}
+
+TEST_F(OutputConfigurationTest, changes_made_by_an_updated_strategy_reach_the_display_configuration)
+{
+    auto const updated_strategy{std::make_shared<TestStrategy>(updated_scale, updated_position)};
+
+    output_configuration.update_strategy(updated_strategy);
+
+    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+
+    auto const configuration = server().the_display()->configuration();
+
+    auto outputs{0};
+
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+        {
+            ++outputs;
+            EXPECT_THAT(output.scale, Eq(updated_scale));
+            EXPECT_THAT(output.top_left, Eq(updated_position));
         });
 
     EXPECT_THAT(outputs, Gt(0));
