@@ -197,11 +197,6 @@ public:
      */
     virtual auto surface_for_fb(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> const& fb)
         -> std::unique_ptr<Surface> = 0;
-
-    /**
-     * Get a mapping of the provided buffer for CPU access.
-     */
-    virtual auto map_buffer(Buffer const& buffer) -> std::unique_ptr<renderer::software::Mapping<std::byte const>> = 0;
 };
 
 }
