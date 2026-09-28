@@ -119,8 +119,11 @@ API details: {cpp:class}`miral::OutputFilter`
 ### Zooming/magnification
 
 For users who require temporary magnification, Mir provides a built-in
-magnification tool. By default, it magnifies a small area around the cursor,
-but the magnification power and magnification area can be modified at runtime.
+magnification tool. By default, it magnifies a small area that follows the
+cursor, but the magnification power and magnification area can be modified at
+runtime. Additionally, the magnifier can be configured to be freely positioned.
+This mode supports moving, resizing, and changing magnification with a pointer
+or one touch contact.
 
 API details: check out {cpp:class}`miral::Magnifier`
 

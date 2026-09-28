@@ -16,9 +16,16 @@
 
 #include <miral/magnifier.h>
 
+#include "magnifier_handle_indicator.h"
+#include "magnifier_geometry.h"
 #include "magnifier_layout.h"
 #include "render_scene_into_surface.h"
+
 #include <miral/live_config.h>
+#include <mir/events/event.h>
+#include <mir/events/input_event.h>
+#include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 #include <mir/log.h>
 #include <mir/server.h>
 #include <mir/synchronised.h>
@@ -29,17 +36,32 @@
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/scene/surface.h>
+#include <mir/scene/null_surface_observer.h>
+#include <mir/scene/basic_surface.h>
+#include <mir/shell/surface_stack.h>
 #include <mir/observer_registrar.h>
 #include <mir/main_loop.h>
+#include <mir/fatal.h>
 
 #include <algorithm>
+#include <optional>
+#include <concepts>
+#include <array>
+#include <utility>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace mi = mir::input;
 namespace ms = mir::scene;
 namespace geom = mir::geometry;
 namespace mg = mir::graphics;
+namespace msh = mir::shell;
+namespace mc = mir::compositor;
+
+namespace mmc = miral::magnifier_controls;
 namespace mml = miral::magnifier_layout;
+
+mir::logging::Tag const& miral_tag{mir::logging::create_tag(mir::logging::base(), "miral")};
+mir::logging::Tag const& magnifier_tag{mir::logging::create_tag(miral_tag, "magnifier")};
 
 namespace
 {
@@ -51,16 +73,167 @@ auto const min_magnification = 1.25f;
 auto const default_magnification = 1.5f;
 auto const max_magnification = 8.0f;
 
+/// Magnification step applied by each zoom button press.
+auto const zoom_step = 0.25f;
+
+class Handle
+{
+public:
+    struct ObserverRegistration
+    {
+        std::shared_ptr<miral::MagnifierHandleIndicator> indicator;
+        std::shared_ptr<ms::SurfaceObserver> observer;
+
+        void unregister()
+        {
+            if (observer)
+                indicator->unregister_interest(*observer);
+        }
+    };
+
+    Handle() = default;
+
+    void init(mir::Server& server, mmc::HandleKind kind, mc::CompositorID capture_compositor_id)
+    {
+        indicator = std::make_shared<miral::MagnifierHandleIndicator>(
+            handle_rect,
+            kind,
+            capture_compositor_id,
+            server.the_buffer_allocator(),
+            server.the_scene_report(),
+            server.the_display_configuration_observer_registrar());
+        handle_surface_stack = server.the_surface_stack();
+
+        server.the_surface_stack()->add_surface(indicator, mi::InputReceptionMode::normal);
+        indicator->set_cursor_image(server.the_default_cursor_image());
+    }
+
+    void reset()
+    {
+        release_observer().unregister();
+
+        if (auto const surface_stack = handle_surface_stack.lock())
+            surface_stack->remove_surface(indicator);
+        indicator.reset();
+    }
+
+    void attach_observer(std::shared_ptr<ms::SurfaceObserver> const& observer)
+    {
+        if (!indicator || this->observer)
+        {
+            mir::log_warning(
+                {magnifier_tag},
+                "Cannot attach observer to handle: either indicator is null or observer already attached");
+            return;
+        }
+
+        indicator->register_interest(observer);
+        this->observer = observer;
+    }
+
+    auto release_observer() -> ObserverRegistration
+    {
+        return {indicator, std::exchange(observer, {})};
+    }
+
+    void move_to(geom::Point const& pos)
+    {
+        if (indicator)
+            indicator->move_to(pos);
+    }
+
+    void show()
+    {
+        if (indicator)
+            indicator->show();
+    }
+
+    void hide()
+    {
+        if (indicator)
+            indicator->hide();
+    }
+
+private:
+    static constexpr geom::Rectangle handle_rect{
+        {0, 0},
+        {
+            geom::Width{mmc::handle_diameter},
+            geom::Height{mmc::handle_diameter}}};
+
+    std::shared_ptr<miral::MagnifierHandleIndicator> indicator;
+    std::weak_ptr<msh::SurfaceStack> handle_surface_stack;
+    std::shared_ptr<ms::SurfaceObserver> observer;
+};
+
+struct Handles
+{
+    Handle drag;
+    Handle resize;
+    Handle zoom_in;
+    Handle zoom_out;
+
+    void for_each(std::invocable<Handle&, mmc::HandleKind> auto&& f)
+    {
+        f(drag, mmc::HandleKind::drag);
+        f(resize, mmc::HandleKind::resize);
+        f(zoom_in, mmc::HandleKind::zoom_in);
+        f(zoom_out, mmc::HandleKind::zoom_out);
+    }
+};
+
 struct State
 {
+    void apply_geometry(
+        miral::RenderSceneIntoSurface& render_scene_into_surface,
+        geom::Rectangle const& new_capture_area,
+        geom::Point const& new_surface_top_left)
+    {
+        applied_placement.reset();
+        render_scene_into_surface.capture_area(new_capture_area);
+
+        if (auto const surf = surface.lock())
+        {
+            surf->move_to(new_surface_top_left);
+            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1)));
+        }
+    }
+
+    void apply_geometry(
+        miral::RenderSceneIntoSurface& render_scene_into_surface,
+        mml::FreePlacement const& new_placement)
+    {
+        if (applied_placement && *applied_placement == new_placement)
+            return;
+
+        freely_positioned_center =
+            geom::RectangleD{geom::PointD{new_placement.surface_top_left}, new_placement.capture_area.size}.centre();
+
+        auto const positions = mmc::positions_for(new_placement, magnification);
+        handles.for_each([&](Handle& handle, mmc::HandleKind kind) { handle.move_to(positions.for_kind(kind)); });
+
+        apply_geometry(render_scene_into_surface, new_placement.capture_area, new_placement.surface_top_left);
+        applied_placement = new_placement;
+    }
+
+    void show_all_handles() { handles.for_each([](Handle& handle, auto) { handle.show(); }); }
+
+    void hide_all_handles() { handles.for_each([](Handle& handle, auto) { handle.hide(); }); }
+
+    auto has_outputs() const -> bool { return screen_bounds.size() != 0; }
+
     std::weak_ptr<ms::Surface> surface;
+    Handles handles;
     geom::Point cursor_pos;
+    geom::PointD freely_positioned_center;
     geom::Rectangles screen_bounds;
     float magnification{default_magnification};
     geom::SizeD requested_visual_size{
         default_capture_width * static_cast<double>(default_magnification),
         default_capture_height * static_cast<double>(default_magnification)};
-    bool default_enabled{false};
+    std::optional<mml::FreePlacement> applied_placement;
+    bool enabled{false};
+    bool follow_cursor{true};
 };
 }
 
@@ -85,7 +258,7 @@ public:
                 surf->set_depth_layer(mir_depth_layer_always_on_top);
                 surf->set_focus_mode(mir_focus_mode_disabled);
 
-                if (s->default_enabled)
+                if (s->enabled)
                     surf->show();
                 else
                     surf->hide();
@@ -106,8 +279,25 @@ public:
 
                 auto s = state.lock();
 
-                if (auto const surf = s->surface.lock(); surf && s->default_enabled)
-                    place_at_cursor(*s);
+                auto const capture_compositor_id = render_scene_into_surface.capture_compositor_id();
+                s->handles.for_each([&](Handle& handle, mmc::HandleKind kind)
+                                    { handle.init(server, kind, capture_compositor_id); });
+
+                if (!s->follow_cursor)
+                    attach_observers(*s);
+
+                if (auto const surf = s->surface.lock(); surf && s->enabled)
+                {
+                    if (!s->follow_cursor)
+                    {
+                        place_freely(*s);
+                        s->show_all_handles();
+                    }
+                    else
+                    {
+                        place(*s);
+                    }
+                }
             });
 
         server.add_stop_callback(
@@ -119,47 +309,158 @@ public:
                 if (display_config_observer)
                     server.the_display_configuration_observer_registrar()->unregister_interest(
                         *display_config_observer);
+
+                // The naive way to do this would be:
+                //  - lock self->state
+                //  - unregister observers
+                //
+                // This may cause a deadlock in the following case:
+                //  - lock self->state
+                //  - on another thread, the observer gets called into, attempts to lock self->state and blocks
+                //  - unregistering the observer waits until the observer returns,
+                //    which it will not since it's waiting on the lock
+                //  - deadlock: unregister waiting on observer, observer waiting on lock held to unregister
+                //
+                //  The lock is only required to grab references to the observers
+                //  and handles, so we lock, copy, then unregister without holding
+                //  the lock.
+                Handles local_handles = [&state = this->state] { return std::exchange(state.lock()->handles, {}); }();
+                local_handles.for_each([](Handle& handle, auto) { handle.reset(); });
+
             });
     }
 
 
     void set_enable(bool enable)
     {
-        auto s = state.lock();
-        s->default_enabled = enable;
-        if (auto const surf = s->surface.lock())
+        std::array<Handle::ObserverRegistration, 4> observers_to_unregister;
         {
+            auto const s = state.lock();
+            s->enabled = enable;
+            auto const surf = s->surface.lock();
+            if (!surf)
+                return;
+
             if (enable)
+            {
+                if (!s->follow_cursor)
+                {
+                    attach_observers(*s);
+                    place_freely(*s);
+                    s->show_all_handles();
+                }
                 surf->show();
+            }
             else
+            {
+                if (!s->follow_cursor)
+                {
+                    s->hide_all_handles();
+                    observers_to_unregister = detach_observers(*s);
+                }
                 surf->hide();
+            }
         }
+
+        for (auto& obs : observers_to_unregister)
+            obs.unregister();
+    }
+
+    void set_magnification(State& s, float new_magnification)
+    {
+        s.magnification = new_magnification;
+        s.applied_placement.reset();
+        if (!s.surface.lock())
+            return;
+
+        place(s);
     }
 
     void set_magnification(float new_magnification)
     {
         auto const s = state.lock();
-        s->magnification = new_magnification;
-        if (!s->surface.lock())
-            return;
-
-        place_at_cursor(*s);
+        set_magnification(*s, new_magnification);
     }
 
     void set_capture_size(geom::Size const& size)
     {
         auto s = state.lock();
+
         s->requested_visual_size = geom::SizeD{size} * s->magnification;
+        s->applied_placement.reset();
         auto const capture_top_left = render_scene_into_surface.capture_area().top_left;
         render_scene_into_surface.capture_area({capture_top_left, size});
 
         if (!s->surface.lock())
             return;
 
-        place_at_cursor(*s);
+        place(*s);
     }
 
     geom::Size current_size() const { return render_scene_into_surface.capture_area().size; }
+
+    void follow_cursor()
+    {
+        // Unregistering can wait for an in-flight observer callback, which may
+        // be waiting for the state lock. Detach the observers under the lock,
+        // then unregister them after releasing it to avoid a deadlock.
+        std::array<Handle::ObserverRegistration, 4> observers;
+        {
+            auto s = state.lock();
+            if (s->follow_cursor)
+                return;
+
+            s->follow_cursor = true;
+            s->hide_all_handles();
+            place_at_cursor(*s);
+
+            observers = detach_observers(*s);
+        }
+
+        for (auto& obs : observers)
+            obs.unregister();
+    }
+
+    void freely_positioned()
+    {
+        auto s = state.lock();
+        if (!s->follow_cursor)
+            return;
+
+        s->follow_cursor = false;
+        attach_observers(*s);
+
+        if (auto const surf = s->surface.lock(); surf && s->enabled)
+        {
+            place_freely(*s);
+            s->show_all_handles();
+        }
+    }
+
+    void on_display_configuration_changed(geom::Rectangles const& screen_bounds)
+    {
+        auto const s = state.lock();
+        s->screen_bounds = screen_bounds;
+        if (!s->has_outputs())
+        {
+            s->applied_placement.reset();
+            return;
+        }
+
+        /// The centre of the primary output, i.e. the first usable one.
+        s->freely_positioned_center = [&screen_bounds = s->screen_bounds]
+        {
+            auto const primary = std::ranges::find_if(
+                screen_bounds,
+                [](geom::Rectangle const& output)
+                { return output.size.width > geom::Width{0} && output.size.height > geom::Height{0}; });
+
+            return geom::PointD{primary->centre()};
+        }();
+
+        if (auto const surf = s->surface.lock())
+            place(*s);
+    }
 
 private:
     class DisplayConfigObserver : public mg::NullDisplayConfigurationObserver
@@ -178,36 +479,271 @@ private:
         Self& self;
     };
 
-    void apply_geometry(
-        mml::Placement const& new_placement,
-        miral::RenderSceneIntoSurface& render_scene_into_surface,
-        State& state)
+    /// Creates and registers concrete observers on each handle. Guards against
+    /// missing indicators.
+    void attach_observers(State& state)
     {
-        render_scene_into_surface.capture_area(new_placement.capture_area);
+        state.handles.drag.attach_observer(std::make_shared<DragHandleObserver>(this));
+        state.handles.resize.attach_observer(std::make_shared<ResizeDragObserver>(this));
+        state.handles.zoom_in.attach_observer(std::make_shared<ZoomButtonObserver>(this, zoom_step));
+        state.handles.zoom_out.attach_observer(std::make_shared<ZoomButtonObserver>(this, -zoom_step));
+    }
 
-        if (auto const surf = state.surface.lock())
-        {
-            surf->move_to(new_placement.capture_area.top_left);
-            surf->set_transformation(glm::scale(glm::mat4(1.0), glm::vec3(state.magnification, state.magnification, 1)));
-        }
+    auto detach_observers(State& state) -> std::array<Handle::ObserverRegistration, 4>
+    {
+        return {
+            state.handles.drag.release_observer(),
+            state.handles.resize.release_observer(),
+            state.handles.zoom_in.release_observer(),
+            state.handles.zoom_out.release_observer()};
+    }
+
+    void place(State& s)
+    {
+        if (s.follow_cursor)
+            place_at_cursor(s);
+        else
+            place_freely(s);
     }
 
     /// Applies visual geometry with the magnifier's logical top-left computed
     /// from its current visual size so the surface is centred on the cursor.
     void place_at_cursor(State& s)
     {
-        auto const has_outputs = s.screen_bounds.size() != 0;
-        if (!has_outputs)
+        if (!s.has_outputs())
+        {
+            s.applied_placement.reset();
             return;
+        }
 
         auto const new_placement = mml::place_following_cursor(
             geom::PointD{s.cursor_pos}, s.requested_visual_size, s.screen_bounds, s.magnification);
 
-        apply_geometry(
-            new_placement,
-            render_scene_into_surface,
-            s);
+        s.apply_geometry(render_scene_into_surface, new_placement.capture_area, new_placement.capture_area.top_left);
     }
+
+    void place_freely(State& s)
+    {
+        place_freely_at(s, s.freely_positioned_center);
+    }
+
+    void place_freely_at(State& s, geom::PointD center)
+    {
+        if (!s.has_outputs())
+        {
+            s.applied_placement.reset();
+            return;
+        }
+
+        s.apply_geometry(
+            render_scene_into_surface,
+            mml::place_freely(center, s.requested_visual_size, s.screen_bounds, s.magnification));
+    }
+
+    /// Base for observers that turn a pointer/touch drag on a handle surface
+    /// into on_drag_start()/on_drag_move() callbacks. Both callbacks are invoked
+    /// with the magnifier mutex held; grab_abs holds the drag's grab position.
+    class HandleObserver : public ms::NullSurfaceObserver
+    {
+    public:
+        explicit HandleObserver(Self* self) : self(self) {}
+
+        void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
+        {
+            if (mir_event_get_type(event.get()) != mir_event_type_input)
+                return;
+            auto const* input_ev = mir_event_get_input_event(event.get());
+            switch (mir_input_event_get_type(input_ev))
+            {
+            case mir_input_event_type_pointer:
+                handle_pointer(mir_input_event_get_pointer_event(input_ev));
+                break;
+            case mir_input_event_type_touch:
+                handle_touch(
+                    mir_input_event_get_device_id(input_ev),
+                    mir_input_event_get_touch_event(input_ev));
+                break;
+            default:
+                break;
+            }
+        }
+
+    protected:
+        virtual void on_drag_start(State& s, geom::Point point) = 0;
+        virtual void on_drag_move(State& s, geom::Point point) = 0;
+
+        Self* self;
+        bool pointer_drag_active{false};
+        bool pointer_primary_down{false};
+        std::optional<std::pair<MirInputDeviceId, MirTouchId>> touch_drag_id;
+        geom::Displacement grab_abs{};
+
+    private:
+        void begin_drag(State& s, geom::Point point)
+        {
+            grab_abs = {geom::as_delta(point.x), geom::as_delta(point.y)};
+            on_drag_start(s, point);
+        }
+
+        void handle_pointer(MirPointerEvent const* pev)
+        {
+            auto const action = mir_pointer_event_action(pev);
+            auto const primary_down = mir_pointer_event_button_state(pev, mir_pointer_button_primary);
+            auto const point = geom::Point{
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_x)),
+                std::round(mir_pointer_event_axis_value(pev, mir_pointer_axis_y)),
+            };
+
+            auto s = self->state.lock();
+            if (action == mir_pointer_action_button_down && primary_down && !pointer_primary_down)
+            {
+                touch_drag_id.reset();
+                pointer_drag_active = true;
+                begin_drag(*s, point);
+            }
+            else if (action == mir_pointer_action_motion && pointer_drag_active && primary_down)
+            {
+                on_drag_move(*s, point);
+            }
+            else if (action == mir_pointer_action_button_up && !primary_down)
+            {
+                pointer_drag_active = false;
+                pointer_primary_down = false;
+                return;
+            }
+
+            if (action == mir_pointer_action_button_down && primary_down)
+                pointer_primary_down = true;
+        }
+
+        void handle_touch(MirInputDeviceId device_id, MirTouchEvent const* tev)
+        {
+            if (mir_touch_event_point_count(tev) != 1)
+            {
+                if (touch_drag_id && touch_drag_id->first == device_id)
+                    touch_drag_id.reset();
+                return;
+            }
+
+            auto const id = mir_touch_event_id(tev, 0);
+            auto const touch_id = std::pair{device_id, id};
+            auto const action = mir_touch_event_action(tev, 0);
+            auto const point = geom::Point{
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_x)),
+                std::round(mir_touch_event_axis_value(tev, 0, mir_touch_axis_y)),
+            };
+
+            auto s = self->state.lock();
+            if (action == mir_touch_action_down)
+            {
+                pointer_drag_active = false;
+                touch_drag_id = touch_id;
+                begin_drag(*s, point);
+            }
+            else if (action == mir_touch_action_change && touch_drag_id == touch_id)
+            {
+                on_drag_move(*s, point);
+            }
+            else if (action == mir_touch_action_up && touch_drag_id == touch_id)
+            {
+                touch_drag_id.reset();
+            }
+        }
+    };
+
+    /// Moves the magnifier when its drag handle is dragged.
+    class DragHandleObserver : public HandleObserver
+    {
+    public:
+        using HandleObserver::HandleObserver;
+
+    protected:
+        void on_drag_start(State& s, geom::Point) override
+        {
+            auto const surf = s.surface.lock();
+            if (!surf)
+                return;
+
+            drag_start = s.freely_positioned_center;
+        }
+
+        void on_drag_move(State& s, geom::Point point) override
+        {
+            auto const new_center = geom::PointD{
+                drag_start.x.as_value() + point.x.as_value() - grab_abs.dx.as_value(),
+                drag_start.y.as_value() + point.y.as_value() - grab_abs.dy.as_value()};
+
+            self->place_freely_at(s, new_center);
+        }
+
+        geom::PointD drag_start{};
+    };
+
+    /// Resizes the magnifier capture area when its resize handle is dragged.
+    ///
+    /// Resizing model
+    /// --------------
+    /// The magnifier draws a *logical* capture rectangle (top-left L, size sw x sh)
+    /// scaled by `mag` into a larger *visual* rectangle on screen. Both share the same
+    /// centre, so (with inner = (mag-1)/2, outer = (mag+1)/2) the visual edges are:
+    ///     visual left/top    = L - inner * size
+    ///     visual right/bottom = L + outer * size
+    ///
+    /// A resize drag keeps the visual corner *opposite* the grabbed handle pinned and
+    /// lets the grabbed corner follow the finger:
+    ///
+    ///     pin +-----------+
+    ///         |  visual   |
+    ///         |   rect    |
+    ///         +-----------X  <- grabbed corner follows the finger (ax, ay)
+    ///
+    /// on_drag_start records the pinned visual corner. on_drag_move measures the visual
+    /// extent from pin to finger, converts it back to a logical size (/ mag), then
+    /// back-solves the surface top-left so the pinned visual corner stays put unless
+    /// keeping the resized magnifier on-screen requires clamping it.
+    class ResizeDragObserver : public HandleObserver
+    {
+    public:
+        using HandleObserver::HandleObserver;
+
+    protected:
+        void on_drag_start(State& s, geom::Point) override
+        {
+            pinned_visual_corner.reset();
+            if (!s.surface.lock() || !s.applied_placement)
+                return;
+
+            auto const bounds = miral::magnifier_geometry::visual_bounds(
+                s.applied_placement->surface_top_left,
+                s.applied_placement->capture_area.size,
+                s.magnification);
+            resize_start_visual_top_left = {bounds.left().as_value(), bounds.top().as_value()};
+            pinned_visual_corner = {bounds.right().as_value(), bounds.bottom().as_value()};
+        }
+
+        void on_drag_move(State& s, geom::Point point) override
+        {
+            if (!s.surface.lock() || !pinned_visual_corner || !s.has_outputs())
+                return;
+
+            auto const dragged_visual_top_left = geom::PointD{
+                resize_start_visual_top_left.x.as_value() + point.x.as_value() - grab_abs.dx.as_value(),
+                resize_start_visual_top_left.y.as_value() + point.y.as_value() - grab_abs.dy.as_value()};
+            s.requested_visual_size = {
+                pinned_visual_corner->x.as_value() - dragged_visual_top_left.x.as_value(),
+                pinned_visual_corner->y.as_value() - dragged_visual_top_left.y.as_value()};
+            s.apply_geometry(
+                self->render_scene_into_surface,
+                mml::resize_freely(
+                    dragged_visual_top_left,
+                    *pinned_visual_corner,
+                    s.screen_bounds,
+                    s.magnification));
+        }
+
+        std::optional<geom::PointD> pinned_visual_corner{};
+        geom::PointD resize_start_visual_top_left{};
+    };
 
     class CursorObserver : public mi::CursorObserver
     {
@@ -218,6 +754,9 @@ private:
         {
             auto s = self->state.lock();
             s->cursor_pos = geom::Point{abs_x, abs_y};
+
+            if (!s->follow_cursor)
+                return;
 
             auto const surf = s->surface.lock();
             if (!surf)
@@ -232,6 +771,71 @@ private:
 
     private:
         Self* self;
+    };
+
+    /// Adjusts the magnification level when a zoom button is tapped or touched.
+    class ZoomButtonObserver : public ms::NullSurfaceObserver
+    {
+    public:
+        ZoomButtonObserver(Self* self, float delta) : self{self}, delta{delta} {}
+
+        void input_consumed(ms::Surface const*, std::shared_ptr<MirEvent const> const& event) override
+        {
+            if (mir_event_get_type(event.get()) != mir_event_type_input)
+                return;
+            auto const* input_ev = mir_event_get_input_event(event.get());
+            switch (mir_input_event_get_type(input_ev))
+            {
+            case mir_input_event_type_pointer:
+                handle_pointer(mir_input_event_get_pointer_event(input_ev));
+                break;
+            case mir_input_event_type_touch:
+                handle_touch(mir_input_event_get_touch_event(input_ev));
+                break;
+            default:
+                break;
+            }
+        }
+
+    private:
+        void handle_pointer(MirPointerEvent const* pev)
+        {
+            auto const action = mir_pointer_event_action(pev);
+            auto const primary_down = mir_pointer_event_button_state(pev, mir_pointer_button_primary);
+            auto s = self->state.lock();
+            if (action == mir_pointer_action_button_down && primary_down && !pointer_primary_down)
+            {
+                apply_zoom(*s);
+            }
+
+            if (action == mir_pointer_action_button_up && !primary_down)
+                pointer_primary_down = false;
+            else if (action == mir_pointer_action_button_down && primary_down)
+                pointer_primary_down = true;
+        }
+
+        void handle_touch(MirTouchEvent const* tev)
+        {
+            if (mir_touch_event_point_count(tev) != 1)
+                return;
+            auto const action = mir_touch_event_action(tev, 0);
+            auto s = self->state.lock();
+            if (action == mir_touch_action_down)
+            {
+                apply_zoom(*s);
+            }
+        }
+
+        /// Clamps and applies the zoom step. Caller must hold self->state.
+        void apply_zoom(State& s)
+        {
+            self->set_magnification(
+                s, std::clamp(s.magnification + delta, min_magnification, max_magnification));
+        }
+
+        Self* self;
+        float delta;
+        bool pointer_primary_down{false};
     };
 
     mir::Synchronised<State> state;
@@ -251,11 +855,7 @@ void miral::Magnifier::Self::DisplayConfigObserver::update_bounds(
                 rects.add(output.extents());
         });
 
-    auto s = self.state.lock();
-    s->screen_bounds = rects;
-
-    if (s->surface.lock())
-        self.place_at_cursor(*s);
+    self.on_display_configuration_changed(rects);
 }
 
 miral::Magnifier::Magnifier()
@@ -349,6 +949,20 @@ miral::Magnifier& miral::Magnifier::magnification(float magnification)
 miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size)
 {
     self->set_capture_size(size);
+    return *this;
+}
+
+miral::Magnifier& miral::Magnifier::set_behavior(Behavior behavior)
+{
+    switch (behavior)
+    {
+    case Behavior::follow_cursor:
+        self->follow_cursor();
+        break;
+    case Behavior::freely_positioned:
+        self->freely_positioned();
+        break;
+    }
     return *this;
 }
 
