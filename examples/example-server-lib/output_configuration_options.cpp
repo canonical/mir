@@ -156,7 +156,7 @@ void OutputConfigurationOptions::Strategy::apply_scale_to(mg::UserDisplayConfigu
         mode_size.height.as_int() : mode_size.width.as_int();
 
     static auto constexpr steps = 4.0f;
-    output.scale = std::round((steps * output_height) / *settings.autoscale_target) / steps;
+    output.scale = std::max(std::round((steps * output_height) / *settings.autoscale_target) / steps, 1.0f);
 }
 
 OutputConfigurationOptions::OutputConfigurationOptions(mlc::Store& config_store) :

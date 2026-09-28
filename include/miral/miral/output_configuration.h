@@ -38,13 +38,15 @@ public:
     class NullStrategy;
     void operator()(mir::Server& server) const;
 
-    /// Creates an output configuration with a default strategy that does nothing.
+    /// Creates an output configuration with a `NullStrategy` (which does nothing).
     OutputConfiguration();
 
     /// Creates an output configuration with the specified strategy.
-    OutputConfiguration(std::shared_ptr<Strategy> strategy);
+    explicit OutputConfiguration(std::shared_ptr<Strategy> strategy);
 
     /// Updates the strategy used to customize the output configuration and applies it.
+    /// \note This method should not be called from within the `apply_configuration` or
+    /// `confirm_configuration` methods of a strategy.
     void update_strategy(std::shared_ptr<Strategy> strategy);
 
     ~OutputConfiguration();
@@ -57,8 +59,6 @@ private:
 };
 
 /// Interface for customization of the output configuration applied to the server.
-///
-/// The default implementation does nothing.
 ///
 /// \remark Since MirAL 6.1
 class OutputConfiguration::Strategy
