@@ -67,8 +67,6 @@ public:
     auto surface_for_fb(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> const& fb)
         -> std::unique_ptr<Surface> override;
 
-    auto map_buffer(Buffer const& buffer) -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override;
-
     auto suitability_for_display(DisplaySink& sink) -> probe::Result override;
 
     auto suitability_for_allocator(std::shared_ptr<GraphicBufferAllocator> const& target) -> probe::Result override;
