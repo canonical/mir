@@ -540,6 +540,8 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                         });
                 };
 
+            current_foreign_buffer = {};
+
             if (auto const foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value()))
             {
                 // The content is compositor-internal, so there is nothing to import through the
@@ -552,7 +554,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             }
             else if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
             {
-                current_foreign_buffer = {};
                 current_buffer = allocator->buffer_from_shm(
                     shm_buffer->data(),
                     std::move(executor_send_frame_callbacks),
@@ -565,7 +566,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             }
             else
             {
-                current_foreign_buffer = {};
                 current_buffer = allocator->buffer_from_resource(
                     weak_buffer.value(),
                     std::move(executor_send_frame_callbacks),
@@ -641,7 +641,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     }
 
-    if (needs_buffer_submission && current_buffer)
+    if (needs_buffer_submission)
     {
         if (submit_current_buffer())
         {
@@ -677,17 +677,21 @@ auto mf::WlSurface::submit_current_buffer() -> bool
     return size_changed;
 }
 
-void mf::WlSurface::foreign_buffer_updated(
-    ExtForeignBufferV1 const& buffer,
-    std::shared_ptr<graphics::Buffer> const& content)
+void mf::WlSurface::foreign_buffer_updated()
 {
     // The client may have attached something else since this surface registered as a consumer.
-    if (!current_foreign_buffer || &current_foreign_buffer.value() != &buffer || !content)
+    if (!current_foreign_buffer)
     {
         return;
     }
 
-    current_buffer = content;
+    auto content = current_foreign_buffer.value().content();
+    if (!content)
+    {
+        return;
+    }
+
+    current_buffer = std::move(content);
     if (submit_current_buffer())
     {
         refresh_surface_data_now();

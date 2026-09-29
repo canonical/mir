@@ -55,16 +55,6 @@ public:
     using CaptureResult = std::expected<std::tuple<time::Timestamp, geometry::Rectangle>, uint32_t>;
     using CaptureCallback = std::function<void(CaptureResult const&)>;
 
-    /// A zero-copy view of the source's current content.
-    struct ZeroCopyContent
-    {
-        std::shared_ptr<graphics::Buffer> buffer;
-        /// The region of `buffer` that should be sampled.
-        geometry::RectangleD source_rect;
-        /// The size of the content in logical coordinates.
-        geometry::Size logical_size;
-    };
-
     ExtImageCopyBackend(ExtImageCopyBackendSession* session, bool overlay_cursor);
     virtual ~ExtImageCopyBackend() = default;
 
@@ -78,10 +68,10 @@ public:
     /// \param consumer_id identifies the consumer to the source's buffer stream for release
     ///                    bookkeeping and must be stable for the lifetime of that consumer.
     ///
-    /// \returns `std::nullopt` when the source cannot be represented by a single existing buffer, in
-    ///           which case the caller must composite the source into a buffer of its own via
-    ///           [begin_capture()].
-    virtual auto acquire_content(void const* consumer_id) -> std::optional<ZeroCopyContent> = 0;
+    /// \returns `nullptr` when the source cannot be represented by a single existing buffer, in
+    ///          which case the caller must composite the source into a buffer of its own via
+    ///          [begin_capture()].
+    virtual auto acquire_content(void const* consumer_id) -> std::shared_ptr<graphics::Buffer> = 0;
 
     // \pre has_damage() == true
     virtual void begin_capture(

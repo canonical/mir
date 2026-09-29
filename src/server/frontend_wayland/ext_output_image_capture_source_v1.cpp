@@ -70,13 +70,13 @@ public:
     ~ExtOutputImageCopyBackend();
 
     bool has_damage() override;
-    
-    auto acquire_content(void const*) -> std::optional<ZeroCopyContent> override
+
+    auto acquire_content(void const*) -> std::shared_ptr<graphics::Buffer> override
     {
         // TODO: implement acquire_content() for outputs, if we can manage it.
-        return std::nullopt;
+        return nullptr;
     }
-    
+
     void begin_capture(
         std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geom::Rectangle const& frame_damage,

@@ -493,7 +493,7 @@ public:
                      ExtImageCopyCaptureCursorSessionV1& cursor_session,
                      std::shared_ptr<time::Clock> const& clock);
 
-    std::optional<ZeroCopyContent> acquire_content(const void* consumer_id) override;
+    auto acquire_content(void const* consumer_id) -> std::shared_ptr<graphics::Buffer> override;
 
     void begin_capture(
         std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
@@ -536,9 +536,10 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::image_set_to(
     apply_damage(std::nullopt);
 }
 
-auto mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::acquire_content(const void*) -> std::optional<ZeroCopyContent>
+auto mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::acquire_content(void const*)
+    -> std::shared_ptr<mg::Buffer>
 {
-    return std::nullopt;
+    return nullptr;
 }
 
 void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(

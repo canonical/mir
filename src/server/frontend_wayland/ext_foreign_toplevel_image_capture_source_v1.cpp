@@ -59,7 +59,7 @@ public:
     ~ExtForeignToplevelImageCopyBackend();
 
     bool has_damage() override;
-    auto acquire_content(void const* consumer_id) -> std::optional<ZeroCopyContent> override;
+    auto acquire_content(void const* consumer_id) -> std::shared_ptr<graphics::Buffer> override;
     void begin_capture(
         std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
@@ -205,12 +205,12 @@ void mf::ExtForeignToplevelImageCopyBackend::surface_updated(geom::Rectangle con
 bool mf::ExtForeignToplevelImageCopyBackend::has_damage() { return ExtImageCopyBackend::has_damage(); }
 
 auto mf::ExtForeignToplevelImageCopyBackend::acquire_content(void const* consumer_id)
-    -> std::optional<ZeroCopyContent>
+    -> std::shared_ptr<mir::graphics::Buffer>
 {
     auto const locked = surface.lock();
     if (!locked)
     {
-        return std::nullopt;
+        return nullptr;
     }
 
     // A surface with subsurfaces (or multiple streams) produces one renderable per layer, which
@@ -218,11 +218,12 @@ auto mf::ExtForeignToplevelImageCopyBackend::acquire_content(void const* consume
     auto const renderables = locked->generate_renderables(consumer_id);
     if (renderables.size() != 1)
     {
-        return std::nullopt;
+        return nullptr;
     }
 
-    auto const& renderable = renderables.front();
-    return ZeroCopyContent{renderable->buffer(), renderable->src_bounds(), renderable->screen_position().size};
+    // TODO: the renderable's src_bounds() and screen_position() are dropped here, so a source
+    // that is cropped or scaled by a viewport is sampled in full by the consumer.
+    return renderables.front()->buffer();
 }
 
 void mf::ExtForeignToplevelImageCopyBackend::begin_capture(

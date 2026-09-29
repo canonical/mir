@@ -24,7 +24,6 @@
 #include <mir/wayland/protocol_error.h>
 
 #include <algorithm>
-
 #include <vector>
 
 namespace mf = mir::frontend;
@@ -78,7 +77,7 @@ private:
     geom::Size current_size;
 };
 
-class ExtForeignBufferManagerV1Global : public mw::ExtForeignBufferManagerV1::Global
+class ExtForeignBufferManagerV1Global : public mw::ForeignBufferManagerV1::Global
 {
 public:
     ExtForeignBufferManagerV1Global(
@@ -91,13 +90,13 @@ private:
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
 };
 
-class ExtForeignBufferManagerV1 : public mw::ExtForeignBufferManagerV1
+class ExtForeignBufferManagerV1 : public mw::ForeignBufferManagerV1
 {
 public:
     ExtForeignBufferManagerV1(
         wl_resource* resource,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
-        mw::ExtForeignBufferManagerV1(resource, Version<1>()),
+        mw::ForeignBufferManagerV1(resource, Version<1>()),
         allocator{allocator}
     {
     }
@@ -108,56 +107,20 @@ private:
     std::shared_ptr<mg::GraphicBufferAllocator> const allocator;
 };
 
-/// The wl_buffer handed to the client. It outlives the session that created it, so it owns the
-/// last content it was given rather than reaching back into the session.
-class ForeignBuffer : public mf::ExtForeignBufferV1
-{
-public:
-    explicit ForeignBuffer(wl_resource* resource) : mf::ExtForeignBufferV1(resource, Version<1>()) {}
-
-    auto content() const -> std::shared_ptr<mg::Buffer> override { return current; }
-
-    void add_consumer(mf::WlSurface& surface) override
-    {
-        auto const weak_surface = mw::make_weak(&surface);
-        if (std::ranges::find(consumers, weak_surface) == consumers.end())
-        {
-            consumers.push_back(weak_surface);
-        }
-    }
-
-    void set_content(std::shared_ptr<mg::Buffer> buffer)
-    {
-        current = std::move(buffer);
-
-        std::erase_if(consumers, [](auto const& consumer) { return !consumer; });
-        for (auto const& consumer : consumers)
-        {
-            consumer.value().foreign_buffer_updated(*this, current);
-        }
-    }
-
-private:
-    std::shared_ptr<mg::Buffer> current;
-    std::vector<mw::Weak<mf::WlSurface>> consumers;
-};
-
-class ExtForeignBufferSessionV1 : public mw::ExtForeignBufferSessionV1, public mf::ExtImageCopyBackendSession
+class ExtForeignBufferSessionV1 : public mw::ForeignBufferSessionV1, public mf::ExtImageCopyBackendSession
 {
 public:
     ExtForeignBufferSessionV1(
         wl_resource* resource,
         mf::ExtImageCopyBackendFactory const& factory,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
-        mw::ExtForeignBufferSessionV1(resource, Version<1>()),
+        mw::ForeignBufferSessionV1(resource, Version<1>()),
         rotation{allocator},
         backend{factory(this, false)}
     {
     }
 
     void get_buffer(wl_resource* buffer) override;
-
-    void destroy() override {}
 
     void maybe_capture_frame() override;
 
@@ -166,17 +129,18 @@ public:
     void set_stopped() override;
 
 private:
+    void capture_frame();
     void composite_frame();
     void publish(std::shared_ptr<mg::Buffer> buffer);
 
     BufferRotation rotation;
-    mw::Weak<ForeignBuffer> foreign_buffer;
+    mw::Weak<mf::ExtForeignBufferV1> foreign_buffer;
     /// Retained on the session so that a buffer requested after the source stopped (or after the
     /// client destroyed a previous one) still resolves to the last content we captured.
     std::shared_ptr<mg::Buffer> last_content;
     geom::Size source_size;
-    /// The buffer size most recently described to the client by a size event. Empty until a size
-    /// event has been sent for the active buffer.
+    /// The buffer size most recently described to the client by a size event, meaningful only
+    /// while `foreign_buffer` is live.
     geom::Size reported_buffer_size;
     bool capture_in_flight{false};
     bool invalidated{false};
@@ -194,23 +158,24 @@ void ExtForeignBufferSessionV1::get_buffer(wl_resource* buffer)
             "get_buffer requested while a buffer is still active for this session"};
     }
 
-    auto const created = new ForeignBuffer{buffer};
-    foreign_buffer = mw::make_weak(created);
+    auto const created = new mf::ExtForeignBufferV1{buffer};
     invalidated = false;
-    reported_buffer_size = {};
 
     // The difference between the [ExtForeignBufferSessionV1] and the [mf::ExtImageCopyCaptureSessionV1]
     // is that this session will attempt to return a zero-copy, opaque buffer to the client. A
     // zero-copy buffer is only available when the source is already backed by a single buffer, so
     // anything else (an output, or a toplevel with subsurfaces) is composited into a buffer we
     // allocate ourselves. Either way the client only ever receives an opaque handle.
-    maybe_capture_frame();
+    //
+    // This runs before `created` is published so that publish() merely records the content: the
+    // client has to receive the size event describing it first.
+    capture_frame();
 
-    auto const buffer_size = last_content ? last_content->size() : source_size;
-    reported_buffer_size = buffer_size;
+    foreign_buffer = mw::make_weak(created);
+    reported_buffer_size = last_content ? last_content->size() : source_size;
     send_size_event(
-        buffer_size.width.as_uint32_t(),
-        buffer_size.height.as_uint32_t(),
+        reported_buffer_size.width.as_uint32_t(),
+        reported_buffer_size.height.as_uint32_t(),
         source_size.width.as_uint32_t(),
         source_size.height.as_uint32_t());
 
@@ -222,6 +187,20 @@ void ExtForeignBufferSessionV1::get_buffer(wl_resource* buffer)
 
 void ExtForeignBufferSessionV1::maybe_capture_frame()
 {
+    // Backends report their initial damage from their own constructor, which runs before our
+    // `backend` member has been assigned. Deferring to the active buffer keeps us off it until
+    // then, and costs nothing: with no buffer there is no consumer to capture for, and the
+    // damage the backend is holding is serviced by the next get_buffer().
+    if (!foreign_buffer)
+    {
+        return;
+    }
+
+    capture_frame();
+}
+
+void ExtForeignBufferSessionV1::capture_frame()
+{
     if (stopped)
     {
         return;
@@ -229,9 +208,9 @@ void ExtForeignBufferSessionV1::maybe_capture_frame()
 
     // Passing `this` as the consumer id keeps the source stream's release bookkeeping
     // separate from any other consumer of the same surface.
-    if (auto const content = backend->acquire_content(this))
+    if (auto content = backend->acquire_content(this))
     {
-        publish(content->buffer);
+        publish(std::move(content));
         return;
     }
 
@@ -290,7 +269,7 @@ void ExtForeignBufferSessionV1::publish(std::shared_ptr<mg::Buffer> buffer)
 
     last_content = std::move(buffer);
 
-    if (!foreign_buffer || reported_buffer_size == geom::Size{})
+    if (!foreign_buffer)
     {
         // Nothing has been described to the client yet; get_buffer() publishes the content once
         // it has sent the matching size event.
@@ -359,6 +338,10 @@ void ExtForeignBufferManagerV1::get_session(wl_resource* session, wl_resource* s
 }
 }
 
+mf::ExtForeignBufferV1::ExtForeignBufferV1(wl_resource* resource) : mw::Buffer(resource, Version<1>())
+{
+}
+
 auto mf::ExtForeignBufferV1::from(wl_resource* resource) -> ExtForeignBufferV1*
 {
     if (auto const buffer = mw::Buffer::from(resource))
@@ -368,11 +351,35 @@ auto mf::ExtForeignBufferV1::from(wl_resource* resource) -> ExtForeignBufferV1*
     return nullptr;
 }
 
+auto mf::ExtForeignBufferV1::content() const -> std::shared_ptr<mg::Buffer>
+{
+    return current;
+}
+
+void mf::ExtForeignBufferV1::add_consumer(WlSurface& surface)
+{
+    auto const weak_surface = mw::make_weak(&surface);
+    if (std::ranges::find(consumers, weak_surface) == consumers.end())
+    {
+        consumers.push_back(weak_surface);
+    }
+}
+
+void mf::ExtForeignBufferV1::set_content(std::shared_ptr<mg::Buffer> buffer)
+{
+    current = std::move(buffer);
+
+    std::erase_if(consumers, [](auto const& consumer) { return !consumer; });
+    for (auto const& consumer : consumers)
+    {
+        consumer.value().foreign_buffer_updated();
+    }
+}
+
 auto mf::create_ext_foreign_buffer_manager_v1(
     wl_display* display,
-    std::shared_ptr<Executor> const&,
     std::shared_ptr<mg::GraphicBufferAllocator> const& allocator)
-    -> std::shared_ptr<mw::ExtForeignBufferManagerV1::Global>
+    -> std::shared_ptr<mw::ForeignBufferManagerV1::Global>
 {
     return std::make_shared<ExtForeignBufferManagerV1Global>(display, allocator);
 }
