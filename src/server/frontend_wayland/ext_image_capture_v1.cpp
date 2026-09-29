@@ -493,8 +493,10 @@ public:
                      ExtImageCopyCaptureCursorSessionV1& cursor_session,
                      std::shared_ptr<time::Clock> const& clock);
 
+    std::optional<ZeroCopyContent> acquire_content(const void* consumer_id) override;
+
     void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
         CaptureCallback const& callback) override;
 
@@ -534,8 +536,13 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::image_set_to(
     apply_damage(std::nullopt);
 }
 
+auto mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::acquire_content(const void*) -> std::optional<ZeroCopyContent>
+{
+    return std::nullopt;
+}
+
 void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         [[maybe_unused]] geom::Rectangle const& frame_damage,
         CaptureCallback const& callback)
 {

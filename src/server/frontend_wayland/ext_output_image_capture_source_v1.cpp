@@ -63,15 +63,22 @@ class ExtOutputImageCopyBackend : public ExtImageCopyBackend, public OutputConfi
 {
 public:
     ExtOutputImageCopyBackend(
-        ExtImageCopyCaptureSessionV1* session,
+        ExtImageCopyBackendSession* session,
         bool overlay_cursor,
         OutputGlobal* output,
         std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
     ~ExtOutputImageCopyBackend();
 
     bool has_damage() override;
+    
+    auto acquire_content(void const*) -> std::optional<ZeroCopyContent> override
+    {
+        // TODO: implement acquire_content() for outputs, if we can manage it.
+        return std::nullopt;
+    }
+    
     void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
         CaptureCallback const& callback) override;
 
@@ -112,7 +119,7 @@ private:
 }
 
 mf::ExtOutputImageCopyBackend::ExtOutputImageCopyBackend(
-    ExtImageCopyCaptureSessionV1* session,
+    ExtImageCopyBackendSession* session,
     bool overlay_cursor,
     OutputGlobal* output,
     std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx) :
@@ -188,7 +195,7 @@ void mf::ExtOutputImageCopyBackend::create_change_notifier()
 }
 
 void mf::ExtOutputImageCopyBackend::begin_capture(
-    std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+    std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
     [[maybe_unused]] geom::Rectangle const& frame_damage,
     CaptureCallback const& callback)
 {

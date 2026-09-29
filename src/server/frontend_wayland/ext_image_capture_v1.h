@@ -32,8 +32,9 @@
 namespace mir
 {
 class Executor;
+namespace graphics { class Buffer; }
 namespace input { class CursorObserverMultiplexer; }
-namespace renderer::software { class RWMappable; }
+namespace renderer::software { class WriteMappable; }
 namespace time { class Clock; }
 namespace frontend
 {
@@ -45,6 +46,7 @@ public:
     virtual ~ExtImageCopyBackendSession() = default;
     virtual void maybe_capture_frame() = 0;
     virtual void set_buffer_constraints(geometry::Size const& size) = 0;
+    virtual void set_stopped() = 0;
 };
 
 class ExtImageCopyBackend
@@ -52,6 +54,16 @@ class ExtImageCopyBackend
 public:
     using CaptureResult = std::expected<std::tuple<time::Timestamp, geometry::Rectangle>, uint32_t>;
     using CaptureCallback = std::function<void(CaptureResult const&)>;
+
+    /// A zero-copy view of the source's current content.
+    struct ZeroCopyContent
+    {
+        std::shared_ptr<graphics::Buffer> buffer;
+        /// The region of `buffer` that should be sampled.
+        geometry::RectangleD source_rect;
+        /// The size of the content in logical coordinates.
+        geometry::Size logical_size;
+    };
 
     ExtImageCopyBackend(ExtImageCopyBackendSession* session, bool overlay_cursor);
     virtual ~ExtImageCopyBackend() = default;
@@ -61,9 +73,19 @@ public:
 
     virtual bool has_damage();
 
+    /// Acquire the source's current content without copying it.
+    ///
+    /// \param consumer_id identifies the consumer to the source's buffer stream for release
+    ///                    bookkeeping and must be stable for the lifetime of that consumer.
+    ///
+    /// \returns `std::nullopt` when the source cannot be represented by a single existing buffer, in
+    ///           which case the caller must composite the source into a buffer of its own via
+    ///           [begin_capture()].
+    virtual auto acquire_content(void const* consumer_id) -> std::optional<ZeroCopyContent> = 0;
+
     // \pre has_damage() == true
     virtual void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geometry::Rectangle const& frame_damage,
         CaptureCallback const& callback) = 0;
 
@@ -115,7 +137,7 @@ public:
     ~ExtImageCopyCaptureSessionV1();
 
     void set_buffer_constraints(geometry::Size const& buffer_size) override;
-    void set_stopped();
+    void set_stopped() override;
     void maybe_capture_frame() override;
 
 private:

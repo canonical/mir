@@ -21,6 +21,7 @@
 #include <mir/compositor/screen_shooter.h>
 #include <mir/compositor/screen_shooter_factory.h>
 #include <mir/frontend/surface_stack.h>
+#include <mir/graphics/renderable.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/scene/null_observer.h>
 #include <mir/scene/null_surface_observer.h>
@@ -51,15 +52,16 @@ class ExtForeignToplevelImageCopyBackend : public ExtImageCopyBackend
 {
 public:
     ExtForeignToplevelImageCopyBackend(
-        ExtImageCopyCaptureSessionV1* session,
+        ExtImageCopyBackendSession* session,
         bool overlay_cursor,
         std::weak_ptr<scene::Surface> surface,
         std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx);
     ~ExtForeignToplevelImageCopyBackend();
 
     bool has_damage() override;
+    auto acquire_content(void const* consumer_id) -> std::optional<ZeroCopyContent> override;
     void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
         CaptureCallback const& callback) override;
 
@@ -146,7 +148,7 @@ private:
 };
 
 mf::ExtForeignToplevelImageCopyBackend::ExtForeignToplevelImageCopyBackend(
-    ExtImageCopyCaptureSessionV1* session,
+    ExtImageCopyBackendSession* session,
     bool overlay_cursor,
     std::weak_ptr<scene::Surface> surface,
     std::shared_ptr<ExtImageCaptureV1Ctx> const& ctx) :
@@ -202,8 +204,29 @@ void mf::ExtForeignToplevelImageCopyBackend::surface_updated(geom::Rectangle con
 
 bool mf::ExtForeignToplevelImageCopyBackend::has_damage() { return ExtImageCopyBackend::has_damage(); }
 
+auto mf::ExtForeignToplevelImageCopyBackend::acquire_content(void const* consumer_id)
+    -> std::optional<ZeroCopyContent>
+{
+    auto const locked = surface.lock();
+    if (!locked)
+    {
+        return std::nullopt;
+    }
+
+    // A surface with subsurfaces (or multiple streams) produces one renderable per layer, which
+    // only a composite can flatten into a single buffer.
+    auto const renderables = locked->generate_renderables(consumer_id);
+    if (renderables.size() != 1)
+    {
+        return std::nullopt;
+    }
+
+    auto const& renderable = renderables.front();
+    return ZeroCopyContent{renderable->buffer(), renderable->src_bounds(), renderable->screen_position().size};
+}
+
 void mf::ExtForeignToplevelImageCopyBackend::begin_capture(
-    std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+    std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
     [[maybe_unused]] geom::Rectangle const& frame_damage,
     CaptureCallback const& callback)
 {
