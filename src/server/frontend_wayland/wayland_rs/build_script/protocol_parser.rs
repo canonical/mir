@@ -55,7 +55,7 @@ pub enum InterfaceItem {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WaylandDescription {
     #[serde(rename = "@summary")]
-    pub summary: String,
+    pub summary: Option<String>,
 
     #[serde(rename = "$value", default)]
     pub text: String,
