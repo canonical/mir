@@ -51,6 +51,7 @@ mirserver has no stable ABI promise. **Every** symbol change requires bumping `M
 - CI (`symbols-check.yml`) catches added/removed symbols but does **not** detect changed signatures — those must be moved to a new stanza manually.
 - `tools/update_package_abis.sh` handles `debian/control` and `.install` file renames, and keeps the `%global *_sover` macros in `rpm/mir.spec` in sync, for all libraries. It does not modify `symbols.map` or CMake variables.
 - ABI version variables are defined per-library as `set(LIB_ABI N)` (e.g., `MIRAL_ABI`, `MIRCORE_ABI`, `MIRWAYLAND_ABI`, `MIRSERVER_ABI`). Bump these when breaking ABI.
+- The version node entries in the Debian symbols files (e.g., ` (optional)MIRAL_6.1@MIRAL_6.1 6.1.0`) are tagged `(optional)` on purpose: GNU ld emits an absolute symbol for each version node, but lld and mold do not, so without the tag `dpkg-gensymbols` fails the build with "some symbols or patterns disappeared" when `-DMIR_USE_LD=lld|mold` is used. Keep the tag when adding a new version stanza.
 
 See [How to Update Symbol Maps](../../doc/sphinx/contributing/how-to/update-symbols-map.md) and
 [DSO Versioning Guide](../../doc/sphinx/contributing/reference/dso-versioning-guide.md) for full

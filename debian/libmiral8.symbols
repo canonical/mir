@@ -1,5 +1,7 @@
 libmiral.so.8 libmiral8 #MINVER#
- MIRAL_6.0@MIRAL_6.0 6.0.0
+# The version node entries below are tagged (optional) because GNU ld emits an
+# absolute symbol for each version node, while lld and mold do not.
+ (optional)MIRAL_6.0@MIRAL_6.0 6.0.0
  (c++)"miral::AddInitCallback::AddInitCallback(std::function<void ()> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::AddInitCallback::operator()(mir::Server&) const@MIRAL_6.0" 6.0.0
  (c++)"miral::AddInitCallback::~AddInitCallback()@MIRAL_6.0" 6.0.0
