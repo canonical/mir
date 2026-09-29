@@ -221,8 +221,9 @@ void miral::FloatingWindowManager::advise_new_window(miral::WindowInfo const& wi
         tools.swap_tree_order(tools.active_window(), window_info.window());
 }
 
-void miral::FloatingWindowManager::advise_focus_gained(WindowInfo const& /*window_info*/)
+void miral::FloatingWindowManager::advise_focus_gained(WindowInfo const& window_info)
 {
+    tools.raise_tree(window_info.window());
 }
 
 bool miral::FloatingWindowManager::Impl::prepare_for_gesture(
@@ -390,39 +391,32 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
         switch (action)
         {
         case mir_pointer_action_button_down:
-        {
-            if (auto const window = tools.window_at(new_cursor))
+            if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
             {
-                tools.select_active_window(window);
-            }
-
-            if (auto const window = tools.active_window())
-            {
-                if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
+                if (shift_keys == pointer_drag_modifier)
                 {
-                    if (shift_keys == pointer_drag_modifier)
+                    if (auto const hint = tools.window_at(new_cursor))
                     {
-                        begin_pointer_gesture(
-                            tools.info_for(window),
-                            mir_pointer_event_input_event(event),
-                            Gesture::pointer_moving, mir_resize_edge_none);
-                        consumes_event = true;
+                        tools.select_active_window(hint);
+
+                        if (auto const window = tools.active_window())
+                        {
+                            begin_pointer_gesture(
+                                tools.info_for(window),
+                                mir_pointer_event_input_event(event),
+                                Gesture::pointer_moving, mir_resize_edge_none);
+                            consumes_event = true;
+                        }
                     }
                 }
             }
             break;
-        }
         case mir_pointer_action_button_up:
-        {
-            auto const window = tools.window_at(new_cursor);
-
-            if (window)
+            if (auto const window = tools.window_at(new_cursor))
             {
                 tools.select_active_window(window);
-                tools.raise_tree(window);
             }
             break;
-        }
         default:
             break;
         }

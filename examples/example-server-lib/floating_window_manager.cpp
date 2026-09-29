@@ -90,14 +90,14 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
 
     if (action == mir_pointer_action_button_down)
     {
-        if (auto const window = tools.window_at(cursor))
-            tools.select_active_window(window);
-
-        if (auto const window = tools.active_window())
+        if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
-            if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
+            if (modifiers == mir_input_event_modifier_alt)
             {
-                if (modifiers == mir_input_event_modifier_alt)
+                if (auto const window = tools.window_at(cursor))
+                    tools.select_active_window(window);
+
+                if (auto const window = tools.active_window())
                 {
                     Rectangle const old_pos{window.top_left(), window.size()};
 
