@@ -33,6 +33,7 @@ input hardware of that platform. The libraries that Mir provides are:
 - `server-x11`
 - `server-virtual`
 - `renderer-egl-generic`
+- `renderer-software-blitter`
 - `input-evdev`
 - `input-stub`
 
