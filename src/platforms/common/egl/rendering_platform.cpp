@@ -216,9 +216,13 @@ auto mge::probe_display_support(std::span<std::shared_ptr<mir::graphics::Display
             {
                 // Check that we can actually initialise the EGL display
                 mg::EGLExtensions ext;
+                if (!ext.platform_base.has_value())
+                {
+                    continue;
+                }
                 auto dpy = ext.platform_base->eglGetPlatformDisplay(
                     EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
-                EGLint major, minor;
+                EGLint major = 0, minor = 0;
                 if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
                 {
                     if (std::make_pair(major, minor) >= std::make_pair(1, 4))
@@ -232,7 +236,7 @@ auto mge::probe_display_support(std::span<std::shared_ptr<mir::graphics::Display
             }
             // Check that EGL_DEFAULT_DISPLAY is something we can use...
             auto dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
-            EGLint major, minor;
+            EGLint major = 0, minor = 0;
             if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
             {
                 if (std::make_pair(major, minor) >= std::make_pair(1, 4))
