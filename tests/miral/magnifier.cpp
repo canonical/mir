@@ -15,6 +15,7 @@
  */
 
 #include <miral/magnifier.h>
+#include <miral/live_config_ini_file.h>
 #include <mir/server.h>
 #include <mir/compositor/scene.h>
 #include <mir/compositor/scene_element.h>
@@ -38,6 +39,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <sstream>
 
 #include <limits>
 #include <string>
@@ -447,6 +449,243 @@ TEST_F(MagnifierTest, cursor_tracked_in_follow_cursor_mode)
 
     EXPECT_THAT(magnifier_top_left(), Ne(before));
 }
+
+struct MagnifierLiveConfigTest : TestServer
+{
+    MagnifierLiveConfigTest()
+    {
+        start_server_in_setup = false;
+        add_to_environment("MIR_SERVER_PLATFORM_DISPLAY_LIBS", "mir:virtual");
+        add_to_environment("MIR_SERVER_VIRTUAL_OUTPUT", "800x600");
+    }
+
+    void SetUp() override
+    {
+        TestServer::SetUp();
+        add_server_init(magnifier);
+    }
+
+    auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
+    { return server().the_scene()->scene_elements_for(this).at(0)->renderable(); }
+
+    void flush_main_loop()
+    {
+        auto flushed = std::make_shared<mir::test::Signal>();
+        server().the_main_loop()->spawn([flushed] { flushed->raise(); });
+        ASSERT_TRUE(flushed->wait_for(2s)) << "timed out waiting for the main loop";
+    }
+
+    miral::live_config::IniFile ini_file;
+    Magnifier magnifier{ini_file};
+};
+
+TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_reapplies_configured_values)
+{
+    std::string const config_values{
+        "magnifier_enable=true\n"
+        "magnifier_behavior=freely_positioned\n"
+        "magnifier_magnification=1.5\n"
+        "magnifier_capture_size_width=300\n"
+        "magnifier_capture_size_height=300\n"};
+    std::istringstream config{config_values};
+    ini_file.load_file(config, "test");
+
+    start_server();
+    flush_main_loop();
+
+    // Runtime-only changes, as made through the behavior toggle and
+    // zoom/resize handles.
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    magnifier.magnification(2.0f);
+    magnifier.capture_size(Size(200, 200));
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f))));
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 200)));
+
+    // A config write to an unrelated key reloads the whole file, re-firing
+    // every handler with unchanged values.
+    std::istringstream reload{config_values};
+    ini_file.load_file(reload, "test");
+    // Claim the queued frame so the scene reflects the reconfigured size.
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(1.5f, 1.5f, 1.0f))));
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(300, 300)));
+}
+
+TEST_F(MagnifierLiveConfigTest, reload_applies_configured_capture_size_at_configured_magnification)
+{
+    std::istringstream initial{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(initial, "test");
+
+    start_server();
+    flush_main_loop();
+
+    std::istringstream reload{
+        "magnifier_enable=true\n"
+        "magnifier_behavior=freely_positioned\n"
+        "magnifier_capture_size_width=240\n"
+        "magnifier_capture_size_height=200\n"
+        "magnifier_magnification=2\n"};
+    ini_file.load_file(reload, "test");
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(240, 200)));
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f))));
+}
+
+TEST_F(MagnifierLiveConfigTest, restoring_enable_key_reapplies_its_value)
+{
+    std::istringstream initial{"magnifier_enable=true\n"};
+    ini_file.load_file(initial, "test");
+    start_server();
+    flush_main_loop();
+
+    std::istringstream without_enable{""};
+    ini_file.load_file(without_enable, "test");
+    magnifier.enable(false);
+    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(0));
+
+    std::istringstream restored{"magnifier_enable=true\n"};
+    ini_file.load_file(restored, "test");
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+}
+
+TEST_F(MagnifierLiveConfigTest, restoring_behavior_key_reapplies_its_value)
+{
+    std::istringstream initial{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(initial, "test");
+    start_server();
+    flush_main_loop();
+
+    std::istringstream without_behavior{"magnifier_enable=true\n"};
+    ini_file.load_file(without_behavior, "test");
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+
+    std::istringstream restored{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(restored, "test");
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+}
+
+TEST_F(MagnifierLiveConfigTest, restoring_valid_behavior_after_invalid_value_reapplies_it)
+{
+    std::istringstream initial{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(initial, "test");
+    start_server();
+    flush_main_loop();
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    std::istringstream invalid{"magnifier_enable=true\nmagnifier_behavior=invalid\n"};
+    ini_file.load_file(invalid, "test");
+    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+
+    std::istringstream restored{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
+    ini_file.load_file(restored, "test");
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+}
+
+struct InvalidCaptureDimension
+{
+    std::string_view name;
+    std::string_view values;
+};
+
+struct InvalidCaptureDimensionRestorationTest :
+    MagnifierLiveConfigTest,
+    WithParamInterface<InvalidCaptureDimension>
+{
+};
+
+TEST_P(InvalidCaptureDimensionRestorationTest, restoring_valid_capture_dimensions_after_invalid_value_reapplies_them)
+{
+    std::string const valid_config{
+        "magnifier_enable=true\n"
+        "magnifier_capture_size_width=200\n"
+        "magnifier_capture_size_height=240\n"};
+    std::istringstream initial{valid_config};
+    ini_file.load_file(initial, "test");
+    start_server();
+    flush_main_loop();
+
+    magnifier.capture_size(Size(260, 260));
+    std::istringstream invalid{std::string{"magnifier_enable=true\n"} + std::string{GetParam().values}};
+    ini_file.load_file(invalid, "test");
+
+    std::istringstream restored{valid_config};
+    ini_file.load_file(restored, "test");
+    magnifier_renderable()->buffer();
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 240)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidDimension,
+    InvalidCaptureDimensionRestorationTest,
+    Values(
+        InvalidCaptureDimension{"width", "magnifier_capture_size_width=0\nmagnifier_capture_size_height=240\n"},
+        InvalidCaptureDimension{"height", "magnifier_capture_size_width=200\nmagnifier_capture_size_height=0\n"}),
+    [](TestParamInfo<InvalidCaptureDimension> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
+struct InvalidCaptureDimensionWithChangedSibling
+{
+    std::string_view name;
+    std::string_view values;
+    Size expected_size;
+};
+
+struct InvalidCaptureDimensionReloadTest :
+    MagnifierLiveConfigTest,
+    WithParamInterface<InvalidCaptureDimensionWithChangedSibling>
+{
+};
+
+TEST_P(InvalidCaptureDimensionReloadTest, changing_other_dimension_preserves_runtime_size_for_invalid_dimension)
+{
+    std::istringstream initial{
+        "magnifier_enable=true\n"
+        "magnifier_capture_size_width=200\n"
+        "magnifier_capture_size_height=240\n"};
+    ini_file.load_file(initial, "test");
+    start_server();
+    flush_main_loop();
+
+    magnifier.capture_size(Size(260, 260));
+    std::istringstream reload{
+        std::string{"magnifier_enable=true\n"} + std::string{GetParam().values}};
+    ini_file.load_file(reload, "test");
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(GetParam().expected_size));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidDimension,
+    InvalidCaptureDimensionReloadTest,
+    Values(
+        InvalidCaptureDimensionWithChangedSibling{
+            "width",
+            "magnifier_capture_size_width=0\nmagnifier_capture_size_height=250\n",
+            Size(260, 250)},
+        InvalidCaptureDimensionWithChangedSibling{
+            "height",
+            "magnifier_capture_size_width=220\nmagnifier_capture_size_height=0\n",
+            Size(220, 260)}),
+    [](TestParamInfo<InvalidCaptureDimensionWithChangedSibling> const& info)
+    {
+        return std::string{info.param.name};
+    });
 
 // Input events are dispatched synchronously through SurfaceInputDispatcher into
 // the handle surface observers, but the observers run via BasicSurface::Multiplexer
