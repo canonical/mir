@@ -222,7 +222,8 @@ auto mf::ExtForeignToplevelImageCopyBackend::acquire_content(void const* consume
     }
 
     // TODO: the renderable's src_bounds() and screen_position() are dropped here, so a source
-    // that is cropped or scaled by a viewport is sampled in full by the consumer.
+    // that is cropped or scaled by a viewport is sampled in full by the consumer. I am unsure
+    // of whether or not we care about this for now.
     return renderables.front()->buffer();
 }
 

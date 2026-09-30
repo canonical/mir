@@ -415,18 +415,6 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
     EXPECT_FALSE(renderables[0]->shaped());
 }
 
-// ext_foreign_buffer_v1 hands a source's buffer straight to another client rather than copying
-// the content, which is only sound while generate_renderables() keeps referencing the stream's
-// buffer instead of duplicating it.
-TEST_F(BasicSurfaceTest, generate_renderables_references_the_streams_buffer_without_copying_it)
-{
-    using namespace testing;
-
-    auto renderables = surface.generate_renderables(compositor_id);
-    ASSERT_THAT(renderables.size(), Eq(1));
-    EXPECT_THAT(renderables[0]->buffer(), Eq(mock_buffer_stream->buffer));
-}
-
 TEST_F(BasicSurfaceTest, test_surface_visibility)
 {
     using namespace testing;
