@@ -24,6 +24,7 @@
 #include <gtest/gtest-spi.h>
 
 #include <cerrno>
+#include <string>
 
 namespace mga = mir::graphics::atomic;
 namespace mgk = mir::graphics::kms;
@@ -94,6 +95,18 @@ public:
     }
 
     mtd::FakeDRMResources resources;
+};
+
+struct PropertyFailureCase
+{
+    char const* name;
+    bool property_missing;
+};
+
+class AtomicUpdatePropertyFailureTest :
+    public AtomicUpdateTest,
+    public WithParamInterface<PropertyFailureCase>
+{
 };
 }
 
@@ -293,6 +306,48 @@ TEST_F(MockDRMAtomicRecordingTest, default_add_and_commit_reject_invalid_request
         AtomicCommit{first_request_id, bogus_fd, 0, 0, {}},
         AtomicCommit{0, bogus_fd, 0, -EINVAL, {}}));
 }
+
+TEST_P(AtomicUpdatePropertyFailureTest, rejects_framebuffer_property_without_commit_and_frees_request)
+{
+    if (GetParam().property_missing)
+        resources.reset();
+    auto const properties = framebuffer_properties();
+
+    Sequence sequence;
+    EXPECT_CALL(mock, drmModeAtomicAlloc()).InSequence(sequence);
+    Matcher<std::string> error_context = AllOf(
+        HasSubstr(framebuffer_property_name),
+        HasSubstr("object ID " + std::to_string(plane_id)));
+    if (GetParam().property_missing)
+    {
+        EXPECT_CALL(mock, drmModeAtomicAddProperty(_, _, _, _)).Times(0);
+    }
+    else
+    {
+        EXPECT_CALL(mock, drmModeAtomicAddProperty(_, plane_id, framebuffer_property_id, framebuffer_id))
+            .InSequence(sequence)
+            .WillOnce(Return(-EIO));
+        error_context = AllOf(
+            error_context,
+            HasSubstr("property ID " + std::to_string(framebuffer_property_id)));
+    }
+    EXPECT_CALL(mock, drmModeAtomicCommit(_, _, _, _)).Times(0);
+    EXPECT_CALL(mock, drmModeAtomicFree(_)).InSequence(sequence);
+
+    EXPECT_THAT([&]
+    {
+        mga::AtomicUpdate update;
+        update.add_property(properties, framebuffer_property_name, framebuffer_id);
+    }, ThrowsMessage<mga::AtomicUpdateError>(error_context));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    FramebufferPropertyFailures,
+    AtomicUpdatePropertyFailureTest,
+    Values(
+        PropertyFailureCase{"MissingFramebufferProperty", true},
+        PropertyFailureCase{"FramebufferPropertyAddReturnsEio", false}),
+    [](TestParamInfo<PropertyFailureCase> const& info) { return info.param.name; });
 
 TEST_F(AtomicUpdateTest, allocation_failure_does_not_create_request_or_cleanup)
 {

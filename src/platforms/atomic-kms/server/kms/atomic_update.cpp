@@ -16,9 +16,11 @@
 
 #include "atomic_update.h"
 
+#include <mir/errno_utils.h>
 #include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <boost/throw_exception.hpp>
+#include <format>
 #include <stdexcept>
 
 namespace mgk = mir::graphics::kms;
@@ -49,5 +51,28 @@ void mga::AtomicUpdate::add_property(
     char const* property_name,
     uint64_t value)
 {
-    drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(property_name), value);
+    auto const object_id = properties.parent_id();
+    if (!properties.has_property(property_name))
+    {
+        BOOST_THROW_EXCEPTION((
+            AtomicUpdateError{
+                std::format(
+                    "Missing DRM atomic property '{}' on object ID {}",
+                    property_name,
+                    object_id)}));
+    }
+    auto const property_id = properties.id_for(property_name);
+    auto const result = drmModeAtomicAddProperty(req, object_id, property_id, value);
+    if (result < 0)
+    {
+        BOOST_THROW_EXCEPTION((
+            AtomicUpdateError{
+                std::format(
+                    "Failed to add DRM atomic property '{}' (property ID {}, object ID {}): {} ({})",
+                    property_name,
+                    property_id,
+                    object_id,
+                    mir::errno_to_cstr(-result),
+                    -result)}));
+    }
 }
