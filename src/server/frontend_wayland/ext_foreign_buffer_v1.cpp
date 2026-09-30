@@ -203,7 +203,7 @@ void ExtForeignBufferSessionV1::capture_frame()
     // allocate ourselves. Either way the client only ever receives an opaque handle.
 
     // First, try and acquire the content directly.
-    // 
+    //
     // Passing `this` as the consumer id keeps the source stream's release bookkeeping
     // separate from any other consumer of the same surface.
     if (auto content = backend->acquire_content(this))
@@ -213,7 +213,7 @@ void ExtForeignBufferSessionV1::capture_frame()
     }
 
     // If acquiring the content directly fails, then composite the content instead.
-    // 
+    //
     // TODO: guard against the capture/damage feedback loop for output sources. Compositing an
     // output renders every surface on it, including the consumer displaying this buffer, so
     // publishing new content damages the scene and immediately schedules another capture. The
