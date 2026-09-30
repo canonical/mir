@@ -179,7 +179,7 @@ void ExtForeignBufferSessionV1::maybe_capture_frame()
 
 void ExtForeignBufferSessionV1::capture_frame()
 {
-    if (stopped || capture_in_flight || source_size == geom::Size{})
+    if (stopped || capture_in_flight || !backend->has_damage() || source_size == geom::Size{})
     {
         return;
     }

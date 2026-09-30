@@ -640,7 +640,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     }
 
-    if (needs_buffer_submission)
+    if (needs_buffer_submission && current_buffer)
     {
         if (submit_current_buffer())
         {
