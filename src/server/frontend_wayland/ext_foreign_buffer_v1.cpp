@@ -131,13 +131,9 @@ private:
 
     BufferPool pool;
     mw::Weak<mf::ExtForeignBufferV1> foreign_buffer;
-    /// Retained on the session so that a buffer requested after the source stopped (or after the
-    /// client destroyed a previous one) still resolves to the last content we captured.
-    std::shared_ptr<mg::Buffer> last_content;
+    std::shared_ptr<mg::Buffer> curent_buffer;
+    std::optional<geom::Size> last_reported_buffer_size;
     geom::Size source_size;
-    /// The buffer size most recently described to the client by a size event, meaningful only
-    /// while `foreign_buffer` is live.
-    geom::Size reported_buffer_size;
     bool capture_in_flight{false};
     bool invalidated{false};
     bool stopped{false};
@@ -157,30 +153,22 @@ void ExtForeignBufferSessionV1::get_buffer(wl_resource* buffer)
     auto const created = new mf::ExtForeignBufferV1{buffer};
     invalidated = false;
 
-    // This runs before `created` is published so that publish() merely records the content.
-    // The client has to receive the size event describing it first.
-    capture_frame();
-
+    curent_buffer.reset();
+    last_reported_buffer_size.reset();
     foreign_buffer = mw::make_weak(created);
-    reported_buffer_size = last_content ? last_content->size() : source_size;
-    send_size_event(
-        reported_buffer_size.width.as_uint32_t(),
-        reported_buffer_size.height.as_uint32_t(),
-        source_size.width.as_uint32_t(),
-        source_size.height.as_uint32_t());
-
-    if (last_content)
-    {
-        created->set_content(last_content);
-    }
+    capture_frame();
 }
 
 void ExtForeignBufferSessionV1::maybe_capture_frame()
 {
+    // TODO: We can probably get around this, but it is best saved for a later refactor:
+    // 
     // Backends report their initial damage from their own constructor, which runs before our
-    // `backend` member has been assigned. Deferring to the active buffer keeps us off it until
-    // then, and costs nothing: with no buffer there is no consumer to capture for, and the
-    // damage the backend is holding is serviced by the next get_buffer().
+    // `backend` member has been assigned. We can safely defer this until afterward, because with
+    // no buffer, there is no consumer to capture for, and the damage the backend is holding is
+    // serviced by the next get_buffer(). We can probably refactor this in the future to split up
+    // the responsibilities: of the backend: one object handles notifying us to update, the other
+    // provides the facilities to act on those updates (e.g. by calling `begin_capture`).
     if (!foreign_buffer)
     {
         return;
@@ -191,18 +179,12 @@ void ExtForeignBufferSessionV1::maybe_capture_frame()
 
 void ExtForeignBufferSessionV1::capture_frame()
 {
-    if (stopped)
+    if (stopped || capture_in_flight || source_size == geom::Size{})
     {
         return;
     }
 
-    // The difference between the [ExtForeignBufferSessionV1] and the [mf::ExtImageCopyCaptureSessionV1]
-    // is that this session will attempt to return a zero-copy, opaque buffer to the client. A
-    // zero-copy buffer is only available when the source is already backed by a single buffer, so
-    // anything else (an output, or a toplevel with subsurfaces) is composited into a buffer we
-    // allocate ourselves. Either way the client only ever receives an opaque handle.
-
-    // First, try and acquire the content directly.
+    // First, try to capture the frame via a zero-copy buffer.
     // 
     // Passing `this` as the consumer id keeps the source stream's release bookkeeping
     // separate from any other consumer of the same surface.
@@ -212,7 +194,7 @@ void ExtForeignBufferSessionV1::capture_frame()
         return;
     }
 
-    // If acquiring the content directly fails, then composite the content instead.
+    // If acquiring a zero-copy buffer fails, then composite the content instead.
     // 
     // TODO: guard against the capture/damage feedback loop for output sources. Compositing an
     // output renders every surface on it, including the consumer displaying this buffer, so
@@ -222,12 +204,6 @@ void ExtForeignBufferSessionV1::capture_frame()
     // surface return no renderables to its own screen shooter (see
     // src/miral/render_scene_into_surface.cpp), which needs an equivalent per-consumer exclusion
     // plumbed from WlSurface down to scene::Surface::generate_renderables.
-
-    // Skip a capture if
-    if (capture_in_flight || !backend->has_damage() || source_size == geom::Size{})
-    {
-        return;
-    }
 
     auto const target = pool.next(source_size);
     capture_in_flight = true;
@@ -261,19 +237,18 @@ void ExtForeignBufferSessionV1::publish(std::shared_ptr<mg::Buffer> buffer)
         return;
     }
 
-    last_content = std::move(buffer);
-
-    if (!foreign_buffer)
+    curent_buffer = std::move(buffer);
+    if (!last_reported_buffer_size)
     {
-        // Nothing has been described to the client yet; get_buffer() publishes the content once
-        // it has sent the matching size event.
-        return;
+        last_reported_buffer_size = curent_buffer->size();
+        send_size_event(
+            last_reported_buffer_size->width.as_uint32_t(),
+            last_reported_buffer_size->height.as_uint32_t(),
+            source_size.width.as_uint32_t(),
+            source_size.height.as_uint32_t());
     }
-
-    if (last_content->size() != reported_buffer_size)
+    else if (curent_buffer->size() != last_reported_buffer_size)
     {
-        // The size event the client is holding no longer describes what we are producing, so it
-        // has to request a new buffer before we can keep it up to date.
         if (!invalidated)
         {
             invalidated = true;
@@ -282,7 +257,10 @@ void ExtForeignBufferSessionV1::publish(std::shared_ptr<mg::Buffer> buffer)
         return;
     }
 
-    foreign_buffer.value().set_content(last_content);
+    if (foreign_buffer)
+    {
+        foreign_buffer.value().set_content(curent_buffer);
+    }
 }
 
 void ExtForeignBufferSessionV1::set_buffer_constraints(geom::Size const& size)
