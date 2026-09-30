@@ -137,7 +137,7 @@ public:
     {
         return [&](miral::WindowManagerTools const& tools)
         {
-            auto result = std::make_unique<miral::FloatingWindowManager>(tools, focus_stealing(), mir_input_event_modifier_alt);
+            auto result = std::make_unique<miral::FloatingWindowManager>(tools, focus_stealing());
             return result;
         };
     }

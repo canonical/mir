@@ -64,11 +64,8 @@ auto touch_center(MirTouchEvent const* event) -> mir::geometry::Point
 
 struct miral::FloatingWindowManager::Impl
 {
-    Impl(WindowManagerTools const& tools,
-        MirInputEventModifier pointer_drag_modifier,
-        FocusStealing focus_stealing) :
+    Impl(WindowManagerTools const& tools, FocusStealing focus_stealing) :
         tools{tools},
-        pointer_drag_modifier{pointer_drag_modifier},
         focus_stealing{focus_stealing}
     {
     }
@@ -98,21 +95,27 @@ struct miral::FloatingWindowManager::Impl
     Size resize_size;
     Point old_cursor{};
     Point old_touch{};
-    MirInputEventModifier pointer_drag_modifier;
     FocusStealing focus_stealing;
 };
 
 miral::FloatingWindowManager::FloatingWindowManager(WindowManagerTools const& tools)
-    : FloatingWindowManager(tools, FocusStealing::allow, mir_input_event_modifier_alt)
+    : FloatingWindowManager(tools, FocusStealing::allow)
+{
+}
+
+miral::FloatingWindowManager::FloatingWindowManager(
+    WindowManagerTools const& tools,
+    FocusStealing focus_stealing) :
+    CanonicalWindowManagerPolicy{tools},
+    self{std::make_unique<Impl>(tools, focus_stealing)}
 {
 }
 
 miral::FloatingWindowManager::FloatingWindowManager(
     WindowManagerTools const& tools,
     FocusStealing focus_stealing,
-    MirInputEventModifier pointer_drag_modifier) :
-    CanonicalWindowManagerPolicy{tools},
-    self{std::make_unique<Impl>(tools, pointer_drag_modifier, focus_stealing)}
+    MirInputEventModifier) :
+    FloatingWindowManager{tools, focus_stealing}
 {
 }
 
@@ -391,21 +394,6 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
         if (auto const window = tools.window_at(new_cursor))
         {
             tools.select_active_window(window);
-        }
-
-        if (auto const window = tools.active_window())
-        {
-            if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
-            {
-                if (shift_keys == pointer_drag_modifier)
-                {
-                    begin_pointer_gesture(
-                        tools.info_for(window),
-                        mir_pointer_event_input_event(event),
-                        Gesture::pointer_moving, mir_resize_edge_none);
-                    consumes_event = true;
-                }
-            }
         }
     }
 

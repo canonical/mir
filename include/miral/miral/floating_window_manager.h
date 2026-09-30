@@ -43,7 +43,8 @@ class FloatingWindowManager : public CanonicalWindowManagerPolicy
 {
 public:
     explicit FloatingWindowManager(WindowManagerTools const& tools);
-    FloatingWindowManager(
+    FloatingWindowManager(WindowManagerTools const& tools, FocusStealing focus_stealing);
+    [[deprecated("pointer_drag_modifier is unused")]] FloatingWindowManager(
         WindowManagerTools const& tools,
         FocusStealing focus_stealing,
         MirInputEventModifier pointer_drag_modifier);
