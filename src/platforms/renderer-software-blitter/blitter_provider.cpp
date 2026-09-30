@@ -101,14 +101,6 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx) -> EGLContext
     return ctx;
 }
 
-class ZeroFramebuffer : public mg::Framebuffer
-{
-public:
-    ZeroFramebuffer() = default;
-    ~ZeroFramebuffer() override = default;
-    auto size() const -> geom::Size override { return {0, 0}; }
-};
-
 class MappableFBOutputSurface : public mg::gl::OutputSurface
 {
 public:
@@ -191,6 +183,12 @@ public:
             GL_UNSIGNED_BYTE,
             mapping->data());
 
+        glFinish();
+
+        // Restore to initial configuration.
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
         // In `wait_complete`, the result of `renderer.render` (this framebuffer) is unsued. So we
         // can safely return `nullptr` knowing that it will not be used anywhere.
         return nullptr;
@@ -252,7 +250,7 @@ private:
 class mg::BlitterRenderingProvider::Surface
 {
 public:
-    explicit Surface(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> fb) : fb_{fb} {};
+    explicit Surface(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> fb) : fb_{std::move(fb)} {};
 
     auto create_output_surface(EGLDisplay dpy, EGLContext ctx) -> std::unique_ptr<MappableFBOutputSurface>
     {
@@ -387,8 +385,7 @@ private:
 mgsb::SoftwareBlitterRenderingProvider::SoftwareBlitterRenderingProvider(
     EGLDisplay dpy,
     EGLContext ctx,
-    // TODO: Is it really correct to provide a single allocator in this way?
-    UniqueModulePtr<mge::BufferAllocator> allocator,
+    std::unique_ptr<mge::BufferAllocator> allocator,
     std::shared_ptr<mg::DMABufEGLProvider> dmabuf_provider,
     std::shared_ptr<mgc::EGLContextExecutor> egl_delegate) :
     mg::BlitterRenderingProvider(),
@@ -423,7 +420,7 @@ auto mgsb::SoftwareBlitterRenderingProvider::blit(
     MirOrientation rotation,
     MirMirrorMode mirror_mode) -> bool
 {
-    if (!source || !gl_rendering_provider->as_texture(source))
+    if (!gl_rendering_provider->as_texture(source))
     {
         return false;
     }
