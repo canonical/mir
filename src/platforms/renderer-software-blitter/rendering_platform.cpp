@@ -35,7 +35,7 @@ auto mgsb::SoftwareBlitterRenderingPlatform::maybe_create_provider(mg::Rendering
         return std::make_shared<mgsb::SoftwareBlitterRenderingProvider>(
             dpy,
             ctx,
-            make_module_ptr<mge::BufferAllocator>(dpy, ctx, dmabuf_provider),
+            std::make_unique<mge::BufferAllocator>(dpy, ctx, dmabuf_provider),
             dmabuf_provider,
             egl_context_executor());
     }
