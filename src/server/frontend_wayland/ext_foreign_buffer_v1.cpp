@@ -162,7 +162,7 @@ void ExtForeignBufferSessionV1::get_buffer(wl_resource* buffer)
 void ExtForeignBufferSessionV1::maybe_capture_frame()
 {
     // TODO: We can probably get around this, but it is best saved for a later refactor:
-    // 
+    //
     // Backends report their initial damage from their own constructor, which runs before our
     // `backend` member has been assigned. We can safely defer this until afterward, because with
     // no buffer, there is no consumer to capture for, and the damage the backend is holding is
@@ -185,7 +185,7 @@ void ExtForeignBufferSessionV1::capture_frame()
     }
 
     // First, try to capture the frame via a zero-copy buffer.
-    // 
+    //
     // Passing `this` as the consumer id keeps the source stream's release bookkeeping
     // separate from any other consumer of the same surface.
     if (auto content = backend->acquire_content(this))
@@ -195,7 +195,7 @@ void ExtForeignBufferSessionV1::capture_frame()
     }
 
     // If acquiring a zero-copy buffer fails, then composite the content instead.
-    // 
+    //
     // TODO: guard against the capture/damage feedback loop for output sources. Compositing an
     // output renders every surface on it, including the consumer displaying this buffer, so
     // publishing new content damages the scene and immediately schedules another capture. The
