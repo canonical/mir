@@ -545,11 +545,10 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
             if (auto const foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value()))
             {
                 // The content is compositor-internal, so there is nothing to import through the
-                // allocator and nothing to release back to the requesting client. Registering as
-                // a consumer keeps the content current without the client re-committing.
+                // allocator and nothing to release back to the requesting client.
                 current_buffer = foreign_buffer->content();
                 current_foreign_buffer = mw::make_weak(foreign_buffer);
-                foreign_buffer->add_consumer(*this);
+                foreign_buffer->add_listener(*this);
                 executor_send_frame_callbacks();
             }
             else if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))

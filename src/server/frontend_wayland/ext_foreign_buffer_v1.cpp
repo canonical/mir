@@ -328,7 +328,7 @@ auto mf::ExtForeignBufferV1::content() const -> std::shared_ptr<mg::Buffer>
     return current;
 }
 
-void mf::ExtForeignBufferV1::add_consumer(WlSurface& surface)
+void mf::ExtForeignBufferV1::add_listener(WlSurface& surface)
 {
     auto const weak_surface = mw::make_weak(&surface);
     if (std::ranges::find(consumers, weak_surface) == consumers.end())

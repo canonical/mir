@@ -57,11 +57,7 @@ public:
     auto content() const -> std::shared_ptr<graphics::Buffer>;
 
     /// Register a surface to be refreshed whenever the compositor updates the content.
-    ///
-    /// The protocol requires the content to stay current once the buffer has been attached and
-    /// committed, so the compositor pushes each update to the surfaces displaying it rather than
-    /// waiting for the client to attach again. Registering the same surface twice is a no-op.
-    void add_consumer(WlSurface& surface);
+    void add_listener(WlSurface& surface);
 
     /// Replace the content and push the update to every registered consumer.
     void set_content(std::shared_ptr<graphics::Buffer> buffer);
