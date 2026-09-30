@@ -139,12 +139,12 @@ Tags can be specified by their full heirarchy (e.g. “base/graphics”) or by t
 
 Possible tags to filter on are:
  - base
- - base/input
- - base/wayland
  - base/graphics
- - base/window-management
+ - base/input
  - base/miral
  - base/miral/magnifier
+ - base/wayland
+ - base/window-management
 
 (global-mouse-cursor-acceleration)=
 ### `mouse-cursor-acceleration`
