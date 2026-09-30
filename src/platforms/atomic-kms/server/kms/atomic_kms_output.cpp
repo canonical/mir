@@ -15,6 +15,7 @@
  */
 
 #include "atomic_kms_output.h"
+#include "atomic_update.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
@@ -116,36 +117,6 @@ private:
     drmModePropertyBlobPtr const ptr;
 };
 
-class AtomicUpdate
-{
-public:
-    AtomicUpdate()
-        : req{drmModeAtomicAlloc()}
-    {
-        if (!req)
-        {
-            BOOST_THROW_EXCEPTION((
-                std::runtime_error{"Failed to allocate Atomic DRM update request"}));
-        }
-    }
-
-    ~AtomicUpdate()
-    {
-        drmModeAtomicFree(req);
-    }
-
-    operator drmModeAtomicReqPtr() const
-    {
-        return req;
-    }
-
-    void add_property(mgk::ObjectProperties const& properties, char const* prop_name, uint64_t value)
-    {
-        drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(prop_name), value);
-    }
-private:
-    drmModeAtomicReqPtr const req;
-};
 }
 
 class mga::AtomicKMSOutput::PropertyBlob
@@ -248,7 +219,7 @@ void mga::AtomicKMSOutput::reset()
             update.add_property(*conf->plane_props, "FB_ID", 0);
             update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-            if (auto err = drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+            if (auto err = update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET))
             {
                 mir::log_warning("Failed release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
             }
@@ -336,7 +307,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+    auto ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
@@ -388,7 +359,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     update.add_property(*conf->plane_props, "FB_ID", 0);
     update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-    auto result = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+    auto result = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
     if (result)
     {
         if (result == -EACCES || result == -EPERM)
@@ -462,11 +433,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    auto ret = drmModeAtomicCommit(
-        drm_fd_,
-        update,
-        0,
-        nullptr);
+    auto ret = update.commit(drm_fd_, 0);
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
@@ -574,7 +541,7 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
     {
         AtomicUpdate update;
         update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
-        if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+        if (auto err = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET))
         {
             mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
         }
@@ -620,7 +587,7 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     AtomicUpdate update;
 
     update.add_property(*conf->crtc_props, "GAMMA_LUT", lut.handle());
-    drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+    update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
 }
 
 void mga::AtomicKMSOutput::refresh_hardware_state()
@@ -637,7 +604,7 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
         update.add_property(*conf->plane_props, "FB_ID", 0);
         update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-        drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+        update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
 
         conf->connector_props = nullptr;
         conf->crtc_props = nullptr;
