@@ -22,4 +22,5 @@ target_link_libraries(mirrenderergl
     mircore
   PRIVATE
     mirgl
+    mirrenderercommon
 )
