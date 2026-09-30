@@ -40,6 +40,9 @@ namespace frontend
 {
 class ExtImageCopyCaptureSessionV1;
 
+/// An session for the [ExtImageCopyBackend] which gets informed when it should take
+/// some action, such as capturing a frame, updating its buffer constraints, or
+/// stopping.
 class ExtImageCopyBackendSession
 {
 public:

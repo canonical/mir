@@ -36,12 +36,10 @@ namespace
 {
 auto const foreign_buffer_format = mir_pixel_format_argb_8888;
 
-/// Buffers we hand to a client are sampled by the compositor while the next update is being
-/// rendered, so compositing must never target a buffer that anything else still references.
-class BufferRotation
+class BufferPool
 {
 public:
-    explicit BufferRotation(std::shared_ptr<mg::GraphicBufferAllocator> allocator) :
+    explicit BufferPool(std::shared_ptr<mg::GraphicBufferAllocator> allocator) :
         allocator{std::move(allocator)}
     {
     }
@@ -54,7 +52,6 @@ public:
             current_size = size;
         }
 
-        // A slot we are the sole owner of is neither published nor being sampled.
         auto const free_slot = std::ranges::find_if(buffers, [](auto const& b) { return b.use_count() == 1; });
         if (free_slot != buffers.end())
         {
@@ -115,7 +112,7 @@ public:
         mf::ExtImageCopyBackendFactory const& factory,
         std::shared_ptr<mg::GraphicBufferAllocator> const& allocator) :
         mw::ForeignBufferSessionV1(resource, Version<1>()),
-        rotation{allocator},
+        pool{allocator},
         backend{factory(this, false)}
     {
     }
@@ -130,10 +127,9 @@ public:
 
 private:
     void capture_frame();
-    void composite_frame();
     void publish(std::shared_ptr<mg::Buffer> buffer);
 
-    BufferRotation rotation;
+    BufferPool pool;
     mw::Weak<mf::ExtForeignBufferV1> foreign_buffer;
     /// Retained on the session so that a buffer requested after the source stopped (or after the
     /// client destroyed a previous one) still resolves to the last content we captured.
@@ -161,14 +157,8 @@ void ExtForeignBufferSessionV1::get_buffer(wl_resource* buffer)
     auto const created = new mf::ExtForeignBufferV1{buffer};
     invalidated = false;
 
-    // The difference between the [ExtForeignBufferSessionV1] and the [mf::ExtImageCopyCaptureSessionV1]
-    // is that this session will attempt to return a zero-copy, opaque buffer to the client. A
-    // zero-copy buffer is only available when the source is already backed by a single buffer, so
-    // anything else (an output, or a toplevel with subsurfaces) is composited into a buffer we
-    // allocate ourselves. Either way the client only ever receives an opaque handle.
-    //
-    // This runs before `created` is published so that publish() merely records the content: the
-    // client has to receive the size event describing it first.
+    // This runs before `created` is published so that publish() merely records the content.
+    // The client has to receive the size event describing it first.
     capture_frame();
 
     foreign_buffer = mw::make_weak(created);
@@ -206,6 +196,14 @@ void ExtForeignBufferSessionV1::capture_frame()
         return;
     }
 
+    // The difference between the [ExtForeignBufferSessionV1] and the [mf::ExtImageCopyCaptureSessionV1]
+    // is that this session will attempt to return a zero-copy, opaque buffer to the client. A
+    // zero-copy buffer is only available when the source is already backed by a single buffer, so
+    // anything else (an output, or a toplevel with subsurfaces) is composited into a buffer we
+    // allocate ourselves. Either way the client only ever receives an opaque handle.
+
+    // First, try and acquire the content directly.
+    // 
     // Passing `this` as the consumer id keeps the source stream's release bookkeeping
     // separate from any other consumer of the same surface.
     if (auto content = backend->acquire_content(this))
@@ -214,11 +212,8 @@ void ExtForeignBufferSessionV1::capture_frame()
         return;
     }
 
-    composite_frame();
-}
-
-void ExtForeignBufferSessionV1::composite_frame()
-{
+    // If acquiring the content directly fails, then composite the content instead.
+    // 
     // TODO: guard against the capture/damage feedback loop for output sources. Compositing an
     // output renders every surface on it, including the consumer displaying this buffer, so
     // publishing new content damages the scene and immediately schedules another capture. The
@@ -228,14 +223,13 @@ void ExtForeignBufferSessionV1::composite_frame()
     // src/miral/render_scene_into_surface.cpp), which needs an equivalent per-consumer exclusion
     // plumbed from WlSurface down to scene::Surface::generate_renderables.
 
-    // One capture at a time: a capture completes asynchronously, and damage may well arrive
-    // faster than we can service it.
+    // Skip a capture if
     if (capture_in_flight || !backend->has_damage() || source_size == geom::Size{})
     {
         return;
     }
 
-    auto const target = rotation.next(source_size);
+    auto const target = pool.next(source_size);
     capture_in_flight = true;
     backend->begin_capture(
         mrs::as_write_mappable(target),
