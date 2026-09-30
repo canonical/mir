@@ -30,7 +30,7 @@ mga::AtomicUpdate::AtomicUpdate()
     if (!req)
     {
         BOOST_THROW_EXCEPTION((
-            std::runtime_error{"Failed to allocate Atomic DRM update request"}));
+            AtomicUpdateError{"Failed to allocate Atomic DRM update request"}));
     }
 }
 

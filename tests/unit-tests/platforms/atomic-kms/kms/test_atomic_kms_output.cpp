@@ -44,6 +44,7 @@ constexpr int mode_height{1080};
 geom::Size const requested_mode_size{mode_width, mode_height};
 geom::Size const smaller_crtc_size{1280, 720};
 geom::Displacement const source_offset{17, 29};
+mg::GammaCurves const sample_gamma{{1}, {2}, {3}};
 
 auto kms_fixed_point(uint32_t value) -> uint64_t
 {
@@ -449,4 +450,21 @@ TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request_without_chang
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
     expect_failed_commit(mock_drm, 0, primary_request_properties(flip_framebuffer_id, 0, 0, false));
+}
+
+TEST_F(AtomicKMSOutputTest, gamma_allocation_failure_destroys_lut_blob)
+{
+    uint32_t const failed_gamma_lut_blob_id{900};
+    auto output_under_test = output();
+    Sequence destruction_order;
+    expect_gamma_blob_lifetime(failed_gamma_lut_blob_id, destruction_order);
+    EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id)).InSequence(destruction_order);
+    EXPECT_CALL(mock_drm, drmModeAtomicAlloc()).WillOnce(Return(nullptr));
+
+    EXPECT_NO_THROW(output_under_test->set_gamma(sample_gamma));
+    EXPECT_TRUE(mock_drm.atomic_requests().empty());
+    EXPECT_TRUE(mock_drm.atomic_commits().empty());
+    EXPECT_THAT(mock_drm.atomic_operations(), ElementsAre(AtomicOperation{AtomicOperationKind::allocate, 0, -1}));
+
+    output_under_test.reset();
 }

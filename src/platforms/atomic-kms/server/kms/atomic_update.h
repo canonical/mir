@@ -19,6 +19,8 @@
 
 #include <xf86drmMode.h>
 
+#include <stdexcept>
+
 namespace mir::graphics::kms
 {
 class ObjectProperties;
@@ -26,6 +28,12 @@ class ObjectProperties;
 
 namespace mir::graphics::atomic
 {
+class AtomicUpdateError : public std::runtime_error
+{
+public:
+    using std::runtime_error::runtime_error;
+};
+
 class AtomicUpdate
 {
 public:
