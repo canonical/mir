@@ -20,6 +20,7 @@
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_helpers.h>
+#include <mir/graphics/gl_format.h>
 #include <mir/graphics/pixel_format_utils.h>
 #include <mir/graphics/renderable.h>
 #include <mir/renderer/gl/gl_surface.h>
@@ -76,7 +77,7 @@ private:
     GLuint id{0};
 };
 
-using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
+using TexturebufferHandle = GLHandle<&glGenTextures, &glDeleteTextures>;
 using FramebufferHandle = GLHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
 
 auto create_current_context(EGLDisplay dpy, EGLContext share_ctx) -> EGLContext
@@ -135,7 +136,7 @@ public:
 
         // We're the current EGL context; destroy our GL resources...
         fbo_.reset();
-        colour_buffer_.reset();
+        texture_buffer_.reset();
 
         // Now release our context, and delete it.
         release_current();
@@ -154,17 +155,8 @@ public:
         auto mapping = fb_->map_writeable();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
 
-        auto const format = mapping->format();
-        GLenum pixel_layout = GL_INVALID_ENUM;
-        if (format == mir_pixel_format_argb_8888 || format == mir_pixel_format_xrgb_8888)
-        {
-            pixel_layout = GL_BGRA_EXT;
-        }
-        else if (format == mir_pixel_format_abgr_8888 || format == mir_pixel_format_xbgr_8888)
-        {
-            pixel_layout = GL_RGBA;
-        }
-        if (pixel_layout == GL_INVALID_ENUM)
+        GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
+        if (!mg::get_gl_pixel_format(mapping->format(), format, type))
         {
             BOOST_THROW_EXCEPTION((std::runtime_error{"Unsupported pixel format for software blitter output"}));
         }
@@ -172,22 +164,16 @@ public:
         glPixelStorei(GL_PACK_ALIGNMENT, 1); // Packed pixels on byte boundary
         glPixelStorei(
             GL_PACK_ROW_LENGTH,
-            mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(format)); // Row length (data + padding) in pixels
+            mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(fb_->format())); // Row length (data + padding) in pixels
 
         glReadPixels(
-            0,
-            0,
-            fb_->size().width.as_int(),
-            fb_->size().height.as_int(),
-            pixel_layout,
-            GL_UNSIGNED_BYTE,
-            mapping->data());
+            0, 0, fb_->size().width.as_int(), fb_->size().height.as_int(), format, GL_UNSIGNED_BYTE, mapping->data());
 
         glFinish();
 
         // Restore to initial configuration.
-        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+        glPixelStorei(GL_PACK_ALIGNMENT, 4);
 
         // In `wait_complete`, the result of `renderer.render` (this framebuffer) is unsued. So we
         // can safely return `nullptr` knowing that it will not be used anywhere.
@@ -196,7 +182,37 @@ public:
     auto size() const -> geom::Size override { return fb_->size(); }
     auto layout() const -> Layout override { return Layout::TopRowFirst; }
 
+    void upload_fb_contents()
+    {
+        // TODO: Is there a better way to read from this buffer?
+        auto const mapping = fb_->map_writeable();
+
+        GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
+        if (!mg::get_gl_pixel_format(mapping->format(), format, type))
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Unsupported pixel format for software blitter output"}));
+        }
+
+        // Upload data to bound texture.
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(fb_->format()));
+        glBindTexture(GL_TEXTURE_2D, texture_buffer_);
+        glTexSubImage2D(
+            GL_TEXTURE_2D,
+            0,
+            0,
+            0,
+            fb_->size().width.as_int(),
+            fb_->size().height.as_int(),
+            format,
+            type,
+            mapping->data());
+        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    }
+
 private:
+
     void ensure_storage_for_size()
     {
         auto const size = fb_->size();
@@ -205,10 +221,30 @@ private:
             return;
         }
 
-        glBindRenderbuffer(GL_RENDERBUFFER, colour_buffer_);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8_OES, size.width.as_int(), size.height.as_int());
+        GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
+        if (!mg::get_gl_pixel_format(fb_->format(), format, type))
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Unsupported pixel format for software blitter output"}));
+        }
+
+        glBindTexture(GL_TEXTURE_2D, texture_buffer_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            format,
+            fb_->size().width.as_int(),
+            fb_->size().height.as_int(),
+            0,
+            format,
+            type,
+            nullptr);
+
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colour_buffer_);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_buffer_, 0);
 
         auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -242,7 +278,7 @@ private:
     EGLDisplay const dpy_;
     EGLContext const ctx_;
     FramebufferHandle fbo_;
-    RenderbufferHandle colour_buffer_;
+    TexturebufferHandle texture_buffer_;
     geom::Size allocated_size;
 };
 }
@@ -254,7 +290,9 @@ public:
 
     auto create_output_surface(EGLDisplay dpy, EGLContext ctx) -> std::unique_ptr<MappableFBOutputSurface>
     {
-        return std::make_unique<MappableFBOutputSurface>(fb_, dpy, ctx);
+        auto surface = std::make_unique<MappableFBOutputSurface>(fb_, dpy, ctx);
+        surface->upload_fb_contents();
+        return surface;
     }
 
 private:
