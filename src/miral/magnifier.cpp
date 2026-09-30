@@ -182,8 +182,7 @@ struct Handles
     }
 };
 
-/// Tracks the last values received from live config so unchanged reloads do
-/// not overwrite runtime adjustments.
+/// Tracks the last values received from live config .
 struct Config
 {
     struct Values
