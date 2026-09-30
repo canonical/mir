@@ -20,7 +20,6 @@
 #include <mir/graphics/display_sink.h>
 #include <mir/renderer/gl/render_target.h>
 #include <mir/graphics/platform.h>
-#include <mir/graphics/rendering_providers.h>
 #include <mir/renderer/gl/gl_surface.h>
 #include <mir/graphics/gl_config.h>
 
@@ -32,23 +31,25 @@ namespace mc = mir::compositor;
 namespace mg = mir::graphics;
 
 mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory(
-    std::vector<std::shared_ptr<mg::GLRenderingProvider>> render_platforms,
+    std::vector<std::shared_ptr<mg::GLRenderingProvider>> gl_providers,
+    std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> blitter_providers,
     std::shared_ptr<mg::GLConfig> gl_config,
     std::shared_ptr<mir::renderer::RendererFactory> const& renderer_factory,
+    std::shared_ptr<mir::renderer::BlitterRendererFactory> const& blitter_renderer_factory,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mc::CompositorReport> const& report,
     std::shared_ptr<mg::OutputFilter> const& output_filter) :
-        platforms{std::move(render_platforms)},
-        gl_config{std::move(gl_config)},
-        renderer_factory{renderer_factory},
-        buffer_allocator{buffer_allocator},
-        report{report},
-        output_filter{output_filter}
-{
-}
+    gl_providers{std::move(gl_providers)},
+    blitter_providers{std::move(blitter_providers)},
+    gl_config{std::move(gl_config)},
+    renderer_factory{renderer_factory},
+    blitter_renderer_factory{blitter_renderer_factory},
+    buffer_allocator{buffer_allocator},
+    report{report},
+    output_filter{output_filter}
+{}
 
-std::unique_ptr<mc::DisplayBufferCompositor>
-mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
+std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     mg::DisplaySink& display_sink)
 {
     /* TODO: There's scope for (GPU) memory optimisation here:
@@ -64,14 +65,39 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     /* In a heterogeneous system, different providers may be better at driving a specific
      * display. Select the best one.
      */
-    std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider = std::make_pair(mg::probe::unsupported, nullptr);
-    for (auto const& provider : platforms)
+    std::pair<mg::probe::Result, std::shared_ptr<mg::GLRenderingProvider>> best_provider =
+        std::make_pair(mg::probe::unsupported, nullptr);
+    for (auto const& provider : gl_providers)
     {
         auto suitability = provider->suitability_for_display(display_sink);
         // We also need to make sure that the GLRenderingProvider can access client buffers...
-        if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported && suitability > best_provider.first)
+        if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported &&
+            suitability > best_provider.first)
         {
             best_provider = std::make_pair(suitability, provider);
+        }
+    }
+    mg::CPUAddressableDisplayAllocator* allocator;
+    if (best_provider.first <= mg::probe::supported &&
+        (allocator = display_sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>()))
+    {
+        std::pair<mg::probe::Result, std::shared_ptr<mg::BlitterRenderingProvider>> best_blitter_provider =
+            std::make_pair(mg::probe::unsupported, nullptr);
+        for (auto const& provider : blitter_providers)
+        {
+            auto suitability = provider->suitability_for_display(display_sink);
+            if (provider->suitability_for_allocator(buffer_allocator) > mg::probe::unsupported &&
+                suitability > best_blitter_provider.first)
+            {
+                best_blitter_provider = std::make_pair(suitability, provider);
+            }
+        }
+        if (best_blitter_provider.first > mg::probe::supported)
+        {
+            auto provider = best_blitter_provider.second;
+            auto renderer = blitter_renderer_factory->create_renderer_for(*allocator, provider);
+            return std::make_unique<DefaultDisplayBufferCompositor>(
+                display_sink, *provider, std::move(renderer), output_filter, report);
         }
     }
     if (best_provider.first == mg::probe::unsupported)
@@ -83,8 +109,7 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
 
     auto const chosen_allocator = best_provider.second;
 
-    auto output_surface = chosen_allocator->surface_for_sink(
-        display_sink, *gl_config);
+    auto output_surface = chosen_allocator->surface_for_sink(display_sink, *gl_config);
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_sink.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
