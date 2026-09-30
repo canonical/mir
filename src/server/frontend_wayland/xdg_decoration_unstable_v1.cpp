@@ -36,9 +36,9 @@ namespace mir
 {
 namespace frontend
 {
-/// Tracks, per toplevel, whether a decoration object is currently attached and the last mode that was
-/// negotiated. An entry outlives any single decoration object so the mode can be retained across a
-/// destroy+recreate that happens without an intervening commit (xdg-decoration v2 semantics).
+/// Tracks, per toplevel, whether a decoration object is currently attached, the mode negotiated but not
+/// yet committed, and the mode the surface actually has. An entry outlives any single decoration object so
+/// the committed mode can be retained across a destroy+recreate with no intervening commit (xdg-decoration v2).
 class ToplevelsWithDecorations
 {
 public:
@@ -51,9 +51,7 @@ public:
     {
         auto& state = toplevels[toplevel];
         if (state.live)
-        {
             return false;
-        }
         state.live = true;
         return true;
     }
@@ -63,9 +61,7 @@ public:
     {
         auto const it = toplevels.find(toplevel);
         if (it == toplevels.end() || !it->second.live)
-        {
             return false;
-        }
         it->second.live = false;
         return true;
     }
@@ -76,35 +72,51 @@ public:
         toplevels.erase(toplevel);
     }
 
-    /// The mode last negotiated for this toplevel, if any decoration has ever set one and it hasn't
-    /// since been forgotten by forget_mode_if_orphaned().
-    auto retained_mode(wl_resource* toplevel) const -> std::optional<DecorationStrategy::DecorationsType>
+    /// The mode the surface had at its last commit, if it hasn't since been reset by a commit with no
+    /// decoration attached.
+    auto committed_mode(wl_resource* toplevel) const -> std::optional<DecorationStrategy::DecorationsType>
     {
-        auto const it = toplevels.find(toplevel);
-        return it == toplevels.end() ? std::nullopt : it->second.mode;
+        if(auto const it = toplevels.find(toplevel); it != toplevels.end())
+            return it->second.committed;
+        return std::nullopt;
     }
 
-    void set_retained_mode(wl_resource* toplevel, DecorationStrategy::DecorationsType mode)
+    /// A mode has been negotiated; like other surface state it only takes effect on the next commit.
+    void set_pending_mode(wl_resource* toplevel, DecorationStrategy::DecorationsType mode)
     {
-        toplevels[toplevel].mode = mode;
+        toplevels[toplevel].pending = mode;
     }
 
-    /// Called on every commit of a toplevel that has ever had a decoration. A commit while no decoration
-    /// is attached means the retained mode must be forgotten (falls back to the compositor's default).
-    void forget_mode_if_orphaned(wl_resource* toplevel)
+    /// Called on every commit of a toplevel that has ever had a decoration.
+    /// \return true if server-side decorations must be removed in this commit.
+    bool surface_committed(wl_resource* toplevel)
     {
         auto const it = toplevels.find(toplevel);
-        if (it != toplevels.end() && !it->second.live)
+        if (it == toplevels.end())
+            return false;
+
+        auto& state = it->second;
+        if (state.live)
         {
-            it->second.mode.reset();
+            if (state.pending)
+                state.committed = std::exchange(state.pending, std::nullopt);
+            return false;
         }
+
+        // A commit with no decoration attached: the mode is assumed to be client-side again
+        auto const had_ssd = state.committed == DecorationStrategy::DecorationsType::ssd ||
+                             state.pending == DecorationStrategy::DecorationsType::ssd;
+        state.committed.reset();
+        state.pending.reset();
+        return had_ssd;
     }
 
 private:
     struct State
     {
         bool live{false};
-        std::optional<DecorationStrategy::DecorationsType> mode;
+        std::optional<DecorationStrategy::DecorationsType> pending;
+        std::optional<DecorationStrategy::DecorationsType> committed;
     };
 
     std::unordered_map<wl_resource*, State> toplevels;
@@ -207,12 +219,17 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
             toplevels_with_decorations->unregister_toplevel(toplevel);
         });
 
-    // A bare commit while no decoration is attached means the retained mode (if any) is no longer
-    // valid, per xdg-decoration v2: it must be re-negotiated from the compositor's default.
+    // Runs during handle_commit(), before the staged spec is applied, so changes made here land in this commit.
+    // The hook is owned by tl, so tl is always alive when it runs.
     tl->set_commit_hook(
-        [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
+        [toplevels_with_decorations = this->toplevels_with_decorations, toplevel, tl]()
         {
-            toplevels_with_decorations->forget_mode_if_orphaned(toplevel);
+            if (toplevels_with_decorations->surface_committed(toplevel))
+            {
+                shell::SurfaceSpecification spec;
+                spec.server_side_decorated = false;
+                tl->apply_spec(spec);
+            }
         });
 
     tl->add_destroy_listener(
@@ -302,7 +319,7 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
     }
 
     this->toplevel->apply_spec(spec);
-    toplevels_with_decorations->set_retained_mode(toplevel_resource, new_type);
+    toplevels_with_decorations->set_pending_mode(toplevel_resource, new_type);
 
     auto const strategy_new_mode = to_mode(new_type);
     send_configure_event(strategy_new_mode);
@@ -315,10 +332,10 @@ void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
 
 void mir::frontend::XdgToplevelDecorationV1::unset_mode()
 {
-    // Retain whatever mode was last negotiated for this toplevel (e.g. across a destroy+recreate with
-    // no intervening commit, per xdg-decoration v2); otherwise fall back to the compositor's default.
+    // Keep the mode the surface actually has (e.g. retained across a destroy+recreate with no intervening
+    // commit, per xdg-decoration v2); otherwise fall back to the compositor's default.
     auto const default_type =
-        toplevels_with_decorations->retained_mode(toplevel_resource).value_or(decoration_strategy->default_style());
+        toplevels_with_decorations->committed_mode(toplevel_resource).value_or(decoration_strategy->default_style());
     auto const protocol_mode = to_mode(default_type);
     update_mode(protocol_mode);
 }
