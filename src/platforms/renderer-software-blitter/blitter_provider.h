@@ -43,7 +43,7 @@ public:
     SoftwareBlitterRenderingProvider(
         EGLDisplay dpy,
         EGLContext ctx,
-        UniqueModulePtr<mir::graphics::egl::generic::BufferAllocator> allocator,
+        std::unique_ptr<mir::graphics::egl::generic::BufferAllocator> allocator,
         std::shared_ptr<DMABufEGLProvider> dmabuf_provider,
         std::shared_ptr<common::EGLContextExecutor> egl_delegate);
 
@@ -74,7 +74,7 @@ public:
     auto make_framebuffer_provider(DisplaySink& sink) -> std::unique_ptr<FramebufferProvider> override;
 
 private:
-    UniqueModulePtr<GraphicBufferAllocator> allocator;
+    std::unique_ptr<GraphicBufferAllocator> allocator;
     std::shared_ptr<mir::graphics::egl::generic::GLRenderingProvider> gl_rendering_provider;
     EGLDisplay const dpy;
     EGLContext const ctx;
