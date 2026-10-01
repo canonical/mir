@@ -89,7 +89,7 @@ public:
     explicit Strategy(Settings const& settings) : settings{settings} {}
 
     void apply_configuration(std::span<mg::UserDisplayConfigurationOutput> outputs) override;
-    void confirm_configuration(std::span<mg::UserDisplayConfigurationOutput const> outputs) override;
+    void confirm_configuration(std::span<mg::DisplayConfigurationOutput const> outputs) override;
 
 private:
     using Layout = Settings::Layout;
@@ -127,7 +127,7 @@ void OutputConfigurationOptions::Strategy::apply_configuration(std::span<mg::Use
     }
 }
 
-void OutputConfigurationOptions::Strategy::confirm_configuration(std::span<mg::UserDisplayConfigurationOutput const>)
+void OutputConfigurationOptions::Strategy::confirm_configuration(std::span<mg::DisplayConfigurationOutput const>)
 {
 }
 

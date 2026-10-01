@@ -45,7 +45,7 @@ auto power_mode_name(MirPowerMode power_mode) -> char const*
     }
 }
 
-void log_configuration(char const* source, std::span<mg::UserDisplayConfigurationOutput const> outputs)
+void log_configuration(char const* source, auto const& outputs)
 {
     if (outputs.empty())
     {
@@ -159,13 +159,11 @@ public:
             wrapped->confirm(conf);
         }
 
-        std::vector<mir::graphics::UserDisplayConfigurationOutput> outputs;
+        std::vector<mir::graphics::DisplayConfigurationOutput> outputs;
 
         conf.for_each_output([&](mg::DisplayConfigurationOutput const& output)
         {
-            // We need to populate the vector with non-const references to the outputs,
-            // but we never share non-const references to the outputs outside this function
-            outputs.emplace_back(const_cast<mg::DisplayConfigurationOutput&>(output)); //TICS !cppcoreguidelines-pro-type-const-cast
+            outputs.emplace_back(output);
         });
 
         log_configuration("after ", outputs);
@@ -187,7 +185,7 @@ void miral::OutputConfiguration::NullStrategy::apply_configuration(std::span<mg:
     // Do nothing
 }
 
-void miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mg::UserDisplayConfigurationOutput const>)
+void miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mg::DisplayConfigurationOutput const>)
 {
     // Do nothing
 }

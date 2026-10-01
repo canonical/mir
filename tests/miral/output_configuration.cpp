@@ -57,7 +57,7 @@ struct TestStrategy : miral::OutputConfiguration::Strategy
         applied.raise();
     }
 
-    void confirm_configuration(std::span<mg::UserDisplayConfigurationOutput const> outputs) override
+    void confirm_configuration(std::span<mg::DisplayConfigurationOutput const> outputs) override
     {
         confirmed_outputs = outputs.size();
         confirmed.raise();

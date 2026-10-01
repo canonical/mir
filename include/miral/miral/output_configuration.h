@@ -72,11 +72,11 @@ public:
     /// \param outputs the modifiable output configuration data
     virtual void apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput> outputs) = 0;
 
-    /// Called after the server has applied a new configuration. The strategy can record the configuration
-    /// that was applied, for example to write it to a log or a file.
+    /// Called when the server applies a new configuration. The strategy can record the configuration,
+    /// for example to write it to a log or a file.
     ///
     /// \param outputs the new configuration
-    virtual void confirm_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput const> outputs) = 0;
+    virtual void confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const> outputs) = 0;
     virtual ~Strategy();
 
 private:
@@ -90,7 +90,7 @@ class OutputConfiguration::NullStrategy : public Strategy
 {
 public:
     void apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput> outputs) override;
-    void confirm_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput const> outputs) override;
+    void confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const> outputs) override;
     ~NullStrategy() override;
 };
 
