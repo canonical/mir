@@ -72,7 +72,7 @@ public:
 
     void for_each_display_sink(
         std::function<void(graphics::DisplaySink&)> const& f) override;
-    void post() override;
+    bool post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
     auto x11_window() const -> xcb_window_t;

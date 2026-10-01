@@ -72,7 +72,7 @@ public:
 
     void for_each_display_sink(
         std::function<void(graphics::DisplaySink&)> const& f) override;
-    void post() override;
+    bool post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
     glm::mat2 transformation() const override;
@@ -90,7 +90,7 @@ protected:
 
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
-    void set_crtc(FBHandle const&);
+    bool set_crtc(FBHandle const&);
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};

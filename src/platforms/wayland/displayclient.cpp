@@ -89,7 +89,7 @@ public:
 
     // DisplaySyncGroup implementation
     void for_each_display_sink(std::function<void(DisplaySink&)> const& f) override;
-    void post() override;
+    bool post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
     // DisplaySink implementation
@@ -329,7 +329,7 @@ void mgw::DisplayClient::Output::for_each_display_sink(std::function<void(Displa
     f(*this);
 }
 
-void mgw::DisplayClient::Output::post()
+bool mgw::DisplayClient::Output::post()
 {
     struct FrameSync
     {
@@ -391,6 +391,7 @@ void mgw::DisplayClient::Output::post()
     // ...so we need external synchronisation to throttle rendering.
     // Wait for the host compositor to tell us to render.
     frame_sync->wait_for_done();
+    return true;
 }
 
 auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milliseconds

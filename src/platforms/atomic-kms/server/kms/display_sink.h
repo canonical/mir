@@ -101,7 +101,7 @@ public:
 
     void for_each_display_sink(
         std::function<void(graphics::DisplaySink&)> const& f) override;
-    void post() override;
+    bool post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
     glm::mat2 transformation() const override;
@@ -117,7 +117,7 @@ protected:
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
 
 private:
-    void set_crtc(FBHandle const&);
+    bool set_crtc(FBHandle const&);
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
