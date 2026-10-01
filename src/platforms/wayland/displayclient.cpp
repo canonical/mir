@@ -89,12 +89,14 @@ public:
 
     // DisplaySyncGroup implementation
     void for_each_display_sink(std::function<void(DisplaySink&)> const& f) override;
-    void post() override;
+    bool post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
     // DisplaySink implementation
     auto view_area() const -> geometry::Rectangle override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
+    auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+        -> std::optional<LogicalStacking> override;
     auto transformation() const -> glm::mat2 override;
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
@@ -327,7 +329,7 @@ void mgw::DisplayClient::Output::for_each_display_sink(std::function<void(Displa
     f(*this);
 }
 
-void mgw::DisplayClient::Output::post()
+bool mgw::DisplayClient::Output::post()
 {
     struct FrameSync
     {
@@ -389,6 +391,7 @@ void mgw::DisplayClient::Output::post()
     // ...so we need external synchronisation to throttle rendering.
     // Wait for the host compositor to tell us to render.
     frame_sync->wait_for_done();
+    return true;
 }
 
 auto mgw::DisplayClient::Output::recommended_sleep() const -> std::chrono::milliseconds
@@ -405,6 +408,10 @@ bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
 {
     return false;
 }
+
+auto mgw::DisplayClient::Output::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
 
 auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
 {

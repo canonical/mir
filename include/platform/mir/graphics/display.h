@@ -59,8 +59,12 @@ public:
     /** Post the content of the DisplayBuffers associated with this DisplaySyncGroup.
      *  The content of all the DisplayBuffers in this DisplaySyncGroup are guaranteed to be onscreen
      *  in the near future. On some platforms, this may wait a potentially long time for vsync.
+     *
+     *  \returns
+     *      True if the platform accepted the new content or if there was no new content to show.
+     *      False if presentation failed. The caller must decide how to recover.
     **/
-    virtual void post() = 0;
+    [[nodiscard]] virtual bool post() = 0;
 
     /**
      * Returns a recommendation to the compositor as to how long it should

@@ -34,6 +34,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 #include <gbm.h>
+#include <optional>
 
 using namespace testing;
 using namespace mir;
@@ -220,6 +221,67 @@ TEST_F(MesaDisplaySinkTest, untransformed_with_bypassable_list_can_bypass)
 
     EXPECT_TRUE(sink.overlay(bypassable_list));
 }
+
+namespace
+{
+struct PostCase
+{
+    bool flip_ok;
+    std::optional<bool> crtc_ok;
+    bool expected;
+    int wait_count;
+};
+
+class MesaPostResult : public MesaDisplaySinkTest, public WithParamInterface<PostCase>
+{
+};
+}
+
+TEST_P(MesaPostResult, post_reports_presentation_result)
+{
+    auto const& param = GetParam();
+    graphics::gbm::DisplaySink sink(
+        drm_fd,
+        gbm,
+        graphics::gbm::BypassOption::allowed,
+        null_display_report(),
+        mock_kms_output,
+        display_area,
+        identity);
+    ASSERT_TRUE(sink.overlay(bypassable_list));
+
+    if (!param.crtc_ok.has_value())
+    {
+        EXPECT_CALL(*mock_kms_output, set_crtc_thunk(_))
+            .Times(0);
+    }
+
+    InSequence sequence;
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(Eq(bypass_framebuffer.get())))
+        .WillOnce(Return(param.flip_ok));
+    if (param.crtc_ok.has_value())
+    {
+        EXPECT_CALL(*mock_kms_output, set_crtc_thunk(Eq(bypass_framebuffer.get())))
+            .WillOnce(Return(*param.crtc_ok));
+    }
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(param.wait_count);
+
+    EXPECT_EQ(param.expected, sink.post());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Presentation,
+    MesaPostResult,
+    Values(PostCase{true, std::nullopt, true, 1}, PostCase{false, false, false, 0}, PostCase{false, true, true, 0}),
+    [](TestParamInfo<PostCase> const& info)
+    {
+        if (info.param.flip_ok)
+        {
+            return "page_flip_succeeds";
+        }
+        return info.param.crtc_ok.value_or(false) ? "set_crtc_recovers" : "presentation_fails";
+    });
 
 namespace
 {

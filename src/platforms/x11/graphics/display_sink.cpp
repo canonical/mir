@@ -74,6 +74,10 @@ auto mgx::DisplaySink::overlay(std::vector<DisplayElement> const& /*renderlist*/
     return false;
 }
 
+auto mgx::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
+
 namespace
 {
 template<typename To, typename From>
@@ -115,10 +119,11 @@ void mgx::DisplaySink::for_each_display_sink(std::function<void(graphics::Displa
     f(*this);
 }
 
-void mgx::DisplaySink::post()
+bool mgx::DisplaySink::post()
 {
     next_frame->swap_buffers();
     next_frame.reset();
+    return true;
 }
 
 std::chrono::milliseconds mgx::DisplaySink::recommended_sleep() const
