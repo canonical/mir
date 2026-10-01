@@ -17,7 +17,7 @@
 #ifndef MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H_
 #define MIR_GRAPHICS_RENDERING_SOFTWARE_BLITTER_H_
 
-#include "renderer-generic-egl/rendering_platform.h"
+#include <common/egl/rendering_platform.h>
 
 #include <memory>
 

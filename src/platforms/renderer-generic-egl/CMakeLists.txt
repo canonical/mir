@@ -4,29 +4,6 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/symbols.map.in
 set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 
 add_library(
-  mirplatformrenderereglgenericobjects OBJECT
-
-  platform_symbols.cpp
-)
-
-target_link_libraries(
-  mirplatformrenderereglgenericobjects
-
-  PUBLIC
-    mirplatform
-    PkgConfig::EGL
-    PkgConfig::GLESv2
-    PkgConfig::WAYLAND_SERVER
-)
-
-target_include_directories(
-  mirplatformrenderereglgenericobjects
-
-  PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/..
-)
-
-add_library(
   mirplatformrenderereglgeneric MODULE
 
   platform_symbols.cpp
