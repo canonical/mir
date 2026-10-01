@@ -17,6 +17,8 @@ add_library(graphics_platform_common STATIC
     quirk_common.cpp
     ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_helpers.h
     egl_helpers.cpp
+    egl_dmabuf_import.cpp
+    ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_dmabuf_import.h
 )
 
 target_include_directories(graphics_platform_common
