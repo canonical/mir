@@ -24,6 +24,7 @@
 #include <boost/throw_exception.hpp>
 #include <cstring>
 #include <stdexcept>
+#include <string>
 #include <vector>
 
 namespace mg = mir::graphics;
@@ -32,20 +33,25 @@ namespace mrb = mir::renderer::blitter;
 namespace
 {
 /// Find an EGLDevice backed by a software rasteriser
-/// 
+///
 /// \returns  The first device advertising EGL_MESA_device_software, or
 ///           EGL_NO_DEVICE_EXT if there is none.
 auto find_software_device() -> EGLDeviceEXT
 {
-    if (!mg::has_egl_client_extension("EGL_EXT_device_enumeration") &&
-        !mg::has_egl_client_extension("EGL_EXT_device_base"))
+    // EGL_EXT_device_base is the union of EGL_EXT_device_enumeration and EGL_EXT_device_query
+    auto const has_device_base = mg::has_egl_client_extension("EGL_EXT_device_base");
+    if (!has_device_base &&
+        (!mg::has_egl_client_extension("EGL_EXT_device_enumeration") ||
+         !mg::has_egl_client_extension("EGL_EXT_device_query")))
     {
         return EGL_NO_DEVICE_EXT;
     }
 
     auto const egl_query_devices =
         reinterpret_cast<PFNEGLQUERYDEVICESEXTPROC>(eglGetProcAddress("eglQueryDevicesEXT")); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: this is how EGL extension entrypoints are resolved
-    if (!egl_query_devices)
+    auto const egl_query_device_string =
+        reinterpret_cast<PFNEGLQUERYDEVICESTRINGEXTPROC>(eglGetProcAddress("eglQueryDeviceStringEXT")); //TICS !cppcoreguidelines-pro-type-reinterpret-cast: this is how EGL extension entrypoints are resolved
+    if (!egl_query_devices || !egl_query_device_string)
     {
         return EGL_NO_DEVICE_EXT;
     }
@@ -63,10 +69,9 @@ auto find_software_device() -> EGLDeviceEXT
     }
     devices.resize(num_devices);
 
-    mg::EGLExtensions::DeviceQuery const device_query;
     for (auto const device : devices)
     {
-        auto const* const extensions = device_query.eglQueryDeviceStringEXT(device, EGL_EXTENSIONS);
+        auto const* const extensions = egl_query_device_string(device, EGL_EXTENSIONS);
         if (extensions && std::strstr(extensions, "EGL_MESA_device_software"))
         {
             return device;
@@ -113,6 +118,19 @@ auto create_software_display() -> EGLDisplay
     BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to find an EGL device for blitter fallback rendering"}));
 }
 
+void require_display_extensions(EGLDisplay dpy)
+{
+    for (auto const* const extension :
+         {"EGL_KHR_no_config_context", "EGL_KHR_surfaceless_context", "EGL_EXT_image_dma_buf_import"})
+    {
+        if (!mg::has_egl_extension(dpy, extension))
+        {
+            BOOST_THROW_EXCEPTION((std::runtime_error{
+                std::string{"EGL implementation missing necessary "} + extension + " extension"}));
+        }
+    }
+}
+
 auto initialise_display(EGLDisplay dpy) -> EGLDisplay
 {
     EGLint major{0}, minor{0};
@@ -121,20 +139,14 @@ auto initialise_display(EGLDisplay dpy) -> EGLDisplay
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL display"));
     }
 
-    if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
+    try
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{
-            "EGL implementation missing necessary EGL_KHR_no_config_context extension"}));
+        require_display_extensions(dpy);
     }
-    if (!mg::has_egl_extension(dpy, "EGL_KHR_surfaceless_context"))
+    catch (...)
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{
-            "EGL implementation missing necessary EGL_KHR_surfaceless_context extension"}));
-    }
-    if (!mg::has_egl_extension(dpy, "EGL_EXT_image_dma_buf_import"))
-    {
-        BOOST_THROW_EXCEPTION((std::runtime_error{
-            "EGL implementation missing necessary EGL_EXT_image_dma_buf_import extension"}));
+        eglTerminate(dpy);
+        throw;
     }
 
     return dpy;
@@ -151,7 +163,10 @@ auto create_context(EGLDisplay dpy) -> EGLContext
     auto const ctx = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, context_attr);
     if (ctx == EGL_NO_CONTEXT)
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
+        // Capture the EGL error before eglTerminate() can overwrite it
+        auto const error = mg::egl_error("Failed to create EGL context");
+        eglTerminate(dpy);
+        BOOST_THROW_EXCEPTION(error);
     }
     return ctx;
 }
@@ -162,7 +177,16 @@ mrb::SoftwareEGLContext::SoftwareEGLContext()
       ctx{create_context(dpy)},
       exts{std::make_unique<mg::EGLExtensions>()}
 {
-    make_current();
+    try
+    {
+        make_current();
+    }
+    catch (...)
+    {
+        eglDestroyContext(dpy, ctx);
+        eglTerminate(dpy);
+        throw;
+    }
 }
 
 mrb::SoftwareEGLContext::~SoftwareEGLContext()

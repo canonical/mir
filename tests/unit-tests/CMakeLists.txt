@@ -100,6 +100,7 @@ add_subdirectory(input/)
 add_subdirectory(logging/)
 add_subdirectory(options/)
 add_subdirectory(platforms/)
+add_subdirectory(renderers/blitter)
 add_subdirectory(renderers/gl)
 add_subdirectory(scene/)
 add_subdirectory(shell/)
@@ -161,6 +162,7 @@ target_link_libraries(
   exampleserverconfig
   mircommon
   graphics_platform_common
+  mirrendererblitter
 
   mir-test-static
   mir-test-framework-static

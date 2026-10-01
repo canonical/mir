@@ -17,9 +17,9 @@ target_include_directories(
 target_link_libraries(mirrendererblitter
   PUBLIC
     mircore
+    mirrenderercommon
   PRIVATE
     mirgl
-    mirrenderercommon
     PkgConfig::EGL
     PkgConfig::GLESv2
 )

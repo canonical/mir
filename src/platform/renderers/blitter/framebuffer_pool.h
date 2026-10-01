@@ -72,15 +72,18 @@ public:
         void bind();
         auto size() const -> geometry::Size;
 
-        /// The blitter's handle to this framebuffer; empty while a Task holds it
-        std::unique_ptr<graphics::BlitterRenderingProvider::Surface> surface;
-
     private:
         std::shared_ptr<SoftwareEGLContext> const context;
         std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const fb;
         common::TextureHandle texture;
         common::FramebufferHandle fbo;
         RenderbufferHandle depth_stencil_buffer;
+
+    public:
+        /// The blitter's handle to this framebuffer; empty while a Task holds it
+        ///
+        /// Declared after \ref fb so that it is destroyed before the framebuffer it targets.
+        std::unique_ptr<graphics::BlitterRenderingProvider::Surface> surface;
     };
 
     /// A pooled framebuffer, acquired via [acquire].
@@ -94,7 +97,7 @@ public:
     struct Self;
 
     /// Acquire a framebuffer, recycling a free one if available.
-    /// 
+    ///
     /// The framebuffer is automatically returned to the pool when the
     /// object is destroyed.
     ///

@@ -66,9 +66,9 @@ mrb::FramebufferPool::Entry::Entry(
     std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
     std::unique_ptr<mg::BlitterRenderingProvider::Surface> surface,
     bool with_depth_stencil) :
-    surface{std::move(surface)},
     context{std::move(context)},
-    fb{std::move(fb)}
+    fb{std::move(fb)},
+    surface{std::move(surface)}
 {
     this->context->make_current();
 
