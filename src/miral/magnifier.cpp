@@ -1010,7 +1010,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         auto const pending = self->pending_config();
         auto const current = self->current_config();
 
-        auto const changed = [&](auto const& pending_value, auto const& current_value)
+        auto const changed = [](auto const& pending_value, auto const& current_value)
         { return pending_value.has_value() && *pending_value != current_value; };
 
         if (changed(pending.enable, current.enable))
