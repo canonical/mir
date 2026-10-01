@@ -17,6 +17,7 @@
 #include "blitter_provider.h"
 
 #include <mir/graphics/display_providers.h>
+#include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_helpers.h>
@@ -106,145 +107,17 @@ class MappableFBOutputSurface : public mg::gl::OutputSurface
 {
 public:
     explicit MappableFBOutputSurface(
-        std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
+        std::shared_ptr<mg::DMABufBuffer> dmabuf,
+        std::shared_ptr<mg::DMABufEGLProvider> const& dmabuf_provider,
         EGLDisplay dpy,
         EGLContext ctx) :
-        fb_{fb},
+        dmabuf_{dmabuf},
         dpy_{dpy},
-        ctx_{create_current_context(dpy, ctx)}
+        ctx_{create_current_context(dpy, ctx)},
+        texture_{dmabuf_provider->as_texture(std::move(dmabuf))}
     {
-        ensure_storage_for_size();
-    }
-
-    ~MappableFBOutputSurface() override
-    {
-        // Capture current EGL state to restore, if the current context is not the one we're destroying
-        auto const egl_restore = [this]() -> std::optional<mgc::CacheEglState>
-        {
-            if (ctx_ != eglGetCurrentContext())
-            {
-                // We're not current; capture the current state...
-                auto current_state = mgc::CacheEglState{};
-                // ...then *make* us current, so we can release our resources
-                make_current();
-                return current_state;
-            }
-
-            // We *are* the current context; we don't need to restore EGL state
-            return std::nullopt;
-        }();
-
-        // We're the current EGL context; destroy our GL resources...
-        fbo_.reset();
-        texture_buffer_.reset();
-
-        // Now release our context, and delete it.
-        release_current();
-        eglDestroyContext(dpy_, ctx_);
-    }
-
-    void bind() override
-    {
-        ensure_storage_for_size();
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-    }
-    void make_current() override { eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_); }
-    void release_current() override { eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT); }
-    auto commit() -> std::unique_ptr<mg::Framebuffer> override
-    {
-        auto mapping = fb_->map_writeable();
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-
-        GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
-        if (!mg::get_gl_pixel_format(mapping->format(), format, type))
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Unsupported pixel format for software blitter output"}));
-        }
-
-        glPixelStorei(GL_PACK_ALIGNMENT, 1); // Packed pixels on byte boundary
-        glPixelStorei(
-            GL_PACK_ROW_LENGTH,
-            mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(fb_->format())); // Row length (data + padding) in pixels
-
-        glReadPixels(
-            0, 0, fb_->size().width.as_int(), fb_->size().height.as_int(), format, GL_UNSIGNED_BYTE, mapping->data());
-
-        glFinish();
-
-        // Restore to initial configuration.
-        glPixelStorei(GL_PACK_ROW_LENGTH, 0);
-        glPixelStorei(GL_PACK_ALIGNMENT, 4);
-
-        // In `wait_complete`, the result of `renderer.render` (this framebuffer) is unsued. So we
-        // can safely return `nullptr` knowing that it will not be used anywhere.
-        return nullptr;
-    }
-    auto size() const -> geom::Size override { return fb_->size(); }
-    auto layout() const -> Layout override { return Layout::TopRowFirst; }
-
-    void upload_fb_contents()
-    {
-        // TODO: Is there a better way to read from this buffer?
-        auto const mapping = fb_->map_writeable();
-
-        GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
-        if (!mg::get_gl_pixel_format(mapping->format(), format, type))
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Unsupported pixel format for software blitter output"}));
-        }
-
-        // Upload data to bound texture.
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(fb_->format()));
-        glBindTexture(GL_TEXTURE_2D, texture_buffer_);
-        glTexSubImage2D(
-            GL_TEXTURE_2D,
-            0,
-            0,
-            0,
-            fb_->size().width.as_int(),
-            fb_->size().height.as_int(),
-            format,
-            type,
-            mapping->data());
-        glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-    }
-
-private:
-
-    void ensure_storage_for_size()
-    {
-        auto const size = fb_->size();
-        if (size == allocated_size)
-        {
-            return;
-        }
-
-        GLenum format = GL_INVALID_ENUM, type = GL_INVALID_ENUM;
-        if (!mg::get_gl_pixel_format(fb_->format(), format, type))
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Unsupported pixel format for software blitter output"}));
-        }
-
-        glBindTexture(GL_TEXTURE_2D, texture_buffer_);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            format,
-            fb_->size().width.as_int(),
-            fb_->size().height.as_int(),
-            0,
-            format,
-            type,
-            nullptr);
-
-        glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_buffer_, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture_->tex_id(), 0);
 
         auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (status != GL_FRAMEBUFFER_COMPLETE)
@@ -270,16 +143,54 @@ private:
                     std::string{"Unknown GL framebuffer error code: "} + std::to_string(status)}));
             }
         }
-
-        allocated_size = size;
     }
 
-    std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb_;
+    ~MappableFBOutputSurface() override
+    {
+        // Capture current EGL state to restore, if the current context is not the one we're destroying
+        auto const egl_restore = [this]() -> std::optional<mgc::CacheEglState>
+        {
+            if (ctx_ != eglGetCurrentContext())
+            {
+                // We're not current; capture the current state...
+                auto current_state = mgc::CacheEglState{};
+                // ...then *make* us current, so we can release our resources
+                make_current();
+                return current_state;
+            }
+
+            // We *are* the current context; we don't need to restore EGL state
+            return std::nullopt;
+        }();
+
+        // We're the current EGL context; destroy our GL resources...
+        fbo_.reset();
+        texture_.reset();
+
+        // Now release our context, and delete it.
+        release_current();
+        eglDestroyContext(dpy_, ctx_);
+    }
+
+    void bind() override { glBindFramebuffer(GL_FRAMEBUFFER, fbo_); }
+    void make_current() override { eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx_); }
+    void release_current() override { eglMakeCurrent(dpy_, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT); }
+    auto commit() -> std::unique_ptr<mg::Framebuffer> override
+    {
+        glFinish();
+        // In `wait_complete`, the result of `renderer.render` (this framebuffer) is unsued. So we
+        // can safely return `nullptr` knowing that it will not be used anywhere.
+        return nullptr;
+    }
+    auto size() const -> geom::Size override { return dmabuf_->size(); }
+    auto layout() const -> Layout override { return Layout::TopRowFirst; }
+
+private:
+    std::shared_ptr<mg::DMABufBuffer> dmabuf_;
     EGLDisplay const dpy_;
     EGLContext const ctx_;
     FramebufferHandle fbo_;
-    TexturebufferHandle texture_buffer_;
-    geom::Size allocated_size;
+    std::shared_ptr<mg::gl::Texture> texture_;
 };
 }
 
@@ -288,10 +199,15 @@ class mg::BlitterRenderingProvider::Surface
 public:
     explicit Surface(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> fb) : fb_{std::move(fb)} {};
 
-    auto create_output_surface(EGLDisplay dpy, EGLContext ctx) -> std::unique_ptr<MappableFBOutputSurface>
+    auto create_output_surface(
+        EGLDisplay dpy,
+        EGLContext ctx,
+        std::shared_ptr<mg::DMABufEGLProvider> const& dmabuf_provider) -> std::unique_ptr<MappableFBOutputSurface>
     {
-        auto surface = std::make_unique<MappableFBOutputSurface>(fb_, dpy, ctx);
-        surface->upload_fb_contents();
+        // TODO: Casting `const` away, not good.
+        std::shared_ptr<DMABufBuffer> dmabuf{
+            fb_, const_cast<DMABufBuffer*>(fb_->as_dmabuf())}; // TICS -cppcoreguidelines-pro-type-const-cast
+        auto surface = std::make_unique<MappableFBOutputSurface>(dmabuf, dmabuf_provider, dpy, ctx);
         return surface;
     }
 
@@ -430,7 +346,8 @@ mgsb::SoftwareBlitterRenderingProvider::SoftwareBlitterRenderingProvider(
     allocator{std::move(allocator)},
     gl_rendering_provider{std::make_shared<mge::GLRenderingProvider>(dpy, ctx, dmabuf_provider, egl_delegate)},
     dpy{dpy},
-    ctx{ctx}
+    ctx{ctx},
+    dmabuf_provider{std::move(dmabuf_provider)}
 {}
 
 auto mgsb::SoftwareBlitterRenderingProvider::create_task(std::unique_ptr<Surface> surface) -> std::unique_ptr<Task>
@@ -441,7 +358,7 @@ auto mgsb::SoftwareBlitterRenderingProvider::create_task(std::unique_ptr<Surface
 auto mgsb::SoftwareBlitterRenderingProvider::wait_complete(std::unique_ptr<Task> task) -> std::unique_ptr<Surface>
 {
     auto surface = task->take_surface();
-    auto output_surface = surface->create_output_surface(dpy, ctx);
+    auto output_surface = surface->create_output_surface(dpy, ctx, dmabuf_provider);
     auto const size = output_surface->size();
     mir::renderer::gl::Renderer renderer{gl_rendering_provider, std::move(output_surface)};
     renderer.set_viewport({{0, 0}, size});
