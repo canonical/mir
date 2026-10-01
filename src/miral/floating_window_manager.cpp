@@ -386,26 +386,39 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
         break;
     }
 
-    if (!consumes_event && action == mir_pointer_action_button_down)
+    if (!consumes_event)
     {
-        if (auto const window = tools.window_at(new_cursor))
+        switch (action)
         {
-            tools.select_active_window(window);
-        }
-
-        if (auto const window = tools.active_window())
-        {
+        case mir_pointer_action_button_down:
             if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
             {
                 if (shift_keys == pointer_drag_modifier)
                 {
-                    begin_pointer_gesture(
-                        tools.info_for(window),
-                        mir_pointer_event_input_event(event),
-                        Gesture::pointer_moving, mir_resize_edge_none);
-                    consumes_event = true;
+                    if (auto const hint = tools.window_at(new_cursor))
+                    {
+                        tools.select_active_window(hint);
+
+                        if (auto const window = tools.active_window())
+                        {
+                            begin_pointer_gesture(
+                                tools.info_for(window),
+                                mir_pointer_event_input_event(event),
+                                Gesture::pointer_moving, mir_resize_edge_none);
+                            consumes_event = true;
+                        }
+                    }
                 }
             }
+            break;
+        case mir_pointer_action_button_up:
+            if (auto const window = tools.window_at(new_cursor))
+            {
+                tools.select_active_window(window);
+            }
+            break;
+        default:
+            break;
         }
     }
 
