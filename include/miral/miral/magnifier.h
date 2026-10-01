@@ -66,6 +66,9 @@ public:
 
     Magnifier& enable(bool enabled);
     Magnifier& magnification(float magnification);
+
+    /// Sets the size of the captured region.
+    /// If either dimension is zero or less, the magnifier keeps its current capture size.
     Magnifier& capture_size(mir::geometry::Size const& size);
 
     /// Sets how the magnifier is positioned.

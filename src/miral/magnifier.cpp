@@ -1063,6 +1063,12 @@ miral::Magnifier& miral::Magnifier::magnification(float magnification)
 
 miral::Magnifier& miral::Magnifier::capture_size(mir::geometry::Size const& size)
 {
+    if (!valid_capture_dimension(size.width.as_int()) || !valid_capture_dimension(size.height.as_int()))
+    {
+        mir::log_warning("Capture size should be greater than 0");
+        return *this;
+    }
+
     self->set_capture_size(size);
     return *this;
 }

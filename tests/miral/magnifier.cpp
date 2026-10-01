@@ -228,6 +228,44 @@ TEST_F(MagnifierTest, can_set_capture_size)
     start_server();
 }
 
+struct MagnifierCaptureSizeTestCase
+{
+    std::string_view name;
+    Size requested;
+};
+
+struct MagnifierCaptureSizeTest :
+    MagnifierTest,
+    WithParamInterface<MagnifierCaptureSizeTestCase>
+{
+};
+
+TEST_P(MagnifierCaptureSizeTest, rejects_non_positive_capture_size)
+{
+    magnifier.capture_size(Size(200, 240)).enable(true);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    magnifier.capture_size(GetParam().requested);
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 240)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidSizes,
+    MagnifierCaptureSizeTest,
+    Values(
+        MagnifierCaptureSizeTestCase{"zero_width", Size(0, 240)},
+        MagnifierCaptureSizeTestCase{"zero_height", Size(200, 0)},
+        MagnifierCaptureSizeTestCase{"negative_width", Size(-1, 240)},
+        MagnifierCaptureSizeTestCase{"negative_height", Size(200, -1)}),
+    [](TestParamInfo<MagnifierCaptureSizeTestCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
 TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
 {
     magnifier.enable(true);
