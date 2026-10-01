@@ -22,7 +22,7 @@
 #include <mir/graphics/platform.h>
 #include <mir/graphics/rendering_providers.h>
 #include <mir/renderer/sw/pixel_source.h>
-#include <renderer-generic-egl/buffer_allocator.h>
+#include <common/egl/buffer_allocator.h>
 
 #include <EGL/egl.h>
 
