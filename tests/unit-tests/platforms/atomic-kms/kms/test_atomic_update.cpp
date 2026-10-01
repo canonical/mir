@@ -14,6 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "atomic_update.h"
+
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/test/doubles/mock_drm.h>
 
 #include <gmock/gmock.h>
@@ -21,7 +24,10 @@
 #include <gtest/gtest-spi.h>
 
 #include <cerrno>
+#include <string>
 
+namespace mga = mir::graphics::atomic;
+namespace mgk = mir::graphics::kms;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
@@ -55,6 +61,52 @@ class MockDRMAtomicRecordingTest : public Test
 {
 public:
     NiceMock<mtd::MockDRM> mock;
+};
+
+class AtomicUpdateTest : public MockDRMAtomicRecordingTest
+{
+public:
+    static constexpr uint32_t plane_id{100};
+    static constexpr uint32_t framebuffer_property_id{42};
+    static constexpr uint64_t framebuffer_id{55};
+    static constexpr uint32_t commit_flags{0};
+    static constexpr char framebuffer_property_name[]{"FB_ID"};
+
+    AtomicUpdateTest()
+    {
+        resources.reset();
+        resources.add_property(plane_id, DRM_MODE_OBJECT_PLANE, framebuffer_property_id, framebuffer_property_name);
+
+        ON_CALL(mock, drmModeObjectGetProperties(bogus_fd, plane_id, DRM_MODE_OBJECT_PLANE))
+            .WillByDefault([this](int, uint32_t id, uint32_t type)
+                {
+                    return resources.find_object_properties(id, type);
+                });
+        ON_CALL(mock, drmModeGetProperty(bogus_fd, framebuffer_property_id))
+            .WillByDefault([this](int, uint32_t id)
+                {
+                    return resources.find_property(id);
+                });
+    }
+
+    auto framebuffer_properties() -> mgk::ObjectProperties
+    {
+        return {bogus_fd, plane_id, DRM_MODE_OBJECT_PLANE};
+    }
+
+    mtd::FakeDRMResources resources;
+};
+
+struct PropertyFailureCase
+{
+    char const* name;
+    bool property_missing;
+};
+
+class AtomicUpdatePropertyFailureTest :
+    public AtomicUpdateTest,
+    public WithParamInterface<PropertyFailureCase>
+{
 };
 }
 
@@ -253,4 +305,89 @@ TEST_F(MockDRMAtomicRecordingTest, default_add_and_commit_reject_invalid_request
         AtomicCommit{0, bogus_fd, 0, -EINVAL, {}},
         AtomicCommit{first_request_id, bogus_fd, 0, 0, {}},
         AtomicCommit{0, bogus_fd, 0, -EINVAL, {}}));
+}
+
+TEST_P(AtomicUpdatePropertyFailureTest, rejects_framebuffer_property_without_commit_and_frees_request)
+{
+    if (GetParam().property_missing)
+        resources.reset();
+    auto const properties = framebuffer_properties();
+
+    Sequence sequence;
+    EXPECT_CALL(mock, drmModeAtomicAlloc()).InSequence(sequence);
+    Matcher<std::string> error_context = AllOf(
+        HasSubstr(framebuffer_property_name),
+        HasSubstr("object ID " + std::to_string(plane_id)));
+    if (GetParam().property_missing)
+    {
+        EXPECT_CALL(mock, drmModeAtomicAddProperty(_, _, _, _)).Times(0);
+    }
+    else
+    {
+        EXPECT_CALL(mock, drmModeAtomicAddProperty(_, plane_id, framebuffer_property_id, framebuffer_id))
+            .InSequence(sequence)
+            .WillOnce(Return(-EIO));
+        error_context = AllOf(
+            error_context,
+            HasSubstr("property ID " + std::to_string(framebuffer_property_id)));
+    }
+    EXPECT_CALL(mock, drmModeAtomicCommit(_, _, _, _)).Times(0);
+    EXPECT_CALL(mock, drmModeAtomicFree(_)).InSequence(sequence);
+
+    EXPECT_THAT([&]
+    {
+        mga::AtomicUpdate update;
+        update.add_property(properties, framebuffer_property_name, framebuffer_id);
+    }, ThrowsMessage<mga::AtomicUpdateError>(error_context));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    FramebufferPropertyFailures,
+    AtomicUpdatePropertyFailureTest,
+    Values(
+        PropertyFailureCase{"MissingFramebufferProperty", true},
+        PropertyFailureCase{"FramebufferPropertyAddReturnsEio", false}),
+    [](TestParamInfo<PropertyFailureCase> const& info) { return info.param.name; });
+
+TEST_F(AtomicUpdateTest, allocation_failure_does_not_create_request_or_cleanup)
+{
+    EXPECT_CALL(mock, drmModeAtomicAlloc()).WillOnce(Return(nullptr));
+    EXPECT_CALL(mock, drmModeAtomicAddProperty(_, _, _, _)).Times(0);
+    EXPECT_CALL(mock, drmModeAtomicCommit(_, _, _, _)).Times(0);
+    EXPECT_CALL(mock, drmModeAtomicFree(_)).Times(0);
+
+    EXPECT_THAT([]
+    {
+        mga::AtomicUpdate update;
+    }, ThrowsMessage<mga::AtomicUpdateError>(HasSubstr("Failed to allocate Atomic DRM update request")));
+}
+
+TEST_F(AtomicUpdateTest, commit_failure_frees_request_and_does_not_change_visible_state)
+{
+    auto const properties = framebuffer_properties();
+    AtomicProperty const expected_property{plane_id, framebuffer_property_id, framebuffer_id};
+
+    {
+        mga::AtomicUpdate update;
+        auto const request = mock.atomic_requests().back().handle;
+        Sequence sequence;
+        EXPECT_CALL(mock, drmModeAtomicAddProperty(request, plane_id, framebuffer_property_id, framebuffer_id))
+            .InSequence(sequence);
+        EXPECT_CALL(mock, drmModeAtomicCommit(bogus_fd, request, commit_flags, nullptr))
+            .InSequence(sequence).WillOnce(Return(-EIO));
+        EXPECT_CALL(mock, drmModeAtomicFree(request)).InSequence(sequence);
+        update.add_property(properties, framebuffer_property_name, framebuffer_id);
+        EXPECT_EQ(update.commit(bogus_fd, commit_flags), -EIO);
+        EXPECT_TRUE(mock.atomic_visible_properties().empty());
+    }
+
+    EXPECT_THAT(mock.atomic_requests(), ElementsAre(
+        mtd::FreedAtomicRequest(first_request_id, ElementsAre(expected_property))));
+    EXPECT_THAT(mock.atomic_commits(), ElementsAre(
+        mtd::AtomicCommitWith(first_request_id, bogus_fd, commit_flags, -EIO, ElementsAre(expected_property))));
+    EXPECT_THAT(mock.atomic_operations(), ElementsAre(
+        AtomicOperation{AtomicOperationKind::allocate, first_request_id, 0},
+        AtomicOperation{AtomicOperationKind::add_property, first_request_id, 1},
+        AtomicOperation{AtomicOperationKind::commit, first_request_id, -EIO},
+        AtomicOperation{AtomicOperationKind::free, first_request_id, 0}));
 }

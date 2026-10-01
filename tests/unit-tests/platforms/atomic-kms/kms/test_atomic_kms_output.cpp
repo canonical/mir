@@ -44,6 +44,7 @@ constexpr int mode_height{1080};
 geom::Size const requested_mode_size{mode_width, mode_height};
 geom::Size const smaller_crtc_size{1280, 720};
 geom::Displacement const source_offset{17, 29};
+mg::GammaCurves const sample_gamma{{1}, {2}, {3}};
 
 auto kms_fixed_point(uint32_t value) -> uint64_t
 {
@@ -106,6 +107,21 @@ void expect_commit_request(
     ASSERT_EQ(mock.atomic_operations().size(), expected.preceding_operations + expected_operations.size());
     EXPECT_THAT(std::span{mock.atomic_operations()}.subspan(expected.preceding_operations),
                 ElementsAreArray(expected_operations));
+}
+
+void expect_failed_request(
+    mtd::MockDRM const& mock, std::vector<AtomicProperty> const& successful_properties)
+{
+    ASSERT_EQ(mock.atomic_requests().size(), 1u);
+    auto const& request = mock.atomic_requests().front();
+    EXPECT_THAT(request, mtd::FreedAtomicRequest(request.id, ElementsAreArray(successful_properties)));
+    EXPECT_TRUE(mock.atomic_commits().empty());
+    EXPECT_TRUE(mock.atomic_visible_properties().empty());
+
+    auto expected_operations = expected_add_operations(request.id, successful_properties.size());
+    expected_operations.push_back({AtomicOperationKind::add_property, request.id, -EIO});
+    expected_operations.push_back({AtomicOperationKind::free, request.id, 0});
+    EXPECT_THAT(mock.atomic_operations(), ElementsAreArray(expected_operations));
 }
 
 void expect_failed_commit(
@@ -239,6 +255,15 @@ public:
         return *resources.find_connector(connector_id);
     }
 
+    void expect_crtc_reusable_after_failure(mga::AtomicKMSOutput& output_under_test)
+    {
+        auto const preceding_operations = mock_drm.atomic_operations().size();
+        output_under_test.set_power_mode(mir_power_mode_off);
+        expect_commit_request(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
+                              {{crtc_id, crtc_active_property_id, 0}},
+                              {.request_index = 1, .preceding_operations = preceding_operations});
+    }
+
     NiceMock<mtd::MockDRM> mock_drm;
     mir::Fd drm_fd;
 
@@ -313,6 +338,19 @@ struct DisableCase
 };
 
 class AtomicKMSDisableTest : public AtomicKMSOutputTest, public WithParamInterface<DisableCase>
+{
+};
+
+struct PrimaryPropertyFailureCase
+{
+    char const* name;
+    bool activate_crtc;
+    bool fail_last_property;
+};
+
+class PrimaryPropertyFailureTest :
+    public AtomicKMSOutputTest,
+    public WithParamInterface<PrimaryPropertyFailureCase>
 {
 };
 }
@@ -429,6 +467,51 @@ INSTANTIATE_TEST_SUITE_P(
         DisableCase{"RefreshDisconnectedConnector", &mga::AtomicKMSOutput::refresh_hardware_state, true}),
     [](TestParamInfo<DisableCase> const& info) { return info.param.name; });
 
+TEST_F(AtomicKMSOutputTest, property_add_failure_prevents_commit)
+{
+    auto output_under_test = output();
+    ON_CALL(mock_drm, drmModeAtomicAddProperty(_, crtc_id, crtc_active_property_id, 0))
+        .WillByDefault(Return(-EIO));
+
+    EXPECT_NO_THROW(output_under_test->set_power_mode(mir_power_mode_off));
+    expect_failed_request(mock_drm, {});
+}
+
+TEST_P(PrimaryPropertyFailureTest, property_add_failure_returns_false_without_commit_and_keeps_crtc_reusable)
+{
+    auto const failure = GetParam();
+    auto const framebuffer_id = failure.activate_crtc ? primary_framebuffer_id : flip_framebuffer_id;
+    auto output_under_test = output();
+    auto successful_properties = primary_request_properties(framebuffer_id, 0, 0, failure.activate_crtc);
+    auto const failed_property = failure.fail_last_property ?
+        successful_properties.back() : successful_properties.front();
+    if (failure.fail_last_property)
+        successful_properties.pop_back();
+    else
+        successful_properties.clear();
+
+    EXPECT_CALL(mock_drm, drmModeAtomicAddProperty(_, _, _, _)).Times(AnyNumber());
+    EXPECT_CALL(mock_drm, drmModeAtomicAddProperty(
+        _, failed_property.object_id, failed_property.property_id, failed_property.value))
+        .WillOnce(Return(-EIO));
+    StubFramebuffer framebuffer{framebuffer_id};
+
+    EXPECT_FALSE(failure.activate_crtc ?
+        output_under_test->set_crtc(framebuffer) : output_under_test->page_flip(framebuffer));
+    expect_failed_request(mock_drm, successful_properties);
+    expect_crtc_reusable_after_failure(*output_under_test);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PrimaryRequestFailures,
+    PrimaryPropertyFailureTest,
+    Values(
+        PrimaryPropertyFailureCase{"SetCrtcFailsAtModeProperty", true, false},
+        PrimaryPropertyFailureCase{"SetCrtcFailsAtFramebufferProperty", true, true},
+        PrimaryPropertyFailureCase{"PageFlipFailsAtModeProperty", false, false},
+        PrimaryPropertyFailureCase{"PageFlipFailsAtFramebufferProperty", false, true}),
+    [](TestParamInfo<PrimaryPropertyFailureCase> const& info) { return info.param.name; });
+
 TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request_without_changing_visible_state)
 {
     auto output_under_test = output();
@@ -449,4 +532,49 @@ TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request_without_chang
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
     expect_failed_commit(mock_drm, 0, primary_request_properties(flip_framebuffer_id, 0, 0, false));
+}
+
+TEST_P(AtomicKMSDisableTest, property_add_failure_is_non_fatal_and_does_not_commit)
+{
+    auto output_under_test = output();
+    if (GetParam().disconnect_connector)
+        connector().connection = DRM_MODE_DISCONNECTED;
+    ON_CALL(mock_drm, drmModeAtomicAddProperty(_, connector_id, connector_crtc_property_id, 0))
+        .WillByDefault(Return(-EIO));
+
+    EXPECT_NO_THROW(((*output_under_test).*GetParam().operation)());
+    expect_failed_request(mock_drm, {});
+}
+
+TEST_F(AtomicKMSOutputTest, gamma_property_add_failure_is_non_fatal)
+{
+    uint32_t const failed_gamma_lut_blob_id{900};
+    auto output_under_test = output();
+    Sequence destruction_order;
+    expect_gamma_blob_lifetime(failed_gamma_lut_blob_id, destruction_order);
+    EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id)).InSequence(destruction_order);
+    ON_CALL(mock_drm, drmModeAtomicAddProperty(_, crtc_id, crtc_gamma_lut_property_id, failed_gamma_lut_blob_id))
+        .WillByDefault(Return(-EIO));
+
+    EXPECT_NO_THROW(output_under_test->set_gamma(sample_gamma));
+    expect_failed_request(mock_drm, {});
+
+    output_under_test.reset();
+}
+
+TEST_F(AtomicKMSOutputTest, gamma_allocation_failure_destroys_lut_blob)
+{
+    uint32_t const failed_gamma_lut_blob_id{900};
+    auto output_under_test = output();
+    Sequence destruction_order;
+    expect_gamma_blob_lifetime(failed_gamma_lut_blob_id, destruction_order);
+    EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id)).InSequence(destruction_order);
+    EXPECT_CALL(mock_drm, drmModeAtomicAlloc()).WillOnce(Return(nullptr));
+
+    EXPECT_NO_THROW(output_under_test->set_gamma(sample_gamma));
+    EXPECT_TRUE(mock_drm.atomic_requests().empty());
+    EXPECT_TRUE(mock_drm.atomic_commits().empty());
+    EXPECT_THAT(mock_drm.atomic_operations(), ElementsAre(AtomicOperation{AtomicOperationKind::allocate, 0, -1}));
+
+    output_under_test.reset();
 }

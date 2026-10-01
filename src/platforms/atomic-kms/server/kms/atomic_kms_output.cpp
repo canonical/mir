@@ -15,6 +15,7 @@
  */
 
 #include "atomic_kms_output.h"
+#include "atomic_update.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
@@ -116,36 +117,6 @@ private:
     drmModePropertyBlobPtr const ptr;
 };
 
-class AtomicUpdate
-{
-public:
-    AtomicUpdate()
-        : req{drmModeAtomicAlloc()}
-    {
-        if (!req)
-        {
-            BOOST_THROW_EXCEPTION((
-                std::runtime_error{"Failed to allocate Atomic DRM update request"}));
-        }
-    }
-
-    ~AtomicUpdate()
-    {
-        drmModeAtomicFree(req);
-    }
-
-    operator drmModeAtomicReqPtr() const
-    {
-        return req;
-    }
-
-    void add_property(mgk::ObjectProperties const& properties, char const* prop_name, uint64_t value)
-    {
-        drmModeAtomicAddProperty(req, properties.parent_id(), properties.id_for(prop_name), value);
-    }
-private:
-    drmModeAtomicReqPtr const req;
-};
 }
 
 class mga::AtomicKMSOutput::PropertyBlob
@@ -241,16 +212,25 @@ void mga::AtomicKMSOutput::reset()
 
         if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
         {
-            AtomicUpdate update;
-            update.add_property(*conf->connector_props, "CRTC_ID", 0);
-            update.add_property(*conf->crtc_props, "ACTIVE", 0);
-            update.add_property(*conf->crtc_props, "MODE_ID", 0);
-            update.add_property(*conf->plane_props, "FB_ID", 0);
-            update.add_property(*conf->plane_props, "CRTC_ID", 0);
-
-            if (auto err = drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+            try
             {
-                mir::log_warning("Failed release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
+                AtomicUpdate update;
+                update.add_property(*conf->connector_props, "CRTC_ID", 0);
+                update.add_property(*conf->crtc_props, "ACTIVE", 0);
+                update.add_property(*conf->crtc_props, "MODE_ID", 0);
+                update.add_property(*conf->plane_props, "FB_ID", 0);
+                update.add_property(*conf->plane_props, "CRTC_ID", 0);
+
+                if (auto err = update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET))
+                {
+                    mir::log_warning("Failed release resources for disconnected output: %s (%i)",
+                        mir::errno_to_cstr(-err),
+                        -err);
+                }
+            }
+            catch (AtomicUpdateError const& e)
+            {
+                mir::log_warning("Failed to release resources for disconnected output: %s", e.what());
             }
 
             conf->crtc_props = nullptr;
@@ -315,28 +295,38 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     auto const width = conf->connector->modes[conf->mode_index].hdisplay;
     auto const height = conf->connector->modes[conf->mode_index].vdisplay;
 
-    AtomicUpdate update;
-    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
-    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
-    update.add_property(*conf->crtc_props, "ACTIVE", 1);
+    int ret;
+    try
+    {
+        AtomicUpdate update;
+        update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
+        update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
+        update.add_property(*conf->crtc_props, "ACTIVE", 1);
 
-    /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_W", static_cast<uint64_t>(width) << 16);
-    update.add_property(*conf->plane_props, "SRC_H", static_cast<uint64_t>(height) << 16);
+        /* Source viewport. Coordinates are 16.16 fixed point format */
+        update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
+        update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
+        update.add_property(*conf->plane_props, "SRC_W", static_cast<uint64_t>(width) << 16);
+        update.add_property(*conf->plane_props, "SRC_H", static_cast<uint64_t>(height) << 16);
 
-    /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*conf->plane_props, "CRTC_X", 0);
-    update.add_property(*conf->plane_props, "CRTC_Y", 0);
-    update.add_property(*conf->plane_props, "CRTC_W", width);
-    update.add_property(*conf->plane_props, "CRTC_H", height);
+        /* Destination viewport. Coordinates are *not* 16.16 */
+        update.add_property(*conf->plane_props, "CRTC_X", 0);
+        update.add_property(*conf->plane_props, "CRTC_Y", 0);
+        update.add_property(*conf->plane_props, "CRTC_W", width);
+        update.add_property(*conf->plane_props, "CRTC_H", height);
 
-    /* Set a surface for the plane */
-    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
-    update.add_property(*conf->plane_props, "FB_ID", fb);
+        /* Set a surface for the plane */
+        update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
+        update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    auto ret = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+        ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
+    }
+    catch (AtomicUpdateError const& e)
+    {
+        mir::log_error("Failed to build CRTC request: %s", e.what());
+        return false;
+    }
+
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
@@ -381,14 +371,24 @@ void mga::AtomicKMSOutput::clear_crtc()
         return;
     }
 
-    AtomicUpdate update;
-    update.add_property(*conf->connector_props, "CRTC_ID", 0);
-    update.add_property(*conf->crtc_props, "ACTIVE", 0);
-    update.add_property(*conf->crtc_props, "MODE_ID", 0);
-    update.add_property(*conf->plane_props, "FB_ID", 0);
-    update.add_property(*conf->plane_props, "CRTC_ID", 0);
+    int result;
+    try
+    {
+        AtomicUpdate update;
+        update.add_property(*conf->connector_props, "CRTC_ID", 0);
+        update.add_property(*conf->crtc_props, "ACTIVE", 0);
+        update.add_property(*conf->crtc_props, "MODE_ID", 0);
+        update.add_property(*conf->plane_props, "FB_ID", 0);
+        update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-    auto result = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+        result = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
+    }
+    catch (AtomicUpdateError const& e)
+    {
+        mir::log_warning("Failed to build clear CRTC request: %s", e.what());
+        return;
+    }
+
     if (result)
     {
         if (result == -EACCES || result == -EPERM)
@@ -442,31 +442,37 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
         return false;
     }
 
-    AtomicUpdate update;
-    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
-    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
+    int ret;
+    try
+    {
+        AtomicUpdate update;
+        update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
+        update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
 
-    /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_W", fb_width << 16);
-    update.add_property(*conf->plane_props, "SRC_H", fb_height << 16);
+        /* Source viewport. Coordinates are 16.16 fixed point format */
+        update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
+        update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
+        update.add_property(*conf->plane_props, "SRC_W", fb_width << 16);
+        update.add_property(*conf->plane_props, "SRC_H", fb_height << 16);
 
-    /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*conf->plane_props, "CRTC_X", 0);
-    update.add_property(*conf->plane_props, "CRTC_Y", 0);
-    update.add_property(*conf->plane_props, "CRTC_W", crtc_width);
-    update.add_property(*conf->plane_props, "CRTC_H", crtc_height);
+        /* Destination viewport. Coordinates are *not* 16.16 */
+        update.add_property(*conf->plane_props, "CRTC_X", 0);
+        update.add_property(*conf->plane_props, "CRTC_Y", 0);
+        update.add_property(*conf->plane_props, "CRTC_W", crtc_width);
+        update.add_property(*conf->plane_props, "CRTC_H", crtc_height);
 
-    /* Set a surface for the plane */
-    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
-    update.add_property(*conf->plane_props, "FB_ID", fb);
+        /* Set a surface for the plane */
+        update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
+        update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    auto ret = drmModeAtomicCommit(
-        drm_fd_,
-        update,
-        0,
-        nullptr);
+        ret = update.commit(drm_fd_, 0);
+    }
+    catch (AtomicUpdateError const& e)
+    {
+        mir::log_error("Failed to build page-flip request: %s", e.what());
+        return false;
+    }
+
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
@@ -572,11 +578,21 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
 
     if (auto conf = configuration.lock(); conf->current_crtc)
     {
-        AtomicUpdate update;
-        update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
-        if (auto err = drmModeAtomicCommit(drm_fd_, update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+        try
         {
-            mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
+            AtomicUpdate update;
+            update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
+            if (auto err = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET))
+            {
+                mir::log_warning("Failed to set DPMS %s (%s [%i])",
+                    should_be_active ? "active" : "off",
+                    mir::errno_to_cstr(-err),
+                    -err);
+            }
+        }
+        catch (AtomicUpdateError const& e)
+        {
+            mir::log_warning("Failed to set DPMS %s (%s)", should_be_active ? "active" : "off", e.what());
         }
     }
     else if (should_be_active)
@@ -617,10 +633,16 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
         drm_lut[i].blue = gamma.blue[i];
     }
     PropertyBlob lut{drm_fd_, drm_lut.get(), sizeof(struct drm_color_lut) * gamma.red.size()};
-    AtomicUpdate update;
-
-    update.add_property(*conf->crtc_props, "GAMMA_LUT", lut.handle());
-    drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+    try
+    {
+        AtomicUpdate update;
+        update.add_property(*conf->crtc_props, "GAMMA_LUT", lut.handle());
+        update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
+    }
+    catch (AtomicUpdateError const& e)
+    {
+        mir::log_warning("Failed to build gamma request: %s", e.what());
+    }
 }
 
 void mga::AtomicKMSOutput::refresh_hardware_state()
@@ -630,14 +652,21 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
 
     if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
     {
-        AtomicUpdate update;
-        update.add_property(*conf->connector_props, "CRTC_ID", 0);
-        update.add_property(*conf->crtc_props, "ACTIVE", 0);
-        update.add_property(*conf->crtc_props, "MODE_ID", 0);
-        update.add_property(*conf->plane_props, "FB_ID", 0);
-        update.add_property(*conf->plane_props, "CRTC_ID", 0);
+        try
+        {
+            AtomicUpdate update;
+            update.add_property(*conf->connector_props, "CRTC_ID", 0);
+            update.add_property(*conf->crtc_props, "ACTIVE", 0);
+            update.add_property(*conf->crtc_props, "MODE_ID", 0);
+            update.add_property(*conf->plane_props, "FB_ID", 0);
+            update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-        drmModeAtomicCommit(drm_fd(), update, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr);
+            update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
+        }
+        catch (AtomicUpdateError const& e)
+        {
+            mir::log_warning("Failed to build hardware-state refresh request: %s", e.what());
+        }
 
         conf->connector_props = nullptr;
         conf->crtc_props = nullptr;
