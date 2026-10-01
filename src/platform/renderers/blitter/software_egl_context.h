@@ -26,7 +26,7 @@ namespace mir::renderer::blitter
 {
 
 /// A surfaceless, software-rastered EGL context.
-/// 
+///
 /// If the [blitter::Renderer] fails to blit, it falls back to drawing with GL into
 /// framebuffers. Those framebuffers are CPU-addressable scanout buffers, which a
 /// real GPU is unlikely to be able to render into, so we deliberately drive the fallback
@@ -35,7 +35,7 @@ class SoftwareEGLContext
 {
 public:
     /// Create and make current a software-rasterised EGL context
-    /// 
+    ///
     /// \throws std::runtime_error if no suitable EGL device/context is available
     SoftwareEGLContext();
     ~SoftwareEGLContext();

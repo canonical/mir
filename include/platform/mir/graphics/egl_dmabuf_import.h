@@ -49,10 +49,8 @@ auto import_dmabuf_to_egl_image(
     std::span<DMABufBuffer::PlaneDescriptor const> planes) -> EGLImageKHR;
 
 /// Import a whole DMABufBuffer into EGL as an EGLImage
-auto import_dmabuf_to_egl_image(
-    EGLDisplay dpy,
-    EGLExtensions const& egl_extensions,
-    DMABufBuffer const& buffer) -> EGLImageKHR;
+auto import_dmabuf_to_egl_image(EGLDisplay dpy, EGLExtensions const& egl_extensions, DMABufBuffer const& buffer)
+    -> EGLImageKHR;
 
 }
 
