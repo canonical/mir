@@ -164,6 +164,9 @@ TEST_F(BasicIdleHandler, off_timeout_when_locked_is_used_when_session_is_locked)
     EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
         .Times(1);
     session_lock.lock();
+
+    EXPECT_CALL(idle_hub, set_idle_inhibition_enabled(true));
+    session_lock.unlock();
 }
 
 TEST_F(BasicIdleHandler, off_timeout_when_locked_is_not_used_when_session_is_not_locked)
