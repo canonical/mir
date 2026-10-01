@@ -69,7 +69,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
                 case mir_orientation_left:
                     output_matrix[0] = 0;
                     output_matrix[1] = -scale;
-                    output_matrix[2] += height;
+                    output_matrix[2] += height * scale;
                     output_matrix[3] = scale;
                     output_matrix[4] = 0;
                     break;
@@ -78,13 +78,13 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
                     output_matrix[1] = scale;
                     output_matrix[3] = -scale;
                     output_matrix[4] = 0;
-                    output_matrix[5] += width;
+                    output_matrix[5] += width * scale;
                     break;
                 case mir_orientation_inverted:
                     output_matrix[0] = -scale;
-                    output_matrix[2] += width;
+                    output_matrix[2] += width * scale;
                     output_matrix[4] = -scale;
-                    output_matrix[5] += height;
+                    output_matrix[5] += height * scale;
                     break;
                 default:
                     break;
