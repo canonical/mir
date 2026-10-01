@@ -52,49 +52,71 @@ Wayland clients. Some protocol extensions are "privileged" and only
 intended for clients that meet some trust criteria.
 
 In your compositor you can enable access to the privileged Wayland
-extensions using the `miral::WaylandExtensions` APIs. There is an example
-of this in miracle-wm.
+extensions using the `miral::WaylandExtensions` APIs:
 
 ```c++
-    WaylandExtensions wayland_extensions = WaylandExtensions {}
-                                               .enable(WaylandExtensions::zwlr_layer_shell_v1)
-                                               .enable(WaylandExtensions::zwlr_foreign_toplevel_manager_v1)
-                                               .enable(WaylandExtensions::zxdg_output_manager_v1)
-                                               .enable(WaylandExtensions::zwp_virtual_keyboard_manager_v1)
-                                               .enable(WaylandExtensions::zwlr_virtual_pointer_manager_v1)
-                                               .enable(WaylandExtensions::zwp_input_method_manager_v2)
-                                               .enable(WaylandExtensions::zwlr_screencopy_manager_v1)
-                                               .enable(WaylandExtensions::ext_session_lock_manager_v1);
+miral::WaylandExtensions extensions;
+
+// Enable an extension for all clients
+extensions.enable(WaylandExtensions::zwlr_layer_shell_v1);
+// Enable an extension conditionally
+extensions.conditionally_enable(WaylandExtensions::zwlr_virtual_pointer_manager_v1,
+    [](miral::WaylandExtensions::EnableInfo const& info)
+    {
+        return !info.creds().is_sandboxed();
+    });
+
+/// ...
+runner.run_with({
+    /// ...
+    extensions,
+});
 ```
+
+Most of the extensions that are not enabled by default provide access
+that could compromise the security of the desktop or allow one
+application to interfere with the operation of another. For example:
+
+* The `zwp_virtual_keyboard_manager_v1` and `zwlr_virtual_pointer_manager_v1` extensions allow a client to inject input events that can be used to control other applications. However they are capabilities that e.g. a remote desktop server or input method might need.
+* The `ext_image_copy_capture_manager_v1` and `zwlr_screencopy_manager_v1` protocols give access to the window contents of other clients. This should again be restricted to remote desktop servers or the `xdg-desktop-portal-wlr` portal backend.
+* The `ext_foreign_toplevel_list_v1` protocol provides information about windows presented by other clients of the compositor. The `zwlr_foreign_toplevel_manager_v1` goes further in offering some level of control. These are useful for building a shell component like a task list or switcher, but you may want to avoid providing this information to sandboxed applications.
+* The `zwlr_layer_shell_v1` protocol allows an app to position itself and make exclusive use of part of a portion of the screen. This is useful for shell components, but could be misused by a badly behaved client.
+* The `ext_data_control_manager_v1` protocol provides features needed for a clipboard manager to operate. But it may bypass regular protections of the clipboard contents.
+
+For these reasons, they should usually only be enabled using
+`conditionally_enable`.
 
 ### Identifying clients to "qualify" them to use privileged extensions
 
-It is up to you how you identify the clients with access to Privileged Wayland
-extensions. But there is prior art:
+It is up to you how you identify the clients with access to Privileged
+Wayland extensions. To help with this, Mir provides some reliable
+client credentials via an the `EnableInfo::creds` method. The returned
+`ApplicationCredentials` object provides the following information:
+
+* The client's process ID, user ID, and group ID, valid at the time of connection.
+* The client's AppArmor label (or an empty string if AppArmor is not enabled).
+* If the client is snap sandboxed, the snap name and app name.
+* If the client is flatpak sandboxed, the flatpak application ID.
+* A generic `is_sandboxed` check that will return true for both snap and flatpak sandboxes.
+
+Compositor authors are encouraged to use the information collected in
+the `ApplicationCredentials` object rather than trying to detect the
+information themselves. There are some subtle details 
 
 #### In Ubuntu Frame
 
-In Ubuntu Frame, AppArmor is queried to identify the snap that contains the
-client and checks that against a list of trusted snaps:
+Ubuntu Frame enables access to certain Wayland extensions to clients
+belonging to a few known snap packages (an on screen keyboard, VNC
+service, and some internal clients).
 
-```c++
-    else if (aa_getpeercon(app_fd, &label_cstr, &mode_cstr) < 0)
-    {
-        ...
-```
+The details can be found in Ubuntu Frame's `AuthModel` class in
+[`src/frame_authorization.cpp`](https://github.com/canonical/ubuntu-frame/blob/core26/src/frame_authorization.cpp).
 
 #### In Miriway
 
 In Miriway, trusted "shell components" have to be `fork()/exec()`d
-by Miriway, and are identified by PID, this is handled by
-`miriway::ChildControl`:
-
-```c++
-void miriway::ChildControl::enable_for_shell(WaylandExtensions& extensions, std::string const& protocol)
-{
-    extensions.conditionally_enable(protocol, self->enable_for_shell_pids);
-}
-```
+by Miriway, and are identified by PID.  This is handled by
+`miriway::ChildControl` in [`miriway_child_control.cpp`](https://github.com/Miriway/Miriway/blob/main/miriway_child_control.cpp).
 
 In addition, There's a `shell-component` configuration option to allow
 these programs to be specified by a Desktop Environment using Miriway.
