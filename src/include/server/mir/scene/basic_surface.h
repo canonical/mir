@@ -199,6 +199,10 @@ private:
     void update_frame_posted_callbacks(State& state);
     auto content_size(State const& state) const -> geometry::Size;
     auto content_top_left(State const& state) const -> geometry::Point;
+    /// The content rectangle restricted to the visible (clipped) extents of the surface. The
+    /// window margins are applied to the clipped rectangle so that the drag edges of clipped
+    /// sides remain outside of the surface's input area.
+    auto visible_content_rect(State const& state) const -> geometry::Rectangle;
     void track_outputs();
     void linearised_track_outputs();
 

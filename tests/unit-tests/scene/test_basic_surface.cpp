@@ -537,6 +537,36 @@ TEST_F(BasicSurfaceTest, surface_doesnt_get_input_outside_clip_area)
     EXPECT_TRUE(surface.input_area_contains({75,75}));
 }
 
+TEST_F(BasicSurfaceTest, margins_of_clipped_surface_are_outside_input_area)
+{
+    geom::DeltaY const top{3};
+    geom::DeltaX const left{2};
+    geom::DeltaY const bottom{5};
+    geom::DeltaX const right{1};
+
+    ms::BasicSurface surface{
+        name,
+        geom::Rectangle{{0,0}, {100,100}},
+        mir_pointer_unconfined,
+        streams,
+        std::shared_ptr<mg::CursorImage>(),
+        report,
+        display_config_registrar};
+
+    surface.set_window_margins(top, left, bottom, right);
+    surface.set_clip_area(std::optional<geom::Rectangle>({{0,0}, {50,50}}));
+
+    // The drag edges of the clipped sides are relative to the clipped rectangle
+    EXPECT_FALSE(surface.input_area_contains({49,25}));
+    EXPECT_FALSE(surface.input_area_contains({25,46}));
+    EXPECT_TRUE(surface.input_area_contains({48,44}));
+
+    // The drag edges of the unclipped sides are unaffected
+    EXPECT_FALSE(surface.input_area_contains({1,25}));
+    EXPECT_FALSE(surface.input_area_contains({25,2}));
+    EXPECT_TRUE(surface.input_area_contains({2,3}));
+}
+
 TEST_F(BasicSurfaceTest, set_input_region)
 {
     std::vector<geom::Rectangle> const rectangles = {
