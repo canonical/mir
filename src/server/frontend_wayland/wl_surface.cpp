@@ -15,6 +15,7 @@
  */
 
 #include "wl_surface.h"
+#include "ext_foreign_buffer_v1.h"
 #include "output_manager.h"
 #include "fractional_scale_v1.h"
 #include <mir/wayland/weak.h>
@@ -539,7 +540,18 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                         });
                 };
 
-            if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
+            current_foreign_buffer = {};
+
+            if (auto const foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value()))
+            {
+                // The content is compositor-internal, so there is nothing to import through the
+                // allocator and nothing to release back to the requesting client.
+                current_buffer = foreign_buffer->content();
+                current_foreign_buffer = mw::make_weak(foreign_buffer);
+                foreign_buffer->add_listener(*this);
+                executor_send_frame_callbacks();
+            }
+            else if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
             {
                 current_buffer = allocator->buffer_from_shm(
                     shm_buffer->data(),
@@ -564,7 +576,9 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     current_buffer->id().as_value());
             }
 
-            needs_buffer_submission = true;
+            // A foreign buffer may not have captured anything yet, in which case there is
+            // nothing to submit.
+            needs_buffer_submission = current_buffer != nullptr;
         }
     }
     else
@@ -628,32 +642,58 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     if (needs_buffer_submission && current_buffer)
     {
-        geom::Size logical_size;
-        geom::RectangleD src_sample;
-
-        if (viewport)
-        {
-            std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(scale, current_buffer->size());
-        }
-        else
-        {
-            src_sample = geom::RectangleD{{0, 0}, current_buffer->size()};
-            logical_size = current_buffer->size() / scale;
-        }
-
-        stream->submit_buffer(current_buffer, logical_size, src_sample);
-
-        if (std::make_optional(logical_size) != buffer_size_)
+        if (submit_current_buffer())
         {
             state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
         }
-
-        buffer_size_ = logical_size;
     }
 
     for (WlSubsurface* child: children)
     {
         child->parent_has_committed();
+    }
+}
+
+auto mf::WlSurface::submit_current_buffer() -> bool
+{
+    geom::Size logical_size;
+    geom::RectangleD src_sample;
+
+    if (viewport)
+    {
+        std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(scale, current_buffer->size());
+    }
+    else
+    {
+        src_sample = geom::RectangleD{{0, 0}, current_buffer->size()};
+        logical_size = current_buffer->size() / scale;
+    }
+
+    stream->submit_buffer(current_buffer, logical_size, src_sample);
+
+    auto const size_changed = std::make_optional(logical_size) != buffer_size_;
+    buffer_size_ = logical_size;
+    return size_changed;
+}
+
+void mf::WlSurface::foreign_buffer_updated()
+{
+    // The client may have attached something else since this surface registered as a consumer.
+    if (!current_foreign_buffer)
+    {
+        return;
+    }
+
+    auto content = current_foreign_buffer.value().content();
+    if (!content)
+    {
+        return;
+    }
+
+    current_buffer = std::move(content);
+    if (submit_current_buffer())
+    {
+        refresh_surface_data_now();
     }
 }
 
