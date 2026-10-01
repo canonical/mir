@@ -18,10 +18,39 @@ libraries, although only the first three are typically used in practice:
 - mircore
 - mircommon
 - mirplatform
-- mirwayland
+- [mirwayland](#how-to-update-mirwayland-symbols)
 
 It is tedious to edit these files. Luckily for us, this versioning business
 is (mostly) automated so that we have to think very little about it.
+
+## Goal
+
+When you change the public interface of a user-facing library, the goal is to
+leave the tree in a state where:
+
+1. Every new symbol is listed in the library's `symbols.map`, in a stanza for
+   the current development version.
+2. No released stanza is modified: released stanzas describe the ABI that
+   consumers already build against, so they must stay byte-for-byte identical.
+3. Any version/ABI numbers the build uses (`MIRAL_VERSION_MINOR`,
+   `MIRWAYLAND_ABI`, etc.) are bumped exactly as described below.
+4. The `check-*-symbols-map` targets (and the
+   [Symbols Check CI](https://github.com/canonical/mir/actions/workflows/symbols-check.yml))
+   pass for every library they cover.
+
+If you forget to update the `symbols.map` file, Github CI will complain and
+prevent the merge until the issue is addressed. Each time a pull request is
+open or updated on Github, this action will be run. If you check the log of
+this action, you will see which symbols have been changed so that you can
+address the issue.
+
+Note that this CI check only covers `miral`, `miroil`, `mirserver` and
+`mircommon`. The other libraries with `symbols.map` files (`mirwayland`,
+`mircore` and `mirplatform`) have no `generate-*-symbols-map` target and no
+CI coverage, so changes to their interfaces must be made by hand in the same
+stanza style. The `mirwayland` section
+[below](#how-to-update-mirwayland-symbols) walks through that manual workflow
+step by step.
 
 ## When are symbols.map files updated
 
@@ -47,13 +76,6 @@ these files:
    to create a single new stanza at a brand new version in the `symbols.map`
    file. This new stanza will contain all of the symbols in that library.
 
-If you forget to update the `symbols.map` file, Github CI will complain and
-prevent the merge until the issue is addressed. You can find results of this action
-[here](https://github.com/canonical/mir/actions/workflows/symbols-check.yml).
-Each time a pull request is open or updated on Github, this action will be
-run. If you check the log of this action, you will see which symbols have been
-changed so that you can address the issue.
-
 **Warning**: Please be aware that this action is not sophisticated enough to
 know if you changed the definition of a symbol. If you add or remove a symbol,
 the action will inform you. However, if you modify a symbol (e.g. by changing
@@ -65,9 +87,8 @@ has changes. Such changes will need to be moved to a new stanza manually.
 Before we can update the symbols of Mir's libraries, we'll want to set
 up our environment so that the our tools can work correctly.
 
-To do this, you will first want to install **clang**. Note that it is
-very important that you have the most recent version of clang, as that
-works the best.
+To do this, you will first want to install **clang** (the same packages the
+Symbols Check CI installs):
 
 ```sh
 sudo apt install clang libclang-dev python3-clang
@@ -228,3 +249,46 @@ If `MIRSERVER_ABI` needed to be updated, you should also run:
 ```sh
 ./tools/update_package_abis.sh
 ```
+
+## How to update mirwayland symbols
+
+Unlike the libraries above, `mirwayland` has no `generate-mirwayland-symbols-map`
+target and is not covered by the Symbols Check CI, so its `symbols.map` file
+(`src/wayland/symbols.map`) is updated by hand. The stanzas are named
+`MIRWAYLAND_<major>.<minor>` after the project version (for example
+`MIRWAYLAND_2.29`, then `MIRWAYLAND_2.30`), each one inheriting from the
+previous stanza.
+
+### Scenario 1: adding a new symbol
+
+1. Make the additive change to the interface (e.g. by adding a new method
+   to an existing class in `include/wayland/mir/wayland/`).
+1. Open `src/wayland/symbols.map` and, if not already created in this release
+   cycle, add a new stanza named after the current development version
+   (e.g. `MIRWAYLAND_2.30 { ... } MIRWAYLAND_2.29;`). If the stanza already
+   exists, add your symbols to it instead of creating another one.
+1. List the new symbols in the new stanza, following the style of the existing
+   entries (for example `mir::wayland::WlArrayBase::*;` inside an
+   `extern "C++"` block).
+1. Check that your new symbols are reflected properly in the `symbols.map` file:
+   ```sh
+   git diff src/wayland/symbols.map
+   ```
+1. Build the project and run the relevant tests. Because no automated check
+   compares the map against the headers, reviewing the diff carefully is the
+   verification: every new public symbol must appear, and no released stanza
+   may be modified.
+
+### Scenario 2: removing or changing a symbol
+
+This is an API break. Follow the same manual stanza procedure as above, and
+additionally:
+
+1. If not already bumped in this release cycle, bump `MIRWAYLAND_ABI` in
+   `src/wayland/CMakeLists.txt`.
+1. Run:
+   ```sh
+   ./tools/update_package_abis.sh
+   ```
+   (There is no Debian `.symbols` file for `mirwayland`, so no
+   `regenerate-*-debian-symbols` step applies.)
