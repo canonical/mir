@@ -50,7 +50,6 @@ struct DisplayElement
     std::shared_ptr<Framebuffer> buffer;
 };
 
-
 /**
  * A renderable that can be displayed on a hardware plane without composition.
  */
@@ -58,7 +57,6 @@ struct DirectLayer
 {
     std::shared_ptr<Renderable> const renderable;
 };
-
 
 /**
  * A renderable that requires composition with other renderables before it can be displayed.
