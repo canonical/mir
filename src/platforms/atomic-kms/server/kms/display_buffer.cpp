@@ -135,6 +135,10 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     return false;
 }
 
+auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
+
 void mga::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
     f(*this);

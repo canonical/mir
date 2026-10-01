@@ -54,6 +54,10 @@ public:
     auto view_area() const -> geometry::Rectangle override;
 
     auto overlay(std::vector<DisplayElement> const& renderlist) -> bool override;
+
+    auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+        -> std::optional<LogicalStacking> override;
+
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
     glm::mat2 transformation() const override;

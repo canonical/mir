@@ -95,6 +95,8 @@ public:
     // DisplaySink implementation
     auto view_area() const -> geometry::Rectangle override;
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
+    auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+        -> std::optional<LogicalStacking> override;
     auto transformation() const -> glm::mat2 override;
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
@@ -405,6 +407,10 @@ bool mgw::DisplayClient::Output::overlay(std::vector<DisplayElement> const&)
 {
     return false;
 }
+
+auto mgw::DisplayClient::Output::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
 
 auto mgw::DisplayClient::Output::transformation() const -> glm::mat2
 {

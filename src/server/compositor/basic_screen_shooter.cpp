@@ -161,6 +161,10 @@ public:
         return false;
     }
 
+    auto plan_presentation(std::vector<std::shared_ptr<mg::Renderable>> const&)
+        -> std::optional<mg::LogicalStacking> override
+    { return std::nullopt; }
+
     void set_next_image(std::unique_ptr<mg::Framebuffer>) override
     {
     }

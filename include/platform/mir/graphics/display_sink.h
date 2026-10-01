@@ -24,6 +24,7 @@
 #include <glm/glm.hpp>
 
 #include <memory>
+#include <variant>
 
 namespace mir
 {
@@ -48,6 +49,38 @@ struct DisplayElement
     geometry::RectangleF source_position;
     std::shared_ptr<Framebuffer> buffer;
 };
+
+
+/**
+ * A renderable that can be displayed on a hardware plane without composition.
+ */
+struct DirectLayer
+{
+    std::shared_ptr<Renderable> const renderable;
+};
+
+
+/**
+ * A renderable that requires composition with other renderables before it can be displayed.
+ */
+struct CompositingLayer
+{
+    std::vector<std::shared_ptr<Renderable>> const renderables;
+};
+
+using Layer = std::variant<DirectLayer, CompositingLayer>;
+
+/**
+ * A logical stacking of layers that can be displayed on a DisplaySink.
+ *
+ * Only the relative order of the layers is important. The first layer in the
+ * vector is the bottom-most, and the last layer is the top-most.
+ */
+struct LogicalStacking
+{
+    std::vector<Layer> const layers;
+};
+
 /**
  * Interface to an output sink.
  */
@@ -129,6 +162,18 @@ public:
         }
         return nullptr;
     }
+
+    /**
+     * Given an ordered list of renderables (back to front), return a logical
+     * stacking of layers that can be displayed on this DisplaySink. Some
+     * renderables may be composited together into a single layer, while others
+     * may be displayed directly on hardware planes.
+     *
+     * \return An optional LogicalStacking. If the DisplaySink cannot display
+     *         the given renderables, it returns std::nullopt.
+     */
+    virtual auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+        -> std::optional<LogicalStacking> = 0;
 
 protected:
     /**

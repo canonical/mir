@@ -74,6 +74,10 @@ auto mgx::DisplaySink::overlay(std::vector<DisplayElement> const& /*renderlist*/
     return false;
 }
 
+auto mgx::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
+
 namespace
 {
 template<typename To, typename From>

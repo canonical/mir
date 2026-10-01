@@ -136,6 +136,10 @@ bool mgg::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     return false;
 }
 
+auto mgg::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
+
 void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
     // When an output is disconnected, its sink will have a size of 0x0.

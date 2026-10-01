@@ -96,6 +96,9 @@ public:
 
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
 
+    auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+        -> std::optional<LogicalStacking> override;
+
     void for_each_display_sink(
         std::function<void(graphics::DisplaySink&)> const& f) override;
     void post() override;
