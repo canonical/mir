@@ -54,6 +54,8 @@ EGLSurface extension_eglCreatePlatformWindowSurfaceEXT(
     EGLConfig config,
     void *native_window,
     const EGLint *attrib_list);
+EGLBoolean extension_eglQueryDevicesEXT(EGLint max_devices, EGLDeviceEXT* devices, EGLint* num_devices);
+char const* extension_eglQueryDeviceStringEXT(EGLDeviceEXT device, EGLint name);
 
 /* EGL{Surface,Display,Config,Context} are all opaque types, so we can put whatever
    we want in them for testing */
@@ -166,6 +168,13 @@ mtd::MockEGL::MockEGL()
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglGetPlatformDisplayEXT)));
     ON_CALL(*this, eglGetProcAddress(StrEq("eglCreatePlatformWindowSurfaceEXT")))
         .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglCreatePlatformWindowSurfaceEXT)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglQueryDevicesEXT")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglQueryDevicesEXT)));
+    ON_CALL(*this, eglGetProcAddress(StrEq("eglQueryDeviceStringEXT")))
+        .WillByDefault(Return(reinterpret_cast<func_ptr_t>(&extension_eglQueryDeviceStringEXT)));
+
+    ON_CALL(*this, eglQueryDevicesEXT(_, _, _))
+        .WillByDefault(DoAll(SetArgPointee<2>(0), Return(EGL_TRUE)));
 }
 
 void mtd::MockEGL::provide_egl_extensions()
@@ -473,4 +482,16 @@ EGLSurface extension_eglCreatePlatformWindowSurfaceEXT(
         config,
         native_window,
         attrib_list);
+}
+
+EGLBoolean extension_eglQueryDevicesEXT(EGLint max_devices, EGLDeviceEXT* devices, EGLint* num_devices)
+{
+    CHECK_GLOBAL_MOCK(EGLBoolean);
+    return global_mock_egl->eglQueryDevicesEXT(max_devices, devices, num_devices);
+}
+
+char const* extension_eglQueryDeviceStringEXT(EGLDeviceEXT device, EGLint name)
+{
+    CHECK_GLOBAL_MOCK(char const*);
+    return global_mock_egl->eglQueryDeviceStringEXT(device, name);
 }
