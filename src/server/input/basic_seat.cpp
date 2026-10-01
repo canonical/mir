@@ -56,7 +56,7 @@ struct mi::BasicSeat::OutputTracker : mg::DisplayConfigurationObserver
                 // touch screen events in a policy
                 bool active = output.power_mode == mir_power_mode_on;
 
-                auto output_size = output.modes[output.current_mode_index].size;
+                auto output_size = output.extents().size;
                 auto width = output_size.width.as_int();
                 auto height = output_size.height.as_int();
                 auto scale = 1 / output.scale;
