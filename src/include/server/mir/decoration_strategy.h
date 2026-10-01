@@ -25,8 +25,15 @@ public:
         ssd
     };
 
+    enum class Renderer
+    {
+        none,
+        internal
+    };
+
     virtual ~DecorationStrategy() = default;
     virtual auto default_style() const -> DecorationsType = 0;
     virtual auto request_style(DecorationsType type) const -> DecorationsType = 0;
+    virtual auto renderer() const -> Renderer = 0;
 };
 }

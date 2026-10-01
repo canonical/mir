@@ -39,3 +39,9 @@ MirAL also has other strategies: {func}`miral::Decorations::prefer_csd`,
 {func}`miral::Decorations::always_ssd`, and
 {func}`miral::Decorations::always_csd`. Try playing around with different
 strategies and seeing how they behave differently.
+
+If your compositor draws its own decorations, you can stop Mir from drawing them internally while still negotiating server-side decorations:
+
+```cpp
+miral::Decorations::always_ssd().with_renderer(miral::Decorations::Renderer::none)
+```

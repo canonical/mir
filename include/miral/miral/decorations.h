@@ -49,6 +49,20 @@ public:
     /// mode. Otherwise use the mode specified by the client.
     static auto prefer_csd() -> Decorations;
 
+    /// Who draws server side decorations
+    /// \remark Since MirAL 6.1
+    enum class Renderer
+    {
+        /// Nothing is drawn, windows using server side decorations are undecorated
+        none,
+        /// Mir draws its built-in decorations
+        internal
+    };
+
+    /// Modifies the renderer for a given decoration strategy.
+    /// \remark Since MirAL 6.1
+    auto with_renderer(Renderer renderer) const -> Decorations;
+
 private:
     struct Self;
 
