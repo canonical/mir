@@ -33,7 +33,8 @@ class SoftwareEGLContext;
 
 using RenderbufferHandle = common::GLMultiHandle<&glDeleteRenderbuffers>;
 
-/// A pool of render targets, usable by both the blitter and GL.
+/// A pool of render targets, usable by both the blitter rendering path and the GL rendering
+/// path.
 ///
 /// Each entry owns a CPU-adressable framebuffer from the display. That framebuffer's
 /// dma-buf is imported into GL as an FBO-backing texture, and the same framebuffer
