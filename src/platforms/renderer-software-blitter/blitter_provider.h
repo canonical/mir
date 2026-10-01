@@ -78,6 +78,7 @@ private:
     std::shared_ptr<mir::graphics::egl::generic::GLRenderingProvider> gl_rendering_provider;
     EGLDisplay const dpy;
     EGLContext const ctx;
+    std::shared_ptr<DMABufEGLProvider> dmabuf_provider;
 };
 
 }
