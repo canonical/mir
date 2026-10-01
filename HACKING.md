@@ -151,5 +151,10 @@ workshop remount dev/mir:wlcs-build "$wlcs_build"
 workshop start
 
 # Run test suite
-workshop run wlcs
+workshop run wlcs          # use the system wlcs package (default)
+workshop run wlcs mounted  # use the mounted wlcs-build binary
 ```
+
+The `wlcs` action always reconfigures Mir before running the tests. With `mounted`, it passes
+`-DWLCS_BINARY=/home/workshop/wlcs-build/wlcs` to CMake so the registered `ctest` suite uses
+the mounted runner instead of the system one.
