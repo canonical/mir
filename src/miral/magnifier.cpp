@@ -76,6 +76,16 @@ auto const max_magnification = 8.0f;
 /// Magnification step applied by each zoom button press.
 auto const zoom_step = 0.25f;
 
+auto valid_magnification(float magnification) -> bool
+{
+    return magnification >= min_magnification && magnification <= max_magnification;
+}
+
+auto valid_capture_dimension(int dimension) -> bool
+{
+    return dimension > 0;
+}
+
 class Handle
 {
 public:
@@ -943,10 +953,18 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
         {"magnifier", "magnification"},
         "The magnification scale ",
         default_magnification,
-        [this](live_config::Key const&, std::optional<float> val)
+        [this](live_config::Key const& key, std::optional<float> val)
         {
             if (!val.has_value())
                 return;
+
+            if (!valid_magnification(*val))
+            {
+                mir::log_warning(
+                    "Config key '%s' should be between %.2f and %.2f",
+                    key.to_string().c_str(), min_magnification, max_magnification);
+                return;
+            }
 
             self->update_magnification(val);
         });
@@ -959,7 +977,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (!val.has_value())
                 return;
 
-            if (*val <= 0)
+            if (!valid_capture_dimension(*val))
             {
                 mir::log_warning("Config key '%s' should be greater than 0", key.to_string().c_str());
                 return;
@@ -976,7 +994,7 @@ miral::Magnifier::Magnifier(live_config::Store& config_store)
             if (!val.has_value())
                 return;
 
-            if (*val <= 0)
+            if (!valid_capture_dimension(*val))
             {
                 mir::log_warning("Config key '%s' should be greater than 0", key.to_string().c_str());
                 return;
@@ -1032,15 +1050,14 @@ miral::Magnifier& miral::Magnifier::enable(bool enabled)
 
 miral::Magnifier& miral::Magnifier::magnification(float magnification)
 {
-    auto const clamped_magnification = std::clamp(magnification, min_magnification, max_magnification);
-    if (magnification != clamped_magnification)
+    if (!valid_magnification(magnification))
     {
         mir::log_warning("Magnification should be between %.2f and %.2f", min_magnification, max_magnification);
 
         return *this;
     }
 
-    self->set_magnification(clamped_magnification);
+    self->set_magnification(magnification);
     return *this;
 }
 

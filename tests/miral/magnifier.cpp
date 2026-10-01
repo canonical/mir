@@ -479,6 +479,49 @@ struct MagnifierLiveConfigTest : TestServer
     Magnifier magnifier{ini_file};
 };
 
+struct MagnifierLiveConfigValueTestCase
+{
+    std::string_view name;
+    std::string_view value;
+};
+
+struct MagnifierLiveConfigMagnificationTest :
+    MagnifierLiveConfigTest,
+    WithParamInterface<MagnifierLiveConfigValueTestCase>
+{
+};
+
+TEST_P(MagnifierLiveConfigMagnificationTest, invalid_magnification_is_ignored)
+{
+    std::istringstream initial{"magnifier_enable=true\nmagnifier_magnification=2\n"};
+    ini_file.load_file(initial, "test");
+    start_server();
+    flush_main_loop();
+
+    std::istringstream invalid{
+        std::string{"magnifier_enable=true\nmagnifier_magnification="} + std::string{GetParam().value} + "\n"};
+    ini_file.load_file(invalid, "test");
+
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidMagnifications,
+    MagnifierLiveConfigMagnificationTest,
+    Values(
+        MagnifierLiveConfigValueTestCase{"negative_one", "-1"},
+        MagnifierLiveConfigValueTestCase{"zero", "0"},
+        MagnifierLiveConfigValueTestCase{"below_minimum", "1"},
+        MagnifierLiveConfigValueTestCase{"above_maximum", "8.25"},
+        MagnifierLiveConfigValueTestCase{"negative_infinity", "-inf"},
+        MagnifierLiveConfigValueTestCase{"positive_infinity", "inf"},
+        MagnifierLiveConfigValueTestCase{"nan", "nan"}),
+    [](TestParamInfo<MagnifierLiveConfigValueTestCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
 TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_reapplies_configured_values)
 {
     std::string const config_values{
