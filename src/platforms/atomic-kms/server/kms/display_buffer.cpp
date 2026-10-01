@@ -109,29 +109,32 @@ void mga::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangl
 
 bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_list)
 {
-    // TODO: implement more than the most basic case.
-    if (renderable_list.size() != 1)
+    if (renderable_list.size() == 1)
     {
+        if (renderable_list[0].screen_positon != view_area())
+        {
+            return false;
+        }
+
+        if (renderable_list[0].source_position.top_left != geom::PointF{0, 0} ||
+            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
+            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
+        {
+            return false;
+        }
+
+        if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
+        {
+            next_swap = std::move(fb);
+            return true;
+        }
         return false;
     }
-
-    if (renderable_list[0].screen_positon != view_area())
+    else
     {
-        return false;
+        // TODO map display elements to atomic KMS planes
     }
 
-    if (renderable_list[0].source_position.top_left != geom::PointF {0,0} ||
-        renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
-        renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
-    {
-        return false;
-    }
-
-    if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
-    {
-        next_swap = std::move(fb);
-        return true;
-    }
     return false;
 }
 
