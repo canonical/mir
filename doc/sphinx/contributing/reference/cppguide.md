@@ -787,14 +787,27 @@ that specifies physical layout of the base class.
 
 **Decision:**
 
-All inheritance should be `public`. If you want to do private
-inheritance, you should be including an instance of the base class as a
-member instead.
+Use `public` inheritance to model an "is-a" relationship. An "is-a"
+relationship needs `public` inheritance by definition: `Bar` publicly
+subclasses `Foo` if it can reasonably be said that `Bar` "is a kind of"
+`Foo`. This covers all [interface inheritance](#interfaces).
 
-Do not overuse implementation inheritance. Composition is often more
-appropriate. Try to restrict use of inheritance to the "is-a" case:
-`Bar` subclasses `Foo` if it can reasonably be said that `Bar` "is a
-kind of" `Foo`.
+`private` inheritance is an implementation technique, not a way to model
+"is-a": it reuses the base class implementation without exposing the
+base class interface to users of the derived class. Use it when there is
+no "is-a" relationship but inheriting the implementation is genuinely
+useful: for example, to reuse a self-contained implementation base (such
+as an RAII owner), to inherit constructors, to make use of `protected`
+members, or to benefit from the empty-base optimization. (For example,
+`wayland::WlArray` privately inherits `wayland::WlArrayBase` to reuse
+ownership of the underlying `wl_array` without claiming that a `WlArray`
+"is a" `WlArrayBase`.)
+
+Otherwise, do not overuse implementation inheritance. Composition is
+often more appropriate: when the relationship is "has-a", when the
+implementation should stay swappable, or when forwarding a few operations
+through a member keeps the derived class interface smaller and clearer
+than inheriting a whole base class would.
 
 Make your destructor `virtual` if necessary. If your class has virtual
 methods, its destructor should be virtual.
