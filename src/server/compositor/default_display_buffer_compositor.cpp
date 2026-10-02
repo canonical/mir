@@ -43,18 +43,20 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     graphics::GLRenderingProvider& gl_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<mir::graphics::OutputFilter> const& output_filter,
-    std::shared_ptr<CompositorReport> const& report) :
+    std::shared_ptr<CompositorReport> const& report,
+    bool post_initial_frame) :
     display_sink(display_sink),
     renderer(renderer),
     output_filter(output_filter),
     fb_adaptor{gl_provider.make_framebuffer_provider(display_sink)},
-    report(report)
+    report(report),
+    post_initial_frame{post_initial_frame}
 {
 }
 
 bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
 {
-    if (scene_elements.size() == 0 && !completed_first_render)
+    if (scene_elements.size() == 0 && !completed_first_render && !post_initial_frame)
         return false;
 
     completed_first_render = true;
