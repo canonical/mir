@@ -60,7 +60,7 @@ FloatingWindowManagerPolicy::FloatingWindowManagerPolicy(
     miral::InternalClientLauncher const& launcher,
     std::function<void()>& shutdown_hook,
     FocusStealing focus_stealing) :
-    FloatingWindowManager(tools, focus_stealing, mir_input_event_modifier_alt),
+    FloatingWindowManager(tools, focus_stealing),
     spinner{spinner},
     decoration_provider{std::make_unique<DecorationProvider>()}
 {
@@ -90,8 +90,24 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
 
     if (action == mir_pointer_action_button_down)
     {
-        if (auto const window = tools.window_at(cursor))
-            tools.select_active_window(window);
+        if (mir_pointer_event_button_state(event, mir_pointer_button_primary))
+        {
+            if (modifiers == mir_input_event_modifier_alt)
+            {
+                if (auto const hint = tools.window_at(cursor))
+                {
+                    tools.select_active_window(hint);
+
+                    if (auto const window = tools.active_window())
+                    {
+                        begin_pointer_move(
+                            tools.info_for(window),
+                            mir_pointer_event_input_event(event));
+                        consumes_event = true;
+                    }
+                }
+            }
+        }
 
         if (auto const window = tools.active_window())
         {
