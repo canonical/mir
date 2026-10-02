@@ -41,7 +41,7 @@ auto create_default_display() -> EGLDisplay
     {
         // Explicitly create a Surfaceless display, when the extension is supported
         mg::EGLExtensions ext;
-        return ext.platform_base->eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+        return ext.platform_base->eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr); // TICS -bugprone-unchecked-optional-access
     }
     // Otherwise, hope that the EGL implementation can pull a functional EGLDisplay out of its hat
     return eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -63,7 +63,7 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayPlatform>
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
-    EGLint major, minor;
+    EGLint major = 0, minor = 0;
     if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
@@ -90,10 +90,10 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
         EGL_NONE
     };
 
-    EGLConfig cfg;
+    EGLConfig cfg; // TICS -cppcoreguidelines-init-variables
     if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        EGLint num_configs;
+        EGLint num_configs; // TICS -cppcoreguidelines-init-variables
 
         if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
         {
@@ -196,6 +196,61 @@ auto maybe_make_dmabuf_provider(
 }
 }
 
+auto mge::probe_display_support(std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays)
+    -> graphics::probe::Result
+{
+    mg::probe::Result maximum_suitability = mg::probe::unsupported;
+    // First check if there are any displays we can possibly drive
+    for (auto const& display_provider : displays)
+    {
+        if (display_provider->acquire_provider<mg::GenericEGLDisplayProvider>())
+        {
+            maximum_suitability = mg::probe::nested;
+            break;
+        }
+        if (display_provider->acquire_provider<mg::CPUAddressableDisplayProvider>())
+        {
+            // Check if the surfaceless platform is available
+            if (mg::has_egl_client_extension("EGL_EXT_platform_base") &&
+                mg::has_egl_client_extension("EGL_MESA_platform_surfaceless"))
+            {
+                // Check that we can actually initialise the EGL display
+                mg::EGLExtensions ext;
+                if (!ext.platform_base.has_value())
+                {
+                    continue;
+                }
+                auto dpy = ext.platform_base->eglGetPlatformDisplay(
+                    EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+                EGLint major = 0, minor = 0;
+                if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
+                {
+                    if (std::make_pair(major, minor) >= std::make_pair(1, 4))
+                    {
+                        // OK, EGL will somehow provide us with a usable display
+                        maximum_suitability = mg::probe::supported;
+                    }
+                    eglTerminate(dpy);
+                }
+                continue;
+            }
+            // Check that EGL_DEFAULT_DISPLAY is something we can use...
+            auto dpy = eglGetDisplay(EGL_DEFAULT_DISPLAY);
+            EGLint major = 0, minor = 0;
+            if (eglInitialize(dpy, &major, &minor) == EGL_TRUE)
+            {
+                if (std::make_pair(major, minor) >= std::make_pair(1, 4))
+                {
+                    // OK, EGL will somehow provide us with a usable display
+                    maximum_suitability = mg::probe::supported;
+                }
+                eglTerminate(dpy);
+            }
+        }
+    }
+    return maximum_suitability;
+}
+
 mge::RenderingPlatform::RenderingPlatform(std::vector<std::shared_ptr<DisplayPlatform>> const& displays)
     : RenderingPlatform(egl_display_from_platforms(displays))
 {
@@ -233,6 +288,26 @@ auto mge::RenderingPlatform::maybe_create_provider(RenderingProvider::Tag const&
             egl_delegate);
     }
     return nullptr;
+}
+
+auto mge::RenderingPlatform::egl_display() const -> EGLDisplay
+{
+    return dpy;
+}
+
+auto mge::RenderingPlatform::egl_context() const -> EGLContext
+{
+    return static_cast<EGLContext>(*ctx);
+}
+
+auto mge::RenderingPlatform::dma_buf_provider() const -> std::shared_ptr<DMABufEGLProvider>
+{
+    return dmabuf_provider;
+}
+
+auto mge::RenderingPlatform::egl_context_executor() const -> std::shared_ptr<common::EGLContextExecutor>
+{
+    return egl_delegate;
 }
 
 mge::RenderingPlatform::EGLDisplayHandle::EGLDisplayHandle(EGLDisplay dpy, bool owns_dpy)

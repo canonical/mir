@@ -1642,6 +1642,10 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
          * This is a logic bug, so go noisily.
          */
         BOOST_THROW_EXCEPTION((std::logic_error{"Failed to find import parameterns for buffer we explicitly allocated for import"}));
+    } else if (auto dmabuf = std::dynamic_pointer_cast<DMABufBuffer>(buffer)) {
+        auto const imported_buffer = import_dma_buf(*dmabuf, []() {}, [](){});
+        std::shared_ptr<NativeBufferBase> native_buffer_base {imported_buffer, imported_buffer->native_buffer_base()};
+        return as_texture(native_buffer_base);
     }
     return nullptr;
 }
