@@ -62,7 +62,9 @@ public:
         std::shared_ptr<GLConfig> const& gl_config,
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
-        std::optional<std::string> const& title);
+        std::optional<std::string> const& title,
+        bool fullscreen,
+        std::vector<WindowConfig> const& windows);
 
     ~Display();
 
