@@ -10,6 +10,8 @@ global:
     "miral::CursorScale::CursorScale(float)";
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
     "miral::CursorScale::CursorScale(miral::live_config::Store&)";
+    "miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&)";
+    "miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&, miral::FocusStealing, MirInputEventModifier)";
     "miral::InputConfiguration::InputConfiguration()";
     "miral::InputConfiguration::InputConfiguration(miral::live_config::Store&)";
     "miral::Keymap::Keymap()";
@@ -24,6 +26,11 @@ global:
     "miral::OutputFilter::OutputFilter()";
     "miral::OutputFilter::OutputFilter(MirOutputFilter)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
+    "miral::TouchEmulator::disable()";
+    "miral::TouchEmulator::disabled()";
+    "miral::TouchEmulator::enable()";
+    "miral::TouchEmulator::enabled()";
+    "miral::TouchEmulator::operator()(mir::Server&)";
     "miral::live_config::OverridesList::OverridesList(miral::live_config::OverridesList&&)";
     "miral::live_config::OverridesList::operator=(miral::live_config::OverridesList&&)";
     miral::AddInitCallback::?AddInitCallback*;
@@ -338,11 +345,6 @@ global:
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
     miral::TouchEmulator::TouchEmulator*;
-    "miral::TouchEmulator::disable()";
-    "miral::TouchEmulator::disabled()";
-    "miral::TouchEmulator::enable()";
-    "miral::TouchEmulator::enabled()";
-    "miral::TouchEmulator::operator()(mir::Server&)";
     miral::WaylandExtensions::?WaylandExtensions*;
     miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::EnableInfo::app*;
@@ -778,3 +780,10 @@ global:
   };
 local: *;
 };
+
+MIRAL_6.1 {
+global:
+  extern "C++" {
+    "miral::FloatingWindowManager::FloatingWindowManager(miral::WindowManagerTools const&, miral::FocusStealing)";
+  };
+} MIRAL_6.0;

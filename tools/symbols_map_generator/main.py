@@ -42,6 +42,7 @@ except ModuleNotFoundError as e:
 
 
 HIDDEN_SYMBOLS = {
+    "miral::FloatingWindowManager::FloatingWindowManager*;",
     "miral::SessionLockListener::?SessionLockListener*;",
     "miral::WaylandExtensions::Context::?Context*;",
     "miral::WaylandExtensions::Context::Context*;",
