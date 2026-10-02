@@ -16,11 +16,19 @@
 
 #include <mir/test/doubles/stub_session.h>
 
+#include <unistd.h>
+
 namespace mtd = mir::test::doubles;
 namespace ms = mir::scene;
 
-mtd::StubSession::StubSession(pid_t pid)
-    : pid(pid)
+
+mtd::StubSession::StubSession()
+    : StubSession{frontend::SessionCredentials{getpid()}}
+{
+}
+
+mtd::StubSession::StubSession(frontend::SessionCredentials&& creds)
+    : creds_{std::move(creds)}
 {}
 
 std::string mtd::StubSession::name() const
@@ -28,9 +36,14 @@ std::string mtd::StubSession::name() const
     return {};
 }
 
+auto mtd::StubSession::creds() const -> frontend::SessionCredentials const&
+{
+    return creds_;
+}
+
 pid_t mtd::StubSession::process_id() const
 {
-    return pid;
+    return creds_.pid();
 }
 
 mir::Fd mtd::StubSession::socket_fd() const

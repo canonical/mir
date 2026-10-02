@@ -52,7 +52,7 @@ public:
     auto is_above(std::weak_ptr<scene::Surface> const& a, std::weak_ptr<scene::Surface> const& b) const -> bool override;
 
     auto open_session(
-        pid_t client_pid,
+        frontend::SessionCredentials&& creds,
         Fd socket_fd,
         std::string const& name) -> std::shared_ptr<scene::Session> override;
 

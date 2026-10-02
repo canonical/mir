@@ -576,7 +576,10 @@ global:
     miral::live_config::Store::Store*;
     miral::live_config::Store::operator*;
     miral::name_of*;
-    miral::operator*;
+    "miral::operator<(miral::Window const&, miral::Window const&)";
+    "miral::operator==(miral::Window const&, miral::Window const&)";
+    "miral::operator==(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)";
+    "miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)";
     miral::pid_of*;
     miral::pre_init*;
     miral::register_log_filtering_config*;
@@ -778,3 +781,15 @@ global:
   };
 local: *;
 };
+
+MIRAL_6.1 {
+global:
+  extern "C++" {
+    miral::ApplicationCredentials::apparmor_label*;
+    miral::ApplicationCredentials::flatpak_id*;
+    miral::ApplicationCredentials::is_sandboxed*;
+    miral::ApplicationCredentials::snap_app_name*;
+    miral::ApplicationCredentials::snap_name*;
+    miral::WaylandExtensions::EnableInfo::creds*;
+  };
+} MIRAL_6.0;
