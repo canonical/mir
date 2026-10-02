@@ -16,7 +16,6 @@
  */
 
 #include "displayclient.h"
-#include <mir/anonymous_shm_file.h>
 #include <mir/fatal.h>
 #include "wl_egl_display_provider.h"
 #include <mir/graphics/platform.h>
@@ -79,7 +78,6 @@ public:
     wl_surface* const surface;
     xdg_surface* shell_surface{nullptr};
     xdg_toplevel* shell_toplevel{nullptr};
-    wl_buffer* initial_buffer{nullptr};
 
     std::optional<geometry::Size> pending_toplevel_size;
     // Size of the window in pixels when not fullscreen
@@ -109,7 +107,6 @@ public:
     void toplevel_configure(int32_t width, int32_t height, wl_array* states);
     void surface_configure(uint32_t serial);
     void apply_size();
-    void commit_initial_buffer();
 
     // DisplaySyncGroup implementation
     void for_each_display_sink(std::function<void(DisplaySink&)> const& f) override;
@@ -202,11 +199,6 @@ mgw::DisplayClient::Output::~Output()
     if (shell_surface)
     {
         xdg_surface_destroy(shell_surface);
-    }
-
-    if (initial_buffer)
-    {
-        wl_buffer_destroy(initial_buffer);
     }
 
     wl_surface_destroy(surface);
@@ -409,10 +401,6 @@ void mgw::DisplayClient::Output::apply_size()
         }
         if (!has_initialized || size_is_changed)
         {
-            if (!has_initialized)
-            {
-                commit_initial_buffer();
-            }
             has_initialized = true;
             {
                 std::lock_guard lock{mutex};
@@ -424,38 +412,6 @@ void mgw::DisplayClient::Output::apply_size()
             owner_->on_display_config_changed();
         }
     }
-}
-
-void mgw::DisplayClient::Output::commit_initial_buffer()
-{
-    // Mir doesn't render until there is something to show, but the host won't map the window without a buffer.
-    // Fill it with black, matching the renderer's clear colour.
-    if (!owner_->shm)
-    {
-        return;
-    }
-
-    auto const width = output_size.width.as_int();
-    auto const height = output_size.height.as_int();
-    auto const stride = width * 4;
-    AnonymousShmFile const shm_file{static_cast<size_t>(stride * height)};
-    std::fill_n(static_cast<uint32_t*>(shm_file.base_ptr()), width * height, 0xff000000);
-    auto const pool = wl_shm_create_pool(owner_->shm, shm_file.fd(), stride * height);
-    initial_buffer = wl_shm_pool_create_buffer(pool, 0, width, height, stride, WL_SHM_FORMAT_XRGB8888);
-    wl_shm_pool_destroy(pool);
-
-    static wl_buffer_listener const buffer_listener{
-        [](void* self, wl_buffer* buffer)
-        {
-            wl_buffer_destroy(buffer);
-            static_cast<Output*>(self)->initial_buffer = nullptr;
-        },
-    };
-    wl_buffer_add_listener(initial_buffer, &buffer_listener, this);
-
-    wl_surface_attach(surface, initial_buffer, 0, 0);
-    wl_surface_damage(surface, 0, 0, INT32_MAX, INT32_MAX);
-    wl_surface_commit(surface);
 }
 
 void mgw::DisplayClient::Output::for_each_display_sink(std::function<void(DisplaySink&)> const& f)
