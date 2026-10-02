@@ -56,7 +56,8 @@ public:
         wl_display* display,
         std::shared_ptr<WlDisplayProvider> provider,
         std::optional<std::string> const& app_id,
-        std::optional<std::string> const& title);
+        std::optional<std::string> const& title,
+        bool fullscreen);
 
     virtual ~DisplayClient();
 
@@ -66,6 +67,7 @@ protected:
     std::shared_ptr<WlDisplayProvider> const provider;
     std::optional<std::string> const app_id;
     std::optional<std::string> const title;
+    bool const fullscreen;
 
     auto display_configuration() const -> std::unique_ptr<DisplayConfiguration>;
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f);

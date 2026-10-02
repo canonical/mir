@@ -39,6 +39,17 @@
 namespace mgw = mir::graphics::wayland;
 namespace geom = mir::geometry;
 
+namespace
+{
+geom::Size const default_window_size{1280, 1024};
+
+// The host doesn't tell us the physical size of a window, so assume 96 DPI
+auto physical_size_mm(geom::Size logical_size) -> geom::Size
+{
+    return {logical_size.width.as_int() * 254 / 960, logical_size.height.as_int() * 254 / 960};
+}
+}
+
 class mgw::DisplayClient::Output  :
     public DisplaySyncGroup,
     public DisplaySink
@@ -67,6 +78,8 @@ public:
     xdg_toplevel* shell_toplevel{nullptr};
 
     std::optional<geometry::Size> pending_toplevel_size;
+    // Logical size of the window when not fullscreen
+    geometry::Size window_size{default_window_size};
     bool has_initialized{false};
 
     // wl_output events
@@ -83,9 +96,13 @@ public:
     void scale(int32_t factor);
     void done();
 
+    // wl_surface events
+    void preferred_buffer_scale(int32_t factor);
+
     // XDG shell events
     void toplevel_configure(int32_t width, int32_t height, wl_array* states);
     void surface_configure(uint32_t serial);
+    void apply_size();
 
     // DisplaySyncGroup implementation
     void for_each_display_sink(std::function<void(DisplaySink&)> const& f) override;
@@ -122,7 +139,20 @@ mgw::DisplayClient::Output::Output(
         [](void* self, auto, auto... args) { static_cast<Output*>(self)->scale(args...); },
     };
     #pragma GCC diagnostic pop
-    wl_output_add_listener(output, &output_listener, this);
+    if (output)
+    {
+        wl_output_add_listener(output, &output_listener, this);
+    }
+    else
+    {
+        static wl_surface_listener const surface_listener{
+            [](auto...){},
+            [](auto...){},
+            [](void* self, auto, auto... args) { static_cast<Output*>(self)->preferred_buffer_scale(args...); },
+            [](auto...){},
+        };
+        wl_surface_add_listener(surface, &surface_listener, this);
+    }
 
     dcout.id = (DisplayConfigurationOutputId)owner->bound_outputs.size();
     dcout.card_id = DisplayConfigurationCardId{1};
@@ -136,6 +166,15 @@ mgw::DisplayClient::Output::Output(
     dcout.scale = 1.0;
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
+
+    if (!output)
+    {
+        // Not attached to a host output, so present a single window-sized mode
+        dcout.modes = {DisplayConfigurationMode{window_size, 60.0}};
+        dcout.current_mode_index = 0;
+        dcout.preferred_mode_index = 0;
+        dcout.physical_size_mm = physical_size_mm(window_size);
+    }
 }
 
 mgw::DisplayClient::Output::~Output()
@@ -270,7 +309,10 @@ void mgw::DisplayClient::Output::done()
         shell_toplevel = xdg_surface_get_toplevel(shell_surface);
         xdg_toplevel_add_listener(shell_toplevel, &shell_toplevel_listener, this);
 
-        xdg_toplevel_set_fullscreen(shell_toplevel, output);
+        if (output)
+        {
+            xdg_toplevel_set_fullscreen(shell_toplevel, output);
+        }
         if (owner_->app_id)
             xdg_toplevel_set_app_id(shell_toplevel, owner_->app_id.value().c_str());
         if (owner_->title)
@@ -282,13 +324,37 @@ void mgw::DisplayClient::Output::done()
     }
 }
 
+void mgw::DisplayClient::Output::preferred_buffer_scale(int32_t factor)
+{
+    if (factor == host_scale)
+    {
+        return;
+    }
+
+    host_scale = factor;
+    wl_surface_set_buffer_scale(surface, host_scale);
+    if (has_initialized)
+    {
+        pending_toplevel_size = window_size * host_scale;
+        apply_size();
+    }
+}
+
 void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t height, wl_array* states)
 {
     (void)states;
 
     if (width > 0 && height > 0)
     {
+        if (!output)
+        {
+            window_size = geometry::Size{width, height};
+        }
         pending_toplevel_size = geometry::Size{host_scale*width, host_scale*height};
+    }
+    else if (!output)
+    {
+        pending_toplevel_size = window_size * host_scale;
     }
     else if (!dcout.modes.empty())
     {
@@ -299,12 +365,20 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
 {
     xdg_surface_ack_configure(shell_surface, serial);
+    apply_size();
+}
 
+void mgw::DisplayClient::Output::apply_size()
+{
     if (pending_toplevel_size)
     {
         bool const size_is_changed = !dcout.custom_logical_size ||
             dcout.custom_logical_size.value() != pending_toplevel_size.value();
         dcout.custom_logical_size = pending_toplevel_size.value();
+        if (!output)
+        {
+            dcout.physical_size_mm = physical_size_mm(window_size);
+        }
         pending_toplevel_size.reset();
         output_size = dcout.extents().size;
         if (!has_initialized || size_is_changed)
@@ -459,11 +533,13 @@ mgw::DisplayClient::DisplayClient(
     wl_display* display,
     std::shared_ptr<WlDisplayProvider> provider,
     std::optional<std::string> const& app_id,
-    std::optional<std::string> const& title) :
+    std::optional<std::string> const& title,
+    bool fullscreen) :
     display{display},
     provider{std::move(provider)},
     app_id{app_id},
     title{title},
+    fullscreen{fullscreen},
     keyboard_context_{xkb_context_new(XKB_CONTEXT_NO_FLAGS)},
     registry{nullptr, [](auto){}}
 {
@@ -495,10 +571,20 @@ mgw::DisplayClient::DisplayClient(
 
     // Roundtrip once to bind to all output globals, then keep roundtripping until surfaces for all outputs are
     // initialized
-    do
+    wl_display_roundtrip(display);
+
+    if (!fullscreen)
+    {
+        // A single window that isn't associated with any host output. Registry names start at 1, so 0 won't clash.
+        std::lock_guard lock{outputs_mutex};
+        auto const [window, _] = bound_outputs.emplace(0, std::make_unique<Output>(nullptr, this));
+        window->second->done();
+    }
+
+    while (has_uninitialized_output())
     {
         wl_display_roundtrip(display);
-    } while (has_uninitialized_output());
+    }
 }
 
 void mgw::DisplayClient::on_display_config_changed()
@@ -540,7 +626,7 @@ void mgw::DisplayClient::new_global(
     if (std::string_view(interface) == "wl_compositor")
     {
         self->compositor =
-            static_cast<decltype(self->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 3u)));
+            static_cast<decltype(self->compositor)>(wl_registry_bind(registry, id, &wl_compositor_interface, std::min(version, 6u)));
     }
     else if (std::string_view(interface) == "wl_shm")
     {
@@ -556,7 +642,7 @@ void mgw::DisplayClient::new_global(
         self->seat = static_cast<decltype(self->seat)>(wl_registry_bind(registry, id, &wl_seat_interface, std::min(version, 6u)));
         add_seat_listener(self, self->seat);
     }
-    else if (std::string_view(interface) == "wl_output")
+    else if (std::string_view(interface) == "wl_output" && self->fullscreen)
     {
         auto output =
             static_cast<wl_output*>(wl_registry_bind(registry, id, &wl_output_interface, std::min(version, 2u)));

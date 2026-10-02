@@ -37,7 +37,8 @@ public:
     Platform(struct wl_display* const wl_display,
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
-        std::optional<std::string> const& title);
+        std::optional<std::string> const& title,
+        bool fullscreen);
     ~Platform() = default;
 
     UniqueModulePtr<Display> create_display(
@@ -52,6 +53,7 @@ private:
     std::shared_ptr<DisplayReport> const report;
     std::optional<std::string> const app_id;
     std::optional<std::string> const title;
+    bool const fullscreen;
 
     std::shared_ptr<WlDisplayProvider> const provider;
 };

@@ -350,6 +350,13 @@ Driver quirks to apply. May be specified multiple times; multiple quirks are com
 Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT`, e.g. `1920x1080:3840x2160`.
 ## Options for mir:wayland platform
 
+(mir-wayland-wayland-fullscreen)=
+### `wayland-fullscreen`
+
+Show a fullscreen window on each host output instead of a single window.
+
+Defaults to `0`.
+
 (mir-wayland-wayland-host)=
 ### `wayland-host`
 
@@ -364,6 +371,8 @@ Application ID for the window containing the Mir output.
 ### `wayland-surface-title`
 
 Title of the window containing the Mir output.
+
+Defaults to `Mir on Wayland`.
 ## Options for mir:x11 platform
 
 (mir-x11-x11-output)=

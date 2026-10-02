@@ -45,6 +45,10 @@ const char* const wayland_surface_app_id_option_description{"Application ID for 
 
 const char* const wayland_surface_title_option{"wayland-surface-title"};
 const char* const wayland_surface_title_option_description{"Title of the window containing the Mir output."};
+
+const char* const wayland_fullscreen_option{"wayland-fullscreen"};
+const char* const wayland_fullscreen_option_description{
+    "Show a fullscreen window on each host output instead of a single window."};
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
@@ -58,12 +62,11 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
     if (options->is_set(wayland_surface_app_id_option))
         app_id = options->get<std::string>(wayland_surface_app_id_option);
 
-    std::optional<std::string> title;
-    if (options->is_set(wayland_surface_title_option))
-        title = options->get<std::string>(wayland_surface_title_option);
+    auto const title = options->get<std::string>(wayland_surface_title_option);
+    auto const fullscreen = options->get<bool>(wayland_fullscreen_option);
 
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title);
+    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title, fullscreen);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -76,8 +79,12 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          wayland_surface_app_id_option_description);
     config.add_options()
         (wayland_surface_title_option,
-         boost::program_options::value<std::string>(),
+         boost::program_options::value<std::string>()->default_value("Mir on Wayland"),
          wayland_surface_title_option_description);
+    config.add_options()
+        (wayland_fullscreen_option,
+         boost::program_options::value<bool>()->default_value(false),
+         wayland_fullscreen_option_description);
 }
 
 auto probe_graphics_platform(
