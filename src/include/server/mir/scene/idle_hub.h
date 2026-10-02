@@ -71,6 +71,9 @@ public:
 
     virtual auto inhibit_idle() -> std::shared_ptr<IdleHub::WakeLock> = 0;
 
+    /// Controls whether active wake locks suppress idle notifications
+    virtual void set_idle_inhibition_enabled(bool enabled) = 0;
+
 private:
     IdleHub(IdleHub const&) = delete;
     IdleHub& operator=(IdleHub const&) = delete;
