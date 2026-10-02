@@ -116,6 +116,10 @@ MirEglApp::MirEglApp(wl_display* display) :
             EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
             EGL_COLOR_BUFFER_TYPE, EGL_RGB_BUFFER,
             EGL_BUFFER_SIZE, (EGLint) bpp,
+            EGL_RED_SIZE, 8,
+            EGL_GREEN_SIZE, 8,
+            EGL_BLUE_SIZE, 8,
+            EGL_ALPHA_SIZE, 8,
             EGL_NONE
         };
 
