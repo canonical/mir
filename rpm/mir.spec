@@ -26,7 +26,7 @@
 # Track various library soversions
 %global miral_sover 8
 %global mircommon_sover 14
-%global mircore_sover 3
+%global mircore_sover 4
 %global miroil_sover 10
 %global mirplatform_sover 36
 %global mirserver_sover 69

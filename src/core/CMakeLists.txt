@@ -1,4 +1,4 @@
-set(MIRCORE_ABI 3)
+set(MIRCORE_ABI 4)
 
 pkg_check_modules(LIBDISPLAY_INFO REQUIRED IMPORTED_TARGET libdisplay-info)
 
