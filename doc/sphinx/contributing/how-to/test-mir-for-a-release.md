@@ -228,11 +228,7 @@ The following describes how to select each console provider:
 
    - This requires running with root privileges
    - You need to ensure that `XDG_RUNTIME_DIR` is set in the environment. If using `sudo`,
-     it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=<directory> miral-shell ...`
-     will ensure this is set.
-   - Before running, double check that `directory` is set to a valid directory
-     (e.g. `/run/user/1000`), otherwise, Mir will fail to start, locking up the
-     system and requiring a force-restart.
+     it might strip this out; running something like `sudo env XDG_RUNTIME_DIR=/run/user/1000 miral-shell ...`
 
 1. **logind**:
 
