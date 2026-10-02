@@ -104,7 +104,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
          wayland_surface_title_option_description);
     config.add_options()
         (wayland_fullscreen_option,
-         boost::program_options::value<bool>()->default_value(false),
+         boost::program_options::value<bool>()->default_value(false)->implicit_value(true),
          wayland_fullscreen_option_description);
     config.add_options()
         (wayland_output_option,
