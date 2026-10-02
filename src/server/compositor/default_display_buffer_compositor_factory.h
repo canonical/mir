@@ -51,7 +51,8 @@ public:
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<CompositorReport> const& report,
-        std::shared_ptr<graphics::OutputFilter> const& output_filter);
+        std::shared_ptr<graphics::OutputFilter> const& output_filter,
+        bool post_initial_frame = false);
 
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) override;
 
@@ -62,6 +63,7 @@ private:
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::OutputFilter> const output_filter;
+    bool const post_initial_frame;
 };
 
 }

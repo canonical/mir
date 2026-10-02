@@ -75,7 +75,13 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
 
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report(), the_output_filter()));
+                    std::move(providers),
+                    the_gl_config(),
+                    the_renderer_factory(),
+                    the_buffer_allocator(),
+                    the_compositor_report(),
+                    the_output_filter(),
+                    post_initial_frame()));
         });
 }
 
@@ -84,6 +90,11 @@ mir::DefaultServerConfiguration::wrap_display_buffer_compositor_factory(
     std::shared_ptr<mc::DisplayBufferCompositorFactory> const& wrapped)
 {
     return wrapped;
+}
+
+bool mir::DefaultServerConfiguration::post_initial_frame()
+{
+    return false;
 }
 
 std::shared_ptr<mc::Compositor>
