@@ -158,14 +158,14 @@ TEST_F(BasicIdleHandler, off_timeout_when_locked_is_used_when_session_is_locked)
     handler.set_display_off_timeout_when_locked(10s);
 
     InSequence sequence;
-    EXPECT_CALL(idle_hub, set_idle_inhibition_enabled(false));
-    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
-        .Times(0);
     EXPECT_CALL(idle_hub, register_interest(_, Eq(10s)))
         .Times(1);
+    EXPECT_CALL(idle_hub, set_idle_inhibition_enabled(false));
     session_lock.lock();
 
     EXPECT_CALL(idle_hub, set_idle_inhibition_enabled(true));
+    EXPECT_CALL(idle_hub, register_interest(_, Eq(30s)))
+        .Times(1);
     session_lock.unlock();
 }
 
