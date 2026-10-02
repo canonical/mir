@@ -315,6 +315,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 %dir %{_libdir}/%{name}/server-platform
 %{_libdir}/%{name}/server-platform/graphics-dummy.so.%{mirplatformgraphics_sover}
 %{_libdir}/%{name}/server-platform/input-stub.so.%{mirplatforminput_sover}
+%{_libdir}/%{name}/server-platform/renderer-egl-generic.so.%{mirplatformgraphics_sover}
 %{_datadir}/%{name}/expected_wlcs_failures.list
 
 %files test-libs-static
