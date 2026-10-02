@@ -24,7 +24,6 @@
 #include <algorithm>
 #include <stdexcept>
 #include <set>
-#include <condition_variable>
 
 class MirEglApp : public WaylandApp
 {
@@ -199,49 +198,25 @@ void MirEglApp::make_current(EGLSurface eglsurface) const
 
 void MirEglApp::swap_buffers(EGLSurface eglsurface, wl_surface* wayland_surface) const
 {
-    // Taken primarily from src/platforms/wayland/displayclient.cpp
-    struct FrameSync
-    {
-        explicit FrameSync(wl_surface* surface):
-            surface{surface}
+    bool frame_done = false;
+    auto const callback = wl_surface_frame(wayland_surface);
+    static wl_callback_listener const frame_listener =
         {
-            callback = wl_surface_frame(surface);
-            static struct wl_callback_listener const frame_listener =
-                {
-                    [](void* data, auto... args)
-                        { static_cast<FrameSync*>(data)->frame_done(args...); },
-                };
-            wl_callback_add_listener(callback, &frame_listener, this);
-        }
+            [](void* data, wl_callback*, uint32_t) { *static_cast<bool*>(data) = true; },
+        };
+    wl_callback_add_listener(callback, &frame_listener, &frame_done);
 
-
-        ~FrameSync()
-        {
-            std::unique_lock lock{mutex};
-            cv.wait_for(lock, std::chrono::milliseconds{100}, [this]{ return posted; });
-            wl_callback_destroy(callback);
-        }
-
-        void frame_done(wl_callback*, uint32_t)
-        {
-            {
-                std::lock_guard lock{mutex};
-                posted = true;
-            }
-            cv.notify_one();
-        }
-
-        wl_surface* const surface;
-
-        wl_callback* callback;
-        std::mutex mutex;
-        bool posted = false;
-        std::condition_variable cv;
-    };
-
-    FrameSync frame_sync{wayland_surface};
     eglSwapInterval(egldisplay, 0);
     eglSwapBuffers(egldisplay, eglsurface);
+
+    // Nothing else dispatches events on this display, so wait for the frame callback here.
+    // Time out in case the surface is not being shown.
+    timespec const timeout{0, 100'000'000};
+    while (!frame_done && wl_display_dispatch_timeout(display(), &timeout) > 0)
+    {
+    }
+
+    wl_callback_destroy(callback);
 }
 
 void MirEglApp::destroy_surface(EGLSurface eglsurface) const
