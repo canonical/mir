@@ -454,6 +454,7 @@ void mgw::DisplayClient::Output::commit_initial_buffer()
     wl_buffer_add_listener(initial_buffer, &buffer_listener, this);
 
     wl_surface_attach(surface, initial_buffer, 0, 0);
+    wl_surface_damage(surface, 0, 0, INT32_MAX, INT32_MAX);
     wl_surface_commit(surface);
 }
 
