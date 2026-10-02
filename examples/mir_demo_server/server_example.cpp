@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "server_example_background.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
@@ -154,6 +155,7 @@ try
 
     InputFilters input_filters;
     me::TestClientRunner test_runner;
+    me::Background background;
 
     miral::WaylandExtensions wayland_extensions;
 
@@ -170,6 +172,7 @@ try
         miral::CursorTheme{"default:DMZ-White"},
         input_filters,
         test_runner,
+        background,
         output_filter,
         input_configuration,
         cursor_scale,
