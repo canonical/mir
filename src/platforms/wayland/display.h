@@ -63,7 +63,8 @@ public:
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
         std::optional<std::string> const& title,
-        bool fullscreen);
+        bool fullscreen,
+        std::vector<WindowConfig> const& windows);
 
     ~Display();
 

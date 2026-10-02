@@ -32,6 +32,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <algorithm>
+#include <cmath>
 #include <condition_variable>
 #include <string_view>
 #include <cstdlib>
@@ -42,12 +43,12 @@ namespace geom = mir::geometry;
 
 namespace
 {
-geom::Size const default_window_size{1280, 1024};
-
-// The host doesn't tell us the physical size of a window, so assume 96 DPI
-auto physical_size_mm(geom::Size logical_size) -> geom::Size
+// The host doesn't tell us the physical size of a window, so assume 96 DPI at the host's scale
+auto physical_size_mm(geom::Size pixel_size, int32_t host_scale) -> geom::Size
 {
-    return {logical_size.width.as_int() * 254 / 960, logical_size.height.as_int() * 254 / 960};
+    return {
+        pixel_size.width.as_int() * 254 / (960 * host_scale),
+        pixel_size.height.as_int() * 254 / (960 * host_scale)};
 }
 }
 
@@ -58,7 +59,8 @@ class mgw::DisplayClient::Output  :
 public:
     Output(
         wl_output* output,
-        DisplayClient* owner);
+        DisplayClient* owner,
+        WindowConfig const& window_config = {{}, 1.0f});
 
     ~Output();
 
@@ -80,8 +82,10 @@ public:
     wl_buffer* initial_buffer{nullptr};
 
     std::optional<geometry::Size> pending_toplevel_size;
-    // Logical size of the window when not fullscreen
-    geometry::Size window_size{default_window_size};
+    // Size of the window in pixels when not fullscreen
+    geometry::Size window_size;
+    // The buffer size must be a multiple of the buffer scale
+    auto window_buffer_size() const -> geometry::Size;
     bool has_initialized{false};
 
     // wl_output events
@@ -127,10 +131,12 @@ private:
 
 mgw::DisplayClient::Output::Output(
     wl_output* output,
-    DisplayClient* owner) :
+    DisplayClient* owner,
+    WindowConfig const& window_config) :
     output{output},
     owner_{owner},
-    surface{wl_compositor_create_surface(owner->compositor)}
+    surface{wl_compositor_create_surface(owner->compositor)},
+    window_size{window_config.size}
 {
     // If building against newer Wayland protocol definitions we may miss trailing fields
     #pragma GCC diagnostic push
@@ -166,17 +172,18 @@ mgw::DisplayClient::Output::Output(
     dcout.used = true;
     dcout.power_mode = mir_power_mode_on;
     dcout.orientation = MirOrientation::mir_orientation_normal;
-    dcout.scale = 1.0;
+    dcout.scale = window_config.scale;
     dcout.form_factor = MirFormFactor::mir_form_factor_monitor;
     dcout.gamma_supported = MirOutputGammaSupported::mir_output_gamma_unsupported;
 
     if (!output)
     {
-        // Not attached to a host output, so present a single window-sized mode
+        // Not attached to a host output, so present a single window-sized mode. This is updated to the actual pixel
+        // size when the window is configured.
         dcout.modes = {DisplayConfigurationMode{window_size, 60.0}};
         dcout.current_mode_index = 0;
         dcout.preferred_mode_index = 0;
-        dcout.physical_size_mm = physical_size_mm(window_size);
+        dcout.physical_size_mm = physical_size_mm(window_size, host_scale);
     }
 }
 
@@ -343,7 +350,7 @@ void mgw::DisplayClient::Output::preferred_buffer_scale(int32_t factor)
     wl_surface_set_buffer_scale(surface, host_scale);
     if (has_initialized)
     {
-        pending_toplevel_size = window_size * host_scale;
+        pending_toplevel_size = window_buffer_size();
         apply_size();
     }
 }
@@ -356,18 +363,25 @@ void mgw::DisplayClient::Output::toplevel_configure(int32_t width, int32_t heigh
     {
         if (!output)
         {
-            window_size = geometry::Size{width, height};
+            window_size = geometry::Size{host_scale*width, host_scale*height};
         }
         pending_toplevel_size = geometry::Size{host_scale*width, host_scale*height};
     }
     else if (!output)
     {
-        pending_toplevel_size = window_size * host_scale;
+        pending_toplevel_size = window_buffer_size();
     }
     else if (!dcout.modes.empty())
     {
         pending_toplevel_size = dcout.modes[dcout.current_mode_index].size;
     }
+}
+
+auto mgw::DisplayClient::Output::window_buffer_size() const -> geometry::Size
+{
+    return {
+        std::max(host_scale, window_size.width.as_int() / host_scale * host_scale),
+        std::max(host_scale, window_size.height.as_int() / host_scale * host_scale)};
 }
 
 void mgw::DisplayClient::Output::surface_configure(uint32_t serial)
@@ -380,15 +394,19 @@ void mgw::DisplayClient::Output::apply_size()
 {
     if (pending_toplevel_size)
     {
-        bool const size_is_changed = !dcout.custom_logical_size ||
-            dcout.custom_logical_size.value() != pending_toplevel_size.value();
-        dcout.custom_logical_size = pending_toplevel_size.value();
+        auto const pixel_size = pending_toplevel_size.value();
+        pending_toplevel_size.reset();
+        bool const size_is_changed = output_size != pixel_size;
+        output_size = pixel_size;
+        dcout.custom_logical_size = geometry::Size{
+            static_cast<int>(std::round(pixel_size.width.as_int() / dcout.scale)),
+            static_cast<int>(std::round(pixel_size.height.as_int() / dcout.scale))};
         if (!output)
         {
-            dcout.physical_size_mm = physical_size_mm(window_size);
+            dcout.modes[0].size = pixel_size;
+            dcout.physical_size_mm = physical_size_mm(pixel_size, host_scale);
+            owner_->layout_windows();
         }
-        pending_toplevel_size.reset();
-        output_size = dcout.extents().size;
         if (!has_initialized || size_is_changed)
         {
             if (!has_initialized)
@@ -577,7 +595,8 @@ mgw::DisplayClient::DisplayClient(
     std::shared_ptr<WlDisplayProvider> provider,
     std::optional<std::string> const& app_id,
     std::optional<std::string> const& title,
-    bool fullscreen) :
+    bool fullscreen,
+    std::vector<WindowConfig> const& windows) :
     display{display},
     provider{std::move(provider)},
     app_id{app_id},
@@ -618,10 +637,17 @@ mgw::DisplayClient::DisplayClient(
 
     if (!fullscreen)
     {
-        // A single window that isn't associated with any host output. Registry names start at 1, so 0 won't clash.
+        // Windows that aren't associated with any host output. Host outputs aren't bound in this mode, so the keys
+        // won't clash.
         std::lock_guard lock{outputs_mutex};
-        auto const [window, _] = bound_outputs.emplace(0, std::make_unique<Output>(nullptr, this));
-        window->second->done();
+        for (auto const& window_config : windows)
+        {
+            auto const [window, _] = bound_outputs.emplace(
+                bound_outputs.size(),
+                std::make_unique<Output>(nullptr, this, window_config));
+            this->windows.push_back(window->second.get());
+            window->second->done();
+        }
     }
 
     while (has_uninitialized_output())
@@ -638,6 +664,18 @@ void mgw::DisplayClient::on_display_config_changed()
     for (auto const& handler : handlers)
     {
         handler();
+    }
+}
+
+void mgw::DisplayClient::layout_windows()
+{
+    // Place the windows' outputs side by side, like the X11 platform does
+    std::lock_guard lock{outputs_mutex};
+    geom::X x{0};
+    for (auto const window : windows)
+    {
+        window->dcout.top_left = {x, 0};
+        x += as_delta(window->dcout.extents().size.width);
     }
 }
 
@@ -714,6 +752,12 @@ void mgw::DisplayClient::remove_global(
     uint32_t id)
 {
     DisplayClient* self = static_cast<decltype(self)>(data);
+
+    if (!self->fullscreen)
+    {
+        // Windows aren't tied to host globals
+        return;
+    }
 
     std::unique_lock lock{self->outputs_mutex};
     auto const output = self->bound_outputs.find(id);
@@ -794,7 +838,7 @@ void mgw::DisplayClient::pointer_enter(
         {
             // Pointer events are displaced and scaled according to the surface
             pointer_displacement = geom::DisplacementF{out.second->dcout.top_left - geometry::Point{}};
-            pointer_scale = out.second->host_scale;
+            pointer_scale = out.second->host_scale / out.second->dcout.scale;
             break;
         }
     }
@@ -863,6 +907,7 @@ void mgw::DisplayClient::touch_down(
         if (surface == out.second->surface)
         {
             touch_displacement = out.second->dcout.top_left - geometry::Point{};
+            touch_scale = out.second->host_scale / out.second->dcout.scale;
             break;
         }
     }

@@ -362,6 +362,13 @@ Defaults to `0`.
 
 Display name for host compositor, e.g. `wayland-0`.
 
+(mir-wayland-wayland-output)=
+### `wayland-output`
+
+Colon separated list of windows to show, each containing a Mir output. Dimensions are in the form `WIDTHxHEIGHT[^SCALE]`, e.g. `1920x1080:1280x1024^2`. Ignored when fullscreen.
+
+Defaults to `1280x1024`.
+
 (mir-wayland-wayland-surface-app-id)=
 ### `wayland-surface-app-id`
 

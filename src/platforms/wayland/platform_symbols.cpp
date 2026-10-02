@@ -15,6 +15,7 @@
  */
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/options_parsing_helpers.h>
 #include <optional>
 
 #include "wayland_display.h"
@@ -49,6 +50,25 @@ const char* const wayland_surface_title_option_description{"Title of the window 
 const char* const wayland_fullscreen_option{"wayland-fullscreen"};
 const char* const wayland_fullscreen_option_description{
     "Show a fullscreen window on each host output instead of a single window."};
+
+const char* const wayland_output_option{"wayland-output"};
+const char* const wayland_output_option_description{
+    "Colon separated list of windows to show, each containing a Mir output. "
+    "Dimensions are in the form `WIDTHxHEIGHT[^SCALE]`, e.g. `1920x1080:1280x1024^2`. Ignored when fullscreen."};
+
+auto parse_windows(std::string const& option) -> std::vector<mgw::WindowConfig>
+{
+    std::vector<mgw::WindowConfig> windows;
+    for (size_t start = 0, end; start <= option.size(); start = end + 1)
+    {
+        end = option.find(':', start);
+        if (end == std::string::npos)
+            end = option.size();
+        auto const [size, scale] = mg::common::parse_size_with_scale(option.substr(start, end - start));
+        windows.push_back({size, scale});
+    }
+    return windows;
+}
 }
 
 mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
@@ -64,9 +84,10 @@ mir::UniqueModulePtr<mg::DisplayPlatform> create_display_platform(
 
     auto const title = options->get<std::string>(wayland_surface_title_option);
     auto const fullscreen = options->get<bool>(wayland_fullscreen_option);
+    auto const windows = parse_windows(options->get<std::string>(wayland_output_option));
 
     mir::assert_entry_point_signature<mg::CreateDisplayPlatform>(&create_display_platform);
-    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title, fullscreen);
+    return mir::make_module_ptr<mgw::Platform>(mpw::connection(*options), report, app_id, title, fullscreen, windows);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description& config)
@@ -85,6 +106,10 @@ void add_graphics_platform_options(boost::program_options::options_description& 
         (wayland_fullscreen_option,
          boost::program_options::value<bool>()->default_value(false),
          wayland_fullscreen_option_description);
+    config.add_options()
+        (wayland_output_option,
+         boost::program_options::value<std::string>()->default_value("1280x1024"),
+         wayland_output_option_description);
 }
 
 auto probe_graphics_platform(
