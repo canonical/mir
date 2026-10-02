@@ -1,0 +1,12 @@
+summary: Launch Mir and compile a MirAL consumer
+prepare: |
+  envsubst '${BASE}' <workshop.yaml.in >workshop.yaml
+  workshop launch
+restore: |
+  workshop remove || true
+execute: |
+  workshop info | MATCH 'status:\s+ready'
+  workshop exec -- bash -lc 'pkg-config --exists miral && c++ /project/tests/main/launch/consumer.cpp -o /tmp/miral-consumer $(pkg-config --cflags --libs miral) && /tmp/miral-consumer'
+debug: |
+  workshop info || true
+  workshop exec -- bash -lc 'pkg-config --cflags --libs miral; ls -la /opt/mir/lib' || true
