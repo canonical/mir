@@ -42,7 +42,7 @@
 
     - miral ABI unchanged at 8
     - mircommon ABI unchanged at 13
-    - mircore ABI unchanged at 3
+    - mircore ABI bumped to 4
     - miroil ABI unchanged at 10
     - mirplatform ABI unchanged at 35
     - mirserver ABI unchanged at 68
