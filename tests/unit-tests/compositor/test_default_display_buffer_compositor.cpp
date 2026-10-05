@@ -19,9 +19,12 @@
 #include <mir/compositor/scene.h>
 #include <mir/renderer/renderer.h>
 #include <mir/geometry/rectangle.h>
+#include <mir/graphics/rendering_providers.h>
+#include <mir/graphics/transformation.h>
 #include <mir/test/doubles/mock_renderer.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_display_sink.h>
+#include <mir/test/doubles/mock_gl_rendering_provider.h>
 #include <mir/test/doubles/fake_renderable.h>
 #include <mir/test/doubles/mock_compositor_report.h>
 #include <mir/test/doubles/stub_scene_element.h>
@@ -101,6 +104,59 @@ struct DefaultDisplayBufferCompositor : public testing::Test
     std::shared_ptr<mtd::FakeRenderable> small;
     std::shared_ptr<mtd::FakeRenderable> big;
     std::shared_ptr<mtd::FakeRenderable> fullscreen;
+};
+
+struct MockOutputFilter : mg::OutputFilter
+{
+    MOCK_METHOD(MirOutputFilter, filter, (), (override));
+    MOCK_METHOD(void, filter, (MirOutputFilter new_filter), (override));
+};
+
+struct StubFramebuffer : mg::Framebuffer
+{
+    explicit StubFramebuffer(geom::Size size) : size_{size}
+    {
+    }
+
+    auto size() const -> geom::Size override
+    {
+        return size_;
+    }
+
+private:
+    geom::Size const size_;
+};
+
+struct MockFramebufferProvider : mg::RenderingProvider::FramebufferProvider
+{
+    MOCK_METHOD(
+        std::unique_ptr<mg::Framebuffer>, buffer_to_framebuffer, (std::shared_ptr<mg::Buffer>), (override));
+};
+
+struct DirectPresentationDefaultDisplayBufferCompositor : DefaultDisplayBufferCompositor
+{
+    DirectPresentationDefaultDisplayBufferCompositor()
+    {
+        using namespace testing;
+        ON_CALL(*output_filter, filter())
+            .WillByDefault(Return(mir_output_filter_none));
+
+        auto provider = std::make_unique<StrictMock<MockFramebufferProvider>>();
+        framebuffer_provider = provider.get();
+        ON_CALL(*provider, buffer_to_framebuffer(_))
+            .WillByDefault([this](auto) { return std::make_unique<StubFramebuffer>(screen.size); });
+        EXPECT_CALL(mock_gl_provider, make_framebuffer_provider(Ref(display_sink)))
+            .WillOnce(Return(ByMove(std::move(provider))));
+
+        compositor = std::make_unique<mc::DefaultDisplayBufferCompositor>(
+            display_sink, mock_gl_provider, mt::fake_shared(mock_renderer), output_filter, mr::null_compositor_report());
+    }
+
+    testing::NiceMock<mtd::MockGlRenderingProvider> mock_gl_provider;
+    std::shared_ptr<testing::NiceMock<MockOutputFilter>> const output_filter{
+        std::make_shared<testing::NiceMock<MockOutputFilter>>()};
+    MockFramebufferProvider* framebuffer_provider{nullptr};
+    std::unique_ptr<mc::DefaultDisplayBufferCompositor> compositor;
 };
 }
 
@@ -341,3 +397,72 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
 
     compositor.composite({element0_occluded, element1_rendered, element2_occluded});
 }
+
+TEST_F(DirectPresentationDefaultDisplayBufferCompositor, eligible_output_is_overlaid)
+{
+    using namespace testing;
+    EXPECT_CALL(*output_filter, filter()).Times(1);
+    EXPECT_CALL(display_sink, transformation()).WillOnce(Return(no_transformation));
+    EXPECT_CALL(*framebuffer_provider, buffer_to_framebuffer(fullscreen->buffer()));
+    EXPECT_CALL(display_sink, overlay(ElementsAre(_))).WillOnce(Return(true));
+    EXPECT_CALL(mock_renderer, suspend());
+    EXPECT_CALL(mock_renderer, render(_)).Times(0);
+    EXPECT_CALL(display_sink, set_next_image(_)).Times(0);
+
+    EXPECT_TRUE(compositor->composite(make_scene_elements({fullscreen})));
+}
+
+namespace
+{
+struct OutputState
+{
+    MirOutputFilter filter;
+    glm::mat2 transform;
+};
+
+struct IneligibleDefaultDisplayBufferCompositor :
+    DirectPresentationDefaultDisplayBufferCompositor,
+    testing::WithParamInterface<OutputState>
+{
+};
+}
+
+TEST_P(IneligibleDefaultDisplayBufferCompositor, ineligible_output_is_composited)
+{
+    using namespace testing;
+    auto const& [filter, transform] = GetParam();
+
+    ON_CALL(*output_filter, filter()).WillByDefault(Return(filter));
+
+    EXPECT_CALL(*output_filter, filter()).Times(1);
+    EXPECT_CALL(display_sink, transformation()).WillOnce(Return(transform));
+    EXPECT_CALL(*framebuffer_provider, buffer_to_framebuffer(_)).Times(0);
+    EXPECT_CALL(display_sink, overlay(_)).Times(0);
+    EXPECT_CALL(mock_renderer, suspend()).Times(0);
+
+    InSequence seq;
+    EXPECT_CALL(mock_renderer, set_output_transform(transform));
+    EXPECT_CALL(mock_renderer, set_viewport(screen));
+    EXPECT_CALL(mock_renderer, set_output_filter(filter));
+
+    auto framebuffer = std::make_unique<StubFramebuffer>(screen.size);
+    auto const rendered_framebuffer = framebuffer.get();
+
+    EXPECT_CALL(mock_renderer, render(ContainerEq(mg::RenderableList{fullscreen, small})))
+        .WillOnce(Return(ByMove(std::move(framebuffer))));
+    EXPECT_CALL(display_sink, set_next_image(Pointer(Eq(rendered_framebuffer))));
+
+    EXPECT_TRUE(compositor->composite(make_scene_elements({fullscreen, small})));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    OutputStates,
+    IneligibleDefaultDisplayBufferCompositor,
+    testing::Values(
+        OutputState{mir_output_filter_grayscale, no_transformation},
+        OutputState{mir_output_filter_invert, no_transformation},
+        OutputState{mir_output_filter_none, mg::transformation(mir_orientation_left)},
+        OutputState{mir_output_filter_none, mg::transformation(mir_orientation_inverted)},
+        OutputState{mir_output_filter_none, mg::transformation(mir_orientation_right)},
+        OutputState{mir_output_filter_none, mg::transformation(mir_mirror_mode_horizontal)},
+        OutputState{mir_output_filter_none, mg::transformation(mir_mirror_mode_vertical)}));
