@@ -87,7 +87,7 @@ private:
 
     void apply_config(std::shared_ptr<graphics::DisplayConfiguration> const& conf);
     void apply_base_config();
-    void send_config_to_all_sessions(
+    void send_config_notifications(
         std::shared_ptr<graphics::DisplayConfiguration> const& conf);
 
     std::shared_ptr<graphics::Display> const display;
