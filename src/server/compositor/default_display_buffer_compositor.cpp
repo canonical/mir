@@ -36,6 +36,51 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
+
+namespace
+{
+auto import_display_elements(
+    mg::RenderableList const& renderable_list,
+    mg::RenderingProvider::FramebufferProvider& fb_adaptor) -> std::vector<mg::DisplayElement>
+{
+    std::vector<mg::DisplayElement> framebuffers;
+    framebuffers.reserve(renderable_list.size());
+
+    for (auto const& renderable : renderable_list)
+    {
+        auto fb = fb_adaptor.buffer_to_framebuffer(renderable->buffer());
+        if (!fb)
+        {
+            break;
+        }
+        geom::Rectangle clipped_dest;
+        if (renderable->clip_area())
+        {
+            clipped_dest = intersection_of(renderable->screen_position(), *renderable->clip_area());
+        }
+        else
+        {
+            clipped_dest = renderable->screen_position();
+        }
+        geom::SizeF const source_size{
+            clipped_dest.size.width.as_value(),
+            clipped_dest.size.height.as_value()};
+        geom::PointF const source_origin{
+            clipped_dest.top_left.x.as_value() - renderable->screen_position().top_left.x.as_value(),
+            clipped_dest.top_left.y.as_value() - renderable->screen_position().top_left.y.as_value()
+        };
+
+        framebuffers.emplace_back(mg::DisplayElement{
+            renderable->screen_position(),
+            geom::RectangleF{source_origin, source_size},
+            std::move(fb)
+        });
+    }
+
+    return framebuffers;
+}
+}
 
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -84,41 +129,8 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     visible_elements.clear();  // Those in use are still in renderable_list
 
-    std::vector<mg::DisplayElement> framebuffers;
-    framebuffers.reserve(renderable_list.size());
-
-    for (auto const& renderable : renderable_list)
-    {
-        auto fb = fb_adaptor->buffer_to_framebuffer(renderable->buffer());
-        if (!fb)
-        {
-            break;
-        }
-        geometry::Rectangle clipped_dest;
-        if (renderable->clip_area())
-        {
-            clipped_dest = intersection_of(renderable->screen_position(), *renderable->clip_area());
-        }
-        else
-        {
-            clipped_dest = renderable->screen_position();
-        }
-        geometry::SizeF const source_size{
-            clipped_dest.size.width.as_value(),
-            clipped_dest.size.height.as_value()};
-        geometry::PointF const source_origin{
-            clipped_dest.top_left.x.as_value() - renderable->screen_position().top_left.x.as_value(),
-            clipped_dest.top_left.y.as_value() - renderable->screen_position().top_left.y.as_value()
-        };
-
-        framebuffers.emplace_back(mg::DisplayElement{
-            renderable->screen_position(),
-            geometry::RectangleF{source_origin, source_size},
-            std::move(fb)
-        });
-    }
-
-    if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
+    auto display_elements = import_display_elements(renderable_list, *fb_adaptor);
+    if (display_elements.size() == renderable_list.size() && display_sink.overlay(display_elements))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
