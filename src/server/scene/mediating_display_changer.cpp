@@ -241,9 +241,6 @@ void ms::MediatingDisplayChanger::configure(std::shared_ptr<graphics::DisplayCon
                 }
             }
 
-            // Notify the policy of the change
-            display_configuration_policy->confirm(*base_configuration_);
-
             /*
              * Clear all the per-session configurations, since they may have become
              * invalid due to the hardware change.
@@ -251,7 +248,7 @@ void ms::MediatingDisplayChanger::configure(std::shared_ptr<graphics::DisplayCon
             config_map.clear();
 
             /* Send the new configuration to all the sessions */
-            send_config_to_all_sessions(base_configuration_);
+            send_config_notifications(base_configuration_);
         });
 }
 
@@ -399,9 +396,12 @@ void ms::MediatingDisplayChanger::apply_base_config()
     base_configuration_applied = true;
 }
 
-void ms::MediatingDisplayChanger::send_config_to_all_sessions(
+void ms::MediatingDisplayChanger::send_config_notifications(
     std::shared_ptr<mg::DisplayConfiguration> const& conf)
 {
+    // Notify the policy of the change
+    display_configuration_policy->confirm(*base_configuration_);
+
     session_container->for_each(
         [this, &conf](std::shared_ptr<Session> const& session)
         {
@@ -478,7 +478,7 @@ void ms::MediatingDisplayChanger::set_base_configuration(std::shared_ptr<mg::Dis
                 apply_base_config();
 
             observer->base_configuration_updated(conf);
-            send_config_to_all_sessions(conf);
+            send_config_notifications(conf);
         });
 }
 

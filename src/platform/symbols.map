@@ -1,4 +1,4 @@
-MIR_PLATFORM_2.29 {
+MIR_PLATFORM_2.30 {
  global:
   extern "C++" {
     mir::gl::tessellate_renderable_into_rectangle*;
@@ -25,21 +25,9 @@ MIR_PLATFORM_2.29 {
     mir::graphics::DRMFormat::info*;
     mir::graphics::DRMFormat::name*;
     mir::graphics::DRMFormat::operator?unsigned?int*; /* Is actually operator uint32_t(), but 🤷 */
-    mir::graphics::DisplayConfiguration::operator*;
-    mir::graphics::DisplayConfiguration::valid*;
-    mir::graphics::DisplayConfigurationOutput::extents*;
-    mir::graphics::DisplayConfigurationOutput::transformation*;
-    mir::graphics::DisplayConfigurationOutput::valid*;
-    mir::graphics::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;
-    mir::graphics::DisplayConfigurationPolicy::DisplayConfigurationPolicy*;
-    mir::graphics::DisplayConfigurationPolicy::apply_to*;
     typeinfo?for?mir::AnonymousShmFile;
     typeinfo?for?mir::ShmFile;
     vtable?for?mir::AnonymousShmFile;
-    mir::graphics::DisplayConfigurationPolicy::operator*;
-    mir::graphics::DisplayInfo::?DisplayInfo*;
-    mir::graphics::DisplayInfo::DisplayInfo*;
-    mir::graphics::DisplayInfo::operator*;
     mir::graphics::EGLContextStore::?EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
@@ -62,8 +50,6 @@ MIR_PLATFORM_2.29 {
     mir::graphics::EventHandlerRegister::register_fd_handler*;
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
-    mir::graphics::GammaCurves::GammaCurves*;
-    mir::graphics::LinearGammaLUTs::LinearGammaLUTs*;
     mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::buffer_from_resource*;
@@ -71,8 +57,6 @@ MIR_PLATFORM_2.29 {
     mir::graphics::OverlappingOutputGroup::for_each_output*;
     mir::graphics::OverlappingOutputGrouping::OverlappingOutputGrouping*;
     mir::graphics::OverlappingOutputGrouping::for_each_group*;
-    mir::graphics::UserDisplayConfigurationOutput::UserDisplayConfigurationOutput*;
-    mir::graphics::UserDisplayConfigurationOutput::extents*;
     mir::graphics::alpha_channel_depth*;
     mir::graphics::blue_channel_depth*;
     mir::graphics::common::EGLContextExecutor::?EGLContextExecutor*;
@@ -202,7 +186,6 @@ MIR_PLATFORM_2.29 {
     typeinfo?for?mir::AbnormalExit;
     typeinfo?for?mir::graphics::Buffer;
     typeinfo?for?mir::graphics::BufferBasic;
-    typeinfo?for?mir::graphics::DisplayConfiguration;
     typeinfo?for?mir::graphics::common::EGLContextExecutor;
     typeinfo?for?mir::graphics::gl::Program;
     typeinfo?for?mir::graphics::gl::ProgramFactory;
@@ -214,7 +197,6 @@ MIR_PLATFORM_2.29 {
     vtable?for?mir::AbnormalExit;
     vtable?for?mir::graphics::Buffer;
     vtable?for?mir::graphics::BufferBasic;
-    vtable?for?mir::graphics::DisplayConfiguration;
     vtable?for?mir::graphics::common::EGLContextExecutor;
     vtable?for?mir::graphics::gl::Program;
     vtable?for?mir::graphics::gl::ProgramFactory;
