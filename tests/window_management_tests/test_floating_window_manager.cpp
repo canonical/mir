@@ -237,6 +237,8 @@ TEST_F(FloatingWindowManagerTest, can_select_window_with_pointer)
         {});
 
     publish_event(*select_event1);
+    EXPECT_TRUE(focused(window2));
+
     publish_event(*select_event2);
 
     EXPECT_TRUE(focused(window1));
