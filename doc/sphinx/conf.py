@@ -209,6 +209,7 @@ linkcheck_ignore = [
     r"https://registry\.khronos\.org/EGL/extensions/.*",
     "https://www.mail-archive.com",
     "https://manpages.ubuntu.com",
+    "https://archive.org",
 ]
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
