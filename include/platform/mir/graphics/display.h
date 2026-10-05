@@ -61,8 +61,8 @@ public:
      *  in the near future. On some platforms, this may wait a potentially long time for vsync.
      *
      *  \returns
-     *      True if the platform accepted the new content or if there was no new content to show.
-     *      False if presentation failed. The caller must decide how to recover.
+     *      `true` if the platform accepted the new content or if there was no new content to show.
+     *      `false` if presentation failed. The caller must decide how to recover.
     **/
     [[nodiscard]] virtual bool post() = 0;
 
