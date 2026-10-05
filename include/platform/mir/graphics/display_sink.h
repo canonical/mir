@@ -63,7 +63,7 @@ struct DirectLayer
  */
 struct CompositingLayer
 {
-    std::vector<std::shared_ptr<Renderable>> const renderables;
+    std::span<std::shared_ptr<Renderable>> const renderables;
 };
 
 using Layer = std::variant<DirectLayer, CompositingLayer>;
