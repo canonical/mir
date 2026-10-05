@@ -40,6 +40,11 @@ namespace geom = mir::geometry;
 
 namespace
 {
+auto direct_presentation_allowed(MirOutputFilter filter, glm::mat2 const& transform) -> bool
+{
+    return filter == mir_output_filter_none && transform == glm::mat2{1};
+}
+
 auto import_display_elements(
     mg::RenderableList const& renderable_list,
     mg::RenderingProvider::FramebufferProvider& fb_adaptor) -> std::vector<mg::DisplayElement>
@@ -129,17 +134,22 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     visible_elements.clear();  // Those in use are still in renderable_list
 
-    auto display_elements = import_display_elements(renderable_list, *fb_adaptor);
-    if (display_elements.size() == renderable_list.size() && display_sink.overlay(display_elements))
+    auto const filter = output_filter->filter();
+    auto const transform = display_sink.transformation();
+    auto const can_present_directly = direct_presentation_allowed(filter, transform);
+    auto const display_elements = can_present_directly ? import_display_elements(renderable_list, *fb_adaptor) :
+                                                         std::vector<mg::DisplayElement>{};
+    if (can_present_directly && display_elements.size() == renderable_list.size() &&
+        display_sink.overlay(display_elements))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
     {
-        renderer->set_output_transform(display_sink.transformation());
+        renderer->set_output_transform(transform);
         renderer->set_viewport(view_area);
-        renderer->set_output_filter(output_filter->filter());
+        renderer->set_output_filter(filter);
 
         display_sink.set_next_image(renderer->render(renderable_list));
 
