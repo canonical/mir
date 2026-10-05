@@ -28,5 +28,5 @@ wayland-backend = { version = ">=0.3.12" }
 bitflags = "2"
 quote = "1"
 proc-macro2 = "1"
-prettyplease = "0.2"
+prettyplease = { version = ">=0.2, <0.4" }
 syn = { version = "2", features = ["full", "parsing"] }
