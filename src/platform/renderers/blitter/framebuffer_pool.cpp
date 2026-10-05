@@ -23,11 +23,13 @@
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_error.h>
+#include <mir/graphics/egl_helpers.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/log.h>
 
 #include <GLES2/gl2ext.h>
 #include <boost/throw_exception.hpp>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -59,6 +61,16 @@ auto make_renderbuffer() -> mrb::RenderbufferHandle
     glGenRenderbuffers(1, &rb);
     return mrb::RenderbufferHandle{rb};
 }
+
+/// Capture the current EGL state for restoration on scope exit, unless \p context is already current
+auto preserve_egl_state_unless_current(mrb::SoftwareEGLContext const& context) -> std::optional<mgc::CacheEglState>
+{
+    if (context.is_current())
+    {
+        return std::nullopt;
+    }
+    return mgc::CacheEglState{};
+}
 }
 
 mrb::FramebufferPool::Entry::Entry(
@@ -70,17 +82,31 @@ mrb::FramebufferPool::Entry::Entry(
     fb{std::move(fb)},
     surface{std::move(surface)}
 {
+    auto const restore_egl_state = preserve_egl_state_unless_current(*this->context);
     this->context->make_current();
 
-    auto const* const dmabuf = this->fb->as_dmabuf();
+    try
+    {
+        build_gl_resources(with_depth_stencil);
+    }
+    catch (...)
+    {
+        release_gl_resources();
+        throw;
+    }
+}
+
+void mrb::FramebufferPool::Entry::build_gl_resources(bool with_depth_stencil)
+{
+    auto const* const dmabuf = fb->as_dmabuf();
     if (!dmabuf)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{
             "Display framebuffer cannot be exported as a dma-buf; cannot use the blitter renderer"}));
     }
 
-    auto const dpy = this->context->display();
-    auto const& extensions = this->context->extensions();
+    auto const dpy = context->display();
+    auto const& extensions = context->extensions();
 
     // The EGLImage is only needed to specify the texture's storage; once the texture
     // is an EGLImage sibling we can throw the image away without freeing the dma-buf.
@@ -123,6 +149,7 @@ mrb::FramebufferPool::Entry::~Entry()
 {
     // We're about to release GL resources, so we need the context they belong
     // to to be current.
+    auto const restore_egl_state = preserve_egl_state_unless_current(*context);
     try
     {
         context->make_current();
@@ -131,6 +158,15 @@ mrb::FramebufferPool::Entry::~Entry()
     {
         mir::log_warning("Failed to make EGL context current to release blitter framebuffer");
     }
+
+    release_gl_resources();
+}
+
+void mrb::FramebufferPool::Entry::release_gl_resources()
+{
+    depth_stencil_buffer = RenderbufferHandle{};
+    fbo = mrc::FramebufferHandle{};
+    texture = mrc::TextureHandle{};
 }
 
 void mrb::FramebufferPool::Entry::bind()

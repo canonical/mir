@@ -324,9 +324,6 @@ TEST_F(SoftwareEGLContextTest, release_current_releases_context_when_current)
     context.release_current();
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(EGL_NO_CONTEXT));
-
-    // The context's destructor also calls eglMakeCurrent()
-    Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
 TEST_F(SoftwareEGLContextTest, release_current_does_nothing_when_another_context_is_current)
@@ -339,9 +336,6 @@ TEST_F(SoftwareEGLContextTest, release_current_does_nothing_when_another_context
     context.release_current();
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
-
-    // The context's destructor also calls eglMakeCurrent()
-    Mock::VerifyAndClearExpectations(&mock_egl);
 }
 
 TEST_F(SoftwareEGLContextTest, release_current_throws_on_failure)
@@ -363,6 +357,20 @@ TEST_F(SoftwareEGLContextTest, destruction_releases_and_destroys_context_then_te
     EXPECT_CALL(mock_egl, eglTerminate(surfaceless_display));
 
     context.reset();
+}
+
+TEST_F(SoftwareEGLContextTest, destruction_does_not_release_another_current_context)
+{
+    auto context = std::make_unique<mrb::SoftwareEGLContext>();
+    eglMakeCurrent(EGL_NO_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, other_context);
+
+    EXPECT_CALL(mock_egl, eglMakeCurrent(_, _, _, _)).Times(0);
+    EXPECT_CALL(mock_egl, eglDestroyContext(surfaceless_display, mock_egl.fake_egl_context));
+    EXPECT_CALL(mock_egl, eglTerminate(surfaceless_display));
+
+    context.reset();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
 
 class SoftwareEGLContextMissingDisplayExtension :

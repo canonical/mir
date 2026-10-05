@@ -36,7 +36,7 @@ using RenderbufferHandle = common::GLMultiHandle<&glDeleteRenderbuffers>;
 /// A pool of render targets, usable by both the blitter rendering path and the GL rendering
 /// path.
 ///
-/// Each [Entry] owns a CPU-adressable framebuffer from the display. That framebuffer's
+/// Each [Entry] owns a CPU-addressable framebuffer from the display. That framebuffer's
 /// dma-buf is imported into GL as an FBO-backing texture, and the same framebuffer
 /// is imported as blitter Surface. This can be expensive, so entries are recycled.
 class FramebufferPool
@@ -59,6 +59,7 @@ public:
     class Entry
     {
     public:
+        /// \note Construction and destruction leave the caller's current EGL state unchanged
         Entry(
             std::shared_ptr<SoftwareEGLContext> context,
             std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> fb,
@@ -74,6 +75,9 @@ public:
         auto size() const -> geometry::Size;
 
     private:
+        void build_gl_resources(bool with_depth_stencil);
+        void release_gl_resources();
+
         std::shared_ptr<SoftwareEGLContext> const context;
         std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const fb;
         common::TextureHandle texture;

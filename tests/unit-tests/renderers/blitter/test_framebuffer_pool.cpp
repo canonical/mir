@@ -27,6 +27,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -440,6 +441,71 @@ TEST_F(FramebufferPoolTest, destroying_entry_tolerates_failure_to_make_context_c
     ON_CALL(mock_egl, eglMakeCurrent(_, _, _, mock_egl.fake_egl_context)).WillByDefault(Return(EGL_FALSE));
 
     EXPECT_NO_THROW(pool.reset());
+}
+
+TEST_F(FramebufferPoolTest, destroying_entry_restores_previously_current_context)
+{
+    auto pool = make_pool();
+    make_other_context_current();
+
+    pool.reset();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+}
+
+TEST_F(FramebufferPoolTest, destroying_entry_leaves_context_current_if_it_already_was)
+{
+    auto pool = make_pool();
+    context->make_current();
+
+    pool.reset();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
+}
+
+TEST_F(FramebufferPoolTest, constructing_pool_restores_previously_current_context)
+{
+    make_other_context_current();
+
+    auto const pool = make_pool();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+}
+
+TEST_F(FramebufferPoolTest, building_new_entry_restores_previously_current_context)
+{
+    auto const pool = make_pool();
+    auto const held = pool->acquire();
+    make_other_context_current();
+
+    EXPECT_CALL(mock_gl, glGenTextures(_, _))
+        .WillOnce(
+            [this](GLsizei n, GLuint* out)
+            {
+                EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
+                std::fill_n(out, n, GLuint{42});
+            });
+
+    auto const fresh = pool->acquire();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+}
+
+TEST_F(FramebufferPoolTest, failed_entry_construction_releases_gl_resources_with_context_current)
+{
+    ON_CALL(mock_gl, glCheckFramebufferStatus(GL_FRAMEBUFFER)).WillByDefault(Return(GL_FRAMEBUFFER_UNSUPPORTED));
+    make_other_context_current();
+
+    auto const expect_context_current = [this](auto, auto)
+    {
+        EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
+    };
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(1))).WillOnce(expect_context_current);
+    EXPECT_CALL(mock_gl, glDeleteFramebuffers(1, Pointee(1))).WillOnce(expect_context_current);
+
+    EXPECT_THROW(make_pool(), std::runtime_error);
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
 
 TEST_F(FramebufferPoolTest, blitter_surface_is_destroyed_before_its_framebuffer)

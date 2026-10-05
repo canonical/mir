@@ -191,14 +191,22 @@ mrb::SoftwareEGLContext::SoftwareEGLContext()
 
 mrb::SoftwareEGLContext::~SoftwareEGLContext()
 {
-    eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (is_current())
+    {
+        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    }
     eglDestroyContext(dpy, ctx);
     eglTerminate(dpy);
 }
 
+auto mrb::SoftwareEGLContext::is_current() const -> bool
+{
+    return eglGetCurrentContext() == ctx;
+}
+
 void mrb::SoftwareEGLContext::make_current() const
 {
-    if (eglGetCurrentContext() == ctx)
+    if (is_current())
     {
         return;
     }
@@ -211,7 +219,7 @@ void mrb::SoftwareEGLContext::make_current() const
 
 void mrb::SoftwareEGLContext::release_current() const
 {
-    if (eglGetCurrentContext() != ctx)
+    if (!is_current())
     {
         return;
     }

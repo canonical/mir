@@ -45,6 +45,7 @@ public:
 
     void make_current() const;
     void release_current() const;
+    auto is_current() const -> bool;
 
     auto display() const -> EGLDisplay { return dpy; }
     auto extensions() const -> graphics::EGLExtensions const& { return *exts; }
