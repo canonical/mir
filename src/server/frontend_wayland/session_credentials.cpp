@@ -38,19 +38,22 @@ mf::SessionCredentials& mf::SessionCredentials::operator=(SessionCredentials&&) 
 
 mf::SessionCredentials::SessionCredentials(Fd const& client_sock)
 {
-    struct ucred cred;
+    struct ucred cred{};
     socklen_t cred_len = sizeof cred;
 
-    if (getsockopt(client_sock, SOL_SOCKET, SO_PEERCRED, &cred, &cred_len) < 0)
+    if (getsockopt(client_sock, SOL_SOCKET, SO_PEERCRED, &cred, &cred_len) == 0)
+    {
+        the_pid = cred.pid;
+        the_uid = cred.uid;
+        the_gid = cred.gid;
+    }
+    else
     {
         mir::log_debug("Failed to read socket peer credentials, falling back to get(uid,gid)");
-        cred.pid = 0;
-        cred.uid = getuid();
-        cred.gid = getgid();
+        the_pid = 0;
+        the_uid = getuid();
+        the_gid = getgid();
     }
-    the_pid = cred.pid;
-    the_uid = cred.uid;
-    the_gid = cred.gid;
 
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
