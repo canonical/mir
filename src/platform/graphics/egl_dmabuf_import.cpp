@@ -84,25 +84,25 @@ auto mg::import_dmabuf_to_egl_image(
     attributes.push_back(EGL_HEIGHT);
     attributes.push_back(size.height.as_int());
     attributes.push_back(EGL_LINUX_DRM_FOURCC_EXT);
-    attributes.push_back(format);
+    attributes.push_back(static_cast<EGLint>(format));
 
     for(auto i = 0u; i < planes.size(); ++i)
     {
-        auto const& attrib_names = egl_attribs[i];
+        auto const& attrib_names = egl_attribs.at(i);
         auto const& plane = planes[i];
 
         attributes.push_back(attrib_names.fd);
-        attributes.push_back(static_cast<int>(plane.dma_buf));
+        attributes.push_back(static_cast<EGLint>(plane.dma_buf));
         attributes.push_back(attrib_names.offset);
-        attributes.push_back(plane.offset);
+        attributes.push_back(static_cast<EGLint>(plane.offset));
         attributes.push_back(attrib_names.pitch);
-        attributes.push_back(plane.stride);
+        attributes.push_back(static_cast<EGLint>(plane.stride));
         if (auto modifier_present = modifier)
         {
             attributes.push_back(attrib_names.modifier_lo);
-            attributes.push_back(modifier_present.value() & 0xFFFFFFFF);
+            attributes.push_back(static_cast<EGLint>(modifier_present.value() & 0xFFFFFFFF));
             attributes.push_back(attrib_names.modifier_hi);
-            attributes.push_back(modifier_present.value() >> 32);
+            attributes.push_back(static_cast<EGLint>(modifier_present.value() >> 32));
         }
     }
     attributes.push_back(EGL_NONE);

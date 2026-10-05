@@ -43,21 +43,21 @@ namespace
 {
 auto make_texture() -> mrc::TextureHandle
 {
-    GLuint tex;
+    GLuint tex = 0;
     glGenTextures(1, &tex);
     return mrc::TextureHandle{tex};
 }
 
 auto make_framebuffer() -> mrc::FramebufferHandle
 {
-    GLuint fb;
+    GLuint fb = 0;
     glGenFramebuffers(1, &fb);
     return mrc::FramebufferHandle{fb};
 }
 
 auto make_renderbuffer() -> mrb::RenderbufferHandle
 {
-    GLuint rb;
+    GLuint rb = 0;
     glGenRenderbuffers(1, &rb);
     return mrb::RenderbufferHandle{rb};
 }
