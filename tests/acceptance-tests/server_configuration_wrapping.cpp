@@ -98,6 +98,41 @@ struct ServerConfigurationWrapping : mir_test_framework::HeadlessTest
     std::shared_ptr<mi::CursorObserverMultiplexer> cursor_observer_multiplexer;
     std::shared_ptr<msh::SurfaceStack> surface_stack;
 };
+
+struct ServerConfigurationRepeatedWrapping : mir_test_framework::HeadlessTest
+{
+    struct TheWrappingShell : msh::ShellWrapper
+    {
+        explicit TheWrappingShell(std::shared_ptr<msh::Shell> const& wrapped) :
+            msh::ShellWrapper{wrapped},
+            wrapped{wrapped}
+        {
+        }
+
+        std::shared_ptr<msh::Shell> const wrapped;
+    };
+
+    void SetUp() override
+    {
+        server.wrap_shell([]
+            (std::shared_ptr<msh::Shell> const& wrapped)
+            {
+                return std::make_shared<MyShell>(wrapped);
+            });
+
+        server.wrap_shell([]
+            (std::shared_ptr<msh::Shell> const& wrapped)
+            {
+                return std::make_shared<TheWrappingShell>(wrapped);
+            });
+
+        server.apply_settings();
+
+        shell = server.the_shell();
+    }
+
+    std::shared_ptr<msh::Shell> shell;
+};
 }
 
 TEST_F(ServerConfigurationWrapping, shell_is_of_wrapper_type)
@@ -148,4 +183,28 @@ TEST_F(ServerConfigurationWrapping, surface_stack_is_of_wrapper_type)
     auto const my_surface_stack = std::dynamic_pointer_cast<MySurfaceStack>(surface_stack);
 
     EXPECT_THAT(my_surface_stack, Ne(nullptr));
+}
+
+TEST_F(ServerConfigurationRepeatedWrapping, outermost_wrapper_is_the_last_registered)
+{
+    EXPECT_THAT(std::dynamic_pointer_cast<TheWrappingShell>(shell), Ne(nullptr));
+}
+
+TEST_F(ServerConfigurationRepeatedWrapping, all_registered_wrappers_are_applied)
+{
+    auto const outer = std::dynamic_pointer_cast<TheWrappingShell>(shell);
+    ASSERT_THAT(outer, Ne(nullptr));
+
+    EXPECT_THAT(std::dynamic_pointer_cast<MyShell>(outer->wrapped), Ne(nullptr));
+}
+
+TEST_F(ServerConfigurationRepeatedWrapping, calls_are_forwarded_through_all_wrappers)
+{
+    auto const outer = std::dynamic_pointer_cast<TheWrappingShell>(shell);
+    ASSERT_THAT(outer, Ne(nullptr));
+    auto const inner = std::dynamic_pointer_cast<MyShell>(outer->wrapped);
+    ASSERT_THAT(inner, Ne(nullptr));
+
+    EXPECT_CALL(*inner, focus_next_session()).Times(1);
+    shell->focus_next_session();
 }

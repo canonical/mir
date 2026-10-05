@@ -575,7 +575,7 @@ void mir::Server::override_the_window_manager_builder(shell::WindowManagerBuilde
 void mir::Server::wrap_##name(decltype(Self::name##_wrapper) const& value)\
 {\
     verify_setting_allowed(self->server_config);\
-    self->name##_wrapper = value;\
+    self->name##_wrapper = self->name##_wrapper ? [value, prev=self->name##_wrapper](auto arg) { return value(prev(arg)); } : value;\
 }
 
 FOREACH_WRAPPER(MIR_SERVER_WRAP)
