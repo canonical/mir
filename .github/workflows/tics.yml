@@ -177,7 +177,10 @@ jobs:
       if: github.event_name == 'merge_group'
       run: |
         # Every merge_group event runs for one pull request, so we can diff against parent
-        git diff --name-only ${{ github.sha }}~1 ${{ github.sha }} >> "$TICS_CHANGED_LIST"
+        # Get list of changed files, excluding deletions and unchanged renames
+        git diff --name-status --find-renames ${{ github.sha }}~1 ${{ github.sha }} \
+          | awk -F '\t' '$1 ~ /^R100|^D/ { next } $1 ~ /^R/ { print $3; next } { print $2 }' \
+          >> "$TICS_CHANGED_LIST"
 
     - if: ${{ github.event.inputs.detach == 'true' }}
       name: Detach TICS QServer to prevent "project already connected" issue

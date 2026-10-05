@@ -25,10 +25,10 @@
 
 # Track various library soversions
 %global miral_sover 8
-%global mircommon_sover 13
+%global mircommon_sover 14
 %global mircore_sover 3
 %global miroil_sover 10
-%global mirplatform_sover 35
+%global mirplatform_sover 36
 %global mirserver_sover 70
 %global mirwayland_sover 7
 %global mirplatformgraphics_sover 24
@@ -333,7 +333,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Fri Sep 25 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0~dev-1
+* Mon Oct 05 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0~dev-1
 - Begin development for 2.31.0 release
 
 * Thu Sep 24 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0-1
