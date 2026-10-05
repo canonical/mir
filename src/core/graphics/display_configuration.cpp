@@ -253,8 +253,7 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
             {
                 if (auto const cta = di_edid_ext_get_cta(*extension))
                 {
-                    auto const data_blocks = di_edid_cta_get_data_blocks(cta);
-                    if (data_blocks)
+                    if (auto const data_blocks = di_edid_cta_get_data_blocks(cta))
                     {
                         for (auto block = data_blocks; *block && !physical_address; ++block)
                         {
