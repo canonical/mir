@@ -193,7 +193,7 @@ TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuff
     EXPECT_TRUE(weak_a.expired());
 }
 
-TEST_F(AtomicDisplaySinkTest, overlay_still_accepts_a_single_fullscreen_element)
+TEST_F(AtomicDisplaySinkTest, overlay_must_be_a_single_fullscreen_element)
 {
     auto const framebuffer = std::make_shared<NiceMock<MockKMSFramebuffer>>();
     auto element = fullscreen_element(framebuffer);
