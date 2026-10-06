@@ -333,7 +333,7 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Mon Oct 05 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0~dev-1
+* Fri Sep 25 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0~dev-1
 - Begin development for 2.31.0 release
 
 * Thu Sep 24 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0-1
