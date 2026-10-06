@@ -432,7 +432,7 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request_without_changing_visible_state)
 {
     auto output_under_test = output();
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_ALLOW_MODESET, nullptr))
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_ALLOW_MODESET))
         .WillOnce(Return(-EIO));
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
@@ -444,7 +444,7 @@ TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request_without_changi
 TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request_without_changing_visible_state)
 {
     auto output_under_test = output();
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, 0, nullptr)).WillOnce(Return(-EIO));
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, 0)).WillOnce(Return(-EIO));
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));

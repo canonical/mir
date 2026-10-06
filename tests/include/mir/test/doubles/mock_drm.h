@@ -194,6 +194,13 @@ public:
                 (drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t value));
     MOCK_METHOD(int, drmModeAtomicCommit,
                 (int fd, drmModeAtomicReqPtr req, uint32_t flags, void* user_data));
+    int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req, uint32_t flags)
+    { return drmModeAtomicCommit(fd, req, flags, nullptr); }
+    auto gmock_drmModeAtomicCommit(
+        testing::Matcher<int> const& fd,
+        testing::Matcher<drmModeAtomicReqPtr> const& req,
+        testing::Matcher<uint32_t> const& flags)
+    { return gmock_drmModeAtomicCommit(fd, req, flags, nullptr); }
     MOCK_METHOD(void, drmModeAtomicFree, (drmModeAtomicReqPtr req));
 
     struct AtomicProperty
