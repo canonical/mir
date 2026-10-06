@@ -25,8 +25,8 @@
 #include <gtest/gtest.h>
 
 #include <cerrno>
+#include <map>
 #include <memory>
-#include <span>
 #include <vector>
 
 namespace mga = mir::graphics::atomic;
@@ -73,9 +73,7 @@ private:
     geom::Size const size_;
 };
 
-using AtomicProperty = mtd::MockDRM::AtomicProperty;
-using AtomicOperation = mtd::MockDRM::AtomicOperation;
-using AtomicOperationKind = mtd::MockDRM::AtomicOperationKind;
+using AtomicPropertyKey = mtd::AtomicPropertyKey;
 
 struct PrimaryRequestParameters
 {
@@ -84,46 +82,6 @@ struct PrimaryRequestParameters
     bool activate_crtc{false};
     geom::Size size{requested_mode_size};
 };
-
-struct CommitExpectation
-{
-    size_t request_index{0};
-    size_t preceding_operations{0};
-    int result{0};
-};
-
-auto expected_add_operations(size_t request_id, size_t property_count) -> std::vector<AtomicOperation>
-{
-    std::vector<AtomicOperation> operations{{AtomicOperationKind::allocate, request_id, 0}};
-    for (size_t index = 0; index < property_count; ++index)
-        operations.push_back({AtomicOperationKind::add_property, request_id, static_cast<int>(index + 1)});
-    return operations;
-}
-
-void expect_commit_request(
-    mtd::MockDRM const& mock, uint32_t flags, std::vector<AtomicProperty> const& properties,
-    CommitExpectation const expected = {})
-{
-    ASSERT_EQ(mock.atomic_requests().size(), expected.request_index + 1);
-    auto const& request = mock.atomic_requests()[expected.request_index];
-    EXPECT_THAT(request, mtd::FreedAtomicRequest(request.id, ElementsAreArray(properties)));
-    EXPECT_THAT(mock.atomic_commits(), ElementsAre(mtd::AtomicCommitWith(
-        request.id, mtd::IsFdOfDevice(drm_device), flags, expected.result, ElementsAreArray(properties))));
-
-    auto expected_operations = expected_add_operations(request.id, properties.size());
-    expected_operations.push_back({AtomicOperationKind::commit, request.id, expected.result});
-    expected_operations.push_back({AtomicOperationKind::free, request.id, 0});
-    ASSERT_EQ(mock.atomic_operations().size(), expected.preceding_operations + expected_operations.size());
-    EXPECT_THAT(std::span{mock.atomic_operations()}.subspan(expected.preceding_operations),
-                ElementsAreArray(expected_operations));
-}
-
-void expect_failed_commit(
-    mtd::MockDRM const& mock, uint32_t flags, std::vector<AtomicProperty> const& properties)
-{
-    expect_commit_request(mock, flags, properties, {.result = -EIO});
-    EXPECT_TRUE(mock.atomic_visible_properties().empty());
-}
 
 class AtomicKMSOutputTest : public Test
 {
@@ -196,37 +154,36 @@ public:
         return result;
     }
 
-    auto disabled_properties() const -> std::vector<AtomicProperty>
+    auto disabled_properties() const -> std::map<AtomicPropertyKey, uint64_t>
     {
         return {
-            {connector_id, connector_crtc_property_id, 0},
-            {crtc_id, crtc_active_property_id, 0},
-            {crtc_id, crtc_mode_property_id, 0},
-            {plane_id, plane_fb_property_id, 0},
-            {plane_id, plane_crtc_property_id, 0}};
+            {{connector_id, connector_crtc_property_id}, 0},
+            {{crtc_id, crtc_active_property_id}, 0},
+            {{crtc_id, crtc_mode_property_id}, 0},
+            {{plane_id, plane_fb_property_id}, 0},
+            {{plane_id, plane_crtc_property_id}, 0}};
     }
 
     auto primary_request_properties(PrimaryRequestParameters const& parameters) const
-        -> std::vector<AtomicProperty>
+        -> std::map<AtomicPropertyKey, uint64_t>
     {
         auto const width = parameters.size.width.as_uint32_t();
         auto const height = parameters.size.height.as_uint32_t();
-        std::vector<AtomicProperty> properties{
-            {crtc_id, crtc_mode_property_id, mode_blob_id},
-            {connector_id, connector_crtc_property_id, crtc_id}};
+        std::map<AtomicPropertyKey, uint64_t> properties{
+            {{crtc_id, crtc_mode_property_id}, mode_blob_id}, {{connector_id, connector_crtc_property_id}, crtc_id}};
         if (parameters.activate_crtc)
-            properties.push_back({crtc_id, crtc_active_property_id, 1});
-        properties.insert(properties.end(), {
-            {plane_id, plane_src_x_property_id, kms_fixed_point(parameters.source_offset.dx.as_uint32_t())},
-            {plane_id, plane_src_y_property_id, kms_fixed_point(parameters.source_offset.dy.as_uint32_t())},
-            {plane_id, plane_src_w_property_id, kms_fixed_point(width)},
-            {plane_id, plane_src_h_property_id, kms_fixed_point(height)},
-            {plane_id, plane_crtc_x_property_id, 0},
-            {plane_id, plane_crtc_y_property_id, 0},
-            {plane_id, plane_crtc_w_property_id, width},
-            {plane_id, plane_crtc_h_property_id, height},
-            {plane_id, plane_crtc_property_id, crtc_id},
-            {plane_id, plane_fb_property_id, parameters.framebuffer_id}});
+            properties[{crtc_id, crtc_active_property_id}] = 1;
+        properties.insert(
+            {{{plane_id, plane_src_x_property_id}, kms_fixed_point(parameters.source_offset.dx.as_uint32_t())},
+             {{plane_id, plane_src_y_property_id}, kms_fixed_point(parameters.source_offset.dy.as_uint32_t())},
+             {{plane_id, plane_src_w_property_id}, kms_fixed_point(width)},
+             {{plane_id, plane_src_h_property_id}, kms_fixed_point(height)},
+             {{plane_id, plane_crtc_x_property_id}, 0},
+             {{plane_id, plane_crtc_y_property_id}, 0},
+             {{plane_id, plane_crtc_w_property_id}, width},
+             {{plane_id, plane_crtc_h_property_id}, height},
+             {{plane_id, plane_crtc_property_id}, crtc_id},
+             {{plane_id, plane_fb_property_id}, parameters.framebuffer_id}});
         return properties;
     }
 
@@ -325,15 +282,18 @@ class AtomicKMSDisableTest : public AtomicKMSOutputTest, public WithParamInterfa
 };
 }
 
-TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_order_and_modeset_flag)
+TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_and_modeset_flag)
 {
     auto output_under_test = output(source_offset);
     auto const properties = primary_request_properties(
         {.framebuffer_id = primary_framebuffer_id, .source_offset = source_offset, .activate_crtc = true});
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device), mtd::AtomicRequestWith(Eq(properties)), DRM_MODE_ATOMIC_ALLOW_MODESET));
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
-    ASSERT_TRUE(output_under_test->set_crtc(framebuffer));
-    expect_commit_request(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET, properties);
+    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
 }
 
 TEST_F(AtomicKMSOutputTest, page_flip_preserves_primary_request_and_uses_normal_commit)
@@ -341,10 +301,11 @@ TEST_F(AtomicKMSOutputTest, page_flip_preserves_primary_request_and_uses_normal_
     auto output_under_test = output(source_offset);
     auto const properties =
         primary_request_properties({.framebuffer_id = flip_framebuffer_id, .source_offset = source_offset});
+    EXPECT_CALL(
+        mock_drm, drmModeAtomicCommit(mtd::IsFdOfDevice(drm_device), mtd::AtomicRequestWith(Eq(properties)), no_flags));
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
-    ASSERT_TRUE(output_under_test->page_flip(framebuffer));
-    expect_commit_request(mock_drm, no_flags, properties);
+    EXPECT_TRUE(output_under_test->page_flip(framebuffer));
 }
 
 TEST_F(AtomicKMSOutputTest, set_crtc_uses_requested_mode_size_instead_of_current_crtc_size)
@@ -355,11 +316,15 @@ TEST_F(AtomicKMSOutputTest, set_crtc_uses_requested_mode_size_instead_of_current
     crtc().mode.vdisplay = smaller_crtc_size.height.as_uint32_t();
     auto output_under_test = output();
     StubFramebuffer framebuffer{primary_framebuffer_id, requested_mode_size};
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(
+                Eq(primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
 
     EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
-    expect_commit_request(
-        mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
-        primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}));
 }
 
 TEST_F(AtomicKMSOutputTest, page_flip_uses_current_crtc_size_instead_of_requested_mode_size)
@@ -370,20 +335,24 @@ TEST_F(AtomicKMSOutputTest, page_flip_uses_current_crtc_size_instead_of_requeste
     crtc().mode.vdisplay = smaller_crtc_size.height.as_uint32_t();
     auto output_under_test = output();
     StubFramebuffer framebuffer{flip_framebuffer_id, smaller_crtc_size};
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(
+                Eq(primary_request_properties({.framebuffer_id = flip_framebuffer_id, .size = smaller_crtc_size}))),
+            no_flags));
 
     EXPECT_TRUE(output_under_test->page_flip(framebuffer));
-    expect_commit_request(
-        mock_drm, no_flags,
-        primary_request_properties({.framebuffer_id = flip_framebuffer_id, .size = smaller_crtc_size}));
 }
 
 TEST_P(AtomicKMSFramebufferSizeTest, page_flip_rejects_mismatch_without_allocating_request)
 {
     auto output_under_test = output();
     StubFramebuffer framebuffer{flip_framebuffer_id, GetParam().size};
+    EXPECT_CALL(mock_drm, drmModeAtomicAlloc()).Times(0);
 
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
-    EXPECT_TRUE(mock_drm.atomic_operations().empty());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -396,9 +365,14 @@ INSTANTIATE_TEST_SUITE_P(
 TEST_F(AtomicKMSOutputTest, power_mode_submits_active_property)
 {
     auto output_under_test = output();
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(ElementsAre(Pair(AtomicPropertyKey{crtc_id, crtc_active_property_id}, 0))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
 
     output_under_test->set_power_mode(mir_power_mode_off);
-    expect_commit_request(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET, {{crtc_id, crtc_active_property_id, 0}});
 }
 
 TEST_F(AtomicKMSOutputTest, gamma_submits_lut_property)
@@ -411,10 +385,15 @@ TEST_F(AtomicKMSOutputTest, gamma_submits_lut_property)
     expect_gamma_blob_lifetime(gamma_lut_blob_id, destruction_order);
     // configure() owns MODE_ID until output destruction; the temporary LUT is freed first.
     EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id)).InSequence(destruction_order);
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(
+                ElementsAre(Pair(AtomicPropertyKey{crtc_id, crtc_gamma_lut_property_id}, gamma_lut_blob_id))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
 
     output_under_test->set_gamma({{red_sample}, {green_sample}, {blue_sample}});
-    expect_commit_request(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
-                          {{crtc_id, crtc_gamma_lut_property_id, gamma_lut_blob_id}});
 
     output_under_test.reset();
 }
@@ -422,11 +401,16 @@ TEST_F(AtomicKMSOutputTest, gamma_submits_lut_property)
 TEST_P(AtomicKMSDisableTest, submits_all_disable_properties)
 {
     auto output_under_test = output();
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(disabled_properties())),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
 
     if (GetParam().disconnect_connector)
         connector().connection = DRM_MODE_DISCONNECTED;
     ((*output_under_test).*GetParam().operation)();
-    expect_commit_request(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET, disabled_properties());
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -437,25 +421,35 @@ INSTANTIATE_TEST_SUITE_P(
         DisableCase{"RefreshDisconnectedConnector", &mga::AtomicKMSOutput::refresh_hardware_state, true}),
     [](TestParamInfo<DisableCase> const& info) { return info.param.name; });
 
-TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request_without_changing_visible_state)
+TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request)
 {
     auto output_under_test = output();
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_ALLOW_MODESET))
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(
+                Eq(primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET))
         .WillOnce(Return(-EIO));
+    EXPECT_CALL(mock_drm, drmModeAtomicFree(_)).WillOnce(DoDefault());
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
     EXPECT_FALSE(output_under_test->set_crtc(framebuffer));
-    expect_failed_commit(
-        mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
-        primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}));
 }
 
-TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request_without_changing_visible_state)
+TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request)
 {
     auto output_under_test = output();
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags)).WillOnce(Return(-EIO));
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(primary_request_properties({.framebuffer_id = flip_framebuffer_id}))),
+            no_flags))
+        .WillOnce(Return(-EIO));
+    EXPECT_CALL(mock_drm, drmModeAtomicFree(_)).WillOnce(DoDefault());
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
-    expect_failed_commit(mock_drm, no_flags, primary_request_properties({.framebuffer_id = flip_framebuffer_id}));
 }

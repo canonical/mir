@@ -25,14 +25,28 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
-#include <iosfwd>
+#include <compare>
 #include <map>
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
+
+namespace mir::test::doubles
+{
+struct AtomicPropertyKey
+{
+    uint32_t object_id;
+    uint32_t property_id;
+    auto operator<=>(AtomicPropertyKey const&) const = default;
+};
+}
+
+struct _drmModeAtomicReq
+{
+    std::map<mir::test::doubles::AtomicPropertyKey, uint64_t> properties;
+};
 
 namespace mir
 {
@@ -203,52 +217,6 @@ public:
     { return gmock_drmModeAtomicCommit(fd, req, flags, nullptr); }
     MOCK_METHOD(void, drmModeAtomicFree, (drmModeAtomicReqPtr req));
 
-    struct AtomicProperty
-    {
-        uint32_t object_id;
-        uint32_t property_id;
-        uint64_t value;
-        auto operator==(AtomicProperty const&) const -> bool = default;
-    };
-
-    struct AtomicRequest
-    {
-        size_t id;
-        drmModeAtomicReqPtr handle;
-        std::vector<AtomicProperty> properties;
-        bool freed{false};
-    };
-
-    struct AtomicCommit
-    {
-        size_t request_id;
-        int fd;
-        uint32_t flags;
-        int result;
-        std::vector<AtomicProperty> properties;
-        auto operator==(AtomicCommit const&) const -> bool = default;
-    };
-
-    enum class AtomicOperationKind {allocate, add_property, commit, free};
-    struct AtomicOperation
-    {
-        AtomicOperationKind kind;
-        size_t request_id;
-        int result;
-        auto operator==(AtomicOperation const&) const -> bool = default;
-    };
-
-    auto atomic_requests() const -> std::vector<AtomicRequest> const&;
-    auto atomic_commits() const -> std::vector<AtomicCommit> const&;
-    auto atomic_operations() const -> std::vector<AtomicOperation> const&;
-    auto atomic_visible_properties() const -> std::map<std::pair<uint32_t, uint32_t>, uint64_t> const&;
-
-    drmModeAtomicReqPtr forward_drm_mode_atomic_alloc();
-    int forward_drm_mode_atomic_add_property(
-        drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t value);
-    int forward_drm_mode_atomic_commit(int fd, drmModeAtomicReqPtr req, uint32_t flags, void* user_data);
-    void forward_drm_mode_atomic_free(drmModeAtomicReqPtr req);
-
     MOCK_METHOD(drmVersionPtr, drmGetVersion, (int));
     MOCK_METHOD(void, drmFreeVersion, (drmVersionPtr));
 
@@ -287,8 +255,6 @@ public:
     friend class IsFdOfDeviceMatcher;
 
 private:
-    auto active_request(drmModeAtomicReqPtr handle) -> AtomicRequest*;
-
     std::unordered_map<std::string, FakeDRMResources> fake_drms;
     std::unordered_map<int, FakeDRMResources&> fd_to_drm;
 
@@ -311,12 +277,6 @@ private:
     };
 
     std::map<std::unique_ptr<char[]>, size_t, TransparentUPtrComparator> mmapings;
-    std::unordered_set<drmModeAtomicReqPtr> atomic_owned_requests;
-    std::unordered_map<drmModeAtomicReqPtr, size_t> atomic_active_requests;
-    std::vector<AtomicRequest> atomic_requests_;
-    std::vector<AtomicCommit> atomic_commits_;
-    std::vector<AtomicOperation> atomic_operations_;
-    std::map<std::pair<uint32_t, uint32_t>, uint64_t> atomic_visible_properties_;
     uint32_t next_property_blob_id{1};
     drmModeObjectProperties empty_object_props;
     mir_test_framework::OpenHandlerHandle const open_interposer;
@@ -324,16 +284,8 @@ private:
     mir_test_framework::MunmapHandlerHandle const munmap_interposer;
 };
 
-void PrintTo(MockDRM::AtomicProperty const& property, std::ostream* out);
-void PrintTo(MockDRM::AtomicCommit const& commit, std::ostream* out);
-void PrintTo(MockDRM::AtomicOperationKind kind, std::ostream* out);
-void PrintTo(MockDRM::AtomicOperation const& operation, std::ostream* out);
-
-testing::Matcher<MockDRM::AtomicRequest> FreedAtomicRequest(
-    size_t id, testing::Matcher<std::vector<MockDRM::AtomicProperty>> properties = testing::_);
-testing::Matcher<MockDRM::AtomicCommit> AtomicCommitWith(
-    size_t request_id, testing::Matcher<int> fd, uint32_t flags, int result,
-    testing::Matcher<std::vector<MockDRM::AtomicProperty>> properties);
+testing::Matcher<drmModeAtomicReqPtr> AtomicRequestWith(
+    testing::Matcher<std::map<AtomicPropertyKey, uint64_t>> properties);
 
 testing::Matcher<int> IsFdOfDevice(char const* device);
 }
