@@ -46,6 +46,7 @@ struct AtomicPropertyKey
 struct _drmModeAtomicReq
 {
     std::map<mir::test::doubles::AtomicPropertyKey, uint64_t> properties;
+    uint32_t cursor{0};
 };
 
 namespace mir

@@ -496,7 +496,7 @@ mtd::MockDRM::MockDRM()
             [](drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t value)
             {
                 req->properties[{object_id, property_id}] = value;
-                return static_cast<int>(req->properties.size());
+                return static_cast<int>(++req->cursor);
             });
 
     ON_CALL(*this, drmModeAtomicCommit(_, _, _, _))
