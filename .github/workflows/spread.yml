@@ -130,10 +130,17 @@ jobs:
         # a full build yielded at most 650M cache
         echo "max_size = 800M" > "${CCACHE_DIR}/ccache.conf"
 
+    - name: Create release tarball
+      run: tools/make_release_tarball --skip-checks
+
     - name: Run Spread task
-      run: |
-        tools/make_release_tarball --skip-checks
-        snap run spread-mir-ci.spread -reuse -v "${MATRIX_SPREAD_TASK}"
+      uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+      with:
+        timeout_minutes: 100
+        max_attempts: 2
+        retry_wait_seconds: 30
+        command: |
+          snap run spread-mir-ci.spread -reuse -v "${MATRIX_SPREAD_TASK}"
       env:
         MATRIX_SPREAD_TASK: ${{ matrix.spread-task }}
 
