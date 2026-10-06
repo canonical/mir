@@ -258,8 +258,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Only used when `--console-provider=vt|logind`.");
 
     std::string tags;
+    auto known_tags = mir::logging::list_known_tags();
+    std::ranges::sort(known_tags); // Output tags in alphabetical order for consistency and readability
     std::ranges::copy(
-        mir::logging::list_known_tags() | std::views::transform([](std::string const& tag) { return " - " + tag; }) | std::views::join_with('\n'),
+        known_tags | std::views::transform([](std::string const& tag) { return " - " + tag; }) | std::views::join_with('\n'),
         std::back_inserter(tags)
     );
 

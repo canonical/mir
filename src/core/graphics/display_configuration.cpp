@@ -192,8 +192,8 @@ mir::geometry::Rectangle extents_of(
         return mir::geometry::Rectangle();
 
     mir::geometry::Size const size{
-        roundf(modes[current_mode_index].size.width.as_int() / scale),
-        roundf(modes[current_mode_index].size.height.as_int() / scale)};
+        roundf(static_cast<float>(modes[current_mode_index].size.width.as_int()) / scale),
+        roundf(static_cast<float>(modes[current_mode_index].size.height.as_int()) / scale)};
 
     if (orientation == mir_orientation_normal ||
         orientation == mir_orientation_inverted)

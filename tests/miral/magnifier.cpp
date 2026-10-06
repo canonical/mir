@@ -230,6 +230,44 @@ TEST_F(MagnifierTest, can_set_capture_size)
     start_server();
 }
 
+struct MagnifierCaptureSizeTestCase
+{
+    std::string_view name;
+    Size requested;
+};
+
+struct MagnifierCaptureSizeTest :
+    MagnifierTest,
+    WithParamInterface<MagnifierCaptureSizeTestCase>
+{
+};
+
+TEST_P(MagnifierCaptureSizeTest, rejects_non_positive_capture_size)
+{
+    magnifier.capture_size(Size(200, 240)).enable(true);
+    start_server();
+    wait_for_magnifier_initialization();
+    wait_for_initial_cursor_state();
+
+    magnifier.capture_size(GetParam().requested);
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 240)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidSizes,
+    MagnifierCaptureSizeTest,
+    Values(
+        MagnifierCaptureSizeTestCase{"zero_width", Size(0, 240)},
+        MagnifierCaptureSizeTestCase{"zero_height", Size(200, 0)},
+        MagnifierCaptureSizeTestCase{"negative_width", Size(-1, 240)},
+        MagnifierCaptureSizeTestCase{"negative_height", Size(200, -1)}),
+    [](TestParamInfo<MagnifierCaptureSizeTestCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
 TEST_F(MagnifierTest, capture_size_is_limited_to_80_percent_of_the_output)
 {
     magnifier.enable(true);
@@ -470,47 +508,258 @@ struct MagnifierLiveConfigTest : TestServer
     auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
     { return server().the_scene()->scene_elements_for(this).at(0)->renderable(); }
 
+    void load_config(std::string const& text)
+    {
+        std::istringstream stream{text};
+        ini_file.load_file(stream, "test");
+    }
+
+    void start_with_config(std::string const& text)
+    {
+        load_config(text);
+        start_server();
+        flush_main_loop();
+    }
+
     void flush_main_loop()
     {
-        mir::test::Signal flushed;
-        server().the_main_loop()->spawn([&flushed] { flushed.raise(); });
-        ASSERT_TRUE(flushed.wait_for(2s)) << "timed out waiting for the main loop";
+        auto flushed = std::make_shared<mir::test::Signal>();
+        server().the_main_loop()->spawn([flushed] { flushed->raise(); });
+        ASSERT_TRUE(flushed->wait_for(2s)) << "timed out waiting for the main loop";
     }
 
     miral::live_config::IniFile ini_file;
     Magnifier magnifier{ini_file};
 };
 
-TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_preserves_runtime_state)
+TEST_F(MagnifierLiveConfigTest, can_set_magnifier_enable)
 {
-    std::istringstream config{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
-    ini_file.load_file(config, "test");
+    start_with_config("magnifier_enable=true\n");
 
-    start_server();
-    flush_main_loop();
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
 
-    // Runtime-only changes, as made through the behavior toggle and
-    // zoom/resize handles.
-    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
-    magnifier.magnification(2.0f);
-    magnifier.capture_size(Size(200, 200));
+    load_config("magnifier_enable=false\n");
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(0));
+}
+
+struct MagnifierLiveConfigBehaviorTest :
+    MagnifierLiveConfigTest,
+    WithParamInterface<std::string_view>
+{
+};
+
+TEST_P(MagnifierLiveConfigBehaviorTest, can_set_magnifier_behavior)
+{
+    auto const follow_cursor = GetParam() == "follow_cursor";
+    magnifier.set_behavior(
+        follow_cursor ? Magnifier::Behavior::freely_positioned : Magnifier::Behavior::follow_cursor);
+
+    start_with_config(
+        std::string{"magnifier_enable=true\nmagnifier_behavior="} + std::string{GetParam()} + "\n");
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(follow_cursor ? 1 : 5));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    MagnifierBehaviors,
+    MagnifierLiveConfigBehaviorTest,
+    Values("follow_cursor", "freely_positioned"),
+    [](TestParamInfo<std::string_view> const& info)
+    {
+        return std::string{info.param};
+    });
+
+TEST_F(MagnifierLiveConfigTest, can_set_magnifier_magnification)
+{
+    start_with_config("magnifier_enable=true\nmagnifier_magnification=2\n");
+
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f))));
+}
+
+TEST_F(MagnifierLiveConfigTest, can_set_magnifier_capture_size_width)
+{
+    start_with_config("magnifier_enable=true\nmagnifier_capture_size_width=200\n");
     magnifier_renderable()->buffer();
 
-    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
-    auto const before_pos = magnifier_renderable()->screen_position();
-    auto const before_transform = magnifier_renderable()->transformation();
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 300)));
+}
 
-    // A config write to an unrelated key reloads the whole file, re-firing
-    // every handler with unchanged (here: preset) values.
-    std::istringstream reload{"magnifier_enable=true\nmagnifier_behavior=freely_positioned\n"};
-    ini_file.load_file(reload, "test");
-    // Claim the stale frame so the next scene read reflects any
-    // (incorrectly) resized capture area.
+TEST_F(MagnifierLiveConfigTest, can_set_magnifier_capture_size_height)
+{
+    start_with_config("magnifier_enable=true\nmagnifier_capture_size_height=240\n");
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(300, 240)));
+}
+
+TEST_F(MagnifierLiveConfigTest, invalid_behavior_is_ignored)
+{
+    magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
+    start_with_config("magnifier_enable=true\nmagnifier_behavior=invalid\n");
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+}
+
+struct MagnifierLiveConfigValueTestCase
+{
+    std::string_view name;
+    std::string_view value;
+};
+
+struct MagnifierLiveConfigMagnificationTest :
+    MagnifierLiveConfigTest,
+    WithParamInterface<MagnifierLiveConfigValueTestCase>
+{
+};
+
+TEST_P(MagnifierLiveConfigMagnificationTest, invalid_magnification_is_ignored)
+{
+    start_with_config("magnifier_enable=true\nmagnifier_magnification=2\n");
+
+    load_config(
+        std::string{"magnifier_enable=true\nmagnifier_magnification="} + std::string{GetParam().value} + "\n");
+
+    auto const expected = glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f));
+    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(expected));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidMagnifications,
+    MagnifierLiveConfigMagnificationTest,
+    Values(
+        MagnifierLiveConfigValueTestCase{"negative_one", "-1"},
+        MagnifierLiveConfigValueTestCase{"zero", "0"},
+        MagnifierLiveConfigValueTestCase{"below_minimum", "1"},
+        MagnifierLiveConfigValueTestCase{"above_maximum", "8.25"},
+        MagnifierLiveConfigValueTestCase{"negative_infinity", "-inf"},
+        MagnifierLiveConfigValueTestCase{"positive_infinity", "inf"},
+        MagnifierLiveConfigValueTestCase{"nan", "nan"}),
+    [](TestParamInfo<MagnifierLiveConfigValueTestCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
+struct MagnifierLiveConfigCaptureDimensionTest :
+    MagnifierLiveConfigTest,
+    WithParamInterface<MagnifierLiveConfigValueTestCase>
+{
+};
+
+TEST_P(MagnifierLiveConfigCaptureDimensionTest, invalid_capture_size_width_is_ignored)
+{
+    start_with_config(
+        "magnifier_enable=true\n"
+        "magnifier_capture_size_width=200\n"
+        "magnifier_capture_size_height=240\n");
+
+    magnifier.capture_size(Size(260, 260));
+    magnifier_renderable()->buffer();
+
+    load_config(
+        std::string{"magnifier_enable=true\nmagnifier_capture_size_height=250\nmagnifier_capture_size_width="} +
+        std::string{GetParam().value} + "\n");
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(260, 250)));
+}
+
+TEST_P(MagnifierLiveConfigCaptureDimensionTest, invalid_capture_size_height_is_ignored)
+{
+    start_with_config(
+        "magnifier_enable=true\n"
+        "magnifier_capture_size_width=200\n"
+        "magnifier_capture_size_height=240\n");
+
+    magnifier.capture_size(Size(260, 260));
+    magnifier_renderable()->buffer();
+
+    load_config(
+        std::string{"magnifier_enable=true\nmagnifier_capture_size_width=220\nmagnifier_capture_size_height="} +
+        std::string{GetParam().value} + "\n");
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(220, 260)));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    InvalidDimensions,
+    MagnifierLiveConfigCaptureDimensionTest,
+    Values(
+        MagnifierLiveConfigValueTestCase{"zero", "0"},
+        MagnifierLiveConfigValueTestCase{"negative_one", "-1"}),
+    [](TestParamInfo<MagnifierLiveConfigValueTestCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
+TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_reapplies_configured_values)
+{
+    std::string const config_values{
+        "magnifier_enable=true\n"
+        "magnifier_behavior=freely_positioned\n"
+        "magnifier_magnification=1.5\n"
+        "magnifier_capture_size_width=300\n"
+        "magnifier_capture_size_height=300\n"};
+    start_with_config(config_values);
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor).magnification(2.0f).capture_size(Size(200, 200));
     magnifier_renderable()->buffer();
 
     EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
-    EXPECT_THAT(magnifier_renderable()->transformation(), Eq(before_transform));
-    EXPECT_THAT(magnifier_renderable()->screen_position(), Eq(before_pos));
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f))));
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(200, 200)));
+
+    load_config(config_values);
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(1.5f, 1.5f, 1.0f))));
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(300, 300)));
+}
+
+TEST_F(MagnifierLiveConfigTest, reload_applies_configured_capture_size_at_configured_magnification)
+{
+    start_with_config(
+        "magnifier_enable=true\n"
+        "magnifier_behavior=freely_positioned\n"
+        "magnifier_capture_size_width=240\n"
+        "magnifier_capture_size_height=200\n"
+        "magnifier_magnification=1.5\n");
+
+    magnifier.capture_size(Size(260, 260));
+    magnifier_renderable()->buffer();
+
+    load_config(
+        "magnifier_enable=true\n"
+        "magnifier_behavior=freely_positioned\n"
+        "magnifier_capture_size_width=240\n"
+        "magnifier_capture_size_height=200\n"
+        "magnifier_magnification=2\n");
+    magnifier_renderable()->buffer();
+
+    EXPECT_THAT(magnifier_renderable()->screen_position().size, Eq(Size(240, 200)));
+    EXPECT_THAT(
+        magnifier_renderable()->transformation(),
+        Eq(glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f))));
+}
+
+TEST_F(MagnifierLiveConfigTest, restoring_valid_behavior_after_invalid_value_reapplies_it)
+{
+    start_with_config("magnifier_enable=true\nmagnifier_behavior=freely_positioned\n");
+
+    magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
+    load_config("magnifier_enable=true\nmagnifier_behavior=invalid\n");
+    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+
+    load_config("magnifier_enable=true\nmagnifier_behavior=freely_positioned\n");
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
 }
 
 // Input events are dispatched synchronously through SurfaceInputDispatcher into
@@ -652,9 +901,6 @@ struct MagnifierHandleTest : MagnifierTest
         flush_observer_callbacks();
     }
 
-    /// Builds a pointer event suitable for feeding straight to the event
-    /// filter, bypassing the input stack so the test can read the filter's
-    /// consume/don't-consume decision directly.
     mir::EventUPtr make_pointer(MirPointerAction action, MirPointerButtons buttons, geom::PointF pos)
     {
         return mir::events::make_pointer_event(

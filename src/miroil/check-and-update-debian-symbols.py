@@ -127,25 +127,29 @@ class SymbolsFile:
             + "."
             + str(context.library_version[2])
         )
+        version_node = (
+            context.library_name.upper()
+            + "_"
+            + str(context.abi_version)
+            + "."
+            + str(context.abi_minor_version)
+        )
+        # GNU ld emits an absolute symbol for each version node, but lld and mold do
+        # not, so the version node entry is tagged "(optional)".
         self.version_marker_line = (
-            " "
-            + context.library_name.upper()
-            + "_"
-            + str(context.abi_version)
-            + "."
-            + str(context.abi_minor_version)
+            " (optional)"
+            + version_node
             + "@"
-            + context.library_name.upper()
-            + "_"
-            + str(context.abi_version)
-            + "."
-            + str(context.abi_minor_version)
+            + version_node
             + " "
             + self.three_component_version
             + "\n"
         )
+        version_marker_pattern = re.compile(
+            r"^ (?:\([^)]*\))?" + re.escape(version_node + "@" + version_node) + r" "
+        )
         for i in reversed(range(len(lines))):
-            if lines[i] == self.version_marker_line:
+            if version_marker_pattern.match(lines[i]):
                 self.prev_version_lines = lines[:i]
                 self.current_version_lines = lines[i + 1 :]
                 return

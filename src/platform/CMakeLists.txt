@@ -1,4 +1,3 @@
-pkg_check_modules(LIBDISPLAY_INFO REQUIRED IMPORTED_TARGET libdisplay-info)
 pkg_check_modules(PIXMAN REQUIRED IMPORTED_TARGET pixman-1)
 
 add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="mirplatform")
@@ -38,6 +37,7 @@ target_link_libraries(mirplatform
     mirudev
     PkgConfig::EPOXY
     mirrenderergl
+    mirrenderercommon
     mirgl
 )
 

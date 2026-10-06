@@ -17,6 +17,7 @@ add_library(example-shell-lib STATIC
     tiling_window_manager.cpp   tiling_window_manager.h
     floating_window_manager.cpp floating_window_manager.h
     decoration_provider.cpp     decoration_provider.h
+    output_configuration_options.cpp output_configuration_options.h
     wallpaper_config.cpp        wallpaper_config.h
         splash_session.h
     sw_splash.cpp               sw_splash.h
