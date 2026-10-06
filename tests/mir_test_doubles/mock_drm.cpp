@@ -23,12 +23,17 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <ostream>
 #include <string_view>
 #include <stdexcept>
 #include <unistd.h>
 #include <dlfcn.h>
 #include <system_error>
 #include <boost/throw_exception.hpp>
+
+struct _drmModeAtomicReq
+{
+};
 
 namespace mtd=mir::test::doubles;
 namespace geom = mir::geometry;
@@ -101,6 +106,11 @@ drmModeRes* mtd::FakeDRMResources::resources_ptr()
     return &resources;
 }
 
+drmModePlaneRes* mtd::FakeDRMResources::plane_resources_ptr()
+{
+    return &plane_resources;
+}
+
 void mtd::FakeDRMResources::prepare()
 {
     resources.count_crtcs = crtcs.size();
@@ -117,6 +127,12 @@ void mtd::FakeDRMResources::prepare()
     for (auto const& connector: connectors)
         connector_ids.push_back(connector.connector_id);
     resources.connectors = connector_ids.data();
+
+    plane_resources.count_planes = planes.size();
+    plane_ids.clear();
+    for (auto const& plane : planes)
+        plane_ids.push_back(plane.plane_id);
+    plane_resources.planes = plane_ids.data();
 }
 
 void mtd::FakeDRMResources::reset()
@@ -130,6 +146,12 @@ void mtd::FakeDRMResources::reset()
     crtc_ids.clear();
     encoder_ids.clear();
     connector_ids.clear();
+
+    plane_resources = {};
+    planes.clear();
+    plane_ids.clear();
+    object_properties.clear();
+    properties.clear();
 }
 
 void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode)
@@ -152,6 +174,28 @@ void mtd::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
     encoder.possible_crtcs = possible_crtcs_mask;
 
     encoders.push_back(encoder);
+}
+
+void mtd::FakeDRMResources::add_plane(uint32_t plane_id, uint32_t possible_crtcs_mask)
+{
+    drmModePlane plane{};
+    plane.plane_id = plane_id;
+    plane.possible_crtcs = possible_crtcs_mask;
+    planes.push_back(plane);
+}
+
+void mtd::FakeDRMResources::add_property(
+    uint32_t object_id, uint32_t object_type, uint32_t property_id, char const* name, uint64_t value)
+{
+    auto& property = properties[property_id];
+    property = {};
+    property.prop_id = property_id;
+    std::strncpy(property.name, name, sizeof(property.name) - 1);
+
+    auto& object = object_properties[{object_id, object_type}];
+    object.ids.push_back(property_id);
+    object.values.push_back(value);
+    object.resource = {static_cast<uint32_t>(object.ids.size()), object.ids.data(), object.values.data()};
 }
 
 void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
@@ -208,6 +252,28 @@ drmModeConnector* mtd::FakeDRMResources::find_connector(uint32_t id)
             return &connector;
     }
     return nullptr;
+}
+
+drmModePlane* mtd::FakeDRMResources::find_plane(uint32_t id)
+{
+    for (auto& plane : planes)
+    {
+        if (plane.plane_id == id)
+            return &plane;
+    }
+    return nullptr;
+}
+
+drmModeObjectProperties* mtd::FakeDRMResources::find_object_properties(uint32_t id, uint32_t type)
+{
+    auto const it = object_properties.find({id, type});
+    return it == object_properties.end() ? &empty_object_properties : &it->second.resource;
+}
+
+drmModePropertyRes* mtd::FakeDRMResources::find_property(uint32_t id)
+{
+    auto const it = properties.find(id);
+    return it == properties.end() ? nullptr : &it->second;
 }
 
 
@@ -411,10 +477,62 @@ mtd::MockDRM::MockDRM()
                 *value = 1;
                 return 0;
             });
+
+    ON_CALL(*this, drmModeCreatePropertyBlob(_, _, _, _))
+        .WillByDefault(
+            [this](int, void const*, size_t, uint32_t* id)
+            {
+                *id = next_property_blob_id++;
+                return 0;
+            });
+    ON_CALL(*this, drmModeDestroyPropertyBlob(_, _))
+        .WillByDefault(Return(0));
+
+    ON_CALL(*this, drmModeAtomicAlloc())
+        .WillByDefault(
+            [this]()
+            {
+                auto const request = new drmModeAtomicReq{};
+                atomic_owned_requests.insert(request);
+                return request;
+            });
+
+    ON_CALL(*this, drmModeAtomicAddProperty(_, _, _, _))
+        .WillByDefault(
+            [this](drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t)
+            {
+                if (!atomic_owned_requests.contains(req) || !object_id || !property_id)
+                    return -EINVAL;
+
+                return static_cast<int>(atomic_requests_[atomic_active_requests.at(req)].properties.size() + 1);
+            });
+
+    ON_CALL(*this, drmModeAtomicCommit(_, _, _, _))
+        .WillByDefault(
+            [this](int, drmModeAtomicReqPtr req, uint32_t, void*)
+            {
+                return atomic_owned_requests.contains(req) ? 0 : -EINVAL;
+            });
+
+    ON_CALL(*this, drmModeAtomicFree(_))
+        .WillByDefault(
+            [this](drmModeAtomicReqPtr req)
+            {
+                if (atomic_owned_requests.erase(req))
+                    delete req;
+            });
 }
 
 mtd::MockDRM::~MockDRM() noexcept
 {
+    if (!atomic_active_requests.empty() || !atomic_owned_requests.empty())
+    {
+        ADD_FAILURE() << "Atomic DRM requests were not freed";
+    }
+    for (auto const request : atomic_owned_requests)
+    {
+        delete request;
+    }
     global_mock = nullptr;
 }
 
@@ -463,6 +581,157 @@ void mtd::MockDRM::consume_event_on(char const* device)
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "Failed to consume fake DRM event"));
     }
+}
+
+auto mtd::MockDRM::atomic_requests() const -> std::vector<AtomicRequest> const&
+{
+    return atomic_requests_;
+}
+
+auto mtd::MockDRM::atomic_commits() const -> std::vector<AtomicCommit> const&
+{
+    return atomic_commits_;
+}
+
+auto mtd::MockDRM::atomic_operations() const -> std::vector<AtomicOperation> const&
+{
+    return atomic_operations_;
+}
+
+auto mtd::MockDRM::atomic_visible_properties() const -> std::map<std::pair<uint32_t, uint32_t>, uint64_t> const&
+{
+    return atomic_visible_properties_;
+}
+
+void mtd::PrintTo(MockDRM::AtomicProperty const& property, std::ostream* out)
+{
+    *out << "AtomicProperty{object_id=" << property.object_id
+         << ", property_id=" << property.property_id
+         << ", value=" << property.value << '}';
+}
+
+void mtd::PrintTo(MockDRM::AtomicCommit const& commit, std::ostream* out)
+{
+    *out << "AtomicCommit{request_id=" << commit.request_id
+         << ", fd=" << commit.fd
+         << ", flags=" << commit.flags
+         << ", result=" << commit.result
+         << ", properties=" << ::testing::PrintToString(commit.properties) << '}';
+}
+
+void mtd::PrintTo(MockDRM::AtomicOperationKind kind, std::ostream* out)
+{
+    switch (kind)
+    {
+        case MockDRM::AtomicOperationKind::allocate:
+            *out << "allocate";
+            return;
+        case MockDRM::AtomicOperationKind::add_property:
+            *out << "add_property";
+            return;
+        case MockDRM::AtomicOperationKind::commit:
+            *out << "commit";
+            return;
+        case MockDRM::AtomicOperationKind::free:
+            *out << "free";
+            return;
+    }
+    *out << "AtomicOperationKind(" << static_cast<int>(kind) << ')';
+}
+
+void mtd::PrintTo(MockDRM::AtomicOperation const& operation, std::ostream* out)
+{
+    *out << "AtomicOperation{kind=";
+    PrintTo(operation.kind, out);
+    *out << ", request_id=" << operation.request_id
+         << ", result=" << operation.result << '}';
+}
+
+testing::Matcher<mtd::MockDRM::AtomicRequest> mtd::FreedAtomicRequest(
+    size_t id, testing::Matcher<std::vector<MockDRM::AtomicProperty>> properties)
+{
+    using namespace testing;
+    return AllOf(
+        Field("id", &MockDRM::AtomicRequest::id, id),
+        Field("properties", &MockDRM::AtomicRequest::properties, properties),
+        Field("freed", &MockDRM::AtomicRequest::freed, true));
+}
+
+testing::Matcher<mtd::MockDRM::AtomicCommit> mtd::AtomicCommitWith(
+    size_t request_id, testing::Matcher<int> fd, uint32_t flags, int result,
+    testing::Matcher<std::vector<MockDRM::AtomicProperty>> properties)
+{
+    using namespace testing;
+    return AllOf(
+        Field("request_id", &MockDRM::AtomicCommit::request_id, request_id),
+        Field("fd", &MockDRM::AtomicCommit::fd, fd),
+        Field("flags", &MockDRM::AtomicCommit::flags, flags),
+        Field("result", &MockDRM::AtomicCommit::result, result),
+        Field("properties", &MockDRM::AtomicCommit::properties, properties));
+}
+
+auto mtd::MockDRM::active_request(drmModeAtomicReqPtr handle) -> AtomicRequest*
+{
+    auto const it = atomic_active_requests.find(handle);
+    return it == atomic_active_requests.end() ? nullptr : &atomic_requests_[it->second];
+}
+
+drmModeAtomicReqPtr mtd::MockDRM::forward_drm_mode_atomic_alloc()
+{
+    auto const request = drmModeAtomicAlloc();
+    size_t id{};
+    if (request)
+    {
+        id = atomic_requests_.size() + 1;
+        atomic_requests_.push_back({id, request, {}});
+        atomic_active_requests[request] = atomic_requests_.size() - 1;
+    }
+    atomic_operations_.push_back({AtomicOperationKind::allocate, id, request ? 0 : -1});
+    return request;
+}
+
+int mtd::MockDRM::forward_drm_mode_atomic_add_property(
+    drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t value)
+{
+    auto const result = drmModeAtomicAddProperty(req, object_id, property_id, value);
+    auto const request = active_request(req);
+    auto const id = request ? request->id : 0;
+    atomic_operations_.push_back({AtomicOperationKind::add_property, id, result});
+    if (request && result >= 0)
+        request->properties.push_back({object_id, property_id, value});
+    return result;
+}
+
+int mtd::MockDRM::forward_drm_mode_atomic_commit(int fd, drmModeAtomicReqPtr req, uint32_t flags, void* user_data)
+{
+    auto const result = drmModeAtomicCommit(fd, req, flags, user_data);
+    auto const request = active_request(req);
+    auto const id = request ? request->id : 0;
+    atomic_operations_.push_back({AtomicOperationKind::commit, id, result});
+    auto const& commit = atomic_commits_.emplace_back(AtomicCommit{
+        id, fd, flags, result, request ? request->properties : std::vector<AtomicProperty>{}});
+    if (request && result == 0 && !(flags & DRM_MODE_ATOMIC_TEST_ONLY))
+    {
+        for (auto const& property : commit.properties)
+            atomic_visible_properties_[{property.object_id, property.property_id}] = property.value;
+    }
+    return result;
+}
+
+void mtd::MockDRM::forward_drm_mode_atomic_free(drmModeAtomicReqPtr req)
+{
+    drmModeAtomicFree(req);
+    auto const request = active_request(req);
+    auto const id = request ? request->id : 0;
+    atomic_operations_.push_back({AtomicOperationKind::free, id, 0});
+    if (request)
+    {
+        request->freed = true;
+        atomic_active_requests.erase(req);
+    }
+    // An overridden gMock free action may not release a default-owned fake handle.
+    if (atomic_owned_requests.erase(req))
+        delete req;
 }
 
 void mtd::MockDRM::add_connector(
@@ -694,6 +963,16 @@ void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr)
     global_mock->drmModeFreeObjectProperties(ptr);
 }
 
+int drmModeCreatePropertyBlob(int fd, void const* data, size_t size, uint32_t* id)
+{
+    return global_mock->drmModeCreatePropertyBlob(fd, data, size, id);
+}
+
+int drmModeDestroyPropertyBlob(int fd, uint32_t id)
+{
+    return global_mock->drmModeDestroyPropertyBlob(fd, id);
+}
+
 int drmModeAddFB(int fd, uint32_t width, uint32_t height,
                  uint8_t depth, uint8_t bpp, uint32_t pitch,
                  uint32_t bo_handle, uint32_t *buf_id)
@@ -820,5 +1099,29 @@ char* drmGetPrimaryDeviceNameFromFd(int fd)
 int drmCheckModesettingSupported(char const* busid)
 {
     return global_mock->drmCheckModesettingSupported(busid);
+}
+
+drmModeAtomicReqPtr drmModeAtomicAlloc()
+{
+    return global_mock->forward_drm_mode_atomic_alloc();
+}
+
+int drmModeAtomicAddProperty(
+    drmModeAtomicReqPtr req,
+    uint32_t object_id,
+    uint32_t property_id,
+    uint64_t value)
+{
+    return global_mock->forward_drm_mode_atomic_add_property(req, object_id, property_id, value);
+}
+
+int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req, uint32_t flags, void* user_data)
+{
+    return global_mock->forward_drm_mode_atomic_commit(fd, req, flags, user_data);
+}
+
+void drmModeAtomicFree(drmModeAtomicReqPtr req)
+{
+    global_mock->forward_drm_mode_atomic_free(req);
 }
 }
