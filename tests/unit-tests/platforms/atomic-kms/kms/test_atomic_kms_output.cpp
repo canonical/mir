@@ -39,6 +39,8 @@ using namespace testing;
 
 namespace
 {
+constexpr char const* drm_device{"/dev/dri/card0"};
+constexpr uint32_t no_flags{0};
 constexpr int mode_width{1920};
 constexpr int mode_height{1080};
 geom::Size const requested_mode_size{mode_width, mode_height};
@@ -75,6 +77,14 @@ using AtomicProperty = mtd::MockDRM::AtomicProperty;
 using AtomicOperation = mtd::MockDRM::AtomicOperation;
 using AtomicOperationKind = mtd::MockDRM::AtomicOperationKind;
 
+struct PrimaryRequestParameters
+{
+    uint32_t framebuffer_id;
+    geom::Displacement source_offset{};
+    bool activate_crtc{false};
+    geom::Size size{requested_mode_size};
+};
+
 struct CommitExpectation
 {
     size_t request_index{0};
@@ -98,7 +108,7 @@ void expect_commit_request(
     auto const& request = mock.atomic_requests()[expected.request_index];
     EXPECT_THAT(request, mtd::FreedAtomicRequest(request.id, ElementsAreArray(properties)));
     EXPECT_THAT(mock.atomic_commits(), ElementsAre(mtd::AtomicCommitWith(
-        request.id, mtd::IsFdOfDevice("/dev/dri/card0"), flags, expected.result, ElementsAreArray(properties))));
+        request.id, mtd::IsFdOfDevice(drm_device), flags, expected.result, ElementsAreArray(properties))));
 
     auto expected_operations = expected_add_operations(request.id, properties.size());
     expected_operations.push_back({AtomicOperationKind::commit, request.id, expected.result});
@@ -144,7 +154,7 @@ public:
     static constexpr uint32_t primary_crtc_mask{1};
 
     AtomicKMSOutputTest()
-        : drm_fd{mock_drm.open("/dev/dri/card0", 0)}
+        : drm_fd{mock_drm.open(drm_device, 0)}
     {
         setup_drm_objects();
 
@@ -196,21 +206,19 @@ public:
             {plane_id, plane_crtc_property_id, 0}};
     }
 
-    auto primary_request_properties(
-        uint32_t framebuffer_id, uint64_t source_x, uint64_t source_y, bool activate_crtc,
-        geom::Size size = requested_mode_size) const
+    auto primary_request_properties(PrimaryRequestParameters const& parameters) const
         -> std::vector<AtomicProperty>
     {
-        auto const width = size.width.as_uint32_t();
-        auto const height = size.height.as_uint32_t();
+        auto const width = parameters.size.width.as_uint32_t();
+        auto const height = parameters.size.height.as_uint32_t();
         std::vector<AtomicProperty> properties{
             {crtc_id, crtc_mode_property_id, mode_blob_id},
             {connector_id, connector_crtc_property_id, crtc_id}};
-        if (activate_crtc)
+        if (parameters.activate_crtc)
             properties.push_back({crtc_id, crtc_active_property_id, 1});
         properties.insert(properties.end(), {
-            {plane_id, plane_src_x_property_id, source_x},
-            {plane_id, plane_src_y_property_id, source_y},
+            {plane_id, plane_src_x_property_id, kms_fixed_point(parameters.source_offset.dx.as_uint32_t())},
+            {plane_id, plane_src_y_property_id, kms_fixed_point(parameters.source_offset.dy.as_uint32_t())},
             {plane_id, plane_src_w_property_id, kms_fixed_point(width)},
             {plane_id, plane_src_h_property_id, kms_fixed_point(height)},
             {plane_id, plane_crtc_x_property_id, 0},
@@ -218,7 +226,7 @@ public:
             {plane_id, plane_crtc_w_property_id, width},
             {plane_id, plane_crtc_h_property_id, height},
             {plane_id, plane_crtc_property_id, crtc_id},
-            {plane_id, plane_fb_property_id, framebuffer_id}});
+            {plane_id, plane_fb_property_id, parameters.framebuffer_id}});
         return properties;
     }
 
@@ -321,8 +329,7 @@ TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_order_and_modeset
 {
     auto output_under_test = output(source_offset);
     auto const properties = primary_request_properties(
-        primary_framebuffer_id, kms_fixed_point(source_offset.dx.as_uint32_t()),
-        kms_fixed_point(source_offset.dy.as_uint32_t()), true);
+        {.framebuffer_id = primary_framebuffer_id, .source_offset = source_offset, .activate_crtc = true});
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
     ASSERT_TRUE(output_under_test->set_crtc(framebuffer));
@@ -332,13 +339,12 @@ TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_order_and_modeset
 TEST_F(AtomicKMSOutputTest, page_flip_preserves_primary_request_and_uses_normal_commit)
 {
     auto output_under_test = output(source_offset);
-    auto const properties = primary_request_properties(
-        flip_framebuffer_id, kms_fixed_point(source_offset.dx.as_uint32_t()),
-        kms_fixed_point(source_offset.dy.as_uint32_t()), false);
+    auto const properties =
+        primary_request_properties({.framebuffer_id = flip_framebuffer_id, .source_offset = source_offset});
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
     ASSERT_TRUE(output_under_test->page_flip(framebuffer));
-    expect_commit_request(mock_drm, 0, properties);
+    expect_commit_request(mock_drm, no_flags, properties);
 }
 
 TEST_F(AtomicKMSOutputTest, set_crtc_uses_requested_mode_size_instead_of_current_crtc_size)
@@ -351,8 +357,9 @@ TEST_F(AtomicKMSOutputTest, set_crtc_uses_requested_mode_size_instead_of_current
     StubFramebuffer framebuffer{primary_framebuffer_id, requested_mode_size};
 
     EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
-    expect_commit_request(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
-                          primary_request_properties(primary_framebuffer_id, 0, 0, true));
+    expect_commit_request(
+        mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
+        primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}));
 }
 
 TEST_F(AtomicKMSOutputTest, page_flip_uses_current_crtc_size_instead_of_requested_mode_size)
@@ -365,8 +372,9 @@ TEST_F(AtomicKMSOutputTest, page_flip_uses_current_crtc_size_instead_of_requeste
     StubFramebuffer framebuffer{flip_framebuffer_id, smaller_crtc_size};
 
     EXPECT_TRUE(output_under_test->page_flip(framebuffer));
-    expect_commit_request(mock_drm, 0,
-                          primary_request_properties(flip_framebuffer_id, 0, 0, false, smaller_crtc_size));
+    expect_commit_request(
+        mock_drm, no_flags,
+        primary_request_properties({.framebuffer_id = flip_framebuffer_id, .size = smaller_crtc_size}));
 }
 
 TEST_P(AtomicKMSFramebufferSizeTest, page_flip_rejects_mismatch_without_allocating_request)
@@ -437,16 +445,17 @@ TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request_without_changi
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
     EXPECT_FALSE(output_under_test->set_crtc(framebuffer));
-    expect_failed_commit(mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
-                         primary_request_properties(primary_framebuffer_id, 0, 0, true));
+    expect_failed_commit(
+        mock_drm, DRM_MODE_ATOMIC_ALLOW_MODESET,
+        primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}));
 }
 
 TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request_without_changing_visible_state)
 {
     auto output_under_test = output();
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, 0)).WillOnce(Return(-EIO));
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags)).WillOnce(Return(-EIO));
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
-    expect_failed_commit(mock_drm, 0, primary_request_properties(flip_framebuffer_id, 0, 0, false));
+    expect_failed_commit(mock_drm, no_flags, primary_request_properties({.framebuffer_id = flip_framebuffer_id}));
 }
