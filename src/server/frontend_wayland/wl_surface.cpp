@@ -396,6 +396,11 @@ void mf::WlSurface::attach(std::optional<wl_resource*> const& buffer, int32_t x,
         mir::log_warning("Client requested unimplemented non-zero attach offset. Rendering will be incorrect.");
     }
 
+    if (buffer && attach_hook)
+    {
+        attach_hook();
+    }
+
     pending.buffer = mw::make_weak(buffer ? ResourceLifetimeTracker::from(buffer.value()) : nullptr);
 }
 

@@ -135,6 +135,10 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
+    /// Whether a buffer has been committed, or a non-null buffer is attached pending the next commit
+    bool has_buffer() const { return buffer_size_ || (pending.buffer && pending.buffer.value()); }
+    /// Called whenever a non-null buffer is attached; unset by default. May throw a ProtocolError to reject it.
+    void set_attach_hook(std::function<void()> hook) { attach_hook = std::move(hook); }
     bool synchronized() const;
     /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
     /// drag-and-drop icon, or a window role such as xdg_toplevel). Used to raise the
@@ -244,6 +248,7 @@ private:
     CallbackList heartbeat_quirk_frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
+    std::function<void()> attach_hook;
     wayland::Weak<Viewport> viewport;
     wayland::Weak<FractionalScaleV1> fractional_scale;
     wayland::Weak<SyncTimeline> sync_timeline;

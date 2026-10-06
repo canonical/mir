@@ -119,6 +119,19 @@ auto mf::WindowWlSurfaceRole::scene_surface() const -> std::optional<std::shared
         return std::nullopt;
 }
 
+auto mf::WindowWlSurfaceRole::has_buffer() const -> bool
+{
+    return surface && surface.value().has_buffer();
+}
+
+void mf::WindowWlSurfaceRole::set_attach_hook(std::function<void()> hook)
+{
+    if (surface)
+    {
+        surface.value().set_attach_hook(std::move(hook));
+    }
+}
+
 void mf::WindowWlSurfaceRole::populate_spec_with_surface_data(shell::SurfaceSpecification& spec)
 {
     spec.streams = std::vector<shell::StreamSpecification>();

@@ -80,6 +80,12 @@ public:
 
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
+    /// Whether the underlying wl_surface has a buffer attached or committed
+    auto has_buffer() const -> bool;
+
+    /// See WlSurface::set_attach_hook()
+    void set_attach_hook(std::function<void()> hook);
+
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 
