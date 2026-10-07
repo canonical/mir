@@ -25,7 +25,29 @@
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <compare>
+#include <map>
+#include <memory>
+#include <string>
 #include <unordered_map>
+#include <utility>
+#include <vector>
+
+namespace mir::test::doubles
+{
+struct AtomicPropertyKey
+{
+    uint32_t object_id;
+    uint32_t property_id;
+    auto operator<=>(AtomicPropertyKey const&) const = default;
+};
+}
+
+struct _drmModeAtomicReq
+{
+    std::map<mir::test::doubles::AtomicPropertyKey, uint64_t> properties;
+    uint32_t cursor{0};
+};
 
 namespace mir
 {
@@ -43,21 +65,29 @@ public:
     int fd() const;
     int write_fd() const;
     drmModeRes* resources_ptr();
+    drmModePlaneRes* plane_resources_ptr();
 
     void add_crtc(uint32_t id, drmModeModeInfo mode);
     void add_encoder(uint32_t encoder_id, uint32_t crtc_id, uint32_t possible_crtcs_mask);
+    void add_plane(uint32_t plane_id, uint32_t possible_crtcs_mask);
     void add_connector(uint32_t connector_id, uint32_t type, drmModeConnection connection,
                        uint32_t encoder_id, std::vector<drmModeModeInfo>& modes,
                        std::vector<uint32_t>& possible_encoder_ids,
                        geometry::Size const& physical_size,
                        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
+    void add_property(uint32_t object_id, uint32_t object_type, uint32_t property_id,
+                      char const* name, uint64_t value = 0);
 
     void prepare();
     void reset();
 
+    // Returned objects and their arrays are borrowed; keep this resource set alive while using them.
     drmModeCrtc* find_crtc(uint32_t id);
     drmModeEncoder* find_encoder(uint32_t id);
     drmModeConnector* find_connector(uint32_t id);
+    drmModePlane* find_plane(uint32_t id);
+    drmModeObjectProperties* find_object_properties(uint32_t id, uint32_t type);
+    drmModePropertyRes* find_property(uint32_t id);
 
     enum ModePreference {NormalMode, PreferredMode};
     static drmModeModeInfo create_mode(uint16_t hdisplay, uint16_t vdisplay,
@@ -80,6 +110,19 @@ private:
     std::vector<drmModeModeInfo> modes;
     std::vector<drmModeModeInfo> modes_empty;
     std::vector<uint32_t> connector_encoder_ids;
+
+    drmModePlaneRes plane_resources{};
+    std::vector<drmModePlane> planes;
+    std::vector<uint32_t> plane_ids;
+    struct ObjectProperties
+    {
+        std::vector<uint32_t> ids;
+        std::vector<uint64_t> values;
+        drmModeObjectProperties resource{};
+    };
+    std::map<std::pair<uint32_t, uint32_t>, ObjectProperties> object_properties;
+    std::map<uint32_t, drmModePropertyRes> properties;
+    drmModeObjectProperties empty_object_properties{};
 };
 
 class MockDRM
@@ -110,6 +153,9 @@ public:
     MOCK_METHOD(void, drmModeFreePlaneResources, (drmModePlaneResPtr ptr));
     MOCK_METHOD(void, drmModeFreePlane, (drmModePlanePtr ptr));
     MOCK_METHOD(void, drmModeFreeObjectProperties, (drmModeObjectPropertiesPtr));
+    MOCK_METHOD(int, drmModeCreatePropertyBlob,
+                (int fd, void const* data, size_t size, uint32_t* id));
+    MOCK_METHOD(int, drmModeDestroyPropertyBlob, (int fd, uint32_t id));
 
     MOCK_METHOD(int, drmModeAddFB, (int fd, uint32_t width, uint32_t height,
                                    uint8_t depth, uint8_t bpp, uint32_t pitch,
@@ -157,6 +203,20 @@ public:
                                           uint16_t* red, uint16_t* green, uint16_t* blue));
     MOCK_METHOD(int, drmModeCrtcSetGamma, (int fd, uint32_t crtc_id, uint32_t size,
                                           uint16_t const* red, uint16_t const* green, uint16_t const* blue));
+
+    MOCK_METHOD(drmModeAtomicReqPtr, drmModeAtomicAlloc, ());
+    MOCK_METHOD(int, drmModeAtomicAddProperty,
+                (drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t value));
+    MOCK_METHOD(int, drmModeAtomicCommit,
+                (int fd, drmModeAtomicReqPtr req, uint32_t flags, void* user_data));
+    int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req, uint32_t flags)
+    { return drmModeAtomicCommit(fd, req, flags, nullptr); }
+    auto gmock_drmModeAtomicCommit(
+        testing::Matcher<int> const& fd,
+        testing::Matcher<drmModeAtomicReqPtr> const& req,
+        testing::Matcher<uint32_t> const& flags)
+    { return gmock_drmModeAtomicCommit(fd, req, flags, nullptr); }
+    MOCK_METHOD(void, drmModeAtomicFree, (drmModeAtomicReqPtr req));
 
     MOCK_METHOD(drmVersionPtr, drmGetVersion, (int));
     MOCK_METHOD(void, drmFreeVersion, (drmVersionPtr));
@@ -218,11 +278,15 @@ private:
     };
 
     std::map<std::unique_ptr<char[]>, size_t, TransparentUPtrComparator> mmapings;
+    uint32_t next_property_blob_id{1};
     drmModeObjectProperties empty_object_props;
     mir_test_framework::OpenHandlerHandle const open_interposer;
     mir_test_framework::MmapHandlerHandle const mmap_interposer;
     mir_test_framework::MunmapHandlerHandle const munmap_interposer;
 };
+
+testing::Matcher<drmModeAtomicReqPtr> AtomicRequestWith(
+    testing::Matcher<std::map<AtomicPropertyKey, uint64_t>> properties);
 
 testing::Matcher<int> IsFdOfDevice(char const* device);
 }
