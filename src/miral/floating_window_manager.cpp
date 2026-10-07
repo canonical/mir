@@ -238,9 +238,6 @@ bool miral::FloatingWindowManager::Impl::prepare_for_gesture(
     {
         switch (window_info.state())
         {
-        case mir_window_state_restored:
-            return true;
-
         case mir_window_state_maximized:
         case mir_window_state_vertmaximized:
         case mir_window_state_horizmaximized:
@@ -262,7 +259,12 @@ bool miral::FloatingWindowManager::Impl::prepare_for_gesture(
             mods.top_left() = placement.top_left;
             mods.size() = placement.size;
             tools.modify_window(window_info, mods);
-        }   return true;
+            [[fallthrough]];
+        }
+
+        case mir_window_state_restored:
+            tools.select_active_window(window_info.window());
+            return true;
 
         default: break;
         }
@@ -270,7 +272,11 @@ bool miral::FloatingWindowManager::Impl::prepare_for_gesture(
 
     case Gesture::pointer_resizing:
     case Gesture::touch_resizing:
-        return window_info.state() == mir_window_state_restored;
+        if (window_info.state() == mir_window_state_restored)
+        {
+            tools.select_active_window(window_info.window());
+            return true;
+        }
 
     case Gesture::none:
         break;
