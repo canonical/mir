@@ -33,6 +33,10 @@ public:
     bool overlay(std::vector<mir::graphics::DisplayElement> const&) override { return false; }
     void set_next_image(std::unique_ptr<mir::graphics::Framebuffer>) override { }
     glm::mat2 transformation() const override { return glm::mat2(1); }
+    auto plan_presentation(std::vector<std::shared_ptr<graphics::Renderable>> const&)
+        -> std::optional<graphics::LogicalStacking> override
+    { return std::nullopt; }
+
 protected:
     auto maybe_create_allocator(graphics::DisplayAllocator::Tag const&) -> graphics::DisplayAllocator* override
     {

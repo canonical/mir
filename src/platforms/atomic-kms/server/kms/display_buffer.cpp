@@ -109,38 +109,45 @@ void mga::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangl
 
 bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_list)
 {
-    // TODO: implement more than the most basic case.
-    if (renderable_list.size() != 1)
+    if (renderable_list.size() == 1)
     {
+        if (renderable_list[0].screen_positon != view_area())
+        {
+            return false;
+        }
+
+        if (renderable_list[0].source_position.top_left != geom::PointF{0, 0} ||
+            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
+            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
+        {
+            return false;
+        }
+
+        if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
+        {
+            next_swap = std::move(fb);
+            return true;
+        }
         return false;
     }
-
-    if (renderable_list[0].screen_positon != view_area())
+    else
     {
-        return false;
+        // TODO map display elements to atomic KMS planes
     }
 
-    if (renderable_list[0].source_position.top_left != geom::PointF {0,0} ||
-        renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
-        renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
-    {
-        return false;
-    }
-
-    if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
-    {
-        next_swap = std::move(fb);
-        return true;
-    }
     return false;
 }
+
+auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
 
 void mga::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
     f(*this);
 }
 
-void mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
+bool mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
 {
     /*
      * Note that failure to set the CRTC is not a fatal error. This can
@@ -150,18 +157,22 @@ void mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
      * errors, and it's not fatal.
      */
     if (!output->set_crtc(forced_frame))
+    {
         mir::log_error("Failed to set DRM CRTC. "
             "Screen contents may be incomplete. "
             "Try plugging the monitor in again.");
+        return false;
+    }
+    return true;
 }
 
-void mga::DisplaySink::post()
+bool mga::DisplaySink::post()
 {
     if (!next_swap)
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
         // Sweet! We can just bail.
-        return;
+        return true;
     }
     /*
      * Otherwise, pull the next frame into the pending slot
@@ -180,15 +191,17 @@ void mga::DisplaySink::post()
      * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
      * to need to do this on every frame. [will complete in this thread]
      */
+    auto presentation_succeeded = true;
     if (needs_set_crtc)
     {
-        set_crtc(*scheduled_fb);
+        presentation_succeeded = set_crtc(*scheduled_fb);
         // SetCrtc is immediate, so the FB is now visible and we have nothing pending
 
         needs_set_crtc = false;
     }
 
-    visible_fb = std::move(scheduled_fb);
+    if (presentation_succeeded)
+        visible_fb = std::move(scheduled_fb);
     scheduled_fb = nullptr;
 
     using namespace std::chrono_literals;  // For operator""ms()
@@ -204,6 +217,8 @@ void mga::DisplaySink::post()
     auto const min_frame_interval = 1000ms / output->max_refresh_rate();
     if (predicted_render_time < min_frame_interval)
         recommend_sleep = min_frame_interval - predicted_render_time;
+
+    return presentation_succeeded;
 }
 
 std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const

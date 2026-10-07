@@ -195,7 +195,12 @@ public:
 
                     // We can skip the post if none of the compositors ended up compositing
                     if (needs_post)
-                        group.post();
+                    {
+                        if (!group.post())
+                        {
+                            // TODO Schedule a recovery frame immediately
+                        }
+                    }
 
                     /*
                      * "Predictive bypass" optimization: If the last frame was

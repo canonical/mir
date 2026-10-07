@@ -92,7 +92,7 @@ Vcs-Git: https://github.com/canonical/mir
 
 #TODO: Packaging infrastructure for better dependency generation,
 #      ala pkg-xorg's xviddriver:Provides and ABI detection.
-Package: libmirserver69
+Package: libmirserver70
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -181,7 +181,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver69 (= ${binary:Version}),
+Depends: libmirserver70 (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmircommon-dev (= ${binary:Version}),
          libglm-dev,
@@ -198,7 +198,7 @@ Section: libdevel
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: libmirserver69 (= ${binary:Version}),
+Depends: libmirserver70 (= ${binary:Version}),
       libmirplatform-dev (= ${binary:Version}),
       libmircommon-dev (= ${binary:Version}),
       libmircore-dev (= ${binary:Version}),
@@ -221,7 +221,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmircommon-dev (= ${binary:Version}),
          libmirplatform-dev (= ${binary:Version}),
          libmirserver-dev (= ${binary:Version}),
-         mir-platform-graphics-stub24,
+         mir-platform-graphics-stub25,
          mir-platform-input-stub11,
          ${misc:Depends},
 Description: Display server for Ubuntu - test development headers and library
@@ -287,7 +287,7 @@ Breaks: mir-test-tools (<< 2.0.0.0+dev148~)
 Replaces: mir-test-tools (<< 2.0.0.0+dev148~)
 Depends: ${misc:Depends},
          ${shlibs:Depends},
-         mir-platform-graphics-stub24,
+         mir-platform-graphics-stub25,
          mir-platform-input-stub11,
 # FIXME: canonical/mir#4772
          mir-platform-rendering-egl-generic,
@@ -324,7 +324,7 @@ Description: Display server for Ubuntu - shared library
  Contains the shared libraries required for the Mir server and client.
 
 # Longer-term these drivers should move out-of-tree
-Package: mir-platform-graphics-x24
+Package: mir-platform-graphics-x25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -338,12 +338,12 @@ Description: Display server for Ubuntu - platform library for X11
  Contains the shared libraries required for the Mir server to interact with
  the X11 platform.
 
-Package: mir-platform-graphics-atomic-kms24
+Package: mir-platform-graphics-atomic-kms25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mir-platform-graphics-gbm-kms24,
+Depends: mir-platform-graphics-gbm-kms25,
          ${misc:Depends},
          ${shlibs:Depends},
 Breaks: mir-platform-graphics-eglstream-kms24 (<< 2.29.0)
@@ -355,7 +355,7 @@ Description: Display server for Ubuntu - platform library for Atomic KMS
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers and Atomic KMS API.
 
-Package: mir-platform-graphics-gbm-kms24
+Package: mir-platform-graphics-gbm-kms25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -369,7 +369,7 @@ Description: Display server for Ubuntu - platform library for GBM KMS
  Contains the shared libraries required for the Mir server to interact with
  the hardware platform using the Mesa drivers.
 
-Package: mir-platform-graphics-wayland24
+Package: mir-platform-graphics-wayland25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -383,7 +383,7 @@ Description: Display server for Ubuntu - platform library for Wayland
  Contains the shared libraries required for the Mir server to interact with
  a "host" Wayland display server.
 
-Package: mir-platform-rendering-egl-generic24
+Package: mir-platform-rendering-egl-generic25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -397,7 +397,7 @@ Description: Display server for Ubuntu - generic EGL rendering platform
  Contains the shared libraries required for the Mir server to provide accelerated
  client rendering via standard EGL interfaces.
 
-Package: mir-platform-graphics-virtual24
+Package: mir-platform-graphics-virtual25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -411,7 +411,7 @@ Description: Display server for Ubuntu - virtual display platform
  Contains the shared libraries required for the Mir server to provide virtual
  output support.
 
-Package: mir-platform-graphics-stub24
+Package: mir-platform-graphics-stub25
 Section: libs
 Architecture: linux-any
 Multi-Arch: same
@@ -478,7 +478,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-atomic-kms24,
+         mir-platform-graphics-atomic-kms25,
          mir-platform-input-evdev11,
          mir-platform-rendering-egl-generic,
 Breaks: mir-platform-graphics-eglstream-kms (<< 2.29.0),
@@ -498,7 +498,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-gbm-kms24,
+         mir-platform-graphics-gbm-kms25,
          mir-platform-input-evdev11,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - gbm-kms driver metapackage
@@ -514,7 +514,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-wayland24,
+         mir-platform-graphics-wayland25,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - wayland driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
@@ -528,7 +528,7 @@ Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mir-platform-rendering-egl-generic24
+Depends: mir-platform-rendering-egl-generic25
 Description: Display server for Ubuntu - EGL rendering provider metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -541,7 +541,7 @@ Section: libs
 Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: mir-platform-graphics-virtual24
+Depends: mir-platform-graphics-virtual25
 Description: Display server for Ubuntu - virtual display provider metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
  robust operation and a well-defined driver model.
@@ -554,7 +554,7 @@ Architecture: linux-any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
 Depends: ${misc:Depends},
-         mir-platform-graphics-x24,
+         mir-platform-graphics-x25,
          mir-platform-rendering-egl-generic,
 Description: Display server for Ubuntu - x driver metapackage
  Mir is a display server running on linux systems, with a focus on efficiency,
