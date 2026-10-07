@@ -85,6 +85,25 @@ auto import_display_elements(
 
     return framebuffers;
 }
+
+bool try_bypass(
+    mg::RenderableList const& renderable_list,
+    mg::RenderingProvider::FramebufferProvider& fb_adaptor,
+    mg::DisplaySink& display_sink,
+    MirOutputFilter filter,
+    glm::mat2 const& transform)
+{
+    auto const can_present_directly = direct_presentation_allowed(filter, transform);
+    if (!can_present_directly)
+        return false;
+
+    auto const display_elements =  import_display_elements(renderable_list, fb_adaptor);
+
+    if (display_elements.size() != renderable_list.size())
+        return false;
+
+    return display_sink.overlay(display_elements);
+}
 }
 
 
@@ -136,11 +155,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     auto const filter = output_filter->filter();
     auto const transform = display_sink.transformation();
-    auto const can_present_directly = direct_presentation_allowed(filter, transform);
-    auto const display_elements = can_present_directly ? import_display_elements(renderable_list, *fb_adaptor) :
-                                                         std::vector<mg::DisplayElement>{};
-    if (can_present_directly && display_elements.size() == renderable_list.size() &&
-        display_sink.overlay(display_elements))
+    if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
