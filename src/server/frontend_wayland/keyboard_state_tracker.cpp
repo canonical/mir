@@ -57,6 +57,18 @@ constexpr std::array modifier_keys = {
 constexpr std::array lock_keys = {KEY_CAPSLOCK, KEY_NUMLOCK, KEY_SCROLLLOCK};
 constexpr unsigned shift_keys_mask = 0b11;
 
+auto key_has_keysym_at_level(
+    xkb_keymap* keymap, xkb_keycode_t keycode, xkb_layout_index_t layout,
+    xkb_level_index_t level, xkb_keysym_t keysym) -> bool
+{
+    xkb_keysym_t const* syms{};
+    auto const count = xkb_keymap_key_get_syms_by_level(keymap, keycode, layout, level, &syms);
+    for (int i = 0; i < count; ++i)
+        if (syms[i] == keysym)
+            return true;
+    return false;
+}
+
 auto shortcut_key_matches(
     mf::KeyboardStateTracker::ShortcutKey key, xkb_keycode_t keycode,
     xkb_keymap* keymap, xkb_state* state, bool shift_held, xkb_layout_index_t current_layout) -> bool
@@ -67,15 +79,7 @@ auto shortcut_key_matches(
     if (xkb_state_key_get_one_sym(state, keycode) == key.value)
         return true;
 
-    if (!shift_held)
-        return false;
-
-    xkb_keysym_t const* syms{};
-    auto const count = xkb_keymap_key_get_syms_by_level(keymap, keycode, current_layout, 0, &syms);
-    for (int i = 0; i < count; ++i)
-        if (syms[i] == key.value)
-            return true;
-    return false;
+    return shift_held && key_has_keysym_at_level(keymap, keycode, current_layout, 0, key.value);
 }
 
 auto keymap_shortcuts_overlap(
@@ -150,14 +154,8 @@ auto mf::KeyboardStateTracker::XkbKeyState::scancode_produces_keysym(
         auto const num_levels = xkb_keymap_num_levels_for_key(compiled_keymap.get(), xkb_keycode, layout);
         for (auto level = 0u; level < num_levels; ++level)
         {
-            xkb_keysym_t const* syms{};
-            auto const num_syms = xkb_keymap_key_get_syms_by_level(
-                compiled_keymap.get(), xkb_keycode, layout, level, &syms);
-            for (auto i = 0; i < num_syms; ++i)
-            {
-                if (syms[i] == keysym)
-                    return true;
-            }
+            if (key_has_keysym_at_level(compiled_keymap.get(), xkb_keycode, layout, level, keysym))
+                return true;
         }
     }
     return false;
@@ -174,15 +172,7 @@ auto mf::KeyboardStateTracker::XkbKeyState::scancode_has_unshifted_keysym(
     if (active_layout == XKB_LAYOUT_INVALID)
         return false;
 
-    xkb_keysym_t const* syms{};
-    auto const num_syms = xkb_keymap_key_get_syms_by_level(
-        compiled_keymap.get(), xkb_keycode, active_layout, 0, &syms);
-    for (auto i = 0; i < num_syms; ++i)
-    {
-        if (syms[i] == keysym)
-            return true;
-    }
-    return false;
+    return key_has_keysym_at_level(compiled_keymap.get(), xkb_keycode, active_layout, 0, keysym);
 }
 
 void mf::KeyboardStateTracker::XkbKeyState::rederive_keysyms_from_scancodes(
