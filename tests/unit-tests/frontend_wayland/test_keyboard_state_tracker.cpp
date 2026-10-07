@@ -39,6 +39,7 @@ constexpr uint32_t key_1_scancode = 2;
 constexpr uint32_t key_0_scancode = 11;
 constexpr uint32_t a_scancode = 30;
 constexpr uint32_t b_scancode = 48;
+constexpr uint32_t s_scancode = 31;
 
 constexpr uint32_t ctrl_l_scancode = 29;
 constexpr uint32_t shift_l_scancode = 42;
@@ -100,6 +101,55 @@ public:
     // Track modifier state per device to emulate Mir's tracking of modifiers
     std::unordered_map<MirInputDeviceId, MirInputEventModifiers> modifier_states;
 };
+
+struct ShiftedKeysym
+{
+    xkb_keysym_t keysym_to_match;
+    xkb_keysym_t shifted_keysym;
+    uint32_t scancode;
+};
+
+class KeyboardStateTrackerShiftTest :
+    public KeyboardStateTrackerTest, public WithParamInterface<ShiftedKeysym>
+{
+};
+
+TEST_P(KeyboardStateTrackerShiftTest, matches_shifted_and_unshifted_symbols_when_unshifted_matching_is_enabled)
+{
+    auto const& key = GetParam();
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+    tracker.process(*key_down(key.shifted_keysym, key.scancode));
+
+    auto constexpr include_unshifted = true;
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, key.keysym_to_match, include_unshifted));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    KeyboardStateTrackerShiftCases,
+    KeyboardStateTrackerShiftTest,
+    Values(
+        ShiftedKeysym{XKB_KEY_s, XKB_KEY_S, s_scancode},
+        ShiftedKeysym{XKB_KEY_S, XKB_KEY_S, s_scancode},
+        ShiftedKeysym{XKB_KEY_1, XKB_KEY_exclam, key_1_scancode},
+        ShiftedKeysym{XKB_KEY_exclam, XKB_KEY_exclam, key_1_scancode}));
+
+TEST_F(KeyboardStateTrackerTest, unshifted_matching_does_not_match_an_unrelated_symbol)
+{
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+    tracker.process(*key_down(XKB_KEY_S, s_scancode));
+
+    auto constexpr include_unshifted = true;
+    EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_a, include_unshifted));
+}
+
+TEST_F(KeyboardStateTrackerTest, matches_unshifted_symbol_when_shift_is_pressed_after_letter)
+{
+    tracker.process(*key_down(XKB_KEY_s, s_scancode));
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+
+    auto constexpr include_unshifted = true;
+    EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_s, include_unshifted));
+}
 
 TEST_F(KeyboardStateTrackerTest, initially_no_keys_pressed)
 {

@@ -79,6 +79,28 @@ auto mf::KeyboardStateTracker::XkbKeyState::scancode_produces_keysym(
     return false;
 }
 
+auto mf::KeyboardStateTracker::XkbKeyState::scancode_has_unshifted_keysym(
+    uint32_t scancode, xkb_keysym_t keysym) const -> bool
+{
+    if (!compiled_keymap)
+        return false;
+
+    auto const xkb_keycode = to_xkb_scan_code(scancode);
+    auto const active_layout = xkb_state_key_get_layout(state.get(), xkb_keycode);
+    if (active_layout == XKB_LAYOUT_INVALID)
+        return false;
+
+    xkb_keysym_t const* syms{};
+    auto const num_syms = xkb_keymap_key_get_syms_by_level(
+        compiled_keymap.get(), xkb_keycode, active_layout, 0, &syms);
+    for (auto i = 0; i < num_syms; ++i)
+    {
+        if (syms[i] == keysym)
+            return true;
+    }
+    return false;
+}
+
 void mf::KeyboardStateTracker::XkbKeyState::rederive_keysyms_from_scancodes(
     std::unordered_map<uint32_t, xkb_keysym_t>& scancode_to_keysym) const
 {
@@ -152,13 +174,18 @@ bool mf::KeyboardStateTracker::process(MirEvent const& event)
     return true;
 }
 
-auto mf::KeyboardStateTracker::keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool
+auto mf::KeyboardStateTracker::keysym_is_pressed(
+    MirInputDeviceId device, xkb_keysym_t keysym, bool include_unshifted) const -> bool
 {
     if (!device_states.contains(device))
         return false;
 
-    return std::ranges::any_of(
-        device_states.at(device).scancode_to_keysym, [keysym](auto const& pair) { return pair.second == keysym; });
+    auto const& device_state = device_states.at(device);
+    return std::ranges::any_of(device_state.scancode_to_keysym, [&](auto const& pair)
+        {
+            return pair.second == keysym ||
+                (include_unshifted && device_state.xkb_key_state.scancode_has_unshifted_keysym(pair.first, keysym));
+        });
 }
 
 auto mf::KeyboardStateTracker::scancode_is_pressed(MirInputDeviceId device, uint32_t scancode) const -> bool

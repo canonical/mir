@@ -56,7 +56,9 @@ public:
     // was processed, false otherwise.
     bool process(MirEvent const& event);
 
-    auto keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool;
+    /// Optionally also match level-zero symbols in each held key's active layout.
+    auto keysym_is_pressed(
+        MirInputDeviceId device, xkb_keysym_t keysym, bool include_unshifted = false) const -> bool;
 
     auto scancode_is_pressed(MirInputDeviceId device, uint32_t scancode) const -> bool;
 
@@ -84,6 +86,8 @@ private:
             std::unordered_map<uint32_t, xkb_keysym_t>& scancode_to_keysym) const;
 
         auto scancode_produces_keysym(uint32_t scancode, xkb_keysym_t keysym) const -> bool;
+
+        auto scancode_has_unshifted_keysym(uint32_t scancode, xkb_keysym_t keysym) const -> bool;
 
     private:
         /// The keymap currently in use for this device, used to detect keymap

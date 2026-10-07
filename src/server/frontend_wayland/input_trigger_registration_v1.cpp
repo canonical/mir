@@ -189,7 +189,9 @@ mf::KeyboardSymTrigger::KeyboardSymTrigger(
 
 bool mf::KeyboardSymTrigger::check_pressed(MirEvent const& event) const
 {
-    return keyboard_state_tracker->keysym_is_pressed(event.to_input()->device_id(), keysym);
+    auto const shift_held = event.to_input()->to_keyboard()->modifiers() &
+        (mir_input_event_modifier_shift | mir_input_event_modifier_shift_left | mir_input_event_modifier_shift_right);
+    return keyboard_state_tracker->keysym_is_pressed(event.to_input()->device_id(), keysym, shift_held);
 }
 
 bool mf::KeyboardSymTrigger::event_is_for_trigger_key(MirEvent const& event) const
