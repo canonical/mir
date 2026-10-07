@@ -544,8 +544,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
             if (auto const foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value()))
             {
-                // The content is compositor-internal, so there is nothing to import through the
-                // allocator and nothing to release back to the requesting client.
+                // The content is a compositor-internal, so there is nothing to import through the allocator.
                 current_buffer = foreign_buffer->content();
                 current_foreign_buffer = mw::make_weak(foreign_buffer);
                 foreign_buffer->add_listener(*this);
@@ -684,16 +683,13 @@ void mf::WlSurface::foreign_buffer_updated()
         return;
     }
 
-    auto content = current_foreign_buffer.value().content();
-    if (!content)
+    if (auto content = current_foreign_buffer.value().content())
     {
-        return;
-    }
-
-    current_buffer = std::move(content);
-    if (submit_current_buffer())
-    {
-        refresh_surface_data_now();
+        current_buffer = std::move(content);
+        if (submit_current_buffer())
+        {
+            refresh_surface_data_now();
+        }
     }
 }
 

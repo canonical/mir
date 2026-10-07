@@ -42,6 +42,7 @@ public:
     explicit BufferPool(std::shared_ptr<mg::GraphicBufferAllocator> allocator) :
         allocator{std::move(allocator)}
     {
+        buffers.reserve(max_buffers);
     }
 
     auto next(geom::Size size) -> std::shared_ptr<mg::Buffer>
@@ -132,7 +133,13 @@ private:
     BufferPool pool;
     mw::Weak<mf::ExtForeignBufferV1> foreign_buffer;
     std::shared_ptr<mg::Buffer> curent_buffer;
+    /// The buffer size sent in the size event for the current foreign buffer. Unset until the
+    /// first frame is published after get_buffer(). Any later frame with a different size
+    /// invalidates the buffer, so the client has to request a new one.
     std::optional<geom::Size> last_reported_buffer_size;
+    /// The size of the capture source, as reported by the backend. Composited captures are
+    /// rendered at this size, and it is sent as the logical size in the size event. Empty
+    /// until the backend reports it, and capture is skipped while it is empty.
     geom::Size source_size;
     bool capture_in_flight{false};
     bool invalidated{false};
@@ -195,16 +202,6 @@ void ExtForeignBufferSessionV1::capture_frame()
     }
 
     // If acquiring a zero-copy buffer fails, then composite the content instead.
-    //
-    // TODO: guard against the capture/damage feedback loop for output sources. Compositing an
-    // output renders every surface on it, including the consumer displaying this buffer, so
-    // publishing new content damages the scene and immediately schedules another capture. The
-    // capture is asynchronous, so this is a busy loop rather than stack recursion, but it is still
-    // unbounded. miral::RenderSceneIntoSurface solves the same problem by having the target
-    // surface return no renderables to its own screen shooter (see
-    // src/miral/render_scene_into_surface.cpp), which needs an equivalent per-consumer exclusion
-    // plumbed from WlSurface down to scene::Surface::generate_renderables.
-
     auto const target = pool.next(source_size);
     capture_in_flight = true;
     backend->begin_capture(

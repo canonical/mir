@@ -73,7 +73,6 @@ public:
 
     auto acquire_content(void const*) -> std::shared_ptr<graphics::Buffer> override
     {
-        // TODO: implement acquire_content() for outputs, if we can manage it.
         return nullptr;
     }
 
