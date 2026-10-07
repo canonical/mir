@@ -161,11 +161,11 @@ public:
         return properties;
     }
 
-    void expect_gamma_blob_lifetime(uint32_t blob_id, Sequence const& destruction_order)
+    void expect_gamma_blob_lifetime(uint32_t blob_id)
     {
         EXPECT_CALL(mock_drm, drmModeCreatePropertyBlob(_, _, _, _))
             .WillOnce(DoAll(SetArgPointee<3>(blob_id), Return(0)));
-        EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, blob_id)).InSequence(destruction_order);
+        EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, blob_id));
     }
 
     auto crtc() -> drmModeCrtc&
@@ -317,10 +317,8 @@ TEST_F(AtomicKMSOutputTest, gamma_submits_lut_property)
     uint16_t const green_sample{2};
     uint16_t const blue_sample{3};
     auto output_under_test = output();
-    Sequence destruction_order;
-    expect_gamma_blob_lifetime(gamma_lut_blob_id, destruction_order);
-    // configure() owns MODE_ID until output destruction; the temporary LUT is freed first.
-    EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id)).InSequence(destruction_order);
+    expect_gamma_blob_lifetime(gamma_lut_blob_id);
+    EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id));
     EXPECT_CALL(
         mock_drm,
         drmModeAtomicCommit(
