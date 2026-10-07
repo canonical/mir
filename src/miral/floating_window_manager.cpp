@@ -403,9 +403,7 @@ bool miral::FloatingWindowManager::Impl::handle_pointer_event(MirPointerEvent co
                 {
                     if (auto const hint = tools.window_at(new_cursor))
                     {
-                        tools.select_active_window(hint);
-
-                        if (auto const window = tools.active_window())
+                        if (auto const window = tools.select_active_window(hint))
                         {
                             begin_pointer_gesture(
                                 tools.info_for(window),
