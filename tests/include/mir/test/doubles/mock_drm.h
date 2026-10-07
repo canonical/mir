@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -293,6 +294,8 @@ private:
     };
 
     std::map<std::unique_ptr<char[]>, size_t, TransparentUPtrComparator> mmapings;
+    std::unordered_map<drmModeAtomicReqPtr, std::unique_ptr<drmModeAtomicReq>> atomic_requests;
+    std::unordered_set<uint32_t> property_blobs;
     uint32_t next_property_blob_id{1};
     mir_test_framework::OpenHandlerHandle const open_interposer;
     mir_test_framework::MmapHandlerHandle const mmap_interposer;

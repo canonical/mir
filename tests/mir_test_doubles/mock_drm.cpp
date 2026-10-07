@@ -503,16 +503,25 @@ mtd::MockDRM::MockDRM()
             [this](int, void const*, size_t, uint32_t* id)
             {
                 *id = next_property_blob_id++;
+                property_blobs.insert(*id);
                 return 0;
             });
     ON_CALL(*this, drmModeDestroyPropertyBlob(_, _))
-        .WillByDefault(Return(0));
+        .WillByDefault(
+            [this](int, uint32_t id)
+            {
+                property_blobs.erase(id);
+                return 0;
+            });
 
     ON_CALL(*this, drmModeAtomicAlloc())
         .WillByDefault(
-            []()
+            [this]()
             {
-                return new _drmModeAtomicReq{};
+                auto request = std::make_unique<drmModeAtomicReq>();
+                auto const ptr = request.get();
+                atomic_requests.emplace(ptr, std::move(request));
+                return ptr;
             });
 
     ON_CALL(*this, drmModeAtomicAddProperty(_, _, _, _))
@@ -528,15 +537,19 @@ mtd::MockDRM::MockDRM()
 
     ON_CALL(*this, drmModeAtomicFree(_))
         .WillByDefault(
-            [](drmModeAtomicReqPtr req)
+            [this](drmModeAtomicReqPtr req)
             {
-                delete req;
+                // An overridden allocation action may return an untracked request.
+                if (atomic_requests.erase(req) == 0)
+                    delete req;
             });
 }
 
 mtd::MockDRM::~MockDRM() noexcept
 {
     global_mock = nullptr;
+    EXPECT_THAT(atomic_requests, testing::IsEmpty()) << "Atomic requests were not freed";
+    EXPECT_THAT(property_blobs, testing::IsEmpty()) << "Property blobs were not destroyed";
 }
 
 void mtd::MockDRM::add_crtc(char const *device, uint32_t id, drmModeModeInfo mode)

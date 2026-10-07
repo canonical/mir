@@ -161,13 +161,6 @@ public:
         return properties;
     }
 
-    void expect_gamma_blob_lifetime(uint32_t blob_id)
-    {
-        EXPECT_CALL(mock_drm, drmModeCreatePropertyBlob(_, _, _, _))
-            .WillOnce(DoAll(SetArgPointee<3>(blob_id), Return(0)));
-        EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, blob_id));
-    }
-
     auto crtc() -> drmModeCrtc&
     {
         return *mock_drm.find_crtc(drm_device, crtc_id);
@@ -317,8 +310,6 @@ TEST_F(AtomicKMSOutputTest, gamma_submits_lut_property)
     uint16_t const green_sample{2};
     uint16_t const blue_sample{3};
     auto output_under_test = output();
-    expect_gamma_blob_lifetime(gamma_lut_blob_id);
-    EXPECT_CALL(mock_drm, drmModeDestroyPropertyBlob(_, mode_blob_id));
     EXPECT_CALL(
         mock_drm,
         drmModeAtomicCommit(
@@ -366,7 +357,6 @@ TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request)
                 Eq(primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}))),
             DRM_MODE_ATOMIC_ALLOW_MODESET))
         .WillOnce(Return(-EIO));
-    EXPECT_CALL(mock_drm, drmModeAtomicFree(_)).WillOnce(DoDefault());
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
     EXPECT_FALSE(output_under_test->set_crtc(framebuffer));
@@ -382,7 +372,6 @@ TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request)
             mtd::AtomicRequestWith(Eq(primary_request_properties({.framebuffer_id = flip_framebuffer_id}))),
             no_flags))
         .WillOnce(Return(-EIO));
-    EXPECT_CALL(mock_drm, drmModeAtomicFree(_)).WillOnce(DoDefault());
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
