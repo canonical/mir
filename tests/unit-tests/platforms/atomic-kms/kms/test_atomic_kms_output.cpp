@@ -115,31 +115,6 @@ public:
         : drm_fd{mock_drm.open(drm_device, 0)}
     {
         setup_drm_objects();
-
-        ON_CALL(mock_drm, drmModeGetResources(_))
-            .WillByDefault(Return(resources.resources_ptr()));
-        ON_CALL(mock_drm, drmModeGetPlaneResources(_))
-            .WillByDefault(Return(resources.plane_resources_ptr()));
-        ON_CALL(mock_drm, drmModeGetConnector(_, connector_id))
-            .WillByDefault(Return(&connector()));
-        ON_CALL(mock_drm, drmModeGetEncoder(_, encoder_id))
-            .WillByDefault(Return(resources.find_encoder(encoder_id)));
-        ON_CALL(mock_drm, drmModeGetCrtc(_, crtc_id))
-            .WillByDefault(Return(&crtc()));
-        ON_CALL(mock_drm, drmModeGetPlane(_, plane_id))
-            .WillByDefault(Return(resources.find_plane(plane_id)));
-        ON_CALL(mock_drm, drmModeObjectGetProperties(_, _, _))
-            .WillByDefault(
-                [this](int, uint32_t id, uint32_t type)
-                {
-                    return resources.find_object_properties(id, type);
-                });
-        ON_CALL(mock_drm, drmModeGetProperty(_, _))
-            .WillByDefault(
-                [this](int, uint32_t property_id)
-                {
-                    return resources.find_property(property_id);
-                });
     }
 
     auto output(geom::Displacement offset = {}) -> std::unique_ptr<mga::AtomicKMSOutput>
@@ -196,12 +171,12 @@ public:
 
     auto crtc() -> drmModeCrtc&
     {
-        return *resources.find_crtc(crtc_id);
+        return *mock_drm.find_crtc(drm_device, crtc_id);
     }
 
     auto connector() -> drmModeConnector&
     {
-        return *resources.find_connector(connector_id);
+        return *mock_drm.find_connector(drm_device, connector_id);
     }
 
     NiceMock<mtd::MockDRM> mock_drm;
@@ -221,21 +196,22 @@ private:
         mode.clock = pixel_clock_khz;
         modes.push_back(mode);
 
-        resources.reset();
-        resources.add_crtc(crtc_id, mode);
+        mock_drm.reset(drm_device);
+        mock_drm.add_crtc(drm_device, crtc_id, mode);
         crtc().width = mode_width;
         crtc().height = mode_height;
-        resources.add_encoder(encoder_id, crtc_id, primary_crtc_mask);
-        resources.add_connector(
-            connector_id, DRM_MODE_CONNECTOR_VGA, DRM_MODE_CONNECTED, encoder_id, modes, encoder_ids, {});
+        mock_drm.add_encoder(drm_device, encoder_id, crtc_id, primary_crtc_mask);
+        mock_drm.add_connector(
+            drm_device, connector_id, DRM_MODE_CONNECTOR_VGA, DRM_MODE_CONNECTED, encoder_id, modes, encoder_ids, {});
         connector().connector_type_id = 1;
-        resources.add_plane(plane_id, primary_crtc_mask);
-        resources.prepare();
+        mock_drm.add_plane(drm_device, plane_id, primary_crtc_mask);
+        mock_drm.prepare(drm_device);
 
-        resources.add_property(connector_id, DRM_MODE_OBJECT_CONNECTOR, connector_crtc_property_id, "CRTC_ID");
-        resources.add_property(crtc_id, DRM_MODE_OBJECT_CRTC, crtc_active_property_id, "ACTIVE");
-        resources.add_property(crtc_id, DRM_MODE_OBJECT_CRTC, crtc_mode_property_id, "MODE_ID");
-        resources.add_property(crtc_id, DRM_MODE_OBJECT_CRTC, crtc_gamma_lut_property_id, "GAMMA_LUT");
+        mock_drm.add_property(
+            drm_device, connector_id, DRM_MODE_OBJECT_CONNECTOR, connector_crtc_property_id, "CRTC_ID");
+        mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_active_property_id, "ACTIVE");
+        mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_mode_property_id, "MODE_ID");
+        mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_gamma_lut_property_id, "GAMMA_LUT");
         add_plane_property(plane_type_property_id, "type", DRM_PLANE_TYPE_PRIMARY);
         add_plane_property(plane_src_x_property_id, "SRC_X");
         add_plane_property(plane_src_y_property_id, "SRC_Y");
@@ -251,10 +227,9 @@ private:
 
     void add_plane_property(uint32_t id, char const* name, uint64_t value = 0)
     {
-        resources.add_property(plane_id, DRM_MODE_OBJECT_PLANE, id, name, value);
+        mock_drm.add_property(drm_device, plane_id, DRM_MODE_OBJECT_PLANE, id, name, value);
     }
 
-    mtd::FakeDRMResources resources;
     std::vector<drmModeModeInfo> modes;
     std::vector<uint32_t> encoder_ids{encoder_id};
 };

@@ -235,6 +235,10 @@ public:
         uint32_t encoder_id,
         uint32_t crtc_id,
         uint32_t possible_crtcs_mask);
+    void add_plane(
+        char const* device,
+        uint32_t plane_id,
+        uint32_t possible_crtcs_mask);
     void add_connector(
         char const* device,
         uint32_t connector_id,
@@ -245,9 +249,20 @@ public:
         std::vector<uint32_t>& possible_encoder_ids,
         geometry::Size const& physical_size,
         drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
+    void add_property(
+        char const* device,
+        uint32_t object_id,
+        uint32_t object_type,
+        uint32_t property_id,
+        char const* name,
+        uint64_t value = 0);
 
     void prepare(char const* device);
     void reset(char const* device);
+
+    // Returned objects are borrowed from the device's resource set.
+    drmModeCrtc* find_crtc(char const* device, uint32_t id);
+    drmModeConnector* find_connector(char const* device, uint32_t id);
 
     void generate_event_on(char const* device);
     void consume_event_on(char const* device);
@@ -279,7 +294,6 @@ private:
 
     std::map<std::unique_ptr<char[]>, size_t, TransparentUPtrComparator> mmapings;
     uint32_t next_property_blob_id{1};
-    drmModeObjectProperties empty_object_props;
     mir_test_framework::OpenHandlerHandle const open_interposer;
     mir_test_framework::MmapHandlerHandle const mmap_interposer;
     mir_test_framework::MunmapHandlerHandle const munmap_interposer;

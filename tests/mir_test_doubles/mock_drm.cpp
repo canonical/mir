@@ -297,8 +297,7 @@ drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
 }
 
 mtd::MockDRM::MockDRM()
-    : empty_object_props{},
-      open_interposer{mir_test_framework::add_open_handler(
+    : open_interposer{mir_test_framework::add_open_handler(
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
@@ -391,8 +390,33 @@ mtd::MockDRM::MockDRM()
                     return fd_to_drm.at(fd).find_connector(connector_id);
                 });
 
+    ON_CALL(*this, drmModeGetPlaneResources(_))
+        .WillByDefault(
+                [this](int fd)
+                {
+                    return fd_to_drm.at(fd).plane_resources_ptr();
+                });
+
+    ON_CALL(*this, drmModeGetPlane(_, _))
+        .WillByDefault(
+                [this](int fd, uint32_t plane_id)
+                {
+                    return fd_to_drm.at(fd).find_plane(plane_id);
+                });
+
     ON_CALL(*this, drmModeObjectGetProperties(_, _, _))
-        .WillByDefault(Return(&empty_object_props));
+        .WillByDefault(
+                [this](int fd, uint32_t id, uint32_t type)
+                {
+                    return fd_to_drm.at(fd).find_object_properties(id, type);
+                });
+
+    ON_CALL(*this, drmModeGetProperty(_, _))
+        .WillByDefault(
+                [this](int fd, uint32_t property_id)
+                {
+                    return fd_to_drm.at(fd).find_property(property_id);
+                });
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
         .WillByDefault(
@@ -529,6 +553,18 @@ void mtd::MockDRM::add_encoder(
     fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask);
 }
 
+void mtd::MockDRM::add_plane(char const* device, uint32_t plane_id, uint32_t possible_crtcs_mask)
+{
+    fake_drms[device].add_plane(plane_id, possible_crtcs_mask);
+}
+
+void mtd::MockDRM::add_property(
+    char const* device, uint32_t object_id, uint32_t object_type, uint32_t property_id,
+    char const* name, uint64_t value)
+{
+    fake_drms[device].add_property(object_id, object_type, property_id, name, value);
+}
+
 void mtd::MockDRM::prepare(char const *device)
 {
     fake_drms[device].prepare();
@@ -537,6 +573,16 @@ void mtd::MockDRM::prepare(char const *device)
 void mtd::MockDRM::reset(char const *device)
 {
     fake_drms[device].reset();
+}
+
+drmModeCrtc* mtd::MockDRM::find_crtc(char const* device, uint32_t id)
+{
+    return fake_drms.at(device).find_crtc(id);
+}
+
+drmModeConnector* mtd::MockDRM::find_connector(char const* device, uint32_t id)
+{
+    return fake_drms.at(device).find_connector(id);
 }
 
 void mtd::MockDRM::generate_event_on(char const *device)
