@@ -482,20 +482,11 @@ TEST_P(KeyboardShortcutOverlap, checks_configured_keymap_before_any_key_event)
     auto const second_modifiers = modifiers(test.second_modifiers, test.second);
     EXPECT_EQ(test.overlaps, tracker.shortcuts_overlap(first_modifiers, test.first, second_modifiers, test.second));
     EXPECT_EQ(test.overlaps, tracker.shortcuts_overlap(second_modifiers, test.second, first_modifiers, test.first));
-
-    mf::InputTriggerRegistry registry;
-    NiceMock<MockShortcutTrigger> accepted;
-    NiceMock<MockShortcutTrigger> requested;
-    ASSERT_TRUE(registry.register_trigger(&accepted));
-    EXPECT_CALL(requested, overlaps(&accepted)).WillOnce(Invoke(
-        [&](auto) { return tracker.shortcuts_overlap(first_modifiers, test.first, second_modifiers, test.second); }));
-    EXPECT_EQ(!test.overlaps, registry.register_trigger(&requested));
 }
 
 INSTANTIATE_TEST_SUITE_P(ConfiguredLayouts, KeyboardShortcutOverlap, Values(
     ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::ctrl, sym(XKB_KEY_s), "us", true},
     ShortcutOverlapCase{PM::shift, sym(XKB_KEY_s), PM::shift, sym(XKB_KEY_S), "us", true},
-    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_exclam), "us", true},
     ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_S), PM::ctrl | PM::shift, sym(XKB_KEY_s), "us", true},
     ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::ctrl, sym(XKB_KEY_S), "us", false},
     ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::ctrl | PM::shift, sym(XKB_KEY_s), "us", false},
@@ -506,7 +497,6 @@ INSTANTIATE_TEST_SUITE_P(ConfiguredLayouts, KeyboardShortcutOverlap, Values(
     ShortcutOverlapCase{PM::ctrl_left, sym(XKB_KEY_s), PM::ctrl_right, sym(XKB_KEY_s), "us", false},
     ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::alt, sym(XKB_KEY_s), "us", false},
     ShortcutOverlapCase{PM::shift, sym(XKB_KEY_s), PM::shift, sym(XKB_KEY_a), "us", false},
-    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_exclam), "fr", false},
     ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_ampersand), "fr", true},
     ShortcutOverlapCase{PM::shift, sym(XKB_KEY_ampersand), PM::shift, sym(XKB_KEY_exclamdown), "fr", true},
     ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_exclam), "fr,us", true},
@@ -526,8 +516,10 @@ TEST_F(KeyboardShortcutOverlap, reads_changes_to_configured_keymaps)
         [&keymap] { return MirKeyboardConfig{keymap}; }));
     auto const shift = mf::InputTriggerModifiers::from_protocol(PM::shift);
     EXPECT_FALSE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_1), shift, sym(XKB_KEY_exclam)));
+    EXPECT_FALSE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_exclam), shift, sym(XKB_KEY_1)));
     keymap = std::make_shared<mir::input::ParameterKeymap>("pc105", "us", "", "");
     EXPECT_TRUE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_1), shift, sym(XKB_KEY_exclam)));
+    EXPECT_TRUE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_exclam), shift, sym(XKB_KEY_1)));
 }
 
 TEST_F(KeyboardShortcutOverlap, checks_each_keyboard)
@@ -567,6 +559,28 @@ TEST_F(KeyboardShortcutOverlap, accounts_for_symbols_retained_after_other_modifi
     auto const required_shift = mf::InputTriggerModifiers::from_protocol(PM::shift);
     EXPECT_TRUE(tracker.shortcuts_overlap(
         required_shift, sym(XKB_KEY_ampersand), required_shift, sym(XKB_KEY_exclamdown)));
+}
+
+TEST(InputTriggerRegistryOverlap, rejects_overlapping_distinct_triggers)
+{
+    mf::InputTriggerRegistry registry;
+    NiceMock<MockShortcutTrigger> accepted;
+    NiceMock<MockShortcutTrigger> requested;
+    ASSERT_TRUE(registry.register_trigger(&accepted));
+    ON_CALL(requested, is_same_trigger(&accepted)).WillByDefault(Return(false));
+    EXPECT_FALSE(requested.is_same_trigger(&accepted));
+    EXPECT_CALL(requested, overlaps(&accepted)).WillOnce(Return(true));
+    EXPECT_FALSE(registry.register_trigger(&requested));
+}
+
+TEST(InputTriggerRegistryOverlap, accepts_non_overlapping_triggers)
+{
+    mf::InputTriggerRegistry registry;
+    NiceMock<MockShortcutTrigger> accepted;
+    NiceMock<MockShortcutTrigger> requested;
+    ASSERT_TRUE(registry.register_trigger(&accepted));
+    EXPECT_CALL(requested, overlaps(&accepted)).WillOnce(Return(false));
+    EXPECT_TRUE(registry.register_trigger(&requested));
 }
 
 TEST(InputTriggerRegistryOverlap, default_predicate_preserves_exact_identity)
