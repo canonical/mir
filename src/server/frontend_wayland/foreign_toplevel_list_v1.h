@@ -28,10 +28,6 @@ namespace scene
 {
 class Surface;
 }
-namespace shell
-{
-class Shell;
-}
 namespace frontend
 {
 class DesktopFileManager;
