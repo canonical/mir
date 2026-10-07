@@ -25,6 +25,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -197,17 +198,17 @@ struct Client
         map();
     }
 
-    static void global(void* data, wl_registry* registry, uint32_t id, char const* name, uint32_t)
+    static void global(void* data, wl_registry* registry, uint32_t id, char const* name, uint32_t version)
     {
         auto& self = *static_cast<Client*>(data);
-        auto bind = [&](wl_interface const& interface, auto& out)
+        auto bind = [&](wl_interface const& interface, auto& out, uint32_t requested_version)
         {
             if (std::string_view{name} == interface.name)
                 out = static_cast<std::remove_reference_t<decltype(out)>>(
-                    wl_registry_bind(registry, id, &interface, 1));
+                    wl_registry_bind(registry, id, &interface, std::min(version, requested_version)));
         };
-        bind(wl_compositor_interface, self.compositor);
-        bind(wl_shm_interface, self.shm);
+        bind(wl_compositor_interface, self.compositor, 3);
+        bind(wl_shm_interface, self.shm, 1);
         if (std::string_view{name} == "xdg_wm_base")
             self.wm_base.reset(static_cast<wl_proxy*>(
                 wl_registry_bind(registry, id, &mir::wayland::xdg_wm_base_interface_data, 1)));
