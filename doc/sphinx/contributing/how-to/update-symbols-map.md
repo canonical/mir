@@ -254,7 +254,15 @@ If `MIRSERVER_ABI` needed to be updated, you should also run:
 
 Unlike the libraries above, `mirwayland` has no `generate-mirwayland-symbols-map`
 target and is not covered by the Symbols Check CI, so its `symbols.map` file
-(`src/wayland/symbols.map`) is updated by hand. The stanzas are named
+(`src/wayland/symbols.map`) is updated by hand. There is no generator target
+because the generator cannot reproduce this map: most of the exported ABI
+(the `mir::wayland::*` protocol classes) is declared in `*_wrapper.h` files
+generated into the build directory at build time rather than in
+`include/wayland`, so a source-header scan would miss them, and the map
+intentionally uses class-level wildcards (e.g. `mir::wayland::Buffer::*;`)
+with no `local: *;` stanza, whereas the generator emits per-symbol entries
+with `local: *;`. Running it would therefore reformat the released stanzas
+instead of updating them. The stanzas are named
 `MIRWAYLAND_<major>.<minor>` after the project version (for example
 `MIRWAYLAND_2.29`, then `MIRWAYLAND_2.30`), each one inheriting from the
 previous stanza.
