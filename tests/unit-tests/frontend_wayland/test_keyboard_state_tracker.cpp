@@ -15,10 +15,13 @@
  */
 
 #include "src/server/frontend_wayland/keyboard_state_tracker.h"
+#include "src/server/frontend_wayland/input_trigger_registration_v1.h"
 
 #include <mir/test/doubles/advanceable_clock.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/input/parameter_keymap.h>
+#include <mir/test/doubles/mock_device.h>
+#include <mir/test/doubles/mock_input_device_hub.h>
 
 #include <xkbcommon/xkbcommon-keysyms.h>
 
@@ -420,3 +423,161 @@ TEST_F(KeyboardStateTrackerTest, key_up_clears_key_when_modifier_changed_while_h
     EXPECT_FALSE(tracker.scancode_is_pressed(device_id, key_1_scancode));
 }
 } // namespace
+
+namespace
+{
+using PM = mir::wayland::InputTriggerRegistrationManagerV1::Modifiers;
+using ShortcutKey = mf::KeyboardStateTracker::ShortcutKey;
+
+auto sym(uint32_t value) -> ShortcutKey { return {ShortcutKey::Type::keysym, value}; }
+auto code(uint32_t value) -> ShortcutKey { return {ShortcutKey::Type::scancode, value}; }
+
+class MockShortcutTrigger : public mf::InputTriggerRegistry::Trigger
+{
+public:
+    MOCK_METHOD(bool, is_same_trigger, (Trigger const*), (const, override));
+    MOCK_METHOD(bool, overlaps, (Trigger const*), (const, override));
+    MOCK_METHOD(bool, is_active, (), (const, override));
+    MOCK_METHOD(EventOutcome, check_event, (MirEvent const&), (override));
+};
+
+struct ShortcutOverlapCase
+{
+    uint32_t first_modifiers;
+    ShortcutKey first;
+    uint32_t second_modifiers;
+    ShortcutKey second;
+    char const* layout;
+    bool overlaps;
+};
+
+class KeyboardShortcutOverlap : public TestWithParam<ShortcutOverlapCase>
+{
+public:
+    KeyboardShortcutOverlap()
+    {
+        ON_CALL(*hub, for_each_input_device(_)).WillByDefault(Invoke(
+            [this](auto const& callback) { callback(device); }));
+    }
+
+    auto modifiers(uint32_t protocol, ShortcutKey key) -> mf::InputTriggerModifiers
+    {
+        return mf::InputTriggerModifiers::from_protocol(
+            protocol, key.type == ShortcutKey::Type::keysym && key.value >= XKB_KEY_A && key.value <= XKB_KEY_Z);
+    }
+
+    std::shared_ptr<NiceMock<mtd::MockInputDeviceHub>> hub{
+        std::make_shared<NiceMock<mtd::MockInputDeviceHub>>()};
+    NiceMock<mtd::MockDevice> device{0, mir::input::DeviceCapability::keyboard, "keyboard", "keyboard"};
+    mf::KeyboardStateTracker tracker{hub};
+};
+
+TEST_P(KeyboardShortcutOverlap, checks_configured_keymap_before_any_key_event)
+{
+    auto const& test = GetParam();
+    auto const keymap = std::make_shared<mir::input::ParameterKeymap>("pc105", test.layout, "", "");
+    ON_CALL(device, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{keymap}));
+
+    auto const first_modifiers = modifiers(test.first_modifiers, test.first);
+    auto const second_modifiers = modifiers(test.second_modifiers, test.second);
+    EXPECT_EQ(test.overlaps, tracker.shortcuts_overlap(first_modifiers, test.first, second_modifiers, test.second));
+    EXPECT_EQ(test.overlaps, tracker.shortcuts_overlap(second_modifiers, test.second, first_modifiers, test.first));
+
+    mf::InputTriggerRegistry registry;
+    NiceMock<MockShortcutTrigger> accepted;
+    NiceMock<MockShortcutTrigger> requested;
+    ASSERT_TRUE(registry.register_trigger(&accepted));
+    EXPECT_CALL(requested, overlaps(&accepted)).WillOnce(Invoke(
+        [&](auto) { return tracker.shortcuts_overlap(first_modifiers, test.first, second_modifiers, test.second); }));
+    EXPECT_EQ(!test.overlaps, registry.register_trigger(&requested));
+}
+
+INSTANTIATE_TEST_SUITE_P(ConfiguredLayouts, KeyboardShortcutOverlap, Values(
+    ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::ctrl, sym(XKB_KEY_s), "us", true},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_s), PM::shift, sym(XKB_KEY_S), "us", true},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_exclam), "us", true},
+    ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_S), PM::ctrl | PM::shift, sym(XKB_KEY_s), "us", true},
+    ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::ctrl, sym(XKB_KEY_S), "us", false},
+    ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::ctrl | PM::shift, sym(XKB_KEY_s), "us", false},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_s), PM::shift_left, sym(XKB_KEY_s), "us", true},
+    ShortcutOverlapCase{PM::shift_left, sym(XKB_KEY_s), PM::shift_right, sym(XKB_KEY_s), "us", false},
+    ShortcutOverlapCase{PM::shift_left, sym(XKB_KEY_S), PM::shift_right, sym(XKB_KEY_S), "us", true},
+    ShortcutOverlapCase{PM::shift_left, sym(XKB_KEY_s), PM::shift_right, sym(XKB_KEY_S), "us", false},
+    ShortcutOverlapCase{PM::ctrl_left, sym(XKB_KEY_s), PM::ctrl_right, sym(XKB_KEY_s), "us", false},
+    ShortcutOverlapCase{PM::ctrl, sym(XKB_KEY_s), PM::alt, sym(XKB_KEY_s), "us", false},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_s), PM::shift, sym(XKB_KEY_a), "us", false},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_exclam), "fr", false},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_ampersand), "fr", true},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_ampersand), PM::shift, sym(XKB_KEY_exclamdown), "fr", true},
+    ShortcutOverlapCase{PM::shift, sym(XKB_KEY_1), PM::shift, sym(XKB_KEY_exclam), "fr,us", true},
+    ShortcutOverlapCase{PM::ctrl, code(s_scancode), PM::ctrl_left, code(s_scancode), "us", true},
+    ShortcutOverlapCase{PM::ctrl | PM::function, code(s_scancode),
+        PM::ctrl_left | PM::function, code(s_scancode), "us", true},
+    ShortcutOverlapCase{PM::ctrl, code(s_scancode), PM::ctrl, code(a_scancode), "us", false},
+    ShortcutOverlapCase{PM::shift, code(s_scancode), PM::shift, sym(XKB_KEY_S), "us", true},
+    ShortcutOverlapCase{PM::shift, code(key_1_scancode), PM::shift, sym(XKB_KEY_exclam), "us", true},
+    ShortcutOverlapCase{PM::shift, code(key_1_scancode), PM::shift, sym(XKB_KEY_exclam), "fr", false},
+    ShortcutOverlapCase{PM::ctrl, code(s_scancode), PM::ctrl | PM::shift, sym(XKB_KEY_S), "us", false}));
+
+TEST_F(KeyboardShortcutOverlap, reads_changes_to_configured_keymaps)
+{
+    auto keymap = std::make_shared<mir::input::ParameterKeymap>("pc105", "fr", "", "");
+    ON_CALL(device, keyboard_configuration()).WillByDefault(Invoke(
+        [&keymap] { return MirKeyboardConfig{keymap}; }));
+    auto const shift = mf::InputTriggerModifiers::from_protocol(PM::shift);
+    EXPECT_FALSE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_1), shift, sym(XKB_KEY_exclam)));
+    keymap = std::make_shared<mir::input::ParameterKeymap>("pc105", "us", "", "");
+    EXPECT_TRUE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_1), shift, sym(XKB_KEY_exclam)));
+}
+
+TEST_F(KeyboardShortcutOverlap, checks_each_keyboard)
+{
+    auto const french = std::make_shared<mir::input::ParameterKeymap>("pc105", "fr", "", "");
+    auto const us = std::make_shared<mir::input::ParameterKeymap>("pc105", "us", "", "");
+    NiceMock<mtd::MockDevice> other{1, mir::input::DeviceCapability::keyboard, "other", "other"};
+    ON_CALL(device, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{french}));
+    ON_CALL(other, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{us}));
+    ON_CALL(*hub, for_each_input_device(_)).WillByDefault(Invoke(
+        [&](auto const& callback) { callback(device); callback(other); }));
+    auto const shift = mf::InputTriggerModifiers::from_protocol(PM::shift);
+    EXPECT_TRUE(tracker.shortcuts_overlap(shift, sym(XKB_KEY_1), shift, sym(XKB_KEY_exclam)));
+}
+
+TEST_F(KeyboardShortcutOverlap, accounts_for_symbols_retained_after_other_modifier_changes)
+{
+    auto const keymap = std::make_shared<mir::input::ParameterKeymap>("pc105", "fr", "", "");
+    ON_CALL(device, keyboard_configuration()).WillByDefault(Return(MirKeyboardConfig{keymap}));
+    mtd::AdvanceableClock clock;
+    auto const shift = mir_input_event_modifier_shift | mir_input_event_modifier_shift_left;
+    auto const altgr = mir_input_event_modifier_alt | mir_input_event_modifier_alt_right;
+    auto const right_alt_scancode = 100u;
+    auto process = [&](MirKeyboardAction action, uint32_t keysym, uint32_t scancode, MirInputEventModifiers mods)
+    {
+        auto event = mir::events::make_key_event(0, clock.now().time_since_epoch(), action, keysym, scancode, mods);
+        event->to_input()->to_keyboard()->set_keymap(keymap);
+        tracker.process(*event);
+    };
+    process(mir_keyboard_action_down, XKB_KEY_Shift_L, shift_l_scancode, shift);
+    process(mir_keyboard_action_down, XKB_KEY_ISO_Level3_Shift, right_alt_scancode, shift | altgr);
+    process(mir_keyboard_action_down, XKB_KEY_exclamdown, key_1_scancode, shift | altgr);
+    process(mir_keyboard_action_up, XKB_KEY_ISO_Level3_Shift, right_alt_scancode, shift);
+
+    EXPECT_TRUE(tracker.keysym_is_pressed(0, XKB_KEY_ampersand, true));
+    EXPECT_TRUE(tracker.keysym_is_pressed(0, XKB_KEY_exclamdown, true));
+    auto const required_shift = mf::InputTriggerModifiers::from_protocol(PM::shift);
+    EXPECT_TRUE(tracker.shortcuts_overlap(
+        required_shift, sym(XKB_KEY_ampersand), required_shift, sym(XKB_KEY_exclamdown)));
+}
+
+TEST(InputTriggerRegistryOverlap, default_predicate_preserves_exact_identity)
+{
+    mf::InputTriggerRegistry registry;
+    NiceMock<MockShortcutTrigger> accepted;
+    NiceMock<MockShortcutTrigger> requested;
+    ASSERT_TRUE(registry.register_trigger(&accepted));
+    EXPECT_CALL(requested, overlaps(&accepted)).WillOnce(Invoke(
+        [&](auto other) { return requested.mf::InputTriggerRegistry::Trigger::overlaps(other); }));
+    EXPECT_CALL(requested, is_same_trigger(&accepted)).WillOnce(Return(true));
+    EXPECT_FALSE(registry.register_trigger(&requested));
+}
+}

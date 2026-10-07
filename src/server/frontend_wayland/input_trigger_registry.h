@@ -179,6 +179,7 @@ public:
     virtual bool is_same_trigger(Trigger const* other) const = 0;
     virtual bool is_same_trigger(KeyboardSymTrigger const* sym_trigger) const;
     virtual bool is_same_trigger(KeyboardCodeTrigger const* code_trigger) const;
+    virtual bool overlaps(Trigger const* other) const;
 
 private:
     void begin(MirEvent const& event);

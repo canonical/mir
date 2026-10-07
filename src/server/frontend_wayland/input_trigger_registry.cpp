@@ -79,7 +79,7 @@ bool mf::InputTriggerRegistry::register_trigger(Trigger* trigger)
     std::erase_if(triggers, [](auto const& weak_trigger) { return !weak_trigger; });
 
     auto const already_registered = sr::any_of(
-        triggers, [trigger](auto const& other_trigger) { return trigger->is_same_trigger(&other_trigger.value()); });
+        triggers, [trigger](auto const& other_trigger) { return trigger->overlaps(&other_trigger.value()); });
 
     if (already_registered)
         return false;
@@ -268,6 +268,11 @@ bool Trigger::handle(MirEvent const& event)
 bool Trigger::is_same_trigger(KeyboardSymTrigger const*) const
 {
     return false;
+}
+
+bool Trigger::overlaps(Trigger const* other) const
+{
+    return is_same_trigger(other);
 }
 
 bool Trigger::is_same_trigger(KeyboardCodeTrigger const*) const

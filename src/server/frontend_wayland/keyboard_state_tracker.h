@@ -26,8 +26,10 @@
 
 namespace mir
 {
+namespace input { class InputDeviceHub; }
 namespace frontend
 {
+class InputTriggerModifiers;
 /// Maintains the set of currently-pressed keysyms and scancodes by processing
 /// keyboard \c MirEvents via \c process().
 ///
@@ -50,7 +52,24 @@ namespace frontend
 class KeyboardStateTracker
 {
 public:
-    KeyboardStateTracker();
+    struct ShortcutKey
+    {
+        enum class Type { keysym, scancode };
+        Type type;
+        uint32_t value;
+        bool operator==(ShortcutKey const&) const = default;
+    };
+
+    explicit KeyboardStateTracker(std::shared_ptr<input::InputDeviceHub> const& input_hub = {});
+
+    /// Check single-key overlaps using Mir's modifier/lock keys and all configured device keymap groups.
+    /// Include recorded symbols retained across non-Shift modifier and layout changes.
+    /// This registration-time snapshot cannot exclude conflicts from later keymaps or hotplug.
+    /// Custom XKB actions and composed input are outside this check.
+    /// Distinct keys remain independently reservable, even though clients can hold both at once.
+    auto shortcuts_overlap(
+        InputTriggerModifiers first_modifiers, ShortcutKey first,
+        InputTriggerModifiers second_modifiers, ShortcutKey second) const -> bool;
 
     // Returns true if the passed in event was an up or down keyboard event and
     // was processed, false otherwise.
@@ -112,6 +131,7 @@ private:
     /// Shared XKB context — one per tracker, reused across all devices.
     std::unique_ptr<xkb_context, void(*)(xkb_context*)> context;
 
+    std::shared_ptr<input::InputDeviceHub> const input_hub;
     std::unordered_map<MirInputDeviceId, DeviceState> device_states;
 };
 }

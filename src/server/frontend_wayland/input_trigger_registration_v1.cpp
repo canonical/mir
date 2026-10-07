@@ -51,6 +51,7 @@ public:
         struct wl_resource* id);
 
     static auto from(struct wl_resource* resource) -> KeyboardTrigger*;
+    bool overlaps(Trigger const* other) const override;
 
     InputTriggerModifiers const modifiers;
     std::shared_ptr<mf::KeyboardStateTracker const> const keyboard_state_tracker;
@@ -61,9 +62,17 @@ private:
 
     virtual bool check_pressed(MirEvent const& event) const = 0;
     virtual bool event_is_for_trigger_key(MirEvent const& event) const = 0;
+    virtual auto shortcut_key() const -> mf::KeyboardStateTracker::ShortcutKey = 0;
 
     bool active{false};
 };
+
+bool KeyboardTrigger::overlaps(Trigger const* other) const
+{
+    auto const keyboard = dynamic_cast<KeyboardTrigger const*>(other);
+    return is_same_trigger(other) || (keyboard && keyboard_state_tracker->shortcuts_overlap(
+        modifiers, shortcut_key(), keyboard->modifiers, keyboard->shortcut_key()));
+}
 
 auto KeyboardTrigger::is_active() const -> bool
 {
@@ -154,6 +163,10 @@ public:
 private:
     bool check_pressed(MirEvent const& event) const override;
     bool event_is_for_trigger_key(MirEvent const& event) const override;
+    auto shortcut_key() const -> mf::KeyboardStateTracker::ShortcutKey override
+    {
+        return {mf::KeyboardStateTracker::ShortcutKey::Type::keysym, keysym};
+    }
 
     uint32_t const keysym;
 };
@@ -173,6 +186,10 @@ public:
 private:
     bool check_pressed(MirEvent const& event) const override;
     bool event_is_for_trigger_key(MirEvent const& event) const override;
+    auto shortcut_key() const -> mf::KeyboardStateTracker::ShortcutKey override
+    {
+        return {mf::KeyboardStateTracker::ShortcutKey::Type::scancode, scancode};
+    }
 
     uint32_t const scancode;
 };
