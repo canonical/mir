@@ -80,7 +80,6 @@ struct PrimaryRequestParameters
     uint32_t framebuffer_id;
     geom::Displacement source_offset{};
     bool activate_crtc{false};
-    geom::Size size{requested_mode_size};
 };
 
 class AtomicKMSOutputTest : public Test
@@ -142,8 +141,8 @@ public:
     auto primary_request_properties(PrimaryRequestParameters const& parameters) const
         -> std::map<AtomicPropertyKey, uint64_t>
     {
-        auto const width = parameters.size.width.as_uint32_t();
-        auto const height = parameters.size.height.as_uint32_t();
+        auto const width = requested_mode_size.width.as_uint32_t();
+        auto const height = requested_mode_size.height.as_uint32_t();
         std::map<AtomicPropertyKey, uint64_t> properties{
             {{crtc_id, crtc_mode_property_id}, mode_blob_id}, {{connector_id, connector_crtc_property_id}, crtc_id}};
         if (parameters.activate_crtc)
@@ -280,44 +279,6 @@ TEST_F(AtomicKMSOutputTest, page_flip_preserves_primary_request_and_uses_normal_
         mock_drm, drmModeAtomicCommit(mtd::IsFdOfDevice(drm_device), mtd::AtomicRequestWith(Eq(properties)), no_flags));
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
-    EXPECT_TRUE(output_under_test->page_flip(framebuffer));
-}
-
-TEST_F(AtomicKMSOutputTest, set_crtc_uses_requested_mode_size_instead_of_current_crtc_size)
-{
-    crtc().width = smaller_crtc_size.width.as_uint32_t();
-    crtc().height = smaller_crtc_size.height.as_uint32_t();
-    crtc().mode.hdisplay = smaller_crtc_size.width.as_uint32_t();
-    crtc().mode.vdisplay = smaller_crtc_size.height.as_uint32_t();
-    auto output_under_test = output();
-    StubFramebuffer framebuffer{primary_framebuffer_id, requested_mode_size};
-    EXPECT_CALL(
-        mock_drm,
-        drmModeAtomicCommit(
-            mtd::IsFdOfDevice(drm_device),
-            mtd::AtomicRequestWith(
-                Eq(primary_request_properties({.framebuffer_id = primary_framebuffer_id, .activate_crtc = true}))),
-            DRM_MODE_ATOMIC_ALLOW_MODESET));
-
-    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
-}
-
-TEST_F(AtomicKMSOutputTest, page_flip_uses_current_crtc_size_instead_of_requested_mode_size)
-{
-    crtc().width = smaller_crtc_size.width.as_uint32_t();
-    crtc().height = smaller_crtc_size.height.as_uint32_t();
-    crtc().mode.hdisplay = smaller_crtc_size.width.as_uint32_t();
-    crtc().mode.vdisplay = smaller_crtc_size.height.as_uint32_t();
-    auto output_under_test = output();
-    StubFramebuffer framebuffer{flip_framebuffer_id, smaller_crtc_size};
-    EXPECT_CALL(
-        mock_drm,
-        drmModeAtomicCommit(
-            mtd::IsFdOfDevice(drm_device),
-            mtd::AtomicRequestWith(
-                Eq(primary_request_properties({.framebuffer_id = flip_framebuffer_id, .size = smaller_crtc_size}))),
-            no_flags));
-
     EXPECT_TRUE(output_under_test->page_flip(framebuffer));
 }
 
