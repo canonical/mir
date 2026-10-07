@@ -36,6 +36,75 @@
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
+namespace geom = mir::geometry;
+
+namespace
+{
+auto direct_presentation_allowed(MirOutputFilter filter, glm::mat2 const& transform) -> bool
+{
+    return filter == mir_output_filter_none && transform == glm::mat2{1};
+}
+
+auto import_display_elements(
+    mg::RenderableList const& renderable_list,
+    mg::RenderingProvider::FramebufferProvider& fb_adaptor) -> std::vector<mg::DisplayElement>
+{
+    std::vector<mg::DisplayElement> framebuffers;
+    framebuffers.reserve(renderable_list.size());
+
+    for (auto const& renderable : renderable_list)
+    {
+        auto fb = fb_adaptor.buffer_to_framebuffer(renderable->buffer());
+        if (!fb)
+        {
+            break;
+        }
+        geom::Rectangle clipped_dest;
+        if (renderable->clip_area())
+        {
+            clipped_dest = intersection_of(renderable->screen_position(), *renderable->clip_area());
+        }
+        else
+        {
+            clipped_dest = renderable->screen_position();
+        }
+        geom::SizeF const source_size{
+            clipped_dest.size.width.as_value(),
+            clipped_dest.size.height.as_value()};
+        geom::PointF const source_origin{
+            clipped_dest.top_left.x.as_value() - renderable->screen_position().top_left.x.as_value(),
+            clipped_dest.top_left.y.as_value() - renderable->screen_position().top_left.y.as_value()
+        };
+
+        framebuffers.emplace_back(mg::DisplayElement{
+            renderable->screen_position(),
+            geom::RectangleF{source_origin, source_size},
+            std::move(fb)
+        });
+    }
+
+    return framebuffers;
+}
+
+bool try_bypass(
+    mg::RenderableList const& renderable_list,
+    mg::RenderingProvider::FramebufferProvider& fb_adaptor,
+    mg::DisplaySink& display_sink,
+    MirOutputFilter filter,
+    glm::mat2 const& transform)
+{
+    auto const can_present_directly = direct_presentation_allowed(filter, transform);
+    if (!can_present_directly)
+        return false;
+
+    auto const display_elements =  import_display_elements(renderable_list, fb_adaptor);
+
+    if (display_elements.size() != renderable_list.size())
+        return false;
+
+    return display_sink.overlay(display_elements);
+}
+}
 
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
@@ -84,50 +153,18 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
      */
     visible_elements.clear();  // Those in use are still in renderable_list
 
-    std::vector<mg::DisplayElement> framebuffers;
-    framebuffers.reserve(renderable_list.size());
-
-    for (auto const& renderable : renderable_list)
-    {
-        auto fb = fb_adaptor->buffer_to_framebuffer(renderable->buffer());
-        if (!fb)
-        {
-            break;
-        }
-        geometry::Rectangle clipped_dest;
-        if (renderable->clip_area())
-        {
-            clipped_dest = intersection_of(renderable->screen_position(), *renderable->clip_area());
-        }
-        else
-        {
-            clipped_dest = renderable->screen_position();
-        }
-        geometry::SizeF const source_size{
-            clipped_dest.size.width.as_value(),
-            clipped_dest.size.height.as_value()};
-        geometry::PointF const source_origin{
-            clipped_dest.top_left.x.as_value() - renderable->screen_position().top_left.x.as_value(),
-            clipped_dest.top_left.y.as_value() - renderable->screen_position().top_left.y.as_value()
-        };
-
-        framebuffers.emplace_back(mg::DisplayElement{
-            renderable->screen_position(),
-            geometry::RectangleF{source_origin, source_size},
-            std::move(fb)
-        });
-    }
-
-    if (framebuffers.size() == renderable_list.size() && display_sink.overlay(framebuffers))
+    auto const filter = output_filter->filter();
+    auto const transform = display_sink.transformation();
+    if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
     }
     else
     {
-        renderer->set_output_transform(display_sink.transformation());
+        renderer->set_output_transform(transform);
         renderer->set_viewport(view_area);
-        renderer->set_output_filter(output_filter->filter());
+        renderer->set_output_filter(filter);
 
         display_sink.set_next_image(renderer->render(renderable_list));
 

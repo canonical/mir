@@ -44,6 +44,9 @@ Mir currently uses hardware composition for cursors
 (where supported by the GPU hardware) and can, in some usecases, enable
 "composition bypass" for fullscreen clients.
 
+Mir disables composition bypass when an output filter (a color effect) is active
+or when the renderer must transform the output.
+
 ### Damage tracking
 
 Damage tracking involves passing information about which parts of buffers have
