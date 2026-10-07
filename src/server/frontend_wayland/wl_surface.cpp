@@ -451,6 +451,8 @@ void mf::WlSurface::set_input_region(std::optional<wl_resource*> const& region)
 
 void mf::WlSurface::commit(WlSurfaceState const& state)
 {
+    bool const was_mapped = buffer_size_.has_value();
+
     if (state.offset)
         offset_ = state.offset.value();
 
@@ -499,6 +501,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         if (!weak_buffer)
         {
             // TODO: unmap surface, and unmap all subsurfaces
+            current_buffer.reset();
             buffer_size_ = std::nullopt;
             send_frame_callbacks(frame_callbacks);
         }
@@ -651,10 +654,31 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         buffer_size_ = logical_size;
     }
 
+    if (was_mapped != buffer_size_.has_value())
+    {
+        if (buffer_size_)
+            ++mapped_lifetime_;
+        for (auto const& listener : mapping_listeners)
+        {
+            if (listener)
+                listener.value().mapping_changed();
+        }
+    }
+
     for (WlSubsurface* child: children)
     {
         child->parent_has_committed();
     }
+}
+
+void mf::WlSurface::add_mapping_listener(MappingListener* listener)
+{
+    mapping_listeners.emplace_back(listener);
+}
+
+void mf::WlSurface::remove_mapping_listener(MappingListener* listener)
+{
+    std::erase_if(mapping_listeners, [&](auto candidate) { return !candidate || &candidate.value() == listener; });
 }
 
 void mf::WlSurface::commit()

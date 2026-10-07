@@ -123,6 +123,13 @@ private:
 class WlSurface : public wayland::Surface
 {
 public:
+    class MappingListener : public virtual wayland::LifetimeTracker
+    {
+    public:
+        virtual void mapping_changed() = 0;
+        virtual ~MappingListener() = default;
+    };
+
     WlSurface(wl_resource* new_resource,
               std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
@@ -135,6 +142,9 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
+    auto mapped_lifetime() const -> uint64_t { return mapped_lifetime_; }
+    void add_mapping_listener(MappingListener* listener);
+    void remove_mapping_listener(MappingListener* listener);
     bool synchronized() const;
     /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
     /// drag-and-drop icon, or a window role such as xdg_toplevel). Used to raise the
@@ -238,6 +248,8 @@ private:
     geometry::Displacement offset_;
     float scale{1};
     std::optional<geometry::Size> buffer_size_;
+    uint64_t mapped_lifetime_{0};
+    std::vector<wayland::Weak<MappingListener>> mapping_listeners;
 
     using CallbackList = std::vector<wayland::Weak<WlSurfaceState::Callback>>;
     CallbackList frame_callbacks;
