@@ -20,6 +20,7 @@
 
 extern "C"
 {
+#include <libdisplay-info/cta.h>
 #include <libdisplay-info/edid.h>
 #include <libdisplay-info/info.h>
 }
@@ -242,6 +243,27 @@ mg::DisplayInfo::DisplayInfo(std::vector<uint8_t> const& edid)
             if (vendor_product->serial)
             {
                 serial_number = vendor_product->serial;
+            }
+        }
+
+        auto const extensions = di_edid_get_extensions(di_info_get_edid(info.get()));
+        if (extensions)
+        {
+            for (auto extension = extensions; *extension && !physical_address; ++extension)
+            {
+                if (auto const cta = di_edid_ext_get_cta(*extension))
+                {
+                    if (auto const data_blocks = di_edid_cta_get_data_blocks(cta))
+                    {
+                        for (auto block = data_blocks; *block && !physical_address; ++block)
+                        {
+                            if (auto const hdmi = di_cta_data_block_get_vendor_hdmi(*block))
+                            {
+                                physical_address = hdmi->source_phys_addr;
+                            }
+                        }
+                    }
+                }
             }
         }
     }
