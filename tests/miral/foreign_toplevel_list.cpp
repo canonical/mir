@@ -188,6 +188,15 @@ struct Client
         roundtrip();
     }
 
+    void remap()
+    {
+        configured = false;
+        wl_surface_commit(surface);
+        roundtrip();
+        ASSERT_TRUE(configured);
+        map();
+    }
+
     static void global(void* data, wl_registry* registry, uint32_t id, char const* name, uint32_t)
     {
         auto& self = *static_cast<Client*>(data);
@@ -316,8 +325,9 @@ TEST_F(ForeignToplevelList, null_buffer_closes_handle_and_remap_creates_new_iden
         client.roundtrip();
         EXPECT_THAT(old_handle.updates, Eq(updates));
 
-        client.map();
+        client.remap();
         ASSERT_THAT(client.handles, SizeIs(2));
+        EXPECT_FALSE(client.handles.back()->identifier_.empty());
         EXPECT_THAT(client.handles.back()->identifier_, Ne(identifier));
         EXPECT_THAT(old_handle.closed_count, Eq(1));
         EXPECT_THAT(old_handle.updates, Eq(updates));
@@ -350,14 +360,14 @@ TEST_F(ForeignToplevelList, remap_without_a_bound_list_changes_identifier)
         auto const identifier = client.handles.front()->identifier_;
         client.stop_list();
         client.unmap();
-        client.map();
+        client.remap();
         client.bind_list();
         ASSERT_THAT(client.handles, SizeIs(2));
         EXPECT_THAT(client.handles.back()->identifier_, Ne(identifier));
     });
 }
 
-TEST_F(ForeignToplevelList, list_bindings_share_identifiers_across_rapid_unmap_and_remap)
+TEST_F(ForeignToplevelList, list_bindings_share_identifiers_across_unmap_and_remap)
 {
     run_as_client([](Client& client)
     {
@@ -368,9 +378,8 @@ TEST_F(ForeignToplevelList, list_bindings_share_identifiers_across_rapid_unmap_a
         auto const identifier = client.handles.front()->identifier_;
         EXPECT_THAT(other.handles.front()->identifier_, Eq(identifier));
 
-        wl_surface_attach(client.surface, nullptr, 0, 0);
-        wl_surface_commit(client.surface);
-        client.map();
+        client.unmap();
+        client.remap();
 
         EXPECT_THAT(client.handles.front()->closed_count, Eq(1));
         EXPECT_THAT(other.handles.front()->closed_count, Eq(1));

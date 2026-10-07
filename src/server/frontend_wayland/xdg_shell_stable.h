@@ -140,6 +140,9 @@ private:
     void destroy_role() const override;
 
     mir::wayland::Weak<XdgSurfaceStable> const xdg_surface;
+    wayland::Weak<WlSurface> const wl_surface;
+    bool last_commit_had_buffer{false};
+    bool remap_configure_pending{false};
 };
 }
 }
