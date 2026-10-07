@@ -30,6 +30,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bitset>
 #include <vector>
 
 namespace mf = mir::frontend;
@@ -84,8 +85,9 @@ auto shortcut_key_matches(
 
 auto keymap_shortcuts_overlap(
     xkb_keymap* keymap, mf::KeyboardStateTracker::ShortcutKey first,
-    mf::KeyboardStateTracker::ShortcutKey second, unsigned modifier_keys_held, bool shift_held) -> bool
+    mf::KeyboardStateTracker::ShortcutKey second, unsigned modifier_keys_held) -> bool
 {
+    bool const shift_held = modifier_keys_held & shift_keys_mask;
     for (unsigned locks = 0; locks < (1u << lock_keys.size()); ++locks)
     {
         auto state = mir::input::XKBStatePtr{xkb_state_new(keymap), xkb_state_unref};
@@ -199,7 +201,7 @@ auto mf::KeyboardStateTracker::shortcuts_overlap(
     InputTriggerModifiers first_modifiers, ShortcutKey first,
     InputTriggerModifiers second_modifiers, ShortcutKey second) const -> bool
 {
-    std::vector<unsigned> common_shift_states;
+    std::bitset<shift_keys_mask + 1> common_shift_states;
     for (unsigned keys_held = 0; keys_held < (1u << modifier_keys.size()); ++keys_held)
     {
         MirInputEventModifiers modifiers = 0;
@@ -215,25 +217,22 @@ auto mf::KeyboardStateTracker::shortcuts_overlap(
             if (InputTriggerModifiers::modifiers_match(first_modifiers, event_modifiers) &&
                 InputTriggerModifiers::modifiers_match(second_modifiers, event_modifiers))
             {
-                common_shift_states.push_back(keys_held & shift_keys_mask);
+                common_shift_states.set(keys_held & shift_keys_mask);
                 break;
             }
         }
     }
-    if (common_shift_states.empty())
+    if (common_shift_states.none())
         return false;
     if (first == second)
         return true;
     if (first.type == ShortcutKey::Type::keysym && second.type == ShortcutKey::Type::keysym)
-        std::erase(common_shift_states, 0u);
-    if (common_shift_states.empty())
+        common_shift_states.reset(0);
+    if (common_shift_states.none())
         return false;
     if (!input_hub || (first.type == ShortcutKey::Type::scancode && second.type == ShortcutKey::Type::scancode))
         return false;
 
-    std::ranges::sort(common_shift_states);
-    common_shift_states.erase(std::unique(common_shift_states.begin(), common_shift_states.end()),
-        common_shift_states.end());
     std::vector<std::shared_ptr<input::Keymap>> keymaps;
     input_hub->for_each_input_device([&](input::Device const& device)
         {
@@ -243,17 +242,13 @@ auto mf::KeyboardStateTracker::shortcuts_overlap(
     for (auto const& keymap : keymaps)
     {
         auto const compiled = keymap->make_unique_xkb_keymap(context.get());
-        for (auto const shift_keys : common_shift_states)
+        // Only Shift transitions refresh recorded symbols. Other modifiers
+        // can change after key-down without changing the symbol used by a trigger.
+        for (unsigned history = 0; history < (1u << modifier_keys.size()); ++history)
         {
-            // Only Shift transitions refresh recorded symbols. Other modifiers
-            // can change after key-down without changing the symbol used by a trigger.
-            for (unsigned history = 0; history < (1u << modifier_keys.size()); ++history)
-            {
-                if ((history & shift_keys_mask) != shift_keys)
-                    continue;
-                if (keymap_shortcuts_overlap(compiled.get(), first, second, history, shift_keys))
-                    return true;
-            }
+            if (common_shift_states.test(history & shift_keys_mask) &&
+                keymap_shortcuts_overlap(compiled.get(), first, second, history))
+                return true;
         }
     }
     return false;
