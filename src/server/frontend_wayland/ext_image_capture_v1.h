@@ -77,10 +77,10 @@ public:
     virtual auto acquire_content(void const* consumer_id) -> std::shared_ptr<graphics::Buffer> = 0;
 
     /// Begin the capture.
-    /// 
+    ///
     /// The \p callback is executed from the Wayland thread, or immediately in the
     /// event of a failure.
-    /// 
+    ///
     /// \pre has_damage() == true
     virtual void begin_capture(
         std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
