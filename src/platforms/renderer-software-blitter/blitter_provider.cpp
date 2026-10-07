@@ -111,9 +111,9 @@ public:
         std::shared_ptr<mg::DMABufEGLProvider> const& dmabuf_provider,
         EGLDisplay dpy,
         EGLContext ctx) :
-        dmabuf_{dmabuf},
         dpy_{dpy},
         ctx_{create_current_context(dpy, ctx)},
+        size_{dmabuf->size()},
         texture_{dmabuf_provider->as_texture(std::move(dmabuf))}
     {
         glBindFramebuffer(GL_FRAMEBUFFER, fbo_);
@@ -182,14 +182,14 @@ public:
         // can safely return `nullptr` knowing that it will not be used anywhere.
         return nullptr;
     }
-    auto size() const -> geom::Size override { return dmabuf_->size(); }
+    auto size() const -> geom::Size override { return size_; }
     auto layout() const -> Layout override { return Layout::TopRowFirst; }
 
 private:
-    std::shared_ptr<mg::DMABufBuffer> dmabuf_;
     EGLDisplay const dpy_;
     EGLContext const ctx_;
     FramebufferHandle fbo_;
+    geom::Size const size_;
     std::shared_ptr<mg::gl::Texture> texture_;
 };
 }
