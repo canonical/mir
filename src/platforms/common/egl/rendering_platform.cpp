@@ -90,10 +90,10 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
         EGL_NONE
     };
 
-    EGLConfig cfg; // TICS -cppcoreguidelines-init-variables
+    EGLConfig cfg{EGL_NO_CONFIG_KHR};
     if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        EGLint num_configs; // TICS -cppcoreguidelines-init-variables
+        EGLint num_configs{0};
 
         if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
         {
