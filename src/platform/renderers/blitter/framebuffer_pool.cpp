@@ -101,6 +101,7 @@ void mrb::FramebufferPool::Entry::build_gl_resources(bool with_depth_stencil)
     auto const* const dmabuf = fb->as_dmabuf();
     if (!dmabuf)
     {
+        // TODO: Do a `glReadPixels` if dmabuf import fails
         BOOST_THROW_EXCEPTION((std::runtime_error{
             "Display framebuffer cannot be exported as a dma-buf; cannot use the blitter renderer"}));
     }

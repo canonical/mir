@@ -139,15 +139,12 @@ auto initialise_display(EGLDisplay dpy) -> EGLDisplay
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL display"));
     }
 
-    try
+    if (major < 1 || (major == 1 && minor < 4))
     {
-        require_display_extensions(dpy);
+        BOOST_THROW_EXCEPTION(mg::egl_error("Must have EGL version >= 1.4"));
     }
-    catch (...)
-    {
-        eglTerminate(dpy);
-        throw;
-    }
+
+    require_display_extensions(dpy);
 
     return dpy;
 }
@@ -163,18 +160,15 @@ auto create_context(EGLDisplay dpy) -> EGLContext
     auto const ctx = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, context_attr);
     if (ctx == EGL_NO_CONTEXT)
     {
-        // Capture the EGL error before eglTerminate() can overwrite it
-        auto const error = mg::egl_error("Failed to create EGL context");
-        eglTerminate(dpy);
-        BOOST_THROW_EXCEPTION(error);
+        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to create EGL context"));
     }
     return ctx;
 }
 }
 
 mrb::SoftwareEGLContext::SoftwareEGLContext()
-    : dpy{initialise_display(create_software_display())},
-      ctx{create_context(dpy)},
+    : dpy{create_software_display()},
+      ctx{create_context(initialise_display(dpy))},
       exts{std::make_unique<mg::EGLExtensions>()}
 {
     try
@@ -184,7 +178,6 @@ mrb::SoftwareEGLContext::SoftwareEGLContext()
     catch (...)
     {
         eglDestroyContext(dpy, ctx);
-        eglTerminate(dpy);
         throw;
     }
 }
@@ -196,7 +189,6 @@ mrb::SoftwareEGLContext::~SoftwareEGLContext()
         eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
     eglDestroyContext(dpy, ctx);
-    eglTerminate(dpy);
 }
 
 auto mrb::SoftwareEGLContext::is_current() const -> bool
@@ -206,10 +198,6 @@ auto mrb::SoftwareEGLContext::is_current() const -> bool
 
 void mrb::SoftwareEGLContext::make_current() const
 {
-    if (is_current())
-    {
-        return;
-    }
     eglBindAPI(EGL_OPENGL_ES_API);
     if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
     {
@@ -219,10 +207,6 @@ void mrb::SoftwareEGLContext::make_current() const
 
 void mrb::SoftwareEGLContext::release_current() const
 {
-    if (!is_current())
-    {
-        return;
-    }
     if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release blitter fallback EGL context"));

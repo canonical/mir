@@ -18,6 +18,7 @@
 #define MIR_RENDERER_BLITTER_EGL_CONTEXT_H_
 
 #include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_resources.h>
 
 #include <EGL/egl.h>
 #include <memory>
@@ -51,7 +52,7 @@ public:
     auto extensions() const -> graphics::EGLExtensions const& { return *exts; }
 
 private:
-    EGLDisplay const dpy;
+    graphics::EGLDisplayHandle const dpy;
     EGLContext const ctx;
     std::unique_ptr<graphics::EGLExtensions> const exts;
 };
