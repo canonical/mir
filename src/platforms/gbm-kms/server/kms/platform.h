@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_GBM_PLATFORM_H_
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/egl_resources.h>
 #include "kms/display.h"
 #include "platform_common.h"
 #include "display_helpers.h"
@@ -110,27 +111,6 @@ private:
     RenderingPlatform(
         std::variant<std::shared_ptr<graphics::GBMDisplayProvider>, std::shared_ptr<gbm_device>> hw,
         std::shared_ptr<GbmQuirks> quirks);
-
-    class EGLDisplayHandle
-    {
-    public:
-        explicit EGLDisplayHandle(EGLDisplay dpy)
-            : dpy{dpy}
-        {
-        }
-
-        ~EGLDisplayHandle()
-        {
-            eglTerminate(dpy);
-        }
-
-        operator EGLDisplay() const
-        {
-            return dpy;
-        }
-    private:
-        EGLDisplay const dpy;
-    };
 
     std::shared_ptr<gbm_device> const device;                   ///< gbm_device this platform is created on, always valid.
     EGLDisplayHandle dpy;

@@ -170,6 +170,9 @@ public:
 
     MOCK_METHOD(EGLBoolean, eglGetSyncValuesCHROMIUM, (EGLDisplay, EGLSurface, int64_t*, int64_t*, int64_t*));
 
+    MOCK_METHOD(EGLBoolean, eglQueryDevicesEXT, (EGLint, EGLDeviceEXT*, EGLint*));
+    MOCK_METHOD(char const*, eglQueryDeviceStringEXT, (EGLDeviceEXT, EGLint));
+
     EGLDisplay const fake_egl_display;
     EGLConfig const* const fake_configs;
     EGLint const fake_configs_num;

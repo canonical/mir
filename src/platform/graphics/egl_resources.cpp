@@ -86,3 +86,22 @@ mg::EGLSurfaceStore::operator EGLSurface() const
 {
     return egl_surface_;
 }
+
+/********************
+ * EGLDisplayHandle *
+ ********************/
+
+mg::EGLDisplayHandle::EGLDisplayHandle(EGLDisplay dpy)
+    : dpy{dpy}
+{
+}
+
+mg::EGLDisplayHandle::~EGLDisplayHandle() noexcept
+{
+    eglTerminate(dpy);
+}
+
+mg::EGLDisplayHandle::operator EGLDisplay() const
+{
+    return dpy;
+}
