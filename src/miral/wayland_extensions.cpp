@@ -15,6 +15,7 @@
  */
 
 #include <miral/wayland_extensions.h>
+#include <miral/application_authorizer.h>
 #include <miral/window.h>
 
 #include <mir/abnormal_exit.h>
@@ -132,6 +133,7 @@ auto map_to_global_names(std::set<std::string> const& extensions) -> std::set<st
 struct miral::WaylandExtensions::EnableInfo::Self
 {
     Application const app;
+    ApplicationCredentials const creds;
     const char* const name;
     std::optional<bool> const user_preference;
 };
@@ -140,13 +142,18 @@ miral::WaylandExtensions::EnableInfo::EnableInfo(
     Application const& app,
     const char* name,
     std::optional<bool> user_preference)
-    : self{std::unique_ptr<Self>(new Self{app, name, user_preference})}
+    : self{std::unique_ptr<Self>(new Self{app, ApplicationCredentials{app->creds()}, name, user_preference})}
 {
 }
 
 auto miral::WaylandExtensions::EnableInfo::app() const -> Application const&
 {
     return self->app;
+}
+
+auto miral::WaylandExtensions::EnableInfo::creds() const -> ApplicationCredentials const&
+{
+    return self->creds;
 }
 
 auto miral::WaylandExtensions::EnableInfo::name() const -> const char*

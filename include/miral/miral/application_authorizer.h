@@ -20,6 +20,8 @@
 #include <sys/types.h>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 #include <type_traits>
 
 namespace mir { class Server; }
@@ -38,6 +40,13 @@ public:
     pid_t pid() const;
     uid_t uid() const;
     gid_t gid() const;
+
+    auto apparmor_label() const -> std::string;
+
+    auto is_sandboxed() const -> bool;
+    auto snap_name() const -> std::optional<std::string>;
+    auto snap_app_name() const -> std::optional<std::string>;
+    auto flatpak_id() const -> std::optional<std::string>;
 
 private:
     ApplicationCredentials() = delete;

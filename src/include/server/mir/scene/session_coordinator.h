@@ -31,6 +31,7 @@ namespace mir
 namespace frontend
 {
 class EventSink;
+class SessionCredentials;
 }
 
 namespace scene
@@ -46,7 +47,7 @@ public:
     virtual void unset_focus() = 0;
 
     virtual auto open_session(
-        pid_t client_pid,
+        frontend::SessionCredentials &&creds,
         Fd socket_fd,
         std::string const& name) -> std::shared_ptr<Session> = 0;
 
