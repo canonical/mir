@@ -627,6 +627,16 @@ void mf::XdgToplevelStable::handle_commit()
             max_size.width.as_int(), max_size.height.as_int(),
             min_size.width.as_int(), min_size.height.as_int()};
     }
+
+    if (commit_hook)
+    {
+        commit_hook();
+    }
+}
+
+void mf::XdgToplevelStable::set_commit_hook(std::function<void()> hook)
+{
+    commit_hook = std::move(hook);
 }
 
 void mf::XdgToplevelStable::set_maximized()

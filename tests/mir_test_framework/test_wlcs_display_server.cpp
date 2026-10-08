@@ -417,9 +417,13 @@ public:
                 BOOST_THROW_EXCEPTION(
                     std::runtime_error{"Surface::get_streams() returned empty list"});
 
-            auto wl_surface = state_accessor->stream_map.at(streams.front().stream);
-
-            state_accessor->surface_map[wl_surface] = surface;
+            // In buffer_stream_created() we associate the first stream with the wl_surface. Looking up
+            // the wl_surface for the first stream here allows us to associate the wl_surface with the surface.
+            if (auto const wl_surface = state_accessor->stream_map.find(streams.front().stream);
+                wl_surface != state_accessor->stream_map.end())
+            {
+                state_accessor->surface_map[wl_surface->second] = surface;
+            }
         }
     }
 
@@ -437,14 +441,13 @@ public:
         auto state_accessor = state.lock();
         if (std::this_thread::get_id() == state_accessor->wayland_thread)
         {
-            if (listeners.last_wl_surface == nullptr)
+            if (listeners.last_wl_surface)
             {
-                BOOST_THROW_EXCEPTION((
-                    std::runtime_error{"BufferStream created without first constructing a wl_surface?"}));
+                // ResourceMapper::resource_created() has identified the surface creation and
+                // we're now creating the default stream for it, so we can associate the two.
+                state_accessor->stream_map[stream] = listeners.last_wl_surface;
+                listeners.last_wl_surface = nullptr;
             }
-
-            state_accessor->stream_map[stream] = listeners.last_wl_surface;
-            listeners.last_wl_surface = nullptr;
         }
     }
 
