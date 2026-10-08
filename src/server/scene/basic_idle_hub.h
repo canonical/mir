@@ -64,6 +64,8 @@ public:
 
     auto inhibit_idle() -> std::shared_ptr<IdleHub::WakeLock> override;
 
+    void set_idle_inhibition_enabled(bool enabled) override;
+
 private:
     class AlarmCallback;
     struct Multiplexer;
@@ -72,6 +74,7 @@ private:
     struct State
     {
         std::weak_ptr<IdleHub::WakeLock> wake_lock;
+        bool idle_inhibition_enabled{true};
         /// Maps timeouts (times from last poke) to the multiplexers that need to be fired at those times.
         std::map<time::Duration, std::shared_ptr<Multiplexer>> timeouts;
         /// Should always be equal to timeouts.begin()->first, or nullopt if timeouts is empty. Only purpose is so we don't
@@ -85,6 +88,7 @@ private:
     };
 
     void poke_locked(State& state);
+    void wake_lock_released();
     void alarm_fired(State& state);
     void schedule_alarm(State& state, time::Timestamp current_time);
 
