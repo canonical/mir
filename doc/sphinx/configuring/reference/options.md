@@ -6,6 +6,6 @@ Mir compositors can usually be configured (in the order of precedence) on the co
 
 Different compositors will expose different options, but here's a list of those available by default:
 
-```{include} options.md.include
+```{include} options.include.md
 
 ```
