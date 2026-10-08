@@ -66,6 +66,7 @@ class WlSubsurface;
 class ResourceLifetimeTracker;
 class Viewport;
 class SyncTimeline;
+class ExtForeignBufferV1;
 
 struct WlSurfaceState
 {
@@ -167,6 +168,10 @@ public:
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
 
+    /// Called by the [ExtForeignBufferV1] that this surface is displaying when the compositor refreshes
+    /// its content, so that the new content reaches the scene without the client re-committing.
+    void foreign_buffer_updated();
+
     void set_fractional_scale(FractionalScaleV1* fractional_scale);
     auto get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>;
 
@@ -221,6 +226,13 @@ private:
      * hide this, here, in the frontend.
      */
     std::shared_ptr<graphics::Buffer> current_buffer;
+
+    /// Set while the surface is displaying a foreign buffer, so pushed content updates can be
+    /// ignored once the client attaches something else.
+    wayland::Weak<ExtForeignBufferV1> current_foreign_buffer;
+
+    /// Submits current_buffer to the stream. Returns whether the logical size changed.
+    auto submit_current_buffer() -> bool;
 
     /* State for when a buffer update is waiting for a client fence to signal
      */

@@ -50,6 +50,7 @@
 #include "wl_seat.h"
 #include "wl_shell.h"
 #include "wlr_screencopy_v1.h"
+#include "ext_foreign_buffer_v1.h"
 #include "xdg_activation_v1.h"
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_decoration_unstable_v1.h"
@@ -238,6 +239,12 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.wayland_executor,
                 ctx.cursor_observer_multiplexer,
                 ctx.clock);
+        }),
+    make_extension_builder<mw::ForeignBufferManagerV1>([](auto const& ctx)
+        {
+            return mf::create_ext_foreign_buffer_manager_v1(
+                ctx.display,
+                ctx.graphic_buffer_allocator);
         }),
     make_extension_builder<mw::PrimarySelectionDeviceManagerV1>([](auto const& ctx)
         {
