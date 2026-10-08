@@ -6,6 +6,13 @@ description: |
   exposed via a tunnel on `localhost:8000`.
 
   Connect the `desktop` interface (`workshop connect dev/mir:desktop`) to run the built server with `workshop exec <executable>` displayed on the host.
+
+  Mount the `wlcs-build` plug to the build directory of `wlcs`, so that the `wlcs` binary
+  is available at `/home/workshop/wlcs-build/wlcs`.
+
+  Use `workshop run wlcs` (the default) to run the registered `ctest` suite against the
+  system wlcs package. Use `workshop run wlcs mounted` to run against the mounted
+  `wlcs-build` binary instead.
 base: ubuntu@26.04
 sdks:
 - name: vscode-remote
@@ -59,6 +66,35 @@ actions:
     set -xeu
     cmake --build ~/build
     VERBOSE=1 ARGS="-V" cmake --build ~/build --target ptest "$@"
+
+  wlcs: |
+    set -xeu
+
+    mode=system
+    if [ $# -ge 1 ] && { [ "$1" = "system" ] || [ "$1" = "mounted" ]; }; then
+      mode="$1"
+      shift
+    fi
+
+    if [ "$mode" = "mounted" ]; then
+      if [ ! -x /home/workshop/wlcs-build/wlcs ]; then
+        echo 'wlcs binary not found at /home/workshop/wlcs-build/wlcs'
+        echo 'ensure `wlcs-build` plug is mounted to the wlcs build directory'
+        exit 1
+      fi
+      configure_options="-DWLCS_BINARY=/home/workshop/wlcs-build/wlcs"
+    else
+      # Revert to the system wlcs binary; without this a previous `mounted` run would
+      # leave its cached path in place and following system runs would reuse it.
+      configure_options="-UWLCS_BINARY"
+    fi
+
+    cmake -S . -B ~/build $configure_options
+
+    cmake --build ~/build --target miral_wlcs_integration
+
+    cd ~/build
+    ctest -R 'wlcs.*' "$@"
 
   doc: |
     set -xeu
