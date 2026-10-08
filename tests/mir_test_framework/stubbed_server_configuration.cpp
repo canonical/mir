@@ -54,6 +54,17 @@ public:
         return std::unique_ptr<mir::renderer::Renderer>(new mtd::StubRenderer());
     }
 };
+class StubBlitterRendererFactory : public mir::renderer::BlitterRendererFactory
+{
+public:
+
+    auto create_renderer_for(
+        mg::CPUAddressableDisplayAllocator&,
+        std::shared_ptr<mg::BlitterRenderingProvider>) const -> std::unique_ptr<mir::renderer::Renderer> override
+    {
+        return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
+    }
+};
 
 }
 
@@ -110,6 +121,17 @@ std::shared_ptr<mir::renderer::RendererFactory> mtf::StubbedServerConfiguration:
         [&]()
         {
             return std::make_shared<StubRendererFactory>();
+        });
+}
+
+std::shared_ptr<mir::renderer::BlitterRendererFactory> mtf::StubbedServerConfiguration::the_blitter_renderer_factory()
+{
+    auto options = the_options();
+
+    return blitter_renderer_factory(
+        [&]()
+        {
+            return std::make_shared<StubBlitterRendererFactory>();
         });
 }
 
