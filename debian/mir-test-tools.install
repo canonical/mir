@@ -2,6 +2,7 @@ usr/bin/mir_performance_tests
 usr/bin/mir-smoke-test-runner
 usr/bin/mir-compositor-smoke-test
 usr/bin/mir_platform_graphics_test_harness
+usr/lib/*/mir/server-platform/renderer-software-blitter.so.24
 usr/lib/*/mir/tools/libmirserverlttng.so
 usr/bin/mir_demo_client_*
 usr/bin/mir_demo_server

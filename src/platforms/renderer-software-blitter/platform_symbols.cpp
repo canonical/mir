@@ -14,27 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <mir/graphics/egl_extensions.h>
-#define MIR_LOG_COMPONENT "gbm-kms"
-#include <mir/log.h>
+#include "rendering_platform.h"
 
-#include <common/egl/rendering_platform.h>
-#include <mir/module_deleter.h>
 #include <mir/assert_module_entry_point.h>
-#include <mir/libname.h>
-#include <mir/udev/wrapper.h>
 #include <mir/graphics/platform.h>
-#include <mir/graphics/egl_error.h>
-#include <mir/graphics/gl_config.h>
-#include <mir/graphics/egl_logger.h>
-#include <mir/graphics/display_providers.h>
+#include <mir/libname.h>
+#include <mir/module_deleter.h>
+#include <mir/udev/wrapper.h>
 
-#include <EGL/egl.h>
-#include <GLES2/gl2.h>
+#include <span>
+#include <vector>
 
 namespace mg = mir::graphics;
+namespace mgsb = mg::software_blitter;
 namespace mo = mir::options;
-namespace mge = mg::egl::generic;
 
 auto create_rendering_platform(
     mg::SupportedDevice const&,
@@ -44,7 +37,7 @@ auto create_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::CreateRenderPlatform>(&create_rendering_platform);
 
-    return mir::make_module_ptr<mge::RenderingPlatform>(displays);
+    return mir::make_module_ptr<mgsb::SoftwareBlitterRenderingPlatform>(displays);
 }
 
 void add_graphics_platform_options(boost::program_options::options_description&)
@@ -60,30 +53,17 @@ auto probe_rendering_platform(
 {
     mir::assert_entry_point_signature<mg::RenderProbe>(&probe_rendering_platform);
 
-    auto const maximum_suitability = mge::probe_display_support(displays);
+    auto const maximum_suitability = mir::graphics::egl::generic::probe_display_support(displays);
 
     std::vector<mg::SupportedDevice> supported_devices;
-    supported_devices.push_back(
-        mg::SupportedDevice {
-            nullptr,                          // We aren't associated with any particular device
-
-            maximum_suitability,              // We should be fully-functional, but let any hardware-specific
-                                              // platform claim a higher priority, if it exists.
-
-            nullptr                           // No platform-specific data
-        });
+    supported_devices.push_back(mg::SupportedDevice{nullptr, maximum_suitability, nullptr});
     return supported_devices;
 }
 
 namespace
 {
-mir::ModuleProperties const description = {
-    "mir:egl-generic",
-    MIR_VERSION_MAJOR,
-    MIR_VERSION_MINOR,
-    MIR_VERSION_MICRO,
-    mir::libname()
-};
+mir::ModuleProperties const description =
+    {"mir:software-blitter", MIR_VERSION_MAJOR, MIR_VERSION_MINOR, MIR_VERSION_MICRO, mir::libname()};
 }
 
 mir::ModuleProperties const* describe_graphics_module()
