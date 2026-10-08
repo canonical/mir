@@ -80,6 +80,22 @@ public:
 
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
 
+    /// Whether the underlying wl_surface has a buffer: either one already committed, or a non-null one
+    /// attached and waiting for the next commit. Returns false if the wl_surface has been destroyed.
+    auto has_buffer() const -> bool;
+
+    /// Sets a function to call each time the client attaches a non-null buffer to the underlying wl_surface
+    /// (wl_surface.attach). Attaching a null buffer does not call it.
+    ///
+    /// The hook runs while the attach request is being handled, before the buffer is stored. To refuse the
+    /// attach, the hook throws a mir::wayland::ProtocolError: the buffer is then not attached, and the error
+    /// is sent to the client, which (as with any Wayland protocol error) disconnects it.
+    ///
+    /// There is a single slot: setting a hook replaces any previous one, and an empty function removes it.
+    /// The wl_surface owns the hook, so anything it captures must stay valid while it is set (hold it weakly
+    /// otherwise). Does nothing if the wl_surface has been destroyed.
+    void set_attach_hook(std::function<void()> hook);
+
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
 

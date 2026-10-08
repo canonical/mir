@@ -135,6 +135,21 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
+    /// Whether this surface has a buffer: either one already committed, or a non-null one attached and
+    /// waiting for the next commit.
+    bool has_buffer() const { return buffer_size_ || (pending.buffer && pending.buffer.value()); }
+
+    /// Sets a function to call each time the client attaches a non-null buffer (wl_surface.attach).
+    /// Attaching a null buffer does not call it. Unset by default.
+    ///
+    /// The hook runs while the attach request is being handled, before the buffer is stored. To refuse the
+    /// attach, the hook throws a mir::wayland::ProtocolError: the buffer is then not attached, and the error
+    /// is sent to the client, which (as with any Wayland protocol error) disconnects it.
+    ///
+    /// There is a single slot: setting a hook replaces any previous one, and an empty function removes it.
+    /// This surface owns the hook, so anything it captures must stay valid while it is set (hold it weakly
+    /// otherwise).
+    void set_attach_hook(std::function<void()> hook) { attach_hook = std::move(hook); }
     bool synchronized() const;
     /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
     /// drag-and-drop icon, or a window role such as xdg_toplevel). Used to raise the
@@ -244,6 +259,7 @@ private:
     CallbackList heartbeat_quirk_frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
+    std::function<void()> attach_hook;
     wayland::Weak<Viewport> viewport;
     wayland::Weak<FractionalScaleV1> fractional_scale;
     wayland::Weak<SyncTimeline> sync_timeline;

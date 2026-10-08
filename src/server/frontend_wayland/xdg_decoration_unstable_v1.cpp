@@ -21,6 +21,7 @@
 #include <mir/shell/surface_specification.h>
 #include <mir/wayland/client.h>
 #include <mir/wayland/protocol_error.h>
+#include <mir/wayland/weak.h>
 
 #include "xdg-decoration-unstable-v1_wrapper.h"
 #include "xdg_output_v1.h"
@@ -90,6 +91,9 @@ public:
     void set_mode(uint32_t mode) override;
     void unset_mode() override;
 
+    /// Whether a configure event has been sent for this decoration yet
+    auto is_configured() const -> bool { return configured; }
+
 private:
     static auto to_mode(DecorationStrategy::DecorationsType) -> uint32_t;
     auto to_decorations_type(uint32_t) -> DecorationStrategy::DecorationsType;
@@ -97,6 +101,7 @@ private:
 
     mir::frontend::XdgToplevelStable* toplevel;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
+    bool configured{false};
 };
 } // namespace frontend
 } // namespace mir
@@ -138,6 +143,15 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     }
 
     auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
+
+    if (wl_resource_get_version(resource) < 2 && tl->has_buffer())
+    {
+        throw mir::wayland::ProtocolError{
+            decoration->resource,
+            Error::unconfigured_buffer,
+            "Decoration created for a toplevel that already has a buffer"};
+    }
+
     if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
         throw mir::wayland::ProtocolError{
@@ -149,6 +163,21 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
         {
             toplevels_with_decorations->unregister_toplevel(toplevel);
         });
+
+    if (wl_resource_get_version(resource) < 2)
+    {
+        tl->set_attach_hook(
+            [weak_decoration = wayland::make_weak(decoration)]()
+            {
+                if (weak_decoration && !weak_decoration.value().is_configured())
+                {
+                    throw wayland::ProtocolError{
+                        weak_decoration.value().resource,
+                        XdgToplevelDecorationV1::Error::unconfigured_buffer,
+                        "Buffer attached before the decoration's first configure"};
+                }
+            });
+    }
 
     tl->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, client = this->client, toplevel]()
@@ -233,6 +262,7 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 
     auto const strategy_new_mode = to_mode(new_type);
     send_configure_event(strategy_new_mode);
+    configured = true;
 }
 
 void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
