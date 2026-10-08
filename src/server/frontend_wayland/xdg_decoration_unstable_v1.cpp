@@ -144,11 +144,12 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
 
     auto decoration = new XdgToplevelDecorationV1{id, tl, decoration_strategy};
 
-    // Version 2 of the protocol allows this
     if (wl_resource_get_version(resource) < 2 && tl->has_buffer())
     {
         throw mir::wayland::ProtocolError{
-            resource, Error::unconfigured_buffer, "Decoration created for a toplevel that already has a buffer"};
+            decoration->resource,
+            Error::unconfigured_buffer,
+            "Decoration created for a toplevel that already has a buffer"};
     }
 
     if (!toplevels_with_decorations->register_toplevel(toplevel))
@@ -163,7 +164,6 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
             toplevels_with_decorations->unregister_toplevel(toplevel);
         });
 
-    // Version 1 also forbids attaching a buffer before the decoration's first configure; version 2 dropped this
     if (wl_resource_get_version(resource) < 2)
     {
         tl->set_attach_hook(

@@ -135,9 +135,20 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
-    /// Whether a buffer has been committed, or a non-null buffer is attached pending the next commit
+    /// Whether this surface has a buffer: either one already committed, or a non-null one attached and
+    /// waiting for the next commit.
     bool has_buffer() const { return buffer_size_ || (pending.buffer && pending.buffer.value()); }
-    /// Called whenever a non-null buffer is attached; unset by default. May throw a ProtocolError to reject it.
+
+    /// Sets a function to call each time the client attaches a non-null buffer (wl_surface.attach).
+    /// Attaching a null buffer does not call it. Unset by default.
+    ///
+    /// The hook runs while the attach request is being handled, before the buffer is stored. To refuse the
+    /// attach, the hook throws a mir::wayland::ProtocolError: the buffer is then not attached, and the error
+    /// is sent to the client, which (as with any Wayland protocol error) disconnects it.
+    ///
+    /// There is a single slot: setting a hook replaces any previous one, and an empty function removes it.
+    /// This surface owns the hook, so anything it captures must stay valid while it is set (hold it weakly
+    /// otherwise).
     void set_attach_hook(std::function<void()> hook) { attach_hook = std::move(hook); }
     bool synchronized() const;
     /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
