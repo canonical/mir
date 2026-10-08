@@ -1,4 +1,4 @@
-name: mir
+name: mir-dev
 plugs:
   desktop:
     interface: desktop

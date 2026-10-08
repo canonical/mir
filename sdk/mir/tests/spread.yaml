@@ -1,0 +1,13 @@
+project: mir
+path: /home/ubuntu/project
+backends:
+  lxd:
+    systems:
+      - ubuntu-26.04:
+          username: ubuntu
+          vm: true
+suites:
+  main/:
+    summary: Test the Mir SDK inside workshops
+    environment:
+      BASE/resolute: ubuntu@26.04

@@ -1,0 +1,26 @@
+#!/bin/bash
+
+set -euo pipefail
+
+apt-get update
+apt-get install --yes --no-install-recommends \
+  build-essential \
+  cmake \
+  libboost-program-options-dev \
+  libgbm-dev \
+  libglm-dev \
+  libinput10 \
+  libwayland-dev \
+  libyaml-cpp-dev \
+  libxcb-xkb1 \
+  libxkbcommon-dev \
+  libxkbcommon-x11-0 \
+  ninja-build \
+  pkg-config \
+  uuid-dev
+
+cat <<'EOF' >/etc/profile.d/mir-sdk.sh
+export PATH=/opt/mir/bin:$PATH
+export PKG_CONFIG_PATH=/opt/mir/lib/pkgconfig${PKG_CONFIG_PATH:+:$PKG_CONFIG_PATH}
+export LD_LIBRARY_PATH=/opt/mir/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
+EOF
