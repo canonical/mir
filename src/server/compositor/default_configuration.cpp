@@ -116,6 +116,16 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
         });
 }
 
+std::shared_ptr<mir::renderer::BlitterRendererFactory> mir::DefaultServerConfiguration::the_blitter_renderer_factory()
+{
+    return blitter_renderer_factory(
+        []() -> std::shared_ptr<mir::renderer::BlitterRendererFactory>
+        {
+            // TODO: Swap out for actual `mir::renderer::blitter::RendererFactory` when created.
+            return {};
+        });
+}
+
 auto mir::DefaultServerConfiguration::the_screen_shooter_factory() -> std::shared_ptr<compositor::ScreenShooterFactory>
 {
     return screen_shooter_factory(
