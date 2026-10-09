@@ -82,12 +82,24 @@ struct OutputConfigurationTest : miral::TestServer
     miral::OutputConfiguration output_configuration{strategy};
 };
 
-struct OutputConfigurationBeforeInitTest : OutputConfigurationTest
+struct OutputConfigurationDeferredUpdateTest : miral::TestServer
 {
-    OutputConfigurationBeforeInitTest()
+    OutputConfigurationDeferredUpdateTest()
     {
-        start_server_in_setup = false;
+        add_server_init([this](mir::Server& server)
+            {
+                server.add_init_callback([this]
+                    {
+                        output_configuration.update_strategy(updated_strategy);
+                    });
+                output_configuration(server);
+            });
     }
+
+    std::shared_ptr<TestStrategy> const strategy{std::make_shared<TestStrategy>(test_scale, test_position)};
+    std::shared_ptr<TestStrategy> const updated_strategy{
+        std::make_shared<TestStrategy>(updated_scale, updated_position)};
+    miral::OutputConfiguration output_configuration{strategy};
 };
 }
 
@@ -148,13 +160,9 @@ TEST_F(OutputConfigurationTest, changes_made_by_an_updated_strategy_reach_the_di
     EXPECT_THAT(outputs, Gt(0));
 }
 
-TEST_F(OutputConfigurationBeforeInitTest, updated_strategy_is_applied_when_the_server_initializes)
+TEST_F(OutputConfigurationDeferredUpdateTest, strategy_updated_before_controller_capture_is_applied)
 {
-    auto const updated_strategy{std::make_shared<TestStrategy>(updated_scale, updated_position)};
-
-    output_configuration.update_strategy(updated_strategy);
-    start_server();
-
+    EXPECT_THAT(strategy->applied_outputs.load(), Gt(0));
     ASSERT_TRUE(updated_strategy->applied.wait_for(2s));
     ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
 
