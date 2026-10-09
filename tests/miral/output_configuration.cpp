@@ -81,6 +81,14 @@ struct OutputConfigurationTest : miral::TestServer
     std::shared_ptr<TestStrategy> const strategy{std::make_shared<TestStrategy>(test_scale, test_position)};
     miral::OutputConfiguration output_configuration{strategy};
 };
+
+struct OutputConfigurationBeforeInitTest : OutputConfigurationTest
+{
+    OutputConfigurationBeforeInitTest()
+    {
+        start_server_in_setup = false;
+    }
+};
 }
 
 TEST_F(OutputConfigurationTest, strategy_sees_the_outputs)
@@ -124,6 +132,30 @@ TEST_F(OutputConfigurationTest, changes_made_by_an_updated_strategy_reach_the_di
 
     output_configuration.update_strategy(updated_strategy);
 
+    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+
+    auto const configuration = server().the_display()->configuration();
+
+    auto outputs{0};
+
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+        {
+            ++outputs;
+            EXPECT_THAT(output.scale, Eq(updated_scale));
+            EXPECT_THAT(output.top_left, Eq(updated_position));
+        });
+
+    EXPECT_THAT(outputs, Gt(0));
+}
+
+TEST_F(OutputConfigurationBeforeInitTest, updated_strategy_is_applied_when_the_server_initializes)
+{
+    auto const updated_strategy{std::make_shared<TestStrategy>(updated_scale, updated_position)};
+
+    output_configuration.update_strategy(updated_strategy);
+    start_server();
+
+    ASSERT_TRUE(updated_strategy->applied.wait_for(2s));
     ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
 
     auto const configuration = server().the_display()->configuration();
