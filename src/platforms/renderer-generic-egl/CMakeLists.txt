@@ -20,6 +20,13 @@ target_link_libraries(
     PkgConfig::WAYLAND_SERVER
 )
 
+target_include_directories(
+  mirplatformrenderereglgeneric
+
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/platforms
+)
+
 set_target_properties(
   mirplatformrenderereglgeneric
   PROPERTIES
