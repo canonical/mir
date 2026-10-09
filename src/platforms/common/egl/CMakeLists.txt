@@ -2,9 +2,9 @@ add_library(
   mirplatformrenderereglcommonobjects OBJECT
 
   buffer_allocator.cpp
-  buffer_allocator.h
+  ${PROJECT_SOURCE_DIR}/src/include/platforms/common/egl/buffer_allocator.h
   rendering_platform.cpp
-  rendering_platform.h
+  ${PROJECT_SOURCE_DIR}/src/include/platforms/common/egl/rendering_platform.h
 )
 
 target_link_libraries(
@@ -20,6 +20,6 @@ target_link_libraries(
 target_include_directories(
   mirplatformrenderereglcommonobjects
 
-  PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../..
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/include/platforms
 )
