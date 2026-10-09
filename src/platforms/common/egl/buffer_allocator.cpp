@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "buffer_allocator.h"
+#include <common/egl/buffer_allocator.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/anonymous_shm_file.h>

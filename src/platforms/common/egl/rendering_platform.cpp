@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rendering_platform.h"
-#include "buffer_allocator.h"
+#include <common/egl/rendering_platform.h>
+#include <common/egl/buffer_allocator.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/platform.h>
 #include <mir/graphics/egl_error.h>
