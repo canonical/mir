@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "rendering_platform.h"
-#include "buffer_allocator.h"
+#include <common/egl/rendering_platform.h>
+#include <common/egl/buffer_allocator.h>
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/platform.h>
 #include <mir/graphics/egl_error.h>
@@ -41,7 +41,7 @@ auto create_default_display() -> EGLDisplay
     {
         // Explicitly create a Surfaceless display, when the extension is supported
         mg::EGLExtensions ext;
-        return ext.platform_base->eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr);
+        return ext.platform_base->eglGetPlatformDisplay(EGL_PLATFORM_SURFACELESS_MESA, EGL_DEFAULT_DISPLAY, nullptr); // TICS -bugprone-unchecked-optional-access
     }
     // Otherwise, hope that the EGL implementation can pull a functional EGLDisplay out of its hat
     return eglGetDisplay(EGL_DEFAULT_DISPLAY);
@@ -63,7 +63,7 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayPlatform>
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
-    EGLint major, minor;
+    EGLint major = 0, minor = 0;
     if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
@@ -90,10 +90,10 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
         EGL_NONE
     };
 
-    EGLConfig cfg;
+    EGLConfig cfg{EGL_NO_CONFIG_KHR};
     if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        EGLint num_configs;
+        EGLint num_configs{0};
 
         if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
         {

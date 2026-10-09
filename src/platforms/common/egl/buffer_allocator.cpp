@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "buffer_allocator.h"
+#include <common/egl/buffer_allocator.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/anonymous_shm_file.h>
@@ -77,10 +77,10 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_wit
         EGL_NONE
     };
 
-    EGLConfig cfg;
+    EGLConfig cfg{EGL_NO_CONFIG_KHR};
     if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        EGLint num_configs;
+        EGLint num_configs{0};
 
         if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
         {
@@ -115,7 +115,7 @@ public:
     {
     }
 
-    ~SurfacelessEGLContext() override
+    ~SurfacelessEGLContext() override // TICS -bugprone-exception-escape
     {
         make_current();
         release_current();

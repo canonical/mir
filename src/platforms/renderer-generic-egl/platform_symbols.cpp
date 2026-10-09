@@ -18,7 +18,7 @@
 #define MIR_LOG_COMPONENT "gbm-kms"
 #include <mir/log.h>
 
-#include "rendering_platform.h"
+#include <common/egl/rendering_platform.h>
 #include <mir/module_deleter.h>
 #include <mir/assert_module_entry_point.h>
 #include <mir/libname.h>
