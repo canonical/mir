@@ -90,7 +90,7 @@ For these reasons, they should usually only be enabled using
 
 It is up to you how you identify the clients with access to Privileged
 Wayland extensions. To help with this, Mir provides some reliable
-client credentials via an the `EnableInfo::creds` method. The returned
+client credentials via the `EnableInfo::creds` method. The returned
 `ApplicationCredentials` object provides the following information:
 
 - The client's process ID, user ID, and group ID, valid at the time of connection.
@@ -118,5 +118,5 @@ In Miriway, trusted "shell components" have to be `fork()/exec()`d
 by Miriway, and are identified by PID. This is handled by
 `miriway::ChildControl` in [`miriway_child_control.cpp`](https://github.com/Miriway/Miriway/blob/main/miriway_child_control.cpp).
 
-In addition, There's a `shell-component` configuration option to allow
+In addition, there's a `shell-component` configuration option to allow
 these programs to be specified by a Desktop Environment using Miriway.
