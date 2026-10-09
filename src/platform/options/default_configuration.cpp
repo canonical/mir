@@ -226,10 +226,10 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Useful for screencasting.")
         (cursor_opt,
             po::value<std::string>()->default_value("auto"),
-            "Cursor type:\n"
-            " - `auto`: use hardware if available, or fallback to software.\n"
-            " - `null`: cursor disabled.\n"
-            " - `software`: always use software cursor.")
+            "Cursor type:\n\n"
+            "- `auto`: use hardware if available, or fallback to software.\n"
+            "- `null`: cursor disabled.\n"
+            "- `software`: always use software cursor.")
         (enable_key_repeat_opt, po::value<bool>()->default_value(true),
             "Enable server generated key repeat.")
         (idle_timeout_opt, po::value<int>()->default_value(0),
@@ -242,12 +242,12 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Useful when developing Mir servers.")
         (console_provider,
             po::value<std::string>()->default_value("auto"),
-            "Method used to handle console-related tasks (device handling, VT switching, etc):\n"
-            " - `logind`: use logind.\n"
-            " - `vt`: use the Linux VT subsystem. Requires root.\n"
-            " - `none`: support no console-related tasks. Useful for nested platforms which do not "
+            "Method used to handle console-related tasks (device handling, VT switching, etc):\n\n"
+            "- `logind`: use logind.\n"
+            "- `vt`: use the Linux VT subsystem. Requires root.\n"
+            "- `none`: support no console-related tasks. Useful for nested platforms which do not "
             "need raw device access and which don't have a VT concept.\n"
-            " - `auto`: detect the appropriate provider.")
+            "- `auto`: detect the appropriate provider.")
         (vt_option_name,
             boost::program_options::value<int>()->default_value(0),
             "VT to run on or 0 to use current. "
@@ -261,7 +261,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
     auto known_tags = mir::logging::list_known_tags();
     std::ranges::sort(known_tags); // Output tags in alphabetical order for consistency and readability
     std::ranges::copy(
-        known_tags | std::views::transform([](std::string const& tag) { return " - " + tag; }) | std::views::join_with('\n'),
+        known_tags | std::views::transform([](std::string const& tag) { return "- " + tag; }) | std::views::join_with('\n'),
         std::back_inserter(tags)
     );
 
@@ -279,9 +279,9 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level\n"
             "except for graphics (and its children), which will be enabled at the debug level.\n"
             "\n"
-            "Tags can be specified by their full heirarchy (e.g. “base/graphics”) or by their name (eg: “graphics”) if unambiguous.\n"
+            "Tags can be specified by their full hierarchy (e.g. “base/graphics”) or by their name (e.g.: “graphics”) if unambiguous.\n"
             "\n"
-            "Possible tags to filter on are:\n"
+            "Possible tags to filter on are:\n\n"
             + tags).c_str());
 
     add_platform_options();
@@ -432,8 +432,8 @@ std::string escape_markdown(std::string const& text)
         case '\"':
             escaped_text << "&quot;";
             break;
-        case '\'':
-            escaped_text << "&apos;";
+        case '*':
+            escaped_text << "\\*";
             break;
         default:
             escaped_text << c;
@@ -500,7 +500,7 @@ std::string options_to_markdown(const std::string& module_name, const boost::pro
     for (auto& o: options)
     {
         text << "\n";
-        text << "(" << make_markdown_label(module_name) << "-" << make_markdown_label(o->long_name()) << ")=\n";
+        text << "(" << make_markdown_label(module_name) << "-" << make_markdown_label(o->long_name()) << ")=\n\n";
         text << "### `" << o->long_name() << "`\n";
         text << "\n";
         text << escape_markdown(o->description()) << "\n";
@@ -596,7 +596,7 @@ void mo::DefaultConfiguration::parse_arguments(
                 {
                     auto const describe_module = platform->load_function<mir::graphics::DescribeModule>("describe_graphics_module", MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                     auto const module_name = describe_module()->name;
-                    help_text << "## Options for " << module_name << " platform\n";
+                    help_text << "\n## Options for " << module_name << " platform\n";
                     help_text << options_to_markdown(module_name, module_desc);
                 }
             }

@@ -207,15 +207,15 @@ auto to_handedness(std::optional<std::string> const& opt_val)-> std::optional<Mi
 
 void miral::add_input_device_configuration_options_to(mir::Server& server)
 {
-    server.add_configuration_option(mouse_handedness_opt, std::format("Mouse laterality:\n"
-                                                                      " - `{}`: left button is primary.\n"
-                                                                      " - `{}`: right button is primary.",
+    server.add_configuration_option(mouse_handedness_opt, std::format("Mouse laterality:\n\n"
+                                                                      "- `{}`: left button is primary.\n"
+                                                                      "- `{}`: right button is primary.",
                                                                       right, left),
     mir::OptionType::string);
     server.add_configuration_option(mouse_cursor_acceleration_opt,
-                                    std::format("Acceleration profile for mice and trackballs:\n"
-                                                " - `{}`: no acceleration.\n"
-                                                " - `{}`: cursor is accelerated.",
+                                    std::format("Acceleration profile for mice and trackballs:\n\n"
+                                                "- `{}`: no acceleration.\n"
+                                                "- `{}`: cursor is accelerated.",
                                                 acceleration_none,
                                                 acceleration_adaptive),
                                     mir::OptionType::string);
@@ -246,9 +246,9 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 				    "If enabled 1, 2, and 3 finger taps are mapped to left, right, middle click events. [true, false]",
                                     mir::OptionType::boolean);
     server.add_configuration_option(touchpad_cursor_acceleration_opt,
-                                    std::format("Acceleration profile for touchpads:\n"
-                                                " - `{}`: no acceleration.\n"
-                                                " - `{}`: cursor accelerates.",
+                                    std::format("Acceleration profile for touchpads:\n\n"
+                                                "- `{}`: no acceleration.\n"
+                                                "- `{}`: cursor accelerates.",
                                                 acceleration_none,
                                                 acceleration_adaptive),
                                     mir::OptionType::string);
@@ -271,10 +271,10 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 
     server.add_configuration_option(touchpad_scroll_mode_opt,
                                     std::format("Scroll mode for touchpads. "
-                                                "Generates scroll events when:\n"
-                                                " - `{}`: single finger moves on right or bottom edges of touchpad.\n"
-                                                " - `{}`: two fingers move horizontally or vertically.\n"
-                                                " - `{}`: mouse button held down.",
+                                                "Generates scroll events when:\n\n"
+                                                "- `{}`: single finger moves on right or bottom edges of touchpad.\n"
+                                                "- `{}`: two fingers move horizontally or vertically.\n"
+                                                "- `{}`: mouse button held down.",
                                                 touchpad_scroll_mode_edge,
                                                 touchpad_scroll_mode_two_finger,
                                                 touchpad_scroll_mode_button_down_scroll),
@@ -282,10 +282,10 @@ void miral::add_input_device_configuration_options_to(mir::Server& server)
 
     server.add_configuration_option(touchpad_click_mode_opt,
                                     std::format("Click mode for touchpad. "
-                                                "Left, middle and right button click events generated when:\n"
-                                                " - `{}`: no events generated.\n"
-                                                " - `{}`: single finger tap on left, middle or right area.\n"
-                                                " - `{}`: one, two or three fingers present when touchpad pushed down.",
+                                                "Left, middle and right button click events generated when:\n\n"
+                                                "- `{}`: no events generated.\n"
+                                                "- `{}`: single finger tap on left, middle or right area.\n"
+                                                "- `{}`: one, two or three fingers present when touchpad pushed down.",
                                                 touchpad_click_mode_none,
                                                 touchpad_click_mode_area,
                                                 touchpad_click_mode_clickfinger),

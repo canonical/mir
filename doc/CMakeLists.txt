@@ -21,7 +21,7 @@ mir_add_wrapped_executable(demo-config-override NOINSTALL
 target_link_libraries(demo-config-override
   miral
 )
-set(OPTIONS_REFERENCE ${SPHINXDIR}/configuring/reference/options.md.include)
+set(OPTIONS_REFERENCE ${SPHINXDIR}/configuring/reference/options.include.md)
 add_custom_target(
   COMMAND
     ${CMAKE_BINARY_DIR}/bin/demo-mir-compositor --help-markdown
