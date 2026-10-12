@@ -169,9 +169,13 @@ jobs:
       with: *ccache_with
 
     - name: Measure coverage
-      timeout-minutes: 45
-      run: |
-        cmake --build build --target coverage-html
+      timeout-minutes: 95
+      uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
+      with:
+        timeout_minutes: 45
+        max_attempts: 2
+        retry_wait_seconds: 30
+        command: cmake --build build --target coverage-html
 
     - name: Get changed files
       if: github.event_name == 'merge_group'

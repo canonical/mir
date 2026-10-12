@@ -54,6 +54,10 @@ public:
     auto view_area() const -> geometry::Rectangle override;
 
     auto overlay(std::vector<DisplayElement> const& renderlist) -> bool override;
+
+    auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+        -> std::optional<LogicalStacking> override;
+
     void set_next_image(std::unique_ptr<Framebuffer> content) override;
 
     glm::mat2 transformation() const override;
@@ -68,7 +72,7 @@ public:
 
     void for_each_display_sink(
         std::function<void(graphics::DisplaySink&)> const& f) override;
-    void post() override;
+    bool post() override;
     std::chrono::milliseconds recommended_sleep() const override;
 
     auto x11_window() const -> xcb_window_t;

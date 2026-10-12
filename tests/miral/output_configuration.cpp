@@ -81,6 +81,26 @@ struct OutputConfigurationTest : miral::TestServer
     std::shared_ptr<TestStrategy> const strategy{std::make_shared<TestStrategy>(test_scale, test_position)};
     miral::OutputConfiguration output_configuration{strategy};
 };
+
+struct OutputConfigurationDeferredUpdateTest : miral::TestServer
+{
+    OutputConfigurationDeferredUpdateTest()
+    {
+        add_server_init([this](mir::Server& server)
+            {
+                server.add_init_callback([this]
+                    {
+                        output_configuration.update_strategy(updated_strategy);
+                    });
+                output_configuration(server);
+            });
+    }
+
+    std::shared_ptr<TestStrategy> const strategy{std::make_shared<TestStrategy>(test_scale, test_position)};
+    std::shared_ptr<TestStrategy> const updated_strategy{
+        std::make_shared<TestStrategy>(updated_scale, updated_position)};
+    miral::OutputConfiguration output_configuration{strategy};
+};
 }
 
 TEST_F(OutputConfigurationTest, strategy_sees_the_outputs)
@@ -124,6 +144,26 @@ TEST_F(OutputConfigurationTest, changes_made_by_an_updated_strategy_reach_the_di
 
     output_configuration.update_strategy(updated_strategy);
 
+    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+
+    auto const configuration = server().the_display()->configuration();
+
+    auto outputs{0};
+
+    configuration->for_each_output([&](mg::DisplayConfigurationOutput const& output)
+        {
+            ++outputs;
+            EXPECT_THAT(output.scale, Eq(updated_scale));
+            EXPECT_THAT(output.top_left, Eq(updated_position));
+        });
+
+    EXPECT_THAT(outputs, Gt(0));
+}
+
+TEST_F(OutputConfigurationDeferredUpdateTest, strategy_updated_before_controller_capture_is_applied)
+{
+    EXPECT_THAT(strategy->applied_outputs.load(), Gt(0));
+    ASSERT_TRUE(updated_strategy->applied.wait_for(2s));
     ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
 
     auto const configuration = server().the_display()->configuration();
