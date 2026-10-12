@@ -19,6 +19,7 @@ target_link_libraries(mirrendererblitter
     mircore
     mirrenderercommon
   PRIVATE
+    graphics_platform_common
     mirgl
     PkgConfig::EGL
     PkgConfig::GLESv2

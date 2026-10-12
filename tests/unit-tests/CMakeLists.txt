@@ -161,7 +161,6 @@ target_link_libraries(
   ${UNIT_TEST_REFERENCES}
   exampleserverconfig
   mircommon
-  graphics_platform_common
   mirrendererblitter
 
   mir-test-static
