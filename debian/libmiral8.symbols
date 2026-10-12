@@ -485,7 +485,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowInfo::window() const@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowInfo::~WindowInfo()@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::WindowManagementPolicy()@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_create(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_delete(miral::Zone const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_application_zone_update(miral::Zone const&, miral::Zone const&)@MIRAL_6.0" 6.0.0
@@ -501,8 +500,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::WindowManagementPolicy::advise_output_create(miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_output_delete(miral::Output const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_output_update(miral::Output const&, miral::Output const&)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_raise(std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
- (c++)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_resize(miral::WindowInfo const&, mir::geometry::generic::Size<int> const&)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::advise_state_change(miral::WindowInfo const&, MirWindowState)@MIRAL_6.0" 6.0.0
  (c++)"miral::WindowManagementPolicy::~WindowManagementPolicy()@MIRAL_6.0" 6.0.0
@@ -746,6 +743,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++|arch-bits=32)"miral::LocatePointer::delay(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=32)"miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=32)"miral::SlowKeys::hold_delay(std::chrono::duration<long long, std::ratio<1ll, 1000ll> >)@MIRAL_6.0" 6.0.0
+ (c++|arch-bits=32)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 4294967295u>)@MIRAL_6.0" 6.0.0
+ (c++|arch-bits=32)"miral::WindowManagementPolicy::advise_raise(std::span<miral::Window const, 4294967295u>)@MIRAL_6.0" 6.0.0
+ (c++|arch-bits=32)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 4294967295u>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 4294967295u> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<float const, 4294967295u>, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 4294967295u> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=32)"miral::live_config::IniFile::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 4294967295u> >)>)@MIRAL_6.0" 6.0.0
@@ -764,6 +764,9 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++|arch-bits=64)"miral::LocatePointer::delay(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::SimulatedSecondaryClick::hold_duration(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::SlowKeys::hold_delay(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_6.0" 6.0.0
+ (c++|arch-bits=64)"miral::WindowManagementPolicy::advise_adding_to_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
+ (c++|arch-bits=64)"miral::WindowManagementPolicy::advise_raise(std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
+ (c++|arch-bits=64)"miral::WindowManagementPolicy::advise_removing_from_workspace(std::shared_ptr<miral::Workspace> const&, std::span<miral::Window const, 18446744073709551615ul>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_floats_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<float const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<float const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFile::add_ints_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<int const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
@@ -777,8 +780,10 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (c++|arch-bits=64)"miral::live_config::IniFileWithOverrides::add_strings_attribute(miral::live_config::Key const&, std::basic_string_view<char, std::char_traits<char> >, std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul>, std::function<void (miral::live_config::Key const&, std::optional<std::span<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > const, 18446744073709551615ul> >)>)@MIRAL_6.0" 6.0.0
  (optional)MIRAL_6.1@MIRAL_6.1 6.1.0
- (c++)"miral::OutputConfiguration::NullStrategy::apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput, 18446744073709551615ul>)@MIRAL_6.1" 6.1.0
- (c++)"miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const, 18446744073709551615ul>)@MIRAL_6.1" 6.1.0
+ (c++|arch-bits=32)"miral::OutputConfiguration::NullStrategy::apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput, 4294967295u>)@MIRAL_6.1" 6.1.0
+ (c++|arch-bits=32)"miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const, 4294967295u>)@MIRAL_6.1" 6.1.0
+ (c++|arch-bits=64)"miral::OutputConfiguration::NullStrategy::apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput, 18446744073709551615ul>)@MIRAL_6.1" 6.1.0
+ (c++|arch-bits=64)"miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const, 18446744073709551615ul>)@MIRAL_6.1" 6.1.0
  (c++)"miral::OutputConfiguration::NullStrategy::~NullStrategy()@MIRAL_6.1" 6.1.0
  (c++)"miral::OutputConfiguration::OutputConfiguration()@MIRAL_6.1" 6.1.0
  (c++)"miral::OutputConfiguration::OutputConfiguration(miral::OutputConfiguration const&)@MIRAL_6.1" 6.1.0
