@@ -179,6 +179,17 @@ public:
         std::string const& description,
         OptionType type);
 
+    /// Override the default value of a configuration option provided by Mir or a
+    /// platform module, e.g. to change Mir's defaults for this server. It is ignored
+    /// if no such option is provided, and std::logic_error is thrown during
+    /// initialisation if its type does not match the option. To set the default of
+    /// an option added by add_configuration_option(), pass it to that function instead.
+    void set_configuration_option_default(std::string const& option, int default_value);
+    void set_configuration_option_default(std::string const& option, double default_value);
+    void set_configuration_option_default(std::string const& option, std::string const& default_value);
+    void set_configuration_option_default(std::string const& option, char const* default_value);
+    void set_configuration_option_default(std::string const& option, bool default_value);
+
     /// Set a handler for any command line options Mir does not recognise.
     /// This will be invoked if any unrecognised options are found during initialisation.
     /// Any unrecognised arguments are passed to this function. The pointers remain valid

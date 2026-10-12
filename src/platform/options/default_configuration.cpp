@@ -77,6 +77,45 @@ char const* const mo::vt_switching_option_name = "vt-switching";
 namespace
 {
 bool const enable_input_default        = true;
+
+void report_unknown_arguments(int argc, char const* const* argv)
+{
+    if (argc)
+    {
+        std::ostringstream help_text;
+        help_text << "Unknown command line options:";
+        for (auto opt = argv; opt != argv+argc ; ++opt)
+            help_text << ' ' << *opt;
+        BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
+    }
+}
+
+void set_option_defaults(
+    boost::program_options::options_description const& desc,
+    std::map<std::string, mo::OptionDefault> const& option_defaults)
+{
+    for (auto const& option : desc.options())
+    {
+        auto const found = option_defaults.find(option->long_name());
+        if (found == option_defaults.end())
+            continue;
+
+        std::visit(
+            [&](auto const& value)
+            {
+                using T = std::decay_t<decltype(value)>;
+                auto const typed = dynamic_cast<boost::program_options::typed_value<T> const*>(option->semantic().get());
+                if (!typed)
+                {
+                    BOOST_THROW_EXCEPTION(std::logic_error(
+                        "Default for option '" + found->first + "' does not match the option's type"));
+                }
+                // The semantic was created non-const by whoever added the option; only access to it is const
+                const_cast<boost::program_options::typed_value<T>*>(typed)->default_value(value);
+            },
+            found->second);
+    }
+}
 }
 
 mo::DefaultConfiguration::DefaultConfiguration(int argc, char const* argv[]) :
@@ -88,19 +127,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
     int argc,
     char const* argv[],
     std::string const& config_file) :
-    DefaultConfiguration(argc, argv,
-        [](int argc, char const* const* argv)
-        {
-            if (argc)
-            {
-                std::ostringstream help_text;
-                help_text << "Unknown command line options:";
-                for (auto opt = argv; opt != argv+argc ; ++opt)
-                    help_text << ' ' << *opt;
-                BOOST_THROW_EXCEPTION(mir::AbnormalExit(help_text.str()));
-            }
-        },
-        config_file)
+    DefaultConfiguration(argc, argv, {}, config_file, {})
 {
 }
 
@@ -178,10 +205,21 @@ mo::DefaultConfiguration::DefaultConfiguration(
     char const* argv[],
     std::function<void(int argc, char const* const* argv)> const& handler,
     std::string const& config_file) :
+    DefaultConfiguration(argc, argv, handler, config_file, {})
+{
+}
+
+mo::DefaultConfiguration::DefaultConfiguration(
+    int argc,
+    char const* argv[],
+    std::function<void(int argc, char const* const* argv)> const& handler,
+    std::string const& config_file,
+    std::map<std::string, OptionDefault> const& option_defaults) :
     config_file{config_file},
+    option_defaults{option_defaults},
     argc(argc),
     argv(argv),
-    unparsed_arguments_handler{handler},
+    unparsed_arguments_handler{handler ? handler : report_unknown_arguments},
     program_options(std::make_shared<boost::program_options::options_description>(
         description_text(argv[0], config_file)))
 {
@@ -284,6 +322,7 @@ mo::DefaultConfiguration::DefaultConfiguration(
             "Possible tags to filter on are:\n"
             + tags).c_str());
 
+    set_option_defaults(*program_options, option_defaults);
     add_platform_options();
 }
 
@@ -335,6 +374,7 @@ void mo::DefaultConfiguration::add_platform_options()
                 assert(inserted && "Attempted to add platform options twice for the same module");
 
                 add_platform_options(options->second);
+                set_option_defaults(options->second, option_defaults);
             }
             catch (std::runtime_error&)
             {
