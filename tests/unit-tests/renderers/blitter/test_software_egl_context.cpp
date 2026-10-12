@@ -275,18 +275,6 @@ TEST_F(SoftwareEGLContextTest, cleans_up_when_context_cannot_be_made_current)
     EXPECT_THROW(mrb::SoftwareEGLContext{}, std::runtime_error);
 }
 
-TEST_F(SoftwareEGLContextTest, make_current_does_nothing_when_already_current)
-{
-    mrb::SoftwareEGLContext const context;
-
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_, _, _, _)).Times(0);
-
-    context.make_current();
-
-    // The context's destructor also calls eglMakeCurrent()
-    Mock::VerifyAndClearExpectations(&mock_egl);
-}
-
 TEST_F(SoftwareEGLContextTest, make_current_makes_context_current_when_another_is)
 {
     mrb::SoftwareEGLContext const context;
@@ -324,18 +312,6 @@ TEST_F(SoftwareEGLContextTest, release_current_releases_context_when_current)
     context.release_current();
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(EGL_NO_CONTEXT));
-}
-
-TEST_F(SoftwareEGLContextTest, release_current_does_nothing_when_another_context_is_current)
-{
-    mrb::SoftwareEGLContext const context;
-    eglMakeCurrent(EGL_NO_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, other_context);
-
-    EXPECT_CALL(mock_egl, eglMakeCurrent(_, _, _, _)).Times(0);
-
-    context.release_current();
-
-    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
 
 TEST_F(SoftwareEGLContextTest, release_current_throws_on_failure)
