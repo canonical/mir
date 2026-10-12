@@ -35,11 +35,11 @@ class BlitterRenderingProvider;
 namespace mir::renderer::blitter
 {
 /// Per-renderer cache of textures.
-/// 
+///
 /// The textures themselves are expensive to create, and the GL fallback is by
 /// definition on the slow path, so we keep them around for as long as their
 /// buffer keeps being submitted.
-/// 
+///
 /// Contents are re-uploaded on each use because the blitter provider gives us
 /// no way to know whether a mapping has changed.
 class TextureCache
@@ -48,7 +48,7 @@ public:
     explicit TextureCache(std::shared_ptr<graphics::BlitterRenderingProvider> blitter);
 
     /// Get a texture containing the current contents of `buffer`
-    /// 
+    ///
     /// \throws std::runtime_error if the buffer cannot be uploaded
     auto get(graphics::Buffer const& buffer) -> graphics::gl::Texture&;
 
@@ -63,18 +63,18 @@ private:
     {
     public:
         MappedBufferTexture();
-    
+
         auto shader(graphics::gl::ProgramFactory& factory) const -> graphics::gl::Program const& override;
         auto layout() const -> Layout override;
         void bind() override;
         auto tex_id() const -> GLuint override;
         void add_syncpoint() override;
         void upload(graphics::BlitterRenderingProvider& blitter, graphics::Buffer const& buffer);
-    
+
     private:
         common::TextureHandle const texture;
     };
-    
+
     struct Entry
     {
         std::unique_ptr<MappedBufferTexture> texture;

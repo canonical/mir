@@ -135,7 +135,7 @@ void mrb::TextureCache::MappedBufferTexture::upload(mg::BlitterRenderingProvider
     }
 
     auto const size = mapping->size();
-    
+
     // As elsewhere in Mir we assume the stride is a whole number of pixels, which is technically
     // not always true, but no client has yet been observed doing otherwise.
     auto const stride_in_px = mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(mapping->format());
