@@ -140,6 +140,11 @@ void mrb::TextureCache::MappedBufferTexture::upload(mg::BlitterRenderingProvider
     // not always true, but no client has yet been observed doing otherwise.
     auto const stride_in_px = mapping->stride().as_int() / MIR_BYTES_PER_PIXEL(mapping->format());
 
+    GLint previous_row_length{0};
+    GLint previous_alignment{4};
+    glGetIntegerv(GL_UNPACK_ROW_LENGTH_EXT, &previous_row_length);
+    glGetIntegerv(GL_UNPACK_ALIGNMENT, &previous_alignment);
+
     bind();
     glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, stride_in_px);
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -150,6 +155,6 @@ void mrb::TextureCache::MappedBufferTexture::upload(mg::BlitterRenderingProvider
         0, format, type, mapping->data());
 
     // Be nice to other users of the GL context by reverting our changes to shared state
-    glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, 0);
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+    glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, previous_row_length);
+    glPixelStorei(GL_UNPACK_ALIGNMENT, previous_alignment);
 }
