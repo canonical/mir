@@ -359,7 +359,7 @@ INSTANTIATE_TEST_SUITE_P(
         DisableCase{"RefreshDisconnectedConnector", &mga::AtomicKMSOutput::refresh_hardware_state, true}),
     [](TestParamInfo<DisableCase> const& info) { return info.param.name; });
 
-TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request)
+TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_returns_false)
 {
     auto output_under_test = output();
     EXPECT_CALL(
@@ -375,7 +375,7 @@ TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_frees_request)
     EXPECT_FALSE(output_under_test->set_crtc(framebuffer));
 }
 
-TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request)
+TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_returns_false)
 {
     auto output_under_test = output();
     EXPECT_CALL(
