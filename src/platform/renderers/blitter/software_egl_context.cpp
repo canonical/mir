@@ -212,3 +212,13 @@ void mrb::SoftwareEGLContext::release_current() const
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release blitter fallback EGL context"));
     }
 }
+
+auto mrb::preserve_egl_state_unless_current(SoftwareEGLContext const& context)
+    -> std::optional<mg::common::CacheEglState>
+{
+    if (context.is_current())
+    {
+        return std::nullopt;
+    }
+    return mg::common::CacheEglState{};
+}

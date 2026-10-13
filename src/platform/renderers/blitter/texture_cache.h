@@ -34,6 +34,8 @@ class BlitterRenderingProvider;
 
 namespace mir::renderer::blitter
 {
+class SoftwareEGLContext;
+
 /// Per-renderer cache of textures.
 ///
 /// The textures themselves are expensive to create, and the GL fallback is by
@@ -45,17 +47,34 @@ namespace mir::renderer::blitter
 class TextureCache
 {
 public:
-    explicit TextureCache(std::shared_ptr<graphics::BlitterRenderingProvider> blitter);
+    TextureCache(
+        std::shared_ptr<SoftwareEGLContext> context,
+        std::shared_ptr<graphics::BlitterRenderingProvider> blitter);
 
-    /// Get a texture containing the current contents of `buffer`
+    /// \note Leaves the caller's current EGL state unchanged
+    ~TextureCache();
+
+    TextureCache(TextureCache const&) = delete;
+    auto operator=(TextureCache const&) -> TextureCache& = delete;
+
+    /// Make the cache's context current and get a texture containing the current contents of `buffer`
     ///
-    /// \throws std::runtime_error if the buffer cannot be uploaded
+    /// The cache's context is left current, ready to draw with the returned texture. The texture
+    /// remains valid until it is dropped by `drop_unused()` or `invalidate()`, or the cache is destroyed.
+    ///
+    /// \throws std::runtime_error if the context cannot be made current or the buffer cannot be uploaded
     auto get(graphics::Buffer const& buffer) -> graphics::gl::Texture&;
 
     /// Drop every texture not returned by `get()` since the last call
+    ///
+    /// \note Leaves the caller's current EGL state unchanged
+    /// \throws std::runtime_error if the context cannot be made current, no textures are dropped
     void drop_unused();
 
     /// Drop every cached texture
+    ///
+    /// \note Leaves the caller's current EGL state unchanged
+    /// \throws std::runtime_error if the context cannot be made current, no textures are dropped
     void invalidate();
 
 private:
@@ -81,6 +100,7 @@ private:
         bool used_this_frame;
     };
 
+    std::shared_ptr<SoftwareEGLContext> const context;
     std::shared_ptr<graphics::BlitterRenderingProvider> const blitter;
     std::map<graphics::BufferID, Entry> textures;
 };

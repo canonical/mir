@@ -15,8 +15,10 @@
  */
 
 #include "src/platform/renderers/blitter/texture_cache.h"
+#include "src/platform/renderers/blitter/software_egl_context.h"
 
 #include <mir/test/doubles/mock_blitter_rendering_provider.h>
+#include <mir/test/doubles/mock_egl.h>
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/stub_buffer.h>
 
@@ -37,6 +39,9 @@ using namespace testing;
 
 namespace
 {
+auto const surfaceless_display{reinterpret_cast<EGLDisplay>(0x5e7f)};
+auto const other_context{reinterpret_cast<EGLContext>(0x07e4)};
+
 /// The image specified for a texture by a glTexImage2D call
 struct Upload
 {
@@ -98,9 +103,34 @@ class TextureCacheTest : public Test
 public:
     TextureCacheTest()
     {
+        ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
+            .WillByDefault(Return("EGL_EXT_platform_base EGL_MESA_platform_surfaceless"));
+        ON_CALL(mock_egl, eglQueryString(Ne(EGL_NO_DISPLAY), EGL_EXTENSIONS))
+            .WillByDefault(Return(
+                "EGL_KHR_no_config_context EGL_KHR_surfaceless_context EGL_EXT_image_dma_buf_import "
+                "EGL_KHR_image_base"));
+        ON_CALL(mock_egl, eglGetPlatformDisplayEXT(EGL_PLATFORM_SURFACELESS_MESA, _, _))
+            .WillByDefault(Return(surfaceless_display));
+
         ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_names());
         ON_CALL(*blitter, map_buffer(_)).WillByDefault(
             [](mg::Buffer const& buffer) { return dynamic_cast<mtd::StubBuffer const&>(buffer).map_readable(); });
+
+        context = std::make_shared<mrb::SoftwareEGLContext>();
+    }
+
+    void make_other_context_current()
+    {
+        eglMakeCurrent(EGL_NO_DISPLAY, EGL_NO_SURFACE, EGL_NO_SURFACE, other_context);
+    }
+
+    /// A GL action that expects the cache's context to be current when it is called
+    auto expect_context_current()
+    {
+        return [this](auto&&...)
+        {
+            EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
+        };
     }
 
     /// Record every texture image specified into \p uploads, along with the texture it was specified for
@@ -123,7 +153,9 @@ public:
             });
     }
 
+    NiceMock<mtd::MockEGL> mock_egl;
     NiceMock<mtd::MockGL> mock_gl;
+    std::shared_ptr<mrb::SoftwareEGLContext> context;
     std::shared_ptr<NiceMock<mtd::MockBlitterRenderingProvider>> const blitter{
         std::make_shared<NiceMock<mtd::MockBlitterRenderingProvider>>()};
 };
@@ -132,7 +164,7 @@ public:
 TEST_F(TextureCacheTest, get_maps_buffer_through_blitter)
 {
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     EXPECT_CALL(*blitter, map_buffer(Ref(buffer)));
 
@@ -144,7 +176,7 @@ TEST_F(TextureCacheTest, get_uploads_buffer_contents_into_returned_texture)
     std::vector<Upload> uploads;
     record_uploads_into(uploads);
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture = cache.get(buffer).tex_id();
 
@@ -155,7 +187,7 @@ TEST_F(TextureCacheTest, get_uploads_buffer_contents_into_returned_texture)
 TEST_F(TextureCacheTest, get_uploads_buffer_in_matching_gl_format)
 {
     mtd::StubBuffer const buffer{geom::Size{4, 3}, mir_pixel_format_abgr_8888};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, _, _, _, GL_RGBA, GL_UNSIGNED_BYTE, _));
 
@@ -169,7 +201,7 @@ TEST_F(TextureCacheTest, get_uploads_buffer_with_padded_stride)
     auto const format = mir_pixel_format_abgr_8888;
     auto const padded_row_px = 8;
     mtd::StubBuffer const buffer{geom::Size{4, 3}, format, geom::Stride{padded_row_px * MIR_BYTES_PER_PIXEL(format)}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     cache.get(buffer);
 
@@ -181,7 +213,7 @@ TEST_F(TextureCacheTest, get_uploads_buffer_with_padded_stride)
 TEST_F(TextureCacheTest, get_returns_texture_with_gl_layout)
 {
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     EXPECT_THAT(cache.get(buffer).layout(), Eq(mg::gl::Texture::Layout::GL));
 }
@@ -189,7 +221,7 @@ TEST_F(TextureCacheTest, get_returns_texture_with_gl_layout)
 TEST_F(TextureCacheTest, get_returns_same_texture_for_same_buffer)
 {
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     EXPECT_CALL(mock_gl, glGenTextures(_, _));
 
@@ -203,7 +235,7 @@ TEST_F(TextureCacheTest, get_returns_distinct_textures_for_distinct_buffers)
 {
     mtd::StubBuffer const buffer_a{geom::Size{4, 3}};
     mtd::StubBuffer const buffer_b{geom::Size{2, 5}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto& texture_a = cache.get(buffer_a);
     auto& texture_b = cache.get(buffer_b);
@@ -217,7 +249,7 @@ TEST_F(TextureCacheTest, get_reuploads_buffer_contents_on_every_call)
     std::vector<Upload> uploads;
     record_uploads_into(uploads);
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture = cache.get(buffer).tex_id();
     cache.get(buffer);
@@ -228,7 +260,7 @@ TEST_F(TextureCacheTest, get_reuploads_buffer_contents_on_every_call)
 TEST_F(TextureCacheTest, get_throws_when_buffer_cannot_be_mapped)
 {
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
     ON_CALL(*blitter, map_buffer(_)).WillByDefault(ReturnNull());
 
     EXPECT_THROW(cache.get(buffer), std::runtime_error);
@@ -237,7 +269,7 @@ TEST_F(TextureCacheTest, get_throws_when_buffer_cannot_be_mapped)
 TEST_F(TextureCacheTest, get_throws_when_buffer_format_has_no_gl_equivalent)
 {
     mtd::StubBuffer const buffer{geom::Size{4, 3}, mir_pixel_format_bgr_888};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     EXPECT_THROW(cache.get(buffer), std::runtime_error);
 }
@@ -249,7 +281,7 @@ TEST_F(TextureCacheTest, drop_unused_keeps_textures_used_since_last_call)
     ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_into(generated));
     ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(delete_into(deleted));
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture = cache.get(buffer).tex_id();
     cache.drop_unused();
@@ -265,7 +297,7 @@ TEST_F(TextureCacheTest, drop_unused_deletes_textures_not_used_since_last_call)
     ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(delete_into(deleted));
     mtd::StubBuffer const buffer_a{geom::Size{4, 3}};
     mtd::StubBuffer const buffer_b{geom::Size{2, 5}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture_a = cache.get(buffer_a).tex_id();
     auto const texture_b = cache.get(buffer_b).tex_id();
@@ -282,7 +314,7 @@ TEST_F(TextureCacheTest, texture_unused_between_two_drops_is_deleted)
     std::vector<GLuint> deleted;
     ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(delete_into(deleted));
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture = cache.get(buffer).tex_id();
     cache.drop_unused();
@@ -298,7 +330,7 @@ TEST_F(TextureCacheTest, get_after_texture_is_dropped_creates_new_texture)
     ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_into(generated));
     record_uploads_into(uploads);
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     cache.get(buffer);
     cache.drop_unused();
@@ -312,7 +344,7 @@ TEST_F(TextureCacheTest, get_after_texture_is_dropped_creates_new_texture)
 
 TEST_F(TextureCacheTest, drop_unused_on_empty_cache_deletes_nothing)
 {
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     EXPECT_CALL(mock_gl, glDeleteTextures(_, _)).Times(0);
 
@@ -325,7 +357,7 @@ TEST_F(TextureCacheTest, invalidate_deletes_all_textures)
     ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(delete_into(deleted));
     mtd::StubBuffer const buffer_a{geom::Size{4, 3}};
     mtd::StubBuffer const buffer_b{geom::Size{2, 5}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture_a = cache.get(buffer_a).tex_id();
     auto const texture_b = cache.get(buffer_b).tex_id();
@@ -341,7 +373,7 @@ TEST_F(TextureCacheTest, get_after_invalidate_creates_new_texture)
     ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_into(generated));
     record_uploads_into(uploads);
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     cache.get(buffer);
     cache.invalidate();
@@ -357,7 +389,7 @@ TEST_F(TextureCacheTest, drop_unused_after_invalidate_deletes_nothing_further)
     std::vector<GLuint> deleted;
     ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(delete_into(deleted));
     mtd::StubBuffer const buffer{geom::Size{4, 3}};
-    mrb::TextureCache cache{blitter};
+    mrb::TextureCache cache{context, blitter};
 
     auto const texture = cache.get(buffer).tex_id();
     cache.invalidate();
@@ -373,11 +405,179 @@ TEST_F(TextureCacheTest, destroying_cache_deletes_its_textures)
     ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(delete_into(deleted));
     mtd::StubBuffer const buffer_a{geom::Size{4, 3}};
     mtd::StubBuffer const buffer_b{geom::Size{2, 5}};
-    auto cache = std::make_unique<mrb::TextureCache>(blitter);
+    auto cache = std::make_unique<mrb::TextureCache>(context, blitter);
 
     auto const texture_a = cache->get(buffer_a).tex_id();
     auto const texture_b = cache->get(buffer_b).tex_id();
     cache.reset();
 
     EXPECT_THAT(deleted, UnorderedElementsAre(texture_a, texture_b));
+}
+
+TEST_F(TextureCacheTest, get_uploads_with_context_current_and_leaves_it_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    make_other_context_current();
+
+    EXPECT_CALL(mock_gl, glGenTextures(_, _)).WillOnce(DoAll(expect_context_current(), generate_names()));
+    EXPECT_CALL(mock_gl, glTexImage2D(GL_TEXTURE_2D, 0, _, _, _, _, _, _, _)).WillOnce(expect_context_current());
+
+    cache.get(buffer);
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
+}
+
+TEST_F(TextureCacheTest, get_throws_when_context_cannot_be_made_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    make_other_context_current();
+    ON_CALL(mock_egl, eglMakeCurrent(_, _, _, mock_egl.fake_egl_context)).WillByDefault(Return(EGL_FALSE));
+
+    EXPECT_CALL(mock_gl, glTexImage2D(_, _, _, _, _, _, _, _, _)).Times(0);
+
+    EXPECT_THROW(cache.get(buffer), std::runtime_error);
+}
+
+TEST_F(TextureCacheTest, drop_unused_deletes_textures_with_context_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    auto const texture = cache.get(buffer).tex_id();
+    cache.drop_unused();
+    make_other_context_current();
+
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(texture))).WillOnce(expect_context_current());
+
+    cache.drop_unused();
+}
+
+TEST_F(TextureCacheTest, drop_unused_restores_previously_current_context)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    cache.get(buffer);
+    cache.drop_unused();
+    make_other_context_current();
+
+    cache.drop_unused();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+}
+
+TEST_F(TextureCacheTest, drop_unused_leaves_context_current_if_it_already_was)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    cache.get(buffer);
+    cache.drop_unused();
+    context->make_current();
+
+    cache.drop_unused();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
+}
+
+TEST_F(TextureCacheTest, drop_unused_with_nothing_to_drop_does_not_switch_context)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    cache.get(buffer);
+    make_other_context_current();
+
+    EXPECT_CALL(mock_egl, eglMakeCurrent(_, _, _, _)).Times(0);
+
+    cache.drop_unused();
+    Mock::VerifyAndClearExpectations(&mock_egl);
+}
+
+TEST_F(TextureCacheTest, drop_unused_throws_and_keeps_textures_when_context_cannot_be_made_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    cache.get(buffer);
+    cache.drop_unused();
+    make_other_context_current();
+    ON_CALL(mock_egl, eglMakeCurrent(_, _, _, mock_egl.fake_egl_context)).WillByDefault(Return(EGL_FALSE));
+
+    EXPECT_CALL(mock_gl, glDeleteTextures(_, _)).Times(0);
+
+    EXPECT_THROW(cache.drop_unused(), std::runtime_error);
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+    Mock::VerifyAndClearExpectations(&mock_gl);
+}
+
+TEST_F(TextureCacheTest, invalidate_deletes_textures_with_context_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    auto const texture = cache.get(buffer).tex_id();
+    make_other_context_current();
+
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(texture))).WillOnce(expect_context_current());
+
+    cache.invalidate();
+}
+
+TEST_F(TextureCacheTest, invalidate_restores_previously_current_context)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    mrb::TextureCache cache{context, blitter};
+    cache.get(buffer);
+    make_other_context_current();
+
+    cache.invalidate();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+}
+
+TEST_F(TextureCacheTest, invalidate_on_empty_cache_does_not_switch_context)
+{
+    mrb::TextureCache cache{context, blitter};
+    make_other_context_current();
+
+    EXPECT_CALL(mock_egl, eglMakeCurrent(_, _, _, _)).Times(0);
+
+    cache.invalidate();
+    Mock::VerifyAndClearExpectations(&mock_egl);
+}
+
+TEST_F(TextureCacheTest, destroying_cache_deletes_textures_with_context_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    auto cache = std::make_unique<mrb::TextureCache>(context, blitter);
+    auto const texture = cache->get(buffer).tex_id();
+    make_other_context_current();
+
+    EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(texture))).WillOnce(expect_context_current());
+
+    cache.reset();
+}
+
+TEST_F(TextureCacheTest, destroying_cache_restores_previously_current_context)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    auto cache = std::make_unique<mrb::TextureCache>(context, blitter);
+    cache->get(buffer);
+    make_other_context_current();
+
+    cache.reset();
+
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+}
+
+TEST_F(TextureCacheTest, destroying_cache_does_not_delete_in_another_context_when_context_cannot_be_made_current)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    auto cache = std::make_unique<mrb::TextureCache>(context, blitter);
+    cache->get(buffer);
+    make_other_context_current();
+    ON_CALL(mock_egl, eglMakeCurrent(_, _, _, mock_egl.fake_egl_context)).WillByDefault(Return(EGL_FALSE));
+
+    ON_CALL(mock_gl, glDeleteTextures(_, _)).WillByDefault(
+        [](auto, auto) { EXPECT_THAT(eglGetCurrentContext(), Ne(other_context)); });
+
+    EXPECT_NO_THROW(cache.reset());
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }

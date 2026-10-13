@@ -17,6 +17,7 @@
 #define MIR_LOG_COMPONENT "BlitterRenderer"
 
 #include "texture_cache.h"
+#include "software_egl_context.h"
 
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/gl_format.h>
@@ -26,6 +27,7 @@
 
 #include <GLES2/gl2ext.h>
 #include <boost/throw_exception.hpp>
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
@@ -42,13 +44,47 @@ auto make_texture() -> mir::renderer::common::TextureHandle
 }
 }
 
-mrb::TextureCache::TextureCache(std::shared_ptr<mg::BlitterRenderingProvider> blitter)
-    : blitter{std::move(blitter)}
+mrb::TextureCache::TextureCache(
+    std::shared_ptr<SoftwareEGLContext> context,
+    std::shared_ptr<mg::BlitterRenderingProvider> blitter)
+    : context{std::move(context)},
+      blitter{std::move(blitter)}
 {
+}
+
+mrb::TextureCache::~TextureCache()
+{
+    if (textures.empty())
+    {
+        return;
+    }
+
+    auto const restore_egl_state = preserve_egl_state_unless_current(*context);
+    try
+    {
+        context->make_current();
+    }
+    catch (...)
+    {
+        // Deleting with some other context current could delete *its* textures,
+        // so prefer to leak ours by having no context current at all.
+        mir::log_warning("Failed to make EGL context current to release blitter fallback textures; leaking them");
+        try
+        {
+            context->release_current();
+        }
+        catch (...)
+        {
+        }
+    }
+
+    textures.clear();
 }
 
 auto mrb::TextureCache::get(mg::Buffer const& buffer) -> mg::gl::Texture&
 {
+    context->make_current();
+
     auto& entry = textures[buffer.id()];
     if (!entry.texture)
     {
@@ -65,7 +101,16 @@ auto mrb::TextureCache::get(mg::Buffer const& buffer) -> mg::gl::Texture&
 
 void mrb::TextureCache::drop_unused()
 {
-    std::erase_if(textures, [](auto const& entry) { return !entry.second.used_this_frame; });
+    auto const unused = [](auto const& entry) { return !entry.second.used_this_frame; };
+
+    // This is called every frame, so avoid switching contexts when there's nothing to drop
+    if (std::ranges::any_of(textures, unused))
+    {
+        auto const restore_egl_state = preserve_egl_state_unless_current(*context);
+        context->make_current();
+        std::erase_if(textures, unused);
+    }
+
     for (auto& [_, entry] : textures)
     {
         entry.used_this_frame = false;
@@ -74,6 +119,13 @@ void mrb::TextureCache::drop_unused()
 
 void mrb::TextureCache::invalidate()
 {
+    if (textures.empty())
+    {
+        return;
+    }
+
+    auto const restore_egl_state = preserve_egl_state_unless_current(*context);
+    context->make_current();
     textures.clear();
 }
 

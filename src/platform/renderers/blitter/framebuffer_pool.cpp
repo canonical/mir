@@ -23,13 +23,11 @@
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_error.h>
-#include <mir/graphics/egl_helpers.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/log.h>
 
 #include <GLES2/gl2ext.h>
 #include <boost/throw_exception.hpp>
-#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -60,16 +58,6 @@ auto make_renderbuffer() -> mrb::RenderbufferHandle
     GLuint rb = 0;
     glGenRenderbuffers(1, &rb);
     return mrb::RenderbufferHandle{rb};
-}
-
-/// Capture the current EGL state for restoration on scope exit, unless \p context is already current
-auto preserve_egl_state_unless_current(mrb::SoftwareEGLContext const& context) -> std::optional<mgc::CacheEglState>
-{
-    if (context.is_current())
-    {
-        return std::nullopt;
-    }
-    return mgc::CacheEglState{};
 }
 }
 
