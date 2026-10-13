@@ -374,6 +374,7 @@ linkcheck_ignore = [
     "https://www.mail-archive.com",
     "https://manpages.ubuntu.com",
     "https://archive.org",
+    "https://wiki.ubuntu.com",
 ]
 
 # A regex list of URLs where anchors are ignored by 'make linkcheck'
