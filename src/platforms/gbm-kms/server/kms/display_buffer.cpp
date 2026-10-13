@@ -201,8 +201,11 @@ bool mgg::DisplaySink::post()
     if (needs_set_crtc)
     {
         presentation_succeeded = set_crtc(*scheduled_fb);
-        // SetCrtc is immediate, so the FB is now visible and we have nothing pending
-        visible_fb = std::move(scheduled_fb);
+        if (presentation_succeeded)
+        {
+            // SetCrtc is immediate, so the FB is now visible and we have nothing pending
+            visible_fb = std::move(scheduled_fb);
+        }
         scheduled_fb = nullptr;
 
         needs_set_crtc = false;
