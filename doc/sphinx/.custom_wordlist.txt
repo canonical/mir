@@ -12,6 +12,7 @@ AppArmor
 appfinder
 ASCII
 AUR
+autodetected
 backend
 backends
 barebones
@@ -223,6 +224,7 @@ SceneChangeNotifiers
 screencast
 screencasting
 Screencasting
+severities
 SimulatedSecondaryClick
 sizeof
 SlowKeys
@@ -254,6 +256,8 @@ toolchains
 toolkits
 Tooltip
 toplevel
+touchpad
+touchpads
 tracepoint
 tracepoints
 TSan

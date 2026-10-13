@@ -285,6 +285,7 @@ extensions = [
 exclude_patterns = [
     "doc-cheat-sheet*",
     ".venv*",
+    "*.include.md",
 ]
 
 # Adds custom CSS files, located remotely or in 'html_static_path'.
