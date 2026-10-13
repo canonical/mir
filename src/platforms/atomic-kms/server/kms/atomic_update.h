@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_ATOMIC_KMS_ATOMIC_UPDATE_H_
-#define MIR_ATOMIC_KMS_ATOMIC_UPDATE_H_
+#ifndef MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_UPDATE_H_
+#define MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_UPDATE_H_
 
 #include <xf86drmMode.h>
 
