@@ -576,6 +576,13 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
             std::invalid_argument("set_gamma: mismatch gamma LUT sizes"));
     }
 
+    if (!conf->crtc_props->has_property("GAMMA_LUT"))
+    {
+        mir::log_warning("Output %s has no GAMMA_LUT property to set gamma on",
+                         mgk::connector_name(conf->connector).c_str());
+        return;
+    }
+
     auto drm_lut = std::make_unique<struct drm_color_lut[]>(gamma.red.size());
     for (size_t i = 0; i < gamma.red.size(); ++i)
     {

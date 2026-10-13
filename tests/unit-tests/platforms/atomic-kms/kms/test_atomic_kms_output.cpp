@@ -46,6 +46,7 @@ constexpr int mode_height{1080};
 geom::Size const requested_mode_size{mode_width, mode_height};
 geom::Size const smaller_crtc_size{1280, 720};
 geom::Displacement const source_offset{17, 29};
+mg::GammaCurves const sample_gamma{{1}, {2}, {3}};
 
 auto kms_fixed_point(uint32_t value) -> uint64_t
 {
@@ -111,9 +112,14 @@ public:
     static constexpr uint32_t primary_crtc_mask{1};
 
     AtomicKMSOutputTest()
+        : AtomicKMSOutputTest{true}
+    {
+    }
+
+    explicit AtomicKMSOutputTest(bool with_gamma_lut)
         : drm_fd{mock_drm.open(drm_device, 0)}
     {
-        setup_drm_objects();
+        setup_drm_objects(with_gamma_lut);
     }
 
     auto output(geom::Displacement offset = {}) -> std::unique_ptr<mga::AtomicKMSOutput>
@@ -175,7 +181,7 @@ public:
     mir::Fd drm_fd;
 
 private:
-    void setup_drm_objects()
+    void setup_drm_objects(bool with_gamma_lut)
     {
         constexpr uint16_t horizontal_total{2000};
         constexpr uint16_t vertical_total{1100};
@@ -203,7 +209,10 @@ private:
             drm_device, connector_id, DRM_MODE_OBJECT_CONNECTOR, connector_crtc_property_id, "CRTC_ID");
         mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_active_property_id, "ACTIVE");
         mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_mode_property_id, "MODE_ID");
-        mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_gamma_lut_property_id, "GAMMA_LUT");
+        if (with_gamma_lut)
+        {
+            mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_gamma_lut_property_id, "GAMMA_LUT");
+        }
         add_plane_property(plane_type_property_id, "type", DRM_PLANE_TYPE_PRIMARY);
         add_plane_property(plane_src_x_property_id, "SRC_X");
         add_plane_property(plane_src_y_property_id, "SRC_Y");
@@ -246,6 +255,15 @@ struct DisableCase
 
 class AtomicKMSDisableTest : public AtomicKMSOutputTest, public WithParamInterface<DisableCase>
 {
+};
+
+class AtomicKMSOutputWithoutGammaLutTest : public AtomicKMSOutputTest
+{
+public:
+    AtomicKMSOutputWithoutGammaLutTest()
+        : AtomicKMSOutputTest{false}
+    {
+    }
 };
 }
 
@@ -375,4 +393,16 @@ TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_frees_request)
 
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
+}
+
+TEST_F(AtomicKMSOutputWithoutGammaLutTest, set_gamma_without_gamma_lut_property_is_ignored)
+{
+    auto output_under_test = output();
+    EXPECT_CALL(mock_drm, drmModeCreatePropertyBlob(_, _, _, _)).Times(0);
+    EXPECT_CALL(mock_drm, drmModeAtomicAlloc()).Times(0);
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _, _)).Times(0);
+
+    output_under_test->set_gamma(sample_gamma);
+
+    output_under_test.reset();
 }
