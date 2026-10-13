@@ -97,11 +97,11 @@ private:
     struct Entry
     {
         std::unique_ptr<MappedBufferTexture> texture;
-        bool used_this_frame;
+        bool used_this_frame = false;
     };
 
-    std::shared_ptr<SoftwareEGLContext> const context;
-    std::shared_ptr<graphics::BlitterRenderingProvider> const blitter;
+    std::shared_ptr<SoftwareEGLContext> context;
+    std::shared_ptr<graphics::BlitterRenderingProvider> blitter;
     std::map<graphics::BufferID, Entry> textures;
 };
 }

@@ -179,7 +179,8 @@ void mrb::TextureCache::MappedBufferTexture::upload(mg::BlitterRenderingProvider
         BOOST_THROW_EXCEPTION((std::runtime_error{"Blitter provider failed to map a buffer for CPU access"}));
     }
 
-    GLenum format, type;
+    GLenum format{0};
+    GLenum type{0};
     if (!mg::get_gl_pixel_format(mapping->format(), format, type))
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{
@@ -202,7 +203,7 @@ void mrb::TextureCache::MappedBufferTexture::upload(mg::BlitterRenderingProvider
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
     glTexImage2D(
-        GL_TEXTURE_2D, 0, format,
+        GL_TEXTURE_2D, 0, static_cast<GLint>(format),
         size.width.as_int(), size.height.as_int(),
         0, format, type, mapping->data());
 
