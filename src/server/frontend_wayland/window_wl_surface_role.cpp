@@ -124,7 +124,7 @@ auto mf::WindowWlSurfaceRole::has_buffer() const -> bool
     return surface && surface.value().has_buffer();
 }
 
-void mf::WindowWlSurfaceRole::set_attach_hook(std::function<void()> hook)
+void mf::WindowWlSurfaceRole::set_attach_hook(std::function<std::optional<wayland::ProtocolError>()> hook)
 {
     if (surface)
     {

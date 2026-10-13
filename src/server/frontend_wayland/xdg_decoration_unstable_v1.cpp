@@ -167,15 +167,16 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     if (wl_resource_get_version(resource) < 2)
     {
         tl->set_attach_hook(
-            [weak_decoration = wayland::make_weak(decoration)]()
+            [weak_decoration = wayland::make_weak(decoration)]() -> std::optional<wayland::ProtocolError>
             {
                 if (weak_decoration && !weak_decoration.value().is_configured())
                 {
-                    throw wayland::ProtocolError{
+                    return wayland::ProtocolError{
                         weak_decoration.value().resource,
                         XdgToplevelDecorationV1::Error::unconfigured_buffer,
                         "Buffer attached before the decoration's first configure"};
                 }
+                return std::nullopt;
             });
     }
 
