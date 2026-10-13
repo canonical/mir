@@ -116,12 +116,28 @@ public:
      * must be consumed by `wait_complete` before any further
      * access to the Surface.
      */
-    class Task;
+    class Task
+    {
+    public:
+        Task() = default;
+        virtual ~Task() = default;
+
+        Task(Task const&) = delete;
+        auto operator=(Task const&) -> Task& = delete;
+    };
 
     /**
      * Handle to a target surface for the blitter
      */
-    class Surface;
+    class Surface
+    {
+    public:
+        Surface() = default;
+        virtual ~Surface() = default;
+
+        Surface(Surface const&) = delete;
+        auto operator=(Surface const&) -> Surface& = delete;
+    };
 
     /**
      * Set up any required bookkeeping for rendering.

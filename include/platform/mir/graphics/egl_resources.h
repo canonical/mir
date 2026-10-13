@@ -66,6 +66,25 @@ private:
     EGLSurface egl_surface_;
 };
 
+/// Owns an EGLDisplay, calling eglTerminate() on it upon destruction.
+///
+/// Declare this before any members wrapping resources on the display, so
+/// that they are cleaned up before the display is terminated.
+class EGLDisplayHandle
+{
+public:
+    explicit EGLDisplayHandle(EGLDisplay dpy);
+    ~EGLDisplayHandle() noexcept;
+
+    EGLDisplayHandle(EGLDisplayHandle const&) = delete;
+    EGLDisplayHandle& operator=(EGLDisplayHandle const&) = delete;
+
+    operator EGLDisplay() const;
+
+private:
+    EGLDisplay const dpy;
+};
+
 }
 }
 

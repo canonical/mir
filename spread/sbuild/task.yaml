@@ -112,7 +112,11 @@ execute: |
     fi
 
     # Build the schroot, if it doesn't already exist
-    [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ] || sg sbuild -c "${MKSBUILD_OPTS[*]}"
+    if ! [ -f /etc/schroot/chroot.d/sbuild-${SCHROOT_NAME} ]; then
+      # Clear previously failed chroot
+      rm --recursive --force /var/lib/schroot/chroots/${SCHROOT_NAME}
+      sg sbuild -c "${MKSBUILD_OPTS[*]}"
+    fi
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 
     # use ccache

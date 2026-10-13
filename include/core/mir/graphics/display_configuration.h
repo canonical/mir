@@ -104,6 +104,7 @@ struct DisplayInfo
     DisplayInfo& operator=(std::vector<uint8_t> const& edid);
 
     std::vector<uint8_t> raw_edid;
+    std::optional<uint16_t> physical_address;
     std::optional<std::string> vendor;
     std::optional<std::string> model;
     std::optional<std::string> serial;

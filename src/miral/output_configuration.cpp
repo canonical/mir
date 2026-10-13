@@ -107,8 +107,19 @@ public:
 
     void set_display_configuration_controller(std::weak_ptr<ms::DisplayConfigurationController> dcc)
     {
-        std::lock_guard lock(mutex);
+        std::unique_lock lock(mutex);
         dcc_weak = std::move(dcc);
+
+        if (!applied)
+        {
+            if (auto dcc_shared = dcc_weak.lock())
+            {
+                lock.unlock();
+                auto config = dcc_shared->base_configuration();
+                apply_to(*config);
+                dcc_shared->set_base_configuration(config);
+            }
+        }
     }
 
     void update_strategy(std::shared_ptr<Strategy> strategy)
@@ -119,6 +130,7 @@ public:
             std::lock_guard lock(mutex);
             this->strategy = std::move(strategy);
             dcc = dcc_weak.lock();
+            applied = false;
         }
 
         // Don't hold the lock while reapplying: the controller calls back into apply_to()
@@ -133,6 +145,7 @@ public:
     void apply_to(mg::DisplayConfiguration& conf) override
     {
         std::lock_guard lock(mutex);
+        applied = true;
 
         if (wrapped)
         {
@@ -173,6 +186,7 @@ public:
 private:
     std::mutex mutex;
     std::shared_ptr<Strategy> strategy;
+    bool applied{false};
     std::shared_ptr<mg::DisplayConfigurationPolicy> wrapped{};
     std::weak_ptr<ms::DisplayConfigurationController> dcc_weak{};
 };

@@ -29,6 +29,8 @@ namespace mir::graphics
 {
 namespace common
 {
+auto select_format_from(CPUAddressableDisplayAllocator const& provider) -> DRMFormat;
+
 class CPUCopyOutputSurface : public gl::OutputSurface
 {
 public:

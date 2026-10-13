@@ -35,7 +35,6 @@
 #include <miral/bounce_keys.h>
 #include <miral/slow_keys.h>
 #include <miral/hover_click.h>
-#include <miral/append_keyboard_event_filter.h>
 #include <miral/touch_emulator.h>
 
 #include <mir/abnormal_exit.h>

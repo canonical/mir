@@ -104,8 +104,9 @@ auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     }
     return ctx;
 }
+}
 
-auto select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> mg::DRMFormat
+auto mgc::select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> mg::DRMFormat
 {
     std::optional<mg::DRMFormat> best_format;
     for (auto const format : provider.supported_formats())
@@ -132,7 +133,6 @@ auto select_format_from(mg::CPUAddressableDisplayAllocator const& provider) -> m
         return *best_format;
     }
     BOOST_THROW_EXCEPTION((std::runtime_error{"Non-?RGB8888 formats not yet supported for display"}));
-}
 }
 
 class mgc::CPUCopyOutputSurface::Impl

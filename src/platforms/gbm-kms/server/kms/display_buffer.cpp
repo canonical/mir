@@ -136,6 +136,10 @@ bool mgg::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     return false;
 }
 
+auto mgg::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
+    -> std::optional<LogicalStacking>
+{ return std::nullopt; }
+
 void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
     // When an output is disconnected, its sink will have a size of 0x0.
@@ -149,7 +153,7 @@ void mgg::DisplaySink::for_each_display_sink(std::function<void(graphics::Displa
     f(*this);
 }
 
-void mgg::DisplaySink::set_crtc(FBHandle const& forced_frame)
+bool mgg::DisplaySink::set_crtc(FBHandle const& forced_frame)
 {
     /*
      * Note that failure to set the CRTC is not a fatal error. This can
@@ -159,18 +163,22 @@ void mgg::DisplaySink::set_crtc(FBHandle const& forced_frame)
      * errors, and it's not fatal.
      */
     if (!output->set_crtc(forced_frame))
+    {
         mir::log_error("Failed to set DRM CRTC. "
             "Screen contents may be incomplete. "
             "Try plugging the monitor in again.");
+        return false;
+    }
+    return true;
 }
 
-void mgg::DisplaySink::post()
+bool mgg::DisplaySink::post()
 {
     if (!next_swap)
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
         // Sweet! We can just bail.
-        return;
+        return true;
     }
     /*
      * Otherwise, pull the next frame into the pending slot
@@ -189,9 +197,10 @@ void mgg::DisplaySink::post()
      * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
      * to need to do this on every frame. [will complete in this thread]
      */
+    auto presentation_succeeded = true;
     if (needs_set_crtc)
     {
-        set_crtc(*scheduled_fb);
+        presentation_succeeded = set_crtc(*scheduled_fb);
         // SetCrtc is immediate, so the FB is now visible and we have nothing pending
         visible_fb = std::move(scheduled_fb);
         scheduled_fb = nullptr;
@@ -214,6 +223,8 @@ void mgg::DisplaySink::post()
     auto const min_frame_interval = 1000ms / output->max_refresh_rate();
     if (predicted_render_time < min_frame_interval)
         recommend_sleep = min_frame_interval - predicted_render_time;
+
+    return presentation_succeeded;
 }
 
 std::chrono::milliseconds mgg::DisplaySink::recommended_sleep() const

@@ -387,7 +387,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
                     auto fb = provider->alloc_fb(mg::DRMFormat{DRM_FORMAT_ABGR8888});
                     sink.set_next_image(std::move(fb));
                 });
-           group.post();
+           EXPECT_THAT(group.post(), Eq(true));
         });
 
     /* Second frame: Previous page flips finish (drmHandleEvent) and new ones
@@ -402,7 +402,7 @@ TEST_F(MesaDisplayMultiMonitorTest, flip_flips_all_connected_crtcs)
                     auto fb = provider->alloc_fb(mg::DRMFormat{DRM_FORMAT_ARGB8888});
                     sink.set_next_image(std::move(fb));
                 });
-           group.post();
+           EXPECT_THAT(group.post(), Eq(true));
         });
 }
 

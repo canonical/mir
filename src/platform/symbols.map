@@ -32,6 +32,9 @@ MIR_PLATFORM_2.30 {
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::EGLContextStore*;
     mir::graphics::EGLContextStore::operator*;
+    mir::graphics::EGLDisplayHandle::?EGLDisplayHandle*;
+    mir::graphics::EGLDisplayHandle::EGLDisplayHandle*;
+    mir::graphics::EGLDisplayHandle::operator*;
     mir::graphics::EGLExtensions::BaseExtensions::BaseExtensions*;
     mir::graphics::EGLExtensions::DebugKHR::DebugKHR*;
     mir::graphics::EGLExtensions::DebugKHR::extension_or_null_object*;
