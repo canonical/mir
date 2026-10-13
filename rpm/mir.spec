@@ -86,7 +86,7 @@ BuildRequires:  pkgconfig(nettle)
 BuildRequires:  pkgconfig(umockdev-1.0) >= 0.6
 BuildRequires:  pkgconfig(uuid)
 BuildRequires:  pkgconfig(wayland-server)
-BuildRequires:  pkgconfig(wayland-client)
+BuildRequires:  pkgconfig(wayland-client) >= 1.24
 BuildRequires:  pkgconfig(xcb)
 BuildRequires:  pkgconfig(xcb-composite)
 BuildRequires:  pkgconfig(xcb-xfixes)
