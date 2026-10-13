@@ -23,6 +23,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <ostream>
 #include <string_view>
 #include <stdexcept>
 #include <unistd.h>
@@ -101,6 +102,11 @@ drmModeRes* mtd::FakeDRMResources::resources_ptr()
     return &resources;
 }
 
+drmModePlaneRes* mtd::FakeDRMResources::plane_resources_ptr()
+{
+    return &plane_resources;
+}
+
 void mtd::FakeDRMResources::prepare()
 {
     resources.count_crtcs = crtcs.size();
@@ -117,6 +123,12 @@ void mtd::FakeDRMResources::prepare()
     for (auto const& connector: connectors)
         connector_ids.push_back(connector.connector_id);
     resources.connectors = connector_ids.data();
+
+    plane_resources.count_planes = planes.size();
+    plane_ids.clear();
+    for (auto const& plane : planes)
+        plane_ids.push_back(plane.plane_id);
+    plane_resources.planes = plane_ids.data();
 }
 
 void mtd::FakeDRMResources::reset()
@@ -130,6 +142,12 @@ void mtd::FakeDRMResources::reset()
     crtc_ids.clear();
     encoder_ids.clear();
     connector_ids.clear();
+
+    plane_resources = {};
+    planes.clear();
+    plane_ids.clear();
+    object_properties.clear();
+    properties.clear();
 }
 
 void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode)
@@ -152,6 +170,28 @@ void mtd::FakeDRMResources::add_encoder(uint32_t encoder_id, uint32_t crtc_id,
     encoder.possible_crtcs = possible_crtcs_mask;
 
     encoders.push_back(encoder);
+}
+
+void mtd::FakeDRMResources::add_plane(uint32_t plane_id, uint32_t possible_crtcs_mask)
+{
+    drmModePlane plane{};
+    plane.plane_id = plane_id;
+    plane.possible_crtcs = possible_crtcs_mask;
+    planes.push_back(plane);
+}
+
+void mtd::FakeDRMResources::add_property(
+    uint32_t object_id, uint32_t object_type, uint32_t property_id, char const* name, uint64_t value)
+{
+    auto& property = properties[property_id];
+    property = {};
+    property.prop_id = property_id;
+    std::strncpy(property.name, name, sizeof(property.name) - 1);
+
+    auto& object = object_properties[{object_id, object_type}];
+    object.ids.push_back(property_id);
+    object.values.push_back(value);
+    object.resource = {static_cast<uint32_t>(object.ids.size()), object.ids.data(), object.values.data()};
 }
 
 void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
@@ -210,6 +250,28 @@ drmModeConnector* mtd::FakeDRMResources::find_connector(uint32_t id)
     return nullptr;
 }
 
+drmModePlane* mtd::FakeDRMResources::find_plane(uint32_t id)
+{
+    for (auto& plane : planes)
+    {
+        if (plane.plane_id == id)
+            return &plane;
+    }
+    return nullptr;
+}
+
+drmModeObjectProperties* mtd::FakeDRMResources::find_object_properties(uint32_t id, uint32_t type)
+{
+    auto const it = object_properties.find({id, type});
+    return it == object_properties.end() ? &empty_object_properties : &it->second.resource;
+}
+
+drmModePropertyRes* mtd::FakeDRMResources::find_property(uint32_t id)
+{
+    auto const it = properties.find(id);
+    return it == properties.end() ? nullptr : &it->second;
+}
+
 
 drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t vdisplay,
                                                    uint32_t clock, uint16_t htotal,
@@ -235,8 +297,7 @@ drmModeModeInfo mtd::FakeDRMResources::create_mode(uint16_t hdisplay, uint16_t v
 }
 
 mtd::MockDRM::MockDRM()
-    : empty_object_props{},
-      open_interposer{mir_test_framework::add_open_handler(
+    : open_interposer{mir_test_framework::add_open_handler(
         [this](char const* path, int flags, std::optional<mode_t>) -> std::optional<int>
         {
             char const* const drm_prefix = "/dev/dri/";
@@ -329,8 +390,33 @@ mtd::MockDRM::MockDRM()
                     return fd_to_drm.at(fd).find_connector(connector_id);
                 });
 
+    ON_CALL(*this, drmModeGetPlaneResources(_))
+        .WillByDefault(
+                [this](int fd)
+                {
+                    return fd_to_drm.at(fd).plane_resources_ptr();
+                });
+
+    ON_CALL(*this, drmModeGetPlane(_, _))
+        .WillByDefault(
+                [this](int fd, uint32_t plane_id)
+                {
+                    return fd_to_drm.at(fd).find_plane(plane_id);
+                });
+
     ON_CALL(*this, drmModeObjectGetProperties(_, _, _))
-        .WillByDefault(Return(&empty_object_props));
+        .WillByDefault(
+                [this](int fd, uint32_t id, uint32_t type)
+                {
+                    return fd_to_drm.at(fd).find_object_properties(id, type);
+                });
+
+    ON_CALL(*this, drmModeGetProperty(_, _))
+        .WillByDefault(
+                [this](int fd, uint32_t property_id)
+                {
+                    return fd_to_drm.at(fd).find_property(property_id);
+                });
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
         .WillByDefault(
@@ -411,11 +497,59 @@ mtd::MockDRM::MockDRM()
                 *value = 1;
                 return 0;
             });
+
+    ON_CALL(*this, drmModeCreatePropertyBlob(_, _, _, _))
+        .WillByDefault(
+            [this](int, void const*, size_t, uint32_t* id)
+            {
+                *id = next_property_blob_id++;
+                property_blobs.insert(*id);
+                return 0;
+            });
+    ON_CALL(*this, drmModeDestroyPropertyBlob(_, _))
+        .WillByDefault(
+            [this](int, uint32_t id)
+            {
+                property_blobs.erase(id);
+                return 0;
+            });
+
+    ON_CALL(*this, drmModeAtomicAlloc())
+        .WillByDefault(
+            [this]()
+            {
+                auto request = std::make_unique<drmModeAtomicReq>();
+                auto const ptr = request.get();
+                atomic_requests.emplace(ptr, std::move(request));
+                return ptr;
+            });
+
+    ON_CALL(*this, drmModeAtomicAddProperty(_, _, _, _))
+        .WillByDefault(
+            [](drmModeAtomicReqPtr req, uint32_t object_id, uint32_t property_id, uint64_t value)
+            {
+                req->properties[{object_id, property_id}] = value;
+                return static_cast<int>(++req->cursor);
+            });
+
+    ON_CALL(*this, drmModeAtomicCommit(_, _, _, _))
+        .WillByDefault(Return(0));
+
+    ON_CALL(*this, drmModeAtomicFree(_))
+        .WillByDefault(
+            [this](drmModeAtomicReqPtr req)
+            {
+                // An overridden allocation action may return an untracked request.
+                if (atomic_requests.erase(req) == 0)
+                    delete req;
+            });
 }
 
 mtd::MockDRM::~MockDRM() noexcept
 {
     global_mock = nullptr;
+    EXPECT_THAT(atomic_requests, testing::IsEmpty()) << "Atomic requests were not freed";
+    EXPECT_THAT(property_blobs, testing::IsEmpty()) << "Property blobs were not destroyed";
 }
 
 void mtd::MockDRM::add_crtc(char const *device, uint32_t id, drmModeModeInfo mode)
@@ -432,6 +566,18 @@ void mtd::MockDRM::add_encoder(
     fake_drms[device].add_encoder(encoder_id, crtc_id, possible_crtcs_mask);
 }
 
+void mtd::MockDRM::add_plane(char const* device, uint32_t plane_id, uint32_t possible_crtcs_mask)
+{
+    fake_drms[device].add_plane(plane_id, possible_crtcs_mask);
+}
+
+void mtd::MockDRM::add_property(
+    char const* device, uint32_t object_id, uint32_t object_type, uint32_t property_id,
+    char const* name, uint64_t value)
+{
+    fake_drms[device].add_property(object_id, object_type, property_id, name, value);
+}
+
 void mtd::MockDRM::prepare(char const *device)
 {
     fake_drms[device].prepare();
@@ -440,6 +586,16 @@ void mtd::MockDRM::prepare(char const *device)
 void mtd::MockDRM::reset(char const *device)
 {
     fake_drms[device].reset();
+}
+
+drmModeCrtc* mtd::MockDRM::find_crtc(char const* device, uint32_t id)
+{
+    return fake_drms.at(device).find_crtc(id);
+}
+
+drmModeConnector* mtd::MockDRM::find_connector(char const* device, uint32_t id)
+{
+    return fake_drms.at(device).find_connector(id);
 }
 
 void mtd::MockDRM::generate_event_on(char const *device)
@@ -463,6 +619,12 @@ void mtd::MockDRM::consume_event_on(char const* device)
         BOOST_THROW_EXCEPTION(
             std::system_error(errno, std::system_category(), "Failed to consume fake DRM event"));
     }
+}
+
+testing::Matcher<drmModeAtomicReqPtr> mtd::AtomicRequestWith(
+    testing::Matcher<std::map<AtomicPropertyKey, uint64_t>> properties)
+{
+    return testing::Pointee(testing::Field("properties", &_drmModeAtomicReq::properties, properties));
 }
 
 void mtd::MockDRM::add_connector(
@@ -694,6 +856,16 @@ void drmModeFreeObjectProperties(drmModeObjectPropertiesPtr ptr)
     global_mock->drmModeFreeObjectProperties(ptr);
 }
 
+int drmModeCreatePropertyBlob(int fd, void const* data, size_t size, uint32_t* id)
+{
+    return global_mock->drmModeCreatePropertyBlob(fd, data, size, id);
+}
+
+int drmModeDestroyPropertyBlob(int fd, uint32_t id)
+{
+    return global_mock->drmModeDestroyPropertyBlob(fd, id);
+}
+
 int drmModeAddFB(int fd, uint32_t width, uint32_t height,
                  uint8_t depth, uint8_t bpp, uint32_t pitch,
                  uint32_t bo_handle, uint32_t *buf_id)
@@ -820,5 +992,29 @@ char* drmGetPrimaryDeviceNameFromFd(int fd)
 int drmCheckModesettingSupported(char const* busid)
 {
     return global_mock->drmCheckModesettingSupported(busid);
+}
+
+drmModeAtomicReqPtr drmModeAtomicAlloc()
+{
+    return global_mock->drmModeAtomicAlloc();
+}
+
+int drmModeAtomicAddProperty(
+    drmModeAtomicReqPtr req,
+    uint32_t object_id,
+    uint32_t property_id,
+    uint64_t value)
+{
+    return global_mock->drmModeAtomicAddProperty(req, object_id, property_id, value);
+}
+
+int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req, uint32_t flags, void* user_data)
+{
+    return global_mock->drmModeAtomicCommit(fd, req, flags, user_data);
+}
+
+void drmModeAtomicFree(drmModeAtomicReqPtr req)
+{
+    global_mock->drmModeAtomicFree(req);
 }
 }
