@@ -29,6 +29,7 @@
 #include "protocol/xdg-shell-client.h"
 #include <wayland-client.h>
 #include <EGL/egl.h>
+#include "platform.h"
 
 #include <functional>
 #include <unordered_map>
@@ -56,7 +57,9 @@ public:
         wl_display* display,
         std::shared_ptr<WlDisplayProvider> provider,
         std::optional<std::string> const& app_id,
-        std::optional<std::string> const& title);
+        std::optional<std::string> const& title,
+        bool fullscreen,
+        std::vector<WindowConfig> const& windows);
 
     virtual ~DisplayClient();
 
@@ -66,6 +69,7 @@ protected:
     std::shared_ptr<WlDisplayProvider> const provider;
     std::optional<std::string> const app_id;
     std::optional<std::string> const title;
+    bool const fullscreen;
 
     auto display_configuration() const -> std::unique_ptr<DisplayConfiguration>;
     void for_each_display_sync_group(const std::function<void(DisplaySyncGroup&)>& f);
@@ -168,7 +172,9 @@ protected:
     bool fake_pointer_frame = false;
     geometry::DisplacementF pointer_displacement; // Position of current output
     geometry::Displacement touch_displacement;   // Position of current output
-    int32_t pointer_scale{1};
+    // Converts from host surface coordinates to Mir logical coordinates
+    float pointer_scale{1};
+    float touch_scale{1};
 
     std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry;
 
@@ -176,6 +182,9 @@ protected:
     // Outputs that will be dropped during the next Display::configure(). It is unsafe to actually drop them until then.
     std::vector<std::unique_ptr<Output>> outputs_to_be_deleted;
     std::unordered_map<uint32_t, std::unique_ptr<Output>> bound_outputs;
+    // When not fullscreen, the windows in the order they are laid out
+    std::vector<Output*> windows;
+    void layout_windows();
     std::mutex mutable config_change_handlers_mutex;
     std::vector<DisplayConfigurationChangeHandler> config_change_handlers;
 };

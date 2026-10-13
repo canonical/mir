@@ -98,8 +98,10 @@ mgw::Display::Display(
     std::shared_ptr<GLConfig> const&,
     std::shared_ptr<DisplayReport> const& report,
     std::optional<std::string> const& app_id,
-    std::optional<std::string> const& title) :
-    DisplayClient{wl_display, std::move(provider), app_id, title},
+    std::optional<std::string> const& title,
+    bool fullscreen,
+    std::vector<WindowConfig> const& windows) :
+    DisplayClient{wl_display, std::move(provider), app_id, title, fullscreen, windows},
     report{report},
     shutdown_signal{::eventfd(0, EFD_CLOEXEC)},
     flush_signal{::eventfd(0, EFD_SEMAPHORE)},
@@ -416,8 +418,8 @@ void mir::graphics::wayland::Display::touch_down(
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_down;
         contact->position = geom::PointF{
-            wl_fixed_to_double(x) + touch_displacement.dx.as_int(),
-            wl_fixed_to_double(y) + touch_displacement.dy.as_int()};
+            touch_scale * wl_fixed_to_double(x) + touch_displacement.dx.as_int(),
+            touch_scale * wl_fixed_to_double(y) + touch_displacement.dy.as_int()};
     }
 }
 
@@ -446,8 +448,8 @@ void mir::graphics::wayland::Display::touch_motion(wl_touch* touch, uint32_t tim
         touch_time = std::chrono::milliseconds{time};
         contact->action = mir_touch_action_change;
         contact->position = geom::PointF{
-            wl_fixed_to_double(x) + touch_displacement.dx.as_int(),
-            wl_fixed_to_double(y) + touch_displacement.dy.as_int()};
+            touch_scale * wl_fixed_to_double(x) + touch_displacement.dx.as_int(),
+            touch_scale * wl_fixed_to_double(y) + touch_displacement.dy.as_int()};
     }
 
     DisplayClient::touch_motion(touch, time, id, x, y);

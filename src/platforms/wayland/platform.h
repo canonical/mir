@@ -19,9 +19,12 @@
 
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display.h>
+#include <mir/geometry/size.h>
 
 #include <wayland-client.h>
 #include <wayland-egl.h>
+
+#include <vector>
 
 namespace mir
 {
@@ -31,13 +34,23 @@ namespace wayland
 {
 class WlDisplayProvider;
 
+struct WindowConfig
+{
+    // Size of the window in pixels
+    geometry::Size size;
+    // Scale of the Mir output shown in the window
+    float scale;
+};
+
 class Platform : public graphics::DisplayPlatform
 {
 public:
     Platform(struct wl_display* const wl_display,
         std::shared_ptr<DisplayReport> const& report,
         std::optional<std::string> const& app_id,
-        std::optional<std::string> const& title);
+        std::optional<std::string> const& title,
+        bool fullscreen,
+        std::vector<WindowConfig> windows);
     ~Platform() = default;
 
     UniqueModulePtr<Display> create_display(
@@ -52,6 +65,8 @@ private:
     std::shared_ptr<DisplayReport> const report;
     std::optional<std::string> const app_id;
     std::optional<std::string> const title;
+    bool const fullscreen;
+    std::vector<WindowConfig> const windows;
 
     std::shared_ptr<WlDisplayProvider> const provider;
 };

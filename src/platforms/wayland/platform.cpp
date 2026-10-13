@@ -72,11 +72,15 @@ mgw::Platform::Platform(
     struct wl_display* const wl_display,
     std::shared_ptr<mg::DisplayReport> const& report,
     std::optional<std::string> const& app_id,
-    std::optional<std::string> const& title) :
+    std::optional<std::string> const& title,
+    bool fullscreen,
+    std::vector<WindowConfig> windows) :
     wl_display{wl_display},
     report{report},
     app_id{app_id},
     title{title},
+    fullscreen{fullscreen},
+    windows{std::move(windows)},
     provider{std::make_shared<WlDisplayProvider>(make_initialised_egl_display(wl_display))}
 {
 }
@@ -85,7 +89,7 @@ mir::UniqueModulePtr<mg::Display> mgw::Platform::create_display(
     std::shared_ptr<DisplayConfigurationPolicy> const&,
     std::shared_ptr<GLConfig> const& gl_config)
 {
-    return mir::make_module_ptr<mgw::Display>(wl_display, provider, gl_config, report, app_id, title);
+    return mir::make_module_ptr<mgw::Display>(wl_display, provider, gl_config, report, app_id, title, fullscreen, windows);
 }
 
 auto mgw::Platform::maybe_create_provider(const DisplayProvider::Tag& type_tag) -> std::shared_ptr<DisplayProvider>
