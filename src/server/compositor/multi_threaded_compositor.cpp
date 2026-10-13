@@ -189,7 +189,7 @@ public:
                                 scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
                         }
 
-                        if (compositor->composite(std::move(scene_elements)))
+                        if (compositor->composite(std::move(scene_elements), mc::CompositionMode::normal))
                             needs_post = true;
                     }
 

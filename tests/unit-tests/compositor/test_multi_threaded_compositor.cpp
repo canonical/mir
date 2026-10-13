@@ -150,7 +150,7 @@ public:
     {
     }
 
-    bool composite(mc::SceneElementSequence&&)
+    bool composite(mc::SceneElementSequence&&, mc::CompositionMode) override
     {
         mark_render_buffer();
         /* Reduce run-time under valgrind */
@@ -267,7 +267,7 @@ public:
     {
     }
 
-    bool composite(mc::SceneElementSequence&&) override
+    bool composite(mc::SceneElementSequence&&, mc::CompositionMode) override
     {
         fake_surface_update();
         /* Reduce run-time under valgrind */
