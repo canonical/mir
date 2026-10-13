@@ -221,7 +221,7 @@ void mga::AtomicKMSOutput::reset()
 
             if (auto err = update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET))
             {
-                mir::log_warning("Failed release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
+                mir::log_warning("Failed to release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
             }
 
             conf->crtc_props = nullptr;
