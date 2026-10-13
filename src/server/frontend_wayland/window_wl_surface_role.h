@@ -22,6 +22,7 @@
 
 #include <mir/flags.h>
 #include <mir/wayland/weak.h>
+#include <mir/wayland/protocol_error.h>
 #include <mir/wayland/lifetime_tracker.h>
 #include <mir/geometry/displacement.h>
 #include <mir/geometry/size.h>
@@ -79,6 +80,10 @@ public:
     ~WindowWlSurfaceRole() override;
 
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>> override;
+
+    auto has_buffer() const -> bool;
+
+    void set_attach_hook(std::function<std::optional<wayland::ProtocolError>()> hook);
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;

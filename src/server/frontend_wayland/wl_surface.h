@@ -21,6 +21,7 @@
 #include <mir/geometry/forward.h>
 #include "wayland_wrapper.h"
 #include <mir/wayland/weak.h>
+#include <mir/wayland/protocol_error.h>
 
 #include "wl_surface_role.h"
 
@@ -37,6 +38,7 @@
 #include <list>
 #include <map>
 #include <typeinfo>
+#include <optional>
 
 namespace mir
 {
@@ -135,6 +137,19 @@ public:
     geometry::Displacement offset() const { return offset_; }
     geometry::Displacement total_offset() const { return offset_ + role->total_offset(); }
     std::optional<geometry::Size> buffer_size() const { return buffer_size_; }
+    /// Whether this surface has a buffer: either one already committed, or a non-null one attached and
+    /// waiting for the next commit.
+    bool has_buffer() const { return buffer_size_ || (pending.buffer && pending.buffer.value()); }
+
+    /// Sets a function to call each time the client attaches a non-null buffer (wl_surface.attach).
+    /// Attaching a null buffer does not call it.
+    ///
+    /// The hook runs before the buffer is stored. If it returns a ProtocolError, the attach is refused and that
+    /// error is sent to the client. If it returns std::nullopt, the attach goes ahead.
+    ///
+    /// There is a single slot: setting a hook replaces any previous one. This surface owns the hook, so anything
+    /// it captures must stay valid while it is set (hold it weakly otherwise).
+    void set_attach_hook(std::function<std::optional<wayland::ProtocolError>()> hook) { attach_hook = std::move(hook); }
     bool synchronized() const;
     /// Whether the surface currently has a role assigned (e.g. subsurface, cursor,
     /// drag-and-drop icon, or a window role such as xdg_toplevel). Used to raise the
@@ -244,6 +259,8 @@ private:
     CallbackList heartbeat_quirk_frame_callbacks;
     std::optional<std::vector<mir::geometry::Rectangle>> input_shape;
     std::vector<SceneSurfaceCreatedCallback> scene_surface_created_callbacks;
+    std::function<std::optional<wayland::ProtocolError>()> attach_hook{
+        []() -> std::optional<wayland::ProtocolError> { return std::nullopt; }};
     wayland::Weak<Viewport> viewport;
     wayland::Weak<FractionalScaleV1> fractional_scale;
     wayland::Weak<SyncTimeline> sync_timeline;
