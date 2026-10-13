@@ -461,7 +461,8 @@ mf::XdgToplevelStable::XdgToplevelStable(wl_resource* new_resource, XdgSurfaceSt
           xdg_surface->xdg_shell.shell,
           xdg_surface->xdg_shell.output_manager,
           xdg_surface->xdg_shell.surface_registry),
-      xdg_surface{xdg_surface}
+      xdg_surface{xdg_surface},
+      wl_surface{surface}
 {
     if (version_supports_wm_capabilities())
     {
@@ -626,6 +627,21 @@ void mf::XdgToplevelStable::handle_commit()
             "Maximum size %dx%d is smaller than minimum size %dx%d",
             max_size.width.as_int(), max_size.height.as_int(),
             min_size.width.as_int(), min_size.height.as_int()};
+    }
+
+    if (wl_surface)
+    {
+        bool const has_buffer = wl_surface.value().buffer_size().has_value();
+        if (last_commit_had_buffer && !has_buffer)
+        {
+            remap_configure_pending = true;
+        }
+        else if (remap_configure_pending && !has_buffer)
+        {
+            send_toplevel_configure();
+            remap_configure_pending = false;
+        }
+        last_commit_had_buffer = has_buffer;
     }
 }
 

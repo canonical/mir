@@ -19,6 +19,8 @@
 #include "wayland_utils.h"
 #include "desktop_file_manager.h"
 #include "foreign_toplevel_handle_creation.h"
+#include "surface_registry.h"
+#include "wl_surface.h"
 #include "mir/wayland/weak.h"
 #include "mir/frontend/surface_stack.h"
 #include "mir/shell/surface_specification.h"
@@ -52,14 +54,14 @@ class ForeignSurfaceObserver;
 class ForeignToplevelIdentifierMap
 {
 public:
-    auto toplevel_id(std::shared_ptr<scene::Surface> const& surface) -> std::string;
+    auto toplevel_id(std::shared_ptr<scene::Surface> const& surface, uint64_t mapped_lifetime) -> std::string;
     void forget_toplevel(std::shared_ptr<scene::Surface> const& surface);
     void forget_stale_toplevels();
 
 private:
     std::map<
         std::weak_ptr<scene::Surface>,
-        std::string,
+        std::pair<uint64_t, std::string>,
         std::owner_less<std::weak_ptr<scene::Surface>>> toplevel_ids;
     uint64_t next_id = 0;
 };
@@ -73,7 +75,9 @@ public:
         std::shared_ptr<Executor> const& wayland_executor,
         ExtForeignToplevelListV1* manager,
         std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
-        std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map);
+        std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry,
+        wl_event_loop* loop);
     ~ForeignSceneObserver();
 
 private:
@@ -89,6 +93,25 @@ private:
     void destroy_surface_observer(std::shared_ptr<scene::Surface> const& surface);
     void clear_surface_observers();
 
+    struct PendingSurfaceObserver
+    {
+        ~PendingSurfaceObserver()
+        {
+            if (source)
+                wl_event_source_remove(source);
+        }
+
+        ForeignSceneObserver* observer;
+        std::shared_ptr<scene::Surface> surface;
+        wl_event_source* source{nullptr};
+    };
+
+    wl_event_loop* const loop;
+    std::map<
+        std::weak_ptr<scene::Surface>,
+        std::unique_ptr<PendingSurfaceObserver>,
+        std::owner_less<std::weak_ptr<scene::Surface>>> pending_surface_observers;
+
     std::shared_ptr<Executor> const wayland_executor;
     wayland::Weak<ExtForeignToplevelListV1> const manager;
     std::map<
@@ -98,24 +121,28 @@ private:
 
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
     std::shared_ptr<ForeignToplevelIdentifierMap> const id_map;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
 
 /// Bound by a client in order to get notified of toplevels from other clients via ForeignToplevelHandleV1
 class ForeignSurfaceObserver
-    : public scene::NullSurfaceObserver
+    : public scene::NullSurfaceObserver,
+      public WlSurface::MappingListener
 {
 public:
     ForeignSurfaceObserver(
         wayland::Weak<ExtForeignToplevelListV1> manager,
         std::shared_ptr<scene::Surface> const& surface,
         std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
-        std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map);
+        std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map,
+        std::optional<wayland::Weak<WlSurface>> const& wl_surface);
     ~ForeignSurfaceObserver();
 
     void cease_and_desist();
 
 private:
     void create_or_close_toplevel_handle_as_needed();
+    void mapping_changed() override;
 
     /// Surface observer
     ///@{
@@ -128,6 +155,7 @@ private:
     wayland::Weak<ExtForeignToplevelListV1> const manager;
 
     std::weak_ptr<scene::Surface> weak_surface;
+    std::optional<wayland::Weak<WlSurface>> const wl_surface;
     /// True if the surface counts as a toplevel window
     bool has_handle = false;
     /// The toplevel handle. This will be empty if the surface is not
@@ -150,12 +178,14 @@ public:
         wl_display* display,
         std::shared_ptr<Executor> const& wayland_executor,
         std::shared_ptr<SurfaceStack> const& surface_stack,
-        std::shared_ptr<DesktopFileManager> const& desktop_file_manager);
+        std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
+        std::shared_ptr<SurfaceRegistry> const& surface_registry);
 
     std::shared_ptr<Executor> const wayland_executor;
     std::shared_ptr<SurfaceStack> const surface_stack;
     std::shared_ptr<DesktopFileManager> const desktop_file_manager;
     std::shared_ptr<ForeignToplevelIdentifierMap> const id_map;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
 
 private:
     void bind(wl_resource* new_resource) override;
@@ -185,10 +215,12 @@ auto mf::create_ext_foreign_toplevel_list_v1(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
 -> std::shared_ptr<mw::ExtForeignToplevelListV1::Global>
 {
-    return std::make_shared<ExtForeignToplevelListV1Global>(display, wayland_executor, surface_stack, desktop_file_manager);
+    return std::make_shared<ExtForeignToplevelListV1Global>(
+        display, wayland_executor, surface_stack, desktop_file_manager, surface_registry);
 }
 
 // ExtForeignToplevelListV1Global
@@ -197,12 +229,14 @@ mf::ExtForeignToplevelListV1Global::ExtForeignToplevelListV1Global(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
     : Global{display, Version<1>()},
       wayland_executor{wayland_executor},
       surface_stack{surface_stack},
       desktop_file_manager{desktop_file_manager},
-      id_map{std::make_shared<ForeignToplevelIdentifierMap>()}
+      id_map{std::make_shared<ForeignToplevelIdentifierMap>()},
+      surface_registry{surface_registry}
 {
 }
 
@@ -214,11 +248,14 @@ void mf::ExtForeignToplevelListV1Global::bind(wl_resource* new_resource)
 
 // ForeignToplevelIdentifierMap
 
-std::string mf::ForeignToplevelIdentifierMap::toplevel_id(std::shared_ptr<scene::Surface> const& surface)
+std::string mf::ForeignToplevelIdentifierMap::toplevel_id(
+    std::shared_ptr<scene::Surface> const& surface, uint64_t mapped_lifetime)
 {
-    std::string& identifier = toplevel_ids[surface];
-    if (identifier.empty())
+    auto& [lifetime, identifier] = toplevel_ids[surface];
+    // A remap needs a new identifier even if no list was bound during the unmap.
+    if (identifier.empty() || lifetime != mapped_lifetime)
     {
+        lifetime = mapped_lifetime;
         identifier = std::format("toplevel:{:x}", next_id++);
     }
     return identifier;
@@ -243,11 +280,15 @@ mf::ForeignSceneObserver::ForeignSceneObserver(
     std::shared_ptr<Executor> const& wayland_executor,
     ExtForeignToplevelListV1* manager,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
-    std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
-    : wayland_executor{wayland_executor},
+    std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry,
+    wl_event_loop* loop)
+    : loop{loop},
+      wayland_executor{wayland_executor},
       manager{manager},
       desktop_file_manager{desktop_file_manager},
-      id_map{id_map}
+      id_map{id_map},
+      surface_registry{surface_registry}
 {
     // Forget toplevel IDs for windows closed while no observer was
     // running.
@@ -313,7 +354,41 @@ void mf::ForeignSceneObserver::end_observation()
 
 void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Surface> const& surface)
 {
-    auto observer = std::make_shared<ForeignSurfaceObserver>(manager, surface, desktop_file_manager, id_map);
+    auto const wl_surface = surface_registry->lookup_wayland_surface(surface);
+    if (!wl_surface && !pending_surface_observers.contains(surface))
+    {
+        // surface_added can run inline before the window role registers its Wayland association.
+        auto pending = std::make_unique<PendingSurfaceObserver>();
+        pending->observer = this;
+        pending->surface = surface;
+        pending->source = wl_event_loop_add_idle(loop, [](void* data)
+        {
+            auto const pending = static_cast<PendingSurfaceObserver*>(data);
+            auto const observer = pending->observer;
+            auto const surface = pending->surface;
+            pending->source = nullptr;
+            try
+            {
+                observer->create_surface_observer(surface);
+            }
+            catch (...)
+            {
+                mir::log(
+                    mir::logging::Severity::critical,
+                    MIR_LOG_COMPONENT,
+                    std::current_exception(),
+                    "Exception creating foreign toplevel surface observer");
+            }
+            observer->pending_surface_observers.erase(surface);
+        }, pending.get());
+        if (!pending->source)
+            BOOST_THROW_EXCEPTION(std::runtime_error("Failed to defer foreign toplevel surface observation"));
+        pending_surface_observers.emplace(surface, std::move(pending));
+        return;
+    }
+
+    auto observer = std::make_shared<ForeignSurfaceObserver>(
+        manager, surface, desktop_file_manager, id_map, wl_surface);
     surface->register_interest(observer, *wayland_executor);
     auto insert_result = surface_observers.insert(std::make_pair(surface, observer));
     if (!insert_result.second)
@@ -327,6 +402,9 @@ void mf::ForeignSceneObserver::create_surface_observer(std::shared_ptr<scene::Su
 
 void mf::ForeignSceneObserver::destroy_surface_observer(std::shared_ptr<scene::Surface> const& surface)
 {
+    if (pending_surface_observers.erase(surface))
+        return;
+
     auto const iter = surface_observers.find(surface);
     if (iter == surface_observers.end())
     {
@@ -344,6 +422,7 @@ void mf::ForeignSceneObserver::destroy_surface_observer(std::shared_ptr<scene::S
 
 void mf::ForeignSceneObserver::clear_surface_observers()
 {
+    pending_surface_observers.clear();
     for (auto const& [weak_surface, observer] : surface_observers)
     {
         observer->cease_and_desist();
@@ -361,12 +440,16 @@ mf::ForeignSurfaceObserver::ForeignSurfaceObserver(
     mw::Weak<ExtForeignToplevelListV1> manager,
     std::shared_ptr<scene::Surface> const& surface,
     std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
-    std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map)
+    std::shared_ptr<ForeignToplevelIdentifierMap> const& id_map,
+    std::optional<mw::Weak<WlSurface>> const& wl_surface)
     : manager{manager},
       weak_surface{surface},
+      wl_surface{wl_surface},
       desktop_file_manager{desktop_file_manager},
       id_map{id_map}
 {
+    if (wl_surface && *wl_surface)
+        wl_surface->value().add_mapping_listener(this);
     create_or_close_toplevel_handle_as_needed();
 }
 
@@ -377,6 +460,8 @@ mf::ForeignSurfaceObserver::~ForeignSurfaceObserver()
 
 void mf::ForeignSurfaceObserver::cease_and_desist()
 {
+    if (wl_surface && *wl_surface)
+        wl_surface->value().remove_mapping_listener(this);
     weak_surface.reset();
     create_or_close_toplevel_handle_as_needed();
 }
@@ -384,7 +469,8 @@ void mf::ForeignSurfaceObserver::cease_and_desist()
 void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
 {
     auto const surface = weak_surface.lock();
-    bool const should_have_handle = surface && should_create_foreign_toplevel_handle(*surface);
+    bool const should_have_handle = surface && should_create_foreign_toplevel_handle(*surface) &&
+        (!wl_surface || (*wl_surface && wl_surface->value().buffer_size().has_value()));
 
     if (should_have_handle != has_handle)
     {
@@ -394,7 +480,7 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
             if (!manager)
                 return;
 
-            auto const toplevel_id = id_map->toplevel_id(surface);
+            auto const toplevel_id = id_map->toplevel_id(surface, wl_surface ? wl_surface->value().mapped_lifetime() : 0);
             auto const name = surface->name();
             auto const app_id = desktop_file_manager->resolve_app_id(*surface);
 
@@ -419,6 +505,11 @@ void mf::ForeignSurfaceObserver::create_or_close_toplevel_handle_as_needed()
         }
         has_handle = should_have_handle;
     }
+}
+
+void mf::ForeignSurfaceObserver::mapping_changed()
+{
+    create_or_close_toplevel_handle_as_needed();
 }
 
 void mf::ForeignSurfaceObserver::attrib_changed(const scene::Surface*, MirWindowAttrib attrib, int)
@@ -482,7 +573,9 @@ mf::ExtForeignToplevelListV1::ExtForeignToplevelListV1(
     ExtForeignToplevelListV1Global& global)
     : mw::ExtForeignToplevelListV1{new_resource, Version<1>()},
       surface_stack{global.surface_stack},
-      observer{std::make_shared<ForeignSceneObserver>(global.wayland_executor, this, global.desktop_file_manager, global.id_map)}
+      observer{std::make_shared<ForeignSceneObserver>(
+          global.wayland_executor, this, global.desktop_file_manager, global.id_map, global.surface_registry,
+          wl_display_get_event_loop(wl_client_get_display(wl_resource_get_client(new_resource))))}
 {
     surface_stack->add_observer(observer);
 }

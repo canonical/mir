@@ -138,7 +138,8 @@ std::vector<ExtensionBuilder> const internal_extension_builders = {
                 ctx.display,
                 ctx.wayland_executor,
                 ctx.surface_stack,
-                ctx.desktop_file_manager);
+                ctx.desktop_file_manager,
+                ctx.surface_registry);
 	}),
     make_extension_builder<mw::RelativePointerManagerV1>([](auto const& ctx)
         {

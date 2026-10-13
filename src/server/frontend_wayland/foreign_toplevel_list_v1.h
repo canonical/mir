@@ -28,14 +28,11 @@ namespace scene
 {
 class Surface;
 }
-namespace shell
-{
-class Shell;
-}
 namespace frontend
 {
 class DesktopFileManager;
 class SurfaceStack;
+class SurfaceRegistry;
 class ExtForeignToplevelListV1;
 
 /// Used by a client to aquire information about a specific toplevel
@@ -61,7 +58,8 @@ auto create_ext_foreign_toplevel_list_v1(
     wl_display* display,
     std::shared_ptr<Executor> const& wayland_executor,
     std::shared_ptr<SurfaceStack> const& surface_stack,
-    std::shared_ptr<DesktopFileManager> const& desktop_file_manager)
+    std::shared_ptr<DesktopFileManager> const& desktop_file_manager,
+    std::shared_ptr<SurfaceRegistry> const& surface_registry)
 -> std::shared_ptr<wayland::ExtForeignToplevelListV1::Global>;
 
 }
