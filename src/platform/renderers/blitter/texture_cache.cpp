@@ -29,6 +29,7 @@
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 #include <stdexcept>
+#include <tuple>
 #include <utility>
 
 namespace mg = mir::graphics;
@@ -75,6 +76,12 @@ mrb::TextureCache::~TextureCache()
         }
         catch (...)
         {
+            // Some other context may still be current, so we can't even let the GL handles be destroyed
+            mir::log_warning("Failed to release EGL context; leaking blitter fallback texture objects");
+            for (auto& [_, entry] : textures)
+            {
+                std::ignore = entry.texture.release();
+            }
         }
     }
 

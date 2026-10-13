@@ -581,3 +581,19 @@ TEST_F(TextureCacheTest, destroying_cache_does_not_delete_in_another_context_whe
     EXPECT_NO_THROW(cache.reset());
     EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
+
+TEST_F(TextureCacheTest, destroying_cache_does_not_delete_textures_when_context_cannot_be_made_current_or_released)
+{
+    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    auto cache = std::make_unique<mrb::TextureCache>(context, blitter);
+    cache->get(buffer);
+    make_other_context_current();
+    ON_CALL(mock_egl, eglMakeCurrent(_, _, _, mock_egl.fake_egl_context)).WillByDefault(Return(EGL_FALSE));
+    ON_CALL(mock_egl, eglMakeCurrent(_, _, _, EGL_NO_CONTEXT)).WillByDefault(Return(EGL_FALSE));
+
+    EXPECT_CALL(mock_gl, glDeleteTextures(_, _)).Times(0);
+
+    EXPECT_NO_THROW(cache.reset());
+    EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
+    Mock::VerifyAndClearExpectations(&mock_gl);
+}
