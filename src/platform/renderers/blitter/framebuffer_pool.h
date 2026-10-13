@@ -62,7 +62,7 @@ public:
         /// \note Construction and destruction leave the caller's current EGL state unchanged
         Entry(
             std::shared_ptr<SoftwareEGLContext> context,
-            std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> fb,
+            std::shared_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> fb,
             std::unique_ptr<graphics::BlitterRenderingProvider::Surface> surface,
             bool with_depth_stencil);
         ~Entry();
@@ -79,7 +79,7 @@ public:
         void release_gl_resources();
 
         std::shared_ptr<SoftwareEGLContext> const context;
-        std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const fb;
+        std::shared_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const fb;
         common::TextureHandle texture;
         common::FramebufferHandle fbo;
         RenderbufferHandle depth_stencil_buffer;
