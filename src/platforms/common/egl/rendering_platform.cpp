@@ -63,7 +63,7 @@ auto egl_display_from_platforms(std::vector<std::shared_ptr<mg::DisplayPlatform>
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to create any EGL display"}));
     }
-    EGLint major = 0, minor = 0;
+    EGLint major{}, minor{};
     if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL"));
@@ -90,10 +90,10 @@ auto make_share_only_context(EGLDisplay dpy, std::optional<EGLContext> share_con
         EGL_NONE
     };
 
-    EGLConfig cfg{EGL_NO_CONFIG_KHR};
+    EGLConfig cfg{};
     if (!mg::has_egl_extension(dpy, "EGL_KHR_no_config_context"))
     {
-        EGLint num_configs{0};
+        EGLint num_configs{};
 
         if (eglChooseConfig(dpy, config_attr, &cfg, 1, &num_configs) != EGL_TRUE || num_configs != 1)
         {
