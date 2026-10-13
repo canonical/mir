@@ -137,18 +137,13 @@ public:
     MOCK_METHOD(
         bool,
         blit,
-        (Task&, mg::Buffer const&, geom::Rectangle const&, geom::Rectangle const&, MirOrientation, MirMirrorMode),
+        (Task&, std::shared_ptr<mg::Buffer> const&, geom::Rectangle const&, geom::Rectangle const&, MirOrientation, MirMirrorMode),
         (override));
     MOCK_METHOD(bool, fill, (Task&, geom::Rectangle const&, uint8_t, uint8_t, uint8_t, uint8_t), (override));
     MOCK_METHOD(
         std::unique_ptr<Surface>,
         surface_for_fb,
-        (mg::CPUAddressableDisplayAllocator::MappableFB const&),
-        (override));
-    MOCK_METHOD(
-        std::unique_ptr<mrs::Mapping<std::byte const>>,
-        map_buffer,
-        (mg::Buffer const&),
+        (std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const&),
         (override));
 };
 
@@ -189,10 +184,10 @@ auto allocate_fakes_from(mg::CPUAddressableDisplayAllocator const& allocator, bo
 /// A surface_for_fb action that creates stub surfaces targeting fake framebuffers
 auto make_stub_surfaces()
 {
-    return [](mg::CPUAddressableDisplayAllocator::MappableFB const& fb)
+    return [](std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const& fb)
         -> std::unique_ptr<mg::BlitterRenderingProvider::Surface>
     {
-        return std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(fb));
+        return std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(*fb));
     };
 }
 
@@ -380,7 +375,7 @@ TEST_F(FramebufferPoolTest, entry_holds_blitter_surface_for_its_framebuffer)
         .WillOnce(
             [&surface](auto const& fb) -> std::unique_ptr<mg::BlitterRenderingProvider::Surface>
             {
-                auto stub = std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(fb));
+                auto stub = std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(*fb));
                 surface = stub.get();
                 return stub;
             });
