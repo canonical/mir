@@ -73,6 +73,7 @@ public:
         /// Make the owning context current and bind this entry's FBO as the GL draw target
         void bind();
         auto size() const -> geometry::Size;
+        auto framebuffer() const -> graphics::CPUAddressableDisplayAllocator::MappableFB const&;
 
     private:
         void build_gl_resources(bool with_depth_stencil);
@@ -92,6 +93,10 @@ public:
     };
 
     /// A pooled framebuffer, acquired via [acquire].
+    ///
+    /// The concrete type is also a `graphics::FBHandle`, forwarding to the display's framebuffer, as
+    /// that is what display sinks present. Converting it to a handle throws if the display's
+    /// framebuffer isn't a `graphics::FBHandle` (which should never happen in practice).
     class PooledFB : public graphics::Framebuffer
     {
     public:

@@ -16,6 +16,7 @@
 
 #include <mir/compositor/display_listener.h>
 #include <mir/graphics/platform.h>
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -83,8 +84,9 @@ class StubBlitterRendererFactory : public mir::renderer::BlitterRendererFactory
 public:
 
     auto create_renderer_for(
+        std::shared_ptr<mg::BlitterRenderingProvider>,
         mg::CPUAddressableDisplayAllocator&,
-        std::shared_ptr<mg::BlitterRenderingProvider>) const -> std::unique_ptr<mir::renderer::Renderer> override
+        std::shared_ptr<mg::GLConfig const>) const -> std::unique_ptr<mir::renderer::Renderer> override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }

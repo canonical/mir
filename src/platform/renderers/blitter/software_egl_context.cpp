@@ -22,9 +22,13 @@
 #include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
+#include <cstddef>
 #include <cstring>
+#include <memory>
+#include <mutex>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace mg = mir::graphics;
@@ -104,6 +108,10 @@ auto create_software_display() -> EGLDisplay
     // No explicitly-software device, so a surfaceless display is the next best thing.
     // It may well be hardware-backed, in which case rendering into the scanout
     // buffer's dma-buf may fail, which we will find out when we build the framebuffer pool.
+    //
+    // TODO: This may be the same display other modules (such as renderer-generic-egl) use, in which case
+    // their eglTerminate would tear it down under us, and ours under them (but this shouldn't really
+    // be a problem in practice, I think).
     if (mg::has_egl_client_extension("EGL_MESA_platform_surfaceless"))
     {
         if (auto const dpy =
@@ -131,30 +139,78 @@ void require_display_extensions(EGLDisplay dpy)
     }
 }
 
-auto initialise_display(EGLDisplay dpy) -> EGLDisplay
+/// The software display shared by every [SoftwareEGLContext] in the process.
+///
+/// There is one blitter renderer, and so one [SoftwareEGLContext], per output. `eglGetPlatformDisplay`
+/// hands each of them the same `EGLDisplay`, and a single `eglTerminate` tears that display down however
+/// many times it was initialised. So we count its users here and only terminate it when the last one
+/// is gone; otherwise destroying one output's renderer would break every other output's.
+class SharedSoftwareDisplay
 {
-    EGLint major{0}, minor{0};
-    if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
+public:
+    /// Acquire a reference to the initialised software display, creating it if needed.
+    ///
+    /// The display is terminated once every returned reference has been dropped.
+    ///
+    ///     \throws std::runtime_error if no suitable display can be created and initialised
+    static auto acquire() -> std::shared_ptr<EGLDisplay const>
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL display"));
+        static SharedSoftwareDisplay shared;
+        {
+            std::lock_guard lock{shared.mutex};
+            if (shared.users == 0)
+            {
+                shared.display = initialise(create_software_display());
+            }
+            shared.users++;
+        }
+
+        return {&shared.display, [](EGLDisplay const*) { shared.release(); }};
     }
 
-    if (major < 1 || (major == 1 && minor < 4))
+private:
+    static auto initialise(EGLDisplay dpy) -> EGLDisplay
     {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Must have EGL version >= 1.4"));
+        try
+        {
+            EGLint major{0}, minor{0};
+            if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL display"));
+            }
+
+            if (major < 1 || (major == 1 && minor < 4))
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Must have EGL version >= 1.4"));
+            }
+
+            require_display_extensions(dpy);
+        }
+        catch (...)
+        {
+            eglTerminate(dpy);
+            throw;
+        }
+        return dpy;
     }
 
-    require_display_extensions(dpy);
+    void release()
+    {
+        std::lock_guard lock{mutex};
+        if (--users == 0)
+        {
+            eglTerminate(std::exchange(display, EGL_NO_DISPLAY));
+        }
+    }
 
-    return dpy;
-}
+    std::mutex mutex;
+    EGLDisplay display{EGL_NO_DISPLAY};
+    std::size_t users{0};
+};
 
 auto create_context(EGLDisplay dpy) -> EGLContext
 {
-    static EGLint const context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
+    static EGLint const context_attr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
 
     eglBindAPI(EGL_OPENGL_ES_API);
     auto const ctx = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, context_attr);
@@ -166,10 +222,11 @@ auto create_context(EGLDisplay dpy) -> EGLContext
 }
 }
 
-mrb::SoftwareEGLContext::SoftwareEGLContext()
-    : dpy{create_software_display()},
-      ctx{create_context(initialise_display(dpy))},
-      exts{std::make_unique<mg::EGLExtensions>()}
+mrb::SoftwareEGLContext::SoftwareEGLContext() :
+    shared_dpy{SharedSoftwareDisplay::acquire()},
+    dpy{*shared_dpy},
+    ctx{create_context(dpy)},
+    exts{std::make_unique<mg::EGLExtensions>()}
 {
     try
     {
