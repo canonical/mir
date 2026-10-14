@@ -104,7 +104,7 @@ jobs:
           ' debian/changelog
 
           dch --newversion "${VERSION}-0ubuntu26.04" \
-              --distribution noble \
+              --distribution resolute \
               --force-distribution \
               ""
 
