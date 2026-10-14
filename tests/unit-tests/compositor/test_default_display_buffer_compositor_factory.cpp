@@ -21,6 +21,7 @@
 
 #include <mir/graphics/rendering_providers.h>
 
+#include <mir/test/doubles/mock_blitter_rendering_provider.h>
 #include <mir/test/doubles/mock_gl_rendering_provider.h>
 #include <mir/test/doubles/stub_renderer.h>
 #include <mir/test/doubles/mock_renderer_factory.h>
@@ -31,10 +32,13 @@
 #include <mir/test/doubles/stub_output_filter.h>
 #include <mir/test/doubles/stub_renderer.h>
 
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <stdexcept>
 
 namespace mc = mir::compositor;
 namespace mg = mir::graphics;
@@ -54,6 +58,48 @@ public:
     }
 };
 
+class MockBlitterRendererFactory : public mir::renderer::BlitterRendererFactory
+{
+public:
+    MockBlitterRendererFactory()
+    {
+        using namespace testing;
+        ON_CALL(*this, create_renderer_for(_, _, _))
+            .WillByDefault([](auto&&...) { return std::make_unique<mtd::StubRenderer>(); });
+    }
+
+    MOCK_METHOD(
+        std::unique_ptr<mir::renderer::Renderer>,
+        create_renderer_for,
+        (std::shared_ptr<mg::BlitterRenderingProvider>,
+         mg::CPUAddressableDisplayAllocator&,
+         std::shared_ptr<mg::GLConfig const>),
+        (const, override));
+};
+
+/// A display that cannot hand out CPU-addressable framebuffers
+class SinkWithoutCPUAllocator : public mtd::StubDisplaySink
+{
+public:
+    using StubDisplaySink::StubDisplaySink;
+
+    auto maybe_create_allocator(mg::DisplayAllocator::Tag const&) -> mg::DisplayAllocator* override
+    {
+        return nullptr;
+    }
+};
+
+auto blitter_with_suitability(mg::probe::Result suitability)
+    -> std::shared_ptr<testing::NiceMock<mtd::MockBlitterRenderingProvider>>
+{
+    using namespace testing;
+
+    auto blitter = std::make_shared<NiceMock<mtd::MockBlitterRenderingProvider>>();
+    ON_CALL(*blitter, suitability_for_display(_)).WillByDefault(Return(suitability));
+    ON_CALL(*blitter, suitability_for_allocator(_)).WillByDefault(Return(suitability));
+    return blitter;
+}
+
 struct DefaultDisplayBufferCompositorFactory : public testing::Test
 {
     DefaultDisplayBufferCompositorFactory() :
@@ -71,6 +117,33 @@ struct DefaultDisplayBufferCompositorFactory : public testing::Test
     std::shared_ptr<mc::CompositorReport> const report;
     std::shared_ptr<mg::OutputFilter> const output_filter;
     mtd::StubDisplaySink display_sink;
+
+    std::shared_ptr<testing::NiceMock<mtd::MockRendererFactory>> const gl_renderer_factory{
+        std::make_shared<testing::NiceMock<mtd::MockRendererFactory>>()};
+    std::shared_ptr<testing::NiceMock<MockBlitterRendererFactory>> const blitter_renderer_factory{
+        std::make_shared<testing::NiceMock<MockBlitterRendererFactory>>()};
+
+    auto factory_with_blitters(std::vector<std::shared_ptr<mg::BlitterRenderingProvider>> blitters)
+        -> mc::DefaultDisplayBufferCompositorFactory
+    {
+        return mc::DefaultDisplayBufferCompositorFactory{
+            gl_providers,
+            std::move(blitters),
+            std::make_shared<mtd::NullGLConfig>(),
+            gl_renderer_factory,
+            blitter_renderer_factory,
+            buffer_allocator,
+            report,
+            output_filter};
+    }
+
+    void expect_gl_renderer()
+    {
+        using namespace testing;
+        EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(_, _, _)).Times(0);
+        EXPECT_CALL(*gl_renderer_factory, create_renderer_for(_, _))
+            .WillOnce([](auto&&...) { return std::make_unique<mtd::StubRenderer>(); });
+    }
 };
 }
 
@@ -84,8 +157,10 @@ TEST_F(DefaultDisplayBufferCompositorFactory, creates_compositor_when_single_gl_
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {supported_provider},
+        {},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
+        nullptr,
         buffer_allocator,
         report,
         output_filter};
@@ -116,8 +191,10 @@ TEST_F(DefaultDisplayBufferCompositorFactory, selects_highest_suitability_gl_pro
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {supported_provider, nested_provider, best_provider},
+        {},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
+        nullptr,
         buffer_allocator,
         report,
         output_filter};
@@ -145,8 +222,10 @@ TEST_F(DefaultDisplayBufferCompositorFactory, does_not_select_gl_provider_with_u
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {supported_provider, unsupported_provider},
+        {},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
+        nullptr,
         buffer_allocator,
         report,
         output_filter};
@@ -168,8 +247,10 @@ TEST_F(DefaultDisplayBufferCompositorFactory, throws_when_no_gl_provider_is_suit
         {
             provider,
         },
+        {},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
+        nullptr,
         buffer_allocator,
         report,
         output_filter};
@@ -190,8 +271,10 @@ TEST_F(DefaultDisplayBufferCompositorFactory, throws_when_no_gl_provider_is_suit
         {
             provider,
         },
+        {},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
+        nullptr,
         buffer_allocator,
         report,
         output_filter};
@@ -204,7 +287,8 @@ TEST_F(DefaultDisplayBufferCompositorFactory, throws_when_gl_provider_list_is_em
     using namespace testing;
 
     mc::DefaultDisplayBufferCompositorFactory factory{
-        {}, std::make_shared<mtd::NullGLConfig>(), renderer_factory, buffer_allocator, report, output_filter};
+        {}, {}, std::make_shared<mtd::NullGLConfig>(), renderer_factory, nullptr, buffer_allocator, report,
+        output_filter};
 
     EXPECT_THROW({ factory.create_compositor_for(display_sink); }, std::logic_error);
 }
@@ -227,12 +311,119 @@ TEST_F(DefaultDisplayBufferCompositorFactory, selects_first_provider_when_suitab
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {first_provider, second_provider},
+        {},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
+        nullptr,
         buffer_allocator,
         report,
         output_filter};
 
     auto compositor = factory.create_compositor_for(display_sink);
     EXPECT_THAT(compositor, NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, composites_with_gl_when_no_blitter_is_available)
+{
+    using namespace testing;
+
+    expect_gl_renderer();
+
+    auto factory = factory_with_blitters({});
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, composites_with_gl_when_no_blitter_renderer_factory_is_available)
+{
+    using namespace testing;
+
+    expect_gl_renderer();
+
+    mc::DefaultDisplayBufferCompositorFactory factory{
+        gl_providers,
+        {blitter_with_suitability(mg::probe::supported)},
+        std::make_shared<mtd::NullGLConfig>(),
+        gl_renderer_factory,
+        nullptr,
+        buffer_allocator,
+        report,
+        output_filter};
+
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, composites_with_gl_when_no_blitter_supports_the_output)
+{
+    using namespace testing;
+
+    expect_gl_renderer();
+
+    auto factory = factory_with_blitters({blitter_with_suitability(mg::probe::unsupported)});
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, composites_with_gl_when_no_blitter_supports_the_buffer_allocator)
+{
+    using namespace testing;
+
+    auto const blitter = blitter_with_suitability(mg::probe::best);
+    ON_CALL(*blitter, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::unsupported));
+
+    expect_gl_renderer();
+
+    auto factory = factory_with_blitters({blitter});
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, composites_with_a_suitable_blitter)
+{
+    using namespace testing;
+
+    auto const blitter = blitter_with_suitability(mg::probe::supported);
+    auto* const display_allocator =
+        display_sink.acquire_compatible_allocator<mg::CPUAddressableDisplayAllocator>();
+
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(blitter), Ref(*display_allocator), _));
+    EXPECT_CALL(*gl_renderer_factory, create_renderer_for(_, _)).Times(0);
+
+    auto factory = factory_with_blitters({blitter});
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, picks_the_best_of_several_blitters)
+{
+    using namespace testing;
+
+    auto const worse = blitter_with_suitability(mg::probe::supported);
+    auto const better = blitter_with_suitability(mg::probe::best);
+
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(better), _, _));
+
+    auto factory = factory_with_blitters({worse, better});
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, composites_with_gl_when_the_display_has_no_cpu_addressable_allocator)
+{
+    using namespace testing;
+
+    SinkWithoutCPUAllocator gl_only_sink{geom::Rectangle{{0, 0}, {640, 480}}};
+
+    expect_gl_renderer();
+
+    auto factory = factory_with_blitters({blitter_with_suitability(mg::probe::supported)});
+    EXPECT_THAT(factory.create_compositor_for(gl_only_sink), NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, falls_back_to_gl_when_the_blitter_renderer_cannot_be_built)
+{
+    using namespace testing;
+
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(_, _, _))
+        .WillOnce(Throw(std::runtime_error{"No llvmpipe for you"}));
+    EXPECT_CALL(*gl_renderer_factory, create_renderer_for(_, _))
+        .WillOnce([](auto&&...) { return std::make_unique<mtd::StubRenderer>(); });
+
+    auto factory = factory_with_blitters({blitter_with_suitability(mg::probe::supported)});
+    EXPECT_THAT(factory.create_compositor_for(display_sink), NotNull());
 }

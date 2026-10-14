@@ -349,6 +349,52 @@ TEST_F(SoftwareEGLContextTest, destruction_does_not_release_another_current_cont
     EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
 
+TEST_F(SoftwareEGLContextTest, contexts_share_one_initialised_display)
+{
+    EXPECT_CALL(mock_egl, eglGetPlatformDisplayEXT(_, _, _)).Times(1);
+    EXPECT_CALL(mock_egl, eglInitialize(surfaceless_display, _, _)).Times(1);
+
+    mrb::SoftwareEGLContext const first;
+    mrb::SoftwareEGLContext const second;
+
+    EXPECT_THAT(second.display(), Eq(first.display()));
+}
+
+TEST_F(SoftwareEGLContextTest, display_is_not_terminated_while_another_context_uses_it)
+{
+    auto first = std::make_unique<mrb::SoftwareEGLContext>();
+    auto second = std::make_unique<mrb::SoftwareEGLContext>();
+
+    EXPECT_CALL(mock_egl, eglTerminate(_)).Times(0);
+    first.reset();
+    Mock::VerifyAndClearExpectations(&mock_egl);
+
+    EXPECT_CALL(mock_egl, eglTerminate(surfaceless_display));
+    second.reset();
+}
+
+TEST_F(SoftwareEGLContextTest, display_is_recreated_after_last_context_is_destroyed)
+{
+    std::make_unique<mrb::SoftwareEGLContext>().reset();
+
+    EXPECT_CALL(mock_egl, eglGetPlatformDisplayEXT(EGL_PLATFORM_SURFACELESS_MESA, _, _));
+    EXPECT_CALL(mock_egl, eglInitialize(surfaceless_display, _, _));
+
+    mrb::SoftwareEGLContext const context;
+}
+
+TEST_F(SoftwareEGLContextTest, failing_to_create_a_context_does_not_terminate_a_display_in_use)
+{
+    mrb::SoftwareEGLContext const existing;
+    ON_CALL(mock_egl, eglCreateContext(_, _, _, _)).WillByDefault(Return(EGL_NO_CONTEXT));
+
+    EXPECT_CALL(mock_egl, eglTerminate(_)).Times(0);
+
+    EXPECT_THROW(mrb::SoftwareEGLContext{}, std::runtime_error);
+
+    Mock::VerifyAndClearExpectations(&mock_egl);
+}
+
 class SoftwareEGLContextMissingDisplayExtension :
     public SoftwareEGLContextTest,
     public WithParamInterface<std::string>

@@ -30,11 +30,13 @@ class OutputFilter;
 namespace renderer
 {
 class RendererFactory;
+class BlitterRendererFactory;
 }
 
 namespace graphics
 {
 class GLRenderingProvider;
+class BlitterRenderingProvider;
 class GLConfig;
 class GraphicBufferAllocator;
 }
@@ -47,8 +49,10 @@ class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFact
 public:
     DefaultDisplayBufferCompositorFactory(
         std::vector<std::shared_ptr<graphics::GLRenderingProvider>> render_platforms,
+        std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> blitter_platforms,
         std::shared_ptr<graphics::GLConfig> gl_config,
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
+        std::shared_ptr<renderer::BlitterRendererFactory> const& blitter_renderer_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<CompositorReport> const& report,
         std::shared_ptr<graphics::OutputFilter> const& output_filter);
@@ -56,9 +60,14 @@ public:
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) override;
 
 private:
+    auto create_blitter_compositor_for(graphics::DisplaySink& display_sink)
+        -> std::unique_ptr<DisplayBufferCompositor>;
+
     std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const platforms;
+    std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> const blitter_platforms;
     std::shared_ptr<graphics::GLConfig> const gl_config;
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
+    std::shared_ptr<renderer::BlitterRendererFactory> const blitter_renderer_factory;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::OutputFilter> const output_filter;

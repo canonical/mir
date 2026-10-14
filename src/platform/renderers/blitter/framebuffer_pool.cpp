@@ -24,6 +24,7 @@
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/log.h>
 
 #include <GLES2/gl2ext.h>
@@ -166,6 +167,11 @@ void mrb::FramebufferPool::Entry::bind()
 
 auto mrb::FramebufferPool::Entry::size() const -> geom::Size { return fb->size(); }
 
+auto mrb::FramebufferPool::Entry::framebuffer() const -> mg::CPUAddressableDisplayAllocator::MappableFB const&
+{
+    return *fb;
+}
+
 struct mrb::FramebufferPool::Self
 {
     std::mutex free_entries_mutex;
@@ -186,12 +192,13 @@ struct mrb::FramebufferPool::Self
 
 namespace
 {
-class PooledFBImpl : public mrb::FramebufferPool::PooledFB
+class PooledFBImpl : public mrb::FramebufferPool::PooledFB, public mg::FBHandle
 {
 public:
     PooledFBImpl(std::shared_ptr<mrb::FramebufferPool::Self> self, std::unique_ptr<mrb::FramebufferPool::Entry> entry) :
         self{std::move(self)},
-        entry_{std::move(entry)}
+        entry_{std::move(entry)},
+        handle{dynamic_cast<mg::FBHandle const*>(&entry_->framebuffer())}
     {}
 
     ~PooledFBImpl() override { self->release(std::move(entry_)); }
@@ -200,9 +207,20 @@ public:
 
     auto entry() -> mrb::FramebufferPool::Entry& override { return *entry_; }
 
+    operator uint32_t() const override
+    {
+        if (!handle)
+        {
+            BOOST_THROW_EXCEPTION((std::logic_error{"Display framebuffer has no FBHandle to present"}));
+        }
+        return *handle;
+    }
+
 private:
     std::shared_ptr<mrb::FramebufferPool::Self> const self;
     std::unique_ptr<mrb::FramebufferPool::Entry> entry_;
+    /// Owned by the entry, so valid for as long as we are; null if the display framebuffer isn't an FBHandle
+    mg::FBHandle const* const handle;
 };
 }
 

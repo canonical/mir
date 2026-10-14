@@ -19,7 +19,6 @@
 
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_helpers.h>
-#include <mir/graphics/egl_resources.h>
 
 #include <EGL/egl.h>
 #include <memory>
@@ -54,7 +53,9 @@ public:
     auto extensions() const -> graphics::EGLExtensions const& { return *exts; }
 
 private:
-    graphics::EGLDisplayHandle const dpy;
+    /// Keeps the process-wide software display initialised for as long as we need it
+    std::shared_ptr<EGLDisplay const> const shared_dpy;
+    EGLDisplay const dpy;
     EGLContext const ctx;
     std::unique_ptr<graphics::EGLExtensions> const exts;
 };
