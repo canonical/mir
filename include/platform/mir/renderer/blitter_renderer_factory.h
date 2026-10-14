@@ -33,7 +33,7 @@ namespace renderer
 class Renderer;
 
 /// Builds renderers that composite with a blitter engine.
-/// 
+///
 /// This is deliberately separate from renderer::RendererFactory: a blitter
 /// renderer renders into the display's own buffers, so it takes the display's
 /// allocator rather than a ready-made output surface.
@@ -43,7 +43,7 @@ public:
     virtual ~BlitterRendererFactory() = default;
 
     /// Create a renderer compositing onto `allocator`'s framebuffers with `blitter`
-    /// 
+    ///
     /// \throws std::runtime_error if `blitter` and `allocator` cannot in fact be
     ///          used together, in which case the caller should fall back to GL
     ///          compositing.
