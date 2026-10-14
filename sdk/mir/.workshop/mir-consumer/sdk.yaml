@@ -1,0 +1,5 @@
+name: mir-consumer
+plugs:
+  mir:
+    interface: mount
+    workshop-target: /opt/mir
