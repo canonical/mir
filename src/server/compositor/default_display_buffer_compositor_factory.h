@@ -19,6 +19,7 @@
 
 #include <mir/compositor/display_buffer_compositor_factory.h>
 #include <mir/compositor/compositor_report.h>
+#include <mir/graphics/rendering_providers.h>
 
 namespace mir
 {
@@ -30,6 +31,7 @@ class OutputFilter;
 namespace renderer
 {
 class RendererFactory;
+class BlitterRendererFactory;
 }
 
 namespace graphics
@@ -46,9 +48,11 @@ class DefaultDisplayBufferCompositorFactory : public DisplayBufferCompositorFact
 {
 public:
     DefaultDisplayBufferCompositorFactory(
-        std::vector<std::shared_ptr<graphics::GLRenderingProvider>> render_platforms,
+        std::vector<std::shared_ptr<graphics::GLRenderingProvider>> gl_providers,
+        std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> blitter_providers,
         std::shared_ptr<graphics::GLConfig> gl_config,
         std::shared_ptr<renderer::RendererFactory> const& renderer_factory,
+        std::shared_ptr<renderer::BlitterRendererFactory> const& blitter_renderer_factory,
         std::shared_ptr<graphics::GraphicBufferAllocator> const& buffer_allocator,
         std::shared_ptr<CompositorReport> const& report,
         std::shared_ptr<graphics::OutputFilter> const& output_filter);
@@ -56,9 +60,11 @@ public:
     std::unique_ptr<DisplayBufferCompositor> create_compositor_for(graphics::DisplaySink& display_sink) override;
 
 private:
-    std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const platforms;
+    std::vector<std::shared_ptr<graphics::GLRenderingProvider>> const gl_providers;
+    std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> const blitter_providers;
     std::shared_ptr<graphics::GLConfig> const gl_config;
     std::shared_ptr<renderer::RendererFactory> const renderer_factory;
+    std::shared_ptr<renderer::BlitterRendererFactory> const blitter_renderer_factory;
     std::shared_ptr<graphics::GraphicBufferAllocator> const buffer_allocator;
     std::shared_ptr<CompositorReport> const report;
     std::shared_ptr<graphics::OutputFilter> const output_filter;
@@ -66,6 +72,5 @@ private:
 
 }
 }
-
 
 #endif /* MIR_COMPOSITOR_DEFAULT_DISPLAY_BUFFER_COMPOSITOR_FACTORY_H_ */
