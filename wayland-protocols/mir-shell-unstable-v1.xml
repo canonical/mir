@@ -25,55 +25,90 @@
     THIS SOFTWARE.
   </copyright>
 
+  <description summary="assign window-management archetypes to surfaces">
+    This protocol lets a client tell the compositor what kind of window a
+    surface represents, so that the compositor can apply an appropriate
+    window-management policy to it.
+
+    Warning! The protocol described in this file is experimental and
+    backward incompatible changes may be made. Backward compatible changes
+    may be added together with the corresponding interface version bump.
+    Backward incompatible changes are done by bumping the version number in
+    the protocol and interface names and resetting the interface version.
+    Once the protocol is to be declared stable, the version number in the
+    protocol name is removed and the interface version numbers are reset.
+  </description>
+
   <interface name="mir_shell_v1" version="1">
     <description summary="create surface archetypes that are recognised by the desktop">
       Clients can use this interface to assign an archetype to wl_surfaces.
 
-      An archetype is like a `wl_surface` role: a surface may have at most one
-      archetype, but unlike a `wl_surface` role a client may assign a new archetype
-      to a surface which already has one. This will remove the old archetype and
-      apply the new one atomically.
+      An archetype is like a wl_surface role: a surface may have at most one
+      archetype, but unlike a wl_surface role a client may assign a new
+      archetype to a surface which already has one. This will remove the old
+      archetype and apply the new one atomically.
 
-      The archetype of a `wl_surface` influences the window-management policies
+      The archetype of a wl_surface influences the window-management policies
       applied to it.
 
-      All archetype state is double-buffered; changing a surface archetype or
-      updates to any archetype state are not applied until the `wl_surface` is
-      `commit`ted.
+      An archetype augments a surface's role, so it may only be assigned to a
+      wl_surface that has, or is about to be given, a compatible role: that is,
+      a role that makes the surface a window the compositor manages. (The
+      xdg_toplevel role is currently the only compatible role, and the sequences
+      described are therefore given in terms of xdg_surface; any future
+      compatible role will describe its own equivalents.)
 
-      Typically, archetype state will be used to augments `xdg_toplevel` state. If a
-      client intends to use an archetype, it SHOULD assign the surface an initial
-      archetype during the initial commit without a buffer attached (see `xdg_surface`).
+      Some roles have semantics that are inconsistent with the semantics of an
+      archetype, and so cannot be combined with one; in particular the
+      wl_subsurface role and the cursor role (see wl_pointer.set_cursor).
+      Assigning an archetype to a surface that already has such a role raises
+      an archetype error on this object. Assigning such a role to a
+      surface that already has an archetype raises the error defined by the
+      request that assigns the role.
+
+      Some roles and extensions duplicate the semantics of an archetype.
+      These remain distinct mechanisms: the compositor applies archetype
+      policy only to surfaces that have been given an archetype. A client using
+      this protocol should implement dialogs with mir_dialog_surface_v1 rather
+      than with xdg_dialog_v1.
+
+      If a client intends to use an archetype, it should assign the surface an
+      initial archetype during the initial commit without a buffer attached (see
+      xdg_surface).
+
+      All archetype state is double-buffered; changing a surface archetype or
+      updating any archetype state is not applied until the wl_surface is
+      committed.
 
       Any events sent to an archetype object are latched to and extend the
-      `xdg_surface.configure` event. Any such events should be treated as a part of
-      an atomic set of configuration changes (including any `xdg_toplevel` events)
-      with the `xdg_surface.configure` event committing the accumulated state and
-      requiring a `xdg_surface.ack_configure` call, as normal.
+      xdg_surface.configure event. Any such events should be treated as part of
+      an atomic set of configuration changes (including any xdg_toplevel
+      events) with the xdg_surface.configure event committing the accumulated
+      state and requiring an xdg_surface.ack_configure call, as normal.
 
-      Changing archetype follows a similar sequence to the initial `xdg_surface`
-      commit. First, a new archetype must be committed. This must be the only state
-      committed in the `wl_surface.commit` request. The compositor will respond with
-      any changes to the surface state prompted by the change of archetype followed
-      by an `xdg_surface.configure` event. The client must ack the configure event
-      (as normal) and the subsequent `wl_surface.commit` will cause the new
-      archetype to be fully applied.
-
-      There are some `wl_surface` roles that conflict with the archetypes described
-      here. Attempting to set both an archetypes and such roles on a surface is a
-      protocol error. In particular, `wl_subsurface`, `wl_cursor` or `xdg_popup` may
-      not be combined with an archetype.
+      Changing archetype follows a similar sequence to the initial xdg_surface
+      commit. First, a new archetype must be committed. This must be the only
+      state committed in the wl_surface.commit request. The compositor will
+      respond with any changes to the surface state prompted by the change of
+      archetype, followed by an xdg_surface.configure event. The client must
+      ack the configure event (as normal) and the subsequent wl_surface.commit
+      will cause the new archetype to be fully applied.
     </description>
+
+    <enum name="error">
+      <entry name="archetype" value="0"
+             summary="the archetype cannot be assigned to this surface"/>
+    </enum>
 
     <request name="get_regular_surface">
       <description summary="assign the mir_regular_surface_v1 archetype">
-        Create a mir_regular_surface_v1 archetype for the given surface. This assigns
-        the archetype of regular_surface to the wl_surface, or raises a protocol error
-        if another archetype is already assigned and the transition is disallowed.
+        Assign the regular surface archetype to the given wl_surface, or raise
+        an archetype error if another archetype is already assigned and
+        the transition is disallowed.
 
-        The previous archetype's role object becomes inert; the client should destroy
-        the previous archetype role object. Any further calls to the previous archetype
-        role object are a protocol error.
+        The previous archetype's object becomes inert; the client should
+        destroy it. Any further requests made on the previous archetype object
+        raise an archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_regular_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -81,16 +116,13 @@
 
     <request name="get_floating_regular_surface">
       <description summary="assign the mir_floating_regular_surface_v1 archetype">
-        Create a mir_floating_regular_surface_v1 archetype for the given surface. This assigns
-        the archetype of floating_regular to the wl_surface, or raises a protocol error
-        if another archetype is already assigned and the transition is disallowed.
+        Assign the floating regular surface archetype to the given wl_surface,
+        or raise an archetype error if another archetype is already
+        assigned and the transition is disallowed.
 
-        The previous archetype's role object becomes inert; the client should destroy
-        the previous archetype role object. Any further calls to the previous archetype
-        role object are a protocol error.
-
-        A floating regular surface is "always on top" of other application windows and will
-        not be docked.
+        The previous archetype's object becomes inert; the client should
+        destroy it. Any further requests made on the previous archetype object
+        raise an archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_floating_regular_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -98,35 +130,13 @@
 
     <request name="get_dialog_surface">
       <description summary="assign the mir_dialog_surface_v1 archetype">
-        Create a mir_dialog_surface_v1 archetype for the given surface. This assigns
-        the archetype of dialog_surface to the wl_surface, or raises a protocol error
-        if another archetype is already assigned and the transition is disallowed.
+        Assign the dialog surface archetype to the given wl_surface, or raise
+        an archetype error if another archetype is already assigned and
+        the transition is disallowed.
 
-        The previous archetype's role object becomes inert; the client should destroy
-        the previous archetype role object. Any further calls to the previous archetype
-        role object are a protocol error.
-
-        A dialog is usually used to communicate information that must be explicitly
-        acknowledged or responded to (for example, to report an error), or to get
-        specific information about something requested in a parent window (for example,
-        a Print dialog) or from a shell function (for example, to confirm shutdown).
-
-        A dialog should have a parent whenever relevant. It may, however, be parentless.
-
-        If a dialog has a parent, it is modal to the parent and any satellites the parent has.
-        This means:
-        (1) A user should be able to move, resize, or hide an open dialog’s parent, but not
-        close it or interact with its contents; and move, resize, or close the parent’s
-        satellites if any, but not interact with their contents.
-        (2) Whenever the parent is minimized or otherwise hidden, the dialog should be minimized
-        or hidden too.
-        (3) Any attempt to give input focus to the parent should focus the dialog instead.
-        Therefore, the dialog and all of its ancestors should be presented as a single entity
-        in any window switcher.
-
-        Partly because of that last behavior, a window should only ever have one dialog child at
-        a time. If an app tries to open a second dialog child, The compositor should close the
-        previous one first.
+        The previous archetype's object becomes inert; the client should
+        destroy it. Any further requests made on the previous archetype object
+        raise an archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_dialog_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -134,28 +144,16 @@
 
     <request name="get_satellite_surface">
       <description summary="assign the mir_satellite_surface_v1 archetype">
-        Create a mir_satellite_surface_v1 archetype for the given surface. This assigns
-        the archetype of satellite_surface to the wl_surface, or raises a protocol error
-        if another archetype is already assigned and the transition is disallowed.
+        Assign the satellite surface archetype to the given wl_surface, or
+        raise an archetype error if another archetype is already
+        assigned and the transition is disallowed.
 
-        The previous archetype's role object becomes inert; the client should destroy
-        the previous archetype role object. Any further calls to the previous archetype
-        role object are a protocol error.
+        The satellite is placed according to the rules in the given positioner.
+        If the positioner is incomplete, an error is raised.
 
-        A satellite is an accessory to a regular, floating regular, or dialog window. It
-        always has a parent window, and typically it provides easy access to functions in
-        its parent: for example, a toolbox, formatting palette, or Find/Change window.
-
-        To reduce clutter when a satellite’s parent is not being used, a satellite should be
-        present on screen only when any of its parents is active (for example, when a dialog
-        or another satellite of its parent has input focus). Otherwise, subject to a delay to
-        allow reparenting, it should not be present — not merely invisible or minimized, and
-        not closed, but not present until its parent becomes active again (or an active window
-        becomes its parent).
-
-        To avoid flicker from briefly-appearing dialogs, whenever a satellite’s parent has a
-        child dialog, the satellite should remain present. But like the parent window itself,
-        it should not receive input as long as the dialog is open.
+        The previous archetype's object becomes inert; the client should
+        destroy it. Any further requests made on the previous archetype object
+        raise an archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_satellite_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -166,14 +164,10 @@
       <description summary="create a positioner object">
         Create a positioner object. A positioner object is used to position
         surfaces relative to some parent surface. See the interface description
-        and xdg_surface.get_popup for details.
+        and mir_shell_v1.get_satellite_surface for details.
       </description>
       <arg name="id" type="new_id" interface="mir_positioner_v1"/>
     </request>
-
-    <enum name="error">
-      <entry name="archetype" value="0" summary="wl_surface has another archetype that prevents this assignment"/>
-    </enum>
 
     <request name="destroy" type="destructor">
       <description summary="destroy the mir_shell object">
@@ -185,103 +179,142 @@
   </interface>
 
   <interface name="mir_regular_surface_v1" version="1">
-    <description summary="Mir metadata interface">
-      An interface that may be implemented by a wl_surface, for surfaces that
-      are designed to be rendered in a desktop-like environment.
+    <description summary="an ordinary application window">
+      An archetype for surfaces that are designed to be rendered in a
+      desktop-like environment.
+
+      A regular surface is an ordinary application window, subject to whatever
+      window-management policy the compositor applies by default.
     </description>
 
     <request name="destroy" type="destructor">
       <description summary="destroy the regular surface archetype">
-        This request destroys the mir surface archetype and disassociates it from the surface.
+        Destroy the archetype object and remove the archetype from the surface.
       </description>
     </request>
   </interface>
 
   <interface name="mir_floating_regular_surface_v1" version="1">
-    <description summary="Mir metadata interface">
-      An interface that may be implemented by a wl_surface, for surfaces that
-      are designed to be rendered in a desktop-like environment.
+    <description summary="an always-on-top application window">
+      An archetype for surfaces that are designed to be rendered in a
+      desktop-like environment.
+
+      A floating regular surface is "always on top" of other application
+      windows and will not be docked.
     </description>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the floating_regular surface archetype">
-        This request destroys the mir surface archetype and disassociates it from the surface.
+      <description summary="destroy the floating regular surface archetype">
+        Destroy the archetype object and remove the archetype from the surface.
       </description>
     </request>
   </interface>
 
   <interface name="mir_dialog_surface_v1" version="1">
-    <description summary="Mir metadata interface">
-      An interface that may be implemented by a wl_surface, for surfaces that
-      are designed to be rendered in a desktop-like environment.
+    <description summary="a window that is modal to its parent">
+      An archetype for surfaces that are designed to be rendered in a
+      desktop-like environment.
+
+      A dialog is usually used to communicate information that must be
+      explicitly acknowledged or responded to (for example, to report an
+      error), or to get specific information about something requested in a
+      parent window (for example, a Print dialog) or from a shell function (for
+      example, to confirm shutdown).
+
+      A dialog should have a parent whenever relevant. It may, however, be
+      parentless.
+
+      If a dialog has a parent, it is modal to the parent and to any satellites
+      the parent has. A user should be able to move, resize, or hide an open
+      dialog's parent, but not close it or interact with its contents; and
+      should be able to move, resize, or close the parent's satellites, if any,
+      but not interact with their contents.
+
+      Whenever the parent is minimized or otherwise hidden, the dialog should
+      be minimized or hidden too.
+
+      Any attempt to give input focus to the parent should focus the dialog
+      instead. The dialog and all of its ancestors should therefore be
+      presented as a single entity in any window switcher.
+
+      Partly because of that last behavior, a window should only ever have one
+      dialog child at a time. If a client tries to open a second dialog child,
+      the compositor should close the previous one first.
     </description>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the dialog_surface archetype">
-        This request destroys the mir surface archetype and disassociates it from the surface.
+      <description summary="destroy the dialog surface archetype">
+        Destroy the archetype object and remove the archetype from the surface.
       </description>
     </request>
   </interface>
 
   <interface name="mir_satellite_surface_v1" version="1">
-    <description summary="Mir metadata interface">
-      An interface that may be implemented by a wl_surface, for surfaces that
-      are designed to be rendered in a desktop-like environment.
+    <description summary="an accessory window attached to a parent">
+      An archetype for surfaces that are designed to be rendered in a
+      desktop-like environment.
+
+      A satellite is an accessory to a regular, floating regular, or dialog
+      window. It always has a parent window, and typically it provides easy
+      access to functions in its parent: for example, a toolbox, formatting
+      palette, or Find/Change window.
+
+      To reduce clutter when a satellite's parent is not being used, a
+      satellite should be present on screen only when any of its parents is
+      active (for example, when a dialog or another satellite of its parent has
+      input focus). Otherwise, subject to a delay to allow reparenting, it
+      should not be present at all: not merely invisible or minimized, and not
+      closed, but not present until its parent becomes active again (or an
+      active window becomes its parent).
+
+      To avoid flicker from briefly-appearing dialogs, whenever a satellite's
+      parent has a child dialog the satellite should remain present. But like
+      the parent window itself, it should not receive input for as long as the
+      dialog is open.
     </description>
 
     <request name="reposition">
       <description summary="recalculate the satellite's location">
-        Reposition an already-mapped satellite. The satellite will be placed given the
-        details in the passed mir_positioner object, and a
-        mir_satellite_surface_v1.repositioned followed by wl_surface.configure will be
-        emitted in response. Any parameters set by the previous positioner will be discarded.
+        Reposition an already-mapped satellite. The satellite will be placed
+        given the details in the passed mir_positioner_v1 object, and a
+        mir_satellite_surface_v1.repositioned event followed by an
+        xdg_surface.configure event will be emitted in response. Any parameters
+        set by the previous positioner will be discarded.
 
         The passed token will be sent in the corresponding
-        xdg_satellite.repositioned event. The new satellite position will not take
-        effect until the corresponding configure event is acknowledged by the
-        client. See xdg_satellite.repositioned for details. The token itself is
-        opaque, and has no other special meaning.
+        mir_satellite_surface_v1.repositioned event. The new satellite position
+        will not take effect until the corresponding configure event is
+        acknowledged by the client. The token itself is opaque, and has no
+        other special meaning.
 
         If multiple reposition requests are sent, the compositor may skip all
         but the last one.
-
-        If the satellite is repositioned in response to a configure event for its
-        parent, the client should send an mir_positioner.set_parent_configure
-        and possibly an mir_positioner.set_parent_size request to allow the
-        compositor to properly constrain the satellite.
-
-        If the satellite is repositioned together with a parent that is being
-        resized, but not in response to a configure event, the client should
-        send an mir_positioner.set_parent_size request.
       </description>
       <arg name="positioner" type="object" interface="mir_positioner_v1"/>
       <arg name="token" type="uint" summary="reposition request token"/>
     </request>
 
     <event name="repositioned">
-      <description summary="signal the completion of a repositioned request">
+      <description summary="signal the completion of a reposition request">
         The repositioned event is sent as part of a satellite configuration
-        sequence, together with mir_satellite_surface_v1.configure and lastly
-        wl_surface.configure to notify the completion of a reposition request.
+        sequence, together with xdg_surface.configure, to notify the completion
+        of a mir_satellite_surface_v1.reposition request. The token argument is
+        the token passed in that request.
 
-        The repositioned event is to notify about the completion of a
-        mir_satellite_surface_v1.reposition request. The token argument is the token passed
-        in the xdg_satellite.reposition request.
+        Immediately after this event is emitted, xdg_surface.configure will be
+        sent with the updated size and position, as well as a new configure
+        serial.
 
-        Immediately after this event is emitted, mir_satellite_surface_v1.configure and
-        wl_surface.configure will be sent with the updated size and position,
-        as well as a new configure serial.
-
-        The client should optionally update the content of the satellite, but must
-        acknowledge the new satellite configuration for the new position to take
-        effect. See mir_satellite_surface_v1.ack_configure for details.
+        The client may optionally update the content of the satellite, but must
+        acknowledge the new satellite configuration for the new position to
+        take effect. See xdg_surface.ack_configure for details.
       </description>
       <arg name="token" type="uint" summary="reposition request token"/>
     </event>
 
     <request name="destroy" type="destructor">
-      <description summary="destroy the satellite_surface archetype">
-        This request destroys the mir surface archetype and disassociates it from the surface.
+      <description summary="destroy the satellite surface archetype">
+        Destroy the archetype object and remove the archetype from the surface.
       </description>
     </request>
   </interface>
@@ -303,10 +336,10 @@
       mir_positioner object can be destroyed or reused; further changes to the
       object will have no effect on previous usages.
 
-      For an mir_positioner object to be considered complete, it must have a
+      For a mir_positioner object to be considered complete, it must have a
       non-zero size set by set_size, and a non-zero anchor rectangle set by
       set_anchor_rect. Passing an incomplete mir_positioner object when
-      positioning a surface raises an invalid_positioner error.
+      positioning a surface raises an error.
     </description>
 
     <enum name="error">
@@ -325,7 +358,7 @@
         object. The size is in surface-local coordinates and corresponds to the
         window geometry. See xdg_surface.set_window_geometry.
 
-        If a zero or negative size is set the invalid_input error is raised.
+        If a zero or negative size is set, an invalid_input error is raised.
       </description>
       <arg name="width" type="int" summary="width of positioned rectangle"/>
       <arg name="height" type="int" summary="height of positioned rectangle"/>
@@ -342,7 +375,7 @@
         anchor rectangle may not extend outside the window geometry of the
         positioned child's parent surface.
 
-        If a negative size is set the invalid_input error is raised.
+        If a negative size is set, an invalid_input error is raised.
       </description>
       <arg name="x" type="int" summary="x position of anchor rectangle"/>
       <arg name="y" type="int" summary="y position of anchor rectangle"/>
@@ -365,7 +398,7 @@
     <request name="set_anchor">
       <description summary="set anchor rectangle anchor">
         Defines the anchor point for the anchor rectangle. The specified anchor
-        is used derive an anchor point that the child surface will be
+        is used to derive an anchor point that the child surface will be
         positioned relative to. If a corner anchor is set (e.g. 'top_left' or
         'bottom_right'), the anchor point will be at the specified corner;
         otherwise, the derived anchor point will be centered on the specified
@@ -394,7 +427,7 @@
         specified (e.g. 'bottom_right' or 'top_left'), then the child surface
         will be placed towards the specified gravity; otherwise, the child
         surface will be centered over the anchor point on any axis that had no
-        gravity specified. If the gravity is not in the ‘gravity’ enum, an
+        gravity specified. If the gravity is not in the 'gravity' enum, an
         invalid_input error is raised.
       </description>
       <arg name="gravity" type="uint" enum="gravity"
