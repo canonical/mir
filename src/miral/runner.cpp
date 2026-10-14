@@ -306,7 +306,7 @@ auto miral::MirRunner::x11_display() const -> std::optional<std::string>
 
 auto miral::pre_init(std::function<void()> const& cb) -> std::function<void(::mir::Server&)>
 {
-    return [&](mir::Server& server) {
+    return [cb](mir::Server& server) {
         server.add_pre_init_callback(cb);
     };
 }

@@ -164,3 +164,12 @@ TEST_F(Runner, register_fd_handler_does_not_invoke_callback_when_fd_not_written_
 //        EXPECT_THAT(runner.x11_display().value(), Eq(":666"));
 //    });
 //}
+
+
+TEST_F(Runner, pre_init_callback_registered)
+{
+    add_server_init(miral::pre_init([this] { callback(); }));
+    EXPECT_CALL(*this, callback());
+
+    miral::TestServer::SetUp();
+}

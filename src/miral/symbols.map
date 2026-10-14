@@ -578,7 +578,7 @@ global:
     miral::name_of*;
     miral::operator*;
     miral::pid_of*;
-    miral::pre_init*;
+    "miral::pre_init(miral::ConfigurationOption const&)";
     miral::register_log_filtering_config*;
     miral::socket_fd_of*;
     miral::toolkit::mir_event_get_input_event*;
@@ -791,6 +791,7 @@ global:
     miral::OutputConfiguration::Strategy::Strategy*;
     miral::OutputConfiguration::operator*;
     miral::OutputConfiguration::update_strategy*;
+    "miral::pre_init(std::function<void ()> const&)";
     non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::?NullStrategy*;
     non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::apply_configuration*;
     non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::confirm_configuration*;
