@@ -19,6 +19,7 @@
 
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/drm_formats.h>
+#include <mir/graphics/kms_framebuffer.h>
 #include <mir/test/doubles/mock_blitter_rendering_provider.h>
 #include <mir/test/doubles/mock_egl.h>
 #include <mir/test/doubles/mock_gl.h>
@@ -33,6 +34,7 @@
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
+#include <tuple>
 #include <vector>
 
 namespace geom = mir::geometry;
@@ -98,6 +100,23 @@ private:
     FakeDMABufBuffer const dmabuf;
     bool const exportable;
     bool* const destroyed;
+};
+
+/// A display framebuffer that, like those of the KMS platforms, can be presented by KMS
+class FakeKMSMappableFB : public FakeMappableFB, public mg::FBHandle
+{
+public:
+    FakeKMSMappableFB(geom::Size size, uint32_t fb_id) :
+        FakeMappableFB{size, true, nullptr},
+        fb_id{fb_id}
+    {
+    }
+
+    auto size() const -> geom::Size override { return FakeMappableFB::size(); }
+    operator uint32_t() const override { return fb_id; }
+
+private:
+    uint32_t const fb_id;
 };
 
 /// Writes to its framebuffer on destruction, so ASan detects a surface outliving its framebuffer
@@ -342,6 +361,32 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_reports_size_of_display_framebuff
 
     EXPECT_THAT(fb->size(), Eq(default_output_size));
     EXPECT_THAT(fb->entry().size(), Eq(default_output_size));
+}
+
+TEST_F(FramebufferPoolTest, pooled_framebuffer_forwards_handle_of_display_framebuffer)
+{
+    uint32_t const fb_id{42};
+    ON_CALL(allocator, alloc_fb(_))
+        .WillByDefault(
+            [&](auto) { return std::make_unique<FakeKMSMappableFB>(allocator.output_size(), fb_id); });
+
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    std::shared_ptr<mg::Framebuffer> const fb{pool->acquire()};
+
+    auto const kms_fb = std::dynamic_pointer_cast<mg::FBHandle>(fb);
+    ASSERT_THAT(kms_fb, NotNull());
+    EXPECT_THAT(static_cast<uint32_t>(*kms_fb), Eq(fb_id));
+    EXPECT_THAT(kms_fb->size(), Eq(default_output_size));
+}
+
+TEST_F(FramebufferPoolTest, pooled_framebuffer_handle_throws_when_display_framebuffer_has_none)
+{
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    std::shared_ptr<mg::Framebuffer> const fb{pool->acquire()};
+
+    auto const kms_fb = std::dynamic_pointer_cast<mg::FBHandle>(fb);
+    ASSERT_THAT(kms_fb, NotNull());
+    EXPECT_THROW(std::ignore = static_cast<uint32_t>(*kms_fb), std::logic_error);
 }
 
 TEST_F(FramebufferPoolTest, entry_holds_blitter_surface_for_its_framebuffer)

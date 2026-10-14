@@ -15,6 +15,7 @@
  */
 
 #include "default_display_buffer_compositor_factory.h"
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 #include <mir/renderer/renderer.h>
 #include <mir/graphics/display_sink.h>
@@ -99,7 +100,7 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
             (best_blitter_provider.first >= mg::probe::supported && best_provider.first < mg::probe::supported))
         {
             auto provider = best_blitter_provider.second;
-            auto renderer = blitter_renderer_factory->create_renderer_for(*allocator, provider);
+            auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator, gl_config);
             return std::make_unique<DefaultDisplayBufferCompositor>(
                 display_sink, *provider, std::move(renderer), output_filter, report);
         }
