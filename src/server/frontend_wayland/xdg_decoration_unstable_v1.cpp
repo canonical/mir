@@ -77,7 +77,7 @@ public:
     /// decoration attached.
     auto committed_mode(wl_resource* toplevel) const -> std::optional<DecorationStrategy::DecorationsType>
     {
-        if(auto const it = toplevels.find(toplevel); it != toplevels.end())
+        if (auto const it = toplevels.find(toplevel); it != toplevels.end())
             return it->second.committed;
         return std::nullopt;
     }
@@ -224,7 +224,7 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
         throw mir::wayland::ProtocolError{
-            resource, Error::already_constructed, "Decoration already constructed for this toplevel"};
+            decoration->resource, Error::already_constructed, "Decoration already constructed for this toplevel"};
     }
 
     decoration->add_destroy_listener(
@@ -321,14 +321,8 @@ auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode) 
     case Mode::server_side:
         return DecorationStrategy::DecorationsType::ssd;
     default:
-    {
-        pid_t pid;
-        wl_client_get_credentials(client->raw_client(), &pid, nullptr, nullptr); // null pointers are allowed
-
-        mir::log_warning("Client PID: %d, attempted to set invalid zxdg_toplevel_decoration_v1 mode (%d), defaulting to client side.", pid, mode);
-
-        return DecorationStrategy::DecorationsType::csd;
-    }
+        throw mir::wayland::ProtocolError{
+            resource, Error::invalid_mode, "Invalid decoration mode %u", mode};
     }
 }
 
@@ -353,6 +347,7 @@ void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 
     auto const strategy_new_mode = to_mode(new_type);
     send_configure_event(strategy_new_mode);
+    toplevel->send_toplevel_configure();
     configured = true;
 }
 

@@ -135,6 +135,8 @@ public:
     void handle_close_request() override;
     void handle_tiled_edges(Flags<MirTiledEdge> tiled_edges) override;
 
+    void send_toplevel_configure();
+
     static XdgToplevelStable* from(wl_resource* surface);
 
     /// Called unconditionally at the end of every commit; unset by default. Used by xdg-decoration to
@@ -142,7 +144,6 @@ public:
     void set_commit_hook(std::function<void()> hook);
 
 private:
-    void send_toplevel_configure();
     void destroy_role() const override;
 
     mir::wayland::Weak<XdgSurfaceStable> const xdg_surface;
