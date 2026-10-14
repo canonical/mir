@@ -44,6 +44,8 @@
 #include <thread>
 #include <mutex>
 #include <chrono>
+#include <condition_variable>
+#include <deque>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -333,6 +335,125 @@ public:
 
     std::mutex thread_names_mutex;
     std::vector<std::string> thread_names;
+};
+
+class ModeRecordingDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
+{
+public:
+    std::unique_ptr<mc::DisplayBufferCompositor> create_compositor_for(mg::DisplaySink&) override
+    {
+        struct ModeRecordingCompositor : mc::DisplayBufferCompositor
+        {
+            explicit ModeRecordingCompositor(ModeRecordingDisplayBufferCompositorFactory& owner)
+                : owner{owner}
+            {
+            }
+
+            bool composite(mc::SceneElementSequence&&, mc::CompositionMode mode) override
+            {
+                return owner.record_composite(mode);
+            }
+
+            ModeRecordingDisplayBufferCompositorFactory& owner;
+        };
+        return std::make_unique<ModeRecordingCompositor>(*this);
+    }
+
+    bool record_composite(mc::CompositionMode mode)
+    {
+        std::lock_guard lock{mutex};
+        modes.push_back(mode);
+        return true;
+    }
+
+    std::vector<mc::CompositionMode> recorded_modes() const
+    {
+        std::lock_guard lock{mutex};
+        return modes;
+    }
+
+private:
+    mutable std::mutex mutex;
+    std::vector<mc::CompositionMode> modes;
+};
+
+class ScriptedDisplaySyncGroup : public mg::DisplaySyncGroup
+{
+public:
+    void for_each_display_sink(std::function<void(mg::DisplaySink&)> const& f) override
+    {
+        f(sink);
+    }
+
+    bool post() override
+    {
+        std::lock_guard lock{mutex};
+        ++post_count_;
+        bool result{default_result};
+        if (!script.empty())
+        {
+            result = script.front();
+            script.pop_front();
+        }
+        cv.notify_all();
+        return result;
+    }
+
+    std::chrono::milliseconds recommended_sleep() const override
+    {
+        return std::chrono::milliseconds::zero();
+    }
+
+    void enqueue_result(bool result)
+    {
+        std::lock_guard lock{mutex};
+        script.push_back(result);
+    }
+
+    void set_default_result(bool result)
+    {
+        std::lock_guard lock{mutex};
+        default_result = result;
+    }
+
+    unsigned int count_posts() const
+    {
+        std::lock_guard lock{mutex};
+        return post_count_;
+    }
+
+    bool wait_for_posts(unsigned int count, std::chrono::steady_clock::duration timeout)
+    {
+        std::unique_lock lock{mutex};
+        return cv.wait_for(lock, timeout, [this, count]{ return post_count_ >= count; });
+    }
+
+private:
+    testing::NiceMock<mtd::MockDisplaySink> sink;
+    mutable std::mutex mutex;
+    std::condition_variable cv;
+    std::deque<bool> script;
+    bool default_result{true};
+    unsigned int post_count_{0};
+};
+
+class ScriptedDisplay : public mtd::NullDisplay
+{
+public:
+    explicit ScriptedDisplay(unsigned int group_count)
+    {
+        groups.reserve(group_count);
+        for (auto i = 0u; i < group_count; ++i)
+            groups.push_back(std::make_unique<ScriptedDisplaySyncGroup>());
+    }
+
+    void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
+    {
+        for (auto& group : groups)
+            f(*group);
+    }
+
+    std::vector<std::unique_ptr<ScriptedDisplaySyncGroup>> groups;
 };
 
 namespace
@@ -933,4 +1054,68 @@ TEST(MultiThreadedCompositor, gets_renderable_if_cursor_needs_compositing)
     std::this_thread::sleep_for(100ms);
 
     compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, failed_posts_schedule_recovery_frames_until_presentation_is_confirmed)
+{
+    using namespace testing;
+
+    auto display = std::make_shared<ScriptedDisplay>(1);
+    auto& group = *display->groups[0];
+    group.enqueue_result(false);
+    group.enqueue_result(false);
+    group.enqueue_result(true);
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    compositor.start();
+
+    /* Each failed post schedules a recovery frame without any client damage,
+     * and repeated failures keep recovery active */
+    ASSERT_TRUE(group.wait_for_posts(3, 2s));
+    EXPECT_THAT(
+        factory->recorded_modes(),
+        ElementsAre(
+            mc::CompositionMode::normal,
+            mc::CompositionMode::recovery,
+            mc::CompositionMode::recovery));
+
+    /* Recovery ended after the confirmed full GL frame; no further frames
+     * without damage
+     */
+    std::this_thread::sleep_for(100ms);
+    EXPECT_EQ(3u, group.count_posts());
+
+    /* The next frame (triggered by damage) is composed normally again */
+    scene->emit_change_event();
+    ASSERT_TRUE(group.wait_for_posts(4, 2s));
+    EXPECT_EQ(mc::CompositionMode::normal, factory->recorded_modes()[3]);
+
+    compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, stop_during_recovery_is_safe)
+{
+    using namespace testing;
+
+    auto display = std::make_shared<ScriptedDisplay>(1);
+    auto& group = *display->groups[0];
+    group.set_default_result(false);
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    compositor.start();
+
+    ASSERT_TRUE(group.wait_for_posts(3, 2s));
+
+    EXPECT_NO_THROW(compositor.stop());
+
+    /* No further compositing after stop */
+    auto const posts_at_stop = group.count_posts();
+    std::this_thread::sleep_for(100ms);
+    EXPECT_EQ(posts_at_stop, group.count_posts());
 }
