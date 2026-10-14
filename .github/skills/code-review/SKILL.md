@@ -43,6 +43,9 @@ user requests those actions.
 - For graphics and input changes, trace coordinate spaces, transforms, scale,
   clipping, output/device selection, buffer ownership, and failure recovery.
   Check that an optimization preserves the conditions of the ordinary path.
+- For input routing, distinguish matching a trigger from consuming an event.
+  Trace press/release pairing through filters, grabs, focus changes, and
+  cancellation; earlier handlers may consume events used to reconstruct state.
 - For Rust/FFI changes, verify the actual ownership, thread, and lifetime
   invariants of unsafe operations on both sides of the boundary.
 - Check whether tests exercise observable behavior and would fail before the
@@ -105,6 +108,12 @@ response whose patch was inspected.
   problems, check whether the authoritative state can be queried instead.
   [Review, #4652](https://github.com/canonical/mir/pull/4652#discussion_r2759707258)
   → [remove cached fullscreen/filter state](https://github.com/canonical/mir/commit/19c837bd0f1c38a374a7b9c0186102dc363c3aba).
+- **Event-derived state can miss consumed input.** Verify which events reach the
+  component before deriving keyboard state from them.
+  [Review, #4380](https://github.com/canonical/mir/pull/4380#discussion_r2469522882)
+  → [use event modifier masks instead of key counts](https://github.com/canonical/mir/commit/3735ad0f4bbe91857a38bbd40989fc38d6055149).
+  This response still acknowledged a limitation for pre-held nonmodifier keys;
+  it is not evidence of complete arbitrary-key tracking.
 
 ### Protocols, graphics, and boundary values
 
@@ -161,6 +170,9 @@ response whose patch was inspected.
   patch and behavioral evidence. In
   [#5007](https://github.com/canonical/mir/pull/5007#issuecomment-4675972971),
   an AI-generated WLCS coverage claim was explicitly retracted.
+- **Verify the tested revision.** In
+  [#4842](https://github.com/canonical/mir/pull/4842#pullrequestreview-4188448900),
+  a reported runtime failure was retracted after discovering a stale checkout.
 
 ## Verify and report
 
@@ -186,10 +198,22 @@ response whose patch was inspected.
 ## Historical basis and refresh
 
 The initial survey enumerated 767 `canonical/mir` PRs created from 2025-10-14
-through 2026-10-14 inclusive, including open and closed PRs. Review threads and
-conversation comments were queried for every PR. The examples above are selected
-patch-verified response chains, not a claim that every suggestion was accepted,
-every response commit was inspected, or every responsive patch was merged.
+through 2026-10-14 inclusive, including open and closed PRs. Inline review threads,
+conversation comments, and standalone review bodies were inspected for every PR,
+with pagination and recovery of oversized responses.
+
+| Creation window (inclusive) | PRs inspected |
+| --------------------------- | ------------- |
+| 2025-10-14–2026-01-13       | 184           |
+| 2026-01-14–2026-04-13       | 173           |
+| 2026-04-14–2026-07-13       | 226           |
+| 2026-07-14–2026-10-14       | 184           |
+
+The inventory can be re-queried with
+[`repo:canonical/mir is:pr created:2025-10-14..2026-10-14`](https://github.com/canonical/mir/pulls?q=is%3Apr+created%3A2025-10-14..2026-10-14).
+The examples above are selected patch-verified response chains, not a claim that
+every suggestion was accepted, every response commit was inspected, or every
+responsive patch was merged.
 
 When refreshing this skill, enumerate and paginate the intended date window,
 inspect inline threads, conversation comments, and standalone review bodies, and
