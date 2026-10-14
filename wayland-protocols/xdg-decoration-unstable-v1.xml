@@ -77,7 +77,7 @@
         retained.
 
         If no xdg_toplevel_decoration was associated with the surface prior to
-        this request, or if a surface commit has been perfomed after a previous
+        this request, or if a surface commit has been performed after a previous
         xdg_toplevel_decoration object associated with the surface was
         destroyed, the decoration mode is assumed to be client-side.
       </description>
@@ -103,6 +103,7 @@
         summary="xdg_toplevel already has a decoration object"/>
       <entry name="orphaned" value="2"
         summary="xdg_toplevel destroyed before the decoration object"/>
+      <entry name="invalid_mode" value="3" summary="invalid mode"/>
     </enum>
 
     <request name="destroy" type="destructor">
@@ -143,6 +144,9 @@
         Such clients are responsible for preventing configure loops and must
         make sure not to send multiple successive set_mode requests with the
         same decoration mode.
+
+        If an invalid mode is supplied by the client, the invalid_mode protocol
+        error is raised by the compositor.
       </description>
       <arg name="mode" type="uint" enum="mode" summary="the decoration mode"/>
     </request>
