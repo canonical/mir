@@ -45,9 +45,6 @@ jobs:
         id: version
         run: |
           if [[ "${INPUTS_VERSION}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "major=${BASH_REMATCH[1]}" | tee --append "$GITHUB_OUTPUT"
-            echo "minor=${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
-            echo "patch=${BASH_REMATCH[3]}" | tee --append "$GITHUB_OUTPUT"
             echo "release_branch=release/${BASH_REMATCH[1]}.${BASH_REMATCH[2]}" | tee --append "$GITHUB_OUTPUT"
             echo "next_version=${BASH_REMATCH[1]}.$(( BASH_REMATCH[2] + 1 )).0" | tee --append "$GITHUB_OUTPUT"
           else
