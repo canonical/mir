@@ -42,7 +42,6 @@ public:
     static constexpr uint32_t plane_id{100};
     static constexpr uint32_t framebuffer_property_id{42};
     static constexpr uint64_t framebuffer_id{55};
-    static constexpr uint32_t commit_flags{0};
     static constexpr char framebuffer_property_name[]{"FB_ID"};
 
     AtomicUpdateTest()
