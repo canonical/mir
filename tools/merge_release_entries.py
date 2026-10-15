@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Git merge driver for release-artifact files whose format is a list of dated
-entries with the newest entry at the top: debian/changelog, rpm/mir.spec and
-doc/sphinx/release-notes.md.
+entries with the newest entry at the top: debian/changelog and rpm/mir.spec.
+For doc/sphinx/release-notes/index.md, only release-status changes on the landing
+page are reconciled; individual release pages use Git's normal merge behavior.
 
 A plain `merge=union` driver concatenates the conflicting hunk from our side
 followed by their side, but does so line-by-line. This driver instead parses
@@ -14,8 +15,8 @@ each side into whole entries and rebuilds the file as:
 For rpm/mir.spec it also bumps the date of the top `~dev` entry to today, since
 the RPM tools reject unordered dates in the changelog.
 
-Everything before the first entry (e.g. the rpm spec's `%bcond`/`Version:`
-preamble, or the release notes' title and template comment) is merged with
+Everything before the first packaging entry (e.g. the rpm spec's `%bcond`/`Version:`
+preamble) is merged with
 `git merge-file`, leaving real conflicts there as ordinary conflict markers.
 
 Registered in .gitattributes as the `merge=release-notes` driver, invoked as:
@@ -34,14 +35,21 @@ from pathlib import Path
 PREAMBLE_END = {
     "debian/changelog": None,
     "rpm/mir.spec": "%changelog\n",
-    "doc/sphinx/release-notes.md": "-->\n",
 }
 
 ENTRY_START = {
     "debian/changelog": re.compile(r"^mir \(", re.MULTILINE),
     "rpm/mir.spec": re.compile(r"^\* ", re.MULTILINE),
-    "doc/sphinx/release-notes.md": re.compile(r"^## Mir ", re.MULTILINE),
 }
+
+LANDING_PAGE = "doc/sphinx/release-notes/index.md"
+RELEASE_LINK = re.compile(
+    r"^(?P<link>- (?:\{doc\}`Mir (?P<local_version>\d+\.\d+) <(?P=local_version)>`"
+    r"|\[Mir (?P<versioned_version>\d+\.\d+)\]"
+    r"\(\.\./\.\./(?P=versioned_version)/release-notes/(?P=versioned_version)/\)))"
+    r"(?P<status> \((?:in development|[Rr]elease [Cc]andidate)\))?$",
+    re.MULTILINE,
+)
 
 # e.g. "* Thu Aug 13 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0~dev-1"
 SPEC_ENTRY_HEADER = re.compile(r"^\* (\w{3} \w{3} \d{1,2} \d{4}) (.*~dev.*)$")
@@ -125,6 +133,9 @@ def merge_preamble(base_pre, ours_pre, theirs_pre):
 
 
 def merge(path_key, base_text, ours_text, theirs_text):
+    if path_key == LANDING_PAGE:
+        return merge_landing_page(base_text, ours_text, theirs_text)
+
     base_pre, base_body = split_preamble(path_key, base_text)
     ours_pre, ours_body = split_preamble(path_key, ours_text)
     theirs_pre, theirs_body = split_preamble(path_key, theirs_text)
@@ -149,9 +160,57 @@ def merge(path_key, base_text, ours_text, theirs_text):
     return preamble + body, conflict
 
 
+def merge_landing_page(base_text, ours_text, theirs_text):
+    def links(text):
+        return {
+            match["local_version"] or match["versioned_version"]: match
+            for match in RELEASE_LINK.finditer(text)
+        }
+
+    base_links = links(base_text)
+    ours_links = links(ours_text)
+    theirs_links = links(theirs_text)
+    for version, base_link in base_links.items():
+        ours_link = ours_links.get(version)
+        theirs_link = theirs_links.get(version)
+        if ours_link is None or theirs_link is None:
+            continue
+        if ours_link.group() == base_link.group():
+            resolved = theirs_link.group()
+        elif (
+            theirs_link.group() == base_link.group()
+            or ours_link.group() == theirs_link.group()
+        ):
+            resolved = ours_link.group()
+        else:
+            resolved = None
+            for candidate, incoming in [
+                (ours_link, theirs_link),
+                (theirs_link, ours_link),
+            ]:
+                if (
+                    candidate["versioned_version"]
+                    and (candidate["status"] or "").lower() == " (release candidate)"
+                    and incoming["local_version"]
+                    and (incoming["status"] or "").lower()
+                    in ("", " (release candidate)")
+                ):
+                    resolved = (
+                        incoming.group()
+                        if not incoming["status"]
+                        else candidate.group()
+                    )
+            if resolved is None:
+                continue
+        base_text = base_text.replace(base_link.group(), resolved)
+        ours_text = ours_text.replace(ours_link.group(), resolved)
+        theirs_text = theirs_text.replace(theirs_link.group(), resolved)
+    return merge_preamble(base_text, ours_text, theirs_text)
+
+
 def main():
     base_path, ours_path, theirs_path, repo_path = sys.argv[1:5]
-    if repo_path not in ENTRY_START:
+    if repo_path not in ENTRY_START and repo_path != LANDING_PAGE:
         sys.exit(f"merge_release_entries: unsupported path {repo_path!r}")
 
     merged, conflict = merge(

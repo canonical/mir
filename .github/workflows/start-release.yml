@@ -137,6 +137,22 @@ jobs:
           ' rpm/mir.spec
           git add rpm/mir.spec
 
+      - name: Mark documentation as a release candidate
+        run: |
+          MINOR_VERSION="${INPUTS_VERSION%.*}"
+          PAGE="doc/sphinx/release-notes/${MINOR_VERSION}.md"
+          awk --include=inplace '
+            $0 == "Unreleased" { $0 = "Release Candidate" }
+            { print }
+          ' "$PAGE"
+          awk --include=inplace -v version="${MINOR_VERSION}" '
+            BEGIN { entry = "- {doc}`Mir " version " <" version ">`" }
+            index($0, entry) == 1 { print entry " (release candidate)"; found = 1; next }
+            { print }
+            END { if (!found) exit 1 }
+          ' doc/sphinx/release-notes/index.md
+          git add doc/sphinx/release-notes/index.md "$PAGE"
+
       - name: Find previous release tag
         id: previous_tag
         run: |
@@ -212,7 +228,7 @@ jobs:
               body: [
                 '<!-- github-generated-release-notes -->',
                 '## GitHub-generated release notes',
-                'Use this as raw material to craft the `debian/changelog` entry for this release, following `.github/workflows/changelog-template`; it is not the final release notes.',
+                `Use this as raw material to refine the Mir ${process.env.INPUTS_VERSION} section in doc/sphinx/release-notes/${process.env.INPUTS_VERSION.split('.').slice(0, 2).join('.')}.md following doc/sphinx/release-notes/template.include.md, and the concise debian/changelog entry following .github/workflows/changelog-template. The refine-release-notes skill covers both; these generated notes are not the final release notes.`,
                 generatedNotes.data.body,
               ].join('\n\n'),
             });
@@ -303,6 +319,28 @@ jobs:
             { print }
           ' rpm/mir.spec
           git add rpm/mir.spec
+
+      - name: Create development release notes
+        run: |
+          MINOR_VERSION="${NEXT_VERSION%.*}"
+          awk -v version="${NEXT_VERSION}" -v minor="${MINOR_VERSION}" '
+            { gsub(/@VERSION@/, version); gsub(/@MINOR@/, minor); print }
+          ' doc/sphinx/release-notes/template.include.md > "doc/sphinx/release-notes/${MINOR_VERSION}.md"
+          awk --include=inplace -v version="${MINOR_VERSION}" -v previous="${INPUTS_VERSION%.*}" '
+            $0 == "- {doc}`Mir " previous " <" previous ">` (in development)" {
+              print "- {doc}`Mir " version " <" version ">` (in development)"
+              print "- [Mir " previous "](../../" previous "/release-notes/" previous "/) (Release Candidate)"
+              inserted = 1
+              next
+            }
+            !toc_inserted && /^[0-9]+\.[0-9]+ </ {
+              print version " <" version ">"
+              toc_inserted = 1
+            }
+            { print }
+            END { if (!inserted || !toc_inserted) exit 1 }
+          ' doc/sphinx/release-notes/index.md
+          git add doc/sphinx/release-notes/index.md "doc/sphinx/release-notes/${MINOR_VERSION}.md"
 
       - name: Commit and push next development version
         run: |
