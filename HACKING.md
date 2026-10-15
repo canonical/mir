@@ -2,7 +2,7 @@
 
 ## Merging release branches
 
-`debian/changelog`, `rpm/mir.spec` and `doc/sphinx/release-notes.md` use a custom git merge
+`debian/changelog`, `rpm/mir.spec` and `doc/sphinx/release-notes/index.md` use a custom git merge
 driver, defined in `.gitconfig`, to auto-resolve the conflicts that come from merging a release
 branch into `main`. Enable it once per clone with:
 
