@@ -91,10 +91,11 @@ TEST_F(TestLog, log_debug_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
-    mir::log_debug({tag}, message);
+    mir::log_debug({tag}, message + "!");
     mir::log_debug({tag}, fmt_string, value);
 }
 
@@ -105,10 +106,11 @@ TEST_F(TestLog, log_info_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::informational, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::informational);
-    mir::log_info({tag}, message);
+    mir::log_info({tag}, message + "!");
     mir::log_info({tag}, fmt_string, value);
 }
 
@@ -119,10 +121,11 @@ TEST_F(TestLog, log_warning_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::warning, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::warning);
-    mir::log_warning({tag}, message);
+    mir::log_warning({tag}, message + "!");
     mir::log_warning({tag}, fmt_string, value);
 }
 
@@ -133,10 +136,11 @@ TEST_F(TestLog, log_error_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::error, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::error, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::error, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::error);
-    mir::log_error({tag}, message);
+    mir::log_error({tag}, message + "!");
     mir::log_error({tag}, fmt_string, value);
 }
 
@@ -147,10 +151,11 @@ TEST_F(TestLog, log_critical_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::critical, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::critical, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::critical, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::critical);
-    mir::log_critical({tag}, message);
+    mir::log_critical({tag}, message + "!");
     mir::log_critical({tag}, fmt_string, value);
 }
 
