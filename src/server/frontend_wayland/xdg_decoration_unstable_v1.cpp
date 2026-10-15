@@ -126,7 +126,10 @@ private:
 class XdgDecorationManagerV1 : public wayland::XdgDecorationManagerV1
 {
 public:
-    XdgDecorationManagerV1(wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy);
+    XdgDecorationManagerV1(
+        wl_resource* resource,
+        std::shared_ptr<DecorationStrategy> strategy,
+        std::shared_ptr<ToplevelsWithDecorations> toplevels_with_decorations);
 
     class Global : public wayland::XdgDecorationManagerV1::Global
     {
@@ -135,6 +138,9 @@ public:
 
     private:
         std::shared_ptr<DecorationStrategy> const decoration_strategy;
+        /// Shared by every manager binding, so a client can't bypass already_constructed or lose a retained
+        /// mode by binding the manager again.
+        std::shared_ptr<ToplevelsWithDecorations> const toplevels_with_decorations;
         void bind(wl_resource* new_zxdg_decoration_manager_v1) override;
     };
 
@@ -184,19 +190,22 @@ auto mir::frontend::create_xdg_decoration_unstable_v1(wl_display* display, std::
 mir::frontend::XdgDecorationManagerV1::Global::Global(
     wl_display* display, std::shared_ptr<DecorationStrategy> strategy) :
     wayland::XdgDecorationManagerV1::Global::Global{display, Version<2>{}},
-    decoration_strategy{std::move(strategy)}
+    decoration_strategy{std::move(strategy)},
+    toplevels_with_decorations{std::make_shared<ToplevelsWithDecorations>()}
 {
 }
 
 void mir::frontend::XdgDecorationManagerV1::Global::bind(wl_resource* new_zxdg_decoration_manager_v1)
 {
-    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1, std::move(decoration_strategy)};
+    new XdgDecorationManagerV1{new_zxdg_decoration_manager_v1, decoration_strategy, toplevels_with_decorations};
 }
 
 mir::frontend::XdgDecorationManagerV1::XdgDecorationManagerV1(
-    wl_resource* resource, std::shared_ptr<DecorationStrategy> strategy) :
+    wl_resource* resource,
+    std::shared_ptr<DecorationStrategy> strategy,
+    std::shared_ptr<ToplevelsWithDecorations> toplevels_with_decorations) :
     mir::wayland::XdgDecorationManagerV1{resource, Version<2>{}},
-    toplevels_with_decorations{std::make_shared<ToplevelsWithDecorations>()},
+    toplevels_with_decorations{std::move(toplevels_with_decorations)},
     decoration_strategy{std::move(strategy)}
 {
 }
@@ -224,8 +233,15 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     if (!toplevels_with_decorations->register_toplevel(toplevel))
     {
         throw mir::wayland::ProtocolError{
-            decoration->resource, Error::already_constructed, "Decoration already constructed for this toplevel"};
+            resource, Error::already_constructed, "Decoration already constructed for this toplevel"};
     }
+
+    auto const initial_mode =
+        toplevels_with_decorations->committed_mode(toplevel).value_or(DecorationStrategy::DecorationsType::csd);
+    toplevels_with_decorations->set_pending_mode(toplevel, initial_mode);
+    shell::SurfaceSpecification spec;
+    spec.server_side_decorated = initial_mode == DecorationStrategy::DecorationsType::ssd;
+    tl->apply_spec(spec);
 
     decoration->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
@@ -254,7 +270,8 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     tl->set_commit_hook(
         [toplevels_with_decorations = this->toplevels_with_decorations, toplevel, tl]()
         {
-            if (toplevels_with_decorations->surface_committed(toplevel))
+            auto const should_undecorate = toplevels_with_decorations->surface_committed(toplevel);
+            if (should_undecorate)
             {
                 shell::SurfaceSpecification spec;
                 spec.server_side_decorated = false;
@@ -358,10 +375,6 @@ void mir::frontend::XdgToplevelDecorationV1::set_mode(uint32_t mode)
 
 void mir::frontend::XdgToplevelDecorationV1::unset_mode()
 {
-    // Keep the mode the surface actually has (e.g. retained across a destroy+recreate with no intervening
-    // commit, per xdg-decoration v2); otherwise fall back to the compositor's default.
-    auto const default_type =
-        toplevels_with_decorations->committed_mode(toplevel_resource).value_or(decoration_strategy->default_style());
-    auto const protocol_mode = to_mode(default_type);
+    auto const protocol_mode = to_mode(decoration_strategy->default_style());
     update_mode(protocol_mode);
 }
