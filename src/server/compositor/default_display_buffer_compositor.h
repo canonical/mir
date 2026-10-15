@@ -50,7 +50,8 @@ public:
         graphics::GLRenderingProvider& gl_provider,
         std::shared_ptr<renderer::Renderer> const& renderer,
         std::shared_ptr<graphics::OutputFilter> const& output_filter,
-        std::shared_ptr<compositor::CompositorReport> const& report);
+        std::shared_ptr<compositor::CompositorReport> const& report,
+        bool post_initial_frame = false);
 
     bool composite(SceneElementSequence&& scene_sequence) override;
 
@@ -60,6 +61,7 @@ private:
     std::shared_ptr<graphics::OutputFilter> const output_filter;
     std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> const fb_adaptor;
     std::shared_ptr<compositor::CompositorReport> const report;
+    bool const post_initial_frame;
     bool completed_first_render = false;
 };
 

@@ -179,6 +179,7 @@ try
         hover_click,
         touch_emulator,
         keymap,
+        [](mir::Server& server) { server.set_post_initial_frame(true); },
     });
 
     // Propagate any test failure

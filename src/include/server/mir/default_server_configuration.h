@@ -232,6 +232,8 @@ public:
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> the_display_buffer_compositor_factory();
     virtual std::shared_ptr<compositor::DisplayBufferCompositorFactory> wrap_display_buffer_compositor_factory(
         std::shared_ptr<compositor::DisplayBufferCompositorFactory> const& wrapped);
+    /// Whether to post a frame on startup, even if there is nothing to show yet
+    virtual bool post_initial_frame();
     /** @} */
 
     /** @name compositor configuration - dependencies

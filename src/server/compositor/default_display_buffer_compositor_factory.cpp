@@ -37,13 +37,15 @@ mc::DefaultDisplayBufferCompositorFactory::DefaultDisplayBufferCompositorFactory
     std::shared_ptr<mir::renderer::RendererFactory> const& renderer_factory,
     std::shared_ptr<mg::GraphicBufferAllocator> const& buffer_allocator,
     std::shared_ptr<mc::CompositorReport> const& report,
-    std::shared_ptr<mg::OutputFilter> const& output_filter) :
+    std::shared_ptr<mg::OutputFilter> const& output_filter,
+    bool post_initial_frame) :
         platforms{std::move(render_platforms)},
         gl_config{std::move(gl_config)},
         renderer_factory{renderer_factory},
         buffer_allocator{buffer_allocator},
         report{report},
-        output_filter{output_filter}
+        output_filter{output_filter},
+        post_initial_frame{post_initial_frame}
 {
 }
 
@@ -88,5 +90,5 @@ mc::DefaultDisplayBufferCompositorFactory::create_compositor_for(
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_sink.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
-        display_sink, *chosen_allocator, std::move(renderer), output_filter, report);
+        display_sink, *chosen_allocator, std::move(renderer), output_filter, report, post_initial_frame);
 }
