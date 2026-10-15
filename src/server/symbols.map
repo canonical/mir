@@ -184,6 +184,7 @@ global:
     mir::Server::set_command_line*;
     mir::Server::set_command_line_handler*;
     mir::Server::set_config_filename*;
+    mir::Server::set_configuration_option_default*;
     mir::Server::set_exception_handler*;
     mir::Server::set_terminator*;
     mir::Server::set_the_decoration_strategy*;

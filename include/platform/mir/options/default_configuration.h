@@ -21,6 +21,9 @@
 #include <mir/options/program_option.h>
 #include <mir/shared_library.h>
 #include <boost/program_options/options_description.hpp>
+#include <map>
+#include <string>
+#include <variant>
 #include <vector>
 #include <unordered_map>
 
@@ -28,6 +31,8 @@ namespace mir
 {
 namespace options
 {
+using OptionDefault = std::variant<int, double, std::string, bool>;
+
 class DefaultConfiguration : public Configuration
 {
 public:
@@ -42,6 +47,16 @@ public:
         char const* argv[],
         std::function<void(int argc, char const* const* argv)> const& handler,
         std::string const& config_file);
+    // option_defaults replaces the default values of options provided by Mir and the
+    // platform modules. Defaults for options that are not provided are ignored, and a
+    // default of a different type to the option throws std::logic_error.
+    // If handler is empty the default handler (which reports unknown options) is used.
+    DefaultConfiguration(
+        int argc,
+        char const* argv[],
+        std::function<void(int argc, char const* const* argv)> const& handler,
+        std::string const& config_file,
+        std::map<std::string, OptionDefault> const& option_defaults);
     virtual ~DefaultConfiguration() = default;
 
     // add_options() allows users to add their own options. This MUST be called
@@ -54,6 +69,7 @@ private:
     std::vector<std::shared_ptr<SharedLibrary>> platform_libraries;
 
     std::string const config_file;
+    std::map<std::string, OptionDefault> const option_defaults;
 
     void add_platform_options();
     // accessed via the base interface, when access to add_options() has been "lost"

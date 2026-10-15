@@ -153,6 +153,7 @@ struct mir::Server::Self
 {
     bool exit_status{false};
     std::string config_file;
+    std::map<std::string, mo::OptionDefault> option_defaults;
     std::shared_ptr<ServerConfiguration> server_config;
 
     std::function<void()> pre_init_callback{[]{}};
@@ -249,16 +250,10 @@ std::shared_ptr<mo::DefaultConfiguration> configuration_options(
     int argc,
     char const** argv,
     std::function<void(int argc, char const* const* argv)> const& command_line_hander,
-    std::string const& config_file)
+    std::string const& config_file,
+    std::map<std::string, mo::OptionDefault> const& option_defaults)
 {
-    std::shared_ptr<mo::DefaultConfiguration> result;
-
-    if (command_line_hander)
-        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander, config_file);
-    else
-        result = std::make_shared<mo::DefaultConfiguration>(argc, argv, config_file);
-
-    return result;
+    return std::make_shared<mo::DefaultConfiguration>(argc, argv, command_line_hander, config_file, option_defaults);
 }
 
 template<typename ConfigPtr>
@@ -383,7 +378,8 @@ void mir::Server::apply_settings()
 {
     if (self->server_config) return;
 
-    auto const options = configuration_options(self->argc, self->argv, self->command_line_hander, self->config_file);
+    auto const options = configuration_options(
+        self->argc, self->argv, self->command_line_hander, self->config_file, self->option_defaults);
     self->add_configuration_options(*options);
 
     auto const config = std::make_shared<ServerConfiguration>(options, self);
@@ -680,6 +676,35 @@ void mir::Server::add_configuration_option(
         };
 
     self->set_add_configuration_options(option_adder);
+}
+
+void mir::Server::set_configuration_option_default(std::string const& option, int default_value)
+{
+    verify_setting_allowed(self->server_config);
+    self->option_defaults[option] = default_value;
+}
+
+void mir::Server::set_configuration_option_default(std::string const& option, double default_value)
+{
+    verify_setting_allowed(self->server_config);
+    self->option_defaults[option] = default_value;
+}
+
+void mir::Server::set_configuration_option_default(std::string const& option, std::string const& default_value)
+{
+    verify_setting_allowed(self->server_config);
+    self->option_defaults[option] = std::string{default_value};
+}
+
+void mir::Server::set_configuration_option_default(std::string const& option, bool default_value)
+{
+    verify_setting_allowed(self->server_config);
+    self->option_defaults[option] = default_value;
+}
+
+void mir::Server::set_configuration_option_default(std::string const& option, char const* default_value)
+{
+    set_configuration_option_default(option, std::string{default_value});
 }
 
 void mir::Server::add_configuration_option(

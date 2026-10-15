@@ -16,6 +16,7 @@
 
 #include <mir_test_framework/headless_test.h>
 
+#include <mir/abnormal_exit.h>
 #include <mir/options/option.h>
 
 #include <boost/program_options/errors.hpp>
@@ -243,4 +244,116 @@ TEST_F(ServerConfigurationOptions, are_read_from_xdg_config_home_before_xdg_conf
     auto const options = server.get_options();
 
     EXPECT_THAT(options->get(test_config_key, not_found), StrEq(fake_xdg_config_home));
+}
+
+TEST_F(ServerConfigurationOptions, string_default_can_be_overridden)
+{
+    server.set_configuration_option_default("cursor", "null");
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_THAT(options->get<std::string>("cursor"), StrEq("null"));
+}
+
+TEST_F(ServerConfigurationOptions, int_default_can_be_overridden)
+{
+    server.set_configuration_option_default("composite-delay", 42);
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_THAT(options->get<int>("composite-delay"), Eq(42));
+}
+
+TEST_F(ServerConfigurationOptions, bool_default_can_be_overridden)
+{
+    server.set_configuration_option_default("enable-input", false);
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_FALSE(options->get<bool>("enable-input"));
+}
+
+TEST_F(ServerConfigurationOptions, command_line_takes_precedence_over_overridden_default)
+{
+    const int argc = 3;
+    char const* argv[argc] = {__PRETTY_FUNCTION__, "--cursor", "software"};
+
+    server.set_command_line(argc, argv);
+    server.set_configuration_option_default("cursor", "null");
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_THAT(options->get<std::string>("cursor"), StrEq("software"));
+}
+
+TEST_F(ServerConfigurationOptions, environment_takes_precedence_over_overridden_default)
+{
+    add_to_environment("MIR_SERVER_CURSOR", "software");
+    server.set_configuration_option_default("cursor", "null");
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_THAT(options->get<std::string>("cursor"), StrEq("software"));
+}
+
+TEST_F(ServerConfigurationOptions, overridden_default_of_wrong_type_is_an_error)
+{
+    server.set_configuration_option_default("composite-delay", "42");
+
+    EXPECT_THROW(server.apply_settings(), std::logic_error);
+}
+
+TEST_F(ServerConfigurationOptions, overridden_default_for_unknown_option_is_ignored)
+{
+    server.set_configuration_option_default("not-actually-an-option-defined", "a string");
+
+    server.apply_settings();
+
+    auto const options = server.get_options();
+    EXPECT_FALSE(options->is_set("not-actually-an-option-defined"));
+}
+
+TEST_F(ServerConfigurationOptions, overridden_default_is_shown_in_help)
+{
+    const int argc = 2;
+    char const* argv[argc] = {__PRETTY_FUNCTION__, "--help"};
+
+    server.set_command_line(argc, argv);
+    server.set_configuration_option_default("cursor", "null");
+
+    try
+    {
+        server.apply_settings();
+        server.get_options();
+        FAIL() << "Expected help output";
+    }
+    catch (mir::ExitWithOutput const& output)
+    {
+        EXPECT_THAT(output.what(), HasSubstr("--cursor arg (=null)"));
+    }
+}
+
+TEST_F(ServerConfigurationOptions, overridden_default_is_shown_in_help_markdown)
+{
+    const int argc = 2;
+    char const* argv[argc] = {__PRETTY_FUNCTION__, "--help-markdown"};
+
+    server.set_command_line(argc, argv);
+    server.set_configuration_option_default("composite-delay", 42);
+
+    try
+    {
+        server.apply_settings();
+        server.get_options();
+        FAIL() << "Expected help output";
+    }
+    catch (mir::ExitWithOutput const& output)
+    {
+        EXPECT_THAT(output.what(), HasSubstr("Defaults to `42`."));
+    }
 }
