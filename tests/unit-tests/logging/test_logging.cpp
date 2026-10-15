@@ -225,6 +225,63 @@ TEST_F(TestLog, can_set_severity_by_full_path_when_tag_name_is_the_same)
     EXPECT_TRUE(ml::logging_enabled_for(bypass_b, severity));
 }
 
+TEST_F(TestLog, repeated_message_is_logged_once_within_window)
+{
+    auto const severity = ml::Severity::warning;
+    auto const message = std::string{"presentation failed"};
+
+    EXPECT_CALL(*logger, log(severity, message, std::string{"gbm-kms"})).Times(1);
+
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", "presentation %s", "failed");
+}
+
+TEST_F(TestLog, set_logger_resets_deduplication_state)
+{
+    auto const severity = ml::Severity::warning;
+    auto const message = std::string{"presentation failed"};
+    auto const replacement = std::make_shared<testing::NiceMock<MockLogger>>();
+
+    EXPECT_CALL(*logger, log(severity, message, std::string{"gbm-kms"})).Times(1);
+    EXPECT_CALL(*replacement, log(severity, message, std::string{"gbm-kms"})).Times(1);
+
+    mir::log(severity, "gbm-kms", message);
+    ml::set_logger(replacement);
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", message);
+}
+
+TEST_F(TestLog, reinstalling_same_logger_resets_deduplication_state)
+{
+    auto const severity = ml::Severity::warning;
+    auto const message = std::string{"presentation failed"};
+
+    EXPECT_CALL(*logger, log(severity, message, std::string{"gbm-kms"})).Times(2);
+
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", message);
+    ml::set_logger(logger);
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", message);
+}
+
+TEST_F(TestLog, disabled_tagged_calls_do_not_consume_deduplication_history)
+{
+    auto const severity = ml::Severity::debug;
+    auto const message = "tagged failure";
+    auto const& tag = ml::graphics();
+
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::error);
+    EXPECT_CALL(*logger, log(testing::_, testing::_, testing::_)).Times(0);
+    mir::log(severity, {tag}, message);
+    testing::Mock::VerifyAndClearExpectations(logger.get());
+
+    ml::tag::set_severity(ml::tag::name(tag), severity);
+    EXPECT_CALL(*logger, log(severity, std::string{message}, std::string{"graphics"})).Times(1);
+    mir::log(severity, {tag}, message);
+    mir::log(severity, {tag}, message);
+}
+
 class LogDeduplicatorTest : public testing::Test
 {
 public:
