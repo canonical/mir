@@ -115,11 +115,19 @@ public:
     {
     }
 
-    ~SurfacelessEGLContext() override // TICS -bugprone-exception-escape
+    ~SurfacelessEGLContext() override
     {
-        make_current();
-        release_current();
-        eglDestroyContext(dpy, ctx);
+        try {
+            release_current();
+            eglDestroyContext(dpy, ctx);
+        } catch (std::runtime_error const& error) {
+            mir::log_info("Cannot destroy surfaceless EGL context: %s", error.what());
+            mir::log(
+                mir::logging::Severity::debug,
+                MIR_LOG_COMPONENT,
+                std::current_exception(),
+                "Detailed error: ");
+        }
     }
 
     void make_current() const override
