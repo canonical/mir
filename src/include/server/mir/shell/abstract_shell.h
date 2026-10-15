@@ -60,7 +60,7 @@ public:
     ~AbstractShell() noexcept;
 
     auto open_session(
-        pid_t client_pid,
+        frontend::SessionCredentials&& creds,
         Fd socket_fd,
         std::string const& name) -> std::shared_ptr<scene::Session> override;
 
