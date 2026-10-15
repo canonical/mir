@@ -1,0 +1,50 @@
+---
+myst:
+  html_meta:
+    description: New features, fixes and compatibility changes in the Mir @MINOR@ series.
+---
+
+(release-@MINOR@)=
+
+# Mir @MINOR@
+
+<!-- Keep one page per minor series, with point-release sections newest first.
+Preserve the invisible release anchors; do not add redundant version headings,
+a "release notes" title suffix, or a "These release notes cover..." introduction. -->
+
+(release-@VERSION@)=
+
+Unreleased
+
+<!-- Keep only the latest release date on this page, as normal text, not a heading.
+Leave Unreleased for the RC workflow to mark Release Candidate, then for finalization
+to replace with the date. Remove older date paragraphs when preparing a new section,
+without removing their release content or anchors. -->
+
+## Requirements and compatibility
+
+<!-- Describe supported environments and any changes to build or runtime dependencies.
+Do not infer support lifetimes or hardware requirements from the format example. -->
+
+## What's new in [Mir @VERSION@](https://github.com/canonical/mir/releases/v@VERSION@)
+
+<!-- Give each significant feature a descriptive third-level heading. Explain what
+changed, who benefits, and how to adopt it. Link to documentation and relevant PRs. -->
+
+## Minor features
+
+<!-- Group smaller improvements and bug fixes under descriptive third-level headings.
+Explain their observable effects rather than repeating commit or PR titles.
+For patch releases, replace this heading with the linked full version:
+## [Mir @VERSION@](https://github.com/canonical/mir/releases/v@VERSION@)
+Keep Minor features for feature releases. -->
+
+## Backwards-incompatible changes
+
+<!-- Describe affected users, previous and new behavior, and migration steps.
+Omit the ABI summary: it belongs in the Debian changelog, not this page. -->
+
+## Deprecated features
+
+<!-- Identify replacements and planned removal versions only when confirmed.
+Remove unused sections and all template comments when refining this page. -->
