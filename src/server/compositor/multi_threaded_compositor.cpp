@@ -33,6 +33,7 @@
 #include <mir/signal.h>
 #include <mir/log.h>
 
+#include <algorithm>
 #include <atomic>
 #include <thread>
 #include <chrono>
@@ -237,15 +238,16 @@ public:
                      */
                     auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
                                  force_sleep : group.recommended_sleep();
-                    std::this_thread::sleep_for(delay);
+                    auto wake_time = std::chrono::steady_clock::now() + delay;
 
                     /* Pace recovery retries to at least one frame interval, so a
                      * persistently failing post() cannot busy-loop.
                      */
                     if (retry)
                     {
-                        std::this_thread::sleep_until(attempt_start + recovery_retry_interval);
+                        wake_time = std::max(wake_time, attempt_start + recovery_retry_interval);
                     }
+                    std::this_thread::sleep_until(wake_time);
                 }
             }
         }
