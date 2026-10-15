@@ -93,7 +93,7 @@ public:
 
     geometry::Rectangle view_area() const override;
 
-    void set_next_image(std::unique_ptr<Framebuffer> content) override;
+    void set_next_image(FramebufferPtr content) override;
 
     bool overlay(std::vector<DisplayElement> const& renderlist) override;
 
