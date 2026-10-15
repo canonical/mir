@@ -39,7 +39,7 @@
     protocol name is removed and the interface version numbers are reset.
   </description>
 
-  <interface name="mir_shell_v1" version="1">
+  <interface name="mir_shell_v1" version="2">
     <description summary="create surface archetypes that are recognised by the desktop">
       Clients can use this interface to assign an archetype to wl_surfaces.
 
@@ -62,15 +62,16 @@
       archetype, and so cannot be combined with one; in particular the
       wl_subsurface role and the cursor role (see wl_pointer.set_cursor).
       Assigning an archetype to a surface that already has such a role raises
-      an archetype error on this object. Assigning such a role to a
+      an invalid_archetype error on this object. Assigning such a role to a
       surface that already has an archetype raises the error defined by the
       request that assigns the role.
 
-      Some roles and extensions duplicate the semantics of an archetype.
+      Some roles and extensions duplicate the semantics of an archetype. A
+      client using this protocol should implement menus and tooltips with
+      mir_menu_surface_v1 and mir_tip_surface_v1 rather than with xdg_popup,
+      and dialogs with mir_dialog_surface_v1 rather than with xdg_dialog_v1.
       These remain distinct mechanisms: the compositor applies archetype
-      policy only to surfaces that have been given an archetype. A client using
-      this protocol should implement dialogs with mir_dialog_surface_v1 rather
-      than with xdg_dialog_v1.
+      policy only to surfaces that have been given an archetype.
 
       If a client intends to use an archetype, it should assign the surface an
       initial archetype during the initial commit without a buffer attached (see
@@ -96,19 +97,21 @@
     </description>
 
     <enum name="error">
-      <entry name="archetype" value="0"
+      <entry name="invalid_archetype" value="0"
              summary="the archetype cannot be assigned to this surface"/>
+      <entry name="invalid_positioner" value="1"
+             summary="the positioner is incomplete"/>
     </enum>
 
     <request name="get_regular_surface">
       <description summary="assign the mir_regular_surface_v1 archetype">
         Assign the regular surface archetype to the given wl_surface, or raise
-        an archetype error if another archetype is already assigned and
+        an invalid_archetype error if another archetype is already assigned and
         the transition is disallowed.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
-        raise an archetype error.
+        raise an invalid_archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_regular_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -117,12 +120,12 @@
     <request name="get_floating_regular_surface">
       <description summary="assign the mir_floating_regular_surface_v1 archetype">
         Assign the floating regular surface archetype to the given wl_surface,
-        or raise an archetype error if another archetype is already
+        or raise an invalid_archetype error if another archetype is already
         assigned and the transition is disallowed.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
-        raise an archetype error.
+        raise an invalid_archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_floating_regular_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -131,12 +134,12 @@
     <request name="get_dialog_surface">
       <description summary="assign the mir_dialog_surface_v1 archetype">
         Assign the dialog surface archetype to the given wl_surface, or raise
-        an archetype error if another archetype is already assigned and
+        an invalid_archetype error if another archetype is already assigned and
         the transition is disallowed.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
-        raise an archetype error.
+        raise an invalid_archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_dialog_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -145,15 +148,15 @@
     <request name="get_satellite_surface">
       <description summary="assign the mir_satellite_surface_v1 archetype">
         Assign the satellite surface archetype to the given wl_surface, or
-        raise an archetype error if another archetype is already
+        raise an invalid_archetype error if another archetype is already
         assigned and the transition is disallowed.
 
         The satellite is placed according to the rules in the given positioner.
-        If the positioner is incomplete, an error is raised.
+        If the positioner is incomplete, an invalid_positioner error is raised.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
-        raise an archetype error.
+        raise an invalid_archetype error.
       </description>
       <arg name="id" type="new_id" interface="mir_satellite_surface_v1"/>
       <arg name="surface" type="object" interface="wl_surface"/>
@@ -164,7 +167,8 @@
       <description summary="create a positioner object">
         Create a positioner object. A positioner object is used to position
         surfaces relative to some parent surface. See the interface description
-        and mir_shell_v1.get_satellite_surface for details.
+        and mir_shell_v1.get_satellite_surface, mir_shell_v1.get_menu_surface
+        and mir_shell_v1.get_tip_surface for details.
       </description>
       <arg name="id" type="new_id" interface="mir_positioner_v1"/>
     </request>
@@ -175,6 +179,44 @@
         object any more. Objects that have been created through this instance
         are not affected.
       </description>
+    </request>
+
+    <!-- Version 2 additions -->
+
+    <request name="get_menu_surface" since="2">
+      <description summary="assign the mir_menu_surface_v1 archetype">
+        Assign the menu surface archetype to the given wl_surface, or raise an
+        invalid_archetype error if another archetype is already assigned and
+        the transition is disallowed.
+
+        The menu is placed according to the rules in the given positioner. If
+        the positioner is incomplete, an invalid_positioner error is raised.
+
+        The previous archetype's object becomes inert; the client should
+        destroy it. Any further requests made on the previous archetype object
+        raise an invalid_archetype error.
+      </description>
+      <arg name="id" type="new_id" interface="mir_menu_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
+    </request>
+
+    <request name="get_tip_surface" since="2">
+      <description summary="assign the mir_tip_surface_v1 archetype">
+        Assign the tip surface archetype to the given wl_surface, or raise an
+        invalid_archetype error if another archetype is already assigned and
+        the transition is disallowed.
+
+        The tip is placed according to the rules in the given positioner. If
+        the positioner is incomplete, an invalid_positioner error is raised.
+
+        The previous archetype's object becomes inert; the client should
+        destroy it. Any further requests made on the previous archetype object
+        raise an invalid_archetype error.
+      </description>
+      <arg name="id" type="new_id" interface="mir_tip_surface_v1"/>
+      <arg name="surface" type="object" interface="wl_surface"/>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
     </request>
   </interface>
 
@@ -273,6 +315,11 @@
       dialog is open.
     </description>
 
+    <enum name="error">
+      <entry name="invalid_archetype" value="0"
+             summary="the archetype has been removed from the surface"/>
+    </enum>
+
     <request name="reposition">
       <description summary="recalculate the satellite's location">
         Reposition an already-mapped satellite. The satellite will be placed
@@ -339,7 +386,7 @@
       For a mir_positioner object to be considered complete, it must have a
       non-zero size set by set_size, and a non-zero anchor rectangle set by
       set_anchor_rect. Passing an incomplete mir_positioner object when
-      positioning a surface raises an error.
+      positioning a surface raises a mir_shell_v1.invalid_positioner error.
     </description>
 
     <enum name="error">
@@ -561,6 +608,143 @@
       </description>
       <arg name="x" type="int" summary="surface position x offset"/>
       <arg name="y" type="int" summary="surface position y offset"/>
+    </request>
+  </interface>
+
+  <!-- Version 2 additions -->
+
+  <interface name="mir_menu_surface_v1" version="1">
+    <description summary="a transient list of commands or options">
+      An archetype for surfaces that are designed to be rendered in a
+      desktop-like environment.
+
+      A menu presents a short-lived list of commands or options, positioned
+      relative to the window or control that invoked it: for example a menu bar
+      menu, a context menu, or a submenu of either.
+
+      A menu is always on top of its parent, and is never given a title bar or
+      window controls. It takes input focus for as long as it is open, and the
+      compositor should dismiss it when the user activates one of its items,
+      interacts with anything outside it, or when its parent is deactivated.
+
+      Menus may be nested: the parent of a submenu is the menu that opened it.
+      Dismissing a menu also dismisses every menu it is an ancestor of.
+    </description>
+
+    <enum name="error">
+      <entry name="invalid_archetype" value="0"
+             summary="the archetype has been removed from the surface"/>
+    </enum>
+
+    <request name="reposition">
+      <description summary="recalculate the menu's location">
+        Reposition an already-mapped menu. The menu will be placed given the
+        details in the passed mir_positioner_v1 object, and a
+        mir_menu_surface_v1.repositioned event followed by an
+        xdg_surface.configure event will be emitted in response. Any parameters
+        set by the previous positioner will be discarded.
+
+        The passed token will be sent in the corresponding
+        mir_menu_surface_v1.repositioned event. The new menu position will not
+        take effect until the corresponding configure event is acknowledged by
+        the client. The token itself is opaque, and has no other special
+        meaning.
+
+        If multiple reposition requests are sent, the compositor may skip all
+        but the last one.
+      </description>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </request>
+
+    <event name="repositioned">
+      <description summary="signal the completion of a reposition request">
+        The repositioned event is sent as part of a menu configuration
+        sequence, together with xdg_surface.configure, to notify the completion
+        of a mir_menu_surface_v1.reposition request. The token argument is the
+        token passed in that request.
+
+        Immediately after this event is emitted, xdg_surface.configure will be
+        sent with the updated size and position, as well as a new configure
+        serial.
+
+        The client may optionally update the content of the menu, but must
+        acknowledge the new menu configuration for the new position to take
+        effect. See xdg_surface.ack_configure for details.
+      </description>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the menu surface archetype">
+        Destroy the archetype object and remove the archetype from the surface.
+      </description>
+    </request>
+  </interface>
+
+  <interface name="mir_tip_surface_v1" version="1">
+    <description summary="a transient, non-interactive explanatory surface">
+      An archetype for surfaces that are designed to be rendered in a
+      desktop-like environment.
+
+      A tip provides supplementary information about a point in its parent: for
+      example a tooltip describing the control the pointer is resting on.
+
+      A tip is always on top of its parent and never takes input focus, so the
+      parent remains active while a tip is present. Because a tip is purely
+      informational, the compositor may dismiss it without notice: for example
+      when the pointer leaves the region it describes, when the user starts
+      typing, or when the parent is deactivated.
+    </description>
+
+    <enum name="error">
+      <entry name="invalid_archetype" value="0"
+             summary="the archetype has been removed from the surface"/>
+    </enum>
+
+    <request name="reposition">
+      <description summary="recalculate the tip's location">
+        Reposition an already-mapped tip. The tip will be placed given the
+        details in the passed mir_positioner_v1 object, and a
+        mir_tip_surface_v1.repositioned event followed by an
+        xdg_surface.configure event will be emitted in response. Any parameters
+        set by the previous positioner will be discarded.
+
+        The passed token will be sent in the corresponding
+        mir_tip_surface_v1.repositioned event. The new tip position will not
+        take effect until the corresponding configure event is acknowledged by
+        the client. The token itself is opaque, and has no other special
+        meaning.
+
+        If multiple reposition requests are sent, the compositor may skip all
+        but the last one.
+      </description>
+      <arg name="positioner" type="object" interface="mir_positioner_v1"/>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </request>
+
+    <event name="repositioned">
+      <description summary="signal the completion of a reposition request">
+        The repositioned event is sent as part of a tip configuration sequence,
+        together with xdg_surface.configure, to notify the completion of a
+        mir_tip_surface_v1.reposition request. The token argument is the token
+        passed in that request.
+
+        Immediately after this event is emitted, xdg_surface.configure will be
+        sent with the updated size and position, as well as a new configure
+        serial.
+
+        The client may optionally update the content of the tip, but must
+        acknowledge the new tip configuration for the new position to take
+        effect. See xdg_surface.ack_configure for details.
+      </description>
+      <arg name="token" type="uint" summary="reposition request token"/>
+    </event>
+
+    <request name="destroy" type="destructor">
+      <description summary="destroy the tip surface archetype">
+        Destroy the archetype object and remove the archetype from the surface.
+      </description>
     </request>
   </interface>
 </protocol>

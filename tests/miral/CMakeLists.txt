@@ -75,6 +75,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     live_config.cpp
     live_config_ini_file.cpp
     magnifier.cpp
+    mir_shell.cpp
     output_configuration.cpp
     output_filter.cpp
     sticky_keys.cpp

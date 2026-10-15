@@ -490,6 +490,15 @@ void mf::WlPointer::set_cursor(
                     Error::role,
                     "Surface already has a non-cursor role"};
             }
+            // The cursor role cannot be combined with a mir_shell_v1 archetype
+            // (see mir-shell-unstable-v1.xml).
+            if (wl_surface->has_archetype())
+            {
+                throw mw::ProtocolError{
+                    resource,
+                    Error::role,
+                    "Surface already has an archetype"};
+            }
             cursor.reset(); // clean up old cursor before creating new one
             cursor = std::make_unique<WlSurfaceCursor>(wl_surface, cursor_hotspot, commit_handler);
             if (surface_under_cursor)

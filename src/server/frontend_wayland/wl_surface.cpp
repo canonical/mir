@@ -22,6 +22,7 @@
 #include "wayland_connector.h"
 #include "wayland_utils.h"
 #include "wl_surface_role.h"
+#include "window_wl_surface_role.h"
 #include "wl_subcompositor.h"
 #include "wl_region.h"
 #include "shm.h"
@@ -131,6 +132,9 @@ mf::WlSurface::WlSurface(
 
 mf::WlSurface::~WlSurface()
 {
+    if (archetype)
+        archetype->make_inert();
+
     // We can't use a function try block as we want to access `client`:
     // "Before any catch clauses of a function-try-block on a destructor are entered,
     // all bases and non-variant members have already been destroyed."
@@ -208,6 +212,27 @@ void mf::WlSurface::clear_role()
 auto mf::WlSurface::can_set_role_type(std::type_info const* role_) const -> bool
 {
     return previous_role_type == &typeid(null_role) || *previous_role_type == *role_;
+}
+
+auto mf::WlSurface::role_accepts_archetype() const -> bool
+{
+    // An archetype may be assigned before the surface has a role, and takes effect once a
+    // compatible role is assigned.
+    return !has_role() || dynamic_cast<WindowWlSurfaceRole const*>(role);
+}
+
+void mf::WlSurface::set_archetype(WlSurfaceArchetype* archetype_)
+{
+    if (archetype && archetype != archetype_)
+        archetype->make_inert();
+
+    archetype = archetype_;
+}
+
+void mf::WlSurface::clear_archetype(WlSurfaceArchetype const* archetype_)
+{
+    if (archetype == archetype_)
+        archetype = nullptr;
 }
 
 void mf::WlSurface::set_pending_offset(std::optional<geom::Displacement> const& offset)
