@@ -569,9 +569,34 @@ global:
     typeinfo?for?mir::wayland::InputPanelSurfaceV1;
     vtable?for?mir::wayland::InputPanelSurfaceV1;
 
-    mir::wayland::MirShellV1::*;
-    non-virtual?thunk?to?mir::wayland::MirShellV1::*;
-    virtual?thunk?to?mir::wayland::MirShellV1::*;
+    # mir_shell_v1 gains requests in later versions, a wildcard here would bind,
+    # those new symbols to this (released) version
+    mir::wayland::MirShellV1::MirShellV1*;
+    mir::wayland::MirShellV1::?MirShellV1*;
+    mir::wayland::MirShellV1::destroy*;
+    mir::wayland::MirShellV1::from*;
+    mir::wayland::MirShellV1::is_instance*;
+    mir::wayland::MirShellV1::Error::invalid_archetype;
+    mir::wayland::MirShellV1::Error::invalid_positioner;
+    mir::wayland::MirShellV1::Global::*;
+    mir::wayland::MirShellV1::Thunks::bind_thunk*;
+    mir::wayland::MirShellV1::Thunks::create_positioner_thunk*;
+    mir::wayland::MirShellV1::Thunks::create_positioner_types*;
+    mir::wayland::MirShellV1::Thunks::destroy_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_dialog_surface_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_dialog_surface_types*;
+    mir::wayland::MirShellV1::Thunks::get_floating_regular_surface_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_floating_regular_surface_types*;
+    mir::wayland::MirShellV1::Thunks::get_regular_surface_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_regular_surface_types*;
+    mir::wayland::MirShellV1::Thunks::get_satellite_surface_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_satellite_surface_types*;
+    mir::wayland::MirShellV1::Thunks::request_messages*;
+    mir::wayland::MirShellV1::Thunks::request_vtable*;
+    mir::wayland::MirShellV1::Thunks::resource_destroyed_thunk*;
+    mir::wayland::MirShellV1::Thunks::supported_version*;
+    non-virtual?thunk?to?mir::wayland::MirShellV1::?MirShellV1*;
+    virtual?thunk?to?mir::wayland::MirShellV1::?MirShellV1*;
     typeinfo?for?mir::wayland::MirShellV1;
     vtable?for?mir::wayland::MirShellV1;
     typeinfo?for?mir::wayland::MirShellV1::Global;
@@ -595,9 +620,17 @@ global:
     typeinfo?for?mir::wayland::MirDialogSurfaceV1;
     vtable?for?mir::wayland::MirDialogSurfaceV1;
 
-    mir::wayland::MirSatelliteSurfaceV1::*;
-    non-virtual?thunk?to?mir::wayland::MirSatelliteSurfaceV1::*;
-    virtual?thunk?to?mir::wayland::MirSatelliteSurfaceV1::*;
+    # mir_satellite_surface_v1 gained an error enum in a later version, a,
+    # wildcard here would bind that new symbol, to this version.,
+    mir::wayland::MirSatelliteSurfaceV1::MirSatelliteSurfaceV1*;
+    mir::wayland::MirSatelliteSurfaceV1::?MirSatelliteSurfaceV1*;
+    mir::wayland::MirSatelliteSurfaceV1::destroy*;
+    mir::wayland::MirSatelliteSurfaceV1::from*;
+    mir::wayland::MirSatelliteSurfaceV1::is_instance*;
+    mir::wayland::MirSatelliteSurfaceV1::send_repositioned_event*;
+    mir::wayland::MirSatelliteSurfaceV1::Thunks::*;
+    non-virtual?thunk?to?mir::wayland::MirSatelliteSurfaceV1::?MirSatelliteSurfaceV1*;
+    virtual?thunk?to?mir::wayland::MirSatelliteSurfaceV1::?MirSatelliteSurfaceV1*;
     typeinfo?for?mir::wayland::MirSatelliteSurfaceV1;
     vtable?for?mir::wayland::MirSatelliteSurfaceV1;
 
@@ -615,3 +648,27 @@ MIRWAYLAND_2.30 {
     mir::wayland::WlArrayBase::*;
   };
 } MIRWAYLAND_2.29;
+
+MIRWAYLAND_2.31 {
+  global:
+  extern "C++" {
+    mir::wayland::MirShellV1::Thunks::get_menu_surface_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_menu_surface_types*;
+    mir::wayland::MirShellV1::Thunks::get_tip_surface_thunk*;
+    mir::wayland::MirShellV1::Thunks::get_tip_surface_types*;
+
+    mir::wayland::MirSatelliteSurfaceV1::Error::invalid_archetype;
+
+    mir::wayland::MirMenuSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirMenuSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirMenuSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirMenuSurfaceV1;
+    vtable?for?mir::wayland::MirMenuSurfaceV1;
+
+    mir::wayland::MirTipSurfaceV1::*;
+    non-virtual?thunk?to?mir::wayland::MirTipSurfaceV1::*;
+    virtual?thunk?to?mir::wayland::MirTipSurfaceV1::*;
+    typeinfo?for?mir::wayland::MirTipSurfaceV1;
+    vtable?for?mir::wayland::MirTipSurfaceV1;
+  };
+} MIRWAYLAND_2.30;

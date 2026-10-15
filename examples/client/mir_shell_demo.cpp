@@ -47,6 +47,8 @@ int32_t main_height = 400;
 mir_positioner_v1_anchor satellite_anchor = MIR_POSITIONER_V1_ANCHOR_LEFT;
 int32_t satellite_offset_vertical = 50;
 int32_t satellite_offset_horizontal = 0;
+int32_t const satellite_width = 100;
+int32_t const satellite_height = 200;
 
 void parse_options(int argc, char* argv[])
 {
@@ -414,7 +416,7 @@ void handle_registry_global(
     else if (std::string_view(interface) == mir_shell_v1_interface.name)
     {
         globals::mir_shell = static_cast<mir_shell_v1*>(wl_registry_bind(
-            registry, id, &mir_shell_v1_interface, std::min(version, 1u)));
+            registry, id, &mir_shell_v1_interface, std::min(version, 2u)));
     }
 }
 
@@ -818,6 +820,7 @@ auto make_satellite(regular_window* main_window) -> std::unique_ptr<satellite>
         auto const positioner = mir_shell_v1_create_positioner(globals::mir_shell);
         auto const [anchor_width, anchor_height] = main_window->size();
 
+        mir_positioner_v1_set_size(positioner, satellite_width, satellite_height);
         mir_positioner_v1_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
         mir_positioner_v1_set_anchor(positioner, satellite_anchor);
         mir_positioner_v1_set_gravity(positioner, satellite_anchor);
@@ -847,11 +850,11 @@ auto make_satellite(regular_window* main_window) -> std::unique_ptr<satellite>
         }
         mir_positioner_v1_set_constraint_adjustment(positioner, constraint_adjustment);
 
-        return std::make_unique<satellite>(100, 200, positioner, *main_window);
+        return std::make_unique<satellite>(satellite_width, satellite_height, positioner, *main_window);
     }
     else
     {
-        return std::make_unique<satellite>(100, 200, nullptr, *main_window);
+        return std::make_unique<satellite>(satellite_width, satellite_height, nullptr, *main_window);
     }
 }
 
