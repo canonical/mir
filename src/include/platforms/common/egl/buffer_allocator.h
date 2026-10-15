@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef COMMON_EGL_BUFFER_ALLOCATOR_H_
-#define COMMON_EGL_BUFFER_ALLOCATOR_H_
+#ifndef MIR_GRAPHICS_COMMON_EGL_BUFFER_ALLOCATOR_H_
+#define MIR_GRAPHICS_COMMON_EGL_BUFFER_ALLOCATOR_H_
 
 #include <mir/graphics/graphic_buffer_allocator.h>
 #include <mir/graphics/linux_dmabuf.h>
@@ -112,4 +112,4 @@ private:
 }
 }
 
-#endif // COMMON_EGL_BUFFER_ALLOCATOR_H_
+#endif // MIR_GRAPHICS_COMMON_EGL_BUFFER_ALLOCATOR_H_
