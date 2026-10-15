@@ -90,37 +90,37 @@ bool FloatingWindowManagerPolicy::handle_pointer_event(MirPointerEvent const* ev
 
     if (action == mir_pointer_action_button_down)
     {
-        if (auto const window = tools.window_at(cursor))
-            tools.select_active_window(window);
-
-        if (auto const window = tools.active_window())
+        if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
         {
-            if (mir_pointer_event_button_state(event, mir_pointer_button_tertiary))
+            if (modifiers == mir_input_event_modifier_alt)
             {
-                if (modifiers == mir_input_event_modifier_alt)
+                if (auto const hint = tools.window_at(cursor))
                 {
-                    Rectangle const old_pos{window.top_left(), window.size()};
-
-                    auto anchor = old_pos.bottom_right();
-                    auto edge = mir_resize_edge_northwest;
-
-                    struct Corner { Point point; MirResizeEdge edge; };
-
-                    for (auto const& corner : {
-                        Corner{old_pos.top_right(), mir_resize_edge_southwest},
-                        Corner{old_pos.bottom_left(), mir_resize_edge_northeast},
-                        Corner{old_pos.top_left, mir_resize_edge_southeast}})
+                    if (auto const window = tools.select_active_window(hint))
                     {
-                        if ((cursor - anchor).length_squared() <
-                            (cursor - corner.point).length_squared())
-                        {
-                            anchor = corner.point;
-                            edge = corner.edge;
-                        }
-                    }
+                        Rectangle const old_pos{window.top_left(), window.size()};
 
-                    begin_pointer_resize(tools.info_for(window), mir_pointer_event_input_event(event), edge);
-                    consumes_event = true;
+                        auto anchor = old_pos.bottom_right();
+                        auto edge = mir_resize_edge_northwest;
+
+                        struct Corner { Point point; MirResizeEdge edge; };
+
+                        for (auto const& corner : {
+                            Corner{old_pos.top_right(), mir_resize_edge_southwest},
+                            Corner{old_pos.bottom_left(), mir_resize_edge_northeast},
+                            Corner{old_pos.top_left, mir_resize_edge_southeast}})
+                        {
+                            if ((cursor - anchor).length_squared() <
+                                (cursor - corner.point).length_squared())
+                            {
+                                anchor = corner.point;
+                                edge = corner.edge;
+                            }
+                        }
+
+                        begin_pointer_resize(tools.info_for(window), mir_pointer_event_input_event(event), edge);
+                        consumes_event = true;
+                    }
                 }
             }
         }

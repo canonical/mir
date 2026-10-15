@@ -209,7 +209,7 @@ TEST_F(FloatingWindowManagerTest, can_select_window_with_pointer)
 
     EXPECT_TRUE(focused(window2));
 
-    auto const select_event = mir::events::make_pointer_event(
+    auto const select_event1 = mir::events::make_pointer_event(
         0,
         std::chrono::system_clock::now().time_since_epoch(),
         mir_input_event_modifier_none,
@@ -222,7 +222,24 @@ TEST_F(FloatingWindowManagerTest, can_select_window_with_pointer)
         mir_pointer_axis_source_none,
         {},
         {});
-    publish_event(*select_event);
+    auto const select_event2 = mir::events::make_pointer_event(
+        0,
+        std::chrono::system_clock::now().time_since_epoch(),
+        mir_input_event_modifier_none,
+        mir_pointer_action_button_up,
+        mir_pointer_button_primary,
+        geom::PointF{
+            window1.top_left().x.as_int() + window1.size().width.as_int() - 1,
+            window1.top_left().y.as_int() + window1.size().height.as_int() - 1},
+        {},
+        mir_pointer_axis_source_none,
+        {},
+        {});
+
+    publish_event(*select_event1);
+    EXPECT_TRUE(focused(window2));
+
+    publish_event(*select_event2);
 
     EXPECT_TRUE(focused(window1));
 }
