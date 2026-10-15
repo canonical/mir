@@ -97,3 +97,10 @@ MIR_CORE_2.30 {
     mir::graphics::operator*;
   };
 } MIR_CORE_2.29;
+
+MIR_CORE_2.31 {
+  global:
+  extern "C++" {
+    "std::formatter<std::exception, char>::format(std::exception const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
+  };
+} MIR_CORE_2.30;
