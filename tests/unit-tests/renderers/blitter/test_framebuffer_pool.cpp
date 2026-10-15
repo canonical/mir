@@ -359,11 +359,30 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_reports_size_of_display_framebuff
     auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
     auto const fb = pool->acquire();
 
-    EXPECT_THAT(fb->size(), Eq(default_output_size));
-    EXPECT_THAT(fb->entry().size(), Eq(default_output_size));
+    EXPECT_THAT(fb.framebuffer->size(), Eq(default_output_size));
+    EXPECT_THAT(fb.entry->size(), Eq(default_output_size));
 }
 
-TEST_F(FramebufferPoolTest, pooled_framebuffer_forwards_handle_of_display_framebuffer)
+TEST_F(FramebufferPoolTest, pooled_framebuffer_is_the_display_framebuffer)
+{
+    mg::CPUAddressableDisplayAllocator::MappableFB* allocated{nullptr};
+    ON_CALL(allocator, alloc_fb(_))
+        .WillByDefault(
+            [&](auto)
+            {
+                auto fb = std::make_unique<FakeMappableFB>(allocator.output_size(), true, nullptr);
+                allocated = fb.get();
+                return fb;
+            });
+
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const fb = pool->acquire();
+
+    EXPECT_THAT(fb.framebuffer.get(), Eq(static_cast<mg::Framebuffer*>(allocated)));
+    EXPECT_THAT(&fb.entry->framebuffer(), Eq(allocated));
+}
+
+TEST_F(FramebufferPoolTest, pooled_framebuffer_can_be_presented_as_display_framebuffer)
 {
     uint32_t const fb_id{42};
     ON_CALL(allocator, alloc_fb(_))
@@ -371,22 +390,49 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_forwards_handle_of_display_frameb
             [&](auto) { return std::make_unique<FakeKMSMappableFB>(allocator.output_size(), fb_id); });
 
     auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
-    std::shared_ptr<mg::Framebuffer> const fb{pool->acquire()};
+    // As KMS display sinks hold it
+    std::shared_ptr<mg::Framebuffer> const fb{pool->acquire().framebuffer};
 
     auto const kms_fb = std::dynamic_pointer_cast<mg::FBHandle>(fb);
     ASSERT_THAT(kms_fb, NotNull());
     EXPECT_THAT(static_cast<uint32_t>(*kms_fb), Eq(fb_id));
-    EXPECT_THAT(kms_fb->size(), Eq(default_output_size));
 }
 
-TEST_F(FramebufferPoolTest, pooled_framebuffer_handle_throws_when_display_framebuffer_has_none)
+TEST_F(FramebufferPoolTest, presented_framebuffer_is_recycled_rather_than_destroyed_once_dropped)
 {
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
-    std::shared_ptr<mg::Framebuffer> const fb{pool->acquire()};
+    bool fb_destroyed{false};
+    record_destruction_in(fb_destroyed);
+    EXPECT_CALL(allocator, alloc_fb(_)).Times(1);
 
-    auto const kms_fb = std::dynamic_pointer_cast<mg::FBHandle>(fb);
-    ASSERT_THAT(kms_fb, NotNull());
-    EXPECT_THROW(std::ignore = static_cast<uint32_t>(*kms_fb), std::logic_error);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto [entry, framebuffer] = pool->acquire();
+    auto const* const first_entry = entry;
+
+    std::shared_ptr<mg::Framebuffer> presented{std::move(framebuffer)};
+    auto as_display_type = std::dynamic_pointer_cast<FakeMappableFB>(presented);
+    presented.reset();
+    as_display_type.reset();
+
+    EXPECT_FALSE(fb_destroyed);
+    EXPECT_THAT(pool->acquire().entry, Eq(first_entry));
+}
+
+TEST_F(FramebufferPoolTest, pooled_framebuffer_is_recycled_after_framebuffer_cast)
+{
+    bool fb_destroyed{false};
+    record_destruction_in(fb_destroyed);
+    EXPECT_CALL(allocator, alloc_fb(_)).Times(1);
+
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto [entry, framebuffer] = pool->acquire();
+    auto const* const first_entry = entry;
+
+    auto as_display_type = mg::framebuffer_cast<FakeMappableFB>(std::move(framebuffer));
+    ASSERT_THAT(as_display_type, NotNull());
+    as_display_type.reset();
+
+    EXPECT_FALSE(fb_destroyed);
+    EXPECT_THAT(pool->acquire().entry, Eq(first_entry));
 }
 
 TEST_F(FramebufferPoolTest, entry_holds_blitter_surface_for_its_framebuffer)
@@ -404,7 +450,7 @@ TEST_F(FramebufferPoolTest, entry_holds_blitter_surface_for_its_framebuffer)
     auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
     auto const fb = pool->acquire();
 
-    EXPECT_THAT(fb->entry().surface.get(), Eq(surface));
+    EXPECT_THAT(fb.entry->surface.get(), Eq(surface));
 }
 
 TEST_F(FramebufferPoolTest, bind_makes_context_current_and_binds_entry_framebuffer)
@@ -417,7 +463,7 @@ TEST_F(FramebufferPoolTest, bind_makes_context_current_and_binds_entry_framebuff
 
     EXPECT_CALL(mock_gl, glBindFramebuffer(GL_FRAMEBUFFER, framebuffers.at(0)));
 
-    fb->entry().bind();
+    fb.entry->bind();
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(mock_egl.fake_egl_context));
 }
@@ -550,12 +596,12 @@ TEST_F(FramebufferPoolTest, released_framebuffer_is_recycled)
 
     auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
     auto fb = pool->acquire();
-    auto const* const first_entry = &fb->entry();
+    auto const* const first_entry = fb.entry;
 
-    fb.reset();
+    fb.framebuffer.reset();
     fb = pool->acquire();
 
-    EXPECT_THAT(&fb->entry(), Eq(first_entry));
+    EXPECT_THAT(fb.entry, Eq(first_entry));
     EXPECT_FALSE(fb_destroyed);
 }
 
@@ -567,7 +613,8 @@ TEST_F(FramebufferPoolTest, simultaneously_held_framebuffers_are_distinct)
     auto const first = pool->acquire();
     auto const second = pool->acquire();
 
-    EXPECT_THAT(&first->entry(), Ne(&second->entry()));
+    EXPECT_THAT(first.entry, Ne(second.entry));
+    EXPECT_THAT(first.framebuffer.get(), Ne(second.framebuffer.get()));
 }
 
 TEST_F(FramebufferPoolTest, output_resize_discards_free_framebuffers)
@@ -581,7 +628,7 @@ TEST_F(FramebufferPoolTest, output_resize_discards_free_framebuffers)
     ON_CALL(allocator, output_size()).WillByDefault(Return(new_size));
     auto const fb = pool->acquire();
 
-    EXPECT_THAT(fb->size(), Eq(new_size));
+    EXPECT_THAT(fb.framebuffer->size(), Eq(new_size));
     EXPECT_TRUE(fb_destroyed);
 }
 
@@ -595,15 +642,15 @@ TEST_F(FramebufferPoolTest, framebuffers_released_after_resize_are_not_recycled)
 
     ON_CALL(allocator, output_size()).WillByDefault(Return(geom::Size{1920, 1080}));
     auto current = pool->acquire();
-    auto const* const current_entry = &current->entry();
+    auto const* const current_entry = current.entry;
 
-    stale.reset();
+    stale.framebuffer.reset();
     EXPECT_TRUE(fb_destroyed);
 
-    current.reset();
+    current.framebuffer.reset();
     auto const recycled = pool->acquire();
 
-    EXPECT_THAT(&recycled->entry(), Eq(current_entry));
+    EXPECT_THAT(recycled.entry, Eq(current_entry));
 }
 
 TEST_F(FramebufferPoolTest, pooled_framebuffer_can_outlive_pool)
@@ -616,7 +663,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_can_outlive_pool)
     pool.reset();
     EXPECT_FALSE(fb_destroyed);
 
-    fb.reset();
+    fb.framebuffer.reset();
     EXPECT_TRUE(fb_destroyed);
 }
 

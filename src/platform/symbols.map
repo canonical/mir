@@ -53,6 +53,9 @@ MIR_PLATFORM_2.30 {
     mir::graphics::EventHandlerRegister::register_fd_handler*;
     mir::graphics::EventHandlerRegister::register_signal_handler*;
     mir::graphics::EventHandlerRegister::unregister_fd_handler*;
+    mir::graphics::FramebufferDeleter::?FramebufferDeleter*;
+    mir::graphics::FramebufferDeleter::FramebufferDeleter*;
+    mir::graphics::FramebufferDeleter::operator*;
     mir::graphics::LinuxDmaBuf::?LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::LinuxDmaBuf*;
     mir::graphics::LinuxDmaBuf::buffer_from_resource*;

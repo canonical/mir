@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_DISPLAY_SINK_H_
 
 #include <mir/graphics/platform.h>
+#include <mir/graphics/framebuffer_ptr.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/renderable.h>
 #include <mir_toolkit/common.h>
@@ -114,9 +115,10 @@ public:
      * * The DisplayPlatform guarantees that this call will succeed with a framebuffer
      *   allocated for this DisplaySink
      *
-     * \param content
+     * \param content The framebuffer to display; dropped (returning it to its source) once
+     *                it is no longer needed
      */
-    virtual void set_next_image(std::unique_ptr<Framebuffer> content) = 0;
+    virtual void set_next_image(FramebufferPtr content) = 0;
 
     /**
      * Returns a transformation that the renderer must apply to all rendering.

@@ -173,7 +173,7 @@ public:
         filter->set_filter(new_filter);
     }
 
-    auto render(mg::RenderableList const& renderables) -> std::unique_ptr<mg::Framebuffer>;
+    auto render(mg::RenderableList const& renderables) -> mg::FramebufferPtr;
 
     void suspend()
     {
@@ -320,10 +320,10 @@ private:
     bool used_gl{false};
 };
 
-auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> std::unique_ptr<mg::Framebuffer>
+auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> mg::FramebufferPtr
 {
-    auto framebuffer = pool.acquire();
-    target = &framebuffer->entry();
+    auto [entry, framebuffer] = pool.acquire();
+    target = entry;
     used_gl = false;
 
     scene = mrc::SceneContext{
@@ -354,7 +354,7 @@ auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> std::
     textures.drop_unused();
     target = nullptr;
 
-    return framebuffer;
+    return std::move(framebuffer);
 }
 
 void mrb::Renderer::Impl::blit_frame(mg::RenderableList const& renderables)
@@ -435,7 +435,7 @@ void mrb::Renderer::set_output_filter(MirOutputFilter filter)
     impl->set_output_filter(filter);
 }
 
-auto mrb::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
+auto mrb::Renderer::render(mg::RenderableList const& renderables) const -> mg::FramebufferPtr
 {
     return impl->render(renderables);
 }
