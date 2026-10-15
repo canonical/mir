@@ -20,10 +20,12 @@
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
 #include <mir/log.h>
+#include "src/core/logging/log_deduplicator.h"
 
 #include <boost/program_options.hpp>
 #include <chrono>
 #include <format>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <cstring>
@@ -222,3 +224,76 @@ TEST_F(TestLog, can_set_severity_by_full_path_when_tag_name_is_the_same)
 
     EXPECT_TRUE(ml::logging_enabled_for(bypass_b, severity));
 }
+
+class LogDeduplicatorTest : public testing::Test
+{
+public:
+    std::optional<std::string> filter(std::string const& message)
+    {
+        return deduplicator.filter(ml::Severity::warning, "gbm-kms", message);
+    }
+
+    void advance(std::chrono::seconds by)
+    {
+        now += by;
+    }
+
+    std::chrono::steady_clock::time_point now{};
+    ml::detail::LogDeduplicator deduplicator{std::chrono::seconds{5}, [this] { return now; }};
+};
+
+
+TEST_F(LogDeduplicatorTest, reprint_after_window_has_count_of_suppressed_plus_one)
+{
+    EXPECT_EQ(filter("presentation failed"), "presentation failed");
+    for (int i = 0; i < 4; ++i)
+    {
+        advance(std::chrono::seconds{1});
+        EXPECT_EQ(filter("presentation failed"), std::nullopt);
+    }
+
+    advance(std::chrono::seconds{1});
+    EXPECT_EQ(filter("presentation failed"), "presentation failed (x5)");
+    EXPECT_EQ(filter("presentation failed"), std::nullopt);
+    advance(std::chrono::seconds{5});
+    EXPECT_EQ(filter("presentation failed"), "presentation failed (x2)");
+}
+
+TEST_F(LogDeduplicatorTest, reprint_has_no_suffix_when_nothing_was_suppressed)
+{
+    filter("presentation failed");
+    advance(std::chrono::seconds{5});
+
+    EXPECT_EQ(filter("presentation failed"), "presentation failed");
+}
+
+
+TEST_F(LogDeduplicatorTest, different_severity_component_or_message_are_not_merged)
+{
+    EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "gbm-kms", "presentation failed"), "presentation failed");
+    EXPECT_EQ(deduplicator.filter(ml::Severity::error, "gbm-kms", "presentation failed"), "presentation failed");
+    EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "atomic-kms", "presentation failed"), "presentation failed");
+    EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "gbm-kms", "presentation recovered"), "presentation recovered");
+}
+
+class PendingRetentionTest : public LogDeduplicatorTest, public testing::WithParamInterface<std::chrono::seconds>
+{
+};
+
+TEST_P(PendingRetentionTest, prunes_singletons_but_keeps_pending_counts)
+{
+    filter("kept");
+    filter("dropped");
+    filter("also dropped");
+    ASSERT_EQ(deduplicator.size(), 3u);
+    advance(std::chrono::seconds{1});
+    EXPECT_EQ(filter("kept"), std::nullopt);
+
+    advance(GetParam() - std::chrono::seconds{1});
+    filter("unrelated");
+    EXPECT_EQ(deduplicator.size(), 2u);
+    EXPECT_EQ(filter("kept"), "kept (x2)");
+}
+
+INSTANTIATE_TEST_SUITE_P(WindowAndRetentionBoundaries, PendingRetentionTest,
+    testing::Values(std::chrono::seconds{5}));
