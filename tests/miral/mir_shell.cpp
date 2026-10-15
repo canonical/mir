@@ -45,7 +45,9 @@ extern struct wl_interface const wl_subsurface_interface_data;
 extern struct wl_interface const mir_shell_v1_interface_data;
 extern struct wl_interface const mir_positioner_v1_interface_data;
 extern struct wl_interface const mir_regular_surface_v1_interface_data;
+extern struct wl_interface const mir_satellite_surface_v1_interface_data;
 extern struct wl_interface const mir_menu_surface_v1_interface_data;
+extern struct wl_interface const mir_tip_surface_v1_interface_data;
 }
 
 namespace
@@ -56,11 +58,14 @@ enum : uint32_t
     wl_compositor_create_surface = 0,
     wl_subcompositor_get_subsurface = 1,
     mir_shell_v1_get_regular_surface = 0,
+    mir_shell_v1_get_satellite_surface = 3,
     mir_shell_v1_create_positioner = 4,
     mir_shell_v1_get_menu_surface = 6,
+    mir_shell_v1_get_tip_surface = 7,
     mir_positioner_v1_set_size = 1,
     mir_positioner_v1_set_anchor_rect = 2,
     mir_menu_surface_v1_reposition = 0,
+    mir_tip_surface_v1_reposition = 0,
 };
 
 /// Error codes, from the same protocol definitions.
@@ -69,6 +74,7 @@ enum : uint32_t
     mir_shell_v1_error_invalid_archetype = 0,
     mir_shell_v1_error_invalid_positioner = 1,
     mir_menu_surface_v1_error_invalid_archetype = 0,
+    mir_tip_surface_v1_error_invalid_archetype = 0,
     wl_subcompositor_error_bad_surface = 0,
 };
 
@@ -179,6 +185,28 @@ struct MirShellClient
             positioner);
     }
 
+    auto get_satellite_surface(wl_proxy* surface, wl_proxy* positioner) -> wl_proxy*
+    {
+        return wl_proxy_marshal_constructor(
+            mir_shell,
+            mir_shell_v1_get_satellite_surface,
+            &mir::wayland::mir_satellite_surface_v1_interface_data,
+            nullptr,
+            surface,
+            positioner);
+    }
+
+    auto get_tip_surface(wl_proxy* surface, wl_proxy* positioner) -> wl_proxy*
+    {
+        return wl_proxy_marshal_constructor(
+            mir_shell,
+            mir_shell_v1_get_tip_surface,
+            &mir::wayland::mir_tip_surface_v1_interface_data,
+            nullptr,
+            surface,
+            positioner);
+    }
+
     static void new_global(void* data, wl_registry* registry, uint32_t id, char const* interface, uint32_t version)
     {
         auto* const self = static_cast<MirShellClient*>(data);
@@ -268,6 +296,58 @@ TEST_F(MirShell, archetype_with_an_incomplete_positioner_is_rejected)
         Optional(Eq(ProtocolError{"mir_shell_v1", mir_shell_v1_error_invalid_positioner})));
 }
 
+TEST_F(MirShell, satellite_surface_with_a_complete_positioner_is_accepted)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                client.get_satellite_surface(client.create_surface(), client.create_positioner(true));
+            }),
+        Eq(std::nullopt));
+}
+
+TEST_F(MirShell, satellite_surface_with_an_incomplete_positioner_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                client.get_satellite_surface(client.create_surface(), client.create_positioner(false));
+            }),
+        Optional(Eq(ProtocolError{"mir_shell_v1", mir_shell_v1_error_invalid_positioner})));
+}
+
+TEST_F(MirShell, tip_surface_with_a_complete_positioner_is_accepted)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                client.get_tip_surface(client.create_surface(), client.create_positioner(true));
+            }),
+        Eq(std::nullopt));
+}
+
+TEST_F(MirShell, tip_surface_with_an_incomplete_positioner_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                client.get_tip_surface(client.create_surface(), client.create_positioner(false));
+            }),
+        Optional(Eq(ProtocolError{"mir_shell_v1", mir_shell_v1_error_invalid_positioner})));
+}
+
 // "Assigning an archetype to a surface that already has such a role raises an invalid_archetype
 // error on this object."
 TEST_F(MirShell, archetype_on_a_subsurface_is_rejected)
@@ -337,4 +417,21 @@ TEST_F(MirShell, requests_on_a_replaced_archetype_are_rejected)
                 wl_proxy_marshal(menu, mir_menu_surface_v1_reposition, positioner, 1);
             }),
         Optional(Eq(ProtocolError{"mir_menu_surface_v1", mir_menu_surface_v1_error_invalid_archetype})));
+}
+
+TEST_F(MirShell, requests_on_a_replaced_tip_surface_are_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                auto* const surface = client.create_surface();
+                auto* const positioner = client.create_positioner(true);
+                auto* const tip = client.get_tip_surface(surface, positioner);
+                client.get_regular_surface(surface);
+                wl_proxy_marshal(tip, mir_tip_surface_v1_reposition, positioner, 1);
+            }),
+        Optional(Eq(ProtocolError{"mir_tip_surface_v1", mir_tip_surface_v1_error_invalid_archetype})));
 }
