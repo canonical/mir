@@ -57,7 +57,7 @@ public:
     virtual void for_each_display_sink(std::function<void(DisplaySink&)> const& f) = 0;
 
     /** Post the content of the DisplayBuffers associated with this DisplaySyncGroup.
-     *  The content of all the DisplayBuffers in this DisplaySyncGroup are guaranteed to be onscreen
+     *  Posting does not guarantee that the content of all the DisplayBuffers in this DisplaySyncGroup will be onscreen
      *  in the near future. On some platforms, this may wait a potentially long time for vsync.
      *
      *  \returns
