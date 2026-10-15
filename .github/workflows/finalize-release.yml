@@ -143,6 +143,36 @@ jobs:
           ' rpm/mir.spec
           git add rpm/mir.spec
 
+      - name: Finalize documentation release notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          MINOR_VERSION="${VERSION%.*}"
+          PAGE="doc/sphinx/release-notes/${MINOR_VERSION}.md"
+          awk --include=inplace -v version="${MINOR_VERSION}" '
+            BEGIN { entry = "- {doc}`Mir " version " <" version ">`" }
+            index($0, entry) == 1 { print entry; found = 1; next }
+            { print }
+            END { if (!found) exit 1 }
+          ' doc/sphinx/release-notes/index.md
+          awk --include=inplace -v release_date="$(date -u '+%-d %B %Y')" '
+            $0 == "Release Candidate" { $0 = release_date }
+            { print }
+          ' "$PAGE"
+          git add doc/sphinx/release-notes/index.md "$PAGE"
+          awk -v version="${VERSION}" '
+            /^\(release-[0-9]+\.[0-9]+\.[0-9]+\)=$/ {
+              if (in_notes) exit
+              if ($0 == "(release-" version ")=") {
+                print "# [Mir " version "](https://github.com/canonical/mir/releases/v" version ")"
+                in_notes = 1
+              }
+              next
+            }
+            in_notes { print }
+          ' "$PAGE" > /tmp/github-release-notes.md
+          test -s /tmp/github-release-notes.md
+
       - name: Commit and push changelog
         id: release
         env:
@@ -162,7 +192,7 @@ jobs:
         with:
           script: |
             const fs = require('fs');
-            const releaseNotes = fs.readFileSync('/tmp/release-notes-section.md', 'utf8');
+            const releaseNotes = fs.readFileSync('/tmp/github-release-notes.md', 'utf8');
 
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
