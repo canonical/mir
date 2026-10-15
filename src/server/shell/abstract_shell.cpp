@@ -584,7 +584,7 @@ void msh::AbstractShell::update_confinement_for(std::shared_ptr<ms::Surface> con
     case mir_pointer_locked_persistent:
     {
         auto rectangle = surface->input_bounds();
-        rectangle.top_left = rectangle.top_left + as_displacement(0.5*rectangle.size);
+        rectangle.top_left = rectangle.centre();
         rectangle.size = {1,1};
         this->seat->set_confinement_regions({rectangle});
         break;
