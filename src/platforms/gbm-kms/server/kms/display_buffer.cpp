@@ -273,7 +273,7 @@ auto mgg::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
     return gbm;
 }
 
-void mir::graphics::gbm::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
+void mir::graphics::gbm::DisplaySink::set_next_image(FramebufferPtr content)
 {
     std::vector<DisplayElement> const single_buffer = {
         DisplayElement {

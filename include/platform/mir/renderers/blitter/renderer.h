@@ -61,7 +61,7 @@ public:
     void set_viewport(geometry::Rectangle const& rect) override;
     void set_output_transform(glm::mat2 const&) override;
     void set_output_filter(MirOutputFilter filter) override;
-    auto render(graphics::RenderableList const&) const -> std::unique_ptr<graphics::Framebuffer> override;
+    auto render(graphics::RenderableList const&) const -> graphics::FramebufferPtr override;
     void suspend() override;
 
 private:

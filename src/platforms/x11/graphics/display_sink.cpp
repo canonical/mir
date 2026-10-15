@@ -78,25 +78,14 @@ auto mgx::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>
     -> std::optional<LogicalStacking>
 { return std::nullopt; }
 
-namespace
+void mgx::DisplaySink::set_next_image(FramebufferPtr content)
 {
-template<typename To, typename From>
-auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
-{
-    From* unowned_src = ptr.release();
-    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    auto frame = framebuffer_cast<helpers::Framebuffer>(std::move(content));
+    if (!frame)
     {
-        return std::unique_ptr<To>{to_src};
+        BOOST_THROW_EXCEPTION((std::bad_cast()));
     }
-    delete unowned_src;
-    BOOST_THROW_EXCEPTION((
-        std::bad_cast()));
-}
-}
-
-void mgx::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
-{
-    next_frame = unique_ptr_cast<helpers::Framebuffer>(std::move(content));
+    next_frame = std::move(frame);
 }
 
 glm::mat2 mgx::DisplaySink::transformation() const

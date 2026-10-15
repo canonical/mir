@@ -241,7 +241,7 @@ auto mga::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
     return gbm;
 }
 
-void mga::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
+void mga::DisplaySink::set_next_image(FramebufferPtr content)
 {
     std::vector<DisplayElement> const single_buffer = {
         DisplayElement {
