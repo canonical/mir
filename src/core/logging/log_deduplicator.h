@@ -26,6 +26,7 @@
 #include <map>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 
@@ -53,9 +54,13 @@ public:
             last_pruned = now;
         }
 
-        auto const [it, inserted] = entries.try_emplace(Key{severity, component, message}, Entry{now, 0});
-        if (inserted)
+        auto const key = std::tuple{severity, std::string_view{component}, std::string_view{message}};
+        auto const it = entries.lower_bound(key);
+        if (it == entries.end() || it->first != key)
+        {
+            entries.emplace_hint(it, Key{severity, component, message}, Entry{now, 0});
             return message;
+        }
 
         auto& entry = it->second;
         if (now - entry.last_printed < window)
@@ -98,7 +103,7 @@ private:
     std::chrono::steady_clock::duration window;
     Clock clock;
     std::chrono::steady_clock::time_point last_pruned;
-    std::map<Key, Entry> entries;
+    std::map<Key, Entry, std::less<>> entries;
 };
 }
 

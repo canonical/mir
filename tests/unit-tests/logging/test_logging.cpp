@@ -333,6 +333,23 @@ TEST_F(LogDeduplicatorTest, different_severity_component_or_message_are_not_merg
     EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "gbm-kms", "presentation recovered"), "presentation recovered");
 }
 
+TEST_F(LogDeduplicatorTest, stored_keys_own_long_component_and_message_strings)
+{
+    auto const severity = ml::Severity::warning;
+    std::string component(128, 'c');
+    std::string message(256, 'm');
+
+    EXPECT_EQ(deduplicator.filter(severity, component, message), message);
+    component.front() = 'd';
+    message.front() = 'n';
+    EXPECT_EQ(deduplicator.filter(severity, component, message), message);
+    component.front() = 'c';
+    message.front() = 'm';
+
+    EXPECT_EQ(deduplicator.filter(severity, component, message), std::nullopt);
+    EXPECT_EQ(deduplicator.size(), 2u);
+}
+
 class PendingRetentionTest : public LogDeduplicatorTest, public testing::WithParamInterface<std::chrono::seconds>
 {
 };
