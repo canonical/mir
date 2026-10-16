@@ -354,7 +354,7 @@ class PendingRetentionTest : public LogDeduplicatorTest, public testing::WithPar
 {
 };
 
-TEST_P(PendingRetentionTest, prunes_singletons_but_keeps_pending_counts)
+TEST_P(PendingRetentionTest, prunes_singletons_and_expires_pending_counts_by_emission_age)
 {
     filter("kept");
     filter("dropped");
@@ -365,9 +365,24 @@ TEST_P(PendingRetentionTest, prunes_singletons_but_keeps_pending_counts)
 
     advance(GetParam() - std::chrono::seconds{1});
     filter("unrelated");
-    EXPECT_EQ(deduplicator.size(), 2u);
-    EXPECT_EQ(filter("kept"), "kept (x2)");
+    auto const keep_pending = GetParam() < ml::detail::LogDeduplicator::pending_count_retention;
+    EXPECT_EQ(deduplicator.size(), keep_pending ? 2u : 1u);
+    EXPECT_EQ(filter("kept"), keep_pending ? "kept (x2)" : "kept");
 }
 
 INSTANTIATE_TEST_SUITE_P(WindowAndRetentionBoundaries, PendingRetentionTest,
-    testing::Values(std::chrono::seconds{5}));
+    testing::Values(std::chrono::seconds{5},
+        ml::detail::LogDeduplicator::pending_count_retention - std::chrono::seconds{1},
+        ml::detail::LogDeduplicator::pending_count_retention));
+
+TEST_F(LogDeduplicatorTest, pending_counts_survive_cutoff_until_next_opportunistic_prune)
+{
+    filter("kept");
+    EXPECT_EQ(filter("kept"), std::nullopt);
+
+    advance(ml::detail::LogDeduplicator::pending_count_retention - std::chrono::seconds{1});
+    filter("unrelated");
+    advance(std::chrono::seconds{1});
+
+    EXPECT_EQ(filter("kept"), "kept (x2)");
+}

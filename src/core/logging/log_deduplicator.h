@@ -37,6 +37,10 @@ class LogDeduplicator
 public:
     using Clock = std::function<std::chrono::steady_clock::time_point()>;
 
+    // Pending counts are best-effort: pruning may discard them five minutes after the last emission.
+    // Pruning runs only on log calls, at most once per window; this is not a peak memory bound.
+    static constexpr auto pending_count_retention = std::chrono::minutes{5};
+
     LogDeduplicator(std::chrono::steady_clock::duration window_size, Clock clock_source)
         : window{window_size},
           clock{std::move(clock_source)},
@@ -96,7 +100,8 @@ private:
         std::erase_if(entries, [&](auto const& item)
         {
             auto const& entry = item.second;
-            return entry.suppressed == 0 && now - entry.last_printed >= window;
+            auto const age = now - entry.last_printed;
+            return (entry.suppressed == 0 && age >= window) || age >= pending_count_retention;
         });
     }
 
