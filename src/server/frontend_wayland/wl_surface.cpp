@@ -15,6 +15,7 @@
  */
 
 #include "wl_surface.h"
+#include "ext_foreign_buffer_v1.h"
 #include "output_manager.h"
 #include "fractional_scale_v1.h"
 #include <mir/wayland/weak.h>
@@ -508,6 +509,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         {
             // TODO: unmap surface, and unmap all subsurfaces
             buffer_size_ = std::nullopt;
+            current_foreign_buffer = {};
             send_frame_callbacks(frame_callbacks);
         }
         else
@@ -547,6 +549,15 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                         });
                 };
 
+            // If we have a current buffer attached currently, let's stop listening on it.
+            if (current_foreign_buffer)
+            {
+                auto foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value());
+                foreign_buffer->remove_listener(*this);
+                current_foreign_buffer = {};
+            }
+
+
             if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
             {
                 current_buffer = allocator->buffer_from_shm(
@@ -558,6 +569,13 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     sw_buffer_committed,
                     wl_resource_get_client(resource),
                     current_buffer->id().as_value());
+            }
+            else if (auto const foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value()))
+            {
+                current_buffer = foreign_buffer->content();
+                current_foreign_buffer = mw::make_weak(foreign_buffer);
+                foreign_buffer->add_listener(*this);
+                executor_send_frame_callbacks();
             }
             else
             {
@@ -572,11 +590,15 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                     current_buffer->id().as_value());
             }
 
-            needs_buffer_submission = true;
+            // A foreign buffer may not have captured anything yet, in which case there is
+            // nothing to submit.
+            needs_buffer_submission = current_buffer != nullptr;
         }
     }
     else
     {
+        current_foreign_buffer = {};
+
         if (state.release_fence)
         {
             throw wayland::ProtocolError{
@@ -636,32 +658,52 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
 
     if (needs_buffer_submission && current_buffer)
     {
-        geom::Size logical_size;
-        geom::RectangleD src_sample;
-
-        if (viewport)
-        {
-            std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(scale, current_buffer->size());
-        }
-        else
-        {
-            src_sample = geom::RectangleD{{0, 0}, current_buffer->size()};
-            logical_size = current_buffer->size() / scale;
-        }
-
-        stream->submit_buffer(current_buffer, logical_size, src_sample);
-
-        if (std::make_optional(logical_size) != buffer_size_)
+        if (submit_current_buffer())
         {
             state.invalidate_surface_data(); // input shape needs to be recalculated for the new size
         }
-
-        buffer_size_ = logical_size;
     }
 
     for (WlSubsurface* child: children)
     {
         child->parent_has_committed();
+    }
+}
+
+auto mf::WlSurface::submit_current_buffer() -> bool
+{
+    geom::Size logical_size;
+    geom::RectangleD src_sample;
+
+    if (viewport)
+    {
+        std::tie(src_sample, logical_size) = viewport.value().resolve_viewport(scale, current_buffer->size());
+    }
+    else
+    {
+        src_sample = geom::RectangleD{{0, 0}, current_buffer->size()};
+        logical_size = current_buffer->size() / scale;
+    }
+
+    stream->submit_buffer(current_buffer, logical_size, src_sample);
+
+    auto const size_changed = std::make_optional(logical_size) != buffer_size_;
+    buffer_size_ = logical_size;
+    return size_changed;
+}
+
+void mf::WlSurface::advise_foreign_buffer_content_changed(std::shared_ptr<graphics::Buffer> buffer)
+{
+    // The client may have attached something else since this surface registered as a consumer.
+    if (!current_foreign_buffer)
+    {
+        return;
+    }
+
+    current_buffer = std::move(buffer);
+    if (submit_current_buffer())
+    {
+        role->advise_compositor_owned_buffer_changed_size();
     }
 }
 
@@ -714,6 +756,16 @@ void mf::WlSurface::commit()
                 sync_timeline.value().resource,
                 SyncTimeline::Error::no_buffer,
                 "Timeline acquire sync point set, but no buffer committed"};
+        }
+
+        // Foreign buffers are compositor-owned and continuously updated, so there is no client
+        // rendering to wait on and no point at which the client's release point could be signalled.
+        if (ExtForeignBufferV1::from(pending.buffer->value()))
+        {
+            throw wayland::ProtocolError{
+                sync_timeline.value().resource,
+                SyncTimeline::Error::unsupported_buffer,
+                "Explicit synchronization is not supported for ext_foreign_buffer_v1 buffers"};
         }
 
         pending_context = std::make_unique<PendingBufferState>(PendingBufferState{

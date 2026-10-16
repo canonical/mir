@@ -138,7 +138,7 @@ private:
 /* Image copy backends */
 
 mf::ExtImageCopyBackend::ExtImageCopyBackend(
-    ExtImageCopyCaptureSessionV1 *session,
+    ExtImageCopyBackendSession *session,
     bool overlay_cursor)
     : session{session},
       overlay_cursor{overlay_cursor}
@@ -281,7 +281,8 @@ mf::ExtImageCopyCaptureSessionV1::~ExtImageCopyCaptureSessionV1()
 {
 }
 
-void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(geom::Size const &buffer_size)
+void mf::ExtImageCopyCaptureSessionV1::set_buffer_constraints(
+    geom::Size const &buffer_size, [[maybe_unused]] geom::Size const& logical_size)
 {
     send_buffer_size_event(
         buffer_size.width.as_uint32_t(), buffer_size.height.as_uint32_t());
@@ -489,12 +490,14 @@ class mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend
     : public ExtImageCopyBackend, public mi::CursorObserver
 {
 public:
-    ImageCopyBackend(ExtImageCopyCaptureSessionV1*session,
+    ImageCopyBackend(ExtImageCopyBackendSession*session,
                      ExtImageCopyCaptureCursorSessionV1& cursor_session,
                      std::shared_ptr<time::Clock> const& clock);
 
+    auto acquire_content(void const* consumer_id) -> std::shared_ptr<graphics::Buffer> override;
+
     void begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         geom::Rectangle const& frame_damage,
         CaptureCallback const& callback) override;
 
@@ -511,7 +514,7 @@ private:
 };
 
 mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::ImageCopyBackend(
-    ExtImageCopyCaptureSessionV1* session,
+    ExtImageCopyBackendSession* session,
     ExtImageCopyCaptureCursorSessionV1& cursor_session,
     std::shared_ptr<time::Clock> const& clock)
     : ExtImageCopyBackend{session, false},
@@ -529,13 +532,19 @@ void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::image_set_to(
     if (size != output_space_area.size)
     {
         output_space_area = geom::Rectangle{{0, 0}, size};
-        session->set_buffer_constraints(size);
+        session->set_buffer_constraints(size, size);
     }
     apply_damage(std::nullopt);
 }
 
+auto mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::acquire_content(void const*)
+    -> std::shared_ptr<mg::Buffer>
+{
+    return nullptr;
+}
+
 void mf::ExtImageCopyCaptureCursorSessionV1::ImageCopyBackend::begin_capture(
-        std::shared_ptr<renderer::software::RWMappable> const& shm_data,
+        std::shared_ptr<renderer::software::WriteMappable> const& shm_data,
         [[maybe_unused]] geom::Rectangle const& frame_damage,
         CaptureCallback const& callback)
 {
