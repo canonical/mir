@@ -40,12 +40,12 @@ namespace debug
 {
 enum class BufferSyncMode
 {
-    off,                ///< Unmodified Mir behaviour
-    per_buffer,         ///< Mutual exclusion while sampling a given client buffer
-    per_buffer_finish,  ///< …and glFinish() before releasing, so the GPU read has completed
-    global,             ///< One process-wide mutex around all compositing and screen capture
-    global_finish,      ///< …and glFinish() before releasing
-    reimport            ///< Fresh EGLImage + texture for every composite
+    off,               ///< Unmodified Mir behaviour
+    per_buffer,        ///< Mutual exclusion while sampling a given client buffer
+    per_buffer_finish, ///< …and glFinish() before releasing, so the GPU read has completed
+    global,            ///< One process-wide mutex around all compositing and screen capture
+    global_finish,     ///< …and glFinish() before releasing
+    reimport           ///< Fresh EGLImage + texture for every composite
 };
 
 auto buffer_sync_mode() -> BufferSyncMode;
@@ -53,15 +53,9 @@ auto buffer_sync_mode() -> BufferSyncMode;
 /// 0 = no tracing, 1 = per-frame tracing, 2 = + per-sample tracing
 auto frame_trace_level() -> int;
 
-inline auto tracing() -> bool
-{
-    return frame_trace_level() > 0;
-}
+inline auto tracing() -> bool { return frame_trace_level() > 0; }
 
-inline auto tracing_verbose() -> bool
-{
-    return frame_trace_level() > 1;
-}
+inline auto tracing_verbose() -> bool { return frame_trace_level() > 1; }
 
 /// Seconds since the first call into this module; the common clock for all trace lines
 auto now_seconds() -> double;
@@ -71,15 +65,11 @@ void trace_warning_message(std::string_view message);
 
 template<typename... Args>
 void trace(std::format_string<Args...> fmt, Args&&... args)
-{
-    trace_message(std::format(fmt, std::forward<Args>(args)...));
-}
+{ trace_message(std::format(fmt, std::forward<Args>(args)...)); }
 
 template<typename... Args>
 void trace_warning(std::format_string<Args...> fmt, Args&&... args)
-{
-    trace_warning_message(std::format(fmt, std::forward<Args>(args)...));
-}
+{ trace_warning_message(std::format(fmt, std::forward<Args>(args)...)); }
 
 /* Tier B: concurrency detector.
  *
