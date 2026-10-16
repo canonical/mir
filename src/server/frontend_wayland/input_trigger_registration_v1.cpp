@@ -189,7 +189,19 @@ mf::KeyboardSymTrigger::KeyboardSymTrigger(
 
 bool mf::KeyboardSymTrigger::check_pressed(MirEvent const& event) const
 {
-    return keyboard_state_tracker->keysym_is_pressed(event.to_input()->device_id(), keysym);
+    auto const device_id = event.to_input()->device_id();
+    if (keyboard_state_tracker->keysym_is_pressed(device_id, keysym))
+        return true;
+
+    auto const upper = xkb_keysym_to_upper(keysym);
+    if (upper != keysym && keyboard_state_tracker->keysym_is_pressed(device_id, upper))
+        return true;
+
+    auto const lower = xkb_keysym_to_lower(keysym);
+    if (lower != keysym && keyboard_state_tracker->keysym_is_pressed(device_id, lower))
+        return true;
+
+    return false;
 }
 
 bool mf::KeyboardSymTrigger::event_is_for_trigger_key(MirEvent const& event) const
@@ -573,6 +585,13 @@ void InputTriggerRegistrationManagerV1::Instance::get_action_control(std::string
 void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
     uint32_t modifiers, uint32_t keysym, struct wl_resource* id)
 {
+    using PM = mw::InputTriggerRegistrationManagerV1::Modifiers;
+    bool const wants_shift = (modifiers & (PM::shift | PM::shift_left | PM::shift_right)) != 0;
+    if (wants_shift)
+    {
+        keysym = xkb_keysym_to_upper(keysym);
+    }
+
     auto const shift_adjustment = (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z);
     auto const protocol_modifiers = InputTriggerModifiers::from_protocol(modifiers, shift_adjustment);
     auto const keyboard_trigger = new mf::KeyboardSymTrigger{
