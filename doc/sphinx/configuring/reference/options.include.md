@@ -1,11 +1,13 @@
 ## Options
 
 (global-arw-file)=
+
 ### `arw-file`
 
 Make server Wayland socket readable and writeable by all users. For debugging purposes only.
 
 (global-composite-delay)=
+
 ### `composite-delay`
 
 Number of milliseconds to wait for new frames from clients before compositing. Higher values result in higher latency but risk causing frame skipping.
@@ -13,6 +15,7 @@ Number of milliseconds to wait for new frames from clients before compositing. H
 Defaults to `0`.
 
 (global-compositor-report)=
+
 ### `compositor-report`
 
 Configure compositor reporting. [{off,log,lttng}]
@@ -20,32 +23,38 @@ Configure compositor reporting. [{off,log,lttng}]
 Defaults to `off`.
 
 (global-console-provider)=
+
 ### `console-provider`
 
 Method used to handle console-related tasks (device handling, VT switching, etc):
- - `logind`: use logind.
- - `vt`: use the Linux VT subsystem. Requires root.
- - `none`: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don&apos;t have a VT concept.
- - `auto`: detect the appropriate provider.
+
+- `logind`: use logind.
+- `vt`: use the Linux VT subsystem. Requires root.
+- `none`: support no console-related tasks. Useful for nested platforms which do not need raw device access and which don't have a VT concept.
+- `auto`: detect the appropriate provider.
 
 Defaults to `auto`.
 
 (global-cursor)=
+
 ### `cursor`
 
 Cursor type:
- - `auto`: use hardware if available, or fallback to software.
- - `null`: cursor disabled.
- - `software`: always use software cursor.
+
+- `auto`: use hardware if available, or fallback to software.
+- `null`: cursor disabled.
+- `software`: always use software cursor.
 
 Defaults to `auto`.
 
 (global-debug)=
+
 ### `debug`
 
 Enable debugging information. Useful when developing Mir servers.
 
 (global-display-report)=
+
 ### `display-report`
 
 Configure display reporting. [{off,log,lttng}]
@@ -53,6 +62,7 @@ Configure display reporting. [{off,log,lttng}]
 Defaults to `off`.
 
 (global-enable-input)=
+
 ### `enable-input`
 
 Enable input.
@@ -60,6 +70,7 @@ Enable input.
 Defaults to `1`.
 
 (global-enable-key-repeat)=
+
 ### `enable-key-repeat`
 
 Enable server generated key repeat.
@@ -67,26 +78,31 @@ Enable server generated key repeat.
 Defaults to `1`.
 
 (global-enable-touchspots)=
+
 ### `enable-touchspots`
 
 Enable visual feedback of touch events. Useful for screencasting.
 
 (global-env-hacks)=
+
 ### `env-hacks`
 
 Colon separated list of environment variable settings.
 
 (global-help)=
+
 ### `help`
 
 Show command line help.
 
 (global-help-markdown)=
+
 ### `help-markdown`
 
 Show command line options in markdown format suitable for including into a document.
 
 (global-idle-timeout)=
+
 ### `idle-timeout`
 
 Number of seconds Mir will remain idle before turning off the display when the session is not locked, or 0 to keep display on forever.
@@ -94,6 +110,7 @@ Number of seconds Mir will remain idle before turning off the display when the s
 Defaults to `0`.
 
 (global-idle-timeout-when-locked)=
+
 ### `idle-timeout-when-locked`
 
 Number of seconds Mir will remain idle before turning off the display when the session is locked, or 0 to keep the display on forever.
@@ -101,6 +118,7 @@ Number of seconds Mir will remain idle before turning off the display when the s
 Defaults to `0`.
 
 (global-input-report)=
+
 ### `input-report`
 
 Configure input reporting. [{off,log,lttng}]
@@ -108,6 +126,7 @@ Configure input reporting. [{off,log,lttng}]
 Defaults to `off`.
 
 (global-key-repeat-delay)=
+
 ### `key-repeat-delay`
 
 Number of milliseconds to hold down a key before generating repeat events.
@@ -115,6 +134,7 @@ Number of milliseconds to hold down a key before generating repeat events.
 Defaults to `600`.
 
 (global-key-repeat-rate)=
+
 ### `key-repeat-rate`
 
 Rate of repeating keys in characters per second.
@@ -122,76 +142,89 @@ Rate of repeating keys in characters per second.
 Defaults to `25`.
 
 (global-log-level)=
+
 ### `log-level`
 
 Minimum severity of a log message required for it to be printed.
 Valid severities are: critical, error, warning, informational, debug (“warn” and “info” can be used as short forms of “warning” and “informational”)
 Must be specified in the form “tag=severity”
 
-Tags are hierarchical. Setting a tag&apos;s severity implicitly sets the severity of all its children.
+Tags are hierarchical. Setting a tag's severity implicitly sets the severity of all its children.
 The root of the tag hierarchy is “base”, so --log-level=base=debug will enable all tags at debug level.
 
 This option can be specified multiple times, and filters are applied in the order they are encountered.
 For example “--log-level core=warning --log-level graphics=debug” will enable all tags at the warning level
 except for graphics (and its children), which will be enabled at the debug level.
 
-Tags can be specified by their full heirarchy (e.g. “base/graphics”) or by their name (eg: “graphics”) if unambiguous.
+Tags can be specified by their full hierarchy (e.g. “base/graphics”) or by their name (e.g.: “graphics”) if unambiguous.
 
 Possible tags to filter on are:
- - base
- - base/graphics
- - base/graphics/output-config
- - base/input
- - base/miral
- - base/miral/magnifier
- - base/wayland
- - base/window-management
+
+- base
+- base/graphics
+- base/graphics/output-config
+- base/input
+- base/miral
+- base/miral/magnifier
+- base/wayland
+- base/window-management
 
 (global-mouse-cursor-acceleration)=
+
 ### `mouse-cursor-acceleration`
 
 Acceleration profile for mice and trackballs:
- - `none`: no acceleration.
- - `adaptive`: cursor is accelerated.
+
+- `none`: no acceleration.
+- `adaptive`: cursor is accelerated.
 
 (global-mouse-cursor-acceleration-bias)=
+
 ### `mouse-cursor-acceleration-bias`
 
 Pointer acceleration speed of mice. Must be within range of [-1.0, 1.0].
 
 (global-mouse-handedness)=
+
 ### `mouse-handedness`
 
 Mouse laterality:
- - `right`: left button is primary.
- - `left`: right button is primary.
+
+- `right`: left button is primary.
+- `left`: right button is primary.
 
 (global-mouse-horizontal-scroll-speed-override)=
+
 ### `mouse-horizontal-scroll-speed-override`
 
 Mouse horizontal scroll speed scaling factor. Use negative values for natural scrolling.
 
 (global-mouse-scroll-speed)=
+
 ### `mouse-scroll-speed`
 
 Mouse scroll speed scaling factor. Use negative values for natural scrolling.
 
 (global-mouse-vertical-scroll-speed-override)=
+
 ### `mouse-vertical-scroll-speed-override`
 
 Mouse vertical scroll speed scaling factor. Use negative values for natural scrolling.
 
 (global-platform-display-libs)=
+
 ### `platform-display-libs`
 
 Comma separated list of libraries to use for platform output support, e.g. `mir:x11,mir:wayland`. If not provided the libraries are autodetected.
 
 (global-platform-input-lib)=
+
 ### `platform-input-lib`
 
 Library to use for platform input support, e.g. `mir:stub-input`. If not provided this is autodetected.
 
 (global-platform-path)=
+
 ### `platform-path`
 
 Directory to look for platform libraries.
@@ -199,11 +232,13 @@ Directory to look for platform libraries.
 Defaults to `<LIBDIR>/mir/server-platform`.
 
 (global-platform-rendering-libs)=
+
 ### `platform-rendering-libs`
 
 Comma separated list of libraries to use for platform rendering support, e.g. `mir:egl-generic`. If not provided the libraries are autodetected.
 
 (global-scene-report)=
+
 ### `scene-report`
 
 Configure scene reporting. [{off,log,lttng}]
@@ -211,6 +246,7 @@ Configure scene reporting. [{off,log,lttng}]
 Defaults to `off`.
 
 (global-seat-report)=
+
 ### `seat-report`
 
 Configure seat reporting. [{off,log}]
@@ -218,6 +254,7 @@ Configure seat reporting. [{off,log}]
 Defaults to `off`.
 
 (global-shared-library-prober-report)=
+
 ### `shared-library-prober-report`
 
 Configure shared library prober reporting. [{log,off,lttng}]
@@ -225,6 +262,7 @@ Configure shared library prober reporting. [{log,off,lttng}]
 Defaults to `log`.
 
 (global-shell-report)=
+
 ### `shell-report`
 
 Configure shell reporting. [{off,log}]
@@ -232,74 +270,90 @@ Configure shell reporting. [{off,log}]
 Defaults to `off`.
 
 (global-touchpad-click-mode)=
+
 ### `touchpad-click-mode`
 
 Click mode for touchpad. Left, middle and right button click events generated when:
- - `none`: no events generated.
- - `area`: single finger tap on left, middle or right area.
- - `clickfinger`: one, two or three fingers present when touchpad pushed down.
+
+- `none`: no events generated.
+- `area`: single finger tap on left, middle or right area.
+- `clickfinger`: one, two or three fingers present when touchpad pushed down.
 
 (global-touchpad-cursor-acceleration)=
+
 ### `touchpad-cursor-acceleration`
 
 Acceleration profile for touchpads:
- - `none`: no acceleration.
- - `adaptive`: cursor accelerates.
+
+- `none`: no acceleration.
+- `adaptive`: cursor accelerates.
 
 (global-touchpad-cursor-acceleration-bias)=
+
 ### `touchpad-cursor-acceleration-bias`
 
 Pointer acceleration speed scaling factor for touchpads. Must be within range of [-1.0, 1.0].
 
 (global-touchpad-disable-while-typing)=
+
 ### `touchpad-disable-while-typing`
 
 Disable touchpad while typing on keyboard. [true, false]
 
 (global-touchpad-disable-with-external-mouse)=
+
 ### `touchpad-disable-with-external-mouse`
 
 Disable touchpad if an external pointer device is plugged in. [true, false]
 
 (global-touchpad-horizontal-scroll-speed-override)=
+
 ### `touchpad-horizontal-scroll-speed-override`
 
 Touchpad horizontal scroll scaling factor. Use negative values for natural scrolling.
 
 (global-touchpad-middle-mouse-button-emulation)=
+
 ### `touchpad-middle-mouse-button-emulation`
 
 Generate middle mouse button click from a simultaneous left and right button click.
 
 (global-touchpad-scroll-mode)=
+
 ### `touchpad-scroll-mode`
 
 Scroll mode for touchpads. Generates scroll events when:
- - `edge`: single finger moves on right or bottom edges of touchpad.
- - `two-finger`: two fingers move horizontally or vertically.
- - `button-down`: mouse button held down.
+
+- `edge`: single finger moves on right or bottom edges of touchpad.
+- `two-finger`: two fingers move horizontally or vertically.
+- `button-down`: mouse button held down.
 
 (global-touchpad-scroll-speed)=
+
 ### `touchpad-scroll-speed`
 
 Touchpad scroll scaling factor. Use negative values for natural scrolling.
 
 (global-touchpad-tap-to-click)=
+
 ### `touchpad-tap-to-click`
 
 Enable or disable tap-to-click on this device. If enabled 1, 2, and 3 finger taps are mapped to left, right, middle click events. [true, false]
 
 (global-touchpad-vertical-scroll-speed-override)=
+
 ### `touchpad-vertical-scroll-speed-override`
 
 Touchpad vertical scroll scaling factor. Use negative values for natural scrolling.
 
 (global-version)=
+
 ### `version`
 
 Display Mir version and exit.
 
 (global-vt)=
+
 ### `vt`
 
 VT to run on or 0 to use current. Only used when `--console-provider=vt`.
@@ -307,19 +361,23 @@ VT to run on or 0 to use current. Only used when `--console-provider=vt`.
 Defaults to `0`.
 
 (global-vt-switching)=
+
 ### `vt-switching`
 
-Enable VT switching on Ctrl+Alt+F*. Only used when `--console-provider=vt|logind`.
+Enable VT switching on Ctrl+Alt+F\*. Only used when `--console-provider=vt|logind`.
 
 Defaults to `1`.
 
 (global-window-management-trace)=
+
 ### `window-management-trace`
 
 Log trace message
+
 ## Options for mir:atomic-kms platform
 
 (mir-atomic-kms-bypass)=
+
 ### `bypass`
 
 Enable bypass optimization for fullscreen surfaces.
@@ -327,12 +385,15 @@ Enable bypass optimization for fullscreen surfaces.
 Defaults to `0`.
 
 (mir-atomic-kms-driver-quirks)=
+
 ### `driver-quirks`
 
 Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
+
 ## Options for mir:gbm-kms platform
 
 (mir-gbm-kms-bypass)=
+
 ### `bypass`
 
 Enable bypass optimization for fullscreen surfaces.
@@ -340,34 +401,43 @@ Enable bypass optimization for fullscreen surfaces.
 Defaults to `0`.
 
 (mir-gbm-kms-driver-quirks)=
+
 ### `driver-quirks`
 
 Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
+
 ## Options for mir:virtual platform
 
 (mir-virtual-virtual-output)=
+
 ### `virtual-output`
 
 Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT`, e.g. `1920x1080:3840x2160`.
+
 ## Options for mir:wayland platform
 
 (mir-wayland-wayland-host)=
+
 ### `wayland-host`
 
 Display name for host compositor, e.g. `wayland-0`.
 
 (mir-wayland-wayland-surface-app-id)=
+
 ### `wayland-surface-app-id`
 
 Application ID for the window containing the Mir output.
 
 (mir-wayland-wayland-surface-title)=
+
 ### `wayland-surface-title`
 
 Title of the window containing the Mir output.
+
 ## Options for mir:x11 platform
 
 (mir-x11-x11-output)=
+
 ### `x11-output`
 
 Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT[^SCALE]`, e.g. `1920x1080:3840x2160^2`.
@@ -375,6 +445,7 @@ Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT
 Defaults to `1280x1024`.
 
 (mir-x11-x11-window-title)=
+
 ### `x11-window-title`
 
 Title of the window containing the Mir output.

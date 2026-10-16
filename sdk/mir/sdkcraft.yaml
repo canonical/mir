@@ -1,0 +1,123 @@
+name: mir
+version: git
+base: ubuntu@26.04
+summary: Mir development files and runtime plugins
+description: |
+  This SDK provides Mir's complete installed development and runtime tree under /opt/mir.
+  Libraries, headers, platform plugins, tools, and Mir development dependencies are available
+  to consumer SDKs through a mount connection.
+platforms:
+  amd64:
+  arm64:
+parts:
+  mir:
+    plugin: cmake
+    # Can't point at the local source, yet: canonical/sdkcraft#294
+    source: https://github.com/canonical/mir.git
+    source-type: git
+    source-branch: main
+    build-environment:
+      # Workaround for canonical/sdkcraft#291
+      - PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:/snap/sdkcraft/current/usr/bin:/snap/sdkcraft/current/bin
+      - CCACHE_SLOPPINESS: time_macros,pch_defines,include_file_mtime,include_file_ctime
+    build-packages:
+      - build-essential
+      - cargo
+      - cmake
+      - clang
+      - ccache
+      - eglexternalplatform-dev
+      - git
+      - libapparmor-dev
+      - libboost-iostreams-dev
+      - libboost-program-options-dev
+      - libdisplay-info-dev
+      - libdrm-dev
+      - libegl1-mesa-dev
+      - libepoxy-dev
+      - libevdev-dev
+      - libfreetype-dev
+      - libgbm-dev
+      - libgles2-mesa-dev
+      - libglib2.0-dev
+      - libglm-dev
+      - libgmock-dev
+      - libgtest-dev
+      - libinput-dev
+      - liblttng-ust-dev
+      - libpixman-1-dev
+      - librust-bitflags-2+default-dev
+      - librust-calloop+default-dev
+      - librust-cxx+default-dev
+      - librust-cxx-build+default-dev
+      - librust-input+default-dev
+      - librust-input+libinput-1-19-dev
+      - librust-libc-0.2+default-dev
+      - librust-log-0.4+default-dev
+      - librust-nix+default-dev
+      - librust-nix+event-dev
+      - librust-nix+poll-dev
+      - librust-prettyplease-0.2+default-dev
+      - librust-proc-macro2-1+default-dev
+      - librust-quick-xml+default-dev
+      - librust-quick-xml+serialize-dev
+      - librust-quote-1+default-dev
+      - librust-serde-1+default-dev
+      - librust-serde-1+derive-dev
+      - librust-syn-2+default-dev
+      - librust-syn-2+full-dev
+      - librust-syn-2+parsing-dev
+      - librust-udev-0.9+default-dev
+      - librust-wayland-backend+default-dev
+      - librust-wayland-scanner+default-dev
+      - librust-wayland-server+default-dev
+      - libstd-rust-dev
+      - libudev-dev
+      - libumockdev-dev
+      - libwayland-dev
+      - libx11-xcb-dev
+      - libxcb-composite0-dev
+      - libxcb-randr0-dev
+      - libxcb-render0-dev
+      - libxcb-res0-dev
+      - libxcb-xfixes0-dev
+      - libxcursor-dev
+      - libxkbcommon-dev
+      - libxkbcommon-x11-dev
+      - libxml++-5.0-dev
+      - libyaml-cpp-dev
+      - linux-libc-dev
+      - ninja-build
+      - pkg-config
+      - python3-dbusmock
+      - python3-pil
+      - python3
+      - rustc
+      - systemtap-sdt-dev
+      - umockdev
+      - uuid-dev
+      - wlcs
+      - xwayland
+    cmake-parameters:
+      - -G Ninja
+      - -DCMAKE_BUILD_TYPE=RelWithDebInfo
+      - -DCMAKE_INSTALL_PREFIX=/opt/mir
+      - -DCMAKE_C_COMPILER=clang
+      - -DCMAKE_CXX_COMPILER=clang++
+      - -DCMAKE_C_COMPILER_LAUNCHER=ccache
+      - -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+      - -DMIR_ENABLE_TESTS=ON
+      - -DMIR_ENABLE_WLCS_TESTS=OFF
+    # Workaround for canonical/sdkcraft#293
+    override-stage: |
+      craftctl default
+      sed -i 's!^prefix=/root/stage!prefix=!' ${CRAFT_STAGE}/opt/mir/lib/pkgconfig/*.pc
+plugs:
+  desktop:
+    interface: desktop
+  gpu:
+    interface: gpu
+slots:
+  install:
+    interface: mount
+    workshop-source: $SDK/opt/mir
