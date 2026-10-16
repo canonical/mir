@@ -38,7 +38,7 @@ namespace renderer::blitter
 /// Rather than texturing each renderable with the GPU, this walks the scene
 /// back-to-front handing each renderable to a [BlitterRenderingProvider]. This is
 /// a win on embedded hardware that has a blitter but little or no useful GPU.
-/// 
+///
 /// It falls back to rendering with GL in cases where blitting fails.
 class Renderer : public renderer::Renderer
 {
