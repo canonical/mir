@@ -37,9 +37,12 @@
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/renderer/sw/pixel_source.h>
+#include <mir/debug_frame_trace.h>
 
 #include <EGL/egl.h>
+#include <atomic>
 #include <cstdint>
+#include <mutex>
 #include <stdexcept>
 #include <sys/ioctl.h>
 #include <sys/mman.h>
@@ -852,11 +855,13 @@ public:
         mg::EGLExtensions const& extensions,
         mg::DMABufBuffer const& dma_buf,
         BufferGLDescription const& descriptor,
-        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
+        std::shared_ptr<mgc::EGLContextExecutor> egl_delegate,
+        uint32_t buffer_id)
         : tex{get_tex_id()},
           desc{descriptor},
           layout_{dma_buf.layout()},
-          egl_delegate{std::move(egl_delegate)}
+          egl_delegate{std::move(egl_delegate)},
+          buffer_id{buffer_id}
     {
         eglBindAPI(EGL_OPENGL_ES_API);
 
@@ -905,6 +910,21 @@ public:
 
     void bind() override
     {
+        /* THROWAWAY (#5325): this texture object is shared by every compositor thread,
+         * so `bind()`/`add_syncpoint()` bracket each thread's use of the client buffer.
+         */
+        auto const mode = mir::debug::buffer_sync_mode();
+
+        if (mir::debug::tracing())
+            mir::debug::note_sample_begin(samplers, buffer_id, tex);
+
+        if (mode == mir::debug::BufferSyncMode::per_buffer ||
+            mode == mir::debug::BufferSyncMode::per_buffer_finish)
+        {
+            use_mutex.lock();
+            holding_use_mutex = true;
+        }
+
         glBindTexture(desc.target, tex);
     }
 
@@ -915,6 +935,17 @@ public:
 
     void add_syncpoint() override
     {
+        if (holding_use_mutex)
+        {
+            if (mir::debug::buffer_sync_mode() == mir::debug::BufferSyncMode::per_buffer_finish)
+                glFinish();
+
+            holding_use_mutex = false;
+            use_mutex.unlock();
+        }
+
+        if (mir::debug::tracing())
+            mir::debug::note_sample_end(samplers, buffer_id);
     }
 
 
@@ -923,6 +954,11 @@ private:
     BufferGLDescription const& desc;
     Layout const layout_;
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+    uint32_t const buffer_id;
+    std::mutex use_mutex;
+    std::atomic<int> samplers{0};
+    /* Only ever written by the thread holding `use_mutex` */
+    bool holding_use_mutex{false};
 };
 
 namespace
@@ -949,7 +985,7 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release)
         : dpy{dpy},
-          tex{dpy, extensions, dma_buf, descriptor, egl_delegate},
+          tex{dpy, extensions, dma_buf, descriptor, egl_delegate, id().as_value()},
           provider_{std::move(provider)},
           on_consumed_{std::move(on_consumed)},
           on_release{std::move(on_release)},
@@ -960,10 +996,18 @@ public:
           modifier_{dma_buf.modifier()},
           format_{dma_buf.format()}
     {
+        mir::debug::note_buffer_imported(
+            id().as_value(),
+            format_.name(),
+            modifier_.value_or(DRM_FORMAT_MOD_INVALID),
+            planes_.size(),
+            size_.width.as_int(),
+            size_.height.as_int());
     }
 
     ~DmabufTexBuffer() override
     {
+        mir::debug::note_buffer_released(id().as_value());
         on_release();
     }
 
@@ -1413,6 +1457,29 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
     {
         if (dmabuf_tex->on_same_egl_display(dpy))
         {
+            /* THROWAWAY (#5325): `reimport` gives every composite a private EGLImage and
+             * texture object, so no GL object is shared between compositor threads while
+             * the underlying dma-buf (and its implicit fences) are unchanged.
+             */
+            if (mir::debug::buffer_sync_mode() == mir::debug::BufferSyncMode::reimport)
+            {
+                if (auto descriptor = descriptor_for_format_and_modifiers(
+                        dmabuf_tex->format(),
+                        dmabuf_tex->modifier().value_or(DRM_FORMAT_MOD_INVALID),
+                        *this))
+                {
+                    dmabuf_tex->as_texture();   // for the on_consumed() side-effect
+                    return std::make_shared<DMABufTex>(
+                        dpy,
+                        *egl_extensions,
+                        *dmabuf_tex,
+                        *descriptor,
+                        egl_delegate,
+                        dmabuf_tex->id().as_value());
+                }
+                mir::log_warning("MIR_DEBUG_BUFFER_SYNC=reimport: no descriptor for buffer; using shared texture");
+            }
+
             auto tex = dmabuf_tex->as_texture();
             return std::shared_ptr<gl::Texture>(std::move(dmabuf_tex), tex);
         }
@@ -1433,7 +1500,8 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
                     *egl_extensions,
                     *dmabuf_tex,
                     *descriptor,
-                    egl_delegate);
+                    egl_delegate,
+                    dmabuf_tex->id().as_value());
             }
         }
         /* Oh, no. We've got a dma-buf in a format that our rendering GPU can't handle.
@@ -1510,7 +1578,8 @@ auto mg::DMABufEGLProvider::as_texture(std::shared_ptr<NativeBufferBase> buffer)
                 *egl_extensions,
                 *importable_dmabuf,
                 *descriptor,
-                egl_delegate);
+                egl_delegate,
+                dmabuf_tex->id().as_value());
         }
 
         /* To get here we have to have failed to find the format/modifier descriptor for a

@@ -32,6 +32,7 @@
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/output_filter.h>
+#include <mir/debug_frame_trace.h>
 
 namespace mc = mir::compositor;
 namespace mr = mir::renderer;
@@ -217,6 +218,17 @@ auto mc::BasicScreenShooter::Self::render(
 {
     std::lock_guard lock{mutex};
 
+    /* THROWAWAY (#5325): screen capture is a third consumer of the clients' textures,
+     * on its own thread; the `global` modes have to cover it too.
+     */
+    auto const sync_mode = mir::debug::buffer_sync_mode();
+    std::unique_lock<std::mutex> global_lock;
+    if (sync_mode == mir::debug::BufferSyncMode::global ||
+        sync_mode == mir::debug::BufferSyncMode::global_finish)
+    {
+        global_lock = std::unique_lock{mir::debug::global_render_mutex()};
+    }
+
     auto scene_elements = scene->scene_elements_for(this);
     auto const captured_time = clock->now();
     mg::RenderableList renderable_list;
@@ -255,6 +267,17 @@ auto mc::BasicScreenShooter::Self::render(
      * going into the buffer we just set
      */
     renderer.render(renderable_list);
+
+    if (sync_mode == mir::debug::BufferSyncMode::global_finish)
+        mir::debug::gl_finish();
+
+    if (mir::debug::tracing())
+    {
+        mir::debug::trace(
+            "screen capture rendered area={}x{}+{}+{} elements={}",
+            area.size.width.as_int(), area.size.height.as_int(),
+            area.top_left.x.as_int(), area.top_left.y.as_int(), renderable_list.size());
+    }
 
     // Because we might be called on a different thread next time we need to
     // ensure the renderer doesn't keep the EGL context current

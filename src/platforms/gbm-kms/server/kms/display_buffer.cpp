@@ -31,6 +31,7 @@
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/gl_config.h>
 #include <mir/graphics/dmabuf_buffer.h>
+#include <mir/debug_frame_trace.h>
 
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
@@ -174,10 +175,26 @@ bool mgg::DisplaySink::set_crtc(FBHandle const& forced_frame)
 
 bool mgg::DisplaySink::post()
 {
+    /* THROWAWAY (#5325): Tier C — the paths below used to be silent, which made
+     * "composited but never presented" indistinguishable from "never composited".
+     */
+    auto const trace_key = debug_trace_key();
+
     if (!next_swap)
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
         // Sweet! We can just bail.
+        if (mir::debug::tracing())
+        {
+            mir::debug::trace("post: no new content for output {} (connector {})", trace_key, output->id());
+            mir::debug::update_output_trace(
+                trace_key,
+                [this](mir::debug::OutputTrace& trace)
+                {
+                    ++trace.skipped_posts;
+                    trace.connector = std::to_string(output->id());
+                });
+        }
         return true;
     }
     /*
@@ -190,8 +207,16 @@ bool mgg::DisplaySink::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * [will complete in a background thread]
      */
+    auto const scheduled_fb_id = static_cast<uint32_t>(*scheduled_fb);
     if (!needs_set_crtc && !schedule_page_flip(*scheduled_fb))
+    {
         needs_set_crtc = true;
+        mir::debug::trace_warning(
+            "post: page flip NOT scheduled for output {} (connector {}), fb={}; falling back to set_crtc",
+            trace_key, output->id(), scheduled_fb_id);
+        mir::debug::update_output_trace(
+            trace_key, [](mir::debug::OutputTrace& trace) { ++trace.failed_flips; });
+    }
 
     /*
      * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
@@ -200,6 +225,15 @@ bool mgg::DisplaySink::post()
     auto presentation_succeeded = true;
     if (needs_set_crtc)
     {
+        if (mir::debug::tracing())
+        {
+            mir::debug::trace_warning(
+                "post: set_crtc fallback for output {} (connector {}), fb={}",
+                trace_key, output->id(), scheduled_fb_id);
+            mir::debug::update_output_trace(
+                trace_key, [](mir::debug::OutputTrace& trace) { ++trace.set_crtc_fallbacks; });
+        }
+
         presentation_succeeded = set_crtc(*scheduled_fb);
         // SetCrtc is immediate, so the FB is now visible and we have nothing pending
         visible_fb = std::move(scheduled_fb);
@@ -220,11 +254,38 @@ bool mgg::DisplaySink::post()
     // that minimises latency.
     wait_for_page_flip();
 
+    if (mir::debug::tracing())
+    {
+        mir::debug::trace(
+            "post: output {} (connector {}) presented fb={} ok={}",
+            trace_key, output->id(), scheduled_fb_id, presentation_succeeded);
+        mir::debug::update_output_trace(
+            trace_key,
+            [this, scheduled_fb_id](mir::debug::OutputTrace& trace)
+            {
+                ++trace.posts;
+                trace.connector = std::to_string(output->id());
+                trace.last_scheduled_fb = scheduled_fb_id;
+                trace.last_visible_fb = visible_fb ? static_cast<uint32_t>(*visible_fb) : 0;
+                trace.last_flip = mir::debug::now_seconds();
+                trace.needs_set_crtc = needs_set_crtc;
+                trace.page_flips_pending = page_flips_pending;
+            });
+    }
+
     auto const min_frame_interval = 1000ms / output->max_refresh_rate();
     if (predicted_render_time < min_frame_interval)
         recommend_sleep = min_frame_interval - predicted_render_time;
 
     return presentation_succeeded;
+}
+
+auto mgg::DisplaySink::debug_trace_key() const -> std::string
+{
+    auto const area = view_area();
+    return mir::debug::output_key(
+        area.size.width.as_int(), area.size.height.as_int(),
+        area.top_left.x.as_int(), area.top_left.y.as_int());
 }
 
 std::chrono::milliseconds mgg::DisplaySink::recommended_sleep() const

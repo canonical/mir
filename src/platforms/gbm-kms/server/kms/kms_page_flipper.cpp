@@ -16,7 +16,9 @@
 
 #include "kms_page_flipper.h"
 #include <mir/graphics/display_report.h>
+#include <mir/log.h>
 
+#include <cstring>
 #include <stdexcept>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
@@ -80,7 +82,15 @@ bool mgg::KMSPageFlipper::schedule_flip(uint32_t crtc_id,
                                &pending_page_flips[crtc_id]);
 
     if (ret)
+    {
         pending_page_flips.erase(crtc_id);
+        /* THROWAWAY (#5325): this failure used to be entirely silent, so a frame
+         * could be composited and then never reach the screen without a log line.
+         */
+        mir::log_warning(
+            "drmModePageFlip failed: crtc=%u connector=%u fb=%u: %s (%d)",
+            crtc_id, connector_id, fb_id, std::strerror(-ret), ret);
+    }
 
     return (ret == 0);
 }
