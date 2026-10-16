@@ -21,6 +21,7 @@
 #include <mir/geometry/size.h>
 #include <gtest/gtest.h>
 
+#include <cerrno>
 #include <cstdlib>
 #include <cstring>
 #include <ostream>
@@ -148,6 +149,9 @@ void mtd::FakeDRMResources::reset()
     plane_ids.clear();
     object_properties.clear();
     properties.clear();
+    property_values.clear();
+    property_enums.clear();
+    property_blobs.clear();
 }
 
 void mtd::FakeDRMResources::add_crtc(uint32_t id, drmModeModeInfo mode)
@@ -192,6 +196,41 @@ void mtd::FakeDRMResources::add_property(
     object.ids.push_back(property_id);
     object.values.push_back(value);
     object.resource = {static_cast<uint32_t>(object.ids.size()), object.ids.data(), object.values.data()};
+}
+
+void mtd::FakeDRMResources::set_property_range(uint32_t property_id, uint32_t flags, uint64_t min, uint64_t max)
+{
+    auto& property = properties.at(property_id);
+    auto& values = property_values[property_id];
+    values = {min, max};
+    property.flags = flags;
+    property.count_values = static_cast<int>(values.size());
+    property.values = values.data();
+}
+
+void mtd::FakeDRMResources::set_property_enums(
+    uint32_t property_id, std::span<std::pair<uint64_t, std::string> const> enums)
+{
+    auto& property = properties.at(property_id);
+    auto& storage = property_enums[property_id];
+    storage.clear();
+    for (auto const& [value, name] : enums)
+    {
+        drm_mode_property_enum entry{};
+        entry.value = value;
+        std::strncpy(entry.name, name.c_str(), sizeof(entry.name) - 1);
+        storage.push_back(entry);
+    }
+    property.flags |= DRM_MODE_PROP_ENUM;
+    property.count_enums = static_cast<int>(storage.size());
+    property.enums = storage.data();
+}
+
+void mtd::FakeDRMResources::add_property_blob(uint32_t blob_id, std::span<std::byte const> data)
+{
+    auto& blob = property_blobs[blob_id];
+    blob.data.assign(data.begin(), data.end());
+    blob.resource = {blob_id, static_cast<uint32_t>(blob.data.size()), blob.data.data()};
 }
 
 void mtd::FakeDRMResources::add_connector(uint32_t connector_id,
@@ -270,6 +309,12 @@ drmModePropertyRes* mtd::FakeDRMResources::find_property(uint32_t id)
 {
     auto const it = properties.find(id);
     return it == properties.end() ? nullptr : &it->second;
+}
+
+drmModePropertyBlobRes* mtd::FakeDRMResources::find_property_blob(uint32_t id)
+{
+    auto const it = property_blobs.find(id);
+    return it == property_blobs.end() ? nullptr : &it->second.resource;
 }
 
 
@@ -417,6 +462,21 @@ mtd::MockDRM::MockDRM()
                 {
                     return fd_to_drm.at(fd).find_property(property_id);
                 });
+
+    ON_CALL(*this, drmModeGetPropertyBlob(_, _))
+        .WillByDefault(
+                [this](int fd, uint32_t blob_id) -> drmModePropertyBlobPtr
+                {
+                    auto const blob = fd_to_drm.at(fd).find_property_blob(blob_id);
+                    if (!blob)
+                    {
+                        errno = ENOENT;
+                    }
+                    return blob;
+                });
+
+    ON_CALL(*this, drmModeFreePropertyBlob(_))
+        .WillByDefault([](drmModePropertyBlobPtr) {});
 
     ON_CALL(*this, drmSetInterfaceVersion(_, _))
         .WillByDefault(
@@ -576,6 +636,23 @@ void mtd::MockDRM::add_property(
     char const* name, uint64_t value)
 {
     fake_drms[device].add_property(object_id, object_type, property_id, name, value);
+}
+
+void mtd::MockDRM::set_property_range(
+    char const* device, uint32_t property_id, uint32_t flags, uint64_t min, uint64_t max)
+{
+    fake_drms[device].set_property_range(property_id, flags, min, max);
+}
+
+void mtd::MockDRM::set_property_enums(
+    char const* device, uint32_t property_id, std::span<std::pair<uint64_t, std::string> const> enums)
+{
+    fake_drms[device].set_property_enums(property_id, enums);
+}
+
+void mtd::MockDRM::add_property_blob(char const* device, uint32_t blob_id, std::span<std::byte const> data)
+{
+    fake_drms[device].add_property_blob(blob_id, data);
 }
 
 void mtd::MockDRM::prepare(char const *device)
@@ -819,6 +896,16 @@ int drmSetClientCap(int fd, uint64_t capability, uint64_t value)
 drmModePropertyPtr drmModeGetProperty(int fd, uint32_t propertyId)
 {
     return global_mock->drmModeGetProperty(fd, propertyId);
+}
+
+drmModePropertyBlobPtr drmModeGetPropertyBlob(int fd, uint32_t blob_id)
+{
+    return global_mock->drmModeGetPropertyBlob(fd, blob_id);
+}
+
+void drmModeFreePropertyBlob(drmModePropertyBlobPtr ptr)
+{
+    global_mock->drmModeFreePropertyBlob(ptr);
 }
 
 int drmModeConnectorSetProperty(int fd, uint32_t connector_id, uint32_t property_id, uint64_t value)
