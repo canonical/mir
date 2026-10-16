@@ -58,7 +58,8 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
             }
 
-            if (auto pinned = find_pinned_rendering_platform())
+            auto const pinned = find_pinned_rendering_platform();
+            if (pinned)
             {
                 if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
                 {
@@ -74,8 +75,11 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 }
             }
 
+            // The blitter compositor may be chosen over GL, so it must honour the pin too
+            auto const blitter_platforms =
+                pinned ? std::vector<std::shared_ptr<mg::RenderingPlatform>>{pinned} : the_rendering_platforms();
             std::vector<std::shared_ptr<mg::BlitterRenderingProvider>> blitter_providers;
-            for (auto const& platform : the_rendering_platforms())
+            for (auto const& platform : blitter_platforms)
             {
                 if (auto blitter = mg::RenderingPlatform::acquire_provider<mg::BlitterRenderingProvider>(platform))
                 {
