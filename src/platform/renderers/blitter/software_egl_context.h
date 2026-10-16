@@ -49,13 +49,14 @@ public:
     void release_current() const;
     auto is_current() const -> bool;
 
-    auto display() const -> EGLDisplay { return dpy; }
+    auto display() const -> EGLDisplay;
     auto extensions() const -> graphics::EGLExtensions const& { return *exts; }
 
 private:
+    class Display;
+
     /// Keeps the process-wide software display initialised for as long as we need it
-    std::shared_ptr<EGLDisplay const> const shared_dpy;
-    EGLDisplay const dpy;
+    std::shared_ptr<Display const> const shared_dpy;
     EGLContext const ctx;
     std::unique_ptr<graphics::EGLExtensions> const exts;
 };
