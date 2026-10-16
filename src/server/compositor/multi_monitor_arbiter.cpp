@@ -21,6 +21,7 @@
 #include <mir/frontend/event_sink.h>
 #include <mir/graphics/drm_formats.h>
 #include "multi_threaded_compositor.h"
+#include <mir/debug_frame_trace.h>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 
@@ -91,6 +92,13 @@ auto mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
 {
     auto current_state = state.lock();
 
+    /* THROWAWAY (#5325): Tier F — record whether this compositor advanced to the
+     * newly-submitted buffer or re-used the one it already had.
+     */
+    auto const previous_buffer =
+        current_state->current_submission ? current_state->current_submission->buffer->id().as_value() : 0;
+    auto const had_next = static_cast<bool>(current_state->next_submission);
+
     // If there is no current buffer or there is, but this compositor is already using it...
     if (!current_state->current_submission || is_user_of_current_buffer(*current_state, id))
     {
@@ -108,6 +116,15 @@ auto mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
     // If there was no current buffer and we weren't able to set one, throw and exception
     if (!current_state->current_submission)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
+
+    if (mir::debug::tracing())
+    {
+        auto const current_buffer = current_state->current_submission->buffer->id().as_value();
+        mir::debug::trace(
+            "arbiter: compositor={} {} buf={} (previous={}, had_pending_submission={})",
+            id, current_buffer == previous_buffer ? "re-uses" : "advances to",
+            current_buffer, previous_buffer, had_next);
+    }
 
     return std::make_shared<TrackingSubmission>(
         current_state->current_submission,
@@ -128,6 +145,13 @@ void mc::MultiMonitorArbiter::submit_buffer(
     geom::Size output_size,
     geom::RectangleD source)
 {
+    if (mir::debug::tracing())
+    {
+        mir::debug::trace(
+            "arbiter: client submitted buf={} size={}x{}",
+            buffer->id().as_value(), output_size.width.as_int(), output_size.height.as_int());
+    }
+
     state.lock()->next_submission = std::make_shared<Submission>(std::move(buffer), output_size, source);
 }
 

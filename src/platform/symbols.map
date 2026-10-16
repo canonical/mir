@@ -2,6 +2,8 @@ MIR_PLATFORM_2.30 {
  global:
   extern "C++" {
     mir::gl::tessellate_renderable_into_rectangle*;
+    /* Throwaway debug instrumentation for issue #5325 */
+    mir::debug::*;
     mir::AnonymousShmFile::?AnonymousShmFile*;
     mir::AnonymousShmFile::AnonymousShmFile*;
     mir::AnonymousShmFile::base_ptr*;
