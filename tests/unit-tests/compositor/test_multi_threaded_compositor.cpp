@@ -1085,8 +1085,7 @@ TEST(MultiThreadedCompositor, failed_posts_schedule_recovery_frames_until_presen
     /* Recovery ended after the confirmed full GL frame; no further frames
      * without damage
      */
-    std::this_thread::sleep_for(100ms);
-    EXPECT_EQ(3u, group.count_posts());
+    EXPECT_FALSE(group.wait_for_posts(4, 100ms));
 
     /* The next frame (triggered by damage) is composed normally again */
     scene->emit_change_event();
@@ -1116,6 +1115,5 @@ TEST(MultiThreadedCompositor, stop_during_recovery_is_safe)
 
     /* No further compositing after stop */
     auto const posts_at_stop = group.count_posts();
-    std::this_thread::sleep_for(100ms);
-    EXPECT_EQ(posts_at_stop, group.count_posts());
+    EXPECT_FALSE(group.wait_for_posts(posts_at_stop + 1, 100ms));
 }
