@@ -24,13 +24,27 @@ namespace mir
 namespace compositor
 {
 
+/**
+ * Whether a composition attempt may use direct presentation.
+ */
+enum class CompositionMode
+{
+    normal,    ///< Direct presentation (bypass / overlays / planes) is allowed
+    recovery,  ///< Render the complete scene through the renderer; no direct presentation
+};
+
 class DisplayBufferCompositor
 {
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    /// Returns true if any compositing happened, otherwise false.
-    virtual bool composite(SceneElementSequence&& scene_sequence) = 0;
+    /**
+     * Returns true if any compositing happened, otherwise false.
+     *
+     * In CompositionMode::recovery the implementation must render the complete
+     * scene itself, without direct presentation.
+     */
+    [[nodiscard]] virtual bool composite(SceneElementSequence&& scene_sequence, CompositionMode mode) = 0;
 
 protected:
     DisplayBufferCompositor() = default;

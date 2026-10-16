@@ -33,6 +33,7 @@
 #include <mir/signal.h>
 #include <mir/log.h>
 
+#include <algorithm>
 #include <atomic>
 #include <thread>
 #include <chrono>
@@ -48,6 +49,8 @@ namespace ms = mir::scene;
 
 namespace
 {
+constexpr std::chrono::milliseconds recovery_retry_interval{16};
+
 class CursorSceneElement : public mc::SceneElement
 {
 public:
@@ -114,6 +117,7 @@ public:
             });
 
         std::vector<std::tuple<mg::DisplaySink*, std::unique_ptr<mc::DisplayBufferCompositor>>> compositors;
+        bool recovering = false;
         group.for_each_display_sink(
         [this, &compositors](mg::DisplaySink& sink)
         {
@@ -178,6 +182,9 @@ public:
                  */
                 if (running)
                 {
+                    auto const attempt_start = std::chrono::steady_clock::now();
+                    auto const mode = recovering ?
+                        mc::CompositionMode::recovery : mc::CompositionMode::normal;
                     bool needs_post = false;
                     for (auto& tuple : compositors)
                     {
@@ -189,16 +196,36 @@ public:
                                 scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
                         }
 
-                        if (compositor->composite(std::move(scene_elements)))
+                        if (compositor->composite(std::move(scene_elements), mode))
                             needs_post = true;
                     }
 
+                    bool retry = false;
                     // We can skip the post if none of the compositors ended up compositing
                     if (needs_post)
                     {
-                        if (!group.post())
+                        if (group.post())
                         {
-                            // TODO Schedule a recovery frame immediately
+                            if (recovering)
+                            {
+                                recovering = false;
+                                mir::log_info("Display presentation recovered");
+                            }
+                        }
+                        else
+                        {
+                            if (!recovering)
+                            {
+                                mir::log_warning(
+                                    "Display presentation failed; compositing recovery frames");
+                            }
+                            recovering = true;
+                            retry = true;
+                            /* Schedule a recovery frame without waiting for new client
+                             * damage; the next iteration renders the complete scene
+                             * through GL.
+                             */
+                            wakeup.raise();
                         }
                     }
 
@@ -211,7 +238,17 @@ public:
                      */
                     auto delay = force_sleep >= std::chrono::milliseconds::zero() ?
                                  force_sleep : group.recommended_sleep();
-                    std::this_thread::sleep_for(delay);
+                    auto wake_time = std::chrono::steady_clock::now() + delay;
+
+                    /* A failed post() returns without waiting for vblank and
+                     * recommended_sleep() may be zero, so pace recovery retries by
+                     * a fixed interval to stop a persistently failing post() busy-looping.
+                     */
+                    if (retry)
+                    {
+                        wake_time = std::max(wake_time, attempt_start + recovery_retry_interval);
+                    }
+                    std::this_thread::sleep_until(wake_time);
                 }
             }
         }

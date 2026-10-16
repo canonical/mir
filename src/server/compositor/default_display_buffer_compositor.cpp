@@ -40,9 +40,9 @@ namespace geom = mir::geometry;
 
 namespace
 {
-auto direct_presentation_allowed(MirOutputFilter filter, glm::mat2 const& transform) -> bool
+auto direct_presentation_allowed(mc::CompositionMode mode, MirOutputFilter filter, glm::mat2 const& transform) -> bool
 {
-    return filter == mir_output_filter_none && transform == glm::mat2{1};
+    return mode == mc::CompositionMode::normal && filter == mir_output_filter_none && transform == glm::mat2{1};
 }
 
 auto import_display_elements(
@@ -90,10 +90,11 @@ bool try_bypass(
     mg::RenderableList const& renderable_list,
     mg::RenderingProvider::FramebufferProvider& fb_adaptor,
     mg::DisplaySink& display_sink,
+    mc::CompositionMode mode,
     MirOutputFilter filter,
     glm::mat2 const& transform)
 {
-    auto const can_present_directly = direct_presentation_allowed(filter, transform);
+    auto const can_present_directly = direct_presentation_allowed(mode, filter, transform);
     if (!can_present_directly)
         return false;
 
@@ -121,7 +122,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 {
 }
 
-bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
+bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements, CompositionMode mode)
 {
     if (scene_elements.size() == 0 && !completed_first_render)
         return false;
@@ -155,7 +156,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     auto const filter = output_filter->filter();
     auto const transform = display_sink.transformation();
-    if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
+    if (try_bypass(renderable_list, *fb_adaptor, display_sink, mode, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
