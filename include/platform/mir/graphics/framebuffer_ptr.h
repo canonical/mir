@@ -25,25 +25,21 @@ namespace mir::graphics
 {
 class Framebuffer;
 
-/// Disposes of a Framebuffer that its holder may not own outright
+/// Disposes of a [Framebuffer] that its holder may not own outright.
 ///
 /// By default, this deletes the framebuffer. Constructed with a release function,
-/// it calls that instead, allowing the framebuffer's real owner (for example, a pool)
-/// to reclaim it when the holder is done with it.
+/// it calls that instead, allowing the framebuffer's real owner to do something
+/// with it when it is released.
 class FramebufferDeleter
 {
 public:
     /// Delete the framebuffer
     FramebufferDeleter() noexcept;
 
-    /// Call \p release instead of deleting the framebuffer
+    /// Call \p release instead of deleting the framebuffer.
     ///
-    /// \p release is called at most once; should this deleter be used again (for example,
-    /// after a `reset()` to a new pointer), it deletes like a default-constructed one.
-    ///
-    /// \note \p release is not passed the framebuffer: a framebuffer type may have
-    ///       several Framebuffer subobjects, so the pointer reaching the deleter
-    ///       isn't necessarily the one originally handed out.
+    /// \p release is called at most once. If this is again (e.g. after a `reset()` to
+    /// a new pointer), it deletes like a default-constructed one.
     explicit FramebufferDeleter(std::move_only_function<void()> release) noexcept;
 
     /// Allow a plain `std::unique_ptr<T>` to convert to a FramebufferPtr
@@ -62,7 +58,7 @@ private:
     std::move_only_function<void()> release;
 };
 
-/// An owning pointer to a Framebuffer, which may return it to its source rather than delete it
+/// An owning pointer to a [Framebuffer] with a custom deleter.
 using FramebufferPtr = std::unique_ptr<Framebuffer, FramebufferDeleter>;
 
 /// Downcast \p framebuffer to \p To, keeping its deleter
