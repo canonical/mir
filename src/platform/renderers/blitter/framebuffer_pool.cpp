@@ -166,6 +166,11 @@ void mrb::FramebufferPool::Entry::bind()
 
 auto mrb::FramebufferPool::Entry::size() const -> geom::Size { return fb->size(); }
 
+auto mrb::FramebufferPool::Entry::framebuffer() -> mg::CPUAddressableDisplayAllocator::MappableFB&
+{
+    return *fb;
+}
+
 struct mrb::FramebufferPool::Self
 {
     std::mutex free_entries_mutex;
@@ -183,28 +188,6 @@ struct mrb::FramebufferPool::Self
         }
     }
 };
-
-namespace
-{
-class PooledFBImpl : public mrb::FramebufferPool::PooledFB
-{
-public:
-    PooledFBImpl(std::shared_ptr<mrb::FramebufferPool::Self> self, std::unique_ptr<mrb::FramebufferPool::Entry> entry) :
-        self{std::move(self)},
-        entry_{std::move(entry)}
-    {}
-
-    ~PooledFBImpl() override { self->release(std::move(entry_)); }
-
-    auto size() const -> geom::Size override { return entry_->size(); }
-
-    auto entry() -> mrb::FramebufferPool::Entry& override { return *entry_; }
-
-private:
-    std::shared_ptr<mrb::FramebufferPool::Self> const self;
-    std::unique_ptr<mrb::FramebufferPool::Entry> entry_;
-};
-}
 
 mrb::FramebufferPool::FramebufferPool(
     std::shared_ptr<SoftwareEGLContext> context,
@@ -241,7 +224,7 @@ auto mrb::FramebufferPool::make_entry() -> std::unique_ptr<Entry>
     return std::make_unique<Entry>(context, std::move(fb), std::move(surface), with_depth_stencil);
 }
 
-auto mrb::FramebufferPool::acquire() -> std::unique_ptr<PooledFB>
+auto mrb::FramebufferPool::acquire() -> PooledFB
 {
     auto entry = [this]() -> std::unique_ptr<Entry>
     {
@@ -267,5 +250,11 @@ auto mrb::FramebufferPool::acquire() -> std::unique_ptr<PooledFB>
         entry = make_entry();
     }
 
-    return std::make_unique<PooledFBImpl>(self, std::move(entry));
+    auto* const checked_out = entry.get();
+    // The entry keeps owning the framebuffer; the deleter just holds the entry until it's dropped
+    mg::FramebufferPtr framebuffer{
+        &checked_out->framebuffer(),
+        mg::FramebufferDeleter{[self = self, entry = std::move(entry)]() mutable { self->release(std::move(entry)); }}};
+
+    return {checked_out, std::move(framebuffer)};
 }

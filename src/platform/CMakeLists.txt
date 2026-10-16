@@ -38,6 +38,7 @@ target_link_libraries(mirplatform
     PkgConfig::EPOXY
     mirrenderergl
     mirrenderercommon
+    mirrendererblitter
     mirgl
 )
 

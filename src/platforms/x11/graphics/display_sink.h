@@ -58,7 +58,7 @@ public:
     auto plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
         -> std::optional<LogicalStacking> override;
 
-    void set_next_image(std::unique_ptr<Framebuffer> content) override;
+    void set_next_image(FramebufferPtr content) override;
 
     glm::mat2 transformation() const override;
 

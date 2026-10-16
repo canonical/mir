@@ -20,9 +20,11 @@
 
 #include <mir/graphics/egl_error.h>
 #include <mir/log.h>
+#include <mir/synchronised.h>
 
 #include <boost/throw_exception.hpp>
 #include <cstring>
+#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -131,30 +133,9 @@ void require_display_extensions(EGLDisplay dpy)
     }
 }
 
-auto initialise_display(EGLDisplay dpy) -> EGLDisplay
-{
-    EGLint major{0}, minor{0};
-    if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL display"));
-    }
-
-    if (major < 1 || (major == 1 && minor < 4))
-    {
-        BOOST_THROW_EXCEPTION(mg::egl_error("Must have EGL version >= 1.4"));
-    }
-
-    require_display_extensions(dpy);
-
-    return dpy;
-}
-
 auto create_context(EGLDisplay dpy) -> EGLContext
 {
-    static EGLint const context_attr[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
-        EGL_NONE
-    };
+    static EGLint const context_attr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
 
     eglBindAPI(EGL_OPENGL_ES_API);
     auto const ctx = eglCreateContext(dpy, EGL_NO_CONFIG_KHR, EGL_NO_CONTEXT, context_attr);
@@ -166,10 +147,89 @@ auto create_context(EGLDisplay dpy) -> EGLContext
 }
 }
 
-mrb::SoftwareEGLContext::SoftwareEGLContext()
-    : dpy{create_software_display()},
-      ctx{create_context(initialise_display(dpy))},
-      exts{std::make_unique<mg::EGLExtensions>()}
+/// The process-wide initialised software display, terminated once the last reference is dropped
+class mrb::SoftwareEGLContext::Display
+{
+public:
+    /// Acquire a reference to the initialised software display, creating it if needed.
+    ///
+    ///     \throws std::runtime_error if no suitable display can be created and initialised
+    static auto acquire() -> std::shared_ptr<Display const>
+    {
+        auto const state = live().lock();
+        if (auto existing = state->display.lock())
+        {
+            return existing;
+        }
+
+        std::shared_ptr<Display const> const display{new Display{create_software_display()}};
+        state->display = display;
+        state->handle = display->dpy;
+        return display;
+    }
+
+    ~Display()
+    {
+        auto const state = live().lock();
+        // Our last reference was dropped before we took the lock, so acquire() may already have
+        // initialised a replacement. EGL returns the same, non-reference-counted, handle for the same
+        // platform display, so terminating it here would pull it out from under the replacement.
+        if (state->display.expired() || state->handle != dpy)
+        {
+            eglTerminate(dpy);
+        }
+    }
+
+    Display(Display const&) = delete;
+    auto operator=(Display const&) -> Display& = delete;
+
+    auto egl_display() const -> EGLDisplay { return dpy; }
+
+private:
+    struct Live
+    {
+        std::weak_ptr<Display const> display;
+        EGLDisplay handle{EGL_NO_DISPLAY};
+    };
+
+    static auto live() -> mir::Synchronised<Live>&
+    {
+        static mir::Synchronised<Live> live;
+        return live;
+    }
+
+    explicit Display(EGLDisplay dpy) :
+        dpy{dpy}
+    {
+        try
+        {
+            EGLint major{0}, minor{0};
+            if (eglInitialize(dpy, &major, &minor) != EGL_TRUE)
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Failed to initialise EGL display"));
+            }
+
+            if (major < 1 || (major == 1 && minor < 4))
+            {
+                BOOST_THROW_EXCEPTION(mg::egl_error("Must have EGL version >= 1.4"));
+            }
+
+            require_display_extensions(dpy);
+        }
+        catch (...)
+        {
+            eglTerminate(dpy);
+            throw;
+        }
+    }
+
+    EGLDisplay const dpy;
+};
+
+mrb::SoftwareEGLContext::SoftwareEGLContext() :
+    dpy{Display::acquire()},
+    ctx{create_context(dpy->egl_display())},
+    exts{std::make_unique<mg::EGLExtensions>()}
 {
     try
     {
@@ -177,7 +237,7 @@ mrb::SoftwareEGLContext::SoftwareEGLContext()
     }
     catch (...)
     {
-        eglDestroyContext(dpy, ctx);
+        eglDestroyContext(display(), ctx);
         throw;
     }
 }
@@ -186,9 +246,14 @@ mrb::SoftwareEGLContext::~SoftwareEGLContext()
 {
     if (is_current())
     {
-        eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+        eglMakeCurrent(display(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     }
-    eglDestroyContext(dpy, ctx);
+    eglDestroyContext(display(), ctx);
+}
+
+auto mrb::SoftwareEGLContext::display() const -> EGLDisplay
+{
+    return dpy->egl_display();
 }
 
 auto mrb::SoftwareEGLContext::is_current() const -> bool
@@ -199,7 +264,7 @@ auto mrb::SoftwareEGLContext::is_current() const -> bool
 void mrb::SoftwareEGLContext::make_current() const
 {
     eglBindAPI(EGL_OPENGL_ES_API);
-    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
+    if (eglMakeCurrent(display(), EGL_NO_SURFACE, EGL_NO_SURFACE, ctx) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to make blitter fallback EGL context current"));
     }
@@ -207,7 +272,7 @@ void mrb::SoftwareEGLContext::make_current() const
 
 void mrb::SoftwareEGLContext::release_current() const
 {
-    if (eglMakeCurrent(dpy, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
+    if (eglMakeCurrent(display(), EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT) != EGL_TRUE)
     {
         BOOST_THROW_EXCEPTION(mg::egl_error("Failed to release blitter fallback EGL context"));
     }
