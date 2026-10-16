@@ -26,8 +26,10 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 #include <compare>
+#include <cstddef>
 #include <map>
 #include <memory>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -78,6 +80,10 @@ public:
                        drmModeSubPixel subpixel_arrangement = DRM_MODE_SUBPIXEL_UNKNOWN);
     void add_property(uint32_t object_id, uint32_t object_type, uint32_t property_id,
                       char const* name, uint64_t value = 0);
+    // Call after add_property(); add_property() resets the property's metadata
+    void set_property_range(uint32_t property_id, uint32_t flags, uint64_t min, uint64_t max);
+    void set_property_enums(uint32_t property_id, std::span<std::pair<uint64_t, std::string> const> enums);
+    void add_property_blob(uint32_t blob_id, std::span<std::byte const> data);
 
     void prepare();
     void reset();
@@ -88,6 +94,7 @@ public:
     drmModePlane* find_plane(uint32_t id);
     drmModeObjectProperties* find_object_properties(uint32_t id, uint32_t type);
     drmModePropertyRes* find_property(uint32_t id);
+    drmModePropertyBlobRes* find_property_blob(uint32_t id);
 
     enum ModePreference {NormalMode, PreferredMode};
     static drmModeModeInfo create_mode(uint16_t hdisplay, uint16_t vdisplay,
@@ -122,6 +129,14 @@ private:
     };
     std::map<std::pair<uint32_t, uint32_t>, ObjectProperties> object_properties;
     std::map<uint32_t, drmModePropertyRes> properties;
+    std::map<uint32_t, std::vector<uint64_t>> property_values;
+    std::map<uint32_t, std::vector<drm_mode_property_enum>> property_enums;
+    struct PropertyBlob
+    {
+        std::vector<std::byte> data;
+        drmModePropertyBlobRes resource{};
+    };
+    std::map<uint32_t, PropertyBlob> property_blobs;
     drmModeObjectProperties empty_object_properties{};
 };
 
@@ -177,6 +192,8 @@ public:
     MOCK_METHOD(int, drmSetClientCap, (int fd, uint64_t capability, uint64_t value));
     MOCK_METHOD(drmModePropertyPtr, drmModeGetProperty, (int fd, uint32_t propertyId));
     MOCK_METHOD(void, drmModeFreeProperty, (drmModePropertyPtr));
+    MOCK_METHOD(drmModePropertyBlobPtr, drmModeGetPropertyBlob, (int fd, uint32_t blob_id));
+    MOCK_METHOD(void, drmModeFreePropertyBlob, (drmModePropertyBlobPtr ptr));
     MOCK_METHOD(int, drmModeConnectorSetProperty, (int fd, uint32_t connector_id, uint32_t property_id, uint64_t value));
 
     MOCK_METHOD(int, drmGetMagic, (int fd, drm_magic_t *magic));
@@ -257,6 +274,21 @@ public:
         uint32_t property_id,
         char const* name,
         uint64_t value = 0);
+    // Call after add_property(); add_property() resets the property's metadata
+    void set_property_range(
+        char const* device,
+        uint32_t property_id,
+        uint32_t flags,
+        uint64_t min,
+        uint64_t max);
+    void set_property_enums(
+        char const* device,
+        uint32_t property_id,
+        std::span<std::pair<uint64_t, std::string> const> enums);
+    void add_property_blob(
+        char const* device,
+        uint32_t blob_id,
+        std::span<std::byte const> data);
 
     void prepare(char const* device);
     void reset(char const* device);
