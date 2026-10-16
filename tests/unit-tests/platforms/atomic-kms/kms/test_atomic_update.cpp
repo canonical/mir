@@ -46,7 +46,6 @@ public:
 
     AtomicUpdateTest()
     {
-        resources.reset();
         resources.add_property(plane_id, DRM_MODE_OBJECT_PLANE, framebuffer_property_id, framebuffer_property_name);
 
         ON_CALL(mock, drmModeObjectGetProperties(bogus_fd, plane_id, DRM_MODE_OBJECT_PLANE))
