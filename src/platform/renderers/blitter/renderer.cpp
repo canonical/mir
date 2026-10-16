@@ -45,11 +45,6 @@ namespace mrc = mir::renderer::common;
 
 namespace
 {
-/// Is a straight copy of this renderable's pixels the correct result?
-///
-/// `blit()` takes neither an alpha nor a blend mode, so anything that needs
-/// blending has to be drawn with GL instead. A buffer with an alpha channel is
-/// still safe to copy where the renderable declares that region opaque.
 auto is_opaque(mg::Renderable const& renderable, geom::Rectangle const& target) -> bool
 {
     if (renderable.alpha() != 1.0f)
@@ -118,8 +113,6 @@ public:
 
     ~Impl()
     {
-        // The pool and texture cache take care of their own GL resources, but the
-        // program factory and filter need our context current to release theirs.
         auto const restore_egl_state = preserve_egl_state_unless_current(*context);
         try
         {
@@ -127,8 +120,6 @@ public:
         }
         catch (...)
         {
-            // Deleting with some other context current could delete *its* objects,
-            // so prefer to leak ours by having no context current at all.
             mir::log_warning("Failed to make EGL context current to release blitter renderer; leaking GL objects");
             try
             {
@@ -156,8 +147,6 @@ public:
 
     void set_output_transform(glm::mat2 const& t)
     {
-        // Our framebuffers are laid out top-row-first, but GL renders
-        // bottom-row-first, so draw everything upside-down.
         display_transform = glm::mat4{
             1.0, 0.0, 0.0, 0.0,
             0.0, -1.0, 0.0, 0.0,
@@ -183,13 +172,6 @@ public:
     }
 
 private:
-    /// Can the blitter be used for this frame at all?
-    ///
-    /// An output filter needs a whole-output GL pass, and anything but a
-    /// one-to-one mapping from scene coordinates to output pixels needs
-    /// scaling/rotation GL does for free. In either case, blitting a renderable
-    /// and then correcting it with GL would be strictly more work than just
-    /// drawing the frame with GL.
     auto can_blit_frame() const -> bool
     {
         return !filter->active()
@@ -208,11 +190,7 @@ private:
     void blit_frame(mg::RenderableList const& renderables);
     void draw_frame_with_gl(mg::RenderableList const& renderables);
 
-    // Any GL drawing has to wait for the blitter to finish with the target, and
-    // the blitter then has to wait for GL, so each transition costs a full
-    // pipeline flush in both directions.
-
-    /// Ensure a blitter Task is active on the target
+    /// Ensure a blitter [Task] is active on the target
     ///
     /// \return false if one could not be started
     auto begin_task() -> bool
@@ -222,7 +200,7 @@ private:
         return static_cast<bool>(task);
     }
 
-    /// Wait for any active blitter Task, returning the target's surface to it
+    /// Wait for any active blitter [Task], returning the target's surface to it
     void end_task()
     {
         if (task)
@@ -242,8 +220,6 @@ private:
         end_task();
         bind_target_for_gl();
         draw();
-        // The blitter has no way to wait on GL, so the draw has to have landed
-        // in the target before we hand it back.
         glFinish();
     }
 
