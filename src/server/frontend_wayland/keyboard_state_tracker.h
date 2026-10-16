@@ -62,6 +62,8 @@ public:
 
     auto is_same_key(MirKeyboardEvent const& event, xkb_keysym_t keysym) const -> bool;
 
+    auto key_producing_keysym_is_pressed(MirInputDeviceId device, xkb_keysym_t keysym) const -> bool;
+
 private:
     /// Owns the per-device XKB keymap and state used to resolve keysyms from
     /// scancodes in a layout- and modifier-aware way.

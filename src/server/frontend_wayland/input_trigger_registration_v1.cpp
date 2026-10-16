@@ -193,13 +193,8 @@ bool mf::KeyboardSymTrigger::check_pressed(MirEvent const& event) const
     if (keyboard_state_tracker->keysym_is_pressed(device_id, keysym))
         return true;
 
-    auto const upper = xkb_keysym_to_upper(keysym);
-    if (upper != keysym && keyboard_state_tracker->keysym_is_pressed(device_id, upper))
-        return true;
-
-    auto const lower = xkb_keysym_to_lower(keysym);
-    if (lower != keysym && keyboard_state_tracker->keysym_is_pressed(device_id, lower))
-        return true;
+    if (modifiers.requires_shift())
+        return keyboard_state_tracker->key_producing_keysym_is_pressed(device_id, keysym);
 
     return false;
 }
@@ -397,6 +392,13 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
         allowed |= mir_input_event_modifier_shift | mir_input_event_modifier_shift_left | mir_input_event_modifier_shift_right;
 
     return InputTriggerModifiers{required, allowed};
+}
+
+auto mf::InputTriggerModifiers::requires_shift() const -> bool
+{
+    auto constexpr shift_mask =
+        mir_input_event_modifier_shift | mir_input_event_modifier_shift_left | mir_input_event_modifier_shift_right;
+    return (required & shift_mask) != 0;
 }
 
 bool mf::InputTriggerModifiers::modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods)
