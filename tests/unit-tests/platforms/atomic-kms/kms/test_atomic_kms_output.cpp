@@ -111,7 +111,12 @@ public:
     static constexpr uint32_t plane_id{40};
     static constexpr uint32_t primary_crtc_mask{1};
 
-    explicit AtomicKMSOutputTest(bool with_gamma_lut = true)
+    AtomicKMSOutputTest()
+        : AtomicKMSOutputTest{true}
+    {
+    }
+
+    explicit AtomicKMSOutputTest(bool with_gamma_lut)
         : drm_fd{mock_drm.open(drm_device, 0)}
     {
         setup_drm_objects(with_gamma_lut);
