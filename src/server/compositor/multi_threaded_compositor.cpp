@@ -240,8 +240,9 @@ public:
                                  force_sleep : group.recommended_sleep();
                     auto wake_time = std::chrono::steady_clock::now() + delay;
 
-                    /* Pace recovery retries to at least one frame interval, so a
-                     * persistently failing post() cannot busy-loop.
+                    /* A failed post() returns without waiting for vblank and
+                     * recommended_sleep() may be zero, so pace recovery retries by
+                     * a fixed interval to stop a persistently failing post() busy-looping.
                      */
                     if (retry)
                     {
