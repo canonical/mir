@@ -299,3 +299,32 @@ TEST_F(PlaneCapabilitiesTest, missing_alpha_or_blend_assumes_fixed_opaque_report
     EXPECT_FALSE(blend_only->bt709_limited.has_value());
     EXPECT_FALSE(caps.primary.bt709_limited.has_value());
 }
+
+TEST_F(PlaneCapabilitiesTest, rebuild_replaces_state_as_one_unit)
+{
+    mga::PlaneCapabilityState state;
+    state.rebuild(drm_fd, target_crtc_id);
+    auto const first = state.current();
+    ASSERT_NE(first, nullptr);
+    EXPECT_THAT(ids_of(first->overlays), Contains(overlay_id));
+
+    mock_drm.add_property_blob(drm_device, overlay_id, {});
+    state.rebuild(drm_fd, target_crtc_id);
+    auto const second = state.current();
+
+    ASSERT_NE(second, nullptr);
+    EXPECT_THAT(ids_of(second->overlays), Not(Contains(overlay_id)));
+    EXPECT_THAT(ids_of(first->overlays), Contains(overlay_id));
+    EXPECT_NE(first.get(), second.get());
+}
+
+TEST_F(PlaneCapabilitiesTest, failed_rebuild_leaves_no_capabilities)
+{
+    mga::PlaneCapabilityState state;
+    state.rebuild(drm_fd, target_crtc_id);
+    ASSERT_NE(state.current(), nullptr);
+
+    mock_drm.add_property_blob(drm_device, primary_id, {});
+    EXPECT_NO_THROW(state.rebuild(drm_fd, target_crtc_id));
+    EXPECT_EQ(state.current(), nullptr);
+}
