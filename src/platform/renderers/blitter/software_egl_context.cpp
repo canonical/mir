@@ -227,8 +227,8 @@ private:
 };
 
 mrb::SoftwareEGLContext::SoftwareEGLContext() :
-    shared_dpy{Display::acquire()},
-    ctx{create_context(shared_dpy->egl_display())},
+    dpy{Display::acquire()},
+    ctx{create_context(dpy->egl_display())},
     exts{std::make_unique<mg::EGLExtensions>()}
 {
     try
@@ -253,7 +253,7 @@ mrb::SoftwareEGLContext::~SoftwareEGLContext()
 
 auto mrb::SoftwareEGLContext::display() const -> EGLDisplay
 {
-    return shared_dpy->egl_display();
+    return dpy->egl_display();
 }
 
 auto mrb::SoftwareEGLContext::is_current() const -> bool
