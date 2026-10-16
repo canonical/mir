@@ -243,9 +243,6 @@ private:
     /// \return  `false` if this renderable must be drawn with GL instead
     auto try_blit(mg::Renderable const& renderable, geom::Rectangle const& visible_area) -> bool
     {
-        if (renderable.orientation() == mir_orientation_left || renderable.orientation() == mir_orientation_right)
-            return false;
-
         if (!visible_area.size.width.as_int() || !visible_area.size.height.as_int())
             return true;    // Entirely clipped away.
 
