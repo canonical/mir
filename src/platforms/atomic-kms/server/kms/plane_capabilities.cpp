@@ -287,3 +287,23 @@ auto mga::discover_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlane
         .overlays = std::move(overlays),
     };
 }
+
+void mga::PlaneCapabilityState::rebuild(int drm_fd, uint32_t crtc_id)
+{
+    *state.lock() = nullptr;
+
+    try
+    {
+        auto caps = std::make_shared<CrtcPlaneCapabilities const>(discover_plane_capabilities(drm_fd, crtc_id));
+        *state.lock() = std::move(caps);
+    }
+    catch (std::exception const& e)
+    {
+        mir::log_warning("Failed to discover plane capabilities for CRTC %u: %s", crtc_id, e.what());
+    }
+}
+
+auto mga::PlaneCapabilityState::current() const -> std::shared_ptr<CrtcPlaneCapabilities const>
+{
+    return *state.lock();
+}

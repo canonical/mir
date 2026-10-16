@@ -17,8 +17,11 @@
 #ifndef MIR_GRAPHICS_ATOMIC_PLANE_CAPABILITIES_H_
 #define MIR_GRAPHICS_ATOMIC_PLANE_CAPABILITIES_H_
 
+#include <mir/synchronised.h>
+
 #include <compare>
 #include <cstdint>
+#include <memory>
 #include <optional>
 #include <vector>
 
@@ -98,6 +101,22 @@ struct CrtcPlaneCapabilities
 /// Overlays with missing or malformed required properties are left out of the
 /// result. Throws if the CRTC or a usable primary plane cannot be found.
 auto discover_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlaneCapabilities;
+
+/// Private plane-capability state for presentation planning.
+///
+/// rebuild() is the single entry point for refreshing the state after a
+/// lifecycle change. It replaces the state as one unit, and a failed rebuild
+/// leaves no capabilities.
+class PlaneCapabilityState
+{
+public:
+    void rebuild(int drm_fd, uint32_t crtc_id);
+
+    auto current() const -> std::shared_ptr<CrtcPlaneCapabilities const>;
+
+private:
+    Synchronised<std::shared_ptr<CrtcPlaneCapabilities const>> state;
+};
 }
 
 #endif // MIR_GRAPHICS_ATOMIC_PLANE_CAPABILITIES_H_
