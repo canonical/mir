@@ -33,6 +33,7 @@
 #include <mir/log.h>
 
 #include <algorithm>
+#include <cmath>
 #include <tuple>
 #include <utility>
 
@@ -85,7 +86,7 @@ auto proportional_subrect(
 
 auto to_byte(float colour) -> uint8_t
 {
-    return static_cast<uint8_t>(std::clamp(colour, 0.0f, 1.0f) * 255.0f + 0.5f);
+    return static_cast<uint8_t>(std::lround(std::clamp(colour, 0.0f, 1.0f) * 255.0f));
 }
 
 /// The part of the scene `renderable` covers within `viewport`, after clipping
