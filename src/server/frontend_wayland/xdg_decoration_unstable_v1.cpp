@@ -89,27 +89,29 @@ public:
     }
 
     /// Called on every commit of a toplevel that has ever had a decoration.
-    /// \return true if server-side decorations must be removed in this commit.
-    bool surface_committed(wl_resource* toplevel)
+    /// \return the mode the surface must take in this commit, or nullopt if it is unchanged.
+    auto surface_committed(wl_resource* toplevel) -> std::optional<DecorationStrategy::DecorationsType>
     {
         auto const it = toplevels.find(toplevel);
         if (it == toplevels.end())
-            return false;
+            return std::nullopt;
 
         auto& state = it->second;
         if (state.live)
         {
-            if (state.pending)
-                state.committed = std::exchange(state.pending, std::nullopt);
-            return false;
+            if (!state.pending)
+                return std::nullopt;
+            state.committed = std::exchange(state.pending, std::nullopt);
+            return state.committed;
         }
 
         // A commit with no decoration attached: the mode is assumed to be client-side again
-        auto const had_ssd = state.committed == DecorationStrategy::DecorationsType::ssd ||
-                             state.pending == DecorationStrategy::DecorationsType::ssd;
+        auto const had_ssd = state.committed == DecorationStrategy::DecorationsType::ssd;
         state.committed.reset();
         state.pending.reset();
-        return had_ssd;
+        if (had_ssd)
+            return DecorationStrategy::DecorationsType::csd;
+        return std::nullopt;
     }
 
 private:
@@ -239,9 +241,6 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     auto const initial_mode =
         toplevels_with_decorations->committed_mode(toplevel).value_or(DecorationStrategy::DecorationsType::csd);
     toplevels_with_decorations->set_pending_mode(toplevel, initial_mode);
-    shell::SurfaceSpecification spec;
-    spec.server_side_decorated = initial_mode == DecorationStrategy::DecorationsType::ssd;
-    tl->apply_spec(spec);
 
     decoration->add_destroy_listener(
         [toplevels_with_decorations = this->toplevels_with_decorations, toplevel]()
@@ -270,11 +269,10 @@ void mir::frontend::XdgDecorationManagerV1::get_toplevel_decoration(wl_resource*
     tl->set_commit_hook(
         [toplevels_with_decorations = this->toplevels_with_decorations, toplevel, tl]()
         {
-            auto const should_undecorate = toplevels_with_decorations->surface_committed(toplevel);
-            if (should_undecorate)
+            if (auto const mode = toplevels_with_decorations->surface_committed(toplevel))
             {
                 shell::SurfaceSpecification spec;
-                spec.server_side_decorated = false;
+                spec.server_side_decorated = *mode == DecorationStrategy::DecorationsType::ssd;
                 tl->apply_spec(spec);
             }
         });
@@ -345,21 +343,8 @@ auto mir::frontend::XdgToplevelDecorationV1::to_decorations_type(uint32_t mode) 
 
 void mir::frontend::XdgToplevelDecorationV1::update_mode(uint32_t new_mode)
 {
-    auto spec = shell::SurfaceSpecification{};
-
     auto const new_type = decoration_strategy->request_style(to_decorations_type(new_mode));
 
-    switch (new_type)
-    {
-    case DecorationStrategy::DecorationsType::ssd:
-        spec.server_side_decorated = true;
-        break;
-    case DecorationStrategy::DecorationsType::csd:
-        spec.server_side_decorated = false;
-        break;
-    }
-
-    this->toplevel->apply_spec(spec);
     toplevels_with_decorations->set_pending_mode(toplevel_resource, new_type);
 
     auto const strategy_new_mode = to_mode(new_type);
