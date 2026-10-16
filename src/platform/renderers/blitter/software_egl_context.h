@@ -55,8 +55,7 @@ public:
 private:
     class Display;
 
-    /// Keeps the process-wide software display initialised for as long as we need it
-    std::shared_ptr<Display const> const shared_dpy;
+    std::shared_ptr<Display const> const dpy;
     EGLContext const ctx;
     std::unique_ptr<graphics::EGLExtensions> const exts;
 };
