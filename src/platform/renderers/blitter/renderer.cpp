@@ -246,7 +246,7 @@ private:
         if (!visible_area.size.width.as_int() || !visible_area.size.height.as_int())
             return true;    // Entirely clipped away.
 
-        if (!is_opaque(renderable, visible_area) || renderable.transformation() != glm::mat4{1})
+        if (renderable.transformation() != glm::mat4{1} || !is_opaque(renderable, visible_area))
             return false;
 
         auto const position = renderable.screen_position();
