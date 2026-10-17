@@ -39,9 +39,9 @@ Then run the release testing in [](how-to-test-mir-for-a-release).
 
 ### Prepare the release notes
 
-Edit the entry for the release version in `debian/changelog` on the release branch to include crafted notes for relevant changes included in the release.
-This Debian changelog entry is the source of truth: `Finalize Release` uses it to generate the RPM changelog entry and GitHub release body. The {ref}`release-notes` page is not read or updated by these workflows.
-Use the GitHub-generated release notes comment on the release PR, along with the git history and diff since the last release, as a reference — the `refine-release-notes` skill automates gathering this context.
+Edit the release's section in `doc/sphinx/release-notes/X.Y.md` and the corresponding `debian/changelog` entry on the release branch.
+The `refine-release-notes` skill can be used to prepare both using the GitHub-generated release notes comment and the git history and diff since the last release.
+`Finalize Release` uses the documentation section for the GitHub release body and the Debian entry for the RPM changelog.
 
 ### Cherry-pick any needed changes
 
@@ -59,7 +59,7 @@ After it completes, verify:
 
 1. Tag `vX.Y.Z` exists on the release branch tip.
 1. The GitHub release is published.
-1. The GitHub release body and RPM changelog entry contain the curated notes from the release entry in `debian/changelog`.
+1. The GitHub release body matches the release's documentation section, and the RPM changelog matches the Debian entry.
 
 ### Merge the release branch into `main`
 
