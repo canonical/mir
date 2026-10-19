@@ -33,6 +33,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <tuple>
 #include <utility>
 
@@ -193,8 +194,11 @@ private:
     /// \return false if one could not be started
     auto begin_task() -> bool
     {
-        if (!task && target->surface)
-            task = blitter->create_task(std::move(target->surface));
+        if (!task)
+        {
+            if (auto surface = target->take_surface())
+                task = blitter->create_task(std::move(surface));
+        }
         return static_cast<bool>(task);
     }
 
@@ -202,7 +206,7 @@ private:
     void end_task()
     {
         if (task)
-            target->surface = blitter->wait_complete(std::move(task));
+            target->return_surface(blitter->wait_complete(std::move(task)));
     }
 
     void bind_target_for_gl()
@@ -290,15 +294,14 @@ private:
 
     /* Valid only for the duration of render() */
     mrc::SceneContext scene{};
-    FramebufferPool::Entry* target{nullptr};
+    std::optional<FramebufferPool::PooledFB> target;
     std::unique_ptr<mg::BlitterRenderingProvider::Task> task;
     bool used_gl{false};
 };
 
 auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> mg::FramebufferPtr
 {
-    auto [entry, framebuffer] = pool.acquire();
-    target = entry;
+    target.emplace(pool.acquire());
     used_gl = false;
 
     scene = mrc::SceneContext{
@@ -319,7 +322,7 @@ auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> mg::F
     {
         // Don't strand the target's surface in an abandoned Task
         end_task();
-        target = nullptr;
+        target.reset();
         throw;
     }
 
@@ -327,9 +330,10 @@ auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> mg::F
         log_gl_errors();
 
     textures.drop_unused();
-    target = nullptr;
 
-    return std::move(framebuffer);
+    auto framebuffer = target->claim_fb();
+    target.reset();
+    return framebuffer;
 }
 
 void mrb::Renderer::Impl::blit_frame(mg::RenderableList const& renderables)

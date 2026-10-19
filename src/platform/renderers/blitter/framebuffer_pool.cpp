@@ -53,6 +53,39 @@ auto make_framebuffer() -> mrc::FramebufferHandle
 }
 }
 
+class mrb::FramebufferPool::Entry
+{
+public:
+    /// \note Construction and destruction leave the caller's current EGL state unchanged
+    Entry(
+        std::shared_ptr<SoftwareEGLContext> context,
+        std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
+        std::unique_ptr<mg::BlitterRenderingProvider::Surface> surface);
+    ~Entry();
+
+    Entry(Entry const&) = delete;
+    auto operator=(Entry const&) -> Entry& = delete;
+
+    void bind();
+    auto size() const -> geom::Size;
+    auto framebuffer() -> mg::CPUAddressableDisplayAllocator::MappableFB&;
+
+private:
+    void build_gl_resources();
+    void release_gl_resources();
+
+    std::shared_ptr<SoftwareEGLContext> const context;
+    std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const fb;
+    mrc::TextureHandle texture;
+    mrc::FramebufferHandle fbo;
+
+public:
+    /// The blitter's handle to this framebuffer; empty while a Task holds it
+    ///
+    /// Declared after \ref fb so that it is destroyed before the framebuffer it targets.
+    std::unique_ptr<mg::BlitterRenderingProvider::Surface> surface;
+};
+
 mrb::FramebufferPool::Entry::Entry(
     std::shared_ptr<SoftwareEGLContext> context,
     std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
@@ -239,12 +272,54 @@ auto mrb::FramebufferPool::acquire() -> PooledFB
         entry = make_entry();
     }
 
-    auto* const checked_out = entry.get();
-    // The entry keeps owning the framebuffer; the deleter just holds the entry until it's dropped
-    mg::FramebufferPtr framebuffer{
-        &checked_out->framebuffer(),
-        mg::FramebufferDeleter{
-            [self = self, entry = std::move(entry)](mg::Framebuffer*) mutable { self->release(std::move(entry)); }}};
+    return {self, std::move(entry)};
+}
 
-    return {checked_out, std::move(framebuffer)};
+mrb::FramebufferPool::PooledFB::PooledFB(std::shared_ptr<Self> pool, std::unique_ptr<Entry> entry) :
+    pool{std::move(pool)},
+    entry{std::move(entry)}
+{
+}
+
+mrb::FramebufferPool::PooledFB::PooledFB(PooledFB&&) noexcept = default;
+
+mrb::FramebufferPool::PooledFB::~PooledFB()
+{
+    if (entry)
+    {
+        pool->release(std::move(entry));
+    }
+}
+
+void mrb::FramebufferPool::PooledFB::bind()
+{
+    entry->bind();
+}
+
+auto mrb::FramebufferPool::PooledFB::size() const -> geom::Size
+{
+    return entry->size();
+}
+
+auto mrb::FramebufferPool::PooledFB::take_surface() -> std::unique_ptr<mg::BlitterRenderingProvider::Surface>
+{
+    return std::move(entry->surface);
+}
+
+void mrb::FramebufferPool::PooledFB::return_surface(std::unique_ptr<mg::BlitterRenderingProvider::Surface> surface)
+{
+    entry->surface = std::move(surface);
+}
+
+auto mrb::FramebufferPool::PooledFB::claim_fb() -> mg::FramebufferPtr
+{
+    auto& framebuffer = entry->framebuffer();
+    // The entry keeps owning the framebuffer; the deleter just holds the entry until it's dropped
+    return mg::FramebufferPtr{
+        &framebuffer,
+        mg::FramebufferDeleter{
+            [pool = std::move(pool), entry = std::move(entry)](mg::Framebuffer*) mutable
+            {
+                pool->release(std::move(entry));
+            }}};
 }
