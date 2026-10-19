@@ -87,7 +87,8 @@ This is a destructive cleanup step: remove the release tags from Git and the rel
 1. Delete any corresponding GitHub release from the repository's Releases page.
    This removes the published release entry and keeps the repository history aligned with the deleted tags and branch.
 
-1. The automated release workflows do not update {ref}`release-notes`. If that page was changed separately for the abandoned release, remove its entry and references to the abandoned version.
+1. The automated release workflows update {ref}`release-notes`, including the per-series page and landing
+   index. If abandoning a release, remove its entry and references to the abandoned version from both.
 
 1. Update `debian/control` and `rpm/mir.spec` to remove references to the removed release.
 
