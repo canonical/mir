@@ -27,7 +27,8 @@ using namespace mir::geometry;
 
 namespace
 {
-mw::Resource::Version<2> version;
+mw::Resource::Version<1> version1;
+mw::Resource::Version<2> version2;
 
 struct Global : mw::MirShellV1::Global
 {
@@ -40,7 +41,7 @@ struct Global : mw::MirShellV1::Global
 struct Instance : mw::MirShellV1
 {
     Instance(struct wl_resource* resource) :
-        MirShellV1{resource, version} {}
+        MirShellV1{resource, version2} {}
 
     void get_regular_surface(struct wl_resource* id, struct wl_resource* surface) override;
 
@@ -63,7 +64,7 @@ struct Surface : MirSurface, mf::WlSurfaceArchetype
 {
     Surface(wl_resource* resource, mf::WlSurface* wl_surface,
             std::optional<MirDepthLayer> depth_layer = std::nullopt) :
-        MirSurface{resource, version},
+        MirSurface{resource, version1},
         wl_surface{wl_surface}
     {
         wl_surface->set_archetype(this);
@@ -89,7 +90,7 @@ template<typename MirSurface, MirWindowType type>
 struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
 {
     SurfaceWithPosition(wl_resource* resource, mf::WlSurface* wl_surface, wl_resource* positioner) :
-        MirSurface{resource, version},
+        MirSurface{resource, version1},
         wl_surface{wl_surface}
     {
         wl_surface->set_archetype(this);
@@ -227,7 +228,7 @@ void Instance::create_positioner(struct wl_resource* id)
 }
 
 MirPositioner::MirPositioner(wl_resource* new_resource)
-    : mw::MirPositionerV1(new_resource, Version<2>())
+    : mw::MirPositionerV1(new_resource, Version<1>())
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
