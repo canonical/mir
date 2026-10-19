@@ -27,7 +27,6 @@ namespace graphics
 {
 class BlitterRenderingProvider;
 class CPUAddressableDisplayAllocator;
-class GLConfig;
 }
 
 namespace renderer::blitter
@@ -52,8 +51,7 @@ public:
     ///         gl::Renderer instead.
     Renderer(
         std::shared_ptr<graphics::BlitterRenderingProvider> blitter,
-        graphics::CPUAddressableDisplayAllocator& allocator,
-        std::shared_ptr<graphics::GLConfig const> config);
+        graphics::CPUAddressableDisplayAllocator& allocator);
     ~Renderer() override;
 
     void set_viewport(geometry::Rectangle const& rect) override;

@@ -26,13 +26,9 @@
 
 #include <memory>
 
-namespace mir::graphics { class GLConfig; }
-
 namespace mir::renderer::blitter
 {
 class SoftwareEGLContext;
-
-using RenderbufferHandle = common::GLMultiHandle<&glDeleteRenderbuffers>;
 
 /// A pool of render targets, usable by both the blitter rendering path and the GL rendering
 /// path.
@@ -52,8 +48,7 @@ public:
     FramebufferPool(
         std::shared_ptr<SoftwareEGLContext> context,
         std::shared_ptr<graphics::BlitterRenderingProvider> blitter,
-        graphics::CPUAddressableDisplayAllocator& allocator,
-        graphics::GLConfig const& config);
+        graphics::CPUAddressableDisplayAllocator& allocator);
 
     ~FramebufferPool();
 
@@ -64,8 +59,7 @@ public:
         Entry(
             std::shared_ptr<SoftwareEGLContext> context,
             std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> fb,
-            std::unique_ptr<graphics::BlitterRenderingProvider::Surface> surface,
-            bool with_depth_stencil);
+            std::unique_ptr<graphics::BlitterRenderingProvider::Surface> surface);
         ~Entry();
 
         Entry(Entry const&) = delete;
@@ -77,14 +71,13 @@ public:
         auto framebuffer() -> graphics::CPUAddressableDisplayAllocator::MappableFB&;
 
     private:
-        void build_gl_resources(bool with_depth_stencil);
+        void build_gl_resources();
         void release_gl_resources();
 
         std::shared_ptr<SoftwareEGLContext> const context;
         std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const fb;
         common::TextureHandle texture;
         common::FramebufferHandle fbo;
-        RenderbufferHandle depth_stencil_buffer;
 
     public:
         /// The blitter's handle to this framebuffer; empty while a Task holds it
@@ -96,7 +89,7 @@ public:
     /// A pooled framebuffer, acquired via [acquire].
     struct PooledFB
     {
-        /// The pool's resources for \ref framebuffer; valid for as long as \ref framebuffer is held
+        /// The pool's resources for \ref framebuffer; valid for as long as [FramebufferPool] is valid
         Entry* entry;
 
         /// The display's own framebuffer, as allocated, so it can be handed to the display sink
@@ -105,7 +98,7 @@ public:
         graphics::FramebufferPtr framebuffer;
     };
 
-    struct Self;
+    class Self;
 
     /// Acquire a framebuffer, recycling a free one if available.
     ///
@@ -123,7 +116,6 @@ private:
     std::shared_ptr<graphics::BlitterRenderingProvider> const blitter;
     graphics::CPUAddressableDisplayAllocator& allocator;
     graphics::DRMFormat const format;
-    bool const with_depth_stencil;
     std::shared_ptr<Self> self;
 };
 

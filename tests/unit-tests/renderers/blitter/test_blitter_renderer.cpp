@@ -23,7 +23,6 @@
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_renderable.h>
 #include <mir/test/doubles/stub_buffer.h>
-#include <mir/test/doubles/stub_gl_config.h>
 
 #include <drm_fourcc.h>
 #include <gmock/gmock.h>
@@ -156,7 +155,6 @@ public:
 
         ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_names());
         ON_CALL(mock_gl, glGenFramebuffers(_, _)).WillByDefault(generate_names());
-        ON_CALL(mock_gl, glGenRenderbuffers(_, _)).WillByDefault(generate_names());
         ON_CALL(mock_gl, glCheckFramebufferStatus(GL_FRAMEBUFFER)).WillByDefault(Return(GL_FRAMEBUFFER_COMPLETE));
         ON_CALL(mock_gl, glCreateShader(_)).WillByDefault(Return(1));
         ON_CALL(mock_gl, glCreateProgram()).WillByDefault(Return(2));
@@ -180,7 +178,7 @@ public:
 
     auto make_renderer(geom::Rectangle const& viewport = {{0, 0}, output_size}) -> std::unique_ptr<mrb::Renderer>
     {
-        auto renderer = std::make_unique<mrb::Renderer>(blitter, allocator, std::make_shared<mtd::StubGLConfig>());
+        auto renderer = std::make_unique<mrb::Renderer>(blitter, allocator);
         renderer->set_viewport(viewport);
         return renderer;
     }

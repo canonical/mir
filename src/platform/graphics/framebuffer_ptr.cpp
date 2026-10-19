@@ -23,7 +23,7 @@ namespace mg = mir::graphics;
 
 mg::FramebufferDeleter::FramebufferDeleter() noexcept = default;
 
-mg::FramebufferDeleter::FramebufferDeleter(std::move_only_function<void()> release) noexcept :
+mg::FramebufferDeleter::FramebufferDeleter(std::move_only_function<void(Framebuffer*)> release) noexcept :
     release{std::move(release)}
 {
 }
@@ -38,7 +38,7 @@ void mg::FramebufferDeleter::operator()(Framebuffer* framebuffer)
 {
     if (release)
     {
-        std::exchange(release, nullptr)();
+        std::exchange(release, nullptr)(framebuffer);
     }
     else
     {

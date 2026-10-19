@@ -104,7 +104,7 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
             auto provider = best_blitter_provider.second;
             try
             {
-                auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator, gl_config);
+                auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator);
                 return std::make_unique<DefaultDisplayBufferCompositor>(
                     display_sink, *provider, std::move(renderer), output_filter, report);
             }

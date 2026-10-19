@@ -21,8 +21,7 @@ namespace mrb = mir::renderer::blitter;
 
 auto mrb::RendererFactory::create_renderer_for(
     std::shared_ptr<graphics::BlitterRenderingProvider> blitter,
-    graphics::CPUAddressableDisplayAllocator& allocator,
-    std::shared_ptr<graphics::GLConfig const> config) const -> std::unique_ptr<mir::renderer::Renderer>
+    graphics::CPUAddressableDisplayAllocator& allocator) const -> std::unique_ptr<mir::renderer::Renderer>
 {
-    return std::make_unique<Renderer>(std::move(blitter), allocator, std::move(config));
+    return std::make_unique<Renderer>(std::move(blitter), allocator);
 }

@@ -23,7 +23,6 @@
 #include <mir/test/doubles/mock_blitter_rendering_provider.h>
 #include <mir/test/doubles/mock_egl.h>
 #include <mir/test/doubles/mock_gl.h>
-#include <mir/test/doubles/mock_gl_config.h>
 
 #include <drm_fourcc.h>
 #include <gmock/gmock.h>
@@ -202,7 +201,6 @@ public:
 
         ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_names());
         ON_CALL(mock_gl, glGenFramebuffers(_, _)).WillByDefault(generate_names());
-        ON_CALL(mock_gl, glGenRenderbuffers(_, _)).WillByDefault(generate_names());
 
         ON_CALL(allocator, supported_formats())
             .WillByDefault(Return(std::vector{mg::DRMFormat{DRM_FORMAT_XRGB8888}}));
@@ -237,7 +235,6 @@ public:
     std::shared_ptr<NiceMock<mtd::MockBlitterRenderingProvider>> const blitter{
         std::make_shared<NiceMock<mtd::MockBlitterRenderingProvider>>()};
     NiceMock<MockCPUAddressableDisplayAllocator> allocator;
-    NiceMock<mtd::MockGLConfig> config;
 };
 }
 
@@ -248,35 +245,35 @@ TEST_F(FramebufferPoolTest, allocates_a_framebuffer_eagerly_in_the_preferred_for
 
     EXPECT_CALL(allocator, alloc_fb(Eq(mg::DRMFormat{DRM_FORMAT_XRGB8888})));
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
 }
 
 TEST_F(FramebufferPoolTest, throws_when_framebuffer_cannot_be_allocated)
 {
     ON_CALL(allocator, alloc_fb(_)).WillByDefault(ReturnNull());
 
-    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config), std::runtime_error);
+    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator), std::runtime_error);
 }
 
 TEST_F(FramebufferPoolTest, throws_when_blitter_cannot_target_framebuffer)
 {
     ON_CALL(*blitter, surface_for_fb(_)).WillByDefault(ReturnNull());
 
-    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config), std::runtime_error);
+    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator), std::runtime_error);
 }
 
 TEST_F(FramebufferPoolTest, throws_when_framebuffer_cannot_be_exported_as_dmabuf)
 {
     allocate_unexportable_framebuffers();
 
-    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config), std::runtime_error);
+    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator), std::runtime_error);
 }
 
 TEST_F(FramebufferPoolTest, throws_when_dmabuf_cannot_be_imported)
 {
     ON_CALL(mock_egl, eglCreateImageKHR(_, _, _, _, _)).WillByDefault(Return(EGL_NO_IMAGE_KHR));
 
-    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config), std::runtime_error);
+    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator), std::runtime_error);
 }
 
 TEST_F(FramebufferPoolTest, throws_when_framebuffer_is_incomplete)
@@ -285,7 +282,7 @@ TEST_F(FramebufferPoolTest, throws_when_framebuffer_is_incomplete)
 
     try
     {
-        std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+        std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
         FAIL() << "Expected FramebufferPool construction to throw";
     }
     catch (std::runtime_error const& error)
@@ -305,58 +302,14 @@ TEST_F(FramebufferPoolTest, imports_dmabuf_as_colour_attachment_of_framebuffer)
     EXPECT_CALL(mock_egl, eglDestroyImageKHR(surfaceless_display, image));
     EXPECT_CALL(mock_gl, glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 1, 0));
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
 
     EXPECT_THAT(textures, ElementsAre(1));
 }
 
-TEST_F(FramebufferPoolTest, has_no_depth_stencil_buffer_when_not_requested)
-{
-    EXPECT_CALL(mock_gl, glGenRenderbuffers(_, _)).Times(0);
-    EXPECT_CALL(mock_gl, glFramebufferRenderbuffer(_, _, _, _)).Times(0);
-
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
-}
-
-TEST_F(FramebufferPoolTest, attaches_depth_stencil_buffer_when_depth_requested)
-{
-    ON_CALL(config, depth_buffer_bits()).WillByDefault(Return(24));
-
-    EXPECT_CALL(
-        mock_gl,
-        glRenderbufferStorage(
-            GL_RENDERBUFFER,
-            GL_DEPTH24_STENCIL8_OES,
-            default_output_size.width.as_int(),
-            default_output_size.height.as_int()));
-    EXPECT_CALL(mock_gl, glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 1));
-    EXPECT_CALL(mock_gl, glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 1));
-
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
-}
-
-TEST_F(FramebufferPoolTest, attaches_depth_stencil_buffer_when_stencil_requested)
-{
-    std::vector<GLuint> renderbuffers;
-    ON_CALL(mock_gl, glGenRenderbuffers(_, _)).WillByDefault(generate_into(renderbuffers));
-    ON_CALL(config, stencil_buffer_bits()).WillByDefault(Return(8));
-
-    EXPECT_CALL(
-        mock_gl,
-        glRenderbufferStorage(
-            GL_RENDERBUFFER,
-            GL_DEPTH24_STENCIL8_OES,
-            default_output_size.width.as_int(),
-            default_output_size.height.as_int()));
-
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
-
-    EXPECT_THAT(renderbuffers, ElementsAre(1));
-}
-
 TEST_F(FramebufferPoolTest, pooled_framebuffer_reports_size_of_display_framebuffer)
 {
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const fb = pool->acquire();
 
     EXPECT_THAT(fb.framebuffer->size(), Eq(default_output_size));
@@ -375,7 +328,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_is_the_display_framebuffer)
                 return fb;
             });
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const fb = pool->acquire();
 
     EXPECT_THAT(fb.framebuffer.get(), Eq(static_cast<mg::Framebuffer*>(allocated)));
@@ -389,7 +342,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_can_be_presented_as_display_frame
         .WillByDefault(
             [&](auto) { return std::make_unique<FakeKMSMappableFB>(allocator.output_size(), fb_id); });
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     // As KMS display sinks hold it
     std::shared_ptr<mg::Framebuffer> const fb{pool->acquire().framebuffer};
 
@@ -404,7 +357,7 @@ TEST_F(FramebufferPoolTest, presented_framebuffer_is_recycled_rather_than_destro
     record_destruction_in(fb_destroyed);
     EXPECT_CALL(allocator, alloc_fb(_)).Times(1);
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto [entry, framebuffer] = pool->acquire();
     auto const* const first_entry = entry;
 
@@ -423,7 +376,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_is_recycled_after_framebuffer_cas
     record_destruction_in(fb_destroyed);
     EXPECT_CALL(allocator, alloc_fb(_)).Times(1);
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto [entry, framebuffer] = pool->acquire();
     auto const* const first_entry = entry;
 
@@ -447,7 +400,7 @@ TEST_F(FramebufferPoolTest, entry_holds_blitter_surface_for_its_framebuffer)
                 return stub;
             });
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const fb = pool->acquire();
 
     EXPECT_THAT(fb.entry->surface.get(), Eq(surface));
@@ -457,7 +410,7 @@ TEST_F(FramebufferPoolTest, bind_makes_context_current_and_binds_entry_framebuff
 {
     std::vector<GLuint> framebuffers;
     ON_CALL(mock_gl, glGenFramebuffers(_, _)).WillByDefault(generate_into(framebuffers));
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const fb = pool->acquire();
     make_other_context_current();
 
@@ -472,12 +425,9 @@ TEST_F(FramebufferPoolTest, destroying_entry_releases_gl_resources_with_context_
 {
     std::vector<GLuint> textures;
     std::vector<GLuint> framebuffers;
-    std::vector<GLuint> renderbuffers;
     ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_into(textures));
     ON_CALL(mock_gl, glGenFramebuffers(_, _)).WillByDefault(generate_into(framebuffers));
-    ON_CALL(mock_gl, glGenRenderbuffers(_, _)).WillByDefault(generate_into(renderbuffers));
-    ON_CALL(config, depth_buffer_bits()).WillByDefault(Return(24));
-    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     make_other_context_current();
 
     auto const expect_context_current = [this](auto, auto)
@@ -486,14 +436,13 @@ TEST_F(FramebufferPoolTest, destroying_entry_releases_gl_resources_with_context_
     };
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(textures.at(0)))).WillOnce(expect_context_current);
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1, Pointee(framebuffers.at(0)))).WillOnce(expect_context_current);
-    EXPECT_CALL(mock_gl, glDeleteRenderbuffers(1, Pointee(renderbuffers.at(0)))).WillOnce(expect_context_current);
 
     pool.reset();
 }
 
 TEST_F(FramebufferPoolTest, destroying_entry_tolerates_failure_to_make_context_current)
 {
-    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     make_other_context_current();
     ON_CALL(mock_egl, eglMakeCurrent(_, _, _, mock_egl.fake_egl_context)).WillByDefault(Return(EGL_FALSE));
 
@@ -502,7 +451,7 @@ TEST_F(FramebufferPoolTest, destroying_entry_tolerates_failure_to_make_context_c
 
 TEST_F(FramebufferPoolTest, destroying_entry_restores_previously_current_context)
 {
-    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     make_other_context_current();
 
     pool.reset();
@@ -512,7 +461,7 @@ TEST_F(FramebufferPoolTest, destroying_entry_restores_previously_current_context
 
 TEST_F(FramebufferPoolTest, destroying_entry_leaves_context_current_if_it_already_was)
 {
-    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     context->make_current();
 
     pool.reset();
@@ -524,14 +473,14 @@ TEST_F(FramebufferPoolTest, constructing_pool_restores_previously_current_contex
 {
     make_other_context_current();
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
 
 TEST_F(FramebufferPoolTest, building_new_entry_restores_previously_current_context)
 {
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const held = pool->acquire();
     make_other_context_current();
 
@@ -560,7 +509,7 @@ TEST_F(FramebufferPoolTest, failed_entry_construction_releases_gl_resources_with
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(1))).WillOnce(expect_context_current);
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1, Pointee(1))).WillOnce(expect_context_current);
 
-    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config), std::runtime_error);
+    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator), std::runtime_error);
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(other_context));
 }
@@ -568,7 +517,7 @@ TEST_F(FramebufferPoolTest, failed_entry_construction_releases_gl_resources_with
 // StubSurface writes to its framebuffer on destruction; ASan reports it if the framebuffer is already gone
 TEST_F(FramebufferPoolTest, blitter_surface_is_destroyed_before_its_framebuffer)
 {
-    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
 
     pool.reset();
 }
@@ -577,14 +526,14 @@ TEST_F(FramebufferPoolTest, blitter_surface_is_destroyed_before_its_framebuffer_
 {
     ON_CALL(mock_gl, glCheckFramebufferStatus(GL_FRAMEBUFFER)).WillByDefault(Return(GL_FRAMEBUFFER_UNSUPPORTED));
 
-    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config), std::runtime_error);
+    EXPECT_THROW(std::make_unique<mrb::FramebufferPool>(context, blitter, allocator), std::runtime_error);
 }
 
 TEST_F(FramebufferPoolTest, first_acquire_uses_eagerly_allocated_framebuffer)
 {
     EXPECT_CALL(allocator, alloc_fb(_)).Times(1);
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const fb = pool->acquire();
 }
 
@@ -594,7 +543,7 @@ TEST_F(FramebufferPoolTest, released_framebuffer_is_recycled)
     record_destruction_in(fb_destroyed);
     EXPECT_CALL(allocator, alloc_fb(_)).Times(1);
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto fb = pool->acquire();
     auto const* const first_entry = fb.entry;
 
@@ -609,7 +558,7 @@ TEST_F(FramebufferPoolTest, simultaneously_held_framebuffers_are_distinct)
 {
     EXPECT_CALL(allocator, alloc_fb(_)).Times(2);
 
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const first = pool->acquire();
     auto const second = pool->acquire();
 
@@ -622,7 +571,7 @@ TEST_F(FramebufferPoolTest, output_resize_discards_free_framebuffers)
     bool fb_destroyed{false};
     record_destruction_in(fb_destroyed);
     EXPECT_CALL(allocator, alloc_fb(_)).Times(2);
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     geom::Size const new_size{1920, 1080};
 
     ON_CALL(allocator, output_size()).WillByDefault(Return(new_size));
@@ -637,7 +586,7 @@ TEST_F(FramebufferPoolTest, framebuffers_released_after_resize_are_not_recycled)
     bool fb_destroyed{false};
     record_destruction_in(fb_destroyed);
     EXPECT_CALL(allocator, alloc_fb(_)).Times(2);
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto stale = pool->acquire();
 
     ON_CALL(allocator, output_size()).WillByDefault(Return(geom::Size{1920, 1080}));
@@ -657,7 +606,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_can_outlive_pool)
 {
     bool fb_destroyed{false};
     record_destruction_in(fb_destroyed);
-    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto fb = pool->acquire();
 
     pool.reset();
@@ -669,7 +618,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_can_outlive_pool)
 
 TEST_F(FramebufferPoolTest, acquire_throws_when_new_framebuffer_cannot_be_built)
 {
-    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator, config);
+    auto const pool = std::make_unique<mrb::FramebufferPool>(context, blitter, allocator);
     auto const held = pool->acquire();
     ON_CALL(allocator, alloc_fb(_)).WillByDefault(ReturnNull());
 

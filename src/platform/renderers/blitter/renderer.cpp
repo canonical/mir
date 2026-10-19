@@ -27,7 +27,6 @@
 #include "common/gl_scene_drawing.h"
 
 #include <mir/graphics/buffer.h>
-#include <mir/graphics/gl_config.h>
 #include <mir/graphics/renderable.h>
 #include <mir/graphics/rendering_providers.h>
 #include <mir/log.h>
@@ -99,11 +98,10 @@ class mrb::Renderer::Impl
 public:
     Impl(
         std::shared_ptr<mg::BlitterRenderingProvider> blitter,
-        mg::CPUAddressableDisplayAllocator& allocator,
-        std::shared_ptr<mg::GLConfig const> const& config)
+        mg::CPUAddressableDisplayAllocator& allocator)
         : blitter{std::move(blitter)},
           context{std::make_shared<SoftwareEGLContext>()},
-          pool{context, this->blitter, allocator, *config},
+          pool{context, this->blitter, allocator},
           textures{context, this->blitter}
     {
         context->make_current();
@@ -254,7 +252,7 @@ private:
         auto const is_transformed =
             renderable.orientation() != mir_orientation_normal || renderable.mirror_mode() != mir_mirror_mode_none;
 
-        // We can only work out which part of the buffer a clipped area samples if it isn't rotated or flipped
+        // TODO: work out which part of the buffer a clipped area samples if it is rotated or flipped
         if (is_clipped && is_transformed)
             return false;
 
@@ -389,9 +387,8 @@ void mrb::Renderer::Impl::draw_with_gl(mg::Renderable const& renderable)
 
 mrb::Renderer::Renderer(
     std::shared_ptr<mg::BlitterRenderingProvider> blitter,
-    mg::CPUAddressableDisplayAllocator& allocator,
-    std::shared_ptr<mg::GLConfig const> config)
-    : impl{std::make_unique<Impl>(std::move(blitter), allocator, std::move(config))}
+    mg::CPUAddressableDisplayAllocator& allocator)
+    : impl{std::make_unique<Impl>(std::move(blitter), allocator)}
 {
 }
 

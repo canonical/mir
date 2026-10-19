@@ -85,8 +85,7 @@ public:
 
     auto create_renderer_for(
         std::shared_ptr<mg::BlitterRenderingProvider>,
-        mg::CPUAddressableDisplayAllocator&,
-        std::shared_ptr<mg::GLConfig const>) const -> std::unique_ptr<mir::renderer::Renderer> override
+        mg::CPUAddressableDisplayAllocator&) const -> std::unique_ptr<mir::renderer::Renderer> override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }

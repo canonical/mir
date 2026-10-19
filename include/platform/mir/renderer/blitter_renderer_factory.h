@@ -25,7 +25,6 @@ namespace graphics
 {
 class BlitterRenderingProvider;
 class CPUAddressableDisplayAllocator;
-class GLConfig;
 }
 
 namespace renderer
@@ -49,8 +48,7 @@ public:
     ///          compositing.
     virtual auto create_renderer_for(
         std::shared_ptr<graphics::BlitterRenderingProvider> blitter,
-        graphics::CPUAddressableDisplayAllocator& allocator,
-        std::shared_ptr<graphics::GLConfig const> config) const -> std::unique_ptr<Renderer> = 0;
+        graphics::CPUAddressableDisplayAllocator& allocator) const -> std::unique_ptr<Renderer> = 0;
 
 protected:
     BlitterRendererFactory() = default;
