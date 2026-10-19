@@ -1,0 +1,8 @@
+name: test-mir
+base: ${BASE}
+sdks:
+  - name: try-mir
+  - name: project-mir-consumer
+connections:
+  - plug: project-mir-consumer:mir
+    slot: mir:install

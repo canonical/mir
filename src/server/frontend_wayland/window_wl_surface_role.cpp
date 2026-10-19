@@ -400,17 +400,7 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
 
     if (auto const scene_surface = weak_scene_surface.lock())
     {
-        bool const is_mapped = scene_surface->visible();
-        bool const should_be_mapped = static_cast<bool>(surface.value().buffer_size());
-        if (!is_mapped && should_be_mapped && scene_surface->state() == mir_window_state_hidden)
-        {
-            spec().state = mir_window_state_restored;
-        }
-        else if (is_mapped && !should_be_mapped)
-        {
-            spec().state = mir_window_state_hidden;
-        }
-
+        apply_mapped_state(*scene_surface, spec());
         apply_client_size(spec());
 
         if (state.surface_data_needs_refresh())
@@ -450,7 +440,47 @@ void mf::WindowWlSurfaceRole::commit(WlSurfaceState const& state)
     pending_explicit_width = std::nullopt;
     pending_explicit_height = std::nullopt;
 
-    if (!scene_surface_marked_ready && surface.value().buffer_size())
+    mark_scene_surface_ready_if_mapped();
+}
+
+void mf::WindowWlSurfaceRole::advise_compositor_owned_buffer_changed_size()
+{
+    auto const scene_surface = weak_scene_surface.lock();
+    if (!surface || !scene_surface)
+    {
+        return;
+    }
+
+    shell::SurfaceSpecification mods;
+    apply_mapped_state(*scene_surface, mods);
+    apply_committed_buffer_size(mods);
+    populate_spec_with_surface_data(mods);
+    shell->modify_surface(session, scene_surface, mods);
+
+    observer->latest_client_size(current_size());
+
+    mark_scene_surface_ready_if_mapped();
+}
+
+void mf::WindowWlSurfaceRole::apply_mapped_state(
+    scene::Surface const& scene_surface,
+    shell::SurfaceSpecification& mods)
+{
+    bool const is_mapped = scene_surface.visible();
+    bool const should_be_mapped = static_cast<bool>(surface.value().buffer_size());
+    if (!is_mapped && should_be_mapped && scene_surface.state() == mir_window_state_hidden)
+    {
+        mods.state = mir_window_state_restored;
+    }
+    else if (is_mapped && !should_be_mapped)
+    {
+        mods.state = mir_window_state_hidden;
+    }
+}
+
+void mf::WindowWlSurfaceRole::mark_scene_surface_ready_if_mapped()
+{
+    if (!scene_surface_marked_ready && surface && surface.value().buffer_size())
     {
         if (auto const scene_surface = weak_scene_surface.lock())
         {
@@ -674,6 +704,16 @@ void mf::WindowWlSurfaceRole::handle_scale_output(graphics::DisplayConfiguration
 
 void mf::WindowWlSurfaceRole::apply_client_size(mir::shell::SurfaceSpecification& mods)
 {
+    apply_committed_buffer_size(mods);
+
+    if (pending_explicit_width)
+        mods.width = pending_explicit_width.value();
+    if (pending_explicit_height)
+        mods.height = pending_explicit_height.value();
+}
+
+void mf::WindowWlSurfaceRole::apply_committed_buffer_size(mir::shell::SurfaceSpecification& mods)
+{
     if ((!committed_width_set_explicitly || !committed_height_set_explicitly) && surface)
     {
         if (auto const buffer_size = surface.value().buffer_size())
@@ -688,9 +728,4 @@ void mf::WindowWlSurfaceRole::apply_client_size(mir::shell::SurfaceSpecification
             }
         }
     }
-
-    if (pending_explicit_width)
-        mods.width = pending_explicit_width.value();
-    if (pending_explicit_height)
-        mods.height = pending_explicit_height.value();
 }

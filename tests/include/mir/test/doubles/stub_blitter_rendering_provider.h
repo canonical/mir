@@ -21,7 +21,6 @@
 
 #include <mir/graphics/platform.h>
 #include <mir/graphics/rendering_providers.h>
-#include <mir/test/doubles/stub_blitter_rendering_provider_types.h>
 
 namespace mir::test::doubles
 {

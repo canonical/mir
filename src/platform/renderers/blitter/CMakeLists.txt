@@ -4,6 +4,8 @@ ADD_LIBRARY(mirrendererblitter OBJECT
   software_egl_context.h
   framebuffer_pool.cpp
   framebuffer_pool.h
+  texture_cache.cpp
+  texture_cache.h
 )
 
 target_include_directories(

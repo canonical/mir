@@ -10,7 +10,7 @@ base: ubuntu@26.04
 sdks:
 - name: vscode-remote
 - name: copilot
-- name: project-mir
+- name: project-mir-dev
 - name: system
 actions:
   configure: |

@@ -1,17 +1,17 @@
 /*
  * Copyright © Canonical Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 or 3 as
- * published by the Free Software Foundation.
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3,
+ * as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
 #ifndef MIR_TEST_DOUBLES_MOCK_BLITTER_RENDERING_PROVIDER_H_
@@ -19,8 +19,14 @@
 
 #include <gmock/gmock.h>
 
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_providers.h>
 #include <mir/graphics/rendering_providers.h>
-#include <mir/test/doubles/stub_blitter_rendering_provider_types.h>
+#include <mir/renderer/sw/pixel_source.h>
+
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 
 namespace mir::test::doubles
 {
@@ -33,7 +39,11 @@ public:
         suitability_for_allocator,
         (std::shared_ptr<graphics::GraphicBufferAllocator> const&),
         (override));
-    MOCK_METHOD(std::unique_ptr<FramebufferProvider>, make_framebuffer_provider, (graphics::DisplaySink&), (override));
+    MOCK_METHOD(
+        std::unique_ptr<FramebufferProvider>,
+        make_framebuffer_provider,
+        (graphics::DisplaySink&),
+        (override));
     MOCK_METHOD(std::unique_ptr<Task>, create_task, (std::unique_ptr<Surface>), (override));
     MOCK_METHOD(std::unique_ptr<Surface>, wait_complete, (std::unique_ptr<Task>), (override));
     MOCK_METHOD(
