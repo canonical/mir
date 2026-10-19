@@ -87,6 +87,7 @@ public:
 
     void populate_spec_with_surface_data(shell::SurfaceSpecification& spec);
     void refresh_surface_data_now() override;
+    void advise_compositor_owned_buffer_changed_size() override;
 
     void apply_spec(shell::SurfaceSpecification const& new_spec);
     void set_pending_offset(std::optional<geometry::Displacement> const& offset);
@@ -194,6 +195,11 @@ private:
     virtual void destroy_role() const = 0;
 
     void apply_client_size(mir::shell::SurfaceSpecification& mods);
+    /// Applies the committed buffer size to any dimension not set explicitly by the client
+    void apply_committed_buffer_size(mir::shell::SurfaceSpecification& mods);
+    /// Shows or hides the window according to whether the surface has a buffer
+    void apply_mapped_state(scene::Surface const& scene_surface, mir::shell::SurfaceSpecification& mods);
+    void mark_scene_surface_ready_if_mapped();
 
     std::vector<graphics::DisplayConfigurationOutputId> pending_enter_events;
     std::vector<graphics::DisplayConfigurationOutputId> pending_rescale_events;
