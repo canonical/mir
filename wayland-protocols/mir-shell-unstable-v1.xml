@@ -45,19 +45,20 @@
 
       An archetype is like a wl_surface role: a surface may have at most one
       archetype, but unlike a wl_surface role a client may, for transitions
-      allowed by the compositor, assign a new archetype to a surface which
-      already has one. This will remove the old archetype and apply the new one
-      atomically.
+      the compositor allows, assign a new archetype to a surface which
+      already has one. The compositor then removes the old archetype and
+      applies the new one atomically.
 
       The archetype of a wl_surface influences the window-management policies
       applied to it.
 
-      An archetype augments a surface's role, so it may only be assigned to a
-      wl_surface that has, or is about to be given, a compatible role: that is,
-      a role that makes the surface a window the compositor manages. (The
-      xdg_toplevel role is currently the only compatible role, and the sequences
-      described are therefore given in terms of xdg_surface; any future
-      compatible role will describe its own equivalents.)
+      An archetype augments a surface's role, so a client may only assign it to
+      a wl_surface that has, or is about to be given, a compatible role: that
+      is, a role that makes the surface a window the compositor manages. (The
+      xdg_toplevel role is currently the only compatible role, and this
+      protocol therefore describes the following sequences in terms of
+      xdg_surface; any future compatible role will describe its own
+      equivalents.)
 
       Some roles have semantics that are inconsistent with the semantics of an
       archetype, and so cannot be combined with one; in particular the
@@ -77,9 +78,9 @@
       initial archetype during the initial commit without a buffer attached (see
       xdg_surface).
 
-      All archetype state is double-buffered; changing a surface archetype or
-      updating any archetype state is not applied until the wl_surface is
-      committed.
+      All archetype state is double-buffered; the compositor does not apply a
+      change of surface archetype, or any update to archetype state, until the
+      client commits the wl_surface.
 
       Any events sent to an archetype object are latched to and extend the
       xdg_surface.configure event. Any such events should be treated as part of
@@ -88,12 +89,12 @@
       state and requiring an xdg_surface.ack_configure call, as normal.
 
       Changing archetype follows a similar sequence to the initial xdg_surface
-      commit. First, a new archetype must be committed. This must be the only
-      state committed in the wl_surface.commit request. The compositor will
+      commit. First, the client must commit a new archetype, and must commit no
+      other state in that wl_surface.commit request. The compositor will
       respond with any changes to the surface state prompted by the change of
       archetype, followed by an xdg_surface.configure event. The client must
-      ack the configure event (as normal) and the subsequent wl_surface.commit
-      will cause the new archetype to be fully applied.
+      ack the configure event (as normal), and at the subsequent
+      wl_surface.commit the compositor fully applies the new archetype.
     </description>
 
     <enum name="error">
@@ -103,9 +104,9 @@
 
     <request name="get_regular_surface">
       <description summary="assign the mir_regular_surface_v1 archetype">
-        Assign the regular surface archetype to the given wl_surface, or raise
-        an archetype error if another archetype is already assigned and
-        the transition is disallowed.
+        Assign the regular surface archetype to the given wl_surface. The
+        compositor raises an archetype error if the surface already has
+        another archetype and the compositor disallows the transition.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
@@ -117,9 +118,9 @@
 
     <request name="get_floating_regular_surface">
       <description summary="assign the mir_floating_regular_surface_v1 archetype">
-        Assign the floating regular surface archetype to the given wl_surface,
-        or raise an archetype error if another archetype is already
-        assigned and the transition is disallowed.
+        Assign the floating regular surface archetype to the given wl_surface.
+        The compositor raises an archetype error if the surface already has
+        another archetype and the compositor disallows the transition.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
@@ -131,9 +132,9 @@
 
     <request name="get_dialog_surface">
       <description summary="assign the mir_dialog_surface_v1 archetype">
-        Assign the dialog surface archetype to the given wl_surface, or raise
-        an archetype error if another archetype is already assigned and
-        the transition is disallowed.
+        Assign the dialog surface archetype to the given wl_surface. The
+        compositor raises an archetype error if the surface already has
+        another archetype and the compositor disallows the transition.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
@@ -145,12 +146,13 @@
 
     <request name="get_satellite_surface">
       <description summary="assign the mir_satellite_surface_v1 archetype">
-        Assign the satellite surface archetype to the given wl_surface, or
-        raise an archetype error if another archetype is already
-        assigned and the transition is disallowed.
+        Assign the satellite surface archetype to the given wl_surface. The
+        compositor raises an archetype error if the surface already has
+        another archetype and the compositor disallows the transition.
 
-        The compositor should place the satellite according to the rules in the given positioner.
-        If the positioner is incomplete, an error is raised.
+        The compositor should place the satellite according to the rules in the
+        given positioner. If the positioner is incomplete, the compositor
+        raises an error.
 
         The previous archetype's object becomes inert; the client should
         destroy it. Any further requests made on the previous archetype object
@@ -163,9 +165,9 @@
 
     <request name="create_positioner">
       <description summary="create a positioner object">
-        Create a positioner object. A positioner object is used to position
-        surfaces relative to some parent surface. See the interface description
-        and mir_shell_v1.get_satellite_surface for details.
+        Create a positioner object. A client uses a positioner object to
+        position surfaces relative to some parent surface. See the interface
+        description and mir_shell_v1.get_satellite_surface for details.
       </description>
       <arg name="id" type="new_id" interface="mir_positioner_v1"/>
     </request>
@@ -207,11 +209,11 @@
 
   <interface name="mir_dialog_surface_v1" version="1">
     <description summary="a window that is modal to its parent">
-      A dialog is usually used to communicate information that must be
-      explicitly acknowledged or responded to (for example, to report an
-      error), or to get specific information about something requested in a
-      parent window (for example, a Print dialog) or from a shell function (for
-      example, to confirm shutdown).
+      A client usually uses a dialog to communicate information that the user
+      must explicitly acknowledge or respond to (for example, to report an
+      error), or to get specific information about something the user requested
+      in a parent window (for example, a Print dialog) or from a shell function
+      (for example, to confirm shutdown).
 
       A dialog should have a parent whenever relevant. It may, however, be
       parentless.
@@ -226,8 +228,8 @@
       be minimized or hidden too.
 
       Any attempt to give input focus to the parent should focus the dialog
-      instead. The dialog and all of its ancestors should therefore be
-      presented as a single entity in any window switcher.
+      instead. The compositor should therefore present the dialog and all of
+      its ancestors as a single entity in any window switcher.
 
       Partly because of that last behavior, a window should only ever have one
       dialog child at a time. If a client tries to open a second dialog child,
@@ -248,33 +250,35 @@
       access to functions in its parent: for example, a toolbox, formatting
       palette, or Find/Change window.
 
-      To reduce clutter when a satellite's parent is not being used, a
-      satellite should be present on screen only when any of its parents is
-      active (for example, when a dialog or another satellite of its parent has
-      input focus). Otherwise, subject to a delay to allow reparenting, it
-      should not be visible, accept input, be minimized, nor be listed in a
-      window switcher. However, a satellite should not be closed as its parent
-      may become active again (or an active window may become its parent).
+      To reduce clutter when a satellite's parent is not active, the
+      compositor should keep the satellite on screen only while one of its
+      parents is active (for example, while a dialog or another satellite of
+      its parent has input focus). Otherwise, subject to a delay to allow
+      reparenting, the compositor should not show the satellite, send it input,
+      minimize it, nor list it in a window switcher. However, the compositor
+      should not close a satellite, as its parent may become active again (or
+      an active window may become its parent).
 
       To avoid flicker from briefly-appearing dialogs, whenever a satellite's
-      parent has a child dialog the satellite should remain present. But like
-      the parent window itself, it should not receive input for as long as the
-      dialog is open.
+      parent has a child dialog the compositor should keep the satellite
+      present. But like the parent window itself, the satellite should not
+      receive input for as long as the dialog is open.
     </description>
 
     <request name="reposition">
       <description summary="recalculate the satellite's location">
-        Reposition an already-mapped satellite. The satellite will be placed
-        given the details in the passed mir_positioner_v1 object, and a
+        Reposition an already-mapped satellite. The compositor places the
+        satellite according to the details in the passed mir_positioner_v1
+        object, and in response emits a
         mir_satellite_surface_v1.repositioned event followed by an
-        xdg_surface.configure event will be emitted in response. Any parameters
-        set by the previous positioner will be discarded.
+        xdg_surface.configure event. The compositor discards any parameters
+        the previous positioner set.
 
-        The passed token will be sent in the corresponding
+        The compositor sends the passed token in the corresponding
         mir_satellite_surface_v1.repositioned event. The new satellite position
-        will not take effect until the corresponding configure event is
-        acknowledged by the client. The token itself is opaque, and has no
-        other special meaning.
+        does not take effect until the client acknowledges the corresponding
+        configure event. The token itself is opaque, and has no other special
+        meaning.
 
         If multiple reposition requests are sent, the compositor may skip all
         but the last one.
@@ -285,14 +289,14 @@
 
     <event name="repositioned">
       <description summary="signal the completion of a reposition request">
-        The repositioned event is sent as part of a satellite configuration
-        sequence, together with xdg_surface.configure, to notify the completion
-        of a mir_satellite_surface_v1.reposition request. The token argument is
-        the token passed in that request.
+        The compositor sends the repositioned event as part of a satellite
+        configuration sequence, together with xdg_surface.configure, to notify
+        the completion of a mir_satellite_surface_v1.reposition request. The
+        token argument is the token the client passed in that request.
 
-        Immediately after this event is emitted, xdg_surface.configure will be
-        sent with the updated size and position, as well as a new configure
-        serial.
+        Immediately after emitting this event, the compositor sends
+        xdg_surface.configure with the updated size and position, as well as a
+        new configure serial.
 
         The client may optionally update the content of the satellite, but must
         acknowledge the new satellite configuration for the new position to
