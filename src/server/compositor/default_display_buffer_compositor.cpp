@@ -121,7 +121,7 @@ mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
 {
 }
 
-bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
+bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements, CompositionMode mode)
 {
     if (scene_elements.size() == 0 && !completed_first_render)
         return false;
@@ -155,7 +155,8 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     auto const filter = output_filter->filter();
     auto const transform = display_sink.transformation();
-    if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
+    if (mode == CompositionMode::normal &&
+        try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
