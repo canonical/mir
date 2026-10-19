@@ -26,6 +26,8 @@
 
 #include "default_display_buffer_compositor.h"
 
+#include <mir/log.h>
+
 #include <boost/throw_exception.hpp>
 
 namespace mc = mir::compositor;
@@ -100,9 +102,16 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
             (best_blitter_provider.first >= mg::probe::supported && best_provider.first < mg::probe::supported))
         {
             auto provider = best_blitter_provider.second;
-            auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator, gl_config);
-            return std::make_unique<DefaultDisplayBufferCompositor>(
-                display_sink, *provider, std::move(renderer), output_filter, report);
+            try
+            {
+                auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator, gl_config);
+                return std::make_unique<DefaultDisplayBufferCompositor>(
+                    display_sink, *provider, std::move(renderer), output_filter, report);
+            }
+            catch (std::exception const& err)
+            {
+                mir::log_warning("Failed to set up blitter compositing (%s); falling back to GL", err.what());
+            }
         }
     }
     if (best_provider.first == mg::probe::unsupported)

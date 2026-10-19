@@ -445,3 +445,37 @@ TEST_F(DefaultDisplayBufferCompositorFactory, does_not_select_blitter_provider_w
     auto compositor = factory.create_compositor_for(display_sink);
     EXPECT_THAT(compositor, NotNull());
 }
+
+TEST_F(DefaultDisplayBufferCompositorFactory, falls_back_to_gl_provider_when_blitter_renderer_creation_throws)
+{
+    using namespace testing;
+
+    auto gl_provider = std::make_shared<NiceMock<mtd::MockGlRenderingProvider>>();
+    ON_CALL(*gl_provider, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::supported));
+    ON_CALL(*gl_provider, suitability_for_display(_)).WillByDefault(Return(mg::probe::supported));
+
+    auto blitter_provider = std::make_shared<NiceMock<mtd::MockBlitterRenderingProvider>>();
+    ON_CALL(*blitter_provider, suitability_for_display(_)).WillByDefault(Return(mg::probe::best));
+    ON_CALL(*blitter_provider, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::supported));
+
+    auto blitter_renderer_factory = std::make_shared<StrictMock<mtd::MockBlitterRendererFactory>>();
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(blitter_provider), _, _))
+        .WillOnce(Throw(std::runtime_error{"blitter and GL cannot share framebuffers"}));
+
+    auto renderer_factory = std::make_shared<StrictMock<mtd::MockRendererFactory>>();
+    EXPECT_CALL(*renderer_factory, create_renderer_for(_, Eq(gl_provider)))
+        .WillOnce(Return(ByMove(std::make_unique<mtd::StubRenderer>())));
+
+    mc::DefaultDisplayBufferCompositorFactory factory{
+        {gl_provider},
+        {blitter_provider},
+        std::make_shared<mtd::NullGLConfig>(),
+        renderer_factory,
+        blitter_renderer_factory,
+        buffer_allocator,
+        report,
+        output_filter};
+
+    auto compositor = factory.create_compositor_for(display_sink);
+    EXPECT_THAT(compositor, NotNull());
+}
