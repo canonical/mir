@@ -251,8 +251,8 @@
       palette, or Find/Change window.
 
       To reduce clutter when a satellite's parent is not active, the
-      compositor should keep the satellite on screen only while one of its
-      parents is active (for example, while a dialog or another satellite of
+      compositor should keep the satellite on screen only while its
+      parent is active (for example, while a dialog or another satellite of
       its parent has input focus). Otherwise, subject to a delay to allow
       reparenting, the compositor should not show the satellite, send it input,
       minimize it, nor list it in a window switcher. However, the compositor
