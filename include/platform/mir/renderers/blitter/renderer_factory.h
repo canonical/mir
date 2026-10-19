@@ -27,8 +27,7 @@ class RendererFactory : public renderer::BlitterRendererFactory
 public:
     auto create_renderer_for(
         std::shared_ptr<graphics::BlitterRenderingProvider> blitter,
-        graphics::CPUAddressableDisplayAllocator& allocator,
-        std::shared_ptr<graphics::GLConfig const> config) const -> std::unique_ptr<renderer::Renderer> override;
+        graphics::CPUAddressableDisplayAllocator& allocator) const -> std::unique_ptr<renderer::Renderer> override;
 };
 
 }

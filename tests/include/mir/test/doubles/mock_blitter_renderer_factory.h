@@ -31,8 +31,7 @@ public:
         std::unique_ptr<renderer::Renderer>,
         create_renderer_for,
         (std::shared_ptr<graphics::BlitterRenderingProvider>,
-         graphics::CPUAddressableDisplayAllocator&,
-         std::shared_ptr<graphics::GLConfig const>),
+         graphics::CPUAddressableDisplayAllocator&),
         (const override));
 };
 }

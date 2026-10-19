@@ -51,7 +51,7 @@ public:
 /// A release function recording how often it's been called
 auto count_into(int& releases)
 {
-    return mg::FramebufferDeleter{[&releases] { ++releases; }};
+    return mg::FramebufferDeleter{[&releases](mg::Framebuffer*) { ++releases; }};
 }
 }
 

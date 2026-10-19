@@ -36,11 +36,11 @@ public:
     /// Delete the framebuffer
     FramebufferDeleter() noexcept;
 
-    /// Call \p release instead of deleting the framebuffer.
+    /// Call \p release with the framebuffer instead of deleting it.
     ///
     /// \p release is called at most once. If this is again (e.g. after a `reset()` to
     /// a new pointer), it deletes like a default-constructed one.
-    explicit FramebufferDeleter(std::move_only_function<void()> release) noexcept;
+    explicit FramebufferDeleter(std::move_only_function<void(Framebuffer*)> release) noexcept;
 
     /// Allow a plain `std::unique_ptr<T>` to convert to a FramebufferPtr
     template<typename T>
@@ -55,7 +55,7 @@ public:
     void operator()(Framebuffer* framebuffer);
 
 private:
-    std::move_only_function<void()> release;
+    std::move_only_function<void(Framebuffer*)> release;
 };
 
 /// An owning pointer to a [Framebuffer] with a custom deleter.
