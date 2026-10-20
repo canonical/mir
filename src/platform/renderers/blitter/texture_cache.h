@@ -88,7 +88,7 @@ private:
         void bind() override;
         auto tex_id() const -> GLuint override;
         void add_syncpoint() override;
-        void upload(graphics::BlitterRenderingProvider& blitter, graphics::Buffer const& buffer);
+        void upload(graphics::Buffer const& buffer);
 
     private:
         common::TextureHandle const texture;
