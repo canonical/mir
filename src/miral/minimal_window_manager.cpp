@@ -18,6 +18,7 @@
 #include <miral/toolkit_event.h>
 #include <miral/application_info.h>
 #include "application_selector.h"
+#include <mir/depth_layer.h>
 #include <linux/input.h>
 
 using namespace miral::toolkit;
@@ -643,7 +644,7 @@ void miral::MinimalWindowManager::Impl::apply_resize_by(Displacement movement)
 bool miral::MinimalWindowManager::Impl::should_prevent_focus(miral::WindowInfo const& info)
 {
     return (focus_stealing == FocusStealing::prevent) && tools.active_window() &&
-           info.depth_layer() == mir_depth_layer_application &&
+           mir::mir_depth_layer_is_application(info.depth_layer()) &&
            tools.active_window().application() != info.window().application();
 }
 

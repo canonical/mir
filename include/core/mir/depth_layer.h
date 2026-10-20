@@ -31,6 +31,17 @@ namespace mir
 */
 auto mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int;
 
+/**
+* Returns whether a MirDepthLayer is one in which application windows live.
+*
+* `mir_depth_layer_always_on_top` counts: it is where always-on-top application windows live (for
+* example the mir_shell_v1 floating regular archetype). Such windows are still applications, so
+* policy that applies to applications (appearing in taskbars, focus-stealing prevention, ...) must
+* apply to them too.
+*/
+constexpr auto mir_depth_layer_is_application(MirDepthLayer depth_layer) -> bool
+{ return depth_layer == mir_depth_layer_application || depth_layer == mir_depth_layer_always_on_top; }
+
 } // namespace mir
 
 #endif // MIR_DEPTH_LAYER_H_
