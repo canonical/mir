@@ -1,3 +1,5 @@
+(reference-index)=
+
 # Reference
 
 These pages provide detailed reference to Mir APIs and other interfaces.

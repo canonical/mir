@@ -1,3 +1,5 @@
+(kernel-requirements)=
+
 # Linux kernel requirements for Mir
 
 To run Mir with the default `gbm-kms` platform you need a linux kernel with at

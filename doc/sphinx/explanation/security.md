@@ -1,3 +1,5 @@
+(mir-security)=
+
 # Security
 
 This document aims to explore in depth the security considerations around Mir
