@@ -18,7 +18,6 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::ApplicationCredentials::gid() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationCredentials::is_sandboxed() const@MIRAL_6.1" 6.1.0
  (c++)"miral::ApplicationCredentials::pid() const@MIRAL_6.0" 6.0.0
- (c++)"miral::ApplicationCredentials::snap_app_name[abi:cxx11]() const@MIRAL_6.1" 6.1.0
  (c++)"miral::ApplicationCredentials::snap_name[abi:cxx11]() const@MIRAL_6.1" 6.1.0
  (c++)"miral::ApplicationCredentials::uid() const@MIRAL_6.0" 6.0.0
  (c++)"miral::ApplicationInfo::ApplicationInfo()@MIRAL_6.0" 6.0.0

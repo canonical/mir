@@ -112,13 +112,6 @@ auto miral::ApplicationCredentials::snap_name() const -> std::optional<std::stri
     });
 }
 
-auto miral::ApplicationCredentials::snap_app_name() const -> std::optional<std::string>
-{
-    return creds.snap_info().transform([](auto const& info) {
-        return info.app_name;
-    });
-}
-
 auto miral::ApplicationCredentials::flatpak_id() const -> std::optional<std::string>
 {
     return creds.flatpak_info().transform([](auto const& info) {

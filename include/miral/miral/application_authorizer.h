@@ -45,7 +45,6 @@ public:
 
     auto is_sandboxed() const -> bool;
     auto snap_name() const -> std::optional<std::string>;
-    auto snap_app_name() const -> std::optional<std::string>;
     auto flatpak_id() const -> std::optional<std::string>;
 
 private:
