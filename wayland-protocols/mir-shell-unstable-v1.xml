@@ -99,7 +99,9 @@
     </description>
 
     <enum name="error">
-      <entry name="invalid_archetype" value="0"
+      <entry name="archetype" value="0" deprecated-since="2"
+             summary="the archetype cannot be assigned to this surface"/>
+      <entry name="invalid_archetype" value="0" since="2"
              summary="the archetype cannot be assigned to this surface"/>
       <entry name="invalid_positioner" value="1"
              summary="the positioner is incomplete"/>
