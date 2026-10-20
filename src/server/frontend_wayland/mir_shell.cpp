@@ -27,8 +27,8 @@ using namespace mir::geometry;
 
 namespace
 {
-mw::Resource::Version<1> version1;
-mw::Resource::Version<2> version2;
+mw::Resource::Version<1> const version1;
+mw::Resource::Version<2> const version2;
 
 struct Global : mw::MirShellV1::Global
 {
