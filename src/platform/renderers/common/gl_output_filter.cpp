@@ -160,6 +160,7 @@ void mrc::GLOutputFilter::apply()
     if (!active())
         return;
 
+    glDisable(GL_BLEND);
     glUseProgram(*program);
     glUniform1i(tex_uniform, 0);
 
