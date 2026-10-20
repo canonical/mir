@@ -194,7 +194,6 @@ public:
         ON_CALL(*renderable, clip_area()).WillByDefault(Return(std::nullopt));
         ON_CALL(*renderable, alpha()).WillByDefault(Return(1.0f));
         ON_CALL(*renderable, shaped()).WillByDefault(Return(false));
-        ON_CALL(*renderable, opaque_region()).WillByDefault(Return(std::nullopt));
         ON_CALL(*renderable, transformation()).WillByDefault(Return(glm::mat4{1.0f}));
         ON_CALL(*renderable, orientation()).WillByDefault(Return(mir_orientation_normal));
         ON_CALL(*renderable, mirror_mode()).WillByDefault(Return(mir_mirror_mode_none));
@@ -282,26 +281,11 @@ TEST_F(BlitterRenderer, draws_translucent_renderables_with_gl_without_attempting
     EXPECT_THAT(renderer->render(renderables), NotNull());
 }
 
-TEST_F(BlitterRenderer, draws_shaped_renderables_without_opaque_region_with_gl_without_attempting_blit)
+TEST_F(BlitterRenderer, blits_shaped_renderables)
 {
     auto renderable = make_renderable();
     mg::RenderableList const renderables{renderable.renderable};
     ON_CALL(*renderable.renderable, shaped()).WillByDefault(Return(true));
-    auto renderer = make_renderer();
-
-    EXPECT_CALL(*blitter, blit(_, _, _, _, _, _)).Times(0);
-    EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(1);
-
-    EXPECT_THAT(renderer->render(renderables), NotNull());
-}
-
-TEST_F(BlitterRenderer, blits_shaped_renderables_when_opaque_region_covers_them)
-{
-    auto renderable = make_renderable();
-    mg::RenderableList const renderables{renderable.renderable};
-    ON_CALL(*renderable.renderable, shaped()).WillByDefault(Return(true));
-    ON_CALL(*renderable.renderable, opaque_region())
-        .WillByDefault(Return(geom::Rectangles{default_renderable_rect}));
     auto renderer = make_renderer();
 
     EXPECT_CALL(*blitter, blit(_, IsSameBufferAs(renderable.buffer), _, _, _, _)).Times(1);
@@ -310,18 +294,16 @@ TEST_F(BlitterRenderer, blits_shaped_renderables_when_opaque_region_covers_them)
     EXPECT_THAT(renderer->render(renderables), NotNull());
 }
 
-TEST_F(BlitterRenderer, opaque_region_is_compared_in_scene_coordinates)
+TEST_F(BlitterRenderer, draws_shaped_translucent_renderables_with_gl_without_attempting_blit)
 {
-    geom::Rectangle const viewport{{1000, 500}, output_size};
-    geom::Rectangle const in_scene{{1010, 520}, {30, 40}};
-    auto renderable = make_renderable(in_scene);
+    auto renderable = make_renderable();
     mg::RenderableList const renderables{renderable.renderable};
     ON_CALL(*renderable.renderable, shaped()).WillByDefault(Return(true));
-    ON_CALL(*renderable.renderable, opaque_region()).WillByDefault(Return(geom::Rectangles{in_scene}));
-    auto renderer = make_renderer(viewport);
+    ON_CALL(*renderable.renderable, alpha()).WillByDefault(Return(0.5f));
+    auto renderer = make_renderer();
 
-    EXPECT_CALL(*blitter, blit(_, _, _, _, _, _)).Times(1);
-    EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(0);
+    EXPECT_CALL(*blitter, blit(_, _, _, _, _, _)).Times(0);
+    EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(1);
 
     EXPECT_THAT(renderer->render(renderables), NotNull());
 }
