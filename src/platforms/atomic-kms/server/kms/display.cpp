@@ -348,6 +348,7 @@ void mga::Display::configure_locked(
     }
 
     size_t output_idx{0};
+    auto const plane_promotion = plane_promotion_for(kms_conf);
     kms_conf.for_each_output(
         [&](DisplayConfigurationOutput const& out)
         {
@@ -392,6 +393,7 @@ void mga::Display::configure_locked(
                     drm_fd,
                     gbm,
                     bypass_option,
+                    plane_promotion,
                     listener,
                     std::move(kms_output),
                     out.extents(),

@@ -18,6 +18,7 @@
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_REALDISPLAY_CONFIGURATION_H_
 
 #include "kms_display_configuration.h"
+#include "platform_common.h"
 
 #include <xf86drmMode.h>
 
@@ -60,6 +61,9 @@ bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfigur
 
 /// Connected, used, powered on and with a valid current mode. Clones count separately.
 auto is_active_physical_output(DisplayConfigurationOutput const& output) -> bool;
+
+/// Plane promotion needs exactly one active physical output on the device that `device_conf` describes.
+auto plane_promotion_for(DisplayConfiguration const& device_conf) -> PlanePromotion;
 
 }
 }

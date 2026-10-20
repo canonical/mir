@@ -53,6 +53,7 @@ mga::DisplaySink::DisplaySink(
     mir::Fd drm_fd,
     std::shared_ptr<struct gbm_device> gbm,
     mga::BypassOption,
+    mga::PlanePromotion plane_promotion,
     std::shared_ptr<DisplayReport> const& listener,
     std::shared_ptr<KMSOutput> output,
     geom::Rectangle const& area,
@@ -62,6 +63,7 @@ mga::DisplaySink::DisplaySink(
       gbm{std::move(gbm)},
       listener(listener),
       output{std::move(output)},
+      plane_promotion{plane_promotion},
       area(area),
       transform{transformation},
       needs_set_crtc{false},
@@ -140,7 +142,13 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
 
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
     -> std::optional<LogicalStacking>
-{ return std::nullopt; }
+{
+    if (plane_promotion != PlanePromotion::available)
+        return std::nullopt;
+
+    // TODO: Build the logical stacking plan from the private plane state
+    return std::nullopt;
+}
 
 void mga::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
 {
