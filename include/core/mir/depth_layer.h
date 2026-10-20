@@ -39,7 +39,7 @@ auto mir_depth_layer_get_index(MirDepthLayer depth_layer) -> unsigned int;
 * policy that applies to applications (appearing in taskbars, focus-stealing prevention, ...) must
 * apply to them too.
 */
-constexpr auto mir_depth_layer_is_application(MirDepthLayer depth_layer) -> bool
+constexpr auto mir_depth_layer_holds_toplevels(MirDepthLayer depth_layer) -> bool
 { return depth_layer == mir_depth_layer_application || depth_layer == mir_depth_layer_always_on_top; }
 
 } // namespace mir

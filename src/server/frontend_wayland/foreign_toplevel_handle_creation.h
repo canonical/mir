@@ -42,7 +42,7 @@ inline auto should_create_foreign_toplevel_handle(
         type != mir_window_type_freestyle)
         return false;
 
-    if (!mir_depth_layer_is_application(surface.depth_layer()))
+    if (!mir_depth_layer_holds_toplevels(surface.depth_layer()))
         return false;
 
     return surface.focus_mode() != mir_focus_mode_disabled;

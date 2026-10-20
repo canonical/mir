@@ -539,7 +539,7 @@ void miral::FloatingWindowManager::Impl::apply_resize_by(Displacement movement)
 bool miral::FloatingWindowManager::Impl::should_prevent_focus(WindowInfo const& info)
 {
     return (focus_stealing == FocusStealing::prevent) && tools.active_window() &&
-           mir::mir_depth_layer_is_application(info.depth_layer()) &&
+           mir::mir_depth_layer_holds_toplevels(info.depth_layer()) &&
            tools.active_window().application() != info.window().application();
 }
 
