@@ -16,18 +16,21 @@
 
 #include "wl_client.h"
 #include "std_layout_uptr.h"
+#include "../proc_utils.h"
 
 #include <mir/frontend/session_authorizer.h>
 #include <mir/frontend/session_credentials.h>
 #include <mir/shell/shell.h>
 #include <mir/scene/session.h>
 #include <mir/fatal.h>
+#include <mir/log.h>
 
 #include <wayland-server-core.h>
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace msh = mir::shell;
+namespace msu = mir::server::utils;
 
 namespace
 {
@@ -148,10 +151,27 @@ void mf::WlClient::handle_client_created(wl_listener* listener, void* data)
         return;
     }
 
+    auto const wl_client_fd = wl_client_get_fd(client);
+
+    // Create a unique name for the client based on PID, socket FD & process' comm
+    std::string client_name;
+    try
+    {
+        client_name = msu::create_session_name(client_pid, wl_client_fd);
+    }
+    catch (...)
+    {
+        mir::log(mir::logging::Severity::warning,
+                 MIR_LOG_COMPONENT,
+                 std::current_exception(),
+                 "Failed to retrieve client's command-line invocation.");
+        client_name = "unknown:" + std::to_string(client_pid);
+    }
+
     auto session = construction_context->shell->open_session(
         client_pid,
-        Fd{IntOwnedFd{wl_client_get_fd(client)}},
-        "");
+        Fd{IntOwnedFd{wl_client_fd}},
+        client_name);
 
     // Can't use std::make_shared because WlClient constructor is private
     auto shared = std::shared_ptr<mf::WlClient>{
