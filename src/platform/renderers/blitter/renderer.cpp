@@ -45,21 +45,6 @@ namespace mrc = mir::renderer::common;
 
 namespace
 {
-auto is_opaque(mg::Renderable const& renderable, geom::Rectangle const& target) -> bool
-{
-    if (renderable.alpha() != 1.0f)
-        return false;
-
-    if (!renderable.shaped())
-        return true;
-
-    auto const opaque = renderable.opaque_region();
-    if (!opaque)
-        return false;
-
-    return std::ranges::any_of(*opaque, [&target](auto const& rect) { return rect.contains(target); });
-}
-
 /// Scale `fraction` of `source` into the corresponding part of `sample`
 auto proportional_subrect(
     geom::RectangleD const& sample,
@@ -248,7 +233,8 @@ private:
         if (!visible_area.size.width.as_int() || !visible_area.size.height.as_int())
             return true;    // Entirely clipped away.
 
-        if (renderable.transformation() != glm::mat4{1} || !is_opaque(renderable, visible_area))
+        // The blitter blends a buffer's own alpha channel, but has no way to apply the renderable's alpha
+        if (renderable.transformation() != glm::mat4{1} || renderable.alpha() != 1.0f)
             return false;
 
         auto const position = renderable.screen_position();
