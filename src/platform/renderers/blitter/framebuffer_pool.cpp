@@ -37,30 +37,6 @@ namespace mgc = mir::graphics::common;
 namespace mrb = mir::renderer::blitter;
 namespace mrc = mir::renderer::common;
 
-namespace
-{
-auto make_texture() -> mrc::TextureHandle
-{
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    return mrc::TextureHandle{tex};
-}
-
-auto make_framebuffer() -> mrc::FramebufferHandle
-{
-    GLuint fb = 0;
-    glGenFramebuffers(1, &fb);
-    return mrc::FramebufferHandle{fb};
-}
-
-auto make_renderbuffer() -> mrb::RenderbufferHandle
-{
-    GLuint rb = 0;
-    glGenRenderbuffers(1, &rb);
-    return mrb::RenderbufferHandle{rb};
-}
-}
-
 mrb::FramebufferPool::Entry::Entry(
     std::shared_ptr<SoftwareEGLContext> context,
     std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
@@ -101,8 +77,8 @@ void mrb::FramebufferPool::Entry::build_gl_resources(bool with_depth_stencil)
     // is an EGLImage sibling we can throw the image away without freeing the dma-buf.
     auto const image = mg::import_dmabuf_to_egl_image(dpy, extensions, *dmabuf);
 
-    texture = make_texture();
-    glBindTexture(GL_TEXTURE_2D, texture);
+    texture.emplace();
+    glBindTexture(GL_TEXTURE_2D, *texture);
     extensions.base(dpy).glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
     extensions.base(dpy).eglDestroyImageKHR(dpy, image);
 
@@ -111,19 +87,19 @@ void mrb::FramebufferPool::Entry::build_gl_resources(bool with_depth_stencil)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    fbo = make_framebuffer();
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    fbo.emplace();
+    glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texture, 0);
 
     if (with_depth_stencil)
     {
         auto const buffer_size = size();
-        depth_stencil_buffer = make_renderbuffer();
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_stencil_buffer);
+        depth_stencil_buffer.emplace();
+        glBindRenderbuffer(GL_RENDERBUFFER, *depth_stencil_buffer);
         glRenderbufferStorage(
             GL_RENDERBUFFER, GL_DEPTH24_STENCIL8_OES, buffer_size.width.as_int(), buffer_size.height.as_int());
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_stencil_buffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *depth_stencil_buffer);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, *depth_stencil_buffer);
     }
 
     if (auto const status = glCheckFramebufferStatus(GL_FRAMEBUFFER); status != GL_FRAMEBUFFER_COMPLETE)
@@ -153,15 +129,15 @@ mrb::FramebufferPool::Entry::~Entry()
 
 void mrb::FramebufferPool::Entry::release_gl_resources()
 {
-    depth_stencil_buffer = RenderbufferHandle{};
-    fbo = mrc::FramebufferHandle{};
-    texture = mrc::TextureHandle{};
+    depth_stencil_buffer.reset();
+    fbo.reset();
+    texture.reset();
 }
 
 void mrb::FramebufferPool::Entry::bind()
 {
     context->make_current();
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
 }
 
 auto mrb::FramebufferPool::Entry::size() const -> geom::Size { return fb->size(); }

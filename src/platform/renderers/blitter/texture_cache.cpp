@@ -37,12 +37,7 @@ namespace mrb = mir::renderer::blitter;
 
 namespace
 {
-auto make_texture() -> mir::renderer::common::TextureHandle
-{
-    GLuint tex{0};
-    glGenTextures(1, &tex);
-    return mir::renderer::common::TextureHandle{tex};
-}
+auto make_texture() -> mir::renderer::common::TextureHandle { return mir::renderer::common::TextureHandle{}; }
 }
 
 mrb::TextureCache::TextureCache(

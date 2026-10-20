@@ -49,9 +49,9 @@ GLchar const* const vertex_shader_src =
 };
 }
 
-auto mrc::compile_shader(GLenum type, GLchar const* src) -> GLuint
+auto mrc::compile_shader(GLenum type, GLchar const* src) -> ShaderHandle
 {
-    GLuint id = glCreateShader(type);
+    ShaderHandle id{type};
     if (!id)
     {
         BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
@@ -65,7 +65,6 @@ auto mrc::compile_shader(GLenum type, GLchar const* src) -> GLuint
     {
         GLchar log[1024] = "(No log info)";
         glGetShaderInfoLog(id, sizeof log, nullptr, log);
-        glDeleteShader(id);
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 std::string("Compile failed: ") + log + " for:\n" + src));
@@ -77,7 +76,7 @@ auto mrc::link_shader(
     ShaderHandle const& vertex_shader,
     ShaderHandle const& fragment_shader) -> mrc::ProgramHandle
 {
-    ProgramHandle program{glCreateProgram()};
+    ProgramHandle program;
     glAttachShader(program, fragment_shader);
     glAttachShader(program, vertex_shader);
     glLinkProgram(program);

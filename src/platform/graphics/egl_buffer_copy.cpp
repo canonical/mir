@@ -22,6 +22,7 @@
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_extensions.h>
+#include "gl_handles.h"
 
 #include <algorithm>
 #include <cstring>
@@ -60,125 +61,12 @@ const GLchar* const fshader =
         "}\n"
     };
 
-template<void (*allocator)(GLsizei, GLuint*), void (* deleter)(GLsizei, GLuint const*)>
-class GLBulkHandle
-{
-public:
-    GLBulkHandle()
-    {
-        allocator(1, &id);
-    }
-
-    ~GLBulkHandle()
-    {
-        if (id)
-            deleter(1, &id);
-    }
-
-    GLBulkHandle(GLBulkHandle const&) = delete;
-    GLBulkHandle& operator=(GLBulkHandle const&) = delete;
-    GLBulkHandle& operator=(GLBulkHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLBulkHandle(GLBulkHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-template<GLuint (*allocator)(GLenum), void (* deleter)(GLuint)>
-class GLTypedHandle
-{
-public:
-    GLTypedHandle(GLenum type)
-        : id{allocator(type)}
-    {
-    }
-
-    ~GLTypedHandle()
-    {
-        if (id)
-            deleter(id);
-    }
-
-    GLTypedHandle(GLTypedHandle const&) = delete;
-    GLTypedHandle& operator=(GLTypedHandle const&) = delete;
-    GLTypedHandle& operator=(GLTypedHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLTypedHandle(GLTypedHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-template<GLuint (*allocator)(void), void (*deleter)(GLuint)>
-class GLHandle
-{
-public:
-    GLHandle()
-        : id{allocator()}
-    {
-    }
-
-    ~GLHandle()
-    {
-        if (id)
-            deleter(id);
-    }
-
-    GLHandle(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLHandle(GLHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-using TextureHandle = GLBulkHandle<&glGenTextures, &glDeleteTextures>;
-using GLBufferHandle = GLBulkHandle<&glGenBuffers, &glDeleteBuffers>;
-
-using RenderbufferHandle = GLBulkHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
-using FramebufferHandle = GLBulkHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
-
-using ProgramHandle = GLHandle<&glCreateProgram, &glDeleteProgram>;
-using ShaderHandle = GLTypedHandle<&glCreateShader, &glDeleteShader>;
+using mir::graphics::FramebufferHandle;
+using mir::graphics::GLBufferHandle;
+using mir::graphics::ProgramHandle;
+using mir::graphics::RenderbufferHandle;
+using mir::graphics::ShaderHandle;
+using mir::graphics::TextureHandle;
 
 ShaderHandle compile_shader(GLenum type, GLchar const* src)
 {
@@ -196,7 +84,6 @@ ShaderHandle compile_shader(GLenum type, GLchar const* src)
     {
         GLchar log[1024] = "(No log info)";
         glGetShaderInfoLog(id, sizeof log, nullptr, log);
-        glDeleteShader(id);
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 std::string("Compile failed: ") + log + " for:\n" + src));

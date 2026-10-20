@@ -65,7 +65,7 @@ private:
 };
 
 /// Compile a shader of `type` from `src`, throwing on failure
-auto compile_shader(GLenum type, GLchar const* src) -> GLuint;
+auto compile_shader(GLenum type, GLchar const* src) -> ShaderHandle;
 
 /// Link `vertex_shader` and `fragment_shader` into a program, throwing on failure
 auto link_shader(ShaderHandle const& vertex_shader, ShaderHandle const& fragment_shader) -> ProgramHandle;
