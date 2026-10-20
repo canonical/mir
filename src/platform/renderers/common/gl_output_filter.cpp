@@ -167,6 +167,14 @@ void mrc::GLOutputFilter::apply()
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture);
 
+    // The scene was drawn through the caller's (possibly letterboxed) viewport,
+    // so the intermediate texture already holds the whole output; drawing it
+    // back through that viewport would letterbox it again and leave the
+    // target's edges unwritten. The caller expects its viewport to persist.
+    GLint saved_viewport[4]{};
+    glGetIntegerv(GL_VIEWPORT, saved_viewport);
+    glViewport(0, 0, texture_size.width.as_int(), texture_size.height.as_int());
+
     // Draw a single right angle triangle that covers the whole output.
     GLfloat vertices[] = {-1, -1, 3, -1, -1, 3};
     GLfloat tex_coords[] = {0, 0, 2, 0, 0, 2};
@@ -175,6 +183,8 @@ void mrc::GLOutputFilter::apply()
     glEnableVertexAttribArray(texcoord_attrib);
     glVertexAttribPointer(texcoord_attrib, 2, GL_FLOAT, GL_FALSE, 0, tex_coords);
     glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    glViewport(saved_viewport[0], saved_viewport[1], saved_viewport[2], saved_viewport[3]);
 }
 
 /// The target can be resized under us, so (re)specify the intermediate texture

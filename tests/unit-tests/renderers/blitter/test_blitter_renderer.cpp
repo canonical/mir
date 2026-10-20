@@ -28,6 +28,8 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <optional>
@@ -530,4 +532,28 @@ TEST_F(BlitterRenderer, suspend_releases_its_own_context)
     renderer->suspend();
 
     EXPECT_THAT(eglGetCurrentContext(), Eq(EGL_NO_CONTEXT));
+}
+
+TEST_F(BlitterRenderer, active_output_filter_covers_the_whole_target_when_letterboxed)
+{
+    auto renderable = make_renderable();
+    mg::RenderableList const renderables{renderable.renderable};
+    // Twice as wide as the output, so the scene is letterboxed into the middle half
+    auto renderer = make_renderer({{0, 0}, {200, 100}});
+    renderer->set_output_filter(mir_output_filter_grayscale);
+
+    std::array<GLint, 4> viewport{};
+    std::vector<std::array<GLint, 4>> viewport_at_draw;
+    ON_CALL(mock_gl, glViewport(_, _, _, _)).WillByDefault(
+        [&](GLint x, GLint y, GLsizei width, GLsizei height) { viewport = {x, y, width, height}; });
+    ON_CALL(mock_gl, glGetIntegerv(GL_VIEWPORT, _)).WillByDefault(
+        [&](auto, GLint* params) { std::ranges::copy(viewport, params); });
+    ON_CALL(mock_gl, glDrawArrays(_, _, _)).WillByDefault(
+        [&](auto, auto, auto) { viewport_at_draw.push_back(viewport); });
+
+    renderer->render(renderables);
+
+    EXPECT_THAT(viewport_at_draw, ElementsAre(
+        ElementsAre(0, 25, 100, 50),    // The renderable, into the intermediate
+        ElementsAre(0, 0, 100, 100)));  // The filter, into the target
 }
