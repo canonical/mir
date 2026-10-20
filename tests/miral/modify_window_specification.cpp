@@ -77,3 +77,49 @@ TEST_F(ModifyWindowState, can_divorce_parent)
 
     basic_window_manager.modify_surface(session, child, modifications);
 }
+
+TEST_F(ModifyWindowState, freestyle_window_can_be_retyped)
+{
+    auto const window = create_window_of_type(mir_window_type_freestyle);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_utility;
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_utility));
+}
+
+TEST_F(ModifyWindowState, window_can_be_retyped_back_to_freestyle)
+{
+    auto const window = create_window_of_type(mir_window_type_dialog);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_freestyle;
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_freestyle));
+}
+
+TEST_F(ModifyWindowState, retyping_a_window_to_its_current_type_is_accepted)
+{
+    auto const window = create_window_of_type(mir_window_type_normal);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_normal));
+}
+
+TEST_F(ModifyWindowState, unsupported_type_change_is_rejected)
+{
+    auto const window = create_window_of_type(mir_window_type_normal);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_inputmethod;
+
+    EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+}
