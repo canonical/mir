@@ -4,6 +4,7 @@ set(XDG_SHELL_X "${PROJECT_SOURCE_DIR}/wayland-protocols/xdg-shell.xml")
 
 add_custom_command(
       OUTPUT "${XDG_SHELL_H}" "${XDG_SHELL_C}"
+      DEPENDS "${XDG_SHELL_X}"
       VERBATIM
       COMMAND "sh" "-c" "wayland-scanner client-header ${XDG_SHELL_X} ${XDG_SHELL_H}"
       COMMAND "sh" "-c" "wayland-scanner private-code  ${XDG_SHELL_X} ${XDG_SHELL_C}"
@@ -15,6 +16,7 @@ set(MIR_SHELL_X "${PROJECT_SOURCE_DIR}/wayland-protocols/mir-shell-unstable-v1.x
 
 add_custom_command(
         OUTPUT "${MIR_SHELL_H}" "${MIR_SHELL_C}"
+        DEPENDS "${MIR_SHELL_X}"
         VERBATIM
         COMMAND "sh" "-c" "wayland-scanner client-header ${MIR_SHELL_X} ${MIR_SHELL_H}"
         COMMAND "sh" "-c" "wayland-scanner private-code  ${MIR_SHELL_X} ${MIR_SHELL_C}"
