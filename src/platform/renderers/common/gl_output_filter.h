@@ -57,6 +57,9 @@ public:
 
     /// Draw the composited scene into the currently bound framebuffer
     ///
+    /// This covers the whole framebuffer regardless of the current GL viewport,
+    /// which is restored afterwards.
+    ///
     /// \note The caller must bind its real target before calling this.
     void apply();
 
