@@ -70,11 +70,6 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
 
-      - name: Update release notes version
-        run: |
-          sed --in-place -E "s/(^## Mir ${INPUTS_VERSION}).*/\1/" doc/sphinx/release-notes.md
-          git add doc/sphinx/release-notes.md
-
       - name: Add a Debian changelog entry
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
@@ -84,6 +79,32 @@ jobs:
           sudo apt-get install --yes --no-install-recommends devscripts
 
           debchange --newversion "${INPUTS_VERSION}" "Begin Release Candidate for ${INPUTS_VERSION} release"
+          awk --include=inplace -v version="${INPUTS_VERSION}" '
+            BEGIN {
+              while ((getline line < "debian/changelog") > 0) {
+                if (match(line, /^[[:space:]]+- ([[:alnum:]]+) ABI (unchanged at|bumped to) ([0-9]+)$/, abi_fields) &&
+                    !(abi_fields[1] in abi_versions)) {
+                  abi_versions[abi_fields[1]] = abi_fields[3]
+                }
+              }
+              close("debian/changelog")
+            }
+            { print }
+            !inserted && $0 == "  * Begin Release Candidate for " version " release" {
+              print ""
+              while ((getline line < ".github/workflows/changelog-template") > 0) {
+                gsub(/X\.YY\.Z/, version, line)
+                if (match(line, /^      - ([[:alnum:]]+) ABI /, abi_fields) &&
+                    abi_fields[1] in abi_versions) {
+                  sub(/(unchanged at|bumped to) <version>/,
+                      "unchanged at " abi_versions[abi_fields[1]], line)
+                }
+                print line
+              }
+              close(".github/workflows/changelog-template")
+              inserted = 1
+            }
+          ' debian/changelog
           git add debian/changelog
 
       - name: Update the RPM changelog
@@ -194,7 +215,7 @@ jobs:
               body: [
                 '<!-- github-generated-release-notes -->',
                 '## GitHub-generated release notes',
-                'Use this as raw material to craft the `release-notes.md` entry in the documentation for this release; it is not the final release notes.',
+                'Use this as raw material to craft the `debian/changelog` entry for this release, following `.github/workflows/changelog-template`; it is not the final release notes.',
                 generatedNotes.data.body,
               ].join('\n\n'),
             });
@@ -237,53 +258,6 @@ jobs:
           git_user_signingkey: true
           git_commit_gpgsign: true
           git_tag_gpgsign: true
-
-      - name: Insert next release notes section
-        run: |
-          awk --include=inplace \
-            -v current_pat="^## Mir ${INPUTS_VERSION}~dev$" \
-            -v current_version="${INPUTS_VERSION}~dev" \
-            -v next_version="${NEXT_VERSION}" '
-
-            # Find the current release section
-            !in_target && $0 ~ current_pat {
-              in_target = 1
-              current_buffer = $0 ORS
-              next
-            }
-
-            in_target {
-              # At next release section, print the collected buffers
-              if ($0 ~ /^## Mir /) {
-                print "## Mir " next_version "~dev"
-                print ""
-                print "- New upstream release " next_version
-                print ""
-                print "  - ABI summary:"
-                print ""
-                printf "%s", abi_buffer
-                print ""
-                printf "%s", current_buffer
-
-                print
-                in_target = 0
-                next
-              }
-
-              # Collect the current release section
-              current_buffer = current_buffer $0 ORS
-
-              # And the rewritten ABI summary
-              if ($0 ~ /unchanged at|bumped to/)
-              {
-                gsub(/bumped to/, "unchanged at", $0)
-                abi_buffer = abi_buffer $0 ORS
-              }
-              next
-            }
-            { print }
-          ' doc/sphinx/release-notes.md
-          git add doc/sphinx/release-notes.md
 
       - name: Add a Debian changelog entry
         env:
