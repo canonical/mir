@@ -17,6 +17,9 @@
 #include "test_window_manager_tools.h"
 #include <mir/event_printer.h>
 
+#include <array>
+#include <vector>
+
 using namespace miral;
 using namespace testing;
 namespace mt = mir::test;
@@ -24,6 +27,68 @@ using mir::operator<<;
 
 namespace
 {
+struct WindowTypeChange
+{
+    MirWindowType from;
+    MirWindowType to;
+    bool accepted;
+};
+
+auto window_type_changes() -> std::vector<WindowTypeChange>
+{
+    constexpr std::array sources{
+        mir_window_type_normal,
+        mir_window_type_utility,
+        mir_window_type_dialog,
+        mir_window_type_gloss,
+        mir_window_type_freestyle,
+        mir_window_type_menu,
+        mir_window_type_inputmethod,
+        mir_window_type_satellite,
+        mir_window_type_tip};
+    constexpr std::array targets{
+        mir_window_type_normal,
+        mir_window_type_utility,
+        mir_window_type_dialog,
+        mir_window_type_gloss,
+        mir_window_type_freestyle,
+        mir_window_type_menu,
+        mir_window_type_inputmethod,
+        mir_window_type_satellite,
+        mir_window_type_tip,
+        mir_window_type_decoration};
+
+    std::vector<WindowTypeChange> changes;
+    for (auto const from : sources)
+    {
+        for (auto const to : targets)
+        {
+            if (from == to)
+                continue;
+
+            auto const accepted =
+                ((to == mir_window_type_normal ||
+                  to == mir_window_type_utility ||
+                  to == mir_window_type_satellite ||
+                  to == mir_window_type_freestyle) &&
+                 (from == mir_window_type_normal ||
+                  from == mir_window_type_utility ||
+                  from == mir_window_type_dialog ||
+                  from == mir_window_type_satellite ||
+                  from == mir_window_type_freestyle)) ||
+                (to == mir_window_type_dialog &&
+                 (from == mir_window_type_normal ||
+                  from == mir_window_type_utility ||
+                  from == mir_window_type_dialog ||
+                  from == mir_window_type_menu ||
+                  from == mir_window_type_satellite ||
+                  from == mir_window_type_freestyle));
+            changes.push_back({from, to, accepted});
+        }
+    }
+    return changes;
+}
+
 X const display_left{0};
 Y const display_top{0};
 Width const display_width{640};
@@ -32,7 +97,7 @@ Height const display_height{480};
 Rectangle const display_area{{display_left,  display_top},
                              {display_width, display_height}};
 
-struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<MirWindowType>
+struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<WindowTypeChange>
 {
     Size const initial_parent_size{600, 400};
 
@@ -123,3 +188,34 @@ TEST_F(ModifyWindowState, unsupported_type_change_is_rejected)
 
     EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
 }
+
+TEST_P(ModifyWindowState, type_change_is_accepted_only_when_supported)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const [from, to, accepted] = GetParam();
+    auto const window = create_window_of_type(
+        from,
+        from == mir_window_type_normal || from == mir_window_type_utility ? Window{} : parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = to;
+    if (to == mir_window_type_normal || to == mir_window_type_utility)
+        modifications.parent = Window{};
+    else if (to == mir_window_type_satellite)
+        modifications.parent = parent;
+
+    if (accepted)
+    {
+        basic_window_manager.modify_surface(session, window, modifications);
+        EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(to));
+    }
+    else
+    {
+        EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModifyWindowType,
+    ModifyWindowState,
+    ValuesIn(window_type_changes()));
