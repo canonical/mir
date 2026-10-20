@@ -156,48 +156,18 @@ public:
     ///     \throws std::runtime_error if no suitable display can be created and initialised
     static auto acquire() -> std::shared_ptr<Display const>
     {
-        auto const state = live().lock();
-        if (auto existing = state->display.lock())
+        auto const live = live_display().lock();
+        if (auto existing = live->lock())
         {
             return existing;
         }
 
-        std::shared_ptr<Display const> const display{new Display{create_software_display()}};
-        state->display = display;
-        state->handle = display->dpy;
+        auto display = std::make_shared<Display const>(create_software_display());
+        *live = display;
         return display;
     }
 
-    ~Display()
-    {
-        auto const state = live().lock();
-        // Our last reference was dropped before we took the lock, so acquire() may already have
-        // initialised a replacement. EGL returns the same, non-reference-counted, handle for the same
-        // platform display, so terminating it here would pull it out from under the replacement.
-        if (state->display.expired() || state->handle != dpy)
-        {
-            eglTerminate(dpy);
-        }
-    }
-
-    Display(Display const&) = delete;
-    auto operator=(Display const&) -> Display& = delete;
-
-    auto egl_display() const -> EGLDisplay { return dpy; }
-
-private:
-    struct Live
-    {
-        std::weak_ptr<Display const> display;
-        EGLDisplay handle{EGL_NO_DISPLAY};
-    };
-
-    static auto live() -> mir::Synchronised<Live>&
-    {
-        static mir::Synchronised<Live> live;
-        return live;
-    }
-
+    /// Initialise \p dpy, terminating it again if it is unsuitable
     explicit Display(EGLDisplay dpy) :
         dpy{dpy}
     {
@@ -221,6 +191,30 @@ private:
             eglTerminate(dpy);
             throw;
         }
+    }
+
+    ~Display()
+    {
+        auto const live = live_display().lock();
+        // acquire() may have initialised a replacement between our last reference being dropped and
+        // us taking the lock. EGL hands out the same, non-reference-counted, handle for the same
+        // platform display, so terminating it here would pull it out from under the replacement.
+        if (live->expired())
+        {
+            eglTerminate(dpy);
+        }
+    }
+
+    Display(Display const&) = delete;
+    auto operator=(Display const&) -> Display& = delete;
+
+    auto egl_display() const -> EGLDisplay { return dpy; }
+
+private:
+    static auto live_display() -> mir::Synchronised<std::weak_ptr<Display const>>&
+    {
+        static mir::Synchronised<std::weak_ptr<Display const>> live;
+        return live;
     }
 
     EGLDisplay const dpy;
