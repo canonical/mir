@@ -100,7 +100,7 @@ auto miral::ApplicationCredentials::apparmor_label() const -> std::string
     return creds.apparmor_label();
 }
 
-auto miral::ApplicationCredentials::is_sandboxed() const -> bool
+auto miral::ApplicationCredentials::from_application_sandbox() const -> bool
 {
     return creds.is_sandboxed();
 }

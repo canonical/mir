@@ -46,7 +46,30 @@ public:
      */
     auto apparmor_label() const -> std::string;
 
-    auto is_sandboxed() const -> bool;
+    /**
+     * Is the client running within an application sandbox?
+     *
+     * Processes running within application sandbox systems
+     * such as Snap or Flatpak can be meaningfully identified
+     * and their privileges limited.
+     *
+     * Connections from processes running within an application
+     * sandbox should have more limited access to sensitive
+     * Wayland protocols — applications are expected to use
+     * Desktop Portals to acquire mediated access to any extra
+     * functionality they require.
+     *
+     * \note This check has false-positives — it is possible for
+     *        unprivileged unconfined processes to impersonate
+     *        running in an application sandbox.
+     *
+     *        Because of this, this check should only be used
+     *        to restrict permissions; it cannot be safely used
+     *        to provide extra permissions only to sandboxed
+     *        processes.
+     */
+    auto from_application_sandbox() const -> bool;
+
     /**
      * The name of the Snap this client is from
      *

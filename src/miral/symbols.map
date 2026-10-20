@@ -787,7 +787,7 @@ global:
   extern "C++" {
     miral::ApplicationCredentials::apparmor_label*;
     miral::ApplicationCredentials::flatpak_id*;
-    miral::ApplicationCredentials::is_sandboxed*;
+    miral::ApplicationCredentials::from_application_sandbox*;
     miral::ApplicationCredentials::snap_name*;
     miral::WaylandExtensions::EnableInfo::creds*;
     miral::OutputConfiguration::?OutputConfiguration*;
