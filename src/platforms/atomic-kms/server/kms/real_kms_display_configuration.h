@@ -58,6 +58,9 @@ private:
 
 bool compatible(RealKMSDisplayConfiguration const& conf1, RealKMSDisplayConfiguration const& conf2);
 
+/// Connected, used, powered on and with a valid current mode. Clones count separately.
+auto is_active_physical_output(DisplayConfigurationOutput const& output) -> bool;
+
 }
 }
 }

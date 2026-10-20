@@ -232,3 +232,10 @@ bool mga::compatible(mga::RealKMSDisplayConfiguration const& conf1, mga::RealKMS
 
     return compatible;
 }
+
+auto mga::is_active_physical_output(mg::DisplayConfigurationOutput const& output) -> bool
+{
+    return output.connected && output.used &&
+        (output.power_mode == mir_power_mode_on) &&
+        (output.current_mode_index < output.modes.size());
+}
