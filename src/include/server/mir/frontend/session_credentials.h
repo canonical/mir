@@ -18,8 +18,10 @@
 #ifndef MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
 #define MIR_FRONTEND_SESSION_CREDENTIALS_ID_H_
 
+#include <expected>
 #include <optional>
 #include <string>
+#include <system_error>
 #include <variant>
 #include <sys/types.h>
 
@@ -54,12 +56,12 @@ public:
     uid_t uid() const;
     gid_t gid() const;
 
-    auto apparmor_label() const -> std::string;
+    auto apparmor_label() const -> std::expected<std::string, std::error_code>;
     auto is_sandboxed() const -> bool;
     auto snap_info() const -> std::optional<SnapInfo>;
     auto flatpak_info() const -> std::optional<FlatpakInfo>;
 
-    static auto detect_sandbox_info(pid_t pid, std::string const& apparmor_label) -> SandboxInfo;
+    static auto detect_sandbox_info(pid_t pid, std::optional<std::string> const& apparmor_label) -> SandboxInfo;
 
 private:
     SessionCredentials() = delete;
@@ -70,7 +72,7 @@ private:
     pid_t the_pid;
     uid_t the_uid;
     gid_t the_gid;
-    std::string the_apparmor_label;
+    std::expected<std::string, std::error_code> the_apparmor_label;
 
     SandboxInfo sandbox_info;
 };

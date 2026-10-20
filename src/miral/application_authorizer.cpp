@@ -95,7 +95,7 @@ auto miral::ApplicationCredentials::gid() const -> gid_t
     return creds.gid();
 }
 
-auto miral::ApplicationCredentials::apparmor_label() const -> std::string
+auto miral::ApplicationCredentials::apparmor_label() const -> std::expected<std::string, std::error_code>
 {
     return creds.apparmor_label();
 }

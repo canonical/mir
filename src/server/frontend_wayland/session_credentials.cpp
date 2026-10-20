@@ -21,8 +21,10 @@
 
 #include <gio/gdesktopappinfo.h>
 
+#include <optional>
 #include <string>
 #include <cstring>
+#include <system_error>
 #ifdef MIR_USE_APPARMOR
 #include <sys/apparmor.h>
 #endif
@@ -35,6 +37,15 @@ namespace mf = mir::frontend;
 
 mf::SessionCredentials::SessionCredentials(SessionCredentials&&) = default;
 mf::SessionCredentials& mf::SessionCredentials::operator=(SessionCredentials&&) = default;
+
+namespace
+{
+template<typename T, typename Err>
+auto to_optional(std::expected<T, Err> expected) -> std::optional<T>
+{
+    return expected.transform([](auto& val) -> std::optional<T> { return val; }).value_or(std::nullopt);
+}
+}
 
 mf::SessionCredentials::SessionCredentials(Fd const& client_sock)
 {
@@ -57,18 +68,21 @@ mf::SessionCredentials::SessionCredentials(Fd const& client_sock)
 
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
-    if (aa_getpeercon(client_sock, &label_cstr, nullptr) >= 0)
+    if (auto err = aa_getpeercon(client_sock, &label_cstr, nullptr); err == 0)
     {
         the_apparmor_label = label_cstr;
         std::free(label_cstr);
     }
     else
     {
+        the_apparmor_label = std::unexpected{std::error_code{err, std::system_category()}};
         mir::log_info("Unable to determine AppArmor label for Wayland client");
     }
+#else
+    the_apparmor_label = std::unexpected{std::error_code{ENOTSUP, std::system_category()}};
 #endif
 
-    sandbox_info = detect_sandbox_info(the_pid, the_apparmor_label);
+    sandbox_info = detect_sandbox_info(the_pid, to_optional(the_apparmor_label));
 }
 
 mf::SessionCredentials::SessionCredentials(pid_t client_pid)
@@ -90,18 +104,21 @@ mf::SessionCredentials::SessionCredentials(pid_t client_pid)
 
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
-    if (aa_gettaskcon(client_pid, &label_cstr, nullptr) >= 0)
+    if (auto err = aa_gettaskcon(client_pid, &label_cstr, nullptr); err >= 0)
     {
         the_apparmor_label = label_cstr;
         std::free(label_cstr);
     }
     else
     {
+        the_apparmor_label = std::unexpected{std::error_code{err, std::system_category()}};
         mir::log_info("Unable to determine AppArmor label for pid");
     }
+#else
+    the_apparmor_label = std::unexpected{std::error_code{ENOTSUP, std::system_category()}};
 #endif
 
-    sandbox_info = detect_sandbox_info(the_pid, the_apparmor_label);
+    sandbox_info = detect_sandbox_info(the_pid, to_optional(the_apparmor_label));
 }
 
 mf::SessionCredentials::SessionCredentials(
@@ -114,9 +131,13 @@ mf::SessionCredentials::SessionCredentials(
 {
 }
 
-auto mf::SessionCredentials::detect_sandbox_info(pid_t pid, std::string const& apparmor_label) -> SandboxInfo
+auto mf::SessionCredentials::detect_sandbox_info(pid_t pid, std::optional<std::string> const& apparmor_label) -> SandboxInfo
 {
-    SandboxInfo info = resolve_if_snap(apparmor_label);
+    SandboxInfo info;
+    if (apparmor_label)
+    {
+        info = resolve_if_snap(*apparmor_label);
+    }
     if (std::holds_alternative<std::monostate>(info))
     {
         info = resolve_if_flatpak(pid);
@@ -176,7 +197,7 @@ gid_t mf::SessionCredentials::gid() const
     return the_gid;
 }
 
-auto mf::SessionCredentials::apparmor_label() const -> std::string
+auto mf::SessionCredentials::apparmor_label() const -> std::expected<std::string, std::error_code>
 {
     return the_apparmor_label;
 }

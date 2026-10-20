@@ -17,12 +17,14 @@
 #ifndef MIRAL_APPLICATION_AUTHORIZER_H
 #define MIRAL_APPLICATION_AUTHORIZER_H
 
+#include <expected>
 #include <sys/types.h>
 #include <functional>
 #include <memory>
 #include <optional>
 #include <string>
 #include <type_traits>
+#include <system_error>
 
 namespace mir { class Server; }
 namespace mir
@@ -42,9 +44,12 @@ public:
     gid_t gid() const;
 
     /**
-     * The AppArmor label of the connecting process (or an empty string if the label is unavailable)
+     * The AppArmor label of the connecting process
+     *
+     * If Mir was built without AppArmor support this will return ENOTSUP.
+     * Otherwise, returns the label of the connecting process or the error.
      */
-    auto apparmor_label() const -> std::string;
+    auto apparmor_label() const -> std::expected<std::string, std::error_code>;
 
     /**
      * Is the client running within an application sandbox?
