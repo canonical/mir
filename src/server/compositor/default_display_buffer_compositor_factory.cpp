@@ -106,7 +106,11 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
             {
                 auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator);
                 return std::make_unique<DefaultDisplayBufferCompositor>(
-                    display_sink, *provider, std::move(renderer), output_filter, report);
+                    display_sink,
+                    provider->make_framebuffer_provider(display_sink),
+                    std::move(renderer),
+                    output_filter,
+                    report);
             }
             catch (std::exception const& err)
             {
@@ -127,5 +131,9 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_sink.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
-        display_sink, *chosen_allocator, std::move(renderer), output_filter, report);
+        display_sink,
+        chosen_allocator->make_framebuffer_provider(display_sink),
+        std::move(renderer),
+        output_filter,
+        report);
 }
