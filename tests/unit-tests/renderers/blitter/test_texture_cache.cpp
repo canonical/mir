@@ -18,6 +18,7 @@
 #include "src/platform/renderers/blitter/software_egl_context.h"
 
 #include <mir/test/doubles/mock_blitter_rendering_provider.h>
+#include <mir/test/doubles/mock_buffer.h>
 #include <mir/test/doubles/mock_egl.h>
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/stub_buffer.h>
@@ -113,8 +114,6 @@ public:
             .WillByDefault(Return(surfaceless_display));
 
         ON_CALL(mock_gl, glGenTextures(_, _)).WillByDefault(generate_names());
-        ON_CALL(*blitter, map_buffer(_)).WillByDefault(
-            [](mg::Buffer const& buffer) { return dynamic_cast<mtd::StubBuffer const&>(buffer).map_readable(); });
 
         context = std::make_shared<mrb::SoftwareEGLContext>();
     }
@@ -163,10 +162,11 @@ public:
 
 TEST_F(TextureCacheTest, get_maps_buffer_through_blitter)
 {
-    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    NiceMock<mtd::MockBuffer> const buffer{geom::Size{4, 3}, geom::Stride{1}, mir_pixel_format_abgr_8888};
+    mtd::StubBuffer const backing_buffer{geom::Size{4, 3}};
     mrb::TextureCache cache{context, blitter};
 
-    EXPECT_CALL(*blitter, map_buffer(Ref(buffer)));
+    EXPECT_CALL(buffer, map_readable()).WillOnce(Return(backing_buffer.map_readable()));
 
     cache.get(buffer);
 }
@@ -259,9 +259,9 @@ TEST_F(TextureCacheTest, get_reuploads_buffer_contents_on_every_call)
 
 TEST_F(TextureCacheTest, get_throws_when_buffer_cannot_be_mapped)
 {
-    mtd::StubBuffer const buffer{geom::Size{4, 3}};
+    NiceMock<mtd::MockBuffer> const buffer{geom::Size{4, 3}, geom::Stride{1}, mir_pixel_format_abgr_8888};
     mrb::TextureCache cache{context, blitter};
-    ON_CALL(*blitter, map_buffer(_)).WillByDefault(ReturnNull());
+    ON_CALL(buffer, map_readable).WillByDefault(ReturnNull());
 
     EXPECT_THROW(cache.get(buffer), std::runtime_error);
 }

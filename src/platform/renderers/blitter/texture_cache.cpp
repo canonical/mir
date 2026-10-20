@@ -101,7 +101,7 @@ auto mrb::TextureCache::get(mg::Buffer const& buffer) -> mg::gl::Texture&
 
     // We have no way of knowing whether the client has re-submitted this buffer
     // with new content, so we have to assume it has.
-    entry.texture->upload(*blitter, buffer);
+    entry.texture->upload(buffer);
 
     return *entry.texture;
 }
@@ -178,9 +178,9 @@ void mrb::TextureCache::MappedBufferTexture::add_syncpoint()
 {
 }
 
-void mrb::TextureCache::MappedBufferTexture::upload(mg::BlitterRenderingProvider& blitter, mg::Buffer const& buffer)
+void mrb::TextureCache::MappedBufferTexture::upload(mg::Buffer const& buffer)
 {
-    auto const mapping = blitter.map_buffer(buffer);
+    auto const mapping = buffer.map_readable();
     if (!mapping)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Blitter provider failed to map a buffer for CPU access"}));
