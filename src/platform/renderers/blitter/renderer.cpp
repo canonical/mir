@@ -181,7 +181,7 @@ private:
     {
         if (!task)
         {
-            if (auto surface = target->take_surface())
+            if (auto surface = target.value().take_surface())
                 task = blitter->create_task(std::move(surface));
         }
         return static_cast<bool>(task);
@@ -191,13 +191,13 @@ private:
     void end_task()
     {
         if (task)
-            target->return_surface(blitter->wait_complete(std::move(task)));
+            target.value().return_surface(blitter->wait_complete(std::move(task)));
     }
 
     void bind_target_for_gl()
     {
         used_gl = true;
-        target->bind();
+        target.value().bind();
         mrc::set_letterboxed_gl_viewport(viewport, display_transform, scene.output_size);
     }
 
@@ -348,7 +348,7 @@ void mrb::Renderer::Impl::draw_frame_with_gl(mg::RenderableList const& renderabl
 
     if (filtering)
     {
-        target->bind();
+        target.value().bind();
         filter->apply();
     }
 
