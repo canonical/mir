@@ -41,10 +41,25 @@ public:
     uid_t uid() const;
     gid_t gid() const;
 
+    /**
+     * The AppArmor label of the connecting process (or an empty string if the label is unavailable)
+     */
     auto apparmor_label() const -> std::string;
 
     auto is_sandboxed() const -> bool;
+    /**
+     * The name of the Snap this client is from
+     *
+     * \note The security guarantees of this are subtle.
+     *        For any confined snap this will return the true name.
+     *        However, any unconfined process — either outside of a snap,
+     *        or from an unconfined snap — can impersonate any snap on
+     *        the system.
+     */
     auto snap_name() const -> std::optional<std::string>;
+    /**
+     * The name of the Flatpak this client is from
+     */
     auto flatpak_id() const -> std::optional<std::string>;
 
 private:
