@@ -1,3 +1,5 @@
+(mir-energy-efficiency)=
+
 # Energy efficiency
 
 This document aims to explore in depth the energy efficiency considerations
