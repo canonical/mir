@@ -18,6 +18,10 @@
 #include <mir/event_printer.h>
 
 #include <array>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <string_view>
 #include <vector>
 
 using namespace miral;
@@ -33,6 +37,33 @@ struct WindowTypeChange
     MirWindowType to;
     bool accepted;
 };
+
+auto short_name(MirWindowType type) -> std::string
+{
+    std::ostringstream out;
+    out << type;
+    auto name = out.str();
+
+    constexpr std::string_view prefix{"mir_window_type_"};
+    if (name.starts_with(prefix))
+        name.erase(0, prefix.size());
+
+    return name;
+}
+
+// Without this gtest dumps the raw parameter bytes, which tells us nothing about
+// which transition failed.
+auto operator<<(std::ostream& out, WindowTypeChange const& change) -> std::ostream&
+{
+    return out << change.from << " => " << change.to
+               << (change.accepted ? " (expected to be accepted)" : " (expected to be rejected)");
+}
+
+auto name_for(TestParamInfo<WindowTypeChange> const& info) -> std::string
+{
+    return short_name(info.param.from) + "_to_" + short_name(info.param.to) +
+           (info.param.accepted ? "_is_accepted" : "_is_rejected");
+}
 
 auto window_type_changes() -> std::vector<WindowTypeChange>
 {
@@ -218,4 +249,5 @@ TEST_P(ModifyWindowState, type_change_is_accepted_only_when_supported)
 INSTANTIATE_TEST_SUITE_P(
     ModifyWindowType,
     ModifyWindowState,
-    ValuesIn(window_type_changes()));
+    ValuesIn(window_type_changes()),
+    name_for);
