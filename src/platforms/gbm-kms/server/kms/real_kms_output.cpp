@@ -186,7 +186,9 @@ void mgg::RealKMSOutput::clear_crtc()
 {
     try
     {
-        ensure_crtc();
+        if (!ensure_crtc()) {
+            return;
+        }
     }
     catch (...)
     {

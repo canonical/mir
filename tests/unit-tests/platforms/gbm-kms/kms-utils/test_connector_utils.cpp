@@ -243,3 +243,68 @@ TEST(KMSConnectorHelper, returns_current_crtc_if_it_exists)
         mgk::get_connector(drm_fd, connector_id[0]));
     EXPECT_THAT(crtc->crtc_id, Eq(crtc_ids[0]));
 }
+
+TEST(KMSConnectorHelper, shared_encoder_unavailable_to_second_connector)
+{
+    using namespace testing;
+    NiceMock<mtd::MockDRM> drm;
+    char const* const drm_device = "/dev/dri/card0";
+    int const drm_fd = open(drm_device, 0, 0);
+
+    std::array<uint32_t, 2> const crtc_ids = {{21, 25}};
+    std::array<uint32_t, 1> const encoder_ids = {{3}};
+    std::array<uint32_t, 2> const connector_ids = {{9, 10}};
+
+    drm.reset(drm_device);
+    auto boring_mode =
+        mtd::FakeDRMResources::create_mode(
+            1200,
+            1600,
+            138500,
+            1400,
+            1800,
+            mtd::FakeDRMResources::ModePreference::PreferredMode);
+
+    // Add active CRTC.
+    drm.add_crtc(drm_device, crtc_ids[0], boring_mode);
+
+    // A single encoder that can drive either CRTC.
+    drm.add_encoder(drm_device, encoder_ids[0], crtc_ids[0], 1 << 0 | 1 << 1);
+
+    std::vector<drmModeModeInfo> modes{boring_mode};
+    std::vector<uint32_t> shared_encoder{encoder_ids[0]};
+
+    // First connector: connected and already owns the shared encoder.
+    drm.add_connector(
+        drm_device,
+        connector_ids[0],
+        DRM_MODE_CONNECTOR_DisplayPort,
+        DRM_MODE_CONNECTED,
+        encoder_ids[0],
+        modes,
+        shared_encoder,
+        mir::geometry::Size{300, 200});
+
+    // Second connector: disconnected, lists only the same shared encoder.
+    drm.add_connector(
+        drm_device,
+        connector_ids[1],
+        DRM_MODE_CONNECTOR_HDMIA,
+        DRM_MODE_DISCONNECTED,
+        0,
+        modes,
+        shared_encoder,
+        mir::geometry::Size{300, 200});
+
+    drm.prepare(drm_device);
+
+    auto crtc = mgk::find_crtc_for_connector(
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_ids[0]));
+    EXPECT_THAT(crtc->crtc_id, Eq(crtc_ids[0]));
+
+    crtc = mgk::find_crtc_for_connector(
+        drm_fd,
+        mgk::get_connector(drm_fd, connector_ids[1]));
+    EXPECT_THAT(crtc, Eq(nullptr));
+}

@@ -178,7 +178,7 @@ std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)
 
 namespace
 {
-std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
+std::optional<std::tuple<mgk::DRMModeCrtcUPtr, int>> find_crtc_and_index_for_connector(
     mgk::DRMModeResources const& resources,
     mgk::DRMModeConnectorUPtr const& connector)
 {
@@ -201,7 +201,7 @@ std::tuple<mgk::DRMModeCrtcUPtr, int> find_crtc_and_index_for_connector(
         crtc_index++;
     }
 
-    BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to find CRTC"});
+    return {};
 }
 }
 
@@ -219,7 +219,11 @@ mgk::DRMModeCrtcUPtr mgk::find_crtc_for_connector(int drm_fd, mgk::DRMModeConnec
         }
     }
 
-    return std::get<0>(find_crtc_and_index_for_connector(resources, connector));
+    auto crtc_pair = find_crtc_and_index_for_connector(resources, connector);
+    if (!crtc_pair.has_value()) {
+        return nullptr;
+    }
+    return std::get<0>(std::move(crtc_pair.value()));
 }
 
 auto mgk::find_crtc_with_primary_plane(
