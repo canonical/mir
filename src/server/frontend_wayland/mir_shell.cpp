@@ -59,6 +59,38 @@ struct Instance : mw::MirShellV1
     void create_positioner(struct wl_resource* id) override;
 };
 
+class MirPositioner : public mw::MirPositionerV1, public SurfaceSpecification
+{
+public:
+    MirPositioner(wl_resource* new_resource);
+
+    auto is_complete() const -> bool { return width && height && aux_rect; }
+
+private:
+    void set_size(int32_t width, int32_t height) override;
+    void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
+    void set_anchor(uint32_t anchor) override;
+    void set_gravity(uint32_t gravity) override;
+    void set_constraint_adjustment(uint32_t constraint_adjustment) override;
+    void set_offset(int32_t x, int32_t y) override;
+};
+
+template<typename Interface>
+auto validated_positioner(wl_resource* receiver, wl_resource* positioner) -> MirPositioner const&
+{
+    auto const* const spec = dynamic_cast<MirPositioner const*>(mw::MirPositionerV1::from(positioner));
+
+    if (!spec || !spec->is_complete())
+    {
+        throw mw::ProtocolError{
+            receiver,
+            Interface::Error::invalid_positioner,
+            "Positioner is incomplete: both the size and the anchor rect must be set"};
+    }
+
+    return *spec;
+}
+
 template<typename MirSurface, MirWindowType type>
 struct Surface : MirSurface, mf::WlSurfaceArchetype
 {
@@ -67,12 +99,12 @@ struct Surface : MirSurface, mf::WlSurfaceArchetype
         MirSurface{resource, version1},
         wl_surface{wl_surface}
     {
-        wl_surface->set_archetype(this);
-
         SurfaceSpecification spec;
         spec.type = type;
         spec.depth_layer = depth_layer;
         wl_surface->update_surface_spec(spec);
+
+        wl_surface->set_archetype(this);
     }
 
     ~Surface()
@@ -89,12 +121,13 @@ struct Surface : MirSurface, mf::WlSurfaceArchetype
 template<typename MirSurface, MirWindowType type>
 struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
 {
-    SurfaceWithPosition(wl_resource* resource, mf::WlSurface* wl_surface, wl_resource* positioner) :
+    SurfaceWithPosition(wl_resource* resource, mf::WlSurface* wl_surface, MirPositioner const& positioner) :
         MirSurface{resource, version1},
         wl_surface{wl_surface}
     {
-        wl_surface->set_archetype(this);
         position(positioner);
+
+        wl_surface->set_archetype(this);
     }
 
     ~SurfaceWithPosition()
@@ -115,35 +148,17 @@ struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
                 "The archetype has been removed from the surface"};
         }
 
-        position(positioner);
+        position(validated_positioner<MirSurface>(MirSurface::resource, positioner));
     }
 
-    void position(wl_resource* positioner) const
+    void position(MirPositioner const& positioner) const
     {
-        auto pspec = dynamic_cast<SurfaceSpecification*>(mw::MirPositionerV1::from(positioner));
-        auto spec = pspec ? *pspec : SurfaceSpecification{};
-
+        SurfaceSpecification spec{positioner};
         spec.type = type;
         wl_surface.value().update_surface_spec(spec);
     }
 
     mw::Weak<mf::WlSurface> wl_surface;
-};
-
-class MirPositioner : public mw::MirPositionerV1, public SurfaceSpecification
-{
-public:
-    MirPositioner(wl_resource* new_resource);
-
-    auto is_complete() const -> bool { return width && height && aux_rect; }
-
-private:
-    void set_size(int32_t width, int32_t height) override;
-    void set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_anchor(uint32_t anchor) override;
-    void set_gravity(uint32_t gravity) override;
-    void set_constraint_adjustment(uint32_t constraint_adjustment) override;
-    void set_offset(int32_t x, int32_t y) override;
 };
 
 auto archetype_target(wl_resource* shell, wl_resource* surface) -> mf::WlSurface*
@@ -159,19 +174,6 @@ auto archetype_target(wl_resource* shell, wl_resource* surface) -> mf::WlSurface
     }
 
     return wl_surface;
-}
-
-void validate_positioner(wl_resource* shell, wl_resource* positioner)
-{
-    auto const spec = dynamic_cast<MirPositioner const*>(mw::MirPositionerV1::from(positioner));
-
-    if (!spec || !spec->is_complete())
-    {
-        throw mw::ProtocolError{
-            shell,
-            mw::MirShellV1::Error::invalid_positioner,
-            "Positioner is incomplete: both the size and the anchor rect must be set"};
-    }
 }
 }
 
@@ -203,23 +205,23 @@ void Instance::get_dialog_surface(struct wl_resource* id, struct wl_resource* su
 
 void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
 {
-    validate_positioner(resource, positioner);
+    auto const& validated = validated_positioner<mw::MirShellV1>(resource, positioner);
     new SurfaceWithPosition<mw::MirSatelliteSurfaceV1, mir_window_type_satellite>
-        {id, archetype_target(resource, surface), positioner};
+        {id, archetype_target(resource, surface), validated};
 }
 
 void Instance::get_menu_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
 {
-    validate_positioner(resource, positioner);
+    auto const& validated = validated_positioner<mw::MirShellV1>(resource, positioner);
     new SurfaceWithPosition<mw::MirMenuSurfaceV1, mir_window_type_menu>
-        {id, archetype_target(resource, surface), positioner};
+        {id, archetype_target(resource, surface), validated};
 }
 
 void Instance::get_tip_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
 {
-    validate_positioner(resource, positioner);
+    auto const& validated = validated_positioner<mw::MirShellV1>(resource, positioner);
     new SurfaceWithPosition<mw::MirTipSurfaceV1, mir_window_type_tip>
-        {id, archetype_target(resource, surface), positioner};
+        {id, archetype_target(resource, surface), validated};
 }
 
 void Instance::create_positioner(struct wl_resource* id)
@@ -299,8 +301,15 @@ void MirPositioner::set_anchor(uint32_t anchor)
         placement = mir_placement_gravity_southeast;
         break;
 
-    default:
+    case Anchor::none:
         placement = mir_placement_gravity_center;
+        break;
+
+    default:
+        throw mw::ProtocolError{
+            resource,
+            mw::MirPositionerV1::Error::invalid_input,
+            "Invalid anchor value %u", anchor};
     }
 
     aux_rect_placement_gravity = placement;
@@ -360,6 +369,19 @@ void MirPositioner::set_gravity(uint32_t gravity)
 
 void MirPositioner::set_constraint_adjustment(uint32_t constraint_adjustment)
 {
+    uint32_t constexpr all_adjustments =
+        ConstraintAdjustment::slide_x | ConstraintAdjustment::slide_y |
+        ConstraintAdjustment::flip_x | ConstraintAdjustment::flip_y |
+        ConstraintAdjustment::resize_x | ConstraintAdjustment::resize_y;
+
+    if (constraint_adjustment & ~all_adjustments)
+    {
+        throw mw::ProtocolError{
+            resource,
+            mw::MirPositionerV1::Error::invalid_input,
+            "Invalid constraint adjustment value 0x%x", constraint_adjustment};
+    }
+
     uint32_t new_placement_hints{0};
     if (constraint_adjustment & ConstraintAdjustment::slide_x)
     {
