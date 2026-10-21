@@ -91,10 +91,7 @@ enum : uint32_t
 /// Enum values from mir_positioner_v1, plus values outside each enum to drive the rejection tests.
 enum : uint32_t
 {
-    mir_positioner_v1_anchor_none = 0,
-    mir_positioner_v1_anchor_bottom_right = 8,
     mir_positioner_v1_anchor_out_of_range = 9,
-    mir_positioner_v1_gravity_none = 0,
     mir_positioner_v1_gravity_out_of_range = 9,
     mir_positioner_v1_constraint_adjustment_slide_x = 1,
     mir_positioner_v1_constraint_adjustment_resize_y = 32,
@@ -320,6 +317,10 @@ struct MirShell : miral::TestServer
 private:
     miral::InternalClientLauncher launcher;
     WaylandClient client;
+};
+
+class MirShellPositionerEnum : public MirShell, public WithParamInterface<uint32_t>
+{
 };
 }
 
@@ -560,23 +561,14 @@ TEST_F(MirShell, positioner_with_an_out_of_range_anchor_is_rejected)
         Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
 }
 
-TEST_F(MirShell, positioner_with_anchor_none_is_accepted)
+TEST_P(MirShellPositionerEnum, positioner_with_anchor_is_accepted)
 {
     start_server();
 
+    auto const value = GetParam();
     EXPECT_THAT(
-        run([](MirShellClient& client)
-            { client.set_anchor(client.create_positioner(true), mir_positioner_v1_anchor_none); }),
-        Eq(std::nullopt));
-}
-
-TEST_F(MirShell, positioner_with_the_last_anchor_in_the_enum_is_accepted)
-{
-    start_server();
-
-    EXPECT_THAT(
-        run([](MirShellClient& client)
-            { client.set_anchor(client.create_positioner(true), mir_positioner_v1_anchor_bottom_right); }),
+        run([value](MirShellClient& client)
+            { client.set_anchor(client.create_positioner(true), value); }),
         Eq(std::nullopt));
 }
 
@@ -591,15 +583,21 @@ TEST_F(MirShell, positioner_with_an_out_of_range_gravity_is_rejected)
         Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
 }
 
-TEST_F(MirShell, positioner_with_gravity_none_is_accepted)
+TEST_P(MirShellPositionerEnum, positioner_with_gravity_is_accepted)
 {
     start_server();
 
+    auto const value = GetParam();
     EXPECT_THAT(
-        run([](MirShellClient& client)
-            { client.set_gravity(client.create_positioner(true), mir_positioner_v1_gravity_none); }),
+        run([value](MirShellClient& client)
+            { client.set_gravity(client.create_positioner(true), value); }),
         Eq(std::nullopt));
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    AllValidEnumValues,
+    MirShellPositionerEnum,
+    Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u));
 
 // "If any bit not defined in the 'constraint_adjustment' enum is set, an invalid_input error is
 // raised." Ignoring undefined bits would silently drop placement behaviour the client asked for.
