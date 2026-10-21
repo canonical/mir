@@ -63,7 +63,7 @@ extensions.enable(WaylandExtensions::zwlr_layer_shell_v1);
 extensions.conditionally_enable(WaylandExtensions::zwlr_virtual_pointer_manager_v1,
     [](miral::WaylandExtensions::EnableInfo const& info)
     {
-        return !info.creds().is_sandboxed();
+        return !info.creds().from_application_sandbox();
     });
 
 /// ...
@@ -94,10 +94,10 @@ client credentials via the `EnableInfo::creds` method. The returned
 `ApplicationCredentials` object provides the following information:
 
 - The client's process ID, user ID, and group ID, valid at the time of connection.
-- The client's AppArmor label (or an empty string if AppArmor is not enabled).
-- If the client is snap sandboxed, the snap name and app name.
+- The client's AppArmor label (or an error if AppArmor is not available or acquiring the label fails in some way).
+- If the client is snap sandboxed, the snap name.
 - If the client is flatpak sandboxed, the flatpak application ID.
-- A generic `is_sandboxed` check that will return true for both snap and flatpak sandboxes.
+- A generic `from_application_sandbox` check that will return true for both snap and flatpak sandboxes.
 
 Compositor authors are encouraged to use the information collected in
 the `ApplicationCredentials` object rather than trying to detect the
