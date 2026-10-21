@@ -65,6 +65,7 @@ HIDDEN_SYMBOLS = {
     "miral::TouchEmulator::enable*;",
     "miral::TouchEmulator::enabled*;",
     "miral::TouchEmulator::operator*;",
+    "miral::operator*;",
 }
 
 
