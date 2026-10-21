@@ -292,7 +292,7 @@ auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> mg::F
 
     scene = mrc::SceneContext{
         .viewport = viewport,
-        .output_size = target->size(),
+        .output_size = target.value().size(),
         .display_transform = display_transform,
         .screen_to_gl_coords = screen_to_gl_coords,
         .frameno = ++frameno};
@@ -317,7 +317,7 @@ auto mrb::Renderer::Impl::render(mg::RenderableList const& renderables) -> mg::F
 
     textures.drop_unused();
 
-    auto framebuffer = target->claim_fb();
+    auto framebuffer = target.value().claim_fb();
     target.reset();
     return framebuffer;
 }
