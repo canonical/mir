@@ -6,9 +6,11 @@ backends:
     lxd:
         systems:
             - alpine-3.24
+            - alpine-3.25
             - alpine-edge
             - ubuntu-26.04
             - fedora-44
+            - fedora-45
 
 environment:
     ARCH: amd64
@@ -18,10 +20,12 @@ environment:
     RELEASE: resolute
     RELEASE/ubuntu: resolute
     RELEASE/ubuntu_devel: stonking
+    RELEASE/ubuntu_stonking: stonking
     RELEASE/debian_sid: sid
     RELEASE/fedora_44: 44
+    RELEASE/fedora_45: 45
     RELEASE/fedora_rawhide: rawhide
-    RELEASE/fedora_clang: 44
+    RELEASE/fedora_clang: 45
     PROPOSED: false
     PROPOSED/ubuntu_proposed: true
     CLANG: 0
