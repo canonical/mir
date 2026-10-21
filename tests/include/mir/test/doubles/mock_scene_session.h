@@ -47,6 +47,7 @@ struct MockSceneSession : public scene::Session
     MOCK_METHOD(std::shared_ptr<scene::Surface>, default_surface, (), (const override));
 
     MOCK_METHOD(std::string, name, (), (const override));
+    MOCK_METHOD(frontend::SessionCredentials const&, creds, (), (const override));
     MOCK_METHOD(pid_t, process_id, (), (const override));
     MOCK_METHOD(Fd, socket_fd, (), (const override));
 
