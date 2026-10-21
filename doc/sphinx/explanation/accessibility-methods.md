@@ -1,3 +1,5 @@
+(mir-accessibility-methods)=
+
 # Accessibility methods
 
 Accessibility methods are options which

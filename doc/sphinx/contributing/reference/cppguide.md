@@ -754,8 +754,9 @@ functors and traits.
 
 ### Inheritance
 
-Composition is often more appropriate than inheritance. When using
-inheritance, make it `public`.
+Public inheritance should model an "is-a" relationship.
+
+Implementation inheritance should be used sparingly.
 
 **Definition:**
 
@@ -786,10 +787,6 @@ implementation. The base class may also define some data members, so
 that specifies physical layout of the base class.
 
 **Decision:**
-
-All inheritance should be `public`. If you want to do private
-inheritance, you should be including an instance of the base class as a
-member instead.
 
 Do not overuse implementation inheritance. Composition is often more
 appropriate. Try to restrict use of inheritance to the "is-a" case:

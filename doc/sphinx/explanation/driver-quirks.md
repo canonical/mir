@@ -1,3 +1,5 @@
+(mir-driver-quirks)=
+
 # Graphics driver quirks
 
 The gbm-kms and atomic-kms graphics platform modules provide a

@@ -1,3 +1,5 @@
+(how-to-integrate-a-custom-wayland-protocol)=
+
 # How to integrate a custom Wayland protocol
 
 Mir enables shells to add custom Wayland protocols to their Mir-based
