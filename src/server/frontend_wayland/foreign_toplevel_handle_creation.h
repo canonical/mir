@@ -19,6 +19,7 @@
 
 #include "mir/scene/surface.h"
 
+#include <mir/depth_layer.h>
 #include <mir_toolkit/common.h>
 
 namespace mir::frontend
@@ -26,8 +27,8 @@ namespace mir::frontend
 /**
  * Returns true when a surface should be exposed via the foreign-toplevel protocols.
  *
- * Eligibility requires a live session, and only includes
- * focusable application-layer normal/utility/freestyle windows.
+ * Eligibility requires a live session, and only includes focusable normal/utility/freestyle
+ * windows in one of the application layers (see mir_depth_layer_is_application()).
  */
 inline auto should_create_foreign_toplevel_handle(
     scene::Surface const& surface) -> bool
@@ -41,7 +42,7 @@ inline auto should_create_foreign_toplevel_handle(
         type != mir_window_type_freestyle)
         return false;
 
-    if (surface.depth_layer() != mir_depth_layer_application)
+    if (!mir_depth_layer_holds_toplevels(surface.depth_layer()))
         return false;
 
     return surface.focus_mode() != mir_focus_mode_disabled;

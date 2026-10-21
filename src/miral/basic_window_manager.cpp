@@ -1066,7 +1066,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
         if (window_info_tmp.must_not_have_parent())
         {
-            if (modifications.parent().has_value())
+            if (auto const& parent = modifications.parent().transform([](auto p) { return p.lock(); }); parent && parent.value())
                 BOOST_THROW_EXCEPTION(std::runtime_error("Target window type does not support parent"));
 
             window_info_tmp.parent({});
@@ -2401,53 +2401,10 @@ void miral::BasicWindowManager::validate_modification_request(WindowSpecificatio
 
     if (auto const& tmp = modifications.type())
     {
-        auto const original_type = target_type;
-
         target_type = tmp.value();
 
-        switch (original_type)
-        {
-        case mir_window_type_normal:
-        case mir_window_type_utility:
-        case mir_window_type_dialog:
-        case mir_window_type_satellite:
-            switch (target_type)
-            {
-            case mir_window_type_normal:
-            case mir_window_type_utility:
-            case mir_window_type_dialog:
-            case mir_window_type_satellite:
-                break;
-
-            default:
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
-            }
-	    // Falls through.
-
-        case mir_window_type_menu:
-            switch (target_type)
-            {
-            case mir_window_type_menu:
-            case mir_window_type_satellite:
-                break;
-
-            default:
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
-            }
-	    // Falls through.
-
-        case mir_window_type_gloss:
-        case mir_window_type_freestyle:
-        case mir_window_type_inputmethod:
-        case mir_window_type_tip:
-        case mir_window_type_decoration:
-            if (target_type != original_type)
-                BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
-            break;
-
-        default:
-            break;
-        }
+        if (target_type != window_info.type() && !window_info.can_morph_to(target_type))
+            BOOST_THROW_EXCEPTION(std::runtime_error("Invalid surface type change"));
     }
 
     switch (target_type)

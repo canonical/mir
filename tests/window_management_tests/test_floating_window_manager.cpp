@@ -543,6 +543,23 @@ TEST_F(FloatingWindowManagerWithThreeWindowsPreventFocusStealing,
     EXPECT_TRUE(is_above(windows[2], windows[1]));
 }
 
+// An always-on-top application window (for example the mir_shell_v1 floating regular archetype) is
+// still an application window, so focus-stealing prevention must apply to it.
+TEST_F(FloatingWindowManagerWithThreeWindowsPreventFocusStealing,
+    an_always_on_top_window_of_another_application_does_not_steal_focus)
+{
+    ASSERT_TRUE(focused(windows[0]));
+
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width{100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_always_on_top;
+    auto const other_app = open_application("always-on-top-app");
+    auto const other_window = create_window(other_app, spec);
+
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_FALSE(focused(other_window));
+}
+
 TEST_F(FloatingWindowManagerWithTwoWindows, if_active_window_is_removed_then_parent_has_focus_priority)
 {
     miral::WindowSpecification spec;
