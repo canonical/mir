@@ -1066,7 +1066,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
 
         if (window_info_tmp.must_not_have_parent())
         {
-            if (modifications.parent().has_value())
+            if (auto const& parent = modifications.parent().transform([](auto p) { return p.lock(); }); parent && parent.value())
                 BOOST_THROW_EXCEPTION(std::runtime_error("Target window type does not support parent"));
 
             window_info_tmp.parent({});

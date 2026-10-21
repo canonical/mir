@@ -220,6 +220,44 @@ TEST_F(ModifyWindowState, unsupported_type_change_is_rejected)
     EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
 }
 
+TEST_F(ModifyWindowState, retyping_to_a_parentless_type_may_request_a_parent_be_cleared)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const window = create_window_of_type(mir_window_type_dialog, parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+    modifications.parent = Window{};
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_normal));
+    EXPECT_FALSE(window_manager_tools.info_for(window).parent());
+}
+
+TEST_F(ModifyWindowState, retyping_to_a_parentless_type_without_clearing_the_parent_is_rejected)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const window = create_window_of_type(mir_window_type_dialog, parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+
+    EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+}
+
+TEST_F(ModifyWindowState, retyping_to_a_parentless_type_while_requesting_a_parent_is_rejected)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const window = create_window_of_type(mir_window_type_dialog, parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+    modifications.parent = parent;
+
+    EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+}
+
 TEST_P(ModifyWindowState, type_change_is_accepted_only_when_supported)
 {
     auto const parent = create_window_of_type(mir_window_type_normal);
