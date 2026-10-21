@@ -68,14 +68,14 @@ mf::SessionCredentials::SessionCredentials(Fd const& client_sock)
 
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
-    if (auto err = aa_getpeercon(client_sock, &label_cstr, nullptr); err == 0)
+    if (aa_getpeercon(client_sock, &label_cstr, nullptr) >= 0)
     {
         the_apparmor_label = label_cstr;
         std::free(label_cstr);
     }
     else
     {
-        the_apparmor_label = std::unexpected{std::error_code{err, std::system_category()}};
+        the_apparmor_label = std::unexpected{std::error_code{errno, std::system_category()}};
         mir::log_info("Unable to determine AppArmor label for Wayland client");
     }
 #else
@@ -104,14 +104,14 @@ mf::SessionCredentials::SessionCredentials(pid_t client_pid)
 
 #ifdef MIR_USE_APPARMOR
     char *label_cstr = nullptr;
-    if (auto err = aa_gettaskcon(client_pid, &label_cstr, nullptr); err >= 0)
+    if (aa_gettaskcon(client_pid, &label_cstr, nullptr) >= 0)
     {
         the_apparmor_label = label_cstr;
         std::free(label_cstr);
     }
     else
     {
-        the_apparmor_label = std::unexpected{std::error_code{err, std::system_category()}};
+        the_apparmor_label = std::unexpected{std::error_code{errno, std::system_category()}};
         mir::log_info("Unable to determine AppArmor label for pid");
     }
 #else
