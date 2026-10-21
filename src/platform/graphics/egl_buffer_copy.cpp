@@ -61,16 +61,9 @@ const GLchar* const fshader =
         "}\n"
     };
 
-using mir::graphics::FramebufferHandle;
-using mir::graphics::GLBufferHandle;
-using mir::graphics::ProgramHandle;
-using mir::graphics::RenderbufferHandle;
-using mir::graphics::ShaderHandle;
-using mir::graphics::TextureHandle;
-
-ShaderHandle compile_shader(GLenum type, GLchar const* src)
+auto compile_shader(GLenum type, GLchar const* src) -> mg::ShaderHandle
 {
-    auto id = ShaderHandle(type);
+    auto id = mg::ShaderHandle(type);
     if (!id)
     {
         BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
@@ -91,11 +84,11 @@ ShaderHandle compile_shader(GLenum type, GLchar const* src)
     return id;
 }
 
-ProgramHandle link_shader(
-    ShaderHandle const& vertex_shader,
-    ShaderHandle const& fragment_shader)
+auto link_shader(
+    mg::ShaderHandle const& vertex_shader,
+    mg::ShaderHandle const& fragment_shader) -> mg::ProgramHandle
 {
-    ProgramHandle program;
+    mg::ProgramHandle program;
     glAttachShader(program, fragment_shader);
     glAttachShader(program, vertex_shader);
     glLinkProgram(program);
@@ -158,9 +151,9 @@ public:
             {
                 glUseProgram(state->prog);
 
-                TextureHandle tex;
-                RenderbufferHandle renderbuffer;
-                FramebufferHandle fbo;
+                mg::TextureHandle tex;
+                mg::RenderbufferHandle renderbuffer;
+                mg::FramebufferHandle fbo;
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, tex);
@@ -207,11 +200,11 @@ private:
     std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     struct State
     {
-        ProgramHandle prog;
+        mg::ProgramHandle prog;
         GLint attrtex;
         GLint attrpos;
-        GLBufferHandle vert_data;
-        GLBufferHandle tex_data;
+        mg::GLBufferHandle vert_data;
+        mg::GLBufferHandle tex_data;
         PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
         PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbufferStorageOES;
     };

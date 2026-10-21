@@ -35,7 +35,6 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
 namespace mrb = mir::renderer::blitter;
-namespace mrc = mir::renderer::common;
 
 mrb::FramebufferPool::Entry::Entry(
     std::shared_ptr<SoftwareEGLContext> context,

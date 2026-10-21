@@ -111,19 +111,4 @@ using RenderbufferHandle = GLHandle<&glDeleteRenderbuffers, &glGenRenderbuffers>
 using FramebufferHandle = GLHandle<&glDeleteFramebuffers, &glGenFramebuffers>;
 }
 
-namespace mir::renderer::common
-{
-using mir::graphics::GLHandle;
-template<auto deleter>
-using GLMultiHandle = mir::graphics::GLHandle<deleter>;
-
-using mir::graphics::BufferHandle;
-using mir::graphics::FramebufferHandle;
-using mir::graphics::GLBufferHandle;
-using mir::graphics::ProgramHandle;
-using mir::graphics::RenderbufferHandle;
-using mir::graphics::ShaderHandle;
-using mir::graphics::TextureHandle;
-}
-
 #endif // MIR_GRAPHICS_GL_HANDLES_H_

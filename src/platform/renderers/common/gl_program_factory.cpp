@@ -49,9 +49,9 @@ GLchar const* const vertex_shader_src =
 };
 }
 
-auto mrc::compile_shader(GLenum type, GLchar const* src) -> ShaderHandle
+auto mrc::compile_shader(GLenum type, GLchar const* src) -> mg::ShaderHandle
 {
-    ShaderHandle id{type};
+    mg::ShaderHandle id{type};
     if (!id)
     {
         BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
@@ -73,10 +73,10 @@ auto mrc::compile_shader(GLenum type, GLchar const* src) -> ShaderHandle
 }
 
 auto mrc::link_shader(
-    ShaderHandle const& vertex_shader,
-    ShaderHandle const& fragment_shader) -> mrc::ProgramHandle
+    mg::ShaderHandle const& vertex_shader,
+    mg::ShaderHandle const& fragment_shader) -> mg::ProgramHandle
 {
-    ProgramHandle program;
+    mg::ProgramHandle program;
     glAttachShader(program, fragment_shader);
     glAttachShader(program, vertex_shader);
     glLinkProgram(program);
@@ -95,7 +95,7 @@ auto mrc::link_shader(
     return program;
 }
 
-mrc::Program::Program(ProgramHandle&& opaque_shader, ProgramHandle&& alpha_shader)
+mrc::Program::Program(mg::ProgramHandle&& opaque_shader, mg::ProgramHandle&& alpha_shader)
     : opaque_handle(std::move(opaque_shader)),
       alpha_handle(std::move(alpha_shader)),
       opaque{opaque_handle},
@@ -164,9 +164,9 @@ auto mrc::GLProgramFactory::compile_fragment_shader(
     // GL shader compilation is *not* threadsafe, and requires external synchronisation
     std::lock_guard lock{compilation_mutex};
 
-    ShaderHandle const opaque_shader{
+    mg::ShaderHandle const opaque_shader{
         compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};
-    ShaderHandle const alpha_shader{
+    mg::ShaderHandle const alpha_shader{
         compile_shader(GL_FRAGMENT_SHADER, alpha_fragment.str().c_str())};
 
     programs.emplace_back(id, std::make_unique<Program>(

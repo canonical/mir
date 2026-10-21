@@ -91,7 +91,7 @@ private:
         void upload(graphics::BlitterRenderingProvider& blitter, graphics::Buffer const& buffer);
 
     private:
-        common::TextureHandle const texture;
+        graphics::TextureHandle const texture;
     };
 
     struct Entry

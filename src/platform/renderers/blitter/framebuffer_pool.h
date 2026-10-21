@@ -32,8 +32,6 @@ namespace mir::renderer::blitter
 {
 class SoftwareEGLContext;
 
-using RenderbufferHandle = common::RenderbufferHandle;
-
 /// A pool of render targets, usable by both the blitter rendering path and the GL rendering
 /// path.
 ///
@@ -81,9 +79,9 @@ public:
 
         std::shared_ptr<SoftwareEGLContext> const context;
         std::unique_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const fb;
-        std::optional<common::TextureHandle> texture;
-        std::optional<common::FramebufferHandle> fbo;
-        std::optional<RenderbufferHandle> depth_stencil_buffer;
+        std::optional<graphics::TextureHandle> texture;
+        std::optional<graphics::FramebufferHandle> fbo;
+        std::optional<graphics::RenderbufferHandle> depth_stencil_buffer;
 
     public:
         /// The blitter's handle to this framebuffer; empty while a Task holds it

@@ -19,6 +19,7 @@
 
 #include <sstream>
 
+namespace mg = mir::graphics;
 namespace mrc = mir::renderer::common;
 namespace geom = mir::geometry;
 
@@ -55,7 +56,7 @@ auto source_for(MirOutputFilter filter) -> GLchar const*
     return nullptr;
 }
 
-auto compile_program(GLchar const* src) -> mrc::ProgramHandle
+auto compile_program(GLchar const* src) -> mg::ProgramHandle
 {
     GLchar const* vertex_src =
         "attribute vec2 position;\n"
@@ -66,7 +67,7 @@ auto compile_program(GLchar const* src) -> mrc::ProgramHandle
         "   v_texcoord = texcoord;\n"
         "}\n";
 
-    mrc::ShaderHandle const vertex_shader{mrc::compile_shader(GL_VERTEX_SHADER, vertex_src)};
+    mg::ShaderHandle const vertex_shader{mrc::compile_shader(GL_VERTEX_SHADER, vertex_src)};
 
     std::stringstream fragment_src;
     fragment_src
@@ -83,15 +84,15 @@ auto compile_program(GLchar const* src) -> mrc::ProgramHandle
         "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
         "}\n";
 
-    mrc::ShaderHandle const fragment_shader{
+    mg::ShaderHandle const fragment_shader{
         mrc::compile_shader(GL_FRAGMENT_SHADER, fragment_src.str().c_str())};
 
     return mrc::link_shader(vertex_shader, fragment_shader);
 }
 
-auto make_texture() -> mrc::TextureHandle
+auto make_texture() -> mg::TextureHandle
 {
-    mrc::TextureHandle tex;
+    mg::TextureHandle tex;
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
@@ -99,9 +100,9 @@ auto make_texture() -> mrc::TextureHandle
     return tex;
 }
 
-auto make_framebuffer(GLuint tex) -> mrc::FramebufferHandle
+auto make_framebuffer(GLuint tex) -> mg::FramebufferHandle
 {
-    mrc::FramebufferHandle fb;
+    mg::FramebufferHandle fb;
     glBindFramebuffer(GL_FRAMEBUFFER, fb);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -144,7 +145,7 @@ auto mrc::GLOutputFilter::bind_intermediate(geom::Size size) -> bool
 
     if (program == nullptr)
     {
-        program = std::make_unique<ProgramHandle>(compile_program(src));
+        program = std::make_unique<mg::ProgramHandle>(compile_program(src));
         position_attrib = glGetAttribLocation(*program, "position");
         texcoord_attrib = glGetAttribLocation(*program, "texcoord");
         tex_uniform = glGetUniformLocation(*program, "tex");
