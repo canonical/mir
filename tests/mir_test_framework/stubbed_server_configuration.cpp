@@ -126,8 +126,6 @@ std::shared_ptr<mir::renderer::RendererFactory> mtf::StubbedServerConfiguration:
 
 std::shared_ptr<mir::renderer::BlitterRendererFactory> mtf::StubbedServerConfiguration::the_blitter_renderer_factory()
 {
-    auto options = the_options();
-
     return blitter_renderer_factory(
         [&]()
         {
