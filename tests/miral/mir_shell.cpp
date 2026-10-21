@@ -91,7 +91,25 @@ enum : uint32_t
 /// Enum values from mir_positioner_v1, plus values outside each enum to drive the rejection tests.
 enum : uint32_t
 {
+    mir_positioner_v1_anchor_none = 0,
+    mir_positioner_v1_anchor_top = 1,
+    mir_positioner_v1_anchor_bottom = 2,
+    mir_positioner_v1_anchor_left = 3,
+    mir_positioner_v1_anchor_right = 4,
+    mir_positioner_v1_anchor_top_left = 5,
+    mir_positioner_v1_anchor_bottom_left = 6,
+    mir_positioner_v1_anchor_top_right = 7,
+    mir_positioner_v1_anchor_bottom_right = 8,
     mir_positioner_v1_anchor_out_of_range = 9,
+    mir_positioner_v1_gravity_none = 0,
+    mir_positioner_v1_gravity_top = 1,
+    mir_positioner_v1_gravity_bottom = 2,
+    mir_positioner_v1_gravity_left = 3,
+    mir_positioner_v1_gravity_right = 4,
+    mir_positioner_v1_gravity_top_left = 5,
+    mir_positioner_v1_gravity_bottom_left = 6,
+    mir_positioner_v1_gravity_top_right = 7,
+    mir_positioner_v1_gravity_bottom_right = 8,
     mir_positioner_v1_gravity_out_of_range = 9,
     mir_positioner_v1_constraint_adjustment_slide_x = 1,
     mir_positioner_v1_constraint_adjustment_resize_y = 32,
@@ -319,7 +337,11 @@ private:
     WaylandClient client;
 };
 
-class MirShellPositionerEnum : public MirShell, public WithParamInterface<uint32_t>
+class MirShellPositionerAnchor : public MirShell, public WithParamInterface<uint32_t>
+{
+};
+
+class MirShellPositionerGravity : public MirShell, public WithParamInterface<uint32_t>
 {
 };
 }
@@ -561,7 +583,7 @@ TEST_F(MirShell, positioner_with_an_out_of_range_anchor_is_rejected)
         Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
 }
 
-TEST_P(MirShellPositionerEnum, positioner_with_anchor_is_accepted)
+TEST_P(MirShellPositionerAnchor, positioner_with_anchor_is_accepted)
 {
     start_server();
 
@@ -583,7 +605,7 @@ TEST_F(MirShell, positioner_with_an_out_of_range_gravity_is_rejected)
         Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
 }
 
-TEST_P(MirShellPositionerEnum, positioner_with_gravity_is_accepted)
+TEST_P(MirShellPositionerGravity, positioner_with_gravity_is_accepted)
 {
     start_server();
 
@@ -595,9 +617,32 @@ TEST_P(MirShellPositionerEnum, positioner_with_gravity_is_accepted)
 }
 
 INSTANTIATE_TEST_SUITE_P(
-    AllValidEnumValues,
-    MirShellPositionerEnum,
-    Values(0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u, 8u));
+    AllValidAnchorValues,
+    MirShellPositionerAnchor,
+    Values(
+        mir_positioner_v1_anchor_none,
+        mir_positioner_v1_anchor_top,
+        mir_positioner_v1_anchor_bottom,
+        mir_positioner_v1_anchor_left,
+        mir_positioner_v1_anchor_right,
+        mir_positioner_v1_anchor_top_left,
+        mir_positioner_v1_anchor_bottom_left,
+        mir_positioner_v1_anchor_top_right,
+        mir_positioner_v1_anchor_bottom_right));
+
+INSTANTIATE_TEST_SUITE_P(
+    AllValidGravityValues,
+    MirShellPositionerGravity,
+    Values(
+        mir_positioner_v1_gravity_none,
+        mir_positioner_v1_gravity_top,
+        mir_positioner_v1_gravity_bottom,
+        mir_positioner_v1_gravity_left,
+        mir_positioner_v1_gravity_right,
+        mir_positioner_v1_gravity_top_left,
+        mir_positioner_v1_gravity_bottom_left,
+        mir_positioner_v1_gravity_top_right,
+        mir_positioner_v1_gravity_bottom_right));
 
 // "If any bit not defined in the 'constraint_adjustment' enum is set, an invalid_input error is
 // raised." Ignoring undefined bits would silently drop placement behaviour the client asked for.
