@@ -16,6 +16,8 @@
 
 #include "xwayland_client_manager.h"
 #include "xwayland_log.h"
+#include "../proc_utils.h"
+
 #include <mir/shell/shell.h>
 #include <mir/scene/session.h>
 #include <mir/log.h>
@@ -28,11 +30,14 @@
 namespace mf = mir::frontend;
 namespace msh = mir::shell;
 namespace ms = mir::scene;
+namespace msu = mir::server::utils;
 
 mf::XWaylandClientManager::Session::Session(XWaylandClientManager* manager, pid_t client_pid)
     : manager{manager},
       client_pid{client_pid},
-      _session{manager->shell->open_session(client_pid, Fd{Fd::invalid}, "")}
+      _session{manager->shell->open_session(client_pid,
+                                            Fd{Fd::invalid},
+                                            msu::create_session_name(client_pid, -1))}
 {
 }
 
