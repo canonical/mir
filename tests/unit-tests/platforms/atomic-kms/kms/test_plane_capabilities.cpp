@@ -151,14 +151,14 @@ struct InFormatsBlob
     }
 };
 
-auto ids_of(std::vector<mga::PlaneCapabilities> const& overlays) -> std::vector<uint32_t>
+auto ids_of(std::vector<mga::PlaneCapability> const& overlays) -> std::vector<uint32_t>
 {
-    return overlays | std::views::transform(&mga::PlaneCapabilities::id) | std::ranges::to<std::vector>();
+    return overlays | std::views::transform(&mga::PlaneCapability::id) | std::ranges::to<std::vector>();
 }
 
-auto find_overlay(mga::CrtcPlaneCapabilities const& caps, uint32_t id) -> mga::PlaneCapabilities const&
+auto find_overlay(mga::CrtcPlaneCapabilities const& caps, uint32_t id) -> mga::PlaneCapability const&
 {
-    auto const it = std::ranges::find(caps.overlays, id, &mga::PlaneCapabilities::id);
+    auto const it = std::ranges::find(caps.overlays, id, &mga::PlaneCapability::id);
     if (it == caps.overlays.end())
         throw std::runtime_error("Plane " + std::to_string(id) + " not found");
     return *it;
@@ -200,7 +200,7 @@ public:
 
     auto discover(uint32_t crtc_id = target_crtc_id) const -> mga::CrtcPlaneCapabilities
     {
-        return mga::discover_plane_capabilities(drm_fd, crtc_id);
+        return mga::discover_crtc_plane_capabilities(drm_fd, crtc_id);
     }
 
     auto add_property(uint32_t plane, char const* name, uint64_t value = 0) -> uint32_t

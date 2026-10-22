@@ -53,7 +53,7 @@ struct Bt709Limited
     auto operator==(Bt709Limited const&) const -> bool = default;
 };
 
-struct PlaneCapabilities
+struct PlaneCapability
 {
     uint32_t id;
 
@@ -84,13 +84,14 @@ struct PlaneCapabilities
     bool can_be_below_primary{};
 };
 
+/// Describes the capabilities of the planes associated with \a crtc_id.
 struct CrtcPlaneCapabilities
 {
     uint32_t crtc_id;
-    PlaneCapabilities primary;
+    PlaneCapability primary;
 
     /// Usable overlays routable to this CRTC, ordered by (zpos.current, id).
-    std::vector<PlaneCapabilities> overlays;
+    std::vector<PlaneCapability> overlays;
 };
 
 /// Reads the plane capabilities of the planes routable to \a crtc_id.
@@ -102,7 +103,7 @@ struct CrtcPlaneCapabilities
 /// warned about and skipped. Planes relying on the fixed-opaque assumption are
 /// reported once during discovery. Throws if the CRTC or a usable primary plane
 /// cannot be found, or if reading DRM state fails.
-auto discover_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlaneCapabilities;
+auto discover_crtc_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlaneCapabilities;
 }
 
 #endif // MIR_GRAPHICS_ATOMIC_PLANE_CAPABILITIES_H_

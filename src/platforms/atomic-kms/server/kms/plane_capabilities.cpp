@@ -146,7 +146,7 @@ auto decode_formats(int drm_fd, mgk::ObjectProperties const& props) -> std::opti
     return parse_in_formats({static_cast<std::byte const*>(blob->data), blob->length});
 }
 
-auto decode_plane(int drm_fd, mgk::ObjectProperties const& props) -> std::optional<mga::PlaneCapabilities>
+auto decode_plane(int drm_fd, mgk::ObjectProperties const& props) -> std::optional<mga::PlaneCapability>
 {
     auto const zpos_prop = props.metadata("zpos");
     if (!zpos_prop || !is_range(*zpos_prop))
@@ -173,7 +173,7 @@ auto decode_plane(int drm_fd, mgk::ObjectProperties const& props) -> std::option
     auto const encoding = encoding_prop ? enum_value(*encoding_prop, "ITU-R BT.709 YCbCr") : std::nullopt;
     auto const range = range_prop ? enum_value(*range_prop, "YCbCr limited range") : std::nullopt;
 
-    return mga::PlaneCapabilities{
+    return mga::PlaneCapability{
         .id = props.parent_id(),
         .zpos = zpos,
         .formats = std::move(*formats),
@@ -186,7 +186,7 @@ auto decode_plane(int drm_fd, mgk::ObjectProperties const& props) -> std::option
 
 }
 
-auto mga::discover_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlaneCapabilities
+auto mga::discover_crtc_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlaneCapabilities
 {
     mgk::DRMModeResources const resources{drm_fd};
     auto const crtc_index = mgk::find_crtc_index(resources, crtc_id);
@@ -200,7 +200,7 @@ auto mga::discover_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlane
     if (!primary)
         BOOST_THROW_EXCEPTION(std::runtime_error{"No usable primary plane for CRTC " + std::to_string(crtc_id)});
 
-    std::vector<PlaneCapabilities> overlays;
+    std::vector<PlaneCapability> overlays;
     for (auto const& plane : plane_resources.planes())
     {
         if ((plane->possible_crtcs & crtc_mask) == 0)
@@ -232,7 +232,7 @@ auto mga::discover_plane_capabilities(int drm_fd, uint32_t crtc_id) -> CrtcPlane
     std::ranges::sort(
         overlays,
         {},
-        [](PlaneCapabilities const& overlay) { return std::pair{overlay.zpos.current, overlay.id}; });
+        [](PlaneCapability const& overlay) { return std::pair{overlay.zpos.current, overlay.id}; });
 
     auto const primary_key = std::pair{primary->zpos.current, primary->id};
     std::string fixed_opaque_ids = primary->fixed_opaque ? std::to_string(primary->id) : "";
