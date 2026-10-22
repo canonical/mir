@@ -24,10 +24,12 @@
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
 #include "platform_common.h"
+#include "presentation_state.h"
 #include <mir/graphics/kms_framebuffer.h>
 
 #include <boost/iostreams/detail/buffer.hpp>
 #include <future>
+#include <optional>
 #include <vector>
 #include <memory>
 #include <atomic>
@@ -134,9 +136,9 @@ private:
     // Framebuffer handling
     // KMS does not take a reference to submitted framebuffers; if you destroy a framebuffer while
     // it's in use, KMS treat that as submitting a null framebuffer and turn off the display.
-    std::shared_ptr<FBHandle const> next_swap{nullptr};    //< Next frame to submit to the hardware
-    std::shared_ptr<FBHandle const> scheduled_fb{nullptr}; //< Frame currently submitted to the hardware, not yet on-screen
-    std::shared_ptr<FBHandle const> visible_fb{nullptr};   //< Frame currently onscreen
+    std::optional<PresentationState> next_state;      //< Next frame to submit to the hardware
+    std::optional<PresentationState> scheduled_state; //< Frame currently submitted to the hardware, not yet on-screen
+    std::optional<PresentationState> visible_state;   //< Frame currently onscreen
 
     geometry::Rectangle area;
     glm::mat2 transform;
