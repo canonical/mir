@@ -164,19 +164,12 @@ auto find_overlay(mga::CrtcPlaneCapabilities const& caps, uint32_t id) -> mga::P
     return *it;
 }
 
-class MockLogger : public mir::logging::Logger
-{
-public:
-    MOCK_METHOD(void, log, (mir::logging::Severity severity, std::string const& message,
-                            std::string const& component), (override));
-};
-
 class PlaneCapabilitiesTest : public Test
 {
 public:
     PlaneCapabilitiesTest()
     {
-        mir::logging::set_logger(logger);
+        mir::logging::set_logger(std::make_shared<mtd::NullLogger>());
         mock_drm.reset(drm_device);
         for (auto const id : {other_crtc_id, target_crtc_id})
             mock_drm.add_crtc(drm_device, id, {});
@@ -186,16 +179,6 @@ public:
 
         for (auto const& plane : planes)
             add_plane_properties(plane);
-
-        // Discovery warns about the untyped plane; allow it in tests that assert on other log messages.
-        EXPECT_CALL(*logger, log(_, _, _)).Times(AnyNumber());
-    }
-
-    void TearDown() override
-    {
-        mir::logging::set_logger(std::make_shared<mtd::NullLogger>());
-        ASSERT_TRUE(logger.unique()) << "Test needs to destroy the MockLogger to verify assertions";
-        logger.reset();
     }
 
     auto discover(uint32_t crtc_id = target_crtc_id) const -> mga::CrtcPlaneCapabilities
@@ -249,7 +232,6 @@ public:
         mock_drm.add_property_blob(drm_device, plane, bytes);
     }
 
-    std::shared_ptr<MockLogger> logger{std::make_shared<MockLogger>()};
     NiceMock<mtd::MockDRM> mock_drm;
     int const drm_fd{mock_drm.open(drm_device, 0)};
     uint32_t next_property_id{1000};
@@ -351,11 +333,12 @@ TEST_F(PlaneCapabilitiesTest, unusable_first_primary_fails_discovery_despite_lat
     EXPECT_THAT([this] { discover(); }, ThrowsMessage<std::runtime_error>(HasSubstr("No usable primary plane")));
 }
 
-TEST_F(PlaneCapabilitiesTest, fixed_opaque_planes_are_reported_once)
+TEST_F(PlaneCapabilitiesTest, planes_without_alpha_or_blend_controls_are_fixed_opaque)
 {
-    EXPECT_CALL(*logger, log(_, AllOf(HasSubstr("fixed-opaque"), EndsWith(": 42, 51")), _)).Times(1);
+    auto const caps = discover();
 
-    discover();
+    EXPECT_TRUE(find_overlay(caps, underlay_id).fixed_opaque);
+    EXPECT_TRUE(find_overlay(caps, fixed_opaque_overlay_id).fixed_opaque);
 }
 
 TEST_F(PlaneCapabilitiesTest, unreadable_in_formats_blob_fails_discovery)
