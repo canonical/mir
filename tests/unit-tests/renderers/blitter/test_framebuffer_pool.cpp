@@ -19,6 +19,7 @@
 
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/drm_formats.h>
+#include <mir/test/doubles/mock_blitter_rendering_provider.h>
 #include <mir/test/doubles/mock_egl.h>
 #include <mir/test/doubles/mock_gl.h>
 #include <mir/test/doubles/mock_gl_config.h>
@@ -122,36 +123,6 @@ public:
     MOCK_METHOD(geom::Size, output_size, (), (const, override));
 };
 
-class MockBlitterRenderingProvider : public mg::BlitterRenderingProvider
-{
-public:
-    MOCK_METHOD(mg::probe::Result, suitability_for_display, (mg::DisplaySink&), (override));
-    MOCK_METHOD(
-        mg::probe::Result,
-        suitability_for_allocator,
-        (std::shared_ptr<mg::GraphicBufferAllocator> const&),
-        (override));
-    MOCK_METHOD(std::unique_ptr<FramebufferProvider>, make_framebuffer_provider, (mg::DisplaySink&), (override));
-    MOCK_METHOD(std::unique_ptr<Task>, create_task, (std::unique_ptr<Surface>), (override));
-    MOCK_METHOD(std::unique_ptr<Surface>, wait_complete, (std::unique_ptr<Task>), (override));
-    MOCK_METHOD(
-        bool,
-        blit,
-        (Task&, mg::Buffer const&, geom::Rectangle const&, geom::Rectangle const&, MirOrientation, MirMirrorMode),
-        (override));
-    MOCK_METHOD(bool, fill, (Task&, geom::Rectangle const&, uint8_t, uint8_t, uint8_t, uint8_t), (override));
-    MOCK_METHOD(
-        std::unique_ptr<Surface>,
-        surface_for_fb,
-        (mg::CPUAddressableDisplayAllocator::MappableFB const&),
-        (override));
-    MOCK_METHOD(
-        std::unique_ptr<mrs::Mapping<std::byte const>>,
-        map_buffer,
-        (mg::Buffer const&),
-        (override));
-};
-
 /// A glGen* action that allocates sequential non-zero names
 auto generate_names()
 {
@@ -244,8 +215,8 @@ public:
     NiceMock<mtd::MockGL> mock_gl;
 
     std::shared_ptr<mrb::SoftwareEGLContext> context;
-    std::shared_ptr<NiceMock<MockBlitterRenderingProvider>> const blitter{
-        std::make_shared<NiceMock<MockBlitterRenderingProvider>>()};
+    std::shared_ptr<NiceMock<mtd::MockBlitterRenderingProvider>> const blitter{
+        std::make_shared<NiceMock<mtd::MockBlitterRenderingProvider>>()};
     NiceMock<MockCPUAddressableDisplayAllocator> allocator;
     NiceMock<mtd::MockGLConfig> config;
 };

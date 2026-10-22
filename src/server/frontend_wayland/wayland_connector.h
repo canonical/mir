@@ -99,6 +99,7 @@ class DesktopFileManager;
 class SurfaceRegistry;
 class InputTriggerRegistry;
 class KeyboardStateTracker;
+class WaylandExecutor;
 
 class WaylandExtensions
 {
@@ -107,7 +108,7 @@ public:
     struct Context
     {
         wl_display* display;
-        std::shared_ptr<Executor> wayland_executor;
+        std::shared_ptr<WaylandExecutor> wayland_executor;
         std::shared_ptr<shell::Shell> shell;
         std::shared_ptr<SessionAuthorizer> session_authorizer;
         std::shared_ptr<scene::Clipboard> main_clipboard;
@@ -244,7 +245,7 @@ private:
     std::unique_ptr<WlShm> shm_global;
     std::unique_ptr<WpViewporter> viewporter;
     std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
-    std::shared_ptr<Executor> const executor;
+    std::shared_ptr<WaylandExecutor> const executor;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;

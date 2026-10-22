@@ -30,7 +30,7 @@ class CompositorReport;
 namespace graphics
 {
 class DisplaySink;
-class GLRenderingProvider;
+class RenderingProvider;
 class OutputFilter;
 }
 namespace renderer
@@ -47,12 +47,12 @@ class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
 public:
     DefaultDisplayBufferCompositor(
         graphics::DisplaySink& display_sink,
-        graphics::GLRenderingProvider& gl_provider,
+        graphics::RenderingProvider& rendering_provider,
         std::shared_ptr<renderer::Renderer> const& renderer,
         std::shared_ptr<graphics::OutputFilter> const& output_filter,
         std::shared_ptr<compositor::CompositorReport> const& report);
 
-    bool composite(SceneElementSequence&& scene_sequence) override;
+    bool composite(SceneElementSequence&& scene_sequence, CompositionMode mode) override;
 
 private:
     graphics::DisplaySink& display_sink;

@@ -17,6 +17,13 @@
 #include "test_window_manager_tools.h"
 #include <mir/event_printer.h>
 
+#include <array>
+#include <ostream>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <vector>
+
 using namespace miral;
 using namespace testing;
 namespace mt = mir::test;
@@ -24,6 +31,95 @@ using mir::operator<<;
 
 namespace
 {
+struct WindowTypeChange
+{
+    MirWindowType from;
+    MirWindowType to;
+    bool accepted;
+};
+
+auto short_name(MirWindowType type) -> std::string
+{
+    std::ostringstream out;
+    out << type;
+    auto name = out.str();
+
+    constexpr std::string_view prefix{"mir_window_type_"};
+    if (name.starts_with(prefix))
+        name.erase(0, prefix.size());
+
+    return name;
+}
+
+// Without this gtest dumps the raw parameter bytes, which tells us nothing about
+// which transition failed.
+auto operator<<(std::ostream& out, WindowTypeChange const& change) -> std::ostream&
+{
+    return out << change.from << " => " << change.to
+               << (change.accepted ? " (expected to be accepted)" : " (expected to be rejected)");
+}
+
+auto name_for(TestParamInfo<WindowTypeChange> const& info) -> std::string
+{
+    return short_name(info.param.from) + "_to_" + short_name(info.param.to) +
+           (info.param.accepted ? "_is_accepted" : "_is_rejected");
+}
+
+auto window_type_changes() -> std::vector<WindowTypeChange>
+{
+    constexpr std::array sources{
+        mir_window_type_normal,
+        mir_window_type_utility,
+        mir_window_type_dialog,
+        mir_window_type_gloss,
+        mir_window_type_freestyle,
+        mir_window_type_menu,
+        mir_window_type_inputmethod,
+        mir_window_type_satellite,
+        mir_window_type_tip};
+    constexpr std::array targets{
+        mir_window_type_normal,
+        mir_window_type_utility,
+        mir_window_type_dialog,
+        mir_window_type_gloss,
+        mir_window_type_freestyle,
+        mir_window_type_menu,
+        mir_window_type_inputmethod,
+        mir_window_type_satellite,
+        mir_window_type_tip,
+        mir_window_type_decoration};
+
+    std::vector<WindowTypeChange> changes;
+    for (auto const from : sources)
+    {
+        for (auto const to : targets)
+        {
+            if (from == to)
+                continue;
+
+            auto const accepted =
+                ((to == mir_window_type_normal ||
+                  to == mir_window_type_utility ||
+                  to == mir_window_type_satellite ||
+                  to == mir_window_type_freestyle) &&
+                 (from == mir_window_type_normal ||
+                  from == mir_window_type_utility ||
+                  from == mir_window_type_dialog ||
+                  from == mir_window_type_satellite ||
+                  from == mir_window_type_freestyle)) ||
+                (to == mir_window_type_dialog &&
+                 (from == mir_window_type_normal ||
+                  from == mir_window_type_utility ||
+                  from == mir_window_type_dialog ||
+                  from == mir_window_type_menu ||
+                  from == mir_window_type_satellite ||
+                  from == mir_window_type_freestyle));
+            changes.push_back({from, to, accepted});
+        }
+    }
+    return changes;
+}
+
 X const display_left{0};
 Y const display_top{0};
 Width const display_width{640};
@@ -32,7 +128,7 @@ Height const display_height{480};
 Rectangle const display_area{{display_left,  display_top},
                              {display_width, display_height}};
 
-struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<MirWindowType>
+struct ModifyWindowState : mt::TestWindowManagerTools, WithParamInterface<WindowTypeChange>
 {
     Size const initial_parent_size{600, 400};
 
@@ -77,3 +173,119 @@ TEST_F(ModifyWindowState, can_divorce_parent)
 
     basic_window_manager.modify_surface(session, child, modifications);
 }
+
+TEST_F(ModifyWindowState, freestyle_window_can_be_retyped)
+{
+    auto const window = create_window_of_type(mir_window_type_freestyle);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_utility;
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_utility));
+}
+
+TEST_F(ModifyWindowState, window_can_be_retyped_back_to_freestyle)
+{
+    auto const window = create_window_of_type(mir_window_type_dialog);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_freestyle;
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_freestyle));
+}
+
+TEST_F(ModifyWindowState, retyping_a_window_to_its_current_type_is_accepted)
+{
+    auto const window = create_window_of_type(mir_window_type_normal);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_normal));
+}
+
+TEST_F(ModifyWindowState, unsupported_type_change_is_rejected)
+{
+    auto const window = create_window_of_type(mir_window_type_normal);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_inputmethod;
+
+    EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+}
+
+TEST_F(ModifyWindowState, retyping_to_a_parentless_type_may_request_a_parent_be_cleared)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const window = create_window_of_type(mir_window_type_dialog, parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+    modifications.parent = Window{};
+
+    basic_window_manager.modify_surface(session, window, modifications);
+
+    EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(mir_window_type_normal));
+    EXPECT_FALSE(window_manager_tools.info_for(window).parent());
+}
+
+TEST_F(ModifyWindowState, retyping_to_a_parentless_type_without_clearing_the_parent_is_rejected)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const window = create_window_of_type(mir_window_type_dialog, parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+
+    EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+}
+
+TEST_F(ModifyWindowState, retyping_to_a_parentless_type_while_requesting_a_parent_is_rejected)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const window = create_window_of_type(mir_window_type_dialog, parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = mir_window_type_normal;
+    modifications.parent = parent;
+
+    EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+}
+
+TEST_P(ModifyWindowState, type_change_is_accepted_only_when_supported)
+{
+    auto const parent = create_window_of_type(mir_window_type_normal);
+    auto const [from, to, accepted] = GetParam();
+    auto const window = create_window_of_type(
+        from,
+        from == mir_window_type_normal || from == mir_window_type_utility ? Window{} : parent);
+
+    mir::shell::SurfaceSpecification modifications;
+    modifications.type = to;
+    if (to == mir_window_type_normal || to == mir_window_type_utility)
+        modifications.parent = Window{};
+    else if (to == mir_window_type_satellite)
+        modifications.parent = parent;
+
+    if (accepted)
+    {
+        basic_window_manager.modify_surface(session, window, modifications);
+        EXPECT_THAT(window_manager_tools.info_for(window).type(), Eq(to));
+    }
+    else
+    {
+        EXPECT_THROW(basic_window_manager.modify_surface(session, window, modifications), std::runtime_error);
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModifyWindowType,
+    ModifyWindowState,
+    ValuesIn(window_type_changes()),
+    name_for);

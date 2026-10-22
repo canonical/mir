@@ -20,6 +20,8 @@
 #include "xdg-shell_wrapper.h"
 #include "window_wl_surface_role.h"
 
+#include <functional>
+
 namespace mir
 {
 namespace scene
@@ -133,13 +135,19 @@ public:
     void handle_close_request() override;
     void handle_tiled_edges(Flags<MirTiledEdge> tiled_edges) override;
 
+    void send_toplevel_configure();
+
     static XdgToplevelStable* from(wl_resource* surface);
 
+    /// Called unconditionally at the end of every commit; unset by default. Used by xdg-decoration to
+    /// notice a commit happening while it has no decoration object attached to this toplevel.
+    void set_commit_hook(std::function<void()> hook);
+
 private:
-    void send_toplevel_configure();
     void destroy_role() const override;
 
     mir::wayland::Weak<XdgSurfaceStable> const xdg_surface;
+    std::function<void()> commit_hook;
 };
 }
 }

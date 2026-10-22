@@ -68,6 +68,24 @@ class WlSubsurface;
 class ResourceLifetimeTracker;
 class Viewport;
 class SyncTimeline;
+class ExtForeignBufferV1;
+
+/// A mir_shell_v1 archetype assigned to a wl_surface. An archetype augments a role rather than
+/// being a role itself, so it is tracked separately from WlSurfaceRole.
+class WlSurfaceArchetype
+{
+public:
+    virtual ~WlSurfaceArchetype() = default;
+
+    /// Called when the surface is given a different archetype, or the surface goes away. The
+    /// object is inert from this point on and must reject any further requests from the client.
+    virtual void make_inert() = 0;
+
+protected:
+    WlSurfaceArchetype() = default;
+    WlSurfaceArchetype(WlSurfaceArchetype const&) = delete;
+    auto operator=(WlSurfaceArchetype const&) -> WlSurfaceArchetype& = delete;
+};
 
 struct WlSurfaceState
 {
@@ -157,6 +175,17 @@ public:
     bool has_role() const { return role != &null_role; }
     template<typename Role>
     auto can_set_role() const -> bool { return can_set_role_type(&typeid(Role)); }
+    /// Whether this surface's role, if any, can be combined with a mir_shell_v1 archetype. An
+    /// archetype augments a role that makes the surface a window the compositor manages; roles
+    /// such as wl_subsurface and cursor have semantics inconsistent with an archetype.
+    auto role_accepts_archetype() const -> bool;
+    /// Whether a mir_shell_v1 archetype is currently assigned to this surface.
+    auto has_archetype() const -> bool { return archetype; }
+    /// Assigns an archetype, making any previously assigned archetype object inert.
+    void set_archetype(WlSurfaceArchetype* archetype);
+    /// Clears the archetype if it is the one currently assigned; a no-op otherwise, as an inert
+    /// archetype object may outlive its replacement being assigned.
+    void clear_archetype(WlSurfaceArchetype const* archetype);
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
     wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
@@ -181,6 +210,10 @@ public:
                                geometry::Displacement const& parent_offset) const;
     void commit(WlSurfaceState const& state);
     auto confine_pointer_state() const -> MirPointerConfinementState;
+
+    /// Called by the [ExtForeignBufferV1] that this surface is displaying when the compositor refreshes
+    /// its content, so that the new content reaches the scene without the client re-committing.
+    void advise_foreign_buffer_content_changed(std::shared_ptr<graphics::Buffer> buffer);
 
     void set_fractional_scale(FractionalScaleV1* fractional_scale);
     auto get_fractional_scale() const -> wayland::Weak<FractionalScaleV1>;
@@ -225,6 +258,7 @@ private:
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
     std::type_info const* previous_role_type;
+    WlSurfaceArchetype* archetype{nullptr};
     std::vector<WlSubsurface*> children; // ordering is from bottom to top
     ptrdiff_t parent_z_index{0}; // index in children where parent surface renders (subsurfaces before this are below parent)
     /* We might need to resubmit the current buffer, but with different metadata
@@ -236,6 +270,13 @@ private:
      * hide this, here, in the frontend.
      */
     std::shared_ptr<graphics::Buffer> current_buffer;
+
+    /// Set while the surface is displaying a foreign buffer, so pushed content updates can be
+    /// ignored once the client attaches something else.
+    wayland::Weak<ExtForeignBufferV1> current_foreign_buffer;
+
+    /// Submits current_buffer to the stream. Returns whether the logical size changed.
+    auto submit_current_buffer() -> bool;
 
     /* State for when a buffer update is waiting for a client fence to signal
      */

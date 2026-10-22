@@ -1,38 +1,34 @@
+(configuring-index)=
+
 # Configuring Mir
 
-This section provides information for end-users running a Mir-based compositor.
-
-Mir is a compositor, not a full desktop environment. The documents in this section provide
-information about configuring both external components — such as remote desktop capabilities,
-on-screen keyboards, and other components you may want to integrate into your desktop environment —
-and internal features of Mir itself, such as accessibility options and other built-in capabilities.
+Mir is a compositor, not a complete desktop environment. This documentation is for people
+running a Mir-based compositor who need to configure Mir itself or connect it to the
+services and applications that make up their graphical environment. Topics include
+touchscreen input, on-screen keyboards, remote desktop, and screencasting.
 
 ## In this documentation
 
-These pages cover the key aspects of configuring Mir based compositors.
+### Configure displays, input, and desktop services
 
-````{grid} 1 1 2 2
+- {ref}`Calibrate a touchscreen device <how-to-calibrate-a-touchscreen-device>`
+- {ref}`Use on-screen keyboards <how-to-use-on-screen-keyboards>`
+- {ref}`Enable remote desktop <how-to-enable-remote-desktop>`
+- {ref}`Enable screencasting <how-to-enable-screencasting>`
 
-```{grid-item-card} [How-to](configuring-how-to-index)
-**How-to guides** - step-by-step guides covering key operations and common tasks
-```
+### Configure and inspect Mir
 
-```{grid-item-card} [Explanation](configuring-explanation-index)
- **Discussion and clarification** of key topics
-```
-````
+- Look up {ref}`Mir configuration options <options-reference>`.
+- Learn how to apply {ref}`configuration overrides <configuration-overrides>`.
+- See {ref}`component reports <component-reports>` for information Mir can
+  provide when diagnosing a running compositor.
 
-## Project and community
+## How this documentation is organised
 
-Mir is a member of the Ubuntu family. It’s an open source project that warmly welcomes community projects, contributions, suggestions, fixes and constructive feedback.
-
-- [Release Notes](https://github.com/canonical/mir/releases)
-- [Code of conduct](https://ubuntu.com/community/docs/ethos/code-of-conduct)
-- [Get support](https://discourse.ubuntu.com/c/project/mir/15)
-- [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
-- {ref}`Contribute <howto-contribute>`
-
-Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
+The {ref}`how-to guides <configuring-how-to-index>` provide steps for common configuration
+tasks. {ref}`Explanations <configuring-explanation-index>` describe supporting concepts and
+reports, while the {ref}`reference <configuring-reference-index>` lists Mir's configuration
+options.
 
 ```{toctree}
 ---
