@@ -56,7 +56,11 @@ auto probe_rendering_platform(
     auto const maximum_suitability = mir::graphics::egl::generic::probe_display_support(displays);
 
     std::vector<mg::SupportedDevice> supported_devices;
-    supported_devices.push_back(mg::SupportedDevice{nullptr, maximum_suitability, nullptr});
+    supported_devices.push_back(
+        mg::SupportedDevice{
+            nullptr,
+            std::min(maximum_suitability, mir::graphics::probe::dummy),     // This is a test platform; should never
+            nullptr});                                                      // be selected in regular use.
     return supported_devices;
 }
 
