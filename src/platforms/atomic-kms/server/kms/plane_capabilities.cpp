@@ -200,6 +200,11 @@ auto mga::discover_crtc_plane_capabilities(int drm_fd, uint32_t crtc_id) -> Crtc
     if (!primary)
         BOOST_THROW_EXCEPTION(std::runtime_error{"No usable primary plane for CRTC " + std::to_string(crtc_id)});
 
+    auto const primary_key = std::pair{primary->zpos.current, primary->id};
+    std::string fixed_opaque_ids = primary->fixed_opaque ? std::to_string(primary->id) : "";
+    auto const overlay_key = [](PlaneCapability const& overlay)
+        { return std::pair{overlay.zpos.current, overlay.id}; };
+
     std::vector<PlaneCapability> overlays;
     for (auto const& plane : plane_resources.planes())
     {
@@ -218,7 +223,14 @@ auto mga::discover_crtc_plane_capabilities(int drm_fd, uint32_t crtc_id) -> Crtc
         {
         case DRM_PLANE_TYPE_OVERLAY:
             if (auto overlay = decode_plane(drm_fd, props))
-                overlays.push_back(std::move(*overlay));
+            {
+                overlay->can_be_above_primary = std::pair{overlay->zpos.max, overlay->id} > primary_key;
+                overlay->can_be_below_primary = std::pair{overlay->zpos.min, overlay->id} < primary_key;
+                if (overlay->fixed_opaque)
+                    fixed_opaque_ids += (fixed_opaque_ids.empty() ? "" : ", ") + std::to_string(overlay->id);
+                auto const pos = std::ranges::lower_bound(overlays, overlay_key(*overlay), {}, overlay_key);
+                overlays.insert(pos, std::move(*overlay));
+            }
             break;
         case DRM_PLANE_TYPE_PRIMARY:
         case DRM_PLANE_TYPE_CURSOR:
@@ -227,21 +239,6 @@ auto mga::discover_crtc_plane_capabilities(int drm_fd, uint32_t crtc_id) -> Crtc
             mir::log_warning("Ignoring plane %u with unknown type", props.parent_id());
             break;
         }
-    }
-
-    std::ranges::sort(
-        overlays,
-        {},
-        [](PlaneCapability const& overlay) { return std::pair{overlay.zpos.current, overlay.id}; });
-
-    auto const primary_key = std::pair{primary->zpos.current, primary->id};
-    std::string fixed_opaque_ids = primary->fixed_opaque ? std::to_string(primary->id) : "";
-    for (auto& overlay : overlays)
-    {
-        overlay.can_be_above_primary = std::pair{overlay.zpos.max, overlay.id} > primary_key;
-        overlay.can_be_below_primary = std::pair{overlay.zpos.min, overlay.id} < primary_key;
-        if (overlay.fixed_opaque)
-            fixed_opaque_ids += (fixed_opaque_ids.empty() ? "" : ", ") + std::to_string(overlay.id);
     }
     if (!fixed_opaque_ids.empty())
     {
