@@ -7,10 +7,12 @@ apt-get --yes --no-install-recommends install \
   ccache \
   clang \
   dmz-cursor-theme \
+  doxygen \
   fonts-ubuntu \
   gcovr \
   glmark2-es2 \
   glmark2-es2-wayland \
+  graphviz \
   inotify-tools \
   lcov \
   libclang-rt-dev \
