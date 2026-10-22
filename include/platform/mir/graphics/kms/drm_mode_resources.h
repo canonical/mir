@@ -106,7 +106,7 @@ public:
     {
         uint32_t id;
         uint64_t value;
-        std::shared_ptr<drmModePropertyRes> metadata;
+        DRMModePropertyUPtr metadata;
     };
 
     ObjectProperties(int drm_fd, uint32_t object_id, uint32_t object_type);

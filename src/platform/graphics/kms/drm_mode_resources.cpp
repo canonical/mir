@@ -257,12 +257,12 @@ std::unordered_map<std::string, mgk::ObjectProperties::Prop> extract_properties(
     std::unordered_map<std::string, mgk::ObjectProperties::Prop> property_map;
     for (auto i = 0u; i < properties->count_props; ++i)
     {
-        std::shared_ptr<drmModePropertyRes> const prop = get_property(drm_fd, properties->props[i]);
-        property_map[prop->name] = {
-            prop->prop_id,
-            properties->prop_values[i],
-            prop
-        };
+        auto prop = get_property(drm_fd, properties->props[i]);
+        std::string name{prop->name};
+        auto const id = prop->prop_id;
+        property_map.insert_or_assign(
+            std::move(name),
+            mgk::ObjectProperties::Prop{id, properties->prop_values[i], std::move(prop)});
     }
     return property_map;
 }
