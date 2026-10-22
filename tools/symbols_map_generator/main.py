@@ -66,6 +66,8 @@ HIDDEN_SYMBOLS = {
     "miral::TouchEmulator::enabled*;",
     "miral::TouchEmulator::operator*;",
     "miral::operator*;",
+    # HACK: Need to properly handle symbol added in https://github.com/canonical/mir/pull/5334
+    "miral::pre_init*;",
 }
 
 
