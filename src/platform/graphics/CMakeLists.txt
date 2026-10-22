@@ -65,6 +65,8 @@ add_library(mirplatformgraphicscommon OBJECT
   ${DRM_FORMATS_BIG_ENDIAN_FILE}
   drm_formats.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_formats.h
+  framebuffer_ptr.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/framebuffer_ptr.h
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/egl_context_executor.h
   egl_context_executor.cpp
   egl_buffer_copy.h

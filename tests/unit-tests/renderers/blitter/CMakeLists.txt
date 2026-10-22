@@ -2,6 +2,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_software_egl_context.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_framebuffer_pool.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_texture_cache.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_blitter_renderer.cpp
 )
 
 set(UNIT_TEST_SOURCES ${UNIT_TEST_SOURCES} PARENT_SCOPE)

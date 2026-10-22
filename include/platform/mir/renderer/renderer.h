@@ -18,14 +18,13 @@
 #define MIR_RENDERER_RENDERER_H_
 
 #include <mir/geometry/rectangle.h>
+#include <mir/graphics/framebuffer_ptr.h>
 #include <mir/graphics/renderable.h>
 #include <mir_toolkit/common.h>
 #include <glm/glm.hpp>
 
 namespace mir
 {
-namespace graphics { class Framebuffer; }
-
 namespace renderer
 {
 
@@ -37,7 +36,7 @@ public:
     virtual void set_viewport(geometry::Rectangle const& rect) = 0;
     virtual void set_output_transform(glm::mat2 const&) = 0;
     virtual void set_output_filter(MirOutputFilter filter) = 0;
-    virtual auto render(graphics::RenderableList const&) const -> std::unique_ptr<graphics::Framebuffer> = 0;
+    virtual auto render(graphics::RenderableList const&) const -> graphics::FramebufferPtr = 0;
     virtual void suspend() = 0; // called when render() is skipped
 
 protected:

@@ -47,14 +47,14 @@ auto direct_presentation_allowed(MirOutputFilter filter, glm::mat2 const& transf
 
 auto import_display_elements(
     mg::RenderableList const& renderable_list,
-    mg::RenderingProvider::FramebufferProvider& fb_adaptor) -> std::vector<mg::DisplayElement>
+    mg::RenderingProvider::FramebufferProvider& fb_provider) -> std::vector<mg::DisplayElement>
 {
     std::vector<mg::DisplayElement> framebuffers;
     framebuffers.reserve(renderable_list.size());
 
     for (auto const& renderable : renderable_list)
     {
-        auto fb = fb_adaptor.buffer_to_framebuffer(renderable->buffer());
+        auto fb = fb_provider.buffer_to_framebuffer(renderable->buffer());
         if (!fb)
         {
             break;
@@ -88,7 +88,7 @@ auto import_display_elements(
 
 bool try_bypass(
     mg::RenderableList const& renderable_list,
-    mg::RenderingProvider::FramebufferProvider& fb_adaptor,
+    mg::RenderingProvider::FramebufferProvider& fb_provider,
     mg::DisplaySink& display_sink,
     MirOutputFilter filter,
     glm::mat2 const& transform)
@@ -97,7 +97,7 @@ bool try_bypass(
     if (!can_present_directly)
         return false;
 
-    auto const display_elements =  import_display_elements(renderable_list, fb_adaptor);
+    auto const display_elements =  import_display_elements(renderable_list, fb_provider);
 
     if (display_elements.size() != renderable_list.size())
         return false;
@@ -109,14 +109,14 @@ bool try_bypass(
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,
-    graphics::RenderingProvider& rendering_provider,
+    std::unique_ptr<mg::RenderingProvider::FramebufferProvider> fb_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<mir::graphics::OutputFilter> const& output_filter,
     std::shared_ptr<CompositorReport> const& report) :
     display_sink(display_sink),
     renderer(renderer),
     output_filter(output_filter),
-    fb_adaptor{rendering_provider.make_framebuffer_provider(display_sink)},
+    fb_provider{std::move(fb_provider)},
     report(report)
 {
 }
@@ -155,7 +155,7 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     auto const filter = output_filter->filter();
     auto const transform = display_sink.transformation();
-    if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
+    if (try_bypass(renderable_list, *fb_provider, display_sink, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
