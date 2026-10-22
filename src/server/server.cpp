@@ -97,6 +97,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(shell)\
     MACRO(persistent_surface_store)\
     MACRO(renderer_factory)\
+    MACRO(blitter_renderer_factory)\
     MACRO(accessibility_manager)\
     MACRO(clock)
 
@@ -130,6 +131,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_seat_observer_registrar)\
     MACRO(the_session_lock)\
     MACRO(the_renderer_factory)\
+    MACRO(the_blitter_renderer_factory)\
     MACRO(the_decoration_strategy)\
     MACRO(the_input_device_registry)\
     MACRO(the_idle_handler)\

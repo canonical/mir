@@ -33,6 +33,7 @@ namespace mir { class Server; }
 
 namespace miral
 {
+class ApplicationCredentials;
 class Window;
 
 /// Enable configuration of the Wayland extensions enabled at runtime.
@@ -93,6 +94,8 @@ public:
     public:
         /// The application that is being given access to this extension
         auto app() const -> Application const&;
+        // The credentials for the application that is being given access.
+        auto creds() const -> ApplicationCredentials const&;
         /// The name of the extension/global, always the same as given to conditionally_enable()
         auto name() const -> char const*;
         /// If the user has enabled or disabled this extension one of the wayland extension Mir options

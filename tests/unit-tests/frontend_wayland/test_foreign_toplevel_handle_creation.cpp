@@ -74,6 +74,16 @@ TEST_F(ForeignToplevelHandleCreation, creates_handles_for_utility_windows_in_app
     EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
 }
 
+// The mir_shell_v1 floating regular archetype is an always-on-top application window: being
+// above other applications must not hide it from taskbars and app switchers.
+TEST_F(ForeignToplevelHandleCreation, creates_handles_for_always_on_top_application_windows)
+{
+    ON_CALL(surface, type())
+        .WillByDefault(Return(mir_window_type_utility));
+    surface.set_depth_layer(mir_depth_layer_always_on_top);
+    EXPECT_TRUE(mf::should_create_foreign_toplevel_handle(surface));
+}
+
 TEST_F(ForeignToplevelHandleCreation, does_not_create_handles_for_non_application_layer_windows)
 {
     surface.set_depth_layer(mir_depth_layer_above);

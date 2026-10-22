@@ -24,6 +24,8 @@ namespace mir
 namespace graphics
 {
 class GLRenderingProvider;
+class BlitterRenderingProvider;
+class CPUAddressableDisplayAllocator;
 namespace gl { class OutputSurface; }
 }
 namespace renderer
@@ -45,6 +47,21 @@ protected:
     RendererFactory() = default;
     RendererFactory(RendererFactory const&) = delete;
     RendererFactory& operator=(RendererFactory const&) = delete;
+};
+
+class BlitterRendererFactory
+{
+public:
+    virtual ~BlitterRendererFactory() = default;
+
+    virtual auto create_renderer_for(
+        graphics::CPUAddressableDisplayAllocator& allocator,
+        std::shared_ptr<graphics::BlitterRenderingProvider> blitter_provider) const -> std::unique_ptr<Renderer> = 0;
+
+protected:
+    BlitterRendererFactory() = default;
+    BlitterRendererFactory(BlitterRendererFactory const&) = delete;
+    BlitterRendererFactory& operator=(BlitterRendererFactory const&) = delete;
 };
 
 }

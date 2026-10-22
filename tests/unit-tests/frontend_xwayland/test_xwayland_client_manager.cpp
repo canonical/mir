@@ -34,7 +34,7 @@ namespace
 {
 struct MockShell : mtd::StubShell
 {
-    MOCK_METHOD(std::shared_ptr<ms::Session>, open_session, (pid_t, mir::Fd, std::string const&), (override));
+    MOCK_METHOD(std::shared_ptr<ms::Session>, open_session, (mf::SessionCredentials&&, mir::Fd, std::string const&), (override));
     MOCK_METHOD(void, close_session, (std::shared_ptr<ms::Session> const&), (override));
 };
 
@@ -64,7 +64,7 @@ TEST_F(XWaylandClientManagerTest, get_session_initially_creates_session)
 {
     mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
-    EXPECT_CALL(shell, open_session(1, _, _))
+    EXPECT_CALL(shell, open_session(ResultOf([](auto&& creds) { return creds.pid(); }, 1), _, _))
         .Times(1)
         .WillOnce(Return(mt::fake_shared(session_1)));
 
@@ -76,7 +76,7 @@ TEST_F(XWaylandClientManagerTest, repeated_get_session_with_same_pid_returns_sam
 {
     mf::XWaylandClientManager manager{mt::fake_shared(shell), mt::fake_shared(auth)};
 
-    EXPECT_CALL(shell, open_session(1, _, _))
+    EXPECT_CALL(shell, open_session(ResultOf([](auto&& creds) { return creds.pid(); }, 1), _, _))
         .Times(1)
         .WillOnce(Return(mt::fake_shared(session_1)));
 
