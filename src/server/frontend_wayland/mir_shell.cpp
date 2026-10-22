@@ -59,12 +59,14 @@ struct Instance : mw::MirShellV1
     void create_positioner(struct wl_resource* id) override;
 };
 
-class MirPositioner : public mw::MirPositionerV1, public SurfaceSpecification
+class MirPositioner : public mw::MirPositionerV1, SurfaceSpecification
 {
 public:
     MirPositioner(wl_resource* new_resource);
 
     auto is_complete() const -> bool { return width && height && aux_rect; }
+
+    auto spec() const -> SurfaceSpecification const& { return *this; }
 
 private:
     void set_size(int32_t width, int32_t height) override;
@@ -153,7 +155,7 @@ struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
 
     void position(MirPositioner const& positioner) const
     {
-        SurfaceSpecification spec{positioner};
+        SurfaceSpecification spec{positioner.spec()};
         spec.type = type;
         wl_surface.value().update_surface_spec(spec);
     }
