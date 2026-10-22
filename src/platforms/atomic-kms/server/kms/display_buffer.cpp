@@ -406,6 +406,29 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
     return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size());
 }
 
+auto mga::import_explicit_dmabuf_framebuffer(
+    mir::Fd drm_fd,
+    std::shared_ptr<struct gbm_device> gbm,
+    std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<FBHandle>
+{
+    auto const modifier = buffer->modifier();
+    if (!modifier || *modifier == DRM_FORMAT_MOD_INVALID)
+    {
+        mir::log_debug(
+            "Not importing buffer type %s for promotion: no explicit modifier",
+            buffer->format().name());
+        return {};
+    }
+
+    auto fb_id = drm_fb_id_from_dma_buffer(drm_fd, gbm, buffer);
+    if (!fb_id)
+    {
+        return {};
+    }
+
+    return std::make_unique<AtomicKmsFbHandle>(fb_id, buffer->size());
+}
+
 auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_tag)
     -> DisplayAllocator*
 {
