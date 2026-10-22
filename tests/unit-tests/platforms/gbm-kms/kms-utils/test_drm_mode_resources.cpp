@@ -21,6 +21,7 @@
 
 #include <unordered_set>
 #include <array>
+#include <cstring>
 #include <vector>
 #include <tuple>
 
@@ -138,7 +139,7 @@ private:
         auto const& property = properties.at(id);
 
         auto prop = std::make_unique<drmModePropertyRes>(id);
-        strncpy(prop->name, property.name, sizeof(prop->name) - 1);
+        std::memcpy(prop->name, property.name, sizeof(prop->name));
         prop->flags = property.flags;
         prop->count_values = property.values.size();
         prop->values = const_cast<uint64_t*>(property.values.data());
