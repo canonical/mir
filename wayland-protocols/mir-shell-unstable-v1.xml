@@ -310,6 +310,8 @@
     <enum name="error">
       <entry name="invalid_archetype" value="0"
              summary="the archetype has been removed from the surface"/>
+      <entry name="invalid_positioner" value="1"
+             summary="the positioner is incomplete"/>
     </enum>
 
     <request name="reposition">
@@ -319,7 +321,8 @@
         object, and in response emits a
         mir_satellite_surface_v1.repositioned event followed by an
         xdg_surface.configure event. The compositor discards any parameters
-        the previous positioner set.
+        the previous positioner set. If the positioner is incomplete, the
+        compositor raises an invalid_positioner error on this object.
 
         The compositor sends the passed token in the corresponding
         mir_satellite_surface_v1.repositioned event. The new satellite position
@@ -443,6 +446,8 @@
         'bottom_right'), the anchor point will be at the specified corner;
         otherwise, the derived anchor point will be centered on the specified
         edge, or in the center of the anchor rectangle if no edge is specified.
+        If the anchor is not in the 'anchor' enum, an invalid_input error is
+        raised.
       </description>
       <arg name="anchor" type="uint" enum="anchor"
            summary="anchor"/>
@@ -583,6 +588,9 @@
         If more than one bit for one axis is set, the order of how adjustments
         are applied is specified in the corresponding adjustment descriptions.
 
+        If any bit not defined in the 'constraint_adjustment' enum is set, an
+        invalid_input error is raised.
+
         The default adjustment is none.
       </description>
       <arg name="constraint_adjustment" type="uint"
@@ -627,6 +635,8 @@
     <enum name="error">
       <entry name="invalid_archetype" value="0"
              summary="the archetype has been removed from the surface"/>
+      <entry name="invalid_positioner" value="1"
+             summary="the positioner is incomplete"/>
     </enum>
 
     <request name="reposition">
@@ -635,7 +645,9 @@
         details in the passed mir_positioner_v1 object, and a
         mir_menu_surface_v1.repositioned event followed by an
         xdg_surface.configure event will be emitted in response. Any parameters
-        set by the previous positioner will be discarded.
+        set by the previous positioner will be discarded. If the positioner is
+        incomplete, the compositor raises an invalid_positioner error on this
+        object.
 
         The passed token will be sent in the corresponding
         mir_menu_surface_v1.repositioned event. The new menu position will not
@@ -693,6 +705,8 @@
     <enum name="error">
       <entry name="invalid_archetype" value="0"
              summary="the archetype has been removed from the surface"/>
+      <entry name="invalid_positioner" value="1"
+             summary="the positioner is incomplete"/>
     </enum>
 
     <request name="reposition">
@@ -701,7 +715,9 @@
         details in the passed mir_positioner_v1 object, and a
         mir_tip_surface_v1.repositioned event followed by an
         xdg_surface.configure event will be emitted in response. Any parameters
-        set by the previous positioner will be discarded.
+        set by the previous positioner will be discarded. If the positioner is
+        incomplete, the compositor raises an invalid_positioner error on this
+        object.
 
         The passed token will be sent in the corresponding
         mir_tip_surface_v1.repositioned event. The new tip position will not

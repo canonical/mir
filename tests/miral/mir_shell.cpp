@@ -65,6 +65,10 @@ enum : uint32_t
     mir_shell_v1_get_tip_surface = 7,
     mir_positioner_v1_set_size = 1,
     mir_positioner_v1_set_anchor_rect = 2,
+    mir_positioner_v1_set_anchor = 3,
+    mir_positioner_v1_set_gravity = 4,
+    mir_positioner_v1_set_constraint_adjustment = 5,
+    mir_satellite_surface_v1_reposition = 0,
     mir_menu_surface_v1_reposition = 0,
     mir_tip_surface_v1_reposition = 0,
 };
@@ -75,9 +79,41 @@ enum : uint32_t
     mir_shell_v1_error_invalid_archetype = 0,
     mir_shell_v1_error_invalid_positioner = 1,
     mir_satellite_surface_v1_error_invalid_archetype = 0,
+    mir_satellite_surface_v1_error_invalid_positioner = 1,
     mir_menu_surface_v1_error_invalid_archetype = 0,
+    mir_menu_surface_v1_error_invalid_positioner = 1,
     mir_tip_surface_v1_error_invalid_archetype = 0,
+    mir_tip_surface_v1_error_invalid_positioner = 1,
+    mir_positioner_v1_error_invalid_input = 0,
     wl_subcompositor_error_bad_surface = 0,
+};
+
+/// Enum values from mir_positioner_v1, plus values outside each enum to drive the rejection tests.
+enum : uint32_t
+{
+    mir_positioner_v1_anchor_none = 0,
+    mir_positioner_v1_anchor_top = 1,
+    mir_positioner_v1_anchor_bottom = 2,
+    mir_positioner_v1_anchor_left = 3,
+    mir_positioner_v1_anchor_right = 4,
+    mir_positioner_v1_anchor_top_left = 5,
+    mir_positioner_v1_anchor_bottom_left = 6,
+    mir_positioner_v1_anchor_top_right = 7,
+    mir_positioner_v1_anchor_bottom_right = 8,
+    mir_positioner_v1_anchor_out_of_range = 9,
+    mir_positioner_v1_gravity_none = 0,
+    mir_positioner_v1_gravity_top = 1,
+    mir_positioner_v1_gravity_bottom = 2,
+    mir_positioner_v1_gravity_left = 3,
+    mir_positioner_v1_gravity_right = 4,
+    mir_positioner_v1_gravity_top_left = 5,
+    mir_positioner_v1_gravity_bottom_left = 6,
+    mir_positioner_v1_gravity_top_right = 7,
+    mir_positioner_v1_gravity_bottom_right = 8,
+    mir_positioner_v1_gravity_out_of_range = 9,
+    mir_positioner_v1_constraint_adjustment_slide_x = 1,
+    mir_positioner_v1_constraint_adjustment_resize_y = 32,
+    mir_positioner_v1_constraint_adjustment_undefined_bit = 64,
 };
 
 struct ProtocolError
@@ -164,6 +200,31 @@ struct MirShellClient
         wl_proxy_marshal(positioner, mir_positioner_v1_set_anchor_rect, 0, 0, 400, 400);
 
         return positioner;
+    }
+
+    void set_anchor(wl_proxy* positioner, uint32_t anchor)
+    {
+        wl_proxy_marshal(positioner, mir_positioner_v1_set_anchor, anchor);
+    }
+
+    void set_gravity(wl_proxy* positioner, uint32_t gravity)
+    {
+        wl_proxy_marshal(positioner, mir_positioner_v1_set_gravity, gravity);
+    }
+
+    void set_constraint_adjustment(wl_proxy* positioner, uint32_t adjustment)
+    {
+        wl_proxy_marshal(positioner, mir_positioner_v1_set_constraint_adjustment, adjustment);
+    }
+
+    void set_size(wl_proxy* positioner, int32_t width, int32_t height)
+    {
+        wl_proxy_marshal(positioner, mir_positioner_v1_set_size, width, height);
+    }
+
+    void set_anchor_rect(wl_proxy* positioner, int32_t x, int32_t y, int32_t width, int32_t height)
+    {
+        wl_proxy_marshal(positioner, mir_positioner_v1_set_anchor_rect, x, y, width, height);
     }
 
     auto get_regular_surface(wl_proxy* surface) -> wl_proxy*
@@ -274,6 +335,14 @@ struct MirShell : miral::TestServer
 private:
     miral::InternalClientLauncher launcher;
     WaylandClient client;
+};
+
+class MirShellPositionerAnchor : public MirShell, public WithParamInterface<uint32_t>
+{
+};
+
+class MirShellPositionerGravity : public MirShell, public WithParamInterface<uint32_t>
+{
 };
 }
 
@@ -442,4 +511,188 @@ TEST_F(MirShell, requests_on_a_replaced_tip_are_rejected)
                 client.reposition(tip, positioner);
             }),
         Optional(Eq(ProtocolError{"mir_tip_surface_v1", mir_tip_surface_v1_error_invalid_archetype})));
+}
+
+TEST_F(MirShell, satellite_reposition_with_an_incomplete_positioner_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                auto* const satellite =
+                    client.get_satellite_surface(client.create_surface(), client.create_positioner(true));
+                wl_proxy_marshal(
+                    satellite, mir_satellite_surface_v1_reposition, client.create_positioner(false), 1);
+            }),
+        Optional(Eq(ProtocolError{"mir_satellite_surface_v1", mir_satellite_surface_v1_error_invalid_positioner})));
+}
+
+TEST_F(MirShell, menu_reposition_with_an_incomplete_positioner_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                auto* const menu = client.get_menu_surface(client.create_surface(), client.create_positioner(true));
+                wl_proxy_marshal(menu, mir_menu_surface_v1_reposition, client.create_positioner(false), 1);
+            }),
+        Optional(Eq(ProtocolError{"mir_menu_surface_v1", mir_menu_surface_v1_error_invalid_positioner})));
+}
+
+TEST_F(MirShell, tip_reposition_with_an_incomplete_positioner_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                auto* const tip = client.get_tip_surface(client.create_surface(), client.create_positioner(true));
+                client.reposition(tip, client.create_positioner(false));
+            }),
+        Optional(Eq(ProtocolError{"mir_tip_surface_v1", mir_tip_surface_v1_error_invalid_positioner})));
+}
+
+TEST_F(MirShell, reposition_with_a_complete_positioner_is_accepted)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                auto* const tip = client.get_tip_surface(client.create_surface(), client.create_positioner(true));
+                client.reposition(tip, client.create_positioner(true));
+            }),
+        Eq(std::nullopt));
+}
+
+// "If the anchor is not in the 'anchor' enum, an invalid_input error is raised." Silently treating
+// an out-of-range anchor as 'none' would place the surface somewhere the client never asked for.
+TEST_F(MirShell, positioner_with_an_out_of_range_anchor_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run([](MirShellClient& client)
+            { client.set_anchor(client.create_positioner(true), mir_positioner_v1_anchor_out_of_range); }),
+        Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
+}
+
+TEST_P(MirShellPositionerAnchor, positioner_with_anchor_is_accepted)
+{
+    start_server();
+
+    auto const value = GetParam();
+    EXPECT_THAT(
+        run([value](MirShellClient& client)
+            { client.set_anchor(client.create_positioner(true), value); }),
+        Eq(std::nullopt));
+}
+
+// "If the gravity is not in the 'gravity' enum, an invalid_input error is raised."
+TEST_F(MirShell, positioner_with_an_out_of_range_gravity_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run([](MirShellClient& client)
+            { client.set_gravity(client.create_positioner(true), mir_positioner_v1_gravity_out_of_range); }),
+        Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
+}
+
+TEST_P(MirShellPositionerGravity, positioner_with_gravity_is_accepted)
+{
+    start_server();
+
+    auto const value = GetParam();
+    EXPECT_THAT(
+        run([value](MirShellClient& client)
+            { client.set_gravity(client.create_positioner(true), value); }),
+        Eq(std::nullopt));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AllValidAnchorValues,
+    MirShellPositionerAnchor,
+    Values(
+        mir_positioner_v1_anchor_none,
+        mir_positioner_v1_anchor_top,
+        mir_positioner_v1_anchor_bottom,
+        mir_positioner_v1_anchor_left,
+        mir_positioner_v1_anchor_right,
+        mir_positioner_v1_anchor_top_left,
+        mir_positioner_v1_anchor_bottom_left,
+        mir_positioner_v1_anchor_top_right,
+        mir_positioner_v1_anchor_bottom_right));
+
+INSTANTIATE_TEST_SUITE_P(
+    AllValidGravityValues,
+    MirShellPositionerGravity,
+    Values(
+        mir_positioner_v1_gravity_none,
+        mir_positioner_v1_gravity_top,
+        mir_positioner_v1_gravity_bottom,
+        mir_positioner_v1_gravity_left,
+        mir_positioner_v1_gravity_right,
+        mir_positioner_v1_gravity_top_left,
+        mir_positioner_v1_gravity_bottom_left,
+        mir_positioner_v1_gravity_top_right,
+        mir_positioner_v1_gravity_bottom_right));
+
+// "If any bit not defined in the 'constraint_adjustment' enum is set, an invalid_input error is
+// raised." Ignoring undefined bits would silently drop placement behaviour the client asked for.
+TEST_F(MirShell, positioner_with_an_undefined_constraint_adjustment_bit_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                client.set_constraint_adjustment(
+                    client.create_positioner(true),
+                    mir_positioner_v1_constraint_adjustment_slide_x |
+                        mir_positioner_v1_constraint_adjustment_undefined_bit);
+            }),
+        Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
+}
+
+TEST_F(MirShell, positioner_with_every_defined_constraint_adjustment_bit_is_accepted)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run(
+            [](MirShellClient& client)
+            {
+                client.set_constraint_adjustment(
+                    client.create_positioner(true),
+                    (mir_positioner_v1_constraint_adjustment_resize_y << 1) - 1);
+            }),
+        Eq(std::nullopt));
+}
+
+// "If a zero or negative size is set, an invalid_input error is raised."
+TEST_F(MirShell, positioner_with_a_zero_size_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run([](MirShellClient& client) { client.set_size(client.create_positioner(false), 0, 100); }),
+        Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
+}
+
+// "If a negative size is set, an invalid_input error is raised."
+TEST_F(MirShell, positioner_with_a_negative_anchor_rect_is_rejected)
+{
+    start_server();
+
+    EXPECT_THAT(
+        run([](MirShellClient& client) { client.set_anchor_rect(client.create_positioner(true), 0, 0, -1, 100); }),
+        Optional(Eq(ProtocolError{"mir_positioner_v1", mir_positioner_v1_error_invalid_input})));
 }

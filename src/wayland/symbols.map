@@ -658,6 +658,7 @@ MIRWAYLAND_2.31 {
     mir::wayland::MirShellV1::Thunks::get_tip_surface_types*;
 
     mir::wayland::MirSatelliteSurfaceV1::Error::invalid_archetype;
+    mir::wayland::MirSatelliteSurfaceV1::Error::invalid_positioner;
 
     mir::wayland::MirMenuSurfaceV1::*;
     non-virtual?thunk?to?mir::wayland::MirMenuSurfaceV1::*;
