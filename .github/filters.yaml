@@ -22,6 +22,7 @@ spread:
   - 'spread/**'
 
 symbols:
+  - '.workshop/**'
   - '.github/workflows/symbols-check.yml'
   - 'include/**/*.h'
   - 'tools/symbols_map_generator/main.py'

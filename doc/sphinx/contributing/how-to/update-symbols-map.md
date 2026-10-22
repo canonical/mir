@@ -60,6 +60,17 @@ the action will inform you. However, if you modify a symbol (e.g. by changing
 the parameters that a method takes), you will *not* be informed that the symbol
 has changes. Such changes will need to be moved to a new stanza manually.
 
+### Running the check locally with Workshop
+
+The `symbols-check` action allows you to easily run the symbols check for a set of targets:
+
+```sh
+workshop run dev symbols-check          # check all libraries
+workshop run dev symbols-check miral    # check a single library
+```
+
+It only reports differences: it does not rewrite any `symbols.map` file.
+
 ## Setup
 
 Before we can update the symbols of Mir's libraries, we'll want to set
