@@ -173,6 +173,22 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_false_when_scene_elemen
     EXPECT_FALSE(compositor.composite(make_scene_elements({})));
 }
 
+TEST_F(DefaultDisplayBufferCompositor, composite_returns_true_when_scene_elements_are_empty_and_posting_initial_frame)
+{
+    using namespace testing;
+
+    EXPECT_CALL(display_sink, set_next_image(_));
+
+    mc::DefaultDisplayBufferCompositor compositor(
+        display_sink,
+        gl_provider,
+        mt::fake_shared(mock_renderer),
+        std::make_shared<mtd::StubOutputFilter>(),
+        mr::null_compositor_report(),
+        true);
+    EXPECT_TRUE(compositor.composite(make_scene_elements({})));
+}
+
 TEST_F(DefaultDisplayBufferCompositor, composite_returns_true_when_scene_elements_is_not_empty_and_this_is_first_composite)
 {
     using namespace testing;

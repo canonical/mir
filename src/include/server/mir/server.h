@@ -224,6 +224,12 @@ public:
     /// The default action is to call mir::report_exception(std::cerr)
     void set_exception_handler(std::function<void()> const& exception_handler);
 
+    /// Post a frame on startup, even if there is nothing to show yet.
+    /// By default nothing is posted until there is content, so that any existing
+    /// output contents (e.g. a boot splash) remain visible. When running in a window
+    /// on a host display server the window may not appear until a frame is posted.
+    void set_post_initial_frame(bool post_initial_frame);
+
     /// Functor for processing SIGTERM or SIGINT
     /// This will not be called directly by a signal handler: arbitrary functions may be invoked.
     using Terminator = std::function<void(int signal)>;

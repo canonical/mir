@@ -14,6 +14,7 @@ global:
     mir::DefaultServerConfiguration::DefaultServerConfiguration*;
     mir::DefaultServerConfiguration::add_wayland_extension*;
     mir::DefaultServerConfiguration::default_reports*;
+    mir::DefaultServerConfiguration::post_initial_frame*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_policy*;
     mir::DefaultServerConfiguration::the_accessibility_manager*;
@@ -185,6 +186,7 @@ global:
     mir::Server::set_command_line_handler*;
     mir::Server::set_config_filename*;
     mir::Server::set_exception_handler*;
+    mir::Server::set_post_initial_frame*;
     mir::Server::set_terminator*;
     mir::Server::set_the_decoration_strategy*;
     mir::Server::set_wayland_extension_policy*;

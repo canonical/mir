@@ -161,6 +161,7 @@ struct mir::Server::Self
     int argc{0};
     char const** argv{nullptr};
     std::function<void()> exception_handler{};
+    bool post_initial_frame{false};
     Terminator terminator{};
     EmergencyCleanupHandler emergency_cleanup_handler;
     std::shared_ptr<TemporaryCompositeEventFilter> temporary_event_filter{
@@ -223,6 +224,11 @@ struct mir::Server::ServerConfiguration : mir::DefaultServerConfiguration
     std::function<void()> the_stop_callback() override
     {
         return self->stop_callback;
+    }
+
+    bool post_initial_frame() override
+    {
+        return self->post_initial_frame;
     }
 
     using mir::DefaultServerConfiguration::the_options;
@@ -356,6 +362,11 @@ auto mir::Server::get_options() const -> std::shared_ptr<options::Option>
 void mir::Server::set_exception_handler(std::function<void()> const& exception_handler)
 {
     self->exception_handler = exception_handler;
+}
+
+void mir::Server::set_post_initial_frame(bool post_initial_frame)
+{
+    self->post_initial_frame = post_initial_frame;
 }
 
 void mir::Server::set_terminator(Terminator const& terminator)
