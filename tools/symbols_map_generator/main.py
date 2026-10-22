@@ -152,7 +152,7 @@ def has_vtable(node: clang.cindex.Cursor):
         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
             continue
 
-        class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+        class_or_struct_node = child.get_definition()
         if class_or_struct_node is None:
             continue
 
@@ -176,9 +176,7 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
         if clang.cindex.conf.lib.clang_isVirtualBase(child):
             result = True
         else:
-            class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(
-                child
-            )
+            class_or_struct_node = child.get_definition()
             if class_or_struct_node is None:
                 continue
 
@@ -321,9 +319,7 @@ def traverse_ast(
                         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
                             continue
 
-                        class_or_struct_node = (
-                            clang.cindex.conf.lib.clang_getCursorDefinition(child)
-                        )
+                        class_or_struct_node = child.get_definition()
                         if class_or_struct_node is None:
                             continue
 
@@ -566,6 +562,14 @@ def main():
     )
 
     args = parser.parse_args()
+
+    if args.external_headers is None and args.internal_headers is None:
+        parser.error(
+            "at least one of --external-headers-directory or --internal-headers-directory is required"
+        )
+    for headers in (args.external_headers, args.internal_headers):
+        if headers is not None and not headers.is_dir():
+            parser.error(f"headers directory does not exist: {headers}")
 
     if args.diff:
         _logger.info("symbols_map_generator is running in 'diff' mode")
