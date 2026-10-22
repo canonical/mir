@@ -69,11 +69,6 @@ actions:
       exit 1
     fi
 
-    # The generator only probes for older LLVM versions
-    llvm_lib=$( ls -d /usr/lib/llvm-*/lib | sort -V | tail -n1 )
-    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH="$llvm_lib"
-    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=$( ls "$llvm_lib"/libclang*.so.1 | tail -n1 )
-
     libraries="miral miroil mirserver mircommon"
     if [ "$#" -gt "0" ] && [ "${1#-}" = "$1" ]; then
       libraries="$1"
