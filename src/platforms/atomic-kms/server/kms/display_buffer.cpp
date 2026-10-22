@@ -367,6 +367,29 @@ auto drm_fb_id_from_dma_buffer(
 
     return fb_id;
 }
+
+struct AtomicKmsFbHandle : public mg::FBHandle
+{
+    AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geom::Size size) :
+        kms_fb_id{fb_handle},
+        size_{size}
+    {
+    }
+
+    virtual auto size() const -> geom::Size override
+    {
+        return size_;
+    }
+
+    virtual operator uint32_t() const override
+    {
+        return *kms_fb_id;
+    }
+
+private:
+    std::shared_ptr<uint32_t> kms_fb_id;
+    geom::Size size_;
+};
 }
 
 auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
@@ -377,29 +400,6 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
     {
         return {};
     }
-
-    struct AtomicKmsFbHandle : public mg::FBHandle
-    {
-        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
-            kms_fb_id{fb_handle},
-            size_{size}
-        {
-        }
-
-        virtual auto size() const -> geometry::Size override
-        {
-            return size_;
-        }
-
-        virtual operator uint32_t() const override
-        {
-            return *kms_fb_id;
-        }
-
-    private:
-        std::shared_ptr<uint32_t> kms_fb_id;
-        geometry::Size size_;
-    };
 
     buffer->on_consumed();
 
