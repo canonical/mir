@@ -28,8 +28,12 @@
 #include <mir/graphics/rendering_providers.h>
 #include <mir/compositor/buffer_stream.h>
 #include <mir/renderer/renderer.h>
+#include <mir/debug_frame_trace.h>
 #include "occlusion.h"
+#include <drm_fourcc.h>
+#include <format>
 #include <memory>
+#include <mutex>
 
 #define MIR_LOG_COMPONENT "compositor"
 #include <mir/log.h>
@@ -126,6 +130,24 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     if (scene_elements.size() == 0 && !completed_first_render)
         return false;
 
+    /* THROWAWAY (#5325): `global`/`global-finish` serialise all compositing (and screen
+     * capture), approximating a single-threaded renderer.
+     */
+    auto const sync_mode = mir::debug::buffer_sync_mode();
+    auto const serialise_globally =
+        sync_mode == mir::debug::BufferSyncMode::global ||
+        sync_mode == mir::debug::BufferSyncMode::global_finish;
+    std::unique_lock<std::mutex> global_lock;
+    if (serialise_globally)
+        global_lock = std::unique_lock{mir::debug::global_render_mutex()};
+
+    auto const& view_area_for_key = display_sink.view_area();
+    auto const trace_key = mir::debug::output_key(
+        view_area_for_key.size.width.as_int(),
+        view_area_for_key.size.height.as_int(),
+        view_area_for_key.top_left.x.as_int(),
+        view_area_for_key.top_left.y.as_int());
+
     completed_first_render = true;
     report->began_frame(this);
 
@@ -155,10 +177,62 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     auto const filter = output_filter->filter();
     auto const transform = display_sink.transformation();
+
+    if (mir::debug::tracing())
+    {
+        std::string renderables;
+        for (auto const& renderable : renderable_list)
+        {
+            auto const buffer = renderable->buffer();
+            auto const buffer_id = buffer->id().as_value();
+            mir::debug::note_buffer_sampled(buffer_id, trace_key);
+
+            auto const modifier =
+                [&]() -> uint64_t
+                {
+                    if (auto const dmabuf = dynamic_cast<mg::DMABufBuffer const*>(buffer->native_buffer_base()))
+                        return dmabuf->modifier().value_or(DRM_FORMAT_MOD_INVALID);
+                    return DRM_FORMAT_MOD_INVALID;
+                }();
+
+            renderables += std::format(
+                " [buf={} surface={} pos={}x{}+{}+{} alpha={:.2f} modifier=0x{:016x}]",
+                buffer_id, renderable->id(),
+                renderable->screen_position().size.width.as_int(),
+                renderable->screen_position().size.height.as_int(),
+                renderable->screen_position().top_left.x.as_int(),
+                renderable->screen_position().top_left.y.as_int(),
+                renderable->alpha(), modifier);
+        }
+
+        mir::debug::trace(
+            "composite begin output={} comp={} elements={}{}",
+            trace_key, static_cast<void const*>(this), renderable_list.size(), renderables);
+
+        auto const last_buffer_id =
+            renderable_list.empty() ? 0u : renderable_list.front()->buffer()->id().as_value();
+        mir::debug::update_output_trace(
+            trace_key,
+            [&](mir::debug::OutputTrace& trace)
+            {
+                ++trace.composites;
+                trace.last_composite = mir::debug::now_seconds();
+                trace.last_buffer_id = last_buffer_id;
+                trace.last_element_count = renderable_list.size();
+            });
+    }
+
     if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();
+
+        if (mir::debug::tracing())
+        {
+            mir::debug::trace("composite end   output={} bypassed", trace_key);
+            mir::debug::update_output_trace(
+                trace_key, [](mir::debug::OutputTrace& trace) { trace.last_bypassed = true; });
+        }
     }
     else
     {
@@ -167,6 +241,16 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
         renderer->set_output_filter(filter);
 
         display_sink.set_next_image(renderer->render(renderable_list));
+
+        if (sync_mode == mir::debug::BufferSyncMode::global_finish)
+            mir::debug::gl_finish();
+
+        if (mir::debug::tracing())
+        {
+            mir::debug::trace("composite end   output={} rendered", trace_key);
+            mir::debug::update_output_trace(
+                trace_key, [](mir::debug::OutputTrace& trace) { trace.last_bypassed = false; });
+        }
 
         report->renderables_in_frame(this, renderable_list);
         report->rendered_frame(this);

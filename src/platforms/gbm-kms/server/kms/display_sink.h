@@ -91,6 +91,8 @@ protected:
 private:
     bool schedule_page_flip(FBHandle const& bufobj);
     bool set_crtc(FBHandle const&);
+    /* THROWAWAY (#5325): names this output the same way the compositor side does */
+    auto debug_trace_key() const -> std::string;
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};

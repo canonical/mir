@@ -73,6 +73,8 @@ add_library(mirplatformgraphicscommon OBJECT
   pixman_image_scaling.cpp
   ${PROJECT_SOURCE_DIR}/include/platform/mir/graphics/drm_syncobj.h
   drm_syncobj.cpp
+  ${PROJECT_SOURCE_DIR}/include/platform/mir/debug_frame_trace.h
+  debug_frame_trace.cpp
 )
 
 mir_generate_protocol_wrapper(mirplatformgraphicscommon "zwp_" linux-dmabuf-stable-v1.xml)

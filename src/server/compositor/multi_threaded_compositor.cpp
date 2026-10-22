@@ -32,6 +32,7 @@
 #include <mir/executor.h>
 #include <mir/signal.h>
 #include <mir/log.h>
+#include <mir/debug_frame_trace.h>
 
 #include <atomic>
 #include <thread>
@@ -199,7 +200,27 @@ public:
                         if (!group.post())
                         {
                             // TODO Schedule a recovery frame immediately
+                            if (mir::debug::tracing())
+                                trace_group("post FAILED");
                         }
+                        else if (mir::debug::tracing())
+                        {
+                            mir::debug::trace("post ok group={}", group_description());
+                        }
+                    }
+                    else if (mir::debug::tracing())
+                    {
+                        /* THROWAWAY (#5325): nothing composited, so nothing is presented and
+                         * the outputs in this group keep whatever is already on screen.
+                         */
+                        trace_group("post SKIPPED (no compositor produced a frame)");
+                        group.for_each_display_sink(
+                            [](mg::DisplaySink& sink)
+                            {
+                                mir::debug::update_output_trace(
+                                    key_for(sink),
+                                    [](mir::debug::OutputTrace& trace) { ++trace.skipped_posts; });
+                            });
                     }
 
                     /*
@@ -234,12 +255,67 @@ public:
     {
         bool took_damage = false;
         group.for_each_display_sink([&](mg::DisplaySink& sink)
-            { if (damage.overlaps(sink.view_area())) took_damage = true; });
+            {
+                auto const overlaps = damage.overlaps(sink.view_area());
+                if (overlaps)
+                    took_damage = true;
+
+                /* THROWAWAY (#5325): Tier E — show exactly which outputs a damage
+                 * rectangle woke, and which it missed.
+                 */
+                if (mir::debug::tracing())
+                {
+                    mir::debug::update_output_trace(
+                        key_for(sink),
+                        [overlaps](mir::debug::OutputTrace& trace)
+                        {
+                            if (overlaps)
+                            {
+                                ++trace.damage_wakeups;
+                                trace.last_damage = mir::debug::now_seconds();
+                            }
+                            else
+                            {
+                                ++trace.damage_misses;
+                            }
+                        });
+
+                    if (mir::debug::tracing_verbose())
+                    {
+                        mir::debug::trace(
+                            "damage {}x{}+{}+{} {} output {}",
+                            damage.size.width.as_int(), damage.size.height.as_int(),
+                            damage.top_left.x.as_int(), damage.top_left.y.as_int(),
+                            overlaps ? "wakes" : "misses", key_for(sink));
+                    }
+                }
+            });
 
         if (took_damage)
         {
             wakeup.raise();
         }
+    }
+
+    static auto key_for(mg::DisplaySink& sink) -> std::string
+    {
+        auto const area = sink.view_area();
+        return mir::debug::output_key(
+            area.size.width.as_int(), area.size.height.as_int(),
+            area.top_left.x.as_int(), area.top_left.y.as_int());
+    }
+
+    auto group_description() -> std::string
+    {
+        std::string description;
+        group.for_each_display_sink(
+            [&description](mg::DisplaySink& sink) { description += " " + key_for(sink); });
+        return description;
+    }
+
+    void trace_group(char const* message)
+    {
+        mir::debug::trace("{} group={}", message, group_description());
     }
 
     void stop()
