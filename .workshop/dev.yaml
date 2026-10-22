@@ -76,6 +76,28 @@ actions:
     cd ~/build
     ctest -R 'wlcs.*' "$@"
 
+  symbols-check: |
+    set -xeu
+
+    if [ ! -f ~/build/CMakeCache.txt ]; then
+      echo "~/build is not configured, run the \`configure\` action first" >&2
+      exit 1
+    fi
+
+    libraries="miral miroil mirserver mircommon"
+    if [ "$#" -gt "0" ] && [ "${1#-}" = "$1" ]; then
+      libraries="$1"
+      shift
+    fi
+
+    ret=0
+    for library in $libraries; do
+      cmake --build ~/build --target "check-${library}-symbols-map" "$@" || ret=$?
+    done
+    # Avoid ~/.bash_logout on exit
+    set +e
+    exit $ret
+
   doc: |
     set -xeu
 
