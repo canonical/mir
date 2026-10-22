@@ -322,6 +322,7 @@ INSTANTIATE_TEST_SUITE_P(
         MalformedInFormats{"FormatsPastEnd", [](InFormatsBlob& blob)
                            { blob.header.formats_offset = sizeof(InFormatsBlob) - sizeof(uint32_t); }},
         MalformedInFormats{"FormatsInsideHeader", [](InFormatsBlob& blob) { blob.header.formats_offset = 0; }},
+        MalformedInFormats{"ModifiersInsideHeader", [](InFormatsBlob& blob) { blob.header.modifiers_offset = 0; }},
         MalformedInFormats{"ModifiersPastEnd", [](InFormatsBlob& blob) { ++blob.header.count_modifiers; }},
         MalformedInFormats{"FormatBitPastEnd", [](InFormatsBlob& blob) { blob.modifiers[0].formats = 0b1000; }}),
     [](TestParamInfo<MalformedInFormats> const& info) { return std::string{info.param.name}; });
