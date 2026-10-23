@@ -626,7 +626,7 @@ def main():
                 "if libclang is installed in a non-standard location."
             )
             exit(1)
-        _logger.info(f"Using libclang at: {found_so}")
+        _logger.info("Using libclang at: %s", found_so)
         clang.cindex.Config.set_library_file(found_so)
 
     include_dirs = args.include_dirs.split(":")
