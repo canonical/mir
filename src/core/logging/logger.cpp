@@ -26,6 +26,7 @@
 #include <mir/synchronised.h>
 #include <mir/logging/dumb_console_logger.h>
 #include <mir/fatal.h>
+#include "log_deduplicator.h"
 
 #include <iostream>
 #include <chrono>
@@ -77,6 +78,25 @@ void ml::Logger::log(Severity severity, Tags tags, std::string_view message)
 
 namespace
 {
+// Keep each installation's history with its sink, including calls still using an old installation.
+class DeduplicatingLogger : public ml::Logger
+{
+public:
+    explicit DeduplicatingLogger(std::shared_ptr<ml::Logger> sink) : sink{std::move(sink)} {}
+
+    void log(ml::Severity severity, std::string const& message, std::string const& component) override
+    {
+        auto const to_print = deduplicator.lock()->filter(severity, component, message);
+        if (to_print)
+            sink->log(severity, *to_print, component);
+    }
+
+private:
+    std::shared_ptr<ml::Logger> const sink;
+    mir::Synchronised<ml::detail::LogDeduplicator> deduplicator{
+        ml::detail::LogDeduplicator{std::chrono::seconds{5}, [] { return std::chrono::steady_clock::now(); }}};
+};
+
 std::mutex log_mutex;
 std::shared_ptr<ml::Logger> the_logger;
 
@@ -85,7 +105,7 @@ std::shared_ptr<ml::Logger> get_logger()
     std::lock_guard lock{log_mutex};
 
     if (!the_logger)
-        the_logger = std::make_shared<ml::DumbConsoleLogger>();
+        the_logger = std::make_shared<DeduplicatingLogger>(std::make_shared<ml::DumbConsoleLogger>());
 
     return the_logger;
 }
@@ -110,7 +130,7 @@ void ml::set_logger(std::shared_ptr<Logger> const& new_logger)
     if (new_logger)
     {
         std::lock_guard lock{log_mutex};
-        the_logger = new_logger;
+        the_logger = std::make_shared<DeduplicatingLogger>(new_logger);
     }
 }
 
