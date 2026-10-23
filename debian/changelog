@@ -1,6 +1,11 @@
 mir (2.31.0) UNRELEASED; urgency=medium
 
+  [ Mir CI Bot ]
   * Begin development for 2.31.0 release
+
+  [ Simon Quigley ]
+  * Build-depend on either syn 3 with prettyplease 0.3, or syn 2 with
+    prettyplease 0.2.
 
  -- Mir CI Bot <mir-ci-bot@canonical.com>  Thu, 17 Sep 2026 10:50:54 +0000
 

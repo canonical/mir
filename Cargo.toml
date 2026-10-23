@@ -28,5 +28,7 @@ wayland-backend = { version = ">=0.3.12" }
 bitflags = "2"
 quote = "1"
 proc-macro2 = "1"
+# cmake/RustLibrary.cmake rewrites these to 0.3 and 3 when the
+# distro registry has prettyplease 0.3 and syn 3.
 prettyplease = "0.2"
 syn = { version = "2", features = ["full", "parsing"] }
