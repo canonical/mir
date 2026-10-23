@@ -19,13 +19,27 @@
 #include "src/server/report/null_report_factory.h"
 #include "mock_kms_output.h"
 
+#include <mir/graphics/dmabuf_buffer.h>
+#include <mir/graphics/drm_formats.h>
 #include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
 #include <mir_test_framework/udev_environment.h>
 
+#include <drm_fourcc.h>
 #include <fcntl.h>
+#include <gbm.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <algorithm>
+#include <array>
+#include <cerrno>
+#include <cstdint>
+
+#include <memory>
 #include <optional>
+#include <span>
+
+#include <vector>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
@@ -48,6 +62,62 @@ public:
     MOCK_METHOD(uint32_t, operator_uint32_thunk, (), (const));
     MOCK_METHOD(geom::Size, size, (), (const, override));
 };
+
+class MockDMABufBuffer : public mg::DMABufBuffer
+{
+public:
+    MOCK_METHOD(mg::DRMFormat, format, (), (const, override));
+    MOCK_METHOD(std::optional<uint64_t>, modifier, (), (const, override));
+    MOCK_METHOD(std::vector<PlaneDescriptor> const&, planes, (), (const, override));
+    MOCK_METHOD(geom::Size, size, (), (const, override));
+    MOCK_METHOD(mg::gl::Texture::Layout, layout, (), (const, override));
+    MOCK_METHOD(void, on_consumed, (), (override));
+};
+
+struct ExpectedGbmImport
+{
+    uint32_t width;
+    uint32_t height;
+    uint32_t format;
+    uint32_t num_fds;
+    std::array<int, 4> fds;
+    std::array<int, 4> strides;
+    std::array<int, 4> offsets;
+    uint64_t modifier;
+};
+
+MATCHER_P(IsGbmImportData, expected, "")
+{
+    auto const* data = static_cast<gbm_import_fd_modifier_data const*>(arg);
+    if (!data)
+    {
+        return false;
+    }
+    if (data->width != expected.width ||
+        data->height != expected.height ||
+        data->format != expected.format ||
+        data->num_fds != expected.num_fds ||
+        data->modifier != expected.modifier)
+    {
+        return false;
+    }
+    for (auto i = 0u; i < expected.num_fds; ++i)
+    {
+        if (data->fds[i] != expected.fds[i] ||
+            data->strides[i] != expected.strides[i] ||
+            data->offsets[i] != expected.offsets[i])
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+MATCHER_P(PlaneArrayIs, expected, "")
+{
+    auto const actual = std::span{arg, 4};
+    return std::ranges::equal(actual, expected);
+}
 
 class StubSurfaceHasFreeBuffersQuirk : public mga::GbmQuirks::SurfaceHasFreeBuffersQuirk
 {
@@ -100,6 +170,49 @@ protected:
     std::unique_ptr<mga::DisplaySink> sink;
 };
 
+class ExplicitDmaBufImportTest : public AtomicDisplaySinkTest
+{
+protected:
+    void SetUp() override
+    {
+        AtomicDisplaySinkTest::SetUp();
+
+        ON_CALL(gbm, gbm_bo_import(_, _, _, _))
+            .WillByDefault(Return(gbm.fake_gbm.bo));
+        ON_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _))
+            .WillByDefault(DoAll(SetArgPointee<8>(fb_id), Return(0)));
+    }
+
+    auto make_buffer(
+        std::vector<mg::DMABufBuffer::PlaneDescriptor> const& planes,
+        std::optional<uint64_t> modifier,
+        geom::Size size = {64, 48}) -> std::shared_ptr<NiceMock<MockDMABufBuffer>>
+    {
+        auto buffer = std::make_shared<NiceMock<MockDMABufBuffer>>();
+        ON_CALL(*buffer, planes()).WillByDefault(ReturnRef(planes));
+        ON_CALL(*buffer, modifier()).WillByDefault(Return(modifier));
+        ON_CALL(*buffer, size()).WillByDefault(Return(size));
+        ON_CALL(*buffer, format()).WillByDefault(Return(mg::DRMFormat{DRM_FORMAT_NV12}));
+        return buffer;
+    }
+
+    auto nv12_planes(uint32_t width = 64, uint32_t height = 48) const
+        -> std::vector<mg::DMABufBuffer::PlaneDescriptor>
+    {
+        return {
+            {mir::Fd{mir::IntOwnedFd{100}}, width, 0},
+            {mir::Fd{mir::IntOwnedFd{101}}, width, width * height}};
+    }
+
+    auto gbm_device_ptr() const -> std::shared_ptr<struct gbm_device>
+    {
+        return {gbm.fake_gbm.device, [](struct gbm_device*) {}};
+    }
+
+    NiceMock<mtd::MockGBM> gbm;
+    uint32_t const fb_id{0xabcd};
+};
+
 struct PostCase
 {
     bool flip_ok;
@@ -108,6 +221,16 @@ struct PostCase
 };
 
 class AtomicPostResult : public AtomicDisplaySinkTest, public WithParamInterface<PostCase>
+{
+};
+
+class ExplicitModifierPassThroughTest : public ExplicitDmaBufImportTest, public WithParamInterface<uint64_t>
+{
+};
+
+class ExplicitModifierRejectionTest
+    : public ExplicitDmaBufImportTest
+    , public WithParamInterface<std::optional<uint64_t>>
 {
 };
 }
@@ -202,4 +325,182 @@ TEST_F(AtomicDisplaySinkTest, overlay_must_be_a_single_fullscreen_element)
 
     element.screen_positon.size = {20, 20};
     EXPECT_FALSE(sink->overlay({element}));
+}
+
+TEST_P(ExplicitModifierPassThroughTest, explicit_modifier_is_passed_through_unchanged)
+{
+    auto const modifier = GetParam();
+
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes{
+        {mir::Fd{mir::IntOwnedFd{100}}, 64, 0}};
+    auto const buffer = make_buffer(planes, modifier);
+
+    ExpectedGbmImport const expected_import{
+        64, 48, DRM_FORMAT_NV12, 1, {100, 0, 0, 0}, {64, 0, 0, 0}, {0, 0, 0, 0}, modifier};
+    auto const expected_handles = std::array<uint32_t, 4>{0x0987, 0, 0, 0};
+    auto const expected_pitches = std::array<uint32_t, 4>{64, 0, 0, 0};
+    auto const expected_offsets = std::array<uint32_t, 4>{0, 0, 0, 0};
+    auto const expected_modifiers = std::array<uint64_t, 4>{modifier, 0, 0, 0};
+
+    EXPECT_CALL(gbm, gbm_bo_import(_, GBM_BO_IMPORT_FD_MODIFIER, IsGbmImportData(expected_import), GBM_BO_USE_SCANOUT))
+        .WillOnce(Return(gbm.fake_gbm.bo));
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(
+        Eq(static_cast<int>(drm_fd)), 64u, 48u, DRM_FORMAT_NV12,
+        PlaneArrayIs(expected_handles),
+        PlaneArrayIs(expected_pitches),
+        PlaneArrayIs(expected_offsets),
+        PlaneArrayIs(expected_modifiers),
+        _, DRM_MODE_FB_MODIFIERS))
+        .WillOnce(DoAll(SetArgPointee<8>(fb_id), Return(0)));
+
+    auto const result = mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer);
+
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(static_cast<uint32_t>(*result), fb_id);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModifierPassThrough,
+    ExplicitModifierPassThroughTest,
+    Values(uint64_t{DRM_FORMAT_MOD_LINEAR}, uint64_t{DRM_FORMAT_MOD_SAMSUNG_64_32_TILE}),
+    [](TestParamInfo<uint64_t> const& info)
+    {
+        return info.param == DRM_FORMAT_MOD_LINEAR ? "linear" : "nonlinear";
+    });
+
+TEST_P(ExplicitModifierRejectionTest, missing_or_invalid_modifier_is_rejected)
+{
+    auto const buffer = make_buffer(nv12_planes(), GetParam());
+
+    EXPECT_CALL(gbm, gbm_bo_import(_, _, _, _)).Times(0);
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer), nullptr);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModifierRejection,
+    ExplicitModifierRejectionTest,
+    Values(std::optional<uint64_t>{}, std::optional<uint64_t>{static_cast<uint64_t>(DRM_FORMAT_MOD_INVALID)}),
+    [](TestParamInfo<std::optional<uint64_t>> const& info)
+    {
+        return info.param.has_value() ? "invalid" : "absent";
+    });
+
+TEST_F(ExplicitDmaBufImportTest, two_plane_nv12_metadata_is_forwarded_exactly)
+{
+    auto const width = 64u;
+    auto const height = 48u;
+    auto const second_plane_offset = width * height;
+    auto const second_plane_stride = width * 2;
+
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes{
+        {mir::Fd{mir::IntOwnedFd{100}}, width, 0},
+        {mir::Fd{mir::IntOwnedFd{101}}, second_plane_stride, second_plane_offset}};
+    auto const buffer = make_buffer(planes, DRM_FORMAT_MOD_SAMSUNG_64_32_TILE);
+
+    gbm_bo_handle handle0{};
+    handle0.u32 = 0x1111;
+    gbm_bo_handle handle1{};
+    handle1.u32 = 0x2222;
+    ON_CALL(gbm, gbm_bo_get_handle_for_plane(_, 0)).WillByDefault(Return(handle0));
+    ON_CALL(gbm, gbm_bo_get_handle_for_plane(_, 1)).WillByDefault(Return(handle1));
+
+    ExpectedGbmImport const expected_import{
+        width, height, DRM_FORMAT_NV12, 2,
+        {100, 101, 0, 0},
+        {static_cast<int>(width), static_cast<int>(second_plane_stride), 0, 0},
+        {0, static_cast<int>(second_plane_offset), 0, 0},
+        DRM_FORMAT_MOD_SAMSUNG_64_32_TILE};
+    auto const expected_handles = std::array<uint32_t, 4>{0x1111, 0x2222, 0, 0};
+    auto const expected_pitches = std::array<uint32_t, 4>{width, second_plane_stride, 0, 0};
+    auto const expected_offsets = std::array<uint32_t, 4>{0, second_plane_offset, 0, 0};
+    auto const expected_modifiers = std::array<uint64_t, 4>{
+        DRM_FORMAT_MOD_SAMSUNG_64_32_TILE, DRM_FORMAT_MOD_SAMSUNG_64_32_TILE, 0, 0};
+
+    EXPECT_CALL(gbm, gbm_bo_import(_, GBM_BO_IMPORT_FD_MODIFIER, IsGbmImportData(expected_import), GBM_BO_USE_SCANOUT))
+        .WillOnce(Return(gbm.fake_gbm.bo));
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(
+        Eq(static_cast<int>(drm_fd)), width, height, DRM_FORMAT_NV12,
+        PlaneArrayIs(expected_handles),
+        PlaneArrayIs(expected_pitches),
+        PlaneArrayIs(expected_offsets),
+        PlaneArrayIs(expected_modifiers),
+        _, DRM_MODE_FB_MODIFIERS))
+        .WillOnce(DoAll(SetArgPointee<8>(fb_id), Return(0)));
+
+    auto const result = mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer);
+
+    ASSERT_NE(result, nullptr);
+    EXPECT_EQ(static_cast<uint32_t>(*result), fb_id);
+}
+
+TEST_F(ExplicitDmaBufImportTest, gbm_import_failure_is_rejected)
+{
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes{
+        {mir::Fd{mir::IntOwnedFd{100}}, 64, 0}};
+    auto const buffer = make_buffer(planes, DRM_FORMAT_MOD_LINEAR);
+
+    EXPECT_CALL(gbm, gbm_bo_import(_, _, _, _))
+        .WillOnce(SetErrnoAndReturn(EINVAL, nullptr));
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer), nullptr);
+}
+
+TEST_F(ExplicitDmaBufImportTest, add_fb_failure_destroys_the_bo_and_drops_the_buffer)
+{
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes{
+        {mir::Fd{mir::IntOwnedFd{100}}, 64, 0}};
+    auto buffer = make_buffer(planes, DRM_FORMAT_MOD_LINEAR);
+    std::weak_ptr<mg::DMABufBuffer> const weak_buffer{buffer};
+
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _))
+        .WillOnce(Return(-EINVAL));
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(1);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(0);
+
+    EXPECT_EQ(mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer), nullptr);
+
+    buffer.reset();
+    EXPECT_TRUE(weak_buffer.expired());
+}
+
+TEST_F(ExplicitDmaBufImportTest, handle_owns_the_bo_and_the_buffer_until_destroyed)
+{
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes{
+        {mir::Fd{mir::IntOwnedFd{100}}, 64, 0}};
+    auto buffer = make_buffer(planes, DRM_FORMAT_MOD_LINEAR);
+    std::weak_ptr<mg::DMABufBuffer> const weak_buffer{buffer};
+
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(0);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(0);
+
+    auto result = mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer);
+    ASSERT_NE(result, nullptr);
+
+    buffer.reset();
+    EXPECT_FALSE(weak_buffer.expired());
+
+    Mock::VerifyAndClearExpectations(&gbm);
+    Mock::VerifyAndClearExpectations(&drm);
+
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(1);
+    EXPECT_CALL(drm, drmModeRmFB(_, fb_id)).Times(1);
+
+    result.reset();
+    EXPECT_TRUE(weak_buffer.expired());
+}
+
+TEST_F(ExplicitDmaBufImportTest, does_not_call_on_consumed)
+{
+    std::vector<mg::DMABufBuffer::PlaneDescriptor> const planes{
+        {mir::Fd{mir::IntOwnedFd{100}}, 64, 0}};
+    auto const buffer = make_buffer(planes, DRM_FORMAT_MOD_LINEAR);
+
+    EXPECT_CALL(*buffer, on_consumed()).Times(0);
+
+    auto const result = mga::import_explicit_dmabuf_framebuffer(drm_fd, gbm_device_ptr(), buffer);
+
+    ASSERT_NE(result, nullptr);
 }
