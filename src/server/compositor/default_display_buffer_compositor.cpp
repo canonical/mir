@@ -109,19 +109,19 @@ bool try_bypass(
 
 mc::DefaultDisplayBufferCompositor::DefaultDisplayBufferCompositor(
     mg::DisplaySink& display_sink,
-    graphics::GLRenderingProvider& gl_provider,
+    graphics::RenderingProvider& rendering_provider,
     std::shared_ptr<mir::renderer::Renderer> const& renderer,
     std::shared_ptr<mir::graphics::OutputFilter> const& output_filter,
     std::shared_ptr<CompositorReport> const& report) :
     display_sink(display_sink),
     renderer(renderer),
     output_filter(output_filter),
-    fb_adaptor{gl_provider.make_framebuffer_provider(display_sink)},
+    fb_adaptor{rendering_provider.make_framebuffer_provider(display_sink)},
     report(report)
 {
 }
 
-bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements)
+bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& scene_elements, CompositionMode mode)
 {
     if (scene_elements.size() == 0 && !completed_first_render)
         return false;
@@ -155,7 +155,8 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
 
     auto const filter = output_filter->filter();
     auto const transform = display_sink.transformation();
-    if (try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
+    if (mode == CompositionMode::normal &&
+        try_bypass(renderable_list, *fb_adaptor, display_sink, filter, transform))
     {
         report->renderables_in_frame(this, renderable_list);
         renderer->suspend();

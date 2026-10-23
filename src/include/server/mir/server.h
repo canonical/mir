@@ -75,6 +75,7 @@ class SeatObserver;
 namespace renderer
 {
 class RendererFactory;
+class BlitterRendererFactory;
 }
 namespace time
 {
@@ -308,6 +309,9 @@ public:
     /// Sets an override functor for the renderer_factory
     void override_the_renderer_factory(Builder<renderer::RendererFactory> const& renderer_factory_builder);
 
+    /// Sets an override functor for the blitter_renderer_factory
+    void override_the_blitter_renderer_factory(Builder<renderer::BlitterRendererFactory> const& blitter_renderer_factory_builder);
+
     void override_the_accessibility_manager(Builder<shell::AccessibilityManager> const& accessibility_manager_factory_builder);
 
     /// Allows for overriding the central clock used for alarms and other
@@ -441,6 +445,9 @@ public:
 
     auto the_renderer_factory() const ->
         std::shared_ptr<renderer::RendererFactory>;
+
+    auto the_blitter_renderer_factory() const ->
+        std::shared_ptr<renderer::BlitterRendererFactory>;
 
     auto the_input_device_registry() const ->
         std::shared_ptr<input::InputDeviceRegistry>;

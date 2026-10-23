@@ -18,10 +18,12 @@
 #define MIR_RENDERER_BLITTER_EGL_CONTEXT_H_
 
 #include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/egl_helpers.h>
 #include <mir/graphics/egl_resources.h>
 
 #include <EGL/egl.h>
 #include <memory>
+#include <optional>
 
 namespace mir::renderer::blitter
 {
@@ -56,6 +58,13 @@ private:
     EGLContext const ctx;
     std::unique_ptr<graphics::EGLExtensions> const exts;
 };
+
+/// Capture the current EGL state for restoration on scope exit, unless \p context is already current
+///
+/// Use before making \p context current in code that must leave the caller's EGL state unchanged.
+[[nodiscard]]
+auto preserve_egl_state_unless_current(SoftwareEGLContext const& context)
+    -> std::optional<graphics::common::CacheEglState>;
 
 }
 

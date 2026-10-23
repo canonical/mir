@@ -19,6 +19,7 @@
 
 #include <boost/throw_exception.hpp>
 #include <algorithm>
+#include <iterator>
 #include <stdexcept>
 #include <optional>
 
@@ -101,39 +102,6 @@ bool plane_compatible_with_crtc(mgk::DRMModePlaneUPtr const& plane, uint32_t crt
     return plane->possible_crtcs & (1 << crtc_index);
 }
 
-std::optional<uint32_t> find_crtc_index(
-    mgk::DRMModeResources const& resources,
-    uint32_t crtc_id)
-{
-    auto crtcs = resources.crtcs();
-    auto it = std::find_if(crtcs.begin(), crtcs.end(), [crtc_id](auto const& crtc) {
-        return crtc->crtc_id == crtc_id;
-    });
-
-    if (it != crtcs.end())
-    {
-        return std::distance(crtcs.begin(), it);
-    }
-    return std::nullopt;
-}
-
-std::optional<mgk::DRMModePlaneUPtr> find_primary_plane_for_crtc(
-    int drm_fd,
-    mgk::PlaneResources& plane_res,
-    uint32_t crtc_index)
-{
-    auto planes = plane_res.planes();
-    auto it = std::find_if(planes.begin(), planes.end(), [drm_fd, crtc_index](auto& plane) {
-        return plane_compatible_with_crtc(plane, crtc_index) && is_primary_plane(drm_fd, plane);
-    });
-
-    if (it != planes.end())
-    {
-        return std::move(*it);
-    }
-    return std::nullopt;
-}
-
 std::optional<std::pair<mgk::DRMModeCrtcUPtr, mgk::DRMModePlaneUPtr>> find_compatible_crtc_plane(
     int drm_fd,
     mgk::DRMModeResources& resources,
@@ -166,6 +134,36 @@ std::optional<std::pair<mgk::DRMModeCrtcUPtr, mgk::DRMModePlaneUPtr>> find_compa
     return std::nullopt;
 }
 
+}
+
+auto mgk::find_crtc_index(mgk::DRMModeResources const& resources, uint32_t crtc_id)
+    -> std::optional<uint32_t>
+{
+    auto crtcs = resources.crtcs();
+    auto it = std::find_if(crtcs.begin(), crtcs.end(), [crtc_id](auto const& crtc) {
+        return crtc->crtc_id == crtc_id;
+    });
+
+    if (it != crtcs.end())
+    {
+        return std::distance(crtcs.begin(), it);
+    }
+    return std::nullopt;
+}
+
+auto mgk::find_primary_plane_for_crtc(int drm_fd, mgk::PlaneResources& plane_res, uint32_t crtc_index)
+    -> std::optional<mgk::DRMModePlaneUPtr>
+{
+    auto planes = plane_res.planes();
+    auto it = std::find_if(planes.begin(), planes.end(), [drm_fd, crtc_index](auto& plane) {
+        return plane_compatible_with_crtc(plane, crtc_index) && is_primary_plane(drm_fd, plane);
+    });
+
+    if (it != planes.end())
+    {
+        return std::move(*it);
+    }
+    return std::nullopt;
 }
 
 std::string mgk::connector_name(mgk::DRMModeConnectorUPtr const& connector)

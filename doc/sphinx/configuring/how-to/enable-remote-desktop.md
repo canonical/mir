@@ -11,7 +11,7 @@ Mir supports remote desktops via the VNC protocol. To demo this, you'll use
    sudo apt install wayvnc
    ```
 
-1. Install your preferred [VNC client](https://help.ubuntu.com/community/VNC/Clients).
+1. Install your preferred [VNC client](https://wiki.ubuntu.com/VNC/Clients).
 
 1. Start the compositor with all extensions enabled:
 

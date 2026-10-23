@@ -83,6 +83,15 @@ void mf::WlSubcompositorInstance::get_subsurface(
             mw::Subcompositor::Error::bad_surface,
             "Surface already has a role"};
     }
+    // The wl_subsurface role cannot be combined with a mir_shell_v1 archetype
+    // (see mir-shell-unstable-v1.xml).
+    if (child_surface->has_archetype())
+    {
+        throw wayland::ProtocolError{
+            resource,
+            mw::Subcompositor::Error::bad_surface,
+            "Surface already has an archetype"};
+    }
     if (child_surface->has_subsurface_with_surface(parent_surface))
     {
         throw wayland::ProtocolError{

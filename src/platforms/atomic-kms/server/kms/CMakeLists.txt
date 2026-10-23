@@ -7,6 +7,8 @@ add_library(
 
   atomic_kms_output.cpp
   atomic_kms_output.h
+  atomic_update.cpp
+  atomic_update.h
   bypass.cpp
   cursor.cpp
   display.cpp
@@ -16,6 +18,8 @@ add_library(
   real_kms_display_configuration.cpp
   kms_output.h
   kms_output_container.h
+  plane_capabilities.cpp
+  plane_capabilities.h
   real_kms_output_container.cpp
   egl_helper.h
   egl_helper.cpp

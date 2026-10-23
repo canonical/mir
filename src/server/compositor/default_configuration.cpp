@@ -73,9 +73,19 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 }
             }
 
+            // TODO: Construct providers
+            std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> blitter_providers;
+
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
-                    std::move(providers), the_gl_config(), the_renderer_factory(), the_buffer_allocator(), the_compositor_report(), the_output_filter()));
+                    std::move(providers),
+                    std::move(blitter_providers),
+                    the_gl_config(),
+                    the_renderer_factory(),
+                    the_blitter_renderer_factory(),
+                    the_buffer_allocator(),
+                    the_compositor_report(),
+                    the_output_filter()));
         });
 }
 
@@ -113,6 +123,16 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
         []()
         {
             return std::make_shared<mir::renderer::gl::RendererFactory>();
+        });
+}
+
+std::shared_ptr<mir::renderer::BlitterRendererFactory> mir::DefaultServerConfiguration::the_blitter_renderer_factory()
+{
+    return blitter_renderer_factory(
+        []() -> std::shared_ptr<mir::renderer::BlitterRendererFactory>
+        {
+            // TODO: Swap out for actual `mir::renderer::blitter::RendererFactory` when created.
+            return {};
         });
 }
 

@@ -162,6 +162,7 @@ Possible tags to filter on are:
 
 - base
 - base/graphics
+- base/graphics/compositor
 - base/graphics/output-config
 - base/input
 - base/miral

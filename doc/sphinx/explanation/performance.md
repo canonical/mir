@@ -1,3 +1,5 @@
+(mir-performance)=
+
 # Performance
 
 This document aims to explore in depth the performance considerations around Mir

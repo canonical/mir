@@ -19,6 +19,7 @@
 #include <mir/frontend/session_credentials.h>
 #include <mir/frontend/session_authorizer.h>
 #include <mir/server.h>
+#include <string>
 
 namespace mf = mir::frontend;
 
@@ -92,4 +93,28 @@ auto miral::ApplicationCredentials::uid() const -> uid_t
 auto miral::ApplicationCredentials::gid() const -> gid_t
 {
     return creds.gid();
+}
+
+auto miral::ApplicationCredentials::apparmor_label() const -> std::expected<std::string, std::error_code>
+{
+    return creds.apparmor_label();
+}
+
+auto miral::ApplicationCredentials::from_application_sandbox() const -> bool
+{
+    return creds.is_sandboxed();
+}
+
+auto miral::ApplicationCredentials::snap_name() const -> std::optional<std::string>
+{
+    return creds.snap_info().transform([](auto const& info) {
+        return info.snap_name;
+    });
+}
+
+auto miral::ApplicationCredentials::flatpak_id() const -> std::optional<std::string>
+{
+    return creds.flatpak_info().transform([](auto const& info) {
+        return info.app_id;
+    });
 }

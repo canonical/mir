@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
-#define MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_
+#ifndef MIR_GRAPHICS_COMMON_EGL_RENDERING_PLATFORM_H_
+#define MIR_GRAPHICS_COMMON_EGL_RENDERING_PLATFORM_H_
 
 #include <mir/graphics/linux_dmabuf.h>
 #include <mir/graphics/platform.h>
@@ -77,4 +77,4 @@ private:
 
 }
 }
-#endif /* MIR_GRAPHICS_RENDERING_EGL_GENERIC_H_ */
+#endif // MIR_GRAPHICS_COMMON_EGL_RENDERING_PLATFORM_H_
