@@ -60,6 +60,17 @@ the action will inform you. However, if you modify a symbol (e.g. by changing
 the parameters that a method takes), you will *not* be informed that the symbol
 has changes. Such changes will need to be moved to a new stanza manually.
 
+### Running the check locally with Workshop
+
+The `symbols-check` action allows you to easily run the symbols check for a set of targets:
+
+```sh
+workshop run dev symbols-check          # check all libraries
+workshop run dev symbols-check miral    # check a single library
+```
+
+It only reports differences: it does not rewrite any `symbols.map` file.
+
 ## Setup
 
 Before we can update the symbols of Mir's libraries, we'll want to set
@@ -73,18 +84,13 @@ works the best.
 sudo apt install clang libclang-dev python3-clang
 ```
 
-Afterwards, you will want to set the following environment variables to point
-at the path of `libclang.so` and `libclang.so`'s `lib` directory. Note that
-these paths are likely to be the same on most Ubuntu 26.04 setups, but may
-vary on other distros:
+The symbols map generator finds `libclang` automatically, preferring the
+LLVM version that matches the installed Python bindings. If `libclang` is
+installed in a non-standard location, point the generator at it:
 
 ```sh
-export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=$( ls /usr/lib/llvm-*/lib/libclang*.so.1 | tail -n1 )
-export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=$( ls -d /usr/lib/llvm-*/lib | tail -n1 )
+export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/path/to/libclang.so.1
 ```
-
-It is recommended that you put those `export ...` commands in your `.bashrc`
-so that you don't have to think about it in the future.
 
 And that's it! Now we are ready to update our symbols automatically.
 

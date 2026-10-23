@@ -18,6 +18,8 @@ import logging
 import sys
 import os
 import argparse
+import glob
+import re
 import concurrent.futures
 from pathlib import Path
 from typing import Optional, TypedDict
@@ -28,10 +30,9 @@ logging.basicConfig(level=logging.INFO)
 _logger = logging.getLogger(__name__)
 
 LIBRARY_NOT_FOUND_ERROR_MSG: str = """\
-    Please install libclang-19-dev and python3-clang-19.
-    Also, ensure that the required environment variables are set correctly. (e.g.)
-        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1
-        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib"""
+    Please install libclang-dev and python3-clang, with matching LLVM versions.
+    If libclang is installed in a non-standard location, point to it with (e.g.)
+        export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-21/lib/libclang.so.1"""
 
 try:
     import clang.cindex
@@ -39,6 +40,38 @@ except ModuleNotFoundError as e:
     _logger.error("Could not import clang in python.")
     _logger.exception(e)
     sys.exit(1)
+
+
+def _llvm_major_version(path: str) -> int:
+    match = re.search(r"(?:llvm-|libclang-|libclang\.so\.)(\d+)", path)
+    return int(match.group(1)) if match else -1
+
+
+def find_libclang() -> Optional[str]:
+    """
+    Returns the path of the libclang shared library to use, or None if none was found.
+
+    Prefers the LLVM version the Python bindings were built for, then the newest one.
+    """
+    # The bindings default to the library name of their own version (e.g. "libclang-21.so")
+    bindings_version = _llvm_major_version(clang.cindex.Config().get_filename())
+
+    patterns = [
+        "/usr/lib/llvm-*/lib/libclang-*.so.1",  # Debian, Ubuntu
+        "/usr/lib/llvm-*/lib/libclang.so.1",
+        "/usr/lib/*-linux-gnu/libclang-*.so.1",
+        "/usr/lib64/libclang.so.*",  # Fedora
+        "/usr/lib/libclang.so.*",  # Alpine, Arch
+    ]
+    candidates = [path for pattern in patterns for path in glob.glob(pattern)]
+    candidates.sort(
+        key=lambda path: (
+            _llvm_major_version(path) == bindings_version,
+            _llvm_major_version(path),
+        ),
+        reverse=True,
+    )
+    return candidates[0] if candidates else None
 
 
 HIDDEN_SYMBOLS = {
@@ -152,7 +185,7 @@ def has_vtable(node: clang.cindex.Cursor):
         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
             continue
 
-        class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(child)
+        class_or_struct_node = child.get_definition()
         if class_or_struct_node is None:
             continue
 
@@ -176,9 +209,7 @@ def has_virtual_base_class(node: clang.cindex.Cursor):
         if clang.cindex.conf.lib.clang_isVirtualBase(child):
             result = True
         else:
-            class_or_struct_node = clang.cindex.conf.lib.clang_getCursorDefinition(
-                child
-            )
+            class_or_struct_node = child.get_definition()
             if class_or_struct_node is None:
                 continue
 
@@ -321,9 +352,7 @@ def traverse_ast(
                         if child.kind != clang.cindex.CursorKind.CXX_BASE_SPECIFIER:
                             continue
 
-                        class_or_struct_node = (
-                            clang.cindex.conf.lib.clang_getCursorDefinition(child)
-                        )
+                        class_or_struct_node = child.get_definition()
                         if class_or_struct_node is None:
                             continue
 
@@ -516,11 +545,10 @@ def main():
         "and creates a list of new internal and external symbols.\n"
         "By default, the script updates the corresponding symbols.map file automatically. "
         "To view this diff only, the user may provide the --diff option.\n"
-        "Please install libclang-19-dev and python3-clang-19 before using this tool.\n"
-        "You must also specify the 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' and 'MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH'"
-        " environment variables, for example:"
-        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-19/lib/libclang.so.1"
-        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=/usr/lib/llvm-19/lib",
+        "Please install libclang-dev and python3-clang before using this tool.\n"
+        "libclang is found automatically; to use a specific one, set the "
+        "'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' environment variable, for example:"
+        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-21/lib/libclang.so.1",
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
@@ -567,6 +595,14 @@ def main():
 
     args = parser.parse_args()
 
+    if args.external_headers is None and args.internal_headers is None:
+        parser.error(
+            "at least one of --external-headers-directory or --internal-headers-directory is required"
+        )
+    for headers in (args.external_headers, args.internal_headers):
+        if headers is not None and not headers.is_dir():
+            parser.error(f"headers directory does not exist: {headers}")
+
     if args.diff:
         _logger.info("symbols_map_generator is running in 'diff' mode")
     else:
@@ -577,72 +613,21 @@ def main():
         file_path = os.environ["MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH"]
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH is {file_path}")
         clang.cindex.Config.set_library_file(file_path)
-    else:
-        clang_so_paths = [
-            "/usr/lib/llvm-19/lib/libclang.so.1",
-            "/usr/lib/x86_64-linux-gnu/libclang-19.so.1",
-            "/usr/lib/aarch64-linux-gnu/libclang-19.so.1",
-            "/usr/lib/libclang-19.so.1",
-            "/usr/lib/llvm-18/lib/libclang-18.so.1",
-            "/usr/lib/x86_64-linux-gnu/libclang-18.so.1",
-            "/usr/lib/aarch64-linux-gnu/libclang-18.so.1",
-            "/usr/lib/libclang-18.so.1",
-        ]
-
-        # Find libclang.so.1
-        found_so = None
-        for path in clang_so_paths:
-            if os.path.isfile(path):
-                found_so = path
-                _logger.debug(f"Found libclang.so.1 at: {path}")
-                break
-
-        if found_so is not None:
-            clang.cindex.Config.set_library_file(found_so)
-            _logger.info(f"Using found libclang.so.1 at: {found_so}")
-        else:
-            _logger.error(
-                "Could not find libclang.so.1 in the environment. "
-                "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH "
-                "if libclang.so.1 is manually installed in a non-standard directory."
-            )
-            exit(1)
-
-    if "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH" in os.environ:
+    elif "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH" in os.environ:
         library_path = os.environ["MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH"]
         _logger.info(f"MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH is {library_path}")
         clang.cindex.Config.set_library_path(library_path)
     else:
-        clang_lib_dirs = [
-            "/usr/lib/llvm-19/lib",
-            "/usr/lib/llvm-18/lib",
-            "/usr/lib/x86_64-linux-gnu",
-            "/usr/lib/aarch64-linux-gnu",
-            "/usr/lib",
-        ]
-
-        # Find library directory
-        found_lib = None
-        for lib_dir in clang_lib_dirs:
-            if os.path.isdir(lib_dir):
-                # Check if directory contains libclang files
-                for file in os.listdir(lib_dir):
-                    if file.startswith("libclang") and ".so" in file:
-                        found_lib = lib_dir
-                        _logger.debug(f"Found clang library directory at: {lib_dir}")
-                        break
-            if found_lib:
-                break
-        if found_lib is not None:
-            clang.cindex.Config.set_library_path(found_lib)
-            _logger.info(f"Using found clang library directory at: {found_lib}")
-        else:
+        found_so = find_libclang()
+        if found_so is None:
             _logger.error(
-                "Could not find clang library directory. "
-                "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH "
-                "if clang is not installed in the standard directory."
+                "Could not find libclang. "
+                "You may want to set MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH "
+                "if libclang is installed in a non-standard location."
             )
             exit(1)
+        _logger.info("Using libclang at: %s", found_so)
+        clang.cindex.Config.set_library_file(found_so)
 
     include_dirs = args.include_dirs.split(":")
     _logger.debug(f"Parsing with include directories: {include_dirs}")
