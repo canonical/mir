@@ -178,3 +178,18 @@ auto mf::KeyboardStateTracker::is_same_key(MirKeyboardEvent const& event, xkb_ke
     auto const& [scancode_to_keysym, _, xkb_key_state] = device_states.at(device);
     return xkb_key_state.scancode_produces_keysym(event.scan_code(), keysym);
 }
+
+auto mf::KeyboardStateTracker::key_producing_keysym_is_pressed(
+    MirInputDeviceId device, xkb_keysym_t keysym) const -> bool
+{
+    if (!device_states.contains(device))
+        return false;
+
+    auto const& [scancode_to_keysym, _, xkb_key_state] = device_states.at(device);
+    return std::ranges::any_of(
+        scancode_to_keysym,
+        [&](auto const& pair)
+        {
+            return pair.second == keysym || xkb_key_state.scancode_produces_keysym(pair.first, keysym);
+        });
+}
