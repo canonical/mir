@@ -230,6 +230,10 @@ msh::BasicIdleHandler::~BasicIdleHandler()
     session_lock->unregister_interest(*session_lock_monitor);
     std::lock_guard lock{mutex};
     clear_observers(lock);
+    if (session_locked)
+    {
+        idle_hub->set_idle_inhibition_enabled(true);
+    }
 }
 
 void msh::BasicIdleHandler::set_display_off_timeout(std::optional<time::Duration> timeout)
@@ -269,6 +273,7 @@ void  msh::BasicIdleHandler::on_session_lock()
         clear_observers(lock);
         register_observers(lock);
     }
+    idle_hub->set_idle_inhibition_enabled(false);
 }
 
 void  msh::BasicIdleHandler::on_session_unlock()
@@ -278,6 +283,10 @@ void  msh::BasicIdleHandler::on_session_unlock()
     if (current_off_timeout_when_locked != current_off_timeout)
     {
         clear_observers(lock);
+    }
+    idle_hub->set_idle_inhibition_enabled(true);
+    if (current_off_timeout_when_locked != current_off_timeout)
+    {
         register_observers(lock);
     }
 }
