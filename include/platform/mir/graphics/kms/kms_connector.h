@@ -19,6 +19,8 @@
 
 #include "drm_mode_resources.h"
 
+#include <cstdint>
+#include <optional>
 #include <string>
 #include <vector>
 #include <xf86drmMode.h>
@@ -30,6 +32,26 @@ namespace graphics
 namespace kms
 {
 std::string connector_name(DRMModeConnectorUPtr const& connector);
+
+/**
+ * Finds the index of the CRTC with the given ID in the DRM resources' CRTC list.
+ *
+ * \param [in]  resources   DRM resources to search.
+ * \param [in]  crtc_id     ID of the CRTC to locate.
+ * \returns     The CRTC's index, or std::nullopt if no CRTC has that ID.
+ */
+auto find_crtc_index(DRMModeResources const& resources, uint32_t crtc_id) -> std::optional<uint32_t>;
+
+/**
+ * Finds the first primary plane that can be used with the CRTC at the given index.
+ *
+ * \param [in]  drm_fd      File descriptor to DRM node.
+ * \param [in]  plane_res   Planes to search.
+ * \param [in]  crtc_index  Index of the CRTC in the DRM resources' CRTC list.
+ * \returns     The plane, or std::nullopt if no compatible primary plane exists.
+ */
+auto find_primary_plane_for_crtc(int drm_fd, PlaneResources& plane_res, uint32_t crtc_index)
+    -> std::optional<DRMModePlaneUPtr>;
 
 /**
  * Finds the first available CRTC that can drive Connector

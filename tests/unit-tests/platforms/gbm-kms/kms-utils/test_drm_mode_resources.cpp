@@ -21,6 +21,7 @@
 
 #include <unordered_set>
 #include <array>
+#include <cstring>
 #include <vector>
 #include <tuple>
 
@@ -45,6 +46,8 @@ struct DRMProperty
 {
     uint32_t id;
     char name[DRM_PROP_NAME_LEN];
+    uint32_t flags{};
+    std::vector<uint64_t> values{};
 };
 
 class FakeDRMObjectsWithProperties
@@ -56,7 +59,7 @@ public:
         for (auto const& prop : properties)
         {
             bool inserted;
-            std::tie(std::ignore, inserted) = this->properties.insert({prop.id, prop.name});
+            std::tie(std::ignore, inserted) = this->properties.insert({prop.id, prop});
             if (!inserted)
             {
                 BOOST_THROW_EXCEPTION(std::logic_error{"Found a property with duplicate id"});
@@ -136,7 +139,10 @@ private:
         auto const& property = properties.at(id);
 
         auto prop = std::make_unique<drmModePropertyRes>(id);
-        strncpy(prop->name, property.c_str(), sizeof(prop->name) - 1);
+        std::memcpy(prop->name, property.name, sizeof(prop->name));
+        prop->flags = property.flags;
+        prop->count_values = property.values.size();
+        prop->values = const_cast<uint64_t*>(property.values.data());
 
         return allocated_props.emplace(prop.get(), std::move(prop)).first->first;
     }
@@ -151,7 +157,7 @@ private:
     }
 
     std::unordered_map<uint32_t, DRMObjectWithProperties> objects;
-    std::unordered_map<uint32_t, std::string> properties;
+    std::unordered_map<uint32_t, DRMProperty> properties;
     std::unordered_set<drmModeObjectPropertiesPtr> allocated_obj_props;
     std::unordered_map<drmModePropertyPtr, std::unique_ptr<drmModePropertyRes>> allocated_props;
     uint32_t next_id{1};
@@ -162,9 +168,9 @@ TEST(DRMModeResources, can_access_plane_properties)
 {
     using namespace testing;
     std::vector<DRMProperty> properties{
-        DRMProperty{1, "FOO"},
-        DRMProperty{2, "type"},
-        DRMProperty{99, "CRTC_ID"}
+        DRMProperty{1, "FOO", DRM_MODE_PROP_RANGE, {0, 0xFF}},
+        DRMProperty{2, "type", DRM_MODE_PROP_ENUM, {DRM_PLANE_TYPE_CURSOR}},
+        DRMProperty{99, "CRTC_ID", DRM_MODE_PROP_OBJECT, {}}
     };
 
     std::vector<DRMObjectWithProperties> plane_object{
@@ -190,9 +196,23 @@ TEST(DRMModeResources, can_access_plane_properties)
 
     auto const plane_id = fake_objects.add_object(plane_object[0]);
 
+    for (auto const& property : properties)
+    {
+        EXPECT_CALL(mock_drm, drmModeGetProperty(_, property.id)).Times(1);
+    }
+
     mgk::ObjectProperties plane_props{0, plane_id, DRM_MODE_OBJECT_PLANE};
 
     EXPECT_THAT(plane_props["type"],
                 Eq(static_cast<unsigned>(DRM_PLANE_TYPE_CURSOR)));
     EXPECT_THAT(plane_props.id_for("CRTC_ID"), Eq(99u));
+
+    auto const* foo = plane_props.metadata("FOO");
+    ASSERT_THAT(foo, NotNull());
+    EXPECT_THAT(foo->flags, Eq(DRM_MODE_PROP_RANGE));
+    ASSERT_THAT(foo->count_values, Eq(2));
+    EXPECT_THAT(foo->values[0], Eq(0u));
+    EXPECT_THAT(foo->values[1], Eq(0xFFu));
+
+    EXPECT_THAT(plane_props.metadata("NOT_A_PROPERTY"), IsNull());
 }
