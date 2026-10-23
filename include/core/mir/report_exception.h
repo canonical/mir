@@ -17,7 +17,10 @@
 #ifndef MIR_REPORT_EXCEPTION_H_
 #define MIR_REPORT_EXCEPTION_H_
 
+#include <exception>
+#include <format>
 #include <iosfwd>
+#include <string>
 
 namespace mir
 {
@@ -36,5 +39,16 @@ void report_exception(std::ostream& stream);
  */
 void report_exception();
 }
+
+/**
+ *  Formats an exception the way report_exception() does: what() together with any boost
+ *  annotations (such as the throw location added by BOOST_THROW_EXCEPTION).
+ *  Format specs for strings (fill, alignment, width) are supported.
+ */
+template<>
+struct std::formatter<std::exception> : std::formatter<std::string>
+{
+    auto format(std::exception const& error, std::format_context& ctx) const -> std::format_context::iterator;
+};
 
 #endif /* MIR_REPORT_EXCEPTION_H_ */
