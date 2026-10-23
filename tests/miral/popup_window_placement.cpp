@@ -262,7 +262,7 @@ auto position_of(MirPlacementGravity rect_gravity, Rectangle rectangle) -> Point
         return rectangle.top_left + Displacement{0, 0.5 * displacement.dy};
 
     case mir_placement_gravity_center:
-        return rectangle.top_left + 0.5 * displacement;
+        return rectangle.centre();
 
     case mir_placement_gravity_east:
         return rectangle.top_right() + Displacement{0, 0.5 * displacement.dy};

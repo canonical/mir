@@ -1302,12 +1302,7 @@ TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_place
 {
     // Move the cursor to the second output
     auto const second_rectangle = get_initial_output_configs()[1].extents();
-    geom::PointF const new_cursor_position{
-        second_rectangle.top_left.x.as_int() + static_cast<int>(
-            static_cast<float>(second_rectangle.size.width.as_int()) / 2.f),
-        second_rectangle.top_left.y.as_int() + static_cast<int>(
-            static_cast<float>(second_rectangle.size.height.as_int()) / 2.f)
-    };
+    geom::PointF const new_cursor_position{second_rectangle.centre()};
     tools().move_cursor_to(new_cursor_position);
     EXPECT_THAT(tools().active_output(), second_rectangle);
 
