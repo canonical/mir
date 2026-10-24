@@ -29,6 +29,7 @@
 
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/egl_helpers.h>
+#include "gl_handles.h"
 #include <cstring>
 
 namespace mg = mir::graphics;
@@ -37,49 +38,6 @@ namespace geom = mir::geometry;
 
 namespace
 {
-template<void (*allocator)(GLsizei, GLuint*), void (* deleter)(GLsizei, GLuint const*)>
-class GLHandle
-{
-public:
-    GLHandle()
-    {
-        (*allocator)(1, &id);
-    }
-
-    ~GLHandle()
-    {
-        if (id)
-            (*deleter)(1, &id);
-    }
-
-    GLHandle(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle const&) = delete;
-
-    void reset()
-    {
-        if (id)
-            (*deleter)(1, &id);
-        id = 0;
-    }
-
-    GLHandle(GLHandle&& from)
-        : id{from.id}
-    {
-        from.id = 0;
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id{0};
-};
-
-using RenderbufferHandle = GLHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
-using FramebufferHandle = GLHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
-
 auto create_current_context(EGLDisplay dpy, EGLContext share_ctx)
     -> EGLContext
 {
@@ -167,9 +125,9 @@ private:
     EGLDisplay const dpy;
     EGLContext ctx;
     DRMFormat const format;
-    RenderbufferHandle colour_buffer;
-    std::shared_ptr<RenderbufferHandle> depth_stencil_buffer;
-    FramebufferHandle fbo;
+    mg::RenderbufferHandle colour_buffer;
+    std::shared_ptr<mg::RenderbufferHandle> depth_stencil_buffer;
+    mg::FramebufferHandle fbo;
     geom::Size allocated_size;
 };
 
@@ -225,7 +183,7 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
       format{select_format_from(allocator)},
       depth_stencil_buffer{
           (config.depth_buffer_bits() || config.stencil_buffer_bits())
-              ? std::make_shared<RenderbufferHandle>()
+              ? std::make_shared<mg::RenderbufferHandle>()
               : nullptr}
 {
     ensure_storage_for_size();

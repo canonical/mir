@@ -24,6 +24,8 @@ add_library(graphics_platform_common STATIC
 target_include_directories(graphics_platform_common
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/platform
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/platform/renderers/common
 )
 
 target_link_libraries(graphics_platform_common
@@ -142,6 +144,8 @@ target_include_directories(mirplatformgraphicscommon
   PUBLIC
     ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/include/platform
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/src/platform/renderers/common
 )
 
 target_link_libraries(

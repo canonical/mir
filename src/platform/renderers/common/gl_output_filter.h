@@ -63,11 +63,11 @@ public:
 private:
     void ensure_texture_storage_for(geometry::Size size);
 
-    TextureHandle const texture;
-    FramebufferHandle const framebuffer;
+    graphics::TextureHandle const texture;
+    graphics::FramebufferHandle const framebuffer;
     geometry::Size texture_size;
     MirOutputFilter filter{mir_output_filter_none};
-    std::unique_ptr<ProgramHandle> program;
+    std::unique_ptr<graphics::ProgramHandle> program;
     GLint position_attrib{0};
     GLint texcoord_attrib{0};
     GLint tex_uniform{0};

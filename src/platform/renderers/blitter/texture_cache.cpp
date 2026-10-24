@@ -35,16 +35,6 @@
 namespace mg = mir::graphics;
 namespace mrb = mir::renderer::blitter;
 
-namespace
-{
-auto make_texture() -> mir::renderer::common::TextureHandle
-{
-    GLuint tex{0};
-    glGenTextures(1, &tex);
-    return mir::renderer::common::TextureHandle{tex};
-}
-}
-
 mrb::TextureCache::TextureCache(
     std::shared_ptr<SoftwareEGLContext> context,
     std::shared_ptr<mg::BlitterRenderingProvider> blitter)
@@ -137,7 +127,6 @@ void mrb::TextureCache::invalidate()
 }
 
 mrb::TextureCache::MappedBufferTexture::MappedBufferTexture()
-    : texture{make_texture()}
 {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
