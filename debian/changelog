@@ -19,15 +19,22 @@ mir (2.31.0) UNRELEASED; urgency=medium
 
     - Enhancements:
 
-      - Pull request title (#<PR number>)
+      - Add freely positioned magnification with on-screen controls (#5135, #5207)
+      - Add MirAL output configuration and display presentation APIs (#5224, #5290)
+      - Support foreign buffers, xdg-decoration v2 and mir-shell-v1 v2 (#5203, #5274, #5239, #5343)
+      - Add a blitter rendering path for supported hardware (#5213, #5317)
+      - Expose sandbox metadata and physical output addresses (#5209, #5291)
 
     - Bugs fixed:
 
-      - Issue title (#<Issue number>)
+      - Scale touch input for output transforms and support circular scrolling (#5292, #5246)
+      - Avoid filtering input triggers too aggressively (#5249)
+      - Recover after presentation failures and honor output filters and transforms (#5336, #5310)
+      - Confirm applied output configurations and smooth MirAL splash-screen fades (#5259, #5321, #5297)
 
     - Documentation:
 
-      - Pull request title (#<PR number>)
+      - Document freely positioned magnification and its controls (#5135)
 
  -- Mir CI Bot <mir-ci-bot@canonical.com>  Sat, 24 Oct 2026 23:02:58 +0000
 
