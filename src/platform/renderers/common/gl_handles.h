@@ -25,12 +25,6 @@
 
 namespace mir::graphics
 {
-namespace detail
-{
-template<auto f, typename... Args>
-concept CallableWith = std::is_invocable_v<decltype(f), Args...>;
-}
-
 /**
  * RAII owner of a GL object name.
  *
@@ -54,13 +48,13 @@ public:
 
     /// eg: glCreateProgram()
     GLHandle()
-        requires detail::CallableWith<allocator>
+        requires std::invocable<decltype(allocator)>
         : id{allocator()}
     {}
 
     /// eg: glGenTextures(1, &id)
     GLHandle()
-        requires detail::CallableWith<allocator, GLsizei, GLuint*>
+        requires std::invocable<decltype(allocator), GLsizei, GLuint*>
         : id{0}
     {
         allocator(1, &id);
@@ -68,7 +62,7 @@ public:
 
     /// eg: glCreateShader(GL_VERTEX_SHADER)
     explicit GLHandle(GLenum type)
-        requires detail::CallableWith<allocator, GLenum>
+        requires std::invocable<decltype(allocator), GLenum>
         : id{allocator(type)}
     {}
 
@@ -78,7 +72,7 @@ public:
     {
         if (id)
         {
-            if constexpr (detail::CallableWith<deleter, GLsizei, GLuint const*>)
+            if constexpr (std::invocable<decltype(deleter), GLsizei, GLuint const*>)
                 deleter(1, &id);
             else
                 deleter(id);

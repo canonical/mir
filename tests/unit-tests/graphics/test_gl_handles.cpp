@@ -61,6 +61,7 @@ TEST_F(GLHandleTest, adopt_existing_name_and_deletes_on_destruction)
 TEST_F(GLHandleTest, program_handle_allocates_on_construction_and_deletes_on_destruction)
 {
     GLuint const program_id = 101;
+    InSequence const s;
     EXPECT_CALL(mock_gl, glCreateProgram()).WillOnce(Return(program_id));
     EXPECT_CALL(mock_gl, glDeleteProgram(program_id)).Times(1);
 
@@ -75,6 +76,7 @@ TEST_F(GLHandleTest, shader_handle_allocates_with_enum_and_deletes_on_destructio
     GLuint const shader_id = 202;
     GLenum const shader_type = GL_VERTEX_SHADER;
 
+    InSequence const s;
     EXPECT_CALL(mock_gl, glCreateShader(shader_type)).WillOnce(Return(shader_id));
     EXPECT_CALL(mock_gl, glDeleteShader(shader_id)).Times(1);
 
@@ -88,6 +90,7 @@ TEST_F(GLHandleTest, bulk_allocator_and_bulk_deleter)
 {
     GLuint const texture_id = 303;
 
+    InSequence const s;
     EXPECT_CALL(mock_gl, glGenTextures(1, _))
         .WillOnce(Invoke(
             [texture_id](GLsizei n, GLuint* ids)
@@ -108,6 +111,7 @@ TEST_F(GLHandleTest, bulk_allocator_and_bulk_deleter)
 TEST_F(GLHandleTest, moved_from_handle_deletes_exactly_once)
 {
     GLuint const program_id = 404;
+    InSequence const s;
     EXPECT_CALL(mock_gl, glCreateProgram()).WillOnce(Return(program_id));
     EXPECT_CALL(mock_gl, glDeleteProgram(program_id)).Times(1);
 
@@ -128,7 +132,7 @@ TEST_F(GLHandleTest, move_assignment_deletes_overwritten_handle)
 
     EXPECT_CALL(mock_gl, glCreateProgram()).WillOnce(Return(id1)).WillOnce(Return(id2));
 
-    InSequence s;
+    InSequence const s;
     EXPECT_CALL(mock_gl, glDeleteProgram(id1)).Times(1);
     EXPECT_CALL(mock_gl, glDeleteProgram(id2)).Times(1);
 
@@ -146,6 +150,7 @@ TEST_F(GLHandleTest, move_assignment_deletes_overwritten_handle)
 TEST_F(GLHandleTest, reset_deletes_early_and_destructor_does_not_double_delete)
 {
     GLuint const id = 601;
+    InSequence const s;
     EXPECT_CALL(mock_gl, glCreateProgram()).WillOnce(Return(id));
     EXPECT_CALL(mock_gl, glDeleteProgram(id)).Times(1);
 
@@ -157,28 +162,44 @@ TEST_F(GLHandleTest, reset_deletes_early_and_destructor_does_not_double_delete)
     }
 }
 
-TEST_F(GLHandleTest, buffer_and_renderbuffer_and_framebuffer_handles)
+TEST_F(GLHandleTest, buffer_handle_allocates_and_deletes)
 {
     GLuint const buf_id = 701;
-    GLuint const rb_id = 702;
-    GLuint const fb_id = 703;
 
+    InSequence const s;
     EXPECT_CALL(mock_gl, glGenBuffers(1, _)).WillOnce(Invoke([buf_id](GLsizei, GLuint* ids) { *ids = buf_id; }));
     EXPECT_CALL(mock_gl, glDeleteBuffers(1, Pointee(buf_id))).Times(1);
 
+    {
+        mg::BufferHandle buffer;
+        EXPECT_EQ(static_cast<GLuint>(buffer), buf_id);
+    }
+}
+
+TEST_F(GLHandleTest, renderbuffer_handle_allocates_and_deletes)
+{
+    GLuint const rb_id = 702;
+
+    InSequence const s;
     EXPECT_CALL(mock_gl, glGenRenderbuffers(1, _)).WillOnce(Invoke([rb_id](GLsizei, GLuint* ids) { *ids = rb_id; }));
     EXPECT_CALL(mock_gl, glDeleteRenderbuffers(1, Pointee(rb_id))).Times(1);
 
+    {
+        mg::RenderbufferHandle renderbuffer;
+        EXPECT_EQ(static_cast<GLuint>(renderbuffer), rb_id);
+    }
+}
+
+TEST_F(GLHandleTest, framebuffer_handle_allocates_and_deletes)
+{
+    GLuint const fb_id = 703;
+
+    InSequence const s;
     EXPECT_CALL(mock_gl, glGenFramebuffers(1, _)).WillOnce(Invoke([fb_id](GLsizei, GLuint* ids) { *ids = fb_id; }));
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1, Pointee(fb_id))).Times(1);
 
     {
-        mg::BufferHandle buffer;
-        mg::RenderbufferHandle renderbuffer;
         mg::FramebufferHandle framebuffer;
-
-        EXPECT_EQ(static_cast<GLuint>(buffer), buf_id);
-        EXPECT_EQ(static_cast<GLuint>(renderbuffer), rb_id);
         EXPECT_EQ(static_cast<GLuint>(framebuffer), fb_id);
     }
 }
