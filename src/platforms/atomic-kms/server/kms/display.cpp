@@ -348,12 +348,11 @@ void mga::Display::configure_locked(
     }
 
     size_t output_idx{0};
+    auto const plane_promotion = plane_promotion_for(kms_conf);
     kms_conf.for_each_output(
         [&](DisplayConfigurationOutput const& out)
         {
-            if (!out.connected || !out.used ||
-                (out.power_mode != mir_power_mode_on) ||
-                (out.current_mode_index >= out.modes.size()))
+            if (!is_active_physical_output(out))
             {
                 // We don't need to do anything for unconfigured outputs
                 return;
@@ -394,6 +393,7 @@ void mga::Display::configure_locked(
                     drm_fd,
                     gbm,
                     bypass_option,
+                    plane_promotion,
                     listener,
                     std::move(kms_output),
                     out.extents(),
