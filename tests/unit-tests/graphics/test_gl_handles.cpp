@@ -92,13 +92,7 @@ TEST_F(GLHandleTest, bulk_allocator_and_bulk_deleter)
 
     InSequence const s;
     EXPECT_CALL(mock_gl, glGenTextures(1, _))
-        .WillOnce(Invoke(
-            [texture_id](GLsizei n, GLuint* ids)
-            {
-                EXPECT_EQ(n, 1);
-                ASSERT_NE(ids, nullptr);
-                *ids = texture_id;
-            }));
+        .WillOnce(SetArgPointee<1>(texture_id));
 
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(texture_id))).Times(1);
 
@@ -167,7 +161,7 @@ TEST_F(GLHandleTest, buffer_handle_allocates_and_deletes)
     GLuint const buf_id = 701;
 
     InSequence const s;
-    EXPECT_CALL(mock_gl, glGenBuffers(1, _)).WillOnce(Invoke([buf_id](GLsizei, GLuint* ids) { *ids = buf_id; }));
+    EXPECT_CALL(mock_gl, glGenBuffers(1, _)).WillOnce(SetArgPointee<1>(buf_id));
     EXPECT_CALL(mock_gl, glDeleteBuffers(1, Pointee(buf_id))).Times(1);
 
     {
@@ -181,7 +175,7 @@ TEST_F(GLHandleTest, renderbuffer_handle_allocates_and_deletes)
     GLuint const rb_id = 702;
 
     InSequence const s;
-    EXPECT_CALL(mock_gl, glGenRenderbuffers(1, _)).WillOnce(Invoke([rb_id](GLsizei, GLuint* ids) { *ids = rb_id; }));
+    EXPECT_CALL(mock_gl, glGenRenderbuffers(1, _)).WillOnce(SetArgPointee<1>(rb_id));
     EXPECT_CALL(mock_gl, glDeleteRenderbuffers(1, Pointee(rb_id))).Times(1);
 
     {
@@ -195,7 +189,7 @@ TEST_F(GLHandleTest, framebuffer_handle_allocates_and_deletes)
     GLuint const fb_id = 703;
 
     InSequence const s;
-    EXPECT_CALL(mock_gl, glGenFramebuffers(1, _)).WillOnce(Invoke([fb_id](GLsizei, GLuint* ids) { *ids = fb_id; }));
+    EXPECT_CALL(mock_gl, glGenFramebuffers(1, _)).WillOnce(SetArgPointee<1>(fb_id));
     EXPECT_CALL(mock_gl, glDeleteFramebuffers(1, Pointee(fb_id))).Times(1);
 
     {
