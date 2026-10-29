@@ -20,6 +20,7 @@
 #include "basic_idle_handler.h"
 #include "decoration/basic_decoration.h"
 #include "decoration/basic_manager.h"
+#include "decoration/decoration_strategy.h"
 #include "default_persistent_surface_store.h"
 #include "graphics_display_layout.h"
 #include "basic_mousekeys_transformer.h"
@@ -77,7 +78,7 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
         [this]()->std::shared_ptr<msd::Manager>
         {
             return std::make_shared<msd::BasicManager>(
-                msd::DecorationStrategy::default_decoration_strategy(the_buffer_allocator()),
+                the_shell_decoration_strategy(),
                 *the_display_configuration_observer_registrar(),
                 [buffer_allocator = the_buffer_allocator(),
                  executor = the_main_loop(),
@@ -94,6 +95,34 @@ auto mir::DefaultServerConfiguration::the_decoration_manager() -> std::shared_pt
                         decoration_strategy);
                 });
         });
+}
+
+auto mir::DefaultServerConfiguration::the_decoration_style() -> std::shared_ptr<msd::DecorationStyle const>
+{
+    if (!decoration_style)
+        decoration_style = std::make_shared<msd::DecorationStyle const>();
+
+    return decoration_style;
+}
+
+void mir::DefaultServerConfiguration::set_the_decoration_style(std::shared_ptr<msd::DecorationStyle const> style)
+{
+    decoration_style = std::move(style);
+}
+
+auto mir::DefaultServerConfiguration::the_shell_decoration_strategy() -> std::shared_ptr<msd::DecorationStrategy>
+{
+    if (!shell_decoration_strategy)
+        shell_decoration_strategy = msd::DecorationStrategy::default_decoration_strategy(
+            the_buffer_allocator(), the_decoration_style());
+
+    return shell_decoration_strategy;
+}
+
+void mir::DefaultServerConfiguration::set_the_shell_decoration_strategy(
+    std::shared_ptr<msd::DecorationStrategy> strategy)
+{
+    shell_decoration_strategy = std::move(strategy);
 }
 
 auto mir::DefaultServerConfiguration::wrap_shell(std::shared_ptr<msh::Shell> const& wrapped) -> std::shared_ptr<msh::Shell>

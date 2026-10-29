@@ -74,7 +74,7 @@ class Shell;
 class ShellReport;
 class SurfaceStack;
 class PersistentSurfaceStore;
-namespace decoration { class Manager; }
+namespace decoration { class Manager; class DecorationStrategy; struct DecorationStyle; }
 }
 namespace time
 {
@@ -339,6 +339,12 @@ public:
 
     auto the_decoration_strategy() -> std::shared_ptr<DecorationStrategy> override;
     void set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy) override;
+
+    auto the_decoration_style() -> std::shared_ptr<shell::decoration::DecorationStyle const> override;
+    void set_the_decoration_style(std::shared_ptr<shell::decoration::DecorationStyle const> style) override;
+
+    auto the_shell_decoration_strategy() -> std::shared_ptr<shell::decoration::DecorationStrategy> override;
+    void set_the_shell_decoration_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy) override;
     auto the_display_configuration_observer() -> std::shared_ptr<graphics::DisplayConfigurationObserver>;
 
 protected:
@@ -445,6 +451,8 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
+    std::shared_ptr<shell::decoration::DecorationStyle const> decoration_style;
+    std::shared_ptr<shell::decoration::DecorationStrategy> shell_decoration_strategy;
 
 private:
     std::shared_ptr<options::Configuration> const configuration_options;
