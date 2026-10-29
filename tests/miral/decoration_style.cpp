@@ -142,6 +142,15 @@ TEST_F(TestDecorationStyleConfig, config_is_applied_at_startup)
     EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
 }
 
+TEST_F(TestDecorationStyleConfig, corner_radius_is_applied)
+{
+    load("decorations_corner_radius=12\n");
+
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->corner_radius, Eq(mir::geometry::Width{12}));
+}
+
 TEST_F(TestDecorationStyleConfig, config_reload_is_applied)
 {
     start_server_with(style);

@@ -16,7 +16,11 @@
 
 #include "src/server/shell/decoration/decoration_strategy.h"
 
+#include <mir/renderer/sw/pixel_source.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
+#include <mir/test/doubles/stub_surface.h>
+
+#include <cstring>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -24,8 +28,47 @@
 namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 namespace mtd = mir::test::doubles;
+namespace ms = mir::scene;
 
 using namespace testing;
+
+namespace
+{
+struct StubWindowSurface : mtd::StubSurface
+{
+    StubWindowSurface(geom::Size size) : size{size} {}
+
+    auto window_size() const -> geom::Size override { return size; }
+    auto state() const -> MirWindowState override { return mir_window_state_restored; }
+    auto name() const -> std::string override { return "stub"; }
+
+    geom::Size const size;
+};
+
+/// The pixels of a rendered decoration buffer, indexed by position
+struct RenderedPixels
+{
+    RenderedPixels(std::shared_ptr<mir::graphics::Buffer> const& buffer) :
+        mappable{std::dynamic_pointer_cast<mir::renderer::software::RWMappable>(buffer)},
+        mapping{mappable->map_rw()},
+        size{mappable->size()},
+        stride{mappable->stride()}
+    {
+    }
+
+    auto operator()(int x, int y) const -> uint32_t
+    {
+        uint32_t pixel;
+        memcpy(&pixel, mapping->data() + y * stride.as_uint32_t() + x * sizeof(pixel), sizeof(pixel));
+        return pixel;
+    }
+
+    std::shared_ptr<mir::renderer::software::RWMappable> const mappable;
+    std::unique_ptr<mir::renderer::software::Mapping<std::byte>> const mapping;
+    geom::Size const size;
+    geom::Stride const stride;
+};
+}
 
 struct DecorationStrategyStyle : Test
 {
@@ -79,4 +122,65 @@ TEST_F(DecorationStrategyStyle, custom_buffer_format_is_used)
     style->buffer_format = mir_pixel_format_xrgb_8888;
 
     EXPECT_THAT(strategy_with(style)->buffer_format(), Eq(mir_pixel_format_xrgb_8888));
+}
+
+struct DecorationStrategyRendering : DecorationStrategyStyle
+{
+    auto render(std::shared_ptr<msd::DecorationStyle const> style)
+        -> std::unique_ptr<msd::RendererStrategy>
+    {
+        strategy = strategy_with(std::move(style));
+        window_state = strategy->new_window_state(surface, 1.0f);
+        auto renderer = strategy->render_strategy();
+        renderer->update_state(*window_state, msd::InputState{{}, {}});
+        return renderer;
+    }
+
+    std::shared_ptr<ms::Surface> const surface{std::make_shared<StubWindowSurface>(geom::Size{200, 100})};
+    std::shared_ptr<msd::DecorationStrategy> strategy;
+    std::unique_ptr<msd::WindowState> window_state;
+};
+
+TEST_F(DecorationStrategyRendering, square_corners_are_opaque)
+{
+    auto const renderer = render(std::make_shared<msd::DecorationStyle const>());
+
+    RenderedPixels const titlebar{renderer->render_titlebar().value()};
+    EXPECT_THAT(titlebar(0, 0) >> 24, Eq(0xFFu));
+
+    RenderedPixels const bottom{renderer->render_bottom_border().value()};
+    EXPECT_THAT(bottom(0, bottom.size.height.as_int() - 1) >> 24, Eq(0xFFu));
+}
+
+TEST_F(DecorationStrategyRendering, rounded_corners_are_transparent)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->corner_radius = geom::Width{12};
+
+    auto const renderer = render(style);
+
+    RenderedPixels const titlebar{renderer->render_titlebar().value()};
+    EXPECT_THAT(titlebar(0, 0), Eq(0u));
+    EXPECT_THAT(titlebar(titlebar.size.width.as_int() - 1, 0), Eq(0u));
+    // Away from the corners the titlebar is untouched
+    EXPECT_THAT(titlebar(titlebar.size.width.as_int() / 2, 0) >> 24, Eq(0xFFu));
+    EXPECT_THAT(titlebar(0, titlebar.size.height.as_int() - 1) >> 24, Eq(0xFFu));
+
+    RenderedPixels const bottom{renderer->render_bottom_border().value()};
+    auto const bottom_row = bottom.size.height.as_int() - 1;
+    EXPECT_THAT(bottom(0, bottom_row), Eq(0u));
+    EXPECT_THAT(bottom(bottom.size.width.as_int() - 1, bottom_row), Eq(0u));
+    EXPECT_THAT(bottom(bottom.size.width.as_int() / 2, bottom_row) >> 24, Eq(0xFFu));
+}
+
+TEST_F(DecorationStrategyRendering, corner_radius_larger_than_the_bottom_border_rounds_the_side_borders)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->corner_radius = geom::Width{20};
+
+    auto const renderer = render(style);
+
+    RenderedPixels const left{renderer->render_left_border().value()};
+    EXPECT_THAT(left(0, left.size.height.as_int() - 1), Eq(0u));
+    EXPECT_THAT(left(0, 0) >> 24, Eq(0xFFu));
 }
