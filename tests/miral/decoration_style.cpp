@@ -133,8 +133,8 @@ struct TestDecorationStyleConfig : TestDecorationStyle
 
 TEST_F(TestDecorationStyleConfig, config_is_applied_at_startup)
 {
-    load("decorations_titlebar_height=42\n"
-         "decorations_color_background_focused=#112233\n");
+    load("ssd_titlebar_height=42\n"
+         "ssd_color_background_focused=#112233\n");
 
     start_server_with(style);
 
@@ -144,7 +144,7 @@ TEST_F(TestDecorationStyleConfig, config_is_applied_at_startup)
 
 TEST_F(TestDecorationStyleConfig, corner_radius_is_applied)
 {
-    load("decorations_corner_radius=12\n");
+    load("ssd_corner_radius=12\n");
 
     start_server_with(style);
 
@@ -155,8 +155,8 @@ TEST_F(TestDecorationStyleConfig, config_reload_is_applied)
 {
     start_server_with(style);
 
-    load("decorations_side_border_width=7\n"
-         "decorations_color_title_unfocused=#44556677\n");
+    load("ssd_side_border_width=7\n"
+         "ssd_color_title_unfocused=#44556677\n");
 
     EXPECT_THAT(applied_style()->side_border_width, Eq(mir::geometry::Width{7}));
     EXPECT_THAT(applied_style()->unfocused.text_color, Eq(msd::pack_pixel(0x44, 0x55, 0x66, 0x77)));
@@ -164,7 +164,7 @@ TEST_F(TestDecorationStyleConfig, config_reload_is_applied)
 
 TEST_F(TestDecorationStyleConfig, dropping_a_config_value_restores_the_default)
 {
-    load("decorations_titlebar_height=42\n");
+    load("ssd_titlebar_height=42\n");
     start_server_with(style);
     ASSERT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{42}));
 
@@ -175,12 +175,12 @@ TEST_F(TestDecorationStyleConfig, dropping_a_config_value_restores_the_default)
 
 TEST_F(TestDecorationStyleConfig, invalid_config_values_are_ignored)
 {
-    load("decorations_titlebar_height=42\n"
-         "decorations_color_background_focused=#112233\n");
+    load("ssd_titlebar_height=42\n"
+         "ssd_color_background_focused=#112233\n");
     start_server_with(style);
 
-    load("decorations_titlebar_height=-1\n"
-         "decorations_color_background_focused=not_a_color\n");
+    load("ssd_titlebar_height=-1\n"
+         "ssd_color_background_focused=not_a_color\n");
 
     EXPECT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{42}));
     EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
