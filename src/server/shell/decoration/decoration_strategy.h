@@ -142,6 +142,11 @@ public:
     virtual auto buffer_format() const -> MirPixelFormat = 0;
     virtual auto resize_corner_input_size() const -> geometry::Size = 0;
 
+    /// Replace the style used for decorations rendered from now on.
+    /// Existing decorations keep their current appearance until they are rebuilt
+    /// (see Manager::redecorate_all())
+    virtual void update_style(std::shared_ptr<DecorationStyle const> const& style) = 0;
+
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;
 

@@ -24,10 +24,15 @@ namespace mir { class Server; }
 
 namespace miral
 {
+namespace live_config { class Store; }
+
 /// Customizes the appearance of the decorations Mir draws for server side
 /// decorated windows.
 ///
-/// Anything left unset keeps Mir's default appearance.
+/// Anything left unset keeps Mir's default appearance. Changes made after the
+/// server has started are applied to the windows that are already decorated.
+///
+/// Copies share the same settings.
 ///
 /// \note Unrecognized Element, State and Metric values are ignored, so that
 ///       new ones can be introduced without breaking ABI.
@@ -36,6 +41,33 @@ class DecorationStyle
 {
 public:
     DecorationStyle();
+
+    /// Constructor registering with a configuration store
+    ///
+    /// Available options:
+    ///     - {decorations,titlebar_height}: Visible height of the titlebar
+    ///     - {decorations,side_border_width}: Visible width of the side borders
+    ///     - {decorations,bottom_border_height}: Visible height of the bottom border
+    ///     - {decorations,button_width}: Width of the titlebar buttons
+    ///     - {decorations,padding_between_buttons}: Gap between the titlebar buttons
+    ///     - {decorations,title_font_height}: Height of the window title text
+    ///     - {decorations,resize_corner_input_width}: Width of the resize handle in a corner
+    ///     - {decorations,resize_corner_input_height}: Height of the resize handle in a corner
+    ///     - {decorations,color,background,focused}
+    ///     - {decorations,color,background,unfocused}
+    ///     - {decorations,color,title,focused}
+    ///     - {decorations,color,title,unfocused}
+    ///     - {decorations,color,button,normal}
+    ///     - {decorations,color,button,hovered}
+    ///     - {decorations,color,button_icon}
+    ///     - {decorations,color,close_button,normal}
+    ///     - {decorations,color,close_button,hovered}
+    ///     - {decorations,color,close_button_icon}
+    ///
+    /// Colors are written as '#rrggbb' or '#rrggbbaa'. Options that are unset
+    /// revert to Mir's defaults.
+    explicit DecorationStyle(live_config::Store& config_store);
+
     DecorationStyle(DecorationStyle const&);
     auto operator=(DecorationStyle const&) -> DecorationStyle&;
     ~DecorationStyle();
@@ -78,9 +110,13 @@ public:
     /// \ref Element::background and \ref Element::title are drawn in either
     /// \ref State::focused or \ref State::unfocused; the button elements are
     /// drawn in either \ref State::normal or \ref State::hovered.
+    ///
+    /// Takes effect immediately, or when the server starts.
     void set_color(Element element, State state, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 0xFF);
 
     /// Set \p metric to \p pixels logical pixels
+    ///
+    /// Takes effect immediately, or when the server starts.
     void set_metric(Metric metric, int pixels);
 
     void operator()(mir::Server& server) const;

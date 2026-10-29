@@ -93,12 +93,12 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     std::unique_lock lock{mutex};
     if (decorations.find(surface.get()) == decorations.end())
     {
-        decorations[surface.get()] = nullptr;
+        decorations[surface.get()] = DecoratedSurface{surface, nullptr};
         lock.unlock();
         auto decoration = decoration_builder(decoration_strategy, locked_shell, surface);
         lock.lock();
         decoration->set_scale(scale);
-        decorations[surface.get()] = std::move(decoration);
+        decorations[surface.get()] = DecoratedSurface{surface, std::move(decoration)};
     }
 }
 
@@ -110,7 +110,7 @@ void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
         auto const it = decorations.find(surface.get());
         if (it != decorations.end())
         {
-            decoration = std::move(it->second);
+            decoration = std::move(it->second.decoration);
             decorations.erase(it);
         }
     }
@@ -124,11 +124,32 @@ void msd::BasicManager::undecorate_all()
     {
         std::lock_guard lock{mutex};
         for (auto& it : decorations)
-            to_destroy.push_back(std::move(it.second));
+            to_destroy.push_back(std::move(it.second.decoration));
         decorations.clear();
     }
     // Destroy the decorations outside the lock
     to_destroy.clear();
+}
+
+void msd::BasicManager::redecorate_all()
+{
+    std::vector<std::shared_ptr<ms::Surface>> to_redecorate;
+    std::vector<std::unique_ptr<Decoration>> to_destroy;
+    {
+        std::lock_guard lock{mutex};
+        for (auto& it : decorations)
+        {
+            if (auto const surface = it.second.surface.lock())
+                to_redecorate.push_back(surface);
+            to_destroy.push_back(std::move(it.second.decoration));
+        }
+        decorations.clear();
+    }
+    // Destroy the decorations outside the lock
+    to_destroy.clear();
+
+    for (auto const& surface : to_redecorate)
+        decorate(surface);
 }
 
 using mir::geometry::Size;
@@ -147,7 +168,8 @@ void msd::BasicManager::set_scale(float new_scale)
         scale = new_scale;
         for (auto& it : decorations)
         {
-            it.second->set_scale(scale);
+            if (auto const& decoration = it.second.decoration)
+                decoration->set_scale(scale);
         }
     }
 }
