@@ -108,12 +108,12 @@ mi::XKBContextPtr mi::make_unique_context()
     return {context, &xkb_context_unref};
 }
 
-mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingStateLedRegistrar::XkbMappingStateLedRegistrar(mir::Executor& executor)
+mircv::XKBMapperRegistrar::DeviceLedRegistrar::DeviceLedRegistrar(mir::Executor& executor)
     : ObserverMultiplexer<LedObserver>(executor)
 {
 }
 
-void mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingStateLedRegistrar::leds_set(mir::input::KeyboardLeds leds)
+void mircv::XKBMapperRegistrar::DeviceLedRegistrar::leds_set(mir::input::KeyboardLeds leds)
 {
     for_each_observer(&LedObserver::leds_set, leds);
 }
@@ -180,7 +180,7 @@ void mircv::XKBMapperRegistrar::map_event(MirEvent& ev)
                 if (mapping_state->update_and_map(ev, compose_state))
                 {
                     update_modifier();
-                    mapping_state->notify_leds_changed();
+                    notify_leds_changed(device_id, *mapping_state);
                 }
             }
 
@@ -208,7 +208,7 @@ mircv::XKBMapperRegistrar::XkbMappingState* mircv::XKBMapperRegistrar::get_keyma
     if (default_keymap)
     {
         auto mapping_state = std::make_unique<XkbMappingState>(
-            default_keymap, default_compiled_keymap, executor);
+            default_keymap, default_compiled_keymap);
         decltype(device_mapping.begin()) insertion_pos;
         std::tie(insertion_pos, std::ignore) =
             device_mapping.emplace(
@@ -244,7 +244,10 @@ void mircv::XKBMapperRegistrar::set_keymap(MirInputDeviceId id, std::shared_ptr<
     std::lock_guard lg(guard);
 
     auto compiled_keymap = new_keymap->make_unique_xkb_keymap(context.get());
-    auto mapping_state = std::make_unique<XkbMappingState>(std::move(new_keymap), std::move(compiled_keymap), executor);
+    auto mapping_state = std::make_unique<XkbMappingState>(std::move(new_keymap), std::move(compiled_keymap));
+
+    // The fresh state has no locked modifiers, so bring the hardware LEDs in line with it
+    notify_leds_changed(id, *mapping_state);
 
     device_mapping.erase(id);
     device_mapping.emplace(
@@ -294,35 +297,44 @@ auto mircv::XKBMapperRegistrar::xkb_modifiers() const -> MirXkbModifiers
 
 void mircv::XKBMapperRegistrar::register_interest(std::weak_ptr<LedObserver> const& observer, MirInputDeviceId id)
 {
-    auto it = device_mapping.find(id);
-    if (it == end(device_mapping))
-        return;
+    std::lock_guard lg(guard);
 
-    auto& registrar = it->second->get_registrar();
-    registrar.register_interest(observer);
+    auto& registrar = device_led_registrars[id];
+    if (!registrar)
+        registrar = std::make_unique<DeviceLedRegistrar>(executor);
+
+    registrar->register_interest(observer);
 }
 
 void mircv::XKBMapperRegistrar::unregister_interest(LedObserver const& observer, MirInputDeviceId id)
 {
-    auto it = device_mapping.find(id);
-    if (it == end(device_mapping))
+    std::lock_guard lg(guard);
+
+    auto it = device_led_registrars.find(id);
+    if (it == end(device_led_registrars))
         return;
 
-    auto& registrar = it->second->get_registrar();
-    registrar.unregister_interest(observer);
+    it->second->unregister_interest(observer);
+}
+
+void mircv::XKBMapperRegistrar::notify_leds_changed(MirInputDeviceId id, XkbMappingState const& mapping_state)
+{
+    auto it = device_led_registrars.find(id);
+    if (it == end(device_led_registrars))
+        return;
+
+    it->second->leds_set(mapping_state.leds());
 }
 
 mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingState(
     std::shared_ptr<Keymap> keymap,
-    std::shared_ptr<xkb_keymap> compiled_keymap,
-    Executor& executor)
+    std::shared_ptr<xkb_keymap> compiled_keymap)
     : keymap{std::move(keymap)},
       compiled_keymap{std::move(compiled_keymap)},
       state{make_unique_state(this->compiled_keymap.get())},
       num_led{xkb_keymap_led_get_index(this->compiled_keymap.get(), XKB_LED_NAME_NUM)},
       caps_led{xkb_keymap_led_get_index(this->compiled_keymap.get(), XKB_LED_NAME_CAPS)},
-      scroll_led{xkb_keymap_led_get_index(this->compiled_keymap.get(), XKB_LED_NAME_SCROLL)},
-      registrar(executor)
+      scroll_led{xkb_keymap_led_get_index(this->compiled_keymap.get(), XKB_LED_NAME_SCROLL)}
 {
 }
 
@@ -381,7 +393,7 @@ auto mircv::XKBMapperRegistrar::XkbMappingState::xkb_modifiers() const -> MirXkb
         xkb_state_serialize_layout(state.get(), XKB_STATE_LAYOUT_EFFECTIVE)};
 }
 
-void mircv::XKBMapperRegistrar::XkbMappingState::notify_leds_changed()
+auto mircv::XKBMapperRegistrar::XkbMappingState::leds() const -> KeyboardLeds
 {
     KeyboardLeds leds;
     if (xkb_state_led_index_is_active(state.get(), caps_led))
@@ -391,12 +403,7 @@ void mircv::XKBMapperRegistrar::XkbMappingState::notify_leds_changed()
     if (xkb_state_led_index_is_active(state.get(), scroll_led))
         leds |= KeyboardLed::scroll_lock;
 
-    registrar.leds_set(leds);
-}
-
-mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingStateLedRegistrar& mircv::XKBMapperRegistrar::XkbMappingState::get_registrar()
-{
-    return registrar;
+    return leds;
 }
 
 auto mircv::XKBMapperRegistrar::XkbMappingState::update_state(

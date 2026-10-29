@@ -77,26 +77,26 @@ private:
         std::optional<std::tuple<xkb_keysym_t,xkb_keysym_t>> last_composed_key;
     };
 
+    /// LED observers are tracked per device independently of the keymap state so that
+    /// replacing a device's keymap does not drop observers registered when the device was added.
+    class DeviceLedRegistrar : public ObserverMultiplexer<LedObserver>
+    {
+    public:
+        explicit DeviceLedRegistrar(Executor&);
+        void leds_set(KeyboardLeds leds) override;
+    };
+
     struct XkbMappingState
     {
-        class XkbMappingStateLedRegistrar : public ObserverMultiplexer<LedObserver>
-        {
-        public:
-            explicit XkbMappingStateLedRegistrar(Executor&);
-            void leds_set(KeyboardLeds leds) override;
-        };
-
         explicit XkbMappingState(
             std::shared_ptr<Keymap> keymap,
-            std::shared_ptr<xkb_keymap> compiled_keymap,
-            Executor& executor);
+            std::shared_ptr<xkb_keymap> compiled_keymap);
         void set_key_state(std::vector<uint32_t> const& key_state);
 
         bool update_and_map(MirEvent& event, ComposeState* compose_state);
         MirInputEventModifiers modifiers() const;
         auto xkb_modifiers() const -> MirXkbModifiers;
-        void notify_leds_changed();
-        XkbMappingStateLedRegistrar& get_registrar();
+        auto leds() const -> KeyboardLeds;
     private:
         /// Returns a pair containing the keysym for the given scancode and if any XKB modifiers have been changed
         auto update_state(
@@ -114,10 +114,10 @@ private:
         xkb_led_index_t num_led;
         xkb_led_index_t caps_led;
         xkb_led_index_t scroll_led;
-        XkbMappingStateLedRegistrar registrar;
     };
 
     XkbMappingState* get_keymapping_state(MirInputDeviceId id);
+    void notify_leds_changed(MirInputDeviceId id, XkbMappingState const& mapping_state);
     ComposeState* get_compose_state(MirInputDeviceId id);
 
     Executor& executor;
@@ -131,6 +131,7 @@ private:
     std::optional<MirInputEventModifiers> modifier_state;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<ComposeState>> device_composing;
+    std::unordered_map<MirInputDeviceId, std::unique_ptr<DeviceLedRegistrar>> device_led_registrars;
 };
 }
 }
