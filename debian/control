@@ -584,6 +584,7 @@ Pre-Depends: ${misc:Pre-Depends}
 Depends: libmiral8 (= ${libmiral8:Version}),
 # ${source:Version} is technically incorrect, but Launchpad doesn't do BinNMUs
 # so it's harmless.
+         libxkbcommon-dev,
          libmircore-dev (= ${source:Version}),
          ${misc:Depends},
 Description: Developer files for the Mir ABI-stable abstraction layer
