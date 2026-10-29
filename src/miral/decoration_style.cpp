@@ -89,6 +89,7 @@ auto metric_of(msd::DecorationStyle const& style, Metric metric) -> std::optiona
     case Metric::title_font_height:         return style.title_font_height.as_value();
     case Metric::resize_corner_input_width: return style.resize_corner_input_size.width.as_value();
     case Metric::resize_corner_input_height:return style.resize_corner_input_size.height.as_value();
+    case Metric::corner_radius:             return style.corner_radius.as_value();
     default:                                return std::nullopt;
     }
 }
@@ -127,6 +128,10 @@ auto set_metric_of(msd::DecorationStyle& style, Metric metric, int pixels) -> bo
 
     case Metric::resize_corner_input_height:
         style.resize_corner_input_size.height = mir::geometry::Height{pixels};
+        return true;
+
+    case Metric::corner_radius:
+        style.corner_radius = mir::geometry::Width{pixels};
         return true;
 
     default:
@@ -193,6 +198,7 @@ MetricKey constexpr metric_keys[] = {
     {"title_font_height",           "Height of the window title text",          Metric::title_font_height},
     {"resize_corner_input_width",   "Width of the resize handle in a corner",   Metric::resize_corner_input_width},
     {"resize_corner_input_height",  "Height of the resize handle in a corner",  Metric::resize_corner_input_height},
+    {"corner_radius",               "Radius of the rounded outer corners",      Metric::corner_radius},
 };
 }
 

@@ -28,6 +28,7 @@
 #include <ft2build.h>
 
 #include <atomic>
+#include <cmath>
 #include <memory>
 #include FT_FREETYPE_H
 #include <endian.h>
@@ -161,6 +162,70 @@ inline void render_minimize_icon(
     }
 }
 
+/// Scale a premultiplied pixel by a coverage value in the range [0, 1]
+inline auto scale_pixel(uint32_t c, float coverage) -> uint32_t
+{
+    unsigned char r = 0, g = 0, b = 0, a = 0;
+    unpack_pixel(c, r, g, b, a);
+    auto const scaled = [coverage](unsigned char v)
+        { return static_cast<unsigned char>(v * coverage + 0.5f); };
+    return pack_pixel(scaled(r), scaled(g), scaled(b), scaled(a));
+}
+
+/// Make the pixels that fall outside the rounded outline of the window transparent
+/// \param buf_offset  position of this buffer within the window, in buffer pixels
+/// \param window_size size of the whole decorated window, in buffer pixels
+/// \param radius      corner radius, in buffer pixels
+inline void round_corners(
+    uint32_t* const data,
+    geom::Size buf_size,
+    geom::Displacement buf_offset,
+    geom::Size window_size,
+    float radius)
+{
+    radius = std::min({
+        radius,
+        window_size.width.as_value() / 2.0f,
+        window_size.height.as_value() / 2.0f});
+
+    if (radius <= 0.0f)
+        return;
+
+    // The centres of the corner arcs are inset from the edges of the window by the radius
+    float const left = radius;
+    float const right = window_size.width.as_value() - radius;
+    float const top = radius;
+    float const bottom = window_size.height.as_value() - radius;
+
+    for (int y = 0; y < buf_size.height.as_int(); ++y)
+    {
+        // Pixel centres are offset by half a pixel from the pixel grid
+        float const window_y = buf_offset.dy.as_value() + y + 0.5f;
+
+        if (window_y > top && window_y < bottom)
+            continue;
+
+        float const centre_y = (window_y <= top) ? top : bottom;
+        uint32_t* const row = data + y * buf_size.width.as_int();
+
+        for (int x = 0; x < buf_size.width.as_int(); ++x)
+        {
+            float const window_x = buf_offset.dx.as_value() + x + 0.5f;
+
+            if (window_x > left && window_x < right)
+                continue;
+
+            float const centre_x = (window_x <= left) ? left : right;
+            float const dx = window_x - centre_x;
+            float const dy = window_y - centre_y;
+            float const coverage = std::clamp(radius + 0.5f - std::sqrt(dx * dx + dy * dy), 0.0f, 1.0f);
+
+            if (coverage < 1.0f)
+                row[x] = scale_pixel(row[x], coverage);
+        }
+    }
+}
+
 struct RendererStrategy : public msd::RendererStrategy
 {
     RendererStrategy(
@@ -220,9 +285,15 @@ private:
 
     float scale{1.0f};
     std::string name;
-    geom::Size left_border_size;
-    geom::Size right_border_size;
-    geom::Size bottom_border_size;
+    geom::Size window_size;
+    geom::Rectangle left_border_rect;
+    geom::Rectangle right_border_rect;
+    geom::Rectangle bottom_border_rect;
+
+    /// Borders can only share solid_color_pixels while the corners are square
+    std::unique_ptr<Pixel[]> left_border_pixels;
+    std::unique_ptr<Pixel[]> right_border_pixels;
+    std::unique_ptr<Pixel[]> bottom_border_pixels;
 
     bool needs_solid_color_redraw{true};
 
@@ -239,6 +310,15 @@ private:
     std::vector<msd::Button> buttons;
 
     void update_solid_color_pixels();
+
+    /// The corner radius in buffer pixels, zero if the corners are square
+    auto scaled_corner_radius() const -> float;
+
+    void drop_border_pixels();
+
+    /// Draws (if needed) and returns the pixels of a border with rounded corners
+    auto rounded_border_pixels(
+        std::unique_ptr<Pixel[]>& pixels, geom::Rectangle rect, float radius) -> Pixel const*;
 
     void set_focus_state(MirWindowFocusState focus_state);
 
@@ -677,6 +757,7 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
 
         needs_solid_color_redraw = true;
         solid_color_pixels.reset(); // force a reallocation next time it's needed
+        drop_border_pixels();
 
         needs_titlebar_redraw = true;
         titlebar_pixels.reset(); // force a reallocation next time it's needed
@@ -684,14 +765,22 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
         needs_titlebar_buttons_redraw = true;
     }
 
-    left_border_size = window_state.left_border_rect().size;
-    right_border_size = window_state.right_border_rect().size;
-    bottom_border_size = window_state.bottom_border_rect().size;
+    window_size = window_state.window_size();
+
+    if (window_state.left_border_rect() != left_border_rect ||
+        window_state.right_border_rect() != right_border_rect ||
+        window_state.bottom_border_rect() != bottom_border_rect)
+    {
+        left_border_rect = window_state.left_border_rect();
+        right_border_rect = window_state.right_border_rect();
+        bottom_border_rect = window_state.bottom_border_rect();
+        drop_border_pixels();
+    }
 
     size_t length{0};
-    length = std::max(length, area(left_border_size));
-    length = std::max(length, area(right_border_size));
-    length = std::max(length, area(bottom_border_size));
+    length = std::max(length, area(left_border_rect.size));
+    length = std::max(length, area(right_border_rect.size));
+    length = std::max(length, area(bottom_border_rect.size));
 
     if (auto const scaled_length{static_cast<size_t>(length * scale * scale)};
         length != solid_color_pixels_length ||
@@ -751,6 +840,12 @@ auto RendererStrategy::render_titlebar() -> std::optional<std::shared_ptr<mir::g
         needs_titlebar_redraw = true;
     }
 
+    auto const radius = scaled_corner_radius();
+
+    // The corners are masked once the titlebar is complete, so a partial redraw won't do
+    if (radius > 0.0f && needs_titlebar_buttons_redraw)
+        needs_titlebar_redraw = true;
+
     if (needs_titlebar_redraw)
     {
         redraw_titlebar_background(scaled_titlebar_size);
@@ -761,6 +856,10 @@ auto RendererStrategy::render_titlebar() -> std::optional<std::shared_ptr<mir::g
     if (needs_titlebar_redraw || needs_titlebar_buttons_redraw)
     {
         redraw_titlebar_buttons(scaled_titlebar_size);
+
+        if (radius > 0.0f)
+            round_corners(
+                titlebar_pixels.get(), scaled_titlebar_size, geom::Displacement{}, window_size * scale, radius);
     }
 
     needs_titlebar_redraw = false;
@@ -771,29 +870,75 @@ auto RendererStrategy::render_titlebar() -> std::optional<std::shared_ptr<mir::g
 
 auto RendererStrategy::render_left_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
-    auto const scaled_left_border_size{left_border_size * scale};
+    auto const scaled_left_border_size{left_border_rect.size * scale};
     if (!area(scaled_left_border_size))
         return std::nullopt;
+    if (auto const radius = scaled_corner_radius(); radius > 0.0f)
+        return make_buffer(
+            style->buffer_format, scaled_left_border_size,
+            rounded_border_pixels(left_border_pixels, left_border_rect, radius));
     update_solid_color_pixels();
     return make_buffer(style->buffer_format, scaled_left_border_size, solid_color_pixels.get());
 }
 
 auto RendererStrategy::render_right_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
-    auto const scaled_right_border_size{right_border_size * scale};
+    auto const scaled_right_border_size{right_border_rect.size * scale};
     if (!area(scaled_right_border_size))
         return std::nullopt;
+    if (auto const radius = scaled_corner_radius(); radius > 0.0f)
+        return make_buffer(
+            style->buffer_format, scaled_right_border_size,
+            rounded_border_pixels(right_border_pixels, right_border_rect, radius));
     update_solid_color_pixels();
     return make_buffer(style->buffer_format, scaled_right_border_size, solid_color_pixels.get());
 }
 
 auto RendererStrategy::render_bottom_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
 {
-    auto const scaled_bottom_border_size{bottom_border_size * scale};
+    auto const scaled_bottom_border_size{bottom_border_rect.size * scale};
     if (!area(scaled_bottom_border_size))
         return std::nullopt;
+    if (auto const radius = scaled_corner_radius(); radius > 0.0f)
+        return make_buffer(
+            style->buffer_format, scaled_bottom_border_size,
+            rounded_border_pixels(bottom_border_pixels, bottom_border_rect, radius));
     update_solid_color_pixels();
     return make_buffer(style->buffer_format, scaled_bottom_border_size, solid_color_pixels.get());
+}
+
+auto RendererStrategy::scaled_corner_radius() const -> float
+{
+    return std::max(0.0f, style->corner_radius.as_value() * scale);
+}
+
+void RendererStrategy::drop_border_pixels()
+{
+    left_border_pixels.reset();
+    right_border_pixels.reset();
+    bottom_border_pixels.reset();
+}
+
+auto RendererStrategy::rounded_border_pixels(
+    std::unique_ptr<Pixel[]>& pixels, geom::Rectangle rect, float radius) -> Pixel const*
+{
+    auto const scaled_size{rect.size * scale};
+
+    // Borders are a solid color, so they only need drawing when (re)allocated
+    if (pixels)
+        return pixels.get();
+
+    pixels = alloc_pixels(scaled_size);
+
+    for (geom::Y y{0}; y < as_y(scaled_size.height); y += geom::DeltaY{1})
+        render_row(pixels.get(), scaled_size, {0, y}, scaled_size.width, current_theme->background_color);
+
+    round_corners(
+        pixels.get(), scaled_size,
+        geom::Displacement{rect.left().as_value() * scale, rect.top().as_value() * scale},
+        window_size * scale, radius);
+
+    return pixels.get();
 }
 
 void RendererStrategy::update_solid_color_pixels()
@@ -892,6 +1037,7 @@ void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
         current_theme = new_theme;
         needs_titlebar_redraw = true;
         needs_solid_color_redraw = true;
+        drop_border_pixels();
     }
 }
 

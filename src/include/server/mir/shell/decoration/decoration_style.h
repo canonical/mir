@@ -87,6 +87,8 @@ struct DecorationStyle
     geometry::Point title_font_top_left{8, 2};      ///< Where to render the window title
     geometry::Displacement icon_padding{5, 5};      ///< Padding inside buttons around icons
     geometry::Width icon_line_width{1};             ///< Width for lines in button icons
+    geometry::Width corner_radius{0};               ///< Radius of the rounded outer corners of the decorations
+                                                    ///< (zero for square corners)
 
     Theme focused{pack_pixel(0x32, 0x32, 0x32), pack_pixel(0xFF, 0xFF, 0xFF)};      ///< Colors used while focused
     Theme unfocused{pack_pixel(0x80, 0x80, 0x80), pack_pixel(0xA0, 0xA0, 0xA0)};    ///< Colors used while unfocused

@@ -63,7 +63,9 @@ and blue channels (plus an optional alpha channel, which defaults to opaque):
 | `close_button`      | `normal`, `hovered`    | The background of the close button              |
 | `close_button_icon` | —                      | The close icon                                  |
 
-`set_metric()` takes a length in logical pixels:
+`set_metric()` takes a length in logical pixels. Setting `corner_radius` to a
+non-zero value rounds the outer corners of the decorations; the corners are
+antialiased and the pixels outside them are transparent:
 
 | Metric                       | Sets                                        |
 | ---------------------------- | ------------------------------------------- |
@@ -75,6 +77,7 @@ and blue channels (plus an optional alpha channel, which defaults to opaque):
 | `title_font_height`          | Height of the window title text             |
 | `resize_corner_input_width`  | Width of the resize handle in a corner      |
 | `resize_corner_input_height` | Height of the resize handle in a corner     |
+| `corner_radius`              | Radius of the rounded outer corners         |
 
 Changes made before the server starts are picked up when it starts; changes made
 afterwards are applied to windows that are already decorated.
@@ -108,6 +111,7 @@ decorations_padding_between_buttons=6
 decorations_title_font_height=14
 decorations_resize_corner_input_width=16
 decorations_resize_corner_input_height=16
+decorations_corner_radius=0
 
 decorations_color_background_focused=#323232
 decorations_color_background_unfocused=#808080
