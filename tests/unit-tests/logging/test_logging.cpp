@@ -20,10 +20,12 @@
 #include <boost/program_options/options_description.hpp>
 #include <mir/logging/logger.h>
 #include <mir/log.h>
+#include "src/core/logging/log_deduplicator.h"
 
 #include <boost/program_options.hpp>
 #include <chrono>
 #include <format>
+#include <optional>
 #include <stdexcept>
 #include <string_view>
 #include <cstring>
@@ -91,10 +93,11 @@ TEST_F(TestLog, log_debug_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::debug, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::debug, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::debug);
-    mir::log_debug({tag}, message);
+    mir::log_debug({tag}, message + "!");
     mir::log_debug({tag}, fmt_string, value);
 }
 
@@ -105,10 +108,11 @@ TEST_F(TestLog, log_info_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::informational, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::informational, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::informational);
-    mir::log_info({tag}, message);
+    mir::log_info({tag}, message + "!");
     mir::log_info({tag}, fmt_string, value);
 }
 
@@ -119,10 +123,11 @@ TEST_F(TestLog, log_warning_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::warning, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::warning, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::warning);
-    mir::log_warning({tag}, message);
+    mir::log_warning({tag}, message + "!");
     mir::log_warning({tag}, fmt_string, value);
 }
 
@@ -133,10 +138,11 @@ TEST_F(TestLog, log_error_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::error, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::error, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::error, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::error);
-    mir::log_error({tag}, message);
+    mir::log_error({tag}, message + "!");
     mir::log_error({tag}, fmt_string, value);
 }
 
@@ -147,10 +153,11 @@ TEST_F(TestLog, log_critical_works)
     auto const message = std::format(fmt_string, value);
     auto const& tag = ml::base();
 
-    EXPECT_CALL(*logger, log(ml::Severity::critical, message, std::string{ml::tag::name(tag)})).Times(2);
+    EXPECT_CALL(*logger, log(ml::Severity::critical, message + "!", std::string{ml::tag::name(tag)})).Times(1);
+    EXPECT_CALL(*logger, log(ml::Severity::critical, message, std::string{ml::tag::name(tag)})).Times(1);
 
     ml::tag::set_severity(ml::tag::name(tag), ml::Severity::critical);
-    mir::log_critical({tag}, message);
+    mir::log_critical({tag}, message + "!");
     mir::log_critical({tag}, fmt_string, value);
 }
 
@@ -216,4 +223,166 @@ TEST_F(TestLog, can_set_severity_by_full_path_when_tag_name_is_the_same)
     ml::tag::set_severity(std::format("base/graphics/gbm-kms/bypass"), severity);
 
     EXPECT_TRUE(ml::logging_enabled_for(bypass_b, severity));
+}
+
+TEST_F(TestLog, repeated_message_is_logged_once_within_window)
+{
+    auto const severity = ml::Severity::warning;
+    auto const message = std::string{"presentation failed"};
+
+    EXPECT_CALL(*logger, log(severity, message, std::string{"gbm-kms"})).Times(1);
+
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", "presentation %s", "failed");
+}
+
+TEST_F(TestLog, set_logger_resets_deduplication_state)
+{
+    auto const severity = ml::Severity::warning;
+    auto const message = std::string{"presentation failed"};
+    auto const replacement = std::make_shared<testing::NiceMock<MockLogger>>();
+
+    EXPECT_CALL(*logger, log(severity, message, std::string{"gbm-kms"})).Times(1);
+    EXPECT_CALL(*replacement, log(severity, message, std::string{"gbm-kms"})).Times(1);
+
+    mir::log(severity, "gbm-kms", message);
+    ml::set_logger(replacement);
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", message);
+}
+
+TEST_F(TestLog, reinstalling_same_logger_resets_deduplication_state)
+{
+    auto const severity = ml::Severity::warning;
+    auto const message = std::string{"presentation failed"};
+
+    EXPECT_CALL(*logger, log(severity, message, std::string{"gbm-kms"})).Times(2);
+
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", message);
+    ml::set_logger(logger);
+    mir::log(severity, "gbm-kms", message);
+    mir::log(severity, "gbm-kms", message);
+}
+
+TEST_F(TestLog, disabled_tagged_calls_do_not_consume_deduplication_history)
+{
+    auto const severity = ml::Severity::debug;
+    auto const message = "tagged failure";
+    auto const& tag = ml::graphics();
+
+    ml::tag::set_severity(ml::tag::name(tag), ml::Severity::error);
+    EXPECT_CALL(*logger, log(testing::_, testing::_, testing::_)).Times(0);
+    mir::log(severity, {tag}, message);
+    testing::Mock::VerifyAndClearExpectations(logger.get());
+
+    ml::tag::set_severity(ml::tag::name(tag), severity);
+    EXPECT_CALL(*logger, log(severity, std::string{message}, std::string{"graphics"})).Times(1);
+    mir::log(severity, {tag}, message);
+    mir::log(severity, {tag}, message);
+}
+
+class LogDeduplicatorTest : public testing::Test
+{
+public:
+    std::optional<std::string> filter(std::string const& message)
+    {
+        return deduplicator.filter(ml::Severity::warning, "gbm-kms", message);
+    }
+
+    void advance(std::chrono::seconds by)
+    {
+        now += by;
+    }
+
+    std::chrono::steady_clock::time_point now{};
+    ml::detail::LogDeduplicator deduplicator{std::chrono::seconds{5}, [this] { return now; }};
+};
+
+
+TEST_F(LogDeduplicatorTest, reprint_after_window_has_count_of_suppressed_plus_one)
+{
+    EXPECT_EQ(filter("presentation failed"), "presentation failed");
+    for (int i = 0; i < 4; ++i)
+    {
+        advance(std::chrono::seconds{1});
+        EXPECT_EQ(filter("presentation failed"), std::nullopt);
+    }
+
+    advance(std::chrono::seconds{1});
+    EXPECT_EQ(filter("presentation failed"), "presentation failed (x5)");
+    EXPECT_EQ(filter("presentation failed"), std::nullopt);
+    advance(std::chrono::seconds{5});
+    EXPECT_EQ(filter("presentation failed"), "presentation failed (x2)");
+}
+
+TEST_F(LogDeduplicatorTest, reprint_has_no_suffix_when_nothing_was_suppressed)
+{
+    filter("presentation failed");
+    advance(std::chrono::seconds{5});
+
+    EXPECT_EQ(filter("presentation failed"), "presentation failed");
+}
+
+
+TEST_F(LogDeduplicatorTest, different_severity_component_or_message_are_not_merged)
+{
+    EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "gbm-kms", "presentation failed"), "presentation failed");
+    EXPECT_EQ(deduplicator.filter(ml::Severity::error, "gbm-kms", "presentation failed"), "presentation failed");
+    EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "atomic-kms", "presentation failed"), "presentation failed");
+    EXPECT_EQ(deduplicator.filter(ml::Severity::warning, "gbm-kms", "presentation recovered"), "presentation recovered");
+}
+
+TEST_F(LogDeduplicatorTest, stored_keys_own_long_component_and_message_strings)
+{
+    auto const severity = ml::Severity::warning;
+    std::string component(128, 'c');
+    std::string message(256, 'm');
+
+    EXPECT_EQ(deduplicator.filter(severity, component, message), message);
+    component.front() = 'd';
+    message.front() = 'n';
+    EXPECT_EQ(deduplicator.filter(severity, component, message), message);
+    component.front() = 'c';
+    message.front() = 'm';
+
+    EXPECT_EQ(deduplicator.filter(severity, component, message), std::nullopt);
+    EXPECT_EQ(deduplicator.size(), 2u);
+}
+
+class PendingRetentionTest : public LogDeduplicatorTest, public testing::WithParamInterface<std::chrono::seconds>
+{
+};
+
+TEST_P(PendingRetentionTest, prunes_singletons_and_expires_pending_counts_by_emission_age)
+{
+    filter("kept");
+    filter("dropped");
+    filter("also dropped");
+    ASSERT_EQ(deduplicator.size(), 3u);
+    advance(std::chrono::seconds{1});
+    EXPECT_EQ(filter("kept"), std::nullopt);
+
+    advance(GetParam() - std::chrono::seconds{1});
+    filter("unrelated");
+    auto const keep_pending = GetParam() < ml::detail::LogDeduplicator::pending_count_retention;
+    EXPECT_EQ(deduplicator.size(), keep_pending ? 2u : 1u);
+    EXPECT_EQ(filter("kept"), keep_pending ? "kept (x2)" : "kept");
+}
+
+INSTANTIATE_TEST_SUITE_P(WindowAndRetentionBoundaries, PendingRetentionTest,
+    testing::Values(std::chrono::seconds{5},
+        ml::detail::LogDeduplicator::pending_count_retention - std::chrono::seconds{1},
+        ml::detail::LogDeduplicator::pending_count_retention));
+
+TEST_F(LogDeduplicatorTest, pending_counts_survive_cutoff_until_next_opportunistic_prune)
+{
+    filter("kept");
+    EXPECT_EQ(filter("kept"), std::nullopt);
+
+    advance(ml::detail::LogDeduplicator::pending_count_retention - std::chrono::seconds{1});
+    filter("unrelated");
+    advance(std::chrono::seconds{1});
+
+    EXPECT_EQ(filter("kept"), "kept (x2)");
 }
