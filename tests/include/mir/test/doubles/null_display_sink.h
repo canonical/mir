@@ -31,7 +31,7 @@ class NullDisplaySink : public graphics::DisplaySink
 public:
     geometry::Rectangle view_area() const override { return geometry::Rectangle(); }
     bool overlay(std::vector<mir::graphics::DisplayElement> const&) override { return false; }
-    void set_next_image(std::unique_ptr<mir::graphics::Framebuffer>) override { }
+    void set_next_image(mir::graphics::FramebufferPtr) override { }
     glm::mat2 transformation() const override { return glm::mat2(1); }
     auto plan_presentation(std::vector<std::shared_ptr<graphics::Renderable>> const&)
         -> std::optional<graphics::LogicalStacking> override
