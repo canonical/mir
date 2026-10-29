@@ -46,41 +46,7 @@ using msd::InputState;
 
 namespace
 {
-/// Decoration geometry properties that don't change
-struct StaticGeometry
-{
-    geom::Height const titlebar_height;           ///< Visible height of the top titlebar with the window's name and buttons
-    geom::Width const side_border_width;          ///< Visible width of the side borders
-    geom::Height const bottom_border_height;      ///< Visible height of the bottom border
-    geom::Size const resize_corner_input_size;    ///< The size of the input area of a resizable corner
-    ///< (does not effect surface input area, only where in the surface is
-    ///< considered a resize corner)
-    geom::Width const button_width;               ///< The width of window control buttons
-    geom::Width const padding_between_buttons;    ///< The gep between titlebar buttons
-    geom::Height const title_font_height;         ///< Height of the text used to render the window title
-    geom::Point const title_font_top_left;        ///< Where to render the window title
-    geom::Displacement const icon_padding;        ///< Padding inside buttons around icons
-    geom::Width const icon_line_width;            ///< Width for lines in button icons
-
-    MirPixelFormat const buffer_format = mir_pixel_format_argb_8888;
-};
-
-constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char b, unsigned char a = 0xFF) -> uint32_t
-{
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-    return ((uint32_t)b <<  0) |
-           ((uint32_t)g <<  8) |
-           ((uint32_t)r << 16) |
-           ((uint32_t)a << 24);
-#elif __BYTE_ORDER == __BIG_ENDIAN
-    return ((uint32_t)b << 24) |
-           ((uint32_t)g << 16) |
-           ((uint32_t)r <<  8) |
-           ((uint32_t)a <<  0);
-#else
-#error unsupported byte order
-#endif
-}
+using msd::pack_pixel;
 
 constexpr auto unpack_pixel(uint32_t c, unsigned char &r, unsigned char &g, unsigned char &b, unsigned char &a) -> void
 {
@@ -112,16 +78,6 @@ constexpr auto blend_pixel(uint32_t c, unsigned char r, unsigned char g, unsigne
     unsigned char out_a = src_a;
     return pack_pixel(out_r, out_g, out_b, out_a);
 }
-
-uint32_t constexpr default_focused_background   = pack_pixel(0x32, 0x32, 0x32);
-uint32_t constexpr default_unfocused_background = pack_pixel(0x80, 0x80, 0x80);
-uint32_t constexpr default_focused_text         = pack_pixel(0xFF, 0xFF, 0xFF);
-uint32_t constexpr default_unfocused_text       = pack_pixel(0xA0, 0xA0, 0xA0);
-uint32_t constexpr default_normal_button        = pack_pixel(0x60, 0x60, 0x60);
-uint32_t constexpr default_active_button        = pack_pixel(0xA0, 0xA0, 0xA0);
-uint32_t constexpr default_close_normal_button  = pack_pixel(0xA0, 0x20, 0x20);
-uint32_t constexpr default_close_active_button  = pack_pixel(0xC0, 0x60, 0x60);
-uint32_t constexpr default_button_icon          = pack_pixel(0xFF, 0xFF, 0xFF);
 
 inline auto area(geom::Size size) -> size_t
 {
@@ -206,7 +162,7 @@ inline void render_minimize_icon(
 struct RendererStrategy : public msd::RendererStrategy
 {
     RendererStrategy(
-        std::shared_ptr<StaticGeometry> const& static_geometry,
+        std::shared_ptr<msd::DecorationStyle const> const& style,
         std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator);
 
     void update_state(WindowState const& window_state, InputState const& input_state) override;
@@ -218,18 +174,10 @@ struct RendererStrategy : public msd::RendererStrategy
 private:
     using Pixel = msd::Pixel;
 
-    std::shared_ptr<StaticGeometry> const static_geometry;
+    std::shared_ptr<msd::DecorationStyle const> const style;
 
-    /// A visual theme for a decoration
-    /// Focused and unfocused windows use a different theme
-    struct Theme
-    {
-        Pixel const background_color;   ///< Color for background of the titlebar and borders
-        Pixel const text_color;         ///< Color the window title is drawn in
-    };
-    Theme const focused_theme;
-    Theme const unfocused_theme;
-    Theme const* current_theme;
+    /// Points at the theme (from the style) matching the window's current focus state
+    msd::Theme const* current_theme;
 
     class Text
     {
@@ -258,9 +206,7 @@ private:
     // Info needed to render a button icon
     struct Icon
     {
-        Pixel const normal_color;   ///< Normal of the background of the button area
-        Pixel const active_color;   ///< Color of the background when button is active
-        Pixel const icon_color;     ///< Color of the icon
+        msd::ButtonTheme const theme;
         std::function<void(
             Pixel* const data,
             geom::Size buf_size,
@@ -307,11 +253,12 @@ private:
 class DecorationStrategy : public msd::DecorationStrategy
 {
 public:
-    DecorationStrategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const&);
+    DecorationStrategy(
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<msd::DecorationStyle const> const& style);
 
     ~DecorationStrategy() override = default;
 
-    auto static_geometry() const -> std::shared_ptr<StaticGeometry>;
     auto render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy> override;
     auto button_placement(unsigned n, const WindowState& ws) const -> geom::Rectangle override;
     auto compute_size_with_decorations(geom::Size content_size, MirWindowType type, MirWindowState state) const
@@ -323,16 +270,17 @@ public:
 
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
+    std::shared_ptr<msd::DecorationStyle const> const style;
 };
 
 auto DecorationStrategy::resize_corner_input_size() const -> geom::Size
 {
-    return static_geometry()->resize_corner_input_size;
+    return style->resize_corner_input_size;
 }
 
 auto DecorationStrategy::buffer_format() const -> MirPixelFormat
 {
-    return static_geometry()->buffer_format;
+    return style->buffer_format;
 }
 
 auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
@@ -341,9 +289,9 @@ auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surf
 {
     return std::make_unique<WindowState>(
         window_surface,
-        static_geometry()->titlebar_height,
-        static_geometry()->side_border_width,
-        static_geometry()->bottom_border_height,
+        style->titlebar_height,
+        style->side_border_width,
+        style->bottom_border_height,
         scale);
 }
 
@@ -353,11 +301,11 @@ auto DecorationStrategy::compute_size_with_decorations(
     switch (msd::border_type_for(type, state))
     {
     case msd::BorderType::Full:
-        content_size.width += static_geometry()->side_border_width * 2;
-        content_size.height += static_geometry()->titlebar_height + static_geometry()->bottom_border_height;
+        content_size.width += style->side_border_width * 2;
+        content_size.height += style->titlebar_height + style->bottom_border_height;
         break;
     case msd::BorderType::Titlebar:
-        content_size.height += static_geometry()->titlebar_height;
+        content_size.height += style->titlebar_height;
         break;
     case msd::BorderType::None:
         break;
@@ -419,9 +367,11 @@ auto msd::border_type_for(MirWindowType type, MirWindowState state) -> msd::Bord
     MIR_FATAL_ERROR("should be unreachable");
 }
 
-auto msd::DecorationStrategy::default_decoration_strategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) -> std::shared_ptr<DecorationStrategy>
+auto msd::DecorationStrategy::default_decoration_strategy(
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<DecorationStyle const> const& style) -> std::shared_ptr<DecorationStrategy>
 {
-    return std::make_shared<::DecorationStrategy>(allocator);
+    return std::make_shared<::DecorationStrategy>(allocator, style);
 }
 
 class RendererStrategy::Text::Impl
@@ -691,33 +641,15 @@ auto RendererStrategy::Text::Impl::utf8_to_utf32(std::string const& text) -> std
 }
 
 RendererStrategy::RendererStrategy(
-    std::shared_ptr<StaticGeometry> const& static_geometry,
+    std::shared_ptr<msd::DecorationStyle const> const& style,
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) :
-    static_geometry{static_geometry},
-    focused_theme{
-        default_focused_background,
-        default_focused_text},
-    unfocused_theme{
-        default_unfocused_background,
-        default_unfocused_text},
+    style{style},
     current_theme{nullptr},
     text{Text::instance()},
     button_icons{
-        {msd::Button::Close, {
-            default_close_normal_button,
-            default_close_active_button,
-            default_button_icon,
-            render_close_icon}},
-        {msd::Button::Maximize, {
-            default_normal_button,
-            default_active_button,
-            default_button_icon,
-            render_maximize_icon}},
-        {msd::Button::Minimize, {
-            default_normal_button,
-            default_active_button,
-            default_button_icon,
-            render_minimize_icon}},
+        {msd::Button::Close, {style->close_button, render_close_icon}},
+        {msd::Button::Maximize, {style->button, render_maximize_icon}},
+        {msd::Button::Minimize, {style->button, render_minimize_icon}},
       },
     allocator{allocator}
 {
@@ -820,7 +752,7 @@ auto RendererStrategy::render_titlebar() -> std::optional<std::shared_ptr<mir::g
     needs_titlebar_redraw = false;
     needs_titlebar_buttons_redraw = false;
 
-    return make_buffer(static_geometry->buffer_format, scaled_titlebar_size, titlebar_pixels.get());
+    return make_buffer(style->buffer_format, scaled_titlebar_size, titlebar_pixels.get());
 }
 
 auto RendererStrategy::render_left_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
@@ -829,7 +761,7 @@ auto RendererStrategy::render_left_border() -> std::optional<std::shared_ptr<mir
     if (!area(scaled_left_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(static_geometry->buffer_format, scaled_left_border_size, solid_color_pixels.get());
+    return make_buffer(style->buffer_format, scaled_left_border_size, solid_color_pixels.get());
 }
 
 auto RendererStrategy::render_right_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
@@ -838,7 +770,7 @@ auto RendererStrategy::render_right_border() -> std::optional<std::shared_ptr<mi
     if (!area(scaled_right_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(static_geometry->buffer_format, scaled_right_border_size, solid_color_pixels.get());
+    return make_buffer(style->buffer_format, scaled_right_border_size, solid_color_pixels.get());
 }
 
 auto RendererStrategy::render_bottom_border() -> std::optional<std::shared_ptr<mir::graphics::Buffer>>
@@ -847,7 +779,7 @@ auto RendererStrategy::render_bottom_border() -> std::optional<std::shared_ptr<m
     if (!area(scaled_bottom_border_size))
         return std::nullopt;
     update_solid_color_pixels();
-    return make_buffer(static_geometry->buffer_format, scaled_bottom_border_size, solid_color_pixels.get());
+    return make_buffer(style->buffer_format, scaled_bottom_border_size, solid_color_pixels.get());
 }
 
 void RendererStrategy::update_solid_color_pixels()
@@ -887,9 +819,9 @@ void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_siz
         scaled_titlebar_size,
         name,
         geom::Point{
-            static_geometry->title_font_top_left.x.as_value() * scale,
-            static_geometry->title_font_top_left.y.as_value() * scale},
-        static_geometry->title_font_height * scale,
+            style->title_font_top_left.x.as_value() * scale,
+            style->title_font_top_left.y.as_value() * scale},
+        style->title_font_height * scale,
         current_theme->text_color);
 }
 
@@ -905,9 +837,9 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
         auto const icon = button_icons.find(button.function);
         if (icon != button_icons.end())
         {
-            Pixel button_color = icon->second.normal_color;
+            Pixel button_color = icon->second.theme.normal_color;
             if (button.state == msd::Button::Hovered)
-                button_color = icon->second.active_color;
+                button_color = icon->second.theme.active_color;
             for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
             {
                 render_row(
@@ -918,15 +850,15 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
                     button_color);
             }
             geom::Rectangle const icon_rect = {
-                scaled_button_rect.top_left + static_geometry->icon_padding * scale, {
-                    scaled_button_rect.size.width - static_geometry->icon_padding.dx * scale * 2,
-                    scaled_button_rect.size.height - static_geometry->icon_padding.dy * scale * 2}};
+                scaled_button_rect.top_left + style->icon_padding * scale, {
+                    scaled_button_rect.size.width - style->icon_padding.dx * scale * 2,
+                    scaled_button_rect.size.height - style->icon_padding.dy * scale * 2}};
             icon->second.render_icon(
                 titlebar_pixels.get(),
                 scaled_titlebar_size,
                 icon_rect,
-                static_geometry->icon_line_width * scale,
-                icon->second.icon_color);
+                style->icon_line_width * scale,
+                icon->second.theme.icon_color);
         }
         else
         {
@@ -937,9 +869,9 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
 
 void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
 {
-    Theme const* const new_theme = (focus_state != mir_window_focus_state_unfocused) ?
-                                       &focused_theme :
-                                       &unfocused_theme;
+    msd::Theme const* const new_theme = (focus_state != mir_window_focus_state_unfocused) ?
+                                            &style->focused :
+                                            &style->unfocused;
 
     if (new_theme != current_theme)
     {
@@ -981,45 +913,29 @@ auto RendererStrategy::make_buffer(MirPixelFormat format, mir::geometry::Size si
     }
 }
 
-DecorationStrategy::DecorationStrategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator)
-    : allocator{allocator}
+DecorationStrategy::DecorationStrategy(
+    std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator,
+    std::shared_ptr<msd::DecorationStyle const> const& style)
+    : allocator{allocator},
+      style{style}
 {
-}
-
-auto DecorationStrategy::static_geometry() const -> std::shared_ptr<StaticGeometry>
-{
-    static auto const geometry{std::make_shared<StaticGeometry>(
-        geom::Height{24},   // titlebar_height
-        geom::Width{6},     // side_border_width
-        geom::Height{6},    // bottom_border_height
-        geom::Size{16, 16}, // resize_corner_input_size
-        geom::Width{24},    // button_width
-        geom::Width{6},     // padding_between_buttons
-        geom::Height{14},   // title_font_height
-        geom::Point{8, 2},  // title_font_top_left
-        geom::Displacement{5, 5}, // icon_padding
-        geom::Width{1},     // detail_line_width
-        mir_pixel_format_argb_8888  // buffer_format
-    )};
-    return geometry;
 }
 
 auto DecorationStrategy::render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
 {
-    return std::make_unique<::RendererStrategy>(static_geometry(), allocator);
+    return std::make_unique<::RendererStrategy>(style, allocator);
 }
 
 auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> geom::Rectangle
 {
     auto const titlebar = ws.titlebar_rect();
-    auto const geometry = static_geometry();
 
     geom::X x =
         titlebar.right() -
         as_delta(ws.side_border_width()) -
-        n * as_delta(geometry->button_width + geometry->padding_between_buttons) -
-        as_delta(geometry->button_width);
+        n * as_delta(style->button_width + style->padding_between_buttons) -
+        as_delta(style->button_width);
     return geom::Rectangle{
                     {x, titlebar.top()},
-                    {geometry->button_width, titlebar.size.height}};
+                    {style->button_width, titlebar.size.height}};
 }
