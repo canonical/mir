@@ -83,6 +83,7 @@ public:
         mir::Fd drm_fd,
         std::shared_ptr<struct gbm_device> gbm,
         BypassOption bypass_options,
+        PlanePromotion plane_promotion,
         std::shared_ptr<DisplayReport> const& listener,
         std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
@@ -123,6 +124,8 @@ private:
     std::shared_ptr<DisplayReport> const listener;
 
     std::shared_ptr<KMSOutput> const output;
+
+    PlanePromotion const plane_promotion;
 
     std::shared_ptr<DmaBufDisplayAllocator> bypass_allocator;
     std::shared_ptr<CPUAddressableDisplayAllocator> kms_allocator;

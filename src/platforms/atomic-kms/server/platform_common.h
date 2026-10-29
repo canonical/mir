@@ -30,6 +30,12 @@ enum class BypassOption
     prohibited
 };
 
+enum class PlanePromotion
+{
+    available,
+    unavailable
+};
+
 }
 }
 }
