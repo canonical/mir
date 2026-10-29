@@ -41,6 +41,7 @@ public:
     WlKeyboard(wl_resource* new_resource, WlSeat& seat);
 
     void handle_event(std::shared_ptr<MirEvent const> const& event);
+    void event(std::shared_ptr<MirKeyboardEvent const> const& event, WlSurface const& surface);
     void focus_on(WlSurface* surface);
 
 private:

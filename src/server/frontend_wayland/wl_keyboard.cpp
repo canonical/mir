@@ -40,6 +40,23 @@ void mf::WlKeyboard::handle_event(std::shared_ptr<MirEvent const> const& event)
     helper->handle_event(event);
 }
 
+void mf::WlKeyboard::event(std::shared_ptr<MirKeyboardEvent const> const& event, WlSurface const& surface)
+{
+    if (as_nullable_ptr(focused_surface) == &surface)
+    {
+        handle_event(event);
+        // Add XKB modifiers if the event doesn't provide them
+        if (!event->xkb_modifiers())
+        {
+            helper->refresh_modifiers();
+        }
+    }
+    else
+    {
+        mir::log_warning("Dropping key, target surface doesn't have keyboard focus");
+    }
+}
+
 void mf::WlKeyboard::focus_on(WlSurface* surface)
 {
     if (as_nullable_ptr(focused_surface) == surface)
