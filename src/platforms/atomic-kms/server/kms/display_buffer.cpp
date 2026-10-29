@@ -84,8 +84,8 @@ mga::DisplaySink::DisplaySink(
         auto mapping = initial_fb->map_writeable();
         ::memset(mapping->data(), 24, mapping->len());
 
-        visible_fb = std::move(initial_fb);
-        this->output->set_crtc(*visible_fb);
+        visible_state = PresentationState::full_scene(std::move(initial_fb));
+        this->output->set_crtc(visible_state->primary());
         listener->report_successful_drm_mode_set_crtc_on_construction();
     }
     listener->report_successful_display_construction();
@@ -127,7 +127,7 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
 
         if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
         {
-            next_swap = std::move(fb);
+            next_state = PresentationState::full_scene(std::move(fb));
             return true;
         }
         return false;
@@ -176,7 +176,7 @@ bool mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
 
 bool mga::DisplaySink::post()
 {
-    if (!next_swap)
+    if (!next_state)
     {
         // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
         // Sweet! We can just bail.
@@ -185,14 +185,14 @@ bool mga::DisplaySink::post()
     /*
      * Otherwise, pull the next frame into the pending slot
      */
-    scheduled_fb = std::move(next_swap);
-    next_swap = nullptr;
+    scheduled_state = std::move(next_state);
+    next_state.reset();
 
     /*
      * Try to schedule a page flip as first preference to avoid tearing.
      * We wait synchronously for this to complete.
      */
-    if (!needs_set_crtc && !output->page_flip(*scheduled_fb))
+    if (!needs_set_crtc && !output->page_flip(scheduled_state->primary()))
         needs_set_crtc = true;
 
     /*
@@ -202,15 +202,15 @@ bool mga::DisplaySink::post()
     auto presentation_succeeded = true;
     if (needs_set_crtc)
     {
-        presentation_succeeded = set_crtc(*scheduled_fb);
+        presentation_succeeded = set_crtc(scheduled_state->primary());
         // SetCrtc is immediate, so the FB is now visible and we have nothing pending
 
         needs_set_crtc = false;
     }
 
     if (presentation_succeeded)
-        visible_fb = std::move(scheduled_fb);
-    scheduled_fb = nullptr;
+        visible_state = std::move(scheduled_state);
+    scheduled_state.reset();
 
     using namespace std::chrono_literals;  // For operator""ms()
 

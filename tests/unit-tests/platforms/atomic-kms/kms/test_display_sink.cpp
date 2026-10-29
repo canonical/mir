@@ -17,6 +17,7 @@
 #include "src/platforms/atomic-kms/server/kms/display_sink.h"
 #include "src/platforms/atomic-kms/server/kms/quirks.h"
 #include "src/server/report/null_report_factory.h"
+#include "mock_kms_framebuffer.h"
 #include "mock_kms_output.h"
 
 #include <mir/test/doubles/mock_drm.h>
@@ -26,6 +27,7 @@
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <optional>
+#include <string_view>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
@@ -37,18 +39,6 @@ using namespace testing;
 
 namespace
 {
-class MockKMSFramebuffer : public mg::FBHandle
-{
-public:
-    operator uint32_t() const override
-    {
-        return operator_uint32_thunk();
-    }
-
-    MOCK_METHOD(uint32_t, operator_uint32_thunk, (), (const));
-    MOCK_METHOD(geom::Size, size, (), (const, override));
-};
-
 class StubSurfaceHasFreeBuffersQuirk : public mga::GbmQuirks::SurfaceHasFreeBuffersQuirk
 {
 public:
@@ -116,7 +106,7 @@ class AtomicPostResult : public AtomicDisplaySinkTest, public WithParamInterface
 TEST_P(AtomicPostResult, post_reports_presentation_result)
 {
     auto const& param = GetParam();
-    auto const framebuffer = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto const framebuffer = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
     ASSERT_TRUE(sink->overlay({fullscreen_element(framebuffer)}));
 
     InSequence sequence;
@@ -159,14 +149,41 @@ TEST_F(AtomicDisplaySinkTest, post_is_a_noop_without_a_queued_frame)
     EXPECT_TRUE(sink->post());
 }
 
-TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuffer_alive)
+TEST_F(AtomicDisplaySinkTest, successful_replacement_retires_the_previous_frame_during_post)
 {
-    auto frame_a = std::make_shared<NiceMock<MockKMSFramebuffer>>();
-    auto frame_b = std::make_shared<NiceMock<MockKMSFramebuffer>>();
-    auto frame_c = std::make_shared<NiceMock<MockKMSFramebuffer>>();
-    std::weak_ptr<mg::Framebuffer> const weak_a{frame_a};
-    std::weak_ptr<mg::Framebuffer> const weak_b{frame_b};
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
 
+    MockFunction<void(std::string_view)> checkpoint;
+    InSequence sequence;
+    EXPECT_CALL(*output, page_flip(Ref(*frame_a)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*output, page_flip(Ref(*frame_b)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*frame_a, destroyed())
+        .Times(1);
+    EXPECT_CALL(checkpoint, Call("second post complete"));
+    EXPECT_CALL(*frame_b, destroyed())
+        .Times(1);
+
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
+    frame_a.reset();
+    ASSERT_TRUE(sink->post());
+
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_b)}));
+    frame_b.reset();
+    ASSERT_TRUE(sink->post());
+    checkpoint.Call("second post complete");
+
+    sink.reset();
+}
+
+TEST_F(AtomicDisplaySinkTest, failed_presentation_retires_only_the_failed_frame)
+{
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+
+    MockFunction<void(std::string_view)> checkpoint;
     InSequence sequence;
     EXPECT_CALL(*output, page_flip(Ref(*frame_a)))
         .WillOnce(Return(true));
@@ -174,29 +191,55 @@ TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuff
         .WillOnce(Return(false));
     EXPECT_CALL(*output, set_crtc(Ref(*frame_b)))
         .WillOnce(Return(false));
-    EXPECT_CALL(*output, page_flip(Ref(*frame_c)))
-        .WillOnce(Return(true));
+    EXPECT_CALL(*frame_b, destroyed())
+        .Times(1);
+    EXPECT_CALL(checkpoint, Call("failed post complete"));
+    EXPECT_CALL(*frame_a, destroyed())
+        .Times(1);
 
     ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
     frame_a.reset();
     ASSERT_TRUE(sink->post());
-    EXPECT_FALSE(weak_a.expired());
 
     ASSERT_TRUE(sink->overlay({fullscreen_element(frame_b)}));
     frame_b.reset();
     EXPECT_FALSE(sink->post());
-    EXPECT_FALSE(weak_a.expired());
-    EXPECT_TRUE(weak_b.expired());
-    EXPECT_TRUE(sink->post());
+    checkpoint.Call("failed post complete");
 
+    sink.reset();
+}
+
+TEST_F(AtomicDisplaySinkTest, replacing_a_queued_frame_retires_only_the_replaced_frame)
+{
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const frame_c = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+
+    MockFunction<void(std::string_view)> checkpoint;
+    InSequence sequence;
+    EXPECT_CALL(*output, page_flip(Ref(*frame_a)))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*frame_b, destroyed())
+        .Times(1);
+    EXPECT_CALL(checkpoint, Call("queued frame replaced"));
+    EXPECT_CALL(*frame_a, destroyed())
+        .Times(1);
+
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
+    frame_a.reset();
+    ASSERT_TRUE(sink->post());
+
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_b)}));
+    frame_b.reset();
     ASSERT_TRUE(sink->overlay({fullscreen_element(frame_c)}));
-    EXPECT_TRUE(sink->post());
-    EXPECT_TRUE(weak_a.expired());
+    checkpoint.Call("queued frame replaced");
+
+    sink.reset();
 }
 
 TEST_F(AtomicDisplaySinkTest, overlay_must_be_a_single_fullscreen_element)
 {
-    auto const framebuffer = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto const framebuffer = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
     auto element = fullscreen_element(framebuffer);
 
     EXPECT_TRUE(sink->overlay({element}));

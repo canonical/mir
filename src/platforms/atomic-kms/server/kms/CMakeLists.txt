@@ -14,6 +14,8 @@ add_library(
   display.cpp
   display_buffer.cpp
   platform.cpp
+  presentation_state.cpp
+  presentation_state.h
   kms_display_configuration.h
   real_kms_display_configuration.cpp
   kms_output.h
