@@ -45,25 +45,25 @@ public:
     /// Constructor registering with a configuration store
     ///
     /// Available options:
-    ///     - {decorations,titlebar_height}: Visible height of the titlebar
-    ///     - {decorations,side_border_width}: Visible width of the side borders
-    ///     - {decorations,bottom_border_height}: Visible height of the bottom border
-    ///     - {decorations,button_width}: Width of the titlebar buttons
-    ///     - {decorations,padding_between_buttons}: Gap between the titlebar buttons
-    ///     - {decorations,title_font_height}: Height of the window title text
-    ///     - {decorations,resize_corner_input_width}: Width of the resize handle in a corner
-    ///     - {decorations,resize_corner_input_height}: Height of the resize handle in a corner
-    ///     - {decorations,corner_radius}: Radius of the rounded outer corners (zero for square corners)
-    ///     - {decorations,color,background,focused}
-    ///     - {decorations,color,background,unfocused}
-    ///     - {decorations,color,title,focused}
-    ///     - {decorations,color,title,unfocused}
-    ///     - {decorations,color,button,normal}
-    ///     - {decorations,color,button,hovered}
-    ///     - {decorations,color,button_icon}
-    ///     - {decorations,color,close_button,normal}
-    ///     - {decorations,color,close_button,hovered}
-    ///     - {decorations,color,close_button_icon}
+    ///     - {ssd,titlebar_height}: Visible height of the titlebar
+    ///     - {ssd,side_border_width}: Visible width of the side borders
+    ///     - {ssd,bottom_border_height}: Visible height of the bottom border
+    ///     - {ssd,button_width}: Width of the titlebar buttons
+    ///     - {ssd,padding_between_buttons}: Gap between the titlebar buttons
+    ///     - {ssd,title_font_height}: Height of the window title text
+    ///     - {ssd,resize_corner_input_width}: Width of the resize handle in a corner
+    ///     - {ssd,resize_corner_input_height}: Height of the resize handle in a corner
+    ///     - {ssd,corner_radius}: Radius of the rounded outer corners (zero for square corners)
+    ///     - {ssd,color,background,focused}
+    ///     - {ssd,color,background,unfocused}
+    ///     - {ssd,color,title,focused}
+    ///     - {ssd,color,title,unfocused}
+    ///     - {ssd,color,button,normal}
+    ///     - {ssd,color,button,hovered}
+    ///     - {ssd,color,button_icon}
+    ///     - {ssd,color,close_button,normal}
+    ///     - {ssd,color,close_button,hovered}
+    ///     - {ssd,color,close_button_icon}
     ///
     /// Colors are written as '#rrggbb' or '#rrggbbaa'. Options that are unset
     /// revert to Mir's defaults.

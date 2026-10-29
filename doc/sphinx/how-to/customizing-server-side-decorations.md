@@ -103,26 +103,26 @@ for more on wiring up a configuration store.
 The options are:
 
 ```ini
-decorations_titlebar_height=32
-decorations_side_border_width=6
-decorations_bottom_border_height=6
-decorations_button_width=24
-decorations_padding_between_buttons=6
-decorations_title_font_height=14
-decorations_resize_corner_input_width=16
-decorations_resize_corner_input_height=16
-decorations_corner_radius=0
+ssd_titlebar_height=32
+ssd_side_border_width=6
+ssd_bottom_border_height=6
+ssd_button_width=24
+ssd_padding_between_buttons=6
+ssd_title_font_height=14
+ssd_resize_corner_input_width=16
+ssd_resize_corner_input_height=16
+ssd_corner_radius=0
 
-decorations_color_background_focused=#323232
-decorations_color_background_unfocused=#808080
-decorations_color_title_focused=#ffffff
-decorations_color_title_unfocused=#a0a0a0
-decorations_color_button_normal=#606060
-decorations_color_button_hovered=#a0a0a0
-decorations_color_button_icon=#ffffff
-decorations_color_close_button_normal=#a02020
-decorations_color_close_button_hovered=#c06060
-decorations_color_close_button_icon=#ffffff
+ssd_color_background_focused=#323232
+ssd_color_background_unfocused=#808080
+ssd_color_title_focused=#ffffff
+ssd_color_title_unfocused=#a0a0a0
+ssd_color_button_normal=#606060
+ssd_color_button_hovered=#a0a0a0
+ssd_color_button_icon=#ffffff
+ssd_color_close_button_normal=#a02020
+ssd_color_close_button_hovered=#c06060
+ssd_color_close_button_icon=#ffffff
 ```
 
 Colors are written as `#rrggbb` or `#rrggbbaa`. The values shown above are Mir's

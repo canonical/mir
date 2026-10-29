@@ -234,7 +234,7 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
     for (auto const& [name, description, metric] : metric_keys)
     {
         config_store.add_int_attribute(
-            {"decorations", name},
+            {"ssd", name},
             description,
             [self=self, metric=metric](live_config::Key const& key, std::optional<int> val)
             {
@@ -254,8 +254,8 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
     for (auto const& [element_name, state_name, element, state] : color_keys)
     {
         auto const key = state_name
-            ? live_config::Key{"decorations", "color", element_name, state_name}
-            : live_config::Key{"decorations", "color", element_name};
+            ? live_config::Key{"ssd", "color", element_name, state_name}
+            : live_config::Key{"ssd", "color", element_name};
 
         config_store.add_string_attribute(
             key,
