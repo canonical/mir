@@ -26,6 +26,8 @@
 
 #include <boost/throw_exception.hpp>
 #include <ft2build.h>
+
+#include <atomic>
 #include <memory>
 #include FT_FREETYPE_H
 #include <endian.h>
@@ -267,26 +269,36 @@ public:
     auto new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                           float scale) const -> std::unique_ptr<WindowState> override;
     auto resize_corner_input_size() const -> geom::Size override;
+    void update_style(std::shared_ptr<msd::DecorationStyle const> const& style) override;
 
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
-    std::shared_ptr<msd::DecorationStyle const> const style;
+
+    // Can be updated at runtime, so always take a local copy before use
+    std::atomic<std::shared_ptr<msd::DecorationStyle const>> style;
 };
+
+void DecorationStrategy::update_style(std::shared_ptr<msd::DecorationStyle const> const& new_style)
+{
+    style = new_style;
+}
 
 auto DecorationStrategy::resize_corner_input_size() const -> geom::Size
 {
-    return style->resize_corner_input_size;
+    return style.load()->resize_corner_input_size;
 }
 
 auto DecorationStrategy::buffer_format() const -> MirPixelFormat
 {
-    return style->buffer_format;
+    return style.load()->buffer_format;
 }
 
 auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                                           float scale) const -> std::unique_ptr<WindowState>
 
 {
+    auto const style = this->style.load();
+
     return std::make_unique<WindowState>(
         window_surface,
         style->titlebar_height,
@@ -298,6 +310,8 @@ auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surf
 auto DecorationStrategy::compute_size_with_decorations(
     geom::Size content_size, MirWindowType type, MirWindowState state) const -> geom::Size
 {
+    auto const style = this->style.load();
+
     switch (msd::border_type_for(type, state))
     {
     case msd::BorderType::Full:
@@ -923,11 +937,12 @@ DecorationStrategy::DecorationStrategy(
 
 auto DecorationStrategy::render_strategy() const -> std::unique_ptr<mir::shell::decoration::RendererStrategy>
 {
-    return std::make_unique<::RendererStrategy>(style, allocator);
+    return std::make_unique<::RendererStrategy>(style.load(), allocator);
 }
 
 auto DecorationStrategy::button_placement(unsigned n, const WindowState& ws) const -> geom::Rectangle
 {
+    auto const style = this->style.load();
     auto const titlebar = ws.titlebar_rect();
 
     geom::X x =
