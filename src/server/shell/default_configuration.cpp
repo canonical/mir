@@ -108,6 +108,15 @@ auto mir::DefaultServerConfiguration::the_decoration_style() -> std::shared_ptr<
 void mir::DefaultServerConfiguration::set_the_decoration_style(std::shared_ptr<msd::DecorationStyle const> style)
 {
     decoration_style = std::move(style);
+
+    // If the server is already running, restyle it
+    if (shell_decoration_strategy)
+    {
+        shell_decoration_strategy->update_style(decoration_style);
+
+        if (auto const manager = decoration_manager.cached())
+            the_main_loop()->spawn([manager] { manager->redecorate_all(); });
+    }
 }
 
 auto mir::DefaultServerConfiguration::the_shell_decoration_strategy() -> std::shared_ptr<msd::DecorationStrategy>
