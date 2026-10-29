@@ -45,7 +45,7 @@ public:
         }
         catch (std::exception const& e)
         {
-            MIR_FATAL_ERROR("Exception thrown while releasing a buffer back to its pool: {}", e.what());
+            MIR_FATAL_ERROR("Exception thrown while releasing a buffer back to its pool: {}", mir::ExceptionDiagnostics{e});
         }
     }
 
