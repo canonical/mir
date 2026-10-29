@@ -53,6 +53,14 @@ actions:
     cmake --build ~/build
     VERBOSE=1 ARGS="-V" cmake --build ~/build --target ptest "$@"
 
+  wlcs: |
+    set -xeu
+
+    cmake --build ~/build --target miral_wlcs_integration
+
+    cd ~/build
+    ctest -R 'wlcs.*' "$@"
+
   doc: |
     set -xeu
 

@@ -242,11 +242,18 @@ try
             fds[display_fd].events &= ~POLLOUT;
         }
 
-        if (poll(fds, indices, -1) == -1)
+        // Don't let syscall interruption break the display platform
+        int polled;
+        do
         {
-            wl_display_cancel_read(display);
-            BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "Failed to wait for event"}));
-        }
+            polled = poll(fds, indices, -1);
+            auto const current_errno = errno;
+            if (polled == -1 && current_errno != EINTR)
+            {
+                wl_display_cancel_read(display);
+                BOOST_THROW_EXCEPTION((std::system_error{current_errno, std::system_category(), "Failed to wait for event"}));
+            }
+        } while (polled == -1);
 
         if (fds[display_fd].revents & (POLLIN | POLLERR))
         {
