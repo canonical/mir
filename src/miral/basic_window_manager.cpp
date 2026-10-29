@@ -2172,7 +2172,7 @@ auto anchor_for(Rectangle const& aux_rect, MirPlacementGravity rect_gravity) -> 
         return aux_rect.top_left + 0.5*as_displacement(aux_rect.size).dy;
 
     case mir_placement_gravity_center:
-        return aux_rect.top_left + 0.5*as_displacement(aux_rect.size);
+        return aux_rect.centre();
 
     case mir_placement_gravity_east:
         return aux_rect.top_right() + 0.5*as_displacement(aux_rect.size).dy;
