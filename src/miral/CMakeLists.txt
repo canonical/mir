@@ -144,6 +144,7 @@ add_library(miral-external OBJECT
     x11_support.cpp                     ${miral_include}/miral/x11_support.h
     zone.cpp                            ${miral_include}/miral/zone.h
     decorations.cpp                     ${miral_include}/miral/decorations.h
+    decoration_style.cpp                ${miral_include}/miral/decoration_style.h
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
