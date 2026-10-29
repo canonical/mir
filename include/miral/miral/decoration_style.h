@@ -53,6 +53,7 @@ public:
     ///     - {decorations,title_font_height}: Height of the window title text
     ///     - {decorations,resize_corner_input_width}: Width of the resize handle in a corner
     ///     - {decorations,resize_corner_input_height}: Height of the resize handle in a corner
+    ///     - {decorations,corner_radius}: Radius of the rounded outer corners (zero for square corners)
     ///     - {decorations,color,background,focused}
     ///     - {decorations,color,background,unfocused}
     ///     - {decorations,color,title,focused}
@@ -103,6 +104,7 @@ public:
         title_font_height,          ///< Height of the window title text
         resize_corner_input_width,  ///< Width of the resize handle in a corner
         resize_corner_input_height, ///< Height of the resize handle in a corner
+        corner_radius,              ///< Radius of the rounded outer corners (zero for square corners)
     };
 
     /// Set the color used to draw \p element while in \p state.
