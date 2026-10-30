@@ -168,7 +168,7 @@ inline auto scale_pixel(uint32_t c, float coverage) -> uint32_t
     unsigned char r = 0, g = 0, b = 0, a = 0;
     unpack_pixel(c, r, g, b, a);
     auto const scaled = [coverage](unsigned char v)
-        { return static_cast<unsigned char>(std::lround(v * coverage)); };
+        { return static_cast<unsigned char>(std::lround(float(v) * coverage)); };
     return pack_pixel(scaled(r), scaled(g), scaled(b), scaled(a));
 }
 
@@ -209,17 +209,17 @@ inline void round_corners(
     for (int y = 0; y < buf_size.height.as_int(); ++y)
     {
         // Pixel centres are offset by half a pixel from the pixel grid
-        float const window_y = buf_offset.dy.round_to<float>() + y + 0.5f;
+        float const window_y = buf_offset.dy.round_to<float>() + float(y) + 0.5f;
 
         if (window_y > top && window_y < bottom)
             continue;
 
         float const centre_y = (window_y <= top) ? top : bottom;
-        uint32_t* const row = data + y * buf_size.width.as_int();
+        uint32_t* const row = data + ptrdiff_t(y * buf_size.width.as_int());
 
         for (int x = 0; x < buf_size.width.as_int(); ++x)
         {
-            float const window_x = buf_offset.dx.round_to<float>() + x + 0.5f;
+            float const window_x = buf_offset.dx.round_to<float>() + float(x) + 0.5f;
 
             if (window_x > left && window_x < right)
                 continue;
@@ -999,8 +999,8 @@ void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_siz
         scaled_titlebar_size,
         name,
         geom::Point{
-            lround(style->title_font_top_left.x.as_value() * scale),
-            lround(style->title_font_top_left.y.as_value() * scale)},
+            lround(style->title_font_top_left.x.round_to<float>() * scale),
+            lround(style->title_font_top_left.y.round_to<float>() * scale)},
         style->title_font_height * scale,
         current_theme->text_color);
 }
@@ -1011,8 +1011,8 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
     {
         geom::Rectangle scaled_button_rect{
             geom::Point{
-                lround(button.rect.left().as_value() * scale),
-                lround(button.rect.top().as_value() * scale)},
+                lround(button.rect.left().round_to<float>() * scale),
+                lround(button.rect.top().round_to<float>() * scale)},
             button.rect.size * scale};
         auto const icon = button_icons.find(button.function);
         if (icon != button_icons.end())
