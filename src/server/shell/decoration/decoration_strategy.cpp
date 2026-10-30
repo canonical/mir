@@ -168,7 +168,7 @@ inline auto scale_pixel(uint32_t c, float coverage) -> uint32_t
     unsigned char r = 0, g = 0, b = 0, a = 0;
     unpack_pixel(c, r, g, b, a);
     auto const scaled = [coverage](unsigned char v)
-        { return static_cast<unsigned char>(lround(v * coverage + 0.5f)); };
+        { return static_cast<unsigned char>(std::lround(v * coverage)); };
     return pack_pixel(scaled(r), scaled(g), scaled(b), scaled(a));
 }
 

@@ -40,6 +40,7 @@ struct StubWindowSurface : mtd::StubSurface
     StubWindowSurface(geom::Size size) : size{size} {}
 
     auto window_size() const -> geom::Size override { return size; }
+    void resize(geom::Size const& new_size) override { size = new_size; }
     auto state() const -> MirWindowState override { return mir_window_state_restored; }
     auto name() const -> std::string override { return "stub"; }
 
@@ -209,7 +210,7 @@ TEST_F(DecorationStrategyRendering, resized_window_reapplies_clamped_corner_radi
 {
     auto style = std::make_shared<msd::DecorationStyle>();
     style->corner_radius = geom::Width{50};
-    surface->size = geom::Size{200, 80};
+    surface->resize(geom::Size{200, 80});
 
     auto const renderer = render(style);
     RenderedPixels const original_titlebar{renderer->render_titlebar().value()};
@@ -217,7 +218,7 @@ TEST_F(DecorationStrategyRendering, resized_window_reapplies_clamped_corner_radi
     auto const titlebar_alpha_before = original_titlebar(5, 23) >> 24;
     auto const bottom_alpha_before = original_bottom(35, 5) >> 24;
 
-    surface->size = geom::Size{200, 200};
+    surface->resize(geom::Size{200, 200});
     window_state = strategy->new_window_state(surface, 1.0f);
     renderer->update_state(*window_state, msd::InputState{{}, {}});
 
