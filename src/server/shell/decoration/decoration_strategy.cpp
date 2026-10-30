@@ -168,7 +168,7 @@ inline auto scale_pixel(uint32_t c, float coverage) -> uint32_t
     unsigned char r = 0, g = 0, b = 0, a = 0;
     unpack_pixel(c, r, g, b, a);
     auto const scaled = [coverage](unsigned char v)
-        { return static_cast<unsigned char>(v * coverage + 0.5f); };
+        { return static_cast<unsigned char>(lround(v * coverage + 0.5f)); };
     return pack_pixel(scaled(r), scaled(g), scaled(b), scaled(a));
 }
 
@@ -185,22 +185,22 @@ inline void round_corners(
 {
     radius = std::min({
         radius,
-        window_size.width.as_value() / 2.0f,
-        window_size.height.as_value() / 2.0f});
+        window_size.width.round_to<float>() / 2.0f,
+        window_size.height.round_to<float>() / 2.0f});
 
     if (radius <= 0.0f)
         return;
 
     // The centres of the corner arcs are inset from the edges of the window by the radius
     float const left = radius;
-    float const right = window_size.width.as_value() - radius;
+    float const right = window_size.width.round_to<float>() - radius;
     float const top = radius;
-    float const bottom = window_size.height.as_value() - radius;
+    float const bottom = window_size.height.round_to<float>() - radius;
 
     for (int y = 0; y < buf_size.height.as_int(); ++y)
     {
         // Pixel centres are offset by half a pixel from the pixel grid
-        float const window_y = buf_offset.dy.as_value() + y + 0.5f;
+        float const window_y = buf_offset.dy.round_to<float>() + y + 0.5f;
 
         if (window_y > top && window_y < bottom)
             continue;
@@ -210,7 +210,7 @@ inline void round_corners(
 
         for (int x = 0; x < buf_size.width.as_int(); ++x)
         {
-            float const window_x = buf_offset.dx.as_value() + x + 0.5f;
+            float const window_x = buf_offset.dx.round_to<float>() + x + 0.5f;
 
             if (window_x > left && window_x < right)
                 continue;
@@ -978,8 +978,8 @@ void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_siz
         scaled_titlebar_size,
         name,
         geom::Point{
-            style->title_font_top_left.x.as_value() * scale,
-            style->title_font_top_left.y.as_value() * scale},
+            lround(style->title_font_top_left.x.as_value() * scale),
+            lround(style->title_font_top_left.y.as_value() * scale)},
         style->title_font_height * scale,
         current_theme->text_color);
 }
@@ -990,8 +990,8 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
     {
         geom::Rectangle scaled_button_rect{
             geom::Point{
-                button.rect.left().as_value() * scale,
-                button.rect.top().as_value() * scale},
+                lround(button.rect.left().as_value() * scale),
+                lround(button.rect.top().as_value() * scale)},
             button.rect.size * scale};
         auto const icon = button_icons.find(button.function);
         if (icon != button_icons.end())
