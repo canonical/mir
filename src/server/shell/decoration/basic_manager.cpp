@@ -117,8 +117,8 @@ void msd::BasicManager::build_decoration(
 
     while (true)
     {
-        float current_scale;
-        bool restyle;
+        float current_scale{};
+        bool restyle{};
         {
             std::lock_guard lock{mutex};
             auto const it = decorations.find(surface.get());
