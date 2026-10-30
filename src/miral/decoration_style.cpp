@@ -313,6 +313,12 @@ void miral::DecorationStyle::set_metric(Metric metric, int pixels)
 {
     std::lock_guard lock{self->mutex};
 
+    if (pixels < 0)
+    {
+        mir::log_warning("Ignoring negative decoration metric %d", static_cast<int>(metric));
+        return;
+    }
+
     if (set_metric_of(self->style, metric, pixels))
         self->apply_locked();
     else

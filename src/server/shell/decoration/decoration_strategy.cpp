@@ -172,6 +172,15 @@ inline auto scale_pixel(uint32_t c, float coverage) -> uint32_t
     return pack_pixel(scaled(r), scaled(g), scaled(b), scaled(a));
 }
 
+inline auto premultiply_pixel(uint32_t c) -> uint32_t
+{
+    unsigned char r = 0, g = 0, b = 0, a = 0;
+    unpack_pixel(c, r, g, b, a);
+    auto const premultiply = [a](unsigned char v)
+        { return static_cast<unsigned char>((static_cast<unsigned int>(v) * a + 127) / 255); };
+    return pack_pixel(premultiply(r), premultiply(g), premultiply(b), a);
+}
+
 /// Make the pixels that fall outside the rounded outline of the window transparent
 /// \param buf_offset  position of this buffer within the window, in buffer pixels
 /// \param window_size size of the whole decorated window, in buffer pixels
@@ -751,6 +760,8 @@ RendererStrategy::RendererStrategy(
 
 void RendererStrategy::update_state(WindowState const& window_state, InputState const& input_state)
 {
+    bool const window_size_changed = window_state.window_size() != window_size;
+
     if (auto const new_scale{window_state.scale()}; new_scale != scale)
     {
         scale = new_scale;
@@ -766,6 +777,11 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
     }
 
     window_size = window_state.window_size();
+    if (window_size_changed)
+    {
+        drop_border_pixels();
+        needs_titlebar_redraw = true;
+    }
 
     if (window_state.left_border_rect() != left_border_rect ||
         window_state.right_border_rect() != right_border_rect ||
@@ -931,7 +947,9 @@ auto RendererStrategy::rounded_border_pixels(
     pixels = alloc_pixels(scaled_size);
 
     for (geom::Y y{0}; y < as_y(scaled_size.height); y += geom::DeltaY{1})
-        render_row(pixels.get(), scaled_size, {0, y}, scaled_size.width, current_theme->background_color);
+        render_row(
+            pixels.get(), scaled_size, {0, y}, scaled_size.width,
+            premultiply_pixel(current_theme->background_color));
 
     round_corners(
         pixels.get(), scaled_size,
@@ -954,7 +972,7 @@ void RendererStrategy::update_solid_color_pixels()
         render_row(
             solid_color_pixels.get(), geom::Size{scaled_solid_color_pixels_length, 1},
             geom::Point{}, geom::Width{scaled_solid_color_pixels_length},
-            current_theme->background_color);
+            premultiply_pixel(current_theme->background_color));
     }
 
     needs_solid_color_redraw = false;
@@ -967,7 +985,7 @@ void RendererStrategy::redraw_titlebar_background(geom::Size const scaled_titleb
         render_row(
             titlebar_pixels.get(), scaled_titlebar_size,
             {0, y}, scaled_titlebar_size.width,
-            current_theme->background_color);
+            premultiply_pixel(current_theme->background_color));
     }
 }
 
@@ -1006,7 +1024,7 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
                     scaled_titlebar_size,
                     {scaled_button_rect.left(), y},
                     scaled_button_rect.size.width,
-                    button_color);
+                    premultiply_pixel(button_color));
             }
             geom::Rectangle const icon_rect = {
                 scaled_button_rect.top_left + style->icon_padding * scale, {
@@ -1017,7 +1035,7 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
                 scaled_titlebar_size,
                 icon_rect,
                 style->icon_line_width * scale,
-                icon->second.theme.icon_color);
+                premultiply_pixel(icon->second.theme.icon_color));
         }
         else
         {

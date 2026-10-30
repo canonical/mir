@@ -20,6 +20,7 @@
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_surface.h>
 
+#include <bit>
 #include <cstring>
 
 #include <gmock/gmock.h>
@@ -42,7 +43,7 @@ struct StubWindowSurface : mtd::StubSurface
     auto state() const -> MirWindowState override { return mir_window_state_restored; }
     auto name() const -> std::string override { return "stub"; }
 
-    geom::Size const size;
+    geom::Size size;
 };
 
 /// The pixels of a rendered decoration buffer, indexed by position
@@ -61,7 +62,10 @@ struct RenderedPixels
         uint32_t pixel;
         // codeql[cpp/suspicious-add-sizeof] stride is in bytes, x is in pixels, so multiply by sizeof(pixel)
         memcpy(&pixel, mapping->data() + y * stride.as_uint32_t() + x * sizeof(pixel), sizeof(pixel));
-        return pixel;
+        if constexpr (std::endian::native == std::endian::big)
+            return std::byteswap(pixel);
+        else
+            return pixel;
     }
 
     std::shared_ptr<mir::renderer::software::RWMappable> const mappable;
@@ -153,6 +157,21 @@ TEST_F(DecorationStrategyRendering, square_corners_are_opaque)
     EXPECT_THAT(bottom(0, bottom.size.height.as_int() - 1) >> 24, Eq(0xFFu));
 }
 
+TEST_F(DecorationStrategyRendering, transparent_fill_colors_are_premultiplied)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->focused.background_color = msd::pack_pixel(0xFF, 0, 0, 0);
+    style->unfocused.background_color = msd::pack_pixel(0xFF, 0, 0, 0);
+
+    auto const renderer = render(style);
+
+    RenderedPixels const titlebar{renderer->render_titlebar().value()};
+    EXPECT_THAT(titlebar(100, 0), Eq(0u));
+
+    RenderedPixels const left{renderer->render_left_border().value()};
+    EXPECT_THAT(left(0, 0), Eq(0u));
+}
+
 TEST_F(DecorationStrategyRendering, rounded_corners_are_transparent)
 {
     auto style = std::make_shared<msd::DecorationStyle>();
@@ -184,4 +203,28 @@ TEST_F(DecorationStrategyRendering, corner_radius_larger_than_the_bottom_border_
     RenderedPixels const left{renderer->render_left_border().value()};
     EXPECT_THAT(left(0, left.size.height.as_int() - 1), Eq(0u));
     EXPECT_THAT(left(0, 0) >> 24, Eq(0xFFu));
+}
+
+TEST_F(DecorationStrategyRendering, resized_window_reapplies_clamped_corner_radius)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->corner_radius = geom::Width{50};
+    surface->size = geom::Size{200, 80};
+
+    auto const renderer = render(style);
+    RenderedPixels const original_titlebar{renderer->render_titlebar().value()};
+    RenderedPixels const original_bottom{renderer->render_bottom_border().value()};
+    auto const titlebar_alpha_before = original_titlebar(5, 23) >> 24;
+    auto const bottom_alpha_before = original_bottom(35, 5) >> 24;
+
+    surface->size = geom::Size{200, 200};
+    window_state = strategy->new_window_state(surface, 1.0f);
+    renderer->update_state(*window_state, msd::InputState{{}, {}});
+
+    RenderedPixels const resized_titlebar{renderer->render_titlebar().value()};
+    RenderedPixels const resized_bottom{renderer->render_bottom_border().value()};
+    EXPECT_THAT(titlebar_alpha_before, Eq(0xFFu));
+    EXPECT_THAT(resized_titlebar(5, 23) >> 24, Eq(0u));
+    EXPECT_GT(bottom_alpha_before, 0u);
+    EXPECT_THAT(resized_bottom(35, 5) >> 24, Eq(0u));
 }
