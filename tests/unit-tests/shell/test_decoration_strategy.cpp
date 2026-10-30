@@ -59,6 +59,7 @@ struct RenderedPixels
     auto operator()(int x, int y) const -> uint32_t
     {
         uint32_t pixel;
+        // codeql[cpp/suspicious-add-sizeof] stride is in bytes, x is in pixels, so multiply by sizeof(pixel)
         memcpy(&pixel, mapping->data() + y * stride.as_uint32_t() + x * sizeof(pixel), sizeof(pixel));
         return pixel;
     }
