@@ -29,7 +29,6 @@
 namespace geom = mir::geometry;
 namespace msd = mir::shell::decoration;
 namespace mtd = mir::test::doubles;
-namespace ms = mir::scene;
 
 using namespace testing;
 
@@ -43,8 +42,11 @@ struct StubWindowSurface : mtd::StubSurface
     void resize(geom::Size const& new_size) override { size = new_size; }
     auto state() const -> MirWindowState override { return mir_window_state_restored; }
     auto name() const -> std::string override { return "stub"; }
+    auto focus_state() const -> MirWindowFocusState override { return focus; }
+    void set_focus_state(MirWindowFocusState new_focus) override { focus = new_focus; }
 
     geom::Size size;
+    MirWindowFocusState focus{mir_window_focus_state_focused};
 };
 
 /// The pixels of a rendered decoration buffer, indexed by position
@@ -132,17 +134,19 @@ TEST_F(DecorationStrategyStyle, custom_buffer_format_is_used)
 
 struct DecorationStrategyRendering : DecorationStrategyStyle
 {
-    auto render(std::shared_ptr<msd::DecorationStyle const> style)
+    auto render(
+        std::shared_ptr<msd::DecorationStyle const> style,
+        msd::InputState const& input_state = msd::InputState{{}, {}})
         -> std::unique_ptr<msd::RendererStrategy>
     {
         strategy = strategy_with(std::move(style));
         window_state = strategy->new_window_state(surface, 1.0f);
         auto renderer = strategy->render_strategy();
-        renderer->update_state(*window_state, msd::InputState{{}, {}});
+        renderer->update_state(*window_state, input_state);
         return renderer;
     }
 
-    std::shared_ptr<ms::Surface> const surface{std::make_shared<StubWindowSurface>(geom::Size{200, 100})};
+    std::shared_ptr<StubWindowSurface> const surface{std::make_shared<StubWindowSurface>(geom::Size{200, 100})};
     std::shared_ptr<msd::DecorationStrategy> strategy;
     std::unique_ptr<msd::WindowState> window_state;
 };
@@ -228,4 +232,24 @@ TEST_F(DecorationStrategyRendering, resized_window_reapplies_clamped_corner_radi
     EXPECT_THAT(resized_titlebar(5, 23) >> 24, Eq(0u));
     EXPECT_GT(bottom_alpha_before, 0u);
     EXPECT_THAT(resized_bottom(35, 5) >> 24, Eq(0u));
+}
+
+TEST_F(DecorationStrategyRendering, buttons_are_drawn_with_the_unfocused_colors_while_unfocused)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->button.normal_color = msd::pack_pixel(0x10, 0x20, 0x30);
+    style->button.unfocused_color = msd::pack_pixel(0x40, 0x50, 0x60);
+
+    geom::Rectangle const button_rect{{100, 0}, {24, 24}};
+    msd::InputState const input_state{{msd::Button{msd::Button::Maximize, msd::Button::Up, button_rect}}, {}};
+
+    auto const focused_renderer = render(style, input_state);
+    RenderedPixels const focused_titlebar{focused_renderer->render_titlebar().value()};
+    EXPECT_THAT(focused_titlebar(101, 1), Eq(msd::pack_pixel(0x10, 0x20, 0x30)));
+
+    surface->set_focus_state(mir_window_focus_state_unfocused);
+
+    auto const unfocused_renderer = render(style, input_state);
+    RenderedPixels const unfocused_titlebar{unfocused_renderer->render_titlebar().value()};
+    EXPECT_THAT(unfocused_titlebar(101, 1), Eq(msd::pack_pixel(0x40, 0x50, 0x60)));
 }

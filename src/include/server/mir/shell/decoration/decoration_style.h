@@ -47,6 +47,31 @@ constexpr auto pack_pixel(unsigned char r, unsigned char g, unsigned char b, uns
 #endif
 }
 
+/// The red, green, blue and alpha channels of a \ref Pixel
+struct Channels
+{
+    unsigned char r, g, b, a;
+};
+
+constexpr auto unpack_pixel(Pixel pixel) -> Channels
+{
+#if __BYTE_ORDER == __LITTLE_ENDIAN
+    return {
+        (unsigned char)(pixel >> 16),
+        (unsigned char)(pixel >>  8),
+        (unsigned char)(pixel >>  0),
+        (unsigned char)(pixel >> 24)};
+#elif __BYTE_ORDER == __BIG_ENDIAN
+    return {
+        (unsigned char)(pixel >>  8),
+        (unsigned char)(pixel >> 16),
+        (unsigned char)(pixel >> 24),
+        (unsigned char)(pixel >>  0)};
+#else
+#error unsupported byte order
+#endif
+}
+
 enum class BorderType
 {
     Full,       ///< Full titlebar and border (for restored windows)
@@ -64,11 +89,16 @@ struct Theme
 };
 
 /// Colors used to draw a titlebar button
+///
+/// \note miral::DecorationStyle derives any of these that haven't been set
+///       explicitly from the corresponding \ref Theme
 struct ButtonTheme
 {
     Pixel normal_color;         ///< Color of the background of the button area
     Pixel active_color;         ///< Color of the background when the button is active
     Pixel icon_color;           ///< Color of the icon
+    Pixel unfocused_color;      ///< Color of the background while the window is unfocused
+    Pixel unfocused_icon_color; ///< Color of the icon while the window is unfocused
 };
 
 /// The appearance of the decorations drawn by the default decoration strategy.
@@ -94,13 +124,17 @@ struct DecorationStyle
     Theme unfocused{pack_pixel(0x80, 0x80, 0x80), pack_pixel(0xA0, 0xA0, 0xA0)};    ///< Colors used while unfocused
 
     ButtonTheme button{
-        pack_pixel(0x60, 0x60, 0x60),
-        pack_pixel(0xA0, 0xA0, 0xA0),
-        pack_pixel(0xFF, 0xFF, 0xFF)};              ///< Colors used for the minimize and maximize buttons
+        pack_pixel(0x65, 0x65, 0x65),
+        pack_pixel(0x98, 0x98, 0x98),
+        pack_pixel(0xFF, 0xFF, 0xFF),
+        pack_pixel(0x88, 0x88, 0x88),
+        pack_pixel(0xA0, 0xA0, 0xA0)};              ///< Colors used for the minimize and maximize buttons
     ButtonTheme close_button{
         pack_pixel(0xA0, 0x20, 0x20),
         pack_pixel(0xC0, 0x60, 0x60),
-        pack_pixel(0xFF, 0xFF, 0xFF)};              ///< Colors used for the close button
+        pack_pixel(0xFF, 0xFF, 0xFF),
+        pack_pixel(0x80, 0x50, 0x50),
+        pack_pixel(0xA0, 0xA0, 0xA0)};              ///< Colors used for the close button
 
     MirPixelFormat buffer_format{mir_pixel_format_argb_8888};
 };

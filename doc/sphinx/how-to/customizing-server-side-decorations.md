@@ -54,14 +54,30 @@ pass it to `run_with()`:
 `set_color()` takes the element, the state it is drawn in, and the red, green
 and blue channels (plus an optional alpha channel, which defaults to opaque):
 
-| Element             | States                 | Draws                                           |
-| ------------------- | ---------------------- | ----------------------------------------------- |
-| `background`        | `focused`, `unfocused` | The title bar and the borders                   |
-| `title`             | `focused`, `unfocused` | The window title text                           |
-| `button`            | `normal`, `hovered`    | The background of the minimize/maximize buttons |
-| `button_icon`       | —                      | The minimize/maximize icons                     |
-| `close_button`      | `normal`, `hovered`    | The background of the close button              |
-| `close_button_icon` | —                      | The close icon                                  |
+| Element             | States                           | Draws                                           |
+| ------------------- | -------------------------------- | ----------------------------------------------- |
+| `background`        | `focused`, `unfocused`           | The title bar and the borders                   |
+| `title`             | `focused`, `unfocused`           | The window title text                           |
+| `button`            | `normal`, `hovered`, `unfocused` | The background of the minimize/maximize buttons |
+| `button_icon`       | `focused`, `unfocused`           | The minimize/maximize icons                     |
+| `close_button`      | `normal`, `hovered`, `unfocused` | The background of the close button              |
+| `close_button_icon` | `focused`, `unfocused`           | The close icon                                  |
+
+Buttons are drawn in `normal` while the window has keyboard focus and the
+pointer is elsewhere, in `hovered` whenever the pointer is over them, and in
+`unfocused` while the window does not have keyboard focus.
+
+Button colors that are not set explicitly are derived from the title bar, so
+setting `background` and `title` is enough to restyle the buttons too:
+
+- `button` is the `background` color mixed a quarter of the way towards the
+  `title` color, or half way while `hovered`
+- `button_icon` and `close_button_icon` are drawn in the `title` color
+- `close_button` keeps its own color, so that it stays distinct
+
+Setting one of those colors explicitly stops it being derived; unsetting it
+again (by removing the option from a configuration file) brings the derived
+color back.
 
 `set_metric()` takes a length in logical pixels. Setting `corner_radius` to a
 non-zero value rounds the outer corners of the decorations; the corners are
@@ -117,17 +133,22 @@ ssd_color_background_focused=#323232
 ssd_color_background_unfocused=#808080
 ssd_color_title_focused=#ffffff
 ssd_color_title_unfocused=#a0a0a0
-ssd_color_button_normal=#606060
-ssd_color_button_hovered=#a0a0a0
-ssd_color_button_icon=#ffffff
+ssd_color_button_normal=#656565
+ssd_color_button_hovered=#989898
+ssd_color_button_unfocused=#888888
+ssd_color_button_icon_focused=#ffffff
+ssd_color_button_icon_unfocused=#a0a0a0
 ssd_color_close_button_normal=#a02020
 ssd_color_close_button_hovered=#c06060
-ssd_color_close_button_icon=#ffffff
+ssd_color_close_button_unfocused=#805050
+ssd_color_close_button_icon_focused=#ffffff
+ssd_color_close_button_icon_unfocused=#a0a0a0
 ```
 
 Colors are written as `#rrggbb` or `#rrggbbaa`. The values shown above are Mir's
-defaults: an option that is removed from the file reverts to its default, and a
-value that cannot be parsed is ignored with a warning.
+defaults: an option that is removed from the file reverts to its default (or to
+the color derived from the title bar), and a value that cannot be parsed is
+ignored with a warning.
 
 `mir_demo_server` is wired up this way, so you can try these options out by
 putting them in `~/.config/mir_demo_server.live-config` and editing it while the

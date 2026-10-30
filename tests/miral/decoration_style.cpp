@@ -105,8 +105,62 @@ TEST_F(TestDecorationStyle, colors_are_applied)
     EXPECT_THAT(applied_style()->unfocused.text_color, Eq(msd::pack_pixel(0x44, 0x55, 0x66)));
 }
 
-TEST_F(TestDecorationStyle, unrecognized_values_are_ignored)
+TEST_F(TestDecorationStyle, unfocused_button_colors_are_applied)
 {
+    miral::DecorationStyle style;
+    style.set_color(
+        miral::DecorationStyle::Element::button, miral::DecorationStyle::State::unfocused, 0x11, 0x22, 0x33);
+    style.set_color(
+        miral::DecorationStyle::Element::button_icon, miral::DecorationStyle::State::unfocused, 0x44, 0x55, 0x66);
+    style.set_color(
+        miral::DecorationStyle::Element::close_button, miral::DecorationStyle::State::unfocused, 0x77, 0x88, 0x99);
+    style.set_color(
+        miral::DecorationStyle::Element::close_button_icon,
+        miral::DecorationStyle::State::unfocused, 0xAA, 0xBB, 0xCC);
+
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->button.unfocused_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+    EXPECT_THAT(applied_style()->button.unfocused_icon_color, Eq(msd::pack_pixel(0x44, 0x55, 0x66)));
+    EXPECT_THAT(applied_style()->close_button.unfocused_color, Eq(msd::pack_pixel(0x77, 0x88, 0x99)));
+    EXPECT_THAT(applied_style()->close_button.unfocused_icon_color, Eq(msd::pack_pixel(0xAA, 0xBB, 0xCC)));
+}
+
+TEST_F(TestDecorationStyle, unset_button_colors_are_derived_from_the_titlebar)
+{
+    miral::DecorationStyle style;
+    style.set_color(
+        miral::DecorationStyle::Element::background, miral::DecorationStyle::State::focused, 0x00, 0x00, 0x00);
+    style.set_color(
+        miral::DecorationStyle::Element::title, miral::DecorationStyle::State::focused, 0x40, 0x80, 0xC0);
+
+    start_server_with(style);
+
+    // A quarter of the way from the background towards the title color
+    EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x10, 0x20, 0x30)));
+    // Halfway there while hovered
+    EXPECT_THAT(applied_style()->button.active_color, Eq(msd::pack_pixel(0x20, 0x40, 0x60)));
+    // Icons are drawn in the title color
+    EXPECT_THAT(applied_style()->button.icon_color, Eq(msd::pack_pixel(0x40, 0x80, 0xC0)));
+    EXPECT_THAT(applied_style()->close_button.icon_color, Eq(msd::pack_pixel(0x40, 0x80, 0xC0)));
+    // The close button keeps its own background
+    EXPECT_THAT(applied_style()->close_button.normal_color, Eq(server_defaults.close_button.normal_color));
+}
+
+TEST_F(TestDecorationStyle, explicit_button_colors_are_not_derived)
+{
+    miral::DecorationStyle style;
+    style.set_color(
+        miral::DecorationStyle::Element::background, miral::DecorationStyle::State::focused, 0x00, 0x00, 0x00);
+    style.set_color(
+        miral::DecorationStyle::Element::button, miral::DecorationStyle::State::normal, 0x11, 0x22, 0x33);
+
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+}
+
+TEST_F(TestDecorationStyle, unrecognized_values_are_ignored){
     miral::DecorationStyle style;
     style.set_metric(static_cast<miral::DecorationStyle::Metric>(0xDEAD), 42);
     style.set_color(
@@ -162,8 +216,45 @@ TEST_F(TestDecorationStyleConfig, corner_radius_is_applied)
     EXPECT_THAT(applied_style()->corner_radius, Eq(mir::geometry::Width{12}));
 }
 
-TEST_F(TestDecorationStyleConfig, config_reload_is_applied)
+TEST_F(TestDecorationStyleConfig, unfocused_button_colors_are_configurable)
 {
+    load("ssd_color_button_unfocused=#112233\n"
+         "ssd_color_button_icon_unfocused=#445566\n"
+         "ssd_color_close_button_unfocused=#778899\n"
+         "ssd_color_close_button_icon_unfocused=#aabbcc\n");
+
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->button.unfocused_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+    EXPECT_THAT(applied_style()->button.unfocused_icon_color, Eq(msd::pack_pixel(0x44, 0x55, 0x66)));
+    EXPECT_THAT(applied_style()->close_button.unfocused_color, Eq(msd::pack_pixel(0x77, 0x88, 0x99)));
+    EXPECT_THAT(applied_style()->close_button.unfocused_icon_color, Eq(msd::pack_pixel(0xAA, 0xBB, 0xCC)));
+}
+
+TEST_F(TestDecorationStyleConfig, unset_button_colors_follow_a_configured_titlebar_color)
+{
+    load("ssd_color_background_focused=#000000\n"
+         "ssd_color_title_focused=#4080c0\n");
+
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x10, 0x20, 0x30)));
+    EXPECT_THAT(applied_style()->button.icon_color, Eq(msd::pack_pixel(0x40, 0x80, 0xC0)));
+
+    load("ssd_color_background_focused=#000000\n"
+         "ssd_color_title_focused=#4080c0\n"
+         "ssd_color_button_normal=#112233\n");
+
+    EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+
+    // Dropping the explicit color restores the derived one
+    load("ssd_color_background_focused=#000000\n"
+         "ssd_color_title_focused=#4080c0\n");
+
+    EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x10, 0x20, 0x30)));
+}
+
+TEST_F(TestDecorationStyleConfig, config_reload_is_applied){
     start_server_with(style);
 
     load("ssd_side_border_width=7\n"

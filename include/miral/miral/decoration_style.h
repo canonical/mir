@@ -60,13 +60,18 @@ public:
     ///     - {ssd,color,title,unfocused}
     ///     - {ssd,color,button,normal}
     ///     - {ssd,color,button,hovered}
-    ///     - {ssd,color,button_icon}
+    ///     - {ssd,color,button,unfocused}
+    ///     - {ssd,color,button_icon,focused}
+    ///     - {ssd,color,button_icon,unfocused}
     ///     - {ssd,color,close_button,normal}
     ///     - {ssd,color,close_button,hovered}
-    ///     - {ssd,color,close_button_icon}
+    ///     - {ssd,color,close_button,unfocused}
+    ///     - {ssd,color,close_button_icon,focused}
+    ///     - {ssd,color,close_button_icon,unfocused}
     ///
     /// Colors are written as '#rrggbb' or '#rrggbbaa'. Options that are unset
-    /// revert to Mir's defaults.
+    /// revert to Mir's defaults; unset button colors are derived from the
+    /// titlebar colors.
     explicit DecorationStyle(live_config::Store& config_store);
 
     DecorationStyle(DecorationStyle const&);
@@ -89,7 +94,7 @@ public:
     {
         focused,   ///< The window has keyboard focus
         unfocused, ///< The window does not have keyboard focus
-        normal,    ///< The pointer is not over the element (buttons only)
+        normal,    ///< The window has keyboard focus and the pointer is not over the element (buttons only)
         hovered,   ///< The pointer is over the element (buttons only)
     };
 
@@ -109,9 +114,15 @@ public:
 
     /// Set the color used to draw \p element while in \p state.
     ///
-    /// \ref Element::background and \ref Element::title are drawn in either
-    /// \ref State::focused or \ref State::unfocused; the button elements are
-    /// drawn in either \ref State::normal or \ref State::hovered.
+    /// \ref Element::background, \ref Element::title and the button icons are
+    /// drawn in either \ref State::focused or \ref State::unfocused; the button
+    /// backgrounds are drawn in \ref State::normal, \ref State::hovered or
+    /// \ref State::unfocused.
+    ///
+    /// Button colors that are not set explicitly are derived from the titlebar:
+    /// the backgrounds of \ref Element::button are the background color mixed
+    /// towards the title color, and the button icons are drawn in the title
+    /// color. \ref Element::close_button keeps its own background color.
     ///
     /// Takes effect immediately, or when the server starts.
     void set_color(Element element, State state, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha = 0xFF);

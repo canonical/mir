@@ -255,6 +255,9 @@ private:
     /// Points at the theme (from the style) matching the window's current focus state
     msd::Theme const* current_theme;
 
+    /// Whether the window currently lacks keyboard focus
+    bool unfocused{false};
+
     class Text
     {
     public:
@@ -1014,7 +1017,7 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
         auto const icon = button_icons.find(button.function);
         if (icon != button_icons.end())
         {
-            Pixel button_color = icon->second.theme.normal_color;
+            Pixel button_color = unfocused ? icon->second.theme.unfocused_color : icon->second.theme.normal_color;
             if (button.state == msd::Button::Hovered)
                 button_color = icon->second.theme.active_color;
             for (geom::Y y{scaled_button_rect.top()}; y < scaled_button_rect.bottom(); y += geom::DeltaY{1})
@@ -1035,7 +1038,8 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
                 scaled_titlebar_size,
                 icon_rect,
                 style->icon_line_width * scale,
-                premultiply_pixel(icon->second.theme.icon_color));
+                premultiply_pixel(
+                    unfocused ? icon->second.theme.unfocused_icon_color : icon->second.theme.icon_color));
         }
         else
         {
@@ -1046,13 +1050,13 @@ void RendererStrategy::redraw_titlebar_buttons(geom::Size const scaled_titlebar_
 
 void RendererStrategy::set_focus_state(MirWindowFocusState focus_state)
 {
-    msd::Theme const* const new_theme = (focus_state != mir_window_focus_state_unfocused) ?
-                                            &style->focused :
-                                            &style->unfocused;
+    bool const now_unfocused = focus_state == mir_window_focus_state_unfocused;
+    msd::Theme const* const new_theme = now_unfocused ? &style->unfocused : &style->focused;
 
     if (new_theme != current_theme)
     {
         current_theme = new_theme;
+        unfocused = now_unfocused;
         needs_titlebar_redraw = true;
         needs_solid_color_redraw = true;
         drop_border_pixels();
