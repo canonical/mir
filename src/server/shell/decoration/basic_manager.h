@@ -80,7 +80,7 @@ private:
         std::weak_ptr<scene::Surface> surface;
         std::unique_ptr<Decoration> decoration;
         std::shared_ptr<BuildToken> building;
-        bool rebuild_pending{false};
+        bool restyle_pending{false};
     };
 
     std::mutex mutex;

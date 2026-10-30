@@ -257,6 +257,19 @@ void msd::BasicDecoration::set_scale(float new_scale)
     window_state_updated();
 }
 
+void msd::BasicDecoration::restyle()
+{
+    // The decoration surface is kept, so that restyling doesn't disturb the stacking order
+    renderer_strategy = decoration_strategy->render_strategy();
+
+    window_state = decoration_strategy->new_window_state(window_surface, scale);
+    input_manager->update_window_state(*window_state);
+    input_state = input_manager->state();
+
+    // Trigger a full refresh
+    update(std::nullopt, std::nullopt);
+}
+
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
 {
     msh::SurfaceSpecification params;

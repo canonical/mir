@@ -38,6 +38,7 @@ class StubDecoration
     : public msd::Decoration
 {
     void set_scale(float /*new_scale*/) override {};
+    void restyle() override {};
 };
 
 struct DecorationBasicManager
@@ -90,6 +91,7 @@ public:
     }
 
     MOCK_METHOD(void, set_scale, (float), (override));
+    MOCK_METHOD(void, restyle, (), (override));
 
     DecorationBasicManager* const mock;
 };
@@ -205,22 +207,24 @@ TEST_F(DecorationBasicManager, does_not_build_decorations_while_locked)
 
 TEST_F(DecorationBasicManager, restyle_during_build_is_deferred_until_build_completes)
 {
-    auto decoration_a = std::make_unique<MockDecoration>(this);
-    auto decoration_b = std::make_unique<MockDecoration>(this);
+    auto decoration = std::make_unique<MockDecoration>(this);
+    auto const decoration_pointer = decoration.get();
     auto const surface = std::make_shared<mtd::StubSurface>();
     int builds{0};
     EXPECT_CALL(*this, build_decoration())
-        .Times(2)
-        .WillRepeatedly([&]()
+        .Times(1)
+        .WillOnce([&]()
             {
-                if (++builds == 1)
-                    manager.redecorate_all();
-                return builds == 1 ? decoration_a.release() : decoration_b.release();
+                ++builds;
+                manager.redecorate_all();
+                return decoration.release();
             });
+    EXPECT_CALL(*decoration_pointer, restyle())
+        .Times(1);
 
     manager.decorate(surface);
 
-    EXPECT_THAT(builds, Eq(2));
+    EXPECT_THAT(builds, Eq(1));
 }
 
 TEST_F(DecorationBasicManager, removal_cancels_a_restyle_queued_during_build)
@@ -228,6 +232,7 @@ TEST_F(DecorationBasicManager, removal_cancels_a_restyle_queued_during_build)
     auto decoration_a = std::make_unique<MockDecoration>(this);
     auto decoration_b = std::make_unique<MockDecoration>(this);
     auto const surface = std::make_shared<mtd::StubSurface>();
+    EXPECT_CALL(*decoration_a, restyle()).Times(0);
     int builds{0};
     EXPECT_CALL(*this, build_decoration())
         .Times(2)
@@ -249,7 +254,7 @@ TEST_F(DecorationBasicManager, removal_cancels_a_restyle_queued_during_build)
     EXPECT_THAT(builds, Eq(2));
 }
 
-TEST_F(DecorationBasicManager, removal_cancels_rebuild_before_its_builder_starts)
+TEST_F(DecorationBasicManager, redecorate_all_restyles_in_place)
 {
     auto decoration = std::make_unique<MockDecoration>(this);
     auto const decoration_pointer = decoration.get();
@@ -260,12 +265,16 @@ TEST_F(DecorationBasicManager, removal_cancels_rebuild_before_its_builder_starts
     manager.decorate(surface);
     Mock::VerifyAndClearExpectations(this);
 
+    // Rebuilding would recreate the decoration surface, raising it above windows stacked on top
+    EXPECT_CALL(*decoration_pointer, restyle())
+        .Times(1);
     EXPECT_CALL(*this, decoration_destroyed(decoration_pointer))
-        .Times(1)
-        .WillOnce([&](auto) { manager.undecorate(surface); });
-    EXPECT_CALL(*this, build_decoration()).Times(0);
+        .Times(0);
+    EXPECT_CALL(*this, build_decoration())
+        .Times(0);
 
     manager.redecorate_all();
+    Mock::VerifyAndClearExpectations(this);
 }
 
 TEST_F(DecorationBasicManager, does_not_destroy_decorations_while_locked)
