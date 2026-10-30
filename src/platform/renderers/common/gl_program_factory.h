@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_COMMON_GL_PROGRAM_FACTORY_H_
 #define MIR_RENDERER_COMMON_GL_PROGRAM_FACTORY_H_
 
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 
 #include <mir/graphics/program.h>
 #include <mir/graphics/program_factory.h>
@@ -36,9 +36,9 @@ namespace mir::renderer::common
 /// drawing code selects the variant appropriate for the renderable's alpha.
 struct Program : public graphics::gl::Program
 {
-    Program(ProgramHandle&& opaque_shader, ProgramHandle&& alpha_shader);
+    Program(graphics::ProgramHandle&& opaque_shader, graphics::ProgramHandle&& alpha_shader);
 
-    ProgramHandle const opaque_handle, alpha_handle;
+    graphics::ProgramHandle const opaque_handle, alpha_handle;
     gl::Renderer::Program opaque, alpha;
 };
 
@@ -58,17 +58,17 @@ public:
         char const* fragment_fragment) -> graphics::gl::Program& override;
 
 private:
-    ShaderHandle const vertex_shader;
+    graphics::ShaderHandle const vertex_shader;
     std::vector<std::pair<void const*, std::unique_ptr<Program>>> programs;
     // GL requires us to synchronise multi-threaded access to the shader APIs.
     std::mutex compilation_mutex;
 };
 
 /// Compile a shader of `type` from `src`, throwing on failure
-auto compile_shader(GLenum type, GLchar const* src) -> GLuint;
+auto compile_shader(GLenum type, GLchar const* src) -> graphics::ShaderHandle;
 
 /// Link `vertex_shader` and `fragment_shader` into a program, throwing on failure
-auto link_shader(ShaderHandle const& vertex_shader, ShaderHandle const& fragment_shader) -> ProgramHandle;
+auto link_shader(graphics::ShaderHandle const& vertex_shader, graphics::ShaderHandle const& fragment_shader) -> graphics::ProgramHandle;
 
 }
 

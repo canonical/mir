@@ -22,6 +22,7 @@
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_extensions.h>
+#include <mir/graphics/gl_handles.h>
 
 #include <algorithm>
 #include <cstring>
@@ -60,129 +61,9 @@ const GLchar* const fshader =
         "}\n"
     };
 
-template<void (*allocator)(GLsizei, GLuint*), void (* deleter)(GLsizei, GLuint const*)>
-class GLBulkHandle
+auto compile_shader(GLenum type, GLchar const* src) -> mg::ShaderHandle
 {
-public:
-    GLBulkHandle()
-    {
-        allocator(1, &id);
-    }
-
-    ~GLBulkHandle()
-    {
-        if (id)
-            deleter(1, &id);
-    }
-
-    GLBulkHandle(GLBulkHandle const&) = delete;
-    GLBulkHandle& operator=(GLBulkHandle const&) = delete;
-    GLBulkHandle& operator=(GLBulkHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLBulkHandle(GLBulkHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-template<GLuint (*allocator)(GLenum), void (* deleter)(GLuint)>
-class GLTypedHandle
-{
-public:
-    GLTypedHandle(GLenum type)
-        : id{allocator(type)}
-    {
-    }
-
-    ~GLTypedHandle()
-    {
-        if (id)
-            deleter(id);
-    }
-
-    GLTypedHandle(GLTypedHandle const&) = delete;
-    GLTypedHandle& operator=(GLTypedHandle const&) = delete;
-    GLTypedHandle& operator=(GLTypedHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLTypedHandle(GLTypedHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-template<GLuint (*allocator)(void), void (*deleter)(GLuint)>
-class GLHandle
-{
-public:
-    GLHandle()
-        : id{allocator()}
-    {
-    }
-
-    ~GLHandle()
-    {
-        if (id)
-            deleter(id);
-    }
-
-    GLHandle(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle const&) = delete;
-    GLHandle& operator=(GLHandle&& rhs)
-    {
-        std::swap(id, rhs.id);
-        return *this;
-    }
-
-    GLHandle(GLHandle&& from)
-        : id{std::exchange(from.id, 0)}
-    {
-    }
-
-    operator GLuint() const
-    {
-        return id;
-    }
-
-private:
-    GLuint id;
-};
-
-using TextureHandle = GLBulkHandle<&glGenTextures, &glDeleteTextures>;
-using GLBufferHandle = GLBulkHandle<&glGenBuffers, &glDeleteBuffers>;
-
-using RenderbufferHandle = GLBulkHandle<&glGenRenderbuffers, &glDeleteRenderbuffers>;
-using FramebufferHandle = GLBulkHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
-
-using ProgramHandle = GLHandle<&glCreateProgram, &glDeleteProgram>;
-using ShaderHandle = GLTypedHandle<&glCreateShader, &glDeleteShader>;
-
-ShaderHandle compile_shader(GLenum type, GLchar const* src)
-{
-    auto id = ShaderHandle(type);
+    auto id = mg::ShaderHandle(type);
     if (!id)
     {
         BOOST_THROW_EXCEPTION(mg::gl_error("Failed to create shader"));
@@ -196,7 +77,6 @@ ShaderHandle compile_shader(GLenum type, GLchar const* src)
     {
         GLchar log[1024] = "(No log info)";
         glGetShaderInfoLog(id, sizeof log, nullptr, log);
-        glDeleteShader(id);
         BOOST_THROW_EXCEPTION(
             std::runtime_error(
                 std::string("Compile failed: ") + log + " for:\n" + src));
@@ -204,11 +84,11 @@ ShaderHandle compile_shader(GLenum type, GLchar const* src)
     return id;
 }
 
-ProgramHandle link_shader(
-    ShaderHandle const& vertex_shader,
-    ShaderHandle const& fragment_shader)
+auto link_shader(
+    mg::ShaderHandle const& vertex_shader,
+    mg::ShaderHandle const& fragment_shader) -> mg::ProgramHandle
 {
-    ProgramHandle program;
+    mg::ProgramHandle program;
     glAttachShader(program, fragment_shader);
     glAttachShader(program, vertex_shader);
     glLinkProgram(program);
@@ -271,9 +151,9 @@ public:
             {
                 glUseProgram(state->prog);
 
-                TextureHandle tex;
-                RenderbufferHandle renderbuffer;
-                FramebufferHandle fbo;
+                mg::TextureHandle tex;
+                mg::RenderbufferHandle renderbuffer;
+                mg::FramebufferHandle fbo;
 
                 glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, tex);
@@ -320,11 +200,11 @@ private:
     std::shared_ptr<mg::EGLExtensions> const egl_extensions;
     struct State
     {
-        ProgramHandle prog;
+        mg::ProgramHandle prog;
         GLint attrtex;
         GLint attrpos;
-        GLBufferHandle vert_data;
-        GLBufferHandle tex_data;
+        mg::GLBufferHandle vert_data;
+        mg::GLBufferHandle tex_data;
         PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES;
         PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC glEGLImageTargetRenderbufferStorageOES;
     };

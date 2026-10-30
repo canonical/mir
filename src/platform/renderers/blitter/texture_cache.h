@@ -18,7 +18,7 @@
 #define MIR_RENDERER_TEXTURE_CACHE_H_
 
 
-#include "common/gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 
 #include <mir/graphics/buffer_id.h>
 #include <mir/graphics/texture.h>
@@ -91,7 +91,7 @@ private:
         void upload(graphics::BlitterRenderingProvider& blitter, graphics::Buffer const& buffer);
 
     private:
-        common::TextureHandle const texture;
+        graphics::TextureHandle const texture;
     };
 
     struct Entry

@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_COMMON_GL_OUTPUT_FILTER_H_
 #define MIR_RENDERER_COMMON_GL_OUTPUT_FILTER_H_
 
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 
 #include <mir/geometry/size.h>
 #include <mir_toolkit/common.h>
@@ -63,11 +63,11 @@ public:
 private:
     void ensure_texture_storage_for(geometry::Size size);
 
-    TextureHandle const texture;
-    FramebufferHandle const framebuffer;
+    graphics::TextureHandle const texture;
+    graphics::FramebufferHandle const framebuffer;
     geometry::Size texture_size;
     MirOutputFilter filter{mir_output_filter_none};
-    std::unique_ptr<ProgramHandle> program;
+    std::unique_ptr<graphics::ProgramHandle> program;
     GLint position_attrib{0};
     GLint texcoord_attrib{0};
     GLint tex_uniform{0};
