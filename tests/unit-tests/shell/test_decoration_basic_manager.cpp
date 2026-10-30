@@ -203,6 +203,71 @@ TEST_F(DecorationBasicManager, does_not_build_decorations_while_locked)
     manager.decorate(surface_a);
 }
 
+TEST_F(DecorationBasicManager, restyle_during_build_is_deferred_until_build_completes)
+{
+    auto decoration_a = std::make_unique<MockDecoration>(this);
+    auto decoration_b = std::make_unique<MockDecoration>(this);
+    auto const surface = std::make_shared<mtd::StubSurface>();
+    int builds{0};
+    EXPECT_CALL(*this, build_decoration())
+        .Times(2)
+        .WillRepeatedly([&]()
+            {
+                if (++builds == 1)
+                    manager.redecorate_all();
+                return builds == 1 ? decoration_a.release() : decoration_b.release();
+            });
+
+    manager.decorate(surface);
+
+    EXPECT_THAT(builds, Eq(2));
+}
+
+TEST_F(DecorationBasicManager, removal_cancels_a_restyle_queued_during_build)
+{
+    auto decoration_a = std::make_unique<MockDecoration>(this);
+    auto decoration_b = std::make_unique<MockDecoration>(this);
+    auto const surface = std::make_shared<mtd::StubSurface>();
+    int builds{0};
+    EXPECT_CALL(*this, build_decoration())
+        .Times(2)
+        .WillRepeatedly([&]()
+            {
+                if (++builds == 1)
+                {
+                    manager.redecorate_all();
+                    EXPECT_THAT(builds, Eq(1));
+                    manager.undecorate(surface);
+                }
+                return builds == 1 ? decoration_a.release() : decoration_b.release();
+            });
+
+    manager.decorate(surface);
+    EXPECT_THAT(builds, Eq(1));
+
+    manager.decorate(surface);
+    EXPECT_THAT(builds, Eq(2));
+}
+
+TEST_F(DecorationBasicManager, removal_cancels_rebuild_before_its_builder_starts)
+{
+    auto decoration = std::make_unique<MockDecoration>(this);
+    auto const decoration_pointer = decoration.get();
+    auto const surface = std::make_shared<mtd::StubSurface>();
+    EXPECT_CALL(*this, build_decoration())
+        .Times(1)
+        .WillOnce([&](){ return decoration.release(); });
+    manager.decorate(surface);
+    Mock::VerifyAndClearExpectations(this);
+
+    EXPECT_CALL(*this, decoration_destroyed(decoration_pointer))
+        .Times(1)
+        .WillOnce([&](auto) { manager.undecorate(surface); });
+    EXPECT_CALL(*this, build_decoration()).Times(0);
+
+    manager.redecorate_all();
+}
+
 TEST_F(DecorationBasicManager, does_not_destroy_decorations_while_locked)
 {
     auto decoration_a = std::make_unique<MockDecoration>(this);
