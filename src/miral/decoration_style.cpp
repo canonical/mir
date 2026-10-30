@@ -22,7 +22,9 @@
 #include <mir/shell/decoration/decoration_style.h>
 
 #include <charconv>
+#include <cmath>
 #include <mutex>
+#include <set>
 
 namespace msd = mir::shell::decoration;
 
@@ -58,6 +60,7 @@ auto color_of(msd::DecorationStyle& style, Element element, State state) -> msd:
         {
         case State::normal:     return &style.button.normal_color;
         case State::hovered:    return &style.button.active_color;
+        case State::unfocused:  return &style.button.unfocused_color;
         default:                return nullptr;
         }
 
@@ -66,14 +69,27 @@ auto color_of(msd::DecorationStyle& style, Element element, State state) -> msd:
         {
         case State::normal:     return &style.close_button.normal_color;
         case State::hovered:    return &style.close_button.active_color;
+        case State::unfocused:  return &style.close_button.unfocused_color;
         default:                return nullptr;
         }
 
-    // Icons are drawn the same way whatever the state
-    case Element::button_icon:          return &style.button.icon_color;
-    case Element::close_button_icon:    return &style.close_button.icon_color;
+    case Element::button_icon:
+        switch (state)
+        {
+        case State::focused:    return &style.button.icon_color;
+        case State::unfocused:  return &style.button.unfocused_icon_color;
+        default:                return nullptr;
+        }
 
-    default:                            return nullptr;
+    case Element::close_button_icon:
+        switch (state)
+        {
+        case State::focused:    return &style.close_button.icon_color;
+        case State::unfocused:  return &style.close_button.unfocused_icon_color;
+        default:                return nullptr;
+        }
+
+    default:                    return nullptr;
     }
 }
 
@@ -162,6 +178,50 @@ auto parse_color(std::string_view text) -> std::optional<msd::Pixel>
     return msd::pack_pixel(channels[0], channels[1], channels[2], channels[3]);
 }
 
+/// Mixes \p fraction of \p toward into \p base
+auto blend(msd::Pixel base, msd::Pixel toward, float fraction) -> msd::Pixel
+{
+    auto const from = msd::unpack_pixel(base);
+    auto const to = msd::unpack_pixel(toward);
+
+    auto const mix = [fraction](unsigned char from, unsigned char to)
+        {
+            return static_cast<unsigned char>(from + std::lround((to - from) * fraction));
+        };
+
+    return msd::pack_pixel(mix(from.r, to.r), mix(from.g, to.g), mix(from.b, to.b), mix(from.a, to.a));
+}
+
+/// Button colors that haven't been set explicitly follow the titlebar: the
+/// backgrounds are the titlebar background mixed towards the title color, and
+/// the icons are drawn in the title color.
+void derive_unset_colors(msd::DecorationStyle& style, std::set<std::pair<Element, State>> const& explicitly_set)
+{
+    auto const derive = [&](Element element, State state, msd::Pixel color)
+        {
+            if (!explicitly_set.contains({element, state}))
+                *color_of(style, element, state) = color;
+        };
+
+    auto constexpr normal_mix = 0.25f;
+    auto constexpr hovered_mix = 0.5f;
+
+    derive(
+        Element::button, State::normal,
+        blend(style.focused.background_color, style.focused.text_color, normal_mix));
+    derive(
+        Element::button, State::hovered,
+        blend(style.focused.background_color, style.focused.text_color, hovered_mix));
+    derive(
+        Element::button, State::unfocused,
+        blend(style.unfocused.background_color, style.unfocused.text_color, normal_mix));
+
+    derive(Element::button_icon, State::focused, style.focused.text_color);
+    derive(Element::button_icon, State::unfocused, style.unfocused.text_color);
+    derive(Element::close_button_icon, State::focused, style.focused.text_color);
+    derive(Element::close_button_icon, State::unfocused, style.unfocused.text_color);
+}
+
 struct ColorKey
 {
     char const* element_name;
@@ -177,10 +237,14 @@ ColorKey constexpr color_keys[] = {
     {"title",               "unfocused",    Element::title,             State::unfocused},
     {"button",              "normal",       Element::button,            State::normal},
     {"button",              "hovered",      Element::button,            State::hovered},
-    {"button_icon",         nullptr,        Element::button_icon,       State::normal},
+    {"button",              "unfocused",    Element::button,            State::unfocused},
+    {"button_icon",         "focused",      Element::button_icon,       State::focused},
+    {"button_icon",         "unfocused",    Element::button_icon,       State::unfocused},
     {"close_button",        "normal",       Element::close_button,      State::normal},
     {"close_button",        "hovered",      Element::close_button,      State::hovered},
-    {"close_button_icon",   nullptr,        Element::close_button_icon, State::normal},
+    {"close_button",        "unfocused",    Element::close_button,      State::unfocused},
+    {"close_button_icon",   "focused",      Element::close_button_icon, State::focused},
+    {"close_button_icon",   "unfocused",    Element::close_button_icon, State::unfocused},
 };
 
 struct MetricKey
@@ -208,6 +272,9 @@ struct miral::DecorationStyle::Self
     std::mutex mutex;
     msd::DecorationStyle style;
 
+    /// The colors set explicitly; the rest are derived from the titlebar colors
+    std::set<std::pair<Element, State>> explicitly_set;
+
     /// Only set while the server is running
     mir::Server* server = nullptr;
 
@@ -220,7 +287,11 @@ struct miral::DecorationStyle::Self
     void apply_locked()
     {
         if (server)
-            server->set_the_decoration_style(std::make_shared<msd::DecorationStyle const>(style));
+        {
+            auto applied = std::make_shared<msd::DecorationStyle>(style);
+            derive_unset_colors(*applied, explicitly_set);
+            server->set_the_decoration_style(std::move(applied));
+        }
     }
 };
 
@@ -265,10 +336,16 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
             {
                 std::lock_guard lock{self->mutex};
 
-                msd::DecorationStyle defaults;
-                auto const color = val
-                    ? parse_color(*val)
-                    : std::optional{*color_of(defaults, element, state)};
+                if (!val)
+                {
+                    // Reverting to the default (or derived) color is the point of an unset value
+                    msd::DecorationStyle defaults;
+                    *color_of(self->style, element, state) = *color_of(defaults, element, state);
+                    self->explicitly_set.erase({element, state});
+                    return;
+                }
+
+                auto const color = parse_color(*val);
 
                 if (!color)
                 {
@@ -279,6 +356,7 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
                 }
 
                 *color_of(self->style, element, state) = *color;
+                self->explicitly_set.insert({element, state});
             });
     }
 
@@ -299,6 +377,7 @@ void miral::DecorationStyle::set_color(
     if (auto const color = color_of(self->style, element, state))
     {
         *color = msd::pack_pixel(red, green, blue, alpha);
+        self->explicitly_set.insert({element, state});
         self->apply_locked();
     }
     else
