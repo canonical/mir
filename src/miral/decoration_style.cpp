@@ -186,7 +186,7 @@ auto blend(msd::Pixel base, msd::Pixel toward, float fraction) -> msd::Pixel
 
     auto const mix = [fraction](unsigned char from, unsigned char to)
         {
-            return static_cast<unsigned char>(from + std::lround((to - from) * fraction));
+            return static_cast<unsigned char>(from + std::lround((float(to) - float(from)) * fraction));
         };
 
     return msd::pack_pixel(mix(from.r, to.r), mix(from.g, to.g), mix(from.b, to.b), mix(from.a, to.a));
