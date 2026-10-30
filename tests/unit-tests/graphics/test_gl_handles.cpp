@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 #include <mir/test/doubles/mock_gl.h>
 
 #include <gmock/gmock.h>
@@ -29,15 +29,10 @@ namespace mtd = mir::test::doubles;
 using namespace testing;
 
 // static_assert requirements:
-static_assert(!std::is_default_constructible_v<mg::GLHandle<&glDeleteProgram>>);
 static_assert(std::is_default_constructible_v<mg::ProgramHandle>);
-static_assert(!std::is_copy_constructible_v<mg::GLHandle<&glDeleteProgram>>);
 static_assert(!std::is_copy_constructible_v<mg::ProgramHandle>);
-static_assert(!std::is_copy_assignable_v<mg::GLHandle<&glDeleteProgram>>);
 static_assert(!std::is_copy_assignable_v<mg::ProgramHandle>);
-static_assert(std::is_move_constructible_v<mg::GLHandle<&glDeleteProgram>>);
 static_assert(std::is_move_constructible_v<mg::ProgramHandle>);
-static_assert(std::is_move_assignable_v<mg::GLHandle<&glDeleteProgram>>);
 static_assert(std::is_move_assignable_v<mg::ProgramHandle>);
 
 namespace
@@ -46,17 +41,6 @@ struct GLHandleTest : public Test
 {
     mtd::MockGL mock_gl;
 };
-
-TEST_F(GLHandleTest, adopt_existing_name_and_deletes_on_destruction)
-{
-    GLuint const id = 42;
-    EXPECT_CALL(mock_gl, glDeleteProgram(id)).Times(1);
-
-    {
-        mg::GLHandle<&glDeleteProgram> handle{id};
-        EXPECT_EQ(static_cast<GLuint>(handle), id);
-    }
-}
 
 TEST_F(GLHandleTest, program_handle_allocates_on_construction_and_deletes_on_destruction)
 {

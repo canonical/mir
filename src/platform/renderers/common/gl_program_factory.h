@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_COMMON_GL_PROGRAM_FACTORY_H_
 #define MIR_RENDERER_COMMON_GL_PROGRAM_FACTORY_H_
 
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 
 #include <mir/graphics/program.h>
 #include <mir/graphics/program_factory.h>

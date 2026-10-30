@@ -22,7 +22,7 @@
 #include <mir/graphics/egl_context_executor.h>
 #include <mir/graphics/egl_error.h>
 #include <mir/graphics/egl_extensions.h>
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 
 #include <algorithm>
 #include <cstring>

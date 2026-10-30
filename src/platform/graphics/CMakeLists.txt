@@ -25,7 +25,7 @@ target_include_directories(graphics_platform_common
   PUBLIC
     ${PROJECT_SOURCE_DIR}/include/platform
   PRIVATE
-    ${PROJECT_SOURCE_DIR}/src/platform/renderers/common
+    ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
 target_link_libraries(graphics_platform_common
@@ -145,7 +145,7 @@ target_include_directories(mirplatformgraphicscommon
     ${CMAKE_CURRENT_BINARY_DIR}
     ${PROJECT_SOURCE_DIR}/include/platform
   PRIVATE
-    ${PROJECT_SOURCE_DIR}/src/platform/renderers/common
+    ${PROJECT_SOURCE_DIR}/src/include/platform
 )
 
 target_link_libraries(

@@ -29,7 +29,7 @@
 
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/egl_helpers.h>
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 #include <cstring>
 
 namespace mg = mir::graphics;

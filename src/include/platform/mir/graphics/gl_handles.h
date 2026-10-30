@@ -19,8 +19,6 @@
 
 #include <GLES2/gl2.h>
 #include <concepts>
-#include <cstddef>
-#include <type_traits>
 #include <utility>
 
 namespace mir::graphics
@@ -30,22 +28,14 @@ namespace mir::graphics
  *
  * \tparam deleter   void(GLuint)                 (eg: glDeleteProgram), or
  *                   void(GLsizei, GLuint const*) (eg: glDeleteTextures)
- * \tparam allocator (optional) GLuint()          (eg: glCreateProgram),
+ * \tparam allocator GLuint()                     (eg: glCreateProgram),
  *                   GLuint(GLenum)               (eg: glCreateShader), or
  *                   void(GLsizei, GLuint*)       (eg: glGenTextures)
- *                   If omitted, the handle adopts an externally-created name.
  */
-template<auto deleter, auto allocator = nullptr>
+template<auto deleter, auto allocator>
 class GLHandle
 {
 public:
-    /// Adopt an existing name (only when we don't know how to allocate)
-    explicit GLHandle(GLuint id)
-        requires(std::same_as<decltype(allocator), std::nullptr_t>)
-        : id{id}
-    {
-    }
-
     /// eg: glCreateProgram()
     GLHandle()
         requires std::invocable<decltype(allocator)>

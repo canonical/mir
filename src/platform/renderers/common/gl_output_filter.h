@@ -17,7 +17,7 @@
 #ifndef MIR_RENDERER_COMMON_GL_OUTPUT_FILTER_H_
 #define MIR_RENDERER_COMMON_GL_OUTPUT_FILTER_H_
 
-#include "gl_handles.h"
+#include <mir/graphics/gl_handles.h>
 
 #include <mir/geometry/size.h>
 #include <mir_toolkit/common.h>
