@@ -9,7 +9,7 @@ myst:
 # Customizing server-side decorations in Mir
 
 When Mir draws server-side decorations it uses a built-in appearance: a dark
-titlebar, a white title, and grey minimize/maximize buttons with a red close
+title bar, a white title, and grey minimize/maximize buttons with a red close
 button. {class}`miral::DecorationStyle` lets you change those colors and the
 sizes of the decoration's parts.
 
@@ -56,7 +56,7 @@ and blue channels (plus an optional alpha channel, which defaults to opaque):
 
 | Element             | States                 | Draws                                           |
 | ------------------- | ---------------------- | ----------------------------------------------- |
-| `background`        | `focused`, `unfocused` | The titlebar and the borders                    |
+| `background`        | `focused`, `unfocused` | The title bar and the borders                   |
 | `title`             | `focused`, `unfocused` | The window title text                           |
 | `button`            | `normal`, `hovered`    | The background of the minimize/maximize buttons |
 | `button_icon`       | —                      | The minimize/maximize icons                     |
@@ -65,15 +65,15 @@ and blue channels (plus an optional alpha channel, which defaults to opaque):
 
 `set_metric()` takes a length in logical pixels. Setting `corner_radius` to a
 non-zero value rounds the outer corners of the decorations; the corners are
-antialiased and the pixels outside them are transparent:
+anti-aliased and the pixels outside them are transparent:
 
 | Metric                       | Sets                                        |
 | ---------------------------- | ------------------------------------------- |
-| `titlebar_height`            | Visible height of the titlebar              |
+| `titlebar_height`            | Visible height of the title bar             |
 | `side_border_width`          | Visible width of the left and right borders |
 | `bottom_border_height`       | Visible height of the bottom border         |
-| `button_width`               | Width of the titlebar buttons               |
-| `padding_between_buttons`    | Gap between the titlebar buttons            |
+| `button_width`               | Width of the title bar buttons              |
+| `padding_between_buttons`    | Gap between the title bar buttons           |
 | `title_font_height`          | Height of the window title text             |
 | `resize_corner_input_width`  | Width of the resize handle in a corner      |
 | `resize_corner_input_height` | Height of the resize handle in a corner     |
