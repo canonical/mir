@@ -80,6 +80,17 @@ TEST_F(TestDecorationStyle, metrics_are_applied)
     EXPECT_THAT(applied_style()->bottom_border_height, Eq(mir::geometry::Height{4}));
 }
 
+TEST_F(TestDecorationStyle, negative_metric_values_are_ignored)
+{
+    miral::DecorationStyle style;
+    style.set_metric(miral::DecorationStyle::Metric::titlebar_height, 42);
+    style.set_metric(miral::DecorationStyle::Metric::titlebar_height, -3);
+
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{42}));
+}
+
 TEST_F(TestDecorationStyle, colors_are_applied)
 {
     miral::DecorationStyle style;
