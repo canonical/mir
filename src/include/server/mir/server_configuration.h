@@ -40,7 +40,6 @@ class Connector;
 }
 namespace shell
 {
-class SessionContainer;
 class Shell;
 class IdleHandler;
 class TokenAuthority;
