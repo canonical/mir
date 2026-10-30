@@ -149,11 +149,12 @@ auto parse_color(std::string_view text) -> std::optional<msd::Pixel>
         return std::nullopt;
 
     uint32_t channels[4] = {0, 0, 0, 0xFF};
+    uint32_t* channel = channels;
 
-    for (auto i = 0u; i != text.size()/2; ++i)
+    for (auto i = 0u; i != text.size(); i += 2, ++channel)
     {
-        auto const begin = text.data() + 2*i;
-        if (auto const [end, ec] = std::from_chars(begin, begin + 2, channels[i], 16);
+        auto const begin = text.data() + i;
+        if (auto const [end, ec] = std::from_chars(begin, begin + 2, *channel, 16);
             ec != std::errc{} || end != begin + 2)
             return std::nullopt;
     }
