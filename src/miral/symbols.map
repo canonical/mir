@@ -24,8 +24,18 @@ global:
     "miral::OutputFilter::OutputFilter()";
     "miral::OutputFilter::OutputFilter(MirOutputFilter)";
     "miral::OutputFilter::OutputFilter(miral::live_config::Store&)";
+    "miral::TouchEmulator::disable()";
+    "miral::TouchEmulator::disabled()";
+    "miral::TouchEmulator::enable()";
+    "miral::TouchEmulator::enabled()";
+    "miral::TouchEmulator::operator()(mir::Server&)";
     "miral::live_config::OverridesList::OverridesList(miral::live_config::OverridesList&&)";
     "miral::live_config::OverridesList::operator=(miral::live_config::OverridesList&&)";
+    "miral::operator<(miral::Window const&, miral::Window const&)";
+    "miral::operator==(miral::Window const&, miral::Window const&)";
+    "miral::operator==(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)";
+    "miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)";
+    "miral::pre_init(miral::ConfigurationOption const&)";
     miral::AddInitCallback::?AddInitCallback*;
     miral::AddInitCallback::AddInitCallback*;
     miral::AddInitCallback::operator*;
@@ -338,11 +348,6 @@ global:
     miral::StickyKeys::operator*;
     miral::StickyKeys::should_disable_if_two_keys_are_pressed_together*;
     miral::TouchEmulator::TouchEmulator*;
-    "miral::TouchEmulator::disable()";
-    "miral::TouchEmulator::disabled()";
-    "miral::TouchEmulator::enable()";
-    "miral::TouchEmulator::enabled()";
-    "miral::TouchEmulator::operator()(mir::Server&)";
     miral::WaylandExtensions::?WaylandExtensions*;
     miral::WaylandExtensions::Context::operator*;
     miral::WaylandExtensions::EnableInfo::app*;
@@ -576,12 +581,7 @@ global:
     miral::live_config::Store::Store*;
     miral::live_config::Store::operator*;
     miral::name_of*;
-    "miral::operator<(miral::Window const&, miral::Window const&)";
-    "miral::operator==(miral::Window const&, miral::Window const&)";
-    "miral::operator==(miral::Window const&, std::shared_ptr<mir::scene::Surface> const&)";
-    "miral::operator==(std::shared_ptr<mir::scene::Surface> const&, miral::Window const&)";
     miral::pid_of*;
-    "miral::pre_init(miral::ConfigurationOption const&)";
     miral::register_log_filtering_config*;
     miral::socket_fd_of*;
     miral::toolkit::mir_event_get_input_event*;
@@ -785,11 +785,11 @@ local: *;
 MIRAL_6.1 {
 global:
   extern "C++" {
+    "miral::pre_init(std::function<void ()> const&)";
     miral::ApplicationCredentials::apparmor_label*;
     miral::ApplicationCredentials::flatpak_id*;
     miral::ApplicationCredentials::from_application_sandbox*;
     miral::ApplicationCredentials::snap_name*;
-    miral::WaylandExtensions::EnableInfo::creds*;
     miral::OutputConfiguration::?OutputConfiguration*;
     miral::OutputConfiguration::NullStrategy::?NullStrategy*;
     miral::OutputConfiguration::NullStrategy::apply_configuration*;
@@ -799,7 +799,7 @@ global:
     miral::OutputConfiguration::Strategy::Strategy*;
     miral::OutputConfiguration::operator*;
     miral::OutputConfiguration::update_strategy*;
-    "miral::pre_init(std::function<void ()> const&)";
+    miral::WaylandExtensions::EnableInfo::creds*;
     non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::?NullStrategy*;
     non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::apply_configuration*;
     non-virtual?thunk?to?miral::OutputConfiguration::NullStrategy::confirm_configuration*;
@@ -811,3 +811,15 @@ global:
     vtable?for?miral::OutputConfiguration::Strategy;
   };
 } MIRAL_6.0;
+
+MIRAL_6.2 {
+global:
+  extern "C++" {
+    miral::DecorationStyle::?DecorationStyle*;
+    miral::DecorationStyle::DecorationStyle*;
+    miral::DecorationStyle::operator*;
+    miral::DecorationStyle::set_color*;
+    miral::DecorationStyle::set_metric*;
+    typeinfo?for?miral::DecorationStyle;
+  };
+} MIRAL_6.1;

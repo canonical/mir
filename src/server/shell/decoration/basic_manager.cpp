@@ -90,16 +90,67 @@ void msd::BasicManager::decorate(std::shared_ptr<ms::Surface> const& surface)
     if (!locked_shell)
         BOOST_THROW_EXCEPTION(std::runtime_error("Shell is null"));
 
-    std::unique_lock lock{mutex};
-    if (decorations.find(surface.get()) == decorations.end())
+    auto const token = std::make_shared<BuildToken>();
     {
-        decorations[surface.get()] = nullptr;
-        lock.unlock();
-        auto decoration = decoration_builder(decoration_strategy, locked_shell, surface);
-        lock.lock();
-        decoration->set_scale(scale);
-        decorations[surface.get()] = std::move(decoration);
+        std::lock_guard lock{mutex};
+        if (decorations.find(surface.get()) != decorations.end())
+            return;
+
+        decorations.emplace(surface.get(), DecoratedSurface{surface, nullptr, token});
     }
+    build_decoration(surface, locked_shell, token);
+}
+
+void msd::BasicManager::build_decoration(
+    std::shared_ptr<ms::Surface> const& surface,
+    std::shared_ptr<msh::Shell> const& locked_shell,
+    std::shared_ptr<BuildToken> const& token)
+{
+    {
+        std::lock_guard lock{mutex};
+        auto const it = decorations.find(surface.get());
+        if (it == decorations.end() || it->second.building != token)
+            return;
+    }
+
+    auto decoration = decoration_builder(decoration_strategy, locked_shell, surface);
+
+    while (true)
+    {
+        float current_scale{};
+        bool restyle{};
+        {
+            std::lock_guard lock{mutex};
+            auto const it = decorations.find(surface.get());
+            if (it == decorations.end() || it->second.building != token)
+                break;
+
+            current_scale = scale;
+            restyle = std::exchange(it->second.restyle_pending, false);
+        }
+
+        // The style and the scale may have changed while the decoration was being built
+        if (restyle)
+            decoration->restyle();
+        decoration->set_scale(current_scale);
+
+        {
+            std::lock_guard lock{mutex};
+            auto const it = decorations.find(surface.get());
+            if (it == decorations.end() || it->second.building != token)
+                break;
+
+            if (!it->second.restyle_pending && scale == current_scale)
+            {
+                it->second.decoration = std::move(decoration);
+                it->second.building.reset();
+                return;
+            }
+        }
+    }
+
+    // Destroy the abandoned decoration outside the lock
+    decoration.reset();
 }
 
 void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
@@ -110,7 +161,7 @@ void msd::BasicManager::undecorate(std::shared_ptr<ms::Surface> const& surface)
         auto const it = decorations.find(surface.get());
         if (it != decorations.end())
         {
-            decoration = std::move(it->second);
+            decoration = std::move(it->second.decoration);
             decorations.erase(it);
         }
     }
@@ -124,9 +175,43 @@ void msd::BasicManager::undecorate_all()
     {
         std::lock_guard lock{mutex};
         for (auto& it : decorations)
-            to_destroy.push_back(std::move(it.second));
+            to_destroy.push_back(std::move(it.second.decoration));
         decorations.clear();
     }
+    // Destroy the decorations outside the lock
+    to_destroy.clear();
+}
+
+void msd::BasicManager::redecorate_all()
+{
+    std::vector<std::unique_ptr<Decoration>> to_destroy;
+    {
+        std::lock_guard lock{mutex};
+        for (auto it = decorations.begin(); it != decorations.end();)
+        {
+            if (it->second.surface.lock())
+            {
+                if (it->second.building)
+                {
+                    // The decoration will be restyled once it has been built
+                    it->second.restyle_pending = true;
+                }
+                else if (auto const& decoration = it->second.decoration)
+                {
+                    // Restyle in place: rebuilding would recreate the decoration surface,
+                    // raising it (and its window) above windows that are stacked on top
+                    decoration->restyle();
+                }
+                ++it;
+            }
+            else
+            {
+                to_destroy.push_back(std::move(it->second.decoration));
+                it = decorations.erase(it);
+            }
+        }
+    }
+
     // Destroy the decorations outside the lock
     to_destroy.clear();
 }
@@ -147,7 +232,8 @@ void msd::BasicManager::set_scale(float new_scale)
         scale = new_scale;
         for (auto& it : decorations)
         {
-            it.second->set_scale(scale);
+            if (auto const& decoration = it.second.decoration)
+                decoration->set_scale(scale);
         }
     }
 }

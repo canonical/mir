@@ -133,6 +133,8 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_renderer_factory)\
     MACRO(the_blitter_renderer_factory)\
     MACRO(the_decoration_strategy)\
+    MACRO(the_decoration_style)\
+    MACRO(the_shell_decoration_strategy)\
     MACRO(the_input_device_registry)\
     MACRO(the_idle_handler)\
     MACRO(the_token_authority)\
@@ -786,6 +788,16 @@ void mir::Server::add_configuration_option(
 void mir::Server::set_the_decoration_strategy(std::shared_ptr<DecorationStrategy> strategy)
 {
     self->server_config->set_the_decoration_strategy(strategy);
+}
+
+void mir::Server::set_the_decoration_style(std::shared_ptr<shell::decoration::DecorationStyle const> style)
+{
+    self->server_config->set_the_decoration_style(std::move(style));
+}
+
+void mir::Server::set_the_shell_decoration_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy)
+{
+    self->server_config->set_the_shell_decoration_strategy(std::move(strategy));
 }
 
 void mir::Server::for_each_output_binding(wayland::Client* client, graphics::DisplayConfigurationOutputId output,

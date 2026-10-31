@@ -86,6 +86,7 @@ public:
     void set_cursor(std::string const& cursor_image_name);
 
     void set_scale(float scale) override;
+    void restyle() override;
 
 protected:
     /// Returns paramaters to create the decoration surface
@@ -101,7 +102,7 @@ protected:
 
     std::shared_ptr<ThreadsafeAccess<BasicDecoration>> const threadsafe_self;
     std::shared_ptr<DecorationStrategy> const decoration_strategy;
-    std::unique_ptr<RendererStrategy> const renderer_strategy;
+    std::unique_ptr<RendererStrategy> renderer_strategy;
 
     std::shared_ptr<shell::Shell> const shell;
     std::shared_ptr<input::CursorImages> const cursor_images;

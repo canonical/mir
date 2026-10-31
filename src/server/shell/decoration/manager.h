@@ -52,6 +52,10 @@ public:
     /// Removes decorations from all currently decorated windows
     virtual void undecorate_all() = 0;
 
+    /// Rebuilds the decorations of all currently decorated windows
+    /// Used to pick up a change of decoration style
+    virtual void redecorate_all() = 0;
+
     /// Compute the corresponding size
     virtual auto compute_size_with_decorations(geometry::Size content_size, MirWindowType type, MirWindowState state)
     -> geometry::Size = 0;

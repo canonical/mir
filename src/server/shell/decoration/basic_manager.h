@@ -63,6 +63,7 @@ public:
     void decorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate(std::shared_ptr<scene::Surface> const& surface) override;
     void undecorate_all() override;
+    void redecorate_all() override;
     auto compute_size_with_decorations(geometry::Size content_size, MirWindowType type,
         MirWindowState state) -> geometry::Size override;
 
@@ -72,10 +73,24 @@ private:
     std::shared_ptr<DisplayConfigurationListener> const display_config_monitor;
     std::weak_ptr<shell::Shell> shell;
 
+    struct BuildToken {};
+
+    struct DecoratedSurface
+    {
+        std::weak_ptr<scene::Surface> surface;
+        std::unique_ptr<Decoration> decoration;
+        std::shared_ptr<BuildToken> building;
+        bool restyle_pending{false};
+    };
+
     std::mutex mutex;
-    std::unordered_map<scene::Surface*, std::unique_ptr<Decoration>> decorations;
+    std::unordered_map<scene::Surface*, DecoratedSurface> decorations;
     float scale{1.0f};
 
+    void build_decoration(
+        std::shared_ptr<scene::Surface> const& surface,
+        std::shared_ptr<shell::Shell> const& locked_shell,
+        std::shared_ptr<BuildToken> const& token);
     void set_scale(float new_scale);
 };
 }

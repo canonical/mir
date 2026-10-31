@@ -41,6 +41,9 @@ public:
         }
         return result;
     }
+
+    /// The cached value, or nullptr if it hasn't been created (or has expired)
+    std::shared_ptr<Type> cached() const { return cache.lock(); }
 };
 } // namespace mir
 

@@ -21,6 +21,7 @@
 #include <mir/geometry/point.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/geometry/size.h>
+#include <mir/shell/decoration/decoration_style.h>
 #include <mir_toolkit/client_types.h>
 
 #include <memory>
@@ -32,15 +33,6 @@ namespace mir::graphics { class Buffer; class GraphicBufferAllocator; }
 
 namespace mir::shell::decoration
 {
-enum class BorderType
-{
-    Full,       ///< Full titlebar and border (for restored windows)
-    Titlebar,   ///< Titlebar only (for maximized windows)
-    None,       ///< No decorations (for fullscreen windows or popups)
-};
-
-auto border_type_for(MirWindowType type, MirWindowState state) -> BorderType;
-
 /// Minimize, maximize, and close buttons
 struct Button
 {
@@ -117,8 +109,6 @@ private:
 };
 
 
-using Pixel = uint32_t;
-
 /// Customization point for rendering
 class RendererStrategy
 {
@@ -138,7 +128,10 @@ class DecorationStrategy
 {
 public:
 
-    static auto default_decoration_strategy(std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator) -> std::shared_ptr<DecorationStrategy>;
+    static auto default_decoration_strategy(
+        std::shared_ptr<mir::graphics::GraphicBufferAllocator> const& allocator,
+        std::shared_ptr<DecorationStyle const> const& style = std::make_shared<DecorationStyle const>())
+        -> std::shared_ptr<DecorationStrategy>;
 
     virtual auto render_strategy() const -> std::unique_ptr<RendererStrategy> = 0;
     virtual auto button_placement(unsigned n, WindowState const& ws) const -> geometry::Rectangle = 0;
@@ -148,6 +141,11 @@ public:
         std::shared_ptr<scene::Surface> const& window_surface, float scale) const -> std::unique_ptr<WindowState> = 0;
     virtual auto buffer_format() const -> MirPixelFormat = 0;
     virtual auto resize_corner_input_size() const -> geometry::Size = 0;
+
+    /// Replace the style used for decorations rendered from now on.
+    /// Existing decorations keep their current appearance until they are rebuilt
+    /// (see Manager::redecorate_all())
+    virtual void update_style(std::shared_ptr<DecorationStyle const> const& style) = 0;
 
     DecorationStrategy() = default;
     virtual ~DecorationStrategy() = default;
