@@ -245,11 +245,11 @@ TEST_F(DecorationStrategyRendering, buttons_are_drawn_with_the_unfocused_colors_
 
     auto const focused_renderer = render(style, input_state);
     RenderedPixels const focused_titlebar{focused_renderer->render_titlebar().value()};
-    EXPECT_THAT(focused_titlebar(101, 1), Eq(msd::pack_pixel(0x10, 0x20, 0x30)));
+    EXPECT_THAT(focused_titlebar(101, 1), Eq(0xFF102030u));
 
     surface->set_focus_state(mir_window_focus_state_unfocused);
 
     auto const unfocused_renderer = render(style, input_state);
     RenderedPixels const unfocused_titlebar{unfocused_renderer->render_titlebar().value()};
-    EXPECT_THAT(unfocused_titlebar(101, 1), Eq(msd::pack_pixel(0x40, 0x50, 0x60)));
+    EXPECT_THAT(unfocused_titlebar(101, 1), Eq(0xFF405060u));
 }
