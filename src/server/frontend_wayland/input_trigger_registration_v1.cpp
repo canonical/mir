@@ -385,10 +385,12 @@ auto mf::InputTriggerModifiers::from_protocol(uint32_t protocol_mods, bool shift
         allowed  |= mir_input_event_modifier_function;
     }
 
-    // When shift_adjustment is active, the trigger was registered with an
-    // uppercase keysym but without an explicit shift modifier. Shift will be
-    // present in the event, so we must allow it without requiring it.
-    if (shift_adjustment)
+    // When shift_adjustment is active and no Shift modifier was explicitly
+    // requested, the trigger was registered with an uppercase keysym. Shift
+    // will be present in the event, so allow it without requiring it. An
+    // explicit side-specific Shift must retain its restriction.
+    auto constexpr protocol_shift_mask = PM::shift | PM::shift_left | PM::shift_right;
+    if (shift_adjustment && (protocol_mods & protocol_shift_mask) == 0)
         allowed |= mir_input_event_modifier_shift | mir_input_event_modifier_shift_left | mir_input_event_modifier_shift_right;
 
     return InputTriggerModifiers{required, allowed};
@@ -594,7 +596,7 @@ void InputTriggerRegistrationManagerV1::Instance::register_keyboard_sym_trigger(
         keysym = xkb_keysym_to_upper(keysym);
     }
 
-    auto const shift_adjustment = (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z);
+    auto const shift_adjustment = !wants_shift && (keysym >= XKB_KEY_A && keysym <= XKB_KEY_Z);
     auto const protocol_modifiers = InputTriggerModifiers::from_protocol(modifiers, shift_adjustment);
     auto const keyboard_trigger = new mf::KeyboardSymTrigger{
         protocol_modifiers,

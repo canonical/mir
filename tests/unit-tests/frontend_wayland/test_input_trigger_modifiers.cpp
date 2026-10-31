@@ -20,6 +20,7 @@
 #include <gtest/gtest.h>
 
 namespace mf = mir::frontend;
+namespace mw = mir::wayland;
 
 using namespace testing;
 
@@ -79,4 +80,23 @@ TEST_F(InputTriggerModifiersTest, held_combo_with_added_modifier_is_a_superset)
 TEST_F(InputTriggerModifiersTest, added_modifier_without_required_is_not_a_superset)
 {
     EXPECT_FALSE(mf::InputTriggerModifiers::event_modifiers_are_superset(alt_trigger, mir_input_event_modifier_shift));
+}
+
+TEST_F(InputTriggerModifiersTest, implicit_shift_adjustment_preserves_explicit_shift_side_restrictions)
+{
+    // Passing true models a lowercase keysym normalized to uppercase during
+    // registration.
+    using PM = mw::InputTriggerRegistrationManagerV1::Modifiers;
+    auto const left_trigger = mf::InputTriggerModifiers::from_protocol(PM::shift_left, true);
+    auto const right_trigger = mf::InputTriggerModifiers::from_protocol(PM::shift_right, true);
+    auto const left_shift = mir_input_event_modifier_shift | mir_input_event_modifier_shift_left;
+    auto const right_shift = mir_input_event_modifier_shift | mir_input_event_modifier_shift_right;
+    auto const both_shifts = mir_input_event_modifier_shift |
+        mir_input_event_modifier_shift_left |
+        mir_input_event_modifier_shift_right;
+
+    EXPECT_TRUE(mf::InputTriggerModifiers::modifiers_match(left_trigger, left_shift));
+    EXPECT_FALSE(mf::InputTriggerModifiers::modifiers_match(left_trigger, both_shifts));
+    EXPECT_TRUE(mf::InputTriggerModifiers::modifiers_match(right_trigger, right_shift));
+    EXPECT_FALSE(mf::InputTriggerModifiers::modifiers_match(right_trigger, both_shifts));
 }
