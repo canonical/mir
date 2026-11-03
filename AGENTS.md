@@ -7,6 +7,7 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/.kb/mir-glib-main-loop.md](src/server/.kb/mir-glib-main-loop.md) - GLib main loop dispatch, teardown guarantees, and alarm semantics.
 - [src/server/.kb/mir-shm-backing.md](src/server/.kb/mir-shm-backing.md) - SHM backing store SIGBUS handling and size guarantees.
 - [src/server/.kb/mir-signal-and-termination.md](src/server/.kb/mir-signal-and-termination.md) - Fatal-signal interception, termination exception flow, and extension policy.
+- [src/server/compositor/.kb/mir-compositor.md](src/server/compositor/.kb/mir-compositor.md) - Compositor threading, buffer arbitration, bypass, and occlusion.
 
 Existing [Copilot instructions](.github/copilot-instructions.md) and [path instructions](.github/instructions/)
 remain authoritative for their existing concerns. [Sphinx documentation](doc/sphinx/) remains authoritative for published docs.
