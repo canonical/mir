@@ -639,3 +639,108 @@ TEST_F(PopupWindowPlacement, place_new_surface_uses_provided_parent_size)
 
     ASSERT_THAT(new_child.top_left(), Eq(expected_position));
 }
+
+namespace
+{
+Height const panel_height{40};
+Rectangle const application_zone{
+    {display_left, display_top}, {display_width, display_height - as_delta(panel_height)}};
+
+struct PopupWindowPlacementWithPanel : PopupWindowPlacement
+{
+    Window panel;
+
+    void SetUp() override
+    {
+        PopupWindowPlacement::SetUp();
+
+        mir::shell::SurfaceSpecification params;
+        params.state = mir_window_state_attached;
+        params.attached_edges = (MirPlacementGravity)(
+            mir_placement_gravity_south | mir_placement_gravity_west | mir_placement_gravity_east);
+        params.set_size(Size{display_width, panel_height});
+        params.exclusive_rect = Rectangle{{0, 0}, {display_width, panel_height}};
+
+        EXPECT_CALL(*window_manager_policy, advise_new_window(_))
+            .WillOnce([this](WindowInfo const& window_info){ panel = window_info.window(); });
+
+        basic_window_manager.add_surface(session, params, &create_surface);
+
+        Mock::VerifyAndClearExpectations(window_manager_policy);
+    }
+};
+}
+
+TEST_F(PopupWindowPlacementWithPanel, fixture_sets_up_panel_and_application_zone)
+{
+    ASSERT_THAT(panel, Ne(null_window));
+    ASSERT_THAT(Rectangle(panel.top_left(), panel.size()),
+                Eq(Rectangle{{display_left, application_zone.bottom_left().y}, {display_width, panel_height}}));
+}
+
+TEST_F(PopupWindowPlacementWithPanel, given_aux_rect_near_bottom_placement_slides_clear_of_exclusive_rect)
+{
+    modification.aux_rect() = rectangle_near_bottom;
+    modification.placement_hints() = mir_placement_hints_slide_y;
+    modification.window_placement_gravity() = mir_placement_gravity_northwest;
+    modification.aux_rect_placement_gravity() = mir_placement_gravity_southwest;
+
+    Point const expected_position{
+        aux_rect_position().top_left.x,
+        (application_zone.bottom_left() - as_displacement(child.size())).y};
+
+    EXPECT_CALL(*window_manager_policy, advise_move_to(_, expected_position));
+    basic_window_manager.modify_window(basic_window_manager.info_for(child), modification);
+    ASSERT_THAT(child.top_left(), Eq(expected_position));
+}
+
+TEST_F(PopupWindowPlacementWithPanel, new_surface_near_bottom_is_placed_clear_of_exclusive_rect)
+{
+    Window new_child;
+    EXPECT_CALL(*window_manager_policy, advise_new_window(_))
+        .WillOnce([&new_child](WindowInfo const& window_info){ new_child = window_info.window(); });
+
+    mir::shell::SurfaceSpecification params;
+    params.type = mir_window_type_menu;
+    params.parent = parent;
+    params.set_size(initial_child_size);
+    params.aux_rect = rectangle_near_bottom;
+    params.placement_hints = mir_placement_hints_slide_y;
+    params.surface_placement_gravity = mir_placement_gravity_northwest;
+    params.aux_rect_placement_gravity = mir_placement_gravity_southwest;
+
+    basic_window_manager.add_surface(session, params, &create_surface);
+
+    std::shared_ptr<mir::scene::Surface> const parent_scene_surface{parent};
+    auto const parent_origin = parent_scene_surface->top_left() + parent_scene_surface->content_offset();
+
+    Point const expected_position{
+        parent_origin.x + as_displacement(rectangle_near_bottom.top_left).dx,
+        (application_zone.bottom_left() - as_displacement(initial_child_size)).y};
+
+    ASSERT_THAT(new_child.top_left(), Eq(expected_position));
+}
+
+TEST_F(PopupWindowPlacementWithPanel, popup_of_window_with_exclusive_rect_may_use_whole_display)
+{
+    Window new_child;
+    EXPECT_CALL(*window_manager_policy, advise_new_window(_))
+        .WillOnce([&new_child](WindowInfo const& window_info){ new_child = window_info.window(); });
+
+    mir::shell::SurfaceSpecification params;
+    params.type = mir_window_type_menu;
+    params.parent = panel;
+    params.set_size(initial_child_size);
+    params.aux_rect = Rectangle{{20, 20}, {20, 20}};
+    params.placement_hints = mir_placement_hints_slide_y;
+    params.surface_placement_gravity = mir_placement_gravity_northwest;
+    params.aux_rect_placement_gravity = mir_placement_gravity_southwest;
+
+    basic_window_manager.add_surface(session, params, &create_surface);
+
+    Point const expected_position{
+        panel.top_left().x + DeltaX{20},
+        (display_area.bottom_left() - as_displacement(initial_child_size)).y};
+
+    ASSERT_THAT(new_child.top_left(), Eq(expected_position));
+}

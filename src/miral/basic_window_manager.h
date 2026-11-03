@@ -281,8 +281,16 @@ private:
     void place_attached(Point& top_left, Size& size, MirPlacementGravity edges, Rectangle application_zone);
 
     auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
-    auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
+    auto place_relative(
+        mir::geometry::Rectangle const& parent,
+        miral::WindowSpecification const& parameters,
+        Size size,
+        bool ignore_exclusion_zones)
         -> std::optional<Rectangle>;
+
+    /// Returns true if the given surface, or any of its ancestors, should not be placed with respect to the
+    /// exclusive rectangles of other windows (because it ignores them, defines one itself, or is fullscreen)
+    auto tree_ignores_exclusion_zones(std::weak_ptr<mir::scene::Surface> const& surface) const -> bool;
 
     void move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement);
     void set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer);

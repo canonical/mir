@@ -1185,7 +1185,11 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
             Rectangle const parent_content_area{
                 parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
                 parent_size};
-            auto new_pos = place_relative(parent_content_area, modifications, window.size());
+            auto new_pos = place_relative(
+                parent_content_area,
+                modifications,
+                window.size(),
+                window_info.ignore_exclusion_zones() || tree_ignores_exclusion_zones(parent));
 
             if (new_pos.has_value())
                 place_and_size(window_info, new_pos.value().top_left, new_pos.value().size);
@@ -1901,7 +1905,9 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
             auto const position = place_relative(
                 parent_content_area,
                 parameters,
-                proposed_size);
+                proposed_size,
+                parameters.ignore_exclusion_zones().value_or(false) ||
+                    tree_ignores_exclusion_zones(parent_scene_surface));
 
             if (position.has_value())
             {
@@ -2360,7 +2366,36 @@ auto child_placement_strategy(
 }
 }
 
-auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& parent, WindowSpecification const& parameters, Size size)
+auto miral::BasicWindowManager::tree_ignores_exclusion_zones(std::weak_ptr<scene::Surface> const& surface) const -> bool
+{
+    for (auto node = surface; ;)
+    {
+        auto const i = window_info.find(node);
+
+        if (i == window_info.end())
+            return false;
+
+        auto const& info = i->second;
+
+        if (info.ignore_exclusion_zones() ||
+            info.exclusive_rect().has_value() ||
+            info.state() == mir_window_state_fullscreen)
+            return true;
+
+        auto const parent = info.parent();
+
+        if (!parent)
+            return false;
+
+        node = parent;
+    }
+}
+
+auto miral::BasicWindowManager::place_relative(
+    mir::geometry::Rectangle const& parent,
+    WindowSpecification const& parameters,
+    Size size,
+    bool ignore_exclusion_zones)
 -> std::optional<Rectangle>
 {
     auto const anchor_rect{[&]
@@ -2373,7 +2408,13 @@ auto miral::BasicWindowManager::place_relative(mir::geometry::Rectangle const& p
     auto const placement_bounds{[&]
     {
         auto const probable_display_area = display_area_for(anchor_rect);
-        return probable_display_area ? probable_display_area.value()->area : parent;
+
+        if (!probable_display_area)
+            return parent;
+
+        return ignore_exclusion_zones ?
+            probable_display_area.value()->area :
+            probable_display_area.value()->application_zone.extents();
     }()};
 
     parameters.size().transform([&](auto const& s) { return size = s; });
