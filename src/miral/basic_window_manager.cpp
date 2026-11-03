@@ -36,6 +36,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <utility>
 
 using namespace mir;
 using namespace mir::geometry;
@@ -2378,7 +2379,6 @@ auto miral::BasicWindowManager::tree_ignores_exclusion_zones(std::weak_ptr<scene
         auto const& info = i->second;
 
         if (info.ignore_exclusion_zones() ||
-            info.exclusive_rect().has_value() ||
             info.state() == mir_window_state_fullscreen)
             return true;
 
@@ -2389,6 +2389,8 @@ auto miral::BasicWindowManager::tree_ignores_exclusion_zones(std::weak_ptr<scene
 
         node = parent;
     }
+
+    std::unreachable();
 }
 
 auto miral::BasicWindowManager::place_relative(

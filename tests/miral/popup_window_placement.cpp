@@ -721,7 +721,7 @@ TEST_F(PopupWindowPlacementWithPanel, new_surface_near_bottom_is_placed_clear_of
     ASSERT_THAT(new_child.top_left(), Eq(expected_position));
 }
 
-TEST_F(PopupWindowPlacementWithPanel, popup_of_window_with_exclusive_rect_may_use_whole_display)
+TEST_F(PopupWindowPlacementWithPanel, popup_of_window_with_exclusive_rect_is_placed_and_repositioned_clear_of_exclusive_rect)
 {
     Window new_child;
     EXPECT_CALL(*window_manager_policy, advise_new_window(_))
@@ -740,7 +740,17 @@ TEST_F(PopupWindowPlacementWithPanel, popup_of_window_with_exclusive_rect_may_us
 
     Point const expected_position{
         panel.top_left().x + DeltaX{20},
-        (display_area.bottom_left() - as_displacement(initial_child_size)).y};
+        (application_zone.bottom_left() - as_displacement(initial_child_size)).y};
 
     ASSERT_THAT(new_child.top_left(), Eq(expected_position));
+
+    modification.aux_rect() = Rectangle{{40, 20}, {20, 20}};
+    modification.placement_hints() = mir_placement_hints_slide_y;
+    modification.window_placement_gravity() = mir_placement_gravity_northwest;
+    modification.aux_rect_placement_gravity() = mir_placement_gravity_southwest;
+
+    Point const repositioned_position{expected_position + Displacement{20, 0}};
+    EXPECT_CALL(*window_manager_policy, advise_move_to(_, repositioned_position));
+    basic_window_manager.modify_window(basic_window_manager.info_for(new_child), modification);
+    EXPECT_THAT(new_child.top_left(), Eq(repositioned_position));
 }
