@@ -421,7 +421,7 @@ Colon separated list of outputs to use. Dimensions are in the form `WIDTHxHEIGHT
 
 ### `wayland-host`
 
-Display name for host compositor, e.g. `wayland-0`.
+Display name for host compositor, e.g. `wayland-0`. Required to use the Wayland platform.
 
 (mir-wayland-wayland-surface-app-id)=
 

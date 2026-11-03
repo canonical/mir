@@ -17,7 +17,6 @@
 #include "wayland_display.h"
 
 #include <mir/options/option.h>
-#include <mir/fatal.h>
 #include <boost/throw_exception.hpp>
 
 namespace mpw = mir::platform::wayland;
@@ -35,7 +34,7 @@ struct WaylandDisplay
 };
 
 char const* wayland_host_option_name{"wayland-host"};
-char const* wayland_host_option_description{"Display name for host compositor, e.g. `wayland-0`."};
+char const* wayland_host_option_description{"Display name for host compositor, e.g. `wayland-0`. Required to use the Wayland platform."};
 }
 
 void mpw::add_connection_options(boost::program_options::options_description& config)
@@ -50,7 +49,9 @@ auto mpw::connection(options::Option const& options) -> struct wl_display*
 {
     if (!options.is_set(wayland_host_option_name))
     {
-        MIR_FATAL_ERROR("{} option required for Wayland platform", wayland_host_option_name);
+        BOOST_THROW_EXCEPTION(std::runtime_error(
+            std::string{"The --"} + wayland_host_option_name + " option is required to use the Wayland platform"
+            " (e.g. --" + wayland_host_option_name + "=wayland-0)"));
     }
 
     auto const wayland_host = options.get<std::string>(wayland_host_option_name);

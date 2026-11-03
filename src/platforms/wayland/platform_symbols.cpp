@@ -100,13 +100,18 @@ auto probe_display_platform(
     mo::Option const& options) -> std::vector<mg::SupportedDevice>
 {
     mir::assert_entry_point_signature<mg::PlatformProbe>(&probe_display_platform);
+    std::vector<mg::SupportedDevice> result;
     if (auto probe = probe_graphics_platform(options))
     {
-        std::vector<mg::SupportedDevice> result;
         result.emplace_back(std::move(probe.value()));
-        return result;
     }
-    return {};
+    else
+    {
+        // Report an unsupported entry rather than nothing, so that if this platform is forced via
+        // --platform-display-libs we still reach create_display_platform() and explain what's missing.
+        result.emplace_back(mg::SupportedDevice{nullptr, mg::probe::unsupported, nullptr});
+    }
+    return result;
 }
 
 mir::ModuleProperties const* describe_graphics_module()

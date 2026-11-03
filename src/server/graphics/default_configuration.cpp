@@ -197,6 +197,10 @@ auto mir::DefaultServerConfiguration::the_display_platforms() -> std::vector<std
         }
         if (display_platforms.empty())
         {
+            if (error_report.str().empty())
+            {
+                error_report << "No usable display platform found";
+            }
             BOOST_THROW_EXCEPTION(std::runtime_error(error_report.str()));
         }
     }
