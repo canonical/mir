@@ -1,15 +1,4 @@
 name: dev
-description: |
-  A development environment for Mir.
-  Provides a Ubuntu 26.04 base with VS Code Remote, GitHub Copilot, and the Mir project SDK.
-  Includes actions for configuring (cmake), building (build), and documentation generation (doc),
-  exposed via a tunnel on `localhost:8000`.
-
-  Connect the `desktop` interface (`workshop connect dev/mir:desktop`) to run the built server with `workshop exec <executable>` displayed on the host.
-
-  Mount the `wlcs-build` plug to the build directory of `wlcs`, and configure the path with
-  `workshop run configure -DWLCS_BINARY=/home/workshop/wlcs-build/<wlcs-binary>`. Alternatively,
-  install `wlcs` through a package manager. Run test suite with `workshop run wlcs`.
 base: ubuntu@26.04
 sdks:
 - name: vscode-remote
