@@ -919,6 +919,17 @@ TEST_F(FullProbeStack, when_all_of_gbm_and_wayland_and_virtual_are_available_sel
     // We also expect the Virtual platform to load
     EXPECT_THAT(devices, Contains(Pair(_, ModuleNameMatches(StrEq("mir:virtual")))));
 }
+
+TEST_F(FullProbeStack, manually_selecting_wayland_platform_without_wayland_host_is_an_error)
+{
+    using namespace testing;
+
+    set_display_libs_option("mir:wayland");
+
+    EXPECT_THAT(
+        [this]() { mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report()); },
+        ThrowsMessage<std::runtime_error>(HasSubstr("mir:wayland")));
+}
 #endif
 
 #if defined(MIR_BUILD_PLATFORM_X11) && defined(MIR_BUILD_PLATFORM_WAYLAND)
@@ -1070,12 +1081,12 @@ TEST_F(FullProbeStack, doesnt_instantiate_other_platforms_when_manually_selected
 
     set_display_libs_option("mir:gbm-kms");
 
-    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
-
-    EXPECT_THAT(devices, IsEmpty());
+    EXPECT_THAT(
+        [this]() { mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report()); },
+        ThrowsMessage<std::runtime_error>(HasSubstr("mir:gbm-kms")));
 }
 
-TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_no_virtual_option_loads_no_platforms)
+TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_no_virtual_option_is_an_error)
 {
     using namespace testing;
 
@@ -1084,9 +1095,9 @@ TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_no_virtual_
 
     set_display_libs_option("mir:virtual");
 
-    auto devices = mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report());
-
-    EXPECT_THAT(devices, IsEmpty());
+    EXPECT_THAT(
+        [this]() { mg::select_display_modules(the_options_provider(), the_console_services(), *the_library_prober_report()); },
+        ThrowsMessage<std::runtime_error>(HasSubstr("mir:virtual")));
 }
 
 TEST_F(FullProbeStack, manually_selecting_only_virtual_platform_with_required_option_option_loads_virtual_platform)

@@ -453,6 +453,7 @@ auto mg::select_display_modules(
         });
     auto virtual_platform = virtual_platform_pos != platforms.end() ? *virtual_platform_pos : std::shared_ptr<SharedLibrary>{};
 
+    std::vector<std::string> unusable_platforms;
     if (global_options->is_set(options::platform_display_libs))
     {
         auto const manually_selected_platforms =
@@ -491,13 +492,21 @@ auto mg::select_display_modules(
                     MIR_SERVER_GRAPHICS_PLATFORM_VERSION);
                 auto const descriptor = describe_module();
 
-                mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
-
-                // We're here only if the platform doesn't claim to support *any* of the detected devices
-                // Add *all* the found devices into our platform list, and hope.
-                for (auto& device : supported_devices)
+                if (supported_devices.empty())
                 {
-                    platform_modules.emplace_back(std::move(device), platform);
+                    mir::log_warning("Manually-specified display platform %s does not support this system and has no devices to try", descriptor->name);
+                    unusable_platforms.emplace_back(descriptor->name);
+                }
+                else
+                {
+                    mir::log_warning("Manually-specified display platform %s does not claim to support this system. Trying anyway...", descriptor->name);
+
+                    // We're here only if the platform doesn't claim to support *any* of the detected devices
+                    // Add *all* the found devices into our platform list, and hope.
+                    for (auto& device : supported_devices)
+                    {
+                        platform_modules.emplace_back(std::move(device), platform);
+                    }
                 }
             }
         }
@@ -520,6 +529,17 @@ auto mg::select_display_modules(
         {
             platform_modules.emplace_back(std::move(virtual_probe.front()), std::move(virtual_platform));
         }
+    }
+
+    if (platform_modules.empty() && !unusable_platforms.empty())
+    {
+        std::string msg{"None of the manually-specified display platforms support this system:"};
+        for (auto const& name : unusable_platforms)
+        {
+            msg += " " + name;
+        }
+        msg += ". Check that any options they require are set (see --help).";
+        BOOST_THROW_EXCEPTION((std::runtime_error{msg}));
     }
     return platform_modules;
 }
