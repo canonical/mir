@@ -296,7 +296,9 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
     if (change.modifier_map)
     {
         auto const& map = change.modifier_map.value();
-        wl_array array{map.size(), map.size(), const_cast<std::byte*>(map.data())};
+        // Safe: send_modifiers_map_event takes non-const wl_array* but doesn't mutate it.
+        wl_array array{
+            map.size(), map.size(), const_cast<std::byte*>(map.data())}; // NOLINT(cppcoreguidelines-pro-type-const-cast)
         send_modifiers_map_event(&array);
     }
     if (change.direction)
