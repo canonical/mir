@@ -328,15 +328,15 @@ private:
 
         void modifiers_map(struct wl_array *map) override
         {
-if (map->size == 0)
-{
-    change.pending_change.modifier_map = std::vector<std::byte>{};
-}
-else
-{
-    auto const* const bytes = static_cast<std::byte const*>(map->data);
-    change.pending_change.modifier_map = std::vector<std::byte>(bytes, bytes + map->size);
-}
+            if (map->size == 0)
+            {
+                change.pending_change.modifier_map = std::vector<std::byte>{};
+            }
+            else
+            {
+                auto const* const bytes = static_cast<std::byte const*>(map->data);
+                change.pending_change.modifier_map = std::vector<std::byte>(bytes, bytes + map->size);
+            }
             change.waiting_status = InputMethodV1ChangeWaitingStatus::none;
         }
 
