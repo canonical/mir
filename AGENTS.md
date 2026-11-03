@@ -17,6 +17,8 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md](src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md) - WaylandConnector publication order, teardown, and client authorization.
 - [src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md](src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md) - WaylandExecutor workqueue ownership and thread affinity.
 - [src/server/frontend_wayland/.kb/wayland-surface-and-input.md](src/server/frontend_wayland/.kb/wayland-surface-and-input.md) - wl_surface role/commit rules, input translation, and protocol state machines.
+- [src/server/graphics/.kb/graphics-display-multiplexing.md](src/server/graphics/.kb/graphics-display-multiplexing.md) - Composite display configuration, rollback, and observer replay.
+- [src/server/graphics/.kb/graphics-platform-selection.md](src/server/graphics/.kb/graphics-platform-selection.md) - Graphics platform probing, selection order, and special cases.
 
 Bug references of the form `LP: #1237332` point to Launchpad bugs, at
 `https://bugs.launchpad.net/bugs/1237332`. Mir's development originally took place on Launchpad, so
