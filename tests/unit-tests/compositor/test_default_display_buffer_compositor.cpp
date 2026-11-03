@@ -24,11 +24,9 @@
 #include <mir/test/doubles/mock_renderer.h>
 #include <mir/test/fake_shared.h>
 #include <mir/test/doubles/mock_display_sink.h>
-#include <mir/test/doubles/mock_gl_rendering_provider.h>
 #include <mir/test/doubles/fake_renderable.h>
 #include <mir/test/doubles/mock_compositor_report.h>
 #include <mir/test/doubles/stub_scene_element.h>
-#include <mir/test/doubles/stub_gl_rendering_provider.h>
 #include <mir/test/doubles/stub_output_filter.h>
 
 #include <gmock/gmock.h>
@@ -81,6 +79,12 @@ auto make_scene_elements(std::initializer_list<std::shared_ptr<mg::Renderable>> 
     return elements;
 }
 
+struct MockFramebufferProvider : mg::RenderingProvider::FramebufferProvider
+{
+    MOCK_METHOD(
+        std::unique_ptr<mg::Framebuffer>, buffer_to_framebuffer, (std::shared_ptr<mg::Buffer>), (override));
+};
+
 struct DefaultDisplayBufferCompositor : public testing::Test
 {
     DefaultDisplayBufferCompositor()
@@ -97,10 +101,14 @@ struct DefaultDisplayBufferCompositor : public testing::Test
             .WillByDefault(Return(false));
     }
 
+    static auto null_framebuffer_provider() -> std::unique_ptr<mg::RenderingProvider::FramebufferProvider>
+    {
+        return std::make_unique<testing::NiceMock<MockFramebufferProvider>>();
+    }
+
     testing::NiceMock<mtd::MockRenderer> mock_renderer;
     geom::Rectangle screen{{0, 0}, {1366, 768}};
     testing::NiceMock<mtd::MockDisplaySink> display_sink;
-    mtd::StubGlRenderingProvider gl_provider;
     std::shared_ptr<mtd::FakeRenderable> small;
     std::shared_ptr<mtd::FakeRenderable> big;
     std::shared_ptr<mtd::FakeRenderable> fullscreen;
@@ -127,12 +135,6 @@ private:
     geom::Size const size_;
 };
 
-struct MockFramebufferProvider : mg::RenderingProvider::FramebufferProvider
-{
-    MOCK_METHOD(
-        std::unique_ptr<mg::Framebuffer>, buffer_to_framebuffer, (std::shared_ptr<mg::Buffer>), (override));
-};
-
 struct DirectPresentationDefaultDisplayBufferCompositor : DefaultDisplayBufferCompositor
 {
     DirectPresentationDefaultDisplayBufferCompositor()
@@ -145,14 +147,11 @@ struct DirectPresentationDefaultDisplayBufferCompositor : DefaultDisplayBufferCo
         framebuffer_provider = provider.get();
         ON_CALL(*provider, buffer_to_framebuffer(_))
             .WillByDefault([this](auto) { return std::make_unique<StubFramebuffer>(screen.size); });
-        EXPECT_CALL(mock_gl_provider, make_framebuffer_provider(Ref(display_sink)))
-            .WillOnce(Return(ByMove(std::move(provider))));
 
         compositor = std::make_unique<mc::DefaultDisplayBufferCompositor>(
-            display_sink, mock_gl_provider, mt::fake_shared(mock_renderer), output_filter, mr::null_compositor_report());
+            display_sink, std::move(provider), mt::fake_shared(mock_renderer), output_filter, mr::null_compositor_report());
     }
 
-    testing::NiceMock<mtd::MockGlRenderingProvider> mock_gl_provider;
     std::shared_ptr<testing::NiceMock<MockOutputFilter>> const output_filter{
         std::make_shared<testing::NiceMock<MockOutputFilter>>()};
     MockFramebufferProvider* framebuffer_provider{nullptr};
@@ -166,7 +165,7 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_false_when_scene_elemen
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -179,7 +178,7 @@ TEST_F(DefaultDisplayBufferCompositor, composite_returns_true_when_scene_element
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -192,7 +191,7 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -223,7 +222,7 @@ TEST_F(DefaultDisplayBufferCompositor, all_expected_reports_are_received_during_
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         report);
@@ -238,7 +237,7 @@ TEST_F(DefaultDisplayBufferCompositor, elements_provided_to_composite_are_render
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -265,7 +264,7 @@ TEST_F(DefaultDisplayBufferCompositor, viewport_is_rotated_when_display_sink_vie
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -286,7 +285,7 @@ TEST_F(DefaultDisplayBufferCompositor, renderer_is_suspended_when_we_have_compos
     using namespace testing;
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -323,7 +322,7 @@ TEST_F(DefaultDisplayBufferCompositor, occluded_surfaces_are_not_rendered)
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -365,7 +364,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_rendered_scene_elements)
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());
@@ -390,7 +389,7 @@ TEST_F(DefaultDisplayBufferCompositor, marks_occluded_scene_elements)
 
     mc::DefaultDisplayBufferCompositor compositor(
         display_sink,
-        gl_provider,
+        null_framebuffer_provider(),
         mt::fake_shared(mock_renderer),
         std::make_shared<mtd::StubOutputFilter>(),
         mr::null_compositor_report());

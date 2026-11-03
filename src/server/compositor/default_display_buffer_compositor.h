@@ -30,7 +30,6 @@ class CompositorReport;
 namespace graphics
 {
 class DisplaySink;
-class RenderingProvider;
 class OutputFilter;
 }
 namespace renderer
@@ -47,7 +46,7 @@ class DefaultDisplayBufferCompositor : public DisplayBufferCompositor
 public:
     DefaultDisplayBufferCompositor(
         graphics::DisplaySink& display_sink,
-        graphics::RenderingProvider& rendering_provider,
+        std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> fb_provider,
         std::shared_ptr<renderer::Renderer> const& renderer,
         std::shared_ptr<graphics::OutputFilter> const& output_filter,
         std::shared_ptr<compositor::CompositorReport> const& report);
@@ -58,7 +57,7 @@ private:
     graphics::DisplaySink& display_sink;
     std::shared_ptr<renderer::Renderer> const renderer;
     std::shared_ptr<graphics::OutputFilter> const output_filter;
-    std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> const fb_adaptor;
+    std::unique_ptr<graphics::RenderingProvider::FramebufferProvider> const fb_provider;
     std::shared_ptr<compositor::CompositorReport> const report;
     bool completed_first_render = false;
 };

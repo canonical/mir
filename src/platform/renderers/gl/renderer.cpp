@@ -215,7 +215,7 @@ mrg::Renderer::~Renderer()
     }
 }
 
-auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> std::unique_ptr<mg::Framebuffer>
+auto mrg::Renderer::render(mg::RenderableList const& renderables) const -> mg::FramebufferPtr
 {
     output_surface->make_current();
     output_surface->bind();
