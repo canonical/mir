@@ -123,6 +123,7 @@ private:
 
         auto orientation() const -> MirOrientation { return current_orientation; }
         auto change_orientation(MirOrientation new_orientation) -> bool;
+        void replace_buffer();
 
         ~GBMBOWrapper();
 

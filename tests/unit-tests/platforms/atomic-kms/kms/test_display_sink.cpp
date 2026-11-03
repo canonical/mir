@@ -71,6 +71,8 @@ protected:
             .WillByDefault(Return(false));
         ON_CALL(*output, max_refresh_rate())
             .WillByDefault(Return(60));
+        ON_CALL(*output, post_cursor())
+            .WillByDefault(Return(true));
 
         sink = std::make_unique<mga::DisplaySink>(
             drm_fd,
@@ -149,14 +151,32 @@ INSTANTIATE_TEST_SUITE_P(
         return info.param.crtc_ok.value_or(false) ? "set_crtc_recovers" : "presentation_fails";
     });
 
-TEST_F(AtomicDisplaySinkTest, post_is_a_noop_without_a_queued_frame)
+TEST_F(AtomicDisplaySinkTest, post_updates_only_cursor_without_a_queued_frame)
 {
     EXPECT_CALL(*output, page_flip(_))
         .Times(0);
     EXPECT_CALL(*output, set_crtc(_))
         .Times(0);
+    EXPECT_CALL(*output, post_cursor()).WillOnce(Return(true));
 
     EXPECT_TRUE(sink->post());
+}
+
+TEST_F(AtomicDisplaySinkTest, cursor_only_post_reports_failure)
+{
+    EXPECT_CALL(*output, post_cursor()).WillOnce(Return(false));
+    EXPECT_FALSE(sink->post());
+}
+
+TEST_F(AtomicDisplaySinkTest, refresh_handler_is_forwarded_to_output)
+{
+    std::function<void()> handler;
+    EXPECT_CALL(*output, register_refresh_handler(_)).WillOnce(SaveArg<0>(&handler));
+    int refreshes{0};
+    sink->register_refresh_handler([&] { ++refreshes; });
+    ASSERT_TRUE(handler);
+    handler();
+    EXPECT_THAT(refreshes, Eq(1));
 }
 
 TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuffer_alive)
