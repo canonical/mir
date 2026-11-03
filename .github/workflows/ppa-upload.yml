@@ -66,6 +66,7 @@ jobs:
       matrix:
         release:
         - "26.04"
+        - "26.10"
         - "devel"
 
     runs-on: ubuntu-latest
