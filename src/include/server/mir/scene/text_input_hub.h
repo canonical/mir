@@ -20,6 +20,7 @@
 #include <mir/observer_registrar.h>
 #include <mir/int_wrapper.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -143,7 +144,7 @@ struct TextInputChange
     std::optional<TextInputKeySym> keysym;
 
     /// \remark Defined for text input v1 and v2, not v3.
-    std::optional<std::vector<std::uint8_t>> modifier_map;
+    std::optional<std::vector<std::byte>> modifier_map;
 
     /// \remark Defined for text input v1 and v2, not v3.
     std::optional<CursorPosition> cursor_position;
