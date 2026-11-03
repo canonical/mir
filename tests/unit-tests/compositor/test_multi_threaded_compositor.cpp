@@ -45,6 +45,8 @@
 #include <mutex>
 #include <chrono>
 #include <condition_variable>
+#include <future>
+#include <utility>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -136,6 +138,14 @@ public:
     {
         throw_on_add_observer_ = flag;
     }
+
+    mc::SceneElementSequence scene_elements_for(mc::CompositorID) override
+    {
+        ++snapshot_count;
+        return {};
+    }
+
+    std::atomic<unsigned int> snapshot_count{0};
 
     private:
     std::mutex observer_mutex;
@@ -360,10 +370,14 @@ public:
 
     bool record_composite(mc::CompositionMode mode)
     {
-        std::lock_guard lock{mutex};
-        modes.push_back(mode);
-        return true;
+        {
+            std::lock_guard lock{mutex};
+            modes.push_back(mode);
+        }
+        return composite_result();
     }
+
+    std::function<bool()> composite_result{[] { return true; }};
 
     std::vector<mc::CompositionMode> recorded_modes() const
     {
@@ -395,6 +409,25 @@ public:
 
     MOCK_METHOD(bool, next_post_result, ());
 
+    void register_refresh_handler(std::function<void()> const& handler) override
+    {
+        std::lock_guard lock{handler_mutex};
+        refresh_handler = handler;
+    }
+
+    void refresh()
+    {
+        std::lock_guard lock{handler_mutex};
+        if (refresh_handler)
+            refresh_handler();
+    }
+
+    bool has_refresh_handler() const
+    {
+        std::lock_guard lock{handler_mutex};
+        return static_cast<bool>(refresh_handler);
+    }
+
     unsigned int count_posts() const
     {
         std::lock_guard lock{mutex};
@@ -411,6 +444,8 @@ private:
     mutable std::mutex mutex;
     std::condition_variable cv;
     unsigned int post_count_{0};
+    mutable std::mutex handler_mutex;
+    std::function<void()> refresh_handler;
 };
 
 class ScriptedDisplay : public mtd::NullDisplay
@@ -1068,6 +1103,197 @@ TEST(MultiThreadedCompositor, failed_posts_schedule_recovery_frames_until_post_s
             mc::CompositionMode::normal));
 
     compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, hardware_refresh_posts_only_its_group_without_sampling_or_rendering)
+{
+    using namespace testing;
+    struct TwoGroupDisplay : ScriptedDisplay
+    {
+        void for_each_display_sync_group(std::function<void(mg::DisplaySyncGroup&)> const& f) override
+        {
+            f(group);
+            f(other_group);
+        }
+        NiceMock<ScriptedDisplaySyncGroup> other_group;
+    };
+
+    auto display = std::make_shared<TwoGroupDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, false};
+
+    EXPECT_CALL(display->other_group, next_post_result()).Times(0);
+    compositor.start();
+    display->group.refresh();
+    ASSERT_TRUE(display->group.wait_for_posts(1, 2s));
+    compositor.stop();
+
+    EXPECT_THAT(factory->recorded_modes(), IsEmpty());
+    EXPECT_THAT(scene->snapshot_count.load(), Eq(2u)); // One startup snapshot per group.
+    EXPECT_THAT(display->group.count_posts(), Eq(1u));
+}
+
+TEST(MultiThreadedCompositor, hardware_refresh_during_rendering_shares_the_scene_post)
+{
+    using namespace testing;
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    factory->composite_result = [&] { display->group.refresh(); return true; };
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    compositor.start();
+    ASSERT_TRUE(display->group.wait_for_posts(1, 2s));
+    EXPECT_FALSE(display->group.wait_for_posts(2, 100ms));
+    compositor.stop();
+
+    EXPECT_THAT(factory->recorded_modes(), ElementsAre(mc::CompositionMode::normal));
+    EXPECT_THAT(scene->snapshot_count.load(), Eq(2u));
+}
+
+TEST(MultiThreadedCompositor, hardware_refresh_posts_even_if_composite_produces_no_frame)
+{
+    using namespace testing;
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    factory->composite_result = [&] { display->group.refresh(); return false; };
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    compositor.start();
+    ASSERT_TRUE(display->group.wait_for_posts(1, 2s));
+    EXPECT_FALSE(display->group.wait_for_posts(2, 100ms));
+    compositor.stop();
+    EXPECT_THAT(factory->recorded_modes(), ElementsAre(mc::CompositionMode::normal));
+}
+
+TEST(MultiThreadedCompositor, no_post_if_composite_produces_no_frame_without_hardware_refresh)
+{
+    using namespace testing;
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    std::promise<void> rendered;
+    auto rendered_future = rendered.get_future();
+    factory->composite_result = [&] { rendered.set_value(); return false; };
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    compositor.start();
+    ASSERT_THAT(rendered_future.wait_for(2s), Eq(std::future_status::ready));
+    compositor.stop();
+    EXPECT_THAT(display->group.count_posts(), Eq(0u));
+}
+
+TEST(MultiThreadedCompositor, scene_damage_during_scene_snapshot_is_not_lost)
+{
+    using namespace testing;
+    struct DamagingScene : StubScene
+    {
+        mc::SceneElementSequence scene_elements_for(mc::CompositorID id) override
+        {
+            auto elements = StubScene::scene_elements_for(id);
+            if (snapshot_count == 2)
+                emit_change_event();
+            return elements;
+        }
+    };
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<DamagingScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    compositor.start();
+    ASSERT_TRUE(display->group.wait_for_posts(2, 2s));
+    compositor.stop();
+    EXPECT_THAT(
+        factory->recorded_modes(), ElementsAre(mc::CompositionMode::normal, mc::CompositionMode::normal));
+}
+
+TEST(MultiThreadedCompositor, hardware_refresh_during_post_is_not_lost)
+{
+    using namespace testing;
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    EXPECT_CALL(display->group, next_post_result())
+        .WillOnce(Invoke([&] { display->group.refresh(); return true; }))
+        .WillRepeatedly(Return(true));
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, false};
+
+    compositor.start();
+    display->group.refresh();
+    ASSERT_TRUE(display->group.wait_for_posts(2, 2s));
+    compositor.stop();
+    EXPECT_THAT(factory->recorded_modes(), IsEmpty());
+    EXPECT_THAT(display->group.count_posts(), Eq(2u));
+}
+
+TEST(MultiThreadedCompositor, failed_hardware_refresh_renders_scene_and_keeps_retrying_without_new_frames)
+{
+    using namespace testing;
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    bool first_frame = true;
+    factory->composite_result = [&] { return !std::exchange(first_frame, false); };
+    EXPECT_CALL(display->group, next_post_result())
+        .WillOnce(Return(false))
+        .WillRepeatedly(Return(true));
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, false};
+
+    compositor.start();
+    display->group.refresh();
+    ASSERT_TRUE(display->group.wait_for_posts(2, 2s));
+    EXPECT_FALSE(display->group.wait_for_posts(3, 100ms));
+    scene->emit_change_event();
+    ASSERT_TRUE(display->group.wait_for_posts(3, 2s));
+    compositor.stop();
+    EXPECT_THAT(
+        factory->recorded_modes(),
+        ElementsAre(mc::CompositionMode::recovery, mc::CompositionMode::recovery, mc::CompositionMode::normal));
+}
+
+TEST(MultiThreadedCompositor, hardware_refresh_handler_is_scoped_to_compositor_thread_lifetime)
+{
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    {
+        mc::MultiThreadedCompositor compositor{
+            display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, false};
+        for (int i = 0; i != 2; ++i)
+        {
+            compositor.start();
+            EXPECT_TRUE(display->group.has_refresh_handler());
+            compositor.stop();
+            EXPECT_FALSE(display->group.has_refresh_handler());
+            display->group.refresh();
+        }
+    }
+    EXPECT_FALSE(display->group.has_refresh_handler());
+    display->group.refresh();
+}
+
+TEST(MultiThreadedCompositor, hardware_refresh_handler_is_cleared_if_start_fails)
+{
+    auto display = std::make_shared<ScriptedDisplay>();
+    auto scene = std::make_shared<StubScene>();
+    scene->throw_on_add_observer(true);
+    auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
+    mc::MultiThreadedCompositor compositor{
+        display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, false};
+
+    EXPECT_THROW(compositor.start(), std::runtime_error);
+    EXPECT_FALSE(display->group.has_refresh_handler());
+    display->group.refresh();
 }
 
 TEST(MultiThreadedCompositor, stop_during_recovery_stops_compositing)

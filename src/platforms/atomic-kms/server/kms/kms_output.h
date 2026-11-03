@@ -27,6 +27,7 @@
 #include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <gbm.h>
+#include <functional>
 
 namespace mir
 {
@@ -71,6 +72,8 @@ public:
     virtual void clear_crtc() = 0;
 
     virtual bool page_flip(FBHandle const& fb) = 0;
+    virtual bool post_cursor() { return true; }
+    virtual void register_refresh_handler(std::function<void()> const&) {}
 
     virtual void set_cursor_image(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;

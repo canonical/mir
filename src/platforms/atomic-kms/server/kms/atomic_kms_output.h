@@ -33,6 +33,7 @@ namespace atomic
 {
 
 class PageFlipper;
+class AtomicUpdate;
 
 class AtomicKMSOutput : public KMSOutput
 {
@@ -53,6 +54,8 @@ public:
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
     bool page_flip(FBHandle const& fb) override;
+    bool post_cursor() override;
+    void register_refresh_handler(std::function<void()> const& handler) override;
 
     void set_cursor_image(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
@@ -69,6 +72,7 @@ public:
 
 private:
     class PropertyBlob;
+    class CursorFramebuffer;
 
     struct Configuration
     {
@@ -81,19 +85,50 @@ private:
         std::unique_ptr<kms::ObjectProperties> crtc_props;
         std::unique_ptr<kms::ObjectProperties> plane_props;
         std::unique_ptr<kms::ObjectProperties> connector_props;
+        std::unique_ptr<kms::ObjectProperties> cursor_props;
+    };
+
+    struct CursorState
+    {
+        std::shared_ptr<CursorFramebuffer> cursor;
+        std::shared_ptr<CursorFramebuffer> visible_cursor;
+        geometry::Point cursor_position;
+        geometry::Size output_size;
+        uint64_t generation{0};
+        bool cursor_dirty{false};
+        bool refresh_pending{false};
+        bool active{false};
+        bool available{false};
+    };
+
+    struct CursorSnapshot
+    {
+        std::shared_ptr<CursorFramebuffer> cursor;
+        geometry::Point cursor_position;
+        uint64_t generation;
+        bool cursor_dirty;
     };
 
     bool ensure_crtc(Configuration& to_update);
+    auto snapshot_cursor() -> CursorSnapshot;
+    void update_cursor_configuration(Configuration const& conf);
+    void add_cursor_update(AtomicUpdate& update, Configuration const& conf, CursorSnapshot const& cursor);
+    void add_cursor_clear(AtomicUpdate& update, Configuration const& conf);
+    void cursor_update_committed(Configuration const& conf, CursorSnapshot const& cursor);
+    bool request_cursor_refresh(CursorState& cursor);
+    void notify_refresh();
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;
+    uint32_t const output_id;
 
     std::future<void> pending_page_flip;
 
     mir::Synchronised<Configuration> configuration;
+    mir::Synchronised<CursorState> cursor_state;
+    mir::Synchronised<std::function<void()>> refresh_handler;
     drmModeCrtc saved_crtc;
     bool using_saved_crtc;
-    std::atomic<bool> cursor_image_set{false};
 };
 
 }
