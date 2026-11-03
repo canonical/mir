@@ -2,6 +2,8 @@
 
 - [.kb/agents.md](.kb/agents.md) - Structure and rules of the knowledge base. You MUST read this file.
 - [src/server/.kb/mir-server.md](src/server/.kb/mir-server.md) - Server startup, shutdown, and ownership.
+- [src/miral/.kb/miral-basic-window-manager.md](src/miral/.kb/miral-basic-window-manager.md) - BasicWindowManager locking, MRU/focus rules, zones and placement.
+- [src/miral/.kb/miral-window-management-model.md](src/miral/.kb/miral-window-management-model.md) - MirAL window-management model: lock contract, Window identity, resize rules.
 - [src/platforms/.kb/kms-display-invariants.md](src/platforms/.kb/kms-display-invariants.md) - KMS invariants shared by atomic-kms and gbm-kms (FB lifetime, cursor, compatibility, quirks).
 - [src/platforms/atomic-kms/.kb/atomic-kms-platform.md](src/platforms/atomic-kms/.kb/atomic-kms-platform.md) - Atomic-kms specific commit model, probing, and format handling.
 - [src/platforms/gbm-kms/.kb/gbm-kms-platform.md](src/platforms/gbm-kms/.kb/gbm-kms-platform.md) - GBM-KMS specific page-flip protocol, output state machine, and probing.
