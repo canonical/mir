@@ -20,9 +20,8 @@ mir (2.31.0) UNRELEASED; urgency=medium
     - Enhancements:
 
       - Add freely positioned magnification with on-screen controls (#5135, #5207)
-      - Add MirAL output configuration and display presentation APIs (#5224, #5290)
+      - Add MirAL output configuration API (#5224)
       - Support foreign buffers, xdg-decoration v2 and mir-shell-v1 v2 (#5203, #5274, #5239, #5343)
-      - Add a blitter rendering path for supported hardware (#5213, #5317)
       - Expose sandbox metadata and physical output addresses (#5209, #5291)
 
     - Bugs fixed:
