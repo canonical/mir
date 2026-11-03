@@ -14,6 +14,9 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/.kb/mir-signal-and-termination.md](src/server/.kb/mir-signal-and-termination.md) - Fatal-signal interception and termination exception flow.
 - [src/server/compositor/.kb/mir-compositor.md](src/server/compositor/.kb/mir-compositor.md) - Compositor threading, buffer arbitration, bypass, and occlusion.
 - [src/server/console/.kb/console-services.md](src/server/console/.kb/console-services.md) - Console providers, VT switching, logind, and session lock.
+- [src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md](src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md) - WaylandConnector publication order, teardown, client backends, and authorization.
+- [src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md](src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md) - WaylandExecutor workqueue ownership and thread affinity.
+- [src/server/frontend_wayland/.kb/wayland-surface-and-input.md](src/server/frontend_wayland/.kb/wayland-surface-and-input.md) - wl_surface role/commit rules, shells, input/clipboard/text bridges, capture, and protocol state machines.
 
 Bug references of the form `LP: #1237332` point to Launchpad bugs, at
 `https://bugs.launchpad.net/bugs/1237332`. Mir's development originally took place on Launchpad, so
