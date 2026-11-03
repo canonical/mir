@@ -8,6 +8,7 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/.kb/mir-shm-backing.md](src/server/.kb/mir-shm-backing.md) - SHM backing store SIGBUS handling and size guarantees.
 - [src/server/.kb/mir-signal-and-termination.md](src/server/.kb/mir-signal-and-termination.md) - Fatal-signal interception and termination exception flow.
 - [src/server/compositor/.kb/mir-compositor.md](src/server/compositor/.kb/mir-compositor.md) - Compositor threading, buffer arbitration, bypass, and occlusion.
+- [src/server/console/.kb/console-services.md](src/server/console/.kb/console-services.md) - Console providers, VT switching, logind, and session lock.
 
 Existing [Copilot instructions](.github/copilot-instructions.md) and [path instructions](.github/instructions/)
 remain authoritative for their existing concerns. [Sphinx documentation](doc/sphinx/) remains authoritative for published docs.
