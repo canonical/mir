@@ -14,6 +14,9 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/.kb/mir-signal-and-termination.md](src/server/.kb/mir-signal-and-termination.md) - Fatal-signal interception, termination exception flow, and extension policy.
 - [src/server/compositor/.kb/mir-compositor.md](src/server/compositor/.kb/mir-compositor.md) - Compositor threading, buffer arbitration, bypass, and occlusion.
 - [src/server/console/.kb/console-services.md](src/server/console/.kb/console-services.md) - Console providers, VT switching, logind, and session lock.
+- [src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md](src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md) - WaylandConnector publication order, teardown, and client authorization.
+- [src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md](src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md) - WaylandExecutor workqueue ownership and thread affinity.
+- [src/server/frontend_wayland/.kb/wayland-surface-and-input.md](src/server/frontend_wayland/.kb/wayland-surface-and-input.md) - wl_surface role/commit rules, input translation, and protocol state machines.
 
 Existing [Copilot instructions](.github/copilot-instructions.md) and [path instructions](.github/instructions/)
 remain authoritative for their existing concerns. [Sphinx documentation](doc/sphinx/) remains authoritative for published docs.
