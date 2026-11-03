@@ -93,28 +93,21 @@ jobs:
       matrix:
         snap:
         - canonical/mir-test-tools
-        - canonical/confined-shell-wip
         - canonical/ubuntu-frame
-        - Miriway/Miriway
         snapcraft-channel: [stable]
         architecture: ${{ fromJSON(needs.arches.outputs.arches) }}
         include:
         - snap: canonical/mir-test-tools
           track: 24
-        - snap: canonical/confined-shell-wip
-          track: latest
         - snap: canonical/ubuntu-frame
           track: 24
-        - snap: Miriway/Miriway
-          track: latest
-          review-opts: --allow-classic
 
     steps:
     - name: Check out code
       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       with:
         repository: ${{ matrix.snap }}
-        ref: mir-libs-build
+        ref: 24/mir-libs-build
         fetch-depth: 0  # needed for version determination
         persist-credentials: false
 
@@ -126,7 +119,6 @@ jobs:
       uses: canonical/actions/build-snap@78e8dd5f693653767f2c60c4a6a421a1ebed35af # release @ 2025.06.05
       with:
         architecture: ${{ matrix.architecture }}
-        review-opts: ${{ matrix.review-opts }}
         snapcraft-token: ${{ secrets.SNAPCRAFT_TOKEN }}
         launchpad-credentials: ${{ secrets.LAUNCHPAD_CREDENTIALS }}
         launchpad-accept-public-upload: true
