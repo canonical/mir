@@ -16,6 +16,7 @@
 
 #include "atomic_kms_output.h"
 #include "atomic_update.h"
+#include "plane_capabilities.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
@@ -166,6 +167,7 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
           .mode_index = 0,
           .fb_offset = {},
           .current_crtc = nullptr,
+          .plane_capabilities = nullptr,
           .current_plane = nullptr,
           .mode = nullptr,
           .crtc_props = nullptr,
@@ -197,6 +199,11 @@ mga::AtomicKMSOutput::~AtomicKMSOutput()
 uint32_t mga::AtomicKMSOutput::id() const
 {
     return configuration.lock()->connector->connector_id;
+}
+
+auto mga::AtomicKMSOutput::plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const>
+{
+    return configuration.lock()->plane_capabilities;
 }
 
 void mga::AtomicKMSOutput::reset()
@@ -235,6 +242,7 @@ void mga::AtomicKMSOutput::reset()
 
     /* Discard previously current crtc */
     conf->current_crtc = nullptr;
+    conf->plane_capabilities = nullptr;
 }
 
 geom::Size mga::AtomicKMSOutput::size() const
@@ -312,6 +320,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
         conf->current_crtc = nullptr;
+        conf->plane_capabilities = nullptr;
         return false;
     }
 
@@ -384,6 +393,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     }
 
     conf->current_crtc = nullptr;
+    conf->plane_capabilities = nullptr;
 }
 
 bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
@@ -438,6 +448,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
         conf->current_crtc = nullptr;
+        conf->plane_capabilities = nullptr;
         return false;
     }
 
@@ -492,8 +503,8 @@ bool mga::AtomicKMSOutput::clear_cursor()
 
 bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
 {
-    /* Nothing to do if we already have a crtc */
-    if (to_update.current_crtc)
+    /* A hardware refresh may have found a CRTC without selecting its primary plane yet. */
+    if (to_update.current_crtc && to_update.current_plane)
         return true;
 
     /* If the output is not connected there is nothing to do */
@@ -517,6 +528,18 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
 
     to_update.crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_crtc);
     to_update.plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_plane);
+
+    auto const crtc_id = to_update.current_crtc->crtc_id;
+    try
+    {
+        to_update.plane_capabilities = std::make_shared<CrtcPlaneCapabilities const>(
+            discover_crtc_plane_capabilities(drm_fd_, crtc_id));
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_warning(
+            "Failed to discover plane capabilities for CRTC %u: %s", crtc_id, error.what());
+    }
 
     return true;
 }
@@ -600,6 +623,8 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 void mga::AtomicKMSOutput::refresh_hardware_state()
 {
     auto conf = configuration.lock();
+    conf->plane_capabilities = nullptr;
+    conf->current_plane = nullptr;
     conf->connector = kms::get_connector(drm_fd_, conf->connector->connector_id);
 
     if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
