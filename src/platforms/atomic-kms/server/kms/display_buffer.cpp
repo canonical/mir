@@ -236,6 +236,7 @@ std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const
 
 void mga::DisplaySink::schedule_set_crtc()
 {
+    output->reset();
     needs_set_crtc = true;
 }
 
