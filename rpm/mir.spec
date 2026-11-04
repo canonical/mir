@@ -28,10 +28,10 @@
 %global mircommon_sover 14
 %global mircore_sover 3
 %global miroil_sover 10
-%global mirplatform_sover 36
+%global mirplatform_sover 37
 %global mirserver_sover 70
 %global mirwayland_sover 7
-%global mirplatformgraphics_sover 25
+%global mirplatformgraphics_sover 26
 %global mirplatforminput_sover 11
 
 Name:           mir
