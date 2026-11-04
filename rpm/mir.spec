@@ -35,7 +35,7 @@
 %global mirplatforminput_sover 11
 
 Name:           mir
-Version:        2.31.0~rc
+Version:        2.31.0
 Release:        0%{?dist}
 Summary:        Next generation Wayland display server toolkit
 
@@ -333,8 +333,39 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 
 %changelog
-* Sat Oct 24 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0~rc-1
-- Begin Release Candidate for 2.31.0 release
+* Wed Nov 04 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0-1
+- New upstream release 2.31.0
+
+  - ABI summary:
+
+    - miral ABI unchanged at 8
+    - mircommon ABI unchanged at 13
+    - mircore ABI unchanged at 3
+    - miroil ABI unchanged at 10
+    - mirplatform ABI unchanged at 35
+    - mirserver ABI unchanged at 69
+    - mirwayland ABI unchanged at 7
+    - mirplatformgraphics ABI unchanged at 24
+    - mirinputplatform ABI unchanged at 11
+
+  - Enhancements:
+
+    - Add freely positioned magnification with on-screen controls (#5135, #5207)
+    - Add MirAL output configuration API (#5224)
+    - Support foreign buffers, xdg-decoration v2 and mir-shell-v1 v2 (#5203, #5274, #5239, #5343)
+    - Expose sandbox metadata and physical output addresses (#5209, #5291)
+
+  - Bugs fixed:
+
+    - Scale touch input for output transforms and support circular scrolling (#5292, #5246)
+    - Avoid filtering input triggers too aggressively (#5249)
+    - Recover after presentation failures and honor output filters and transforms (#5336, #5310)
+    - Confirm applied output configurations and smooth MirAL splash-screen fades (#5259, #5321, #5297)
+
+  - Documentation:
+
+    - Document freely positioned magnification and its controls (#5135)
+
 
 * Thu Sep 24 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.30.0-1
 

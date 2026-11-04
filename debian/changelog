@@ -1,7 +1,5 @@
-mir (2.31.0) UNRELEASED; urgency=medium
+mir (2.31.0-0ubuntu26.04) resolute; urgency=medium
 
-  * Begin development for 2.31.0 release
-  * Begin Release Candidate for 2.31.0 release
 
   * New upstream release 2.31.0
 
@@ -35,7 +33,7 @@ mir (2.31.0) UNRELEASED; urgency=medium
 
       - Document freely positioned magnification and its controls (#5135)
 
- -- Mir CI Bot <mir-ci-bot@canonical.com>  Sat, 24 Oct 2026 23:02:58 +0000
+ -- Mir CI Bot <mir-ci-bot@canonical.com>  Wed, 04 Nov 2026 21:04:07 +0000
 
 mir (2.30.0-0ubuntu26.04) noble; urgency=medium
 
