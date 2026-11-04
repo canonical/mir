@@ -16,11 +16,13 @@
 
 #include "src/server/shell/decoration/decoration_strategy.h"
 
+#include <mir/default_font.h>
 #include <mir/renderer/sw/pixel_source.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/stub_surface.h>
 
 #include <bit>
+#include <cmath>
 #include <cstring>
 
 #include <gmock/gmock.h>
@@ -41,11 +43,12 @@ struct StubWindowSurface : mtd::StubSurface
     auto window_size() const -> geom::Size override { return size; }
     void resize(geom::Size const& new_size) override { size = new_size; }
     auto state() const -> MirWindowState override { return mir_window_state_restored; }
-    auto name() const -> std::string override { return "stub"; }
+    auto name() const -> std::string override { return title; }
     auto focus_state() const -> MirWindowFocusState override { return focus; }
     void set_focus_state(MirWindowFocusState new_focus) override { focus = new_focus; }
 
     geom::Size size;
+    std::string title{"stub"};
     MirWindowFocusState focus{mir_window_focus_state_focused};
 };
 
@@ -135,11 +138,12 @@ struct DecorationStrategyRendering : DecorationStrategyStyle
 {
     auto render(
         std::shared_ptr<msd::DecorationStyle const> style,
-        msd::InputState const& input_state = msd::InputState{{}, {}})
+        msd::InputState const& input_state = msd::InputState{{}, {}},
+        float scale = 1.0f)
         -> std::unique_ptr<msd::RendererStrategy>
     {
         strategy = strategy_with(std::move(style));
-        window_state = strategy->new_window_state(surface, 1.0f);
+        window_state = strategy->new_window_state(surface, scale);
         auto renderer = strategy->render_strategy();
         renderer->update_state(*window_state, input_state);
         return renderer;
@@ -228,3 +232,117 @@ TEST_F(DecorationStrategyRendering, buttons_are_drawn_with_the_unfocused_colors_
     RenderedPixels const unfocused_titlebar{unfocused_renderer->render_titlebar().value()};
     EXPECT_THAT(unfocused_titlebar(101, 1), Eq(0xFF405060u));
 }
+
+struct DecorationTitleRendering : DecorationStrategyRendering, WithParamInterface<float>
+{
+    void SetUp() override
+    {
+        if (mir::default_font().empty())
+            GTEST_SKIP() << "No decoration font available";
+    }
+
+    auto title_pixels(std::string const& title, msd::InputState const& input_state, int left, int right)
+        -> std::vector<uint32_t>
+    {
+        surface->title = title;
+        auto const renderer = render(std::make_shared<msd::DecorationStyle const>(), input_state, GetParam());
+        RenderedPixels const pixels{renderer->render_titlebar().value()};
+        std::vector<uint32_t> result;
+        for (int y = 0; y < pixels.size.height.as_int(); ++y)
+            for (int x = left; x < right; ++x)
+                result.push_back(pixels(x, y));
+        return result;
+    }
+
+    msd::InputState const buttons{{
+        msd::Button{msd::Button::Close, msd::Button::Up, {{160, 0}, {24, 24}}},
+        msd::Button{msd::Button::Minimize, msd::Button::Up, {{100, 0}, {24, 24}}}}, {}};
+};
+
+TEST_P(DecorationTitleRendering, long_title_does_not_draw_under_or_between_buttons)
+{
+    auto const left = lround(100 * GetParam());
+    auto const right = lround(200 * GetParam());
+
+    EXPECT_THAT(
+        title_pixels(std::string(100, 'W'), buttons, left, right),
+        Eq(title_pixels("", buttons, left, right)));
+}
+
+TEST_P(DecorationTitleRendering, short_title_is_unchanged_when_buttons_are_present)
+{
+    auto const right = lround(100 * GetParam());
+    auto const expected = title_pixels("Title", {{}, {}}, 0, right);
+
+    EXPECT_THAT(title_pixels("Title", buttons, 0, right), Eq(expected));
+    EXPECT_THAT(expected, Ne(title_pixels("", buttons, 0, right)));
+}
+
+TEST_P(DecorationTitleRendering, overlapping_glyph_extents_do_not_cause_unnecessary_ellipsis)
+{
+    auto const width = lround(200 * GetParam());
+    auto const full_title = title_pixels("ffffffffff", {{}, {}}, 0, width);
+    auto const background = title_pixels("", {{}, {}}, 0, width);
+    int last_pixel{0};
+    for (size_t i = 0; i < full_title.size(); ++i)
+        if (full_title[i] != background[i])
+            last_pixel = std::max(last_pixel, static_cast<int>(i % width));
+
+    int const button_left = std::ceil((last_pixel + 2) / GetParam());
+    msd::InputState const tight_buttons{{
+        msd::Button{msd::Button::Close, msd::Button::Up, {{button_left, 0}, {24, 24}}}}, {}};
+    auto const right = lround(button_left * GetParam());
+    EXPECT_THAT(
+        title_pixels("ffffffffff", tight_buttons, 0, right),
+        Eq(title_pixels("ffffffffff", {{}, {}}, 0, right)));
+}
+
+TEST_P(DecorationTitleRendering, long_titles_preserve_both_ends_with_a_middle_ellipsis)
+{
+    for (auto const& [first, last] : std::vector<std::pair<std::string, std::string>>{
+        {"A", "Z"}, {"é", "Ω"}, {"e\u0301", "Ω\u0301"}})
+    {
+        SCOPED_TRACE(first + "…" + last);
+        surface->resize({200, 100});
+        std::string title;
+        for (int i = 0; i < 50; ++i)
+            title += first;
+        for (int i = 0; i < 50; ++i)
+            title += last;
+        auto const right = lround(100 * GetParam());
+        auto const actual = title_pixels(title, buttons, 0, right);
+        EXPECT_THAT(actual, Ne(title_pixels("", buttons, 0, right)));
+
+        // Render candidate abbreviations on a wide titlebar so the expected text is not itself ellipsized.
+        surface->resize({1000, 100});
+        bool matched{false};
+        std::string prefix;
+        for (int i = 1; i < 16 && !matched; ++i)
+        {
+            prefix += first;
+            std::string suffix;
+            for (int j = 1; j < 16 && !matched; ++j)
+            {
+                suffix += last;
+                matched = actual == title_pixels(prefix + "…" + suffix, {{}, {}}, 0, right);
+            }
+        }
+        EXPECT_TRUE(matched);
+    }
+}
+
+TEST_P(DecorationTitleRendering, title_is_omitted_when_even_the_ellipsis_does_not_fit)
+{
+    auto const right = lround(200 * GetParam());
+    for (auto const button_left : {0, 8, 9})
+    {
+        SCOPED_TRACE(button_left);
+        msd::InputState const cramped_buttons{{
+            msd::Button{msd::Button::Close, msd::Button::Up, {{button_left, 0}, {24, 24}}}}, {}};
+        EXPECT_THAT(
+            title_pixels("Long window title", cramped_buttons, 0, right),
+            Eq(title_pixels("", cramped_buttons, 0, right)));
+    }
+}
+
+INSTANTIATE_TEST_SUITE_P(Scales, DecorationTitleRendering, Values(1.0f, 1.5f, 2.0f));
