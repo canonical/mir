@@ -43,7 +43,7 @@ namespace shell
 class Shell;
 class IdleHandler;
 class TokenAuthority;
-namespace decoration { class DecorationStrategy; struct DecorationStyle; }
+namespace decoration { struct DecorationStyle; }
 }
 namespace graphics
 {

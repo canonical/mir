@@ -30,6 +30,8 @@ namespace msd = mir::shell::decoration;
 
 namespace
 {
+mir::logging::Tags const log_tags{mir::logging::graphics()};
+
 using Element = miral::DecorationStyle::Element;
 using State = miral::DecorationStyle::State;
 using Metric = miral::DecorationStyle::Metric;
@@ -315,7 +317,7 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
 
                 if (val && *val < 0)
                 {
-                    mir::log_warning("Config key '%s' cannot be negative", key.to_string().c_str());
+                    mir::log_warning(log_tags, "Config key '{}' cannot be negative", key);
                     return;
                 }
 
@@ -349,9 +351,9 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
                 }
                 else
                 {
-                    mir::log_warning(
-                        "Config key '%s', '%s' is not a color of the form '#rrggbb' or '#rrggbbaa'",
-                        key.to_string().c_str(), val->data());
+                    mir::log_warning(log_tags,
+                                     "Config key '{}', '{}' is not a color of the form '#rrggbb' or '#rrggbbaa'",
+                                     key.to_string(), val->data());
                 }
             });
     }
@@ -378,8 +380,8 @@ void miral::DecorationStyle::set_color(
     }
     else
     {
-        mir::log_warning(
-            "Ignoring decoration color for unsupported element %d in state %d",
+        mir::log_warning(log_tags,
+            "Ignoring decoration color for unsupported element {} in state {}",
             static_cast<int>(element), static_cast<int>(state));
     }
 }
@@ -390,14 +392,14 @@ void miral::DecorationStyle::set_metric(Metric metric, int pixels)
 
     if (pixels < 0)
     {
-        mir::log_warning("Ignoring negative decoration metric %d", static_cast<int>(metric));
+        mir::log_warning(log_tags,  "Ignoring negative decoration metric {}", static_cast<int>(metric));
         return;
     }
 
     if (set_metric_of(self->style, metric, pixels))
         self->apply_locked();
     else
-        mir::log_warning("Ignoring unsupported decoration metric %d", static_cast<int>(metric));
+        mir::log_warning(log_tags, "Ignoring unsupported decoration metric {}", static_cast<int>(metric));
 }
 
 void miral::DecorationStyle::operator()(mir::Server& server) const
