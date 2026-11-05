@@ -182,20 +182,21 @@ inline auto premultiply_pixel(uint32_t c) -> uint32_t
 }
 
 /// Make the pixels that fall outside the rounded outline of the window transparent
+/// \param buf_size    size of the border's buffer, in buffer pixels
 /// \param buf_offset  position of this buffer within the window, in buffer pixels
 /// \param window_size size of the whole decorated window, in buffer pixels
 /// \param radius      corner radius, in buffer pixels
 inline void round_corners(
     uint32_t* const data,
-    geom::Size buf_size,
-    geom::Displacement buf_offset,
-    geom::Size window_size,
+    geom::Size const& buf_size,
+    geom::Displacement const& buf_offset,
+    geom::Size const& window_size,
     float radius)
 {
     radius = std::min({
         radius,
-        window_size.width.round_to<float>() / 2.0f,
-        window_size.height.round_to<float>() / 2.0f});
+        buf_size.width.round_to<float>() / 2.0f,
+        buf_size.height.round_to<float>() / 2.0f});
 
     if (radius <= 0.0f)
         return;
