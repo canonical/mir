@@ -339,13 +339,13 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
   - ABI summary:
 
     - miral ABI unchanged at 8
-    - mircommon ABI unchanged at 13
+    - mircommon ABI bumped to 14
     - mircore ABI unchanged at 3
     - miroil ABI unchanged at 10
-    - mirplatform ABI unchanged at 35
-    - mirserver ABI unchanged at 69
+    - mirplatform ABI bumped to 36
+    - mirserver ABI bumped to 70
     - mirwayland ABI unchanged at 7
-    - mirplatformgraphics ABI unchanged at 24
+    - mirplatformgraphics ABI bumped to 25
     - mirinputplatform ABI unchanged at 11
 
   - Enhancements:
