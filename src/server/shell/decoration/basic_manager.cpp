@@ -189,7 +189,7 @@ void msd::BasicManager::redecorate_all()
         std::lock_guard lock{mutex};
         for (auto it = decorations.begin(); it != decorations.end();)
         {
-            if (it->second.surface.lock())
+            if (!it->second.surface.expired())
             {
                 if (it->second.building)
                 {
