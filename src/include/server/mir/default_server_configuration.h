@@ -343,8 +343,6 @@ public:
     auto the_decoration_style() -> std::shared_ptr<shell::decoration::DecorationStyle const> override;
     void set_the_decoration_style(std::shared_ptr<shell::decoration::DecorationStyle const> style) override;
 
-    auto the_shell_decoration_strategy() -> std::shared_ptr<shell::decoration::DecorationStrategy> override;
-    void set_the_shell_decoration_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy) override;
     auto the_display_configuration_observer() -> std::shared_ptr<graphics::DisplayConfigurationObserver>;
 
 protected:
@@ -451,10 +449,12 @@ protected:
     CachedPtr<cookie::Authority> cookie_authority;
     CachedPtr<input::receiver::XKBMapperRegistrar> xkb_mapper_registrar;
     std::shared_ptr<DecorationStrategy> decoration_strategy;
-    std::shared_ptr<shell::decoration::DecorationStyle const> decoration_style;
-    std::shared_ptr<shell::decoration::DecorationStrategy> shell_decoration_strategy;
 
 private:
+    std::mutex decoration_mutex;
+    std::shared_ptr<shell::decoration::DecorationStrategy> basic_decoration_strategy;
+    std::shared_ptr<shell::decoration::DecorationStyle const> decoration_style;
+
     std::shared_ptr<options::Configuration> const configuration_options;
     std::shared_ptr<input::EventFilter> default_filter;
     CachedPtr<ObserverMultiplexer<graphics::DisplayConfigurationObserver>>
