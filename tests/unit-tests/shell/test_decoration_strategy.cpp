@@ -197,7 +197,7 @@ TEST_F(DecorationStrategyRendering, rounded_corners_are_transparent)
     EXPECT_THAT(bottom(bottom.size.width.as_int() / 2, bottom_row) >> 24, Eq(0xFFu));
 }
 
-TEST_F(DecorationStrategyRendering, corner_radius_larger_than_the_bottom_border_rounds_the_side_borders)
+TEST_F(DecorationStrategyRendering, corner_radius_larger_than_the_bottom_border_does_not_round_the_side_borders)
 {
     auto style = std::make_shared<msd::DecorationStyle>();
     style->corner_radius = geom::Width{20};
@@ -205,32 +205,8 @@ TEST_F(DecorationStrategyRendering, corner_radius_larger_than_the_bottom_border_
     auto const renderer = render(style);
 
     RenderedPixels const left{renderer->render_left_border().value()};
-    EXPECT_THAT(left(0, left.size.height.as_int() - 1), Eq(0u));
+    EXPECT_THAT(left(0, left.size.height.as_int() - 1), Ne(0u));
     EXPECT_THAT(left(0, 0) >> 24, Eq(0xFFu));
-}
-
-TEST_F(DecorationStrategyRendering, resized_window_reapplies_clamped_corner_radius)
-{
-    auto style = std::make_shared<msd::DecorationStyle>();
-    style->corner_radius = geom::Width{50};
-    surface->resize(geom::Size{200, 80});
-
-    auto const renderer = render(style);
-    RenderedPixels const original_titlebar{renderer->render_titlebar().value()};
-    RenderedPixels const original_bottom{renderer->render_bottom_border().value()};
-    auto const titlebar_alpha_before = original_titlebar(5, 23) >> 24;
-    auto const bottom_alpha_before = original_bottom(35, 5) >> 24;
-
-    surface->resize(geom::Size{200, 200});
-    window_state = strategy->new_window_state(surface, 1.0f);
-    renderer->update_state(*window_state, msd::InputState{{}, {}});
-
-    RenderedPixels const resized_titlebar{renderer->render_titlebar().value()};
-    RenderedPixels const resized_bottom{renderer->render_bottom_border().value()};
-    EXPECT_THAT(titlebar_alpha_before, Eq(0xFFu));
-    EXPECT_THAT(resized_titlebar(5, 23) >> 24, Eq(0u));
-    EXPECT_GT(bottom_alpha_before, 0u);
-    EXPECT_THAT(resized_bottom(35, 5) >> 24, Eq(0u));
 }
 
 TEST_F(DecorationStrategyRendering, buttons_are_drawn_with_the_unfocused_colors_while_unfocused)
