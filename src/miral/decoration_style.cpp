@@ -112,42 +112,43 @@ auto metric_of(msd::DecorationStyle const& style, Metric metric) -> std::optiona
 
 auto set_metric_of(msd::DecorationStyle& style, Metric metric, int pixels) -> bool
 {
+    using namespace mir::geometry;
     switch (metric)
     {
     case Metric::titlebar_height:
-        style.titlebar_height = mir::geometry::Height{pixels};
+        style.titlebar_height = Height{pixels};
         return true;
 
     case Metric::side_border_width:
-        style.side_border_width = mir::geometry::Width{pixels};
+        style.side_border_width = Width{pixels};
         return true;
 
     case Metric::bottom_border_height:
-        style.bottom_border_height = mir::geometry::Height{pixels};
+        style.bottom_border_height = Height{pixels};
         return true;
 
     case Metric::button_width:
-        style.button_width = mir::geometry::Width{pixels};
+        style.button_width = Width{pixels};
         return true;
 
     case Metric::padding_between_buttons:
-        style.padding_between_buttons = mir::geometry::Width{pixels};
+        style.padding_between_buttons = Width{pixels};
         return true;
 
     case Metric::title_font_height:
-        style.title_font_height = mir::geometry::Height{pixels};
+        style.title_font_height = Height{pixels};
         return true;
 
     case Metric::resize_corner_input_width:
-        style.resize_corner_input_size.width = mir::geometry::Width{pixels};
+        style.resize_corner_input_size.width = Width{pixels};
         return true;
 
     case Metric::resize_corner_input_height:
-        style.resize_corner_input_size.height = mir::geometry::Height{pixels};
+        style.resize_corner_input_size.height = Height{pixels};
         return true;
 
     case Metric::corner_radius:
-        style.corner_radius = mir::geometry::Width{pixels};
+        style.corner_radius = Width{pixels};
         return true;
 
     default:
