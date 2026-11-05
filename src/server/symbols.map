@@ -16,7 +16,6 @@ global:
     mir::DefaultServerConfiguration::default_reports*;
     mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     mir::DefaultServerConfiguration::set_the_decoration_style*;
-    mir::DefaultServerConfiguration::set_the_shell_decoration_strategy*;
     mir::DefaultServerConfiguration::set_wayland_extension_policy*;
     mir::DefaultServerConfiguration::the_accessibility_manager*;
     mir::DefaultServerConfiguration::the_buffer_allocator*;
@@ -193,7 +192,6 @@ global:
     mir::Server::set_terminator*;
     mir::Server::set_the_decoration_strategy*;
     mir::Server::set_the_decoration_style*;
-    mir::Server::set_the_shell_decoration_strategy*;
     mir::Server::set_wayland_extension_policy*;
     mir::Server::stop*;
     mir::Server::supported_pixel_formats*;
@@ -818,7 +816,6 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_style*;
-    non-virtual?thunk?to?mir::DefaultServerConfiguration::set_the_shell_decoration_strategy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::set_wayland_extension_policy*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_accessibility_manager*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
@@ -1422,7 +1419,6 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::add_wayland_extension*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::set_the_decoration_style*;
-    virtual?thunk?to?mir::DefaultServerConfiguration::set_the_shell_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_application_not_responding_detector*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_compositor*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_console_services*;
@@ -1444,7 +1440,6 @@ global:
     virtual?thunk?to?mir::DefaultServerConfiguration::the_screen_shooter_factory*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_server_status_listener*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_session_lock*;
-    virtual?thunk?to?mir::DefaultServerConfiguration::the_shell_decoration_strategy*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_stop_callback*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_text_input_hub*;
     virtual?thunk?to?mir::DefaultServerConfiguration::the_token_authority*;

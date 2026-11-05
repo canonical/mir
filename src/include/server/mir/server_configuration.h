@@ -129,8 +129,6 @@ public:
     virtual auto the_decoration_style() -> std::shared_ptr<shell::decoration::DecorationStyle const> = 0;
     virtual void set_the_decoration_style(std::shared_ptr<shell::decoration::DecorationStyle const> style) = 0;
 
-    virtual auto the_shell_decoration_strategy() -> std::shared_ptr<shell::decoration::DecorationStrategy> = 0;
-    virtual void set_the_shell_decoration_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy) = 0;
 protected:
     ServerConfiguration() = default;
     virtual ~ServerConfiguration() = default;

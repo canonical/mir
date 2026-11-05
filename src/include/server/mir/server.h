@@ -512,10 +512,6 @@ public:
     auto the_decoration_style() const -> std::shared_ptr<shell::decoration::DecorationStyle const>;
     void set_the_decoration_style(std::shared_ptr<shell::decoration::DecorationStyle const> style);
 
-    /// The strategy used to draw and lay out server side decorations
-    auto the_shell_decoration_strategy() const -> std::shared_ptr<shell::decoration::DecorationStrategy>;
-    void set_the_shell_decoration_strategy(std::shared_ptr<shell::decoration::DecorationStrategy> strategy);
-
     auto the_buffer_allocator() const -> std::shared_ptr<graphics::GraphicBufferAllocator>;
 
     auto the_default_cursor_image() const -> std::shared_ptr<graphics::CursorImage>;
