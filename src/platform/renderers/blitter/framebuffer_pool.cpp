@@ -59,7 +59,7 @@ public:
     /// \note Construction and destruction leave the caller's current EGL state unchanged
     Entry(
         std::shared_ptr<SoftwareEGLContext> context,
-        std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
+        std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
         std::unique_ptr<mg::BlitterRenderingProvider::Surface> surface);
     ~Entry();
 
@@ -75,7 +75,7 @@ private:
     void release_gl_resources();
 
     std::shared_ptr<SoftwareEGLContext> const context;
-    std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const fb;
+    std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const fb;
     mrc::TextureHandle texture;
     mrc::FramebufferHandle fbo;
 
@@ -88,7 +88,7 @@ public:
 
 mrb::FramebufferPool::Entry::Entry(
     std::shared_ptr<SoftwareEGLContext> context,
-    std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
+    std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb,
     std::unique_ptr<mg::BlitterRenderingProvider::Surface> surface) :
     context{std::move(context)},
     fb{std::move(fb)},
@@ -249,13 +249,13 @@ mrb::FramebufferPool::~FramebufferPool() = default;
 
 auto mrb::FramebufferPool::make_entry() -> std::unique_ptr<Entry>
 {
-    auto fb = allocator.alloc_fb(format);
+    auto fb = std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB>(allocator.alloc_fb(format));
     if (!fb)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to allocate display framebuffer for the blitter renderer"}));
     }
 
-    auto surface = blitter->surface_for_fb(*fb);
+    auto surface = blitter->surface_for_fb(fb);
     if (!surface)
     {
         BOOST_THROW_EXCEPTION((std::runtime_error{"Blitter cannot render into the display's framebuffers"}));

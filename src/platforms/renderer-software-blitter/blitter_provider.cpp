@@ -81,6 +81,18 @@ private:
 using TexturebufferHandle = GLHandle<&glGenTextures, &glDeleteTextures>;
 using FramebufferHandle = GLHandle<&glGenFramebuffers, &glDeleteFramebuffers>;
 
+template<typename To, typename From>
+auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
+{
+    From* unowned_src = ptr.release();
+    if (auto to_src = dynamic_cast<To*>(unowned_src))
+    {
+        return std::unique_ptr<To>{to_src};
+    }
+    delete unowned_src;
+    BOOST_THROW_EXCEPTION((std::bad_cast()));
+}
+
 auto create_current_context(EGLDisplay dpy, EGLContext share_ctx) -> EGLContext
 {
     static EGLint const context_attr[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
@@ -194,10 +206,11 @@ private:
 };
 }
 
-class mg::BlitterRenderingProvider::Surface
+class MappableFBSurface : public mg::BlitterRenderingProvider::Surface
 {
 public:
-    explicit Surface(std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> fb) : fb_{std::move(fb)} {};
+    explicit MappableFBSurface(std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb) :
+        fb_{std::move(fb)} {};
 
     auto create_output_surface(
         EGLDisplay dpy,
@@ -205,29 +218,29 @@ public:
         std::shared_ptr<mg::DMABufEGLProvider> const& dmabuf_provider) -> std::unique_ptr<MappableFBOutputSurface>
     {
         // TODO: Casting `const` away, not good.
-        std::shared_ptr<DMABufBuffer> dmabuf{
-            fb_, const_cast<DMABufBuffer*>(fb_->as_dmabuf())}; // TICS -cppcoreguidelines-pro-type-const-cast
+        std::shared_ptr<mg::DMABufBuffer> dmabuf{
+            fb_, const_cast<mg::DMABufBuffer*>(fb_->as_dmabuf())}; // TICS -cppcoreguidelines-pro-type-const-cast
         auto surface = std::make_unique<MappableFBOutputSurface>(dmabuf, dmabuf_provider, dpy, ctx);
         return surface;
     }
 
 private:
-    std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> fb_;
+    std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> fb_;
 };
 
-class mg::BlitterRenderingProvider::Task
+class BlitterTask : public mg::BlitterRenderingProvider::Task
 {
 public:
-    explicit Task(std::unique_ptr<Surface> surface) : surface{std::move(surface)} {}
-    ~Task() = default;
+    explicit BlitterTask(std::unique_ptr<MappableFBSurface> surface) : surface{std::move(surface)} {}
+    ~BlitterTask() = default;
 
-    auto take_surface() -> std::unique_ptr<Surface> { return std::move(surface); }
+    auto take_surface() -> std::unique_ptr<MappableFBSurface> { return std::move(surface); }
     auto take_renderables() -> mg::RenderableList { return std::move(renderables); }
 
     void push(std::shared_ptr<mg::Renderable> renderable) { renderables.push_back(std::move(renderable)); }
 
 private:
-    std::unique_ptr<Surface> surface;
+    std::unique_ptr<MappableFBSurface> surface;
     mg::RenderableList renderables;
 };
 
@@ -352,18 +365,20 @@ mgsb::SoftwareBlitterRenderingProvider::SoftwareBlitterRenderingProvider(
 
 auto mgsb::SoftwareBlitterRenderingProvider::create_task(std::unique_ptr<Surface> surface) -> std::unique_ptr<Task>
 {
-    return std::make_unique<Task>(std::move(surface));
+    auto mappable_surface = unique_ptr_cast<MappableFBSurface>(std::move(surface));
+    return std::make_unique<BlitterTask>(std::move(mappable_surface));
 }
 
 auto mgsb::SoftwareBlitterRenderingProvider::wait_complete(std::unique_ptr<Task> task) -> std::unique_ptr<Surface>
 {
-    auto surface = task->take_surface();
+    auto blitter_task = unique_ptr_cast<BlitterTask>(std::move(task));
+    auto surface = blitter_task->take_surface();
     auto output_surface = surface->create_output_surface(dpy, ctx, dmabuf_provider);
     auto const size = output_surface->size();
     mir::renderer::gl::Renderer renderer{gl_rendering_provider, std::move(output_surface)};
     renderer.set_viewport({{0, 0}, size});
     renderer.set_output_transform(glm::mat2{1.0f});
-    renderer.render(task->take_renderables());
+    renderer.render(blitter_task->take_renderables());
     return surface;
 }
 
@@ -375,12 +390,13 @@ auto mgsb::SoftwareBlitterRenderingProvider::blit(
     MirOrientation rotation,
     MirMirrorMode mirror_mode) -> bool
 {
-    if (!gl_rendering_provider->as_texture(source))
+    auto blitter_task = dynamic_cast<BlitterTask*>(&task);
+    if (!blitter_task || !gl_rendering_provider->as_texture(source))
     {
         return false;
     }
 
-    task.push(std::make_shared<BlitRenderable>(source, source_rect, target_rect, rotation, mirror_mode));
+    blitter_task->push(std::make_shared<BlitRenderable>(source, source_rect, target_rect, rotation, mirror_mode));
     return true;
 }
 
@@ -392,14 +408,19 @@ auto mgsb::SoftwareBlitterRenderingProvider::fill(
     uint8_t b,
     uint8_t a) -> bool
 {
-    task.push(std::make_shared<FillRenderable>(*allocator, target_rect, r, g, b, a));
+    auto blitter_task = dynamic_cast<BlitterTask*>(&task);
+    if (!blitter_task)
+    {
+        return false;
+    }
+    blitter_task->push(std::make_shared<FillRenderable>(*allocator, target_rect, r, g, b, a));
     return true;
 }
 
 auto mgsb::SoftwareBlitterRenderingProvider::surface_for_fb(
     std::shared_ptr<CPUAddressableDisplayAllocator::MappableFB> const& fb) -> std::unique_ptr<Surface>
 {
-    return std::make_unique<Surface>(fb);
+    return std::make_unique<MappableFBSurface>(fb);
 }
 
 auto mgsb::SoftwareBlitterRenderingProvider::suitability_for_display(DisplaySink& sink) -> probe::Result
