@@ -15,7 +15,7 @@ Each page covers a minor series and its point releases. Where no page exists, th
 ## Ubuntu 26.04
 
 - {doc}`Mir 2.32 <2.32>` (in development)
-- [Mir 2.31](../../2.31/release-notes/2.31/) (Release Candidate)
+- {doc}`Mir 2.31 <2.31>`
 - {doc}`Mir 2.30 <2.30>`
 - {doc}`Mir 2.29 <2.29>`
 
