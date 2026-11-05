@@ -225,8 +225,8 @@ void derive_unset_colors(msd::DecorationStyle& style, std::set<std::pair<Element
 
 struct ColorKey
 {
-    char const* element_name;
-    char const* state_name;     ///< nullptr if the element is drawn the same in all states
+    std::string_view const element_name;
+    std::string_view const state_name;     ///< nullptr if the element is drawn the same in all states
     Element element;
     State state;
 };
@@ -326,12 +326,8 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
 
     for (auto const& [element_name, state_name, element, state] : color_keys)
     {
-        auto const key = state_name
-            ? live_config::Key{"ssd", "color", element_name, state_name}
-            : live_config::Key{"ssd", "color", element_name};
-
         config_store.add_string_attribute(
-            key,
+            live_config::Key{"ssd", "color", element_name, state_name},
             "Color as '#rrggbb' or '#rrggbbaa'",
             [self=self, element=element, state=state](live_config::Key const& key, std::optional<std::string_view> val)
             {
@@ -346,18 +342,17 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
                     return;
                 }
 
-                auto const color = parse_color(*val);
-
-                if (!color)
+                if (auto const color = parse_color(*val))
+                {
+                    *color_of(self->style, element, state) = *color;
+                    self->explicitly_set.insert({element, state});
+                }
+                else
                 {
                     mir::log_warning(
-                        "Config key '%s' is not a color of the form '#rrggbb' or '#rrggbbaa'",
-                        key.to_string().c_str());
-                    return;
+                        "Config key '%s', '%s' is not a color of the form '#rrggbb' or '#rrggbbaa'",
+                        key.to_string().c_str(), val->data());
                 }
-
-                *color_of(self->style, element, state) = *color;
-                self->explicitly_set.insert({element, state});
             });
     }
 
