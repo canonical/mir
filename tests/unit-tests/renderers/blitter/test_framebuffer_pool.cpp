@@ -178,10 +178,10 @@ auto allocate_fakes_from(mg::CPUAddressableDisplayAllocator const& allocator, bo
 /// A surface_for_fb action that creates stub surfaces targeting fake framebuffers
 auto make_stub_surfaces()
 {
-    return [](mg::CPUAddressableDisplayAllocator::MappableFB const& fb)
+    return [](std::shared_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const& fb)
         -> std::unique_ptr<mg::BlitterRenderingProvider::Surface>
     {
-        return std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(fb));
+        return std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(*fb));
     };
 }
 
@@ -392,7 +392,7 @@ TEST_F(FramebufferPoolTest, pooled_framebuffer_holds_blitter_surface_for_its_fra
         .WillOnce(
             [&surface](auto const& fb) -> std::unique_ptr<mg::BlitterRenderingProvider::Surface>
             {
-                auto stub = std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(fb));
+                auto stub = std::make_unique<StubSurface>(dynamic_cast<FakeMappableFB const&>(*fb));
                 surface = stub.get();
                 return stub;
             });
