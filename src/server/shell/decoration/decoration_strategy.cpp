@@ -796,10 +796,10 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
         drop_border_pixels();
     }
 
-    size_t length{0};
-    length = std::max(length, area(left_border_rect.size));
-    length = std::max(length, area(right_border_rect.size));
-    length = std::max(length, area(bottom_border_rect.size));
+    size_t const length{std::max({
+        area(left_border_rect.size),
+        area(right_border_rect.size),
+        area(bottom_border_rect.size)})};
 
     if (auto const scaled_length{static_cast<size_t>(length * scale * scale)};
         length != solid_color_pixels_length ||
