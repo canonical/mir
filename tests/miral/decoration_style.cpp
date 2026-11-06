@@ -289,3 +289,58 @@ TEST_F(TestDecorationStyleConfig, invalid_config_values_are_ignored)
     EXPECT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{42}));
     EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
 }
+
+TEST_F(TestDecorationStyleConfig, api_values_survive_a_config_load)
+{
+    style.set_metric(miral::DecorationStyle::Metric::titlebar_height, 42);
+    style.set_color(
+        miral::DecorationStyle::Element::background, miral::DecorationStyle::State::focused, 0x11, 0x22, 0x33);
+
+    load("");
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{42}));
+    EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+}
+
+TEST_F(TestDecorationStyleConfig, config_values_override_api_values)
+{
+    style.set_metric(miral::DecorationStyle::Metric::titlebar_height, 42);
+    style.set_color(
+        miral::DecorationStyle::Element::background, miral::DecorationStyle::State::focused, 0x11, 0x22, 0x33);
+
+    load("ssd_titlebar_height=7\n"
+         "ssd_color_background_focused=#445566\n");
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{7}));
+    EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x44, 0x55, 0x66)));
+}
+
+TEST_F(TestDecorationStyleConfig, dropping_a_config_value_restores_the_api_value)
+{
+    style.set_metric(miral::DecorationStyle::Metric::titlebar_height, 42);
+    style.set_color(
+        miral::DecorationStyle::Element::background, miral::DecorationStyle::State::focused, 0x11, 0x22, 0x33);
+
+    load("ssd_titlebar_height=7\n"
+         "ssd_color_background_focused=#445566\n");
+    start_server_with(style);
+    ASSERT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{7}));
+
+    load("");
+
+    EXPECT_THAT(applied_style()->titlebar_height, Eq(mir::geometry::Height{42}));
+    EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+}
+
+TEST_F(TestDecorationStyleConfig, api_colors_set_after_start_override_derived_colors)
+{
+    load("ssd_color_background_focused=#000000\n");
+    start_server_with(style);
+
+    style.set_color(
+        miral::DecorationStyle::Element::button, miral::DecorationStyle::State::normal, 0x11, 0x22, 0x33);
+
+    EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
+}

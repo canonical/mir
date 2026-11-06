@@ -23,6 +23,7 @@
 
 #include <charconv>
 #include <cmath>
+#include <map>
 #include <mutex>
 #include <ranges>
 #include <set>
@@ -93,23 +94,6 @@ auto color_of(msd::DecorationStyle& style, Element element, State state) -> msd:
         }
 
     default:                    return nullptr;
-    }
-}
-
-auto metric_of(msd::DecorationStyle const& style, Metric metric) -> std::optional<int>
-{
-    switch (metric)
-    {
-    case Metric::titlebar_height:           return style.titlebar_height.as_value();
-    case Metric::side_border_width:         return style.side_border_width.as_value();
-    case Metric::bottom_border_height:      return style.bottom_border_height.as_value();
-    case Metric::button_width:              return style.button_width.as_value();
-    case Metric::padding_between_buttons:   return style.padding_between_buttons.as_value();
-    case Metric::title_font_height:         return style.title_font_height.as_value();
-    case Metric::resize_corner_input_width: return style.resize_corner_input_size.width.as_value();
-    case Metric::resize_corner_input_height:return style.resize_corner_input_size.height.as_value();
-    case Metric::corner_radius:             return style.corner_radius.as_value();
-    default:                                return std::nullopt;
     }
 }
 
@@ -273,13 +257,36 @@ MetricKey constexpr metric_keys[] = {
 struct miral::DecorationStyle::Self
 {
     std::mutex mutex;
-    msd::DecorationStyle style;
 
-    /// The colors set explicitly; the rest are derived from the titlebar colors
-    std::set<std::pair<Element, State>> explicitly_set;
+    /// The style as set through the API; the config is applied on top of this
+    msd::DecorationStyle base;
+
+    /// The colors set explicitly through the API
+    std::set<std::pair<Element, State>> base_explicitly_set;
+
+    std::map<Metric, int> config_metrics;
+    std::map<std::pair<Element, State>, msd::Pixel> config_colors;
 
     /// Only set while the server is running
     mir::Server* server = nullptr;
+
+    auto composed_locked() const -> msd::DecorationStyle
+    {
+        auto result = base;
+        auto explicitly_set = base_explicitly_set;
+
+        for (auto const& [metric, pixels] : config_metrics)
+            set_metric_of(result, metric, pixels);
+
+        for (auto const& [element_state, color] : config_colors)
+        {
+            *color_of(result, element_state.first, element_state.second) = color;
+            explicitly_set.insert(element_state);
+        }
+
+        derive_unset_colors(result, explicitly_set);
+        return result;
+    }
 
     void apply()
     {
@@ -290,11 +297,7 @@ struct miral::DecorationStyle::Self
     void apply_locked()
     {
         if (server)
-        {
-            auto applied = std::make_shared<msd::DecorationStyle>(style);
-            derive_unset_colors(*applied, explicitly_set);
-            server->set_the_decoration_style(std::move(applied));
-        }
+            server->set_the_decoration_style(std::make_shared<msd::DecorationStyle>(composed_locked()));
     }
 };
 
@@ -321,8 +324,11 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
                     return;
                 }
 
-                // Reverting to the default is the point of an unset value
-                set_metric_of(self->style, metric, val.value_or(metric_of(msd::DecorationStyle{}, metric).value()));
+                // Reverting to the value set through the API is the point of an unset value
+                if (val)
+                    self->config_metrics.insert_or_assign(metric, *val);
+                else
+                    self->config_metrics.erase(metric);
             });
     }
 
@@ -337,17 +343,14 @@ miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
 
                 if (!val)
                 {
-                    // Reverting to the default (or derived) color is the point of an unset value
-                    msd::DecorationStyle defaults;
-                    *color_of(self->style, element, state) = *color_of(defaults, element, state);
-                    self->explicitly_set.erase({element, state});
+                    // Reverting to the API (or derived) color is the point of an unset value
+                    self->config_colors.erase({element, state});
                     return;
                 }
 
                 if (auto const color = parse_color(*val))
                 {
-                    *color_of(self->style, element, state) = *color;
-                    self->explicitly_set.insert({element, state});
+                    self->config_colors.insert_or_assign({element, state}, *color);
                 }
                 else
                 {
@@ -372,10 +375,10 @@ void miral::DecorationStyle::set_color(
 {
     std::lock_guard lock{self->mutex};
 
-    if (auto const color = color_of(self->style, element, state))
+    if (auto const color = color_of(self->base, element, state))
     {
         *color = msd::pack_pixel(red, green, blue, alpha);
-        self->explicitly_set.insert({element, state});
+        self->base_explicitly_set.insert({element, state});
         self->apply_locked();
     }
     else
@@ -396,7 +399,7 @@ void miral::DecorationStyle::set_metric(Metric metric, int pixels)
         return;
     }
 
-    if (set_metric_of(self->style, metric, pixels))
+    if (set_metric_of(self->base, metric, pixels))
         self->apply_locked();
     else
         mir::log_warning(log_tags, "Ignoring unsupported decoration metric {}", static_cast<int>(metric));
