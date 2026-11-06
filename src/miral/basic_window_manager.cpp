@@ -1893,9 +1893,15 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
     {
         if (parameters.aux_rect().has_value() && parameters.placement_hints().has_value())
         {
-            auto const parent_size = parameters.parent_size().value_or(parent_scene_surface->content_size());
+            // Decorations cover the whole parent window (including its margins) regardless of
+            // the parent's current state (e.g. hidden windows have no margins, but they may
+            // be applied before or after the decoration is placed)
+            bool const is_decoration = parameters.type().value_or(mir_window_type_normal) == mir_window_type_decoration;
+            auto const parent_size = parameters.parent_size().value_or(
+                is_decoration ? parent_scene_surface->window_size() : parent_scene_surface->content_size());
             Rectangle const parent_content_area{
-                parent_scene_surface->top_left() + parent_scene_surface->content_offset(),
+                parent_scene_surface->top_left() +
+                    (is_decoration ? Displacement{} : parent_scene_surface->content_offset()),
                 parent_size};
 
             auto const position = place_relative(
