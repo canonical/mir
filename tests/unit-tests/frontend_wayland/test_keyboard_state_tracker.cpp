@@ -37,6 +37,7 @@ namespace
 
 constexpr uint32_t key_1_scancode = 2;
 constexpr uint32_t key_0_scancode = 11;
+constexpr uint32_t q_scancode = 16;
 constexpr uint32_t a_scancode = 30;
 constexpr uint32_t b_scancode = 48;
 
@@ -62,7 +63,7 @@ public:
             keysym,
             scancode,
             mod);
-        event->to_input()->to_keyboard()->set_keymap(default_keymap);
+        event->to_input()->to_keyboard()->set_keymap(keymap);
         return event;
     }
 
@@ -81,7 +82,7 @@ public:
             keysym,
             scancode,
             mod);
-        event->to_input()->to_keyboard()->set_keymap(default_keymap);
+        event->to_input()->to_keyboard()->set_keymap(keymap);
         return event;
     }
 
@@ -94,7 +95,7 @@ public:
     // Default US QWERTY keymap attached to every test event so that the
     // tracker's xkb_state is populated and shift-transition re-derivation
     // via xkb_state_key_get_one_sym() works correctly.
-    std::shared_ptr<mir::input::Keymap> const default_keymap{
+    std::shared_ptr<mir::input::Keymap> keymap{
         std::make_shared<mir::input::ParameterKeymap>()};
 
     // Track modifier state per device to emulate Mir's tracking of modifiers
@@ -342,6 +343,22 @@ TEST_F(KeyboardStateTrackerTest, releasing_shift_after_digit_demotes_symbol_back
 
     EXPECT_TRUE(tracker.keysym_is_pressed(device_id, XKB_KEY_0));
     EXPECT_FALSE(tracker.keysym_is_pressed(device_id, XKB_KEY_parenright));
+}
+
+TEST_F(KeyboardStateTrackerTest, keysym_fallback_does_not_match_symbols_from_an_inactive_layout)
+{
+    // On a US layout key Q produces Q while the same physical key produces A
+    // on a French layout. Only the first (currently active) layout may be used
+    // to find Shift-equivalent symbols for the held key.
+    keymap = std::make_shared<mir::input::ParameterKeymap>(
+        mir::input::ParameterKeymap::default_model, "us,fr", "", "");
+
+    tracker.process(*key_down(XKB_KEY_Shift_L, shift_l_scancode));
+    auto const q_down = key_down(XKB_KEY_Q, q_scancode);
+    tracker.process(*q_down);
+
+    EXPECT_FALSE(tracker.is_same_key(*q_down->to_input()->to_keyboard(), XKB_KEY_A));
+    EXPECT_FALSE(tracker.key_producing_keysym_is_pressed(device_id, XKB_KEY_A));
 }
 
 TEST_F(KeyboardStateTrackerTest, key_up_clears_key_when_modifier_changed_while_held)

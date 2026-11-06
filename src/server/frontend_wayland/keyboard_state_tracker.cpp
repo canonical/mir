@@ -60,20 +60,20 @@ auto mf::KeyboardStateTracker::XkbKeyState::scancode_produces_keysym(
 
     auto const xkb_keycode = to_xkb_scan_code(scancode);
 
-    auto const num_layouts = xkb_keymap_num_layouts_for_key(compiled_keymap.get(), xkb_keycode);
-    for (auto layout = 0u; layout < num_layouts; ++layout)
+    auto const layout = xkb_state_key_get_layout(state.get(), xkb_keycode);
+    if (layout == XKB_LAYOUT_INVALID)
+        return false;
+
+    auto const num_levels = xkb_keymap_num_levels_for_key(compiled_keymap.get(), xkb_keycode, layout);
+    for (auto level = 0u; level < num_levels; ++level)
     {
-        auto const num_levels = xkb_keymap_num_levels_for_key(compiled_keymap.get(), xkb_keycode, layout);
-        for (auto level = 0u; level < num_levels; ++level)
+        xkb_keysym_t const* syms{};
+        auto const num_syms = xkb_keymap_key_get_syms_by_level(
+            compiled_keymap.get(), xkb_keycode, layout, level, &syms);
+        for (auto i = 0; i < num_syms; ++i)
         {
-            xkb_keysym_t const* syms{};
-            auto const num_syms = xkb_keymap_key_get_syms_by_level(
-                compiled_keymap.get(), xkb_keycode, layout, level, &syms);
-            for (auto i = 0; i < num_syms; ++i)
-            {
-                if (syms[i] == keysym)
-                    return true;
-            }
+            if (syms[i] == keysym)
+                return true;
         }
     }
     return false;
@@ -175,6 +175,20 @@ auto mf::KeyboardStateTracker::is_same_key(MirKeyboardEvent const& event, xkb_ke
     if (!device_states.contains(device))
         return false;
 
+    return device_states.at(device).xkb_key_state.scancode_produces_keysym(event.scan_code(), keysym);
+}
+
+auto mf::KeyboardStateTracker::key_producing_keysym_is_pressed(
+    MirInputDeviceId device, xkb_keysym_t keysym) const -> bool
+{
+    if (!device_states.contains(device))
+        return false;
+
     auto const& [scancode_to_keysym, _, xkb_key_state] = device_states.at(device);
-    return xkb_key_state.scancode_produces_keysym(event.scan_code(), keysym);
+    return std::ranges::any_of(
+        scancode_to_keysym,
+        [&](auto const& pair)
+        {
+            return pair.second == keysym || xkb_key_state.scancode_produces_keysym(pair.first, keysym);
+        });
 }
