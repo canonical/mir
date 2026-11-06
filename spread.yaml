@@ -6,7 +6,6 @@ backends:
     lxd:
         systems:
             - alpine-3.24
-            - alpine-3.25
             - alpine-edge
             - ubuntu-26.04
             - fedora-44

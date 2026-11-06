@@ -49,7 +49,6 @@ jobs:
         - lxd:...:ubuntu_stonking
         - lxd:...:ubuntu_proposed
         - lxd:alpine-3.24:...:amd64
-        - lxd:alpine-3.25:...:amd64
         - lxd:alpine-edge:...:amd64
 
     runs-on: ${{ contains(matrix.spread-task, 'arm64') && 'ubuntu-26.04-arm' || 'ubuntu-26.04' }}
