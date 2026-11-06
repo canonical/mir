@@ -64,7 +64,11 @@ struct DirectLayer
  */
 struct CompositingLayer
 {
-    std::span<std::shared_ptr<Renderable>> const renderables;
+    /**
+     * The renderables to composite, in back-to-front order. Renderables presented
+     * by a DirectLayer of the same LogicalStacking are not included.
+     */
+    RenderableList const renderables;
 };
 
 using Layer = std::variant<DirectLayer, CompositingLayer>;

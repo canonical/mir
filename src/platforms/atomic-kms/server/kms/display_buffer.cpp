@@ -17,6 +17,7 @@
 #include "display_sink.h"
 #include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "kms_output.h"
+#include "plane_capabilities.h"
 #include <mir/graphics/cpu_addressable_fb.h>
 #include "gbm_display_allocator.h"
 #include <mir/errno_utils.h>
@@ -24,22 +25,30 @@
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/platform.h>
+
 #include <mir/log.h>
 #include <mir/graphics/dmabuf_buffer.h>
 
 #include <algorithm>
+#include <array>
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <drm_fourcc.h>
 
 #include <drm_mode.h>
 #include <gbm.h>
 #include <memory>
+#include <optional>
+#include <ranges>
+#include <span>
 #include <stdexcept>
+#include <utility>
 #include <chrono>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -140,14 +149,201 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     return false;
 }
 
-auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
-    -> std::optional<LogicalStacking>
+namespace
 {
-    if (plane_promotion != PlanePromotion::available)
+auto const identity_transform = glm::mat4{1};
+constexpr mga::PropertyValue opaque_alpha{0xffff};
+
+auto is_directly_scannable(mg::Renderable const& renderable) -> bool
+{
+    return renderable.alpha() == 1.0f &&
+        renderable.transformation() == identity_transform &&
+        renderable.orientation() == mir_orientation_normal &&
+        renderable.mirror_mode() == mir_mirror_mode_none &&
+        !renderable.clip_area();
+}
+
+auto has_legal_overlay_plane(mga::CrtcPlaneCapabilities const& capabilities, uint64_t modifier) -> bool
+{
+    auto const format_modifier = mga::FormatModifier{DRM_FORMAT_NV12, modifier};
+    return std::ranges::any_of(capabilities.overlays, [&](mga::PlaneCapability const& plane)
+    {
+        return plane.can_be_above_primary &&
+            plane.bt709_limited.has_value() &&
+            std::ranges::find(plane.formats, format_modifier) != plane.formats.end() &&
+            (!plane.alpha_max || plane.alpha_max == opaque_alpha);
+    });
+}
+
+auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabilities const& capabilities) -> bool
+{
+    if (!is_directly_scannable(renderable))
+        return false;
+
+    auto const buffer = renderable.buffer();
+    if (!buffer)
+        return false;
+
+    auto const dmabuf = dynamic_cast<mg::DMABufBuffer*>(buffer->native_buffer_base());
+    if (!dmabuf ||
+        dmabuf->format() != DRM_FORMAT_NV12 ||
+        dmabuf->layout() != mg::gl::Texture::Layout::GL)
+    {
+        return false;
+    }
+
+    auto const modifier = dmabuf->modifier();
+    return modifier && *modifier != DRM_FORMAT_MOD_INVALID &&
+        has_legal_overlay_plane(capabilities, *modifier) &&
+        renderable.src_bounds() == geom::RectangleD{{0, 0}, dmabuf->size()} &&
+        renderable.screen_position().size == dmabuf->size();
+}
+
+auto pixel_area(geom::Rectangle const& rect) -> int
+{
+    return rect.size.width.as_int() * rect.size.height.as_int();
+}
+
+auto is_2d_affine(glm::mat4 const& transform) -> bool
+{
+    // screen_to_gl_coords sets w = 1 - z, so a transform only preserves the footprint
+    // when it leaves the z = 0 plane fixed and keeps w at 1. glm is column-major:
+    // transform[column][row].
+    return transform[0][3] == 0 && transform[1][3] == 0 && transform[3][3] == 1 &&
+        transform[0][2] == 0 && transform[1][2] == 0 && transform[3][2] == 0;
+}
+
+auto oriented_footprint(geom::Rectangle const& rect, MirOrientation orientation) -> geom::Rectangle
+{
+    // Left and right orientations rotate the rect about its centre and re-anchor it at the
+    // same top_left, which swaps its dimensions.
+    if (orientation == mir_orientation_left || orientation == mir_orientation_right)
+    {
+        return {
+            rect.top_left,
+            geom::Size{geom::Width{rect.size.height.as_int()}, geom::Height{rect.size.width.as_int()}}};
+    }
+    return rect;
+}
+
+auto footprint_bounds(mg::Renderable const& renderable) -> std::optional<geom::Rectangle>
+{
+    auto const transform = renderable.transformation();
+    if (!is_2d_affine(transform))
         return std::nullopt;
 
-    // TODO: Build the logical stacking plan from the private plane state
-    return std::nullopt;
+    auto const oriented = oriented_footprint(renderable.screen_position(), renderable.orientation());
+    auto const centre_x = oriented.top_left.x.as_int() + oriented.size.width.as_int() / 2.0;
+    auto const centre_y = oriented.top_left.y.as_int() + oriented.size.height.as_int() / 2.0;
+    auto const half_width = oriented.size.width.as_int() / 2.0;
+    auto const half_height = oriented.size.height.as_int() / 2.0;
+
+    // Mirror the shader, which composes the transform about the centre:
+    // (transform * (position - centre)) + centre.
+    auto const t = glm::dmat4{transform};
+    auto xs = std::array<double, 4>{};
+    auto ys = std::array<double, 4>{};
+    auto corner = std::size_t{0};
+    for (auto const dx : {-half_width, half_width})
+    {
+        for (auto const dy : {-half_height, half_height})
+        {
+            auto const p = t * glm::dvec4{dx, dy, 0.0, 1.0};
+            xs[corner] = centre_x + p.x;
+            ys[corner] = centre_y + p.y;
+            ++corner;
+        }
+    }
+
+    // Round outward so float noise can never shrink the bound.
+    auto const left = std::floor(std::ranges::min(xs));
+    auto const top = std::floor(std::ranges::min(ys));
+    auto const right = std::ceil(std::ranges::max(xs));
+    auto const bottom = std::ceil(std::ranges::max(ys));
+
+    return geom::Rectangle{
+        {geom::X{static_cast<int>(left)}, geom::Y{static_cast<int>(top)}},
+        {geom::Width{static_cast<int>(right - left)}, geom::Height{static_cast<int>(bottom - top)}}};
+}
+
+auto content_above_blocks(
+    std::vector<std::shared_ptr<mg::Renderable>> const& renderables,
+    std::size_t index,
+    geom::Rectangle const& candidate_area) -> bool
+{
+    for (auto const& renderable : std::span{renderables}.subspan(index + 1))
+    {
+        auto const bounds = footprint_bounds(*renderable);
+        if (!bounds || bounds->overlaps(candidate_area))
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+auto select_direct_candidate(
+    std::vector<std::shared_ptr<mg::Renderable>> const& renderables,
+    geom::Rectangle const& sink_area,
+    mga::CrtcPlaneCapabilities const& capabilities) -> std::optional<std::size_t>
+{
+    std::optional<std::size_t> best;
+    int best_area{0};
+
+    for (auto index = std::size_t{0}; index < renderables.size(); ++index)
+    {
+        auto const& renderable = renderables[index];
+        if (!is_overlay_eligible(*renderable, capabilities))
+            continue;
+
+        auto const destination = renderable->screen_position();
+        if (destination.size.width.as_int() <= 0 ||
+            destination.size.height.as_int() <= 0 ||
+            !sink_area.contains(destination) ||
+            content_above_blocks(renderables, index, destination))
+        {
+            continue;
+        }
+
+        auto const candidate_area = pixel_area(destination);
+        // >= keeps the frontmost of equal-area candidates, as index increases towards the front
+        if (!best || candidate_area >= best_area)
+        {
+            best = index;
+            best_area = candidate_area;
+        }
+    }
+
+    return best;
+}
+}
+
+auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+    -> std::optional<LogicalStacking>
+{
+    auto const plane_capabilities = output->plane_capabilities();
+    // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
+    auto const unscaled = area.size == output->size();
+    if (plane_promotion != PlanePromotion::available ||
+        !plane_capabilities ||
+        !unscaled ||
+        transform != glm::mat2{1})
+    {
+        return std::nullopt;
+    }
+
+    auto const candidate = select_direct_candidate(renderables, area, *plane_capabilities);
+    if (!candidate)
+        return std::nullopt;
+
+    return LogicalStacking{{
+        CompositingLayer{
+            renderables |
+                std::views::filter([&](auto const& renderable) { return renderable != renderables[*candidate]; }) |
+                std::ranges::to<std::vector>(),
+        },
+        DirectLayer{renderables[*candidate]},
+    }};
 }
 
 void mga::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
@@ -236,6 +432,7 @@ std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const
 
 void mga::DisplaySink::schedule_set_crtc()
 {
+    output->reset();
     needs_set_crtc = true;
 }
 
