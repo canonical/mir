@@ -31,6 +31,7 @@
 
 #include <drm_fourcc.h>
 #include <fcntl.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
@@ -564,13 +565,21 @@ INSTANTIATE_TEST_SUITE_P(
         SceneCase{"blocked_large_falls_back", {{{{12, 34}, {30, 30}}, true}, {{{12, 34}, {10, 10}}},
                                               {{{44, 34}, {20, 20}}, true}}, 2},
         SceneCase{"overlapping_plain_ui", {{display_area, true}, {{{12, 34}, {10, 10}}}}, std::nullopt},
-        SceneCase{"unknown_transform_above", {{{{12, 34}, {30, 30}}, true},
-                                              {{{50, 34}, {20, 20}}, false, glm::mat4{2.0f}}}, std::nullopt},
-        SceneCase{"half_turn_coverage_is_unknown", {{{{12, 34}, {30, 30}}, true},
-            {{{50, 34}, {10, 10}}, false, glm::mat4{mg::transformation(mir_orientation_inverted)}}}, std::nullopt},
-        SceneCase{"quarter_turn_coverage_is_unknown", {{{{12, 34}, {30, 30}}, true},
-            {{{50, 34}, {10, 10}}, false, glm::mat4{mg::transformation(mir_orientation_left)}}}, std::nullopt},
-        SceneCase{"above_orientation_is_unknown", {{{{12, 34}, {30, 30}}, true},
-            {.area = {{50, 34}, {10, 10}}, .orientation = mir_orientation_left}}, std::nullopt},
+        SceneCase{"w_scaling_transform_above", {{{{12, 34}, {30, 30}}, true},
+                                                {{{50, 34}, {20, 20}}, false, glm::mat4{2.0f}}}, std::nullopt},
+        SceneCase{"half_turn_above_disjoint", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false, glm::mat4{mg::transformation(mir_orientation_inverted)}}}, 0},
+        SceneCase{"quarter_turn_above_disjoint", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false, glm::mat4{mg::transformation(mir_orientation_left)}}}, 0},
+        SceneCase{"oriented_above_disjoint", {{{{12, 34}, {30, 30}}, true},
+            {.area = {{50, 34}, {10, 10}}, .orientation = mir_orientation_left}}, 0},
+        SceneCase{"oriented_footprint_avoids_false_block", {{{{12, 34}, {30, 30}}, true},
+            {.area = {{30, 10}, {20, 40}}, .orientation = mir_orientation_left}}, 0},
+        SceneCase{"translated_above_overlaps", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false,
+             glm::translate(glm::mat4{1}, glm::vec3{-45.0f, 0.0f, 0.0f})}}, std::nullopt},
+        SceneCase{"tilted_above_blocks", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false,
+             glm::rotate(glm::mat4{1}, 0.5f, glm::vec3{1.0f, 0.0f, 0.0f})}}, std::nullopt},
         SceneCase{"disjoint_plain_ui", {{{{12, 34}, {30, 30}}, true}, {{{50, 34}, {20, 20}}}}, 0}),
     [](TestParamInfo<SceneCase> const& info) { return std::string{info.param.name}; });

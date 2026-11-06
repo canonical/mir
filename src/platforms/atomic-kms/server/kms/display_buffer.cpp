@@ -30,11 +30,13 @@
 #include <mir/graphics/dmabuf_buffer.h>
 
 #include <algorithm>
+#include <array>
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 #include <drm_fourcc.h>
@@ -42,6 +44,7 @@
 #include <drm_mode.h>
 #include <gbm.h>
 #include <memory>
+#include <optional>
 #include <ranges>
 #include <span>
 #include <stdexcept>
@@ -201,6 +204,68 @@ auto pixel_area(geom::Rectangle const& rect) -> int
     return rect.size.width.as_int() * rect.size.height.as_int();
 }
 
+auto is_2d_affine(glm::mat4 const& transform) -> bool
+{
+    // screen_to_gl_coords sets w = 1 - z, so a transform only preserves the footprint
+    // when it leaves the z = 0 plane fixed and keeps w at 1. glm is column-major:
+    // transform[column][row].
+    return transform[0][3] == 0 && transform[1][3] == 0 && transform[3][3] == 1 &&
+        transform[0][2] == 0 && transform[1][2] == 0 && transform[3][2] == 0;
+}
+
+auto oriented_footprint(geom::Rectangle const& rect, MirOrientation orientation) -> geom::Rectangle
+{
+    // Left and right orientations rotate the rect about its centre and re-anchor it at the
+    // same top_left, which swaps its dimensions.
+    if (orientation == mir_orientation_left || orientation == mir_orientation_right)
+    {
+        return {
+            rect.top_left,
+            geom::Size{geom::Width{rect.size.height.as_int()}, geom::Height{rect.size.width.as_int()}}};
+    }
+    return rect;
+}
+
+auto footprint_bounds(mg::Renderable const& renderable) -> std::optional<geom::Rectangle>
+{
+    auto const transform = renderable.transformation();
+    if (!is_2d_affine(transform))
+        return std::nullopt;
+
+    auto const oriented = oriented_footprint(renderable.screen_position(), renderable.orientation());
+    auto const centre_x = oriented.top_left.x.as_int() + oriented.size.width.as_int() / 2.0;
+    auto const centre_y = oriented.top_left.y.as_int() + oriented.size.height.as_int() / 2.0;
+    auto const half_width = oriented.size.width.as_int() / 2.0;
+    auto const half_height = oriented.size.height.as_int() / 2.0;
+
+    // Mirror the shader, which composes the transform about the centre:
+    // (transform * (position - centre)) + centre.
+    auto const t = glm::dmat4{transform};
+    auto xs = std::array<double, 4>{};
+    auto ys = std::array<double, 4>{};
+    auto corner = std::size_t{0};
+    for (auto const dx : {-half_width, half_width})
+    {
+        for (auto const dy : {-half_height, half_height})
+        {
+            auto const p = t * glm::dvec4{dx, dy, 0.0, 1.0};
+            xs[corner] = centre_x + p.x;
+            ys[corner] = centre_y + p.y;
+            ++corner;
+        }
+    }
+
+    // Round outward so float noise can never shrink the bound.
+    auto const left = std::floor(std::ranges::min(xs));
+    auto const top = std::floor(std::ranges::min(ys));
+    auto const right = std::ceil(std::ranges::max(xs));
+    auto const bottom = std::ceil(std::ranges::max(ys));
+
+    return geom::Rectangle{
+        {geom::X{static_cast<int>(left)}, geom::Y{static_cast<int>(top)}},
+        {geom::Width{static_cast<int>(right - left)}, geom::Height{static_cast<int>(bottom - top)}}};
+}
+
 auto content_above_blocks(
     std::vector<std::shared_ptr<mg::Renderable>> const& renderables,
     std::size_t index,
@@ -208,10 +273,8 @@ auto content_above_blocks(
 {
     for (auto const& renderable : std::span{renderables}.subspan(index + 1))
     {
-
-        if (renderable->orientation() != mir_orientation_normal ||
-            renderable->transformation() != identity_transform ||
-            renderable->screen_position().overlaps(candidate_area))
+        auto const bounds = footprint_bounds(*renderable);
+        if (!bounds || bounds->overlaps(candidate_area))
         {
             return true;
         }
