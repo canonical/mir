@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "fractional_scale_v1.h"
+#include "wp_fractional_scale_v1.h"
 
 #include <mir/graphics/display_configuration.h>
 #include <mir/wayland/protocol_error.h>
