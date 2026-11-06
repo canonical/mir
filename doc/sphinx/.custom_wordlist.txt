@@ -84,7 +84,7 @@ evdi
 Fedora
 fd
 filesystem
-flatpak
+Flatpak
 FloatingWindowManagerPolicy
 Frame
 frontend

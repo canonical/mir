@@ -15,6 +15,7 @@
  */
 
 #include "default_display_buffer_compositor_factory.h"
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 #include <mir/renderer/renderer.h>
 #include <mir/graphics/display_sink.h>
@@ -24,6 +25,8 @@
 #include <mir/graphics/gl_config.h>
 
 #include "default_display_buffer_compositor.h"
+
+#include <mir/log.h>
 
 #include <boost/throw_exception.hpp>
 
@@ -99,9 +102,20 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
             (best_blitter_provider.first >= mg::probe::supported && best_provider.first < mg::probe::supported))
         {
             auto provider = best_blitter_provider.second;
-            auto renderer = blitter_renderer_factory->create_renderer_for(*allocator, provider);
-            return std::make_unique<DefaultDisplayBufferCompositor>(
-                display_sink, *provider, std::move(renderer), output_filter, report);
+            try
+            {
+                auto renderer = blitter_renderer_factory->create_renderer_for(provider, *allocator);
+                return std::make_unique<DefaultDisplayBufferCompositor>(
+                    display_sink,
+                    provider->make_framebuffer_provider(display_sink),
+                    std::move(renderer),
+                    output_filter,
+                    report);
+            }
+            catch (std::exception const& err)
+            {
+                mir::log_warning("Failed to set up blitter compositing (%s); falling back to GL", err.what());
+            }
         }
     }
     if (best_provider.first == mg::probe::unsupported)
@@ -117,5 +131,9 @@ std::unique_ptr<mc::DisplayBufferCompositor> mc::DefaultDisplayBufferCompositorF
     auto renderer = renderer_factory->create_renderer_for(std::move(output_surface), chosen_allocator);
     renderer->set_viewport(display_sink.view_area());
     return std::make_unique<DefaultDisplayBufferCompositor>(
-        display_sink, *chosen_allocator, std::move(renderer), output_filter, report);
+        display_sink,
+        chosen_allocator->make_framebuffer_provider(display_sink),
+        std::move(renderer),
+        output_filter,
+        report);
 }

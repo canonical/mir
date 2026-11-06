@@ -21,6 +21,7 @@
 #include "default_display_buffer_compositor_factory.h"
 #include <mir/executor.h>
 #include "multi_threaded_compositor.h"
+#include <mir/renderers/blitter/renderer_factory.h>
 #include <mir/renderers/gl/renderer_factory.h>
 #include "basic_screen_shooter.h"
 #include "basic_screen_shooter_factory.h"
@@ -57,7 +58,8 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 BOOST_THROW_EXCEPTION((std::runtime_error{"Selected rendering platform does not support GL"}));
             }
 
-            if (auto pinned = find_pinned_rendering_platform())
+            auto const pinned = find_pinned_rendering_platform();
+            if (pinned)
             {
                 if (auto gl_provider = mg::RenderingPlatform::acquire_provider<mg::GLRenderingProvider>(pinned))
                 {
@@ -73,8 +75,17 @@ mir::DefaultServerConfiguration::the_display_buffer_compositor_factory()
                 }
             }
 
-            // TODO: Construct providers
-            std::vector<std::shared_ptr<graphics::BlitterRenderingProvider>> blitter_providers;
+            // The blitter compositor may be chosen over GL, so it must honour the pin too
+            auto const blitter_platforms =
+                pinned ? std::vector<std::shared_ptr<mg::RenderingPlatform>>{pinned} : the_rendering_platforms();
+            std::vector<std::shared_ptr<mg::BlitterRenderingProvider>> blitter_providers;
+            for (auto const& platform : blitter_platforms)
+            {
+                if (auto blitter = mg::RenderingPlatform::acquire_provider<mg::BlitterRenderingProvider>(platform))
+                {
+                    blitter_providers.push_back(blitter);
+                }
+            }
 
             return wrap_display_buffer_compositor_factory(
                 std::make_shared<mc::DefaultDisplayBufferCompositorFactory>(
@@ -129,10 +140,9 @@ std::shared_ptr<mir::renderer::RendererFactory> mir::DefaultServerConfiguration:
 std::shared_ptr<mir::renderer::BlitterRendererFactory> mir::DefaultServerConfiguration::the_blitter_renderer_factory()
 {
     return blitter_renderer_factory(
-        []() -> std::shared_ptr<mir::renderer::BlitterRendererFactory>
+        []()
         {
-            // TODO: Swap out for actual `mir::renderer::blitter::RendererFactory` when created.
-            return {};
+            return std::make_shared<mir::renderer::blitter::RendererFactory>();
         });
 }
 

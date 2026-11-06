@@ -32,6 +32,10 @@
 
 #include <mir/graphics/transformation.h>
 
+#include <algorithm>
+#include <array>
+#include <vector>
+
 using testing::SetArgPointee;
 using testing::InSequence;
 using testing::Return;
@@ -639,4 +643,39 @@ TEST_F(GLRenderer, destroys_gl_resources_with_current_context)
             {
                EXPECT_THAT(eglGetCurrentContext(), testing::Eq(dummy_ctx));
             });
+}
+
+TEST_F(GLRenderer, active_output_filter_covers_the_whole_output_when_letterboxed)
+{
+    using testing::ElementsAre;
+
+    auto output_surface = make_output_surface();
+    ON_CALL(*output_surface, size())
+        .WillByDefault(Return(mir::geometry::Size{100, 100}));
+    ON_CALL(*output_surface, commit())
+        .WillByDefault([]() { return std::unique_ptr<mg::Framebuffer>(); });
+
+    std::array<GLint, 4> viewport{};
+    std::vector<std::array<GLint, 4>> viewport_at_draw;
+    ON_CALL(mock_gl, glViewport(_, _, _, _)).WillByDefault(
+        [&](GLint x, GLint y, GLsizei width, GLsizei height) { viewport = {x, y, width, height}; });
+    ON_CALL(mock_gl, glGetIntegerv(GL_VIEWPORT, _)).WillByDefault(
+        [&](auto, GLint* params) { std::ranges::copy(viewport, params); });
+    ON_CALL(mock_gl, glDrawArrays(_, _, _)).WillByDefault(
+        [&](auto, auto, auto) { viewport_at_draw.push_back(viewport); });
+
+    mrg::Renderer renderer(gl_platform, std::move(output_surface));
+    // Twice as wide as the output, so the scene is letterboxed into the middle half
+    renderer.set_viewport({{0, 0}, {200, 100}});
+    renderer.set_output_filter(mir_output_filter_grayscale);
+
+    // Render twice, as the scene's viewport needs to survive the filter for the next frame
+    renderer.render(renderable_list);
+    renderer.render(renderable_list);
+
+    EXPECT_THAT(viewport_at_draw, ElementsAre(
+        ElementsAre(0, 25, 100, 50),    // The renderable, into the intermediate
+        ElementsAre(0, 0, 100, 100),    // The filter, into the output
+        ElementsAre(0, 25, 100, 50),
+        ElementsAre(0, 0, 100, 100)));
 }
