@@ -59,7 +59,7 @@ auto whole_of(geom::Rectangle const& rect) -> geom::RectangleD
 
 MATCHER_P(IsSameBufferAs, buffer, "")
 {
-    return &arg == buffer.get();
+    return arg.get() == buffer.get();
 }
 
 class FakeDMABufBuffer : public mg::DMABufBuffer
@@ -174,8 +174,6 @@ public:
             [](auto task) { return std::move(dynamic_cast<HoldingTask&>(*task).surface); });
         ON_CALL(*blitter, blit(_, _, _, _, _, _)).WillByDefault(Return(true));
         ON_CALL(*blitter, fill(_, _, _, _, _, _)).WillByDefault(Return(true));
-        ON_CALL(*blitter, map_buffer(_)).WillByDefault(
-            [](mg::Buffer const& buffer) { return dynamic_cast<mtd::StubBuffer const&>(buffer).map_readable(); });
     }
 
     auto make_renderer(geom::Rectangle const& viewport = {{0, 0}, output_size}) -> std::unique_ptr<mrb::Renderer>
@@ -222,7 +220,6 @@ TEST_F(BlitterRenderer, blits_all_renderables_in_one_task_without_gl_drawing)
     EXPECT_CALL(*blitter, fill(_, _, 0, 0, 0, 255)).Times(1);
     EXPECT_CALL(*blitter, blit(_, _, _, _, _, _)).Times(2);
     EXPECT_CALL(*blitter, wait_complete(_)).Times(1);
-    EXPECT_CALL(*blitter, map_buffer(_)).Times(0);
     EXPECT_CALL(mock_gl, glDrawArrays(_, _, _)).Times(0);
 
     EXPECT_THAT(renderer->render(renderables), NotNull());

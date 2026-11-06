@@ -29,8 +29,16 @@ namespace renderer::gl
 class Context;
 }
 
+namespace graphics::common
+{
+class EGLContextExecutor;
+}
+
 namespace graphics::egl::generic
 {
+
+auto probe_display_support(std::span<std::shared_ptr<mir::graphics::DisplayPlatform>> const& displays)
+    -> graphics::probe::Result;
 
 class RenderingPlatform : public graphics::RenderingPlatform
 {
@@ -45,6 +53,11 @@ public:
 protected:
     auto maybe_create_provider(
         RenderingProvider::Tag const& type_tag) -> std::shared_ptr<RenderingProvider> override;
+
+    auto egl_display() const -> EGLDisplay;
+    auto egl_context() const -> EGLContext;
+    auto dma_buf_provider() const -> std::shared_ptr<DMABufEGLProvider>;
+    auto egl_context_executor() const -> std::shared_ptr<common::EGLContextExecutor>;
 
 private:
     explicit RenderingPlatform(std::tuple<EGLDisplay, bool> dpy);

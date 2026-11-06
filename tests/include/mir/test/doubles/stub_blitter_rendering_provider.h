@@ -52,7 +52,7 @@ public:
     auto wait_complete(std::unique_ptr<Task>) -> std::unique_ptr<Surface> override { return nullptr; }
     auto blit(
         Task&,
-        graphics::Buffer const&,
+        std::shared_ptr<graphics::Buffer> const&,
         geometry::Rectangle const&,
         geometry::Rectangle const&,
         MirOrientation,
@@ -61,13 +61,8 @@ public:
         return false;
     }
     auto fill(Task&, geometry::Rectangle const&, uint8_t, uint8_t, uint8_t, uint8_t) -> bool override { return false; }
-    auto surface_for_fb(graphics::CPUAddressableDisplayAllocator::MappableFB const&)
+    auto surface_for_fb(std::shared_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const&)
         -> std::unique_ptr<Surface> override
-    {
-        return nullptr;
-    }
-    // TODO: Remove when no longer needed in `BlitterRenderingProvider` interface.
-    auto map_buffer(graphics::Buffer const&) -> std::unique_ptr<renderer::software::Mapping<std::byte const>> override
     {
         return nullptr;
     }

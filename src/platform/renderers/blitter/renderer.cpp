@@ -256,7 +256,7 @@ private:
         return begin_task() &&
             blitter->blit(
                 *task,
-                *renderable.buffer(),
+                renderable.buffer(),
                 source_rect,
                 to_target(visible_area),
                 renderable.orientation(),

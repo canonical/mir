@@ -50,7 +50,7 @@ public:
         bool,
         blit,
         (Task&,
-         graphics::Buffer const&,
+         std::shared_ptr<graphics::Buffer> const&,
          geometry::Rectangle const&,
          geometry::Rectangle const&,
          MirOrientation,
@@ -60,12 +60,7 @@ public:
     MOCK_METHOD(
         std::unique_ptr<Surface>,
         surface_for_fb,
-        (graphics::CPUAddressableDisplayAllocator::MappableFB const&),
-        (override));
-    MOCK_METHOD(
-        std::unique_ptr<renderer::software::Mapping<std::byte const>>,
-        map_buffer,
-        (graphics::Buffer const&),
+        (std::shared_ptr<graphics::CPUAddressableDisplayAllocator::MappableFB> const&),
         (override));
 };
 }
