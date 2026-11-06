@@ -85,3 +85,5 @@ libmircore.so.3 libmircore3 #MINVER#
  (c++)"mir::output_type_name(unsigned int)@MIR_CORE_2.30" 2.30.0
  (c++)"typeinfo for mir::graphics::DisplayConfiguration@MIR_CORE_2.30" 2.30.0
  (c++)"vtable for mir::graphics::DisplayConfiguration@MIR_CORE_2.30" 2.30.0
+ (optional)MIR_CORE_2.31@MIR_CORE_2.31 2.31.0
+ (c++)"std::formatter<mir::ExceptionDiagnostics, char>::format(mir::ExceptionDiagnostics const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const@MIR_CORE_2.31" 2.31.0
