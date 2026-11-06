@@ -805,3 +805,12 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++|arch-bits=32)"miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const, 4294967295u>)@MIRAL_6.1" 6.1.0
  (c++|arch-bits=64)"miral::OutputConfiguration::NullStrategy::apply_configuration(std::span<mir::graphics::UserDisplayConfigurationOutput, 18446744073709551615ul>)@MIRAL_6.1" 6.1.0
  (c++|arch-bits=64)"miral::OutputConfiguration::NullStrategy::confirm_configuration(std::span<mir::graphics::DisplayConfigurationOutput const, 18446744073709551615ul>)@MIRAL_6.1" 6.1.0
+ (optional)MIRAL_6.2@MIRAL_6.2 6.2.0
+ (c++)"miral::DecorationStyle::DecorationStyle()@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::DecorationStyle(miral::DecorationStyle const&)@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::DecorationStyle(miral::live_config::Store&)@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::operator()(mir::Server&) const@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::operator=(miral::DecorationStyle const&)@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::set_color(miral::DecorationStyle::Element, miral::DecorationStyle::State, unsigned char, unsigned char, unsigned char, unsigned char)@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::set_metric(miral::DecorationStyle::Metric, int)@MIRAL_6.2" 6.2.0
+ (c++)"miral::DecorationStyle::~DecorationStyle()@MIRAL_6.2" 6.2.0

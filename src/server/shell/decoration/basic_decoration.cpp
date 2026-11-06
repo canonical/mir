@@ -257,6 +257,19 @@ void msd::BasicDecoration::set_scale(float new_scale)
     window_state_updated();
 }
 
+void msd::BasicDecoration::restyle()
+{
+    // The decoration surface is kept, so that restyling doesn't disturb the stacking order
+    renderer_strategy = decoration_strategy->render_strategy();
+
+    window_state = decoration_strategy->new_window_state(window_surface, scale);
+    input_manager->update_window_state(*window_state);
+    input_state = input_manager->state();
+
+    // Trigger a full refresh
+    update(std::nullopt, std::nullopt);
+}
+
 auto msd::BasicDecoration::create_surface() const -> std::shared_ptr<scene::Surface>
 {
     msh::SurfaceSpecification params;
@@ -347,6 +360,7 @@ void msd::BasicDecoration::update(
     }
 
     if (window_updated({
+            &WindowState::window_size,
             &WindowState::focused_state,
             &WindowState::window_name,
             &WindowState::titlebar_rect,
@@ -365,6 +379,7 @@ void msd::BasicDecoration::update(
         std::optional<std::shared_ptr<mg::Buffer>>>> new_buffers;
 
     if (window_updated({
+            &WindowState::window_size,
             &WindowState::focused_state,
             &WindowState::side_border_width,
             &WindowState::side_border_height,
@@ -379,6 +394,7 @@ void msd::BasicDecoration::update(
     }
 
     if (window_updated({
+            &WindowState::window_size,
             &WindowState::focused_state,
             &WindowState::bottom_border_width,
             &WindowState::bottom_border_height,
@@ -390,6 +406,7 @@ void msd::BasicDecoration::update(
     }
 
     if (window_updated({
+            &WindowState::window_size,
             &WindowState::focused_state,
             &WindowState::window_name,
             &WindowState::titlebar_rect,

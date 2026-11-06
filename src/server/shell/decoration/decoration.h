@@ -32,6 +32,9 @@ public:
 
     virtual void set_scale(float new_scale) = 0;
 
+    /// Redraw with the decoration strategy's current style
+    virtual void restyle() = 0;
+
 private:
     Decoration(Decoration const&) = delete;
     Decoration& operator=(Decoration const&) = delete;
