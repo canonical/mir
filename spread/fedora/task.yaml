@@ -1,6 +1,5 @@
 summary: Build Fedora packages
 systems: [fedora-*]
-variants: [fedora_*]
 kill-timeout: 60m
 
 execute: |
