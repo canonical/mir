@@ -759,6 +759,8 @@ void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
     load_glyph(glyph);
     if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
     {
+        auto const glyph_index = FT_Get_Char_Index(face, glyph);
+
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "Failed to render glyph " + std::to_string(glyph_index) +
             " (" + freetype_error_to_string(error) + ")"));
