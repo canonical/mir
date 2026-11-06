@@ -83,6 +83,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     runner.cpp
     wayland_extensions.cpp
     xdg_dialog.cpp
+    xdg_shell.cpp
     zone.cpp
     example_xdg_shell_v6.cpp example_xdg_shell_v6.h
     test_touch_emulator.cpp

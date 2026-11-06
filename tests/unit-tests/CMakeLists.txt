@@ -162,6 +162,8 @@ target_link_libraries(
   exampleserverconfig
   mircommon
   mirrendererblitter
+  mirrenderercommon
+  mirrenderergl
 
   mir-test-static
   mir-test-framework-static

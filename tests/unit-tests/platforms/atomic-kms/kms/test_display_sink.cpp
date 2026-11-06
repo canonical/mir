@@ -76,6 +76,7 @@ protected:
             drm_fd,
             nullptr,
             mga::BypassOption::allowed,
+            mga::PlanePromotion::available,
             mir::report::null_display_report(),
             output,
             display_area,

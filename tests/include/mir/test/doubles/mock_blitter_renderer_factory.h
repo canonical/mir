@@ -19,7 +19,7 @@
 
 #include <gmock/gmock.h>
 
-#include <mir/renderer/renderer_factory.h>
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer.h>
 
 namespace mir::test::doubles
@@ -30,7 +30,8 @@ public:
     MOCK_METHOD(
         std::unique_ptr<renderer::Renderer>,
         create_renderer_for,
-        (graphics::CPUAddressableDisplayAllocator&, std::shared_ptr<graphics::BlitterRenderingProvider>),
+        (std::shared_ptr<graphics::BlitterRenderingProvider>,
+         graphics::CPUAddressableDisplayAllocator&),
         (const override));
 };
 }

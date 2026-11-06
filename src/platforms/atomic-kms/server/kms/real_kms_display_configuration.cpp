@@ -232,3 +232,23 @@ bool mga::compatible(mga::RealKMSDisplayConfiguration const& conf1, mga::RealKMS
 
     return compatible;
 }
+
+auto mga::is_active_physical_output(mg::DisplayConfigurationOutput const& output) -> bool
+{
+    return output.connected && output.used &&
+        (output.power_mode == mir_power_mode_on) &&
+        (output.current_mode_index < output.modes.size());
+}
+
+auto mga::plane_promotion_for(mg::DisplayConfiguration const& device_conf) -> mga::PlanePromotion
+{
+    size_t active_outputs{0};
+    device_conf.for_each_output(
+        [&](mg::DisplayConfigurationOutput const& output)
+        {
+            if (is_active_physical_output(output))
+                ++active_outputs;
+        });
+
+    return active_outputs == 1 ? mga::PlanePromotion::available : mga::PlanePromotion::unavailable;
+}

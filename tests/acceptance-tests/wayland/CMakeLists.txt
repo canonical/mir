@@ -30,7 +30,13 @@ set_target_properties(
   LINK_DEPENDS ${SYMBOL_FILE}
 )
 
-pkg_get_variable(WLCS_BINARY wlcs test_runner)
+# Allow overriding the wlcs test runner path via the build system. If it's not
+# provided, ask pkg-config for the installed binary location.
+if (WLCS_BINARY)
+  set(WLCS_BINARY "${WLCS_BINARY}" CACHE PATH "Path to the wlcs test runner" FORCE)
+else()
+  pkg_get_variable(WLCS_BINARY wlcs test_runner)
+endif()
 
 if(cmake_build_type_lower MATCHES "addresssanitizer")
   set(WLCS_BINARY ${WLCS_BINARY}.asan)

@@ -32,6 +32,7 @@
 #include <mir/test/doubles/stub_output_filter.h>
 #include <mir/test/doubles/stub_renderer.h>
 
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 
 #include <gmock/gmock.h>
@@ -58,7 +59,9 @@ public:
 class StubBlitterRendererFactory : public mir::renderer::BlitterRendererFactory
 {
 public:
-    auto create_renderer_for(mg::CPUAddressableDisplayAllocator&, std::shared_ptr<mg::BlitterRenderingProvider>) const
+    auto create_renderer_for(
+        std::shared_ptr<mg::BlitterRenderingProvider>,
+        mg::CPUAddressableDisplayAllocator&) const
         -> std::unique_ptr<mir::renderer::Renderer> override
     {
         return std::make_unique<mtd::StubRenderer>();
@@ -263,7 +266,8 @@ TEST_F(DefaultDisplayBufferCompositorFactory, prefers_blitter_provider_when_gl_p
     EXPECT_CALL(*renderer_factory, create_renderer_for(_, _)).Times(0);
 
     auto blitter_renderer_factory = std::make_shared<StrictMock<mtd::MockBlitterRendererFactory>>();
-    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(_, _)).Times(1);
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(blitter_provider), _))
+        .WillOnce(Return(ByMove(std::make_unique<mtd::StubRenderer>())));
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {gl_provider},
@@ -295,7 +299,8 @@ TEST_F(DefaultDisplayBufferCompositorFactory, prefers_blitter_provider_when_gl_p
     EXPECT_CALL(*renderer_factory, create_renderer_for(_, _)).Times(0);
 
     auto blitter_renderer_factory = std::make_shared<StrictMock<mtd::MockBlitterRendererFactory>>();
-    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(_, _)).Times(1);
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(blitter_provider), _))
+        .WillOnce(Return(ByMove(std::make_unique<mtd::StubRenderer>())));
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {gl_provider},
@@ -423,12 +428,46 @@ TEST_F(DefaultDisplayBufferCompositorFactory, does_not_select_blitter_provider_w
     ON_CALL(*unsupported, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::unsupported));
 
     auto blitter_renderer_factory = std::make_shared<StrictMock<mtd::MockBlitterRendererFactory>>();
-    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(_, Eq(supported)))
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(supported), _))
         .WillOnce(Return(ByMove(std::make_unique<mtd::StubRenderer>())));
 
     mc::DefaultDisplayBufferCompositorFactory factory{
         {},
         {supported, unsupported},
+        std::make_shared<mtd::NullGLConfig>(),
+        renderer_factory,
+        blitter_renderer_factory,
+        buffer_allocator,
+        report,
+        output_filter};
+
+    auto compositor = factory.create_compositor_for(display_sink);
+    EXPECT_THAT(compositor, NotNull());
+}
+
+TEST_F(DefaultDisplayBufferCompositorFactory, falls_back_to_gl_provider_when_blitter_renderer_creation_throws)
+{
+    using namespace testing;
+
+    auto gl_provider = std::make_shared<NiceMock<mtd::MockGlRenderingProvider>>();
+    ON_CALL(*gl_provider, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::supported));
+    ON_CALL(*gl_provider, suitability_for_display(_)).WillByDefault(Return(mg::probe::supported));
+
+    auto blitter_provider = std::make_shared<NiceMock<mtd::MockBlitterRenderingProvider>>();
+    ON_CALL(*blitter_provider, suitability_for_display(_)).WillByDefault(Return(mg::probe::best));
+    ON_CALL(*blitter_provider, suitability_for_allocator(_)).WillByDefault(Return(mg::probe::supported));
+
+    auto blitter_renderer_factory = std::make_shared<StrictMock<mtd::MockBlitterRendererFactory>>();
+    EXPECT_CALL(*blitter_renderer_factory, create_renderer_for(Eq(blitter_provider), _))
+        .WillOnce(Throw(std::runtime_error{"blitter and GL cannot share framebuffers"}));
+
+    auto renderer_factory = std::make_shared<StrictMock<mtd::MockRendererFactory>>();
+    EXPECT_CALL(*renderer_factory, create_renderer_for(_, Eq(gl_provider)))
+        .WillOnce(Return(ByMove(std::make_unique<mtd::StubRenderer>())));
+
+    mc::DefaultDisplayBufferCompositorFactory factory{
+        {gl_provider},
+        {blitter_provider},
         std::make_shared<mtd::NullGLConfig>(),
         renderer_factory,
         blitter_renderer_factory,
