@@ -1,9 +1,14 @@
-# Canonical theme (still needed for Furo theme and custom templates)
-canonical-sphinx~=0.6
-
-# Extensions previously auto-loaded by canonical-sphinx
-myst-parser~=4.0    # v5.0.0 causes version conflicts
+# Ulwazi theme and core Sphinx tools
+sphinx
+build
 sphinx-autobuild
+ulwazi
+sphinx-basic-ng
+beautifulsoup4
+packaging
+
+# Sphinx extensions
+myst-parser~=4.0    # v5.0.0 causes version conflicts
 sphinx-design==0.6.1
 sphinx-notfound-page~=1.1
 sphinx-reredirects==0.1.6
@@ -12,7 +17,7 @@ sphinxcontrib-jquery~=4.1
 sphinxext-opengraph~=0.13
 sphinx-rerediraffe>=0.0.3, <1.0.0
 
-# Extra extensions, previously bundled as canonical-sphinx-extensions
+# Additional Sphinx extensions
 sphinx-config-options~=0.1
 sphinx-contributor-listing~=0.1
 sphinx-filtered-toctree~=0.1
