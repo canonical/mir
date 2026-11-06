@@ -60,6 +60,9 @@ mtd::MockGBM::MockGBM()
     ON_CALL(*this, gbm_bo_get_handle(fake_gbm.bo))
     .WillByDefault(Return(fake_gbm.bo_handle));
 
+    ON_CALL(*this, gbm_bo_get_handle_for_plane(_,_))
+    .WillByDefault(Return(fake_gbm.bo_handle));
+
     ON_CALL(*this, gbm_bo_set_user_data(_,_,_))
     .WillByDefault(Invoke(this, &MockGBM::on_gbm_bo_set_user_data));
 
@@ -152,6 +155,11 @@ uint32_t gbm_bo_get_format(struct gbm_bo *bo)
 union gbm_bo_handle gbm_bo_get_handle(struct gbm_bo *bo)
 {
     return global_mock->gbm_bo_get_handle(bo);
+}
+
+union gbm_bo_handle gbm_bo_get_handle_for_plane(struct gbm_bo *bo, int plane)
+{
+    return global_mock->gbm_bo_get_handle_for_plane(bo, plane);
 }
 
 void gbm_bo_set_user_data(struct gbm_bo *bo, void *data,

@@ -65,6 +65,7 @@ public:
     MOCK_METHOD(uint32_t, gbm_bo_get_stride, (struct gbm_bo *bo));
     MOCK_METHOD(uint32_t, gbm_bo_get_format, (struct gbm_bo *bo));
     MOCK_METHOD(union gbm_bo_handle, gbm_bo_get_handle, (struct gbm_bo *bo));
+    MOCK_METHOD(union gbm_bo_handle, gbm_bo_get_handle_for_plane, (struct gbm_bo *bo, int plane));
     MOCK_METHOD(void, gbm_bo_set_user_data,
                 (struct gbm_bo *bo, void *data, void (*destroy_user_data)(struct gbm_bo *, void *)));
     MOCK_METHOD(void*, gbm_bo_get_user_data, (struct gbm_bo *bo));

@@ -73,6 +73,24 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
         std::shared_ptr<struct gbm_device> const gbm;
 };
 
+/**
+ * Import a DMA-BUF that carries an explicit modifier for plane promotion.
+ *
+ * Unlike DmaBufDisplayAllocator::framebuffer_for(), a buffer whose modifier is
+ * missing (either std::nullopt or DRM_FORMAT_MOD_INVALID) is rejected rather
+ * than having a sentinel modifier substituted.
+ *
+ * Returns null, and logs, when the modifier is missing or the import fails.
+ *
+ * This does not mark the buffer consumed. A promoted buffer is never textured
+ * by GL, so the caller must signal frame callbacks when the frame is actually
+ * presented.
+ */
+auto import_explicit_dmabuf_framebuffer(
+    mir::Fd drm_fd,
+    std::shared_ptr<struct gbm_device> gbm,
+    std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<FBHandle>;
+
 class DisplaySink :
     public graphics::DisplaySink,
     public graphics::DisplaySyncGroup,
