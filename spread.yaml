@@ -10,7 +10,6 @@ backends:
             - alpine-edge
             - ubuntu-26.04
             - fedora-44
-            - fedora-45
 
 environment:
     ARCH: amd64
