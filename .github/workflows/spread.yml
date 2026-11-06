@@ -32,7 +32,6 @@ jobs:
         spread-task:
         - lxd:...:debian_sid
         - lxd:...:fedora_44
-        - lxd:...:fedora_45
         - lxd:...:fedora_clang
         - lxd:...:fedora_rawhide
         - lxd:...:spread/ubuntu:asan
