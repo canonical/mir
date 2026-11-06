@@ -42,6 +42,7 @@
 #include <mir/input/device.h>
 #include <mir/input/device_capability.h>
 #include <mir/input/input_device_info.h>
+#include <mir/input/input_sink.h>
 #include <mir/input/mir_pointer_config.h>
 #include <mir/input/mir_touchpad_config.h>
 #include <mir/input/touch_visualizer.h>
@@ -49,6 +50,9 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <array>
+#include <utility>
 
 namespace mt = mir::test;
 namespace mtd = mt::doubles;
@@ -142,6 +146,49 @@ struct SingleSeatInputDeviceHubSetup : ::testing::Test
     }
 };
 
+struct OutputTransformation
+{
+    float scale;
+    MirOrientation orientation;
+    std::array<std::pair<float, float>, 5> expected_points;
+};
+
+struct SeatOutputTransformation :
+    SingleSeatInputDeviceHubSetup,
+    WithParamInterface<OutputTransformation>
+{
+    geom::Rectangle const output_rectangle{{50, 70}, {1200, 600}};
+    uint32_t const output_id{1};
+
+    void SetUp() override
+    {
+        // These tests only use the seat, so the hub's ConfigChanger need not be dispatched.
+    }
+
+    void configure_output()
+    {
+        display_config.configure_output(0, output_rectangle, GetParam().scale, GetParam().orientation);
+    }
+
+    void expect_transformed_points()
+    {
+        auto const output = seat.output_info(output_id);
+        EXPECT_THAT(output.active, Eq(true));
+        EXPECT_THAT(output.output_size, Eq(output_rectangle.size));
+
+        std::array<std::pair<float, float>, 5> const points{{
+            {0, 0}, {1200, 0}, {0, 600}, {1200, 600}, {300, 120}}};
+        for (std::size_t i = 0; i != points.size(); ++i)
+        {
+            SCOPED_TRACE(i);
+            auto [x, y] = points[i];
+            output.transform_to_scene(x, y);
+            EXPECT_FLOAT_EQ(x, GetParam().expected_points[i].first);
+            EXPECT_FLOAT_EQ(y, GetParam().expected_points[i].second);
+        }
+    }
+};
+
 auto motion_event(mi::EventBuilder& builder, float x, float y) -> mir::EventUPtr
 {
     return builder.pointer_event(
@@ -169,6 +216,58 @@ auto button_event(mi::EventBuilder& builder, MirPointerAction action, MirPointer
 }
 
 }
+
+TEST_P(SeatOutputTransformation, maps_output_coordinates_to_scaled_and_rotated_scene)
+{
+    configure_output();
+
+    expect_transformed_points();
+}
+
+TEST_P(SeatOutputTransformation, updates_transformation_after_display_reconfiguration)
+{
+    display_config.configure_output(0, {{-300, 120}, {600, 300}}, 3.0f, mir_orientation_inverted);
+    auto const previous_output = seat.output_info(output_id);
+    EXPECT_THAT(previous_output.active, Eq(true));
+    EXPECT_THAT(previous_output.output_size, Eq(geom::Size(600, 300)));
+    float x = 300, y = 120;
+    previous_output.transform_to_scene(x, y);
+    EXPECT_FLOAT_EQ(x, -200);
+    EXPECT_FLOAT_EQ(y, 180);
+
+    configure_output();
+
+    expect_transformed_points();
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ScalesAndOrientations,
+    SeatOutputTransformation,
+    Values(
+        OutputTransformation{1.0f, mir_orientation_normal,
+            {{{50, 70}, {1250, 70}, {50, 670}, {1250, 670}, {350, 190}}}},
+        OutputTransformation{1.0f, mir_orientation_left,
+            {{{650, 70}, {650, 1270}, {50, 70}, {50, 1270}, {530, 370}}}},
+        OutputTransformation{1.0f, mir_orientation_right,
+            {{{50, 1270}, {50, 70}, {650, 1270}, {650, 70}, {170, 970}}}},
+        OutputTransformation{1.0f, mir_orientation_inverted,
+            {{{1250, 670}, {50, 670}, {1250, 70}, {50, 70}, {950, 550}}}},
+        OutputTransformation{1.5f, mir_orientation_normal,
+            {{{50, 70}, {850, 70}, {50, 470}, {850, 470}, {250, 150}}}},
+        OutputTransformation{1.5f, mir_orientation_left,
+            {{{450, 70}, {450, 870}, {50, 70}, {50, 870}, {370, 270}}}},
+        OutputTransformation{1.5f, mir_orientation_right,
+            {{{50, 870}, {50, 70}, {450, 870}, {450, 70}, {130, 670}}}},
+        OutputTransformation{1.5f, mir_orientation_inverted,
+            {{{850, 470}, {50, 470}, {850, 70}, {50, 70}, {650, 390}}}},
+        OutputTransformation{2.0f, mir_orientation_normal,
+            {{{50, 70}, {650, 70}, {50, 370}, {650, 370}, {200, 130}}}},
+        OutputTransformation{2.0f, mir_orientation_left,
+            {{{350, 70}, {350, 670}, {50, 70}, {50, 670}, {290, 220}}}},
+        OutputTransformation{2.0f, mir_orientation_right,
+            {{{50, 670}, {50, 70}, {350, 670}, {350, 70}, {110, 520}}}},
+        OutputTransformation{2.0f, mir_orientation_inverted,
+            {{{650, 370}, {50, 370}, {650, 70}, {50, 70}, {500, 310}}}}));
 
 TEST_F(SingleSeatInputDeviceHubSetup, input_sink_posts_events_to_input_dispatcher)
 {
