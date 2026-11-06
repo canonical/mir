@@ -24,6 +24,7 @@
 #include <charconv>
 #include <cmath>
 #include <mutex>
+#include <ranges>
 #include <set>
 
 namespace msd = mir::shell::decoration;
@@ -168,13 +169,12 @@ auto parse_color(std::string_view text) -> std::optional<msd::Pixel>
         return std::nullopt;
 
     uint32_t channels[4] = {0, 0, 0, 0xFF};
-    uint32_t* channel = channels;
 
-    for (auto i = 0u; i != text.size(); i += 2, ++channel)
+    for (auto [in, channel] : std::ranges::zip_view{(text | std::views::chunk(2)), channels})
     {
-        auto const begin = text.data() + i;
-        if (auto const [end, ec] = std::from_chars(begin, begin + 2, *channel, 16);
-            ec != std::errc{} || end != begin + 2)
+        auto const [end, ec] = std::from_chars(in.begin(), in.end(), channel, 16);
+
+        if (ec != std::errc{} || end != in.end())
             return std::nullopt;
     }
 
