@@ -505,6 +505,7 @@ private:
 
     void set_char_size(geom::Height height);
     auto ellipsize(std::u32string const& text, int available_width) -> std::u32string;
+    void load_glyph(char32_t glyph);
     void rasterize_glyph(char32_t glyph);
     void render_glyph(
         Pixel* buf,
@@ -658,10 +659,13 @@ auto RendererStrategy::Text::Impl::ellipsize(std::u32string const& text, int ava
     };
     auto const measure = [this](char32_t glyph) -> Extents
     {
-        rasterize_glyph(glyph);
+        load_glyph(glyph);
+        auto const bitmap_right = face->glyph->metrics.horiBearingX + face->glyph->metrics.width;
+        auto const bitmap_right_pixels =
+            bitmap_right / 64 + (bitmap_right > 0 && bitmap_right % 64 != 0);
         return {
             face->glyph->advance.x / 64,
-            std::max<int64_t>(0, face->glyph->bitmap_left + static_cast<int64_t>(face->glyph->bitmap.width))};
+            std::max<int64_t>(0, bitmap_right_pixels)};
     };
 
     struct Glyph
@@ -738,7 +742,7 @@ auto freetype_error_to_string(FT_Error error) -> char const*
 }
 }
 
-void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
+void RendererStrategy::Text::Impl::load_glyph(char32_t glyph)
 {
     auto const glyph_index = FT_Get_Char_Index(face, glyph);
 
@@ -748,7 +752,11 @@ void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
             "Failed to load glyph " + std::to_string(glyph_index) +
             " (" + freetype_error_to_string(error) + ")"));
     }
+}
 
+void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
+{
+    load_glyph(glyph);
     if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(
