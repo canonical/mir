@@ -160,7 +160,8 @@ TEST_F(TestDecorationStyle, explicit_button_colors_are_not_derived)
     EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
 }
 
-TEST_F(TestDecorationStyle, unrecognized_values_are_ignored){
+TEST_F(TestDecorationStyle, unrecognized_values_are_ignored)
+{
     miral::DecorationStyle style;
     style.set_metric(static_cast<miral::DecorationStyle::Metric>(0xDEAD), 42);
     style.set_color(
@@ -254,7 +255,8 @@ TEST_F(TestDecorationStyleConfig, unset_button_colors_follow_a_configured_titleb
     EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x10, 0x20, 0x30)));
 }
 
-TEST_F(TestDecorationStyleConfig, config_reload_is_applied){
+TEST_F(TestDecorationStyleConfig, config_reload_is_applied)
+{
     start_server_with(style);
 
     load("ssd_side_border_width=7\n"
