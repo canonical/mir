@@ -196,9 +196,9 @@ auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabil
         renderable.screen_position().size == dmabuf->size();
 }
 
-auto pixel_area(geom::Rectangle const& rect) -> int64_t
+auto pixel_area(geom::Rectangle const& rect) -> int
 {
-    return int64_t{rect.size.width.as_int()} * rect.size.height.as_int();
+    return rect.size.width.as_int() * rect.size.height.as_int();
 }
 
 auto content_above_blocks(
@@ -225,7 +225,7 @@ auto select_direct_candidate(
     mga::CrtcPlaneCapabilities const& capabilities) -> std::optional<std::size_t>
 {
     std::optional<std::size_t> best;
-    int64_t best_area{0};
+    int best_area{0};
 
     for (auto index = std::size_t{0}; index < renderables.size(); ++index)
     {
