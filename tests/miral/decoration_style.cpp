@@ -344,3 +344,14 @@ TEST_F(TestDecorationStyleConfig, api_colors_set_after_start_override_derived_co
 
     EXPECT_THAT(applied_style()->button.normal_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33)));
 }
+
+TEST_F(TestDecorationStyleConfig, api_alpha_survives_a_config_load)
+{
+    style.set_color(
+        miral::DecorationStyle::Element::background, miral::DecorationStyle::State::focused, 0x11, 0x22, 0x33, 0x80);
+
+    load("");
+    start_server_with(style);
+
+    EXPECT_THAT(applied_style()->focused.background_color, Eq(msd::pack_pixel(0x11, 0x22, 0x33, 0x80)));
+}
