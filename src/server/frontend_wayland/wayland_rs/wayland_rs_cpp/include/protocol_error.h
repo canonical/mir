@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 class ProtocolError : public std::runtime_error
 {

@@ -18,9 +18,9 @@
 #ifndef MIR_FRONTEND_WP_VIEWPORTER_H
 #define MIR_FRONTEND_WP_VIEWPORTER_H
 
-#include <mir/wayland/weak.h>
-#include "viewporter_wrapper.h"
-#include "wayland_wrapper.h"
+#include "viewporter.h"
+#include "wayland.h"
+#include "weak.h"
 
 #include <mir/geometry/rectangle.h>
 
@@ -30,13 +30,19 @@ namespace mir::frontend
 {
 class WlSurface;
 
-class WpViewporter : public wayland::Viewporter::Global
+class WpViewporter : public wayland::Viewporter
 {
 public:
-    explicit WpViewporter(wl_display* display);
+    WpViewporter(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ViewporterMiddleware> instance,
+        uint32_t object_id);
 
 private:
-    void bind(wl_resource* new_wp_viewporter) override;
+    auto get_viewport(
+        wayland::Weak<wayland::Surface> const& surface,
+        rust::Box<wayland::ViewportMiddleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::Viewport> override;
 };
 
 /**
@@ -47,7 +53,11 @@ private:
 class Viewport : public wayland::Viewport
 {
 public:
-    Viewport(wl_resource* new_viewport, WlSurface* surface);
+    Viewport(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::ViewportMiddleware> instance,
+        uint32_t object_id,
+        WlSurface* surface);
     ~Viewport() override;
 
     /**

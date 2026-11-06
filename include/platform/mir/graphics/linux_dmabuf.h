@@ -18,7 +18,6 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-stable-v1_wrapper.h"
 
 #include <EGL/egl.h>
 #include <sys/types.h>
@@ -125,24 +124,6 @@ private:
     std::unique_ptr<renderer::gl::Context> const import_context;
     EGLImageAllocator allocate_importable_image;
     std::unique_ptr<EGLBufferCopier> const blitter;
-};
-
-class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
-{
-public:
-    LinuxDmaBuf(wl_display* display, std::shared_ptr<DMABufEGLProvider> provider);
-
-    auto buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<common::EGLContextExecutor> egl_delegate) -> std::shared_ptr<Buffer>;
-
-private:
-    class Instance;
-    void bind(wl_resource* new_resource) override;
-
-    std::shared_ptr<DMABufEGLProvider> const provider;
 };
 
 }

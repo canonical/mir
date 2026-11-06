@@ -81,6 +81,7 @@ function(add_wayland_protocol xml_file out_var)
 endfunction()
 
 set(PROTOCOL_XMLS
+  ${PROTOCOLS_DIR}/mir-shell-unstable-v1.xml
   ${PROTOCOLS_DIR}/wlr-foreign-toplevel-management-unstable-v1.xml
   ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml
   ${PROTOCOLS_DIR}/wlr-layer-shell-unstable-v1.xml

@@ -21,8 +21,8 @@
 #include <mir/events/event.h>
 #include <mir/executor.h>
 #include <mir/shell/token_authority.h>
-#include <mir/wayland/lifetime_tracker.h>
-#include <mir/wayland/weak.h>
+#include "lifetime_tracker.h"
+#include "weak.h"
 
 #include <array>
 #include <functional>
@@ -91,7 +91,7 @@ private:
 };
 
 // Version-agnostic interface
-class InputTriggerRegistry::Action : public virtual wayland::LifetimeTracker
+class InputTriggerRegistry::Action : public wayland::LifetimeTracker
 {
 public:
     Action() = default;
@@ -151,7 +151,7 @@ private:
     Executor& wayland_executor;
 };
 
-class InputTriggerRegistry::Trigger: public virtual wayland::LifetimeTracker
+class InputTriggerRegistry::Trigger: public wayland::LifetimeTracker
 {
 public:
     enum class EventOutcome
