@@ -293,11 +293,13 @@ void TextInputV1::send_text_change(ms::TextInputChange const& change)
             change.keysym->state,
             change.keysym->modifiers);
     }
-    if (auto const modifier_map = change.modifier_map.transform([](auto const& mm) -> wl_array const* { return mm; }))
+    if (change.modifier_map)
     {
+        auto const& map = change.modifier_map.value();
         // Safe: send_modifiers_map_event takes non-const wl_array* but doesn't mutate it.
-        send_modifiers_map_event(
-            const_cast<wl_array*>(modifier_map.value())); // NOLINT(cppcoreguidelines-pro-type-const-cast)
+        wl_array array{
+            map.size(), map.size(), const_cast<std::byte*>(map.data())}; // NOLINT(cppcoreguidelines-pro-type-const-cast)
+        send_modifiers_map_event(&array);
     }
     if (change.direction)
     {
