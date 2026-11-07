@@ -19,7 +19,6 @@
 
 #include <mir/graphics/egl_extensions.h>
 #include <mir/graphics/egl_helpers.h>
-#include <mir/graphics/egl_resources.h>
 
 #include <EGL/egl.h>
 #include <memory>
@@ -50,11 +49,13 @@ public:
     void release_current() const;
     auto is_current() const -> bool;
 
-    auto display() const -> EGLDisplay { return dpy; }
+    auto display() const -> EGLDisplay;
     auto extensions() const -> graphics::EGLExtensions const& { return *exts; }
 
 private:
-    graphics::EGLDisplayHandle const dpy;
+    class Display;
+
+    std::shared_ptr<Display const> const dpy;
     EGLContext const ctx;
     std::unique_ptr<graphics::EGLExtensions> const exts;
 };

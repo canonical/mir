@@ -9,5 +9,5 @@ tools/make_release_tarball    export-ignore
 tools/ppa-upload.sh           export-ignore
 
 debian/changelog                merge=release-notes
-doc/sphinx/release-notes.md     merge=release-notes
+doc/sphinx/release-notes/index.md merge=release-notes
 rpm/mir.spec                    merge=release-notes

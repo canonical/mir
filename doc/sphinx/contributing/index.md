@@ -1,75 +1,51 @@
+(contributing-index)=
+
 # Contributing to Mir
 
-This section provides information for contributors to the Mir project.
+Mir is a C++ project with Rust components that is developed, tested, and shipped across
+multiple platforms and packaging formats. This documentation helps contributors
+understand the codebase, build and validate changes, and participate in the project.
 
-Mir is a large C++ project that ships across many platforms and packaging formats,
-including snaps. The documents in this subsection guide you through the code, help you
-test changes, and explain how to get your proposals merged.
-
-The Mir development team welcomes new contributors. You do not need to be a compositor
-developer to make meaningful contributions — improving docs, reporting high-quality
-issues, and running test plans on real hardware all help ship better releases.
-If you are looking for a first contribution, check out the
+You do not need to be a compositor developer to contribute: documentation improvements,
+useful issue reports, and testing releases on real hardware all help improve Mir. New
+contributors can start with the
 [good first issues](https://github.com/canonical/mir/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22Good%20first%20issue%22)
-label on GitHub.
+on GitHub.
 
 ## In this documentation
 
-These pages cover the key aspects of working on Mir
+### Get involved and contribute
 
-````{grid} 1 1 2 2
+- {ref}`Get involved in Mir <howto-contribute>` to set up a development
+  environment and learn how to contribute.
+- {ref}`Contribute documentation <contributing-documentation>`.
+- {ref}`Report issues and request features <contributing-reporting-issues>`.
 
-```{grid-item-card} [How-to guides](contributing-how-to-index)
-**How-to guides** - step-by-step guides covering key operations and common tasks
-- [](howto-contribute)
-```
+### Develop and maintain Mir
 
-```{grid-item-card} [Explanation](contributing-explanation-index)
- **Discussion and clarification** of key topics
-```
+- Learn about Mir's {ref}`architecture <mir-architecture>`,
+  {ref}`libraries and module structure <mir-libraries>`, and
+  {ref}`input platform APIs <mir-input-platform>`.
+- Work with {ref}`graphics support for snaps <how-to-enable-graphics-for-snaps-on-a-device>`,
+  {ref}`debug Mir snaps <how-to-debug-mir-snaps>`,
+  {ref}`update Wayland Explorer <how-to-update-wayland-explorer>`, and
+  {ref}`update symbol maps <how-to-update-symbols-maps>`.
 
-````
+### Test, release, and look up development practices
 
-````{grid} 1 1 2 2
+- {ref}`Test Mir for a release <how-to-test-mir-for-a-release>` or validate a graphical
+  snap environment with {ref}`checkbox-mir <how-to-use-checkbox-mir>`.
+- {ref}`Measure code coverage <how-to-measure-coverage>` and
+  {ref}`release a new Mir version <how-to-release-a-new-mir-version>`.
+- Read the {ref}`C++ style guide <cppguide>`,
+  {ref}`continuous integration reference <mir-continuous-integration>`, and
+  {ref}`DSO versioning guide <dso-versioning-guide>`.
 
-```{grid-item-card} [Reference](contributing-reference-index)
- **Technical information** - specifications, APIs, architecture
-```
-````
+## How this documentation is organised
 
-## Project and community
-
-Mir is a member of the Ubuntu family. It's an open source project that warmly welcomes community projects, contributions, suggestions, fixes and constructive feedback.
-
-- [Release Notes](https://github.com/canonical/mir/releases)
-- [Code of conduct](https://ubuntu.com/community/docs/ethos/code-of-conduct)
-- [Get support](https://discourse.ubuntu.com/c/project/mir/15)
-- [Join our online chat](https://matrix.to/#/#mir-server:matrix.org)
-- [Getting involved in Mir](howto-contribute)
-
-Thinking about using Mir for your next project? [Get in touch](https://canonical.com/mir)!
-
-## Contributing beyond core development
-
-### Documentation
-
-If you spot unclear wording, outdated examples, or missing guides, see
-[How to contribute documentation to Mir](contributing-documentation).
-
-### Raising issues and requesting features
-
-See [How to report Mir issues and request features](contributing-reporting-issues)
-for guidance on writing good bug reports and feature requests, and when to use
-[GitHub issues](https://github.com/canonical/mir/issues) versus
-[Discourse](https://discourse.ubuntu.com/c/project/mir/15).
-
-### Testing outside day-to-day development
-
-You can contribute by validating release candidates and snap environments even
-if you are not changing Mir source code.
-
-- [How to test Mir for a release](how-to-test-mir-for-a-release)
-- [Using checkbox-mir](how-to-use-checkbox-mir)
+The {ref}`how-to guides <contributing-how-to-index>` cover tasks such as contributing,
+development, testing, and releasing. {ref}`Explanations <contributing-explanation-index>`
+describe the project's architecture and APIs, while the {ref}`reference <contributing-reference-index>` documents development practices and tooling.
 
 ```{toctree}
 ---

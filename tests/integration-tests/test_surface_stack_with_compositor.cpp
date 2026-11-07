@@ -16,6 +16,7 @@
 
 #include <mir/compositor/display_listener.h>
 #include <mir/graphics/platform.h>
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 #include "src/server/report/null_report_factory.h"
 #include "src/server/scene/surface_stack.h"
@@ -35,6 +36,7 @@
 #include <mir/test/doubles/stub_buffer_allocator.h>
 #include <mir/test/doubles/mock_gl_buffer.h>
 #include <mir/test/doubles/mock_output_surface.h>
+#include <mir/test/doubles/stub_blitter_rendering_provider.h>
 #include <mir/test/doubles/stub_gl_rendering_provider.h>
 #include <mir/test/doubles/null_gl_config.h>
 #include <mir/test/doubles/stub_buffer_allocator.h>
@@ -59,6 +61,11 @@ namespace mi = mir::input;
 namespace geom = mir::geometry;
 using namespace testing;
 
+namespace mir::renderer {
+    // TODO: Replace with actual renderer
+    class BlitterRenderer {};
+}
+
 namespace
 {
 class StubRendererFactory : public mir::renderer::RendererFactory
@@ -67,6 +74,18 @@ public:
     auto create_renderer_for(
         std::unique_ptr<mg::gl::OutputSurface>,
         std::shared_ptr<mg::GLRenderingProvider>) const -> std::unique_ptr<mir::renderer::Renderer> override
+    {
+        return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
+    }
+};
+
+class StubBlitterRendererFactory : public mir::renderer::BlitterRendererFactory
+{
+public:
+
+    auto create_renderer_for(
+        std::shared_ptr<mg::BlitterRenderingProvider>,
+        mg::CPUAddressableDisplayAllocator&) const -> std::unique_ptr<mir::renderer::Renderer> override
     {
         return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }
@@ -186,6 +205,7 @@ struct SurfaceStackCompositor : public Test
     ms::SurfaceStack stack{null_scene_report};
     std::shared_ptr<mc::CompositorReport> null_comp_report{mr::null_compositor_report()};
     StubRendererFactory renderer_factory;
+    StubBlitterRendererFactory blitter_renderer_factory;
     std::chrono::system_clock::time_point timeout;
     std::shared_ptr<mc::Stream> stream;
     std::shared_ptr<mtd::MockBufferStream> mock_buffer_stream;
@@ -205,8 +225,10 @@ struct SurfaceStackCompositor : public Test
 
     mc::DefaultDisplayBufferCompositorFactory dbc_factory{
         std::vector<std::shared_ptr<mg::GLRenderingProvider>>{std::make_shared<mtd::StubGlRenderingProvider>()},
+        std::vector<std::shared_ptr<mg::BlitterRenderingProvider>>{std::make_shared<mtd::StubBlitterRenderingProvider>()},
         std::make_shared<mtd::NullGLConfig>(),
         mt::fake_shared(renderer_factory),
+        mt::fake_shared(blitter_renderer_factory),
         std::make_shared<mtd::StubBufferAllocator>(),
         null_comp_report,
         std::make_shared<mtd::StubOutputFilter>()};

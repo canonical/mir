@@ -165,7 +165,7 @@ public:
         -> std::optional<mg::LogicalStacking> override
     { return std::nullopt; }
 
-    void set_next_image(std::unique_ptr<mg::Framebuffer>) override
+    void set_next_image(mg::FramebufferPtr) override
     {
     }
 

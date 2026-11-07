@@ -94,7 +94,9 @@ mtf::HeadlessDisplayBufferCompositorFactory::create_compositor_for(mg::DisplaySi
             return renderables;
         }
 
-        bool composite(mir::compositor::SceneElementSequence&& seq) override
+        bool composite(
+            mir::compositor::SceneElementSequence&& seq,
+            mir::compositor::CompositionMode) override
         {
             auto renderlist = filter(seq, display_sink.view_area());
 

@@ -4,6 +4,8 @@ myst:
     description: How to update the Wayland Explorer's view of protocols supported by a Mir server.
 ---
 
+(how-to-update-wayland-explorer)=
+
 # How to update Wayland Explorer for Mir
 
 Wayland Explorer is a popular website that provides a user-friendly view of the protocols that each compositor or compositor library supports.

@@ -24,6 +24,7 @@
 
 #include <mir/test/doubles/stub_renderer.h>
 
+#include <mir/renderer/blitter_renderer_factory.h>
 #include <mir/renderer/renderer_factory.h>
 #include "src/server/input/null_input_manager.h"
 #include "src/server/input/null_input_dispatcher.h"
@@ -52,6 +53,17 @@ public:
         const -> std::unique_ptr<mir::renderer::Renderer> override
     {
         return std::unique_ptr<mir::renderer::Renderer>(new mtd::StubRenderer());
+    }
+};
+class StubBlitterRendererFactory : public mir::renderer::BlitterRendererFactory
+{
+public:
+
+    auto create_renderer_for(
+        std::shared_ptr<mg::BlitterRenderingProvider>,
+        mg::CPUAddressableDisplayAllocator&) const -> std::unique_ptr<mir::renderer::Renderer> override
+    {
+        return std::unique_ptr<mtd::StubRenderer>(new mtd::StubRenderer);
     }
 };
 
@@ -110,6 +122,15 @@ std::shared_ptr<mir::renderer::RendererFactory> mtf::StubbedServerConfiguration:
         [&]()
         {
             return std::make_shared<StubRendererFactory>();
+        });
+}
+
+std::shared_ptr<mir::renderer::BlitterRendererFactory> mtf::StubbedServerConfiguration::the_blitter_renderer_factory()
+{
+    return blitter_renderer_factory(
+        [&]()
+        {
+            return std::make_shared<StubBlitterRendererFactory>();
         });
 }
 

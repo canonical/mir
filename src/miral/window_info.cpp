@@ -97,12 +97,14 @@ bool miral::WindowInfo::can_morph_to(MirWindowType new_type) const
     case mir_window_type_normal:
     case mir_window_type_utility:
     case mir_window_type_satellite:
+    case mir_window_type_freestyle:
         switch (type())
         {
         case mir_window_type_normal:
         case mir_window_type_utility:
         case mir_window_type_dialog:
         case mir_window_type_satellite:
+        case mir_window_type_freestyle:
             return true;
 
         default:
@@ -118,6 +120,7 @@ bool miral::WindowInfo::can_morph_to(MirWindowType new_type) const
         case mir_window_type_dialog:
         case mir_window_type_menu:
         case mir_window_type_satellite:
+        case mir_window_type_freestyle:
             return true;
 
         default:

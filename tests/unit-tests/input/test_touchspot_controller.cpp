@@ -68,12 +68,9 @@ struct StubScene : public mtd::StubInputScene
 
     void expect_spots_centered_at(std::vector<geom::Point> spots)
     {
-        int const touchspot_side_in_pixels = 64;
         for (auto overlay : overlays)
         {
-            auto top_left_pos = overlay->screen_position().top_left;
-            auto center_pos = geom::Point{top_left_pos.x.as_int() + touchspot_side_in_pixels/2,
-                top_left_pos.y.as_int() + touchspot_side_in_pixels/2};
+            auto center_pos = overlay->screen_position().centre();
             auto it = std::find(spots.begin(), spots.end(), center_pos);
             EXPECT_FALSE(it == spots.end());
             spots.erase(it);

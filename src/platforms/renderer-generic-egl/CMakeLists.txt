@@ -6,17 +6,14 @@ set(symbol_map ${CMAKE_CURRENT_BINARY_DIR}/symbols.map)
 add_library(
   mirplatformrenderereglgeneric MODULE
 
-  buffer_allocator.cpp
-  buffer_allocator.h
   platform_symbols.cpp
-  rendering_platform.h
-  rendering_platform.cpp
 )
 
 target_link_libraries(
   mirplatformrenderereglgeneric
 
   PRIVATE
+    mirplatformrenderereglcommonobjects
     mirplatform
     PkgConfig::EGL
     PkgConfig::GLESv2

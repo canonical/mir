@@ -258,10 +258,11 @@ std::unordered_map<std::string, mgk::ObjectProperties::Prop> extract_properties(
     for (auto i = 0u; i < properties->count_props; ++i)
     {
         auto prop = get_property(drm_fd, properties->props[i]);
-        property_map[prop->name] = {
-            prop->prop_id,
-            properties->prop_values[i]
-        };
+        std::string name{prop->name};
+        auto const id = prop->prop_id;
+        property_map.insert_or_assign(
+            std::move(name),
+            mgk::ObjectProperties::Prop{id, properties->prop_values[i], std::move(prop)});
     }
     return property_map;
 }
@@ -310,6 +311,12 @@ uint32_t mgk::ObjectProperties::id_for(char const* property_name) const
 bool mgk::ObjectProperties::has_property(char const* property_name) const
 {
     return properties_table.count(property_name) > 0;
+}
+
+auto mgk::ObjectProperties::metadata(char const* property_name) const -> drmModePropertyRes const*
+{
+    auto const prop = properties_table.find(property_name);
+    return prop == properties_table.end() ? nullptr : prop->second.metadata.get();
 }
 
 uint32_t mgk::ObjectProperties::parent_id() const

@@ -222,6 +222,60 @@ TEST_F(MesaDisplaySinkTest, untransformed_with_bypassable_list_can_bypass)
     EXPECT_TRUE(sink.overlay(bypassable_list));
 }
 
+TEST_F(MesaDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuffer_alive)
+{
+    graphics::gbm::DisplaySink sink(
+        drm_fd,
+        gbm,
+        graphics::gbm::BypassOption::allowed,
+        null_display_report(),
+        {mock_kms_output},
+        display_area,
+        identity);
+
+    auto fullscreen_element = [this](std::shared_ptr<MockKMSFramebuffer> const& framebuffer)
+    {
+        return mir::graphics::DisplayElement{
+            display_area,
+            {{0, 0}, {display_area.size.width.as_value(), display_area.size.height.as_value()}},
+            framebuffer};
+    };
+
+    auto frame_a = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto frame_b = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto frame_c = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    std::weak_ptr<mir::graphics::Framebuffer> const weak_a{frame_a};
+    std::weak_ptr<mir::graphics::Framebuffer> const weak_b{frame_b};
+
+    InSequence sequence;
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
+        .WillOnce(Return(true));
+    EXPECT_CALL(*mock_kms_output, wait_for_page_flip())
+        .Times(1);
+
+    ASSERT_TRUE(sink.overlay({fullscreen_element(frame_a)}));
+    frame_a.reset();
+    ASSERT_TRUE(sink.post());
+    EXPECT_FALSE(weak_a.expired());
+
+    EXPECT_CALL(*mock_kms_output, schedule_page_flip_thunk(_))
+        .WillOnce(Return(false));
+    EXPECT_CALL(*mock_kms_output, set_crtc_thunk(_))
+        .WillOnce(Return(false));
+
+    ASSERT_TRUE(sink.overlay({fullscreen_element(frame_b)}));
+    frame_b.reset();
+    EXPECT_FALSE(sink.post());
+    EXPECT_FALSE(weak_a.expired());
+    EXPECT_TRUE(weak_b.expired());
+
+    Mock::VerifyAndClearExpectations(mock_kms_output.get());
+
+    ASSERT_TRUE(sink.overlay({fullscreen_element(frame_c)}));
+    EXPECT_TRUE(sink.post());
+    EXPECT_TRUE(weak_a.expired());
+}
+
 namespace
 {
 struct PostCase

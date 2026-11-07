@@ -50,7 +50,8 @@ class XdgSurfaceStable : public mw::XdgSurface
 public:
     static XdgSurfaceStable* from(wl_resource* surface);
 
-    XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell);
+    XdgSurfaceStable(
+        wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell, mw::XdgWmBase& wm_base);
     ~XdgSurfaceStable() = default;
 
     void get_toplevel(wl_resource* new_toplevel) override;
@@ -67,6 +68,9 @@ public:
 
     using mw::XdgSurface::client;
     using mw::XdgSurface::resource;
+
+    /// The xdg_wm_base this surface was created from
+    mw::Weak<mw::XdgWmBase> const wm_base;
 
 private:
     mw::Weak<WindowWlSurfaceRole> window_role_;
@@ -85,7 +89,7 @@ class XdgPositionerStable : public mw::XdgPositioner, public shell::SurfaceSpeci
 public:
     XdgPositionerStable(wl_resource* new_resource);
 
-    void ensure_complete() const;
+    void ensure_complete(mw::Weak<mw::XdgWmBase> const& wm_base) const;
 
     bool reactive{false};
 
@@ -164,7 +168,7 @@ void mf::XdgShellStable::Instance::get_xdg_surface(wl_resource* new_shell_surfac
             mw::XdgWmBase::Error::role,
             "Surface already has a role"};
     }
-    new XdgSurfaceStable{new_shell_surface, wl_surface, *shell};
+    new XdgSurfaceStable{new_shell_surface, wl_surface, *shell, *this};
 }
 
 void mf::XdgShellStable::Instance::pong(uint32_t serial)
@@ -181,8 +185,10 @@ mf::XdgSurfaceStable* mf::XdgSurfaceStable::from(wl_resource* surface)
     return static_cast<XdgSurfaceStable*>(static_cast<mw::XdgSurface*>(tmp));
 }
 
-mf::XdgSurfaceStable::XdgSurfaceStable(wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell)
+mf::XdgSurfaceStable::XdgSurfaceStable(
+    wl_resource* new_resource, WlSurface* surface, XdgShellStable const& xdg_shell, mw::XdgWmBase& wm_base)
     : mw::XdgSurface(new_resource, Version<5>()),
+      wm_base{mw::make_weak(&wm_base)},
       surface{surface},
       xdg_shell{xdg_shell}
 {
@@ -316,7 +322,7 @@ mf::XdgPopupStable::XdgPopupStable(
       shell{xdg_surface->xdg_shell.shell},
       xdg_surface{xdg_surface}
 {
-    positioner.ensure_complete();
+    positioner.ensure_complete(xdg_surface->wm_base);
     positioner.type = mir_window_type_tip;
     if (parent_role)
     {
@@ -367,7 +373,7 @@ void mf::XdgPopupStable::reposition(wl_resource* positioner_resource, uint32_t t
     auto const& positioner = *static_cast<XdgPositionerStable*>(
         static_cast<mw::XdgPositioner*>(
             wl_resource_get_user_data(positioner_resource)));
-    positioner.ensure_complete();
+    positioner.ensure_complete(xdg_surface ? xdg_surface.value().wm_base : mw::Weak<mw::XdgWmBase>{});
 
     reactive = positioner.reactive;
     aux_rect = positioner.aux_rect ? positioner.aux_rect.value() : geom::Rectangle{};
@@ -786,15 +792,29 @@ mf::XdgPositionerStable::XdgPositionerStable(wl_resource* new_resource)
     placement_hints = static_cast<MirPlacementHints>(0);
 }
 
-void mf::XdgPositionerStable::ensure_complete() const
+void mf::XdgPositionerStable::ensure_complete(mw::Weak<mw::XdgWmBase> const& wm_base) const
 {
-    if (!width || !height || !aux_rect)
+    if (width && height && aux_rect)
+        return;
+
+    // `invalid_positioner` is defined by xdg_wm_base, so reporting it anywhere else would have
+    // the client decode code 5 against the wrong interface. If the client has already destroyed
+    // its xdg_wm_base (itself a protocol violation we do not police), fall back to the error
+    // this object does define rather than letting the bad positioner through.
+    if (wm_base)
     {
         throw mw::ProtocolError{
-            resource,
+            wm_base.value().resource,
             mw::XdgWmBase::Error::invalid_positioner,
             "Incomplete positioner"};
     }
+
+    // If the client has already destroyed its xdg_wm_base (itself a protocol violation),
+    // fall back to an error this object does define
+    throw mw::ProtocolError{
+        resource,
+        Error::invalid_input,
+        "Incomplete positioner"};
 }
 
 void mf::XdgPositionerStable::set_size(int32_t width, int32_t height)

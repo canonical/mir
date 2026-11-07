@@ -201,8 +201,11 @@ bool mgg::DisplaySink::post()
     if (needs_set_crtc)
     {
         presentation_succeeded = set_crtc(*scheduled_fb);
-        // SetCrtc is immediate, so the FB is now visible and we have nothing pending
-        visible_fb = std::move(scheduled_fb);
+        if (presentation_succeeded)
+        {
+            // SetCrtc is immediate, so the FB is now visible and we have nothing pending
+            visible_fb = std::move(scheduled_fb);
+        }
         scheduled_fb = nullptr;
 
         needs_set_crtc = false;
@@ -273,7 +276,7 @@ auto mgg::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
     return gbm;
 }
 
-void mir::graphics::gbm::DisplaySink::set_next_image(std::unique_ptr<Framebuffer> content)
+void mir::graphics::gbm::DisplaySink::set_next_image(FramebufferPtr content)
 {
     std::vector<DisplayElement> const single_buffer = {
         DisplayElement {

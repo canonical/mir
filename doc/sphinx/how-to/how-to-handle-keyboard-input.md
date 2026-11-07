@@ -1,3 +1,5 @@
+(how-to-handle-keyboard-input)=
+
 # How to handle keyboard input
 
 This how-to guide will show you the basics of handling keyboard input in Mir

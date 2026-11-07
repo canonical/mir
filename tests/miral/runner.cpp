@@ -17,6 +17,7 @@
 #include <miral/test_server.h>
 #include <miral/x11_support.h>
 
+#include <mir/server.h>
 #include <mir/test/pipe.h>
 #include <mir/test/signal.h>
 
@@ -164,3 +165,21 @@ TEST_F(Runner, register_fd_handler_does_not_invoke_callback_when_fd_not_written_
 //        EXPECT_THAT(runner.x11_display().value(), Eq(":666"));
 //    });
 //}
+
+
+TEST_F(Runner, pre_init_callback_registered)
+{
+    MockFunction<void()> init_callback;
+    {
+        InSequence s;
+        EXPECT_CALL(*this, callback());
+        EXPECT_CALL(init_callback, Call());
+    }
+
+    add_server_init([init_callback = init_callback.AsStdFunction()](::mir::Server& server) {
+        server.add_init_callback(init_callback);
+    });
+
+    add_server_init(miral::pre_init([this] { callback(); }));
+    miral::TestServer::SetUp();
+}

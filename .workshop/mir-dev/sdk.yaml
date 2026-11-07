@@ -8,5 +8,8 @@ plugs:
   ccache:
     interface: mount
     workshop-target: /home/workshop/.cache/ccache
+  wlcs-build:
+    interface: mount
+    workshop-target: /home/workshop/wlcs-build
   gpu:
     interface: gpu

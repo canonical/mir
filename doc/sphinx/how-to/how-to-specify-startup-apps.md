@@ -1,3 +1,5 @@
+(how-to-specify-startup-apps)=
+
 # How to specify startup applications
 
 When starting a compositor or display server, you usually want to start a few

@@ -75,12 +75,15 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     live_config.cpp
     live_config_ini_file.cpp
     magnifier.cpp
+    mir_shell.cpp
+    mir_shell_archetypes.cpp
     output_configuration.cpp
     output_filter.cpp
     sticky_keys.cpp
     runner.cpp
     wayland_extensions.cpp
     xdg_dialog.cpp
+    xdg_shell.cpp
     zone.cpp
     example_xdg_shell_v6.cpp example_xdg_shell_v6.h
     test_touch_emulator.cpp

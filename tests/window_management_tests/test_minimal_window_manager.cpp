@@ -628,6 +628,23 @@ TEST_F(MinimalWindowManagerWithThreeWindowsPreventFocusStealing,
     EXPECT_TRUE(is_above(windows[2], windows[1]));
 }
 
+// An always-on-top application window (for example the mir_shell_v1 floating regular archetype) is
+// still an application window, so focus-stealing prevention must apply to it.
+TEST_F(MinimalWindowManagerWithThreeWindowsPreventFocusStealing,
+    an_always_on_top_window_of_another_application_does_not_steal_focus)
+{
+    ASSERT_TRUE(focused(windows[0]));
+
+    miral::WindowSpecification spec;
+    spec.size() = { geom::Width{100}, geom::Height{100} };
+    spec.depth_layer() = mir_depth_layer_always_on_top;
+    auto const other_app = open_application("always-on-top-app");
+    auto const other_window = create_window(other_app, spec);
+
+    EXPECT_TRUE(focused(windows[0]));
+    EXPECT_FALSE(focused(other_window));
+}
+
 TEST_F(MinimalWindowManagerWithTwoWindows, if_active_window_is_removed_then_parent_has_focus_priority)
 {
     miral::WindowSpecification spec;
@@ -1285,12 +1302,7 @@ TEST_F(MinimalWindowManagerTest, when_no_surface_is_focused_then_window_is_place
 {
     // Move the cursor to the second output
     auto const second_rectangle = get_initial_output_configs()[1].extents();
-    geom::PointF const new_cursor_position{
-        second_rectangle.top_left.x.as_int() + static_cast<int>(
-            static_cast<float>(second_rectangle.size.width.as_int()) / 2.f),
-        second_rectangle.top_left.y.as_int() + static_cast<int>(
-            static_cast<float>(second_rectangle.size.height.as_int()) / 2.f)
-    };
+    geom::PointF const new_cursor_position{second_rectangle.centre()};
     tools().move_cursor_to(new_cursor_position);
     EXPECT_THAT(tools().active_output(), second_rectangle);
 

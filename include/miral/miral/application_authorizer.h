@@ -17,10 +17,14 @@
 #ifndef MIRAL_APPLICATION_AUTHORIZER_H
 #define MIRAL_APPLICATION_AUTHORIZER_H
 
+#include <expected>
 #include <sys/types.h>
 #include <functional>
 #include <memory>
+#include <optional>
+#include <string>
 #include <type_traits>
+#include <system_error>
 
 namespace mir { class Server; }
 namespace mir
@@ -38,6 +42,53 @@ public:
     pid_t pid() const;
     uid_t uid() const;
     gid_t gid() const;
+
+    /**
+     * The AppArmor label of the connecting process
+     *
+     * If Mir was built without AppArmor support this will return ENOTSUP.
+     * Otherwise, returns the label of the connecting process or the error.
+     */
+    auto apparmor_label() const -> std::expected<std::string, std::error_code>;
+
+    /**
+     * Is the client running within an application sandbox?
+     *
+     * Processes running within application sandbox systems
+     * such as Snap or Flatpak can be meaningfully identified
+     * and their privileges limited.
+     *
+     * Connections from processes running within an application
+     * sandbox should have more limited access to sensitive
+     * Wayland protocols — applications are expected to use
+     * Desktop Portals to acquire mediated access to any extra
+     * functionality they require.
+     *
+     * \note This check has false-positives — it is possible for
+     *        unprivileged unconfined processes to impersonate
+     *        running in an application sandbox.
+     *
+     *        Because of this, this check should only be used
+     *        to restrict permissions; it cannot be safely used
+     *        to provide extra permissions only to sandboxed
+     *        processes.
+     */
+    auto from_application_sandbox() const -> bool;
+
+    /**
+     * The name of the Snap this client is from
+     *
+     * \note The security guarantees of this are subtle.
+     *        For any confined snap this will return the true name.
+     *        However, any unconfined process — either outside of a snap,
+     *        or from an unconfined snap — can impersonate any snap on
+     *        the system.
+     */
+    auto snap_name() const -> std::optional<std::string>;
+    /**
+     * The name of the Flatpak this client is from
+     */
+    auto flatpak_id() const -> std::optional<std::string>;
 
 private:
     ApplicationCredentials() = delete;

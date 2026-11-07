@@ -1,3 +1,5 @@
+(consumer-libraries)=
+
 # Libraries for compositor authors
 
 These are the principal libraries *Mir* provides compositor authors.

@@ -47,6 +47,8 @@ int32_t main_height = 400;
 mir_positioner_v1_anchor satellite_anchor = MIR_POSITIONER_V1_ANCHOR_LEFT;
 int32_t satellite_offset_vertical = 50;
 int32_t satellite_offset_horizontal = 0;
+int32_t const satellite_width = 100;
+int32_t const satellite_height = 200;
 
 void parse_options(int argc, char* argv[])
 {
@@ -152,10 +154,18 @@ wl_seat* seat;
 wl_output* output;
 xdg_wm_base* wm_base;
 mir_shell_v1* mir_shell;
+uint32_t mir_shell_version;
 
 window_register my_windows;
 
 void init();
+}
+
+/// The compositor may advertise an older mir_shell_v1 than we were built against, so anything
+/// added after version 1 must be guarded by the version actually bound.
+bool mir_shell_supports(uint32_t since_version)
+{
+    return globals::mir_shell && globals::mir_shell_version >= since_version;
 }
 
 class window
@@ -273,9 +283,13 @@ class regular_window;
 class satellite;
 class dialog;
 class floating_regular;
+class menu;
+class tip;
 auto make_satellite(regular_window* main_window) -> std::unique_ptr<satellite>;
 auto make_dialog(regular_window* main_window) -> std::unique_ptr<dialog>;
 auto make_floater() -> std::unique_ptr<floating_regular>;
+auto make_menu(toplevel* parent) -> std::unique_ptr<menu>;
+auto make_tip(toplevel* parent) -> std::unique_ptr<tip>;
 
 class regular_window : public grey_window
 {
@@ -284,8 +298,10 @@ public:
     ~regular_window();
 
     static std::list<std::unique_ptr<satellite>> toolboxs;
+    static std::list<std::unique_ptr<menu>> menus;
     static std::unique_ptr<floating_regular> my_floater;
     static std::unique_ptr<dialog> my_dialog;
+    static std::unique_ptr<tip> my_tip;
 
 protected:
     void
@@ -342,6 +358,44 @@ private:
 
     void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
     override;
+};
+
+/// mir_menu_surface_v1 was added in mir_shell_v1 version 2
+class menu : public grey_window
+{
+public:
+    menu(int32_t width, int32_t height, mir_positioner_v1* positioner, toplevel* parent);
+    ~menu();
+
+private:
+    mir_menu_surface_v1* const mir_surface;
+
+    void handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+        override;
+    void handle_keyboard_modifiers(
+        wl_keyboard* keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+        uint32_t group) override;
+
+    void handle_repositioned(mir_menu_surface_v1* menu_surface, uint32_t token);
+
+    static mir_menu_surface_v1_listener const menu_listener;
+
+    uint32_t modifiers = 0;
+};
+
+/// mir_tip_surface_v1 was added in mir_shell_v1 version 2
+class tip : public grey_window
+{
+public:
+    tip(int32_t width, int32_t height, mir_positioner_v1* positioner, toplevel* parent);
+    ~tip();
+
+private:
+    mir_tip_surface_v1* const mir_surface;
+
+    void handle_repositioned(mir_tip_surface_v1* tip_surface, uint32_t token);
+
+    static mir_tip_surface_v1_listener const tip_listener;
 };
 
 class input_listener
@@ -413,8 +467,9 @@ void handle_registry_global(
     }
     else if (std::string_view(interface) == mir_shell_v1_interface.name)
     {
+        globals::mir_shell_version = std::min(version, uint32_t(mir_shell_v1_interface.version));
         globals::mir_shell = static_cast<mir_shell_v1*>(wl_registry_bind(
-            registry, id, &mir_shell_v1_interface, std::min(version, 1u)));
+            registry, id, &mir_shell_v1_interface, globals::mir_shell_version));
     }
 }
 
@@ -466,6 +521,11 @@ void globals::init()
     if (!mir_shell)
     {
         puts("WARNING: no mir_shell*");
+    }
+    else
+    {
+        printf("Bound mir_shell_v1 version %u (this client supports up to version %i)\n",
+               mir_shell_version, mir_shell_v1_interface.version);
     }
 
     if (fail) abort();
@@ -711,8 +771,10 @@ void grey_window::show_unactivated()
 }
 
 std::list<std::unique_ptr<satellite>> regular_window::toolboxs;
+std::list<std::unique_ptr<menu>> regular_window::menus;
 std::unique_ptr<floating_regular> regular_window::my_floater;
 std::unique_ptr<dialog> regular_window::my_dialog;
+std::unique_ptr<tip> regular_window::my_tip;
 
 regular_window::regular_window(int32_t width, int32_t height) :
     grey_window(width, height, 192),
@@ -746,6 +808,14 @@ void regular_window::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial,
             break;
         case KEY_F:my_floater = make_floater();
             break;
+        case KEY_M:
+            if (auto new_menu = make_menu(this))
+                menus.push_back(std::move(new_menu));
+            break;
+        case KEY_I:
+            // A tip never takes input focus, so it is toggled from its parent
+            my_tip = my_tip ? nullptr : make_tip(this);
+            break;
         }
     }
     if (state == WL_KEYBOARD_KEY_STATE_RELEASED)
@@ -753,6 +823,8 @@ void regular_window::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial,
     {
     case KEY_ESC:
         toolboxs.clear();
+        menus.clear();
+        my_tip.reset();
         break;
     }
 }
@@ -818,6 +890,7 @@ auto make_satellite(regular_window* main_window) -> std::unique_ptr<satellite>
         auto const positioner = mir_shell_v1_create_positioner(globals::mir_shell);
         auto const [anchor_width, anchor_height] = main_window->size();
 
+        mir_positioner_v1_set_size(positioner, satellite_width, satellite_height);
         mir_positioner_v1_set_anchor_rect(positioner, 0, 0, anchor_width, anchor_height);
         mir_positioner_v1_set_anchor(positioner, satellite_anchor);
         mir_positioner_v1_set_gravity(positioner, satellite_anchor);
@@ -847,11 +920,11 @@ auto make_satellite(regular_window* main_window) -> std::unique_ptr<satellite>
         }
         mir_positioner_v1_set_constraint_adjustment(positioner, constraint_adjustment);
 
-        return std::make_unique<satellite>(100, 200, positioner, *main_window);
+        return std::make_unique<satellite>(satellite_width, satellite_height, positioner, *main_window);
     }
     else
     {
-        return std::make_unique<satellite>(100, 200, nullptr, *main_window);
+        return std::make_unique<satellite>(satellite_width, satellite_height, nullptr, *main_window);
     }
 }
 
@@ -920,6 +993,188 @@ void floating_regular::handle_keyboard_key(wl_keyboard* keyboard, uint32_t seria
 auto make_floater() -> std::unique_ptr<floating_regular>
 {
     return std::make_unique<floating_regular>(200, 200);
+}
+
+auto make_positioner(
+    int32_t width, int32_t height,
+    int32_t anchor_x, int32_t anchor_y, int32_t anchor_width, int32_t anchor_height,
+    mir_positioner_v1_anchor anchor,
+    mir_positioner_v1_gravity gravity,
+    uint32_t constraint_adjustment) -> mir_positioner_v1*
+{
+    auto const positioner = mir_shell_v1_create_positioner(globals::mir_shell);
+
+    // A positioner is only complete once both the size and the anchor rect are set
+    mir_positioner_v1_set_size(positioner, width, height);
+    mir_positioner_v1_set_anchor_rect(positioner, anchor_x, anchor_y, anchor_width, anchor_height);
+    mir_positioner_v1_set_anchor(positioner, anchor);
+    mir_positioner_v1_set_gravity(positioner, gravity);
+    mir_positioner_v1_set_constraint_adjustment(positioner, constraint_adjustment);
+
+    return positioner;
+}
+
+void report_unsupported(char const* archetype, int since_version)
+{
+    if (globals::mir_shell)
+    {
+        printf("WARNING: %s needs mir_shell_v1 version %i, but the compositor supports version %u\n",
+               archetype, since_version, globals::mir_shell_version);
+    }
+    else
+    {
+        printf("WARNING: %s needs mir_shell_v1, which the compositor doesn't support\n", archetype);
+    }
+}
+
+menu::menu(int32_t width, int32_t height, mir_positioner_v1* positioner, toplevel* parent) :
+    grey_window{width, height, 208, 0},
+    mir_surface{positioner && mir_shell_supports(MIR_SHELL_V1_GET_MENU_SURFACE_SINCE_VERSION)
+        ? mir_shell_v1_get_menu_surface(globals::mir_shell, *this, positioner) : nullptr}
+{
+    xdg_toplevel_set_parent(*this, *parent);
+    xdg_toplevel_set_title(*this, "menu");
+
+    if (mir_surface)
+    {
+        mir_menu_surface_v1_add_listener(mir_surface, &menu_listener, this);
+    }
+    redraw();
+}
+
+menu::~menu()
+{
+    if (mir_surface)
+    {
+        mir_menu_surface_v1_destroy(mir_surface);
+    }
+}
+
+void menu::handle_repositioned(mir_menu_surface_v1* /*menu_surface*/, uint32_t /*token*/)
+{
+    trace("Received menu repositioned event");
+}
+
+mir_menu_surface_v1_listener const menu::menu_listener =
+{
+    .repositioned = [](void* ctx, auto... args) { static_cast<menu*>(ctx)->handle_repositioned(args...); },
+};
+
+void menu::handle_keyboard_modifiers(
+    wl_keyboard* keyboard, uint32_t serial, uint32_t mods_depressed, uint32_t mods_latched, uint32_t mods_locked,
+    uint32_t group)
+{
+    grey_window::handle_keyboard_modifiers(keyboard, serial, mods_depressed, mods_latched, mods_locked, group);
+
+    modifiers = mods_depressed;
+}
+
+void menu::handle_keyboard_key(wl_keyboard* keyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state)
+{
+    grey_window::handle_keyboard_key(keyboard, serial, time, key, state);
+
+    if (state != WL_KEYBOARD_KEY_STATE_RELEASED)
+        return;
+
+    if (modifiers == ControlMask && key == KEY_M)
+    {
+        // Menus may be nested: the parent of a submenu is the menu that opened it
+        if (auto submenu = make_menu(this))
+            regular_window::menus.push_back(std::move(submenu));
+    }
+    else if (key == KEY_ESC)
+    {
+        regular_window::menus.clear();  // Careful: this destroys *this
+    }
+}
+
+auto make_menu(toplevel* parent) -> std::unique_ptr<menu>
+{
+    if (!mir_shell_supports(MIR_SHELL_V1_GET_MENU_SURFACE_SINCE_VERSION))
+    {
+        report_unsupported("mir_menu_surface_v1", MIR_SHELL_V1_GET_MENU_SURFACE_SINCE_VERSION);
+        return {};
+    }
+
+    int32_t const menu_width = 120;
+    int32_t const menu_height = 160;
+
+    auto const [parent_width, parent_height] = parent->size();
+
+    // A submenu drops out of the side of its parent menu, a menu out of the bottom of a "menu bar"
+    auto const positioner = dynamic_cast<menu*>(parent)
+        ? make_positioner(
+            menu_width, menu_height, 0, 0, parent_width, parent_height,
+            MIR_POSITIONER_V1_ANCHOR_TOP_RIGHT, MIR_POSITIONER_V1_GRAVITY_BOTTOM_RIGHT,
+            MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_FLIP_X | MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_Y)
+        : make_positioner(
+            menu_width, menu_height, 0, 0, std::min(parent_width, 100), 20,
+            MIR_POSITIONER_V1_ANCHOR_BOTTOM_LEFT, MIR_POSITIONER_V1_GRAVITY_BOTTOM_RIGHT,
+            MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_FLIP_Y | MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_X);
+
+    auto result = std::make_unique<menu>(menu_width, menu_height, positioner, parent);
+
+    // The compositor copies the rules when the positioner is used, so we needn't keep it
+    mir_positioner_v1_destroy(positioner);
+
+    return result;
+}
+
+tip::tip(int32_t width, int32_t height, mir_positioner_v1* positioner, toplevel* parent) :
+    grey_window{width, height, 240, 0},
+    mir_surface{positioner && mir_shell_supports(MIR_SHELL_V1_GET_TIP_SURFACE_SINCE_VERSION)
+        ? mir_shell_v1_get_tip_surface(globals::mir_shell, *this, positioner) : nullptr}
+{
+    xdg_toplevel_set_parent(*this, *parent);
+    xdg_toplevel_set_title(*this, "tip");
+
+    if (mir_surface)
+    {
+        mir_tip_surface_v1_add_listener(mir_surface, &tip_listener, this);
+    }
+    redraw();
+}
+
+tip::~tip()
+{
+    if (mir_surface)
+    {
+        mir_tip_surface_v1_destroy(mir_surface);
+    }
+}
+
+void tip::handle_repositioned(mir_tip_surface_v1* /*tip_surface*/, uint32_t /*token*/)
+{
+    trace("Received tip repositioned event");
+}
+
+mir_tip_surface_v1_listener const tip::tip_listener =
+{
+    .repositioned = [](void* ctx, auto... args) { static_cast<tip*>(ctx)->handle_repositioned(args...); },
+};
+
+auto make_tip(toplevel* parent) -> std::unique_ptr<tip>
+{
+    if (!mir_shell_supports(MIR_SHELL_V1_GET_TIP_SURFACE_SINCE_VERSION))
+    {
+        report_unsupported("mir_tip_surface_v1", MIR_SHELL_V1_GET_TIP_SURFACE_SINCE_VERSION);
+        return {};
+    }
+
+    int32_t const tip_width = 160;
+    int32_t const tip_height = 40;
+
+    // The tip describes a notional control in the parent
+    auto const positioner = make_positioner(
+        tip_width, tip_height, 20, 30, 60, 20,
+        MIR_POSITIONER_V1_ANCHOR_BOTTOM_LEFT, MIR_POSITIONER_V1_GRAVITY_BOTTOM_RIGHT,
+        MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_X | MIR_POSITIONER_V1_CONSTRAINT_ADJUSTMENT_SLIDE_Y);
+
+    auto result = std::make_unique<tip>(tip_width, tip_height, positioner, parent);
+
+    mir_positioner_v1_destroy(positioner);
+
+    return result;
 }
 
 wl_pointer_listener const input_listener::pointer_listener =
@@ -1080,6 +1335,15 @@ int main(int argc, char* argv[])
     parse_options(argc, argv);
 
     globals::init();
+
+    puts("Keys (in the main window, unless noted):");
+    puts("  Ctrl-T  open a satellite");
+    puts("  Ctrl-D  open a dialog");
+    puts("  Ctrl-F  open a floating regular window");
+    puts("  Ctrl-M  open a menu (Ctrl-M in a menu opens a submenu)");
+    puts("  Ctrl-I  toggle a tip");
+    puts("  Ctrl-Q  quit");
+    puts("  Esc     dismiss satellites, menus and tips");
 
     {
         input_listener input;

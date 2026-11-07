@@ -24,13 +24,28 @@ namespace mir
 namespace compositor
 {
 
+/**
+ * How a composition attempt should present its content.
+ */
+enum class CompositionMode
+{
+    normal,    ///< Direct presentation (bypass / overlays / planes) is allowed
+    recovery,  ///< Render the visible scene through the renderer; client-buffer bypass and plane promotion are disabled
+};
+
 class DisplayBufferCompositor
 {
 public:
     virtual ~DisplayBufferCompositor() = default;
 
-    /// Returns true if any compositing happened, otherwise false.
-    virtual bool composite(SceneElementSequence&& scene_sequence) = 0;
+    /**
+     * Returns true if any compositing happened, otherwise false.
+     *
+     * In CompositionMode::recovery the implementation must render the visible
+     * scene itself, without client-buffer bypass or plane promotion. The
+     * hardware cursor plane is not affected.
+     */
+    [[nodiscard]] virtual bool composite(SceneElementSequence&& scene_sequence, CompositionMode mode) = 0;
 
 protected:
     DisplayBufferCompositor() = default;

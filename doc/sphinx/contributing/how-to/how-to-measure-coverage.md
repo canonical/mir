@@ -1,3 +1,5 @@
+(how-to-measure-coverage)=
+
 # How to measure code coverage
 
 This guide shows how to enable the project's built-in coverage targets and how to produce coverage reports manually for a subset of the code using `gcovr`.

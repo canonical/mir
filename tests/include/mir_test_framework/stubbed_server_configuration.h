@@ -40,6 +40,7 @@ public:
     auto the_display_platforms() -> std::vector<std::shared_ptr<graphics::DisplayPlatform>> const& override;
     auto the_rendering_platforms() -> std::vector<std::shared_ptr<graphics::RenderingPlatform>> const& override;
     std::shared_ptr<renderer::RendererFactory> the_renderer_factory() override;
+    std::shared_ptr<renderer::BlitterRendererFactory> the_blitter_renderer_factory() override;
     std::shared_ptr<input::InputManager> the_input_manager() override;
     std::shared_ptr<shell::InputTargeter> the_input_targeter() override;
 

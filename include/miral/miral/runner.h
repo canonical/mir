@@ -166,6 +166,12 @@ private:
     struct Self;
     std::unique_ptr<Self> const self;
 };
+
+/// Register the provided callback with `add_pre_init_callback`
+///
+/// \param cb the callback
+/// \returns a modified callback
+auto pre_init(std::function<void()> const& cb) -> std::function<void(::mir::Server&)>;
 }
 
 #endif //MIRAL_RUNNER_H

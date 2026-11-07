@@ -49,6 +49,7 @@ debian
 deps
 destructors
 devel
+Dialogs
 DisplayLink's
 DisplayPlatform
 dispatchable
@@ -83,6 +84,7 @@ evdi
 Fedora
 fd
 filesystem
+Flatpak
 FloatingWindowManagerPolicy
 Frame
 frontend
@@ -204,6 +206,7 @@ Qtmir
 radeon
 raspberrypi
 rc
+reimplemented
 remediations
 recomposition
 remediations
@@ -268,6 +271,7 @@ udev
 unary
 UndefinedBehaviourSanitizer
 unmanaged
+unmappable
 untrusted
 URIs
 usecases

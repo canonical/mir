@@ -1,4 +1,4 @@
-MIR_SERVER_INTERNAL_2.30 {
+MIR_SERVER_INTERNAL_2.31 {
 global:
   extern "C++" {
     VTT?for?mir::DefaultServerConfiguration;
@@ -72,6 +72,7 @@ global:
     mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
     mir::DefaultServerConfiguration::the_renderer_factory*;
+    mir::DefaultServerConfiguration::the_blitter_renderer_factory*;
     mir::DefaultServerConfiguration::the_rendering_platforms*;
     mir::DefaultServerConfiguration::the_scene*;
     mir::DefaultServerConfiguration::the_scene_report*;
@@ -174,6 +175,7 @@ global:
     mir::Server::override_the_persistent_surface_store*;
     mir::Server::override_the_pointer_input_dispatcher*;
     mir::Server::override_the_renderer_factory*;
+    mir::Server::override_the_blitter_renderer_factory*;
     mir::Server::override_the_server_status_listener*;
     mir::Server::override_the_session_authorizer*;
     mir::Server::override_the_session_listener*;
@@ -217,6 +219,7 @@ global:
     mir::Server::the_persistent_surface_store*;
     mir::Server::the_pointer_input_dispatcher*;
     mir::Server::the_renderer_factory*;
+    mir::Server::the_blitter_renderer_factory*;
     mir::Server::the_rendering_platforms*;
     mir::Server::the_scene*;
     mir::Server::the_scene_report*;
@@ -328,6 +331,10 @@ global:
     mir::frontend::SessionCredentials::gid*;
     mir::frontend::SessionCredentials::pid*;
     mir::frontend::SessionCredentials::uid*;
+    mir::frontend::SessionCredentials::apparmor_label*;
+    mir::frontend::SessionCredentials::is_sandboxed*;
+    mir::frontend::SessionCredentials::snap_info*;
+    mir::frontend::SessionCredentials::flatpak_info*;
     mir::frontend::Surface::?Surface*;
     mir::frontend::Surface::Surface*;
     mir::frontend::Surface::operator*;
@@ -856,6 +863,7 @@ global:
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_pointer_input_dispatcher*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_primary_selection_clipboard*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_renderer_factory*;
+    non-virtual?thunk?to?mir::DefaultServerConfiguration::the_blitter_renderer_factory*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_rendering_platforms*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_scene*;
     non-virtual?thunk?to?mir::DefaultServerConfiguration::the_scene_report*;

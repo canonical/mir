@@ -36,6 +36,7 @@ class Session;
 namespace frontend
 {
 class SessionAuthorizer;
+class SessionCredentials;
 
 /// Keeps track of which session is associated with which XWayland client PID
 class XWaylandClientManager
@@ -46,7 +47,7 @@ public:
     class Session
     {
     public:
-        Session(XWaylandClientManager* manager, pid_t client_pid);
+        Session(XWaylandClientManager* manager, SessionCredentials&& creds);
         ~Session();
 
         auto session() const -> std::shared_ptr<scene::Session>;

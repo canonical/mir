@@ -99,11 +99,11 @@ public:
         -> std::optional<LogicalStacking> override;
     auto transformation() const -> glm::mat2 override;
     auto maybe_create_allocator(DisplayAllocator::Tag const& type_tag) -> DisplayAllocator* override;
-    void set_next_image(std::unique_ptr<Framebuffer> content) override;
+    void set_next_image(FramebufferPtr content) override;
 
 private:
     std::mutex mutex;
-    std::unique_ptr<WlDisplayAllocator::Framebuffer> next_frame;
+    std::unique_ptr<WlDisplayAllocator::Framebuffer, FramebufferDeleter> next_frame;
     std::shared_ptr<WlDisplayAllocator> provider;
 };
 
@@ -433,25 +433,9 @@ auto mgw::DisplayClient::Output::maybe_create_allocator(DisplayAllocator::Tag co
     return nullptr;
 }
 
-namespace
+void mgw::DisplayClient::Output::set_next_image(FramebufferPtr content)
 {
-template<typename To, typename From>
-auto unique_ptr_cast(std::unique_ptr<From> ptr) -> std::unique_ptr<To>
-{
-    From* unowned_src = ptr.release();
-    if (auto to_src = dynamic_cast<To*>(unowned_src))
-    {
-        return std::unique_ptr<To>{to_src};
-    }
-    delete unowned_src;
-    BOOST_THROW_EXCEPTION((
-        std::bad_cast()));
-}
-}
-
-void mgw::DisplayClient::Output::set_next_image(std::unique_ptr<Framebuffer> content)
-{
-    if (auto wl_content = unique_ptr_cast<WlDisplayAllocator::Framebuffer>(std::move(content)))
+    if (auto wl_content = framebuffer_cast<WlDisplayAllocator::Framebuffer>(std::move(content)))
     {
         std::lock_guard lock{mutex};
         next_frame = std::move(wl_content);
