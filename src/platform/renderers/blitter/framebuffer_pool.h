@@ -17,8 +17,6 @@
 #ifndef MIR_RENDERER_BLITTER_FRAMEBUFFER_POOL_H_
 #define MIR_RENDERER_BLITTER_FRAMEBUFFER_POOL_H_
 
-#include "common/gl_handles.h"
-
 #include <mir/graphics/display_providers.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/framebuffer_ptr.h>

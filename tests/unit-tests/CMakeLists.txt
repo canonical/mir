@@ -24,6 +24,7 @@ include_directories(
   ${CMAKE_SOURCE_DIR}
 
   ${PROJECT_SOURCE_DIR}/src/include/server
+  ${PROJECT_SOURCE_DIR}/src/include/platform
   ${CMAKE_BINARY_DIR}/src/server/console
 )
 

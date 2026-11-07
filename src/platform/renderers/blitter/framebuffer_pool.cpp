@@ -23,10 +23,12 @@
 #include <mir/graphics/cpu_copy_output_surface.h>
 #include <mir/graphics/dmabuf_buffer.h>
 #include <mir/graphics/egl_error.h>
+#include <mir/graphics/gl_handles.h>
 #include <mir/log.h>
 #include <mir/synchronised.h>
 
 #include <boost/throw_exception.hpp>
+#include <optional>
 #include <stdexcept>
 #include <utility>
 
@@ -34,25 +36,6 @@ namespace geom = mir::geometry;
 namespace mg = mir::graphics;
 namespace mgc = mir::graphics::common;
 namespace mrb = mir::renderer::blitter;
-namespace mrc = mir::renderer::common;
-
-namespace
-{
-auto make_texture() -> mrc::TextureHandle
-{
-    GLuint tex = 0;
-    glGenTextures(1, &tex);
-    return mrc::TextureHandle{tex};
-}
-
-auto make_framebuffer() -> mrc::FramebufferHandle
-{
-    GLuint fb = 0;
-    glGenFramebuffers(1, &fb);
-    return mrc::FramebufferHandle{fb};
-}
-}
-
 class mrb::FramebufferPool::Entry
 {
 public:
@@ -76,8 +59,8 @@ private:
 
     std::shared_ptr<SoftwareEGLContext> const context;
     std::unique_ptr<mg::CPUAddressableDisplayAllocator::MappableFB> const fb;
-    mrc::TextureHandle texture;
-    mrc::FramebufferHandle fbo;
+    std::optional<mg::TextureHandle> texture;
+    std::optional<mg::FramebufferHandle> fbo;
 
 public:
     /// The blitter's handle to this framebuffer; empty while a Task holds it
@@ -125,8 +108,8 @@ void mrb::FramebufferPool::Entry::build_gl_resources()
     // is an EGLImage sibling we can throw the image away without freeing the dma-buf.
     auto const image = mg::import_dmabuf_to_egl_image(dpy, extensions, *dmabuf);
 
-    texture = make_texture();
-    glBindTexture(GL_TEXTURE_2D, texture);
+    texture.emplace();
+    glBindTexture(GL_TEXTURE_2D, *texture);
     extensions.base(dpy).glEGLImageTargetTexture2DOES(GL_TEXTURE_2D, image);
     extensions.base(dpy).eglDestroyImageKHR(dpy, image);
 
@@ -135,9 +118,9 @@ void mrb::FramebufferPool::Entry::build_gl_resources()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    fbo = make_framebuffer();
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
-    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture, 0);
+    fbo.emplace();
+    glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, *texture, 0);
 
     if (auto const status = glCheckFramebufferStatus(GL_FRAMEBUFFER); status != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -166,14 +149,14 @@ mrb::FramebufferPool::Entry::~Entry()
 
 void mrb::FramebufferPool::Entry::release_gl_resources()
 {
-    fbo = mrc::FramebufferHandle{};
-    texture = mrc::TextureHandle{};
+    fbo.reset();
+    texture.reset();
 }
 
 void mrb::FramebufferPool::Entry::bind()
 {
     context->make_current();
-    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, *fbo);
 }
 
 auto mrb::FramebufferPool::Entry::size() const -> geom::Size { return fb->size(); }
