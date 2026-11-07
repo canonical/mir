@@ -46,9 +46,7 @@ public:
     GLHandle()
         requires std::invocable<decltype(allocator), GLsizei, GLuint*>
         : id{0}
-    {
-        allocator(1, &id);
-    }
+    { allocator(1, &id); }
 
     /// eg: glCreateShader(GL_VERTEX_SHADER)
     explicit GLHandle(GLenum type)

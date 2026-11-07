@@ -17,7 +17,6 @@
 #ifndef MIR_RENDERER_TEXTURE_CACHE_H_
 #define MIR_RENDERER_TEXTURE_CACHE_H_
 
-
 #include <mir/graphics/gl_handles.h>
 
 #include <mir/graphics/buffer_id.h>

@@ -68,8 +68,8 @@ private:
 auto compile_shader(GLenum type, GLchar const* src) -> graphics::ShaderHandle;
 
 /// Link `vertex_shader` and `fragment_shader` into a program, throwing on failure
-auto link_shader(graphics::ShaderHandle const& vertex_shader, graphics::ShaderHandle const& fragment_shader) -> graphics::ProgramHandle;
-
+auto link_shader(graphics::ShaderHandle const& vertex_shader, graphics::ShaderHandle const& fragment_shader)
+    -> graphics::ProgramHandle;
 }
 
 #endif // MIR_RENDERER_COMMON_GL_PROGRAM_FACTORY_H_

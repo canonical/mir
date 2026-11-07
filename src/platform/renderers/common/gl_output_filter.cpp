@@ -84,8 +84,7 @@ auto compile_program(GLchar const* src) -> mg::ProgramHandle
         "    gl_FragColor = sample_to_rgba(v_texcoord);\n"
         "}\n";
 
-    mg::ShaderHandle const fragment_shader{
-        mrc::compile_shader(GL_FRAGMENT_SHADER, fragment_src.str().c_str())};
+    mg::ShaderHandle const fragment_shader{mrc::compile_shader(GL_FRAGMENT_SHADER, fragment_src.str().c_str())};
 
     return mrc::link_shader(vertex_shader, fragment_shader);
 }

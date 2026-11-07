@@ -75,8 +75,7 @@ TEST_F(GLHandleTest, bulk_allocator_and_bulk_deleter)
     GLuint const texture_id = 303;
 
     InSequence const s;
-    EXPECT_CALL(mock_gl, glGenTextures(1, _))
-        .WillOnce(SetArgPointee<1>(texture_id));
+    EXPECT_CALL(mock_gl, glGenTextures(1, _)).WillOnce(SetArgPointee<1>(texture_id));
 
     EXPECT_CALL(mock_gl, glDeleteTextures(1, Pointee(texture_id))).Times(1);
 

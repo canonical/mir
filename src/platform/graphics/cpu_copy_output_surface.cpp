@@ -176,15 +176,14 @@ mgc::CPUCopyOutputSurface::Impl::Impl(
     EGLDisplay dpy,
     EGLContext share_ctx,
     mg::CPUAddressableDisplayAllocator& allocator,
-    GLConfig const& config)
-    : allocator{allocator},
-      dpy{dpy},
-      ctx{create_current_context(dpy, share_ctx)},
-      format{select_format_from(allocator)},
-      depth_stencil_buffer{
-          (config.depth_buffer_bits() || config.stencil_buffer_bits())
-              ? std::make_shared<mg::RenderbufferHandle>()
-              : nullptr}
+    GLConfig const& config) :
+    allocator{allocator},
+    dpy{dpy},
+    ctx{create_current_context(dpy, share_ctx)},
+    format{select_format_from(allocator)},
+    depth_stencil_buffer{
+        (config.depth_buffer_bits() || config.stencil_buffer_bits()) ? std::make_shared<mg::RenderbufferHandle>() :
+                                                                       nullptr}
 {
     ensure_storage_for_size();
 }

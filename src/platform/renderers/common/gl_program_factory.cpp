@@ -72,9 +72,8 @@ auto mrc::compile_shader(GLenum type, GLchar const* src) -> mg::ShaderHandle
     return id;
 }
 
-auto mrc::link_shader(
-    mg::ShaderHandle const& vertex_shader,
-    mg::ShaderHandle const& fragment_shader) -> mg::ProgramHandle
+auto mrc::link_shader(mg::ShaderHandle const& vertex_shader, mg::ShaderHandle const& fragment_shader)
+    -> mg::ProgramHandle
 {
     mg::ProgramHandle program;
     glAttachShader(program, fragment_shader);
@@ -95,11 +94,11 @@ auto mrc::link_shader(
     return program;
 }
 
-mrc::Program::Program(mg::ProgramHandle&& opaque_shader, mg::ProgramHandle&& alpha_shader)
-    : opaque_handle(std::move(opaque_shader)),
-      alpha_handle(std::move(alpha_shader)),
-      opaque{opaque_handle},
-      alpha{alpha_handle}
+mrc::Program::Program(mg::ProgramHandle&& opaque_shader, mg::ProgramHandle&& alpha_shader) :
+    opaque_handle(std::move(opaque_shader)),
+    alpha_handle(std::move(alpha_shader)),
+    opaque{opaque_handle},
+    alpha{alpha_handle}
 {
 }
 
@@ -164,10 +163,8 @@ auto mrc::GLProgramFactory::compile_fragment_shader(
     // GL shader compilation is *not* threadsafe, and requires external synchronisation
     std::lock_guard lock{compilation_mutex};
 
-    mg::ShaderHandle const opaque_shader{
-        compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};
-    mg::ShaderHandle const alpha_shader{
-        compile_shader(GL_FRAGMENT_SHADER, alpha_fragment.str().c_str())};
+    mg::ShaderHandle const opaque_shader{compile_shader(GL_FRAGMENT_SHADER, opaque_fragment.str().c_str())};
+    mg::ShaderHandle const alpha_shader{compile_shader(GL_FRAGMENT_SHADER, alpha_fragment.str().c_str())};
 
     programs.emplace_back(id, std::make_unique<Program>(
         link_shader(vertex_shader, opaque_shader),

@@ -84,9 +84,7 @@ auto compile_shader(GLenum type, GLchar const* src) -> mg::ShaderHandle
     return id;
 }
 
-auto link_shader(
-    mg::ShaderHandle const& vertex_shader,
-    mg::ShaderHandle const& fragment_shader) -> mg::ProgramHandle
+auto link_shader(mg::ShaderHandle const& vertex_shader, mg::ShaderHandle const& fragment_shader) -> mg::ProgramHandle
 {
     mg::ProgramHandle program;
     glAttachShader(program, fragment_shader);
