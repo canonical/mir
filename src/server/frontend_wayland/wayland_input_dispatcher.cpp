@@ -23,6 +23,7 @@
 
 #include <mir/input/keymap.h>
 #include <mir/wayland/client.h>
+#include <mir/events/keyboard_event.h>
 #include <mir/events/pointer_event.h>
 #include <mir/events/touch_event.h>
 
@@ -67,7 +68,15 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
             });
     }   break;
 
-    // Keyboard events are sent to the WlSeat via it's KeyboardObserver
+    // For keyboard events from miroil::dispatch_input_event()
+    case mir_input_event_type_key:
+    {
+        auto const keyboard_event = dynamic_pointer_cast<MirKeyboardEvent const>(event);
+        seat->for_each_listener(wl_surface.value().client, [&](WlKeyboard* keyboard)
+            {
+                keyboard->event(keyboard_event, wl_surface.value());
+            });
+    }   break;
 
     default:
         break;
