@@ -1414,12 +1414,6 @@ auto mg::DMABufEGLProvider::import_dma_buf(
         dma_buf.modifier().value_or(DRM_FORMAT_MOD_INVALID),
         *this);
 
-    /* Constructing a DmabufTexBuffer creates a GL texture bound to the imported
-     * dma-buf's EGLImage, which requires a current EGL context. It is a precondition
-     * of this method that the caller has made a suitable context (for example,
-     * context()) current on the calling thread. Without a current context the texture
-     * is never bound to the EGLImage and samples as black.
-     */
     return std::make_shared<DmabufTexBuffer>(
         dpy,
         *egl_extensions,

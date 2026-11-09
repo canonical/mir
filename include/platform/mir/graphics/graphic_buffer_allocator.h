@@ -93,9 +93,6 @@ public:
     /**
      * The linux-dmabuf import provider for this allocator, if any.
      *
-     * The (Rust-backed) Wayland frontend uses this to implement the zwp_linux_dmabuf_v1
-     * protocol directly, rather than going through the old libwayland bind_display path.
-     *
      * \return the provider, or nullptr if this allocator does not support dmabuf import.
      */
     virtual auto dma_buf_provider() -> std::shared_ptr<DMABufEGLProvider> = 0;

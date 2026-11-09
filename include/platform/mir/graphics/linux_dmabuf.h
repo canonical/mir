@@ -97,17 +97,11 @@ public:
 
     /**
      * Whether the given format/modifier combination can be imported by this provider.
-     *
-     * Exposed for the (Rust-backed) Wayland frontend, which no longer has access to the
-     * internal EGL format descriptors.
      */
     auto is_importable(DRMFormat format, uint64_t modifier) const -> bool;
 
     /**
      * The formats (and their supported modifiers) this provider can import.
-     *
-     * Exposed for the Wayland frontend so it can advertise linux-dmabuf formats/modifiers
-     * without touching the internal EGL descriptor types.
      */
     auto supported_format_modifiers() const -> std::vector<std::pair<DRMFormat, std::vector<uint64_t>>>;
 
