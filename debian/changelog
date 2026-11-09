@@ -1,6 +1,8 @@
 mir (2.32.0) UNRELEASED; urgency=medium
 
   * Begin development for 2.32.0 release
+  * Bump mirplatform ABI to 37 and graphics platform ABI to 26 for the
+    DMA-BUF provider interface changes.
 
  -- Mir CI Bot <mir-ci-bot@canonical.com>  Sat, 24 Oct 2026 23:03:39 +0000
 
