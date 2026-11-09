@@ -1,0 +1,424 @@
+/*
+ * Copyright © Canonical Ltd.
+ *
+ * This program is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License version 2 or 3 as
+ * published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <miral/decoration_style.h>
+#include <miral/live_config.h>
+
+#include <mir/log.h>
+#include <mir/server.h>
+#include <mir/shell/decoration/decoration_style.h>
+
+#include <charconv>
+#include <cmath>
+#include <map>
+#include <mutex>
+#include <ranges>
+#include <set>
+
+namespace msd = mir::shell::decoration;
+
+namespace
+{
+mir::logging::Tags const log_tags{mir::logging::graphics()};
+
+using Element = miral::DecorationStyle::Element;
+using State = miral::DecorationStyle::State;
+using Metric = miral::DecorationStyle::Metric;
+
+/// The color of \p element in \p state, or nullptr if the combination isn't drawn
+auto color_of(msd::DecorationStyle& style, Element element, State state) -> msd::Pixel*
+{
+    switch (element)
+    {
+    case Element::background:
+        switch (state)
+        {
+        case State::focused:    return &style.focused.background_color;
+        case State::unfocused:  return &style.unfocused.background_color;
+        default:                return nullptr;
+        }
+
+    case Element::title:
+        switch (state)
+        {
+        case State::focused:    return &style.focused.text_color;
+        case State::unfocused:  return &style.unfocused.text_color;
+        default:                return nullptr;
+        }
+
+    case Element::button:
+        switch (state)
+        {
+        case State::normal:     return &style.button.normal_color;
+        case State::hovered:    return &style.button.active_color;
+        case State::unfocused:  return &style.button.unfocused_color;
+        default:                return nullptr;
+        }
+
+    case Element::close_button:
+        switch (state)
+        {
+        case State::normal:     return &style.close_button.normal_color;
+        case State::hovered:    return &style.close_button.active_color;
+        case State::unfocused:  return &style.close_button.unfocused_color;
+        default:                return nullptr;
+        }
+
+    case Element::button_icon:
+        switch (state)
+        {
+        case State::focused:    return &style.button.icon_color;
+        case State::unfocused:  return &style.button.unfocused_icon_color;
+        default:                return nullptr;
+        }
+
+    case Element::close_button_icon:
+        switch (state)
+        {
+        case State::focused:    return &style.close_button.icon_color;
+        case State::unfocused:  return &style.close_button.unfocused_icon_color;
+        default:                return nullptr;
+        }
+
+    default:                    return nullptr;
+    }
+}
+
+auto set_metric_of(msd::DecorationStyle& style, Metric metric, int pixels) -> bool
+{
+    using namespace mir::geometry;
+    switch (metric)
+    {
+    case Metric::titlebar_height:
+        style.titlebar_height = Height{pixels};
+        return true;
+
+    case Metric::side_border_width:
+        style.side_border_width = Width{pixels};
+        return true;
+
+    case Metric::bottom_border_height:
+        style.bottom_border_height = Height{pixels};
+        return true;
+
+    case Metric::button_width:
+        style.button_width = Width{pixels};
+        return true;
+
+    case Metric::padding_between_buttons:
+        style.padding_between_buttons = Width{pixels};
+        return true;
+
+    case Metric::title_font_height:
+        style.title_font_height = Height{pixels};
+        return true;
+
+    case Metric::resize_corner_input_width:
+        style.resize_corner_input_size.width = Width{pixels};
+        return true;
+
+    case Metric::resize_corner_input_height:
+        style.resize_corner_input_size.height = Height{pixels};
+        return true;
+
+    case Metric::corner_radius:
+        style.corner_radius = Width{pixels};
+        return true;
+
+    default:
+        return false;
+    }
+}
+
+/// Parses "#rrggbb" or "#rrggbbaa" (the leading '#' is optional)
+auto parse_color(std::string_view text) -> std::optional<msd::Pixel>
+{
+    if (text.starts_with('#'))
+        text.remove_prefix(1);
+
+    if (text.size() != 6 && text.size() != 8)
+        return std::nullopt;
+
+    uint32_t channels[4] = {0, 0, 0, 0xFF};
+
+    for (auto [in, channel] : std::ranges::zip_view{(text | std::views::chunk(2)), channels})
+    {
+        auto const [end, ec] = std::from_chars(in.begin(), in.end(), channel, 16);
+
+        if (ec != std::errc{} || end != in.end())
+            return std::nullopt;
+    }
+
+    return msd::pack_pixel(channels[0], channels[1], channels[2], channels[3]);
+}
+
+/// Mixes \p fraction of \p toward into \p base
+auto blend(msd::Pixel base, msd::Pixel toward, float fraction) -> msd::Pixel
+{
+    auto const from = msd::unpack_pixel(base);
+    auto const to = msd::unpack_pixel(toward);
+
+    auto const mix = [fraction](unsigned char from, unsigned char to)
+        {
+            return static_cast<unsigned char>(from + std::lround((float(to) - float(from)) * fraction));
+        };
+
+    return msd::pack_pixel(mix(from.r, to.r), mix(from.g, to.g), mix(from.b, to.b), mix(from.a, to.a));
+}
+
+/// Button colors that haven't been set explicitly follow the titlebar: the
+/// backgrounds are the titlebar background mixed towards the title color, and
+/// the icons are drawn in the title color.
+void derive_unset_colors(msd::DecorationStyle& style, std::set<std::pair<Element, State>> const& explicitly_set)
+{
+    auto const derive = [&](Element element, State state, msd::Pixel color)
+        {
+            if (!explicitly_set.contains({element, state}))
+                *color_of(style, element, state) = color;
+        };
+
+    auto constexpr normal_mix = 0.25f;
+    auto constexpr hovered_mix = 0.5f;
+
+    derive(
+        Element::button, State::normal,
+        blend(style.focused.background_color, style.focused.text_color, normal_mix));
+    derive(
+        Element::button, State::hovered,
+        blend(style.focused.background_color, style.focused.text_color, hovered_mix));
+    derive(
+        Element::button, State::unfocused,
+        blend(style.unfocused.background_color, style.unfocused.text_color, normal_mix));
+
+    derive(Element::button_icon, State::focused, style.focused.text_color);
+    derive(Element::button_icon, State::unfocused, style.unfocused.text_color);
+    derive(Element::close_button_icon, State::focused, style.focused.text_color);
+    derive(Element::close_button_icon, State::unfocused, style.unfocused.text_color);
+}
+
+struct ColorKey
+{
+    std::string_view const element_name;
+    std::string_view const state_name;     ///< nullptr if the element is drawn the same in all states
+    Element element;
+    State state;
+};
+
+ColorKey constexpr color_keys[] = {
+    {"background",          "focused",      Element::background,        State::focused},
+    {"background",          "unfocused",    Element::background,        State::unfocused},
+    {"title",               "focused",      Element::title,             State::focused},
+    {"title",               "unfocused",    Element::title,             State::unfocused},
+    {"button",              "normal",       Element::button,            State::normal},
+    {"button",              "hovered",      Element::button,            State::hovered},
+    {"button",              "unfocused",    Element::button,            State::unfocused},
+    {"button_icon",         "focused",      Element::button_icon,       State::focused},
+    {"button_icon",         "unfocused",    Element::button_icon,       State::unfocused},
+    {"close_button",        "normal",       Element::close_button,      State::normal},
+    {"close_button",        "hovered",      Element::close_button,      State::hovered},
+    {"close_button",        "unfocused",    Element::close_button,      State::unfocused},
+    {"close_button_icon",   "focused",      Element::close_button_icon, State::focused},
+    {"close_button_icon",   "unfocused",    Element::close_button_icon, State::unfocused},
+};
+
+struct MetricKey
+{
+    char const* name;
+    char const* description;
+    Metric metric;
+};
+
+MetricKey constexpr metric_keys[] = {
+    {"titlebar_height",             "Visible height of the titlebar",           Metric::titlebar_height},
+    {"side_border_width",           "Visible width of the side borders",        Metric::side_border_width},
+    {"bottom_border_height",        "Visible height of the bottom border",      Metric::bottom_border_height},
+    {"button_width",                "Width of the titlebar buttons",            Metric::button_width},
+    {"padding_between_buttons",     "Gap between the titlebar buttons",         Metric::padding_between_buttons},
+    {"title_font_height",           "Height of the window title text",          Metric::title_font_height},
+    {"resize_corner_input_width",   "Width of the resize handle in a corner",   Metric::resize_corner_input_width},
+    {"resize_corner_input_height",  "Height of the resize handle in a corner",  Metric::resize_corner_input_height},
+    {"corner_radius",               "Radius of the rounded outer corners",      Metric::corner_radius},
+};
+}
+
+struct miral::DecorationStyle::Self
+{
+    std::mutex mutex;
+
+    /// The style as set through the API; the config is applied on top of this
+    msd::DecorationStyle base;
+
+    /// The colors set explicitly through the API
+    std::set<std::pair<Element, State>> base_explicitly_set;
+
+    std::map<Metric, int> config_metrics;
+    std::map<std::pair<Element, State>, msd::Pixel> config_colors;
+
+    /// Only set while the server is running
+    mir::Server* server = nullptr;
+
+    auto composed_locked() const -> msd::DecorationStyle
+    {
+        auto result = base;
+        auto explicitly_set = base_explicitly_set;
+
+        for (auto const& [metric, pixels] : config_metrics)
+            set_metric_of(result, metric, pixels);
+
+        for (auto const& [element_state, color] : config_colors)
+        {
+            *color_of(result, element_state.first, element_state.second) = color;
+            explicitly_set.insert(element_state);
+        }
+
+        derive_unset_colors(result, explicitly_set);
+        return result;
+    }
+
+    void apply()
+    {
+        std::lock_guard lock{mutex};
+        apply_locked();
+    }
+
+    void apply_locked()
+    {
+        if (server)
+            server->set_the_decoration_style(std::make_shared<msd::DecorationStyle>(composed_locked()));
+    }
+};
+
+miral::DecorationStyle::DecorationStyle() :
+    self{std::make_shared<Self>()}
+{
+}
+
+miral::DecorationStyle::DecorationStyle(live_config::Store& config_store) :
+    DecorationStyle{}
+{
+    for (auto const& [name, description, metric] : metric_keys)
+    {
+        config_store.add_int_attribute(
+            {"ssd", name},
+            description,
+            [self=self, metric=metric](live_config::Key const& key, std::optional<int> val)
+            {
+                std::lock_guard lock{self->mutex};
+
+                if (val && *val < 0)
+                {
+                    mir::log_warning(log_tags, "Config key '{}' cannot be negative", key);
+                    return;
+                }
+
+                // Reverting to the value set through the API is the point of an unset value
+                if (val)
+                    self->config_metrics.insert_or_assign(metric, *val);
+                else
+                    self->config_metrics.erase(metric);
+            });
+    }
+
+    for (auto const& [element_name, state_name, element, state] : color_keys)
+    {
+        config_store.add_string_attribute(
+            live_config::Key{"ssd", "color", element_name, state_name},
+            "Color as '#rrggbb' or '#rrggbbaa'",
+            [self=self, element=element, state=state](live_config::Key const& key, std::optional<std::string_view> val)
+            {
+                std::lock_guard lock{self->mutex};
+
+                if (!val)
+                {
+                    // Reverting to the API (or derived) color is the point of an unset value
+                    self->config_colors.erase({element, state});
+                    return;
+                }
+
+                if (auto const color = parse_color(*val))
+                {
+                    self->config_colors.insert_or_assign({element, state}, *color);
+                }
+                else
+                {
+                    mir::log_warning(log_tags,
+                                     "Config key '{}', '{}' is not a color of the form '#rrggbb' or '#rrggbbaa'",
+                                     key.to_string(), val->data());
+                }
+            });
+    }
+
+    config_store.on_done([self=self] { self->apply(); });
+}
+
+miral::DecorationStyle::DecorationStyle(DecorationStyle const&) = default;
+
+auto miral::DecorationStyle::operator=(DecorationStyle const&) -> DecorationStyle& = default;
+
+miral::DecorationStyle::~DecorationStyle() = default;
+
+void miral::DecorationStyle::set_color(
+    Element element, State state, uint8_t red, uint8_t green, uint8_t blue, uint8_t alpha)
+{
+    std::lock_guard lock{self->mutex};
+
+    if (auto const color = color_of(self->base, element, state))
+    {
+        *color = msd::pack_pixel(red, green, blue, alpha);
+        self->base_explicitly_set.insert({element, state});
+        self->apply_locked();
+    }
+    else
+    {
+        mir::log_warning(log_tags,
+            "Ignoring decoration color for unsupported element {} in state {}",
+            static_cast<int>(element), static_cast<int>(state));
+    }
+}
+
+void miral::DecorationStyle::set_metric(Metric metric, int pixels)
+{
+    std::lock_guard lock{self->mutex};
+
+    if (pixels < 0)
+    {
+        mir::log_warning(log_tags,  "Ignoring negative decoration metric {}", static_cast<int>(metric));
+        return;
+    }
+
+    if (set_metric_of(self->base, metric, pixels))
+        self->apply_locked();
+    else
+        mir::log_warning(log_tags, "Ignoring unsupported decoration metric {}", static_cast<int>(metric));
+}
+
+void miral::DecorationStyle::operator()(mir::Server& server) const
+{
+    server.add_pre_init_callback(
+        [self=self, &server]
+        {
+            std::lock_guard lock{self->mutex};
+            self->server = &server;
+            self->apply_locked();
+        });
+
+    server.add_stop_callback(
+        [self=self]
+        {
+            std::lock_guard lock{self->mutex};
+            self->server = nullptr;
+        });
+}

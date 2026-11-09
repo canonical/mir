@@ -20,6 +20,7 @@
 #include "server_example_test_client.h"
 
 #include <miral/cursor_theme.h>
+#include <miral/decoration_style.h>
 #include <miral/input_configuration.h>
 #include <miral/keymap.h>
 #include <miral/live_config.h>
@@ -133,6 +134,7 @@ try
     runner.set_exception_handler(exception_handler);
 
     miral::CursorScale cursor_scale{config_store};
+    miral::DecorationStyle decoration_style{config_store};
     miral::OutputFilter output_filter{config_store};
     miral::InputConfiguration input_configuration{config_store};
     miral::BounceKeys bounce_keys{config_store};
@@ -179,6 +181,7 @@ try
         hover_click,
         touch_emulator,
         keymap,
+        decoration_style,
     });
 
     // Propagate any test failure

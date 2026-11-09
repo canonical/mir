@@ -811,3 +811,15 @@ global:
     vtable?for?miral::OutputConfiguration::Strategy;
   };
 } MIRAL_6.0;
+
+MIRAL_6.2 {
+global:
+  extern "C++" {
+    miral::DecorationStyle::?DecorationStyle*;
+    miral::DecorationStyle::DecorationStyle*;
+    miral::DecorationStyle::operator*;
+    miral::DecorationStyle::set_color*;
+    miral::DecorationStyle::set_metric*;
+    typeinfo?for?miral::DecorationStyle;
+  };
+} MIRAL_6.1;
