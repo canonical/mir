@@ -98,7 +98,7 @@ MIR_CORE_2.30 {
   };
 } MIR_CORE_2.29;
 
-MIR_CORE_2.31 {
+MIR_CORE_2.32 {
   global:
   extern "C++" {
     "std::formatter<mir::ExceptionDiagnostics, char>::format(mir::ExceptionDiagnostics const&, std::basic_format_context<std::__format::_Sink_iter<char>, char>&) const";
