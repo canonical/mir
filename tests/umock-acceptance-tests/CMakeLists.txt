@@ -2,6 +2,7 @@ include(CMakeDependentOption)
 
 mir_add_wrapped_executable(mir_umock_acceptance_tests NOINSTALL
 
+  test_evdev_recordings.cpp
   test_libinput.cpp
   )
 
@@ -17,6 +18,7 @@ target_link_libraries(mir_umock_acceptance_tests
   mir-test-framework-static
   mir-test-doubles-static
   mir-umock-test-framework
+  mir-recorded-input-test-framework
 
   PkgConfig::UMOCKDEV
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.

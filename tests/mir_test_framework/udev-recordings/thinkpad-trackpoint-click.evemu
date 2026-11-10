@@ -1,0 +1,8 @@
+# device /dev/input/event4
+# Hand-authored events in the format recorded by
+#   umockdev-record --evemu-events /dev/input/event4=FILE -- sleep 10
+# for the device in thinkpad-trackpoint.umockdev
+E: 0.000000 0001 0110 0001  # EV_KEY / BTN_LEFT             1
+E: 0.000000 0000 0000 0000  # ------------ SYN_REPORT (0) ----------
+E: 0.080000 0001 0110 0000  # EV_KEY / BTN_LEFT             0
+E: 0.080000 0000 0000 0000  # ------------ SYN_REPORT (0) ----------
