@@ -226,44 +226,48 @@ auto oriented_footprint(geom::Rectangle const& rect, MirOrientation orientation)
     return rect;
 }
 
-auto footprint_bounds(mg::Renderable const& renderable) -> std::optional<geom::Rectangle>
+// Mirror the shader, which composes the transform about the centre:
+// (transform * (position - centre)) + centre.
+auto transformed_bounds(glm::mat4 const& transform, geom::Rectangle const& rect) -> geom::Rectangle
 {
-    auto const transform = renderable.transformation();
-    if (!is_2d_affine(transform))
-        return std::nullopt;
+    auto const rect_f = geom::RectangleF{geom::PointF{rect.top_left}, geom::SizeF{rect.size}};
+    auto const [centre_x, centre_y] = rect_f.centre();
+    auto const [half_width, half_height] = rect_f.size / 2.0f;
 
-    auto const oriented = oriented_footprint(renderable.screen_position(), renderable.orientation());
-    auto const centre_x = oriented.top_left.x.as_int() + oriented.size.width.as_int() / 2.0;
-    auto const centre_y = oriented.top_left.y.as_int() + oriented.size.height.as_int() / 2.0;
-    auto const half_width = oriented.size.width.as_int() / 2.0;
-    auto const half_height = oriented.size.height.as_int() / 2.0;
+    auto const corners = std::array{
+        glm::vec4{-half_width.as_value(), -half_height.as_value(), 0.0f, 1.0f},
+        glm::vec4{-half_width.as_value(),  half_height.as_value(), 0.0f, 1.0f},
+        glm::vec4{ half_width.as_value(), -half_height.as_value(), 0.0f, 1.0f},
+        glm::vec4{ half_width.as_value(),  half_height.as_value(), 0.0f, 1.0f}};
 
-    // Mirror the shader, which composes the transform about the centre:
-    // (transform * (position - centre)) + centre.
-    auto const t = glm::dmat4{transform};
-    auto xs = std::array<double, 4>{};
-    auto ys = std::array<double, 4>{};
-    auto corner = std::size_t{0};
-    for (auto const dx : {-half_width, half_width})
-    {
-        for (auto const dy : {-half_height, half_height})
-        {
-            auto const p = t * glm::dvec4{dx, dy, 0.0, 1.0};
-            xs[corner] = centre_x + p.x;
-            ys[corner] = centre_y + p.y;
-            ++corner;
-        }
-    }
+    auto transformed = std::array<glm::vec4, 4>{};
+    std::ranges::transform(corners, transformed.begin(), [&](auto const& c) { return transform * c; });
+    auto const [min_x, max_x] = std::ranges::minmax(transformed, {}, [](auto const& v) { return v.x; });
+    auto const [min_y, max_y] = std::ranges::minmax(transformed, {}, [](auto const& v) { return v.y; });
 
     // Round outward so float noise can never shrink the bound.
-    auto const left = std::floor(std::ranges::min(xs));
-    auto const top = std::floor(std::ranges::min(ys));
-    auto const right = std::ceil(std::ranges::max(xs));
-    auto const bottom = std::ceil(std::ranges::max(ys));
+    auto const left   = std::floor(centre_x.as_value() + min_x.x);
+    auto const top    = std::floor(centre_y.as_value() + min_y.y);
+    auto const right  = std::ceil (centre_x.as_value() + max_x.x);
+    auto const bottom = std::ceil (centre_y.as_value() + max_y.y);
 
     return geom::Rectangle{
         {geom::X{static_cast<int>(left)}, geom::Y{static_cast<int>(top)}},
         {geom::Width{static_cast<int>(right - left)}, geom::Height{static_cast<int>(bottom - top)}}};
+}
+
+auto footprint_bounds(mg::Renderable const& renderable) -> std::optional<geom::Rectangle>
+{
+    auto const transform = renderable.transformation();
+
+    if (transform == identity_transform)
+        return oriented_footprint(renderable.screen_position(), renderable.orientation());
+
+    if (!is_2d_affine(transform))
+        return std::nullopt;
+
+    auto const oriented = oriented_footprint(renderable.screen_position(), renderable.orientation());
+    return transformed_bounds(transform, oriented);
 }
 
 auto content_above_blocks(
