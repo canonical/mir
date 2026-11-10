@@ -17,16 +17,14 @@
 #include <mir_test_framework/recorded_input_platform.h>
 #include <mir_test_framework/executable_path.h>
 #include <mir/test/doubles/null_emergency_cleanup.h>
+#include <mir/test/doubles/null_input_report.h>
 #include <mir/test/doubles/stub_console_services.h>
 
 #include <mir/dispatch/action_queue.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
 #include <mir/dispatch/threaded_dispatcher.h>
+#include <mir/events/event.h>
 #include <mir/events/event_builders.h>
-#include <mir/events/input_event.h>
-#include <mir/events/keyboard_event.h>
-#include <mir/events/pointer_event.h>
-#include <mir/events/touch_event.h>
 #include <mir/geometry/rectangle.h>
 #include <mir/input/event_builder.h>
 #include <mir/input/input_device.h>
@@ -53,7 +51,6 @@
 #include <cstdarg>
 #include <cstdint>
 #include <filesystem>
-#include <format>
 #include <future>
 #include <mutex>
 #include <optional>
@@ -69,28 +66,18 @@ namespace md = mir::dispatch;
 
 using namespace std::chrono_literals;
 
-/*
- * umockdev's ioctl emulation tracks descriptor numbers, not open file descriptions:
- * https://github.com/martinpitt/umockdev/blob/0.19.7/src/libumockdev-preload.c#L598-L690
- * (ioctl_wrapped_fds, ioctl_emulate_open(), fstat_adjust_emulated_device()).
- * Consequently a real dup loses ioctl emulation and, for the replay PTYs, the
+/**
+ * This whole `dup` business is unfortunate.
+ *
+ * umockdev's ioctl emulation tracks descriptor numbers, not open file descriptions.
+ * As a result, a call to `dup` loses ioctl emulation and - for the replay PTYs - the
  * emulated fstat identity. libinput then rejects the copied fd as a non-input device.
  *
- * evdev-rs correctly duplicates descriptors to give Rust and libinput their own
- * ownership. Do not change production ownership to accommodate this test limitation.
- * Instead, this test-only object interposes dup/fcntl/fcntl64, reopening explicitly
- * registered devices and registering the copies. All other descriptors use libc.
+ * To fix this, we interpose dup/fctnl/fctnl64 and reopen registered devices while also
+ * registering the copies. Everything else uses libc luke usual.
  *
- * Reopening preserves access/status flags and the requested close-on-exec flag,
- * but NOT shared offsets, locks, or subsequent file-status changes. These tests
- * exercise replay and event translation, not dup's shared-description semantics.
- * If open() cannot meet F_DUPFD's minimum fd, fail with EOPNOTSUPP rather than
- * return a too-small descriptor. dup2/dup3 and direct syscalls are out of scope.
- *
- * fcntl affects the entire test process, so arguments must be decoded by command:
- * getters may have no third argument, setters take ints, and others take pointers.
- * Unknown commands fail with EINVAL rather than guessing their variadic ABI.
- * Keep this object out of production and unrelated test executables.
+ * The evdev-rs implementation is correct to use `dup` here, so the solution is not
+ * to just not use `dup`.
  */
 namespace
 {
@@ -288,11 +275,6 @@ namespace
 {
 geom::Rectangle const screen{{0, 0}, {1920, 1080}};
 
-struct NullInputReport : mi::InputReport
-{
-    void received_event_from_kernel(std::chrono::nanoseconds, int, int, int) override {}
-};
-
 // StubConsoleServices opens /dev/null for input devices, which libinput rejects. Open the (umockdev) device node.
 class DevnodeConsoleServices : public mtd::StubConsoleServices
 {
@@ -395,7 +377,7 @@ struct mtf::RecordedInputPlatform::Self : mi::InputSink, mi::InputDeviceRegistry
     {
         {
             std::lock_guard lock{mutex};
-            events.push_back(event);
+            events.emplace_back(event->clone());
         }
         changed.notify_all();
     }
@@ -416,10 +398,12 @@ struct mtf::RecordedInputPlatform::Self : mi::InputSink, mi::InputDeviceRegistry
     // Called on the input thread, so the device is started before it can process any events
     auto add_device(std::shared_ptr<mi::InputDevice> const& device) -> std::weak_ptr<mi::Device> override
     {
-        std::lock_guard lock{mutex};
-        auto& builder = builders.emplace_back(std::make_unique<EventBuilder>(next_device_id++));
-        device->start(this, builder.get());
-        devices.push_back(device);
+        {
+            std::lock_guard lock{mutex};
+            auto& builder = builders.emplace_back(std::make_unique<EventBuilder>(next_device_id++));
+            device->start(this, builder.get());
+            devices.push_back(device);
+        }
         changed.notify_all();
         return {};
     }
@@ -427,8 +411,10 @@ struct mtf::RecordedInputPlatform::Self : mi::InputSink, mi::InputDeviceRegistry
     void remove_device(std::shared_ptr<mi::InputDevice> const& device) override
     {
         device->stop();
-        std::lock_guard lock{mutex};
-        std::erase(devices, device);
+        {
+            std::lock_guard lock{mutex};
+            std::erase(devices, device);
+        }
         changed.notify_all();
     }
 
@@ -490,7 +476,7 @@ void mtf::RecordedInputPlatform::start()
         std::make_shared<mtd::NullEmergencyCleanup>(),
         std::shared_ptr<mi::InputDeviceRegistry>{self.get(), [](auto*) {}},
         std::make_shared<DevnodeConsoleServices>(),
-        std::make_shared<NullInputReport>());
+        std::make_shared<mtd::NullInputReport>());
 
     self->multiplexer->add_watch(self->actions);
     self->input_thread = std::make_unique<md::ThreadedDispatcher>("Recorded input", self->multiplexer);
@@ -567,71 +553,4 @@ auto mtf::RecordedInputPlatform::settled_events(std::chrono::milliseconds quiet_
         }
     }
     return self->events;
-}
-
-namespace
-{
-auto describe(MirKeyboardEvent const& key) -> std::string
-{
-    return std::format("key action={} scan_code={}", static_cast<int>(key.action()), key.scan_code());
-}
-
-auto describe(MirPointerEvent const& pointer) -> std::string
-{
-    auto const position = pointer.position();
-    return std::format(
-        "pointer action={} buttons={:#x} source={} position={} motion=({:.3f},{:.3f}) "
-        "hscroll=({:.3f},{},{},{}) vscroll=({:.3f},{},{},{})",
-        static_cast<int>(pointer.action()),
-        static_cast<unsigned>(pointer.buttons()),
-        static_cast<int>(pointer.axis_source()),
-        position ? std::format("({:.3f},{:.3f})", position->x.as_value(), position->y.as_value()) : "none",
-        pointer.motion().dx.as_value(),
-        pointer.motion().dy.as_value(),
-        pointer.h_scroll().precise.as_value(),
-        pointer.h_scroll().discrete.as_value(),
-        pointer.h_scroll().value120.as_value(),
-        pointer.h_scroll().stop,
-        pointer.v_scroll().precise.as_value(),
-        pointer.v_scroll().discrete.as_value(),
-        pointer.v_scroll().value120.as_value(),
-        pointer.v_scroll().stop);
-}
-
-auto describe(MirTouchEvent const& touch) -> std::string
-{
-    std::string description{"touch"};
-    for (std::size_t i = 0; i != touch.pointer_count(); ++i)
-    {
-        description += std::format(
-            " [id={} action={} tool={} position=({:.3f},{:.3f})]",
-            touch.id(i),
-            static_cast<int>(touch.action(i)),
-            static_cast<int>(touch.tool_type(i)),
-            touch.position(i).x.as_value(),
-            touch.position(i).y.as_value());
-    }
-    return description;
-}
-}
-
-auto mtf::describe_input_event(MirEvent const& event) -> std::string
-{
-    if (event.type() != mir_event_type_input)
-    {
-        return std::format("non-input event type={}", static_cast<int>(event.type()));
-    }
-
-    auto const& input = *event.to_input();
-    switch (input.input_type())
-    {
-    case mir_input_event_type_key:
-        return describe(*input.to_keyboard());
-    case mir_input_event_type_pointer:
-        return describe(*input.to_pointer());
-    case mir_input_event_type_touch:
-        return describe(*input.to_touch());
-    default:
-        return std::format("input type={}", static_cast<int>(input.input_type()));
-    }
 }

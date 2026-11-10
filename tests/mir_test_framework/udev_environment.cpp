@@ -31,7 +31,6 @@
 #include <format>
 #include <fstream>
 #include <optional>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -287,9 +286,21 @@ auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::st
     long long const now_us = now.tv_sec * 1'000'000LL + now.tv_nsec / 1'000;
     std::optional<long long> offset_us;
 
+    // umockdev_testbed_load_evemu_events_from_string() isn't available in all supported umockdev versions
+    std::string rebased_filename = std::string{umockdev_testbed_get_root_dir(testbed)} + "/rebased-XXXXXX.evemu";
+    int const fd = mkstemps(rebased_filename.data(), std::strlen(".evemu"));
+    if (fd < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to create rebased evemu recording"));
+    }
+    close(fd);
+    auto const remove_recording = mir::raii::paired_calls(
+        [] {}, [&] { unlink(rebased_filename.c_str()); });
+    std::ofstream output{rebased_filename, std::ios::trunc};
+
     std::string device_node;
-    std::string const device_prefix{"# device "};
-    std::ostringstream rebased;
+    std::string_view constexpr device_prefix = "# device ";
     for (std::string line; std::getline(evemu_file, line);)
     {
         long long seconds{};
@@ -309,40 +320,17 @@ auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::st
             auto const rebased_us = timestamp_us + *offset_us;
             line = std::format("E: {}.{:06}{}", rebased_us / 1'000'000, rebased_us % 1'000'000, line.substr(consumed));
         }
-        rebased << line << '\n';
+        output << line << '\n';
     }
     if (device_node.empty())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("evemu recording has no \"# device\" header: " + evemu_filename));
     }
 
-    // umockdev_testbed_load_evemu_events_from_string() isn't available in all supported umockdev versions
-    std::string rebased_filename = std::string{umockdev_testbed_get_root_dir(testbed)} + "/rebased-XXXXXX.evemu";
-    int const fd = mkstemps(rebased_filename.data(), std::strlen(".evemu"));
-    if (fd < 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to create rebased evemu recording"));
-    }
-    auto const remove_recording = mir::raii::paired_calls(
-        [] {}, [&] { unlink(rebased_filename.c_str()); });
-    auto output = mir::raii::deleter_for(fdopen(fd, "w"), &fclose);
+    output.close();
     if (!output)
     {
-        auto const error = errno;
-        close(fd);
-        BOOST_THROW_EXCEPTION(std::system_error(error, std::system_category(), "Failed to open rebased evemu stream"));
-    }
-    auto const contents = rebased.str();
-    if (fwrite(contents.data(), 1, contents.size(), output.get()) != contents.size() || fflush(output.get()) != 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to write rebased evemu recording"));
-    }
-    if (fclose(output.release()) != 0)
-    {
-        BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to close rebased evemu recording"));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to write rebased evemu recording: " + rebased_filename));
     }
 
     GError* err = nullptr;

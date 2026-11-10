@@ -92,11 +92,6 @@ private:
     struct Self;
     std::unique_ptr<Self> const self;
 };
-
-/// A description of an input event for comparing platform output
-///
-/// Omits details (timestamps, device ids) that legitimately differ between runs.
-auto describe_input_event(MirEvent const& event) -> std::string;
 }
 
 #endif // MIR_TEST_FRAMEWORK_RECORDED_INPUT_PLATFORM_H_

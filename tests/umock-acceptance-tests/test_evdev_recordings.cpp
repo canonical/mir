@@ -20,11 +20,13 @@
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/events/pointer_event.h>
+#include <mir/events/touch_event.h>
 #include <mir/fd.h>
 #include <mir/input/device_capability.h>
 #include <mir/input/input_device.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/pointer_settings.h>
+#include <mir/test/event_matchers.h>
 
 #include <dlfcn.h>
 #include <fcntl.h>
@@ -35,8 +37,10 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <cmath>
 #include <cstdio>
-#include <ranges>
+#include <optional>
+#include <tuple>
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
@@ -86,6 +90,99 @@ auto pointer_events(mtf::RecordedInputPlatform::Events const& events, MirPointer
 MATCHER_P2(IsKey, action, scan_code, "")
 {
     return arg->action() == action && arg->scan_code() == scan_code;
+}
+
+auto near(float lhs, float rhs) -> bool
+{
+    return std::abs(lhs - rhs) <= 1e-3f;
+}
+
+auto near(mir::geometry::PointF lhs, mir::geometry::PointF rhs) -> bool
+{
+    return near(lhs.x.as_value(), rhs.x.as_value()) && near(lhs.y.as_value(), rhs.y.as_value());
+}
+
+auto near(std::optional<mir::geometry::PointF> const& lhs, std::optional<mir::geometry::PointF> const& rhs) -> bool
+{
+    return lhs && rhs ? near(*lhs, *rhs) : lhs.has_value() == rhs.has_value();
+}
+
+template<typename Tag>
+auto near(mir::events::ScrollAxis<Tag> const& lhs, mir::events::ScrollAxis<Tag> const& rhs) -> bool
+{
+    return near(lhs.precise.as_value(), rhs.precise.as_value()) &&
+        lhs.discrete == rhs.discrete &&
+        lhs.value120 == rhs.value120 &&
+        lhs.stop == rhs.stop;
+}
+
+auto equivalent(MirKeyboardEvent const& lhs, MirKeyboardEvent const& rhs) -> bool
+{
+    return lhs.action() == rhs.action() && lhs.scan_code() == rhs.scan_code();
+}
+
+auto equivalent(MirPointerEvent const& lhs, MirPointerEvent const& rhs) -> bool
+{
+    return lhs.action() == rhs.action() &&
+        lhs.buttons() == rhs.buttons() &&
+        lhs.axis_source() == rhs.axis_source() &&
+        near(lhs.position(), rhs.position()) &&
+        near(lhs.motion().dx.as_value(), rhs.motion().dx.as_value()) &&
+        near(lhs.motion().dy.as_value(), rhs.motion().dy.as_value()) &&
+        near(lhs.h_scroll(), rhs.h_scroll()) &&
+        near(lhs.v_scroll(), rhs.v_scroll());
+}
+
+auto equivalent(MirTouchEvent const& lhs, MirTouchEvent const& rhs) -> bool
+{
+    if (lhs.pointer_count() != rhs.pointer_count())
+    {
+        return false;
+    }
+    for (std::size_t i = 0; i != lhs.pointer_count(); ++i)
+    {
+        if (lhs.id(i) != rhs.id(i) ||
+            lhs.action(i) != rhs.action(i) ||
+            lhs.tool_type(i) != rhs.tool_type(i) ||
+            !near(lhs.position(i), rhs.position(i)))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+/// Ignores details (timestamps, device ids) that legitimately differ between platforms
+auto equivalent(MirEvent const& lhs, MirEvent const& rhs) -> bool
+{
+    if (lhs.type() != rhs.type() || lhs.type() != mir_event_type_input)
+    {
+        return lhs.type() == rhs.type();
+    }
+
+    auto const& lhs_input = *lhs.to_input();
+    auto const& rhs_input = *rhs.to_input();
+    if (lhs_input.input_type() != rhs_input.input_type())
+    {
+        return false;
+    }
+
+    switch (lhs_input.input_type())
+    {
+    case mir_input_event_type_key:
+        return equivalent(*lhs_input.to_keyboard(), *rhs_input.to_keyboard());
+    case mir_input_event_type_pointer:
+        return equivalent(*lhs_input.to_pointer(), *rhs_input.to_pointer());
+    case mir_input_event_type_touch:
+        return equivalent(*lhs_input.to_touch(), *rhs_input.to_touch());
+    default:
+        return true;
+    }
+}
+
+MATCHER(IsEquivalentEvent, "")
+{
+    return equivalent(*std::get<0>(arg), *std::get<1>(arg));
 }
 
 struct EvdevRecordings : TestWithParam<std::string>
@@ -287,7 +384,7 @@ TEST(EvdevPlatformParity, platforms_produce_the_same_events_from_the_same_record
         std::pair{trackpoint, "thinkpad-trackpoint-motion"}})
     {
         SCOPED_TRACE(recording);
-        std::vector<std::vector<std::string>> descriptions;
+        std::vector<mtf::RecordedInputPlatform::Events> platform_events;
         for (auto const& module : modules)
         {
             mtf::RecordedInputPlatform platform{module};
@@ -310,11 +407,9 @@ TEST(EvdevPlatformParity, platforms_produce_the_same_events_from_the_same_record
 
             platform.play(recording);
             platform.wait_for_events(1);
-            auto const events = platform.settled_events();
-            auto const described = events | std::views::transform([](auto const& e) { return mtf::describe_input_event(*e); });
-            descriptions.emplace_back(described.begin(), described.end());
+            platform_events.push_back(platform.settled_events());
         }
-        EXPECT_THAT(descriptions[0], Not(IsEmpty()));
-        EXPECT_THAT(descriptions[1], ContainerEq(descriptions[0]));
+        EXPECT_THAT(platform_events[0], Not(IsEmpty()));
+        EXPECT_THAT(platform_events[1], Pointwise(IsEquivalentEvent(), platform_events[0]));
     }
 }
