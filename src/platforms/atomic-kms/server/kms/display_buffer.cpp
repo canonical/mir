@@ -271,19 +271,10 @@ auto footprint_bounds(mg::Renderable const& renderable) -> std::optional<geom::R
 }
 
 auto content_above_blocks(
-    std::vector<std::shared_ptr<mg::Renderable>> const& renderables,
-    std::size_t index,
-    geom::Rectangle const& candidate_area) -> bool
+    std::span<std::optional<geom::Rectangle> const> content_above,
+    geom::Rectangle const& candidate_bounds) -> bool
 {
-    for (auto const& renderable : std::span{renderables}.subspan(index + 1))
-    {
-        auto const bounds = footprint_bounds(*renderable);
-        if (!bounds || bounds->overlaps(candidate_area))
-        {
-            return true;
-        }
-    }
-    return false;
+    return std::ranges::any_of(content_above, [&](auto const& bounds) { return !bounds || bounds->overlaps(candidate_bounds); });
 }
 
 auto select_direct_candidate(
@@ -294,26 +285,31 @@ auto select_direct_candidate(
     std::optional<std::size_t> best;
     int best_area{0};
 
-    for (auto index = std::size_t{0}; index < renderables.size(); ++index)
+    auto const transformed_bounds =
+        renderables |
+        std::ranges::views::transform([](auto const& renderable) { return footprint_bounds(*renderable); })
+        | std::ranges::to<std::vector>();
+
+    for (auto candidate_index = std::size_t{0}; candidate_index < renderables.size(); ++candidate_index)
     {
-        auto const& renderable = renderables[index];
+        auto const& candidate_bounds = transformed_bounds[candidate_index];
+        if (!candidate_bounds || candidate_bounds->size.width.as_int() <= 0 ||
+            candidate_bounds->size.height.as_int() <= 0 || !sink_area.contains(*candidate_bounds))
+            continue;
+
+        auto const& renderable = renderables[candidate_index];
         if (!is_overlay_eligible(*renderable, capabilities))
             continue;
 
-        auto const destination = renderable->screen_position();
-        if (destination.size.width.as_int() <= 0 ||
-            destination.size.height.as_int() <= 0 ||
-            !sink_area.contains(destination) ||
-            content_above_blocks(renderables, index, destination))
-        {
+        auto const content_above = std::span{transformed_bounds}.subspan(candidate_index + 1);
+        if (content_above_blocks(content_above, *candidate_bounds))
             continue;
-        }
 
-        auto const candidate_area = pixel_area(destination);
+        auto const candidate_area = pixel_area(*candidate_bounds);
         // >= keeps the frontmost of equal-area candidates, as index increases towards the front
         if (!best || candidate_area >= best_area)
         {
-            best = index;
+            best = candidate_index;
             best_area = candidate_area;
         }
     }
