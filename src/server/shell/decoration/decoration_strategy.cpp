@@ -405,6 +405,11 @@ auto DecorationStrategy::compute_size_with_decorations(
 {
     auto const style = this->style.load();
 
+    // A hidden window has no borders drawn, but when it is shown again it will be restored
+    // with them, so the window must already be sized to accommodate them.
+    if (state == mir_window_state_hidden || state == mir_window_state_minimized)
+        state = mir_window_state_restored;
+
     switch (msd::border_type_for(type, state))
     {
     case msd::BorderType::Full:
