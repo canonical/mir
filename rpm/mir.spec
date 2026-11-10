@@ -338,6 +338,18 @@ desktop-file-validate %{buildroot}%{_datadir}/applications/miral-shell.desktop
 
 - Begin development for 2.32.0 release
 
+  - ABI summary:
+
+    - miral ABI unchanged at 8
+    - mircommon ABI unchanged at 14
+    - mircore ABI unchanged at 3
+    - miroil ABI unchanged at 10
+    - mirplatform ABI unchanged at 36
+    - mirserver ABI bumped to 71
+    - mirwayland ABI unchanged at 7
+    - mirplatformgraphics ABI unchanged at 25
+    - mirinputplatform ABI unchanged at 11
+
 * Wed Nov 04 2026 Mir CI Bot <mir-ci-bot@canonical.com> - 2.31.0-1
 - New upstream release 2.31.0
 
