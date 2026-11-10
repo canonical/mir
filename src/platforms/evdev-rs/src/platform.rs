@@ -16,10 +16,9 @@
 
 use crate::device::{InputDevicePtr, LibinputDevice, LibinputDeviceState, ScrollState};
 use crate::event_processing::process_libinput_events;
-use crate::fd_store::FdStore;
 use crate::udev_monitor::{UdevEventType, UdevMonitor};
 use std::collections::HashSet;
-use std::os::fd::{AsRawFd, FromRawFd, OwnedFd};
+use std::os::fd::AsRawFd;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -45,9 +44,6 @@ pub struct PlatformRs {
 
     /// Rust-owned udev monitor for input device hotplug events.
     udev_monitor: Option<UdevMonitor>,
-
-    /// Manages pre-acquired and backup file descriptors for device nodes.
-    fd_store: Arc<Mutex<FdStore>>,
 }
 
 impl PlatformRs {
@@ -65,7 +61,6 @@ impl PlatformRs {
             running: Arc::new(AtomicBool::new(false)),
             known_devnums: HashSet::new(),
             udev_monitor: None,
-            fd_store: Arc::new(Mutex::new(FdStore::new())),
         }
     }
 
@@ -78,7 +73,7 @@ impl PlatformRs {
     /// `TakeDevice` D-Bus replies.
     ///
     /// Returns `true` if a fresh context was created, `false` if the platform
-    /// was already started.
+    /// was already started or context creation failed.
     pub fn start(&mut self) -> bool {
         if self.state.is_some() || self.libinput.is_some() {
             return false;
@@ -86,11 +81,23 @@ impl PlatformRs {
 
         println!("Starting the evdev-rs platform");
 
-        self.libinput = Some(input::Libinput::new_from_path(
-            crate::libinput_interface::LibinputInterfaceImpl {
-                fd_store: self.fd_store.clone(),
-            },
-        ));
+        let context = self
+            .bridge
+            .create_libinput_context()
+            .cast::<input::ffi::libinput>();
+        if context.is_null() {
+            eprintln!("evdev-rs: failed to create libinput context");
+            return false;
+        }
+        // # Safety
+        // The bridge returns a live libinput context whose callbacks borrow its fd store.
+        // The bridge outlives all platform operations. from_raw takes its own reference,
+        // so release the creation reference after wrapping it.
+        self.libinput = Some(unsafe {
+            let libinput = input::Libinput::from_raw(context);
+            input::ffi::libinput_unref(context);
+            libinput
+        });
 
         self.state = Some(Arc::new(Mutex::new(LibinputDeviceState {
             known_devices: Vec::new(),
@@ -123,8 +130,8 @@ impl PlatformRs {
     /// Add a device to the libinput context by path.
     ///
     /// Called internally after a device fd has been acquired and stored in
-    /// the bridge's pending-fd map. libinput will call `open_restricted()`,
-    /// which retrieves the pre-acquired fd non-blockingly via `claim_pending_fd`.
+    /// the bridge's fd store. The shared C++ libinput callbacks borrow that fd
+    /// without duplicating it or taking ownership.
     pub fn path_add_device(&mut self, devnode: &str) {
         let Some(libinput) = self.libinput.as_mut() else {
             return;
@@ -202,6 +209,7 @@ impl PlatformRs {
         let Some(state_arc) = self.state.take() else {
             // Platform not started or already stopped.
             self.libinput.take();
+            self.bridge.release_all_devices();
             return;
         };
 
@@ -246,6 +254,7 @@ impl PlatformRs {
         }
 
         self.libinput.take();
+        self.bridge.release_all_devices();
     }
 
     pub fn create_input_device(&mut self, device_id: i32) -> Box<LibinputDevice> {
@@ -404,9 +413,7 @@ impl PlatformRs {
                     self.bridge.release_device(devnum);
                 }
 
-                if let Ok(mut store) = self.fd_store.lock() {
-                    store.remove(devnode);
-                }
+                self.bridge.remove_device_fd(devnode);
             }
         }
     }
@@ -414,26 +421,17 @@ impl PlatformRs {
     /// Handle device activation (fd acquired from ConsoleServices).
     ///
     /// Invoked from C++ (on the input dispatch thread via ActionQueue)
-    /// after `Device::Observer::activated()` has fired and the fd has
-    /// been dup'd.
-    pub fn on_device_activated(&mut self, devnode: &str, devnum: u64, fd: i32) {
+    /// after `Device::Observer::activated()` has fired and the bridge has
+    /// retained the acquired mir::Fd.
+    pub fn on_device_activated(&mut self, devnode: &str, devnum: u64) {
         println!(
-            "evdev-rs: on_device_activated devnode={} devnum={} fd={}",
-            devnode, devnum, fd
+            "evdev-rs: on_device_activated devnode={} devnum={}",
+            devnode, devnum
         );
 
         if !self.running.load(Ordering::Acquire) {
             println!("evdev-rs: on_device_activated ignored — platform not running");
             return;
-        }
-
-        // Store the fd so that open_restricted() can claim it.
-        match self.fd_store.lock() {
-            Ok(mut store) => store.store(devnode, unsafe { OwnedFd::from_raw_fd(fd) }),
-            Err(_) => {
-                println!("evdev-rs: on_device_activated: fd_store mutex poisoned");
-                return;
-            }
         }
 
         // Transfer the Device from pending to active in C++.
@@ -445,6 +443,10 @@ impl PlatformRs {
             devnode
         );
         self.path_add_device(devnode);
+
+        // libinput queues DEVICE_ADDED without making its fd readable, so process it now
+        // rather than when the next input arrives
+        self.process();
     }
 
     /// Handle device suspension (e.g. VT switch or lid close).
@@ -486,9 +488,7 @@ impl PlatformRs {
 
         self.known_devnums.remove(&devnum);
         self.bridge.release_device(devnum);
-        if let Ok(mut store) = self.fd_store.lock() {
-            store.remove(devnode);
-        }
         self.path_remove_device(devnode);
+        self.bridge.remove_device_fd(devnode);
     }
 }

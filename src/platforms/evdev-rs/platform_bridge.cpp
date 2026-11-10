@@ -16,6 +16,7 @@
 
 #include "platform_bridge.h"
 #include "platform.h"
+#include "../evdev/libinput_ptr.h"
 
 #include "mir/console_services.h"
 #include "mir/log.h"
@@ -81,6 +82,28 @@ void miers::PlatformBridge::release_pending_device(uint64_t devnum) const
 bool miers::PlatformBridge::has_device(uint64_t devnum) const
 {
     return device_watchers.count(static_cast<dev_t>(devnum)) > 0;
+}
+
+auto miers::PlatformBridge::create_libinput_context() const -> libinput*
+{
+    return evdev::make_libinput(&device_fds).release();
+}
+
+void miers::PlatformBridge::store_device_fd(std::string const& devnode, mir::Fd fd) const
+{
+    device_fds.store_fd(devnode.c_str(), std::move(fd));
+}
+
+void miers::PlatformBridge::remove_device_fd(rust::Str devnode) const
+{
+    device_fds.remove_fd(device_fds.take_fd(std::string{devnode}.c_str()));
+}
+
+void miers::PlatformBridge::release_all_devices() const
+{
+    device_watchers.clear();
+    pending_devices.clear();
+    device_fds.clear();
 }
 
 std::shared_ptr<mi::InputDevice> miers::PlatformBridge::create_input_device(int device_id) const

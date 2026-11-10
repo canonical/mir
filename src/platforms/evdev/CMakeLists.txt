@@ -2,6 +2,8 @@ add_compile_definitions(MIR_LOG_COMPONENT_FALLBACK="evdev-input")
 
 add_library(mirevdevutilsobjects OBJECT
     button_utils.cpp
+    fd_store.cpp fd_store.h
+    libinput_ptr.cpp
 )
 
 target_link_libraries(mirevdevutilsobjects
@@ -14,12 +16,12 @@ target_link_libraries(mirevdevutilsobjects
 add_library(mirplatforminputevdevobjects OBJECT
     libinput_device.cpp
     libinput_device_ptr.cpp
-    libinput_ptr.cpp
     platform.cpp
-        fd_store.cpp fd_store.h)
+)
 
 target_link_libraries(mirplatforminputevdevobjects
   PUBLIC
+    mirevdevutilsobjects
     mirplatform
     mircommon
     mircore
