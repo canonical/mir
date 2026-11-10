@@ -17,7 +17,10 @@
 #ifndef MIR_REPORT_EXCEPTION_H_
 #define MIR_REPORT_EXCEPTION_H_
 
+#include <exception>
+#include <format>
 #include <iosfwd>
+#include <string>
 
 namespace mir
 {
@@ -35,6 +38,27 @@ void report_exception(std::ostream& stream);
  *  Call from a catch block (and only from a catch block) to write error information to stdout or stderr as appropriate.
  */
 void report_exception();
+
+/**
+ *  Wraps an exception for std::format, e.g. std::format("{}", mir::ExceptionDiagnostics{e}).
+ *  Formats as boost::diagnostic_information(): what() together with any boost annotations
+ *  (such as the throw location added by BOOST_THROW_EXCEPTION). The result can span
+ *  several lines.
+ */
+struct ExceptionDiagnostics
+{
+    std::exception const& error;
+};
 }
+
+/**
+ *  Format specs for strings (fill, alignment, width) are supported.
+ */
+template<>
+struct std::formatter<mir::ExceptionDiagnostics> : std::formatter<std::string>
+{
+    auto format(mir::ExceptionDiagnostics const& diagnostics, std::format_context& ctx) const
+        -> std::format_context::iterator;
+};
 
 #endif /* MIR_REPORT_EXCEPTION_H_ */

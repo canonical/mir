@@ -64,3 +64,18 @@ void mir::report_exception()
 {
     report_exception(std::cout, std::cerr);
 }
+
+auto std::formatter<mir::ExceptionDiagnostics>::format(
+    mir::ExceptionDiagnostics const& diagnostics, std::format_context& ctx) const -> std::format_context::iterator
+{
+    auto info = boost::diagnostic_information(diagnostics.error);
+
+    // diagnostic_information() ends its output with a newline; drop it so the
+    // caller's format string controls what follows.
+    while (!info.empty() && info.back() == '\n')
+    {
+        info.pop_back();
+    }
+
+    return std::formatter<std::string>::format(info, ctx);
+}
