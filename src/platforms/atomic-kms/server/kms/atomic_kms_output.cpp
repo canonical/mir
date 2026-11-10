@@ -28,6 +28,7 @@
 #include <mir/log.h>
 #include <drm_fourcc.h>
 #include <drm_mode.h>
+#include <algorithm>
 #include <span>
 #include <string_view>
 
@@ -148,6 +149,36 @@ private:
     mir::Fd const drm_fd;
 };
 
+class mga::AtomicKMSOutput::CursorFramebuffer
+{
+public:
+    CursorFramebuffer(mir::Fd fd, gbm_bo* buffer)
+        : fd{std::move(fd)},
+          width{gbm_bo_get_width(buffer)},
+          height{gbm_bo_get_height(buffer)}
+    {
+        uint32_t handles[4]{gbm_bo_get_handle(buffer).u32};
+        uint32_t strides[4]{gbm_bo_get_stride(buffer)};
+        uint32_t offsets[4]{};
+        if (drmModeAddFB2(this->fd, width, height, gbm_bo_get_format(buffer),
+                         handles, strides, offsets, &id, 0))
+        {
+            BOOST_THROW_EXCEPTION((std::system_error{
+                errno, std::system_category(), "Failed to create cursor framebuffer"}));
+        }
+    }
+
+    ~CursorFramebuffer()
+    {
+        drmModeRmFB(fd, id);
+    }
+
+    mir::Fd const fd;
+    uint32_t const width;
+    uint32_t const height;
+    uint32_t id{0};
+};
+
 /* Note:
  * (At least) Clang includes -Wmissing-designated-field-initializers to -Wextra
  * This (questionably?) warns when using designated field initialisers but
@@ -160,6 +191,7 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
     mir::Fd drm_master,
     kms::DRMModeConnectorUPtr connector)
     : drm_fd_{drm_master},
+      output_id{connector->connector_id},
       configuration{
           Configuration {
           .connector = std::move(connector),
@@ -170,7 +202,8 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
           .mode = nullptr,
           .crtc_props = nullptr,
           .plane_props = nullptr,
-          .connector_props = nullptr
+          .connector_props = nullptr,
+          .cursor_props = nullptr
       }},
       saved_crtc(),
       using_saved_crtc{true}
@@ -196,7 +229,7 @@ mga::AtomicKMSOutput::~AtomicKMSOutput()
 
 uint32_t mga::AtomicKMSOutput::id() const
 {
-    return configuration.lock()->connector->connector_id;
+    return output_id;
 }
 
 void mga::AtomicKMSOutput::reset()
@@ -218,10 +251,15 @@ void mga::AtomicKMSOutput::reset()
             update.add_property(*conf->crtc_props, "MODE_ID", 0);
             update.add_property(*conf->plane_props, "FB_ID", 0);
             update.add_property(*conf->plane_props, "CRTC_ID", 0);
+            add_cursor_clear(update, *conf);
 
             if (auto err = update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET))
             {
                 mir::log_warning("Failed to release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
+            }
+            else
+            {
+                cursor_state.lock()->visible_cursor.reset();
             }
 
             conf->crtc_props = nullptr;
@@ -235,17 +273,13 @@ void mga::AtomicKMSOutput::reset()
 
     /* Discard previously current crtc */
     conf->current_crtc = nullptr;
+    conf->cursor_props.reset();
+    update_cursor_configuration(*conf);
 }
 
 geom::Size mga::AtomicKMSOutput::size() const
 {
-    auto conf = configuration.lock();
-    // Disconnected hardware has no modes: invent a size
-    if (conf->connector->connection == DRM_MODE_DISCONNECTED)
-        return {0, 0};
-
-    drmModeModeInfo const& mode(conf->connector->modes[conf->mode_index]);
-    return {mode.hdisplay, mode.vdisplay};
+    return cursor_state.lock()->output_size;
 }
 
 unsigned mga::AtomicKMSOutput::max_refresh_rate() const
@@ -268,6 +302,7 @@ void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_
         &conf->connector->modes[conf->mode_index],
         sizeof(conf->connector->modes[conf->mode_index]));
     ensure_crtc(*conf);
+    update_cursor_configuration(*conf);
 }
 
 bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
@@ -306,6 +341,8 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     /* Set a surface for the plane */
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
+    auto const cursor = snapshot_cursor();
+    add_cursor_update(update, *conf, cursor);
 
     auto ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
     if (ret)
@@ -319,6 +356,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     conf->current_crtc = mgk::get_crtc(drm_fd_, conf->current_crtc->crtc_id);
 
     using_saved_crtc = false;
+    cursor_update_committed(*conf, cursor);
     return true;
 }
 
@@ -339,7 +377,8 @@ void mga::AtomicKMSOutput::clear_crtc()
     auto conf = configuration.lock();
     try
     {
-        ensure_crtc(*conf);
+        if (!ensure_crtc(*conf))
+            return;
     }
     catch (...)
     {
@@ -358,6 +397,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     update.add_property(*conf->crtc_props, "MODE_ID", 0);
     update.add_property(*conf->plane_props, "FB_ID", 0);
     update.add_property(*conf->plane_props, "CRTC_ID", 0);
+    add_cursor_clear(update, *conf);
 
     auto result = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
     if (result)
@@ -384,6 +424,10 @@ void mga::AtomicKMSOutput::clear_crtc()
     }
 
     conf->current_crtc = nullptr;
+    conf->cursor_props.reset();
+    if (!result)
+        cursor_state.lock()->visible_cursor.reset();
+    update_cursor_configuration(*conf);
 }
 
 bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
@@ -432,6 +476,8 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     /* Set a surface for the plane */
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
+    auto const cursor = snapshot_cursor();
+    add_cursor_update(update, *conf, cursor);
 
     auto ret = update.commit(drm_fd_, 0);
     if (ret)
@@ -442,52 +488,202 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     }
 
     using_saved_crtc = false;
+    cursor_update_committed(*conf, cursor);
     return true;
 }
 
 void mga::AtomicKMSOutput::set_cursor_image(gbm_bo* buffer)
 {
-    if (auto conf = configuration.lock(); conf->current_crtc)
     {
-        if (auto result = drmModeSetCursor(
-            drm_fd_,
-            conf->current_crtc->crtc_id,
-            gbm_bo_get_handle(buffer).u32,
-            gbm_bo_get_width(buffer),
-            gbm_bo_get_height(buffer)))
-        {
-            mir::log_warning("set_cursor: drmModeSetCursor failed (%s)", mir::errno_to_cstr(-result));
-        }
-        cursor_image_set = true;
+        auto cursor = cursor_state.lock();
+        if (!cursor->active || !cursor->available)
+            return;
     }
+    std::shared_ptr<CursorFramebuffer> image;
+    try
+    {
+        // The DRM framebuffer pins the GEM storage even after Cursor destroys its GBM buffer.
+        image = std::make_shared<CursorFramebuffer>(drm_fd_, buffer);
+    }
+    catch (std::exception const& error)
+    {
+        mir::log_warning("Failed to prepare cursor: %s", error.what());
+        return;
+    }
+    bool refresh{false};
+    {
+        auto cursor = cursor_state.lock();
+        if (!cursor->active || !cursor->available)
+            return;
+        cursor->cursor = std::move(image);
+        refresh = request_cursor_refresh(*cursor);
+    }
+    if (refresh)
+        notify_refresh();
 }
 
 void mga::AtomicKMSOutput::move_cursor(geometry::Point destination)
 {
-    if (auto conf = configuration.lock(); conf->current_crtc)
+    bool refresh{false};
     {
-        if (auto result =
-                drmModeMoveCursor(drm_fd_, conf->current_crtc->crtc_id, destination.x.as_int(), destination.y.as_int()))
-        {
-            mir::log_warning("move_cursor: drmModeMoveCursor failed (%s)", mir::errno_to_cstr(-result));
-        }
+        auto cursor = cursor_state.lock();
+        if (cursor->cursor_position == destination)
+            return;
+        cursor->cursor_position = destination;
+        if (cursor->cursor)
+            refresh = request_cursor_refresh(*cursor);
     }
+    if (refresh)
+        notify_refresh();
 }
 
 bool mga::AtomicKMSOutput::clear_cursor()
 {
-    int result = 0;
-    if (auto conf = configuration.lock(); conf->current_crtc)
+    bool refresh{false};
     {
-        result = drmModeSetCursor(drm_fd_, conf->current_crtc->crtc_id, 0, 0, 0);
-
-        if (result)
-            mir::log_warning("clear_cursor: drmModeSetCursor failed (%s)", mir::errno_to_cstr(-result));
+        auto cursor = cursor_state.lock();
+        if (cursor->active && !cursor->available)
+            return false;
+        if (!cursor->cursor && !cursor->visible_cursor && !cursor->cursor_dirty)
+            return true;
+        cursor->cursor.reset();
+        refresh = request_cursor_refresh(*cursor);
     }
+    if (refresh)
+        notify_refresh();
+    return true;
+}
 
-    cursor_image_set = false;
+bool mga::AtomicKMSOutput::request_cursor_refresh(CursorState& cursor)
+{
+    cursor.cursor_dirty = true;
+    ++cursor.generation;
+    if (cursor.refresh_pending)
+        return false;
+    cursor.refresh_pending = true;
+    return true;
+}
 
-    return !result;
+void mga::AtomicKMSOutput::notify_refresh()
+{
+    auto handler = refresh_handler.lock();
+    if (*handler)
+        (*handler)();
+}
+
+void mga::AtomicKMSOutput::register_refresh_handler(std::function<void()> const& handler)
+{
+    auto current_handler = refresh_handler.lock();
+    *current_handler = handler;
+    bool refresh{false};
+    {
+        auto cursor = cursor_state.lock();
+        cursor->refresh_pending = false;
+        if (cursor->cursor_dirty && handler)
+            refresh = request_cursor_refresh(*cursor);
+    }
+    if (refresh)
+        (*current_handler)();
+}
+
+void mga::AtomicKMSOutput::add_cursor_clear(AtomicUpdate& update, Configuration const& conf)
+{
+    if (!conf.cursor_props)
+        return;
+    update.add_property(*conf.cursor_props, "FB_ID", 0);
+    update.add_property(*conf.cursor_props, "CRTC_ID", 0);
+}
+
+auto mga::AtomicKMSOutput::snapshot_cursor() -> CursorSnapshot
+{
+    auto cursor = cursor_state.lock();
+    cursor->refresh_pending = false;
+    return {cursor->cursor, cursor->cursor_position, cursor->generation, cursor->cursor_dirty};
+}
+
+void mga::AtomicKMSOutput::update_cursor_configuration(Configuration const& conf)
+{
+    auto cursor = cursor_state.lock();
+    cursor->active = conf.current_crtc != nullptr;
+    cursor->available = conf.cursor_props != nullptr;
+    if (conf.connector->connection == DRM_MODE_CONNECTED &&
+        conf.mode_index < static_cast<size_t>(conf.connector->count_modes))
+    {
+        auto const& mode = conf.connector->modes[conf.mode_index];
+        cursor->output_size = {mode.hdisplay, mode.vdisplay};
+    }
+    else
+    {
+        cursor->output_size = {0, 0};
+    }
+    if (cursor->cursor_dirty || cursor->cursor || cursor->visible_cursor)
+    {
+        cursor->cursor_dirty = true;
+        ++cursor->generation;
+    }
+    cursor->refresh_pending = false;
+}
+
+void mga::AtomicKMSOutput::add_cursor_update(
+    AtomicUpdate& update, Configuration const& conf, CursorSnapshot const& cursor)
+{
+    if (!cursor.cursor_dirty || !conf.cursor_props)
+        return;
+    if (!cursor.cursor)
+    {
+        add_cursor_clear(update, conf);
+        return;
+    }
+    auto const& props = *conf.cursor_props;
+    update.add_property(props, "FB_ID", cursor.cursor->id);
+    update.add_property(props, "CRTC_ID", conf.current_crtc->crtc_id);
+    update.add_property(props, "SRC_X", 0);
+    update.add_property(props, "SRC_Y", 0);
+    update.add_property(props, "SRC_W", static_cast<uint64_t>(cursor.cursor->width) << 16);
+    update.add_property(props, "SRC_H", static_cast<uint64_t>(cursor.cursor->height) << 16);
+    update.add_property(props, "CRTC_X", cursor.cursor_position.x.as_int());
+    update.add_property(props, "CRTC_Y", cursor.cursor_position.y.as_int());
+    update.add_property(props, "CRTC_W", cursor.cursor->width);
+    update.add_property(props, "CRTC_H", cursor.cursor->height);
+}
+
+void mga::AtomicKMSOutput::cursor_update_committed(Configuration const& conf, CursorSnapshot const& snapshot)
+{
+    if (snapshot.cursor_dirty && conf.cursor_props)
+    {
+        auto cursor = cursor_state.lock();
+        cursor->visible_cursor = snapshot.cursor;
+        // Input can replace the pending state while the DRM commit is blocked.
+        if (cursor->generation == snapshot.generation)
+            cursor->cursor_dirty = false;
+    }
+}
+
+bool mga::AtomicKMSOutput::post_cursor()
+{
+    {
+        auto cursor = cursor_state.lock();
+        cursor->refresh_pending = false;
+        if (!cursor->cursor_dirty)
+            return true;
+    }
+    auto conf = configuration.lock();
+    if (!ensure_crtc(*conf))
+        return false;
+    auto const cursor = snapshot_cursor();
+    if (!cursor.cursor_dirty || !conf->cursor_props)
+        return true;
+
+    AtomicUpdate update;
+    add_cursor_update(update, *conf, cursor);
+    // Blocking, without PAGE_FLIP_EVENT: no outstanding events or framebuffer lifetimes to track.
+    if (auto const error = update.commit(drm_fd_, 0))
+    {
+        mir::log_warning("Failed to post cursor: %s (%i)", mir::errno_to_cstr(-error), -error);
+        return false;
+    }
+    cursor_update_committed(*conf, cursor);
+    return true;
 }
 
 bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
@@ -517,6 +713,47 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
 
     to_update.crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_crtc);
     to_update.plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_plane);
+    to_update.cursor_props.reset();
+    mgk::DRMModeResources resources{drm_fd_};
+    uint32_t crtc_mask{1};
+    for (auto const& crtc : resources.crtcs())
+    {
+        if (crtc->crtc_id == to_update.current_crtc->crtc_id)
+            break;
+        crtc_mask <<= 1;
+    }
+    mgk::PlaneResources planes{drm_fd_};
+    for (auto const& plane : planes.planes())
+    {
+        if (!(plane->possible_crtcs & crtc_mask) ||
+            (plane->crtc_id && plane->crtc_id != to_update.current_crtc->crtc_id))
+            continue;
+        auto const formats = std::span{plane->formats, plane->count_formats};
+        if (std::ranges::find(formats, DRM_FORMAT_ARGB8888) == formats.end())
+            continue;
+        auto props = std::make_unique<mgk::ObjectProperties>(drm_fd_, plane);
+        if ((*props)["type"] == DRM_PLANE_TYPE_CURSOR)
+        {
+            auto const bound_crtc = (*props)["CRTC_ID"] ? (*props)["CRTC_ID"] : plane->crtc_id;
+            if (bound_crtc && bound_crtc != to_update.current_crtc->crtc_id)
+                continue;
+            // Without a shared allocator, an unbound multi-CRTC plane could be claimed by two outputs.
+            if (!bound_crtc && (plane->possible_crtcs & (plane->possible_crtcs - 1)))
+                continue;
+            if (bound_crtc || !to_update.cursor_props)
+                to_update.cursor_props = std::move(props);
+            if (bound_crtc)
+                break;
+        }
+    }
+    if (to_update.cursor_props && (*to_update.cursor_props)["FB_ID"] &&
+        (*to_update.cursor_props)["CRTC_ID"] == to_update.current_crtc->crtc_id)
+    {
+        auto cursor = cursor_state.lock();
+        cursor->cursor_dirty = true;
+        ++cursor->generation;
+    }
+    update_cursor_configuration(to_update);
 
     return true;
 }
@@ -610,24 +847,19 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
         update.add_property(*conf->crtc_props, "MODE_ID", 0);
         update.add_property(*conf->plane_props, "FB_ID", 0);
         update.add_property(*conf->plane_props, "CRTC_ID", 0);
+        add_cursor_clear(update, *conf);
 
-        update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
+        if (!update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET))
+            cursor_state.lock()->visible_cursor.reset();
 
         conf->connector_props = nullptr;
         conf->crtc_props = nullptr;
         conf->plane_props = nullptr;
     }
     conf->current_crtc = nullptr;
-
-    if (conf->connector->encoder_id)
-    {
-        auto encoder = kms::get_encoder(drm_fd_, conf->connector->encoder_id);
-
-        if (encoder->crtc_id)
-        {
-            conf->current_crtc = kms::get_crtc(drm_fd_, encoder->crtc_id);
-        }
-    }
+    conf->cursor_props.reset();
+    update_cursor_configuration(*conf);
+    ensure_crtc(*conf);
 }
 
 namespace
@@ -906,5 +1138,6 @@ int mga::AtomicKMSOutput::drm_fd() const
 
 bool mga::AtomicKMSOutput::has_cursor_image() const
 {
-    return cursor_image_set;
+    auto cursor = cursor_state.lock();
+    return cursor->cursor && cursor->active && cursor->available;
 }

@@ -153,6 +153,17 @@ public:
                     scene->unregister_compositor(std::get<1>(compositor).get());
             });
 
+        auto refresh_registration = mir::raii::paired_calls(
+            [this]
+            {
+                group.register_refresh_handler([this]
+                {
+                    hardware_refresh = true;
+                    wakeup.raise();
+                });
+            },
+            [this] { group.register_refresh_handler({}); });
+
         started.set_value();
 
         try
@@ -188,21 +199,27 @@ public:
                     auto const mode = recovering ?
                         mc::CompositionMode::recovery : mc::CompositionMode::normal;
                     bool needs_post = false;
-                    for (auto& tuple : compositors)
+                    // Consume damage before sampling so damage during rendering survives for the next frame.
+                    bool const render_scene = scene_dirty.exchange(false) || recovering;
+                    if (render_scene)
                     {
-                        auto& compositor = std::get<1>(tuple);
-                        auto scene_elements = scene->scene_elements_for(compositor.get());
-                        if (cursor->needs_compositing())
+                        for (auto& tuple : compositors)
                         {
-                            if (auto const cursor_renderable = cursor->renderable())
-                                scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
-                        }
+                            auto& compositor = std::get<1>(tuple);
+                            auto scene_elements = scene->scene_elements_for(compositor.get());
+                            if (cursor->needs_compositing())
+                            {
+                                if (auto const cursor_renderable = cursor->renderable())
+                                    scene_elements.push_back(std::make_shared<CursorSceneElement>(cursor_renderable));
+                            }
 
-                        if (compositor->composite(std::move(scene_elements), mode))
-                            needs_post = true;
+                            if (compositor->composite(std::move(scene_elements), mode))
+                                needs_post = true;
+                        }
                     }
 
-                    // We can skip the post if none of the compositors ended up compositing
+                    // Include refreshes arriving during rendering, even if composite() produced no frame.
+                    needs_post = hardware_refresh.exchange(false) || needs_post;
                     if (needs_post)
                     {
                         if (group.post())
@@ -220,13 +237,12 @@ public:
                                 mir::log_debug({compositor_tag}, "Display presentation failed; compositing recovery frames");
                             }
                             recovering = true;
-                            /* Schedule a recovery frame without waiting for new client
-                             * damage; the next iteration renders the visible scene
-                             * through the renderer.
-                             */
-                            wakeup.raise();
                         }
                     }
+
+                    // Recovery must keep rendering even without client damage or a new frame to post.
+                    if (recovering)
+                        wakeup.raise();
 
                     /*
                      * "Predictive bypass" optimization: If the last frame was
@@ -258,6 +274,7 @@ public:
 
     void schedule_compositing()
     {
+        scene_dirty = true;
         wakeup.raise();
     }
 
@@ -269,7 +286,7 @@ public:
 
         if (took_damage)
         {
-            wakeup.raise();
+            schedule_compositing();
         }
     }
 
@@ -302,6 +319,8 @@ private:
     std::shared_ptr<mc::Scene> const scene;
     mir::Signal wakeup;
     std::atomic<bool> running;
+    std::atomic<bool> scene_dirty{false};
+    std::atomic<bool> hardware_refresh{false};
     std::chrono::milliseconds force_sleep{-1};
     std::shared_ptr<DisplayListener> const display_listener;
     std::shared_ptr<CompositorReport> const report;

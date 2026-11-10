@@ -15,16 +15,23 @@
  */
 
 #include "atomic_kms_output.h"
+#include "cursor.h"
+#include "kms_output_container.h"
 
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/gamma_curves.h>
 #include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
+#include <drm_fourcc.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <atomic>
 #include <cerrno>
+#include <chrono>
+#include <future>
 #include <map>
 #include <memory>
 #include <vector>
@@ -109,6 +116,8 @@ public:
     static constexpr uint32_t encoder_id{20};
     static constexpr uint32_t crtc_id{10};
     static constexpr uint32_t plane_id{40};
+    static constexpr uint32_t cursor_plane_id{41};
+    static constexpr uint32_t bound_cursor_plane_id{42};
     static constexpr uint32_t primary_crtc_mask{1};
 
     AtomicKMSOutputTest()
@@ -116,8 +125,8 @@ public:
     {
     }
 
-    explicit AtomicKMSOutputTest(bool with_gamma_lut)
-        : drm_fd{mock_drm.open(drm_device, 0)}
+    explicit AtomicKMSOutputTest(bool with_gamma_lut, bool with_cursor = false, bool with_bound_cursor = false)
+        : drm_fd{mock_drm.open(drm_device, 0)}, with_cursor{with_cursor}, with_bound_cursor{with_bound_cursor}
     {
         setup_drm_objects(with_gamma_lut);
     }
@@ -203,7 +212,24 @@ private:
             drm_device, connector_id, DRM_MODE_CONNECTOR_VGA, DRM_MODE_CONNECTED, encoder_id, modes, encoder_ids, {});
         connector().connector_type_id = 1;
         mock_drm.add_plane(drm_device, plane_id, primary_crtc_mask);
+        if (with_cursor)
+            mock_drm.add_plane(drm_device, cursor_plane_id, primary_crtc_mask);
+        if (with_bound_cursor)
+            mock_drm.add_plane(drm_device, bound_cursor_plane_id, primary_crtc_mask);
         mock_drm.prepare(drm_device);
+        if (with_cursor)
+        {
+            auto const cursor_plane = drmModeGetPlane(drm_fd, cursor_plane_id);
+            cursor_plane->formats = &cursor_format;
+            cursor_plane->count_formats = 1;
+        }
+        if (with_bound_cursor)
+        {
+            auto const cursor_plane = drmModeGetPlane(drm_fd, bound_cursor_plane_id);
+            cursor_plane->formats = &cursor_format;
+            cursor_plane->count_formats = 1;
+            cursor_plane->crtc_id = crtc_id;
+        }
 
         mock_drm.add_property(
             drm_device, connector_id, DRM_MODE_OBJECT_CONNECTOR, connector_crtc_property_id, "CRTC_ID");
@@ -229,10 +255,81 @@ private:
     void add_plane_property(uint32_t id, char const* name, uint64_t value = 0)
     {
         mock_drm.add_property(drm_device, plane_id, DRM_MODE_OBJECT_PLANE, id, name, value);
+        if (with_cursor)
+        {
+            mock_drm.add_property(
+                drm_device, cursor_plane_id, DRM_MODE_OBJECT_PLANE, id, name,
+                id == plane_type_property_id ? DRM_PLANE_TYPE_CURSOR : value);
+        }
+        if (with_bound_cursor)
+        {
+            auto const bound_value = id == plane_type_property_id ? DRM_PLANE_TYPE_CURSOR :
+                id == plane_crtc_property_id ? crtc_id : value;
+            mock_drm.add_property(
+                drm_device, bound_cursor_plane_id, DRM_MODE_OBJECT_PLANE, id, name, bound_value);
+        }
     }
 
     std::vector<drmModeModeInfo> modes;
     std::vector<uint32_t> encoder_ids{encoder_id};
+    uint32_t cursor_format{DRM_FORMAT_ARGB8888};
+    bool const with_cursor;
+    bool const with_bound_cursor;
+};
+
+class AtomicKMSCursorTest : public AtomicKMSOutputTest
+{
+public:
+    static constexpr uint32_t cursor_fb_id{99};
+    static constexpr uint32_t cursor_width{64};
+    static constexpr uint32_t cursor_height{64};
+
+    explicit AtomicKMSCursorTest(bool with_bound_cursor = false) : AtomicKMSOutputTest{true, true, with_bound_cursor}
+    {
+        ON_CALL(gbm, gbm_bo_get_width(_)).WillByDefault(Return(cursor_width));
+        ON_CALL(gbm, gbm_bo_get_height(_)).WillByDefault(Return(cursor_height));
+        ON_CALL(gbm, gbm_bo_get_stride(_)).WillByDefault(Return(cursor_width * 4));
+        ON_CALL(gbm, gbm_bo_get_format(_)).WillByDefault(Return(DRM_FORMAT_ARGB8888));
+        ON_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
+            .WillByDefault(DoAll(SetArgPointee<7>(cursor_fb_id), Return(0)));
+        EXPECT_CALL(mock_drm, drmModeSetCursor(_, _, _, _, _)).Times(0);
+        EXPECT_CALL(mock_drm, drmModeMoveCursor(_, _, _, _)).Times(0);
+    }
+
+    auto cursor_properties(geom::Point position = {}) const -> std::map<AtomicPropertyKey, uint64_t>
+    {
+        return {
+            {{cursor_plane_id, plane_fb_property_id}, cursor_fb_id},
+            {{cursor_plane_id, plane_crtc_property_id}, crtc_id},
+            {{cursor_plane_id, plane_src_x_property_id}, 0},
+            {{cursor_plane_id, plane_src_y_property_id}, 0},
+            {{cursor_plane_id, plane_src_w_property_id}, kms_fixed_point(cursor_width)},
+            {{cursor_plane_id, plane_src_h_property_id}, kms_fixed_point(cursor_height)},
+            {{cursor_plane_id, plane_crtc_x_property_id}, static_cast<uint64_t>(position.x.as_int())},
+            {{cursor_plane_id, plane_crtc_y_property_id}, static_cast<uint64_t>(position.y.as_int())},
+            {{cursor_plane_id, plane_crtc_w_property_id}, cursor_width},
+            {{cursor_plane_id, plane_crtc_h_property_id}, cursor_height}};
+    }
+
+    NiceMock<mtd::MockGBM> gbm;
+};
+
+class AtomicKMSBoundCursorTest : public AtomicKMSCursorTest
+{
+public:
+    AtomicKMSBoundCursorTest() : AtomicKMSCursorTest{true} {}
+};
+
+enum class CursorCommit
+{
+    cursor_only,
+    page_flip,
+    modeset
+};
+
+class AtomicKMSConcurrentCursorTest :
+    public AtomicKMSCursorTest, public WithParamInterface<CursorCommit>
+{
 };
 
 struct FramebufferMismatch
@@ -265,6 +362,376 @@ public:
     {
     }
 };
+}
+
+TEST_F(AtomicKMSCursorTest, image_and_moves_are_deferred_and_coalesced)
+{
+    auto output_under_test = output();
+    int refreshes{0};
+    output_under_test->register_refresh_handler([&]
+        {
+            ++refreshes;
+            // The refresh callback may inspect the output without deadlocking.
+            EXPECT_TRUE(output_under_test->has_cursor_image());
+        });
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    output_under_test->move_cursor({1, 2});
+    output_under_test->move_cursor({-3, 4});
+    EXPECT_TRUE(output_under_test->has_cursor_image());
+    EXPECT_THAT(refreshes, Eq(1));
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(cursor_properties({-3, 4}))), no_flags));
+    EXPECT_TRUE(output_under_test->post_cursor());
+    Mock::VerifyAndClearExpectations(&mock_drm);
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, cursor_and_content_share_page_flip)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    auto properties = primary_request_properties({.framebuffer_id = flip_framebuffer_id});
+    properties.merge(cursor_properties());
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, mtd::AtomicRequestWith(Eq(properties)), no_flags));
+    StubFramebuffer framebuffer{flip_framebuffer_id};
+    EXPECT_TRUE(output_under_test->page_flip(framebuffer));
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, cursor_and_content_share_modeset)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    auto properties = primary_request_properties(
+        {.framebuffer_id = primary_framebuffer_id, .activate_crtc = true});
+    properties.merge(cursor_properties());
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(properties)), DRM_MODE_ATOMIC_ALLOW_MODESET));
+    StubFramebuffer framebuffer{primary_framebuffer_id};
+    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, clean_cursor_does_not_add_properties_to_content_commit)
+{
+    auto output_under_test = output();
+    auto const properties = primary_request_properties({.framebuffer_id = flip_framebuffer_id});
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, mtd::AtomicRequestWith(Eq(properties)), no_flags));
+    StubFramebuffer framebuffer{flip_framebuffer_id};
+    EXPECT_TRUE(output_under_test->page_flip(framebuffer));
+}
+
+TEST_F(AtomicKMSCursorTest, failed_cursor_commit_is_retried_and_new_move_requests_refresh)
+{
+    auto output_under_test = output();
+    int refreshes{0};
+    output_under_test->register_refresh_handler([&] { ++refreshes; });
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(cursor_properties())), no_flags)).WillOnce(Return(-EACCES));
+    EXPECT_FALSE(output_under_test->post_cursor());
+    output_under_test->move_cursor({3, 4});
+    EXPECT_THAT(refreshes, Eq(2));
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(cursor_properties({3, 4}))), no_flags));
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, failed_content_commit_keeps_pending_cursor_for_modeset)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags)).WillOnce(Return(-EINVAL));
+    StubFramebuffer framebuffer{flip_framebuffer_id};
+    EXPECT_FALSE(output_under_test->page_flip(framebuffer));
+    auto properties = primary_request_properties(
+        {.framebuffer_id = flip_framebuffer_id, .activate_crtc = true});
+    properties.merge(cursor_properties());
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(properties)), DRM_MODE_ATOMIC_ALLOW_MODESET));
+    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
+}
+
+TEST_F(AtomicKMSCursorTest, clearing_retains_visible_framebuffer_until_successful_commit)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    ASSERT_TRUE(output_under_test->post_cursor());
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, cursor_fb_id)).Times(0);
+    EXPECT_TRUE(output_under_test->clear_cursor());
+    EXPECT_FALSE(output_under_test->has_cursor_image());
+    std::map<AtomicPropertyKey, uint64_t> const properties{
+        {{cursor_plane_id, plane_fb_property_id}, 0},
+        {{cursor_plane_id, plane_crtc_property_id}, 0}};
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(properties)), no_flags)).WillOnce(Return(-EACCES));
+    EXPECT_FALSE(output_under_test->post_cursor());
+    Mock::VerifyAndClearExpectations(&mock_drm);
+    InSequence sequence;
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, mtd::AtomicRequestWith(Eq(properties)), no_flags));
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, cursor_fb_id));
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, registration_wakes_for_already_pending_cursor)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    int refreshes{0};
+    output_under_test->register_refresh_handler([&] { ++refreshes; });
+    EXPECT_THAT(refreshes, Eq(1));
+}
+
+TEST_F(AtomicKMSCursorTest, clearing_refresh_handler_waits_for_in_flight_callback)
+{
+    using namespace std::chrono_literals;
+    auto output_under_test = output();
+    std::promise<void> entered;
+    std::promise<void> release;
+    auto released = release.get_future().share();
+    std::atomic<int> calls{0};
+    output_under_test->register_refresh_handler([&]
+        {
+            if (++calls == 1)
+                entered.set_value();
+            released.wait();
+        });
+    auto update = std::async(std::launch::async, [&]
+        {
+            output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+        });
+    EXPECT_THAT(entered.get_future().wait_for(2s), Eq(std::future_status::ready));
+    std::promise<void> clearing;
+    auto clear = std::async(std::launch::async, [&]
+        {
+            clearing.set_value();
+            output_under_test->register_refresh_handler({});
+        });
+    clearing.get_future().wait();
+    EXPECT_THAT(clear.wait_for(50ms), Eq(std::future_status::timeout));
+    release.set_value();
+    update.get();
+    clear.get();
+    EXPECT_TRUE(output_under_test->post_cursor());
+    output_under_test->move_cursor({1, 2});
+    EXPECT_THAT(calls.load(), Eq(1));
+}
+
+TEST_P(AtomicKMSConcurrentCursorTest, input_updates_do_not_wait_for_commit_and_are_not_lost)
+{
+    using namespace std::chrono_literals;
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    std::atomic<int> refreshes{0};
+    output_under_test->register_refresh_handler([&] { ++refreshes; });
+    std::promise<void> entered;
+    std::promise<void> release;
+    auto released = release.get_future().share();
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).WillOnce(
+        [&] (auto...)
+        {
+            entered.set_value();
+            released.wait();
+            return 0;
+        });
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, cursor_fb_id)).Times(0);
+    StubFramebuffer framebuffer{flip_framebuffer_id};
+    auto commit = std::async(std::launch::async, [&]
+        {
+            switch (GetParam())
+            {
+            case CursorCommit::cursor_only:
+                return output_under_test->post_cursor();
+            case CursorCommit::page_flip:
+                return output_under_test->page_flip(framebuffer);
+            case CursorCommit::modeset:
+                return output_under_test->set_crtc(framebuffer);
+            }
+            return false;
+        });
+    EXPECT_THAT(entered.get_future().wait_for(2s), Eq(std::future_status::ready));
+    ON_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
+        .WillByDefault(DoAll(SetArgPointee<7>(100u), Return(0)));
+    auto input = std::async(std::launch::async, [&]
+        {
+            EXPECT_THAT(output_under_test->id(), Eq(connector_id));
+            EXPECT_THAT(output_under_test->size(), Eq(requested_mode_size));
+            EXPECT_TRUE(output_under_test->has_cursor_image());
+            output_under_test->move_cursor({1, 2});
+            EXPECT_TRUE(output_under_test->clear_cursor());
+            output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+            output_under_test->move_cursor({-3, 4});
+        });
+    EXPECT_THAT(input.wait_for(2s), Eq(std::future_status::ready));
+    release.set_value();
+    input.get();
+    EXPECT_TRUE(commit.get());
+    EXPECT_THAT(refreshes.load(), Eq(2));
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    auto properties = cursor_properties({-3, 4});
+    properties[{cursor_plane_id, plane_fb_property_id}] = 100;
+    InSequence sequence;
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, mtd::AtomicRequestWith(Eq(properties)), no_flags));
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, cursor_fb_id));
+    EXPECT_TRUE(output_under_test->post_cursor());
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, 100u));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    Commits,
+    AtomicKMSConcurrentCursorTest,
+    Values(CursorCommit::cursor_only, CursorCommit::page_flip, CursorCommit::modeset));
+
+TEST_F(AtomicKMSCursorTest, replacing_pending_image_keeps_visible_image_until_commit)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    ASSERT_TRUE(output_under_test->post_cursor());
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, cursor_fb_id)).Times(0);
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _))
+        .WillOnce(DoAll(SetArgPointee<7>(100u), Return(0)))
+        .WillOnce(DoAll(SetArgPointee<7>(101u), Return(0)));
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, 100u));
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    Mock::VerifyAndClearExpectations(&mock_drm);
+    InSequence sequence;
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags));
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, cursor_fb_id));
+    EXPECT_TRUE(output_under_test->post_cursor());
+    EXPECT_CALL(mock_drm, drmModeRmFB(_, 101u));
+}
+
+TEST_F(AtomicKMSCursorTest, posting_does_not_access_the_original_gbm_buffer)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    gbm_bo_destroy(gbm.fake_gbm.bo);
+    EXPECT_CALL(gbm, gbm_bo_get_width(_)).Times(0);
+    EXPECT_CALL(gbm, gbm_bo_get_height(_)).Times(0);
+    EXPECT_CALL(gbm, gbm_bo_get_handle(_)).Times(0);
+    EXPECT_TRUE(output_under_test->post_cursor());
+    EXPECT_TRUE(output_under_test->clear_cursor());
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, reconfiguration_reapplies_the_cursor_with_the_content)
+{
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    ASSERT_TRUE(output_under_test->post_cursor());
+    output_under_test->reset();
+    output_under_test->configure({}, 0);
+    auto properties = primary_request_properties(
+        {.framebuffer_id = primary_framebuffer_id, .activate_crtc = true});
+    properties[{crtc_id, crtc_mode_property_id}] = mode_blob_id + 1;
+    properties.merge(cursor_properties());
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(
+        _, mtd::AtomicRequestWith(Eq(properties)), DRM_MODE_ATOMIC_ALLOW_MODESET));
+    StubFramebuffer framebuffer{primary_framebuffer_id};
+    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
+}
+
+TEST_F(AtomicKMSCursorTest, incompatible_cursor_plane_is_not_used)
+{
+    auto const plane = drmModeGetPlane(drm_fd, cursor_plane_id);
+    plane->possible_crtcs = primary_crtc_mask << 1;
+    auto output_under_test = output();
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    EXPECT_FALSE(output_under_test->has_cursor_image());
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, unbound_cursor_plane_shared_by_multiple_crtcs_is_not_claimed)
+{
+    auto const plane = drmModeGetPlane(drm_fd, cursor_plane_id);
+    plane->possible_crtcs = primary_crtc_mask | (primary_crtc_mask << 1);
+    auto output_under_test = output();
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _)).Times(0);
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    EXPECT_FALSE(output_under_test->has_cursor_image());
+    EXPECT_FALSE(output_under_test->clear_cursor());
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSBoundCursorTest, bound_cursor_plane_is_preferred_over_earlier_unbound_plane)
+{
+    auto const plane = drmModeGetPlane(drm_fd, bound_cursor_plane_id);
+    plane->possible_crtcs = primary_crtc_mask | (primary_crtc_mask << 1);
+    auto output_under_test = output();
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    std::map<AtomicPropertyKey, uint64_t> properties;
+    for (auto const& [key, value] : cursor_properties())
+        properties[{bound_cursor_plane_id, key.property_id}] = value;
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, mtd::AtomicRequestWith(Eq(properties)), no_flags));
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, constructor_hide_defers_clearing_an_inherited_cursor)
+{
+    struct Outputs : mga::KMSOutputContainer
+    {
+        std::shared_ptr<mga::KMSOutput> output;
+        void for_each_output(std::function<void(std::shared_ptr<mga::KMSOutput> const&)> f) const override
+        {
+            f(output);
+        }
+        void update_from_hardware_state() override {}
+    };
+    struct InitialConfiguration : mga::CurrentConfiguration
+    {
+        void with_current_configuration_do(
+            std::function<void(mga::KMSDisplayConfiguration const&)> const&) override {}
+    };
+    auto const props = drmModeObjectGetProperties(drm_fd, cursor_plane_id, DRM_MODE_OBJECT_PLANE);
+    for (uint32_t i = 0; i < props->count_props; ++i)
+    {
+        if (props->props[i] == plane_fb_property_id)
+            props->prop_values[i] = cursor_fb_id;
+        if (props->props[i] == plane_crtc_property_id)
+            props->prop_values[i] = crtc_id;
+    }
+    auto outputs = std::make_shared<Outputs>();
+    outputs->output = output();
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    mga::Cursor cursor{outputs, std::make_shared<InitialConfiguration>()};
+    Mock::VerifyAndClearExpectations(&mock_drm);
+    std::map<AtomicPropertyKey, uint64_t> const properties{
+        {{cursor_plane_id, plane_fb_property_id}, 0},
+        {{cursor_plane_id, plane_crtc_property_id}, 0}};
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, mtd::AtomicRequestWith(Eq(properties)), no_flags));
+    EXPECT_TRUE(outputs->output->post_cursor());
+}
+
+TEST_F(AtomicKMSCursorTest, cursor_plane_without_argb_support_is_not_used)
+{
+    auto const plane = drmModeGetPlane(drm_fd, cursor_plane_id);
+    plane->count_formats = 0;
+    auto output_under_test = output();
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    EXPECT_FALSE(output_under_test->has_cursor_image());
+    EXPECT_TRUE(output_under_test->post_cursor());
+}
+
+TEST_F(AtomicKMSOutputTest, missing_cursor_plane_does_not_issue_cursor_commit)
+{
+    auto output_under_test = output();
+    NiceMock<mtd::MockGBM> gbm;
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+    EXPECT_CALL(mock_drm, drmModeAddFB2(_, _, _, _, _, _, _, _, _)).Times(0);
+    output_under_test->set_cursor_image(gbm.fake_gbm.bo);
+    output_under_test->move_cursor({10, 20});
+    EXPECT_FALSE(output_under_test->has_cursor_image());
+    EXPECT_FALSE(output_under_test->clear_cursor());
+    EXPECT_TRUE(output_under_test->post_cursor());
 }
 
 TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_and_modeset_flag)
