@@ -96,13 +96,12 @@ geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& 
             {
                 auto const& screen = db.view_area();
                 auto const& overlap = intersection_of(rect, screen);
-                int area = overlap.size.width.as_int() *
-                           overlap.size.height.as_int();
+                int overlap_area = area(overlap.size);
 
-                if (area > max_area)
+                if (overlap_area > max_area)
                 {
                     best = screen;
-                    max_area = area;
+                    max_area = overlap_area;
                 }
             });
     });

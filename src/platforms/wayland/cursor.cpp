@@ -97,11 +97,12 @@ void mpw::Cursor::show(std::shared_ptr<graphics::CursorImage> const& cursor_imag
 
         auto const width = scaled_cursor_buf.size.width.as_uint32_t();
         auto const height = scaled_cursor_buf.size.height.as_uint32_t();
+        auto const buf_size_bytes = 4 * area(scaled_cursor_buf.size);
         auto const hotspot_x = current_cursor_image->hotspot().dx.as_uint32_t() * current_scale;
         auto const hotspot_y = current_cursor_image->hotspot().dy.as_uint32_t() * current_scale;
         void* data_buffer;
-        auto const shm_pool = make_shm_pool(shm, 4 * width * height, &data_buffer);
-        std::memcpy(data_buffer, scaled_cursor_buf.data.get(), 4 * width * height);
+        auto const shm_pool = make_shm_pool(shm, buf_size_bytes, &data_buffer);
+        std::memcpy(data_buffer, scaled_cursor_buf.data.get(), buf_size_bytes);
         buffer = wl_shm_pool_create_buffer(shm_pool, 0, width, height, 4 * width, WL_SHM_FORMAT_ARGB8888);
         wl_surface_attach(surface, buffer, 0, 0);
         wl_surface_commit(surface);
