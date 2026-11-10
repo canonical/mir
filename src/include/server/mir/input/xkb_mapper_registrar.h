@@ -47,6 +47,7 @@ public:
     void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state) override;
     void set_keymap_for_device(MirInputDeviceId id, std::shared_ptr<Keymap> map) override;
     void set_keymap_for_all_devices(std::shared_ptr<Keymap> map) override;
+    /// Called when device \a id is removed; also discards the LED observers registered for it.
     void clear_keymap_for_device(MirInputDeviceId id) override;
     void clear_all_keymaps() override;
     void map_event(MirEvent& event) override;
@@ -117,7 +118,7 @@ private:
     };
 
     XkbMappingState* get_keymapping_state(MirInputDeviceId id);
-    void notify_leds_changed(MirInputDeviceId id, XkbMappingState const& mapping_state);
+    void notify_leds_changed(MirInputDeviceId id, KeyboardLeds leds);
     ComposeState* get_compose_state(MirInputDeviceId id);
 
     Executor& executor;
@@ -131,7 +132,7 @@ private:
     std::optional<MirInputEventModifiers> modifier_state;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<XkbMappingState>> device_mapping;
     std::unordered_map<MirInputDeviceId, std::unique_ptr<ComposeState>> device_composing;
-    std::unordered_map<MirInputDeviceId, std::unique_ptr<DeviceLedRegistrar>> device_led_registrars;
+    std::unordered_map<MirInputDeviceId, std::shared_ptr<DeviceLedRegistrar>> device_led_registrars;
 };
 }
 }

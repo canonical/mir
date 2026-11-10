@@ -129,3 +129,38 @@ TEST_F(XKBMapperRegistrarLeds, unregistered_observer_is_not_notified)
 
     press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
 }
+
+TEST_F(XKBMapperRegistrarLeds, replacing_default_keymap_clears_leds)
+{
+    mapper.set_keymap_for_all_devices(keymap("us"));
+    mapper.register_interest(observer, device_id);
+    press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
+
+    EXPECT_CALL(*observer, leds_set(mi::KeyboardLeds{}));
+
+    mapper.set_keymap_for_all_devices(keymap("latam"));
+}
+
+TEST_F(XKBMapperRegistrarLeds, clearing_all_keymaps_clears_leds)
+{
+    mapper.set_keymap_for_device(device_id, keymap("us"));
+    mapper.register_interest(observer, device_id);
+    press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
+
+    EXPECT_CALL(*observer, leds_set(mi::KeyboardLeds{}));
+
+    mapper.clear_all_keymaps();
+}
+
+TEST_F(XKBMapperRegistrarLeds, observers_are_discarded_when_device_is_removed)
+{
+    mapper.set_keymap_for_device(device_id, keymap("us"));
+    mapper.register_interest(observer, device_id);
+
+    mapper.clear_keymap_for_device(device_id);
+    mapper.set_keymap_for_device(device_id, keymap("us"));
+
+    EXPECT_CALL(*observer, leds_set(_)).Times(0);
+
+    press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
+}
