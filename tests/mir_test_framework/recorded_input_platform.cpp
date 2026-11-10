@@ -102,6 +102,17 @@ struct Registration
 
 mir::Synchronised<std::unordered_map<int, Registration>> registrations;
 
+// The caller still owns fd and must not close it concurrently with duplication.
+void reopen_on_dup(int fd, std::string const& devnode)
+{
+    struct stat st{};
+    if (fstat(fd, &st) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to stat recorded input fd"));
+    }
+    registrations.lock()->insert_or_assign(fd, Registration{devnode, st.st_rdev});
+}
+
 auto registered_devnode(int fd) -> std::optional<std::string>
 {
     auto const locked = registrations.lock();
@@ -153,7 +164,7 @@ auto reopen(Fcntl real_fcntl, int fd, int extra_flags, int minimum = 0) -> std::
             errno = EOPNOTSUPP;
             return -1;
         }
-        mtf::reopen_on_dup(reopened, *devnode);
+        reopen_on_dup(reopened, *devnode);
         cleanup.release();
     }
     return reopened;
@@ -238,16 +249,6 @@ auto forward_fcntl(Fcntl real, int fd, int cmd, va_list args) -> int
 }
 }
 
-void mtf::reopen_on_dup(int fd, std::string const& devnode)
-{
-    struct stat st{};
-    if (fstat(fd, &st) != 0)
-    {
-        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to stat recorded input fd"));
-    }
-    registrations.lock()->insert_or_assign(fd, Registration{devnode, st.st_rdev});
-}
-
 extern "C" int dup(int fd)
 {
     static auto const real_dup = reinterpret_cast<int (*)(int)>(dlsym(RTLD_NEXT, "dup"));
@@ -308,7 +309,7 @@ public:
             {
                 BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "open() failed"}));
             }
-            mtf::reopen_on_dup(fd, device->devnode());
+            reopen_on_dup(fd, device->devnode());
             observer->activated(std::move(fd));
             promise.set_value(nullptr);
         }
