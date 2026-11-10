@@ -19,16 +19,13 @@
 
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/display.h>
-#include "display_helpers.h"
-#include "egl_helper.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
-#include "platform_common.h"
-#include "presentation_state.h"
 #include <mir/graphics/kms_framebuffer.h>
 
-#include <boost/iostreams/detail/buffer.hpp>
-#include <future>
+#include "platform_common.h"
+#include "presentation_state.h"
+
 #include <optional>
 #include <vector>
 #include <memory>
