@@ -62,8 +62,3 @@ void mie::FdStore::remove_fd(int fd)
         fds.erase(element);
     }
 }
-
-void mie::FdStore::clear()
-{
-    fds.clear();
-}

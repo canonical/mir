@@ -10,7 +10,6 @@ add_library(mirplatforminputevdevrsobjects OBJECT
 
 target_link_libraries(mirplatforminputevdevrsobjects
   PUBLIC
-  mirevdevutilsobjects
   mirplatform
   mircommon
   mircore
@@ -53,6 +52,7 @@ add_rust_cxx_library(mirplatforminputevdevrs_rust
     src/device.rs
     src/event_processing.rs
     src/ffi.rs
+    src/libinput_interface.rs
     src/platform.rs
     src/udev_monitor.rs
   LIBRARIES PkgConfig::UDEV PkgConfig::LIBINPUT mircommon mirplatform

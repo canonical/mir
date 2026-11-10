@@ -30,6 +30,7 @@
 #include <mir/dispatch/action_queue.h>
 #include <mir/log.h>
 
+#include <unistd.h>
 #include <optional>
 
 namespace mi = mir::input;
@@ -201,19 +202,24 @@ void InputDeviceObserver::activated(mir::Fd&& device_fd)
 
     mir::log_info("evdev-rs: enqueuing on_device_activated for %s", devnode.c_str());
     device_queue->enqueue(
-        [devnode = devnode,
-         devnum = devnum,
-         device_fd = std::move(device_fd),
-         bridge = locked->bridge,
-         &platform_impl = platform_impl]() mutable
+        [devnode = devnode, devnum = devnum, device_fd = device_fd, &platform_impl = platform_impl]()
         {
-            if (!platform_impl->is_running())
+            // dup() so that mir::Fd's destructor closes the original without
+            // invalidating the fd we hand to libinput via open_restricted().
+            int const duped = ::dup(static_cast<int>(device_fd));
+            if (duped < 0)
             {
-                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running");
+                mir::log_error("evdev-rs: dup() failed in activated() for %s", devnode.c_str());
                 return;
             }
-            bridge->store_device_fd(devnode, std::move(device_fd));
-            platform_impl->on_device_activated(devnode, devnum);
+
+            if (!platform_impl->is_running())
+            {
+                mir::log_info("evdev-rs: on_device_activated dequeued but platform not running, closing fd=%d", duped);
+                ::close(duped);
+                return;
+            }
+            platform_impl->on_device_activated(devnode, devnum, duped);
         });
 }
 

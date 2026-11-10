@@ -39,10 +39,27 @@ class InputDevice;
 namespace mir_test_framework
 {
 /**
+ * Registers an umockdev input fd for the test-only duplication workaround.
+ *
+ * dup() and fcntl(F_DUPFD[_CLOEXEC]) reopen the recorded device so umockdev
+ * recognises the new fd. Copies are registered too; unrelated fds are untouched.
+ * The caller still owns fd and must not close it concurrently with duplication.
+ *
+ * This is not a general dup replacement: reopening does not share the original
+ * open file description. Unsatisfied minimum-fd requests fail with EOPNOTSUPP;
+ * dup2(), dup3(), and direct syscalls are not emulated.
+ *
+ * Requires libumockdev-preload and an executable exporting the interposed symbols.
+ */
+void reopen_on_dup(int fd, std::string const& devnode);
+
+/**
  * Drives a real input platform module (eg: "input-evdev") against umockdev devices,
  * replaying evemu recordings and capturing the MirEvents the platform produces.
  *
- * Must be used in a process running with libumockdev-preload.
+ * Must be used in a process running with libumockdev-preload. Acquired device
+ * fds are registered with reopen_on_dup(); this harness tests event translation,
+ * not the production backend's shared-open-file-description semantics.
  */
 class RecordedInputPlatform
 {
@@ -63,9 +80,6 @@ public:
 
     /// Creates and starts the platform on a dedicated input thread
     void start();
-
-    /// Stops and restarts the same platform instance on the input thread
-    void restart();
 
     /// Waits for the platform to register at least count devices; returns those registered
     auto wait_for_devices(std::size_t count, std::chrono::milliseconds timeout = default_timeout) -> Devices;

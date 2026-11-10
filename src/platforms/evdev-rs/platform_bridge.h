@@ -17,8 +17,6 @@
 #ifndef MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 #define MIR_INPUT_EVDEV_RS_PLATFORM_BRIDGE_H
 
-#include "../evdev/fd_store.h"
-
 #include <mir/console_services.h>
 #include <mir/input/input_device.h>
 #include <mir/input/event_builder.h>
@@ -27,8 +25,6 @@
 #include <future>
 #include <unordered_map>
 #include <rust/cxx.h>
-
-struct libinput;
 
 namespace mir
 {
@@ -125,18 +121,12 @@ public:
     /// Check whether a device is active (not pending).
     bool has_device(uint64_t devnum) const;
 
-    auto create_libinput_context() const -> libinput*;
-    void store_device_fd(std::string const& devnode, mir::Fd fd) const;
-    void remove_device_fd(rust::Str devnode) const;
-    void release_all_devices() const;
-
 private:
     Platform* platform;
     std::shared_ptr<mir::ConsoleServices> console;
 
     mutable std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>> pending_devices;
     mutable std::unordered_map<dev_t, std::unique_ptr<mir::Device>> device_watchers;
-    mutable evdev::FdStore device_fds;
 };
 }
 }

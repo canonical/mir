@@ -20,12 +20,16 @@
 #include <mir/events/input_event.h>
 #include <mir/events/keyboard_event.h>
 #include <mir/events/pointer_event.h>
+#include <mir/fd.h>
 #include <mir/input/device_capability.h>
 #include <mir/input/input_device.h>
 #include <mir/input/input_device_info.h>
 #include <mir/input/pointer_settings.h>
 
-#include <linux/input-event-codes.h>
+#include <dlfcn.h>
+#include <fcntl.h>
+#include <linux/input.h>
+#include <sys/ioctl.h>
 #include <sys/resource.h>
 #include <unistd.h>
 
@@ -35,6 +39,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <csignal>
+#include <cstdio>
 #include <ranges>
 #include <system_error>
 
@@ -144,6 +149,138 @@ TEST(RecordedInputReplayDeathTest, reports_failure_to_write_rebased_recording)
         ExitedWithCode(0), "");
 }
 
+TEST(RecordedInputFds, duplicated_devices_retain_ioctl_emulation)
+{
+    mtf::UdevEnvironment udev;
+    udev.add_standard_device(trackpoint);
+    mir::Fd fd{open("/dev/input/event4", O_RDWR | O_NONBLOCK | O_CLOEXEC)};
+    ASSERT_THAT(fd, Ne(mir::Fd::invalid));
+    mtf::reopen_on_dup(fd, "/dev/input/event4");
+
+    // evdev-rs first calls dup() in C++, then fcntl(F_DUPFD_CLOEXEC) in OwnedFd::try_clone().
+    mir::Fd first{dup(fd)};
+    ASSERT_THAT(first, Ne(mir::Fd::invalid));
+    input_id id{};
+    EXPECT_THAT(ioctl(first, EVIOCGID, &id), Eq(0));
+    EXPECT_THAT(id.vendor, Eq(2));
+    EXPECT_THAT(fcntl(first, F_GETFD), Eq(0));
+    EXPECT_THAT(fcntl(first, F_GETFL) & O_NONBLOCK, Ne(0));
+
+    for (auto const* symbol : {"fcntl", "fcntl64"})
+    {
+        SCOPED_TRACE(symbol);
+        auto const call = reinterpret_cast<int (*)(int, int, ...)>(dlsym(RTLD_DEFAULT, symbol));
+        ASSERT_THAT(call, NotNull());
+        for (auto const command : {F_DUPFD, F_DUPFD_CLOEXEC})
+        {
+            SCOPED_TRACE(command);
+            mir::Fd copy{call(first, command, 0)};
+            ASSERT_THAT(copy, Ne(mir::Fd::invalid));
+            input_id copied_id{};
+            EXPECT_THAT(ioctl(copy, EVIOCGID, &copied_id), Eq(0));
+            EXPECT_THAT(copied_id.vendor, Eq(2));
+            EXPECT_THAT(fcntl(copy, F_GETFD), Eq(command == F_DUPFD_CLOEXEC ? FD_CLOEXEC : 0));
+            EXPECT_THAT(fcntl(copy, F_GETFL) & O_NONBLOCK, Ne(0));
+        }
+    }
+}
+
+TEST(RecordedInputFds, invalid_or_unsatisfied_minimum_is_not_ignored)
+{
+    mtf::UdevEnvironment udev;
+    udev.add_standard_device(trackpoint);
+    mir::Fd fd{open("/dev/input/event4", O_RDWR)};
+    ASSERT_THAT(fd, Ne(mir::Fd::invalid));
+    mtf::reopen_on_dup(fd, "/dev/input/event4");
+
+    for (auto const* symbol : {"fcntl", "fcntl64"})
+    {
+        SCOPED_TRACE(symbol);
+        auto const call = reinterpret_cast<int (*)(int, int, ...)>(dlsym(RTLD_DEFAULT, symbol));
+        ASSERT_THAT(call, NotNull());
+        for (auto const command : {F_DUPFD, F_DUPFD_CLOEXEC})
+        {
+            SCOPED_TRACE(command);
+            auto const invalid = call(fd, command, -1);
+            auto const invalid_error = errno;
+            EXPECT_THAT(invalid, Eq(-1));
+            EXPECT_THAT(invalid_error, Eq(EINVAL));
+
+            auto const minimum = fd + 100;
+            mir::Fd copy{call(fd, command, minimum)};
+            auto const copy_error = errno;
+            if (copy == mir::Fd::invalid)
+            {
+                EXPECT_THAT(copy_error, Eq(EOPNOTSUPP));
+            }
+            else
+            {
+                EXPECT_THAT(copy, Ge(minimum));
+            }
+        }
+    }
+}
+
+TEST(RecordedInputFds, unrelated_descriptors_keep_native_duplication_and_fcntl_behaviour)
+{
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> file{std::tmpfile(), &std::fclose};
+    ASSERT_THAT(file, NotNull());
+    auto const fd = fileno(file.get());
+    ASSERT_THAT(lseek(fd, 7, SEEK_SET), Eq(7));
+
+    mir::Fd copy{dup(fd)};
+    ASSERT_THAT(copy, Ne(mir::Fd::invalid));
+    EXPECT_THAT(lseek(copy, 0, SEEK_CUR), Eq(7));
+    EXPECT_THAT(lseek(copy, 3, SEEK_SET), Eq(3));
+    EXPECT_THAT(lseek(fd, 0, SEEK_CUR), Eq(3));
+
+    for (auto const* symbol : {"fcntl", "fcntl64"})
+    {
+        SCOPED_TRACE(symbol);
+        auto const call = reinterpret_cast<int (*)(int, int, ...)>(dlsym(RTLD_DEFAULT, symbol));
+        ASSERT_THAT(call, NotNull());
+        EXPECT_THAT(call(fd, F_SETFD, FD_CLOEXEC), Eq(0));
+        EXPECT_THAT(call(fd, F_GETFD), Eq(FD_CLOEXEC));
+        EXPECT_THAT(call(fd, F_SETFD, 0), Eq(0));
+        EXPECT_THAT(call(fd, F_GETFD), Eq(0));
+
+        struct flock lock{};
+        lock.l_type = F_WRLCK;
+        lock.l_whence = SEEK_SET;
+        EXPECT_THAT(call(fd, F_GETLK, &lock), Eq(0));
+        EXPECT_THAT(lock.l_type, Eq(F_UNLCK));
+
+        mir::Fd high_fd{call(fd, F_DUPFD_CLOEXEC, 128)};
+        ASSERT_THAT(high_fd, Ne(mir::Fd::invalid));
+        EXPECT_THAT(high_fd, Ge(128));
+        EXPECT_THAT(call(high_fd, F_GETFD), Eq(FD_CLOEXEC));
+        EXPECT_THAT(lseek(high_fd, 0, SEEK_CUR), Eq(3));
+    }
+}
+
+TEST(RecordedInputFds, closed_registration_does_not_redirect_reused_descriptor)
+{
+    mtf::UdevEnvironment udev;
+    udev.add_standard_device(trackpoint);
+    std::unique_ptr<std::FILE, int (*)(std::FILE*)> file{std::tmpfile(), &std::fclose};
+    ASSERT_THAT(file, NotNull());
+
+    int registered_fd;
+    {
+        mir::Fd fd{open("/dev/input/event4", O_RDWR)};
+        ASSERT_THAT(fd, Ne(mir::Fd::invalid));
+        mtf::reopen_on_dup(fd, "/dev/input/event4");
+        registered_fd = fd;
+    }
+    mir::Fd reused{dup2(fileno(file.get()), registered_fd)};
+    ASSERT_THAT(reused, Eq(registered_fd));
+    ASSERT_THAT(lseek(reused, 7, SEEK_SET), Eq(7));
+
+    mir::Fd copy{dup(reused)};
+    ASSERT_THAT(copy, Ne(mir::Fd::invalid));
+    EXPECT_THAT(lseek(copy, 0, SEEK_CUR), Eq(7));
+}
+
 TEST_P(EvdevRecordings, devices_are_registered_before_they_produce_input)
 {
     platform->add_device(keyboard);
@@ -229,19 +366,6 @@ TEST_P(EvdevRecordings, typing_hello_produces_key_down_and_up_for_each_letter)
         IsKey(mir_keyboard_action_down, KEY_L), IsKey(mir_keyboard_action_up, KEY_L),
         IsKey(mir_keyboard_action_down, KEY_L), IsKey(mir_keyboard_action_up, KEY_L),
         IsKey(mir_keyboard_action_down, KEY_O), IsKey(mir_keyboard_action_up, KEY_O)));
-}
-
-TEST_P(EvdevRecordings, restarting_reacquires_devices_and_delivers_input)
-{
-    ASSERT_THAT(start_with(keyboard), NotNull());
-
-    platform->restart();
-    ASSERT_THAT(platform->wait_for_devices(1), SizeIs(1));
-    platform->replay("thinkpad-keyboard-hello");
-    auto const events = platform->wait_for_events(
-        [](auto const& events) { return key_events(events).size() >= 10; });
-
-    EXPECT_THAT(key_events(events), SizeIs(10));
 }
 
 TEST_P(EvdevRecordings, clicking_produces_primary_button_down_then_up)

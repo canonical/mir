@@ -36,7 +36,6 @@ public:
     void store_fd(char const* path, mir::Fd&& fd);
     mir::Fd take_fd(char const* path);
     void remove_fd(int fd);
-    void clear();
 
 private:
     FdStore(FdStore const&) = delete;

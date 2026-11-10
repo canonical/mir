@@ -35,16 +35,23 @@
 #include <mir/input/input_sink.h>
 #include <mir/input/platform.h>
 #include <mir/options/program_option.h>
+#include <mir/raii.h>
 #include <mir/shared_library.h>
+#include <mir/synchronised.h>
 #include <mir/udev/wrapper.h>
 
 #include <boost/throw_exception.hpp>
 
+#include <dlfcn.h>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <unistd.h>
 
+#include <cerrno>
 #include <condition_variable>
+#include <cstdarg>
+#include <cstdint>
 #include <filesystem>
 #include <format>
 #include <future>
@@ -52,6 +59,7 @@
 #include <optional>
 #include <stdexcept>
 #include <system_error>
+#include <unordered_map>
 
 namespace mtf = mir_test_framework;
 namespace mtd = mir::test::doubles;
@@ -60,6 +68,220 @@ namespace geom = mir::geometry;
 namespace md = mir::dispatch;
 
 using namespace std::chrono_literals;
+
+/*
+ * umockdev's ioctl emulation tracks descriptor numbers, not open file descriptions:
+ * https://github.com/martinpitt/umockdev/blob/0.19.7/src/libumockdev-preload.c#L598-L690
+ * (ioctl_wrapped_fds, ioctl_emulate_open(), fstat_adjust_emulated_device()).
+ * Consequently a real dup loses ioctl emulation and, for the replay PTYs, the
+ * emulated fstat identity. libinput then rejects the copied fd as a non-input device.
+ *
+ * evdev-rs correctly duplicates descriptors to give Rust and libinput their own
+ * ownership. Do not change production ownership to accommodate this test limitation.
+ * Instead, this test-only object interposes dup/fcntl/fcntl64, reopening explicitly
+ * registered devices and registering the copies. All other descriptors use libc.
+ *
+ * Reopening preserves access/status flags and the requested close-on-exec flag,
+ * but NOT shared offsets, locks, or subsequent file-status changes. These tests
+ * exercise replay and event translation, not dup's shared-description semantics.
+ * If open() cannot meet F_DUPFD's minimum fd, fail with EOPNOTSUPP rather than
+ * return a too-small descriptor. dup2/dup3 and direct syscalls are out of scope.
+ *
+ * fcntl affects the entire test process, so arguments must be decoded by command:
+ * getters may have no third argument, setters take ints, and others take pointers.
+ * Unknown commands fail with EINVAL rather than guessing their variadic ABI.
+ * Keep this object out of production and unrelated test executables.
+ */
+namespace
+{
+struct Registration
+{
+    std::string devnode;
+    dev_t rdev;
+};
+
+mir::Synchronised<std::unordered_map<int, Registration>> registrations;
+
+auto registered_devnode(int fd) -> std::optional<std::string>
+{
+    auto const locked = registrations.lock();
+    auto const registration = locked->find(fd);
+    if (registration == locked->end())
+    {
+        return std::nullopt;
+    }
+
+    // Closed descriptor numbers can be reused by unrelated files between tests.
+    struct stat st{};
+    if (fstat(fd, &st) != 0 || !S_ISCHR(st.st_mode) || st.st_rdev != registration->second.rdev)
+    {
+        locked->erase(registration);
+        return std::nullopt;
+    }
+    return registration->second.devnode;
+}
+
+using Fcntl = int (*)(int, int, ...);
+
+auto reopen(Fcntl real_fcntl, int fd, int extra_flags, int minimum = 0) -> std::optional<int>
+{
+    auto const devnode = registered_devnode(fd);
+    if (!devnode)
+    {
+        return std::nullopt;
+    }
+
+    if (minimum < 0)
+    {
+        errno = EINVAL;
+        return -1;
+    }
+
+    auto const flags = real_fcntl(fd, F_GETFL);
+    if (flags < 0)
+    {
+        return -1;
+    }
+    auto const reopened = open(devnode->c_str(), flags | extra_flags);
+    if (reopened >= 0)
+    {
+        auto cleanup = mir::raii::deleter_for(&reopened, [](int const* fd) { close(*fd); });
+        // Moving the fd with dup2() would lose umockdev's ioctl tracking again.
+        if (reopened < minimum)
+        {
+            cleanup.reset();
+            errno = EOPNOTSUPP;
+            return -1;
+        }
+        mtf::reopen_on_dup(reopened, *devnode);
+        cleanup.release();
+    }
+    return reopened;
+}
+
+auto real_fcntl() -> Fcntl
+{
+    static auto const real = reinterpret_cast<Fcntl>(dlsym(RTLD_NEXT, "fcntl"));
+    return real;
+}
+
+auto forward_fcntl(Fcntl real, int fd, int cmd, va_list args) -> int
+{
+    switch (cmd)
+    {
+    case F_DUPFD:
+    case F_DUPFD_CLOEXEC:
+    {
+        auto const minimum = va_arg(args, int);
+        if (auto const reopened = reopen(real, fd, cmd == F_DUPFD_CLOEXEC ? O_CLOEXEC : 0, minimum))
+        {
+            return *reopened;
+        }
+        return real(fd, cmd, minimum);
+    }
+    case F_SETFD:
+    case F_SETFL:
+    case F_SETOWN:
+    case F_SETSIG:
+    case F_SETLEASE:
+    case F_NOTIFY:
+    case F_SETPIPE_SZ:
+    case F_ADD_SEALS:
+#ifdef F_DUPFD_QUERY
+    case F_DUPFD_QUERY:
+#endif
+        return real(fd, cmd, va_arg(args, int));
+    case F_GETLK:
+    case F_SETLK:
+    case F_SETLKW:
+    case F_OFD_GETLK:
+    case F_OFD_SETLK:
+    case F_OFD_SETLKW:
+#if defined(__GLIBC__) && F_GETLK64 == 12 && F_GETLK == F_GETLK64
+    // 32-bit libraries without _FILE_OFFSET_BITS=64 still use the original Linux commands.
+    case 5:
+    case 6:
+    case 7:
+#endif
+        return real(fd, cmd, va_arg(args, struct flock*));
+#if F_GETLK != F_GETLK64
+    case F_GETLK64:
+    case F_SETLK64:
+    case F_SETLKW64:
+        return real(fd, cmd, va_arg(args, struct flock64*));
+#endif
+    case F_GETOWN_EX:
+    case F_SETOWN_EX:
+        return real(fd, cmd, va_arg(args, struct f_owner_ex*));
+#ifdef F_GET_RW_HINT
+    case F_GET_RW_HINT:
+    case F_SET_RW_HINT:
+    case F_GET_FILE_RW_HINT:
+    case F_SET_FILE_RW_HINT:
+        return real(fd, cmd, va_arg(args, uint64_t*));
+#endif
+    case F_GETFD:
+    case F_GETFL:
+    case F_GETOWN:
+    case F_GETSIG:
+    case F_GETLEASE:
+    case F_GETPIPE_SZ:
+    case F_GET_SEALS:
+#ifdef F_CREATED_QUERY
+    case F_CREATED_QUERY:
+#endif
+        return real(fd, cmd);
+    default:
+        errno = EINVAL;
+        return -1;
+    }
+}
+}
+
+void mtf::reopen_on_dup(int fd, std::string const& devnode)
+{
+    struct stat st{};
+    if (fstat(fd, &st) != 0)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to stat recorded input fd"));
+    }
+    registrations.lock()->insert_or_assign(fd, Registration{devnode, st.st_rdev});
+}
+
+extern "C" int dup(int fd)
+{
+    static auto const real_dup = reinterpret_cast<int (*)(int)>(dlsym(RTLD_NEXT, "dup"));
+    if (auto const reopened = reopen(real_fcntl(), fd, 0))
+    {
+        return *reopened;
+    }
+    return real_dup(fd);
+}
+
+// Explicit names avoid <fcntl.h>'s large-file redirection; modules may call either symbol.
+extern "C" int interposed_fcntl(int fd, int cmd, ...) __asm__("fcntl");
+extern "C" int interposed_fcntl64(int fd, int cmd, ...) __asm__("fcntl64");
+
+extern "C" int interposed_fcntl(int fd, int cmd, ...)
+{
+    va_list args;
+    va_start(args, cmd);
+    auto const cleanup = mir::raii::paired_calls([] {}, [&] { va_end(args); });
+    return forward_fcntl(real_fcntl(), fd, cmd, args);
+}
+
+extern "C" int interposed_fcntl64(int fd, int cmd, ...)
+{
+#ifdef __GLIBC__
+    static auto const real = reinterpret_cast<Fcntl>(dlsym(RTLD_NEXT, "fcntl64"));
+#else
+    auto const real = real_fcntl();
+#endif
+    va_list args;
+    va_start(args, cmd);
+    auto const cleanup = mir::raii::paired_calls([] {}, [&] { va_end(args); });
+    return forward_fcntl(real, fd, cmd, args);
+}
 
 namespace
 {
@@ -86,6 +308,7 @@ public:
             {
                 BOOST_THROW_EXCEPTION((std::system_error{errno, std::system_category(), "open() failed"}));
             }
+            mtf::reopen_on_dup(fd, device->devnode());
             observer->activated(std::move(fd));
             promise.set_value(nullptr);
         }
@@ -275,18 +498,6 @@ void mtf::RecordedInputPlatform::start()
     run_on_input_thread(
         [this]
         {
-            self->platform->start();
-            self->multiplexer->add_watch(self->platform->dispatchable());
-        });
-}
-
-void mtf::RecordedInputPlatform::restart()
-{
-    run_on_input_thread(
-        [this]
-        {
-            self->multiplexer->remove_watch(self->platform->dispatchable());
-            self->platform->stop();
             self->platform->start();
             self->multiplexer->add_watch(self->platform->dispatchable());
         });

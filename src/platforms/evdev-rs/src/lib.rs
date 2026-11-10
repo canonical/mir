@@ -28,7 +28,9 @@
 
 mod device;
 mod event_processing;
+mod fd_store;
 mod ffi;
+mod libinput_interface;
 mod platform;
 mod udev_monitor;
 
@@ -199,7 +201,7 @@ mod ffi_bridge {
         fn process_udev_events(self: &mut PlatformRs);
 
         /// Called from C++ when a device fd has been acquired (activated).
-        fn on_device_activated(self: &mut PlatformRs, devnode: &str, devnum: u64);
+        fn on_device_activated(self: &mut PlatformRs, devnode: &str, devnum: u64, fd: i32);
 
         /// Called from C++ when a device is suspended (e.g. VT switch).
         fn on_device_suspended(self: &mut PlatformRs, devnode: &str, devnum: u64);
@@ -247,9 +249,6 @@ mod ffi_bridge {
         pub type InputReport;
         pub type EventBuilderWrapper;
         pub type RectangleWrapper;
-        #[namespace = ""]
-        #[cxx_name = "libinput"]
-        type LibinputContext;
         // Map C++ KeyEventData to the Rust struct
         type KeyEventData = crate::ffi::KeyEventData;
         // Map C++ PointerEventData to the Rust struct
@@ -296,12 +295,6 @@ mod ffi_bridge {
 
         /// Check whether a device is already pending or active.
         pub fn has_device(self: &PlatformBridge, devnum: u64) -> bool;
-
-        /// Creates a context using the bridge's non-owning device callbacks.
-        /// The caller must release the returned libinput reference.
-        pub fn create_libinput_context(self: &PlatformBridge) -> *mut LibinputContext;
-        pub fn remove_device_fd(self: &PlatformBridge, devnode: &str);
-        pub fn release_all_devices(self: &PlatformBridge);
 
         /// # Safety
         ///
