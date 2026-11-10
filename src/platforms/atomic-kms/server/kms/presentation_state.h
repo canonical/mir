@@ -53,6 +53,12 @@ public:
     static auto mixed(std::shared_ptr<FBHandle const> primary, std::vector<ClientPlaneAssignment> client_planes)
         -> PresentationState;
 
+    // A copy would silently extend the lifetime of the scanout resources this state owns
+    PresentationState(PresentationState const&) = delete;
+    PresentationState& operator=(PresentationState const&) = delete;
+    PresentationState(PresentationState&&) = default;
+    PresentationState& operator=(PresentationState&&) = default;
+
     auto primary() const -> FBHandle const&;
     auto client_planes() const -> std::span<ClientPlaneAssignment const>;
     auto primary_holds_full_scene() const -> bool;
