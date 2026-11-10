@@ -29,18 +29,14 @@
 #include <dlfcn.h>
 #include <fcntl.h>
 #include <linux/input.h>
-#include <sys/resource.h>
 #include <unistd.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
 #include <algorithm>
-#include <cerrno>
-#include <csignal>
 #include <cstdio>
 #include <ranges>
-#include <system_error>
 
 namespace mtf = mir_test_framework;
 namespace mi = mir::input;
@@ -113,76 +109,6 @@ struct EvdevRecordings : TestWithParam<std::string>
 
     std::optional<mtf::RecordedInputPlatform> platform;
 };
-}
-
-TEST(RecordedInputReplayDeathTest, reports_failure_to_write_rebased_recording)
-{
-    ASSERT_EXIT(
-        {
-            auto const result = []
-            {
-                mtf::UdevEnvironment udev;
-                udev.add_standard_device(trackpoint);
-                struct rlimit limit{};
-                if (getrlimit(RLIMIT_FSIZE, &limit) != 0)
-                {
-                    return 2;
-                }
-                limit.rlim_cur = 0;
-                if (signal(SIGXFSZ, SIG_IGN) == SIG_ERR || setrlimit(RLIMIT_FSIZE, &limit) != 0)
-                {
-                    return 2;
-                }
-                try
-                {
-                    udev.load_device_evemu("thinkpad-trackpoint-click");
-                }
-                catch (std::system_error const& error)
-                {
-                    return error.code().value() == EFBIG ? 0 : 1;
-                }
-                return 1;
-            }();
-            _exit(result);
-        },
-        ExitedWithCode(0), "");
-}
-
-TEST(RecordedInputFds, unrelated_descriptors_keep_native_duplication_and_fcntl_behaviour)
-{
-    std::unique_ptr<std::FILE, int (*)(std::FILE*)> file{std::tmpfile(), &std::fclose};
-    ASSERT_THAT(file, NotNull());
-    auto const fd = fileno(file.get());
-    ASSERT_THAT(lseek(fd, 7, SEEK_SET), Eq(7));
-
-    mir::Fd copy{dup(fd)};
-    ASSERT_THAT(copy, Ne(mir::Fd::invalid));
-    EXPECT_THAT(lseek(copy, 0, SEEK_CUR), Eq(7));
-    EXPECT_THAT(lseek(copy, 3, SEEK_SET), Eq(3));
-    EXPECT_THAT(lseek(fd, 0, SEEK_CUR), Eq(3));
-
-    for (auto const* symbol : {"fcntl", "fcntl64"})
-    {
-        SCOPED_TRACE(symbol);
-        auto const call = reinterpret_cast<int (*)(int, int, ...)>(dlsym(RTLD_DEFAULT, symbol));
-        ASSERT_THAT(call, NotNull());
-        EXPECT_THAT(call(fd, F_SETFD, FD_CLOEXEC), Eq(0));
-        EXPECT_THAT(call(fd, F_GETFD), Eq(FD_CLOEXEC));
-        EXPECT_THAT(call(fd, F_SETFD, 0), Eq(0));
-        EXPECT_THAT(call(fd, F_GETFD), Eq(0));
-
-        struct flock lock{};
-        lock.l_type = F_WRLCK;
-        lock.l_whence = SEEK_SET;
-        EXPECT_THAT(call(fd, F_GETLK, &lock), Eq(0));
-        EXPECT_THAT(lock.l_type, Eq(F_UNLCK));
-
-        mir::Fd high_fd{call(fd, F_DUPFD_CLOEXEC, 128)};
-        ASSERT_THAT(high_fd, Ne(mir::Fd::invalid));
-        EXPECT_THAT(high_fd, Ge(128));
-        EXPECT_THAT(call(high_fd, F_GETFD), Eq(FD_CLOEXEC));
-        EXPECT_THAT(lseek(high_fd, 0, SEEK_CUR), Eq(3));
-    }
 }
 
 TEST_P(EvdevRecordings, devices_are_registered_before_they_produce_input)

@@ -38,15 +38,12 @@ class InputDevice;
 
 namespace mir_test_framework
 {
-/**
- * Drives a real input platform module (eg: "input-evdev") against umockdev devices,
- * replaying evemu recordings and capturing the MirEvents the platform produces.
- *
- * Must be used in a process running with libumockdev-preload. Duplicating an
- * acquired device fd (via dup() or fcntl(F_DUPFD[_CLOEXEC])) reopens the device
- * so umockdev recognises the copy; this harness tests event translation, not the
- * production backend's shared-open-file-description semantics.
- */
+/// Drives a real input platform module (eg: "input-evdev") against umockdev devices,
+/// replaying evemu recordings and capturing the MirEvents the platform produces.
+///
+/// Must be used in a process running with libumockdev-preload. Duplicating an
+/// acquired device fd (via dup() or fcntl(F_DUPFD[_CLOEXEC])) reopens the device
+/// so umockdev recognises the copy.
 class RecordedInputPlatform
 {
 public:
@@ -67,7 +64,7 @@ public:
     /// Creates and starts the platform on a dedicated input thread
     void start();
 
-    /// Waits for the platform to register at least count devices; returns those registered
+    /// Waits for the platform to register at least count devices; returns those registered.
     auto wait_for_devices(std::size_t count, std::chrono::milliseconds timeout = default_timeout) -> Devices;
 
     /// Runs action on the input thread (as the server does for device configuration) and waits for it
@@ -76,11 +73,9 @@ public:
     /// Replays udev-recordings/<name>.evemu into its device and waits for the replay to be written
     void replay(std::string const& name);
 
-    /**
-     * Waits until done(events) is satisfied or timeout expires
-     *
-     * \return all events captured so far
-     */
+    /// Waits until done(events) is satisfied or timeout expires
+    ///
+    /// \return all events captured so far
     auto wait_for_events(
         std::function<bool(Events const&)> const& done,
         std::chrono::milliseconds timeout = default_timeout) -> Events;
@@ -98,11 +93,9 @@ private:
     std::unique_ptr<Self> const self;
 };
 
-/**
- * A description of an input event for comparing platform output
- *
- * Omits details (timestamps, device ids) that legitimately differ between runs.
- */
+/// A description of an input event for comparing platform output
+///
+/// Omits details (timestamps, device ids) that legitimately differ between runs.
 auto describe_input_event(MirEvent const& event) -> std::string;
 }
 
