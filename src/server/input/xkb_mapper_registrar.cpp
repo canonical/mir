@@ -180,7 +180,7 @@ void mircv::XKBMapperRegistrar::map_event(MirEvent& ev)
                 if (mapping_state->update_and_map(ev, compose_state))
                 {
                     update_modifier();
-                    notify_leds_changed(device_id, *mapping_state);
+                    notify_leds_changed(device_id, mapping_state->leds());
                 }
             }
 
@@ -231,6 +231,11 @@ void mircv::XKBMapperRegistrar::set_keymap(std::shared_ptr<Keymap> new_keymap)
     std::lock_guard lg(guard);
     default_keymap = std::move(new_keymap);
     default_compiled_keymap = default_keymap->make_unique_xkb_keymap(context.get());
+
+    // Discarding the existing states drops any locked modifiers, so turn the hardware LEDs off to match
+    for (auto const& [id, _] : device_mapping)
+        notify_leds_changed(id, KeyboardLeds{});
+
     device_mapping.clear();
 }
 
@@ -247,7 +252,7 @@ void mircv::XKBMapperRegistrar::set_keymap(MirInputDeviceId id, std::shared_ptr<
     auto mapping_state = std::make_unique<XkbMappingState>(std::move(new_keymap), std::move(compiled_keymap));
 
     // The fresh state has no locked modifiers, so bring the hardware LEDs in line with it
-    notify_leds_changed(id, *mapping_state);
+    notify_leds_changed(id, mapping_state->leds());
 
     device_mapping.erase(id);
     device_mapping.emplace(
@@ -260,6 +265,10 @@ void mircv::XKBMapperRegistrar::clear_all_keymaps()
 {
     std::lock_guard lg(guard);
     default_keymap.reset();
+
+    for (auto const& [id, _] : device_mapping)
+        notify_leds_changed(id, KeyboardLeds{});
+
     device_mapping.clear();
     update_modifier();
 }
@@ -268,6 +277,7 @@ void mircv::XKBMapperRegistrar::clear_keymap_for_device(MirInputDeviceId id)
 {
     std::lock_guard lg(guard);
     device_mapping.erase(id);
+    device_led_registrars.erase(id);
     update_modifier();
 }
 
@@ -301,29 +311,35 @@ void mircv::XKBMapperRegistrar::register_interest(std::weak_ptr<LedObserver> con
 
     auto& registrar = device_led_registrars[id];
     if (!registrar)
-        registrar = std::make_unique<DeviceLedRegistrar>(executor);
+        registrar = std::make_shared<DeviceLedRegistrar>(executor);
 
     registrar->register_interest(observer);
 }
 
 void mircv::XKBMapperRegistrar::unregister_interest(LedObserver const& observer, MirInputDeviceId id)
 {
-    std::lock_guard lg(guard);
+    std::shared_ptr<DeviceLedRegistrar> registrar;
+    {
+        std::lock_guard lg(guard);
 
-    auto it = device_led_registrars.find(id);
-    if (it == end(device_led_registrars))
-        return;
+        auto it = device_led_registrars.find(id);
+        if (it == end(device_led_registrars))
+            return;
 
-    it->second->unregister_interest(observer);
+        registrar = it->second;
+    }
+
+    // Unregistering may wait for in-flight notifications, or be called from within one, so don't hold `guard`
+    registrar->unregister_interest(observer);
 }
 
-void mircv::XKBMapperRegistrar::notify_leds_changed(MirInputDeviceId id, XkbMappingState const& mapping_state)
+void mircv::XKBMapperRegistrar::notify_leds_changed(MirInputDeviceId id, KeyboardLeds leds)
 {
     auto it = device_led_registrars.find(id);
     if (it == end(device_led_registrars))
         return;
 
-    it->second->leds_set(mapping_state.leds());
+    it->second->leds_set(leds);
 }
 
 mircv::XKBMapperRegistrar::XkbMappingState::XkbMappingState(
