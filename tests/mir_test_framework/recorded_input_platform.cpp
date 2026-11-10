@@ -531,7 +531,7 @@ void mtf::RecordedInputPlatform::run_on_input_thread(std::function<void()> const
     finished.get();
 }
 
-void mtf::RecordedInputPlatform::replay(std::string const& name)
+void mtf::RecordedInputPlatform::play(std::string const& name)
 {
     udev.wait_for_device_script(udev.load_device_evemu(name));
 }

@@ -70,8 +70,8 @@ public:
     /// Runs action on the input thread (as the server does for device configuration) and waits for it
     void run_on_input_thread(std::function<void()> const& action);
 
-    /// Replays udev-recordings/<name>.evemu into its device and waits for the replay to be written
-    void replay(std::string const& name);
+    /// Plays udev-recordings/<name>.evemu into its device and waits for it to be written
+    void play(std::string const& name);
 
     /// Waits until done(events) is satisfied or timeout expires
     ///

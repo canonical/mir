@@ -49,7 +49,7 @@ auto const keyboard = "thinkpad-keyboard";
 auto const trackpoint = "thinkpad-trackpoint";
 auto const touchpad = "thinkpad-touchpad";
 
-// thinkpad-trackpoint-motion.evemu: 10 reports of REL_X=3, REL_Y=-2
+// Originate from thinkpad-trackpoint-motion.evemu: 10 reports of REL_X=3, REL_Y=-2
 int const motion_reports = 10;
 float const motion_dx = 3;
 float const motion_dy = -2;
@@ -187,7 +187,7 @@ TEST_P(EvdevRecordings, typing_hello_produces_key_down_and_up_for_each_letter)
 {
     ASSERT_THAT(start_with(keyboard), NotNull());
 
-    platform->replay("thinkpad-keyboard-hello");
+    platform->play("thinkpad-keyboard-hello");
     platform->wait_for_events([](auto const& events) { return key_events(events).size() >= 10; });
 
     EXPECT_THAT(key_events(platform->settled_events()), ElementsAre(
@@ -202,7 +202,7 @@ TEST_P(EvdevRecordings, clicking_produces_primary_button_down_then_up)
 {
     ASSERT_THAT(start_with(trackpoint), NotNull());
 
-    platform->replay("thinkpad-trackpoint-click");
+    platform->play("thinkpad-trackpoint-click");
     platform->wait_for_events(
         [](auto const& events) { return !pointer_events(events, mir_pointer_action_button_up).empty(); });
     auto const events = platform->settled_events();
@@ -220,7 +220,7 @@ TEST_P(EvdevRecordings, motion_with_default_acceleration_is_in_the_recorded_dire
 {
     ASSERT_THAT(start_with(trackpoint), NotNull());
 
-    platform->replay("thinkpad-trackpoint-motion");
+    platform->play("thinkpad-trackpoint-motion");
     platform->wait_for_events(
         [](auto const& events) { return pointer_events(events, mir_pointer_action_motion).size() >= motion_reports; });
 
@@ -250,7 +250,7 @@ TEST_P(EvdevRecordings, motion_with_flat_acceleration_reports_the_recorded_delta
             device->apply_settings(flat);
         });
 
-    platform->replay("thinkpad-trackpoint-motion");
+    platform->play("thinkpad-trackpoint-motion");
     platform->wait_for_events(
         [](auto const& events) { return pointer_events(events, mir_pointer_action_motion).size() >= motion_reports; });
 
@@ -308,7 +308,7 @@ TEST(EvdevPlatformParity, platforms_produce_the_same_events_from_the_same_record
                     }
                 });
 
-            platform.replay(recording);
+            platform.play(recording);
             platform.wait_for_events(1);
             auto const events = platform.settled_events();
             auto const described = events | std::views::transform([](auto const& e) { return mtf::describe_input_event(*e); });
