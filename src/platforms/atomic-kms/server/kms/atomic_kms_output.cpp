@@ -24,6 +24,7 @@
 #include <mir/graphics/gamma_curves.h>
 #include <mir_toolkit/common.h>
 #include <mir/graphics/kms/kms_connector.h>
+#include <mir/geometry/rectangle.h>
 #include <mir/errno_utils.h>
 #include <mir/fatal.h>
 #include <mir/log.h>
@@ -63,6 +64,30 @@ uint32_t create_blob_returning_handle(mir::Fd const& drm_fd, void const* data, s
                 "Failed to create DRM property blob"}));
     }
     return handle;
+}
+
+void add_plane_scanout(
+    mga::AtomicUpdate& update,
+    mgk::ObjectProperties const& plane_props,
+    uint32_t crtc_id,
+    mg::FBHandle const& fb,
+    geom::Displacement const& source_offset,
+    geom::Rectangle const& destination)
+{
+    update.add_property(plane_props, "CRTC_ID", crtc_id);
+    update.add_property(plane_props, "FB_ID", fb);
+
+    /* Source viewport. Coordinates are 16.16 fixed point format */
+    update.add_property(plane_props, "SRC_X", source_offset.dx.as_uint32_t() << 16);
+    update.add_property(plane_props, "SRC_Y", source_offset.dy.as_uint32_t() << 16);
+    update.add_property(plane_props, "SRC_W", static_cast<uint64_t>(fb.size().width.as_uint32_t()) << 16);
+    update.add_property(plane_props, "SRC_H", static_cast<uint64_t>(fb.size().height.as_uint32_t()) << 16);
+
+    /* Destination viewport. Coordinates are *not* 16.16 */
+    update.add_property(plane_props, "CRTC_X", destination.top_left.x.as_int());
+    update.add_property(plane_props, "CRTC_Y", destination.top_left.y.as_int());
+    update.add_property(plane_props, "CRTC_W", destination.size.width.as_uint32_t());
+    update.add_property(plane_props, "CRTC_H", destination.size.height.as_uint32_t());
 }
 
 class PropertyBlobData
@@ -424,24 +449,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     }
 
     AtomicUpdate update;
-    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
-    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
-
-    /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_W", fb_width << 16);
-    update.add_property(*conf->plane_props, "SRC_H", fb_height << 16);
-
-    /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*conf->plane_props, "CRTC_X", 0);
-    update.add_property(*conf->plane_props, "CRTC_Y", 0);
-    update.add_property(*conf->plane_props, "CRTC_W", crtc_width);
-    update.add_property(*conf->plane_props, "CRTC_H", crtc_height);
-
-    /* Set a surface for the plane */
-    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
-    update.add_property(*conf->plane_props, "FB_ID", fb);
+    add_primary_properties(update, *conf, fb);
 
     auto ret = update.commit(drm_fd_, 0);
     if (ret)
@@ -542,6 +550,26 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
     }
 
     return true;
+}
+
+void mga::AtomicKMSOutput::add_primary_properties(
+    AtomicUpdate& update,
+    Configuration const& conf,
+    FBHandle const& fb) const
+{
+    auto const crtc_width = conf.current_crtc->width;
+    auto const crtc_height = conf.current_crtc->height;
+
+    update.add_property(*conf.crtc_props, "MODE_ID", conf.mode->handle());
+    update.add_property(*conf.connector_props, "CRTC_ID", conf.current_crtc->crtc_id);
+
+    add_plane_scanout(
+        update,
+        *conf.plane_props,
+        conf.current_crtc->crtc_id,
+        fb,
+        conf.fb_offset,
+        {{}, geom::Size{geom::Width{static_cast<int>(crtc_width)}, geom::Height{static_cast<int>(crtc_height)}}});
 }
 
 void mga::AtomicKMSOutput::restore_saved_crtc()
