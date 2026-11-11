@@ -13,9 +13,6 @@ target_include_directories(mir_umock_acceptance_tests
 
 add_dependencies(mir_umock_acceptance_tests GMock)
 
-# Loaded platform modules must resolve dup/fcntl to the test-only umockdev wrappers.
-set_target_properties(mir_umock_acceptance_tests PROPERTIES ENABLE_EXPORTS TRUE)
-
 target_link_libraries(mir_umock_acceptance_tests
   mir-test-assist
   mir-test-framework-static

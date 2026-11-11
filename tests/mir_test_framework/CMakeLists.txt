@@ -105,7 +105,7 @@ add_library(mir-recorded-input-test-framework OBJECT
 )
 
 target_link_libraries(mir-recorded-input-test-framework
-  PRIVATE mirplatform PkgConfig::UMOCKDEV ${CMAKE_DL_LIBS}
+  PRIVATE mirplatform PkgConfig::UMOCKDEV
 )
 
 add_library(mir-test-framework-static STATIC)

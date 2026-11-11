@@ -41,9 +41,7 @@ namespace mir_test_framework
 /// Drives a real input platform module (eg: "input-evdev") against umockdev devices,
 /// replaying evemu recordings and capturing the MirEvents the platform produces.
 ///
-/// Must be used in a process running with libumockdev-preload. Duplicating an
-/// acquired device fd (via dup() or fcntl(F_DUPFD[_CLOEXEC])) reopens the device
-/// so umockdev recognises the copy.
+/// Must be used in a process running with libumockdev-preload.
 class RecordedInputPlatform
 {
 public:
