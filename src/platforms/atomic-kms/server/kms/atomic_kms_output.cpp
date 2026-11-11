@@ -65,6 +65,27 @@ uint32_t create_blob_returning_handle(mir::Fd const& drm_fd, void const* data, s
     return handle;
 }
 
+void add_plane_viewport(
+    mga::AtomicUpdate& update,
+    mgk::ObjectProperties const& plane_props,
+    geom::Displacement const& source_offset,
+    geom::Size const& source_size,
+    geom::Point const& destination,
+    geom::Size const& destination_size)
+{
+    /* Source viewport. Coordinates are 16.16 fixed point format */
+    update.add_property(plane_props, "SRC_X", source_offset.dx.as_uint32_t() << 16);
+    update.add_property(plane_props, "SRC_Y", source_offset.dy.as_uint32_t() << 16);
+    update.add_property(plane_props, "SRC_W", static_cast<uint64_t>(source_size.width.as_uint32_t()) << 16);
+    update.add_property(plane_props, "SRC_H", static_cast<uint64_t>(source_size.height.as_uint32_t()) << 16);
+
+    /* Destination viewport. Coordinates are *not* 16.16 */
+    update.add_property(plane_props, "CRTC_X", destination.x.as_int());
+    update.add_property(plane_props, "CRTC_Y", destination.y.as_int());
+    update.add_property(plane_props, "CRTC_W", destination_size.width.as_uint32_t());
+    update.add_property(plane_props, "CRTC_H", destination_size.height.as_uint32_t());
+}
+
 class PropertyBlobData
 {
 public:
@@ -424,24 +445,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     }
 
     AtomicUpdate update;
-    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
-    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
-
-    /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_W", fb_width << 16);
-    update.add_property(*conf->plane_props, "SRC_H", fb_height << 16);
-
-    /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*conf->plane_props, "CRTC_X", 0);
-    update.add_property(*conf->plane_props, "CRTC_Y", 0);
-    update.add_property(*conf->plane_props, "CRTC_W", crtc_width);
-    update.add_property(*conf->plane_props, "CRTC_H", crtc_height);
-
-    /* Set a surface for the plane */
-    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
-    update.add_property(*conf->plane_props, "FB_ID", fb);
+    add_primary_properties(update, *conf, fb);
 
     auto ret = update.commit(drm_fd_, 0);
     if (ret)
@@ -542,6 +546,30 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
     }
 
     return true;
+}
+
+void mga::AtomicKMSOutput::add_primary_properties(
+    AtomicUpdate& update,
+    Configuration const& conf,
+    FBHandle const& fb) const
+{
+    auto const crtc_width = conf.current_crtc->width;
+    auto const crtc_height = conf.current_crtc->height;
+
+    update.add_property(*conf.crtc_props, "MODE_ID", conf.mode->handle());
+    update.add_property(*conf.connector_props, "CRTC_ID", conf.current_crtc->crtc_id);
+
+    add_plane_viewport(
+        update,
+        *conf.plane_props,
+        conf.fb_offset,
+        fb.size(),
+        geom::Point{},
+        geom::Size{geom::Width{static_cast<int>(crtc_width)}, geom::Height{static_cast<int>(crtc_height)}});
+
+    /* Set a surface for the plane */
+    update.add_property(*conf.plane_props, "CRTC_ID", conf.current_crtc->crtc_id);
+    update.add_property(*conf.plane_props, "FB_ID", fb);
 }
 
 void mga::AtomicKMSOutput::restore_saved_crtc()
