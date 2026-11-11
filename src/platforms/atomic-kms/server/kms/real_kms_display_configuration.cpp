@@ -152,6 +152,27 @@ void name_outputs(std::vector<std::pair<mg::DisplayConfigurationOutput, std::sha
 }
 }
 
+void mga::RealKMSDisplayConfiguration::clear_connected_unused_outputs() const
+{
+    for_each_output([&](DisplayConfigurationOutput const& conf_output)
+    {
+        /*
+         * An output may be unused either because it's explicitly not used
+         * (DisplayConfigurationOutput::used) or because its power mode is
+         * not mir_power_mode_on.
+         */
+        if (conf_output.connected &&
+            (!conf_output.used || (conf_output.power_mode != mir_power_mode_on)))
+        {
+            auto kms_output = get_output_for(conf_output.id);
+
+            kms_output->clear_crtc();
+            kms_output->set_power_mode(conf_output.power_mode);
+            kms_output->set_gamma(conf_output.gamma);
+        }
+    });
+}
+
 void mga::RealKMSDisplayConfiguration::update()
 {
     decltype(outputs) new_outputs;
