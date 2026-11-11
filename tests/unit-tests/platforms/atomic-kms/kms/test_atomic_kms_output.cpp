@@ -136,9 +136,11 @@ public:
         mgk::DRMModeConnectorUPtr connector_copy{
             nullptr, std::default_delete<drmModeConnector>{}};
         connector_copy.reset(new drmModeConnector{connector()});
+        auto crtc = mgk::get_crtc(drm_fd, crtc_id);
+        auto plane = mgk::get_plane(drm_fd, plane_id);
         auto result = std::make_unique<mga::AtomicKMSOutput>(
             std::move(drm_fd), std::move(connector_copy));
-        result->configure(offset, 0);
+        result->configure(offset, 0, std::move(crtc), std::move(plane));
         return result;
     }
 
@@ -378,7 +380,9 @@ TEST_P(AtomicKMSDisableTest, submits_all_disable_properties)
 
     connector().connection = DRM_MODE_CONNECTED;
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
-    output_under_test->configure({}, 0);
+    auto crtc = mgk::get_crtc(drm_fd, crtc_id);
+    auto plane = mgk::get_plane(drm_fd, plane_id);
+    output_under_test->configure({}, 0, std::move(crtc), std::move(plane));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 
@@ -451,7 +455,9 @@ TEST_F(AtomicKMSOutputTest, reset_invalidates_capabilities_even_on_same_connecte
     output_under_test->reset();
     EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
-    output_under_test->configure({}, 0);
+    auto crtc = mgk::get_crtc(drm_fd, crtc_id);
+    auto plane = mgk::get_plane(drm_fd, plane_id);
+    output_under_test->configure({}, 0, std::move(crtc), std::move(plane));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 

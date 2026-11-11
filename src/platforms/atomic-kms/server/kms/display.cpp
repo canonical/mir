@@ -15,6 +15,7 @@
  */
 
 #include "display.h"
+#include "crtc_assignment.h"
 #include "cursor.h"
 #include "display_sink.h"
 
@@ -35,6 +36,7 @@
 #include <gbm.h>
 #include <cstdlib>
 #include <string_view>
+#include <map>
 #include <memory>
 #include <system_error>
 #include <xf86drm.h>
@@ -335,6 +337,8 @@ void mga::Display::configure_locked(
         compatible(kms_conf, current_display_configuration)};
     std::vector<std::unique_ptr<DisplaySink>> display_buffers_new;
 
+    std::map<mg::DisplayConfigurationOutputId, CrtcAssignment> assignments;
+
     if (!comp)
     {
         /* Reset the state of all outputs */
@@ -345,6 +349,8 @@ void mga::Display::configure_locked(
                 kms_output->clear_cursor();
                 kms_output->reset();
             });
+
+        assignments = solve_crtc_assignments(drm_fd, kms_conf);
     }
 
     size_t output_idx{0};
@@ -361,14 +367,6 @@ void mga::Display::configure_locked(
             auto kms_output = kms_conf.get_output_for(out.id);
             auto const mode_index = kms_conf.get_kms_mode_index(out.id, out.current_mode_index);
 
-            kms_output->configure({0, 0}, mode_index);
-
-            if (!comp)
-            {
-                kms_output->set_power_mode(out.power_mode);
-                kms_output->set_gamma(out.gamma);
-            }
-
             auto const transform = out.transformation();
 
             if (comp)
@@ -382,26 +380,53 @@ void mga::Display::configure_locked(
                 display_sinks[output_idx]->set_transformation(
                     transform,
                     out.extents());
-                ++output_idx;
             }
             else
             {
-                /* If we need a modeset we'll create a new set
-                 * of `DisplaySink`s
+                /* If we need a modeset we'll create a new set of
+                 * `DisplaySink`s, reusing existing ones for outputs whose
+                 * CRTC/plane/mode assignment has not changed.
                  */
-                auto db = std::make_unique<DisplaySink>(
-                    drm_fd,
-                    gbm,
-                    bypass_option,
-                    plane_promotion,
-                    listener,
-                    std::move(kms_output),
-                    out.extents(),
-                    transform,
-                    gbm_quirks);
+                auto assignment = std::move(assignments.at(out.id));
+                auto const needs_reconfigure =
+                    (mode_index != kms_output->current_mode_index()) ||
+                    (assignment.crtc->crtc_id != kms_output->current_crtc_id()) ||
+                    (assignment.plane->plane_id != kms_output->current_plane_id());
 
-                display_buffers_new.push_back(std::move(db));
+                if (needs_reconfigure)
+                {
+                    kms_output->clear_crtc();
+
+                    auto db = std::make_unique<DisplaySink>(
+                        drm_fd,
+                        gbm,
+                        bypass_option,
+                        plane_promotion,
+                        listener,
+                        kms_output,
+                        out.extents(),
+                        transform,
+                        gbm_quirks,
+                        mode_index,
+                        std::move(assignment));
+
+                    display_buffers_new.push_back(std::move(db));
+                }
+                else
+                {
+                    auto previous_sink = std::move(display_sinks[output_idx]);
+                    previous_sink->set_transformation(
+                        transform,
+                        out.extents());
+
+                    display_buffers_new.push_back(std::move(previous_sink));
+                }
+
+                kms_output->set_power_mode(out.power_mode);
+                kms_output->set_gamma(out.gamma);
             }
+
+            ++output_idx;
         });
 
     if (!comp)

@@ -46,13 +46,20 @@ public:
     auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> override;
 
     void reset() override;
-    void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
+    void configure(
+        geometry::Displacement fb_offset,
+        size_t kms_mode_index,
+        kms::DRMModeCrtcUPtr crtc,
+        kms::DRMModePlaneUPtr plane) override;
     geometry::Size size() const override;
     unsigned max_refresh_rate() const override;
 
     bool set_crtc(FBHandle const& fb) override;
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
+    uint32_t current_crtc_id() const override;
+    uint32_t current_plane_id() const override;
+    size_t current_mode_index() const override;
     bool page_flip(FBHandle const& fb) override;
 
     void set_cursor_image(gbm_bo* buffer) override;
@@ -85,7 +92,6 @@ private:
         std::unique_ptr<kms::ObjectProperties> connector_props;
     };
 
-    bool ensure_crtc(Configuration& to_update);
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;

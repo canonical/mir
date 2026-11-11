@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "src/platforms/atomic-kms/server/kms/crtc_assignment.h"
 #include "src/platforms/atomic-kms/server/kms/display_sink.h"
 #include "src/platforms/atomic-kms/server/kms/plane_capabilities.h"
 #include "src/platforms/atomic-kms/server/kms/quirks.h"
@@ -48,6 +49,7 @@
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
+namespace mgk = mir::graphics::kms;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -136,6 +138,11 @@ protected:
         glm::mat2 const& transformation = glm::mat2{1},
         mga::PlanePromotion promotion = mga::PlanePromotion::available) -> std::unique_ptr<mga::DisplaySink>
     {
+        auto crtc = mgk::DRMModeCrtcUPtr{new drmModeCrtc{}, [](drmModeCrtc*) {}};
+        crtc->crtc_id = 1;
+        auto plane = mgk::DRMModePlaneUPtr{new drmModePlane{}, [](drmModePlane*) {}};
+        plane->plane_id = 2;
+
         return std::make_unique<mga::DisplaySink>(
             drm_fd,
             nullptr,
@@ -145,7 +152,9 @@ protected:
             output,
             display_area,
             transformation,
-            std::make_shared<mga::GbmQuirks>(std::make_unique<StubSurfaceHasFreeBuffersQuirk>()));
+            std::make_shared<mga::GbmQuirks>(std::make_unique<StubSurfaceHasFreeBuffersQuirk>()),
+            0,
+            mga::CrtcAssignment{std::move(crtc), std::move(plane)});
     }
 
     auto make_candidate(
@@ -343,6 +352,44 @@ TEST_F(AtomicDisplaySinkTest, post_is_a_noop_without_a_queued_frame)
         .Times(0);
 
     EXPECT_TRUE(sink->post());
+}
+
+TEST_F(AtomicDisplaySinkTest, constructor_configures_output_with_crtc_and_plane)
+{
+    uint32_t const expected_crtc_id{123};
+    uint32_t const expected_plane_id{456};
+
+    auto crtc = mgk::DRMModeCrtcUPtr{new drmModeCrtc{}, [](drmModeCrtc*) {}};
+    crtc->crtc_id = expected_crtc_id;
+    auto plane = mgk::DRMModePlaneUPtr{new drmModePlane{}, [](drmModePlane*) {}};
+    plane->plane_id = expected_plane_id;
+
+    uint32_t passed_crtc_id{0};
+    uint32_t passed_plane_id{0};
+
+    EXPECT_CALL(*output, configure(_, _, _, _))
+        .WillOnce(Invoke(
+            [&](geom::Displacement, size_t, mgk::DRMModeCrtcUPtr received_crtc, mgk::DRMModePlaneUPtr received_plane)
+            {
+                passed_crtc_id = received_crtc->crtc_id;
+                passed_plane_id = received_plane->plane_id;
+            }));
+
+    auto test_sink = std::make_unique<mga::DisplaySink>(
+        drm_fd,
+        nullptr,
+        mga::BypassOption::allowed,
+        mga::PlanePromotion::available,
+        mir::report::null_display_report(),
+        output,
+        display_area,
+        glm::mat2{1},
+        std::make_shared<mga::GbmQuirks>(std::make_unique<StubSurfaceHasFreeBuffersQuirk>()),
+        7,
+        mga::CrtcAssignment{std::move(crtc), std::move(plane)});
+
+    EXPECT_THAT(passed_crtc_id, Eq(expected_crtc_id));
+    EXPECT_THAT(passed_plane_id, Eq(expected_plane_id));
 }
 
 TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuffer_alive)

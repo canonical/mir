@@ -58,7 +58,11 @@ public:
     virtual auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> = 0;
 
     virtual void reset() = 0;
-    virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
+    virtual void configure(
+        geometry::Displacement fb_offset,
+        size_t kms_mode_index,
+        kms::DRMModeCrtcUPtr crtc,
+        kms::DRMModePlaneUPtr plane) = 0;
     virtual geometry::Size size() const = 0;
 
     /**
@@ -77,6 +81,10 @@ public:
      */
     virtual bool has_crtc_mismatch() = 0;
     virtual void clear_crtc() = 0;
+
+    virtual uint32_t current_crtc_id() const = 0;
+    virtual uint32_t current_plane_id() const = 0;
+    virtual size_t current_mode_index() const = 0;
 
     virtual bool page_flip(FBHandle const& fb) = 0;
 
