@@ -244,7 +244,7 @@ void mga::Display::resume()
         for (auto& db_ptr : display_sinks)
             db_ptr->schedule_set_crtc();
 
-        clear_connected_unused_outputs();
+        current_display_configuration.clear_connected_unused_outputs();
     }
 }
 
@@ -285,27 +285,6 @@ auto mga::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
     }
 
     return locked_cursor;
-}
-
-void mga::Display::clear_connected_unused_outputs()
-{
-    current_display_configuration.for_each_output([&](DisplayConfigurationOutput const& conf_output)
-    {
-        /*
-         * An output may be unused either because it's explicitly not used
-         * (DisplayConfigurationOutput::used) or because its power mode is
-         * not mir_power_mode_on.
-         */
-        if (conf_output.connected &&
-            (!conf_output.used || (conf_output.power_mode != mir_power_mode_on)))
-        {
-            auto kms_output = current_display_configuration.get_output_for(conf_output.id);
-
-            kms_output->clear_crtc();
-            kms_output->set_power_mode(conf_output.power_mode);
-            kms_output->set_gamma(conf_output.gamma);
-        }
-    });
 }
 
 bool mga::Display::apply_if_configuration_preserves_display_buffers(
@@ -349,7 +328,19 @@ void mga::Display::configure_locked(
                 kms_output->clear_cursor();
                 kms_output->reset();
             });
+    }
 
+    /*
+     * Release CRTCs from outputs that are connected but will not be active
+     * in the new configuration *before* the solver runs. Otherwise an
+     * output being disabled could still hold a CRTC that the solver then
+     * hands to a newly-enabled output, causing the later cleanup to clear
+     * the CRTC used by the new output.
+     */
+    kms_conf.clear_connected_unused_outputs();
+
+    if (!comp)
+    {
         assignments = solve_crtc_assignments(drm_fd, kms_conf);
     }
 
@@ -434,10 +425,6 @@ void mga::Display::configure_locked(
 
     /* Store applied configuration */
     current_display_configuration = kms_conf;
-
-    if (!comp)
-        /* Clear connected but unused outputs */
-        clear_connected_unused_outputs();
 }
 
 namespace

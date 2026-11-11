@@ -48,6 +48,9 @@ public:
     size_t get_kms_mode_index(DisplayConfigurationOutputId id, size_t conf_mode_index) const override;
     void update() override;
 
+    /// Clear the CRTC of any output that is connected but not active in this configuration.
+    void clear_connected_unused_outputs() const;
+
 private:
 
     std::shared_ptr<KMSOutputContainer> displays;
