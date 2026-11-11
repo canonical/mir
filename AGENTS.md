@@ -25,6 +25,8 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/scene/.kb/scene-idle-and-input-hubs.md](src/server/scene/.kb/scene-idle-and-input-hubs.md) - Idle hub state machine, text-input serials, and clipboard locking.
 - [src/server/scene/.kb/scene-sessions-and-display-config.md](src/server/scene/.kb/scene-sessions-and-display-config.md) - Session lifetime/order and display-configuration application semantics.
 - [src/server/scene/.kb/scene-surface-stack.md](src/server/scene/.kb/scene-surface-stack.md) - SurfaceStack layering, focus order, occlusion, and locking.
+- [src/server/shell/.kb/accessibility-input-transformers.md](src/server/shell/.kb/accessibility-input-transformers.md) - Accessibility input transformers: hover click, mousekeys, slow/sticky keys.
+- [src/server/shell/.kb/shell-focus-and-confinement.md](src/server/shell/.kb/shell-focus-and-confinement.md) - AbstractShell focus, popup, and pointer-confinement rules.
 
 Existing [Copilot instructions](.github/copilot-instructions.md) and [path instructions](.github/instructions/)
 remain authoritative for their existing concerns. [Sphinx documentation](doc/sphinx/) remains authoritative for published docs.
