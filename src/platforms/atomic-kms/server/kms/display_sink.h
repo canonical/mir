@@ -153,6 +153,8 @@ public:
 
     auto drm_fd() const -> mir::Fd;
 
+    auto output_id() const -> uint32_t;
+
     auto gbm_device() const -> std::shared_ptr<struct gbm_device>;
 
 protected:

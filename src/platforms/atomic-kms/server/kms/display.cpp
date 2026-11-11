@@ -22,6 +22,7 @@
 #include "kms_display_configuration.h"
 #include "kms_output.h"
 
+#include <algorithm>
 #include <mir/console_services.h>
 #include <mir/graphics/display_configuration_policy.h>
 #include <mir/graphics/display_report.h>
@@ -39,6 +40,7 @@
 #include <map>
 #include <memory>
 #include <system_error>
+#include <utility>
 #include <xf86drm.h>
 #include <mir/log.h>
 #include <mir/graphics/kms/drm_mode_resources.h>
@@ -314,11 +316,31 @@ void mga::Display::configure_locked(
     bool const comp{
         (&kms_conf != &current_display_configuration) &&
         compatible(kms_conf, current_display_configuration)};
-    std::vector<std::unique_ptr<DisplaySink>> display_buffers_new;
 
-    std::map<mg::DisplayConfigurationOutputId, CrtcAssignment> assignments;
+    if (comp)
+    {
+        kms_conf.for_each_output(
+            [&](DisplayConfigurationOutput const& out)
+            {
+                if (!is_active_physical_output(out))
+                {
+                    return;
+                }
 
-    if (!comp)
+                auto previous_sink = std::find_if(display_sinks.begin(), display_sinks.end(), [&](auto& sink) {
+                    return sink && static_cast<int>(sink->output_id()) == out.id.as_value();
+                });
+
+                // Configuration should be compatible, so there should be a corresponding previous sink.
+                if (previous_sink == display_sinks.end())
+                {
+                    BOOST_THROW_EXCEPTION(std::runtime_error{"Compatible configuration resulted in mismatched sinks"});
+                }
+
+                (*previous_sink)->set_transformation(out.transformation(), out.extents());
+            });
+    }
+    else
     {
         /* Reset the state of all outputs */
         kms_conf.for_each_output(
@@ -328,52 +350,47 @@ void mga::Display::configure_locked(
                 kms_output->clear_cursor();
                 kms_output->reset();
             });
-    }
 
-    /*
-     * Release CRTCs from outputs that are connected but will not be active
-     * in the new configuration *before* the solver runs. Otherwise an
-     * output being disabled could still hold a CRTC that the solver then
-     * hands to a newly-enabled output, causing the later cleanup to clear
-     * the CRTC used by the new output.
-     */
-    kms_conf.clear_connected_unused_outputs();
+        /*
+         * Release CRTCs from outputs that are connected but will not be active
+         * in the new configuration *before* the solver runs. Otherwise an
+         * output being disabled could still hold a CRTC that the solver then
+         * hands to a newly-enabled output, causing the later cleanup to clear
+         * the CRTC used by the new output.
+         */
+        kms_conf.clear_connected_unused_outputs();
 
-    if (!comp)
-    {
-        assignments = solve_crtc_assignments(drm_fd, kms_conf);
-    }
+        std::vector<std::unique_ptr<DisplaySink>> display_buffers_new;
+        std::map<mg::DisplayConfigurationOutputId, CrtcAssignment> assignments = solve_crtc_assignments(drm_fd, kms_conf);
+        auto const plane_promotion = plane_promotion_for(kms_conf);
 
-    size_t output_idx{0};
-    auto const plane_promotion = plane_promotion_for(kms_conf);
-    kms_conf.for_each_output(
-        [&](DisplayConfigurationOutput const& out)
-        {
-            if (!is_active_physical_output(out))
+        kms_conf.for_each_output(
+            [&](DisplayConfigurationOutput const& out)
             {
-                // We don't need to do anything for unconfigured outputs
-                return;
-            }
+                if (!is_active_physical_output(out))
+                {
+                    // We don't need to do anything for unconfigured outputs
+                    return;
+                }
 
-            auto kms_output = kms_conf.get_output_for(out.id);
-            auto const mode_index = kms_conf.get_kms_mode_index(out.id, out.current_mode_index);
+                auto kms_output = kms_conf.get_output_for(out.id);
+                auto const mode_index = kms_conf.get_kms_mode_index(out.id, out.current_mode_index);
 
-            auto const transform = out.transformation();
+                auto const transform = out.transformation();
 
-            if (comp)
-            {
-                /* If we don't need a modeset we can just
-                 * update our existing `DisplaySink`s.
-                 *
-                 * Note: this assumes that RealKMSDisplayConfiguration.for_each_output
-                 * iterates over outputs in the same order each time.
-                 */
-                display_sinks[output_idx]->set_transformation(
-                    transform,
-                    out.extents());
-            }
-            else
-            {
+                auto previous_sink = [&]() -> std::unique_ptr<DisplaySink>
+                {
+                    for (auto& sink : display_sinks)
+                    {
+                        if (sink && static_cast<int>(sink->output_id()) == out.id.as_value())
+                        {
+                            return std::exchange(sink, nullptr);
+                        }
+                    }
+
+                    return nullptr;
+                }();
+
                 /* If we need a modeset we'll create a new set of
                  * `DisplaySink`s, reusing existing ones for outputs whose
                  * CRTC/plane/mode assignment has not changed.
@@ -384,7 +401,7 @@ void mga::Display::configure_locked(
                     (assignment.crtc->crtc_id != kms_output->current_crtc_id()) ||
                     (assignment.plane->plane_id != kms_output->current_plane_id());
 
-                if (needs_reconfigure)
+                if (needs_reconfigure || !previous_sink)
                 {
                     kms_output->clear_crtc();
 
@@ -405,7 +422,6 @@ void mga::Display::configure_locked(
                 }
                 else
                 {
-                    auto previous_sink = std::move(display_sinks[output_idx]);
                     previous_sink->set_transformation(
                         transform,
                         out.extents());
@@ -415,13 +431,10 @@ void mga::Display::configure_locked(
 
                 kms_output->set_power_mode(out.power_mode);
                 kms_output->set_gamma(out.gamma);
-            }
+            });
 
-            ++output_idx;
-        });
-
-    if (!comp)
         display_sinks = std::move(display_buffers_new);
+    }
 
     /* Store applied configuration */
     current_display_configuration = kms_conf;
