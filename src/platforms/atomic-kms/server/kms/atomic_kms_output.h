@@ -32,6 +32,7 @@ namespace graphics
 namespace atomic
 {
 
+class AtomicUpdate;
 class PageFlipper;
 
 class AtomicKMSOutput : public KMSOutput
@@ -86,6 +87,7 @@ private:
     };
 
     bool ensure_crtc(Configuration& to_update);
+    void add_primary_properties(AtomicUpdate& update, Configuration const& conf, FBHandle const& fb) const;
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;
