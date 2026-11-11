@@ -27,15 +27,18 @@
 #include <mir/graphics/transformation.h>
 #include <mir/test/doubles/mock_buffer.h>
 #include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
 #include <mir/test/doubles/mock_renderable.h>
 #include <mir_test_framework/udev_environment.h>
 
 #include <drm_fourcc.h>
 #include <fcntl.h>
+#include <gbm.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#include <cerrno>
 #include <cstdint>
 
 #include <memory>
@@ -218,6 +221,37 @@ protected:
     std::shared_ptr<NiceMock<mt::MockKMSOutput>> const output{
         std::make_shared<NiceMock<mt::MockKMSOutput>>()};
     std::unique_ptr<mga::DisplaySink> sink;
+};
+
+class DmaBufImportTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        ON_CALL(gbm, gbm_bo_import(_, _, _, _))
+            .WillByDefault(Return(gbm.fake_gbm.bo));
+        ON_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _))
+            .WillByDefault(DoAll(SetArgPointee<8>(fb_id), Return(0)));
+    }
+
+    auto make_buffer() -> std::shared_ptr<StubDMABufBuffer>
+    {
+        auto buffer = std::make_shared<StubDMABufBuffer>(geom::Size{64, 48});
+        buffer->planes_.push_back({mir::Fd{}, 64, 0});
+        return buffer;
+    }
+
+    auto gbm_device_ptr() const -> std::shared_ptr<struct gbm_device>
+    {
+        return {gbm.fake_gbm.device, [](struct gbm_device*) {}};
+    }
+
+    NiceMock<mtd::MockDRM> drm;
+    NiceMock<mtd::MockGBM> gbm;
+    // MockDRM and MockGBM intercept every call, so no real fd is needed.
+    mir::Fd const drm_fd;
+    uint32_t const fb_id{0xabcd};
+    mga::DmaBufDisplayAllocator allocator{gbm_device_ptr(), drm_fd};
 };
 
 struct PostCase
@@ -598,3 +632,51 @@ INSTANTIATE_TEST_SUITE_P(
              glm::rotate(glm::mat4{1}, 0.5f, glm::vec3{1.0f, 0.0f, 0.0f})}}, std::nullopt},
         SceneCase{"disjoint_plain_ui", {{{{12, 34}, {30, 30}}, true}, {{{50, 34}, {20, 20}}}}, 0}),
     [](TestParamInfo<SceneCase> const& info) { return std::string{info.param.name}; });
+
+TEST_F(DmaBufImportTest, gbm_import_failure_returns_no_framebuffer)
+{
+    EXPECT_CALL(gbm, gbm_bo_import(_, _, _, _))
+        .WillOnce(SetErrnoAndReturn(EINVAL, nullptr));
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(allocator.framebuffer_for(make_buffer()), nullptr);
+}
+
+TEST_F(DmaBufImportTest, add_fb_failure_releases_the_bo_and_the_buffer)
+{
+    auto buffer = make_buffer();
+    std::weak_ptr<mg::DMABufBuffer> const weak_buffer{buffer};
+
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _))
+        .WillOnce(Return(-EINVAL));
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(1);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(0);
+
+    EXPECT_EQ(allocator.framebuffer_for(buffer), nullptr);
+
+    buffer.reset();
+    EXPECT_TRUE(weak_buffer.expired());
+}
+
+TEST_F(DmaBufImportTest, framebuffer_keeps_the_bo_and_the_buffer_until_destroyed)
+{
+    auto buffer = make_buffer();
+    std::weak_ptr<mg::DMABufBuffer> const weak_buffer{buffer};
+
+    EXPECT_CALL(gbm, gbm_bo_destroy(_)).Times(0);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(0);
+
+    auto framebuffer = allocator.framebuffer_for(buffer);
+    ASSERT_NE(framebuffer, nullptr);
+
+    buffer.reset();
+    EXPECT_FALSE(weak_buffer.expired());
+
+    Mock::VerifyAndClearExpectations(&gbm);
+    Mock::VerifyAndClearExpectations(&drm);
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(1);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(1);
+
+    framebuffer.reset();
+    EXPECT_TRUE(weak_buffer.expired());
+}
