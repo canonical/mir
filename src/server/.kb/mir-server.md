@@ -2,7 +2,7 @@
 
 This file maps the server startup and shutdown path and its resource lifetimes.
 
-Read the top-level `.kb/agents.md` file before continuing below.
+IMPORTANT: Read the `.kb/agents.md` file.
 
 
 # Concepts
