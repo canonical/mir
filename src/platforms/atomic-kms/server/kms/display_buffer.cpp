@@ -67,7 +67,9 @@ mga::DisplaySink::DisplaySink(
     std::shared_ptr<KMSOutput> output,
     geom::Rectangle const& area,
     glm::mat2 const& transformation,
-    std::shared_ptr<GbmQuirks> const& gbm_quirks)
+    std::shared_ptr<GbmQuirks> const& gbm_quirks,
+    size_t kms_mode_index,
+    CrtcAssignment assignment)
     : DmaBufDisplayAllocator(gbm, drm_fd),
       gbm{std::move(gbm)},
       listener(listener),
@@ -78,6 +80,12 @@ mga::DisplaySink::DisplaySink(
       needs_set_crtc{false},
       gbm_quirks{gbm_quirks}
 {
+    this->output->configure(
+        {0, 0},
+        kms_mode_index,
+        std::move(assignment.crtc),
+        std::move(assignment.plane));
+
     listener->report_successful_setup_of_native_resources();
 
     if (this->output->has_crtc_mismatch())

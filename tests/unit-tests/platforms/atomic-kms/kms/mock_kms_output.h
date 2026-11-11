@@ -19,6 +19,7 @@
 
 #include "src/platforms/atomic-kms/server/kms/kms_output.h"
 #include "src/platforms/atomic-kms/server/kms/presentation_state.h"
+#include <mir/graphics/kms/drm_mode_resources.h>
 #include <gmock/gmock.h>
 
 #include <cstdint>
@@ -35,12 +36,20 @@ class MockKMSOutput : public graphics::atomic::KMSOutput
 public:
     MOCK_METHOD(uint32_t, id, (), (const, override));
     MOCK_METHOD(void, reset, (), (override));
-    MOCK_METHOD(void, configure, (geometry::Displacement, size_t), (override));
+    MOCK_METHOD(void, configure,
+                (geometry::Displacement,
+                 size_t,
+                 graphics::kms::DRMModeCrtcUPtr,
+                 graphics::kms::DRMModePlaneUPtr),
+                (override));
     MOCK_METHOD(geometry::Size, size, (), (const, override));
     MOCK_METHOD(unsigned, max_refresh_rate, (), (const, override));
     MOCK_METHOD(bool, set_crtc, (graphics::FBHandle const&), (override));
     MOCK_METHOD(bool, has_crtc_mismatch, (), (override));
     MOCK_METHOD(void, clear_crtc, (), (override));
+    MOCK_METHOD(uint32_t, current_crtc_id, (), (const, override));
+    MOCK_METHOD(uint32_t, current_plane_id, (), (const, override));
+    MOCK_METHOD(size_t, current_mode_index, (), (const, override));
     MOCK_METHOD(bool, page_flip, (graphics::FBHandle const&), (override));
     MOCK_METHOD(bool, test_presentation, (graphics::atomic::PresentationState const&), (override));
     MOCK_METHOD(void, set_cursor_image, (gbm_bo*), (override));
