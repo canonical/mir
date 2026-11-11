@@ -23,6 +23,7 @@
 #include <mir/graphics/display_providers.h>
 #include <mir/graphics/kms_framebuffer.h>
 
+#include "plane_capabilities.h"
 #include "platform_common.h"
 #include "presentation_state.h"
 
@@ -118,6 +119,9 @@ protected:
 
 private:
     bool set_crtc(FBHandle const&);
+
+    auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
+    auto can_promote() const -> bool;
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
