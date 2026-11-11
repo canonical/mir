@@ -122,19 +122,7 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
 {
     if (renderable_list.size() == 1)
     {
-        if (renderable_list[0].screen_positon != view_area())
-        {
-            return false;
-        }
-
-        if (renderable_list[0].source_position.top_left != geom::PointF{0, 0} ||
-            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
-            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
-        {
-            return false;
-        }
-
-        if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
+        if (auto fb = fullscreen_framebuffer(renderable_list[0]))
         {
             next_state = PresentationState::full_scene(std::move(fb));
             return true;
@@ -147,6 +135,31 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     }
 
     return false;
+}
+
+auto mga::DisplaySink::fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>
+{
+    if (element.screen_positon != view_area())
+    {
+        return nullptr;
+    }
+
+    if (element.source_position.top_left != geom::PointF{0, 0} ||
+        element.source_position.size.width.as_value() != view_area().size.width.as_int() ||
+        element.source_position.size.height.as_value() != view_area().size.height.as_int())
+    {
+        return nullptr;
+    }
+
+    return std::dynamic_pointer_cast<FBHandle>(element.buffer);
+}
+
+auto mga::DisplaySink::can_promote() const -> bool
+{
+    // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
+    return plane_promotion == PlanePromotion::available &&
+        area.size == output->size() &&
+        transform == glm::mat2{1};
 }
 
 namespace
@@ -163,16 +176,18 @@ auto is_directly_scannable(mg::Renderable const& renderable) -> bool
         !renderable.clip_area();
 }
 
-auto has_legal_overlay_plane(mga::CrtcPlaneCapabilities const& capabilities, uint64_t modifier) -> bool
+auto find_legal_overlay_plane(
+    mga::CrtcPlaneCapabilities const& capabilities,
+    mga::FormatModifier format_modifier) -> mga::PlaneCapability const*
 {
-    auto const format_modifier = mga::FormatModifier{DRM_FORMAT_NV12, modifier};
-    return std::ranges::any_of(capabilities.overlays, [&](mga::PlaneCapability const& plane)
+    auto const plane = std::ranges::find_if(capabilities.overlays, [&](mga::PlaneCapability const& plane)
     {
         return plane.can_be_above_primary &&
             plane.bt709_limited.has_value() &&
             std::ranges::find(plane.formats, format_modifier) != plane.formats.end() &&
             (!plane.alpha_max || plane.alpha_max == opaque_alpha);
     });
+    return plane == capabilities.overlays.end() ? nullptr : &*plane;
 }
 
 auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabilities const& capabilities) -> bool
@@ -194,7 +209,7 @@ auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabil
 
     auto const modifier = dmabuf->modifier();
     return modifier && *modifier != DRM_FORMAT_MOD_INVALID &&
-        has_legal_overlay_plane(capabilities, *modifier) &&
+        find_legal_overlay_plane(capabilities, {DRM_FORMAT_NV12, *modifier}) != nullptr &&
         renderable.src_bounds() == geom::RectangleD{{0, 0}, dmabuf->size()} &&
         renderable.screen_position().size == dmabuf->size();
 }
@@ -322,12 +337,7 @@ auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>
     -> std::optional<LogicalStacking>
 {
     auto const plane_capabilities = output->plane_capabilities();
-    // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
-    auto const unscaled = area.size == output->size();
-    if (plane_promotion != PlanePromotion::available ||
-        !plane_capabilities ||
-        !unscaled ||
-        transform != glm::mat2{1})
+    if (!can_promote() || !plane_capabilities)
     {
         return std::nullopt;
     }
