@@ -136,3 +136,43 @@ TEST(ReportExceptionTest, handles_strange_exception_type)
     EXPECT_THAT(out.str(), IsEmpty());
     EXPECT_THAT(err.str(), Not(IsEmpty()));
 }
+
+TEST(ExceptionFormatterTest, includes_what_of_standard_exception)
+{
+    std::string const message{"test-format-exception"};
+    try
+    {
+        throw std::runtime_error{message};
+    }
+    catch (std::exception const& error)
+    {
+        EXPECT_THAT(std::format("{}", mir::ExceptionDiagnostics{error}), HasSubstr(message));
+    }
+}
+
+TEST(ExceptionFormatterTest, includes_line_number_when_exception_thrown_with_boost)
+{
+    int const line = __LINE__ + 3; // the exception is thrown three lines down
+    try
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error{"hello"});
+    }
+    catch (std::exception const& error)
+    {
+        auto const formatted = std::format("{}", mir::ExceptionDiagnostics{error});
+        EXPECT_THAT(formatted, HasSubstr("hello"));
+        EXPECT_THAT(formatted, HasSubstr(std::to_string(line)));
+    }
+}
+
+TEST(ExceptionFormatterTest, does_not_end_with_newline)
+{
+    try
+    {
+        throw std::logic_error{"test-no-trailing-newline"};
+    }
+    catch (std::logic_error const& error)
+    {
+        EXPECT_THAT(std::format("{}", mir::ExceptionDiagnostics{error}), Not(EndsWith("\n")));
+    }
+}
