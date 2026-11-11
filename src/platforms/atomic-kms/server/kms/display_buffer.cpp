@@ -449,6 +449,11 @@ auto mga::DisplaySink::drm_fd() const -> mir::Fd
     return mir::Fd{mir::IntOwnedFd{output->drm_fd()}};
 }
 
+auto mga::DisplaySink::output_id() const -> uint32_t
+{
+    return output->id();
+}
+
 auto mga::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
 {
     return gbm;
