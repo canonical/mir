@@ -100,6 +100,14 @@ target_link_libraries(mir-umock-test-framework
   PRIVATE mirplatform PkgConfig::UMOCKDEV
 )
 
+add_library(mir-recorded-input-test-framework OBJECT
+  recorded_input_platform.cpp
+)
+
+target_link_libraries(mir-recorded-input-test-framework
+  PRIVATE mirplatform PkgConfig::UMOCKDEV
+)
+
 add_library(mir-test-framework-static STATIC)
 
 add_dependencies(mir-test-framework-static GMock)

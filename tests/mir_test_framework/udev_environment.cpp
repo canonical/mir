@@ -18,16 +18,23 @@
 #include <mir_test_framework/executable_path.h>
 
 #include <mir/udev/wrapper.h>
+#include <mir/raii.h>
 
 #include <umockdev.h>
 
 #include <sys/stat.h>
 #include <unistd.h>
+#include <cstdio>
 #include <cstdlib>
-#include <sstream>
+#include <cstring>
+#include <ctime>
+#include <format>
+#include <fstream>
+#include <optional>
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <system_error>
 #include <boost/throw_exception.hpp>
 #include <boost/exception/errinfo_errno.hpp>
 #include <unordered_set>
@@ -168,8 +175,40 @@ void mtf::UdevEnvironment::add_standard_device(std::string const& name)
         }();
 
     auto descriptor_filename = recordings_path + "/" + name + ".umockdev";
+    std::ifstream descriptor_file{descriptor_filename};
+    if (!descriptor_file)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open mock udev device recording: " + descriptor_filename));
+    }
+
+    // Devices recorded from the same machine share ancestors, which umockdev refuses to add twice
+    std::string descriptor;
+    std::string record;
+    bool skip_record{false};
+    for (std::string line; std::getline(descriptor_file, line);)
+    {
+        if (line.starts_with("P: "))
+        {
+            skip_record = existing_devices.contains("/sys" + line.substr(3));
+        }
+        record += line + '\n';
+        if (line.empty())
+        {
+            if (!skip_record)
+            {
+                descriptor += record;
+            }
+            record.clear();
+            skip_record = false;
+        }
+    }
+    if (!skip_record)
+    {
+        descriptor += record;
+    }
+
     GError* err = nullptr;
-    if (!umockdev_testbed_add_from_file(testbed, descriptor_filename.c_str(), &err))
+    if (!umockdev_testbed_add_from_string(testbed, descriptor.c_str(), &err))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to create mock udev device: ") +
                                                  err->message));
@@ -228,14 +267,88 @@ void mtf::UdevEnvironment::load_device_ioctls(std::string const& name)
     }
 }
 
-void mtf::UdevEnvironment::load_device_evemu(std::string const& name)
+auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::string
 {
-    auto evemu_filename = recordings_path + "/" + name + ".evemu";
+    auto const evemu_filename = recordings_path + "/" + name + ".evemu";
+    std::ifstream evemu_file{evemu_filename};
+    if (!evemu_file)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open evemu recording: " + evemu_filename));
+    }
+
+    // umockdev replays the recorded timestamps verbatim. Rebase them onto the current CLOCK_MONOTONIC
+    // time (as libinput uses) so that timestamp-driven behaviour (debouncing, acceleration…) is realistic.
+    timespec now{};
+    if (clock_gettime(CLOCK_MONOTONIC, &now) < 0)
+    {
+        BOOST_THROW_EXCEPTION(std::system_error(errno, std::system_category(), "Failed to get replay timestamp"));
+    }
+    long long const now_us = now.tv_sec * 1'000'000LL + now.tv_nsec / 1'000;
+    std::optional<long long> offset_us;
+
+    // umockdev_testbed_load_evemu_events_from_string() isn't available in all supported umockdev versions
+    std::string rebased_filename = std::string{umockdev_testbed_get_root_dir(testbed)} + "/rebased-XXXXXX.evemu";
+    int const fd = mkstemps(rebased_filename.data(), std::strlen(".evemu"));
+    if (fd < 0)
+    {
+        BOOST_THROW_EXCEPTION(
+            std::system_error(errno, std::system_category(), "Failed to create rebased evemu recording"));
+    }
+    close(fd);
+    auto const remove_recording = mir::raii::paired_calls(
+        [] {}, [&] { unlink(rebased_filename.c_str()); });
+    std::ofstream output{rebased_filename, std::ios::trunc};
+
+    std::string device_node;
+    std::string_view constexpr device_prefix = "# device ";
+    for (std::string line; std::getline(evemu_file, line);)
+    {
+        long long seconds{};
+        long long microseconds{};
+        int consumed{};
+        if (line.starts_with(device_prefix) && device_node.empty())
+        {
+            device_node = line.substr(device_prefix.size());
+        }
+        else if (sscanf(line.c_str(), "E: %lld.%lld%n", &seconds, &microseconds, &consumed) == 2)
+        {
+            auto const timestamp_us = seconds * 1'000'000 + microseconds;
+            if (!offset_us)
+            {
+                offset_us = now_us - timestamp_us;
+            }
+            auto const rebased_us = timestamp_us + *offset_us;
+            line = std::format("E: {}.{:06}{}", rebased_us / 1'000'000, rebased_us % 1'000'000, line.substr(consumed));
+        }
+        output << line << '\n';
+    }
+    if (device_node.empty())
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("evemu recording has no \"# device\" header: " + evemu_filename));
+    }
+
+    output.close();
+    if (!output)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to write rebased evemu recording: " + rebased_filename));
+    }
 
     GError* err = nullptr;
-    if (!umockdev_testbed_load_evemu_events(testbed, nullptr, evemu_filename.c_str(), &err))
+    auto const loaded = umockdev_testbed_load_evemu_events(testbed, device_node.c_str(), rebased_filename.c_str(), &err);
+    if (!loaded)
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load evemu recording: ") +
+                                                 err->message));
+    }
+    return device_node;
+}
+
+void mtf::UdevEnvironment::wait_for_device_script(std::string const& device_node)
+{
+    GError* err = nullptr;
+    if (!umockdev_testbed_wait_script(testbed, device_node.c_str(), &err))
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed waiting for device script: ") +
                                                  err->message));
     }
 }
