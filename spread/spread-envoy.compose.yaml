@@ -1,0 +1,37 @@
+name: mir-sbuild-proxy
+
+services:
+  envoy:
+    image: envoyproxy/envoy:v1.40.2@sha256:8de97e654644827d62afdbf7e1d3dc9fee01a8690d410dd1c63a30dc6b6cecbb
+    container_name: mir-sbuild-proxy
+    ports:
+    - "${LXD_ADDRESS:?}:3128:3128"
+    restart: on-failure
+    read_only: true
+    user: "${SBUILD_PROXY_UID:?}:${SBUILD_PROXY_GID:?}"
+    cap_drop:
+    - ALL
+    volumes:
+    - type: bind
+      source: ./spread-envoy.yaml
+      target: /etc/envoy.yaml
+      read_only: true
+      bind:
+        create_host_path: false
+    - type: bind
+      source: "${RUNNER_TEMP:?}/sbuild-proxy"
+      target: /etc/envoy
+      read_only: true
+      bind:
+        create_host_path: false
+    tmpfs:
+    - "/run/mir-sbuild-proxy:uid=${SBUILD_PROXY_UID:?},gid=${SBUILD_PROXY_GID:?},mode=0700"
+    entrypoint: [envoy]
+    command:
+    - -c
+    - /etc/envoy.yaml
+    - --disable-hot-restart
+    - --concurrency
+    - "2"
+    - --drain-time-s
+    - "1"

@@ -13,6 +13,16 @@ summary: Build Ubuntu packages
 execute: |
     cd $SPREAD_PATH
 
+    if [ -n "${SBUILD_PROXY_URL}" ]; then
+      install -d /usr/local/share/ca-certificates
+      printf '%s' "${SBUILD_PROXY_CA}" | base64 --decode \
+        > /usr/local/share/ca-certificates/mir-sbuild-proxy.crt
+      export http_proxy="${SBUILD_PROXY_URL}" https_proxy="${SBUILD_PROXY_URL}"
+      export no_proxy=localhost,127.0.0.1,::1
+      unset NO_PROXY
+      update-ca-certificates
+    fi
+
     NODBG=$( [[ "${DEB_BUILD_OPTIONS}" != *nostrip* ]] && echo true || echo false )
 
     # Add Mir dev PPA for any out-of-archive packages needed
