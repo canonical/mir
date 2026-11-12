@@ -365,6 +365,8 @@ TEST_F(AtomicKMSOutputTest, gamma_submits_lut_property)
 
 TEST_P(AtomicKMSDisableTest, submits_all_disable_properties)
 {
+    auto crtc = mgk::get_crtc(drm_fd, crtc_id);
+    auto plane = mgk::get_plane(drm_fd, plane_id);
     auto output_under_test = output();
     EXPECT_CALL(
         mock_drm,
@@ -380,8 +382,6 @@ TEST_P(AtomicKMSDisableTest, submits_all_disable_properties)
 
     connector().connection = DRM_MODE_CONNECTED;
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
-    auto crtc = mgk::get_crtc(drm_fd, crtc_id);
-    auto plane = mgk::get_plane(drm_fd, plane_id);
     output_under_test->configure({}, 0, std::move(crtc), std::move(plane));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
@@ -408,7 +408,7 @@ TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_returns_false)
 
     StubFramebuffer framebuffer{primary_framebuffer_id};
     EXPECT_FALSE(output_under_test->set_crtc(framebuffer));
-    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
+    EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 
 TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_returns_false)
@@ -435,54 +435,39 @@ TEST_F(AtomicKMSOutputTest, initial_capabilities_match_crtc_and_primary_plane)
     EXPECT_THAT(capabilities->primary.id, Eq(plane_id));
 }
 
-TEST_F(AtomicKMSOutputTest, failed_flip_clears_capabilities_until_rediscovered)
+TEST_F(AtomicKMSOutputTest, failed_flip_retains_crtc_state)
 {
     auto output_under_test = output();
     EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags)).WillOnce(Return(-EIO));
     StubFramebuffer framebuffer{flip_framebuffer_id};
     EXPECT_FALSE(output_under_test->page_flip(framebuffer));
-    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
-
-    EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_ALLOW_MODESET));
-    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
+    EXPECT_THAT(output_under_test->current_crtc_id(), Eq(crtc_id));
 }
 
-TEST_F(AtomicKMSOutputTest, reset_invalidates_capabilities_even_on_same_connected_crtc)
+TEST_F(AtomicKMSOutputTest, reset_retains_capabilities_on_same_connected_crtc)
 {
-    auto output_under_test = output();
-    output_under_test->reset();
-    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
-    EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
     auto crtc = mgk::get_crtc(drm_fd, crtc_id);
     auto plane = mgk::get_plane(drm_fd, plane_id);
+    auto output_under_test = output();
+    output_under_test->reset();
+    EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
     output_under_test->configure({}, 0, std::move(crtc), std::move(plane));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 
-TEST_F(AtomicKMSOutputTest, hardware_refresh_rediscovers_capabilities_on_next_crtc_use)
+TEST_F(AtomicKMSOutputTest, reset_invalidates_capabilities_on_disconnected_crtc)
 {
+    auto crtc = mgk::get_crtc(drm_fd, crtc_id);
+    auto plane = mgk::get_plane(drm_fd, plane_id);
     auto output_under_test = output();
-    output_under_test->refresh_hardware_state();
+    connector().connection = DRM_MODE_DISCONNECTED;
+    output_under_test->reset();
     EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
-    StubFramebuffer framebuffer{primary_framebuffer_id};
-    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
+    connector().connection = DRM_MODE_CONNECTED;
+    output_under_test->configure({}, 0, std::move(crtc), std::move(plane));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
-}
-
-TEST_F(AtomicKMSOutputTest, failed_discovery_leaves_null_capabilities_but_set_crtc_succeeds)
-{
-    auto output_under_test = output();
-    ASSERT_THAT(output_under_test->plane_capabilities(), NotNull());
-    output_under_test->reset();
-    StubFramebuffer framebuffer{primary_framebuffer_id};
-    EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id))
-        .WillOnce(SetErrnoAndReturn(EIO, nullptr));
-    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_ALLOW_MODESET));
-    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
-    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
 }
 
 TEST_F(AtomicKMSOutputWithoutGammaLutTest, set_gamma_without_gamma_lut_property_is_ignored)
