@@ -370,8 +370,6 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
-        conf->current_crtc = nullptr;
-        conf->plane_capabilities = nullptr;
         return false;
     }
 
@@ -489,8 +487,6 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
-        conf->current_crtc = nullptr;
-        conf->plane_capabilities = nullptr;
         return false;
     }
 
@@ -740,8 +736,8 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
         conf->connector_props = nullptr;
         conf->crtc_props = nullptr;
         conf->plane_props = nullptr;
+        conf->current_crtc = nullptr;
     }
-    conf->current_crtc = nullptr;
 
     if (conf->connector->encoder_id)
     {
