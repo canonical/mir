@@ -66,6 +66,9 @@ public:
 
     bool operator==(InputTriggerModifiers const& other) const = default;
 
+    /// \return true if Shift is among the trigger's required modifiers.
+    auto requires_shift() const -> bool;
+
     /// \return true if the event modifiers exactly satisfy the trigger: every
     /// required modifier is present and no modifier outside the allowed set is.
     static auto modifiers_match(InputTriggerModifiers modifiers, MirInputEventModifiers event_mods) -> bool;
