@@ -853,7 +853,8 @@ public:
         mg::DMABufBuffer const& dma_buf,
         BufferGLDescription const& descriptor,
         std::shared_ptr<mgc::EGLContextExecutor> egl_delegate)
-        : tex{get_tex_id()},
+        : dpy{dpy},
+          tex{get_tex_id()},
           desc{descriptor},
           layout_{dma_buf.layout()},
           egl_delegate{std::move(egl_delegate)}
@@ -866,6 +867,9 @@ public:
 
         glBindTexture(target, tex);
         extensions.base(dpy).glEGLImageTargetTexture2DOES(target, image);
+        // Insert a fence into the command stream; we need this as `bind()` can be called on a different thread
+        // and with a different EGLContext current. We need explicit synchronisation ensure this propagates.
+        sync = eglCreateSync(dpy, EGL_SYNC_FENCE, nullptr);
 
         // tex is now an EGLImage sibling, so we can free the EGLImage without
         // freeing the backing data.
@@ -880,9 +884,10 @@ public:
     ~DMABufTex() override
     {
         egl_delegate->spawn(
-            [tex = tex]()
+            [tex = tex, sync = sync, dpy = dpy]()
             {
                 glDeleteTextures(1, &tex);
+                eglDestroySync(dpy, sync);
             });
     }
 
@@ -905,6 +910,10 @@ public:
 
     void bind() override
     {
+        // This might be called on a different EGLContext in a different thread.
+        // We need to ensure changes to the texture have propagated before any sampling happens;
+        // insert a wait-for-fence into the command stream.
+        eglWaitSync(dpy, sync, 0);
         glBindTexture(desc.target, tex);
     }
 
@@ -919,10 +928,12 @@ public:
 
 
 private:
+    EGLDisplay const dpy;
     GLuint const tex;
     BufferGLDescription const& desc;
     Layout const layout_;
     std::shared_ptr<mgc::EGLContextExecutor> const egl_delegate;
+    EGLSync sync;
 };
 
 namespace
