@@ -5,6 +5,13 @@ sdks:
 - name: copilot
 - name: project-mir-dev
 - name: system
+  slots:
+    copilot-token:
+      interface: secret
+      collection: default
+      attributes:
+        service: copilot
+
 actions:
   configure: |
     set -xeu
