@@ -293,12 +293,12 @@ void mga::AtomicKMSOutput::configure(
     try
     {
         conf->plane_capabilities = std::make_shared<CrtcPlaneCapabilities const>(
-            discover_crtc_plane_capabilities(drm_fd_, crtc->crtc_id));
+            discover_crtc_plane_capabilities(drm_fd_, conf->current_crtc->crtc_id));
     }
     catch (std::runtime_error const& error)
     {
         mir::log_warning(
-            "Failed to discover plane capabilities for CRTC %u: %s", crtc->crtc_id, error.what());
+            "Failed to discover plane capabilities for CRTC %u: %s", conf->current_crtc->crtc_id, error.what());
     }
 }
 
