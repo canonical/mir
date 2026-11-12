@@ -68,3 +68,14 @@ static_assert(std::convertible_to<geom::SizeF, geom::SizeD>, "Implicit conversio
 // Test that lossy implicit conversions fail
 static_assert(!std::convertible_to<geom::Size, geom::SizeF>, "Conversion float->int is lossy");
 static_assert(!std::convertible_to<geom::SizeD, geom::SizeF>, "Conversion double->float is lossy");
+
+TEST(geometry, size_area)
+{
+    using namespace geom;
+
+    EXPECT_EQ(12, area(Size{3, 4}));
+    EXPECT_EQ(12.0f, area(SizeF{3.0f, 4.0f}));
+    EXPECT_EQ(0, area(Size{}));
+}
+
+static_assert(geom::generic::area(geom::Size{3, 4}) == 12, "area is constexpr");

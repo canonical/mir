@@ -692,7 +692,7 @@ auto miral::BasicWindowManager::display_area_for(Rectangle const& rect) const
     for (auto& area : display_areas)
     {
         auto const intersection = intersection_of(rect, area->area).size;
-        auto const intersection_area = intersection.width.as_int() * intersection.height.as_int();
+        auto const intersection_area = generic::area(intersection);
         if (intersection_area > max_overlap_area)
         {
             // Find the area with the biggest overlap
