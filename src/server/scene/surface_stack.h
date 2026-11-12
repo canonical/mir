@@ -87,7 +87,7 @@ public:
     virtual ~SurfaceStack() noexcept(true);
 
     // From Scene
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID id) override;
+    auto scene_elements_for(compositor::CompositorID id) -> std::pair<compositor::SceneElementSequence, SceneElementState> override;
     void register_compositor(compositor::CompositorID id) override;
     void unregister_compositor(compositor::CompositorID id) override;
 

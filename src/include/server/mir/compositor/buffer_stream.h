@@ -41,9 +41,15 @@ class BufferStream : public frontend::BufferStream
 public:
     class Submission;
 
+    enum class SubmissionState
+    {
+        Latest,                     ///< This submission contains the most recent buffer
+        NewerBufferAvailable,       ///< There is another buffer available after this one; another composition is required.
+    };
+
     virtual ~BufferStream() = default;
 
-    virtual auto next_submission_for_compositor(void const* user_id) -> std::shared_ptr<Submission> = 0;
+    virtual auto next_submission_for_compositor(void const* user_id) -> std::pair<std::shared_ptr<Submission>, SubmissionState> = 0;
     virtual auto has_submitted_buffer() const -> bool = 0;
 
     class Submission

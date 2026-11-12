@@ -37,7 +37,7 @@ public:
         stub_compositor_buffer = std::make_shared<StubBuffer>();
     }
 
-    auto next_submission_for_compositor(void const*) -> std::shared_ptr<Submission> override
+    auto next_submission_for_compositor(void const*) -> std::pair<std::shared_ptr<Submission>, SubmissionState> override
     {
         class DummySubmission : public Submission
         {
@@ -71,7 +71,7 @@ public:
         };
 
         --nready;
-        return std::make_shared<DummySubmission>(stub_compositor_buffer);
+        return {std::make_shared<DummySubmission>(stub_compositor_buffer), SubmissionState::Latest};
     }
 
     void submit_buffer(

@@ -166,7 +166,7 @@ public:
              */
             for (auto const& [_, compositor] : compositors)
             {
-                auto elements = scene->scene_elements_for(compositor.get());
+                auto elements = scene->scene_elements_for(compositor.get()).first;
                 for (auto const& element : elements)
                 {
                     // We need to actually access the buffer in order for it to be marked in use.
@@ -191,7 +191,7 @@ public:
                     for (auto& tuple : compositors)
                     {
                         auto& compositor = std::get<1>(tuple);
-                        auto scene_elements = scene->scene_elements_for(compositor.get());
+                        auto [scene_elements, state] = scene->scene_elements_for(compositor.get());
                         if (cursor->needs_compositing())
                         {
                             if (auto const cursor_renderable = cursor->renderable())
@@ -200,6 +200,10 @@ public:
 
                         if (compositor->composite(std::move(scene_elements), mode))
                             needs_post = true;
+
+                        // If this compositor did not latch all the most recent buffers, schedule another pass
+                        if (state != mc::Scene::SceneElementState::Latest)
+                            wakeup.raise();
                     }
 
                     // We can skip the post if none of the compositors ended up compositing

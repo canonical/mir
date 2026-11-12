@@ -54,7 +54,7 @@ void mc::Stream::set_frame_posted_callback(
     *frame_callback.lock() = callback;
 }
 
-auto mc::Stream::next_submission_for_compositor(void const* id) -> std::shared_ptr<Submission>
+auto mc::Stream::next_submission_for_compositor(void const* id) -> std::pair<std::shared_ptr<Submission>, SubmissionState>
 {
     return arbiter->compositor_acquire(id);
 }

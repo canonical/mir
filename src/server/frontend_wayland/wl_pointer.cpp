@@ -612,7 +612,7 @@ void WlSurfaceCursor::apply_latest_buffer()
              * we should take it into account when rendering the cursor
              */
             auto const cursor_image = std::make_shared<BufferCursorImage>(
-                stream->next_submission_for_compositor(this)->claim_buffer(),
+                stream->next_submission_for_compositor(this).first->claim_buffer(),
                 hotspot);
             surface->set_cursor_image(cursor_image);
         }

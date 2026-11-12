@@ -229,7 +229,7 @@ auto miroil::Surface::get_wrapped() const -> mir::scene::Surface*
 
 mir::graphics::RenderableList miroil::Surface::generate_renderables(miroil::CompositorID id) const
 {
-    return wrapped->generate_renderables(id);
+    return wrapped->generate_renderables(id).first;
 }
 
 void miroil::Surface::set_orientation(MirOrientation orientation)

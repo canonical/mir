@@ -91,10 +91,11 @@ public:
     {
     }
 
-    mg::RenderableList generate_renderables(mc::CompositorID id) const override
+    auto generate_renderables(mc::CompositorID id) const
+        -> std::pair<mg::RenderableList, mir::scene::Surface::RenderableState> override
     {
         if (id == screen_shooter->id())
-            return {};
+            return {{}, mir::scene::Surface::RenderableState::Latest};
 
         std::lock_guard lock{mutex};
         auto buffer = pool.claim();
