@@ -261,6 +261,9 @@ public:
     /// Sets an override functor for creating the compositor.
     void override_the_compositor(Builder<compositor::Compositor> const& compositor_builder);
 
+    /// Sets an override functor for creating the compositor report.
+    void override_the_compositor_report(Builder<compositor::CompositorReport> const& compositor_report_builder);
+
     /// Sets an override functor for creating the cursor images.
     void override_the_cursor_images(Builder<input::CursorImages> const& cursor_images_builder);
 

@@ -14,80 +14,94 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "system_performance_test.h"
+#include "performance_test_utils.h"
+#include "src/server/report/logging/compositor_report.h"
 
-#include <format>
-#include <fstream>
-#include <cstring>
+#include <mir/synchronised.h>
+#include <mir/time/steady_clock.h>
+#include <mir_test_framework/async_server_runner.h>
+#include <mir_test_framework/executable_path.h>
+#include <mir_test_framework/process.h>
+#include <miral/external_client.h>
+#include <miral/floating_window_manager.h>
+#include <miral/set_window_management_policy.h>
+
+#include <gtest/gtest.h>
+
+#include <initializer_list>
+#include <memory>
+#include <optional>
 #include <string>
+#include <thread>
+#include <vector>
 
 using namespace std::literals::chrono_literals;
 using namespace mir::test;
+namespace mtf = mir_test_framework;
+namespace mrl = mir::report::logging;
 
 namespace
 {
-struct CompositorPerformance : SystemPerformanceTest
+class CollectingCompositorReport : public mrl::CompositorReport
+{
+public:
+    using mrl::CompositorReport::CompositorReport;
+
+    auto latest_statistics() const -> std::optional<FrameStatistics>
+    {
+        return *statistics.lock();
+    }
+
+private:
+    void report_statistics(SubCompositorId id, FrameStatistics const& sample) override
+    {
+        mrl::CompositorReport::report_statistics(id, sample);
+        if (sample.frames > 0 && sample.elapsed > 0us)
+            *statistics.lock() = sample;
+    }
+
+    mir::Synchronised<std::optional<FrameStatistics>> statistics;
+};
+
+struct CompositorPerformance : testing::Test, mtf::AsyncServerRunner
 {
     void SetUp() override
     {
-        compositor_fps = compositor_render_time = -1.0f;
-        SystemPerformanceTest::set_up_with("--compositor-report=log");
+        window_management_policy(server);
+        launcher(server);
+        server.override_the_compositor_report(
+            [this]
+            {
+                report = std::make_shared<CollectingCompositorReport>(
+                    server.the_logger(), std::make_shared<mir::time::SteadyClock>());
+                return report;
+            });
+        start_server();
     }
 
-    void read_compositor_report()
+    void TearDown() override
     {
-        char line[256];
+        clients.clear();
+        stop_server();
+        record_properties(output_filename, "server");
+    }
 
-        const ::testing::TestInfo *const test_info =
-                ::testing::UnitTest::GetInstance()->current_test_info();
-
-        const auto output_filename = std::format(
-                 "/tmp/{}_{}_server.log",
-                 test_info->test_case_name(), test_info->name());
-        std::ofstream out{output_filename};
-
-        if (out.good())
+    void spawn_clients(std::initializer_list<std::string> names)
+    {
+        for (auto const& name : names)
         {
-            std::cerr << "Saving server logs to: " << output_filename << std::endl;
-        }
-        else
-        {
-            std::cerr << "Failed to open log file: " << output_filename << std::endl;
-        }
-
-        while (fgets(line, sizeof(line), server_output))
-        {
-            if (out.good())
-            {
-                out << line;
-            }
-
-            if (char const* perf = std::strstr(line, "averaged "))
-            {
-                float fps, render_time, latency, frames, seconds;
-                if (5 == sscanf(perf, "averaged %f FPS, %f ms/frame, latency %f ms, %f frames over %f sec",
-                                &fps, &render_time, &latency, &frames, &seconds))
-                {
-                    if (frames > 0.0 && seconds > 0.0)
-                    {
-                        compositor_fps = fps;
-                        compositor_render_time = render_time;
-                    }
-                }
-            }
-            if (char const* renderer = std::strstr(line, "GL renderer: "))
-            {
-                server_renderer.assign(renderer + 13, std::strlen(renderer) - 14);
-            }
-            if (char const* mode = std::strstr(line, "Current mode"))
-            {
-                server_mode.assign(mode + 13, std::strlen(mode) - 14);
-            }
+            auto const pid = launcher.launch(std::vector<std::string>{mtf::executable_path() + "/" + name});
+            ASSERT_GT(pid, 0);
+            clients.push_back(std::make_unique<mtf::Process>(pid));
+            std::this_thread::sleep_for(100ms);
         }
     }
 
-    float compositor_fps, compositor_render_time;
-    std::string server_renderer, server_mode;
+    miral::SetWindowManagementPolicy const window_management_policy{
+        miral::set_window_management_policy<miral::FloatingWindowManager>()};
+    miral::ExternalClientLauncher launcher;
+    std::shared_ptr<CollectingCompositorReport> report;
+    std::vector<std::unique_ptr<mtf::Process>> clients;
 };
 } // anonymous namespace
 
@@ -96,13 +110,15 @@ TEST_F(CompositorPerformance, regression_test_1563287)
     spawn_clients({"mir_demo_client_wayland", "mir_demo_client_wayland_egl_spinner",
                    "mir_demo_client_wayland", "mir_demo_client_wayland_egl_spinner",
                    "mir_demo_client_wayland", "mir_demo_client_wayland_egl_spinner"});
-    run_server_for(10s);
+    std::this_thread::sleep_for(10s);
 
-    read_compositor_report();
+    auto const statistics = report->latest_statistics();
+    ASSERT_TRUE(statistics) << "No compositor performance sample received";
+    auto const compositor_fps = statistics->frames / std::chrono::duration<double>(statistics->elapsed).count();
+    auto const compositor_render_time =
+        std::chrono::duration<double, std::milli>(statistics->render_time).count() / statistics->frames;
     RecordProperty("framerate", std::to_string(compositor_fps));
     RecordProperty("render_time", std::to_string(compositor_render_time));
-    RecordProperty("server_renderer", server_renderer);
-    RecordProperty("server_mode", server_mode);
     EXPECT_GE(compositor_fps, 0);
     EXPECT_GT(compositor_render_time, 0);
 }

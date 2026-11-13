@@ -84,6 +84,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
 
 #define FOREACH_OVERRIDE(MACRO)\
     MACRO(compositor)\
+    MACRO(compositor_report)\
     MACRO(cursor_images)\
     MACRO(display_buffer_compositor_factory)\
     MACRO(gl_config)\
