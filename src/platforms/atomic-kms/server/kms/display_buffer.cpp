@@ -600,6 +600,20 @@ auto mga::AtomicKmsFbHandle::size() const -> geometry::Size
     return size_;
 }
 
+mga::DirectScanoutFramebuffer::DirectScanoutFramebuffer(
+    std::shared_ptr<uint32_t> fb_id,
+    geom::Size size,
+    mga::FormatModifier format_modifier) :
+    AtomicKmsFbHandle{std::move(fb_id), size},
+    format_modifier_{format_modifier}
+{
+}
+
+auto mga::DirectScanoutFramebuffer::format_modifier() const -> mga::FormatModifier
+{
+    return format_modifier_;
+}
+
 auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
 {
     auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm, buffer);
