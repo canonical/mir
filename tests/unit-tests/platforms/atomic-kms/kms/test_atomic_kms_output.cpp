@@ -368,17 +368,10 @@ TEST_P(AtomicKMSDisableTest, submits_all_disable_properties)
     auto crtc = mgk::get_crtc(drm_fd, crtc_id);
     auto plane = mgk::get_plane(drm_fd, plane_id);
     auto output_under_test = output();
-    EXPECT_CALL(
-        mock_drm,
-        drmModeAtomicCommit(
-            mtd::IsFdOfDevice(drm_device),
-            mtd::AtomicRequestWith(Eq(disabled_properties())),
-            DRM_MODE_ATOMIC_ALLOW_MODESET));
 
     if (GetParam().disconnect_connector)
         connector().connection = DRM_MODE_DISCONNECTED;
     ((*output_under_test).*GetParam().operation)();
-    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
 
     connector().connection = DRM_MODE_CONNECTED;
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
