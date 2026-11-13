@@ -87,6 +87,21 @@ private:
     geometry::Size size_;
 };
 
+/// A framebuffer imported with an explicit modifier, for direct scanout on an overlay plane
+class DirectScanoutFramebuffer : public AtomicKmsFbHandle
+{
+public:
+    DirectScanoutFramebuffer(
+        std::shared_ptr<uint32_t> fb_id,
+        geometry::Size size,
+        FormatModifier format_modifier);
+
+    auto format_modifier() const -> FormatModifier;
+
+private:
+    FormatModifier format_modifier_;
+};
+
 class DisplaySink :
     public graphics::DisplaySink,
     public graphics::DisplaySyncGroup,
