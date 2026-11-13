@@ -101,6 +101,7 @@ struct OutputConfigurationDeferredUpdateTest : miral::TestServer
         std::make_shared<TestStrategy>(updated_scale, updated_position)};
     miral::OutputConfiguration output_configuration{strategy};
 };
+}
 
 void wait_for_strategy_update(std::shared_ptr<TestStrategy> const& strategy)
 {
