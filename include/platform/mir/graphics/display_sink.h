@@ -98,9 +98,13 @@ public:
     /** This will render renderlist to the screen and post the result to the
      *  screen if there is a hardware optimization that can be done.
      *  \param [in] renderlist
-     *      The renderables that should appear on the screen if the hardware
-     *      is capable of optmizing that list somehow. If what you want
-     *      displayed on the screen cannot be represented by a RenderableList,
+     *      The elements that should appear on the screen, ordered bottom (first)
+     *      to top (last), if the hardware is capable of optmizing that list
+     *      somehow. Each element is shown opaque at its screen_positon, sampling
+     *      its source_position. Callers passing several elements should build
+     *      them from the layers of plan_presentation(), which is where renderable
+     *      properties such as alpha and transformation are checked. If what you
+     *      want displayed on the screen cannot be represented by such a list,
      *      then you should render using a graphics library like OpenGL.
      *  \returns
      *      True if the hardware can (and has) fully composite/overlay the list;
