@@ -73,6 +73,20 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
         std::shared_ptr<struct gbm_device> const gbm;
 };
 
+/// A framebuffer handle that owns a DRM framebuffer id
+class AtomicKmsFbHandle : public FBHandle
+{
+public:
+    AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_id, geometry::Size size);
+
+    operator uint32_t() const override;
+    auto size() const -> geometry::Size override;
+
+private:
+    std::shared_ptr<uint32_t> kms_fb_id;
+    geometry::Size size_;
+};
+
 class DisplaySink :
     public graphics::DisplaySink,
     public graphics::DisplaySyncGroup,
