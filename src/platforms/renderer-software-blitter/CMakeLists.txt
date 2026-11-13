@@ -19,7 +19,6 @@ target_link_libraries(
   PRIVATE
     mirplatform
     mirplatformrenderereglcommonobjects
-    PkgConfig::WAYLAND_SERVER
 )
 
 set_target_properties(
