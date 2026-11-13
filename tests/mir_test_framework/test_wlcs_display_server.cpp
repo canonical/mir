@@ -28,8 +28,6 @@
 #include <mir/test/null_input_device_observer.h>
 
 #include <mir/executor.h>
-#include <mir/errno_utils.h>
-#include <mir/fd.h>
 #include <mir/input/cursor_observer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/device.h>
@@ -46,13 +44,9 @@
 #include <wayland-client.h>
 
 #include <fcntl.h>
-#include <sys/eventfd.h>
 
-#include <string_view>
-#include <deque>
 #include <mutex>
 #include <format>
-#include <optional>
 #include <unordered_map>
 
 
@@ -163,34 +157,6 @@ public:
 protected:
     std::mutex mutex;
     Guarded value;
-};
-
-template<typename Guarded>
-class WaitableMutex : public Mutex<Guarded>
-{
-public:
-    using Mutex<Guarded>::Mutex;
-
-    template<typename Predicate, typename Rep, typename Period>
-    MutexGuard<Guarded> wait_for(Predicate predicate, std::chrono::duration<Rep, Period> timeout)
-    {
-        std::unique_lock lock{this->mutex};
-        if (!notifier.wait_for(
-            lock, timeout, [this, &predicate]()
-                { return predicate(this->value); }))
-        {
-            BOOST_THROW_EXCEPTION((std::runtime_error{"Notification timeout"}));
-        }
-        return MutexGuard<Guarded>{std::move(lock), this->value};
-    }
-
-    void notify_all()
-    {
-        notifier.notify_all();
-    }
-
-private:
-    std::condition_variable notifier;
 };
 
 /// Dispatches work onto the Wayland event loop via mir::Server.
