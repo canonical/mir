@@ -490,6 +490,7 @@ public:
     /// test/integration tooling to map a client-side surface to its Mir surface.
     auto scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
         -> std::shared_ptr<scene::Surface>;
+
     void add_wayland_extension(
         std::string const& name,
         std::function<std::shared_ptr<void>(
