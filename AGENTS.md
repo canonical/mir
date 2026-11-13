@@ -10,5 +10,9 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/compositor/.kb/mir-compositor.md](src/server/compositor/.kb/mir-compositor.md) - Compositor threading, buffer arbitration, bypass, and occlusion.
 - [src/server/console/.kb/console-services.md](src/server/console/.kb/console-services.md) - Console providers, VT switching, logind, and session lock.
 
+Bug references of the form `LP: #1237332` point to Launchpad bugs, at
+`https://bugs.launchpad.net/bugs/1237332`. Mir's development originally took place on Launchpad, so
+older comments and knowledge-base entries cite bugs there rather than on GitHub.
+
 Existing [Copilot instructions](.github/copilot-instructions.md) and [path instructions](.github/instructions/)
 remain authoritative for their existing concerns. [Sphinx documentation](doc/sphinx/) remains authoritative for published docs.
