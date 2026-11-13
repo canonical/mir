@@ -11,6 +11,8 @@ backends:
             - fedora-44
 
 environment:
+    SBUILD_PROXY_URL: '$(HOST: printf "%s" "${MIR_SBUILD_PROXY_URL:-}")'
+    SBUILD_PROXY_CA: '$(HOST: printf "%s" "${MIR_SBUILD_PROXY_CA:-}")'
     ARCH: amd64
     ARCH/ubuntu_arm64: arm64
     DISTRO: ubuntu
@@ -61,6 +63,12 @@ prepare: |
     precedence ::/96          20
     precedence ::ffff:0:0/96 100
     EOF
+
+    if { [ -z "${SBUILD_PROXY_URL}" ] && [ -n "${SBUILD_PROXY_CA}" ]; } ||
+       { [ -n "${SBUILD_PROXY_URL}" ] && [ -z "${SBUILD_PROXY_CA}" ]; }; then
+      echo "Both SBUILD_PROXY_URL and SBUILD_PROXY_CA must be set together." >&2
+      exit 1
+    fi
 
 suites:
     spread/:

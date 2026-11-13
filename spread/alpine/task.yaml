@@ -3,6 +3,19 @@ systems: [alpine-*]
 variants: [amd64, "*ld"]
 
 execute: |
+    if [ -n "${SBUILD_PROXY_URL}" ]; then
+        if ! command -v update-ca-certificates > /dev/null; then
+            apk add ca-certificates
+        fi
+        mkdir -p /usr/local/share/ca-certificates
+        printf '%s' "${SBUILD_PROXY_CA}" | base64 -d \
+            > /usr/local/share/ca-certificates/mir-sbuild-proxy.crt
+        update-ca-certificates
+        export http_proxy="${SBUILD_PROXY_URL}" https_proxy="${SBUILD_PROXY_URL}"
+        export no_proxy=localhost,127.0.0.1,::1
+        unset NO_PROXY
+    fi
+
     apk add \
         boost-dev \
         cargo \

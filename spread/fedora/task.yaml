@@ -6,6 +6,19 @@ kill-timeout: 60m
 execute: |
     echo "defaultyes=True" >> /etc/dnf/dnf.conf
 
+    if [ -n "${SBUILD_PROXY_URL}" ]; then
+        if ! command -v update-ca-trust > /dev/null; then
+            dnf install ca-certificates
+        fi
+        install -d /etc/pki/ca-trust/source/anchors
+        printf '%s' "${SBUILD_PROXY_CA}" | base64 --decode \
+            > /etc/pki/ca-trust/source/anchors/mir-sbuild-proxy.crt
+        update-ca-trust
+        export http_proxy="${SBUILD_PROXY_URL}" https_proxy="${SBUILD_PROXY_URL}"
+        export no_proxy=localhost,127.0.0.1,::1
+        unset NO_PROXY
+    fi
+
     TEST_PKGS=(
       cmake
       createrepo
