@@ -107,7 +107,6 @@ void wait_for_strategy_update(std::shared_ptr<TestStrategy> const& strategy)
     ASSERT_TRUE(strategy->applied.wait_for(2s));
     ASSERT_TRUE(strategy->confirmed.wait_for(2s));
 }
-}
 
 TEST_F(OutputConfigurationTest, strategy_sees_the_outputs)
 {
