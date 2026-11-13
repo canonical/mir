@@ -18,11 +18,9 @@
 #define MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 
 #include <cstdint>
-#include <map>
 #include <memory>
 #include <optional>
 #include <unordered_map>
-#include <utility>
 
 namespace mir
 {
@@ -62,10 +60,6 @@ public:
 private:
     std::unordered_map<std::shared_ptr<input::Surface const>, wayland::Weak<frontend::WlSurface> const>
         scene_surface_to_wayland_surface;
-
-    using ObjectKey = std::pair<scene::Session const*, uint32_t>;
-    std::map<ObjectKey, wayland::Weak<frontend::WlSurface>> wayland_surface_by_object;
-    std::unordered_map<input::Surface const*, ObjectKey> object_key_by_scene_surface;
 };
 
 }
