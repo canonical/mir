@@ -55,6 +55,7 @@ public:
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
     bool page_flip(FBHandle const& fb) override;
+    bool test_presentation(PresentationState const& state) override;
 
     void set_cursor_image(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;

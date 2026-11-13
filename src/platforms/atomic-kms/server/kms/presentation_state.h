@@ -17,6 +17,8 @@
 #ifndef MIR_GRAPHICS_ATOMIC_PRESENTATION_STATE_H_
 #define MIR_GRAPHICS_ATOMIC_PRESENTATION_STATE_H_
 
+#include <mir/geometry/point.h>
+
 #include <cstdint>
 #include <memory>
 #include <span>
@@ -37,6 +39,8 @@ struct ClientPlaneAssignment
     PlaneId plane;
     /// The imported framebuffer, which keeps the client buffer it was imported from alive
     std::shared_ptr<FBHandle const> framebuffer;
+    /// Top-left of the framebuffer on the output, in CRTC pixels. The framebuffer is shown unscaled
+    geometry::Point destination;
 };
 
 /// Everything a single presentation puts on an output, and owns while it is queued or on screen

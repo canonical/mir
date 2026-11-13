@@ -16,6 +16,7 @@
 
 #include "atomic_kms_output.h"
 #include "plane_capabilities.h"
+#include "presentation_state.h"
 
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
@@ -32,6 +33,8 @@
 #include <span>
 #include <map>
 #include <memory>
+#include <string>
+#include <utility>
 #include <vector>
 
 namespace mga = mir::graphics::atomic;
@@ -285,6 +288,188 @@ public:
     {
     }
 };
+
+struct MixedRequestCase
+{
+    char const* name{"baseline"};
+    uint32_t overlay_plane{AtomicKMSOutputTest::plane_id + 1};
+    uint64_t overlay_zpos_min{0};
+    uint64_t expected_overlay_zpos{0};
+    geom::Point client_destination{100, 50};
+};
+
+/// Adds one overlay plane that can be routed to the fixture's CRTC and can scan out
+/// BT.709 limited-range YCbCr, so that mixed presentations are testable
+class AtomicKMSMixedPresentationTest : public AtomicKMSOutputTest
+{
+public:
+    static constexpr uint32_t overlay_type_property_id{401};
+    static constexpr uint32_t overlay_src_x_property_id{402};
+    static constexpr uint32_t overlay_src_y_property_id{403};
+    static constexpr uint32_t overlay_src_w_property_id{404};
+    static constexpr uint32_t overlay_src_h_property_id{405};
+    static constexpr uint32_t overlay_crtc_x_property_id{406};
+    static constexpr uint32_t overlay_crtc_y_property_id{407};
+    static constexpr uint32_t overlay_crtc_w_property_id{408};
+    static constexpr uint32_t overlay_crtc_h_property_id{409};
+    static constexpr uint32_t overlay_crtc_property_id{410};
+    static constexpr uint32_t overlay_fb_property_id{411};
+    static constexpr uint32_t overlay_zpos_property_id{412};
+    static constexpr uint32_t overlay_formats_property_id{413};
+    static constexpr uint32_t overlay_alpha_property_id{414};
+    static constexpr uint32_t overlay_blend_mode_property_id{415};
+    static constexpr uint32_t overlay_color_encoding_property_id{416};
+    static constexpr uint32_t overlay_color_range_property_id{417};
+    static constexpr uint32_t overlay_formats_blob_id{4};
+
+    static constexpr uint64_t overlay_zpos_max{3};
+    static constexpr uint64_t overlay_zpos_current{3};
+    static constexpr uint64_t overlay_alpha_max{0xffff};
+    static constexpr uint64_t overlay_blend_none_value{7};
+    static constexpr uint64_t overlay_bt709_encoding_value{11};
+    static constexpr uint64_t overlay_bt709_limited_range_value{13};
+
+    static constexpr uint32_t client_framebuffer_id{99};
+    static constexpr geom::Size client_framebuffer_size{640, 480};
+
+    MixedRequestCase const request;
+
+    AtomicKMSMixedPresentationTest() : AtomicKMSMixedPresentationTest{MixedRequestCase{}}
+    {
+    }
+
+    explicit AtomicKMSMixedPresentationTest(MixedRequestCase const& request) : request{request}
+    {
+        mock_drm.add_plane(drm_device, request.overlay_plane, primary_crtc_mask);
+        // prepare() rebuilds the plane list, so re-run it now that the overlay exists
+        mock_drm.prepare(drm_device);
+        add_overlay_properties();
+    }
+
+    auto mixed_state(uint32_t plane, geom::Size primary_size) const -> mga::PresentationState
+    {
+        return mga::PresentationState::mixed(
+            std::make_shared<StubFramebuffer>(primary_framebuffer_id, primary_size),
+            {mga::ClientPlaneAssignment{
+                plane,
+                std::make_shared<StubFramebuffer>(client_framebuffer_id, client_framebuffer_size),
+                request.client_destination}});
+    }
+
+    auto mixed_state() const -> mga::PresentationState
+    {
+        return mixed_state(request.overlay_plane, requested_mode_size);
+    }
+
+    auto mixed_request_properties() const -> std::map<AtomicPropertyKey, uint64_t>
+    {
+        auto properties = primary_request_properties({.framebuffer_id = primary_framebuffer_id});
+        properties.merge(overlay_request_properties());
+        return properties;
+    }
+
+private:
+    auto overlay_request_properties() const -> std::map<AtomicPropertyKey, uint64_t>
+    {
+        auto const width = client_framebuffer_size.width.as_uint32_t();
+        auto const height = client_framebuffer_size.height.as_uint32_t();
+        return {
+            {{request.overlay_plane, overlay_fb_property_id}, client_framebuffer_id},
+            {{request.overlay_plane, overlay_crtc_property_id}, crtc_id},
+            {{request.overlay_plane, overlay_src_x_property_id}, 0},
+            {{request.overlay_plane, overlay_src_y_property_id}, 0},
+            {{request.overlay_plane, overlay_src_w_property_id}, kms_fixed_point(width)},
+            {{request.overlay_plane, overlay_src_h_property_id}, kms_fixed_point(height)},
+            {{request.overlay_plane, overlay_crtc_x_property_id},
+             static_cast<uint64_t>(static_cast<int64_t>(request.client_destination.x.as_int()))},
+            {{request.overlay_plane, overlay_crtc_y_property_id},
+             static_cast<uint64_t>(static_cast<int64_t>(request.client_destination.y.as_int()))},
+            {{request.overlay_plane, overlay_crtc_w_property_id}, width},
+            {{request.overlay_plane, overlay_crtc_h_property_id}, height},
+            {{request.overlay_plane, overlay_alpha_property_id}, overlay_alpha_max},
+            {{request.overlay_plane, overlay_blend_mode_property_id}, overlay_blend_none_value},
+            {{request.overlay_plane, overlay_color_encoding_property_id}, overlay_bt709_encoding_value},
+            {{request.overlay_plane, overlay_color_range_property_id}, overlay_bt709_limited_range_value},
+            {{request.overlay_plane, overlay_zpos_property_id}, request.expected_overlay_zpos}};
+    }
+
+    void add_overlay_property(uint32_t id, char const* name, uint64_t value = 0)
+    {
+        mock_drm.add_property(drm_device, request.overlay_plane, DRM_MODE_OBJECT_PLANE, id, name, value);
+    }
+
+    void add_overlay_properties()
+    {
+        add_overlay_property(overlay_type_property_id, "type", DRM_PLANE_TYPE_OVERLAY);
+        add_overlay_property(overlay_src_x_property_id, "SRC_X");
+        add_overlay_property(overlay_src_y_property_id, "SRC_Y");
+        add_overlay_property(overlay_src_w_property_id, "SRC_W");
+        add_overlay_property(overlay_src_h_property_id, "SRC_H");
+        add_overlay_property(overlay_crtc_x_property_id, "CRTC_X");
+        add_overlay_property(overlay_crtc_y_property_id, "CRTC_Y");
+        add_overlay_property(overlay_crtc_w_property_id, "CRTC_W");
+        add_overlay_property(overlay_crtc_h_property_id, "CRTC_H");
+        add_overlay_property(overlay_crtc_property_id, "CRTC_ID");
+        add_overlay_property(overlay_fb_property_id, "FB_ID");
+
+        add_overlay_property(overlay_zpos_property_id, "zpos", overlay_zpos_current);
+        mock_drm.set_property_range(
+            drm_device, overlay_zpos_property_id, DRM_MODE_PROP_RANGE, request.overlay_zpos_min, overlay_zpos_max);
+
+        add_overlay_property(overlay_alpha_property_id, "alpha", overlay_alpha_max);
+        mock_drm.set_property_range(drm_device, overlay_alpha_property_id, DRM_MODE_PROP_RANGE, 0, overlay_alpha_max);
+
+        std::vector<std::pair<uint64_t, std::string>> const blend_modes{
+            {6, "Pre-multiplied"}, {overlay_blend_none_value, "None"}, {8, "Coverage"}};
+        add_overlay_property(overlay_blend_mode_property_id, "pixel blend mode");
+        mock_drm.set_property_enums(drm_device, overlay_blend_mode_property_id, blend_modes);
+
+        std::vector<std::pair<uint64_t, std::string>> const color_encodings{
+            {10, "ITU-R BT.601 YCbCr"},
+            {overlay_bt709_encoding_value, "ITU-R BT.709 YCbCr"},
+            {12, "ITU-R BT.2020 YCbCr"}};
+        add_overlay_property(overlay_color_encoding_property_id, "COLOR_ENCODING");
+        mock_drm.set_property_enums(drm_device, overlay_color_encoding_property_id, color_encodings);
+
+        std::vector<std::pair<uint64_t, std::string>> const color_ranges{
+            {overlay_bt709_limited_range_value, "YCbCr limited range"}, {14, "YCbCr full range"}};
+        add_overlay_property(overlay_color_range_property_id, "COLOR_RANGE");
+        mock_drm.set_property_enums(drm_device, overlay_color_range_property_id, color_ranges);
+
+        struct OverlayInFormatsBlob
+        {
+            drm_format_modifier_blob header{
+                FORMAT_BLOB_CURRENT, 0, 1, offsetof(OverlayInFormatsBlob, formats), 1,
+                offsetof(OverlayInFormatsBlob, modifiers)};
+            uint32_t formats[1]{DRM_FORMAT_NV12};
+            drm_format_modifier modifiers[1]{{1, 0, 0, DRM_FORMAT_MOD_LINEAR}};
+        } const formats;
+        add_overlay_property(overlay_formats_property_id, "IN_FORMATS", overlay_formats_blob_id);
+        mock_drm.add_property_blob(drm_device, overlay_formats_blob_id, std::as_bytes(std::span{&formats, 1}));
+    }
+};
+
+class AtomicKMSMixedRequestTest :
+    public AtomicKMSMixedPresentationTest, public WithParamInterface<MixedRequestCase>
+{
+public:
+    AtomicKMSMixedRequestTest() : AtomicKMSMixedPresentationTest{GetParam()}
+    {
+    }
+};
+
+struct MixedPresentationRejectionCase
+{
+    char const* name;
+    geom::Size primary_size{requested_mode_size};
+    uint32_t assignment_plane{AtomicKMSOutputTest::plane_id + 1};
+    bool bt709_limited{true};
+};
+
+class AtomicKMSMixedRejectionTest :
+    public AtomicKMSMixedPresentationTest, public WithParamInterface<MixedPresentationRejectionCase>
+{
+};
 }
 
 TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_and_modeset_flag)
@@ -489,4 +674,86 @@ TEST_F(AtomicKMSOutputWithoutGammaLutTest, set_gamma_without_gamma_lut_property_
     output_under_test->set_gamma(sample_gamma);
 
     output_under_test.reset();
+}
+
+TEST_P(AtomicKMSMixedRequestTest, mixed_presentation_commits_primary_and_overlay_as_test_only)
+{
+    auto output_under_test = output();
+    ASSERT_THAT(output_under_test->plane_capabilities(), NotNull());
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(mixed_request_properties())),
+            DRM_MODE_ATOMIC_TEST_ONLY));
+
+    EXPECT_TRUE(output_under_test->test_presentation(mixed_state()));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    MixedRequest,
+    AtomicKMSMixedRequestTest,
+    Values(
+        MixedRequestCase{.name = "baseline"},
+        MixedRequestCase{.name = "overlay_id_below_primary",
+                         .overlay_plane = AtomicKMSOutputTest::plane_id - 1,
+                         .expected_overlay_zpos = 1},
+        MixedRequestCase{.name = "overlay_min_above_primary",
+                         .overlay_zpos_min = 2,
+                         .expected_overlay_zpos = 2},
+        MixedRequestCase{.name = "negative_destination", .client_destination = {-40, -20}}),
+    [](TestParamInfo<MixedRequestCase> const& info) { return info.param.name; });
+
+TEST_P(AtomicKMSMixedRejectionTest, invalid_mixed_presentation_commits_nothing)
+{
+    auto const& param = GetParam();
+    if (!param.bt709_limited)
+    {
+        mock_drm.set_property_enums(
+            drm_device, overlay_color_encoding_property_id,
+            {{10, "ITU-R BT.601 YCbCr"}, {12, "ITU-R BT.2020 YCbCr"}});
+    }
+    auto output_under_test = output();
+    auto const capabilities = output_under_test->plane_capabilities();
+    ASSERT_THAT(capabilities, NotNull());
+    ASSERT_THAT(capabilities->overlays, SizeIs(1));
+    ASSERT_EQ(capabilities->overlays.front().bt709_limited.has_value(), param.bt709_limited);
+
+    auto const state = mixed_state(param.assignment_plane, param.primary_size);
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+
+    EXPECT_FALSE(output_under_test->test_presentation(state));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PresentationValidity,
+    AtomicKMSMixedRejectionTest,
+    Values(
+        MixedPresentationRejectionCase{.name = "primary_width_mismatch",
+                                       .primary_size = {mode_width - 1, mode_height}},
+        MixedPresentationRejectionCase{.name = "primary_height_mismatch",
+                                       .primary_size = {mode_width, mode_height - 1}},
+        MixedPresentationRejectionCase{.name = "missing_overlay_plane",
+                                       .assignment_plane = AtomicKMSOutputTest::plane_id + 2},
+        MixedPresentationRejectionCase{.name = "overlay_without_bt709_limited", .bt709_limited = false}),
+    [](TestParamInfo<MixedPresentationRejectionCase> const& info) { return info.param.name; });
+
+TEST_F(AtomicKMSMixedPresentationTest, failed_test_commit_returns_false_and_keeps_capabilities)
+{
+    auto output_under_test = output();
+    ASSERT_THAT(output_under_test->plane_capabilities(), NotNull());
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_TEST_ONLY)).WillOnce(Return(-EINVAL));
+
+    EXPECT_FALSE(output_under_test->test_presentation(mixed_state()));
+    EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
+}
+
+TEST_F(AtomicKMSMixedPresentationTest, test_presentation_without_plane_capabilities_commits_nothing)
+{
+    auto output_under_test = output();
+    output_under_test->reset();
+    ASSERT_THAT(output_under_test->plane_capabilities(), IsNull());
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, _)).Times(0);
+
+    EXPECT_FALSE(output_under_test->test_presentation(mixed_state()));
 }
