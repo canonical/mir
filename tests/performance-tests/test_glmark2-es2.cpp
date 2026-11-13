@@ -14,6 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "performance_test_utils.h"
+
 #include <mir_test_framework/async_server_runner.h>
 #include <mir/test/popen.h>
 #include <mir/test/spin_wait.h>
@@ -49,7 +51,7 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
 
     void TearDown() override {
         stop_server();
-        record_properties(output_filename, "server");
+        mt::record_properties(output_filename, "server");
     }
 
     virtual char const *command() =0;
@@ -89,35 +91,6 @@ struct AbstractGLMark2Test : testing::Test, mtf::AsyncServerRunner {
         RecordProperty("score", score);
         RecordProperty("client_renderer", renderer);
         return score;
-    }
-
-    void record_properties(std::string const& log_filename, std::string const& prefix)
-    {
-        std::ifstream logs(log_filename);
-        if (!logs)
-        {
-            std::cerr << "Failed to open log file for analysis: " << log_filename << std::endl;
-            return;
-        }
-
-        std::string line;
-        while (logs.good() && getline(logs, line))
-        {
-            if (const auto n = line.find("GL renderer:"); n != std::string::npos)
-            {
-                std::ostringstream property;
-                property << prefix << "_renderer";
-                RecordProperty(property.str(), line.substr(n+13, line.size()));
-                continue;
-            }
-            if (const auto n = line.find("Current mode"); n != std::string::npos)
-            {
-                std::ostringstream property;
-                property << prefix << "_mode";
-                RecordProperty(property.str(), line.substr(n+13, line.size()));
-                break;
-            }
-        }
     }
 };
 
@@ -216,7 +189,7 @@ struct HostedGLMark2Wayland : GLMark2Wayland
         if (pid > 0)
         {
             kill(pid, SIGTERM);
-            record_properties(host_output_filename, "host");
+            mt::record_properties(host_output_filename, "host");
         }
     }
 

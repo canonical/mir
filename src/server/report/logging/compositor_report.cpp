@@ -73,55 +73,21 @@ void mrl::CompositorReport::rendered_frame(SubCompositorId id)
     inst.bypassed = false;
 }
 
-void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id)
+void mrl::CompositorReport::Instance::report(CompositorReport& report, SubCompositorId id)
 {
     // The first report is a valid sample, but don't log anything because
     // we need at least two samples for valid deltas.
     if (last_reported_total_time_sum > TimePoint())
     {
-        long long dt =
+        report.report_statistics(id, FrameStatistics{
+            nframes - last_reported_nframes,
+            nbypassed - last_reported_bypassed,
             std::chrono::duration_cast<std::chrono::microseconds>(
-                total_time_sum - last_reported_total_time_sum
-            ).count();
-        auto dn = nframes - last_reported_nframes;
-        long long dr =
+                total_time_sum - last_reported_total_time_sum),
             std::chrono::duration_cast<std::chrono::microseconds>(
-                render_time_sum - last_reported_render_time_sum
-            ).count();
-        long long dl =
+                render_time_sum - last_reported_render_time_sum),
             std::chrono::duration_cast<std::chrono::microseconds>(
-                latency_sum - last_reported_latency_sum
-            ).count();
-
-        long bypass_percent = dn ? (nbypassed - last_reported_bypassed) * 100L / dn : 0;
-
-        // Keep everything premultiplied by 1000 to guarantee accuracy
-        // and avoid floating point.
-        long frames_per_1000sec = dt ? dn * 1000000000LL / dt : 0;
-        long avg_render_time_usec = dn ? dr / dn : 0;
-        long avg_latency_usec = dn ? dl / dn : 0;
-        long dt_msec = dt / 1000L;
-
-        auto const msg = std::format(
-                 "Display {} averaged {}.{:03d} FPS, "
-                 "{}.{:03d} ms/frame, "
-                 "latency {}.{:03d} ms, "
-                 "{} frames over {}.{:03d} sec, "
-                 "{}% bypassed",
-                 static_cast<const void*>(id),
-                 frames_per_1000sec / 1000,
-                 frames_per_1000sec % 1000,
-                 avg_render_time_usec / 1000,
-                 avg_render_time_usec % 1000,
-                 avg_latency_usec / 1000,
-                 avg_latency_usec % 1000,
-                 dn,
-                 dt_msec / 1000,
-                 dt_msec % 1000,
-                 bypass_percent
-                 );
-
-        logger.log(ml::Severity::informational, msg, component);
+                latency_sum - last_reported_latency_sum)});
     }
 
     last_reported_total_time_sum = total_time_sum;
@@ -129,6 +95,41 @@ void mrl::CompositorReport::Instance::log(ml::Logger& logger, SubCompositorId id
     last_reported_latency_sum = latency_sum;
     last_reported_nframes = nframes;
     last_reported_bypassed = nbypassed;
+}
+
+void mrl::CompositorReport::report_statistics(SubCompositorId id, FrameStatistics const& statistics)
+{
+    auto const dt = statistics.elapsed.count();
+    auto const dn = statistics.frames;
+    auto const dr = statistics.render_time.count();
+    auto const dl = statistics.latency.count();
+    long const bypass_percent = dn ? statistics.bypassed_frames * 100L / dn : 0;
+
+    // Keep everything premultiplied by 1000 to guarantee accuracy and avoid floating point.
+    long const frames_per_1000sec = dt ? dn * 1000000000LL / dt : 0;
+    long const avg_render_time_usec = dn ? dr / dn : 0;
+    long const avg_latency_usec = dn ? dl / dn : 0;
+    long const dt_msec = dt / 1000L;
+
+    auto const msg = std::format(
+        "Display {} averaged {}.{:03d} FPS, "
+        "{}.{:03d} ms/frame, "
+        "latency {}.{:03d} ms, "
+        "{} frames over {}.{:03d} sec, "
+        "{}% bypassed",
+        static_cast<const void*>(id),
+        frames_per_1000sec / 1000,
+        frames_per_1000sec % 1000,
+        avg_render_time_usec / 1000,
+        avg_render_time_usec % 1000,
+        avg_latency_usec / 1000,
+        avg_latency_usec % 1000,
+        dn,
+        dt_msec / 1000,
+        dt_msec % 1000,
+        bypass_percent);
+
+    logger->log(ml::Severity::informational, msg, component);
 }
 
 void mrl::CompositorReport::finished_frame(SubCompositorId id)
@@ -152,7 +153,7 @@ void mrl::CompositorReport::finished_frame(SubCompositorId id)
         last_report = t;
 
         for (auto& i : instance)
-            i.second.log(*logger, i.first);
+            i.second.report(*this, i.first);
     }
 
     if (inst.bypassed != inst.prev_bypassed || inst.nframes == 1)

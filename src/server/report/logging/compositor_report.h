@@ -38,6 +38,15 @@ namespace logging
 class CompositorReport : public mir::compositor::CompositorReport
 {
 public:
+    struct FrameStatistics
+    {
+        long frames;
+        long bypassed_frames;
+        std::chrono::microseconds elapsed;
+        std::chrono::microseconds render_time;
+        std::chrono::microseconds latency;
+    };
+
     CompositorReport(std::shared_ptr<mir::logging::Logger> const& logger,
                      std::shared_ptr<time::Clock> const& clock);
     void added_display(int width, int height, int x, int y, SubCompositorId id) override;
@@ -48,6 +57,11 @@ public:
     void started() override;
     void stopped() override;
     void scheduled() override;
+
+protected:
+    /// Receives per-display interval totals after the initial baseline sample.
+    /// Called with the report mutex held; overrides must not re-enter this report.
+    virtual void report_statistics(SubCompositorId id, FrameStatistics const& statistics);
 
 private:
     std::shared_ptr<mir::logging::Logger> const logger;
@@ -74,7 +88,7 @@ private:
         long last_reported_nframes = 0;
         long last_reported_bypassed = 0;
 
-        void log(mir::logging::Logger& logger, SubCompositorId id);
+        void report(CompositorReport& report, SubCompositorId id);
     };
 
     std::mutex mutex; // Protects the following...
