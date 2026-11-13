@@ -20,6 +20,9 @@
 #include "src/platforms/atomic-kms/server/kms/kms_output.h"
 #include <gmock/gmock.h>
 
+#include <cstdint>
+#include <memory>
+
 namespace mir
 {
 
@@ -47,6 +50,8 @@ public:
     MOCK_METHOD(void, refresh_hardware_state, (), (override));
     MOCK_METHOD(void, update_from_hardware_state, (graphics::DisplayConfigurationOutput&), (const, override));
     MOCK_METHOD(int, drm_fd, (), (const, override));
+    MOCK_METHOD(std::shared_ptr<graphics::atomic::CrtcPlaneCapabilities const>, plane_capabilities,
+                (), (const, override));
 };
 
 } // namespace test

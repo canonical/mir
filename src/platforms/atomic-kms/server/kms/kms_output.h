@@ -28,6 +28,8 @@
 
 #include <gbm.h>
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
@@ -37,6 +39,8 @@ class FBHandle;
 
 namespace atomic
 {
+
+struct CrtcPlaneCapabilities;
 
 class KMSOutput
 {
@@ -48,6 +52,10 @@ public:
      * this may want to be an opaque class Id + operator== in future.
      */
     virtual uint32_t id() const = 0;
+
+    /// Null when there is no selected CRTC or discovery failed. Rebuilt after reset,
+    /// hardware refresh, release or a failed commit.
+    virtual auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> = 0;
 
     virtual void reset() = 0;
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;

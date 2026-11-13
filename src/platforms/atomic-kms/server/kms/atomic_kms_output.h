@@ -43,6 +43,7 @@ public:
     ~AtomicKMSOutput();
 
     uint32_t id() const override;
+    auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> override;
 
     void reset() override;
     void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
@@ -76,6 +77,7 @@ private:
         size_t mode_index;
         geometry::Displacement fb_offset;
         kms::DRMModeCrtcUPtr current_crtc;
+        std::shared_ptr<CrtcPlaneCapabilities const> plane_capabilities;
         kms::DRMModePlaneUPtr current_plane;
         std::unique_ptr<PropertyBlob> mode;
         std::unique_ptr<kms::ObjectProperties> crtc_props;
