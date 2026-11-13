@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
-#define MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
+#ifndef MIR_FRONTEND_ZWP_RELATIVE_POINTER_V1_H
+#define MIR_FRONTEND_ZWP_RELATIVE_POINTER_V1_H
 
 #include "relative-pointer-unstable-v1_wrapper.h"
 
@@ -34,4 +34,4 @@ auto create_relative_pointer_unstable_v1(
 }
 }
 
-#endif  // MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
+#endif  // MIR_FRONTEND_ZWP_RELATIVE_POINTER_V1_H

@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_XDG_DECORATION_UNSTABLE_V1_H
-#define MIR_FRONTEND_XDG_DECORATION_UNSTABLE_V1_H
+#ifndef MIR_FRONTEND_XDG_WM_DIALOG_V1_H
+#define MIR_FRONTEND_XDG_WM_DIALOG_V1_H
 
-#include "xdg-decoration-unstable-v1_wrapper.h"
+#include "xdg-dialog-v1_wrapper.h"
+
+struct wl_display;
 
 namespace mir
 {
-class DecorationStrategy;
-
 namespace frontend
 {
-auto create_xdg_decoration_unstable_v1(wl_display* display, std::shared_ptr<DecorationStrategy> strategy) -> std::shared_ptr<wayland::XdgDecorationManagerV1::Global>;
+auto create_xdg_dialog_v1(struct wl_display* display) -> std::shared_ptr<wayland::XdgWmDialogV1::Global>;
 }
-} // namespace mir
+}
 
-#endif // MIR_FRONTEND_RELATIVE_POINTER_UNSTABLE_V1_H
+#endif // MIR_FRONTEND_XDG_WM_DIALOG_V1_H
