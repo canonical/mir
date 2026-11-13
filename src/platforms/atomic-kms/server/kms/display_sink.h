@@ -19,6 +19,7 @@
 
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/display.h>
+#include "crtc_assignment.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
 #include <mir/graphics/kms_framebuffer.h>
@@ -87,7 +88,9 @@ public:
         std::shared_ptr<KMSOutput> output,
         geometry::Rectangle const& area,
         glm::mat2 const& transformation,
-        std::shared_ptr<GbmQuirks> const& gbm_quirks);
+        std::shared_ptr<GbmQuirks> const& gbm_quirks,
+        size_t kms_mode_index,
+        CrtcAssignment assignment);
     ~DisplaySink();
 
     geometry::Rectangle view_area() const override;
@@ -110,6 +113,8 @@ public:
     void schedule_set_crtc();
 
     auto drm_fd() const -> mir::Fd;
+
+    auto output_id() const -> uint32_t;
 
     auto gbm_device() const -> std::shared_ptr<struct gbm_device>;
 

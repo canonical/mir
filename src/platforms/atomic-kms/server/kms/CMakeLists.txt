@@ -9,6 +9,8 @@ add_library(
   atomic_kms_output.h
   atomic_update.cpp
   atomic_update.h
+  crtc_assignment.cpp
+  crtc_assignment.h
   bypass.cpp
   cursor.cpp
   display.cpp

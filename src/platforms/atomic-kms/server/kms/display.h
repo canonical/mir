@@ -84,8 +84,6 @@ public:
     std::shared_ptr<graphics::Cursor> create_hardware_cursor() override;
 
 private:
-    void clear_connected_unused_outputs();
-
     mutable std::mutex configuration_mutex;
     mir::Fd const drm_fd;
     std::shared_ptr<struct gbm_device> const gbm;

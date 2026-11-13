@@ -1,4 +1,5 @@
 mir_add_wrapped_executable(mir_unit_tests_atomic-kms NOINSTALL
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_crtc_assignment.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_cursor.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_configuration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_display_sink.cpp
