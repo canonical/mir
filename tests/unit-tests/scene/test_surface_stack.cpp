@@ -109,7 +109,21 @@ struct StubSurface : public ms::BasicSurface
         register_interest(observer);
     }
 
+    auto generate_renderables(mc::CompositorID id) const
+        -> std::pair<mg::RenderableList, ms::Surface::RenderableState> override
+    {
+        auto generated = BasicSurface::generate_renderables(id);
+        generated.second = renderable_state;
+        return generated;
+    }
+
+    void set_renderable_state(ms::Surface::RenderableState state)
+    {
+        renderable_state = state;
+    }
+
     mir::Executor& executor;
+    ms::Surface::RenderableState renderable_state{ms::Surface::RenderableState::Latest};
 };
 
 struct MockSessionLockObserver : public ms::SessionLockObserver
@@ -186,6 +200,48 @@ TEST_F(SurfaceStack, stacking_order)
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream3)));
+}
+
+TEST_F(SurfaceStack, scene_elements_for_returns_latest_when_all_surfaces_are_latest)
+{
+    using namespace testing;
+
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id).second,
+        Eq(mc::Scene::SceneElementState::Latest));
+}
+
+TEST_F(SurfaceStack, scene_elements_for_returns_newer_buffer_available_when_any_surface_is_newer)
+{
+    using namespace testing;
+
+    std::static_pointer_cast<StubSurface>(stub_surface2)->set_renderable_state(
+        ms::Surface::RenderableState::NewerBufferAvailable);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id).second,
+        Eq(mc::Scene::SceneElementState::NewerBufferAvailable));
+}
+
+TEST_F(SurfaceStack, scene_elements_for_ignores_hidden_surfaces_with_newer_buffers)
+{
+    using namespace testing;
+
+    std::static_pointer_cast<StubSurface>(invisible_stub_surface)->set_renderable_state(
+        ms::Surface::RenderableState::NewerBufferAvailable);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(invisible_stub_surface, mi::InputReceptionMode::normal);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id).second,
+        Eq(mc::Scene::SceneElementState::Latest));
 }
 
 TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)

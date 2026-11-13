@@ -131,6 +131,36 @@ TEST_F(BasicSurfaceTest, basics)
         EXPECT_FALSE(renderable->shaped());
 }
 
+TEST_F(BasicSurfaceTest, generate_renderables_returns_latest_when_all_stream_submissions_are_latest)
+{
+    using namespace testing;
+
+    auto second_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    surface.set_streams({{mock_buffer_stream, {}}, {second_stream, {}}});
+
+    auto const [renderables, state] = surface.generate_renderables(this);
+
+    EXPECT_THAT(renderables, SizeIs(2));
+    EXPECT_THAT(state, Eq(ms::Surface::RenderableState::Latest));
+}
+
+TEST_F(BasicSurfaceTest, generate_renderables_returns_newer_when_any_stream_has_a_newer_submission)
+{
+    using namespace testing;
+
+    auto newer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    surface.set_streams({{mock_buffer_stream, {}}, {newer_stream, {}}});
+    ON_CALL(*newer_stream, next_submission_for_compositor(_))
+        .WillByDefault(Return(std::pair<std::shared_ptr<mc::BufferStream::Submission>, mc::BufferStream::SubmissionState>{
+            newer_stream->submission,
+            mc::BufferStream::SubmissionState::NewerBufferAvailable}));
+
+    auto const [renderables, state] = surface.generate_renderables(this);
+
+    EXPECT_THAT(renderables, SizeIs(2));
+    EXPECT_THAT(state, Eq(ms::Surface::RenderableState::NewerBufferAvailable));
+}
+
 TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
 {
     int const n = 10;

@@ -136,6 +136,52 @@ TEST_F(MultiMonitorArbiter, compositor_access)
     EXPECT_THAT(cbuffer->claim_buffer(), IsSameBufferAs(buffers[0]));
 }
 
+TEST_F(MultiMonitorArbiter, compositor_acquire_reports_latest_when_no_newer_submission_is_pending)
+{
+    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
+    arbiter->submit_buffer(buffer, size, source);
+
+    auto [first_submission, first_state] = arbiter->compositor_acquire(this);
+    EXPECT_THAT(first_state, Eq(mc::BufferStream::SubmissionState::Latest));
+    first_submission->claim_buffer();
+
+    auto [_, second_state] = arbiter->compositor_acquire(this);
+    EXPECT_THAT(second_state, Eq(mc::BufferStream::SubmissionState::Latest));
+}
+
+TEST_F(MultiMonitorArbiter, compositor_acquire_reports_newer_submission_to_compositor_not_using_current_buffer)
+{
+    int compositor1{0};
+    int compositor2{0};
+
+    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
+    arbiter->submit_buffer(buffer, size, source);
+    arbiter->compositor_acquire(&compositor1).first->claim_buffer();        // First compositor has acquired the first buffer, making it current
+
+    std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
+    arbiter->submit_buffer(buffer, size, source);
+    auto [submission, state] = arbiter->compositor_acquire(&compositor2);   // Second compositor hasn't acquired the current buffer yet, so gets it
+
+    EXPECT_THAT(state, Eq(mc::BufferStream::SubmissionState::NewerBufferAvailable));
+    EXPECT_THAT(submission->claim_buffer(), IsSameBufferAs(buffers[0]));
+}
+
+TEST_F(MultiMonitorArbiter, compositor_acquire_reports_latest_after_advancing_to_newer_submission)
+{
+    int compositor_id{0};
+
+    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
+    arbiter->submit_buffer(buffer, size, source);
+    arbiter->compositor_acquire(&compositor_id).first->claim_buffer();
+
+    std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
+    arbiter->submit_buffer(buffer, size, source);
+    auto [submission, state] = arbiter->compositor_acquire(&compositor_id);
+
+    EXPECT_THAT(state, Eq(mc::BufferStream::SubmissionState::Latest));
+    EXPECT_THAT(submission->claim_buffer(), IsSameBufferAs(buffers[1]));
+}
+
 TEST_F(MultiMonitorArbiter, compositor_release_sends_buffer_back)
 {
     auto buffer_released = std::make_shared<bool>(false);
