@@ -22,8 +22,6 @@ The SIGBUS handler takes an ordinary mutex and relies on kernel-sent, synchronou
 
 A client can claim a larger SHM pool than it created. [`ShmBacking::lock_range()`](../shm_backing.cpp) wraps such a mapping with an `AccessProtector` unless `size_is_trustworthy` is true. On a BUS_ADRERR fault in the protected range, [`sigbus_handler`](../shm_backing.cpp) attempts to replace the range with an anonymous zero `MAP_FIXED` mapping so the access completes. On success, the protector records the fault and `Mapping::access_fault()` reports it.
 
-Recovery is not guaranteed: `within_protected_region()` rejects a fault on the range's first byte, and the `MAP_FIXED` remap fails when the range start is not page-aligned. Such a fault falls through to the previous SIGBUS handler.
-
 ## Mapping lifetime
 
 `current_mapping` is an `std::atomic<std::shared_ptr<CurrentMapping const>>`. Each `CurrentMapping` munmaps itself on destruction and pins the address for readers. `get_range()` bounds-checks with `start > size || size - start < len` to avoid integer overflow.
