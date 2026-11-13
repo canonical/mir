@@ -254,6 +254,18 @@ protected:
     mga::DmaBufDisplayAllocator allocator{gbm_device_ptr(), drm_fd};
 };
 
+struct ImportModifierCase
+{
+    std::string_view name;
+    std::optional<uint64_t> buffer_modifier;
+    uint64_t gbm_modifier;
+    uint64_t addfb_modifier;
+};
+
+class DmaBufImportModifierTest : public DmaBufImportTest, public WithParamInterface<ImportModifierCase>
+{
+};
+
 struct PostCase
 {
     bool flip_ok;
@@ -680,3 +692,57 @@ TEST_F(DmaBufImportTest, framebuffer_keeps_the_bo_and_the_buffer_until_destroyed
     framebuffer.reset();
     EXPECT_TRUE(weak_buffer.expired());
 }
+
+TEST_P(DmaBufImportModifierTest, passes_the_modifier_to_gbm_and_addfb)
+{
+    auto const& param = GetParam();
+    auto const buffer = make_buffer();
+    buffer->modifier_ = param.buffer_modifier;
+
+    EXPECT_CALL(
+        gbm,
+        gbm_bo_import(
+            _,
+            _,
+            ResultOf(
+                [](void* data)
+                {
+                    return static_cast<gbm_import_fd_modifier_data const*>(data)->modifier;
+                },
+                param.gbm_modifier),
+            _))
+        .WillOnce(Return(gbm.fake_gbm.bo));
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, Pointee(param.addfb_modifier), _, _))
+        .WillOnce(DoAll(SetArgPointee<8>(fb_id), Return(0)));
+
+    EXPECT_NE(allocator.framebuffer_for(buffer), nullptr);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ModifierImport,
+    DmaBufImportModifierTest,
+    Values(
+        ImportModifierCase{
+            .name = "linear",
+            .buffer_modifier = DRM_FORMAT_MOD_LINEAR,
+            .gbm_modifier = DRM_FORMAT_MOD_LINEAR,
+            .addfb_modifier = DRM_FORMAT_MOD_LINEAR},
+        ImportModifierCase{
+            .name = "nonlinear",
+            .buffer_modifier = DRM_FORMAT_MOD_SAMSUNG_64_32_TILE,
+            .gbm_modifier = DRM_FORMAT_MOD_SAMSUNG_64_32_TILE,
+            .addfb_modifier = DRM_FORMAT_MOD_SAMSUNG_64_32_TILE},
+        ImportModifierCase{
+            .name = "absent",
+            .buffer_modifier = std::nullopt,
+            .gbm_modifier = DRM_FORMAT_MOD_NONE,
+            .addfb_modifier = DRM_FORMAT_MOD_INVALID},
+        ImportModifierCase{
+            .name = "invalid",
+            .buffer_modifier = DRM_FORMAT_MOD_INVALID,
+            .gbm_modifier = DRM_FORMAT_MOD_INVALID,
+            .addfb_modifier = DRM_FORMAT_MOD_INVALID}),
+    [](TestParamInfo<ImportModifierCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
