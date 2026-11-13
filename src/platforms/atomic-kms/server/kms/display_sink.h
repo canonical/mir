@@ -151,6 +151,7 @@ private:
 
     auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
     auto can_promote() const -> bool;
+    auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
