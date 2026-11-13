@@ -39,7 +39,8 @@ struct ClientPlaneAssignment
     PlaneId plane;
     /// The imported framebuffer, which keeps the client buffer it was imported from alive
     std::shared_ptr<FBHandle const> framebuffer;
-    /// Top-left of the framebuffer on the output, in CRTC pixels. The framebuffer is shown unscaled
+    /// Top-left of the framebuffer on the output, in CRTC pixels. The framebuffer is shown unscaled.
+    /// The destination may be partly outside the output; the kernel clips it.
     geometry::Point destination;
 };
 

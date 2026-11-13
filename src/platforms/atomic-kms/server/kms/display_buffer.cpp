@@ -129,9 +129,10 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
         }
         return false;
     }
-    else
+
+    if (renderable_list.size() == 2)
     {
-        // TODO map display elements to atomic KMS planes
+        return queue_mixed(renderable_list[0], renderable_list[1]);
     }
 
     return false;
@@ -331,6 +332,62 @@ auto select_direct_candidate(
 
     return best;
 }
+}
+
+auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
+{
+    auto const capabilities = output->plane_capabilities();
+    if (!can_promote() || !capabilities)
+    {
+        return false;
+    }
+
+    auto primary_fb = fullscreen_framebuffer(primary);
+    if (!primary_fb)
+    {
+        return false;
+    }
+
+    auto client_fb = std::dynamic_pointer_cast<DirectScanoutFramebuffer>(client.buffer);
+    if (!client_fb)
+    {
+        return false;
+    }
+
+    auto const format_modifier = client_fb->format_modifier();
+    if (format_modifier.format != DRM_FORMAT_NV12)
+    {
+        return false;
+    }
+
+    auto const size = client_fb->size();
+    // The client may be partly outside the output; the kernel clips the destination and
+    // adjusts the source, so only require a visible overlap.
+    if (client.source_position != geom::RectangleF{{0, 0}, {size.width.as_value(), size.height.as_value()}} ||
+        client.screen_positon.size != size ||
+        !view_area().overlaps(client.screen_positon))
+    {
+        return false;
+    }
+
+    auto const plane = find_legal_overlay_plane(*capabilities, format_modifier);
+    if (!plane)
+    {
+        return false;
+    }
+
+    auto const destination = geom::Point{} + (client.screen_positon.top_left - view_area().top_left);
+    auto state = PresentationState::mixed(
+        std::move(primary_fb),
+        {ClientPlaneAssignment{plane->id, std::move(client_fb), destination}});
+
+    if (!output->test_presentation(state))
+    {
+        return false;
+    }
+
+    next_state = std::move(state);
+    return true;
 }
 
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
