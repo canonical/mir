@@ -70,11 +70,12 @@ geom::Size const client_size{20, 10};
 geom::RectangleF const client_full_source{{0, 0}, geom::SizeF{client_size}};
 geom::Point const client_top_left{20, 40};
 
-auto make_client_framebuffer(mga::FormatModifier const& format_modifier = {DRM_FORMAT_NV12, supported_modifier})
-    -> std::shared_ptr<mga::DirectScanoutFramebuffer>
+auto make_client_framebuffer(
+    mga::FormatModifier const& format_modifier = {DRM_FORMAT_NV12, supported_modifier},
+    mg::gl::Texture::Layout layout = mg::gl::Texture::Layout::GL) -> std::shared_ptr<mga::DirectScanoutFramebuffer>
 {
     return std::make_shared<mga::DirectScanoutFramebuffer>(
-        std::make_shared<uint32_t>(client_fb_id), client_size, format_modifier);
+        std::make_shared<uint32_t>(client_fb_id), client_size, format_modifier, layout);
 }
 
 auto client_element(
@@ -379,6 +380,7 @@ struct RejectedClientCase
 {
     std::string_view name;
     mga::FormatModifier format{DRM_FORMAT_NV12, supported_modifier};
+    mg::gl::Texture::Layout layout{mg::gl::Texture::Layout::GL};
     geom::Rectangle destination{client_top_left, client_size};
     geom::RectangleF source{client_full_source};
 };
@@ -742,7 +744,7 @@ TEST_P(AtomicMixedRejectedClient, overlay_rejects_a_client_it_cannot_scan_out)
 {
     auto const& param = GetParam();
     mg::DisplayElement const client{
-        param.destination, param.source, make_client_framebuffer(param.format)};
+        param.destination, param.source, make_client_framebuffer(param.format, param.layout)};
 
     EXPECT_FALSE(sink->overlay({legal_primary(), client}));
 }
@@ -752,6 +754,7 @@ INSTANTIATE_TEST_SUITE_P(
     AtomicMixedRejectedClient,
     Values(
         RejectedClientCase{.name = "unsupported_modifier", .format = {DRM_FORMAT_NV12, other_modifier}},
+        RejectedClientCase{.name = "layout_not_gl", .layout = mg::gl::Texture::Layout::TopRowFirst},
         RejectedClientCase{.name = "scaled_destination", .destination = {client_top_left, client_size / 2}},
         RejectedClientCase{.name = "cropped_source", .source = {{0, 0}, client_full_source.size / 2}}),
     [](TestParamInfo<RejectedClientCase> const& info) { return std::string{info.param.name}; });

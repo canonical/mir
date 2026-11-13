@@ -22,6 +22,7 @@
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
 #include <mir/graphics/kms_framebuffer.h>
+#include <mir/graphics/texture.h>
 
 #include "plane_capabilities.h"
 #include "platform_common.h"
@@ -94,12 +95,15 @@ public:
     DirectScanoutFramebuffer(
         std::shared_ptr<uint32_t> fb_id,
         geometry::Size size,
-        FormatModifier format_modifier);
+        FormatModifier format_modifier,
+        gl::Texture::Layout layout);
 
     auto format_modifier() const -> FormatModifier;
+    auto layout() const -> gl::Texture::Layout;
 
 private:
     FormatModifier format_modifier_;
+    gl::Texture::Layout layout_;
 };
 
 class DisplaySink :
