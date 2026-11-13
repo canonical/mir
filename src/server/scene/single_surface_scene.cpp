@@ -37,7 +37,8 @@ public:
     SingleSurfaceScene(std::weak_ptr<Surface> const& surface);
 
     // From Scene
-    auto scene_elements_for(mc::CompositorID id) -> mc::SceneElementSequence override;
+    auto scene_elements_for(mc::CompositorID id)
+        -> std::pair<mc::SceneElementSequence, mc::Scene::SceneElementState> override;
     void register_compositor(mc::CompositorID id) override;
     void unregister_compositor(mc::CompositorID id) override;
 
@@ -64,14 +65,19 @@ ms::SingleSurfaceScene::SingleSurfaceScene(
 {
 }
 
-auto ms::SingleSurfaceScene::scene_elements_for(mc::CompositorID id) -> mc::SceneElementSequence
+auto ms::SingleSurfaceScene::scene_elements_for(mc::CompositorID id)
+    -> std::pair<mc::SceneElementSequence, mc::Scene::SceneElementState>
 {
     RecursiveReadLock lg(guard);
 
+    auto state = mc::Scene::SceneElementState::Latest;
     mc::SceneElementSequence elements;
     if (auto const locked = surface.lock())
     {
-        for (auto& renderable : locked->generate_renderables(id))
+        auto [renderables, renderable_state] = locked->generate_renderables(id);
+        state = renderable_state == ms::Surface::RenderableState::Latest ?
+            mc::Scene::SceneElementState::Latest : mc::Scene::SceneElementState::NewerBufferAvailable;
+        for (auto& renderable : renderables)
         {
             elements.emplace_back(
                 std::make_shared<SurfaceSceneElement>(
@@ -81,7 +87,7 @@ auto ms::SingleSurfaceScene::scene_elements_for(mc::CompositorID id) -> mc::Scen
                     id));
         }
     }
-    return elements;
+    return {elements, state};
 }
 
 void ms::SingleSurfaceScene::register_compositor(mc::CompositorID id)

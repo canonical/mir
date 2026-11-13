@@ -39,6 +39,12 @@ class Scene
 public:
     virtual ~Scene() {}
 
+    enum class SceneElementState
+    {
+        Latest,                     ///< All scene elements contain the most recent buffer
+        NewerBufferAvailable,       ///< At least one scene element has another buffer available after this one; another composition is required.
+    };
+
     /**
      * Generate a valid sequence of scene elements based on the current state of the Scene.
      * \param [in] id      An arbitrary unique identifier used to distinguish
@@ -50,7 +56,7 @@ public:
      * \returns a sequence of SceneElements for the compositor id. The
      *          sequence is in stacking order from back to front.
      */
-    virtual SceneElementSequence scene_elements_for(CompositorID id) = 0;
+    virtual auto scene_elements_for(CompositorID id) -> std::pair<SceneElementSequence, SceneElementState> = 0;
 
     virtual void register_compositor(CompositorID id) = 0;
     virtual void unregister_compositor(CompositorID id) = 0;

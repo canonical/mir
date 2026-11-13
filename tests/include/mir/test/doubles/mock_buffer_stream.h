@@ -66,11 +66,16 @@ struct MockBufferStream : public compositor::BufferStream
         ON_CALL(*this, set_frame_posted_callback(testing::_))
             .WillByDefault([&](auto const& callback){ frame_posted_callback = callback; });
         ON_CALL(*this, next_submission_for_compositor(testing::_))
-            .WillByDefault(testing::Return(submission));
+            .WillByDefault(testing::Return(std::pair<std::shared_ptr<Submission>, SubmissionState>{
+                submission, SubmissionState::Latest}));
     }
     std::shared_ptr<StubBuffer> buffer { std::make_shared<StubBuffer>() };
     std::shared_ptr<MockSubmission> submission { std::make_shared<testing::NiceMock<MockSubmission>>() };
-    MOCK_METHOD(std::shared_ptr<Submission>, next_submission_for_compositor, (void const*), (override));
+    MOCK_METHOD(
+        (std::pair<std::shared_ptr<Submission>, SubmissionState>),
+        next_submission_for_compositor,
+        (void const*),
+        (override));
     MOCK_METHOD(void, set_frame_posted_callback, (std::function<void(geometry::Size const&)> const&), (override));
 
     MOCK_METHOD(

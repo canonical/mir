@@ -44,7 +44,8 @@ public:
         std::shared_ptr<mir::ObserverRegistrar<mir::graphics::DisplayConfigurationObserver>> const&
             display_config_registrar);
 
-    auto generate_renderables(mir::compositor::CompositorID id) const -> mir::graphics::RenderableList override;
+    auto generate_renderables(mir::compositor::CompositorID id) const
+        -> std::pair<mir::graphics::RenderableList, mir::scene::Surface::RenderableState> override;
 
 private:
     miral::SoftwareBufferPool mutable pool;

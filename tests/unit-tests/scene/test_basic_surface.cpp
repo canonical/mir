@@ -127,8 +127,38 @@ TEST_F(BasicSurfaceTest, basics)
     EXPECT_EQ(rect.size, surface.window_size());
     EXPECT_EQ(rect.size, surface.content_size());
     EXPECT_EQ(rect.top_left, surface.top_left());
-    for (auto& renderable : surface.generate_renderables(this))
+    for (auto& renderable : surface.generate_renderables(this).first)
         EXPECT_FALSE(renderable->shaped());
+}
+
+TEST_F(BasicSurfaceTest, generate_renderables_returns_latest_when_all_stream_submissions_are_latest)
+{
+    using namespace testing;
+
+    auto second_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    surface.set_streams({{mock_buffer_stream, {}}, {second_stream, {}}});
+
+    auto const [renderables, state] = surface.generate_renderables(this);
+
+    EXPECT_THAT(renderables, SizeIs(2));
+    EXPECT_THAT(state, Eq(ms::Surface::RenderableState::Latest));
+}
+
+TEST_F(BasicSurfaceTest, generate_renderables_returns_newer_when_any_stream_has_a_newer_submission)
+{
+    using namespace testing;
+
+    auto newer_stream = std::make_shared<NiceMock<mtd::MockBufferStream>>();
+    surface.set_streams({{mock_buffer_stream, {}}, {newer_stream, {}}});
+    ON_CALL(*newer_stream, next_submission_for_compositor(_))
+        .WillByDefault(Return(std::pair<std::shared_ptr<mc::BufferStream::Submission>, mc::BufferStream::SubmissionState>{
+            newer_stream->submission,
+            mc::BufferStream::SubmissionState::NewerBufferAvailable}));
+
+    auto const [renderables, state] = surface.generate_renderables(this);
+
+    EXPECT_THAT(renderables, SizeIs(2));
+    EXPECT_THAT(state, Eq(ms::Surface::RenderableState::NewerBufferAvailable));
 }
 
 TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
@@ -148,7 +178,7 @@ TEST_F(BasicSurfaceTest, buffer_stream_ids_always_unique)
                 std::shared_ptr<mg::CursorImage>(),
                 report,
                 display_config_registrar);
-        for (auto& renderable : surface->generate_renderables(this))
+        for (auto& renderable : surface->generate_renderables(this).first)
             ids.insert(renderable->id());
     }
     for (auto& it : ids)
@@ -172,7 +202,7 @@ TEST_F(BasicSurfaceTest, id_never_invalid)
                 report,
                 display_config_registrar);
 
-        for (auto& renderable : surface->generate_renderables(this))
+        for (auto& renderable : surface->generate_renderables(this).first)
             EXPECT_THAT(renderable->id(), testing::Ne(nullptr));
     }
 }
@@ -203,14 +233,14 @@ TEST_F(BasicSurfaceTest, update_size)
     EXPECT_EQ(rect.size, surface.window_size());
     EXPECT_NE(new_size, surface.window_size());
 
-    auto renderables = surface.generate_renderables(compositor_id);
+    auto renderables = surface.generate_renderables(compositor_id).first;
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     auto old_transformation = renderables[0]->transformation();
 
     surface.resize(new_size);
     EXPECT_EQ(new_size, surface.window_size());
     // Size no longer affects transformation:
-    renderables = surface.generate_renderables(compositor_id);
+    renderables = surface.generate_renderables(compositor_id).first;
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     EXPECT_THAT(renderables[0]->transformation(), testing::Eq(old_transformation));
 }
@@ -390,7 +420,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
 
     surface.register_interest(observer, executor);
 
-    auto renderables = surface.generate_renderables(compositor_id);
+    auto renderables = surface.generate_renderables(compositor_id).first;
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     auto original_transformation = renderables[0]->transformation();
     glm::mat4 trans{0.1f, 0.5f, 0.9f, 1.3f,
@@ -399,7 +429,7 @@ TEST_F(BasicSurfaceTest, test_surface_set_transformation_updates_transform)
                     0.4f, 0.8f, 1.2f, 1.6f};
 
     surface.set_transformation(trans);
-    renderables = surface.generate_renderables(compositor_id);
+    renderables = surface.generate_renderables(compositor_id).first;
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     auto got = renderables[0]->transformation();
     EXPECT_NE(original_transformation, got);
@@ -410,7 +440,7 @@ TEST_F(BasicSurfaceTest, test_surface_is_opaque_by_default)
 {
     using namespace testing;
 
-    auto renderables = surface.generate_renderables(compositor_id);
+    auto renderables = surface.generate_renderables(compositor_id).first;
     ASSERT_THAT(renderables.size(), testing::Eq(1));
     EXPECT_FALSE(renderables[0]->shaped());
 }
@@ -1311,7 +1341,7 @@ TEST_F(BasicSurfaceTest, adds_buffer_streams)
     };
     surface.set_streams(streams);
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(4));
     EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
     EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d0));
@@ -1333,14 +1363,14 @@ TEST_F(BasicSurfaceTest, moving_surface_repositions_all_associated_streams)
     };
 
     surface.set_streams(streams);
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfPosition(rect.top_left));
     EXPECT_THAT(renderables[1], IsRenderableOfPosition(rect.top_left + d));
 
     surface.move_to(pt);
 
-    renderables = surface.generate_renderables(this);
+    renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfPosition(pt));
     EXPECT_THAT(renderables[1], IsRenderableOfPosition(pt + d));
@@ -1350,7 +1380,7 @@ TEST_F(BasicSurfaceTest, can_remove_all_streams)
 {
     using namespace testing;
     surface.set_streams({});
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     EXPECT_THAT(renderables.size(), Eq(0));
 }
 
@@ -1365,7 +1395,7 @@ TEST_F(BasicSurfaceTest, can_set_streams_not_containing_originally_created_with_
         { buffer_stream1, {0,0}}
     };
     surface.set_streams(streams);
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     EXPECT_THAT(renderables.size(), Eq(2));
 }
 
@@ -1388,12 +1418,12 @@ TEST_F(BasicSurfaceTest, does_not_render_if_outside_of_clip_area)
     surface.set_streams(streams);
     surface.set_clip_area(std::optional<geom::Rectangle>({{200,0},{100,100}}));
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(0));
 
     surface.set_clip_area(std::optional<geom::Rectangle>({{0,0},{100,100}}));
 
-    renderables = surface.generate_renderables(this);
+    renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(4));
 
 }
@@ -1458,13 +1488,13 @@ TEST_F(BasicSurfaceTest, changing_alpha_effects_all_streams)
     };
 
     surface.set_streams(streams);
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfAlpha(1.0f));
     EXPECT_THAT(renderables[1], IsRenderableOfAlpha(1.0f));
 
     surface.set_alpha(alpha);
-    renderables = surface.generate_renderables(this);
+    renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfAlpha(alpha));
     EXPECT_THAT(renderables[1], IsRenderableOfAlpha(alpha));
@@ -1487,17 +1517,17 @@ TEST_F(BasicSurfaceTest, visibility_matches_produced_list)
     };
     surface.set_streams(streams);
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     EXPECT_FALSE(surface.visible());
     EXPECT_THAT(renderables.size(), Eq(0));
 
     stream2_visible = true;
-    renderables = surface.generate_renderables(this);
+    renderables = surface.generate_renderables(this).first;
     EXPECT_TRUE(surface.visible());
     EXPECT_THAT(renderables.size(), Eq(1));
 
     stream1_visible = true;
-    renderables = surface.generate_renderables(this);
+    renderables = surface.generate_renderables(this).first;
     EXPECT_TRUE(surface.visible());
     EXPECT_THAT(renderables.size(), Eq(2));
 }
@@ -1522,7 +1552,7 @@ TEST_F(BasicSurfaceTest, buffer_streams_produce_correctly_sized_renderables)
     };
     surface.set_streams(streams);
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0], IsRenderableOfSize(size0));
     EXPECT_THAT(renderables[1], IsRenderableOfSize(size1));
@@ -1546,7 +1576,7 @@ TEST_F(BasicSurfaceTest, renderables_of_transparent_buffer_streams_are_shaped)
     };
     surface.set_streams(streams);
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(2));
     EXPECT_THAT(renderables[0]->shaped(), false);
     EXPECT_THAT(renderables[1]->shaped(), true);
@@ -1566,7 +1596,7 @@ TEST_F(BasicSurfaceTest, renderables_of_new_buffers_are_normal)
     };
     surface.set_streams(streams);
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(1));
     EXPECT_THAT(renderables[0]->orientation(), mir_orientation_normal);
 }
@@ -1585,7 +1615,7 @@ TEST_F(BasicSurfaceTest, renderables_of_new_buffers_have_none_mirror_mode)
     };
     surface.set_streams(streams);
 
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     ASSERT_THAT(renderables.size(), Eq(1));
     EXPECT_THAT(renderables[0]->mirror_mode(), mir_mirror_mode_none);
 }
@@ -1690,7 +1720,7 @@ TEST_F(BasicSurfaceTest, setting_orientation_results_in_renderable_with_same_ori
 {
     using namespace testing;
     surface.set_orientation(mir_orientation_inverted);
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     EXPECT_THAT(renderables.size(), Eq(1));
     EXPECT_THAT(renderables[0]->orientation(), mir_orientation_inverted);
 }
@@ -1699,7 +1729,7 @@ TEST_F(BasicSurfaceTest, setting_mirror_mode_results_in_renderable_with_same_mir
 {
     using namespace testing;
     surface.set_mirror_mode(mir_mirror_mode_horizontal);
-    auto renderables = surface.generate_renderables(this);
+    auto renderables = surface.generate_renderables(this).first;
     EXPECT_THAT(renderables.size(), Eq(1));
     EXPECT_THAT(renderables[0]->mirror_mode(), mir_mirror_mode_horizontal);
 }

@@ -30,9 +30,10 @@ namespace doubles
 class StubScene : public compositor::Scene
 {
 public:
-    compositor::SceneElementSequence scene_elements_for(compositor::CompositorID) override
+    auto scene_elements_for(compositor::CompositorID)
+        -> std::pair<compositor::SceneElementSequence, SceneElementState> override
     {
-        return {};
+        return {{}, SceneElementState::Latest};
     }
     void register_compositor(compositor::CompositorID) override
     {

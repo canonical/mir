@@ -793,7 +793,7 @@ TEST(MultiThreadedCompositor, double_start_or_stop_ignored)
         .Times(1);
     EXPECT_CALL(*mock_scene, scene_elements_for(_))
         .Times(AtLeast(0))
-        .WillRepeatedly(Return(mc::SceneElementSequence{}));
+        .WillRepeatedly(Return(std::pair{mc::SceneElementSequence{}, mc::Scene::SceneElementState::Latest}));
 
     mc::MultiThreadedCompositor compositor{display, db_compositor_factory, mock_scene, null_display_listener, mock_report, stub_cursor, default_delay, true};
 

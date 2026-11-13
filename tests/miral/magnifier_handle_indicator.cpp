@@ -43,6 +43,6 @@ TEST(HandleIndicator, excludes_itself_from_the_capture_compositor)
         std::make_shared<mtd::FakeDisplayConfigurationObserverRegistrar>()};
     indicator.show();
 
-    EXPECT_THAT(indicator.generate_renderables(&capture_compositor), IsEmpty());
-    EXPECT_THAT(indicator.generate_renderables(&display_compositor), SizeIs(1));
+    EXPECT_THAT(indicator.generate_renderables(&capture_compositor).first, IsEmpty());
+    EXPECT_THAT(indicator.generate_renderables(&display_compositor).first, SizeIs(1));
 }

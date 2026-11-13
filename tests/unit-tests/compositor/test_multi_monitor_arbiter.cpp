@@ -132,8 +132,54 @@ TEST_F(MultiMonitorArbiter, compositor_access)
 {
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer = arbiter->compositor_acquire(this);
+    auto cbuffer = arbiter->compositor_acquire(this).first;
     EXPECT_THAT(cbuffer->claim_buffer(), IsSameBufferAs(buffers[0]));
+}
+
+TEST_F(MultiMonitorArbiter, compositor_acquire_reports_latest_when_no_newer_submission_is_pending)
+{
+    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
+    arbiter->submit_buffer(buffer, size, source);
+
+    auto [first_submission, first_state] = arbiter->compositor_acquire(this);
+    EXPECT_THAT(first_state, Eq(mc::BufferStream::SubmissionState::Latest));
+    first_submission->claim_buffer();
+
+    auto [_, second_state] = arbiter->compositor_acquire(this);
+    EXPECT_THAT(second_state, Eq(mc::BufferStream::SubmissionState::Latest));
+}
+
+TEST_F(MultiMonitorArbiter, compositor_acquire_reports_newer_submission_to_compositor_not_using_current_buffer)
+{
+    int compositor1{0};
+    int compositor2{0};
+
+    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
+    arbiter->submit_buffer(buffer, size, source);
+    arbiter->compositor_acquire(&compositor1).first->claim_buffer();        // First compositor has acquired the first buffer, making it current
+
+    std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
+    arbiter->submit_buffer(buffer, size, source);
+    auto [submission, state] = arbiter->compositor_acquire(&compositor2);   // Second compositor hasn't acquired the current buffer yet, so gets it
+
+    EXPECT_THAT(state, Eq(mc::BufferStream::SubmissionState::NewerBufferAvailable));
+    EXPECT_THAT(submission->claim_buffer(), IsSameBufferAs(buffers[0]));
+}
+
+TEST_F(MultiMonitorArbiter, compositor_acquire_reports_latest_after_advancing_to_newer_submission)
+{
+    int compositor_id{0};
+
+    auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
+    arbiter->submit_buffer(buffer, size, source);
+    arbiter->compositor_acquire(&compositor_id).first->claim_buffer();
+
+    std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
+    arbiter->submit_buffer(buffer, size, source);
+    auto [submission, state] = arbiter->compositor_acquire(&compositor_id);
+
+    EXPECT_THAT(state, Eq(mc::BufferStream::SubmissionState::Latest));
+    EXPECT_THAT(submission->claim_buffer(), IsSameBufferAs(buffers[1]));
 }
 
 TEST_F(MultiMonitorArbiter, compositor_release_sends_buffer_back)
@@ -143,13 +189,13 @@ TEST_F(MultiMonitorArbiter, compositor_release_sends_buffer_back)
     auto [buffer, size, source] = default_submission_data_from_buffer(std::move(notifying_buffer));
     arbiter->submit_buffer(std::move(buffer), size, source);
 
-    auto cbuffer = arbiter->compositor_acquire(this);
+    auto cbuffer = arbiter->compositor_acquire(this).first;
     cbuffer->claim_buffer();
     cbuffer.reset();
     // We need to acquire a new buffer - the current one is on-screen, so can't be sent back.
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    arbiter->compositor_acquire(this)->claim_buffer();
+    arbiter->compositor_acquire(this).first->claim_buffer();
 
     EXPECT_TRUE(*buffer_released);
 }
@@ -158,10 +204,10 @@ TEST_F(MultiMonitorArbiter, compositor_can_acquire_different_buffers)
 {
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer1 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer1 = arbiter->compositor_acquire(this).first->claim_buffer();
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer2 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer2 = arbiter->compositor_acquire(this).first->claim_buffer();
     EXPECT_THAT(cbuffer1, Not(IsSameBufferAs(cbuffer2)));
 }
 
@@ -172,22 +218,22 @@ TEST_F(MultiMonitorArbiter, compositor_buffer_syncs_to_fastest_compositor)
 
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    auto cbuffer2 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto cbuffer1 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
+    auto cbuffer2 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer4 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    auto cbuffer5 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto cbuffer4 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
+    auto cbuffer5 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer6 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
-    auto cbuffer7 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto cbuffer6 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
+    auto cbuffer7 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
 
     EXPECT_THAT(cbuffer1, IsSameBufferAs(buffers[0]));
     EXPECT_THAT(cbuffer2, IsSameBufferAs(buffers[0]));
@@ -202,23 +248,23 @@ TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_
 {
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto id1 = arbiter->compositor_acquire(this)->claim_buffer()->id();
+    auto id1 = arbiter->compositor_acquire(this).first->claim_buffer()->id();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto id2 = arbiter->compositor_acquire(this)->claim_buffer()->id();
+    auto id2 = arbiter->compositor_acquire(this).first->claim_buffer()->id();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[2]);
     arbiter->submit_buffer(buffer, size, source);
-    auto id3 = arbiter->compositor_acquire(this)->claim_buffer()->id();
+    auto id3 = arbiter->compositor_acquire(this).first->claim_buffer()->id();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[3]);
     arbiter->submit_buffer(buffer, size, source);
-    auto id4 = arbiter->compositor_acquire(this)->claim_buffer()->id();
+    auto id4 = arbiter->compositor_acquire(this).first->claim_buffer()->id();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[4]);
     arbiter->submit_buffer(buffer, size, source);
-    auto iddqd = arbiter->compositor_acquire(this)->claim_buffer()->id();
+    auto iddqd = arbiter->compositor_acquire(this).first->claim_buffer()->id();
 
     EXPECT_THAT(id1, Eq(buffers[0]->id()));
     EXPECT_THAT(id2, Eq(buffers[1]->id()));
@@ -231,30 +277,30 @@ TEST_F(MultiMonitorArbiter, compositor_consumes_all_buffers_when_operating_as_a_
 {
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer1 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer1 = arbiter->compositor_acquire(this).first->claim_buffer();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer2 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer2 = arbiter->compositor_acquire(this).first->claim_buffer();
     auto id1 = cbuffer1->id();
 
     cbuffer1.reset();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[2]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer3 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer3 = arbiter->compositor_acquire(this).first->claim_buffer();
     auto id2 = cbuffer2->id();
     cbuffer2.reset();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[3]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer4 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer4 = arbiter->compositor_acquire(this).first->claim_buffer();
     auto id3 = cbuffer3->id();
     cbuffer3.reset();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[4]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer5 = arbiter->compositor_acquire(this)->claim_buffer();
+    auto cbuffer5 = arbiter->compositor_acquire(this).first->claim_buffer();
     auto id4 = cbuffer4->id();
     cbuffer4.reset();
     auto id5 = cbuffer5->id();
@@ -276,14 +322,14 @@ TEST_F(MultiMonitorArbiter, compositor_can_acquire_a_few_times_and_only_sends_on
     auto [buffer, size, source] =
         default_submission_data_from_buffer(wrap_with_destruction_notifier(buffers[0], buffer_released));
     arbiter->submit_buffer(std::move(buffer), size, source);
-    auto cbuffer1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto cbuffer1 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer2 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto cbuffer2 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
     EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
 
-    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     EXPECT_FALSE(*buffer_released);
     cbuffer1.reset();
     cbuffer2.reset();
@@ -297,12 +343,12 @@ TEST_F(MultiMonitorArbiter, advance_on_fastest_has_same_buffer)
 
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto id1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer()->id(); //buffer[0]
+    auto id1 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer()->id(); //buffer[0]
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto id2 = arbiter->compositor_acquire(&comp_id2)->claim_buffer()->id(); //buffer[0]
+    auto id2 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer()->id(); //buffer[0]
 
-    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1)->claim_buffer(); //buffer[1]
+    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer(); //buffer[1]
 
     EXPECT_THAT(id1, Eq(id2));
     EXPECT_THAT(id1, Eq(buffers[0]->id()));
@@ -332,26 +378,26 @@ TEST_F(MultiMonitorArbiter, buffers_are_sent_back)
     auto [buffer, size, source] = default_submission_data_from_buffer(buf_queue.front());
     arbiter->submit_buffer(buffer, size, source);
     buf_queue.pop_front();
-    auto b1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto b1 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     b1.reset();
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buf_queue.front());
     arbiter->submit_buffer(buffer, size, source);
     buf_queue.pop_front();
-    auto b2 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto b2 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     b2.reset();
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buf_queue.front());
     arbiter->submit_buffer(buffer, size, source);
     buf_queue.pop_front();
-    auto b3 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    auto b5 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto b3 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
+    auto b5 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
     b3.reset();
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buf_queue.front());
     arbiter->submit_buffer(buffer, size, source);
     buf_queue.pop_front();
-    auto b4 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto b4 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     b5.reset();
     b4.reset();
-    auto b6 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto b6 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     b6.reset();
 
     EXPECT_THAT(buffer_released, Each(Pointee(true)));
@@ -364,20 +410,20 @@ TEST_F(MultiMonitorArbiter, will_release_buffer_in_nbuffers_2_starvation_scenari
 
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto b1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto b1 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     auto id1 = b1->id();
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto b2 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto b2 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     auto id2 = b2->id();
 
     b1.reset();
 
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto b3 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto b3 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
     auto id3 = b3->id();
-    auto b4 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto b4 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
     auto id4 = b4->id();
 
     b3.reset();
@@ -414,13 +460,13 @@ TEST_F(MultiMonitorArbiter, second_compositor_advances_schedule_after_both_aquir
 
     auto [buffer, size, source] = default_submission_data_from_buffer(buffers[0]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer1 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
-    auto cbuffer2 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
-    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1)->claim_buffer();
+    auto cbuffer1 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
+    auto cbuffer2 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
+    auto cbuffer3 = arbiter->compositor_acquire(&comp_id1).first->claim_buffer();
     EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer2));
     EXPECT_THAT(cbuffer1, IsSameBufferAs(cbuffer3));
     std::tie(buffer, size, source) = default_submission_data_from_buffer(buffers[1]);
     arbiter->submit_buffer(buffer, size, source);
-    auto cbuffer4 = arbiter->compositor_acquire(&comp_id2)->claim_buffer();
+    auto cbuffer4 = arbiter->compositor_acquire(&comp_id2).first->claim_buffer();
     EXPECT_THAT(cbuffer1, Not(IsSameBufferAs(cbuffer4)));
 }

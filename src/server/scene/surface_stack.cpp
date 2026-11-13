@@ -111,10 +111,11 @@ ms::SurfaceStack::~SurfaceStack() noexcept(true)
     }
 }
 
-mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID id)
+auto ms::SurfaceStack::scene_elements_for(mc::CompositorID id) -> std::pair<mc::SceneElementSequence, SceneElementState>
 {
     RecursiveReadLock lg(guard);
 
+    auto scene_state = SceneElementState::Latest;
     mc::SceneElementSequence elements;
     for (auto const& layer : surface_layers)
     {
@@ -122,7 +123,8 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
         {
             if (surface_can_be_shown(surface) && surface->visible())
             {
-                for (auto& renderable : surface->generate_renderables(id))
+                auto [renderables, surface_state ] = surface->generate_renderables(id);
+                for (auto& renderable : renderables)
                 {
                     elements.emplace_back(
                         std::make_shared<SurfaceSceneElement>(
@@ -131,6 +133,11 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
                             rendering_trackers[surface.get()],
                             id));
                 }
+
+                if (surface_state != Surface::RenderableState::Latest)
+                {
+                    scene_state = SceneElementState::NewerBufferAvailable;
+                }
             }
         }
     }
@@ -138,7 +145,7 @@ mc::SceneElementSequence ms::SurfaceStack::scene_elements_for(mc::CompositorID i
     {
         elements.emplace_back(std::make_shared<OverlaySceneElement>(renderable));
     }
-    return elements;
+    return {elements, scene_state};
 }
 
 void ms::SurfaceStack::register_compositor(mc::CompositorID cid)
