@@ -191,6 +191,22 @@ auto find_legal_overlay_plane(
     return plane == capabilities.overlays.end() ? nullptr : &*plane;
 }
 
+auto promotable_plane(
+    mga::CrtcPlaneCapabilities const& capabilities,
+    mga::FormatModifier format_modifier,
+    mg::gl::Texture::Layout layout) -> mga::PlaneCapability const*
+{
+    // Layout::GL means the buffer is not y-inverted (memory row 0 is the top). A y-inverted
+    // buffer would need the plane "rotation" property with DRM_MODE_REFLECT_Y, which is not decoded.
+    if (format_modifier.format != DRM_FORMAT_NV12 ||
+        layout != mg::gl::Texture::Layout::GL)
+    {
+        return nullptr;
+    }
+
+    return find_legal_overlay_plane(capabilities, format_modifier);
+}
+
 auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabilities const& capabilities) -> bool
 {
     if (!is_directly_scannable(renderable))
@@ -201,16 +217,14 @@ auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabil
         return false;
 
     auto const dmabuf = dynamic_cast<mg::DMABufBuffer*>(buffer->native_buffer_base());
-    if (!dmabuf ||
-        dmabuf->format() != DRM_FORMAT_NV12 ||
-        dmabuf->layout() != mg::gl::Texture::Layout::GL)
+    if (!dmabuf)
     {
         return false;
     }
 
     auto const modifier = dmabuf->modifier();
     return modifier && *modifier != DRM_FORMAT_MOD_INVALID &&
-        find_legal_overlay_plane(capabilities, {DRM_FORMAT_NV12, *modifier}) != nullptr &&
+        promotable_plane(capabilities, mga::FormatModifier{dmabuf->format(), *modifier}, dmabuf->layout()) &&
         renderable.src_bounds() == geom::RectangleD{{0, 0}, dmabuf->size()} &&
         renderable.screen_position().size == dmabuf->size();
 }
@@ -354,8 +368,8 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
         return false;
     }
 
-    auto const format_modifier = client_fb->format_modifier();
-    if (format_modifier.format != DRM_FORMAT_NV12)
+    auto const plane = promotable_plane(*capabilities, client_fb->format_modifier(), client_fb->layout());
+    if (!plane)
     {
         return false;
     }
@@ -366,12 +380,6 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
     if (client.source_position != geom::RectangleF{{0, 0}, {size.width.as_value(), size.height.as_value()}} ||
         client.screen_positon.size != size ||
         !view_area().overlaps(client.screen_positon))
-    {
-        return false;
-    }
-
-    auto const plane = find_legal_overlay_plane(*capabilities, format_modifier);
-    if (!plane)
     {
         return false;
     }
@@ -660,15 +668,22 @@ auto mga::AtomicKmsFbHandle::size() const -> geometry::Size
 mga::DirectScanoutFramebuffer::DirectScanoutFramebuffer(
     std::shared_ptr<uint32_t> fb_id,
     geom::Size size,
-    mga::FormatModifier format_modifier) :
+    mga::FormatModifier format_modifier,
+    mg::gl::Texture::Layout layout) :
     AtomicKmsFbHandle{std::move(fb_id), size},
-    format_modifier_{format_modifier}
+    format_modifier_{format_modifier},
+    layout_{layout}
 {
 }
 
 auto mga::DirectScanoutFramebuffer::format_modifier() const -> mga::FormatModifier
 {
     return format_modifier_;
+}
+
+auto mga::DirectScanoutFramebuffer::layout() const -> mg::gl::Texture::Layout
+{
+    return layout_;
 }
 
 auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>

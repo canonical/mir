@@ -77,11 +77,13 @@ geom::Point const client_top_left_outside_output{
 geom::Point const client_top_left_clear_of_output{
     display_area.top_left + geom::DeltaX{display_area.size.width.as_int()}};
 
-auto make_client_framebuffer(mga::FormatModifier const& format_modifier = {DRM_FORMAT_NV12, supported_modifier})
+auto make_client_framebuffer(
+    mga::FormatModifier const& format_modifier = {DRM_FORMAT_NV12, supported_modifier},
+    mg::gl::Texture::Layout layout = mg::gl::Texture::Layout::GL)
     -> std::shared_ptr<mga::DirectScanoutFramebuffer>
 {
     return std::make_shared<mga::DirectScanoutFramebuffer>(
-        std::make_shared<uint32_t>(client_fb_id), client_size, format_modifier);
+        std::make_shared<uint32_t>(client_fb_id), client_size, format_modifier, layout);
 }
 
 mga::CrtcPlaneCapabilities legal_capabilities()
@@ -381,6 +383,7 @@ struct MixedRejectionCase
     bool plain_client_framebuffer{false};
     uint32_t client_format{DRM_FORMAT_NV12};
     uint64_t client_modifier{supported_modifier};
+    mg::gl::Texture::Layout client_layout{mg::gl::Texture::Layout::GL};
     geom::Rectangle primary_destination{display_area};
     geom::Rectangle client_destination{client_top_left, client_size};
     geom::RectangleF client_source{{0, 0}, {client_size.width.as_value(), client_size.height.as_value()}};
@@ -813,7 +816,7 @@ TEST_P(AtomicMixedRejection, overlay_rejects_ineligible_elements)
     }
     else
     {
-        client_fb = make_client_framebuffer({param.client_format, param.client_modifier});
+        client_fb = make_client_framebuffer({param.client_format, param.client_modifier}, param.client_layout);
     }
 
     mg::DisplayElement const client_element{param.client_destination, param.client_source, client_fb};
@@ -833,6 +836,8 @@ INSTANTIATE_TEST_SUITE_P(
         MixedRejectionCase{.name = "plain_client_framebuffer", .plain_client_framebuffer = true},
         MixedRejectionCase{.name = "client_format_not_nv12", .client_format = DRM_FORMAT_XRGB8888},
         MixedRejectionCase{.name = "client_modifier_not_supported", .client_modifier = other_modifier},
+        MixedRejectionCase{.name = "client_layout_not_gl",
+                           .client_layout = mg::gl::Texture::Layout::TopRowFirst},
         MixedRejectionCase{.name = "scaled_client_destination",
                            .client_destination = {client_top_left, client_size / 2}},
         MixedRejectionCase{.name = "cropped_client_source",
