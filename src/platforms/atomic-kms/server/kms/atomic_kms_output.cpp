@@ -408,16 +408,16 @@ void mga::AtomicKMSOutput::clear_crtc()
     conf->plane_capabilities = nullptr;
 }
 
-uint32_t mga::AtomicKMSOutput::current_crtc_id() const
+std::optional<uint32_t> mga::AtomicKMSOutput::current_crtc_id() const
 {
     auto conf = configuration.lock();
-    return conf->current_crtc ? conf->current_crtc->crtc_id : 0;
+    return conf->current_crtc ? std::optional(conf->current_crtc->crtc_id) : std::nullopt;
 }
 
-uint32_t mga::AtomicKMSOutput::current_plane_id() const
+std::optional<uint32_t> mga::AtomicKMSOutput::current_plane_id() const
 {
     auto conf = configuration.lock();
-    return conf->current_plane ? conf->current_plane->plane_id : 0;
+    return conf->current_plane ? std::optional(conf->current_plane->plane_id) : std::nullopt;
 }
 
 size_t mga::AtomicKMSOutput::current_mode_index() const

@@ -22,8 +22,9 @@
 #include <mir/fd.h>
 #include <mir/synchronised.h>
 
-#include <memory>
 #include <future>
+#include <memory>
+#include <optional>
 
 namespace mir
 {
@@ -57,8 +58,8 @@ public:
     bool set_crtc(FBHandle const& fb) override;
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
-    uint32_t current_crtc_id() const override;
-    uint32_t current_plane_id() const override;
+    std::optional<uint32_t> current_crtc_id() const override;
+    std::optional<uint32_t> current_plane_id() const override;
     size_t current_mode_index() const override;
     bool page_flip(FBHandle const& fb) override;
 
