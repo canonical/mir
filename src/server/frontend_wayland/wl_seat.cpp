@@ -14,11 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "surface_registry.h"
-#include "wayland_wrapper.h"
 
 #include "wl_seat.h"
 
-#include "wayland_utils.h"
 #include "wl_surface.h"
 #include "wl_keyboard.h"
 #include "wl_pointer.h"
@@ -26,8 +24,9 @@
 #include "wl_data_device.h"
 #include "keyboard_state_tracker.h"
 
+#include "wayland_rs/src/ffi.rs.h"
+
 #include <mir/executor.h>
-#include <mir/wayland/client.h>
 #include <mir/observer_registrar.h>
 #include <mir/input/input_device_observer.h>
 #include <mir/input/input_device_hub.h>
@@ -215,7 +214,7 @@ public:
 
         if (seat.focused_surface)
         {
-            seat.for_each_listener(seat.focused_surface.value().client, [&](WlKeyboard* keyboard)
+            seat.for_each_listener(seat.focused_surface.value().client.get(), [&](WlKeyboard* keyboard)
                 {
                     keyboard->handle_event(event);
                 });
@@ -226,7 +225,7 @@ public:
     {
         if (auto const wayland_surface = surface_registry->lookup_wayland_surface(surface))
         {
-            seat.set_focus_to(mw::as_nullable_ptr(*wayland_surface));
+            seat.set_focus_to(*wayland_surface ? &wayland_surface->value() : nullptr);
         }
         else
         {
@@ -242,21 +241,27 @@ private:
     ConsumedKeyTracker consumed_key_tracker;
 };
 
-class mf::WlSeat::Instance : public wayland::Seat
+class mf::WlSeat::Instance : public mw::Seat
 {
 public:
-    Instance(wl_resource* new_resource, mf::WlSeat* seat);
+    Instance(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::SeatMiddleware> instance,
+        uint32_t object_id,
+        mf::WlSeat* seat);
 
     mf::WlSeat* const seat;
 
 private:
-    void get_pointer(wl_resource* new_pointer) override;
-    void get_keyboard(wl_resource* new_keyboard) override;
-    void get_touch(wl_resource* new_touch) override;
+    auto get_pointer(rust::Box<mw::PointerMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::Pointer> override;
+    auto get_keyboard(rust::Box<mw::KeyboardMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::Keyboard> override;
+    auto get_touch(rust::Box<mw::TouchMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<mw::Touch> override;
 };
 
 mf::WlSeat::WlSeat(
-    wl_display* display,
     Executor& wayland_executor,
     std::shared_ptr<time::Clock> const& clock,
     std::shared_ptr<mi::InputDeviceHub> const& input_hub,
@@ -266,8 +271,7 @@ mf::WlSeat::WlSeat(
     std::shared_ptr<mf::SurfaceRegistry> const& surface_registry,
     std::shared_ptr<mf::InputTriggerRegistry> const& input_trigger_registry,
     std::shared_ptr<KeyboardStateTracker> const& keyboard_state_tracker)
-    :   Global(display, Version<9>()),
-        keymap{std::make_shared<input::ParameterKeymap>()},
+    :   keymap{std::make_shared<input::ParameterKeymap>()},
         config_observer{
             std::make_shared<ConfigObserver>(
                 keymap,
@@ -300,10 +304,18 @@ mf::WlSeat::~WlSeat()
     }
 }
 
-auto mf::WlSeat::from(struct wl_resource* resource) -> WlSeat*
+auto mf::WlSeat::from(mw::Weak<mw::Seat> const& seat) -> WlSeat*
 {
-    auto const instance = static_cast<mf::WlSeat::Instance*>(wayland::Seat::from(resource));
+    auto const instance = mw::Seat::from<mf::WlSeat::Instance>(seat);
     return instance ? instance->seat : nullptr;
+}
+
+auto mf::WlSeat::create_instance(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::SeatMiddleware> instance,
+    uint32_t object_id) -> std::shared_ptr<mw::Seat>
+{
+    return std::make_shared<Instance>(std::move(client), std::move(instance), object_id, this);
 }
 
 void mf::WlSeat::for_each_listener(mw::Client* client, std::function<void(PointerEventDispatcher*)> func)
@@ -333,14 +345,9 @@ auto mf::WlSeat::make_keyboard_helper(KeyboardCallbacks* callbacks) -> std::shar
     return keyboard_helper;
 }
 
-void mf::WlSeat::bind(wl_resource* new_wl_seat)
-{
-    new Instance{new_wl_seat, this};
-}
-
 void mf::WlSeat::set_focus_to(WlSurface* new_surface)
 {
-    auto const new_client = new_surface ? new_surface->client : nullptr;
+    auto const new_client = new_surface ? new_surface->client.get() : nullptr;
     if (new_client != focused_client)
     {
         keyboard_listeners->for_each(focused_client, [](WlKeyboard* keyboard)
@@ -380,8 +387,12 @@ void mf::WlSeat::set_focus_to(WlSurface* new_surface)
         });
 }
 
-mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
-    : mw::Seat(new_resource, Version<9>()),
+mf::WlSeat::Instance::Instance(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::SeatMiddleware> instance,
+    uint32_t object_id,
+    mf::WlSeat* seat)
+    : mw::Seat(std::move(client), std::move(instance), object_id),
       seat{seat}
 {
     // TODO: Read the actual capabilities. Do we have a keyboard? Mouse? Touch?
@@ -389,40 +400,49 @@ mf::WlSeat::Instance::Instance(wl_resource* new_resource, mf::WlSeat* seat)
     send_name_event_if_supported("seat0");
 }
 
-void mf::WlSeat::Instance::get_pointer(wl_resource* new_pointer)
+auto mf::WlSeat::Instance::get_pointer(
+    rust::Box<mw::PointerMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Pointer>
 {
-    auto const pointer = new WlPointer{new_pointer};
-    auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer);
+    auto pointer = std::make_shared<WlPointer>(client, std::move(child_instance), child_object_id);
+    auto dispatcher = std::make_shared<PointerEventDispatcher>(pointer.get());
 
-    seat->pointer_listeners->register_listener(client, dispatcher.get());
+    seat->pointer_listeners->register_listener(client.get(), dispatcher.get());
     pointer->add_destroy_listener(
-        [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client]()
+        [listeners = seat->pointer_listeners, listener = std::move(dispatcher), client = client.get()]()
         {
             listeners->unregister_listener(client, listener.get());
         });
+    return pointer;
 }
 
-void mf::WlSeat::Instance::get_keyboard(wl_resource* new_keyboard)
+auto mf::WlSeat::Instance::get_keyboard(
+    rust::Box<mw::KeyboardMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Keyboard>
 {
-    auto const keyboard = new WlKeyboard{new_keyboard, *seat};
+    auto keyboard = std::make_shared<WlKeyboard>(client, std::move(child_instance), child_object_id, *seat);
 
-    seat->keyboard_listeners->register_listener(client, keyboard);
+    seat->keyboard_listeners->register_listener(client.get(), keyboard.get());
     keyboard->add_destroy_listener(
-        [listeners = seat->keyboard_listeners, listener = keyboard, client = client]()
+        [listeners = seat->keyboard_listeners, listener = keyboard.get(), client = client.get()]()
         {
             listeners->unregister_listener(client, listener);
         });
+    return keyboard;
 }
 
-void mf::WlSeat::Instance::get_touch(wl_resource* new_touch)
+auto mf::WlSeat::Instance::get_touch(
+    rust::Box<mw::TouchMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Touch>
 {
-    auto const touch = new WlTouch{new_touch, seat->clock};
-    seat->touch_listeners->register_listener(client, touch);
+    auto touch = std::make_shared<WlTouch>(client, std::move(child_instance), child_object_id, seat->clock);
+    seat->touch_listeners->register_listener(client.get(), touch.get());
     touch->add_destroy_listener(
-        [listeners = seat->touch_listeners, listener = touch, client = client]()
+        [listeners = seat->touch_listeners, listener = touch.get(), client = client.get()]()
         {
             listeners->unregister_listener(client, listener);
         });
+    return touch;
 }
 
 void mf::WlSeat::add_focus_listener(mw::Client* client, FocusListener* listener)
@@ -450,9 +470,9 @@ mf::PointerEventDispatcher::PointerEventDispatcher(WlPointer* wl_pointer) :
 
 void mf::PointerEventDispatcher::event(std::shared_ptr<MirPointerEvent const> const& event, WlSurface& root_surface)
 {
-    if (wl_data_device)
+    if (wl_data_device && wl_data_device_destroyed && !*wl_data_device_destroyed)
     {
-        wl_data_device.value().event(event, root_surface);
+        wl_data_device->event(event, root_surface);
     }
     else if (wl_pointer)
     {
@@ -462,7 +482,8 @@ void mf::PointerEventDispatcher::event(std::shared_ptr<MirPointerEvent const> co
 
 void mf::PointerEventDispatcher::start_dispatch_to_data_device(WlDataDevice* wl_data_device)
 {
-    this->wl_data_device = wayland::Weak<WlDataDevice>{wl_data_device};
+    this->wl_data_device = wl_data_device;
+    wl_data_device_destroyed = wl_data_device ? wl_data_device->destroyed_flag() : nullptr;
 
     if (wl_pointer)
     {
@@ -472,5 +493,6 @@ void mf::PointerEventDispatcher::start_dispatch_to_data_device(WlDataDevice* wl_
 
 void mf::PointerEventDispatcher::stop_dispatch_to_data_device()
 {
-    wl_data_device = wayland::Weak<WlDataDevice>{};
+    wl_data_device = nullptr;
+    wl_data_device_destroyed.reset();
 }

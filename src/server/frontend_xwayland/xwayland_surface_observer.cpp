@@ -18,7 +18,6 @@
 #include "xwayland_surface_observer_surface.h"
 #include "xwayland_surface.h"
 #include "wl_seat.h"
-#include "wayland_utils.h"
 #include "window_wl_surface_role.h"
 #include "wayland_input_dispatcher.h"
 

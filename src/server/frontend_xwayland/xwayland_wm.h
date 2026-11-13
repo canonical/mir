@@ -30,7 +30,6 @@
 #include <optional>
 #include <mutex>
 
-#include <wayland-server-core.h>
 #include <xcb/xfixes.h>
 
 namespace mir
@@ -64,7 +63,7 @@ public:
     /// Takes ownership of the given FD
     XWaylandWM(
         std::shared_ptr<WaylandConnector> wayland_connector,
-        wl_client* wayland_client,
+        wayland::Client* wayland_client,
         Fd const& fd,
         std::shared_ptr<dispatch::MultiplexingDispatchable> const& dispatcher,
         float assumed_surface_scale);
@@ -112,7 +111,7 @@ private:
 
     xcb_query_extension_reply_t const* const xfixes; ///< Must not be freed, can be null
     std::shared_ptr<WaylandConnector> const wayland_connector;
-    wl_client* const wayland_client;
+    wayland::Client* const wayland_client;
     std::shared_ptr<XWaylandWMShell> const wm_shell;
     Executor& wayland_executor;
     std::unique_ptr<XWaylandCursors> const cursors;

@@ -18,11 +18,13 @@
 #define MIR_PLATFORM_GBM_KMS_LINUX_DMABUF_H_
 
 #include "egl_context_executor.h"
-#include "linux-dmabuf-stable-v1_wrapper.h"
 
 #include <EGL/egl.h>
+#include <sys/types.h>
+#include <functional>
 #include <memory>
 #include <span>
+#include <vector>
 
 #include <mir/graphics/buffer.h>
 #include <mir/graphics/drm_formats.h>
@@ -89,22 +91,59 @@ private:
     std::unique_ptr<EGLBufferCopier> const blitter;
 };
 
-class LinuxDmaBuf : public mir::wayland::LinuxDmabufV1::Global
+/**
+ * linux-dmabuf client buffer support offered by a graphics platform.
+ *
+ * A platform that can import linux-dmabuf client buffers constructs one of these and
+ * offers it through GraphicBufferAllocator::linux_dmabuf(). The Wayland frontend only
+ * advertises zwp_linux_dmabuf_v1 when the platform offers one, and routes all imports
+ * of client dma-bufs through it.
+ */
+class LinuxDmaBuf
 {
 public:
-    LinuxDmaBuf(wl_display* display, std::shared_ptr<DMABufEGLProvider> provider);
+    struct FormatModifiers
+    {
+        DRMFormat format;
+        std::vector<uint64_t> modifiers;
+    };
 
-    auto buffer_from_resource(
-        wl_resource* buffer,
-        std::function<void()>&& on_consumed,
-        std::function<void()>&& on_release,
-        std::shared_ptr<common::EGLContextExecutor> egl_delegate) -> std::shared_ptr<Buffer>;
+    /**
+     * \param provider          The provider used to import dma-bufs
+     * \param import_context    An EGL context, made current by import() while importing
+     */
+    LinuxDmaBuf(std::shared_ptr<DMABufEGLProvider> provider, std::unique_ptr<renderer::gl::Context> import_context);
+
+    ~LinuxDmaBuf();
+
+    /// The device clients should allocate their dma-bufs on
+    auto main_device() const -> dev_t;
+
+    /// The formats, and the modifiers for each, that clients may submit
+    auto formats() const -> std::vector<FormatModifiers> const&;
+
+    /// Whether clients may submit dma-bufs with this format/modifier pair
+    auto supports(DRMFormat format, uint64_t modifier) const -> bool;
+
+    /**
+     * Validate that this dma-buf *can* be imported
+     *
+     * \throws  EGL exception on failure
+     */
+    void validate_import(DMABufBuffer const& dma_buf);
+
+    /**
+     * Import a client's dma-buf into a Buffer
+     *
+     * \note    Must be called on the Wayland thread
+     */
+    auto import(DMABufBuffer const& dma_buf, std::function<void()>&& on_consumed, std::function<void()>&& on_release)
+        -> std::shared_ptr<Buffer>;
 
 private:
-    class Instance;
-    void bind(wl_resource* new_resource) override;
-
     std::shared_ptr<DMABufEGLProvider> const provider;
+    std::unique_ptr<renderer::gl::Context> const import_context;
+    std::vector<FormatModifiers> const formats_;
 };
 
 }

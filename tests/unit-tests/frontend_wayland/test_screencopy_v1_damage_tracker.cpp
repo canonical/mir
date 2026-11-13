@@ -28,6 +28,7 @@
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
 namespace mw = mir::wayland;
+namespace mw = mir::wayland;
 namespace geom = mir::geometry;
 namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
@@ -448,8 +449,8 @@ TEST_F(DamageTrackerV1, when_outputs_are_different_allows_multiple_pending_frame
 {
     geom::Rectangle const area{{}, {20, 30}};
     capture_frame(area, area.size);
-    wl_resource* output_a{reinterpret_cast<wl_resource*>(1)};
-    wl_resource* output_b{reinterpret_cast<wl_resource*>(2)};
+    mw::Output* output_a{reinterpret_cast<mw::Output*>(1)};
+    mw::Output* output_b{reinterpret_cast<mw::Output*>(2)};
 
     {
         NiceMock<MockFrame> frame_a{area};
