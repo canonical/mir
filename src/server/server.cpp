@@ -507,7 +507,7 @@ auto mir::Server::get_activation_token() const -> std::string
     BOOST_THROW_EXCEPTION(std::logic_error("Cannot open connection when not running"));
 }
 
-void mir::Server::run_on_wayland_display(std::function<void(Executor&)> const& functor)
+void mir::Server::run_on_wayland_display(std::function<void()> const& functor)
 {
     if (auto const config = self->server_config)
     {

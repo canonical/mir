@@ -33,7 +33,6 @@ namespace mir::wayland { class Client; }
 
 namespace mir
 {
-class Executor;
 template<class Observer>
 class ObserverRegistrar;
 
@@ -480,14 +479,14 @@ public:
     /// It can be passed to another process, or used with wl_display_connect_to_fd()
     auto open_wayland_client_socket() -> Fd;
 
-    /// Run the supplied functor on the Wayland event-loop thread, passing the
-    /// executor that dispatches work onto that loop. Used by test/integration
-    /// tooling that needs to interact with the running Wayland backend.
-    void run_on_wayland_display(std::function<void(Executor&)> const& functor);
+    /// Run the supplied functor on the Wayland event-loop thread. Must only be
+    /// called while the server is running. Used by WLCS that needs to
+    /// interact with the running Wayland backend.
+    void run_on_wayland_display(std::function<void()> const& functor);
 
     /// Resolve the `scene::Surface` for the Wayland surface identified by
     /// (`session`, protocol object `id`), or nullptr if unknown. Used by
-    /// test/integration tooling to map a client-side surface to its Mir surface.
+    /// WLCS to map a client-side surface to its Mir surface.
     auto scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
         -> std::shared_ptr<scene::Surface>;
 

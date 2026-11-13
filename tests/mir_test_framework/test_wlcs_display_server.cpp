@@ -193,7 +193,35 @@ private:
     std::condition_variable notifier;
 };
 
+/// Dispatches work onto the Wayland event loop via mir::Server.
+///
+/// Once stopped, work is dropped: calling into mir::Server during shutdown
+/// would lazily recreate the (already destroyed) Wayland connector.
+class ServerWaylandExecutor : public mir::Executor
+{
+public:
+    explicit ServerWaylandExecutor(mir::Server& server)
+        : server{&server}
+    {
+    }
 
+    void spawn(std::function<void()>&& work) override
+    {
+        std::lock_guard lock{mutex};
+        if (server)
+            server->run_on_wayland_display(work);
+    }
+
+    void stop()
+    {
+        std::lock_guard lock{mutex};
+        server = nullptr;
+    }
+
+private:
+    std::mutex mutex;
+    mir::Server* server;
+};
 }
 
 
@@ -539,6 +567,10 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
                 });
 
             mir_server = &server;
+
+            auto const wayland_executor = std::make_shared<ServerWaylandExecutor>(server);
+            server.add_stop_callback([wayland_executor] { wayland_executor->stop(); });
+            executor = wayland_executor;
         });
 }
 
@@ -549,12 +581,8 @@ void miral::TestWlcsDisplayServer::start_server()
     mir::test::Signal started;
 
     mir_server->run_on_wayland_display(
-        [this, &started](mir::Executor& wayland_executor)
+        [this, &started]()
             {
-                // The executor is owned by the running Wayland backend and
-                // outlives our use of it, so wrap it in a non-owning shared_ptr.
-                executor = std::shared_ptr<mir::Executor>(std::shared_ptr<void>{}, &wayland_executor);
-
                 // Execute all observations on the Wayland event loop…
                 mir_server->the_seat_observer_registrar()->register_interest(event_listener, *executor);
 

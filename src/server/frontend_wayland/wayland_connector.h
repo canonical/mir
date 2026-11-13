@@ -203,7 +203,7 @@ public:
     int client_socket_fd(
         std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
 
-    void run_on_wayland_display(std::function<void(Executor&)> const& functor);
+    void run_on_wayland_display(std::function<void()> const& functor);
 
     /// Create a Wayland client for `client_fd` on the Wayland event loop and
     /// pass it to `callback`. The wl_display is owned by this connector, so

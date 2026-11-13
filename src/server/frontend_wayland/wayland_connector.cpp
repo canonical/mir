@@ -578,9 +578,9 @@ int mf::WaylandConnector::client_socket_fd(
     return socket_fd[client];
 }
 
-void mf::WaylandConnector::run_on_wayland_display(std::function<void(Executor&)> const& functor)
+void mf::WaylandConnector::run_on_wayland_display(std::function<void()> const& functor)
 {
-    executor->spawn([executor = executor, functor]() { functor(*executor); });
+    executor->spawn([functor]() { functor(); });
 }
 
 void mf::WaylandConnector::create_wayland_client(
