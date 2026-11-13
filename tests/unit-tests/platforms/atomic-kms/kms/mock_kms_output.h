@@ -24,6 +24,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <optional>
 
 namespace mir
 {
@@ -47,8 +48,8 @@ public:
     MOCK_METHOD(bool, set_crtc, (graphics::FBHandle const&), (override));
     MOCK_METHOD(bool, has_crtc_mismatch, (), (override));
     MOCK_METHOD(void, clear_crtc, (), (override));
-    MOCK_METHOD(uint32_t, current_crtc_id, (), (const, override));
-    MOCK_METHOD(uint32_t, current_plane_id, (), (const, override));
+    MOCK_METHOD(std::optional<uint32_t>, current_crtc_id, (), (const, override));
+    MOCK_METHOD(std::optional<uint32_t>, current_plane_id, (), (const, override));
     MOCK_METHOD(size_t, current_mode_index, (), (const, override));
     MOCK_METHOD(bool, page_flip, (graphics::FBHandle const&), (override));
     MOCK_METHOD(bool, test_presentation, (graphics::atomic::PresentationState const&), (override));
