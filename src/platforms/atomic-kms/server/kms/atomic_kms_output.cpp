@@ -17,6 +17,7 @@
 #include "atomic_kms_output.h"
 #include "atomic_update.h"
 #include "plane_capabilities.h"
+#include "presentation_state.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/display_configuration.h>
@@ -29,6 +30,7 @@
 #include <mir/log.h>
 #include <drm_fourcc.h>
 #include <drm_mode.h>
+#include <algorithm>
 #include <span>
 #include <string_view>
 
@@ -63,6 +65,27 @@ uint32_t create_blob_returning_handle(mir::Fd const& drm_fd, void const* data, s
                 "Failed to create DRM property blob"}));
     }
     return handle;
+}
+
+void add_plane_viewport(
+    mga::AtomicUpdate& update,
+    mgk::ObjectProperties const& plane_props,
+    geom::Displacement const& source_offset,
+    geom::Size const& source_size,
+    geom::Point const& destination,
+    geom::Size const& destination_size)
+{
+    /* Source viewport. Coordinates are 16.16 fixed point format */
+    update.add_property(plane_props, "SRC_X", source_offset.dx.as_uint32_t() << 16);
+    update.add_property(plane_props, "SRC_Y", source_offset.dy.as_uint32_t() << 16);
+    update.add_property(plane_props, "SRC_W", static_cast<uint64_t>(source_size.width.as_uint32_t()) << 16);
+    update.add_property(plane_props, "SRC_H", static_cast<uint64_t>(source_size.height.as_uint32_t()) << 16);
+
+    /* Destination viewport. Coordinates are *not* 16.16 */
+    update.add_property(plane_props, "CRTC_X", destination.x.as_int());
+    update.add_property(plane_props, "CRTC_Y", destination.y.as_int());
+    update.add_property(plane_props, "CRTC_W", destination_size.width.as_uint32_t());
+    update.add_property(plane_props, "CRTC_H", destination_size.height.as_uint32_t());
 }
 
 class PropertyBlobData
@@ -424,24 +447,7 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     }
 
     AtomicUpdate update;
-    update.add_property(*conf->crtc_props, "MODE_ID", conf->mode->handle());
-    update.add_property(*conf->connector_props, "CRTC_ID", conf->current_crtc->crtc_id);
-
-    /* Source viewport. Coordinates are 16.16 fixed point format */
-    update.add_property(*conf->plane_props, "SRC_X", conf->fb_offset.dx.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_Y", conf->fb_offset.dy.as_uint32_t() << 16);
-    update.add_property(*conf->plane_props, "SRC_W", fb_width << 16);
-    update.add_property(*conf->plane_props, "SRC_H", fb_height << 16);
-
-    /* Destination viewport. Coordinates are *not* 16.16 */
-    update.add_property(*conf->plane_props, "CRTC_X", 0);
-    update.add_property(*conf->plane_props, "CRTC_Y", 0);
-    update.add_property(*conf->plane_props, "CRTC_W", crtc_width);
-    update.add_property(*conf->plane_props, "CRTC_H", crtc_height);
-
-    /* Set a surface for the plane */
-    update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
-    update.add_property(*conf->plane_props, "FB_ID", fb);
+    add_primary_properties(update, *conf, fb);
 
     auto ret = update.commit(drm_fd_, 0);
     if (ret)
@@ -453,6 +459,84 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     }
 
     using_saved_crtc = false;
+    return true;
+}
+
+bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
+{
+    auto conf = configuration.lock();
+    if (!conf->plane_capabilities)
+    {
+        mir::log_debug("Output %s has no associated CRTC to test a presentation on",
+                       mgk::connector_name(conf->connector).c_str());
+        return false;
+    }
+
+    auto const& primary = state.primary();
+    if ((conf->current_crtc->width != primary.size().width.as_uint32_t()) ||
+        (conf->current_crtc->height != primary.size().height.as_uint32_t()))
+    {
+        return false;
+    }
+
+    AtomicUpdate update;
+    add_primary_properties(update, *conf, primary);
+
+    auto const& caps = *conf->plane_capabilities;
+    for (auto const& assignment : state.client_planes())
+    {
+        // configure_locked() may have rediscovered the capabilities since planning, so look the plane up again.
+        auto const plane = std::ranges::find_if(
+            caps.overlays,
+            [&assignment](auto const& candidate) { return candidate.id == assignment.plane; });
+        if ((plane == caps.overlays.end()) || !plane->bt709_limited)
+        {
+            return false;
+        }
+
+        auto const& fb = *assignment.framebuffer;
+
+        mgk::ObjectProperties plane_props{drm_fd_, plane->id, DRM_MODE_OBJECT_PLANE};
+
+        update.add_property(plane_props, "FB_ID", fb);
+        update.add_property(plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
+
+        add_plane_viewport(update, plane_props, geom::Displacement{}, fb.size(), assignment.destination, fb.size());
+
+        if (plane->alpha_max)
+        {
+            update.add_property(plane_props, "alpha", *plane->alpha_max);
+        }
+        if (plane->blend_none)
+        {
+            update.add_property(plane_props, "pixel blend mode", *plane->blend_none);
+        }
+        update.add_property(plane_props, "COLOR_ENCODING", plane->bt709_limited->encoding);
+        update.add_property(plane_props, "COLOR_RANGE", plane->bt709_limited->range);
+        if (!plane->zpos.immutable)
+        {
+            /* Equal zpos is broken by plane ID, with the higher ID above, matching
+             * drm_atomic_normalize_zpos(). This is the lowest legal value that keeps
+             * the overlay above the primary.
+             */
+            update.add_property(
+                plane_props,
+                "zpos",
+                std::max(plane->zpos.min, caps.primary.zpos.current + (plane->id > caps.primary.id ? 0 : 1)));
+        }
+    }
+
+    auto const ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_TEST_ONLY);
+    if (ret)
+    {
+        mir::log_debug(
+            "Output %s rejected mixed presentation: %s (%i)",
+            mgk::connector_name(conf->connector).c_str(),
+            mir::errno_to_cstr(-ret),
+            -ret);
+        return false;
+    }
+
     return true;
 }
 
@@ -542,6 +626,30 @@ bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
     }
 
     return true;
+}
+
+void mga::AtomicKMSOutput::add_primary_properties(
+    AtomicUpdate& update,
+    Configuration const& conf,
+    FBHandle const& fb) const
+{
+    auto const crtc_width = conf.current_crtc->width;
+    auto const crtc_height = conf.current_crtc->height;
+
+    update.add_property(*conf.crtc_props, "MODE_ID", conf.mode->handle());
+    update.add_property(*conf.connector_props, "CRTC_ID", conf.current_crtc->crtc_id);
+
+    add_plane_viewport(
+        update,
+        *conf.plane_props,
+        conf.fb_offset,
+        fb.size(),
+        geom::Point{},
+        geom::Size{geom::Width{static_cast<int>(crtc_width)}, geom::Height{static_cast<int>(crtc_height)}});
+
+    /* Set a surface for the plane */
+    update.add_property(*conf.plane_props, "CRTC_ID", conf.current_crtc->crtc_id);
+    update.add_property(*conf.plane_props, "FB_ID", fb);
 }
 
 void mga::AtomicKMSOutput::restore_saved_crtc()

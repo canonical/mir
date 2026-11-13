@@ -122,31 +122,45 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
 {
     if (renderable_list.size() == 1)
     {
-        if (renderable_list[0].screen_positon != view_area())
-        {
-            return false;
-        }
-
-        if (renderable_list[0].source_position.top_left != geom::PointF{0, 0} ||
-            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
-            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
-        {
-            return false;
-        }
-
-        if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
+        if (auto fb = fullscreen_framebuffer(renderable_list[0]))
         {
             next_state = PresentationState::full_scene(std::move(fb));
             return true;
         }
         return false;
     }
-    else
+
+    if (renderable_list.size() == 2)
     {
-        // TODO map display elements to atomic KMS planes
+        return queue_mixed(renderable_list[0], renderable_list[1]);
     }
 
     return false;
+}
+
+auto mga::DisplaySink::fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>
+{
+    if (element.screen_positon != view_area())
+    {
+        return nullptr;
+    }
+
+    if (element.source_position.top_left != geom::PointF{0, 0} ||
+        element.source_position.size.width.as_value() != view_area().size.width.as_int() ||
+        element.source_position.size.height.as_value() != view_area().size.height.as_int())
+    {
+        return nullptr;
+    }
+
+    return std::dynamic_pointer_cast<FBHandle>(element.buffer);
+}
+
+auto mga::DisplaySink::can_promote() const -> bool
+{
+    // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
+    return plane_promotion == PlanePromotion::available &&
+        area.size == output->size() &&
+        transform == glm::mat2{1};
 }
 
 namespace
@@ -163,16 +177,34 @@ auto is_directly_scannable(mg::Renderable const& renderable) -> bool
         !renderable.clip_area();
 }
 
-auto has_legal_overlay_plane(mga::CrtcPlaneCapabilities const& capabilities, uint64_t modifier) -> bool
+auto find_legal_overlay_plane(
+    mga::CrtcPlaneCapabilities const& capabilities,
+    mga::FormatModifier format_modifier) -> mga::PlaneCapability const*
 {
-    auto const format_modifier = mga::FormatModifier{DRM_FORMAT_NV12, modifier};
-    return std::ranges::any_of(capabilities.overlays, [&](mga::PlaneCapability const& plane)
+    auto const plane = std::ranges::find_if(capabilities.overlays, [&](mga::PlaneCapability const& plane)
     {
         return plane.can_be_above_primary &&
             plane.bt709_limited.has_value() &&
             std::ranges::find(plane.formats, format_modifier) != plane.formats.end() &&
             (!plane.alpha_max || plane.alpha_max == opaque_alpha);
     });
+    return plane == capabilities.overlays.end() ? nullptr : &*plane;
+}
+
+auto promotable_plane(
+    mga::CrtcPlaneCapabilities const& capabilities,
+    mga::FormatModifier format_modifier,
+    mg::gl::Texture::Layout layout) -> mga::PlaneCapability const*
+{
+    // Layout::GL means the buffer is not y-inverted (memory row 0 is the top). A y-inverted
+    // buffer would need the plane "rotation" property with DRM_MODE_REFLECT_Y, which is not decoded.
+    if (format_modifier.format != DRM_FORMAT_NV12 ||
+        layout != mg::gl::Texture::Layout::GL)
+    {
+        return nullptr;
+    }
+
+    return find_legal_overlay_plane(capabilities, format_modifier);
 }
 
 auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabilities const& capabilities) -> bool
@@ -185,16 +217,14 @@ auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabil
         return false;
 
     auto const dmabuf = dynamic_cast<mg::DMABufBuffer*>(buffer->native_buffer_base());
-    if (!dmabuf ||
-        dmabuf->format() != DRM_FORMAT_NV12 ||
-        dmabuf->layout() != mg::gl::Texture::Layout::GL)
+    if (!dmabuf)
     {
         return false;
     }
 
     auto const modifier = dmabuf->modifier();
     return modifier && *modifier != DRM_FORMAT_MOD_INVALID &&
-        has_legal_overlay_plane(capabilities, *modifier) &&
+        promotable_plane(capabilities, mga::FormatModifier{dmabuf->format(), *modifier}, dmabuf->layout()) &&
         renderable.src_bounds() == geom::RectangleD{{0, 0}, dmabuf->size()} &&
         renderable.screen_position().size == dmabuf->size();
 }
@@ -318,16 +348,61 @@ auto select_direct_candidate(
 }
 }
 
+auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
+{
+    auto const capabilities = output->plane_capabilities();
+    if (!can_promote() || !capabilities)
+    {
+        return false;
+    }
+
+    auto primary_fb = fullscreen_framebuffer(primary);
+    if (!primary_fb)
+    {
+        return false;
+    }
+
+    auto client_fb = std::dynamic_pointer_cast<DirectScanoutFramebuffer>(client.buffer);
+    if (!client_fb)
+    {
+        return false;
+    }
+
+    auto const plane = promotable_plane(*capabilities, client_fb->format_modifier(), client_fb->layout());
+    if (!plane)
+    {
+        return false;
+    }
+
+    auto const size = client_fb->size();
+    // The client may be partly outside the output; the kernel clips the destination and
+    // adjusts the source, so only require a visible overlap.
+    if (client.source_position != geom::RectangleF{{0, 0}, {size.width.as_value(), size.height.as_value()}} ||
+        client.screen_positon.size != size ||
+        !view_area().overlaps(client.screen_positon))
+    {
+        return false;
+    }
+
+    auto const destination = geom::Point{} + (client.screen_positon.top_left - view_area().top_left);
+    auto state = PresentationState::mixed(
+        std::move(primary_fb),
+        {ClientPlaneAssignment{plane->id, std::move(client_fb), destination}});
+
+    if (!output->test_presentation(state))
+    {
+        return false;
+    }
+
+    next_state = std::move(state);
+    return true;
+}
+
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
     -> std::optional<LogicalStacking>
 {
     auto const plane_capabilities = output->plane_capabilities();
-    // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
-    auto const unscaled = area.size == output->size();
-    if (plane_promotion != PlanePromotion::available ||
-        !plane_capabilities ||
-        !unscaled ||
-        transform != glm::mat2{1})
+    if (!can_promote() || !plane_capabilities)
     {
         return std::nullopt;
     }
@@ -574,6 +649,43 @@ auto drm_fb_id_from_dma_buffer(
 }
 }
 
+mga::AtomicKmsFbHandle::AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_id, geometry::Size size) :
+    kms_fb_id{std::move(fb_id)},
+    size_{size}
+{
+}
+
+mga::AtomicKmsFbHandle::operator uint32_t() const
+{
+    return *kms_fb_id;
+}
+
+auto mga::AtomicKmsFbHandle::size() const -> geometry::Size
+{
+    return size_;
+}
+
+mga::DirectScanoutFramebuffer::DirectScanoutFramebuffer(
+    std::shared_ptr<uint32_t> fb_id,
+    geom::Size size,
+    mga::FormatModifier format_modifier,
+    mg::gl::Texture::Layout layout) :
+    AtomicKmsFbHandle{std::move(fb_id), size},
+    format_modifier_{format_modifier},
+    layout_{layout}
+{
+}
+
+auto mga::DirectScanoutFramebuffer::format_modifier() const -> mga::FormatModifier
+{
+    return format_modifier_;
+}
+
+auto mga::DirectScanoutFramebuffer::layout() const -> mg::gl::Texture::Layout
+{
+    return layout_;
+}
+
 auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
 {
     auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm, buffer);
@@ -582,29 +694,6 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
     {
         return {};
     }
-
-    struct AtomicKmsFbHandle : public mg::FBHandle
-    {
-        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
-            kms_fb_id{fb_handle},
-            size_{size}
-        {
-        }
-
-        virtual auto size() const -> geometry::Size override
-        {
-            return size_;
-        }
-
-        virtual operator uint32_t() const override
-        {
-            return *kms_fb_id;
-        }
-
-    private:
-        std::shared_ptr<uint32_t> kms_fb_id;
-        geometry::Size size_;
-    };
 
     buffer->on_consumed();
 
