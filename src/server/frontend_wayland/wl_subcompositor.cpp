@@ -18,11 +18,13 @@
 
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
+#include "resource_lifetime_tracker.h"
 
 #include <mir/wayland/client.h>
 #include <mir/wayland/protocol_error.h>
 #include <mir/geometry/rectangle.h>
 #include <boost/throw_exception.hpp>
+#include <wayland-server-protocol.h>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
@@ -249,11 +251,38 @@ void mf::WlSubsurface::refresh_surface_data_now()
     }
 }
 
+namespace
+{
+/// A synchronized subsurface keeps its commits in a cache until the parent commits. A buffer that
+/// is replaced there is never applied, so nothing else will release it: do it here.
+void release_replaced_buffer(mf::WlSurfaceState& cached, mf::WlSurfaceState const& incoming)
+{
+    if (!cached.buffer || !incoming.buffer)
+        return;
+
+    auto const& old_buffer = cached.buffer.value();
+    if (!old_buffer || old_buffer == incoming.buffer.value())
+        return;
+
+    if (cached.release_fence)
+    {
+        // The fence belongs to the buffer being dropped, not to the incoming one
+        cached.release_fence->signal();
+        cached.release_fence.reset();
+    }
+    else
+    {
+        wl_buffer_send_release(old_buffer.value());
+    }
+}
+}
+
 void mf::WlSubsurface::commit(WlSurfaceState const& state)
 {
     if (!cached_state)
         cached_state = WlSurfaceState();
 
+    release_replaced_buffer(cached_state.value(), state);
     cached_state.value().update_from(state);
 
     if (cached_state.value().buffer)
