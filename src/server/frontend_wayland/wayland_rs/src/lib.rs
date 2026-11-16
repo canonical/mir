@@ -22,6 +22,7 @@ include!("protocols.rs");
 include!("middleware.rs");
 include!("ffi.rs");
 include!("wayland_server_generated.rs");
+mod dynamic;
 mod protocol_impls;
 mod wayland_client;
 mod wayland_server_core;

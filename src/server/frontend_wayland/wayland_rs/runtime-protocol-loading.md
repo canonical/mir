@@ -1,6 +1,6 @@
 # Plan: runtime-loadable (out-of-tree) protocol implementations for `wayland_rs`
 
-Status: proposal. Based on the `wayland-rs/08-spinner-splash-size` stack (#5234), where the
+Status: first increment implemented (see [Progress](#progress)). Based on the `wayland-rs/08-spinner-splash-size` stack (#5234), where the
 Wayland frontend runs on `wayland_rs` and `libmirwayland` / the C++ protocol generator are gone.
 
 ## Problem
@@ -76,9 +76,10 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
      self-references are fine.
    - `child_interface` (`new_id`) is stored as the new object's interface and used to parse its
      requests (`rs/server_impl/client.rs:597-680`), so it must be the **full** descriptor.
-   - Therefore build in two phases: leak stable `Interface` slots for every interface first, then
-     fill `MessageDesc`s pointing at those slots (handles cycles such as
-     `xdg_toplevel.set_parent`).
+   - Therefore build children first, in topological order of `new_id` references, and reject
+     `new_id` cycles at load time. Building cyclic graphs would need references to
+     not-yet-initialised `Interface`s. Object-argument cycles such as `xdg_toplevel.set_parent`
+     are unaffected, because they use name-only placeholders.
 1. **Register a global:**
    ```rust
    handle.backend_handle().create_global::<ServerState>(
@@ -146,6 +147,8 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
 
 ## Phased work items
 
+Progress against these items is tracked in [Progress](#progress).
+
 1. Spike: hand-written dynamic global loading an in-repo test XML at runtime, registered via
    `backend_handle().create_global`, bound by a client in the `tests/wayland_rs` harness; prove
    interop with a `wl_surface` argument.
@@ -159,6 +162,34 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
    `tests/miral/example_xdg_shell_v6.cpp`); miral/WLCS tests.
 1. Optional: `dlopen` plugin loader + Rust helper crate.
 1. Update `doc/sphinx/` (how-to for shell authors) and release notes for the MirAL deprecations.
+
+## Progress
+
+Done (first increment, `src/dynamic/` + `tests/wayland_rs/test_dynamic_protocol.cpp`):
+
+- Runtime registry (`load_dynamic_protocol(xml)`), reusing `build_script/protocol_parser.rs` via
+  `#[path]` rather than a separate crate. Loading is idempotent for identical XML. It rejects
+  invalid XML, clashes with in-tree (generated `BUILTIN_INTERFACE_NAMES`) or already-loaded
+  interfaces, `new_id`s without an interface or of an in-tree or unknown interface, and `new_id`
+  cycles. A failed load registers nothing.
+- Generic cxx bridge:
+  - `DynamicArgument`/`DynamicArgumentKind` shared types.
+  - C++ `DynamicGlobalHandler` (`bind`, `can_view`) and `DynamicResourceHandler` (`on_request`,
+    `on_constructor_request`, `on_destroyed`) in `wayland_rs_cpp/include/dynamic_protocol.h`.
+  - Rust `DynamicResource` (`send_event`, `post_error`, `destroy`, `create_resource`,
+    `set_handler`, `client`, …).
+- `WaylandServer::create_dynamic_global` (running server only) returning an RAII
+  `DynamicGlobal`.
+- Requests are dispatched to C++; object arguments carry the target's handler.
+  `mir::wayland::ProtocolError` is posted to the client, and other exceptions become
+  `wl_display` implementation errors.
+- `send_event` fully validates before reaching the backend (opcode, `since`, arity, kinds,
+  nullability, embedded nulls, object/`new_id` ownership and interface, fds), so C++ misuse
+  returns an error instead of panicking.
+- A null `GlobalFactory` now registers no in-tree globals. The test fixture relies on this.
+
+Not done yet: in-tree interop table (object args of in-tree interfaces arrive with only an id),
+pre-run registration queue, MirAL API, typed generator, `dlopen`, docs, dependency caps.
 
 ## Risks / open questions
 

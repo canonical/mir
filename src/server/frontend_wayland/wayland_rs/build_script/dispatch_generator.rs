@@ -62,7 +62,7 @@ pub fn generate_dispatch_rs(protocols: &[WaylandProtocol]) -> TokenStream {
                 OBJECT_REGISTRY.write().unwrap_or_else(|e| e.into_inner()).remove(&resource.id().protocol_id());
             }
 
-            fn parse_post_error(what: &str) -> (u32, u32, String) {
+            pub(crate) fn parse_post_error(what: &str) -> (u32, u32, String) {
                 let mut parts = what.splitn(3, ':');
                 let object_id = parts.next()
                     .and_then(|s| s.trim().parse::<u32>().ok())

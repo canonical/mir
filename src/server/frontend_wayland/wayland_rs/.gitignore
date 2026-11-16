@@ -7,6 +7,7 @@ wayland_rs_cpp/include/*
 wayland_rs_cpp/src/*
 
 !wayland_rs_cpp/include/client.h
+!wayland_rs_cpp/include/dynamic_protocol.h
 !wayland_rs_cpp/include/lifetime_tracker.h
 !wayland_rs_cpp/include/protocol_error.h
 !wayland_rs_cpp/include/wayland_client_registry.h

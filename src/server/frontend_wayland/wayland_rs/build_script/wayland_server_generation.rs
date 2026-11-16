@@ -12,13 +12,21 @@ use quote::{format_ident, quote};
 /// At the moment this includes:
 ///
 /// - The global registration method.
+/// - The names of every interface compiled into Mir (`BUILTIN_INTERFACE_NAMES`),
+///   which protocols loaded at runtime must not redefine.
 pub fn generate_wayland_server_generated_rs(protocols: &[WaylandProtocol]) -> TokenStream {
     let registration_impls = protocols.iter().flat_map(generate_register_globals_impl);
+    let builtin_interface_names = protocols
+        .iter()
+        .flat_map(|protocol| protocol.interfaces.iter().map(|interface| &interface.name));
 
     quote! {
         use crate::ffi::GlobalFactory;
         use cxx::UniquePtr;
         use std::sync::{Mutex, Arc};
+
+        /// The names of every interface whose protocol is compiled into Mir.
+        pub(crate) const BUILTIN_INTERFACE_NAMES: &[&str] = &[#(#builtin_interface_names),*];
 
         // Rust cannot know that my GlobalFactory is thread-safe, despite being
         // wrapped in an Arc<Mutex<...>>. As a result, we need to implement Send + Sync
@@ -27,7 +35,12 @@ pub fn generate_wayland_server_generated_rs(protocols: &[WaylandProtocol]) -> To
         unsafe impl Sync for GlobalFactory {}
 
         impl WaylandServer {
+            /// Register a global for each in-tree interface. A null `factory`
+            /// registers none (a server with only runtime-loaded globals).
             pub fn register_globals(state: &ServerState, factory: Arc<Mutex<UniquePtr<GlobalFactory>>>) {
+                if factory.lock().expect("No recovery from lock poisoning").is_null() {
+                    return;
+                }
                 #(#registration_impls)*
             }
         }

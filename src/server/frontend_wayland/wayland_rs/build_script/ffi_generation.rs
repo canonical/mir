@@ -44,10 +44,81 @@ pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> T
         use crate::wayland_client::*;
         use crate::middleware::*;
         use crate::dispatch::*;
+        use crate::dynamic::*;
 
         #[cxx::bridge(namespace = "mir::wayland")]
         #[allow(dead_code, unused_imports, clippy::all)]
         mod ffi {
+            /// The wire type of a [DynamicArgument].
+            #[derive(Debug)]
+            enum DynamicArgumentKind {
+                Int,
+                Uint,
+                Fixed,
+                String,
+                Object,
+                NewId,
+                Array,
+                Fd,
+            }
+
+            /// A single request or event argument of a protocol loaded at runtime.
+            ///
+            /// Only the fields relevant to `kind` are meaningful:
+            /// * `Int`: `int_value`.
+            /// * `Uint`: `uint_value`.
+            /// * `Fixed`: `int_value`, holding the raw 24.8 fixed-point value.
+            /// * `String`: `string_value`, or `is_null` for a null string.
+            /// * `Object` / `NewId`: `object_id` (the protocol id; 0 for a null object). On
+            ///   requests, `object_handler` is the handler of an object argument that belongs
+            ///   to a protocol loaded at runtime (null otherwise).
+            /// * `Array`: `array_value`.
+            /// * `Fd`: `fd`. A received descriptor is owned by the recipient; a descriptor sent
+            ///   in an event is duplicated, so the sender keeps ownership.
+            struct DynamicArgument {
+                kind: DynamicArgumentKind,
+                int_value: i32,
+                uint_value: u32,
+                string_value: String,
+                is_null: bool,
+                array_value: Vec<u8>,
+                fd: i32,
+                object_id: u32,
+                object_handler: SharedPtr<DynamicResourceHandler>,
+            }
+
+            extern "Rust" {
+                fn load_dynamic_protocol(xml: &str) -> Result<()>;
+
+                type DynamicGlobal;
+                fn create_dynamic_global(self: &WaylandServer, interface_name: &str, version: u32, handler: UniquePtr<DynamicGlobalHandler>) -> Result<Box<DynamicGlobal>>;
+
+                type DynamicResource;
+                fn object_id(self: &DynamicResource) -> u32;
+                fn version(self: &DynamicResource) -> u32;
+                fn interface_name(self: &DynamicResource) -> String;
+                fn is_alive(self: &DynamicResource) -> bool;
+                fn client(self: &DynamicResource) -> Result<Box<WaylandClient>>;
+                fn send_event(self: &DynamicResource, opcode: u32, args: &[DynamicArgument]) -> Result<()>;
+                fn post_error(self: &DynamicResource, code: u32, message: &str);
+                fn destroy(self: &DynamicResource);
+                fn create_resource(self: &DynamicResource, interface_name: &str) -> Result<Box<DynamicResource>>;
+                fn set_handler(self: &DynamicResource, handler: SharedPtr<DynamicResourceHandler>) -> Result<()>;
+            }
+
+            unsafe extern "C++" {
+                include!("wayland_rs_cpp/include/dynamic_protocol.h");
+
+                type DynamicGlobalHandler;
+                fn bind(self: Pin<&mut DynamicGlobalHandler>, client: Box<WaylandClient>, resource: Box<DynamicResource>) -> Result<SharedPtr<DynamicResourceHandler>>;
+                fn can_view(self: Pin<&mut DynamicGlobalHandler>, client_id: Box<WaylandClientId>) -> Result<bool>;
+
+                type DynamicResourceHandler;
+                fn on_request(self: Pin<&mut DynamicResourceHandler>, opcode: u32, args: Vec<DynamicArgument>) -> Result<()>;
+                fn on_constructor_request(self: Pin<&mut DynamicResourceHandler>, opcode: u32, args: Vec<DynamicArgument>, new_resource: Box<DynamicResource>) -> Result<SharedPtr<DynamicResourceHandler>>;
+                fn on_destroyed(self: Pin<&mut DynamicResourceHandler>) -> Result<()>;
+            }
+
             extern "Rust" {
                 type WaylandServer;
                 fn create_wayland_server() -> Box<WaylandServer>;
