@@ -15,8 +15,10 @@
  */
 
 #include "atomic_kms_output.h"
+#include "fake_plane_properties.h"
 #include "plane_capabilities.h"
 
+#include <mir/geometry/rectangle.h>
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/gamma_curves.h>
@@ -28,16 +30,16 @@
 #include <drm_fourcc.h>
 
 #include <cerrno>
-#include <cstddef>
-#include <span>
 #include <map>
 #include <memory>
+#include <utility>
 #include <vector>
 
 namespace mga = mir::graphics::atomic;
 namespace mg = mir::graphics;
 namespace mgk = mir::graphics::kms;
 namespace geom = mir::geometry;
+namespace mt = mir::test;
 namespace mtd = mir::test::doubles;
 
 using namespace testing;
@@ -95,20 +97,6 @@ public:
     static constexpr uint32_t crtc_active_property_id{201};
     static constexpr uint32_t crtc_mode_property_id{202};
     static constexpr uint32_t crtc_gamma_lut_property_id{203};
-    static constexpr uint32_t plane_type_property_id{301};
-    static constexpr uint32_t plane_src_x_property_id{302};
-    static constexpr uint32_t plane_src_y_property_id{303};
-    static constexpr uint32_t plane_src_w_property_id{304};
-    static constexpr uint32_t plane_src_h_property_id{305};
-    static constexpr uint32_t plane_crtc_x_property_id{306};
-    static constexpr uint32_t plane_crtc_y_property_id{307};
-    static constexpr uint32_t plane_crtc_w_property_id{308};
-    static constexpr uint32_t plane_crtc_h_property_id{309};
-    static constexpr uint32_t plane_crtc_property_id{310};
-    static constexpr uint32_t plane_fb_property_id{311};
-    static constexpr uint32_t plane_zpos_property_id{312};
-    static constexpr uint32_t plane_formats_property_id{313};
-    static constexpr uint32_t plane_formats_blob_id{3};
     static constexpr uint32_t mode_blob_id{1};
     static constexpr uint32_t gamma_lut_blob_id{2};
     static constexpr uint32_t primary_framebuffer_id{77};
@@ -117,6 +105,10 @@ public:
     static constexpr uint32_t encoder_id{20};
     static constexpr uint32_t crtc_id{10};
     static constexpr uint32_t plane_id{40};
+    // FakePlaneProperties uses the plane ID as its IN_FORMATS blob ID
+    static constexpr uint32_t plane_formats_blob_id{plane_id};
+    static constexpr mt::PlanePropertyIds primary_properties{plane_id};
+    static constexpr uint64_t primary_zpos{0};
     static constexpr uint32_t primary_crtc_mask{1};
 
     AtomicKMSOutputTest()
@@ -148,30 +140,41 @@ public:
             {{connector_id, connector_crtc_property_id}, 0},
             {{crtc_id, crtc_active_property_id}, 0},
             {{crtc_id, crtc_mode_property_id}, 0},
-            {{plane_id, plane_fb_property_id}, 0},
-            {{plane_id, plane_crtc_property_id}, 0}};
+            {{plane_id, primary_properties.fb_id}, 0},
+            {{plane_id, primary_properties.crtc_id}, 0}};
+    }
+
+    auto scanout_request_properties(
+        uint32_t plane,
+        uint32_t framebuffer_id,
+        geom::Displacement source_offset,
+        geom::Rectangle destination) const -> std::map<AtomicPropertyKey, uint64_t>
+    {
+        mt::PlanePropertyIds const ids{plane};
+        auto const width = destination.size.width.as_uint32_t();
+        auto const height = destination.size.height.as_uint32_t();
+        return {
+            {{plane, ids.fb_id}, framebuffer_id},
+            {{plane, ids.crtc_id}, crtc_id},
+            {{plane, ids.src_x}, kms_fixed_point(source_offset.dx.as_uint32_t())},
+            {{plane, ids.src_y}, kms_fixed_point(source_offset.dy.as_uint32_t())},
+            {{plane, ids.src_w}, kms_fixed_point(width)},
+            {{plane, ids.src_h}, kms_fixed_point(height)},
+            {{plane, ids.crtc_x}, static_cast<uint64_t>(static_cast<int64_t>(destination.top_left.x.as_int()))},
+            {{plane, ids.crtc_y}, static_cast<uint64_t>(static_cast<int64_t>(destination.top_left.y.as_int()))},
+            {{plane, ids.crtc_w}, width},
+            {{plane, ids.crtc_h}, height}};
     }
 
     auto primary_request_properties(PrimaryRequestParameters const& parameters) const
         -> std::map<AtomicPropertyKey, uint64_t>
     {
-        auto const width = requested_mode_size.width.as_uint32_t();
-        auto const height = requested_mode_size.height.as_uint32_t();
         std::map<AtomicPropertyKey, uint64_t> properties{
             {{crtc_id, crtc_mode_property_id}, mode_blob_id}, {{connector_id, connector_crtc_property_id}, crtc_id}};
         if (parameters.activate_crtc)
             properties[{crtc_id, crtc_active_property_id}] = 1;
-        properties.insert(
-            {{{plane_id, plane_src_x_property_id}, kms_fixed_point(parameters.source_offset.dx.as_uint32_t())},
-             {{plane_id, plane_src_y_property_id}, kms_fixed_point(parameters.source_offset.dy.as_uint32_t())},
-             {{plane_id, plane_src_w_property_id}, kms_fixed_point(width)},
-             {{plane_id, plane_src_h_property_id}, kms_fixed_point(height)},
-             {{plane_id, plane_crtc_x_property_id}, 0},
-             {{plane_id, plane_crtc_y_property_id}, 0},
-             {{plane_id, plane_crtc_w_property_id}, width},
-             {{plane_id, plane_crtc_h_property_id}, height},
-             {{plane_id, plane_crtc_property_id}, crtc_id},
-             {{plane_id, plane_fb_property_id}, parameters.framebuffer_id}});
+        properties.merge(scanout_request_properties(
+            plane_id, parameters.framebuffer_id, parameters.source_offset, {{}, requested_mode_size}));
         return properties;
     }
 
@@ -187,6 +190,7 @@ public:
 
     NiceMock<mtd::MockDRM> mock_drm;
     mir::Fd drm_fd;
+    mt::FakePlaneProperties plane_properties{mock_drm, drm_device};
 
 private:
     void setup_drm_objects(bool with_gamma_lut)
@@ -210,7 +214,10 @@ private:
         mock_drm.add_connector(
             drm_device, connector_id, DRM_MODE_CONNECTOR_VGA, DRM_MODE_CONNECTED, encoder_id, modes, encoder_ids, {});
         connector().connector_type_id = 1;
-        mock_drm.add_plane(drm_device, plane_id, primary_crtc_mask);
+        plane_properties.add(
+            {.id = plane_id, .crtcs = primary_crtc_mask, .type = DRM_PLANE_TYPE_PRIMARY,
+             .zpos = mt::fixed_zpos(primary_zpos)},
+            mt::SingleFormatBlob{DRM_FORMAT_XRGB8888}.bytes());
         mock_drm.prepare(drm_device);
 
         mock_drm.add_property(
@@ -221,34 +228,6 @@ private:
         {
             mock_drm.add_property(drm_device, crtc_id, DRM_MODE_OBJECT_CRTC, crtc_gamma_lut_property_id, "GAMMA_LUT");
         }
-        add_plane_property(plane_type_property_id, "type", DRM_PLANE_TYPE_PRIMARY);
-        add_plane_property(plane_src_x_property_id, "SRC_X");
-        add_plane_property(plane_src_y_property_id, "SRC_Y");
-        add_plane_property(plane_src_w_property_id, "SRC_W");
-        add_plane_property(plane_src_h_property_id, "SRC_H");
-        add_plane_property(plane_crtc_x_property_id, "CRTC_X");
-        add_plane_property(plane_crtc_y_property_id, "CRTC_Y");
-        add_plane_property(plane_crtc_w_property_id, "CRTC_W");
-        add_plane_property(plane_crtc_h_property_id, "CRTC_H");
-        add_plane_property(plane_crtc_property_id, "CRTC_ID");
-        add_plane_property(plane_fb_property_id, "FB_ID");
-        add_plane_property(plane_zpos_property_id, "zpos");
-        mock_drm.set_property_range(
-            drm_device, plane_zpos_property_id, DRM_MODE_PROP_RANGE | DRM_MODE_PROP_IMMUTABLE, 0, 0);
-        add_plane_property(plane_formats_property_id, "IN_FORMATS", plane_formats_blob_id);
-        struct InFormatsBlob
-        {
-            drm_format_modifier_blob header{
-                FORMAT_BLOB_CURRENT, 0, 1, offsetof(InFormatsBlob, formats), 1, offsetof(InFormatsBlob, modifiers)};
-            uint32_t formats[1]{DRM_FORMAT_XRGB8888};
-            drm_format_modifier modifiers[1]{{1, 0, 0, DRM_FORMAT_MOD_LINEAR}};
-        } const formats;
-        mock_drm.add_property_blob(drm_device, plane_formats_blob_id, std::as_bytes(std::span{&formats, 1}));
-    }
-
-    void add_plane_property(uint32_t id, char const* name, uint64_t value = 0)
-    {
-        mock_drm.add_property(drm_device, plane_id, DRM_MODE_OBJECT_PLANE, id, name, value);
     }
 
     std::vector<drmModeModeInfo> modes;
