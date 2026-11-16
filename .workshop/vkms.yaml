@@ -1,0 +1,35 @@
+name: vkms
+base: ubuntu@26.04
+runtime: lxd-vm
+sdks:
+- name: vscode-remote
+- name: copilot
+- name: project-mir-dev
+- name: project-vkms-kernel
+- name: system
+actions:
+  configure: |
+    set -xeu
+    cmake \
+      -DCMAKE_BUILD_TYPE=Debug \
+      -DCMAKE_INSTALL_PREFIX=$HOME/install \
+      -DCMAKE_C_COMPILER=clang \
+      -DCMAKE_CXX_COMPILER=clang++ \
+      -DMIR_USE_LD=mold \
+      -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+      -DMIR_PLATFORM=atomic-kms \
+      -DMIR_RUN_VKMS_TESTS=ON \
+      -B $HOME/build \
+      -G Ninja \
+      . \
+      "$@"
+
+  build: |
+    set -xeu
+    cmake --build ~/build "$@"
+
+  test: |
+    set -xeu
+    cmake --build ~/build
+    VERBOSE=1 ARGS="-V" cmake --build ~/build --target ptest "$@"

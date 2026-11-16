@@ -13,6 +13,10 @@ add_subdirectory(compositor/)
 add_subdirectory(process/)
 add_subdirectory(input/)
 
+if (MIR_BUILD_PLATFORM_ATOMIC_KMS)
+  add_subdirectory(platforms/atomic-kms)
+endif()
+
 mir_add_wrapped_executable(mir_integration_tests NOINSTALL
   ${INTEGRATION_TESTS_SRCS}
 )

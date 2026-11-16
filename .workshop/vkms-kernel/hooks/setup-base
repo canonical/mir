@@ -1,0 +1,22 @@
+set -xeu
+
+if ! modprobe vkms; then
+  apt-get update
+  apt-get --yes --no-install-recommends install "linux-modules-extra-$(uname -r)"
+  modprobe vkms
+fi
+
+printf 'vkms\n' > /etc/modules-load.d/vkms.conf
+
+swapfile=/var/lib/workshop-vkms.swap
+if [ ! -e "$swapfile" ]; then
+  fallocate --length 2G "$swapfile"
+  chmod 0600 "$swapfile"
+  mkswap "$swapfile"
+fi
+if ! swapon --show=NAME --noheadings | grep --fixed-strings --line-regexp --quiet "$swapfile"; then
+  swapon "$swapfile"
+fi
+if ! grep --fixed-strings --line-regexp --quiet "$swapfile none swap sw 0 0" /etc/fstab; then
+  printf '%s none swap sw 0 0\n' "$swapfile" >> /etc/fstab
+fi
