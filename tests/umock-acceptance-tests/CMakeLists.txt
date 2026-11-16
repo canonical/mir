@@ -22,6 +22,16 @@ target_link_libraries(mir_umock_acceptance_tests
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
+# Earlier umockdev releases lose device emulation on dup()ed fds, which the
+# input platforms rely on when opening devices. Only in version 0.20 was this
+# support added: https://github.com/martinpitt/umockdev/releases/tag/0.20.0
+if (UMOCKDEV_VERSION VERSION_GREATER_EQUAL 0.20)
+  target_sources(mir_umock_acceptance_tests PRIVATE test_evdev_recordings.cpp)
+  target_link_libraries(mir_umock_acceptance_tests mir-recorded-input-test-framework)
+else()
+  message(STATUS "umockdev ${UMOCKDEV_VERSION} < 0.20: skipping evdev recording tests")
+endif()
+
 CMAKE_DEPENDENT_OPTION(
   MIR_RUN_ACCEPTANCE_TESTS
   "Run acceptance tests as part of default testing"

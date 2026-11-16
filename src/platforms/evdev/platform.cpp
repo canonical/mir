@@ -42,6 +42,7 @@
 #include <string_view>
 #include <version>
 #include <format>
+#include <functional>
 #include <string>
 
 namespace mi = mir::input;
@@ -156,7 +157,8 @@ public:
         mu::Device const& device,
         std::vector<std::shared_ptr<mie::LibInputDevice>>& devices,
         std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices,
-        std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers)
+        std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers,
+        std::function<void()> process_input_events)
         : action_queue{std::move(action_queue)},
           device_fds{device_fds},
           lib{lib},
@@ -165,7 +167,8 @@ public:
           syspath{device.syspath()},
           devices{devices},
           pending_devices{pending_devices},
-          device_watchers{device_watchers}
+          device_watchers{device_watchers},
+          process_input_events{std::move(process_input_events)}
     {
         /*
          * We take everything shared with Platform (except action_queue) by reference.
@@ -189,7 +192,8 @@ public:
                 devnode = devnode,
                 devnum = devnum,
                 &pending_devices = pending_devices,
-                &device_watchers = device_watchers
+                &device_watchers = device_watchers,
+                process_input_events = process_input_events
             ]() mutable
             {
                 device_fds.store_fd(devnode.c_str(), std::move(fd));
@@ -208,6 +212,12 @@ public:
                     */
                     device_watchers.erase(devnum);
                     device_fds.remove_fd(device_fds.take_fd(devnode.c_str()));
+                }
+                else
+                {
+                    // libinput queues DEVICE_ADDED without making its fd readable, so process it now
+                    // rather than when the next input arrives
+                    process_input_events();
                 }
             });
     }
@@ -278,6 +288,7 @@ private:
     std::vector<std::shared_ptr<mie::LibInputDevice>>& devices;
     std::unordered_map<dev_t, std::future<std::unique_ptr<mir::Device>>>& pending_devices;
     std::unordered_map<dev_t, std::unique_ptr<mir::Device>>& device_watchers;
+    std::function<void()> const process_input_events;
 };
 }
 
@@ -344,7 +355,8 @@ void mie::Platform::start()
                                     *workaround_device,
                                     devices,
                                     pending_devices,
-                                    device_watchers)));
+                                    device_watchers,
+                                    [this] { process_input_events(); })));
                     }
                     break;
                 }

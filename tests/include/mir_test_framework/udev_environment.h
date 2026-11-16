@@ -88,11 +88,24 @@ public:
      * (or evemu-record) and associates it with the udev device it was recorded from.
      *
      * The udev records for the device this recording is associated with
-     * must already exist in the testbed
+     * must already exist in the testbed. Replay starts immediately: events are
+     * queued on the device node until something reads them. Event timestamps are
+     * rebased so that the first event is stamped with the current CLOCK_MONOTONIC time.
      *
-     * @param name The unadorned filename for the ioctl records to add
+     * The recording must have a "# device /dev/input/eventN" header identifying
+     * the device node to replay on.
+     *
+     * @param name The unadorned filename for the evemu recording to load
+     * @return The device node (from the recording's "# device" header) the events are replayed on
      */
-    void load_device_evemu(std::string const& name);
+    auto load_device_evemu(std::string const& name) -> std::string;
+
+    /**
+     * Block until the umockdev script (or evemu replay) for a device has finished
+     *
+     * @param device_node The device node (eg: /dev/input/event4) the script was loaded for
+     */
+    void wait_for_device_script(std::string const& device_node);
 
     UMockdevTestbed *testbed;
     std::string const recordings_path;
