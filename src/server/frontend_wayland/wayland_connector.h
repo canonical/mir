@@ -211,7 +211,8 @@ public:
     void create_wayland_client(Fd const& client_fd, std::function<void(wl_client*)> const& callback);
 
     /// Resolve the `scene::Surface` for the Wayland surface identified by
-    /// (`session`, protocol object `id`), or nullptr if unknown.
+    /// (`session`, protocol object `id`), or nullptr if unknown. Must only be
+    /// called on the Wayland thread.
     auto scene_surface_for(scene::Session const& session, uint32_t id) const
         -> std::shared_ptr<scene::Surface>;
 

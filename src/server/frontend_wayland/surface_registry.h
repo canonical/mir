@@ -53,7 +53,7 @@ public:
     /// Resolve the `scene::Surface` for the Wayland surface identified by
     /// (`session`, protocol object `id`), or nullptr if unknown. Intended for
     /// test/integration tooling that needs to map a client-side surface to its
-    /// Mir scene surface.
+    /// Mir scene surface. Must only be called on the Wayland thread.
     auto scene_surface_for(scene::Session const& session, uint32_t id) const
         -> std::shared_ptr<scene::Surface>;
 

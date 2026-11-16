@@ -603,11 +603,29 @@ void miral::TestWlcsDisplayServer::position_window(wl_display* client_, wl_surfa
     if (!session)
         BOOST_THROW_EXCEPTION((std::out_of_range{"No session for client socket"}));
 
-    if (auto const scene_surface = mir_server->scene_surface_for_wayland_surface(*session, id))
+    struct Result
     {
-        scene_surface->move_to(point);
-    }
-    else
+        mir::test::Signal done;
+        bool found{false};
+    };
+    auto const result = std::make_shared<Result>();
+
+    // The surface registry may only be accessed from the Wayland thread
+    mir_server->run_on_wayland_display(
+        [server = mir_server, session, id, point, result]()
+        {
+            if (auto const scene_surface = server->scene_surface_for_wayland_surface(*session, id))
+            {
+                scene_surface->move_to(point);
+                result->found = true;
+            }
+            result->done.raise();
+        });
+
+    if (!result->done.wait_for(a_long_time))
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Timeout waiting to position window"}));
+
+    if (!result->found)
     {
         abort();
         // TODO: log? Error handling?

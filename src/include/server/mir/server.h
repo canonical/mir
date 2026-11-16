@@ -487,7 +487,8 @@ public:
 
     /// Resolve the `scene::Surface` for the Wayland surface identified by
     /// (`session`, protocol object `id`), or nullptr if unknown. Used by
-    /// WLCS to map a client-side surface to its Mir surface.
+    /// WLCS to map a client-side surface to its Mir surface. Must only be
+    /// called on the Wayland event-loop thread (see run_on_wayland_display()).
     auto scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
         -> std::shared_ptr<scene::Surface>;
 
