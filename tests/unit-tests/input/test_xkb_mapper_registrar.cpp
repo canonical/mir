@@ -43,10 +43,15 @@ struct MockLedObserver : mi::LedObserver
 
 struct XKBMapperRegistrarLeds : Test
 {
-    void press_and_release(int scan_code, xkb_keysym_t keysym)
+    void press(int scan_code, xkb_keysym_t keysym)
     {
         auto down = builder.key_event(std::nullopt, mir_keyboard_action_down, keysym, scan_code);
         mapper.map_event(*down);
+    }
+
+    void press_and_release(int scan_code, xkb_keysym_t keysym)
+    {
+        press(scan_code, keysym);
         auto up = builder.key_event(std::nullopt, mir_keyboard_action_up, keysym, scan_code);
         mapper.map_event(*up);
     }
@@ -71,7 +76,7 @@ TEST_F(XKBMapperRegistrarLeds, caps_lock_sets_caps_lock_led)
 
     EXPECT_CALL(*observer, leds_set(mi::KeyboardLeds{mi::KeyboardLed::caps_lock}));
 
-    press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
+    press(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
 }
 
 TEST_F(XKBMapperRegistrarLeds, leds_still_update_after_keymap_is_replaced)
@@ -83,7 +88,7 @@ TEST_F(XKBMapperRegistrarLeds, leds_still_update_after_keymap_is_replaced)
 
     EXPECT_CALL(*observer, leds_set(mi::KeyboardLeds{mi::KeyboardLed::caps_lock}));
 
-    press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
+    press(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
 }
 
 TEST_F(XKBMapperRegistrarLeds, leds_still_update_after_default_keymap_is_replaced)
@@ -95,7 +100,7 @@ TEST_F(XKBMapperRegistrarLeds, leds_still_update_after_default_keymap_is_replace
 
     EXPECT_CALL(*observer, leds_set(mi::KeyboardLeds{mi::KeyboardLed::num_lock}));
 
-    press_and_release(KEY_NUMLOCK, XKB_KEY_Num_Lock);
+    press(KEY_NUMLOCK, XKB_KEY_Num_Lock);
 }
 
 TEST_F(XKBMapperRegistrarLeds, leds_update_when_registered_before_any_keymap)
@@ -105,7 +110,7 @@ TEST_F(XKBMapperRegistrarLeds, leds_update_when_registered_before_any_keymap)
 
     EXPECT_CALL(*observer, leds_set(mi::KeyboardLeds{mi::KeyboardLed::caps_lock}));
 
-    press_and_release(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
+    press(KEY_CAPSLOCK, XKB_KEY_Caps_Lock);
 }
 
 TEST_F(XKBMapperRegistrarLeds, replacing_keymap_clears_leds)
