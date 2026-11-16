@@ -22,6 +22,7 @@ import glob
 import re
 import concurrent.futures
 from pathlib import Path
+from textwrap import dedent
 from typing import Optional, TypedDict
 from collections import OrderedDict
 import bisect
@@ -545,10 +546,7 @@ def main():
         "and creates a list of new internal and external symbols.\n"
         "By default, the script updates the corresponding symbols.map file automatically. "
         "To view this diff only, the user may provide the --diff option.\n"
-        "Please install libclang-dev and python3-clang before using this tool.\n"
-        "libclang is found automatically; to use a specific one, set the "
-        "'MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH' environment variable, for example:"
-        "\n    export MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=/usr/lib/llvm-21/lib/libclang.so.1",
+        + dedent(LIBRARY_NOT_FOUND_ERROR_MSG),
         formatter_class=argparse.RawTextHelpFormatter,
     )
     parser.add_argument(
