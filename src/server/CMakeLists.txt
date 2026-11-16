@@ -147,7 +147,7 @@ add_custom_target(
         --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserverobjects,INCLUDE_DIRECTORIES>,:>:$<JOIN:$<TARGET_PROPERTY:PkgConfig::UUID,INTERFACE_INCLUDE_DIRECTORIES>,:>"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -157,6 +157,6 @@ add_custom_target(
       --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
       --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
       --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
-      --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+      --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserverobjects,INCLUDE_DIRECTORIES>,:>:$<JOIN:$<TARGET_PROPERTY:PkgConfig::UUID,INTERFACE_INCLUDE_DIRECTORIES>,:>"
       --diff
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
