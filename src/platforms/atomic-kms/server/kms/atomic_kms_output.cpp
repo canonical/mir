@@ -445,8 +445,8 @@ bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
         /* If the submitted FB isn't the same size as the output, we need
          * a modeset, which can't be done as a pageflip.
          *
-         * The calling code should detect a failure to pagefilp, and fall back
-         * on `set_crtc`.
+         * The calling code should detect a failure to pageflip, and fall back
+         * on `set_crtc` if there are no client planes to present.
          */
         return false;
     }
