@@ -18,7 +18,7 @@ The most widely used and tested platform is “mesa-kms” which works with the 
 
 Platform|Status|Description
 --|--|--
-gbm-kms|Released|Works with any driver providing KMS, `libgbm` and an EGL supporting [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt). The open-source Mesa drivers are the obvious example, but other drivers supporting these interfaces should work - for example, the binary MALI drivers provided by ARM have been tested on some devices.
+gbm-kms|Released|Works with drivers providing KMS, `libgbm` and EGL with GBM platform support. Hardware-accelerated client buffers use linux-dmabuf or [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt); clients supporting `wl_shm` can submit software buffers without either. The open-source Mesa drivers are the obvious example, but other drivers supporting these interfaces should work - for example, the binary MALI drivers provided by ARM have been tested on some devices.
 x11|Released|Provides “Mir-on-X11” primarily for development.
 eglstream-kms|Released|Works with proprietary Nvidia drivers.
 wayland|Released|Provides “Mir-on-Wayland” both for nested compositors and for development.
@@ -76,9 +76,11 @@ Different Mir platforms require different features of the underlying driver stac
 
 ### gbm-kms
 
-The gbm-kms platform requires a DRM device node with KMS support, a `libgbm` implementation for buffer allocation, and an EGL implementation supporting at least [EGL_KHR_platform_gbm](https://www.khronos.org/registry/EGL/extensions/KHR/EGL_KHR_platform_gbm.txt) (or the equivalent [EGL_MESA_platform_gbm](https://www.khronos.org/registry/EGL/extensions/MESA/EGL_MESA_platform_gbm.txt) extension) and [EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt).
+The gbm-kms platform requires a DRM device node with KMS support, a `libgbm` implementation for buffer allocation, and an EGL implementation supporting at least [EGL_KHR_platform_gbm](https://www.khronos.org/registry/EGL/extensions/KHR/EGL_KHR_platform_gbm.txt) (or the equivalent [EGL_MESA_platform_gbm](https://www.khronos.org/registry/EGL/extensions/MESA/EGL_MESA_platform_gbm.txt) extension).
 
 Optionally, the EGL implementation can support [EGL_EXT_image_dma_buf_import](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import.txt), [EGL_EXT_image_dma_buf_import_modifiers](https://www.khronos.org/registry/EGL/extensions/EXT/EGL_EXT_image_dma_buf_import_modifiers.txt), and use the [zwp_linux_dmabuf_unstable_v1](https://gitlab.freedesktop.org/wayland/wayland-protocols/-/blob/master/unstable/linux-dmabuf/linux-dmabuf-unstable-v1.xml) Wayland protocol for client buffer transfer. Support for this was added in Mir 2.3. Composite-bypass support depends on this implementation. Some future performance improvements, such as overlay plane usage, are likely to require this support from the driver stack.
+
+[EGL_WL_bind_wayland_display](https://www.khronos.org/registry/EGL/extensions/WL/EGL_WL_bind_wayland_display.txt) is optional for both gbm-kms and generic EGL rendering. When available and successfully bound, Mir retains support for legacy EGL client buffers. Without it, hardware-accelerated client buffer import requires the linux-dmabuf support described above, including both EGL import extensions. If neither import path is available, clients must support software buffers through `wl_shm`; Mir cannot convert unsupported hardware buffers into SHM buffers.
 
 ### eglstream-kms
 
