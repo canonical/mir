@@ -490,13 +490,14 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
     for (auto const& assignment : state.client_planes())
     {
         // configure_locked() may have rediscovered the capabilities since planning, so look the plane up again.
-        auto const found = std::ranges::find_if(
+        auto const plane_iter = std::ranges::find_if(
             caps.overlays, [&assignment](auto const& candidate) { return candidate.id == assignment.plane; });
-        if (found == caps.overlays.end())
+        if (plane_iter == caps.overlays.end())
         {
             return false;
         }
-        auto const& plane = *found;
+        // TICS cannot follow the optional checks through the iterator dereference.
+        auto const& plane = *plane_iter;
         if (!plane.bt709_limited)
         {
             return false;
