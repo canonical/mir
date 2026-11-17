@@ -366,9 +366,9 @@ auto presents_primary_and_one_client_plane(
 struct MixedProposalCase
 {
     std::string_view name;
-    geom::Displacement offset{8, 6};
+    geom::Displacement offset;
     /// nullopt when rejected before test_presentation(); otherwise the result test_presentation() returns
-    std::optional<bool> test_commit_result{true};
+    std::optional<bool> test_commit_result;
 };
 
 class AtomicMixedProposal : public AtomicDisplaySinkTest, public WithParamInterface<MixedProposalCase>
@@ -379,10 +379,10 @@ class AtomicMixedProposal : public AtomicDisplaySinkTest, public WithParamInterf
 struct RejectedClientCase
 {
     std::string_view name;
-    mga::FormatModifier format{DRM_FORMAT_NV12, supported_modifier};
-    mg::gl::Texture::Layout layout{mg::gl::Texture::Layout::GL};
-    geom::Rectangle destination{client_top_left, client_size};
-    geom::RectangleF source{client_full_source};
+    mga::FormatModifier format;
+    mg::gl::Texture::Layout layout;
+    geom::Rectangle destination;
+    geom::RectangleF source;
 };
 
 class AtomicMixedRejectedClient : public AtomicDisplaySinkTest, public WithParamInterface<RejectedClientCase>
@@ -731,13 +731,13 @@ INSTANTIATE_TEST_SUITE_P(
     MixedProposal,
     AtomicMixedProposal,
     Values(
-        MixedProposalCase{.name = "inside_output", .offset = {8, 6}},
-        MixedProposalCase{.name = "partly_outside_output", .offset = {-10, -5}},
+        MixedProposalCase{.name = "inside_output", .offset = {8, 6}, .test_commit_result = true},
+        MixedProposalCase{.name = "partly_outside_output", .offset = {-10, -5}, .test_commit_result = true},
         MixedProposalCase{
             .name = "completely_outside_output",
             .offset = {output_size.width.as_int(), 0},
             .test_commit_result = std::nullopt},
-        MixedProposalCase{.name = "rejected_by_test_commit", .test_commit_result = false}),
+        MixedProposalCase{.name = "rejected_by_test_commit", .offset = {8, 6}, .test_commit_result = false}),
     [](TestParamInfo<MixedProposalCase> const& info) { return std::string{info.param.name}; });
 
 TEST_P(AtomicMixedRejectedClient, overlay_rejects_a_client_it_cannot_scan_out)
@@ -753,10 +753,30 @@ INSTANTIATE_TEST_SUITE_P(
     RejectedClient,
     AtomicMixedRejectedClient,
     Values(
-        RejectedClientCase{.name = "unsupported_modifier", .format = {DRM_FORMAT_NV12, other_modifier}},
-        RejectedClientCase{.name = "layout_not_gl", .layout = mg::gl::Texture::Layout::TopRowFirst},
-        RejectedClientCase{.name = "scaled_destination", .destination = {client_top_left, client_size / 2}},
-        RejectedClientCase{.name = "cropped_source", .source = {{0, 0}, client_full_source.size / 2}}),
+        RejectedClientCase{
+            .name = "unsupported_modifier",
+            .format = {DRM_FORMAT_NV12, other_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {client_top_left, client_size},
+            .source = client_full_source},
+        RejectedClientCase{
+            .name = "layout_not_gl",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::TopRowFirst,
+            .destination = {client_top_left, client_size},
+            .source = client_full_source},
+        RejectedClientCase{
+            .name = "scaled_destination",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {client_top_left, client_size / 2},
+            .source = client_full_source},
+        RejectedClientCase{
+            .name = "cropped_source",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {client_top_left, client_size},
+            .source = {{0, 0}, client_full_source.size / 2}}),
     [](TestParamInfo<RejectedClientCase> const& info) { return std::string{info.param.name}; });
 
 TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_client_without_a_direct_scanout_framebuffer)
