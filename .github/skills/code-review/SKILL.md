@@ -20,11 +20,12 @@ branch diff.
 General-purpose review tends to miss the following. Check each one that applies
 before reporting anything else.
 
-- **ABI.** New or removed symbols need the correct `symbols.map` stanza and
-  `debian/*.symbols` entry. A removal still needs a version bump. Check the
-  current minor-release branch before adding symbols, and prefer a conversion
-  operator over an ABI break. Follow
-  `.github/instructions/abi-symbols.instructions.md`.
+- **ABI.** Follow `.github/instructions/abi-symbols.instructions.md`; the
+  procedure differs by library. MirAL and MirOil use the symbol-map and Debian
+  symbol regeneration targets. mirserver has no stable ABI: every symbol change
+  needs a `MIRSERVER_ABI` bump and `tools/update_package_abis.sh`, and there is
+  no `regenerate-mirserver-debian-symbols` target. Version bumps are
+  once-per-release-cycle, so check whether one already happened.
 - **Wayland.** Report errors on the resource that defines the rule, not the
   resource of the method being executed. Trace resource lifetime when a peer
   resource can be destroyed first. Check version negotiation against older
@@ -38,7 +39,10 @@ before reporting anything else.
 - **Concurrency.** Check that a lock covers the whole multi-step update, and that
   a key collision is not silently ignored.
 - **Errors.** Check that an exception is not constructed and discarded, and that
-  `noexcept` and hot paths do not allocate.
+  no exception can escape a `noexcept` boundary. Allocation inside `noexcept` is
+  acceptable when it is contained, as in `src/core/fatal.cpp`. Flag hot-path
+  allocation only against a concrete performance constraint or a demonstrated
+  problem.
 - **Build.** Check for duplicate link entries, unused includes after a rewrite,
   and toolchain assumptions in workflows.
 
