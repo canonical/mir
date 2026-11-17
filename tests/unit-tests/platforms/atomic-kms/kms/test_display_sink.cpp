@@ -814,6 +814,43 @@ TEST_F(AtomicDisplaySinkTest, post_page_flips_an_accepted_mixed_state_until_the_
     EXPECT_TRUE(weak_client.expired());
 }
 
+TEST_F(AtomicDisplaySinkTest, failed_mixed_post_reports_failure_without_falling_back_to_set_crtc)
+{
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    std::weak_ptr<mg::Framebuffer> const weak_a{frame_a};
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_a))))
+        .WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
+    ASSERT_TRUE(sink->post());
+
+    std::weak_ptr<mg::Framebuffer> weak_client;
+    {
+        auto const client_fb = make_client_framebuffer();
+        weak_client = client_fb;
+        ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a), client_element(client_fb)}));
+    }
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_a))))
+        .WillOnce(Return(false));
+    // set_crtc would show the primary alone, so a failed mixed commit must ask the compositor to recover
+    EXPECT_CALL(*output, set_crtc(_))
+        .Times(0);
+
+    frame_a.reset();
+    EXPECT_FALSE(sink->post());
+    EXPECT_TRUE(weak_client.expired());
+    EXPECT_FALSE(weak_a.expired());
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_b))))
+        .WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_b)}));
+
+    EXPECT_TRUE(sink->post());
+    EXPECT_TRUE(weak_a.expired());
+}
+
 TEST_F(DmaBufImportTest, gbm_import_failure_returns_no_framebuffer)
 {
     EXPECT_CALL(gbm, gbm_bo_import(_, _, _, _))

@@ -350,7 +350,7 @@ auto select_direct_candidate(
 
 auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
 {
-    // set_crtc presents only the primary, so a mixed frame would show a hole.
+    // A pending set_crtc cannot present a mixed frame, so queueing one would only spur a GL recovery frame.
     if (needs_set_crtc)
     {
         return false;
@@ -469,20 +469,24 @@ bool mga::DisplaySink::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * We wait synchronously for this to complete.
      */
-    if (!needs_set_crtc && !output->page_flip(*scheduled_state))
-        needs_set_crtc = true;
-
-    /*
-     * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
-     * to need to do this on every frame. [will complete in this thread]
-     */
     auto presentation_succeeded = true;
-    if (needs_set_crtc)
+    if (needs_set_crtc || !output->page_flip(*scheduled_state))
     {
-        presentation_succeeded = set_crtc(scheduled_state->primary());
-        // SetCrtc is immediate, so the FB is now visible and we have nothing pending
-
-        needs_set_crtc = false;
+        if (scheduled_state->client_planes().empty())
+        {
+            /*
+             * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
+             * to need to do this on every frame. [will complete in this thread]
+             */
+            presentation_succeeded = set_crtc(scheduled_state->primary());
+            // SetCrtc is immediate, so the FB is now visible and we have nothing pending
+            needs_set_crtc = false;
+        }
+        else
+        {
+            // A mixed frame failed; let the compositor render a GL recovery frame.
+            presentation_succeeded = false;
+        }
     }
 
     if (presentation_succeeded)

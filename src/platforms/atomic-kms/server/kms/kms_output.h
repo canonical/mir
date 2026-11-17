@@ -87,7 +87,8 @@ public:
     ///
     /// \return true if the kernel accepts the request; false if the output has no CRTC or the
     ///         primary does not match the mode size, if a client plane is not usable according
-    ///         to the known capabilities, or if the commit fails.
+    ///         to the known capabilities, or if the commit fails. Only a state without client
+    ///         planes can fall back to set_crtc(), which presents the primary alone.
     virtual bool page_flip(PresentationState const& state) = 0;
 
     /// Builds the complete atomic request that would present \a state and checks it with a
