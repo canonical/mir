@@ -89,7 +89,7 @@ add_custom_target(
         --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --external-headers-directory="${PROJECT_SOURCE_DIR}/include/common"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>:${PROJECT_SOURCE_DIR}/include/core:${PROJECT_SOURCE_DIR}/include/platform"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -99,6 +99,6 @@ add_custom_target(
         --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
         --external-headers-directory="${PROJECT_SOURCE_DIR}/include/common"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mircommon,INTERFACE_INCLUDE_DIRECTORIES>,:>:${PROJECT_SOURCE_DIR}/include/core:${PROJECT_SOURCE_DIR}/include/platform"
         --diff
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
