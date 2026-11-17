@@ -350,6 +350,12 @@ auto select_direct_candidate(
 
 auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
 {
+    // set_crtc presents only the primary, so a mixed frame would show a hole.
+    if (needs_set_crtc)
+    {
+        return false;
+    }
+
     auto const capabilities = output->plane_capabilities();
     if (!can_promote() || !capabilities)
     {
@@ -463,7 +469,7 @@ bool mga::DisplaySink::post()
      * Try to schedule a page flip as first preference to avoid tearing.
      * We wait synchronously for this to complete.
      */
-    if (!needs_set_crtc && !output->page_flip(scheduled_state->primary()))
+    if (!needs_set_crtc && !output->page_flip(*scheduled_state))
         needs_set_crtc = true;
 
     /*
