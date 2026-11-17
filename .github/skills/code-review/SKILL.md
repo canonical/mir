@@ -6,14 +6,14 @@ description: Review a Mir pull request or local diff for defects that general-pu
 # Code Review
 
 Use this skill when asked to review a Mir pull request, or a staged, unstaged, or
-branch diff. 
+branch diff.
 
 ## Establish the change
 
 1. Read the applicable `.github/instructions/` files, the surrounding code,
    callers, and tests. Current code takes precedence over any earlier review
    comment.
-2. Check that the title and description match the diff and test steps.
+1. Check that the title and description match the diff and test steps.
 
 ## Check these first
 
