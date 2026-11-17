@@ -63,6 +63,19 @@ public:
         output.outputs.at(output_index).modes[0].size = output_size;
         apply_config();
     }
+    void configure_output(
+        std::size_t output_index,
+        geometry::Rectangle const& rectangle,
+        float scale,
+        MirOrientation orientation)
+    {
+        auto& configured_output = output.outputs.at(output_index);
+        configured_output.modes.at(configured_output.current_mode_index).size = rectangle.size;
+        configured_output.top_left = rectangle.top_left;
+        configured_output.scale = scale;
+        configured_output.orientation = orientation;
+        apply_config();
+    }
     void disconnect_output(std::size_t output_index)
     {
         output.outputs.at(output_index).connected = false;
