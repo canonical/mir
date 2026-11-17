@@ -323,6 +323,26 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_read)
     EXPECT_TRUE(map->access_fault());
 }
 
+TEST(ShmBacking, access_into_zero_sized_backing_is_safe)
+{
+    using namespace testing;
+
+    // Lie as hard as possible
+    auto shm_fd = make_shm_fd(0);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, 200);
+
+    auto range = backing->get_rw_range(0, 200);
+
+    auto map = range->map_ro();
+
+    for (auto const& a : *map)
+    {
+        EXPECT_THAT(a, Eq(std::byte{0}));
+    }
+
+    EXPECT_TRUE(map->access_fault());
+}
+
 TEST(ShmBacking, access_fault_is_true_after_invaild_write)
 {
     using namespace testing;
