@@ -385,7 +385,7 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
         return false;
     }
 
-    auto const destination = geom::Point{} + (client.screen_positon.top_left - view_area().top_left);
+    auto const destination = client.screen_positon.top_left - geom::generic::as_displacement(view_area().top_left);
     auto state = PresentationState::mixed(
         std::move(primary_fb),
         {ClientPlaneAssignment{plane->id, std::move(client_fb), destination}});
