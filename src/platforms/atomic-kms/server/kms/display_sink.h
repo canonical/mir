@@ -154,7 +154,7 @@ private:
     bool set_crtc(FBHandle const&);
 
     auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
-    auto can_promote() const -> bool;
+    auto output_maps_1_to_1_to_crtc() const -> bool;
     auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
 
     std::shared_ptr<struct gbm_device> const gbm;
