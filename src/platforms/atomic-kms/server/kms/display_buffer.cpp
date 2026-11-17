@@ -155,9 +155,10 @@ auto mga::DisplaySink::fullscreen_framebuffer(DisplayElement const& element) con
     return std::dynamic_pointer_cast<FBHandle>(element.buffer);
 }
 
-auto mga::DisplaySink::can_promote() const -> bool
+auto mga::DisplaySink::output_maps_1_to_1_to_crtc() const -> bool
 {
     // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
+    // We do not scale, so a logical output smaller or larger than the mode cannot be promoted.
     return plane_promotion == PlanePromotion::available &&
         area.size == output->size() &&
         transform == glm::mat2{1};
@@ -351,7 +352,7 @@ auto select_direct_candidate(
 auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
 {
     auto const capabilities = output->plane_capabilities();
-    if (!can_promote() || !capabilities)
+    if (!output_maps_1_to_1_to_crtc() || !capabilities)
     {
         return false;
     }
@@ -402,7 +403,7 @@ auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>
     -> std::optional<LogicalStacking>
 {
     auto const plane_capabilities = output->plane_capabilities();
-    if (!can_promote() || !plane_capabilities)
+    if (!output_maps_1_to_1_to_crtc() || !plane_capabilities)
     {
         return std::nullopt;
     }
