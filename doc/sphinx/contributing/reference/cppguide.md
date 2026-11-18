@@ -1523,12 +1523,8 @@ memset(&data, 0, sizeof(Struct));
 
 ### C++26
 
-Use C++26 features wherever appropriate.
-
-**Definition:**
-
-C++26 is the current ISO C++ standard. It contains significant
-changes to both the language and libraries from older standards.
+Mir's CMake configuration requires C++26. Use C++26 features where they improve the code and are
+supported by Mir's toolchains.
 
 ## Naming
 
@@ -2491,7 +2487,9 @@ be placed as shown below.
 If not conditional on an enumerated value, switch statements should
 always have a `default` case (in the case of an enumerated value, the
 compiler will warn you if any values are not handled). If the default
-case should never execute, simply `assert`:
+case should never execute, `assert` may document that debug-time
+programmer invariant. Do not use it to validate input or enforce
+behavior required in release builds.
 
 ```c++
 switch (var)
