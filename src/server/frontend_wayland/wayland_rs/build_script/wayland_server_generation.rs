@@ -13,7 +13,7 @@ use quote::{format_ident, quote};
 ///
 /// - The global registration method.
 /// - The names of every interface compiled into Mir (`BUILTIN_INTERFACE_NAMES`),
-///   which protocols loaded at runtime must not redefine.
+///   which protocols registered at runtime must not redefine.
 pub fn generate_wayland_server_generated_rs(protocols: &[WaylandProtocol]) -> TokenStream {
     let registration_impls = protocols.iter().flat_map(generate_register_globals_impl);
     let builtin_interface_names = protocols

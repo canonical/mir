@@ -32,8 +32,9 @@ struct DynamicResource;
 struct WaylandClient;
 struct WaylandClientId;
 
-/// Handles the requests of one object of a protocol loaded at runtime (with
-/// `load_dynamic_protocol`).
+/// Handles the requests of one object of a protocol registered at runtime (with
+/// `register_dynamic_protocol`, usually through the `register_protocol()`
+/// function that `mir_wayland_generator` generates).
 ///
 /// All calls happen on the Wayland event-loop thread. Throwing
 /// `mir::wayland::ProtocolError` posts that protocol error to the client; any
@@ -66,7 +67,7 @@ protected:
     auto operator=(DynamicResourceHandler const&) -> DynamicResourceHandler& = delete;
 };
 
-/// Handles a global of a protocol loaded at runtime (see
+/// Handles a global of a protocol registered at runtime (see
 /// `WaylandServer::create_dynamic_global`).
 ///
 /// All calls happen on the Wayland event-loop thread.

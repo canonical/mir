@@ -17,8 +17,6 @@ log.workspace = true
 wayland-scanner.workspace = true
 wayland-backend.workspace = true
 bitflags.workspace = true
-serde.workspace = true
-quick-xml.workspace = true
 
 [build-dependencies]
 cxx-build.workspace = true

@@ -105,8 +105,9 @@ impl WaylandServer {
         Ok(Box::new(OutputGlobal { id, handle }))
     }
 
-    /// Create a global for `interface_name`, an interface of a protocol loaded at
-    /// runtime with `load_dynamic_protocol`, advertised at `version`.
+    /// Create a global for `interface_name`, an interface of a protocol
+    /// registered at runtime with `register_dynamic_protocol`, advertised at
+    /// `version`.
     ///
     /// `handler` decides which clients can see the global and handles binds.
     /// The returned [crate::dynamic::DynamicGlobal] owns the global: dropping it

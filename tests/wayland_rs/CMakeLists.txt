@@ -10,6 +10,8 @@ mir_add_wrapped_executable(mir_wayland_rs_tests NOINSTALL
   ${PROJECT_SOURCE_DIR}/tests/mir_test_framework/temporary_environment_value.cpp
 )
 
+mir_generate_protocol_wrapper(mir_wayland_rs_tests "mir_" mir_test_dynamic_v1.xml)
+
 add_dependencies(mir_wayland_rs_tests GMock)
 
 target_link_libraries(mir_wayland_rs_tests

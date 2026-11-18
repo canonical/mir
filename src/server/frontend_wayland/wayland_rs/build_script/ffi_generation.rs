@@ -62,7 +62,7 @@ pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> T
                 Fd,
             }
 
-            /// A single request or event argument of a protocol loaded at runtime.
+            /// A single request or event argument of a protocol registered at runtime.
             ///
             /// Only the fields relevant to `kind` are meaningful:
             /// * `Int`: `int_value`.
@@ -71,7 +71,7 @@ pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> T
             /// * `String`: `string_value`, or `is_null` for a null string.
             /// * `Object` / `NewId`: `object_id` (the protocol id; 0 for a null object). On
             ///   requests, `object_handler` is the handler of an object argument that belongs
-            ///   to a protocol loaded at runtime (null otherwise).
+            ///   to a protocol registered at runtime (null otherwise).
             /// * `Array`: `array_value`.
             /// * `Fd`: `fd`. A received descriptor is owned by the recipient; a descriptor sent
             ///   in an event is duplicated, so the sender keeps ownership.
@@ -87,8 +87,46 @@ pub fn generate_ffi(protocols: &[WaylandProtocol], builders: &[CppBuilder]) -> T
                 object_handler: SharedPtr<DynamicResourceHandler>,
             }
 
+            /// An argument of a [DynamicMessageDescriptor].
+            #[derive(Clone, Debug, PartialEq)]
+            struct DynamicArgumentDescriptor {
+                name: String,
+                kind: DynamicArgumentKind,
+                /// For `String` and `Object` arguments, whether null is allowed.
+                allow_null: bool,
+                /// For `Object` and `NewId` arguments, the interface name (empty when the
+                /// protocol does not name one).
+                interface: String,
+            }
+
+            /// A request or event of a [DynamicInterfaceDescriptor].
+            #[derive(Clone, Debug, PartialEq)]
+            struct DynamicMessageDescriptor {
+                name: String,
+                since: u32,
+                is_destructor: bool,
+                args: Vec<DynamicArgumentDescriptor>,
+            }
+
+            /// An interface of a [DynamicProtocolDescriptor]. Requests and events are in
+            /// opcode order.
+            #[derive(Clone, Debug, PartialEq)]
+            struct DynamicInterfaceDescriptor {
+                name: String,
+                version: u32,
+                requests: Vec<DynamicMessageDescriptor>,
+                events: Vec<DynamicMessageDescriptor>,
+            }
+
+            /// A protocol to serve at runtime, as emitted by `mir_wayland_generator`.
+            #[derive(Clone, Debug, PartialEq)]
+            struct DynamicProtocolDescriptor {
+                name: String,
+                interfaces: Vec<DynamicInterfaceDescriptor>,
+            }
+
             extern "Rust" {
-                fn load_dynamic_protocol(xml: &str) -> Result<()>;
+                fn register_dynamic_protocol(protocol: &DynamicProtocolDescriptor) -> Result<()>;
 
                 type DynamicGlobal;
                 fn create_dynamic_global(self: &WaylandServer, interface_name: &str, version: u32, handler: UniquePtr<DynamicGlobalHandler>) -> Result<Box<DynamicGlobal>>;

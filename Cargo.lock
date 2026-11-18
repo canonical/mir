@@ -311,6 +311,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "mir_wayland_generator"
+version = "0.1.0"
+dependencies = [
+ "quick-xml",
+ "serde",
+]
+
+[[package]]
 name = "nix"
 version = "0.31.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"

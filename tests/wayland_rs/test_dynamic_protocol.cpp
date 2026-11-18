@@ -16,6 +16,7 @@
 
 #include "wayland_rs_server_test.h"
 
+#include "mir_test_dynamic_v1_wrapper.h"
 #include "protocol_error.h"
 
 #include <mir/synchronised.h>
@@ -31,6 +32,7 @@
 #include <chrono>
 #include <condition_variable>
 #include <cstdint>
+#include <format>
 #include <future>
 #include <memory>
 #include <optional>
@@ -41,56 +43,18 @@
 #include <vector>
 
 namespace mrs = mir::wayland;
+namespace generated = mir::wayland::mir_test_dynamic_v1;
 using namespace std::chrono_literals;
 using testing::ElementsAre;
 using testing::HasSubstr;
 
 namespace
 {
-char const* const test_protocol_xml = R"(<?xml version="1.0" encoding="UTF-8"?>
-<protocol name="mir_test_dynamic_v1">
-  <interface name="mir_test_dynamic_manager_v1" version="2">
-    <request name="destroy" type="destructor"/>
-    <request name="ping">
-      <arg name="serial" type="uint"/>
-      <arg name="message" type="string"/>
-    </request>
-    <request name="create_child">
-      <arg name="id" type="new_id" interface="mir_test_dynamic_child_v1"/>
-      <arg name="value" type="int"/>
-    </request>
-    <request name="trigger_error">
-      <arg name="code" type="uint"/>
-    </request>
-    <request name="adopt">
-      <arg name="child" type="object" interface="mir_test_dynamic_child_v1" allow-null="true"/>
-    </request>
-    <event name="pong">
-      <arg name="serial" type="uint"/>
-      <arg name="message" type="string"/>
-    </event>
-    <event name="child_created" since="2">
-      <arg name="child" type="new_id" interface="mir_test_dynamic_child_v1"/>
-    </event>
-  </interface>
-  <interface name="mir_test_dynamic_child_v1" version="2">
-    <request name="destroy" type="destructor"/>
-    <request name="echo_fixed">
-      <arg name="value" type="fixed"/>
-    </request>
-    <event name="value">
-      <arg name="value" type="int"/>
-    </event>
-    <event name="fixed_value">
-      <arg name="value" type="fixed"/>
-    </event>
-  </interface>
-</protocol>
-)";
+char const* const manager_name = generated::TestDynamicManagerV1::interface_name;
+char const* const child_name = generated::TestDynamicChildV1::interface_name;
 
-char const* const manager_name = "mir_test_dynamic_manager_v1";
-char const* const child_name = "mir_test_dynamic_child_v1";
-
+// Client-side opcodes. The server side uses the generated wrapper
+// (mir_test_dynamic_v1.xml).
 namespace opcode
 {
 uint32_t const destroy = 0;
@@ -151,14 +115,6 @@ auto int_arg(int32_t value) -> mrs::DynamicArgument
     return arg;
 }
 
-auto fixed_arg(int32_t raw) -> mrs::DynamicArgument
-{
-    mrs::DynamicArgument arg{};
-    arg.kind = mrs::DynamicArgumentKind::Fixed;
-    arg.int_value = raw;
-    return arg;
-}
-
 auto string_arg(std::string const& value) -> mrs::DynamicArgument
 {
     mrs::DynamicArgument arg{};
@@ -212,114 +168,88 @@ private:
     std::condition_variable changed;
 };
 
-class ChildHandler : public mrs::DynamicResourceHandler
+class Child : public generated::TestDynamicChildV1
 {
 public:
-    ChildHandler(rust::Box<mrs::DynamicResource> resource, Log& log) : resource{std::move(resource)}, log{log} {}
-
-    void on_request(uint32_t opcode, rust::Vec<mrs::DynamicArgument> args) override
-    {
-        switch (opcode)
-        {
-        case opcode::destroy:
-            log.add("child.destroy");
-            break;
-        case opcode::echo_fixed:
-            log.add("child.echo_fixed " + std::to_string(args[0].int_value));
-            send(*resource, opcode::fixed_value, {fixed_arg(args[0].int_value)});
-            break;
-        default:
-            log.add("child.unexpected " + std::to_string(opcode));
-        }
-    }
+    Child(rust::Box<mrs::DynamicResource> resource, Log& log) : TestDynamicChildV1{std::move(resource)}, log{log} {}
 
     void on_destroyed() override { log.add("child.destroyed"); }
 
-    rust::Box<mrs::DynamicResource> const resource;
-
 private:
+    void destroy() override { log.add("child.destroy"); }
+
+    void echo_fixed(double value) override
+    {
+        log.add(std::format("child.echo_fixed {}", value));
+        send_fixed_value_event(value);
+    }
+
     Log& log;
 };
 
-class ManagerHandler : public mrs::DynamicResourceHandler
+class Manager : public generated::TestDynamicManagerV1
 {
 public:
-    ManagerHandler(rust::Box<mrs::DynamicResource> resource, Log& log) : resource{std::move(resource)}, log{log} {}
-
-    void on_request(uint32_t opcode, rust::Vec<mrs::DynamicArgument> args) override
+    Manager(rust::Box<mrs::DynamicResource> resource, Log& log) : TestDynamicManagerV1{std::move(resource)}, log{log}
     {
-        switch (opcode)
-        {
-        case opcode::destroy:
-            log.add("manager.destroy");
-            break;
-        case opcode::ping:
-            log.add("manager.ping " + std::to_string(args[0].uint_value) + " " + std::string{args[1].string_value});
-            send(
-                *resource, opcode::pong, {uint_arg(args[0].uint_value), string_arg(std::string{args[1].string_value})});
-            break;
-        case opcode::trigger_error:
-            if (args[0].uint_value == 0)
-                throw std::runtime_error{"not a protocol error"};
-            throw mrs::ProtocolError{resource->object_id(), args[0].uint_value, "triggered"};
-        case opcode::adopt:
-        {
-            auto const& child = args[0];
-            auto const* const handler = dynamic_cast<ChildHandler const*>(child.object_handler.get());
-            log.add(
-                "manager.adopt " + std::to_string(child.object_id) + " " +
-                (handler && handler->resource->object_id() == child.object_id ? "handler" : "no-handler"));
-            break;
-        }
-        default:
-            log.add("manager.unexpected " + std::to_string(opcode));
-        }
-    }
-
-    auto on_constructor_request(
-        uint32_t opcode,
-        rust::Vec<mrs::DynamicArgument> args,
-        rust::Box<mrs::DynamicResource> new_resource) -> std::shared_ptr<mrs::DynamicResourceHandler> override
-    {
-        if (opcode != opcode::create_child)
-        {
-            log.add("manager.unexpected " + std::to_string(opcode));
-            return nullptr;
-        }
-
-        log.add(
-            "manager.create_child " + std::string{new_resource->interface_name()} + " v" +
-            std::to_string(new_resource->version()));
-        send(*new_resource, opcode::value, {int_arg(args[1].int_value)});
-        return std::make_shared<ChildHandler>(std::move(new_resource), log);
     }
 
     void on_destroyed() override { log.add("manager.destroyed"); }
 
-    rust::Box<mrs::DynamicResource> const resource;
-
 private:
+    void destroy() override { log.add("manager.destroy"); }
+
+    void ping(uint32_t serial, std::string const& message) override
+    {
+        log.add(std::format("manager.ping {} {}", serial, message));
+        send_pong_event(serial, message);
+    }
+
+    auto create_child(rust::Box<mrs::DynamicResource> id, int32_t value)
+        -> std::shared_ptr<generated::TestDynamicChildV1> override
+    {
+        log.add(std::format("manager.create_child {} v{}", std::string{id->interface_name()}, id->version()));
+        auto child = std::make_shared<Child>(std::move(id), log);
+        child->send_value_event(value);
+        return child;
+    }
+
+    void trigger_error(uint32_t code) override
+    {
+        if (code == 0)
+            throw std::runtime_error{"not a protocol error"};
+        throw mrs::ProtocolError{object_id(), code, "triggered"};
+    }
+
+    void adopt(std::shared_ptr<generated::TestDynamicChildV1> const& child) override
+    {
+        log.add(
+            "manager.adopt " +
+            (child ? std::to_string(child->object_id()) + (std::dynamic_pointer_cast<Child>(child) ? " Child" : " ?")
+                   : std::string{"null"}));
+    }
+
     Log& log;
 };
 
-class GlobalHandler : public mrs::DynamicGlobalHandler
+class Global : public generated::TestDynamicManagerV1::Global
 {
 public:
-    explicit GlobalHandler(Log& log) : log{log} {}
+    explicit Global(Log& log) : log{log} {}
 
-    auto bind(rust::Box<mrs::WaylandClient>, rust::Box<mrs::DynamicResource> resource)
-        -> std::shared_ptr<mrs::DynamicResourceHandler> override
-    {
-        log.add("bind v" + std::to_string(resource->version()));
-        auto handler = std::make_shared<ManagerHandler>(std::move(resource), log);
-        managers.push_back(handler);
-        return handler;
-    }
-
-    /// The handlers of bound managers. Only touch on the event-loop thread.
-    std::vector<std::weak_ptr<ManagerHandler>> managers;
+    /// The bound managers. Only touch on the event-loop thread.
+    std::vector<std::weak_ptr<Manager>> managers;
 
 private:
+    auto on_bind(rust::Box<mrs::WaylandClient>, rust::Box<mrs::DynamicResource> resource)
+        -> std::shared_ptr<generated::TestDynamicManagerV1> override
+    {
+        log.add("bind v" + std::to_string(resource->version()));
+        auto manager = std::make_shared<Manager>(std::move(resource), log);
+        managers.push_back(manager);
+        return manager;
+    }
+
     Log& log;
 };
 
@@ -380,7 +310,7 @@ class DynamicProtocolTest : public mrs::test::RunningWaylandServerTest
 public:
     void SetUp() override
     {
-        mrs::load_dynamic_protocol(test_protocol_xml);
+        generated::register_protocol();
         RunningWaylandServerTest::SetUp();
     }
 
@@ -408,10 +338,10 @@ public:
 
     void create_global(uint32_t version)
     {
-        auto handler = std::make_unique<GlobalHandler>(log);
+        auto handler = std::make_unique<Global>(log);
         global_handler = handler.get();
-        global.emplace(
-            on_loop([&] { return (*server)->create_dynamic_global(manager_name, version, std::move(handler)); }));
+        global.emplace(on_loop([&]
+            { return generated::TestDynamicManagerV1::Global::create(**server, std::move(handler), version); }));
     }
 
     void connect_client()
@@ -452,116 +382,174 @@ public:
         ASSERT_NE(wl_display_roundtrip(display), -1) << "Unexpected protocol error " << wl_display_get_error(display);
     }
 
-    auto first_manager() -> std::shared_ptr<ManagerHandler>
-    {
-        return on_loop([this] { return global_handler->managers.at(0).lock(); });
-    }
+    /// The first bound manager. Only call on the event-loop thread.
+    auto first_manager() -> std::shared_ptr<Manager> { return global_handler->managers.at(0).lock(); }
 
     Log log;
-    GlobalHandler* global_handler{nullptr};
+    Global* global_handler{nullptr};
     std::optional<rust::Box<mrs::DynamicGlobal>> global;
     wl_display* display{nullptr};
     ClientState client;
 };
 
-auto expect_load_error(std::string const& xml) -> std::string
+template<typename T>
+auto to_rust(std::vector<T> items) -> rust::Vec<T>
+{
+    rust::Vec<T> result;
+    for (auto& item : items)
+        result.push_back(std::move(item));
+    return result;
+}
+
+auto argument(std::string const& name, mrs::DynamicArgumentKind kind, std::string const& interface = "")
+    -> mrs::DynamicArgumentDescriptor
+{
+    return {rust::String{name}, kind, false, rust::String{interface}};
+}
+
+auto message(std::string const& name, std::vector<mrs::DynamicArgumentDescriptor> args = {})
+    -> mrs::DynamicMessageDescriptor
+{
+    return {rust::String{name}, 1, false, to_rust(std::move(args))};
+}
+
+auto interface(
+    std::string const& name,
+    std::vector<mrs::DynamicMessageDescriptor> requests = {},
+    std::vector<mrs::DynamicMessageDescriptor> events = {}) -> mrs::DynamicInterfaceDescriptor
+{
+    return {rust::String{name}, 1, to_rust(std::move(requests)), to_rust(std::move(events))};
+}
+
+auto protocol(std::string const& name, std::vector<mrs::DynamicInterfaceDescriptor> interfaces)
+    -> mrs::DynamicProtocolDescriptor
+{
+    return {rust::String{name}, to_rust(std::move(interfaces))};
+}
+
+auto expect_registration_error(mrs::DynamicProtocolDescriptor const& protocol) -> std::string
 {
     try
     {
-        mrs::load_dynamic_protocol(xml);
+        mrs::register_dynamic_protocol(protocol);
     }
     catch (rust::Error const& error)
     {
         return error.what();
     }
-    ADD_FAILURE() << "Loading the protocol unexpectedly succeeded";
+    ADD_FAILURE() << "Registering the protocol unexpectedly succeeded";
     return {};
 }
-
-auto single_interface_protocol(std::string const& protocol, std::string const& interface_body) -> std::string
-{
-    return "<protocol name=\"" + protocol + "\">" + interface_body + "</protocol>";
-}
 }
 
-TEST(DynamicProtocolLoading, reloading_identical_protocol_succeeds)
+TEST(DynamicProtocolRegistration, registering_identical_protocol_again_succeeds)
 {
-    mrs::load_dynamic_protocol(test_protocol_xml);
-    EXPECT_NO_THROW(mrs::load_dynamic_protocol(test_protocol_xml));
+    generated::register_protocol();
+    EXPECT_NO_THROW(generated::register_protocol());
 }
 
-TEST(DynamicProtocolLoading, rejects_invalid_xml)
+TEST(DynamicProtocolRegistration, rejects_different_protocol_with_same_name)
 {
-    EXPECT_THAT(expect_load_error("<protocol name=\"mir_test_broken\"><interface"), testing::Not(testing::IsEmpty()));
+    generated::register_protocol();
+    auto const error = expect_registration_error(protocol("mir_test_dynamic_v1", {interface(manager_name)}));
+    EXPECT_THAT(error, HasSubstr("mir_test_dynamic_v1"));
 }
 
-TEST(DynamicProtocolLoading, rejects_redefining_builtin_interface)
+TEST(DynamicProtocolRegistration, rejects_inconsistent_descriptors)
 {
-    auto const error = expect_load_error(
-        single_interface_protocol("mir_test_clash_builtin", R"(<interface name="wl_compositor" version="1"/>)"));
+    auto const rejected = [](mrs::DynamicInterfaceDescriptor interface)
+    {
+        return !expect_registration_error(protocol("mir_test_inconsistent", {std::move(interface)})).empty();
+    };
+
+    auto unnamed = interface("");
+    EXPECT_TRUE(rejected(unnamed)) << "unnamed interface";
+
+    auto version_0 = interface("mir_test_inconsistent_v1");
+    version_0.version = 0;
+    EXPECT_TRUE(rejected(version_0)) << "version 0";
+
+    auto too_new = interface("mir_test_inconsistent_v1", {message("request")});
+    too_new.requests[0].since = 2;
+    EXPECT_TRUE(rejected(too_new)) << "message newer than its interface";
+
+    auto nullable_uint =
+        interface("mir_test_inconsistent_v1", {message("request", {argument("a", mrs::DynamicArgumentKind::Uint)})});
+    nullable_uint.requests[0].args[0].allow_null = true;
+    EXPECT_TRUE(rejected(nullable_uint)) << "nullable uint";
+
+    EXPECT_TRUE(rejected(interface(
+        "mir_test_inconsistent_v1",
+        {message("request", {argument("a", mrs::DynamicArgumentKind::Int, "wl_surface")})})))
+        << "int with an interface";
+
+    EXPECT_TRUE(rejected(interface(
+        "mir_test_inconsistent_v1",
+        {message("request", {argument("a", static_cast<mrs::DynamicArgumentKind>(200))})})))
+        << "unknown kind";
+}
+
+TEST(DynamicProtocolRegistration, rejects_redefining_builtin_interface)
+{
+    auto const error = expect_registration_error(protocol("mir_test_clash_builtin", {interface("wl_compositor")}));
     EXPECT_THAT(error, HasSubstr("wl_compositor"));
 }
 
-TEST(DynamicProtocolLoading, rejects_redefining_interface_of_another_loaded_protocol)
+TEST(DynamicProtocolRegistration, rejects_redefining_interface_of_another_registered_protocol)
 {
-    mrs::load_dynamic_protocol(test_protocol_xml);
-    auto const error = expect_load_error(single_interface_protocol(
-        "mir_test_clash_dynamic", R"(<interface name="mir_test_dynamic_child_v1" version="1"/>)"));
-    EXPECT_THAT(error, HasSubstr("mir_test_dynamic_child_v1"));
+    generated::register_protocol();
+    auto const error = expect_registration_error(protocol("mir_test_clash_dynamic", {interface(child_name)}));
+    EXPECT_THAT(error, HasSubstr(child_name));
 }
 
-TEST(DynamicProtocolLoading, rejects_new_id_without_interface)
+TEST(DynamicProtocolRegistration, rejects_new_id_without_interface)
 {
-    auto const error = expect_load_error(single_interface_protocol(
+    auto const error = expect_registration_error(protocol(
         "mir_test_untyped_new_id",
-        R"(<interface name="mir_test_untyped_new_id_v1" version="1">
-             <request name="bind"><arg name="id" type="new_id"/></request>
-           </interface>)"));
+        {interface(
+            "mir_test_untyped_new_id_v1", {message("bind", {argument("id", mrs::DynamicArgumentKind::NewId)})})}));
     EXPECT_THAT(error, HasSubstr("new_id"));
 }
 
-TEST(DynamicProtocolLoading, rejects_new_id_of_builtin_interface)
+TEST(DynamicProtocolRegistration, rejects_new_id_of_builtin_interface)
 {
-    auto const error = expect_load_error(single_interface_protocol(
+    auto const error = expect_registration_error(protocol(
         "mir_test_builtin_new_id",
-        R"(<interface name="mir_test_builtin_new_id_v1" version="1">
-             <request name="sync"><arg name="callback" type="new_id" interface="wl_callback"/></request>
-           </interface>)"));
+        {interface(
+            "mir_test_builtin_new_id_v1",
+            {message("sync", {argument("callback", mrs::DynamicArgumentKind::NewId, "wl_callback")})})}));
     EXPECT_THAT(error, HasSubstr("wl_callback"));
 }
 
-TEST(DynamicProtocolLoading, rejects_new_id_cycle)
+TEST(DynamicProtocolRegistration, rejects_new_id_cycle)
 {
-    auto const error = expect_load_error(R"(<protocol name="mir_test_cycle">
-        <interface name="mir_test_cycle_a_v1" version="1">
-          <request name="make_b"><arg name="id" type="new_id" interface="mir_test_cycle_b_v1"/></request>
-        </interface>
-        <interface name="mir_test_cycle_b_v1" version="1">
-          <request name="make_a"><arg name="id" type="new_id" interface="mir_test_cycle_a_v1"/></request>
-        </interface>
-      </protocol>)");
+    auto const error = expect_registration_error(protocol(
+        "mir_test_cycle",
+        {interface(
+             "mir_test_cycle_a_v1",
+             {message("make_b", {argument("id", mrs::DynamicArgumentKind::NewId, "mir_test_cycle_b_v1")})}),
+         interface(
+             "mir_test_cycle_b_v1",
+             {message("make_a", {argument("id", mrs::DynamicArgumentKind::NewId, "mir_test_cycle_a_v1")})})}));
     EXPECT_THAT(error, HasSubstr("cycle"));
 }
 
-TEST(DynamicProtocolLoading, failed_load_registers_nothing)
+TEST(DynamicProtocolRegistration, failed_registration_registers_nothing)
 {
-    expect_load_error(R"(<protocol name="mir_test_partial">
-        <interface name="mir_test_partial_ok_v1" version="1"/>
-        <interface name="wl_surface" version="1"/>
-      </protocol>)");
+    expect_registration_error(
+        protocol("mir_test_partial", {interface("mir_test_partial_ok_v1"), interface("wl_surface")}));
 
     // Had the valid interface been registered, this would clash with it.
     EXPECT_NO_THROW(
-        mrs::load_dynamic_protocol(single_interface_protocol(
-            "mir_test_partial_retry", R"(<interface name="mir_test_partial_ok_v1" version="1"/>)")));
+        mrs::register_dynamic_protocol(protocol("mir_test_partial_retry", {interface("mir_test_partial_ok_v1")})));
 }
 
-TEST(DynamicProtocolLoading, creating_global_fails_when_server_is_not_running)
+TEST(DynamicProtocolRegistration, creating_global_fails_when_server_is_not_running)
 {
-    mrs::load_dynamic_protocol(test_protocol_xml);
     Log log;
     auto server = mrs::create_wayland_server();
-    EXPECT_THROW(server->create_dynamic_global(manager_name, 1, std::make_unique<GlobalHandler>(log)), rust::Error);
+    EXPECT_THROW(
+        generated::TestDynamicManagerV1::Global::create(*server, std::make_unique<Global>(log)), rust::Error);
 }
 
 TEST_F(DynamicProtocolTest, creating_global_rejects_bad_arguments)
@@ -573,7 +561,7 @@ TEST_F(DynamicProtocolTest, creating_global_rejects_bad_arguments)
             {
                 try
                 {
-                    auto handler = with_handler ? std::make_unique<GlobalHandler>(log) : nullptr;
+                    auto handler = with_handler ? std::make_unique<Global>(log) : nullptr;
                     (*server)->create_dynamic_global(interface, version, std::move(handler));
                     return true;
                 }
@@ -584,7 +572,7 @@ TEST_F(DynamicProtocolTest, creating_global_rejects_bad_arguments)
             });
     };
 
-    EXPECT_FALSE(try_create("mir_test_never_loaded_v1", 1, true));
+    EXPECT_FALSE(try_create("mir_test_never_registered_v1", 1, true));
     EXPECT_FALSE(try_create(manager_name, 0, true));
     EXPECT_FALSE(try_create(manager_name, 3, true));
     EXPECT_FALSE(try_create(manager_name, 2, false));
@@ -602,14 +590,17 @@ TEST_F(DynamicProtocolTest, client_can_bind_global)
 
 TEST_F(DynamicProtocolTest, global_can_be_hidden_from_client)
 {
-    class HidingGlobalHandler : public GlobalHandler
+    class HidingGlobal : public Global
     {
     public:
-        using GlobalHandler::GlobalHandler;
+        using Global::Global;
         auto can_view(rust::Box<mrs::WaylandClientId>) -> bool override { return false; }
     };
     global.emplace(on_loop(
-        [&] { return (*server)->create_dynamic_global(manager_name, 2, std::make_unique<HidingGlobalHandler>(log)); }));
+        [&]
+        {
+            return generated::TestDynamicManagerV1::Global::create(**server, std::make_unique<HidingGlobal>(log));
+        }));
 
     EXPECT_FALSE(bind_manager(1));
 }
@@ -648,14 +639,11 @@ TEST_F(DynamicProtocolTest, constructor_request_creates_object_with_handler)
 
     EXPECT_THAT(
         log.snapshot(),
-        ElementsAre(
-            "bind v2",
-            "manager.create_child mir_test_dynamic_child_v1 v2",
-            "child.echo_fixed " + std::to_string(wl_fixed_from_double(1.5))));
+        ElementsAre("bind v2", "manager.create_child mir_test_dynamic_child_v1 v2", "child.echo_fixed 1.5"));
     EXPECT_THAT(client.events, ElementsAre("value -7", "fixed_value " + std::to_string(wl_fixed_from_double(1.5))));
 }
 
-TEST_F(DynamicProtocolTest, object_argument_carries_its_handler)
+TEST_F(DynamicProtocolTest, object_argument_arrives_as_its_handler)
 {
     create_global(2);
     auto* const manager = bind_manager(2);
@@ -671,8 +659,8 @@ TEST_F(DynamicProtocolTest, object_argument_carries_its_handler)
         ElementsAre(
             "bind v2",
             "manager.create_child mir_test_dynamic_child_v1 v2",
-            "manager.adopt " + std::to_string(wl_proxy_get_id(child)) + " handler",
-            "manager.adopt 0 no-handler"));
+            "manager.adopt " + std::to_string(wl_proxy_get_id(child)) + " Child",
+            "manager.adopt null"));
 }
 
 TEST_F(DynamicProtocolTest, server_can_create_object_and_send_it_in_event)
@@ -684,12 +672,9 @@ TEST_F(DynamicProtocolTest, server_can_create_object_and_send_it_in_event)
     on_loop(
         [this]
         {
-            auto const manager = global_handler->managers.at(0).lock();
-            auto child = manager->resource->create_resource(child_name);
-            auto const child_id = child->object_id();
-            auto handler = std::make_shared<ChildHandler>(std::move(child), log);
-            handler->resource->set_handler(handler);
-            send(*manager->resource, opcode::child_created, {new_id_arg(child_id)});
+            auto const manager = first_manager();
+            manager->send_child_created_event(
+                std::make_shared<Child>(manager->resource().create_resource(child_name), log));
         });
     roundtrip();
     ASSERT_TRUE(client.server_child);
@@ -700,6 +685,26 @@ TEST_F(DynamicProtocolTest, server_can_create_object_and_send_it_in_event)
     roundtrip();
 
     EXPECT_THAT(client.events, ElementsAre("child_created", "fixed_value " + std::to_string(wl_fixed_from_int(3))));
+}
+
+TEST_F(DynamicProtocolTest, handler_rejects_resource_of_another_interface)
+{
+    create_global(2);
+    ASSERT_TRUE(bind_manager(2));
+
+    EXPECT_TRUE(on_loop(
+        [this]
+        {
+            try
+            {
+                Child{first_manager()->resource().create_resource(manager_name), log};
+                return false;
+            }
+            catch (std::invalid_argument const&)
+            {
+                return true;
+            }
+        }));
 }
 
 TEST_F(DynamicProtocolTest, destructor_request_notifies_destruction)
@@ -779,7 +784,7 @@ TEST_F(DynamicProtocolTest, invalid_events_are_rejected_without_sending)
             {
                 try
                 {
-                    send(*global_handler->managers.at(0).lock()->resource, opcode, args);
+                    send(first_manager()->resource(), opcode, args);
                     return false;
                 }
                 catch (rust::Error const&)
@@ -795,6 +800,7 @@ TEST_F(DynamicProtocolTest, invalid_events_are_rejected_without_sending)
     EXPECT_TRUE(rejected(opcode::pong, {uint_arg(1), null_string_arg()})) << "null non-nullable string";
     EXPECT_TRUE(rejected(opcode::pong, {uint_arg(1), string_arg(std::string{"a\0b", 3})})) << "embedded null";
     EXPECT_TRUE(rejected(opcode::child_created, {new_id_arg(1000)})) << "event newer than the object";
+    EXPECT_FALSE(on_loop([this] { return first_manager()->version_supports_child_created(); }));
 
     roundtrip();
     EXPECT_THAT(client.events, testing::IsEmpty());

@@ -14,22 +14,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//! Protocols loaded at runtime ("dynamic" protocols).
+//! Protocols registered at runtime ("dynamic" protocols).
 //!
 //! The protocols in `wayland-protocols/` are compiled into Mir with typed
-//! bindings. This module serves protocols that Mir has never seen at build time:
-//! their XML is parsed at runtime into `wayland-backend` interface descriptors,
-//! and requests and events are forwarded untyped between the backend and C++
-//! handlers (`DynamicGlobalHandler` / `DynamicResourceHandler`).
+//! bindings. This module serves protocols that Mir has never seen at build time.
+//! `mir_wayland_generator` turns their XML into C++ when the protocol's
+//! implementation is built; at runtime that code registers a protocol
+//! descriptor, from which `wayland-backend` interface descriptors are built.
+//! Requests and events are forwarded untyped between the backend and the
+//! generated C++ (`DynamicGlobalHandler` / `DynamicResourceHandler`), which
+//! presents them as typed calls.
 
 mod descriptors;
 mod objects;
 
-// Shared with the build script so both agree on how protocol XML is interpreted.
-#[path = "../../build_script/protocol_parser.rs"]
-#[allow(dead_code)]
-mod protocol_parser;
-
-pub use descriptors::load_dynamic_protocol;
+pub use descriptors::register_dynamic_protocol;
 pub(crate) use objects::create_dynamic_global;
 pub use objects::{DynamicGlobal, DynamicResource};

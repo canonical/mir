@@ -63,13 +63,17 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
 | Option                                                           | Summary                                                                                                                                                    | Verdict                                                                                                                                                                                       |
 | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A. libwayland (`system`) backend + expose `wl_display*`          | `wayland-server` feature `system` gives `Handle::display_ptr()` and `ObjectId::from_ptr`/`as_ptr`, so the existing MirAL `Builder` ABI could keep working. | Rejected as the main path: re-introduces libwayland under Rust, mixes two object models, and contradicts this stack's removal of libwayland types. Kept only as an emergency compat fallback. |
-| B. Runtime ("dynamic") protocol layer on the untyped backend API | Parse XML at runtime, build leaked `Interface`s, generic `GlobalHandler`/`ObjectData` forwarding to C++ over a small fixed FFI; typed C++ codegen on top.  | **Recommended.** Pure Rust, no per-protocol Rust code, small stable ABI.                                                                                                                      |
+| B. Runtime ("dynamic") protocol layer on the untyped backend API | Generate typed C++ from XML at build time; it registers a descriptor at runtime, from which leaked `Interface`s and generic forwarding to C++ are built.   | **Recommended.** Pure Rust, no per-protocol Rust code, small stable ABI.                                                                                                                      |
 | C. Out-of-tree Rust crates linked as rlib / Rust-ABI `dlopen`    | Unstable Rust ABI; requires rebuilding Mir.                                                                                                                | Rejected. Rust plugins instead use B's C ABI via a thin helper crate.                                                                                                                         |
 
 ## How runtime loading works (Option B)
 
-1. **Get the XML** at runtime (file path, embedded string, or plugin) and parse it with the
-   same parser as `build_script/protocol_parser.rs`.
+1. **Generate code at build time.** The protocol implementer runs `mir_wayland_generator` on the
+   XML (in CMake, `mir_generate_protocol_wrapper`). It emits typed C++ classes and a
+   `register_protocol()` function holding the protocol as a structured descriptor
+   (`DynamicProtocolDescriptor`). No XML is read at runtime.
+1. **Register at runtime.** `register_protocol()` passes the descriptor to
+   `register_dynamic_protocol`, which validates it.
 1. **Build descriptors.** Map each `<arg type>` to `ArgumentType`, set `since` and
    `is_destructor`. Leak the result to get `&'static Interface`.
    - `arg_interfaces` (object args) are only compared by name, so placeholders and
@@ -77,7 +81,7 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
    - `child_interface` (`new_id`) is stored as the new object's interface and used to parse its
      requests (`rs/server_impl/client.rs:597-680`), so it must be the **full** descriptor.
    - Therefore build children first, in topological order of `new_id` references, and reject
-     `new_id` cycles at load time. Building cyclic graphs would need references to
+     `new_id` cycles at registration. Building cyclic graphs would need references to
      not-yet-initialised `Interface`s. Object-argument cycles such as `xdg_toplevel.set_parent`
      are unaffected, because they use name-only placeholders.
 1. **Register a global:**
@@ -101,12 +105,12 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
 
 ### Rust side (`wayland_rs/src/dynamic/`)
 
-1. **Shared protocol parser**: move `build_script/protocol_parser.rs` into a small workspace
-   crate used by both the build script and runtime, so they agree on XML semantics (enums,
-   `since`, `allow-null`, destructors).
-1. **`DynamicProtocolRegistry`**: `load_xml(&str) -> Result<ProtocolHandle>`; builds `Interface`
+1. **Generator** (`generator/`, host tool `mir_wayland_generator`): shares
+   `build_script/protocol_parser.rs` with the build script so both agree on XML semantics (enums,
+   `since`, `allow-null`, destructors), validates the protocol and emits the typed C++.
+1. **`DynamicProtocolRegistry`**: `register_dynamic_protocol(&DynamicProtocolDescriptor)`; builds `Interface`
    graphs, resolving cross-protocol references (`wl_surface`, `wl_output`, `wl_seat`, …) to the
-   scanner-generated statics first, then other loaded dynamic protocols; rejects name clashes with
+   scanner-generated statics first, then other registered dynamic protocols; rejects name clashes with
    in-tree interfaces and interface-less `new_id`s.
 1. **`DynamicGlobal`** and **`DynamicObject`** as described above.
 1. **Cross-protocol object interop**: generate (in the existing build script) a lookup table
@@ -114,7 +118,7 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
    `Resource::from_id` + `.data::<Arc<Mutex<XxxWrapper>>>()` as `dispatch.rs` does today, so a
    dynamic request carrying a `wl_surface` arrives in C++ as the real `mir::wayland::Surface`.
    The reverse (a dynamic protocol creating an in-tree-typed child via `new_id`) is unsupported
-   initially (`wayland_server::ResourceData` has no public constructor in 0.31) — reject at load.
+   initially (`wayland_server::ResourceData` has no public constructor in 0.31) — reject at registration.
 1. **Event/lifecycle API** on a `DynamicResource` box: `send_event(opcode, args)`, `post_error`,
    `version`, `object_id`, `client`, `destroy_and_delete`; event-loop-thread only, with the
    existing `WaylandExecutor` / `drain_queue` for cross-thread work.
@@ -128,15 +132,14 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
    (`bind`, `can_view`) and `DynamicResourceHandler` (`on_request`, `on_destroyed`); no
    per-protocol types cross the bridge.
 1. **Public, ABI-stable MirAL API** (pimpl; new symbols in `src/miral/symbols.map` and debian
-   symbols, per `.github/instructions/abi-symbols.instructions.md`): register a protocol from XML
-   plus a factory via `miral::WaylandExtensions`, and a `miral::WaylandResource`-style value type
+   symbols, per `.github/instructions/abi-symbols.instructions.md`): register a generated protocol
+   descriptor plus a factory via `miral::WaylandExtensions`, and a `miral::WaylandResource`-style value type
    (send_event, post_error, client, application/window lookup). Deprecate `Context::display()`
    and the `wl_client*`/`wl_resource*` overloads of `application_for`/`window_for`, which are
    already non-functional on this stack.
-1. **Typed wrapper generator for out-of-tree users**: factor the C++ emitter
-   (`build_script/cpp_protocol_generation.rs` / `cpp_builder.rs`) into an installed tool that
-   emits header-only typed classes on top of the generic MirAL API, so downstream code looks like
-   the in-tree `mir::wayland::*` classes without depending on Mir's internal cxx ABI.
+1. **Typed wrapper generator for out-of-tree users**: `mir_wayland_generator` (done, in-tree
+   only). Install it, with its CMake helper, once its output targets the public MirAL API instead
+   of Mir's internal cxx ABI.
 1. **Wiring**: extend `configure_wayland_extensions` / `WaylandExtensions::run_builders`
    (`src/server/frontend_wayland/wayland_default_configuration.cpp`) so dynamic extensions
    participate in `--wayland-extensions`, `--add/drop-wayland-extensions` and
@@ -149,31 +152,41 @@ shell/plugin (C++ via MirAL, optionally Rust/C via `dlopen`) that Mir has never 
 
 Progress against these items is tracked in [Progress](#progress).
 
-1. Spike: hand-written dynamic global loading an in-repo test XML at runtime, registered via
+1. Spike: hand-written dynamic global serving an in-repo test protocol at runtime, registered via
    `backend_handle().create_global`, bound by a client in the `tests/wayland_rs` harness; prove
    interop with a `wl_surface` argument.
-1. Extract shared protocol model crate; implement `DynamicProtocolRegistry` + Rust unit tests
-   (descriptor building, cycles, cross-refs, clash/invalid-XML rejection, version/`since`).
+1. Build-time generator (typed C++ + descriptors); `DynamicProtocolRegistry` + tests
+   (descriptor building, cycles, cross-refs, clash/inconsistent-descriptor rejection, version/`since`).
 1. `DynamicGlobal` / `DynamicObject` + generic cxx bridge; tests in `tests/wayland_rs`.
 1. Generated in-tree interop table.
 1. Runtime add/remove while running + pre-run queue.
 1. Public MirAL API + symbols + docs; wiring into extension options.
-1. Typed C++ generator tool + a new reference out-of-tree example (replacing the removed
+1. Install the generator + a new reference out-of-tree example (replacing the removed
    `tests/miral/example_xdg_shell_v6.cpp`); miral/WLCS tests.
 1. Optional: `dlopen` plugin loader + Rust helper crate.
 1. Update `doc/sphinx/` (how-to for shell authors) and release notes for the MirAL deprecations.
 
 ## Progress
 
-Done (first increment, `src/dynamic/` + `tests/wayland_rs/test_dynamic_protocol.cpp`):
+Done (first increment, `src/dynamic/`, `generator/` + `tests/wayland_rs/test_dynamic_protocol.cpp`):
 
-- Runtime registry (`load_dynamic_protocol(xml)`), reusing `build_script/protocol_parser.rs` via
-  `#[path]` rather than a separate crate. Loading is idempotent for identical XML. It rejects
-  invalid XML, clashes with in-tree (generated `BUILTIN_INTERFACE_NAMES`) or already-loaded
-  interfaces, `new_id`s without an interface or of an in-tree or unknown interface, and `new_id`
-  cycles. A failed load registers nothing.
+- No XML is parsed at runtime. `mir_wayland_generator <prefix> <protocol.xml> header|source [output]`
+  (CMake: `mir_generate_protocol_wrapper(target prefix protocol.xml)`) reuses
+  `build_script/protocol_parser.rs` via `#[path]` and validates the protocol (`since`,
+  `allow-null`, `new_id` interfaces, name clashes). It emits, in `mir::wayland::<protocol>`:
+  - one class per interface over `DynamicResource`, with typed `send_*_event`,
+    `version_supports_*`, enums and virtual request handlers. Object arguments of interfaces in
+    the same XML arrive as `std::shared_ptr` to their handler;
+  - a nested `Global` (`create(server, handler, version)`, `on_bind`) for global interfaces;
+  - `register_protocol()`, which builds a `DynamicProtocolDescriptor` and calls
+    `register_dynamic_protocol`.
+- Runtime registry (`register_dynamic_protocol(descriptor)`). Registration is idempotent for
+  identical descriptors. It rejects inconsistent descriptors, clashes with in-tree (generated
+  `BUILTIN_INTERFACE_NAMES`) or already-registered interfaces, `new_id`s without an interface or
+  of an in-tree or unknown interface, and `new_id` cycles. A failed registration registers
+  nothing.
 - Generic cxx bridge:
-  - `DynamicArgument`/`DynamicArgumentKind` shared types.
+  - `DynamicArgument`/`DynamicArgumentKind` and the descriptor shared types.
   - C++ `DynamicGlobalHandler` (`bind`, `can_view`) and `DynamicResourceHandler` (`on_request`,
     `on_constructor_request`, `on_destroyed`) in `wayland_rs_cpp/include/dynamic_protocol.h`.
   - Rust `DynamicResource` (`send_event`, `post_error`, `destroy`, `create_resource`,
@@ -189,7 +202,8 @@ Done (first increment, `src/dynamic/` + `tests/wayland_rs/test_dynamic_protocol.
 - A null `GlobalFactory` now registers no in-tree globals. The test fixture relies on this.
 
 Not done yet: in-tree interop table (object args of in-tree interfaces arrive with only an id),
-pre-run registration queue, MirAL API, typed generator, `dlopen`, docs, dependency caps.
+pre-run registration queue, MirAL API, installing the generator, `dlopen`, docs (including
+updating `doc/sphinx/how-to/how-to-integrate-a-custom-wayland-protocol.md`), dependency caps.
 
 ## Risks / open questions
 
@@ -197,7 +211,7 @@ pre-run registration queue, MirAL API, typed generator, `dlopen`, docs, dependen
   (`rs/server_impl/client.rs:134-201,657`): wrong event opcode/signature, wrong-interface/null
   object or `new_id` in events, cross-client objects, and — on *incoming requests* — a `new_id`
   whose `MessageDesc` lacks `child_interface`. A panic across the cxx boundary aborts. Reject
-  interface-less `new_id` at load time, pre-validate every C++ `send_event`, and fuzz/unit-test
+  interface-less `new_id` at registration, pre-validate every C++ `send_event`, and fuzz/unit-test
   descriptor building.
 - **Dependency pinning.** Workspace `Cargo.toml` has `wayland-backend = ">=0.3.12"` /
   `wayland-server = ">=0.31.13"` with no upper bound; cap to `<0.4` / `<0.32` before relying on

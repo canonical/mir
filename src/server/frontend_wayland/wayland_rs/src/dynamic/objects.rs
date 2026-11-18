@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-//! Globals and objects of protocols loaded at runtime.
+//! Globals and objects of protocols registered at runtime.
 //!
 //! Requests are delivered untyped to C++ `DynamicResourceHandler`s; C++ sends
 //! events through a [DynamicResource]. `wayland-backend` panics (aborting Mir)
@@ -48,7 +48,7 @@ unsafe impl Sync for DynamicGlobalHandler {}
 unsafe impl Send for DynamicResourceHandler {}
 unsafe impl Sync for DynamicResourceHandler {}
 
-/// Create a global for an interface of a protocol loaded at runtime.
+/// Create a global for an interface of a protocol registered at runtime.
 pub(crate) fn create_dynamic_global(
     handle: DisplayHandle,
     interface_name: &str,
@@ -79,7 +79,7 @@ pub(crate) fn create_dynamic_global(
     Ok(Box::new(DynamicGlobal { id, handle }))
 }
 
-/// An RAII handle owning a global of a protocol loaded at runtime (see
+/// An RAII handle owning a global of a protocol registered at runtime (see
 /// `WaylandServer::create_dynamic_global`).
 ///
 /// Dropping it withdraws the global. Objects already bound remain alive.
@@ -152,7 +152,7 @@ impl GlobalHandler<ServerState> for GlobalData {
     }
 }
 
-/// The backend's per-object data for objects of protocols loaded at runtime.
+/// The backend's per-object data for objects of protocols registered at runtime.
 #[derive(Default)]
 struct DynamicObject {
     handler: Mutex<Option<SharedPtr<DynamicResourceHandler>>>,
@@ -394,7 +394,7 @@ fn find_object(
     found
 }
 
-/// An object of a protocol loaded at runtime, as seen from C++.
+/// An object of a protocol registered at runtime, as seen from C++.
 ///
 /// All methods must be called on the Wayland event-loop thread.
 pub struct DynamicResource {
