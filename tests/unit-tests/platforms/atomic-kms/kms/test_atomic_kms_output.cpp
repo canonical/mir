@@ -596,6 +596,7 @@ TEST_P(AtomicKMSMixedRejectionTest, test_presentation_rejects_invalid_state)
     auto output_under_test = output();
     if (param.reset_output)
     {
+        connector().connection = DRM_MODE_DISCONNECTED;
         output_under_test->reset();
         ASSERT_THAT(output_under_test->plane_capabilities(), IsNull());
     }

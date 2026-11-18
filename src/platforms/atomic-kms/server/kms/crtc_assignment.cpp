@@ -185,8 +185,9 @@ auto mga::solve_crtc_assignments(mir::Fd const& drm_fd, RealKMSDisplayConfigurat
         {
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
-                    "Failed to find a compatible CRTC/encoder/plane assignment for output " +
-                    std::to_string(output.id.as_value())));
+                    std::format(
+                        "Failed to find a compatible CRTC/encoder/plane assignment for output {}",
+                        output.id.as_value())));
         }
 
         auto crtc = mgk::get_crtc(drm_fd, chosen->crtc_id);
@@ -196,7 +197,7 @@ auto mga::solve_crtc_assignments(mir::Fd const& drm_fd, RealKMSDisplayConfigurat
         {
             BOOST_THROW_EXCEPTION(
                 std::runtime_error(
-                    "Failed to retrieve assigned CRTC or plane for output " + std::to_string(output.id.as_value())));
+                    std::format("Failed to retrieve assigned CRTC or plane for output {}", output.id.as_value())));
         }
 
         result.emplace(output.id, CrtcAssignment{std::move(crtc), std::move(plane)});

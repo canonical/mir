@@ -327,8 +327,9 @@ void mga::Display::configure_locked(
                     return;
                 }
 
-                auto previous_sink = std::find_if(display_sinks.begin(), display_sinks.end(), [&](auto& sink) {
-                    return sink && static_cast<int>(sink->output_id()) == out.id.as_value();
+                auto kms_output = kms_conf.get_output_for(out.id);
+                auto previous_sink = std::ranges::find_if(display_sinks.begin(), display_sinks.end(), [&](auto& sink) {
+                    return sink && sink->connector_id() == kms_output->id();
                 });
 
                 // Configuration should be compatible, so there should be a corresponding previous sink.
@@ -382,7 +383,7 @@ void mga::Display::configure_locked(
                 {
                     for (auto& sink : display_sinks)
                     {
-                        if (sink && static_cast<int>(sink->output_id()) == out.id.as_value())
+                        if (sink && static_cast<int>(sink->connector_id()) == out.id.as_value())
                         {
                             return std::exchange(sink, nullptr);
                         }
