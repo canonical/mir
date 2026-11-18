@@ -1001,18 +1001,15 @@ Within function parameter lists all references must be `const`:
 void foo(string const& in, string* out);
 ```
 
-In fact it is a very strong convention in Unity code that input
-arguments are values or `const` references while output arguments are
-pointers. Input parameters may be `const` pointers. Non-`const`
-reference parameters are allowed but there must be a valid reason for
-it, a strong preference is given to `const` reference parameters.
+In Mir code, input arguments are usually values or `const` references
+while output arguments are usually pointers. Input parameters may be
+`const` pointers. Non-`const` reference parameters are allowed when
+there is a valid reason, but `const` references are preferred for input.
 
 One case when you might want an input parameter to be a `const` pointer
 is if you want to emphasize that the argument is not copied, so it must
 exist for the lifetime of the object; it is usually best to document
-this in comments as well. STL adapters such as `bind2nd` and `mem_fun`
-do not permit reference parameters, so you must declare functions with
-pointer parameters in these cases, too.
+this in comments as well.
 
 ### Function overloading
 
@@ -1382,62 +1379,19 @@ For integers we know can be "big", use `int64_t`.
 Code should be 64-bit and 32-bit friendly. Bear in mind problems of
 printing, comparisons, and structure alignment.
 
-- `printf()` specifiers for some types are not cleanly portable between
-  32-bit and 64-bit systems. C99 defines some portable format
-  specifiers. Unfortunately, MSVC 7.1 does not understand some of these
-  specifiers and the standard is missing a few, so we have to define our
-  own ugly versions in some cases (in the style of the standard include
-  file `inttypes.h`):
-
-  ```c++
-  // printf macros for size_t, in the style of inttypes.h
-  #ifdef _LP64
-  #define __PRIS_PREFIX "z"
-  #else
-  #define __PRIS_PREFIX
-  #endif
-
-  // Use these macros after a % in a printf format string
-  // to get correct 32/64 bit behavior, like this:
-  // size_t size = records.size();
-  // printf("%"PRIuS"\n", size);
-
-  #define PRIdS __PRIS_PREFIX "d"
-  #define PRIxS __PRIS_PREFIX "x"
-  #define PRIuS __PRIS_PREFIX "u"
-  #define PRIXS __PRIS_PREFIX "X"
-  #define PRIoS __PRIS_PREFIX "o"
-  ```
-
-  | Type                     | DO NOT use            | DO use                   | Notes               |
-  | ------------------------ | --------------------- | ------------------------ | ------------------- |
-  | `void*` (or any pointer) | `%lx`                 | `%p`                     |                     |
-  | `int64_t`                | `%qd`, `%lld`         | `%"PRId64"`              |                     |
-  | `uint64_t`               | `%qu`, `%llu`, `%llx` | `%"PRIu64"`, `%"PRIx64"` |                     |
-  | `size_t`                 | `%u`                  | `%"PRIuS"`, `%"PRIxS"`   | C99 specifies `%zu` |
-  | `ptrdiff_t`              | `%d`                  | `%"PRIdS"`               | C99 specifies `%zd` |
-
-  Note that the `PRI*` macros expand to independent strings which are
-  concatenated by the compiler. Hence if you are using a non-constant
-  format string, you need to insert the value of the macro into the
-  format, rather than the name. It is still possible, as usual, to
-  include length specifiers, etc., after the `%` when using the `PRI*`
-  macros. So, e.g. `printf("x = %30"PRIuS"\n", x)` would expand on
-  32-bit Linux to `printf("x = %30" "u" "\n", x)`, which the compiler
-  will treat as `printf("x = %30u\n", x)`.
+- When using `printf()`-style formatting, use specifiers that match the
+  argument types. Use `%p` for pointers, `%zu` for `size_t`, and `%td`
+  for `ptrdiff_t`. For fixed-width integers, use the corresponding
+  `PRI*` macro from `<cinttypes>` (for example, `PRId64` for
+  `int64_t`).
 
 - Remember that `sizeof(void*)` != `sizeof(int)`. Use `intptr_t` if you
   want a pointer-sized integer.
 
-- You may need to be careful with structure alignments, particularly for
-  structures being stored on disk. Any class/structure with a
-  `int64_t`/`uint64_t` member will by default end up being 8-byte
-  aligned on a 64-bit system. If you have such structures being shared
-  on disk between 32-bit and 64-bit code, you will need to ensure that
-  they are packed the same on both architectures. Most compilers offer a
-  way to alter structure alignment. For gcc, you can use
-  `__attribute__((packed))`. MSVC offers `#pragma pack()` and
-  `__declspec(align())`.
+- For structures stored on disk or shared between 32-bit and 64-bit
+  code, do not rely on implementation-specific layout. Prefer explicit
+  serialization; if a shared layout is required, define and verify its
+  alignment and packing for every supported toolchain.
 
 - Use the `LL` or `ULL` suffixes as needed to create 64-bit constants.
   For example:
@@ -1447,9 +1401,10 @@ printing, comparisons, and structure alignment.
   uint64_t my_mask = 3ULL << 48;
   ```
 
-- If you really need different code on 32-bit and 64-bit systems, use
-  `#ifdef _LP64` to choose between the code variants. (But please avoid
-  this if possible, and keep any such changes localized.)
+- If code must differ between 32-bit and 64-bit systems, use compile-time
+  checks supported by the toolchains and keep the differences localized.
+  Avoid architecture-specific branches when using portable types can
+  solve the problem.
 
 ### Preprocessor macros
 
