@@ -245,7 +245,11 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
         return []
 
     spelling = node.spelling
-    n_template_args = node.type.get_num_template_arguments()
+    n_template_args = (
+        node.type.get_num_template_arguments()
+        if node.kind != clang.cindex.CursorKind.VAR_DECL
+        else -1
+    )
     if n_template_args != -1:
         template_types = [
             node.type.get_template_argument_type(i).spelling
@@ -263,8 +267,18 @@ def get_namespace_str(node: clang.cindex.Cursor) -> list[str]:
 def traverse_ast(
     node: clang.cindex.Cursor, filename: str, result: set[str]
 ) -> set[str]:
-    # Ignore private and protected variables
-    if node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE:
+    # Private member functions still produce symbols in the shared library.
+    if (
+        node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE
+        and node.kind
+        not in (
+            clang.cindex.CursorKind.FUNCTION_DECL,
+            clang.cindex.CursorKind.CXX_METHOD,
+            clang.cindex.CursorKind.CONSTRUCTOR,
+            clang.cindex.CursorKind.DESTRUCTOR,
+            clang.cindex.CursorKind.CONVERSION_FUNCTION,
+        )
+    ):
         return result
 
     # Check if we need to output a symbol
