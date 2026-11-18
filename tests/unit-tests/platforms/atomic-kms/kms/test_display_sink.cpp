@@ -368,12 +368,12 @@ TEST_F(AtomicDisplaySinkTest, constructor_configures_output_with_crtc_and_plane)
     uint32_t passed_plane_id{0};
 
     EXPECT_CALL(*output, configure(_, _, _, _))
-        .WillOnce(Invoke(
+        .WillOnce(
             [&](geom::Displacement, size_t, mgk::DRMModeCrtcUPtr received_crtc, mgk::DRMModePlaneUPtr received_plane)
             {
                 passed_crtc_id = received_crtc->crtc_id;
                 passed_plane_id = received_plane->plane_id;
-            }));
+            });
 
     auto test_sink = std::make_unique<mga::DisplaySink>(
         drm_fd,

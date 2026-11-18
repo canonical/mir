@@ -449,7 +449,7 @@ auto mga::DisplaySink::drm_fd() const -> mir::Fd
     return mir::Fd{mir::IntOwnedFd{output->drm_fd()}};
 }
 
-auto mga::DisplaySink::output_id() const -> uint32_t
+auto mga::DisplaySink::connector_id() const -> uint32_t
 {
     return output->id();
 }
