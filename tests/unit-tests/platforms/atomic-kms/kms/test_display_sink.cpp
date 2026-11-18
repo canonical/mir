@@ -367,8 +367,6 @@ struct MixedProposalCase
 {
     std::string_view name;
     geom::Displacement offset;
-    /// nullopt when rejected before test_presentation(); otherwise the result test_presentation() returns
-    std::optional<bool> test_commit_result;
 };
 
 class AtomicMixedProposal : public AtomicDisplaySinkTest, public WithParamInterface<MixedProposalCase>
@@ -691,53 +689,34 @@ INSTANTIATE_TEST_SUITE_P(
         SceneCase{"disjoint_plain_ui", {{{{12, 34}, {30, 30}}, true}, {{{50, 34}, {20, 20}}}}, 0}),
     [](TestParamInfo<SceneCase> const& info) { return std::string{info.param.name}; });
 
-TEST_P(AtomicMixedProposal, overlay_queues_mixed_state_only_when_overlapping_and_accepted)
+TEST_P(AtomicMixedProposal, overlay_queues_mixed_state_when_accepted)
 {
     auto const& param = GetParam();
     auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
     auto const client_fb = make_client_framebuffer();
 
-    if (param.test_commit_result.has_value())
-    {
-        EXPECT_CALL(
-            *output,
-            test_presentation(presents_primary_and_one_client_plane(
-                *primary_fb, *client_fb, legal_overlay_id, geom::Point{} + param.offset)))
-            .WillOnce(Return(*param.test_commit_result));
-    }
-    else
-    {
-        EXPECT_CALL(*output, test_presentation(_)).Times(0);
-    }
+    EXPECT_CALL(
+        *output,
+        test_presentation(presents_primary_and_one_client_plane(
+            *primary_fb, *client_fb, legal_overlay_id, geom::Point{} + param.offset)))
+        .WillOnce(Return(true));
 
-    auto const accepted = param.test_commit_result.value_or(false);
-    EXPECT_EQ(
-        accepted,
-        sink->overlay({fullscreen_element(primary_fb), client_element(client_fb, display_area.top_left + param.offset)}));
+    EXPECT_TRUE(
+        sink->overlay(
+            {fullscreen_element(primary_fb), client_element(client_fb, display_area.top_left + param.offset)}));
 
-    if (accepted)
-    {
-        EXPECT_CALL(*output, page_flip(Ref(*primary_fb))).WillOnce(Return(true));
-    }
-    else
-    {
-        EXPECT_CALL(*output, page_flip(_)).Times(0);
-    }
+    EXPECT_CALL(*output, page_flip(Ref(*primary_fb))).WillOnce(Return(true));
     EXPECT_TRUE(sink->post());
 }
 
-// The kernel clips a partly off-screen destination, so only a non-overlapping client is rejected up front.
+// The kernel clips a partly off-screen destination, so the sink still proposes it (RejectedClient
+// covers a non-overlapping destination).
 INSTANTIATE_TEST_SUITE_P(
     MixedProposal,
     AtomicMixedProposal,
     Values(
-        MixedProposalCase{.name = "inside_output", .offset = {8, 6}, .test_commit_result = true},
-        MixedProposalCase{.name = "partly_outside_output", .offset = {-10, -5}, .test_commit_result = true},
-        MixedProposalCase{
-            .name = "completely_outside_output",
-            .offset = {output_size.width.as_int(), 0},
-            .test_commit_result = std::nullopt},
-        MixedProposalCase{.name = "rejected_by_test_commit", .offset = {8, 6}, .test_commit_result = false}),
+        MixedProposalCase{.name = "inside_output", .offset = {8, 6}},
+        MixedProposalCase{.name = "partly_outside_output", .offset = {-10, -5}}),
     [](TestParamInfo<MixedProposalCase> const& info) { return std::string{info.param.name}; });
 
 TEST_P(AtomicMixedRejectedClient, overlay_rejects_a_client_it_cannot_scan_out)
@@ -776,8 +755,33 @@ INSTANTIATE_TEST_SUITE_P(
             .format = {DRM_FORMAT_NV12, supported_modifier},
             .layout = mg::gl::Texture::Layout::GL,
             .destination = {client_top_left, client_size},
-            .source = {{0, 0}, client_full_source.size / 2}}),
+            .source = {{0, 0}, client_full_source.size / 2}},
+        RejectedClientCase{
+            .name = "completely_outside_output",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {display_area.top_left + geom::Displacement{output_size.width.as_int(), 0}, client_size},
+            .source = client_full_source}),
     [](TestParamInfo<RejectedClientCase> const& info) { return std::string{info.param.name}; });
+
+TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_mixed_state_the_test_commit_rejects)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+    auto const offset = geom::Displacement{8, 6};
+
+    EXPECT_CALL(
+        *output,
+        test_presentation(presents_primary_and_one_client_plane(
+            *primary_fb, *client_fb, legal_overlay_id, geom::Point{} + offset)))
+        .WillOnce(Return(false));
+
+    EXPECT_FALSE(
+        sink->overlay({fullscreen_element(primary_fb), client_element(client_fb, display_area.top_left + offset)}));
+
+    EXPECT_CALL(*output, page_flip(_)).Times(0);
+    EXPECT_TRUE(sink->post());
+}
 
 TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_client_without_a_direct_scanout_framebuffer)
 {
