@@ -165,34 +165,14 @@ inline. The main reason for making a virtual function inline is to place
 its definition in the class, either for convenience or to document its
 behavior, e.g., for accessors and mutators.
 
-(the-inl-h-files)=
+### Inline and template definitions
 
-### The -inl.h files
-
-You may use file names with a `-inl.h` suffix to define complex inline
-functions when needed.
-
-The definition of an inline function needs to be in a header file, so
-that the compiler has the definition available for inlining at the call
-sites. However, implementation code properly belongs in `.cpp` files,
-and we do not like to have much actual code in `.h` files unless there
-is a readability or performance advantage.
-
-If an inline function definition is short, with very little, if any,
-logic in it, you should put the code in your `.h` file. For example,
-accessors and mutators should certainly be inside a class definition.
-More complex inline functions may also be put in a `.h` file for the
-convenience of the implementer and callers, though if this makes the
-`.h` file too unwieldy you can instead put that code in a separate
-`-inl.h` file. This separates the implementation from the class
-definition, while still allowing the implementation to be included where
-necessary.
-
-Another use of `-inl.h` files is for definitions of function templates.
-This can be used to keep your template definitions easy to read.
-
-Do not forget that a `-inl.h` file requires a [`#define`
-guard](#the-define-guard) just like any other header file.
+When a header declares inline functions or templates whose definitions
+are needed by code including that header, put the definitions in the
+header or in another self-contained header that it includes. Do not
+split them into separately included `-inl.h` files. If all uses of a
+template are confined to one `.cpp` file, its definition may remain
+there.
 
 ### Function parameter ordering
 
@@ -1052,41 +1032,11 @@ some information about the arguments, e.g., `append_string()`,
 
 ### Default arguments
 
-We do not allow default function parameters, except in a few uncommon
-situations explained below.
-
-**Pros:**
-
-Often you have a function that uses lots of default values, but
-occasionally you want to override the defaults. Default parameters allow
-an easy way to do this without having to define many functions for the
-rare exceptions.
-
-**Cons:**
-
-People often figure out how to use an API by looking at existing code
-that uses it. Default parameters are more difficult to maintain because
-copy-and-paste from previous code may not reveal all the parameters.
-Copy-and-pasting of code segments can cause major problems when the
-default arguments are not appropriate for the new code.
-
-**Decision:**
-
-Except as described below, we require all arguments to be explicitly
-specified, to force programmers to consider the API and the values they
-are passing for each argument rather than silently accepting defaults
-they may not be aware of.
-
-One specific exception is when default arguments are used to simulate
-variable-length argument lists.
-
-```c++
-// Support up to 4 params by using a default empty AlphaNum.
-string str_cat(AlphaNum const& a,
-               AlphaNum const& b = gEmptyAlphaNum,
-               AlphaNum const& c = gEmptyAlphaNum,
-               AlphaNum const& d = gEmptyAlphaNum);
-```
+Use default arguments when they make a common call clearer and the
+default is unsurprising and stable. Avoid them when the value changes
+the meaning of an operation in a way callers should choose explicitly.
+Declare a default argument once, on the declaration visible to callers;
+do not repeat it in the function definition.
 
 ### Variable-length arrays and alloca()
 
@@ -1158,93 +1108,20 @@ Do not use C-style casts. Instead, use these C++-style casts.
 - Use `reinterpret_cast` to do unsafe conversions of pointer types to
   and from integer and other pointer types. Use this only if you know
   what you are doing and you understand the aliasing issues.
-- Do not use `dynamic_cast` except in test code. If you need to know
-  type information at runtime in this way outside of a unit test, you
-  probably have a design flaw.
+- Use `dynamic_cast` for checked runtime interface queries or
+  downcasts when the API contract requires them, as in Mir's graphics
+  platform interfaces. Avoid using it for routine type-based branching
+  when virtual dispatch or a type-safe alternative better expresses the
+  design.
 
 ### Streams
 
-Use streams only for logging.
-
-**Definition:**
-
-Streams are a replacement for `printf()` and `scanf()`.
-
-**Pros:**
-
-With streams, you do not need to know the type of the object you are
-printing. You do not have problems with format strings not matching the
-argument list. (Though with gcc, you do not have that problem with
-`printf` either.) Streams have automatic constructors and destructors
-that open and close the relevant files.
-
-**Cons:**
-
-Streams make it difficult to do functionality like `pread()`. Some
-formatting (particularly the common format string idiom `%.*s`) is
-difficult if not impossible to do efficiently using streams without
-using `printf`-like hacks. Streams do not support operator reordering
-(the `%1s` directive), which is helpful for internationalization.
-
-**Decision:**
-
-Do not use streams, except where required by a logging interface. Use
-`printf`-like routines instead.
-
-There are various pros and cons to using streams, but in this case, as
-in many other cases, consistency trumps the debate. Do not use streams
-in your code.
-
-**Extended Discussion**
-
-There has been debate on this issue, so this explains the reasoning in
-greater depth. Recall the Only One Way guiding principle: we want to
-make sure that whenever we do a certain type of I/O, the code looks the
-same in all those places. Because of this, we do not want to allow users
-to decide between using streams or using `printf` plus Read/Write/etc.
-Instead, we should settle on one or the other. We made an exception for
-logging because it is a pretty specialized application, and for
-historical reasons.
-
-Proponents of streams have argued that streams are the obvious choice of
-the two, but the issue is not actually so clear. For every advantage of
-streams they point out, there is an equivalent disadvantage. The biggest
-advantage is that you do not need to know the type of the object to be
-printing. This is a fair point. But, there is a downside: you can easily
-use the wrong type, and the compiler will not warn you. It is easy to
-make this kind of mistake without knowing when using streams.
-
-```c++
-cout << this;  // Prints the address
-cout << *this;  // Prints the contents
-```
-
-The compiler does not generate an error because `<<` has been
-overloaded. We discourage overloading for just this reason.
-
-Some say `printf` formatting is ugly and hard to read, but streams are
-often no better. Consider the following two fragments, both with the
-same typo. Which is easier to discover?
-
-```c++
-cerr << "Error connecting to '" << foo->bar()->hostname.first
-     << ":" << foo->bar()->hostname.second << ": " << strerror(errno);
-
-fprintf(stderr, "Error connecting to '%s:%u: %s",
-        foo->bar()->hostname.first, foo->bar()->hostname.second,
-        strerror(errno));
-```
-
-And so on and so forth for any issue you might bring up. (You could
-argue, "Things would be better with the right wrappers," but if it is
-true for one scheme, is it not also true for the other? Also, remember
-the goal is to make the language smaller, not add yet more machinery
-that someone has to learn.)
-
-Either path would yield different advantages and disadvantages, and
-there is not a clearly superior solution. The simplicity doctrine
-mandates we settle on one of them though, and the majority decision was
-on `printf` + `read`/`write`.
+Use `std::stringstream` or `std::ostringstream` to assemble in-memory
+text when they make the code clear; Mir uses them for reports, generated
+text, and diagnostic messages. Use Mir's logging interfaces for logging.
+For file, socket, and descriptor I/O, follow the APIs and patterns of the
+subsystem rather than choosing streams or `printf`-style routines by
+general rule.
 
 ### Preincrement and predecrement
 
@@ -1382,7 +1259,7 @@ printing, comparisons, and structure alignment.
 - When using `printf()`-style formatting, use specifiers that match the
   argument types. Use `%p` for pointers, `%zu` for `size_t`, and `%td`
   for `ptrdiff_t`. For fixed-width integers, use the corresponding
-  `PRI*` macro from `<cinttypes>` (for example, `PRId64` for
+  `PRI*` macro from `<cinttypes>` (for example, `"%" PRId64` for
   `int64_t`).
 
 - Remember that `sizeof(void*)` != `sizeof(int)`. Use `intptr_t` if you
@@ -1588,19 +1465,9 @@ In general, make your filenames very specific. For example, use
 a pair of files called, e.g., `foo_bar.h` and `foo_bar.cpp`, defining a
 class called `FooBar`.
 
-Inline functions must be in a `.h` file. If your inline functions are
-very short, they should go directly into your `.h` file. However, if
-your inline functions include a lot of code, they may go into a third
-file that ends in `-inl.h`. In a class with a lot of inline code, your
-class could have three files:
-
-```c++
-url_table.h      // The class declaration.
-url_table.cpp     // The class definition.
-url_table-inl.h  // Inline functions that include lots of code.
-```
-
-See also the section [-inl.h Files](the-inl-h-files)
+Definitions needed by clients of a header belong in that header or in
+another self-contained header it includes. See
+[Inline and template definitions](#inline-and-template-definitions).
 
 ### Type names
 

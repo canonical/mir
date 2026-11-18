@@ -130,7 +130,7 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Public API changes**: When adding, removing, or changing symbols in public headers, update the corresponding `symbols.map` and Debian symbols file — see the ABI & symbols instructions for the procedure.
 - **Inline functions**: Only for small functions (≤10 lines)
 - **Preprocessor macros**: Avoid when possible; prefer inline functions, enums, and const variables
-- **Streams**: Use only for logging, prefer `printf`-style for other I/O
+- **Streams**: Use `std::stringstream` or `std::ostringstream` for in-memory text when appropriate; use Mir's logging APIs for logging
 - **Reference parameters**: Input parameters should be `const` references or values; output parameters are rare and should use non-const references when modifying inputs, or return `std::pair`/`std::tuple` for multiple outputs
 - **Modern idioms**:
   - **Optionals**: Prefer `value_or()` over `if (opt) ... else ...` for defaults; chain with `.transform(fn).value_or(fallback)` for map-then-default
