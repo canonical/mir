@@ -33,6 +33,7 @@
 #include <string_view>
 
 #include <boost/throw_exception.hpp>
+#include <stdexcept>
 #include <system_error>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -233,16 +234,15 @@ void mga::AtomicKMSOutput::reset()
 
             conf->crtc_props = nullptr;
             conf->plane_props = nullptr;
+            conf->current_crtc = nullptr;
+            conf->current_plane = nullptr;
+            conf->plane_capabilities = nullptr;
         }
     }
     catch (std::exception const& e)
     {
         MIR_FATAL_ERROR("{}", e.what());
     }
-
-    /* Discard previously current crtc */
-    conf->current_crtc = nullptr;
-    conf->plane_capabilities = nullptr;
 }
 
 geom::Size mga::AtomicKMSOutput::size() const
@@ -266,8 +266,18 @@ unsigned mga::AtomicKMSOutput::max_refresh_rate() const
     return current_mode.vrefresh;
 }
 
-void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_index)
+void mga::AtomicKMSOutput::configure(
+    geom::Displacement offset,
+    size_t kms_mode_index,
+    mgk::DRMModeCrtcUPtr crtc,
+    mgk::DRMModePlaneUPtr plane)
 {
+    if (!crtc || !plane)
+    {
+        BOOST_THROW_EXCEPTION(std::invalid_argument(
+            "AtomicKMSOutput::configure requires a non-null CRTC and plane"));
+    }
+
     auto conf = configuration.lock();
     conf->fb_offset = offset;
     conf->mode_index = kms_mode_index;
@@ -275,13 +285,27 @@ void mga::AtomicKMSOutput::configure(geom::Displacement offset, size_t kms_mode_
         drm_fd_,
         &conf->connector->modes[conf->mode_index],
         sizeof(conf->connector->modes[conf->mode_index]));
-    ensure_crtc(*conf);
+    conf->current_crtc = std::move(crtc);
+    conf->current_plane = std::move(plane);
+    conf->crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, conf->current_crtc);
+    conf->plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, conf->current_plane);
+
+    try
+    {
+        conf->plane_capabilities = std::make_shared<CrtcPlaneCapabilities const>(
+            discover_crtc_plane_capabilities(drm_fd_, conf->current_crtc->crtc_id));
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_warning(
+            "Failed to discover plane capabilities for CRTC %u: %s", conf->current_crtc->crtc_id, error.what());
+    }
 }
 
 bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
 {
     auto conf = configuration.lock();
-    if (!ensure_crtc(*conf))
+    if (!conf->current_crtc)
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
                        mgk::connector_name(conf->connector).c_str());
@@ -319,8 +343,6 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
-        conf->current_crtc = nullptr;
-        conf->plane_capabilities = nullptr;
         return false;
     }
 
@@ -334,7 +356,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
 bool mga::AtomicKMSOutput::has_crtc_mismatch()
 {
     auto conf = configuration.lock();
-    if (!ensure_crtc(*conf))
+    if (!conf->current_crtc)
     {
         mir::log_error("Output %s has no associated CRTC to get ", mgk::connector_name(conf->connector).c_str());
         return true;
@@ -346,18 +368,8 @@ bool mga::AtomicKMSOutput::has_crtc_mismatch()
 void mga::AtomicKMSOutput::clear_crtc()
 {
     auto conf = configuration.lock();
-    try
+    if (!conf->current_crtc)
     {
-        ensure_crtc(*conf);
-    }
-    catch (...)
-    {
-        /*
-         * In order to actually clear the output, we need to have a crtc
-         * connected to the output/connector so that we can disconnect
-         * it. However, not being able to get a crtc is OK, since it means
-         * that the output cannot be displaying anything anyway.
-         */
         return;
     }
 
@@ -396,10 +408,28 @@ void mga::AtomicKMSOutput::clear_crtc()
     conf->plane_capabilities = nullptr;
 }
 
+std::optional<uint32_t> mga::AtomicKMSOutput::current_crtc_id() const
+{
+    auto conf = configuration.lock();
+    return conf->current_crtc ? std::optional(conf->current_crtc->crtc_id) : std::nullopt;
+}
+
+std::optional<uint32_t> mga::AtomicKMSOutput::current_plane_id() const
+{
+    auto conf = configuration.lock();
+    return conf->current_plane ? std::optional(conf->current_plane->plane_id) : std::nullopt;
+}
+
+size_t mga::AtomicKMSOutput::current_mode_index() const
+{
+    auto conf = configuration.lock();
+    return conf->mode_index;
+}
+
 bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
 {
     auto conf = configuration.lock();
-    if (!ensure_crtc(*conf))
+    if (!conf->current_crtc)
     {
         mir::log_error("Output %s has no associated CRTC to set a framebuffer on",
                        mgk::connector_name(conf->connector).c_str());
@@ -447,8 +477,6 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
     if (ret)
     {
         mir::log_error("Failed to schedule page flip: %s (%i)", mir::errno_to_cstr(-ret), -ret);
-        conf->current_crtc = nullptr;
-        conf->plane_capabilities = nullptr;
         return false;
     }
 
@@ -501,49 +529,6 @@ bool mga::AtomicKMSOutput::clear_cursor()
     return !result;
 }
 
-bool mga::AtomicKMSOutput::ensure_crtc(Configuration& to_update)
-{
-    /* A hardware refresh may have found a CRTC without selecting its primary plane yet. */
-    if (to_update.current_crtc && to_update.current_plane)
-        return true;
-
-    /* If the output is not connected there is nothing to do */
-    if (to_update.connector->connection != DRM_MODE_CONNECTED)
-        return false;
-
-    // Update the connector as we may unexpectedly fail in find_crtc_and_index_for_connector()
-    // https://github.com/canonical/mir/issues/2661
-    to_update.connector = kms::get_connector(drm_fd_, to_update.connector->connector_id);
-
-    if (to_update.connector->connection != DRM_MODE_CONNECTED)
-    {
-        return false;
-    }
-
-    std::tie(to_update.current_crtc, to_update.current_plane) = mgk::find_crtc_with_primary_plane(drm_fd_, to_update.connector);
-    if (!to_update.current_crtc || !to_update.current_plane)
-    {
-        return false;
-    }
-
-    to_update.crtc_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_crtc);
-    to_update.plane_props = std::make_unique<mgk::ObjectProperties>(drm_fd_, to_update.current_plane);
-
-    auto const crtc_id = to_update.current_crtc->crtc_id;
-    try
-    {
-        to_update.plane_capabilities = std::make_shared<CrtcPlaneCapabilities const>(
-            discover_crtc_plane_capabilities(drm_fd_, crtc_id));
-    }
-    catch (std::runtime_error const& error)
-    {
-        mir::log_warning(
-            "Failed to discover plane capabilities for CRTC %u: %s", crtc_id, error.what());
-    }
-
-    return true;
-}
-
 void mga::AtomicKMSOutput::restore_saved_crtc()
 {
     if (auto conf = configuration.lock(); !using_saved_crtc)
@@ -585,7 +570,7 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
     }
 
     auto conf = configuration.lock();
-    if (!ensure_crtc(*conf))
+    if (!conf->current_crtc)
     {
         mir::log_warning("Output %s has no associated CRTC to set gamma on",
                          mgk::connector_name(conf->connector).c_str());
@@ -623,36 +608,7 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 void mga::AtomicKMSOutput::refresh_hardware_state()
 {
     auto conf = configuration.lock();
-    conf->plane_capabilities = nullptr;
-    conf->current_plane = nullptr;
     conf->connector = kms::get_connector(drm_fd_, conf->connector->connector_id);
-
-    if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
-    {
-        AtomicUpdate update;
-        update.add_property(*conf->connector_props, "CRTC_ID", 0);
-        update.add_property(*conf->crtc_props, "ACTIVE", 0);
-        update.add_property(*conf->crtc_props, "MODE_ID", 0);
-        update.add_property(*conf->plane_props, "FB_ID", 0);
-        update.add_property(*conf->plane_props, "CRTC_ID", 0);
-
-        update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
-
-        conf->connector_props = nullptr;
-        conf->crtc_props = nullptr;
-        conf->plane_props = nullptr;
-    }
-    conf->current_crtc = nullptr;
-
-    if (conf->connector->encoder_id)
-    {
-        auto encoder = kms::get_encoder(drm_fd_, conf->connector->encoder_id);
-
-        if (encoder->crtc_id)
-        {
-            conf->current_crtc = kms::get_crtc(drm_fd_, encoder->crtc_id);
-        }
-    }
 }
 
 namespace
