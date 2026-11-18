@@ -33,6 +33,8 @@
 #include <cerrno>
 #include <map>
 #include <memory>
+#include <string>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -237,7 +239,7 @@ private:
 
 struct FramebufferMismatch
 {
-    char const* name;
+    std::string_view name;
     geom::Size size;
 };
 
@@ -248,7 +250,7 @@ class AtomicKMSFramebufferSizeTest :
 
 struct DisableCase
 {
-    char const* name;
+    std::string_view name;
     void (mga::AtomicKMSOutput::*operation)();
     bool disconnect_connector{false};
 };
@@ -277,7 +279,7 @@ struct OverlayPlane
 
 struct MixedRequestCase
 {
-    char const* name;
+    std::string_view name;
     OverlayPlane overlay;
     uint64_t expected_overlay_zpos;
 };
@@ -349,7 +351,7 @@ class AtomicKMSMixedRequestTest : public AtomicKMSMixedPresentationTest, public 
 
 struct MixedPresentationRejectionCase
 {
-    char const* name;
+    std::string_view name;
     geom::Size primary_size;
     uint32_t assignment_plane;
     bool bt709_limited;
@@ -402,7 +404,7 @@ INSTANTIATE_TEST_SUITE_P(
     Values(
         FramebufferMismatch{"WidthMismatch", {smaller_crtc_size.width, requested_mode_size.height}},
         FramebufferMismatch{"HeightMismatch", {requested_mode_size.width, smaller_crtc_size.height}}),
-    [](TestParamInfo<FramebufferMismatch> const& info) { return info.param.name; });
+    [](TestParamInfo<FramebufferMismatch> const& info) { return std::string{info.param.name}; });
 
 TEST_F(AtomicKMSOutputTest, power_mode_submits_active_property)
 {
@@ -463,7 +465,7 @@ INSTANTIATE_TEST_SUITE_P(
         DisableCase{"ClearCrtc", &mga::AtomicKMSOutput::clear_crtc},
         DisableCase{"ResetDisconnectedConnector", &mga::AtomicKMSOutput::reset, true},
         DisableCase{"RefreshDisconnectedConnector", &mga::AtomicKMSOutput::refresh_hardware_state, true}),
-    [](TestParamInfo<DisableCase> const& info) { return info.param.name; });
+    [](TestParamInfo<DisableCase> const& info) { return std::string{info.param.name}; });
 
 TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_returns_false)
 {
@@ -599,7 +601,7 @@ INSTANTIATE_TEST_SUITE_P(
             .name = "overlay_zpos_min_above_primary_is_kept",
             .overlay = {.id = AtomicKMSOutputTest::plane_id + 1, .zpos_min = AtomicKMSOutputTest::primary_zpos + 2},
             .expected_overlay_zpos = AtomicKMSOutputTest::primary_zpos + 2}),
-    [](TestParamInfo<MixedRequestCase> const& info) { return info.param.name; });
+    [](TestParamInfo<MixedRequestCase> const& info) { return std::string{info.param.name}; });
 
 TEST_P(AtomicKMSMixedRejectionTest, test_presentation_rejects_invalid_state)
 {
@@ -659,7 +661,7 @@ INSTANTIATE_TEST_SUITE_P(
             .assignment_plane = AtomicKMSOutputTest::plane_id + 1,
             .bt709_limited = false,
             .reset_output = false}),
-    [](TestParamInfo<MixedPresentationRejectionCase> const& info) { return info.param.name; });
+    [](TestParamInfo<MixedPresentationRejectionCase> const& info) { return std::string{info.param.name}; });
 
 TEST_F(AtomicKMSMixedPresentationTest, failed_test_commit_returns_false_and_keeps_capabilities)
 {
