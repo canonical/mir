@@ -74,7 +74,10 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
         std::shared_ptr<struct gbm_device> const gbm;
 };
 
-/// A framebuffer handle that owns a DRM framebuffer id
+/// A framebuffer handle that owns a DRM framebuffer id.
+///
+/// Declared in this header only because DirectScanoutFramebuffer, which tests construct, derives
+/// from it.
 class AtomicKmsFbHandle : public FBHandle
 {
 public:
@@ -88,7 +91,9 @@ private:
     geometry::Size size_;
 };
 
-/// A framebuffer imported with an explicit modifier, for direct scanout on an overlay plane
+/// A framebuffer imported with an explicit modifier, for direct scanout on an overlay plane.
+///
+/// Declared here so tests can construct one.
 class DirectScanoutFramebuffer : public AtomicKmsFbHandle
 {
 public:
