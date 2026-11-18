@@ -397,7 +397,7 @@ TEST_P(AtomicPostResult, post_reports_presentation_result)
     ASSERT_TRUE(sink->overlay({fullscreen_element(framebuffer)}));
 
     InSequence sequence;
-    EXPECT_CALL(*output, page_flip(Ref(*framebuffer)))
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*framebuffer))))
         .WillOnce(Return(param.flip_ok));
     if (param.crtc_ok.has_value())
     {
@@ -445,13 +445,13 @@ TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuff
     std::weak_ptr<mg::Framebuffer> const weak_b{frame_b};
 
     InSequence sequence;
-    EXPECT_CALL(*output, page_flip(Ref(*frame_a)))
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_a))))
         .WillOnce(Return(true));
-    EXPECT_CALL(*output, page_flip(Ref(*frame_b)))
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_b))))
         .WillOnce(Return(false));
     EXPECT_CALL(*output, set_crtc(Ref(*frame_b)))
         .WillOnce(Return(false));
-    EXPECT_CALL(*output, page_flip(Ref(*frame_c)))
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_c))))
         .WillOnce(Return(true));
 
     ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
@@ -479,7 +479,7 @@ TEST_F(AtomicDisplaySinkTest, replacing_a_queued_frame_retires_only_the_replaced
     std::weak_ptr<mg::Framebuffer> const weak_a{frame_a};
     std::weak_ptr<mg::Framebuffer> const weak_b{frame_b};
 
-    EXPECT_CALL(*output, page_flip(Ref(*frame_a)))
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_a))))
         .WillOnce(Return(true));
 
     ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
@@ -717,7 +717,8 @@ TEST_P(AtomicMixedProposal, overlay_queues_mixed_state_only_when_overlapping_and
 
     if (accepted)
     {
-        EXPECT_CALL(*output, page_flip(Ref(*primary_fb))).WillOnce(Return(true));
+        EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*primary_fb))))
+            .WillOnce(Return(true));
     }
     else
     {
@@ -791,6 +792,83 @@ TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_primary_that_is_not_fullscreen)
     primary.screen_positon.size = client_size;
 
     EXPECT_FALSE(sink->overlay({primary, client_element(make_client_framebuffer())}));
+}
+
+TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_mixed_state_while_a_modeset_is_pending)
+{
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+
+    sink->schedule_set_crtc();
+
+    EXPECT_FALSE(sink->overlay({legal_primary(), client_element(make_client_framebuffer())}));
+}
+
+TEST_F(AtomicDisplaySinkTest, post_page_flips_an_accepted_mixed_state_until_the_client_is_replaced)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+
+    std::weak_ptr<mg::Framebuffer> weak_client;
+    {
+        auto client_fb = make_client_framebuffer();
+        weak_client = client_fb;
+
+        ASSERT_TRUE(sink->overlay({fullscreen_element(primary_fb), client_element(client_fb)}));
+
+        EXPECT_CALL(
+            *output,
+            page_flip(presents_primary_and_one_client_plane(
+                *primary_fb, *client_fb, legal_overlay_id, geom::Point{} + (client_top_left - display_area.top_left))))
+            .WillOnce(Return(true));
+    }
+
+    EXPECT_TRUE(sink->post());
+    EXPECT_FALSE(weak_client.expired());
+
+    auto const replacement_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    EXPECT_TRUE(sink->overlay({fullscreen_element(replacement_fb)}));
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::client_planes, IsEmpty())))
+        .WillOnce(Return(true));
+
+    EXPECT_TRUE(sink->post());
+    EXPECT_TRUE(weak_client.expired());
+}
+
+TEST_F(AtomicDisplaySinkTest, failed_mixed_post_reports_failure_without_falling_back_to_set_crtc)
+{
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    std::weak_ptr<mg::Framebuffer> const weak_a{frame_a};
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_a))))
+        .WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
+    ASSERT_TRUE(sink->post());
+
+    std::weak_ptr<mg::Framebuffer> weak_client;
+    {
+        auto const client_fb = make_client_framebuffer();
+        weak_client = client_fb;
+        ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a), client_element(client_fb)}));
+    }
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_a))))
+        .WillOnce(Return(false));
+    // set_crtc would show the primary alone, so a failed mixed commit must ask the compositor to recover
+    EXPECT_CALL(*output, set_crtc(_))
+        .Times(0);
+
+    frame_a.reset();
+    EXPECT_FALSE(sink->post());
+    EXPECT_TRUE(weak_client.expired());
+    EXPECT_FALSE(weak_a.expired());
+
+    EXPECT_CALL(*output, page_flip(Property(&mga::PresentationState::primary, Ref(*frame_b))))
+        .WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_b)}));
+
+    EXPECT_TRUE(sink->post());
+    EXPECT_TRUE(weak_a.expired());
 }
 
 TEST_F(DmaBufImportTest, gbm_import_failure_returns_no_framebuffer)

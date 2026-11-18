@@ -79,7 +79,17 @@ public:
     virtual bool has_crtc_mismatch() = 0;
     virtual void clear_crtc() = 0;
 
-    virtual bool page_flip(FBHandle const& fb) = 0;
+    /// Commit \a state to the hardware, including any client overlay planes, with a
+    /// normal blocking commit. This is the same request test_presentation() tests.
+    ///
+    /// Overlay planes that this output enabled earlier but that \a state does not use
+    /// are disabled.
+    ///
+    /// \return true if the kernel accepts the request; false if the output has no CRTC or the
+    ///         primary does not match the mode size, if a client plane is not usable according
+    ///         to the known capabilities, or if the commit fails. Only a state without client
+    ///         planes can fall back to set_crtc(), which presents the primary alone.
+    virtual bool page_flip(PresentationState const& state) = 0;
 
     /// Builds the complete atomic request that would present \a state and checks it with a
     /// single DRM_MODE_ATOMIC_TEST_ONLY commit. Nothing visible changes.
