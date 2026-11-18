@@ -41,6 +41,7 @@ global:
     miroil::MirServerHooks::operator*;
     miroil::MirServerHooks::the_display_configuration_controller*;
     miroil::MirServerHooks::the_mir_display*;
+    miroil::MirServerHooks::the_text_input_hub*;
     miroil::OpenGLContext::OpenGLContext*;
     miroil::OpenGLContext::operator*;
     miroil::OpenGLContext::the_open_gl_config*;
@@ -68,6 +69,12 @@ global:
     miroil::SurfaceObserver::?SurfaceObserver*;
     miroil::SurfaceObserver::SurfaceObserver*;
     miroil::SurfaceObserver::operator*;
+    miroil::TextInputHubWrapper::?TextInputHubWrapper*;
+    miroil::TextInputHubWrapper::TextInputHubWrapper*;
+    miroil::TextInputHubWrapper::set_handler_state*;
+    miroil::TextInputHubWrapper::deactivate_handler*;
+    miroil::TextInputHubWrapper::show_input_panel*;
+    miroil::TextInputHubWrapper::hide_input_panel*;
     miroil::dispatch_input_event*;
     non-virtual?thunk?to?miroil::Compositor::?Compositor*;
     non-virtual?thunk?to?miroil::DisplayConfigurationPolicy::?DisplayConfigurationPolicy*;

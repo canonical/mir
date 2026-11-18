@@ -37,6 +37,7 @@ libmiroil.so.10 libmiroil10 #MINVER#
  (c++)"miroil::MirServerHooks::operator()(mir::Server&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::MirServerHooks::the_display_configuration_controller() const@MIROIL_10.0" 2.29.0
  (c++)"miroil::MirServerHooks::the_mir_display() const@MIROIL_10.0" 2.29.0
+ (c++)"miroil::MirServerHooks::the_text_input_hub() const@MIROIL_10.0" 2.29.0
  (c++)"miroil::OpenGLContext::OpenGLContext(mir::graphics::GLConfig*)@MIROIL_10.0" 2.29.0
  (c++)"miroil::OpenGLContext::operator()(mir::Server&)@MIROIL_10.0" 2.29.0
  (c++)"miroil::OpenGLContext::the_open_gl_config() const@MIROIL_10.0" 2.29.0
@@ -61,6 +62,11 @@ libmiroil.so.10 libmiroil10 #MINVER#
  (c++)"miroil::Surface::set_orientation(MirOrientation)@MIROIL_10.0" 2.29.0
  (c++)"miroil::Surface::top_left() const@MIROIL_10.0" 2.29.0
  (c++)"miroil::Surface::visible() const@MIROIL_10.0" 2.29.0
+ (c++)"miroil::TextInputHubWrapper::TextInputHubWrapper(std::shared_ptr<mir::scene::TextInputHub> const&)@MIROIL_10.0" 2.29.0
+ (c++)"miroil::TextInputHubWrapper::deactivate_handler(std::shared_ptr<miroil::TextInputChangeHandler> const&)@MIROIL_10.0" 2.29.0
+ (c++)"miroil::TextInputHubWrapper::hide_input_panel()@MIROIL_10.0" 2.29.0
+ (c++)"miroil::TextInputHubWrapper::set_handler_state(std::shared_ptr<miroil::TextInputChangeHandler> const&, bool, miroil::TextInputState const&)@MIROIL_10.0" 2.29.0
+ (c++)"miroil::TextInputHubWrapper::show_input_panel()@MIROIL_10.0" 2.29.0
  (c++)"miroil::dispatch_input_event(miral::Window const&, MirInputEvent const*)@MIROIL_10.0" 2.29.0
  (c++)"typeinfo for miroil::Compositor@MIROIL_10.0" 2.29.0
  (c++)"typeinfo for miroil::DisplayConfigurationPolicy@MIROIL_10.0" 2.29.0
