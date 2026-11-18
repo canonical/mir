@@ -23,14 +23,16 @@
 #include <umockdev.h>
 
 #include <sys/stat.h>
+#include <linux/input.h>
 #include <unistd.h>
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
-#include <format>
 #include <fstream>
 #include <optional>
+#include <span>
 #include <string>
 #include <vector>
 #include <stdexcept>
@@ -267,6 +269,33 @@ void mtf::UdevEnvironment::load_device_ioctls(std::string const& name)
     }
 }
 
+namespace
+{
+/// Quote binary data as umockdev's script format expects (see ScriptRunner.encode() in umockdev)
+auto encode_script_data(std::span<std::byte const> data) -> std::string
+{
+    std::string quoted;
+    for (auto const byte : data)
+    {
+        auto const c = static_cast<unsigned char>(byte);
+        if (c < 32)
+        {
+            quoted += '^';
+            quoted += static_cast<char>(c + 64);
+        }
+        else if (c == '^')
+        {
+            quoted += "^`";
+        }
+        else
+        {
+            quoted += static_cast<char>(c);
+        }
+    }
+    return quoted;
+}
+}
+
 auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::string
 {
     auto const evemu_filename = recordings_path + "/" + name + ".evemu";
@@ -276,7 +305,7 @@ auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::st
         BOOST_THROW_EXCEPTION(std::runtime_error("Failed to open evemu recording: " + evemu_filename));
     }
 
-    // umockdev replays the recorded timestamps verbatim. Rebase them onto the current CLOCK_MONOTONIC
+    // The recorded timestamps are replayed verbatim. Rebase them onto the current CLOCK_MONOTONIC
     // time (as libinput uses) so that timestamp-driven behaviour (debouncing, acceleration…) is realistic.
     timespec now{};
     if (clock_gettime(CLOCK_MONOTONIC, &now) < 0)
@@ -286,31 +315,52 @@ auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::st
     long long const now_us = now.tv_sec * 1'000'000LL + now.tv_nsec / 1'000;
     std::optional<long long> offset_us;
 
-    // umockdev_testbed_load_evemu_events_from_string() isn't available in all supported umockdev versions
-    std::string rebased_filename = std::string{umockdev_testbed_get_root_dir(testbed)} + "/rebased-XXXXXX.evemu";
-    int const fd = mkstemps(rebased_filename.data(), std::strlen(".evemu"));
+    // umockdev_testbed_load_evemu_events() writes each event to the device separately, so a reader can see a
+    // partial frame (which libinput "fixes" by splitting it in two). The kernel only ever delivers whole frames,
+    // so convert the recording into a umockdev script that writes each frame (up to SYN_REPORT) in one go.
+    std::string script_filename = std::string{umockdev_testbed_get_root_dir(testbed)} + "/evemu-XXXXXX.script";
+    int const fd = mkstemps(script_filename.data(), std::strlen(".script"));
     if (fd < 0)
     {
         BOOST_THROW_EXCEPTION(
-            std::system_error(errno, std::system_category(), "Failed to create rebased evemu recording"));
+            std::system_error(errno, std::system_category(), "Failed to create evemu replay script"));
     }
     close(fd);
-    auto const remove_recording = mir::raii::paired_calls(
-        [] {}, [&] { unlink(rebased_filename.c_str()); });
-    std::ofstream output{rebased_filename, std::ios::trunc};
+    auto const remove_script = mir::raii::paired_calls(
+        [] {}, [&] { unlink(script_filename.c_str()); });
+    std::ofstream output{script_filename, std::ios::trunc};
 
     std::string device_node;
+    std::vector<input_event> frame;
+    std::optional<long long> previous_frame_us;
+    auto const write_frame =
+        [&]
+        {
+            if (frame.empty())
+            {
+                return;
+            }
+            auto const frame_us = static_cast<long long>(frame.front().input_event_sec) * 1'000'000 +
+                static_cast<long long>(frame.front().input_event_usec);
+            auto const delay_ms = previous_frame_us ? std::max(0LL, (frame_us - *previous_frame_us) / 1'000) : 0LL;
+            previous_frame_us = frame_us;
+            output << "r " << delay_ms << " " << encode_script_data(std::as_bytes(std::span{frame})) << '\n';
+            frame.clear();
+        };
+
     std::string_view constexpr device_prefix = "# device ";
     for (std::string line; std::getline(evemu_file, line);)
     {
         long long seconds{};
         long long microseconds{};
-        int consumed{};
+        unsigned type{};
+        unsigned code{};
+        int value{};
         if (line.starts_with(device_prefix) && device_node.empty())
         {
             device_node = line.substr(device_prefix.size());
         }
-        else if (sscanf(line.c_str(), "E: %lld.%lld%n", &seconds, &microseconds, &consumed) == 2)
+        else if (sscanf(line.c_str(), "E: %lld.%lld %x %x %d", &seconds, &microseconds, &type, &code, &value) == 5)
         {
             auto const timestamp_us = seconds * 1'000'000 + microseconds;
             if (!offset_us)
@@ -318,10 +368,28 @@ auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::st
                 offset_us = now_us - timestamp_us;
             }
             auto const rebased_us = timestamp_us + *offset_us;
-            line = std::format("E: {}.{:06}{}", rebased_us / 1'000'000, rebased_us % 1'000'000, line.substr(consumed));
+
+            input_event event{};
+            event.input_event_sec = rebased_us / 1'000'000;
+            event.input_event_usec = rebased_us % 1'000'000;
+            event.type = static_cast<__u16>(type);
+            event.code = static_cast<__u16>(code);
+            event.value = value;
+            frame.push_back(event);
+
+            if (type == EV_SYN && code == SYN_REPORT)
+            {
+                write_frame();
+            }
         }
-        output << line << '\n';
+        else if (!line.empty() && !line.starts_with('#'))
+        {
+            BOOST_THROW_EXCEPTION(
+                std::runtime_error("Invalid line in evemu recording " + evemu_filename + ": " + line));
+        }
     }
+    write_frame();
+
     if (device_node.empty())
     {
         BOOST_THROW_EXCEPTION(std::runtime_error("evemu recording has no \"# device\" header: " + evemu_filename));
@@ -330,12 +398,11 @@ auto mtf::UdevEnvironment::load_device_evemu(std::string const& name) -> std::st
     output.close();
     if (!output)
     {
-        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to write rebased evemu recording: " + rebased_filename));
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to write evemu replay script: " + script_filename));
     }
 
     GError* err = nullptr;
-    auto const loaded = umockdev_testbed_load_evemu_events(testbed, device_node.c_str(), rebased_filename.c_str(), &err);
-    if (!loaded)
+    if (!umockdev_testbed_load_script(testbed, device_node.c_str(), script_filename.c_str(), &err))
     {
         BOOST_THROW_EXCEPTION(std::runtime_error(std::string("Failed to load evemu recording: ") +
                                                  err->message));

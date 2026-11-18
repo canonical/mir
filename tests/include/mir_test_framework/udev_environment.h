@@ -91,6 +91,7 @@ public:
      * must already exist in the testbed. Replay starts immediately: events are
      * queued on the device node until something reads them. Event timestamps are
      * rebased so that the first event is stamped with the current CLOCK_MONOTONIC time.
+     * As with the kernel, each event frame (up to SYN_REPORT) is delivered atomically.
      *
      * The recording must have a "# device /dev/input/eventN" header identifying
      * the device node to replay on.
