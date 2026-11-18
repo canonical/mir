@@ -268,16 +268,20 @@ def traverse_ast(
     node: clang.cindex.Cursor, filename: str, result: set[str]
 ) -> set[str]:
     # Private member functions still produce symbols in the shared library.
-    if (
-        node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE
-        and node.kind
-        not in (
-            clang.cindex.CursorKind.FUNCTION_DECL,
-            clang.cindex.CursorKind.CXX_METHOD,
-            clang.cindex.CursorKind.CONSTRUCTOR,
-            clang.cindex.CursorKind.DESTRUCTOR,
-            clang.cindex.CursorKind.CONVERSION_FUNCTION,
-        )
+    private_member_function = node.kind in (
+        clang.cindex.CursorKind.FUNCTION_DECL,
+        clang.cindex.CursorKind.CXX_METHOD,
+        clang.cindex.CursorKind.CONSTRUCTOR,
+        clang.cindex.CursorKind.DESTRUCTOR,
+        clang.cindex.CursorKind.CONVERSION_FUNCTION,
+    )
+    is_deleted = (
+        node.kind != clang.cindex.CursorKind.FUNCTION_DECL
+        and private_member_function
+        and node.is_deleted_method()
+    )
+    if node.access_specifier == clang.cindex.AccessSpecifier.PRIVATE and (
+        not private_member_function or is_deleted
     ):
         return result
 
