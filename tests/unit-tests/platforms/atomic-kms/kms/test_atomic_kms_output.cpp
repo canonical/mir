@@ -269,13 +269,23 @@ public:
 // Partly off-screen so mixed-request cases also verify signed CRTC_X/CRTC_Y encoding
 geom::Point const client_destination{-40, -20};
 
+struct OverlayPlane
+{
+    uint32_t id;
+    uint64_t zpos_min;
+};
+
 struct MixedRequestCase
 {
     char const* name;
-    uint32_t overlay_plane{AtomicKMSOutputTest::plane_id + 1};
-    uint64_t overlay_zpos_min{0};
-    uint64_t expected_overlay_zpos{AtomicKMSOutputTest::primary_zpos};
+    OverlayPlane overlay;
+    uint64_t expected_overlay_zpos;
 };
+
+/// An overlay that every mixed state below can legally use
+OverlayPlane const legal_overlay{
+    .id = AtomicKMSOutputTest::plane_id + 1,
+    .zpos_min = 0};
 
 /// The fixture can add one overlay plane (via add_overlay_plane) that can be routed to the CRTC
 /// and scan out BT.709 limited-range YCbCr, so that mixed presentations are testable
@@ -288,14 +298,14 @@ public:
     static constexpr geom::Size client_framebuffer_size{640, 480};
 
     void add_overlay_plane(
-        MixedRequestCase const& request = {},
+        OverlayPlane const& overlay,
         mt::EnumValues const& color_encodings = mt::color_encodings)
     {
         plane_properties.add(
-            {.id = request.overlay_plane,
+            {.id = overlay.id,
              .crtcs = primary_crtc_mask,
              .type = DRM_PLANE_TYPE_OVERLAY,
-             .zpos = mt::RangeProperty{request.overlay_zpos_min, overlay_zpos_max, overlay_zpos_max},
+             .zpos = mt::RangeProperty{overlay.zpos_min, overlay_zpos_max, overlay_zpos_max},
              .alpha = mt::full_alpha,
              .blend = mt::blend_modes,
              .color_encoding = color_encodings,
@@ -319,16 +329,16 @@ public:
 
     auto mixed_request_properties(MixedRequestCase const& request) const -> std::map<AtomicPropertyKey, uint64_t>
     {
-        mt::PlanePropertyIds const ids{request.overlay_plane};
+        mt::PlanePropertyIds const ids{request.overlay.id};
         auto properties = primary_request_properties({.framebuffer_id = primary_framebuffer_id});
         properties.merge(scanout_request_properties(
-            request.overlay_plane, client_framebuffer_id, {}, {client_destination, client_framebuffer_size}));
+            request.overlay.id, client_framebuffer_id, {}, {client_destination, client_framebuffer_size}));
         properties.insert(
-            {{{request.overlay_plane, ids.alpha}, mt::full_alpha.max},
-             {{request.overlay_plane, ids.pixel_blend_mode}, mt::blend::none},
-             {{request.overlay_plane, ids.color_encoding}, mt::color_encoding::bt709},
-             {{request.overlay_plane, ids.color_range}, mt::color_range::limited},
-             {{request.overlay_plane, ids.zpos}, request.expected_overlay_zpos}});
+            {{{request.overlay.id, ids.alpha}, mt::full_alpha.max},
+             {{request.overlay.id, ids.pixel_blend_mode}, mt::blend::none},
+             {{request.overlay.id, ids.color_encoding}, mt::color_encoding::bt709},
+             {{request.overlay.id, ids.color_range}, mt::color_range::limited},
+             {{request.overlay.id, ids.zpos}, request.expected_overlay_zpos}});
         return properties;
     }
 };
@@ -340,10 +350,10 @@ class AtomicKMSMixedRequestTest : public AtomicKMSMixedPresentationTest, public 
 struct MixedPresentationRejectionCase
 {
     char const* name;
-    geom::Size primary_size{requested_mode_size};
-    uint32_t assignment_plane{AtomicKMSOutputTest::plane_id + 1};
-    bool bt709_limited{true};
-    bool reset_output{false};
+    geom::Size primary_size;
+    uint32_t assignment_plane;
+    bool bt709_limited;
+    bool reset_output;
 };
 
 class AtomicKMSMixedRejectionTest : public AtomicKMSMixedPresentationTest,
@@ -559,7 +569,7 @@ TEST_F(AtomicKMSOutputWithoutGammaLutTest, set_gamma_without_gamma_lut_property_
 TEST_P(AtomicKMSMixedRequestTest, mixed_presentation_commits_primary_and_overlay_as_test_only)
 {
     auto const& param = GetParam();
-    add_overlay_plane(param);
+    add_overlay_plane(param.overlay);
     auto output_under_test = output();
     ASSERT_THAT(output_under_test->plane_capabilities(), NotNull());
     EXPECT_CALL(
@@ -569,7 +579,7 @@ TEST_P(AtomicKMSMixedRequestTest, mixed_presentation_commits_primary_and_overlay
             mtd::AtomicRequestWith(Eq(mixed_request_properties(param))),
             DRM_MODE_ATOMIC_TEST_ONLY));
 
-    EXPECT_TRUE(output_under_test->test_presentation(mixed_state(param.overlay_plane)));
+    EXPECT_TRUE(output_under_test->test_presentation(mixed_state(param.overlay.id)));
 }
 
 // Equal zpos is ordered by plane id, so only an overlay with a lower id than the primary needs primary_zpos + 1.
@@ -577,21 +587,26 @@ INSTANTIATE_TEST_SUITE_P(
     MixedRequest,
     AtomicKMSMixedRequestTest,
     Values(
-        MixedRequestCase{.name = "higher_id_overlay_shares_primary_zpos"},
+        MixedRequestCase{
+            .name = "higher_id_overlay_shares_primary_zpos",
+            .overlay = {.id = AtomicKMSOutputTest::plane_id + 1, .zpos_min = 0},
+            .expected_overlay_zpos = AtomicKMSOutputTest::primary_zpos},
         MixedRequestCase{
             .name = "lower_id_overlay_goes_above_primary_zpos",
-            .overlay_plane = AtomicKMSOutputTest::plane_id - 1,
+            .overlay = {.id = AtomicKMSOutputTest::plane_id - 1, .zpos_min = 0},
             .expected_overlay_zpos = AtomicKMSOutputTest::primary_zpos + 1},
         MixedRequestCase{
             .name = "overlay_zpos_min_above_primary_is_kept",
-            .overlay_zpos_min = AtomicKMSOutputTest::primary_zpos + 2,
+            .overlay = {.id = AtomicKMSOutputTest::plane_id + 1, .zpos_min = AtomicKMSOutputTest::primary_zpos + 2},
             .expected_overlay_zpos = AtomicKMSOutputTest::primary_zpos + 2}),
     [](TestParamInfo<MixedRequestCase> const& info) { return info.param.name; });
 
 TEST_P(AtomicKMSMixedRejectionTest, test_presentation_rejects_invalid_state)
 {
     auto const& param = GetParam();
-    add_overlay_plane({}, param.bt709_limited ? mt::EnumValues{mt::color_encodings} : mt::EnumValues{});
+    add_overlay_plane(
+        legal_overlay,
+        param.bt709_limited ? mt::EnumValues{mt::color_encodings} : mt::EnumValues{});
     auto output_under_test = output();
     if (param.reset_output)
     {
@@ -614,24 +629,45 @@ INSTANTIATE_TEST_SUITE_P(
     PresentationValidity,
     AtomicKMSMixedRejectionTest,
     Values(
-        MixedPresentationRejectionCase{.name = "without_plane_capabilities", .reset_output = true},
-        MixedPresentationRejectionCase{.name = "primary_width_mismatch", .primary_size = {mode_width - 1, mode_height}},
+        MixedPresentationRejectionCase{
+            .name = "without_plane_capabilities",
+            .primary_size = requested_mode_size,
+            .assignment_plane = AtomicKMSOutputTest::plane_id + 1,
+            .bt709_limited = true,
+            .reset_output = true},
+        MixedPresentationRejectionCase{
+            .name = "primary_width_mismatch",
+            .primary_size = {mode_width - 1, mode_height},
+            .assignment_plane = AtomicKMSOutputTest::plane_id + 1,
+            .bt709_limited = true,
+            .reset_output = false},
         MixedPresentationRejectionCase{
             .name = "primary_height_mismatch",
-            .primary_size = {mode_width, mode_height - 1}},
+            .primary_size = {mode_width, mode_height - 1},
+            .assignment_plane = AtomicKMSOutputTest::plane_id + 1,
+            .bt709_limited = true,
+            .reset_output = false},
         MixedPresentationRejectionCase{
             .name = "missing_overlay_plane",
-            .assignment_plane = AtomicKMSOutputTest::plane_id + 2},
-        MixedPresentationRejectionCase{.name = "overlay_without_bt709_limited", .bt709_limited = false}),
+            .primary_size = requested_mode_size,
+            .assignment_plane = AtomicKMSOutputTest::plane_id + 2,
+            .bt709_limited = true,
+            .reset_output = false},
+        MixedPresentationRejectionCase{
+            .name = "overlay_without_bt709_limited",
+            .primary_size = requested_mode_size,
+            .assignment_plane = AtomicKMSOutputTest::plane_id + 1,
+            .bt709_limited = false,
+            .reset_output = false}),
     [](TestParamInfo<MixedPresentationRejectionCase> const& info) { return info.param.name; });
 
 TEST_F(AtomicKMSMixedPresentationTest, failed_test_commit_returns_false_and_keeps_capabilities)
 {
-    add_overlay_plane();
+    add_overlay_plane(legal_overlay);
     auto output_under_test = output();
     ASSERT_THAT(output_under_test->plane_capabilities(), NotNull());
     EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_TEST_ONLY)).WillOnce(Return(-EINVAL));
 
-    EXPECT_FALSE(output_under_test->test_presentation(mixed_state()));
+    EXPECT_FALSE(output_under_test->test_presentation(mixed_state(legal_overlay.id)));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
