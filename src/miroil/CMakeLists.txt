@@ -1,9 +1,9 @@
 set(MIROIL_ABI 10)
 set(MIROIL_VERSION_MAJOR ${MIROIL_ABI})
-set(MIROIL_VERSION_MINOR 0)
+set(MIROIL_VERSION_MINOR 1)
 set(MIROIL_VERSION_PATCH 0)
 set(MIROIL_VERSION ${MIROIL_VERSION_MAJOR}.${MIROIL_VERSION_MINOR}.${MIROIL_VERSION_PATCH})
-set(MIR_VERSION_OF_LAST_ABI_CHANGE "2.29.0")
+set(MIR_VERSION_OF_LAST_ABI_CHANGE "2.32.0")
 
 
 set(symbol_map ${CMAKE_CURRENT_SOURCE_DIR}/symbols.map)
@@ -26,6 +26,7 @@ add_library(miroil SHARED
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h
     set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
     surface.cpp ${miroil_include}/miroil/surface.h
+    text_input_hub_wrapper.cpp ${miroil_include}/miroil/text_input_hub_wrapper.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
     gesture_ender.cpp gesture_ender.h
