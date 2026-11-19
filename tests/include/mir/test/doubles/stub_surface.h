@@ -52,7 +52,11 @@ struct StubSurface : scene::Surface
     void set_mirror_mode(MirMirrorMode) override {}
     void set_transformation(glm::mat4 const&) override {}
     bool visible() const override { return false; }
-    graphics::RenderableList generate_renderables(compositor::CompositorID) const override { return {}; }
+    auto generate_renderables(compositor::CompositorID) const
+        -> std::pair<graphics::RenderableList, scene::Surface::RenderableState> override
+    {
+        return {{}, scene::Surface::RenderableState::Latest};
+    }
     MirWindowType type() const override { return mir_window_type_normal; }
     auto state_tracker() const -> scene::SurfaceStateTracker override
     {

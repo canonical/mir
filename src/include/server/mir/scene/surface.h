@@ -66,7 +66,13 @@ public:
     /// Size of the surface including window frame (if any)
     virtual geometry::Size window_size() const = 0;
 
-    virtual graphics::RenderableList generate_renderables(compositor::CompositorID id) const = 0;
+    enum class RenderableState
+    {
+        Latest,                     ///< All renderables contain the most recent buffer
+        NewerBufferAvailable,       ///< At least one renerable has another buffer available after this one; another composition is required.
+    };
+
+    virtual auto generate_renderables(compositor::CompositorID id) const -> std::pair<graphics::RenderableList, RenderableState> = 0;
 
     virtual MirWindowType type() const = 0;
     virtual MirWindowState state() const = 0;

@@ -109,7 +109,21 @@ struct StubSurface : public ms::BasicSurface
         register_interest(observer);
     }
 
+    auto generate_renderables(mc::CompositorID id) const
+        -> std::pair<mg::RenderableList, ms::Surface::RenderableState> override
+    {
+        auto generated = BasicSurface::generate_renderables(id);
+        generated.second = renderable_state;
+        return generated;
+    }
+
+    void set_renderable_state(ms::Surface::RenderableState state)
+    {
+        renderable_state = state;
+    }
+
     mir::Executor& executor;
+    ms::Surface::RenderableState renderable_state{ms::Surface::RenderableState::Latest};
 };
 
 struct MockSessionLockObserver : public ms::SessionLockObserver
@@ -181,11 +195,53 @@ TEST_F(SurfaceStack, stacking_order)
     stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream3)));
+}
+
+TEST_F(SurfaceStack, scene_elements_for_returns_latest_when_all_surfaces_are_latest)
+{
+    using namespace testing;
+
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id).second,
+        Eq(mc::Scene::SceneElementState::Latest));
+}
+
+TEST_F(SurfaceStack, scene_elements_for_returns_newer_buffer_available_when_any_surface_is_newer)
+{
+    using namespace testing;
+
+    std::static_pointer_cast<StubSurface>(stub_surface2)->set_renderable_state(
+        ms::Surface::RenderableState::NewerBufferAvailable);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
+    stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id).second,
+        Eq(mc::Scene::SceneElementState::NewerBufferAvailable));
+}
+
+TEST_F(SurfaceStack, scene_elements_for_ignores_hidden_surfaces_with_newer_buffers)
+{
+    using namespace testing;
+
+    std::static_pointer_cast<StubSurface>(invisible_stub_surface)->set_renderable_state(
+        ms::Surface::RenderableState::NewerBufferAvailable);
+    stack.add_surface(stub_surface1, mi::InputReceptionMode::normal);
+    stack.add_surface(invisible_stub_surface, mi::InputReceptionMode::normal);
+
+    EXPECT_THAT(
+        stack.scene_elements_for(compositor_id).second,
+        Eq(mc::Scene::SceneElementState::Latest));
 }
 
 TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
@@ -212,7 +268,7 @@ TEST_F(SurfaceStack, stacking_order_with_multiple_buffer_streams)
     stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_stream0),
@@ -232,7 +288,7 @@ TEST_F(SurfaceStack, scene_snapshot_omits_invisible_surfaces)
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
@@ -247,7 +303,7 @@ TEST_F(SurfaceStack, surfaces_are_emitted_by_layer)
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream3),
@@ -282,7 +338,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -291,7 +347,7 @@ TEST_F(SurfaceStack, raise_to_top_alters_render_ordering)
     stack.raise(stub_surface1);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream3),
@@ -330,7 +386,7 @@ TEST_F(SurfaceStack, generate_elementelements)
         stack.add_surface(surface, mi::InputReceptionMode::normal);
     }
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
 
     ASSERT_THAT(elements.size(), Eq(num_surfaces));
 
@@ -527,7 +583,7 @@ TEST_F(SurfaceStack, scene_elements_hold_snapshot_of_positioning_info)
         stack.add_surface(surface, mi::InputReceptionMode::normal);
     }
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
 
     auto const changed_position = geom::Point{43,44};
     for(auto const& surface : surfaces)
@@ -554,7 +610,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_delay_buffer_acquisition)
         display_config_registrar);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
 
     Mock::VerifyAndClearExpectations(mock_stream.get());
     ASSERT_THAT(elements.size(), Eq(1u));
@@ -577,7 +633,7 @@ TEST_F(SurfaceStack, generates_scene_elements_that_allow_only_one_buffer_acquisi
         display_config_registrar);
         stack.add_surface(surface, mi::InputReceptionMode::normal);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
     ASSERT_THAT(elements.size(), Eq(1u));
     elements.front()->renderable()->buffer();
     elements.front()->renderable()->buffer();
@@ -611,9 +667,9 @@ TEST_F(SurfaceStack, occludes_not_rendered_surface)
 
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
     ASSERT_THAT(elements.size(), Eq(1u));
-    auto const elements2 = stack.scene_elements_for(compositor_id2);
+    auto const elements2 = stack.scene_elements_for(compositor_id2).first;
     ASSERT_THAT(elements2.size(), Eq(1u));
 
     EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_occluded));
@@ -634,9 +690,9 @@ TEST_F(SurfaceStack, exposes_rendered_surface)
     auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
     ASSERT_THAT(elements.size(), Eq(1u));
-    auto const elements2 = stack.scene_elements_for(compositor_id2);
+    auto const elements2 = stack.scene_elements_for(compositor_id2).first;
     ASSERT_THAT(elements2.size(), Eq(1u));
 
     EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed));
@@ -659,11 +715,11 @@ TEST_F(SurfaceStack, occludes_surface_when_unregistering_all_compositors_that_re
     auto const mock_surface = std::make_shared<MockConfigureSurface>(executor);
     stack.add_surface(mock_surface, mi::InputReceptionMode::normal);
 
-    auto const elements = stack.scene_elements_for(compositor_id);
+    auto const elements = stack.scene_elements_for(compositor_id).first;
     ASSERT_THAT(elements.size(), Eq(1u));
-    auto const elements2 = stack.scene_elements_for(compositor_id2);
+    auto const elements2 = stack.scene_elements_for(compositor_id2).first;
     ASSERT_THAT(elements2.size(), Eq(1u));
-    auto const elements3 = stack.scene_elements_for(compositor_id3);
+    auto const elements3 = stack.scene_elements_for(compositor_id3).first;
     ASSERT_THAT(elements3.size(), Eq(1u));
 
     EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed))
@@ -795,7 +851,7 @@ TEST_F(SurfaceStack, overlays_appear_at_top_of_renderlist)
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -813,7 +869,7 @@ TEST_F(SurfaceStack, removed_overlays_are_removed)
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -822,7 +878,7 @@ TEST_F(SurfaceStack, removed_overlays_are_removed)
     stack.remove_input_visualization(mt::fake_shared(r));
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
@@ -958,7 +1014,7 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
 
     stack.raise({stub_surface1, stub_surface3});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream1),
@@ -972,7 +1028,7 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
 
     stack.raise({stub_surface2, stub_surface3});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -983,7 +1039,7 @@ TEST_F(SurfaceStack, raise_surfaces_to_top)
 
     stack.raise({stub_surface2, stub_surface1, stub_surface3});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -999,7 +1055,7 @@ TEST_F(SurfaceStack, new_surface_is_placed_under_old_according_to_depth_layer)
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream1)));
@@ -1022,7 +1078,7 @@ TEST_F(SurfaceStack, raise_does_not_reorder_surfaces_when_depth_layers_are_diffe
 
     stack.raise({stub_surface1, stub_surface3});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -1041,7 +1097,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
     executor.execute();
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
@@ -1056,7 +1112,7 @@ TEST_F(SurfaceStack, changing_depth_layer_causes_reorder)
     executor.execute();
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream1)));
@@ -1068,7 +1124,7 @@ TEST_F(SurfaceStack, changing_depth_layer_does_not_cause_reorder_when_it_shouldn
     stack.add_surface(stub_surface2, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
@@ -1076,7 +1132,7 @@ TEST_F(SurfaceStack, changing_depth_layer_does_not_cause_reorder_when_it_shouldn
     stub_surface1->set_depth_layer(mir_depth_layer_below);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2)));
@@ -1093,7 +1149,7 @@ TEST_F(SurfaceStack, raising_surface_set_respects_depth_layers)
     stack.add_surface(stub_surface3, mi::InputReceptionMode::normal);
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream2),
@@ -1110,7 +1166,7 @@ TEST_F(SurfaceStack, raising_surface_set_respects_depth_layers)
     stack.raise({stub_surface1, stub_surface2});
 
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream1),
             SceneElementForStream(stub_buffer_stream3),
@@ -1172,7 +1228,7 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
         stack.raise(stub_surface2);
 
         EXPECT_THAT(
-            stack.scene_elements_for(compositor_id),
+            stack.scene_elements_for(compositor_id).first,
             ElementsAre(
                 SceneElementForStream(stub_buffer_stream2),
                 SceneElementForStream(stub_buffer_stream1)))
@@ -1182,7 +1238,7 @@ TEST_F(SurfaceStack, all_depth_layers_are_handled)
         executor.execute();
 
         EXPECT_THAT(
-            stack.scene_elements_for(compositor_id),
+            stack.scene_elements_for(compositor_id).first,
             ElementsAre(
                 SceneElementForStream(stub_buffer_stream1),
                 SceneElementForStream(stub_buffer_stream2)))
@@ -1245,7 +1301,7 @@ TEST_F(SurfaceStack, surfaces_that_are_sent_to_back_appear_at_the_front_of_the_l
 
     stack.send_to_back({stub_surface2, stub_surface3});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream3),
@@ -1275,7 +1331,7 @@ TEST_F(SurfaceStack, single_surfaces_can_be_swapped)
 
     stack.swap_z_order({stub_surface1}, {stub_surface2});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream2),
             SceneElementForStream(stub_buffer_stream1),
@@ -1305,7 +1361,7 @@ TEST_F(SurfaceStack, multiple_surfaces_can_be_swapped)
 
     stack.swap_z_order({stub_surface1, stub_surface2}, {stub_surface3});
     EXPECT_THAT(
-        stack.scene_elements_for(compositor_id),
+        stack.scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(stub_buffer_stream3),
             SceneElementForStream(stub_buffer_stream1),
@@ -1349,7 +1405,7 @@ TEST_F(SingleSurfaceScene, scene_elements_for)
 {
     auto const scene = ms::create_surface_scene(capture_surface);
     EXPECT_THAT(
-        scene->scene_elements_for(compositor_id),
+        scene->scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(capture_buffer_stream)));
 }
@@ -1358,7 +1414,7 @@ TEST_F(SingleSurfaceScene, scene_elements_for_hidden)
 {
     auto const scene = ms::create_surface_scene(hidden_surface);
     EXPECT_THAT(
-        scene->scene_elements_for(compositor_id),
+        scene->scene_elements_for(compositor_id).first,
         ElementsAre(
             SceneElementForStream(hidden_buffer_stream)));
 }
@@ -1383,9 +1439,9 @@ TEST_F(SingleSurfaceScene, exposes_rendered_surface)
     scene->register_compositor(compositor_id);
     scene->register_compositor(compositor_id2);
 
-    auto const elements = scene->scene_elements_for(compositor_id);
+    auto const elements = scene->scene_elements_for(compositor_id).first;
     ASSERT_THAT(elements.size(), Eq(1u));
-    auto const elements2 = scene->scene_elements_for(compositor_id2);
+    auto const elements2 = scene->scene_elements_for(compositor_id2).first;
     ASSERT_THAT(elements2.size(), Eq(1u));
 
     EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed));
@@ -1406,11 +1462,11 @@ TEST_F(SingleSurfaceScene, occludes_surface_when_unregistering_all_compositors_t
     scene->register_compositor(compositor_id2);
     scene->register_compositor(compositor_id3);
 
-    auto const elements = scene->scene_elements_for(compositor_id);
+    auto const elements = scene->scene_elements_for(compositor_id).first;
     ASSERT_THAT(elements.size(), Eq(1u));
-    auto const elements2 = scene->scene_elements_for(compositor_id2);
+    auto const elements2 = scene->scene_elements_for(compositor_id2).first;
     ASSERT_THAT(elements2.size(), Eq(1u));
-    auto const elements3 = scene->scene_elements_for(compositor_id3);
+    auto const elements3 = scene->scene_elements_for(compositor_id3).first;
     ASSERT_THAT(elements3.size(), Eq(1u));
 
     EXPECT_CALL(*mock_surface, configure(mir_window_attrib_visibility, mir_window_visibility_exposed))
