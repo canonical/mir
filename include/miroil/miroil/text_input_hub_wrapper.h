@@ -28,10 +28,7 @@ namespace mir
 {
 namespace scene
 {
-namespace detail
-{
-struct TextInputStateSerialTag;
-}
+namespace detail { struct TextInputStateSerialTag; }
 class TextInputHub;
 class TextInputChangeHandler;
 }
@@ -68,27 +65,24 @@ enum class TextInputContentPurpose
 
 enum class TextInputContentHint : uint32_t
 {
-    none                = 0,
-    completion          = 1 << 0,
-    spellcheck          = 1 << 1,
+    none = 0,
+    completion = 1 << 0,
+    spellcheck = 1 << 1,
     auto_capitalization = 1 << 2,
-    lowercase           = 1 << 3,
-    uppercase           = 1 << 4,
-    titlecase           = 1 << 5,
-    hidden_text         = 1 << 6,
-    sensitive_data      = 1 << 7,
-    latin               = 1 << 8,
-    multiline           = 1 << 9,
+    lowercase = 1 << 3,
+    uppercase = 1 << 4,
+    titlecase = 1 << 5,
+    hidden_text = 1 << 6,
+    sensitive_data = 1 << 7,
+    latin = 1 << 8,
+    multiline = 1 << 9,
 };
 
 struct TextInputChange
 {
     TextInputChange() = default;
 
-    TextInputChange(TextInputStateSerial serial)
-        : serial{serial}
-    {
-    }
+    TextInputChange(TextInputStateSerial serial) : serial{serial} {}
 
     struct TextInputPreeditStyle
     {
@@ -159,7 +153,10 @@ public:
     TextInputHubWrapper(std::shared_ptr<mir::scene::TextInputHub> const& wrapped);
     ~TextInputHubWrapper() = default;
 
-    auto set_handler_state(std::shared_ptr<TextInputChangeHandler> const& handler, bool new_input_field, TextInputState const& state) -> TextInputStateSerial;
+    auto set_handler_state(
+        std::shared_ptr<TextInputChangeHandler> const& handler,
+        bool new_input_field,
+        TextInputState const& state) -> TextInputStateSerial;
     void deactivate_handler(std::shared_ptr<TextInputChangeHandler> const& handler);
 
     void show_input_panel();
