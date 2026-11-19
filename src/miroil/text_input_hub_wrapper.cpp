@@ -82,7 +82,11 @@ auto TextInputHubWrapper::set_handler_state(std::shared_ptr<TextInputChangeHandl
 {
     mir::scene::TextInputState mir_state;
 
-    wrapped_handler->wrapped = handler;
+    if (wrapped_handler->wrapped != handler)
+    {
+        wrapped_handler = std::make_shared<WrappedTextInputChangeHandler>();
+        wrapped_handler->wrapped = handler;
+    }
 
     if (state.surrounding_text.has_value())
     {
