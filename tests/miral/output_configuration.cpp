@@ -103,6 +103,12 @@ struct OutputConfigurationDeferredUpdateTest : miral::TestServer
 };
 }
 
+void wait_for_strategy_update(std::shared_ptr<TestStrategy> const& strategy)
+{
+    ASSERT_TRUE(strategy->applied.wait_for(2s));
+    ASSERT_TRUE(strategy->confirmed.wait_for(2s));
+}
+
 TEST_F(OutputConfigurationTest, strategy_sees_the_outputs)
 {
     EXPECT_THAT(strategy->applied_outputs.load(), Gt(0));
@@ -131,8 +137,7 @@ TEST_F(OutputConfigurationTest, update_strategy_applies_the_new_strategy)
 
     output_configuration.update_strategy(updated_strategy);
 
-    ASSERT_TRUE(updated_strategy->applied.wait_for(2s));
-    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+    wait_for_strategy_update(updated_strategy);
 
     EXPECT_THAT(updated_strategy->applied_outputs.load(), Gt(0));
     EXPECT_THAT(updated_strategy->confirmed_outputs.load(), Eq(updated_strategy->applied_outputs.load()));
@@ -144,7 +149,7 @@ TEST_F(OutputConfigurationTest, changes_made_by_an_updated_strategy_reach_the_di
 
     output_configuration.update_strategy(updated_strategy);
 
-    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+    wait_for_strategy_update(updated_strategy);
 
     auto const configuration = server().the_display()->configuration();
 
@@ -163,8 +168,7 @@ TEST_F(OutputConfigurationTest, changes_made_by_an_updated_strategy_reach_the_di
 TEST_F(OutputConfigurationDeferredUpdateTest, strategy_updated_before_controller_capture_is_applied)
 {
     EXPECT_THAT(strategy->applied_outputs.load(), Gt(0));
-    ASSERT_TRUE(updated_strategy->applied.wait_for(2s));
-    ASSERT_TRUE(updated_strategy->confirmed.wait_for(2s));
+    wait_for_strategy_update(updated_strategy);
 
     auto const configuration = server().the_display()->configuration();
 
