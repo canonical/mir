@@ -97,6 +97,14 @@ inline constexpr Size<T> as_size(Point<T> const& point)
 template<typename T>
 inline constexpr Point<T> as_point(Size<T> const& size)
 { return Point<T>{size.width.as_value(), size.height.as_value()}; }
+
+/// The area of the size, that is, width * height.
+///
+/// The dimensions are expected to be non-negative; otherwise the result is the
+/// raw signed product.
+template<typename T>
+inline constexpr auto area(Size<T> const& size) -> T
+{ return size.width.as_value() * size.height.as_value(); }
 }
 }
 }

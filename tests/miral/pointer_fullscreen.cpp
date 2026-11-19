@@ -253,7 +253,7 @@ private:
 
     void create_pool()
     {
-        auto const size = output.size.width.as_int() * output.size.height.as_int() * 4;
+        auto const size = area(output.size) * 4;
         auto const fd = memfd_create("mir-test-buffer", MFD_CLOEXEC);
         EXPECT_THAT(fd, Ge(0));
         EXPECT_THAT(ftruncate(fd, size), Eq(0));

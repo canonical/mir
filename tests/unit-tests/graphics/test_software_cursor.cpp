@@ -44,7 +44,7 @@ struct StubCursorImage : mg::CursorImage
     StubCursorImage(geom::Displacement const& hotspot)
         : hotspot_{hotspot},
           pixels(
-            size().width.as_uint32_t() * size().height.as_uint32_t() * bytes_per_pixel,
+            area(size()) * bytes_per_pixel,
             std::byte{0x55})
     {
     }
@@ -233,9 +233,7 @@ TEST_F(SoftwareCursor, creates_renderable_with_filled_buffer)
 {
     using namespace testing;
 
-    size_t const image_size =
-        4 * stub_cursor_image->size().width.as_uint32_t() *
-        stub_cursor_image->size().height.as_uint32_t();
+    size_t const image_size = 4 * area(stub_cursor_image->size());
     auto const image_data =
         static_cast<std::byte const*>(stub_cursor_image->as_argb_8888());
 

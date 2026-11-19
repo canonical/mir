@@ -266,7 +266,7 @@ void mgg::Cursor::show(std::shared_ptr<CursorImage> const& cursor_image)
     current_cursor_image = cursor_image;
 
     auto const scaled_cursor_buf = mg::scale_cursor_image(*current_cursor_image, current_scale);
-    auto const buf_size_bytes = scaled_cursor_buf.size.width.as_value() * scaled_cursor_buf.size.height.as_value() * 4;
+    auto const buf_size_bytes = area(scaled_cursor_buf.size) * 4;
     size = scaled_cursor_buf.size;
 
     buffer = std::make_shared<mgc::MemoryBackedShmBuffer>(
