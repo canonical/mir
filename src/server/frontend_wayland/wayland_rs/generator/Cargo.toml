@@ -1,0 +1,9 @@
+[package]
+name = "mir_wayland_generator"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+serde.workspace = true
+quick-xml.workspace = true

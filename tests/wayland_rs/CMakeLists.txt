@@ -5,9 +5,12 @@ mir_add_wrapped_executable(mir_wayland_rs_tests NOINSTALL
   ${CMAKE_CURRENT_SOURCE_DIR}/test_client_injection.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_protocol_error.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_weak.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_dynamic_protocol.cpp
   ${PROJECT_SOURCE_DIR}/tests/mir_test/signal.cpp
   ${PROJECT_SOURCE_DIR}/tests/mir_test_framework/temporary_environment_value.cpp
 )
+
+mir_generate_protocol_wrapper(mir_wayland_rs_tests "mir_" mir_test_dynamic_v1.xml)
 
 add_dependencies(mir_wayland_rs_tests GMock)
 

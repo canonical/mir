@@ -105,6 +105,34 @@ impl WaylandServer {
         Ok(Box::new(OutputGlobal { id, handle }))
     }
 
+    /// Create a global for `interface_name`, an interface of a protocol
+    /// registered at runtime with `register_dynamic_protocol`, advertised at
+    /// `version`.
+    ///
+    /// `handler` decides which clients can see the global and handles binds.
+    /// The returned [crate::dynamic::DynamicGlobal] owns the global: dropping it
+    /// removes the global from the display.
+    ///
+    /// # Errors
+    /// Returns an error if the server is not running, the interface has not been
+    /// loaded, `version` is 0 or above the interface's version, or `handler` is null.
+    pub fn create_dynamic_global(
+        &self,
+        interface_name: &str,
+        version: u32,
+        handler: UniquePtr<crate::ffi::DynamicGlobalHandler>,
+    ) -> Result<Box<crate::dynamic::DynamicGlobal>, Box<dyn error::Error>> {
+        let handle = self
+            .display_handle
+            .lock()
+            .expect("No recovery from lock poisoning")
+            .as_ref()
+            .ok_or("create_dynamic_global called while the server was not running")?
+            .clone();
+
+        crate::dynamic::create_dynamic_global(handle, interface_name, version, handler)
+    }
+
     /// Run the wayland server.
     ///
     /// This function will block the current thread.

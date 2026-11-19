@@ -347,6 +347,31 @@ function (mir_check_no_unreleased_symbols TARGET DEPENDENT_TARGET)
   add_dependencies(${DEPENDENT_TARGET} ${TARGET_NAME})
 endfunction()
 
+# Generates the typed C++ wrapper of the Wayland protocol in PROTOCOL_FILE
+# (relative to the current source directory, or absolute) and adds it to
+# TARGET_NAME. NAME_PREFIX is stripped from interface names to form class names.
+# The wrapper registers the protocol with the Rust Wayland server at runtime; the
+# XML itself is only read here.
+function (mir_generate_protocol_wrapper TARGET_NAME NAME_PREFIX PROTOCOL_FILE)
+  if (NAME_PREFIX STREQUAL "")
+    set(NAME_PREFIX "_") # matches no interface name
+  endif()
+  get_filename_component(PROTOCOL_PATH "${PROTOCOL_FILE}" ABSOLUTE BASE_DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+  get_filename_component(PROTOCOL_NAME "${PROTOCOL_PATH}" NAME_WE)
+  set(OUTPUT_PATH_HEADER "${CMAKE_CURRENT_BINARY_DIR}/${PROTOCOL_NAME}_wrapper.h")
+  set(OUTPUT_PATH_SRC "${CMAKE_CURRENT_BINARY_DIR}/${PROTOCOL_NAME}_wrapper.cpp")
+  get_target_property(GENERATOR mir_wayland_generator MIR_WAYLAND_GENERATOR_EXECUTABLE)
+  add_custom_command(
+    OUTPUT "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}"
+    VERBATIM
+    COMMAND "${GENERATOR}" "${NAME_PREFIX}" "${PROTOCOL_PATH}" header "${OUTPUT_PATH_HEADER}"
+    COMMAND "${GENERATOR}" "${NAME_PREFIX}" "${PROTOCOL_PATH}" source "${OUTPUT_PATH_SRC}"
+    DEPENDS mir_wayland_generator "${GENERATOR}" "${PROTOCOL_PATH}"
+  )
+  target_sources("${TARGET_NAME}" PRIVATE "${OUTPUT_PATH_HEADER}" "${OUTPUT_PATH_SRC}")
+  target_include_directories("${TARGET_NAME}" PRIVATE "${CMAKE_CURRENT_BINARY_DIR}")
+endfunction()
+
 function (mir_make_pkgconfig_variable PKGCONFIG_VARIABLE INPUT_PATH)
   get_filename_component(INPUT_ABSOLUTE "${INPUT_PATH}" ABSOLUTE BASE_DIR "${CMAKE_INSTALL_PREFIX}")
   file(RELATIVE_PATH INPUT_RELATIVE "${CMAKE_INSTALL_PREFIX}" "${INPUT_ABSOLUTE}")

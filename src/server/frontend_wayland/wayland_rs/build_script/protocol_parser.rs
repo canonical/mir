@@ -35,7 +35,7 @@ pub struct WaylandInterface {
     // We cannot just use separate Vecs for requests, events, enums, etc.
     // because serde expects that all elements of the same type are grouped together,
     // which is not the case in Wayland protocol XML files.
-    #[serde(rename = "$value")]
+    #[serde(rename = "$value", default)]
     pub items: Vec<InterfaceItem>,
 }
 

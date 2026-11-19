@@ -32,6 +32,9 @@ add_rust_cxx_library(mirwayland_rs
     build_script/protocol_parser.rs
     build_script/wayland_server_generation.rs
     src/lib.rs
+    src/dynamic/descriptors.rs
+    src/dynamic/mod.rs
+    src/dynamic/objects.rs
     src/wayland_client.rs
     src/wayland_server_core.rs
     ${wayland_rs_protocols}
@@ -40,6 +43,8 @@ add_rust_cxx_library(mirwayland_rs
     ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/include
     ${PROJECT_SOURCE_DIR}/include/common
 )
+
+add_subdirectory(generator)
 
 set(wayland_rs_generated_sources
   ${CMAKE_CURRENT_SOURCE_DIR}/wayland_rs_cpp/src/ext_data_control_v1.cpp

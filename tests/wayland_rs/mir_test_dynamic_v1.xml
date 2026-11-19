@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<protocol name="mir_test_dynamic_v1">
+  <interface name="mir_test_dynamic_manager_v1" version="2">
+    <request name="destroy" type="destructor"/>
+    <request name="ping">
+      <arg name="serial" type="uint"/>
+      <arg name="message" type="string"/>
+    </request>
+    <request name="create_child">
+      <arg name="id" type="new_id" interface="mir_test_dynamic_child_v1"/>
+      <arg name="value" type="int"/>
+    </request>
+    <request name="trigger_error">
+      <arg name="code" type="uint"/>
+    </request>
+    <request name="adopt">
+      <arg name="child" type="object" interface="mir_test_dynamic_child_v1" allow-null="true"/>
+    </request>
+    <event name="pong">
+      <arg name="serial" type="uint"/>
+      <arg name="message" type="string"/>
+    </event>
+    <event name="child_created" since="2">
+      <arg name="child" type="new_id" interface="mir_test_dynamic_child_v1"/>
+    </event>
+  </interface>
+  <interface name="mir_test_dynamic_child_v1" version="2">
+    <request name="destroy" type="destructor"/>
+    <request name="echo_fixed">
+      <arg name="value" type="fixed"/>
+    </request>
+    <event name="value">
+      <arg name="value" type="int"/>
+    </event>
+    <event name="fixed_value">
+      <arg name="value" type="fixed"/>
+    </event>
+  </interface>
+</protocol>
