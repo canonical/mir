@@ -445,6 +445,10 @@ impl PlatformRs {
             devnode
         );
         self.path_add_device(devnode);
+
+        // libinput queues DEVICE_ADDED without making its fd readable, so process it now
+        // rather than when the next input arrives
+        self.process();
     }
 
     /// Handle device suspension (e.g. VT switch or lid close).
