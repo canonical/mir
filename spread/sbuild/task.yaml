@@ -13,12 +13,23 @@ kill-timeout: 90m
 execute: |
     cd $SPREAD_PATH
 
+    if [ -n "${SBUILD_PROXY_URL}" ]; then
+      install -d /usr/local/share/ca-certificates
+      printf '%s' "${SBUILD_PROXY_CA}" | base64 --decode \
+        > /usr/local/share/ca-certificates/mir-sbuild-proxy.crt
+      export http_proxy="${SBUILD_PROXY_URL}" https_proxy="${SBUILD_PROXY_URL}"
+      export no_proxy=localhost,127.0.0.1,::1
+      unset NO_PROXY
+      update-ca-certificates
+    fi
+
     add-apt-repository universe
     apt-get update
     apt-get install \
         --yes \
         --no-install-recommends \
         autopkgtest \
+        ca-certificates \
         debootstrap \
         debhelper \
         dh-python \
@@ -53,7 +64,7 @@ execute: |
     MKSBUILD_OPTS=(
       mk-sbuild
       --distro ${DISTRO}
-      --debootstrap-include=ccache,passwd,qemu-user
+      --debootstrap-include=ca-certificates,ccache,passwd,qemu-user
       ${RELEASE}
     )
 
@@ -72,6 +83,19 @@ execute: |
       --host=${DEB_HOST_ARCH}
       --purge=never
     )
+    if [ -n "${SBUILD_PROXY_URL}" ]; then
+      cat >> ~/.sbuildrc <<'EOF'
+    push @{$environment_filter}, '^(http_proxy|https_proxy|no_proxy)$';
+    1;
+    EOF
+      MKSBUILD_OPTS+=("--debootstrap-proxy=${SBUILD_PROXY_URL}")
+      SBUILD_OPTS+=(
+        --autopkgtest-root-args="sudo --preserve-env=http_proxy,https_proxy,no_proxy --"
+        --autopkgtest-opt="--env=http_proxy=${http_proxy}"
+        --autopkgtest-opt="--env=https_proxy=${https_proxy}"
+        --autopkgtest-opt="--env=no_proxy=${no_proxy}"
+      )
+    fi
 
     SCHROOT_NAME="${RELEASE}-${DEB_BUILD_ARCH}"
 
@@ -116,6 +140,12 @@ execute: |
       # Clear previously failed chroot
       rm --recursive --force /var/lib/schroot/chroots/${SCHROOT_NAME}
       sg sbuild -c "${MKSBUILD_OPTS[*]}"
+    fi
+    if [ -n "${SBUILD_PROXY_URL}" ]; then
+      CHROOT_ROOT="/var/lib/schroot/chroots/${SCHROOT_NAME}"
+      install -D -m 644 /usr/local/share/ca-certificates/mir-sbuild-proxy.crt \
+        "${CHROOT_ROOT}/usr/local/share/ca-certificates/mir-sbuild-proxy.crt"
+      chroot "${CHROOT_ROOT}" update-ca-certificates
     fi
     echo "export XDG_RUNTIME_DIR=/tmp" >> debian/opts.mk
 

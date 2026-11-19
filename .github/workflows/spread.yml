@@ -102,6 +102,43 @@ jobs:
         fetch-depth: 0
         persist-credentials: false
 
+    - name: Set up the package proxy
+      run: |
+        sudo apt-get install --yes --no-install-recommends mkcert
+
+        umask 077
+        PROXY_DIR="${RUNNER_TEMP}/sbuild-proxy"
+        mkdir "${PROXY_DIR}"
+        LXD_CIDR=$(lxc network get lxdbr0 ipv4.address)
+        LXD_ADDRESS="${LXD_CIDR%/*}"
+        mirrors=(
+          archive.ubuntu.com azure.archive.ubuntu.com security.ubuntu.com ports.ubuntu.com
+          ppa.launchpad.net ppa.launchpadcontent.net
+          deb.debian.org cdn-fastly.deb.debian.org ftp.debian.org security.debian.org
+          mirrors.fedoraproject.org download.fedoraproject.org dl.fedoraproject.org
+          dl-cdn.alpinelinux.org
+        )
+        CAROOT="${PROXY_DIR}" mkcert \
+          -cert-file "${PROXY_DIR}/proxy.crt" -key-file "${PROXY_DIR}/proxy.key" \
+          "${mirrors[@]}"
+        mv "${PROXY_DIR}/rootCA.pem" "${PROXY_DIR}/ca.crt"
+        rm "${PROXY_DIR}/rootCA-key.pem"
+
+        {
+        echo "LXD_ADDRESS=${LXD_ADDRESS}"
+        echo "SBUILD_PROXY_UID=$(id -u)"
+        echo "SBUILD_PROXY_GID=$(id -g)"
+        echo "MIR_SBUILD_PROXY_URL=http://${LXD_ADDRESS}:3128"
+        echo "MIR_SBUILD_PROXY_CA=$(base64 --wrap=0 "${PROXY_DIR}/ca.crt")"
+        } >> "$GITHUB_ENV"
+
+    - name: Start the package proxy
+      uses: hoverkraft-tech/compose-action@b659c744ee9bed25aea2307c017ad849bd104433 # v3.2.0
+      with:
+        compose-file: spread/spread-envoy.compose.yaml
+        up-flags: --detach
+        services-log-level: info
+
     - name: Set up CCache
       id: setup-ccache
       run: |
@@ -136,13 +173,8 @@ jobs:
       run: tools/make_release_tarball --skip-checks
 
     - name: Run Spread task
-      uses: nick-fields/retry@ad984534de44a9489a53aefd81eb77f87c70dc60 # v4.0.0
-      with:
-        timeout_minutes: 100
-        max_attempts: 2
-        retry_wait_seconds: 30
-        command: |
-          snap run spread-mir-ci.spread -reuse -v "${MATRIX_SPREAD_TASK}"
+      timeout-minutes: 100
+      run: snap run spread-mir-ci.spread -reuse -v "${MATRIX_SPREAD_TASK}"
       env:
         MATRIX_SPREAD_TASK: ${{ matrix.spread-task }}
 

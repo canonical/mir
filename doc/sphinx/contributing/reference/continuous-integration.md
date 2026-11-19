@@ -178,6 +178,21 @@ When Spread is used, the actual build runs in LXD containers, use `lxc ls` and `
 
 Sbuild adds another layer, a chroot environment. Use `schroot --list --all-sessions` to list the available sessions and `schroot --run --chroot session:<id>` to access it. The build is in `/build`. To run many Mir tests you'll need to `export XDG_RUNTIME_DIR=/tmp`.
 
+##### Resilient package proxy
+
+The [Spread workflow](https://github.com/canonical/mir/blob/main/.github/workflows/spread.yml)
+runs a local Envoy proxy to make package downloads in LXD containers and build
+roots less susceptible to transient network failures. It allows HTTP GET and HEAD
+requests to any host on the standard HTTP port and retries them when upstream
+connections fail or servers return transient errors. The proxy port is published
+on the LXD bridge address, but does not restrict client source addresses.
+
+For HTTPS repositories on the allowlist, the proxy temporarily intercepts TLS using a
+job-specific CA trusted by the build environments, while still verifying upstream
+certificates. Other HTTPS destinations use end-to-end CONNECT tunnels on port 443;
+their requests are neither inspected nor retried by the proxy. The proxy does not
+cache package downloads.
+
 ## Summary
 
 As shown above, Mir is being tested quite extensively on a large number of environments. We're
