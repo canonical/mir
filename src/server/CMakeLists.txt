@@ -146,7 +146,8 @@ add_custom_target(
         --library-name mir_server
         --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
         --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+        --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
+        --include-dirs="$<JOIN:$<TARGET_PROPERTY:mirserverobjects,INCLUDE_DIRECTORIES>,:>:$<JOIN:$<TARGET_PROPERTY:PkgConfig::UUID,INTERFACE_INCLUDE_DIRECTORIES>,:>:$<JOIN:$<TARGET_PROPERTY:PkgConfig::GLIB,INTERFACE_INCLUDE_DIRECTORIES>,:>:${PROJECT_SOURCE_DIR}/include/core:${PROJECT_SOURCE_DIR}/include/platform:${PROJECT_SOURCE_DIR}/include/common:${PROJECT_SOURCE_DIR}/include/miral:${PROJECT_SOURCE_DIR}/include/wayland:${PROJECT_SOURCE_DIR}/include/client:${PROJECT_SOURCE_DIR}/src/include/common:${PROJECT_SOURCE_DIR}/src/include/platforms"
     WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
 
 add_custom_target(
@@ -155,6 +156,7 @@ add_custom_target(
       --library-name mir_server
       --version ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
       --symbols-map-path="${CMAKE_CURRENT_SOURCE_DIR}/symbols.map"
-      --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserver,INCLUDE_DIRECTORIES>,:>"
+      --internal-headers-directory="${PROJECT_SOURCE_DIR}/src/include/server"
+      --include-dirs "$<JOIN:$<TARGET_PROPERTY:mirserverobjects,INCLUDE_DIRECTORIES>,:>:$<JOIN:$<TARGET_PROPERTY:PkgConfig::UUID,INTERFACE_INCLUDE_DIRECTORIES>,:>:$<JOIN:$<TARGET_PROPERTY:PkgConfig::GLIB,INTERFACE_INCLUDE_DIRECTORIES>,:>:${PROJECT_SOURCE_DIR}/include/core:${PROJECT_SOURCE_DIR}/include/platform:${PROJECT_SOURCE_DIR}/include/common:${PROJECT_SOURCE_DIR}/include/miral:${PROJECT_SOURCE_DIR}/include/wayland:${PROJECT_SOURCE_DIR}/include/client:${PROJECT_SOURCE_DIR}/src/include/common:${PROJECT_SOURCE_DIR}/src/include/platforms"
       --diff
   WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}")
