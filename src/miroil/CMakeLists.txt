@@ -26,6 +26,7 @@ add_library(miroil SHARED
     open_gl_context.cpp ${miroil_include}/miroil/open_gl_context.h
     set_compositor.cpp ${miroil_include}/miroil/set_compositor.h
     surface.cpp ${miroil_include}/miroil/surface.h
+    text_input_hub_wrapper.cpp ${miroil_include}/miroil/text_input_hub_wrapper.h
     ${miroil_include}/miroil/display_configuration_storage.h
     ${miroil_include}/miroil/display_id.h
     gesture_ender.cpp gesture_ender.h
