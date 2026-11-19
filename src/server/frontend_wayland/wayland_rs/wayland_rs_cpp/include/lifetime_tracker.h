@@ -24,7 +24,7 @@
 
 namespace mir
 {
-namespace wayland_rs
+namespace wayland
 {
 
 /// The base class of any object that wants to provide a destroyed flag.

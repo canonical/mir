@@ -17,60 +17,57 @@
 
 #include "wp_viewporter.h"
 #include <mir/geometry/forward.h>
-#include <mir/wayland/protocol_error.h>
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
+#include "client.h"
+#include "protocol_error.h"
 #include "wl_surface.h"
 
+#include <cmath>
+#include <limits>
 #include <utility>
 
 namespace mf = mir::frontend;
 namespace geom = mir::geometry;
+namespace mw = mir::wayland;
 
-namespace
+mf::WpViewporter::WpViewporter(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ViewporterMiddleware> instance,
+    uint32_t object_id)
+    : mw::Viewporter{std::move(client), std::move(instance), object_id}
 {
-class ViewporterInstance : public mir::wayland::Viewporter
+}
+
+auto mf::WpViewporter::get_viewport(
+    mw::Weak<mw::Surface> const& surface,
+    rust::Box<mw::ViewportMiddleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<mw::Viewport>
 {
-public:
-    explicit ViewporterInstance(wl_resource* resource)
-        : Viewporter(resource, Version<1>{})
+    auto surf = mw::Surface::from<WlSurface>(surface);
+    try
     {
+        return std::make_shared<mf::Viewport>(client, std::move(child_instance), child_object_id, surf);
     }
-
-private:
-    void get_viewport(wl_resource* id, wl_resource* surface) override
+    catch (std::logic_error const&)
     {
-        auto surf = mf::WlSurface::from(surface);
-        try
-        {
-            new mf::Viewport(id, surf);
-        }
-        catch (std::logic_error const&)
-        {
-            // We get a std::logic_error if the surface already had a viewport; translate to protocol exception here
-            throw mir::wayland::ProtocolError{
-                resource,
-                Viewporter::Error::viewport_exists,
-                "Surface already has a viewport associated"};
-        }
+        // We get a std::logic_error if the surface already had a viewport; translate to protocol exception here
+        throw mw::ProtocolError{
+            object_id(),
+            Error::viewport_exists,
+            "Surface already has a viewport associated"};
     }
-};
 }
 
-mf::WpViewporter::WpViewporter(wl_display* display)
-    : Global(display, Version<1>{})
+mf::Viewport::Viewport(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::ViewportMiddleware> instance,
+    uint32_t object_id,
+    WlSurface* surface)
+    : mw::Viewport{std::move(client), std::move(instance), object_id}
 {
-}
-
-void mf::WpViewporter::bind(wl_resource* new_resource)
-{
-    new ViewporterInstance(new_resource);
-}
-
-mf::Viewport::Viewport(wl_resource* new_viewport, WlSurface* surface)
-    : wayland::Viewport(new_viewport, Version<1>{})
-{
-    surface->associate_viewport(wayland::make_weak<Viewport>(this));
-    this->surface = wayland::make_weak<wayland::Surface>(surface);
+    surface->associate_viewport(mw::make_weak(this));
+    this->surface = mw::make_weak(static_cast<mw::Surface*>(surface));
 }
 
 mf::Viewport::~Viewport()
@@ -109,6 +106,7 @@ auto as_int_size_if_exact(geom::SizeD size) -> std::optional<geom::Size>
 auto mf::Viewport::resolve_viewport(int32_t scale, geom::Size buffer_size) const
     -> std::pair<geom::RectangleD, geom::Size>
 {
+    auto const id = const_cast<Viewport*>(this)->object_id();
     auto const src_bounds =
         [&]()
         {
@@ -125,9 +123,9 @@ auto mf::Viewport::resolve_viewport(int32_t scale, geom::Size buffer_size) const
                 };
                 if (!entire_buffer.contains(source_in_buffer_coords))
                 {
-                    throw wayland::ProtocolError{
-                        resource,
-                        wayland::Viewport::Error::out_of_buffer,
+                    throw mw::ProtocolError{
+                        id,
+                        Error::out_of_buffer,
                         "Source viewport (%f, %f), (%f × %f) is not entirely within buffer (%i × %i)",
                         source_in_buffer_coords.left().as_value(),
                         source_in_buffer_coords.top().as_value(),
@@ -158,9 +156,9 @@ auto mf::Viewport::resolve_viewport(int32_t scale, geom::Size buffer_size) const
             }
             else
             {
-                throw wayland::ProtocolError{
-                    resource,
-                    wayland::Viewport::Error::bad_size,
+                throw mw::ProtocolError{
+                    id,
+                    Error::bad_size,
                     "No wp_viewport destination set, and source size (%f × %f) is not integral", src_bounds.size.width.as_value(), src_bounds.size.height.as_value()};
             }
         }();
@@ -173,8 +171,8 @@ void mf::Viewport::set_source(double x, double y, double width, double height)
 {
     if (!surface)
     {
-        throw wayland::ProtocolError{
-            resource,
+        throw mw::ProtocolError{
+            object_id(),
             Error::no_surface,
             "Surface associated with viewport has been destroyed"};
     }
@@ -188,8 +186,8 @@ void mf::Viewport::set_source(double x, double y, double width, double height)
         }
         else
         {
-            throw wayland::ProtocolError{
-                resource,
+            throw mw::ProtocolError{
+                object_id(),
                 Error::bad_value,
                 "Source viewport (%f, %f), (%f × %f) invalid: (x,y) must be non-negative, (width, height) must be positive",
                 x, y,
@@ -208,8 +206,8 @@ void mf::Viewport::set_destination(int32_t width, int32_t height)
 {
     if (!surface)
     {
-        throw wayland::ProtocolError{
-            resource,
+        throw mw::ProtocolError{
+            object_id(),
             Error::no_surface,
             "Surface associated with viewport has been destroyed"};
     }
@@ -221,8 +219,8 @@ void mf::Viewport::set_destination(int32_t width, int32_t height)
         }
         else
         {
-            throw wayland::ProtocolError{
-                resource,
+            throw mw::ProtocolError{
+                object_id(),
                 Error::bad_value,
                 "Destination viewport (%i × %i) invalid: (width, height) must both be positive",
                 width, height

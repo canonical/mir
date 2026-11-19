@@ -17,7 +17,9 @@
 #ifndef MIR_FRONTEND_XDG_DECORATION_MANAGER_V1_H
 #define MIR_FRONTEND_XDG_DECORATION_MANAGER_V1_H
 
-#include "xdg-decoration-unstable-v1_wrapper.h"
+#include "xdg_decoration_unstable_v1.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -25,7 +27,18 @@ class DecorationStrategy;
 
 namespace frontend
 {
-auto create_xdg_decoration_unstable_v1(wl_display* display, std::shared_ptr<DecorationStrategy> strategy) -> std::shared_ptr<wayland::XdgDecorationManagerV1::Global>;
+class ToplevelsWithDecorations;
+
+/// State shared by every binding of the decoration manager
+auto make_toplevels_with_decorations() -> std::shared_ptr<ToplevelsWithDecorations>;
+
+auto create_xdg_decoration_manager_v1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::XdgDecorationManagerV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<DecorationStrategy> strategy,
+    std::shared_ptr<ToplevelsWithDecorations> toplevels_with_decorations)
+    -> std::shared_ptr<wayland::XdgDecorationManagerV1>;
 }
 } // namespace mir
 

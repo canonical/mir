@@ -14,11 +14,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 #ifndef MIR_SERVER_FRONTEND_DATA_CONTROL_V1_H_
 #define MIR_SERVER_FRONTEND_DATA_CONTROL_V1_H_
 
-#include "ext-data-control-v1_wrapper.h"
+#include "ext_data_control_v1.h"
+
+#include <memory>
 
 namespace mir
 {
@@ -28,10 +29,13 @@ class Clipboard;
 }
 namespace frontend
 {
-auto create_data_control_manager_v1(
-    struct wl_display* display,
+auto create_ext_data_control_manager_v1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtDataControlManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<mir::scene::Clipboard> const& clipboard,
-    std::shared_ptr<mir::scene::Clipboard> const& primary_clipboard) -> std::shared_ptr<wayland::DataControlManagerV1::Global>;
+    std::shared_ptr<mir::scene::Clipboard> const& primary_clipboard)
+-> std::shared_ptr<wayland::ExtDataControlManagerV1>;
 }
 }
 

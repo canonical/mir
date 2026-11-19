@@ -50,7 +50,7 @@
 #include <vector>
 
 namespace mf = mir::frontend;
-namespace mrs = mir::wayland_rs;
+namespace mrs = mir::wayland;
 namespace ms = mir::scene;
 namespace mtd = mir::test::doubles;
 

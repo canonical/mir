@@ -29,7 +29,7 @@ namespace mir
 {
 namespace scene { class Session; }
 
-namespace wayland_rs
+namespace wayland
 {
 /// The raw Rust client handle that arrives over the FFI boundary.
 using RawWlClient = rust::Box<WaylandClient>;

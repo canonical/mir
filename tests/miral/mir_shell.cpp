@@ -37,18 +37,16 @@ using namespace testing;
 
 auto constexpr client_completion_timeout = std::chrono::seconds{6};
 
-namespace mir::wayland
+// Provided by the `protocols` library, generated from wayland-protocols/mir-shell-unstable-v1.xml
+// by wayland-scanner.
+extern "C"
 {
-extern struct wl_interface const wl_compositor_interface_data;
-extern struct wl_interface const wl_surface_interface_data;
-extern struct wl_interface const wl_subcompositor_interface_data;
-extern struct wl_interface const wl_subsurface_interface_data;
-extern struct wl_interface const mir_shell_v1_interface_data;
-extern struct wl_interface const mir_positioner_v1_interface_data;
-extern struct wl_interface const mir_regular_surface_v1_interface_data;
-extern struct wl_interface const mir_satellite_surface_v1_interface_data;
-extern struct wl_interface const mir_menu_surface_v1_interface_data;
-extern struct wl_interface const mir_tip_surface_v1_interface_data;
+extern struct wl_interface const mir_shell_v1_interface;
+extern struct wl_interface const mir_positioner_v1_interface;
+extern struct wl_interface const mir_regular_surface_v1_interface;
+extern struct wl_interface const mir_satellite_surface_v1_interface;
+extern struct wl_interface const mir_menu_surface_v1_interface;
+extern struct wl_interface const mir_tip_surface_v1_interface;
 }
 
 namespace
@@ -174,7 +172,7 @@ struct MirShellClient
     auto create_surface() -> wl_proxy*
     {
         return wl_proxy_marshal_constructor(
-            compositor, wl_compositor_create_surface, &mir::wayland::wl_surface_interface_data, nullptr);
+            compositor, wl_compositor_create_surface, &wl_surface_interface, nullptr);
     }
 
     auto create_subsurface(wl_proxy* surface, wl_proxy* parent) -> wl_proxy*
@@ -182,7 +180,7 @@ struct MirShellClient
         return wl_proxy_marshal_constructor(
             subcompositor,
             wl_subcompositor_get_subsurface,
-            &mir::wayland::wl_subsurface_interface_data,
+            &wl_subsurface_interface,
             nullptr,
             surface,
             parent);
@@ -192,7 +190,7 @@ struct MirShellClient
     auto create_positioner(bool complete) -> wl_proxy*
     {
         auto* const positioner = wl_proxy_marshal_constructor(
-            mir_shell, mir_shell_v1_create_positioner, &mir::wayland::mir_positioner_v1_interface_data, nullptr);
+            mir_shell, mir_shell_v1_create_positioner, &mir_positioner_v1_interface, nullptr);
 
         if (complete)
             wl_proxy_marshal(positioner, mir_positioner_v1_set_size, 100, 200);
@@ -232,7 +230,7 @@ struct MirShellClient
         return wl_proxy_marshal_constructor(
             mir_shell,
             mir_shell_v1_get_regular_surface,
-            &mir::wayland::mir_regular_surface_v1_interface_data,
+            &mir_regular_surface_v1_interface,
             nullptr,
             surface);
     }
@@ -242,7 +240,7 @@ struct MirShellClient
         return wl_proxy_marshal_constructor(
             mir_shell,
             mir_shell_v1_get_menu_surface,
-            &mir::wayland::mir_menu_surface_v1_interface_data,
+            &mir_menu_surface_v1_interface,
             nullptr,
             surface,
             positioner);
@@ -253,7 +251,7 @@ struct MirShellClient
         return wl_proxy_marshal_constructor(
             mir_shell,
             mir_shell_v1_get_satellite_surface,
-            &mir::wayland::mir_satellite_surface_v1_interface_data,
+            &mir_satellite_surface_v1_interface,
             nullptr,
             surface,
             positioner);
@@ -264,7 +262,7 @@ struct MirShellClient
         return wl_proxy_marshal_constructor(
             mir_shell,
             mir_shell_v1_get_tip_surface,
-            &mir::wayland::mir_tip_surface_v1_interface_data,
+            &mir_tip_surface_v1_interface,
             nullptr,
             surface,
             positioner);
@@ -286,9 +284,9 @@ struct MirShellClient
                     wl_registry_bind(registry, id, &iface, std::min(version, static_cast<uint32_t>(iface.version))));
         };
 
-        bind(mir::wayland::wl_compositor_interface_data, self->compositor);
-        bind(mir::wayland::wl_subcompositor_interface_data, self->subcompositor);
-        bind(mir::wayland::mir_shell_v1_interface_data, self->mir_shell);
+        bind(wl_compositor_interface, self->compositor);
+        bind(wl_subcompositor_interface, self->subcompositor);
+        bind(mir_shell_v1_interface, self->mir_shell);
     }
 
     static void global_remove(void*, wl_registry*, uint32_t) {}

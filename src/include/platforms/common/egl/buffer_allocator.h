@@ -23,7 +23,6 @@
 #include <mir/graphics/rendering_providers.h>
 
 #include <EGL/egl.h>
-#include <wayland-server-core.h>
 
 #include <memory>
 
@@ -71,13 +70,14 @@ public:
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
+    auto linux_dmabuf() -> std::shared_ptr<LinuxDmaBuf> override;
+
     auto shared_egl_context() -> EGLContext;
 private:
     std::unique_ptr<renderer::gl::Context> const ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
     std::shared_ptr<Executor> wayland_executor;
-    std::unique_ptr<LinuxDmaBuf> dmabuf_extension;
-    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+    std::shared_ptr<LinuxDmaBuf> const linux_dmabuf_;
 };
 
 class GLRenderingProvider : public graphics::GLRenderingProvider

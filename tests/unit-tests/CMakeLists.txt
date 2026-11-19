@@ -104,7 +104,6 @@ add_subdirectory(renderers/blitter)
 add_subdirectory(renderers/gl)
 add_subdirectory(scene/)
 add_subdirectory(shell/)
-add_subdirectory(wayland/)
 
 if (NOT HAVE_PTHREAD_GETNAME_NP)
   set_source_files_properties(
@@ -174,7 +173,6 @@ target_link_libraries(
   mirserver-static
 
   PkgConfig::LIBINPUT
-  PkgConfig::WAYLAND_SERVER
   ${CMAKE_THREAD_LIBS_INIT} # Link in pthread.
 )
 
@@ -223,12 +221,10 @@ target_link_libraries(mir_unit_tests
   mir-test-doubles-platform-static
   )
 
-if (MIR_ENABLE_RUST)
-  target_link_libraries(mir_unit_tests
-    mirwayland_rs
-    PkgConfig::WAYLAND_CLIENT
-  )
-endif()
+target_link_libraries(mir_unit_tests
+  mirwayland_rs
+  PkgConfig::WAYLAND_CLIENT
+)
 
 target_link_libraries(mir_umock_unit_tests
 

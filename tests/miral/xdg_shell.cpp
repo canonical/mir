@@ -38,15 +38,15 @@ using namespace testing;
 
 auto constexpr client_completion_timeout = std::chrono::seconds{6};
 
-namespace mir::wayland
+// Provided by the `protocols` library, generated from wayland-protocols/xdg-shell.xml
+// by wayland-scanner.
+extern "C"
 {
-extern struct wl_interface const wl_compositor_interface_data;
-extern struct wl_interface const wl_surface_interface_data;
-extern struct wl_interface const xdg_wm_base_interface_data;
-extern struct wl_interface const xdg_surface_interface_data;
-extern struct wl_interface const xdg_toplevel_interface_data;
-extern struct wl_interface const xdg_positioner_interface_data;
-extern struct wl_interface const xdg_popup_interface_data;
+extern struct wl_interface const xdg_wm_base_interface;
+extern struct wl_interface const xdg_surface_interface;
+extern struct wl_interface const xdg_toplevel_interface;
+extern struct wl_interface const xdg_positioner_interface;
+extern struct wl_interface const xdg_popup_interface;
 }
 
 namespace
@@ -129,13 +129,13 @@ struct XdgShellClient
     auto create_surface() -> wl_proxy*
     {
         return wl_proxy_marshal_constructor(
-            compositor, wl_compositor_create_surface, &mir::wayland::wl_surface_interface_data, nullptr);
+            compositor, wl_compositor_create_surface, &wl_surface_interface, nullptr);
     }
 
     auto get_xdg_surface(wl_proxy* surface) -> wl_proxy*
     {
         return wl_proxy_marshal_constructor(
-            wm_base, xdg_wm_base_get_xdg_surface, &mir::wayland::xdg_surface_interface_data, nullptr, surface);
+            wm_base, xdg_wm_base_get_xdg_surface, &xdg_surface_interface, nullptr, surface);
     }
 
     /// A popup needs a parent, and only a surface with a role can be one.
@@ -143,7 +143,7 @@ struct XdgShellClient
     {
         auto* const xdg_surface = get_xdg_surface(create_surface());
         wl_proxy_marshal_constructor(
-            xdg_surface, xdg_surface_get_toplevel, &mir::wayland::xdg_toplevel_interface_data, nullptr);
+            xdg_surface, xdg_surface_get_toplevel, &xdg_toplevel_interface, nullptr);
         return xdg_surface;
     }
 
@@ -151,7 +151,7 @@ struct XdgShellClient
     auto create_positioner(bool complete) -> wl_proxy*
     {
         auto* const positioner = wl_proxy_marshal_constructor(
-            wm_base, xdg_wm_base_create_positioner, &mir::wayland::xdg_positioner_interface_data, nullptr);
+            wm_base, xdg_wm_base_create_positioner, &xdg_positioner_interface, nullptr);
 
         if (complete)
             wl_proxy_marshal(positioner, xdg_positioner_set_size, 100, 200);
@@ -166,7 +166,7 @@ struct XdgShellClient
         return wl_proxy_marshal_constructor(
             xdg_surface,
             xdg_surface_get_popup,
-            &mir::wayland::xdg_popup_interface_data,
+            &xdg_popup_interface,
             nullptr,
             parent,
             positioner);
@@ -188,8 +188,8 @@ struct XdgShellClient
                     wl_registry_bind(registry, id, &iface, std::min(version, static_cast<uint32_t>(iface.version))));
         };
 
-        bind(mir::wayland::wl_compositor_interface_data, self->compositor);
-        bind(mir::wayland::xdg_wm_base_interface_data, self->wm_base);
+        bind(wl_compositor_interface, self->compositor);
+        bind(xdg_wm_base_interface, self->wm_base);
     }
 
     static void global_remove(void*, wl_registry*, uint32_t) {}

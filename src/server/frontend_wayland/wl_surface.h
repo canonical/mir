@@ -17,11 +17,11 @@
 #ifndef MIR_FRONTEND_WL_SURFACE_H
 #define MIR_FRONTEND_WL_SURFACE_H
 
-#include "wp_fractional_scale_v1.h"
+#include "wayland.h"
+#include "weak.h"
+
 #include <mir/geometry/forward.h>
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
-#include <mir/wayland/protocol_error.h>
+#include "protocol_error.h"
 
 #include "wl_surface_role.h"
 
@@ -61,13 +61,17 @@ namespace compositor
 {
 class BufferStream;
 }
+namespace wayland
+{
+class WaylandServer;
+}
 namespace frontend
 {
 class WlSurface;
 class WlSubsurface;
-class ResourceLifetimeTracker;
 class Viewport;
 class SyncTimeline;
+class FractionalScaleV1;
 class ExtForeignBufferV1;
 
 /// A mir_shell_v1 archetype assigned to a wl_surface. An archetype augments a role rather than
@@ -92,7 +96,10 @@ struct WlSurfaceState
     class Callback : public wayland::Callback
     {
     public:
-        Callback(wl_resource* new_resource);
+        Callback(
+            std::shared_ptr<wayland::Client> client,
+            rust::Box<wayland::CallbackMiddleware> instance,
+            uint32_t object_id);
     };
 
     // if you add variables, don't forget to update this
@@ -105,7 +112,7 @@ struct WlSurfaceState
     // NOTE: nullopt has a distinct meaning from the optional containing a null Weak here
     // nullopt: the current state should not be changed
     // null Weak: the current buffer, if any, should be cleared
-    std::optional<wayland::Weak<ResourceLifetimeTracker>> buffer;
+    std::optional<wayland::Weak<wayland::Buffer>> buffer;
 
     shell::SurfaceSpecification surface_spec;
     std::optional<float> scale;
@@ -143,10 +150,13 @@ private:
 class WlSurface : public wayland::Surface
 {
 public:
-    WlSurface(wl_resource* new_resource,
+    WlSurface(std::shared_ptr<wayland::Client> client,
+              rust::Box<wayland::SurfaceMiddleware> instance,
+              uint32_t object_id,
               std::shared_ptr<mir::Executor> const& wayland_executor,
               std::shared_ptr<mir::Executor> const& frame_callback_executor,
-              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator);
+              std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
+              wayland::WaylandServer& server);
 
     ~WlSurface();
 
@@ -187,7 +197,6 @@ public:
     /// archetype object may outlive its replacement being assigned.
     void clear_archetype(WlSurfaceArchetype const* archetype);
     auto subsurface_at(geometry::Point point) -> std::optional<WlSurface*>;
-    wl_resource* raw_resource() const { return resource; }
     auto scene_surface() const -> std::optional<std::shared_ptr<scene::Surface>>;
     /// Callback is called immediately if the surface already has a scene::Surface, or else on the first commit where
     /// one exists
@@ -248,12 +257,11 @@ public:
     std::shared_ptr<scene::Session> const session;
     std::shared_ptr<compositor::BufferStream> const stream;
 
-    static WlSurface* from(wl_resource* resource);
-
 private:
     std::shared_ptr<mir::graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<mir::Executor> const wayland_executor;
     std::shared_ptr<mir::Executor> const frame_callback_executor;
+    wayland::WaylandServer& server;
 
     NullWlSurfaceRole null_role;
     WlSurfaceRole* role;
@@ -278,11 +286,18 @@ private:
     /// Submits current_buffer to the stream. Returns whether the logical size changed.
     auto submit_current_buffer() -> bool;
 
-    /* State for when a buffer update is waiting for a client fence to signal
+    /* State for when a buffer update is waiting for a client fence to signal.
+     *
+     * WaylandServer::register_fd_ready_listener is one-shot and non-cancellable,
+     * so a previously-registered wait cannot be removed. Instead each wait is
+     * tagged with buffer_ready_generation; when a newer commit supersedes an
+     * in-flight wait we bump the generation (and signal awaiting_release so the
+     * client may reuse the buffer), and the stale listener no-ops when it fires.
      */
-    struct PendingBufferState;
-    std::unique_ptr<PendingBufferState> pending_context;
-    struct wl_event_source* buffer_ready_source{nullptr};
+    friend class BufferReadyNotifier;
+    uint64_t buffer_ready_generation{0};
+    bool awaiting_buffer{false};
+    std::optional<SyncPoint> awaiting_release;
 
     static void complete_commit(WlSurface* surf);
 
@@ -309,19 +324,28 @@ private:
     void send_frame_callbacks(CallbackList& list);
     auto can_set_role_type(std::type_info const* role_) const -> bool;
 
-    void attach(std::optional<wl_resource*> const& buffer, int32_t x, int32_t y) override;
+    void attach(std::optional<wayland::Weak<wayland::Buffer>> const& buffer, int32_t x, int32_t y) override;
     void damage(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void frame(wl_resource* callback) override;
-    void set_opaque_region(std::optional<wl_resource*> const& region) override;
-    void set_input_region(std::optional<wl_resource*> const& region) override;
+    auto frame(rust::Box<wayland::CallbackMiddleware> child_instance, uint32_t child_object_id)
+        -> std::shared_ptr<wayland::Callback> override;
+    void set_opaque_region(std::optional<wayland::Weak<wayland::Region>> const& region) override;
+    void set_input_region(std::optional<wayland::Weak<wayland::Region>> const& region) override;
     void commit() override;
     void damage_buffer(int32_t x, int32_t y, int32_t width, int32_t height) override;
-    void set_buffer_transform(int32_t transform) override;
+    void set_buffer_transform(uint32_t transform) override;
     void set_buffer_scale(int32_t scale) override;
     void offset(int32_t x, int32_t y) override;
 
     std::optional<geometry::Rectangles> opaque_region_;
 };
+
+/// Non-owning shared_ptr aliasing a live WlSurface, for synchronous wayland_rs
+/// sender calls (send_enter/leave/down) that take std::shared_ptr<Surface>.
+/// The returned pointer MUST NOT outlive the WlSurface.
+inline auto as_surface_ptr(WlSurface* surface) -> std::shared_ptr<wayland::Surface>
+{
+    return surface ? std::shared_ptr<wayland::Surface>{std::shared_ptr<void>{}, surface} : nullptr;
+}
 }
 }
 
