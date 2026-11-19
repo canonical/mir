@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include "fake_plane_properties.h"
 #include "plane_capabilities.h"
 
 #include <mir/logging/logger.h>
@@ -72,36 +73,11 @@ constexpr uint32_t second_primary_id{56};
 constexpr uint32_t inverted_alpha_id{59};
 constexpr uint32_t inverted_zpos_id{60};
 constexpr uint32_t both_crtcs_mask{target_crtc_mask | other_crtc_mask};
-using EnumValues = std::vector<std::pair<uint64_t, std::string>>;
 
-struct RangeProperty
-{
-    uint64_t min;
-    uint64_t max;
-    uint64_t value;
-    uint32_t flags{DRM_MODE_PROP_RANGE};
-};
+using namespace mir::test;
 
-constexpr auto fixed_zpos(uint64_t zpos) -> RangeProperty
-{
-    return {zpos, zpos, zpos, DRM_MODE_PROP_RANGE | DRM_MODE_PROP_IMMUTABLE};
-}
-
-constexpr RangeProperty full_alpha{0, 0xffff, 0xffff};
-EnumValues const blend_modes{{6, "Pre-multiplied"}, {7, "None"}, {8, "Coverage"}};
-
-struct PlaneSpec
-{
-    uint32_t id;
-    uint32_t crtcs;
-    std::optional<uint64_t> type{};
-    bool in_formats{true};
-    std::optional<RangeProperty> zpos{};
-    std::optional<RangeProperty> alpha{};
-    EnumValues blend{};
-    EnumValues color_encoding{};
-    EnumValues color_range{};
-};
+std::pair<uint64_t, std::string> const blend_modes_without_none[]{
+    {blend::premultiplied, "Pre-multiplied"}, {blend::coverage, "Coverage"}};
 
 std::vector<PlaneSpec> const planes{
     {.id = primary_id, .crtcs = target_crtc_mask, .type = DRM_PLANE_TYPE_PRIMARY, .zpos = fixed_zpos(1),
@@ -115,7 +91,7 @@ std::vector<PlaneSpec> const planes{
     {.id = fixed_opaque_overlay_id, .crtcs = target_crtc_mask, .type = DRM_PLANE_TYPE_OVERLAY,
      .zpos = fixed_zpos(2)},
     {.id = blend_without_none_id, .crtcs = target_crtc_mask, .type = DRM_PLANE_TYPE_OVERLAY, .zpos = fixed_zpos(2),
-     .blend = {{6, "Pre-multiplied"}, {8, "Coverage"}}},
+     .blend = blend_modes_without_none},
     {.id = no_zpos_id, .crtcs = target_crtc_mask, .type = DRM_PLANE_TYPE_OVERLAY},
     {.id = invalid_zpos_id, .crtcs = target_crtc_mask, .type = DRM_PLANE_TYPE_OVERLAY,
      .zpos = RangeProperty{2, 2, 2, DRM_MODE_PROP_ENUM}},
@@ -128,9 +104,7 @@ std::vector<PlaneSpec> const planes{
     {.id = cursor_id, .crtcs = target_crtc_mask, .type = DRM_PLANE_TYPE_CURSOR, .zpos = fixed_zpos(5)},
     {.id = untyped_id, .crtcs = target_crtc_mask, .zpos = fixed_zpos(2)},
     {.id = overlay_id, .crtcs = both_crtcs_mask, .type = DRM_PLANE_TYPE_OVERLAY, .zpos = fixed_zpos(2),
-     .alpha = full_alpha, .blend = blend_modes,
-     .color_encoding = {{10, "ITU-R BT.601 YCbCr"}, {11, "ITU-R BT.709 YCbCr"}, {12, "ITU-R BT.2020 YCbCr"}},
-     .color_range = {{13, "YCbCr limited range"}, {14, "YCbCr full range"}}},
+     .alpha = full_alpha, .blend = blend_modes, .color_encoding = color_encodings, .color_range = color_ranges},
     {.id = top_overlay_id, .crtcs = both_crtcs_mask, .type = DRM_PLANE_TYPE_OVERLAY, .zpos = RangeProperty{0, 4, 3},
      .blend = blend_modes},
     {.id = other_primary_id, .crtcs = other_crtc_mask, .type = DRM_PLANE_TYPE_PRIMARY, .zpos = fixed_zpos(0)},
@@ -174,11 +148,8 @@ public:
         for (auto const id : {other_crtc_id, target_crtc_id})
             mock_drm.add_crtc(drm_device, id, {});
         for (auto const& plane : planes)
-            mock_drm.add_plane(drm_device, plane.id, plane.crtcs);
+            plane_properties.add(plane, InFormatsBlob{}.bytes());
         mock_drm.prepare(drm_device);
-
-        for (auto const& plane : planes)
-            add_plane_properties(plane);
     }
 
     auto discover(uint32_t crtc_id = target_crtc_id) const -> mga::CrtcPlaneCapabilities
@@ -186,55 +157,9 @@ public:
         return mga::discover_crtc_plane_capabilities(drm_fd, crtc_id);
     }
 
-    auto add_property(uint32_t plane, char const* name, uint64_t value = 0) -> uint32_t
-    {
-        auto const id = next_property_id++;
-        mock_drm.add_property(drm_device, plane, DRM_MODE_OBJECT_PLANE, id, name, value);
-        return id;
-    }
-
-    auto add_range(uint32_t plane, char const* name, RangeProperty const& range) -> uint32_t
-    {
-        auto const id = add_property(plane, name, range.value);
-        mock_drm.set_property_range(drm_device, id, range.flags, range.min, range.max);
-        return id;
-    }
-
-    void add_enum(uint32_t plane, char const* name, EnumValues const& values)
-    {
-        mock_drm.set_property_enums(drm_device, add_property(plane, name), values);
-    }
-
-    void add_plane_properties(PlaneSpec const& plane)
-    {
-        if (plane.type)
-            add_property(plane.id, "type", *plane.type);
-        if (plane.in_formats)
-        {
-            add_property(plane.id, "IN_FORMATS", plane.id);
-            set_in_formats(plane.id, InFormatsBlob{}.bytes());
-        }
-        if (plane.zpos)
-            add_range(plane.id, "zpos", *plane.zpos);
-        if (plane.alpha)
-            add_range(plane.id, "alpha", *plane.alpha);
-        for (auto const& [name, values] : {std::pair{"pixel blend mode", &plane.blend},
-                                          {"COLOR_ENCODING", &plane.color_encoding},
-                                          {"COLOR_RANGE", &plane.color_range}})
-        {
-            if (!values->empty())
-                add_enum(plane.id, name, *values);
-        }
-    }
-
-    void set_in_formats(uint32_t plane, std::span<std::byte const> bytes)
-    {
-        mock_drm.add_property_blob(drm_device, plane, bytes);
-    }
-
     NiceMock<mtd::MockDRM> mock_drm;
     int const drm_fd{mock_drm.open(drm_device, 0)};
-    uint32_t next_property_id{1000};
+    mir::test::FakePlaneProperties plane_properties{mock_drm, drm_device};
 };
 }
 
@@ -280,9 +205,9 @@ TEST_F(PlaneCapabilitiesTest, decodes_exact_formats_and_display_properties)
         mga::FormatModifier{DRM_FORMAT_XRGB8888, I915_FORMAT_MOD_Y_TILED},
         mga::FormatModifier{DRM_FORMAT_ARGB8888, DRM_FORMAT_MOD_LINEAR}));
     EXPECT_THAT(overlay.alpha_max, Optional(mga::PropertyValue{0xffff}));
-    EXPECT_THAT(overlay.blend_none, Optional(mga::PropertyValue{7}));
+    EXPECT_THAT(overlay.blend_none, Optional(mga::PropertyValue{blend::none}));
     EXPECT_FALSE(overlay.fixed_opaque);
-    EXPECT_THAT(overlay.bt709_limited, Optional(mga::Bt709Limited{11, 13}));
+    EXPECT_THAT(overlay.bt709_limited, Optional(mga::Bt709Limited{color_encoding::bt709, color_range::limited}));
 
     auto const& blend_without_none = find_overlay(caps, blend_without_none_id);
     EXPECT_EQ(blend_without_none.blend_none, std::nullopt);
@@ -308,7 +233,7 @@ TEST_P(MalformedInFormatsTest, overlay_with_malformed_or_empty_formats_is_not_us
 {
     InFormatsBlob blob;
     GetParam().modify(blob);
-    set_in_formats(overlay_id, blob.bytes());
+    plane_properties.set_in_formats(overlay_id, blob.bytes());
 
     EXPECT_THAT(ids_of(discover().overlays), Not(Contains(overlay_id)));
 }
@@ -329,7 +254,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 TEST_F(PlaneCapabilitiesTest, unusable_first_primary_fails_discovery_despite_later_usable_primary)
 {
-    set_in_formats(primary_id, {});
+    plane_properties.set_in_formats(primary_id, {});
 
     EXPECT_THAT([this] { discover(); }, ThrowsMessage<std::runtime_error>(HasSubstr("No usable primary plane")));
 }

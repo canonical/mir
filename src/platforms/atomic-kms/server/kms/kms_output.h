@@ -41,6 +41,7 @@ namespace atomic
 {
 
 struct CrtcPlaneCapabilities;
+class PresentationState;
 
 class KMSOutput
 {
@@ -79,6 +80,14 @@ public:
     virtual void clear_crtc() = 0;
 
     virtual bool page_flip(FBHandle const& fb) = 0;
+
+    /// Builds the complete atomic request that would present \a state and checks it with a
+    /// single DRM_MODE_ATOMIC_TEST_ONLY commit. Nothing visible changes.
+    ///
+    /// \return true if the kernel accepts the request; false if it rejects it or the output
+    ///         cannot present \a state (no CRTC with known plane capabilities, or the primary
+    ///         does not match the mode size)
+    virtual bool test_presentation(PresentationState const& state) = 0;
 
     virtual void set_cursor_image(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;

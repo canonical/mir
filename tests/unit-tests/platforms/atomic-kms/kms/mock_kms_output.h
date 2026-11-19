@@ -18,6 +18,7 @@
 #define MOCK_KMS_OUTPUT_H_
 
 #include "src/platforms/atomic-kms/server/kms/kms_output.h"
+#include "src/platforms/atomic-kms/server/kms/presentation_state.h"
 #include <gmock/gmock.h>
 
 #include <cstdint>
@@ -41,6 +42,7 @@ public:
     MOCK_METHOD(bool, has_crtc_mismatch, (), (override));
     MOCK_METHOD(void, clear_crtc, (), (override));
     MOCK_METHOD(bool, page_flip, (graphics::FBHandle const&), (override));
+    MOCK_METHOD(bool, test_presentation, (graphics::atomic::PresentationState const&), (override));
     MOCK_METHOD(void, set_cursor_image, (gbm_bo*), (override));
     MOCK_METHOD(void, move_cursor, (geometry::Point), (override));
     MOCK_METHOD(bool, clear_cursor, (), (override));
