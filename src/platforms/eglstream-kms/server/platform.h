@@ -36,6 +36,8 @@ class Device;
 
 namespace graphics
 {
+class DMABufEGLProvider;
+
 namespace eglstream
 {
 class RenderingPlatform : public graphics::RenderingPlatform
@@ -53,6 +55,7 @@ protected:
 private:
     EGLDisplay const dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 
 class DisplayPlatform : public graphics::DisplayPlatform

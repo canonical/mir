@@ -30,6 +30,10 @@ auto mg::has_egl_client_extension(char const* extension) -> bool
 auto mg::has_egl_extension(EGLDisplay dpy, char const* extension) -> bool
 {
     auto const extensions = eglQueryString(dpy, EGL_EXTENSIONS);
+    if (!extensions)
+    {
+        BOOST_THROW_EXCEPTION(std::runtime_error("Failed to query EGL extensions"));
+    }
     auto found_substring = strstr(extensions, extension);
     while (found_substring)
     {

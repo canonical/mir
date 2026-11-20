@@ -27,6 +27,8 @@
 
 #include "mir/console_services.h"
 #include "mir/graphics/egl_error.h"
+#include "mir/graphics/linux_dmabuf.h"
+#include "mir/log.h"
 #include "mir/renderer/gl/context.h"
 
 #include <sys/sysmacros.h>
@@ -171,11 +173,39 @@ private:
     EGLDisplay const dpy;
     EGLContext const ctx;
 };
+
+auto maybe_make_dmabuf_provider(EGLDisplay dpy, mir::renderer::gl::Context const& ctx)
+    -> std::shared_ptr<mg::DMABufEGLProvider>
+{
+    if (!mge::supports_dmabuf_import(dpy))
+    {
+        return {};
+    }
+
+    try
+    {
+        return std::make_shared<mg::DMABufEGLProvider>(
+            dpy,
+            std::make_shared<mg::EGLExtensions>(),
+            mg::EGLExtensions::EXTImageDmaBufImportModifiers{dpy},
+            std::make_shared<mgc::EGLContextExecutor>(ctx.make_share_context()),
+            [](mg::DRMFormat, std::span<uint64_t const>, mir::geometry::Size) -> std::shared_ptr<mg::DMABufBuffer>
+            {
+                return nullptr; // Import on the rendering device does not require allocating dma-bufs.
+            });
+    }
+    catch (std::runtime_error const& error)
+    {
+        mir::log_warning("Cannot enable EGLStream renderer's dma-buf import: %s", error.what());
+        return {};
+    }
+}
 }
 
 mge::RenderingPlatform::RenderingPlatform(EGLDisplay dpy)
     : dpy{dpy},
-      ctx{std::make_unique<BasicEGLContext>(dpy)}
+      ctx{std::make_unique<BasicEGLContext>(dpy)},
+      dmabuf_provider{maybe_make_dmabuf_provider(dpy, *ctx)}
 {
     // XWayland eglstream has always been kinda flaky, now it's somehow worse.
     // Disable it until we've had a chance to look at what's wrong.
@@ -190,7 +220,7 @@ mge::RenderingPlatform::~RenderingPlatform()
 mir::UniqueModulePtr<mg::GraphicBufferAllocator> mge::RenderingPlatform::create_buffer_allocator(
     mg::Display const&)
 {
-    return mir::make_module_ptr<mge::BufferAllocator>(ctx->make_share_context());
+    return mir::make_module_ptr<mge::BufferAllocator>(ctx->make_share_context(), dmabuf_provider);
 }
 
 auto mge::RenderingPlatform::maybe_create_provider(
@@ -198,7 +228,7 @@ auto mge::RenderingPlatform::maybe_create_provider(
 {
     if (dynamic_cast<graphics::GLRenderingProvider::Tag const*>(&type_tag))
     {
-        return std::make_shared<mge::GLRenderingProvider>(dpy, ctx->make_share_context());
+        return std::make_shared<mge::GLRenderingProvider>(dpy, ctx->make_share_context(), dmabuf_provider);
     }
     return nullptr;
 }

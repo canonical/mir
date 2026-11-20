@@ -218,16 +218,23 @@ void mge::BufferAllocator::bind_display(wl_display* display, std::shared_ptr<Exe
 
     try
     {
-        mg::wayland::bind_display(dpy, display, *egl_extensions);
-        egl_display_bound = true;
+        if (mg::has_egl_extension(dpy, "EGL_WL_bind_wayland_display"))
+        {
+            mg::wayland::bind_display(dpy, display, *egl_extensions);
+            egl_display_bound = true;
+        }
+        else
+        {
+            mir::log_info("EGL_WL_bind_wayland_display unavailable; legacy EGL buffer import disabled");
+        }
     }
-    catch (...)
+    catch (std::runtime_error const&)
     {
         log(
             logging::Severity::warning,
             MIR_LOG_COMPONENT,
             std::current_exception(),
-            "Failed to bind EGL Display to Wayland display, falling back to software buffers");
+            "Failed to bind EGL display to Wayland display; legacy EGL buffer import disabled");
     }
 
     try
@@ -285,6 +292,7 @@ void mge::BufferAllocator::unbind_display(wl_display* display)
         auto dpy = eglGetCurrentDisplay();
 
         mg::wayland::unbind_display(dpy, display, *egl_extensions);
+        egl_display_bound = false;
     }
 }
 
@@ -297,20 +305,28 @@ std::shared_ptr<mg::Buffer> mge::BufferAllocator::buffer_from_resource(
         [this]() { ctx->make_current(); },
         [this]() { ctx->release_current(); });
 
-    if (auto dmabuf = dmabuf_extension->buffer_from_resource(
-        buffer,
-        std::function<void()>{on_consumed},
-        std::function<void()>{on_release},
-        egl_delegate))
+    if (dmabuf_extension)
     {
-        return dmabuf;
+        if (auto dmabuf = dmabuf_extension->buffer_from_resource(
+            buffer,
+            std::function<void()>{on_consumed},
+            std::function<void()>{on_release},
+            egl_delegate))
+        {
+            return dmabuf;
+        }
     }
-    return mg::wayland::buffer_from_resource(
-        buffer,
-        std::move(on_consumed),
-        std::move(on_release),
-        *egl_extensions,
-        egl_delegate);
+    if (egl_display_bound)
+    {
+        return mg::wayland::buffer_from_resource(
+            buffer,
+            std::move(on_consumed),
+            std::move(on_release),
+            *egl_extensions,
+            egl_delegate);
+    }
+    BOOST_THROW_EXCEPTION(std::runtime_error(
+        "Failed to import client buffer: not an importable linux-dmabuf buffer and legacy EGL buffer import is unavailable"));
 }
 
 auto mge::BufferAllocator::buffer_from_shm(

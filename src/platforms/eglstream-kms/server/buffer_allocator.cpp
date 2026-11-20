@@ -24,6 +24,7 @@
 #include "mir/graphics/drm_formats.h"
 #include "mir/graphics/egl_resources.h"
 #include "mir/graphics/gl_config.h"
+#include "mir/graphics/linux_dmabuf.h"
 #include "mir/graphics/platform.h"
 #include "shm_buffer.h"
 #include "mir/graphics/buffer_properties.h"
@@ -42,6 +43,7 @@
 #include "mir/wayland/protocol_error.h"
 #include "mir/wayland/wayland_base.h"
 #include "mir/renderer/gl/gl_surface.h"
+#include "utils.h"
 
 #define MIR_LOG_COMPONENT "platform-eglstream-kms"
 #include "mir/log.h"
@@ -68,10 +70,70 @@ namespace geom = mir::geometry;
 #define EGL_WAYLAND_EGLSTREAM_WL              0x334B
 #endif /* EGL_WL_wayland_eglstream */
 
-mge::BufferAllocator::BufferAllocator(std::unique_ptr<renderer::gl::Context> ctx)
+// The display keeps the wrappers alive until queued cleanup runs, or until
+// display destruction if the Wayland event loop has already stopped.
+struct mge::BufferAllocator::ClientGlobals : wl_listener
+{
+    static void attach(wl_display* display, std::shared_ptr<ClientGlobals> const& globals)
+    {
+        globals->display = display;
+        globals->notify = [](wl_listener* listener, void*)
+        {
+            static_cast<ClientGlobals*>(listener)->destroy();
+        };
+        globals->display_owner = globals;
+        wl_display_add_destroy_listener(display, globals.get());
+    }
+
+    void destroy()
+    {
+        auto owner = std::move(display_owner);
+        if (!owner)
+        {
+            return;
+        }
+        wl_list_remove(&link);
+        if (controller)
+        {
+            wl_global_destroy(controller);
+            controller = nullptr;
+        }
+        dmabuf.reset();
+
+        if (unbind_wayland_display)
+        {
+            try
+            {
+                auto context_guard = mir::raii::paired_calls(
+                    [this] { context->make_current(); },
+                    [this] { context->release_current(); });
+                if (unbind_wayland_display(eglGetCurrentDisplay(), display) != EGL_TRUE)
+                {
+                    BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));
+                }
+            }
+            catch (std::exception const& error)
+            {
+                mir::log_warning("%s", error.what());
+            }
+        }
+    }
+
+    wl_display* display{nullptr};
+    wl_global* controller{nullptr};
+    std::unique_ptr<LinuxDmaBufUnstable> dmabuf;
+    std::shared_ptr<renderer::gl::Context> context;
+    PFNEGLUNBINDWAYLANDDISPLAYWL unbind_wayland_display{nullptr};
+    std::shared_ptr<ClientGlobals> display_owner;
+};
+
+mge::BufferAllocator::BufferAllocator(
+    std::unique_ptr<renderer::gl::Context> ctx,
+    std::shared_ptr<DMABufEGLProvider> dmabuf_provider)
     : wayland_ctx{ctx->make_share_context()},
       egl_delegate{
-          std::make_shared<mgc::EGLContextExecutor>(std::move(ctx))}
+          std::make_shared<mgc::EGLContextExecutor>(std::move(ctx))},
+      dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
 
@@ -293,6 +355,11 @@ try
 {
     auto const allocator = static_cast<mge::BufferAllocator*>(
         wl_resource_get_user_data(eglstream_controller_resource));
+    auto const globals = allocator->client_globals.lock();
+    if (!globals || !globals->controller)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"Wayland EGLStream controller is no longer active"}));
+    }
 
     EGLAttrib const attribs[] = {
         EGL_WAYLAND_EGLSTREAM_WL, (EGLAttrib)buffer,
@@ -347,65 +414,73 @@ void mge::BufferAllocator::bind_eglstream_controller(
 
 void mir::graphics::eglstream::BufferAllocator::bind_display(
     wl_display* display,
-    std::shared_ptr<Executor>)
+    std::shared_ptr<Executor> executor)
 {
-    if (!wl_global_create(
-        display,
-        &wl_eglstream_controller_interface,
-        1,
-        this,
-        &bind_eglstream_controller))
+    auto globals = std::make_shared<ClientGlobals>();
     {
-        BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to publish wayland-eglstream-controller global"}));
-    }
-
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { wayland_ctx->make_current(); },
-        [this]() { wayland_ctx->release_current(); });
-
-    auto dpy = eglGetCurrentDisplay();
-
-    if (extensions(dpy).eglBindWaylandDisplayWL(dpy, display) != EGL_TRUE)
-    {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to bind Wayland EGL display")));
-    }
-
-    std::vector<char const*> missing_extensions;
-    for (char const* extension : {
-        "EGL_KHR_stream_consumer_gltexture",
-        "EGL_NV_stream_attrib"})
-    {
-        if (!epoxy_has_egl_extension(dpy, extension))
+        auto context_guard = mir::raii::paired_calls(
+            [this] { wayland_ctx->make_current(); },
+            [this] { wayland_ctx->release_current(); });
+        auto const dpy = eglGetCurrentDisplay();
+        if (supports_legacy_client_streams(dpy))
         {
-            missing_extensions.push_back(extension);
+            try
+            {
+                auto const& legacy = extensions(dpy);
+                if (legacy.eglBindWaylandDisplayWL(dpy, display) != EGL_TRUE)
+                {
+                    BOOST_THROW_EXCEPTION((mg::egl_error("Failed to bind Wayland EGL display")));
+                }
+                globals->unbind_wayland_display = legacy.eglUnbindWaylandDisplayWL;
+                globals->context = wayland_ctx;
+            }
+            catch (std::runtime_error const& error)
+            {
+                mir::log_warning("Cannot enable legacy Wayland EGLStream import: %s", error.what());
+            }
         }
     }
 
-    if (!missing_extensions.empty())
+    if (globals->unbind_wayland_display)
     {
-        std::stringstream message;
-        message << "Missing required extension" << (missing_extensions.size() > 1 ? "s:" : ":");
-        for (auto missing_extension : missing_extensions)
+        ClientGlobals::attach(display, globals);
+        globals->controller = wl_global_create(
+            display, &wl_eglstream_controller_interface, 1, this, &bind_eglstream_controller);
+        if (!globals->controller)
         {
-            message << " " << missing_extension;
+            globals->destroy();
+            BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to publish wayland-eglstream-controller global"}));
         }
-
-        BOOST_THROW_EXCEPTION((std::runtime_error{message.str()}));
+        mir::log_info("Bound EGLStreams-backed Wayland display");
+    }
+    else if (dmabuf_provider)
+    {
+        globals->dmabuf = std::make_unique<LinuxDmaBufUnstable>(display, dmabuf_provider);
+        ClientGlobals::attach(display, globals);
+        mir::log_info("Enabled linux-dmabuf client import with EGLStream rendering");
+    }
+    else
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{
+            "EGLStream renderer has neither a usable legacy Wayland binding nor dma-buf import"}));
     }
 
-    mir::log_info("Bound EGLStreams-backed Wayland display");
+    client_globals = globals;
+    wayland_executor = std::move(executor);
 }
 
-void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display* display)
+void mir::graphics::eglstream::BufferAllocator::unbind_display(wl_display*)
 {
-    auto context_guard = mir::raii::paired_calls(
-        [this]() { wayland_ctx->make_current(); },
-        [this]() { wayland_ctx->release_current(); });
-    auto dpy = eglGetCurrentDisplay();
-
-    if (extensions(dpy).eglUnbindWaylandDisplayWL(dpy, display) != EGL_TRUE)
+    if (wayland_executor)
     {
-        BOOST_THROW_EXCEPTION((mg::egl_error("Failed to unbind Wayland EGL display")));
+        wayland_executor->spawn([globals = client_globals]
+        {
+            if (auto active = globals.lock())
+            {
+                active->destroy();
+            }
+        });
+        wayland_executor.reset();
     }
 }
 
@@ -493,8 +568,23 @@ std::shared_ptr<mir::graphics::Buffer>
 mir::graphics::eglstream::BufferAllocator::buffer_from_resource(
     wl_resource* buffer,
     std::function<void()>&& on_consumed,
-    std::function<void()>&& /*on_release*/)
+    std::function<void()>&& on_release)
 {
+    auto globals = client_globals.lock();
+    if (globals && globals->dmabuf)
+    {
+        if (auto imported = globals->dmabuf->buffer_from_resource(
+            buffer, std::move(on_consumed), std::move(on_release), egl_delegate))
+        {
+            return imported;
+        }
+        BOOST_THROW_EXCEPTION((std::runtime_error{"EGLStream renderer cannot import this non-dma-buf buffer"}));
+    }
+    if (!globals || !globals->controller)
+    {
+        BOOST_THROW_EXCEPTION((std::runtime_error{"No EGLStream client buffer import is active"}));
+    }
+
     auto context_guard = mir::raii::paired_calls(
         [this]() { wayland_ctx->make_current(); },
         [this]() { wayland_ctx->release_current(); });
@@ -715,9 +805,13 @@ auto pick_stream_surface_config(EGLDisplay dpy, mg::GLConfig const& gl_config) -
 }
 }
 
-mge::GLRenderingProvider::GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<mir::renderer::gl::Context> ctx)
+mge::GLRenderingProvider::GLRenderingProvider(
+    EGLDisplay dpy,
+    std::unique_ptr<mir::renderer::gl::Context> ctx,
+    std::shared_ptr<DMABufEGLProvider> dmabuf_provider)
     : dpy{dpy},
-      ctx{std::move(ctx)}
+      ctx{std::move(ctx)},
+      dmabuf_provider{std::move(dmabuf_provider)}
 {
 }
 
@@ -726,6 +820,13 @@ mge::GLRenderingProvider::~GLRenderingProvider() = default;
 auto mir::graphics::eglstream::GLRenderingProvider::as_texture(std::shared_ptr<Buffer> buffer)
     -> std::shared_ptr<gl::Texture>
 {
+    if (dmabuf_provider)
+    {
+        if (auto texture = dmabuf_provider->as_texture(buffer))
+        {
+            return texture;
+        }
+    }
     return std::dynamic_pointer_cast<gl::Texture>(std::move(buffer));
 }
 

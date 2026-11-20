@@ -241,36 +241,27 @@ auto probe_rendering_platform(
 
         if (display != EGL_NO_DISPLAY)
         {
-            std::vector<char const*> missing_extensions;
-            for (char const* extension : {
-                "EGL_KHR_stream_consumer_gltexture",
-                "EGL_NV_stream_attrib"})
+            if (!epoxy_has_egl_extension(display, "EGL_NV_stream_attrib"))
             {
-                if (!epoxy_has_egl_extension(display, extension))
-                {
-                    missing_extensions.push_back(extension);
-                }
+                mir::log_info("EGLDevice found but unsuitable. Missing extension EGL_NV_stream_attrib");
+                continue;
+            }
+            if (!mge::supports_legacy_client_streams(display) && !mge::supports_dmabuf_import(display))
+            {
+                mir::log_info("EGLDevice found but unsuitable. Neither legacy Wayland EGLStream nor dma-buf import is supported");
+                continue;
             }
 
-            for (auto const missing_extension: missing_extensions)
+            supported_devices.back().support_level = maximum_suitability;
+            if (using_display_platform_dpy)
             {
-                mir::log_info("EGLDevice found but unsuitable. Missing extension %s", missing_extension);
+                supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
+                    std::in_place_index<0>, display};
             }
-
-            if (missing_extensions.empty())
+            else
             {
-                // We've got EGL, and we've got the necessary EGL extensions. We're good.
-                supported_devices.back().support_level = maximum_suitability;
-                if (using_display_platform_dpy)
-                {
-                    supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
-                        std::in_place_index<0>, display};
-                }
-                else
-                {
-                    supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
-                        std::in_place_index<1>, device};
-                }
+                supported_devices.back().platform_data = std::variant<EGLDisplay, EGLDeviceEXT>{
+                    std::in_place_index<1>, device};
             }
         }
     }

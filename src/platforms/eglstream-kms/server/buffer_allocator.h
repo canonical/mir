@@ -40,6 +40,7 @@ class Context;
 namespace graphics
 {
 class Display;
+class DMABufEGLProvider;
 
 namespace gl
 {
@@ -53,7 +54,9 @@ class BufferAllocator:
     public graphics::GraphicBufferAllocator
 {
 public:
-    BufferAllocator(std::unique_ptr<renderer::gl::Context> ctx);
+    BufferAllocator(
+        std::unique_ptr<renderer::gl::Context> ctx,
+        std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
     ~BufferAllocator();
 
     std::shared_ptr<Buffer> alloc_software_buffer(geometry::Size size, MirPixelFormat format) override;
@@ -73,6 +76,7 @@ public:
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> override;
 
 private:
+    struct ClientGlobals;
     static void create_buffer_eglstream_resource(
         wl_client* client,
         wl_resource* eglstream_controller,
@@ -88,6 +92,9 @@ private:
     EGLExtensions::LazyDisplayExtensions<EGLExtensions::NVStreamAttribExtensions> const nv_extensions;
     std::shared_ptr<renderer::gl::Context> const wayland_ctx;
     std::shared_ptr<common::EGLContextExecutor> const egl_delegate;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
+    std::shared_ptr<Executor> wayland_executor;
+    std::weak_ptr<ClientGlobals> client_globals;
     std::unique_ptr<gl::Program> shader;
     static struct wl_eglstream_controller_interface const impl;
 };
@@ -95,7 +102,10 @@ private:
 class GLRenderingProvider : public graphics::GLRenderingProvider
 {
 public:
-    GLRenderingProvider(EGLDisplay dpy, std::unique_ptr<renderer::gl::Context> ctx);
+    GLRenderingProvider(
+        EGLDisplay dpy,
+        std::unique_ptr<renderer::gl::Context> ctx,
+        std::shared_ptr<DMABufEGLProvider> dmabuf_provider);
     ~GLRenderingProvider();
 
     auto as_texture(std::shared_ptr<Buffer> buffer) -> std::shared_ptr<gl::Texture> override;
@@ -112,6 +122,7 @@ public:
 private:
     EGLDisplay dpy;
     std::unique_ptr<renderer::gl::Context> const ctx;
+    std::shared_ptr<DMABufEGLProvider> const dmabuf_provider;
 };
 
 }
