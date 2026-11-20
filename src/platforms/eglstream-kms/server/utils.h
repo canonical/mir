@@ -28,6 +28,8 @@ namespace graphics
 namespace eglstream
 {
 dev_t devnum_for_device(EGLDeviceEXT device);
+bool supports_legacy_client_streams(EGLDisplay display);
+bool supports_dmabuf_import(EGLDisplay display);
 
 struct VersionInfo
 {

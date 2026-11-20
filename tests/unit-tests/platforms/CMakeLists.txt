@@ -47,6 +47,15 @@ if (MIR_BUILD_PLATFORM_GBM_KMS)
 else()
   target_link_libraries(mir_unit_tests_egl_buffer_allocator server_platform_common)
 endif()
+if (MIR_BUILD_PLATFORM_EGLSTREAM_KMS)
+  target_sources(mir_unit_tests_egl_buffer_allocator PRIVATE
+    test_eglstream_dispatch.cpp
+    ${PROJECT_SOURCE_DIR}/src/platforms/eglstream-kms/server/buffer_allocator.cpp
+    ${PROJECT_SOURCE_DIR}/src/platforms/eglstream-kms/server/utils.cpp
+  )
+  target_compile_definitions(mir_unit_tests_egl_buffer_allocator PRIVATE MIR_TEST_EGLSTREAM_KMS)
+  target_link_libraries(mir_unit_tests_egl_buffer_allocator PkgConfig::EPOXY PkgConfig::WAYLAND_EGLSTREAM)
+endif()
 add_dependencies(mir_unit_tests_egl_buffer_allocator GMock)
 set_target_properties(mir_unit_tests_egl_buffer_allocator PROPERTIES ENABLE_EXPORTS TRUE)
 if (MIR_RUN_UNIT_TESTS)

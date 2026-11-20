@@ -19,6 +19,14 @@
 #include "src/platforms/gbm-kms/server/buffer_allocator.h"
 #include "src/platforms/gbm-kms/server/surfaceless_egl_context.h"
 #endif
+#ifdef MIR_TEST_EGLSTREAM_KMS
+#include "src/platforms/eglstream-kms/server/buffer_allocator.h"
+
+auto redirect_epoxy_egl(
+    decltype(&eglGetCurrentDisplay),
+    decltype(&eglQueryString),
+    decltype(&eglGetProcAddress)) -> std::function<void()>;
+#endif
 #include "mir/anonymous_shm_file.h"
 #include "mir/graphics/egl_context_executor.h"
 #include "mir/graphics/graphic_buffer_allocator.h"
@@ -35,6 +43,7 @@
 #include <drm_fourcc.h>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <map>
 #include <poll.h>
 #include <sys/socket.h>
 #include <wayland-client.h>
@@ -100,7 +109,7 @@ auto const allocator_types = Values(
 );
 }
 
-class EGLBufferAllocatorTest : public TestWithParam<Allocator>
+class EGLBufferAllocatorFixture : public Test
 {
 protected:
     void SetUp() override
@@ -139,7 +148,7 @@ protected:
         display.reset();
     }
 
-    void create_allocator(bool with_dmabuf = false)
+    void prepare_dmabuf_provider(bool with_dmabuf)
     {
         egl_executor = std::make_shared<mgc::EGLContextExecutor>(std::make_unique<mtd::NullGLContext>());
         if (with_dmabuf)
@@ -160,25 +169,6 @@ protected:
                     return nullptr;
                 });
         }
-#ifdef MIR_BUILD_PLATFORM_GBM_KMS
-        if (GetParam() == Allocator::gbm)
-        {
-            allocator = std::make_unique<mg::gbm::BufferAllocator>(
-                std::make_unique<mg::gbm::SurfacelessEGLContext>(mock_egl.fake_egl_display),
-                egl_executor,
-                provider);
-            renderer = std::make_unique<mg::gbm::GLRenderingProvider>(
-                nullptr, egl_executor, provider, mock_egl.fake_egl_display, mock_egl.fake_egl_context);
-        }
-        else
-#endif
-        {
-            allocator = std::make_unique<mg::egl::generic::BufferAllocator>(
-                mock_egl.fake_egl_display, mock_egl.fake_egl_context, provider);
-            renderer = std::make_unique<mg::egl::generic::GLRenderingProvider>(
-                mock_egl.fake_egl_display, mock_egl.fake_egl_context, provider);
-        }
-        allocator->bind_display(display.get(), wayland_executor);
     }
 
     void roundtrip()
@@ -198,22 +188,28 @@ protected:
         wl_callback_destroy(callback);
     }
 
-    void create_dmabuf()
+    void scan_globals(wl_registry* registry, std::map<std::string, uint32_t>& globals)
     {
-        uint32_t global_name = 0;
-        auto* registry = wl_display_get_registry(client_display.get());
         static wl_registry_listener const listener{
             [](void* data, wl_registry*, uint32_t name, char const* interface, uint32_t)
             {
-                if (std::string{interface} == zwp_linux_dmabuf_v1_interface.name)
-                    *static_cast<uint32_t*>(data) = name;
+                static_cast<std::map<std::string, uint32_t>*>(data)->emplace(interface, name);
             },
             [](void*, wl_registry*, uint32_t) {}};
-        wl_registry_add_listener(registry, &listener, &global_name);
-        ASSERT_NO_FATAL_FAILURE(roundtrip());
-        ASSERT_NE(0u, global_name);
+        wl_registry_add_listener(registry, &listener, &globals);
+        roundtrip();
+    }
+
+    void create_dmabuf()
+    {
+        std::map<std::string, uint32_t> globals;
+        std::unique_ptr<wl_registry, decltype(&wl_registry_destroy)> registry{
+            wl_display_get_registry(client_display.get()), wl_registry_destroy};
+        ASSERT_NO_FATAL_FAILURE(scan_globals(registry.get(), globals));
+        auto const global = globals.find(zwp_linux_dmabuf_v1_interface.name);
+        ASSERT_NE(globals.end(), global);
         auto* dmabuf = static_cast<zwp_linux_dmabuf_v1*>(
-            wl_registry_bind(registry, global_name, &zwp_linux_dmabuf_v1_interface, 3));
+            wl_registry_bind(registry.get(), global->second, &zwp_linux_dmabuf_v1_interface, 3));
         static zwp_linux_dmabuf_v1_listener const dmabuf_listener{
             [](void*, zwp_linux_dmabuf_v1*, uint32_t) {},
             [](void*, zwp_linux_dmabuf_v1*, uint32_t, uint32_t, uint32_t) {}};
@@ -228,7 +224,6 @@ protected:
         wl_buffer_destroy(buffer);
         zwp_linux_buffer_params_v1_destroy(params);
         zwp_linux_dmabuf_v1_destroy(dmabuf);
-        wl_registry_destroy(registry);
     }
 
     void expect_no_legacy_calls()
@@ -283,6 +278,153 @@ protected:
     std::unique_ptr<mg::GraphicBufferAllocator> allocator;
     std::unique_ptr<mg::GLRenderingProvider> renderer;
 };
+
+class EGLBufferAllocatorTest : public EGLBufferAllocatorFixture, public WithParamInterface<Allocator>
+{
+protected:
+    void create_allocator(bool with_dmabuf = false)
+    {
+        prepare_dmabuf_provider(with_dmabuf);
+#ifdef MIR_BUILD_PLATFORM_GBM_KMS
+        if (GetParam() == Allocator::gbm)
+        {
+            allocator = std::make_unique<mg::gbm::BufferAllocator>(
+                std::make_unique<mg::gbm::SurfacelessEGLContext>(mock_egl.fake_egl_display),
+                egl_executor,
+                provider);
+            renderer = std::make_unique<mg::gbm::GLRenderingProvider>(
+                nullptr, egl_executor, provider, mock_egl.fake_egl_display, mock_egl.fake_egl_context);
+        }
+        else
+#endif
+        {
+            allocator = std::make_unique<mg::egl::generic::BufferAllocator>(
+                mock_egl.fake_egl_display, mock_egl.fake_egl_context, provider);
+            renderer = std::make_unique<mg::egl::generic::GLRenderingProvider>(
+                mock_egl.fake_egl_display, mock_egl.fake_egl_context, provider);
+        }
+        allocator->bind_display(display.get(), wayland_executor);
+    }
+};
+
+#ifdef MIR_TEST_EGLSTREAM_KMS
+namespace
+{
+class ShareableNullGLContext : public mtd::NullGLContext
+{
+public:
+    auto make_share_context() const -> std::unique_ptr<Context> override
+    {
+        return std::make_unique<ShareableNullGLContext>();
+    }
+};
+}
+
+class EGLStreamBufferAllocatorTest : public EGLBufferAllocatorFixture
+{
+protected:
+    void SetUp() override
+    {
+        EGLBufferAllocatorFixture::SetUp();
+        restore_epoxy = redirect_epoxy_egl(eglGetCurrentDisplay, eglQueryString, eglGetProcAddress);
+        extensions += " EGL_NV_stream_attrib";
+    }
+
+    void TearDown() override
+    {
+        EGLBufferAllocatorFixture::TearDown();
+        restore_epoxy();
+    }
+
+    void create_allocator(bool with_dmabuf)
+    {
+        prepare_dmabuf_provider(with_dmabuf);
+        allocator = std::make_unique<mg::eglstream::BufferAllocator>(
+            std::make_unique<ShareableNullGLContext>(), provider);
+        renderer = std::make_unique<mg::eglstream::GLRenderingProvider>(
+            mock_egl.fake_egl_display, std::make_unique<mtd::NullGLContext>(), provider);
+    }
+
+    auto advertised_globals()
+    {
+        auto* registry = wl_display_get_registry(client_display.get());
+        std::map<std::string, uint32_t> globals;
+        scan_globals(registry, globals);
+        wl_registry_destroy(registry);
+        return globals;
+    }
+private:
+    std::function<void()> restore_epoxy;
+};
+
+TEST_F(EGLStreamBufferAllocatorTest, imports_dmabuf_with_callbacks_without_legacy_binding)
+{
+    expect_no_legacy_calls();
+    ON_CALL(mock_egl, eglQueryString(EGL_NO_DISPLAY, EGL_EXTENSIONS))
+        .WillByDefault(Return("EGL_WL_bind_wayland_display EGL_KHR_stream_consumer_gltexture"));
+    create_allocator(true);
+    allocator->bind_display(display.get(), wayland_executor);
+    EXPECT_FALSE(advertised_globals().contains("wl_eglstream_controller"));
+    ASSERT_NO_FATAL_FAILURE(create_dmabuf());
+    check_import_callbacks();
+    allocator->unbind_display(display.get());
+    wayland_executor->execute();
+    EXPECT_FALSE(advertised_globals().contains(zwp_linux_dmabuf_v1_interface.name));
+}
+
+TEST_F(EGLStreamBufferAllocatorTest, failed_legacy_binding_falls_back_to_dmabuf)
+{
+    extensions += " EGL_WL_bind_wayland_display EGL_KHR_stream_consumer_gltexture";
+    EXPECT_CALL(mock_egl, eglBindWaylandDisplayWL(_, display.get())).WillOnce(Return(EGL_FALSE));
+    EXPECT_CALL(mock_egl, eglUnbindWaylandDisplayWL(_, _)).Times(0);
+    create_allocator(true);
+    allocator->bind_display(display.get(), wayland_executor);
+    EXPECT_FALSE(advertised_globals().contains("wl_eglstream_controller"));
+    ASSERT_NO_FATAL_FAILURE(create_dmabuf());
+    check_import_callbacks();
+}
+
+TEST_F(EGLStreamBufferAllocatorTest, prefers_legacy_controller_and_unbinds_on_display_destruction)
+{
+    extensions += " EGL_WL_bind_wayland_display EGL_KHR_stream_consumer_gltexture";
+    EXPECT_CALL(mock_egl, eglBindWaylandDisplayWL(_, display.get())).WillOnce(Return(EGL_TRUE));
+    EXPECT_CALL(mock_egl, eglUnbindWaylandDisplayWL(_, display.get())).WillOnce(Return(EGL_TRUE));
+    create_allocator(true);
+    allocator->bind_display(display.get(), wayland_executor);
+    auto const globals = advertised_globals();
+    EXPECT_TRUE(globals.contains("wl_eglstream_controller"));
+    EXPECT_FALSE(globals.contains(zwp_linux_dmabuf_v1_interface.name));
+}
+
+TEST_F(EGLStreamBufferAllocatorTest, rejects_binding_without_an_accelerated_import_path)
+{
+    expect_no_legacy_calls();
+    create_allocator(false);
+    EXPECT_THROW(allocator->bind_display(display.get(), wayland_executor), std::runtime_error);
+    EXPECT_FALSE(advertised_globals().contains("wl_eglstream_controller"));
+    EXPECT_FALSE(advertised_globals().contains(zwp_linux_dmabuf_v1_interface.name));
+}
+
+TEST_F(EGLStreamBufferAllocatorTest, dmabuf_fallback_preserves_shm_import_and_callbacks)
+{
+    expect_no_legacy_calls();
+    create_allocator(true);
+    allocator->bind_display(display.get(), wayland_executor);
+    auto source = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(
+        allocator->alloc_software_buffer({4, 4}, mir_pixel_format_argb_8888));
+    ASSERT_NE(nullptr, source);
+    MockFunction<void()> consumed;
+    MockFunction<void()> released;
+    EXPECT_CALL(consumed, Call()).Times(1);
+    EXPECT_CALL(released, Call()).Times(1);
+    auto buffer = allocator->buffer_from_shm(source, consumed.AsStdFunction(), released.AsStdFunction());
+    EXPECT_NE(nullptr, renderer->as_texture(buffer));
+    auto mappable = std::dynamic_pointer_cast<mir::renderer::software::RWMappableBuffer>(buffer);
+    ASSERT_NE(nullptr, mappable);
+    mappable->map_readable();
+    mappable->map_readable();
+}
+#endif
 
 TEST_P(EGLBufferAllocatorTest, missing_extension_rejects_non_shm_buffer_without_legacy_calls)
 {

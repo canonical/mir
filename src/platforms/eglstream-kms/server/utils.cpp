@@ -26,6 +26,26 @@
 
 namespace mg = mir::graphics;
 
+bool mg::eglstream::supports_legacy_client_streams(EGLDisplay display)
+{
+    // epoxy_has_egl_extension also checks client extensions, which aren't display capabilities.
+    auto const extensions = eglQueryString(display, EGL_EXTENSIONS);
+    return extensions &&
+        epoxy_extension_in_string(extensions, "EGL_WL_bind_wayland_display") &&
+        epoxy_extension_in_string(extensions, "EGL_KHR_stream_consumer_gltexture");
+}
+
+bool mg::eglstream::supports_dmabuf_import(EGLDisplay display)
+{
+    auto const extensions = eglQueryString(display, EGL_EXTENSIONS);
+    return extensions &&
+        epoxy_extension_in_string(extensions, "EGL_KHR_image_base") &&
+        epoxy_extension_in_string(extensions, "EGL_EXT_image_dma_buf_import") &&
+        epoxy_extension_in_string(extensions, "EGL_EXT_image_dma_buf_import_modifiers") &&
+        eglGetProcAddress("eglQueryDmaBufFormatsEXT") &&
+        eglGetProcAddress("eglQueryDmaBufModifiersEXT");
+}
+
 dev_t mg::eglstream::devnum_for_device(EGLDeviceEXT device)
 {
     auto const device_path = eglQueryDeviceStringEXT(device, EGL_DRM_DEVICE_FILE_EXT);
