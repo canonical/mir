@@ -596,6 +596,54 @@ TEST_F(TestCursorController, forwards_cursor_moved_to)
     controller.cursor_moved_to(abs_x, abs_y);
 }
 
+TEST_F(TestCursorController, set_hidden_hides_cursor_and_forwards_pointer_unusable)
+{
+    StubScene targets{};
+    TestController controller{targets, cursor, default_cursor_image, cursor_observer};
+
+    EXPECT_CALL(cursor, hide()).Times(AtLeast(1));
+    EXPECT_CALL(*cursor_observer, pointer_unusable()).Times(1);
+
+    controller.set_hidden(true);
+}
+
+TEST_F(TestCursorController, set_hidden_false_shows_cursor_and_forwards_pointer_usable)
+{
+    StubScene targets{};
+    TestController controller{targets, cursor, default_cursor_image, cursor_observer};
+    controller.set_hidden(true);
+
+    EXPECT_CALL(cursor, show(_)).Times(1);
+    EXPECT_CALL(*cursor_observer, pointer_usable()).Times(1);
+
+    controller.set_hidden(false);
+}
+
+TEST_F(TestCursorController, cursor_image_change_is_not_shown_while_hidden)
+{
+    StubInputSurface surface{rect_1_1_1_1, std::make_shared<NamedCursorImage>(cursor_name_1)};
+    StubScene targets({mt::fake_shared(surface)});
+    TestController controller{targets, cursor, default_cursor_image, cursor_observer};
+    controller.set_hidden(true);
+
+    EXPECT_CALL(cursor, show(_)).Times(0);
+
+    controller.cursor_moved_to(1.0f, 1.0f);
+}
+
+TEST_F(TestCursorController, first_pointing_device_shows_a_previously_hidden_cursor)
+{
+    StubScene targets{};
+    TestController controller{targets, cursor, default_cursor_image, cursor_observer};
+    controller.set_hidden(true);
+    controller.pointer_unusable();
+
+    EXPECT_CALL(cursor, show(_)).Times(1);
+    EXPECT_CALL(*cursor_observer, pointer_usable()).Times(1);
+
+    controller.pointer_usable();
+}
+
 struct TestCursorControllerDragIcon : public TestCursorController
 {
     NiceMock<mtd::MockCursor> cursor;
