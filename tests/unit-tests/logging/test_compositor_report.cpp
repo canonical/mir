@@ -18,15 +18,20 @@
 #include <mir/logging/logger.h>
 #include <mir/test/doubles/advanceable_clock.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 #include <cstdio>
+#include <utility>
+#include <vector>
 
 using namespace std;
+using namespace testing;
 
 namespace mtd = mir::test::doubles;
 namespace mrl = mir::report::logging;
 namespace ml = mir::logging;
+using namespace std::literals::chrono_literals;
 
 namespace
 {
@@ -55,16 +60,145 @@ private:
     string last;
 };
 
+class RecordingCompositorReport : public mrl::CompositorReport
+{
+public:
+    using mrl::CompositorReport::CompositorReport;
+
+    std::vector<std::pair<SubCompositorId, FrameStatistics>> samples;
+
+private:
+    void report_statistics(SubCompositorId id, FrameStatistics const& statistics) override
+    {
+        mrl::CompositorReport::report_statistics(id, statistics);
+        samples.emplace_back(id, statistics);
+    }
+};
+
 struct LoggingCompositorReport : ::testing::Test
 {
     std::shared_ptr<mtd::AdvanceableClock> const clock =
         std::make_shared<mtd::AdvanceableClock>();
     std::shared_ptr<Recorder> const recorder =
         make_shared<Recorder>();
-    mrl::CompositorReport report{recorder, clock};
+    RecordingCompositorReport report{recorder, clock};
+
+    void render_frame(void const* id, chrono::microseconds render_time, chrono::microseconds interval)
+    {
+        report.scheduled();
+        report.began_frame(id);
+        clock->advance_by(render_time);
+        report.rendered_frame(id);
+        clock->advance_by(interval - render_time);
+        report.finished_frame(id);
+    }
 };
 
 } // namespace
+
+TEST_F(LoggingCompositorReport, first_interval_establishes_a_baseline)
+{
+    render_frame(nullptr, 20ms, 1s);
+    EXPECT_TRUE(report.samples.empty());
+}
+
+TEST_F(LoggingCompositorReport, reports_structured_interval_totals)
+{
+    void const* const id = "display";
+    // The first frame establishes the baseline; each following pair emits one interval sample.
+    render_frame(id, 20ms, 1s);
+    render_frame(id, 20ms, 1s);
+    render_frame(id, 10ms, 500ms);
+    render_frame(id, 10ms, 500ms);
+
+    EXPECT_THAT(report.samples, ElementsAre(
+        Pair(id, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1s, .render_time = 20ms, .latency = 0us}),
+        Pair(id, mrl::CompositorReport::FrameStatistics{
+            .frames = 2, .bypassed_frames = 0, .elapsed = 1s, .render_time = 20ms, .latency = 0us})));
+}
+
+TEST_F(LoggingCompositorReport, structured_totals_include_latency_and_bypassed_frames)
+{
+    render_frame(nullptr, 20ms, 1s);
+
+    report.scheduled();
+    clock->advance_by(5ms);
+    report.began_frame(nullptr);
+    clock->advance_by(995ms);
+    report.finished_frame(nullptr);
+
+    EXPECT_THAT(report.samples, ElementsAre(
+        Pair(nullptr, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 1, .elapsed = 1s, .render_time = 0us, .latency = 5ms})));
+}
+
+TEST_F(LoggingCompositorReport, structured_totals_are_separate_for_each_display)
+{
+    void const* const first = "first";
+    void const* const second = "second";
+    render_frame(first, 10ms, 10ms);
+    render_frame(second, 20ms, 20ms);
+    clock->advance_by(1s);
+    render_frame(first, 10ms, 10ms);
+    render_frame(second, 20ms, 20ms);
+    clock->advance_by(1s);
+    render_frame(first, 10ms, 10ms);
+
+    EXPECT_THAT(report.samples, UnorderedElementsAre(
+        Pair(first, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1030ms, .render_time = 10ms, .latency = 0us}),
+        Pair(second, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1030ms, .render_time = 20ms, .latency = 0us})));
+}
+
+TEST_F(LoggingCompositorReport, structured_totals_handle_an_idle_display)
+{
+    void const* const active = "active";
+    void const* const idle = "idle";
+    render_frame(active, 10ms, 10ms);
+    render_frame(idle, 20ms, 20ms);
+    clock->advance_by(1s);
+    render_frame(active, 10ms, 10ms);
+    render_frame(active, 10ms, 1s);
+
+    ASSERT_EQ(report.samples.size(), 2u);
+    EXPECT_NE(report.samples[0].first, report.samples[1].first);
+    for (auto const& [id, statistics] : report.samples)
+    {
+        if (id == idle)
+        {
+            EXPECT_EQ(statistics.frames, 0);
+            EXPECT_EQ(statistics.bypassed_frames, 0);
+            EXPECT_EQ(statistics.elapsed, 0us);
+            EXPECT_EQ(statistics.render_time, 0us);
+            EXPECT_EQ(statistics.latency, 0us);
+        }
+        else
+        {
+            EXPECT_EQ(id, active);
+        }
+    }
+}
+
+TEST_F(LoggingCompositorReport, restarting_discards_previous_structured_totals)
+{
+    render_frame(nullptr, 20ms, 1s);
+    render_frame(nullptr, 20ms, 1s);
+    ASSERT_EQ(report.samples.size(), 1u);
+    report.samples.clear();
+
+    report.stopped();
+    clock->advance_by(5s);
+    report.started();
+    render_frame(nullptr, 10ms, 1s);
+    EXPECT_TRUE(report.samples.empty());
+    render_frame(nullptr, 10ms, 1s);
+
+    EXPECT_THAT(report.samples, ElementsAre(
+        Pair(nullptr, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1s, .render_time = 10ms, .latency = 0us})));
+}
 
 TEST_F(LoggingCompositorReport, calculates_accurate_stats)
 {

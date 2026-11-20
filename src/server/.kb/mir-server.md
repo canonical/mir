@@ -22,3 +22,10 @@ and Xwayland connector in that order. After the main loop returns, it stops them
 [`DisplayServer::Private`](../display_server.cpp) retains the graphics platforms and emergency cleanup while the server exists.
 [`Server::run()`](../server.cpp) resets the server configuration after exception handling.
 The configuration keeps platform libraries loaded while the server processes an exception from a platform library.
+
+## Compositor performance reporting
+
+`Server::override_the_compositor_report()` installs a report through the normal cached component factory.
+The logging compositor report provides a protected `report_statistics()` hook with per-display interval totals,
+after an initial baseline interval. The hook runs under the report mutex and must not re-enter the report.
+This hook allows report consumers to use the calculated timing data without parsing formatted log messages.
