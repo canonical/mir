@@ -45,6 +45,8 @@ public:
         std::chrono::microseconds elapsed;
         std::chrono::microseconds render_time;
         std::chrono::microseconds latency;
+
+        bool operator==(FrameStatistics const&) const = default;
     };
 
     CompositorReport(std::shared_ptr<mir::logging::Logger> const& logger,

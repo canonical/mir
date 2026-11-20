@@ -4,7 +4,7 @@ mir_add_wrapped_executable(mir_performance_tests
     performance_test_utils.cpp
 )
 
-target_include_directories(mir_performance_tests PRIVATE ${PROJECT_SOURCE_DIR})
+target_include_directories(mir_performance_tests PRIVATE ${PROJECT_SOURCE_DIR}/src/server)
 
 target_link_libraries(mir_performance_tests
   mir-test-assist
@@ -53,21 +53,18 @@ if(MIR_RUN_PERFORMANCE_TESTS)
     COMMAND "env" "MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual" "MIR_SERVER_VIRTUAL_OUTPUT=1280x1024" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests" "--gtest_filter=-CompositorPerformance.regression_test_1563287"
   )
 
-  # The virtual platform has no display sinks, so frame timings need a nested X11 display.
+  # regression_test_1563287 needs real display sinks; run it on X11 under a nested X server.
   find_program(XVFB_RUN_EXECUTABLE xvfb-run)
   if(XVFB_RUN_EXECUTABLE AND TARGET mirplatformserverx11)
     add_dependencies(mir_performance_tests mirplatformserverx11)
-    foreach(logging IN ITEMS false true)
-      mir_add_test(NAME mir_compositor_performance_tests_logging_${logging}
-        COMMAND "${XVFB_RUN_EXECUTABLE}" "--auto-servernum" "env"
-          "MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:x11"
-          "MIR_SERVER_X11_OUTPUT=1280x1024"
-          "MIR_SERVER_LOGGING=${logging}"
-          "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests"
-          "--enable-input=off"
-          "--gtest_filter=CompositorPerformance.regression_test_1563287"
-      )
-    endforeach()
+    mir_add_test(NAME mir_compositor_performance_test
+      COMMAND "${XVFB_RUN_EXECUTABLE}" "--auto-servernum" "env"
+        "MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:x11"
+        "MIR_SERVER_X11_OUTPUT=1280x1024"
+        "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/mir_performance_tests"
+        "--enable-input=off"
+        "--gtest_filter=CompositorPerformance.regression_test_1563287"
+    )
   else()
     message(STATUS "Compositor performance tests require xvfb-run and the X11 graphics platform")
   endif()

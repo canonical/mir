@@ -15,7 +15,7 @@
  */
 
 #include "performance_test_utils.h"
-#include "src/server/report/logging/compositor_report.h"
+#include "report/logging/compositor_report.h"
 
 #include <mir/synchronised.h>
 #include <mir/time/steady_clock.h>
@@ -33,6 +33,7 @@
 #include <optional>
 #include <string>
 #include <thread>
+#include <utility>
 #include <vector>
 
 using namespace std::literals::chrono_literals;
@@ -42,6 +43,14 @@ namespace mrl = mir::report::logging;
 
 namespace
 {
+auto compute_statistics(mrl::CompositorReport::FrameStatistics const& statistics) -> std::pair<double, double>
+{
+    auto const fps = statistics.frames / std::chrono::duration<double>(statistics.elapsed).count();
+    auto const render_time =
+        std::chrono::duration<double, std::milli>(statistics.render_time).count() / statistics.frames;
+    return {fps, render_time};
+}
+
 class CollectingCompositorReport : public mrl::CompositorReport
 {
 public:
@@ -114,9 +123,7 @@ TEST_F(CompositorPerformance, regression_test_1563287)
 
     auto const statistics = report->latest_statistics();
     ASSERT_TRUE(statistics) << "No compositor performance sample received";
-    auto const compositor_fps = statistics->frames / std::chrono::duration<double>(statistics->elapsed).count();
-    auto const compositor_render_time =
-        std::chrono::duration<double, std::milli>(statistics->render_time).count() / statistics->frames;
+    auto const [compositor_fps, compositor_render_time] = compute_statistics(*statistics);
     RecordProperty("framerate", std::to_string(compositor_fps));
     RecordProperty("render_time", std::to_string(compositor_render_time));
     EXPECT_GE(compositor_fps, 0);

@@ -18,6 +18,7 @@
 #include <mir/logging/logger.h>
 #include <mir/test/doubles/advanceable_clock.h>
 
+#include <gmock/gmock.h>
 #include <gtest/gtest.h>
 #include <string>
 #include <cstdio>
@@ -25,6 +26,7 @@
 #include <vector>
 
 using namespace std;
+using namespace testing;
 
 namespace mtd = mir::test::doubles;
 namespace mrl = mir::report::logging;
@@ -103,21 +105,17 @@ TEST_F(LoggingCompositorReport, first_interval_establishes_a_baseline)
 TEST_F(LoggingCompositorReport, reports_structured_interval_totals)
 {
     void const* const id = "display";
+    // The first frame establishes the baseline; each following pair emits one interval sample.
     render_frame(id, 20ms, 1s);
     render_frame(id, 20ms, 1s);
     render_frame(id, 10ms, 500ms);
     render_frame(id, 10ms, 500ms);
 
-    ASSERT_EQ(report.samples.size(), 2u);
-    EXPECT_EQ(report.samples[0].first, id);
-    EXPECT_EQ(report.samples[0].second.frames, 1);
-    EXPECT_EQ(report.samples[0].second.bypassed_frames, 0);
-    EXPECT_EQ(report.samples[0].second.elapsed, 1s);
-    EXPECT_EQ(report.samples[0].second.render_time, 20ms);
-    EXPECT_EQ(report.samples[0].second.latency, 0us);
-    EXPECT_EQ(report.samples[1].second.frames, 2);
-    EXPECT_EQ(report.samples[1].second.elapsed, 1s);
-    EXPECT_EQ(report.samples[1].second.render_time, 20ms);
+    EXPECT_THAT(report.samples, ElementsAre(
+        Pair(id, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1s, .render_time = 20ms, .latency = 0us}),
+        Pair(id, mrl::CompositorReport::FrameStatistics{
+            .frames = 2, .bypassed_frames = 0, .elapsed = 1s, .render_time = 20ms, .latency = 0us})));
 }
 
 TEST_F(LoggingCompositorReport, structured_totals_include_latency_and_bypassed_frames)
@@ -130,12 +128,9 @@ TEST_F(LoggingCompositorReport, structured_totals_include_latency_and_bypassed_f
     clock->advance_by(995ms);
     report.finished_frame(nullptr);
 
-    ASSERT_EQ(report.samples.size(), 1u);
-    EXPECT_EQ(report.samples[0].second.frames, 1);
-    EXPECT_EQ(report.samples[0].second.bypassed_frames, 1);
-    EXPECT_EQ(report.samples[0].second.elapsed, 1s);
-    EXPECT_EQ(report.samples[0].second.render_time, 0us);
-    EXPECT_EQ(report.samples[0].second.latency, 5ms);
+    EXPECT_THAT(report.samples, ElementsAre(
+        Pair(nullptr, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 1, .elapsed = 1s, .render_time = 0us, .latency = 5ms})));
 }
 
 TEST_F(LoggingCompositorReport, structured_totals_are_separate_for_each_display)
@@ -150,15 +145,11 @@ TEST_F(LoggingCompositorReport, structured_totals_are_separate_for_each_display)
     clock->advance_by(1s);
     render_frame(first, 10ms, 10ms);
 
-    ASSERT_EQ(report.samples.size(), 2u);
-    for (auto const& [id, statistics] : report.samples)
-    {
-        EXPECT_EQ(statistics.frames, 1);
-        EXPECT_EQ(statistics.bypassed_frames, 0);
-        EXPECT_EQ(statistics.elapsed, 1030ms);
-        EXPECT_EQ(statistics.render_time, id == first ? 10ms : 20ms);
-    }
-    EXPECT_NE(report.samples[0].first, report.samples[1].first);
+    EXPECT_THAT(report.samples, UnorderedElementsAre(
+        Pair(first, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1030ms, .render_time = 10ms, .latency = 0us}),
+        Pair(second, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1030ms, .render_time = 20ms, .latency = 0us})));
 }
 
 TEST_F(LoggingCompositorReport, structured_totals_handle_an_idle_display)
@@ -204,10 +195,9 @@ TEST_F(LoggingCompositorReport, restarting_discards_previous_structured_totals)
     EXPECT_TRUE(report.samples.empty());
     render_frame(nullptr, 10ms, 1s);
 
-    ASSERT_EQ(report.samples.size(), 1u);
-    EXPECT_EQ(report.samples[0].second.frames, 1);
-    EXPECT_EQ(report.samples[0].second.elapsed, 1s);
-    EXPECT_EQ(report.samples[0].second.render_time, 10ms);
+    EXPECT_THAT(report.samples, ElementsAre(
+        Pair(nullptr, mrl::CompositorReport::FrameStatistics{
+            .frames = 1, .bypassed_frames = 0, .elapsed = 1s, .render_time = 10ms, .latency = 0us})));
 }
 
 TEST_F(LoggingCompositorReport, calculates_accurate_stats)

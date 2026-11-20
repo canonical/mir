@@ -19,9 +19,13 @@
 #include <gtest/gtest.h>
 
 #include <fstream>
+#include <string_view>
 
 void mir::test::record_properties(std::string const& log_filename, std::string const& prefix)
 {
+    constexpr std::string_view renderer_marker{"GL renderer:"};
+    constexpr std::string_view mode_marker{"Current mode"};
+
     std::ifstream logs{log_filename};
     ASSERT_TRUE(logs) << "Failed to open log file for analysis: " << log_filename;
 
@@ -30,13 +34,13 @@ void mir::test::record_properties(std::string const& log_filename, std::string c
     std::string line;
     while (std::getline(logs, line))
     {
-        if (auto const n = line.find("GL renderer:"); n != std::string::npos)
+        if (auto const n = line.find(renderer_marker); n != std::string::npos)
         {
-            renderer = line.substr(n + 13);
+            renderer = line.substr(n + renderer_marker.size());
         }
-        else if (auto const n = line.find("Current mode"); n != std::string::npos)
+        else if (auto const n = line.find(mode_marker); n != std::string::npos)
         {
-            mode = line.substr(n + 13);
+            mode = line.substr(n + mode_marker.size());
             break;
         }
     }
