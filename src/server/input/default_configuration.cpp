@@ -62,6 +62,23 @@ namespace mg = mir::graphics;
 namespace msh = mir::shell;
 namespace md = mir::dispatch;
 
+namespace
+{
+// The main loop is the multiplexer's default executor, so it must outlive the multiplexer
+class MainLoopCursorObserverMultiplexer : public mi::CursorObserverMultiplexer
+{
+public:
+    explicit MainLoopCursorObserverMultiplexer(std::shared_ptr<mir::MainLoop> const& main_loop) :
+        CursorObserverMultiplexer{*main_loop},
+        main_loop{main_loop}
+    {
+    }
+
+private:
+    std::shared_ptr<mir::MainLoop> const main_loop;
+};
+}
+
 std::shared_ptr<mi::CompositeEventFilter>
 mir::DefaultServerConfiguration::the_composite_event_filter()
 {
@@ -144,7 +161,19 @@ mir::DefaultServerConfiguration::the_surface_input_dispatcher()
     return surface_input_dispatcher(
         [this]()
         {
-            return std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene());
+            struct DispatcherWithCursorObservation
+            {
+                std::shared_ptr<mi::SurfaceInputDispatcher> const dispatcher;
+                // The multiplexer is only weakly cached, so we keep the one we registered with alive
+                std::shared_ptr<mi::CursorObserverMultiplexer> const cursor_observer_multiplexer;
+            };
+
+            auto const holder = std::make_shared<DispatcherWithCursorObservation>(
+                std::make_shared<mi::SurfaceInputDispatcher>(the_input_scene()),
+                the_cursor_observer_multiplexer());
+            // Synchronous, so that pointer leave/enter is ordered with respect to dispatched pointer events
+            holder->cursor_observer_multiplexer->register_early_observer(holder->dispatcher, immediate_executor);
+            return std::shared_ptr<mi::SurfaceInputDispatcher>{holder, holder->dispatcher.get()};
         });
 }
 
@@ -199,7 +228,7 @@ mir::DefaultServerConfiguration::the_cursor_observer_multiplexer()
     return cursor_observer_multiplexer(
         [this]() -> std::shared_ptr<mi::CursorObserverMultiplexer>
         {
-            return wrap_cursor_observer_multiplexer(std::make_shared<mi::CursorObserverMultiplexer>(*the_main_loop()));
+            return wrap_cursor_observer_multiplexer(std::make_shared<MainLoopCursorObserverMultiplexer>(the_main_loop()));
         });
 }
 

@@ -316,7 +316,7 @@ void mi::SurfaceInputDispatcher::surface_moved(ms::Surface const* moved_surface)
 {
     std::lock_guard lock{dispatcher_mutex};
 
-    if (!last_pointer_event)
+    if (!last_pointer_event || !pointer_visible)
         return;
 
     auto ctx = context_for_event(
@@ -347,7 +347,7 @@ void mi::SurfaceInputDispatcher::surface_resized()
 {
     std::lock_guard lock{dispatcher_mutex};
 
-    if (!last_pointer_event)
+    if (!last_pointer_event || !pointer_visible)
         return;
 
     auto ctx = context_for_event(
@@ -436,6 +436,10 @@ bool mi::SurfaceInputDispatcher::dispatch_pointer(MirInputDeviceId /*id*/, std::
     auto const ev = event.get();
     std::unique_lock lg(dispatcher_mutex);
     last_pointer_event = event;
+
+    if (!pointer_visible)
+        return false;
+
     auto const* input_ev = mir_event_get_input_event(ev);
     auto const* pev = mir_input_event_get_pointer_event(input_ev);
     auto action = mir_pointer_event_action(pev);
@@ -661,4 +665,56 @@ void mir::input::SurfaceInputDispatcher::disable_dispatch_to_gesture_owner(std::
     std::lock_guard lg(dispatcher_mutex);
     dispatch_to_gesture_owner = false;
     this->on_end_gesture = std::move(on_end_gesture);
+}
+
+void mi::SurfaceInputDispatcher::cursor_moved_to(float, float)
+{
+}
+
+void mi::SurfaceInputDispatcher::pointer_usable()
+{
+    std::lock_guard lock{dispatcher_mutex};
+
+    if (pointer_visible)
+        return;
+
+    pointer_visible = true;
+
+    if (!last_pointer_event)
+        return;
+
+    auto ctx = context_for_event(
+        last_pointer_event.get(),
+        current_target,
+        [this](auto point) { return scene->input_surface_at(point); });
+
+    if (dispatch_scene_change_enter_exit_events(
+        ctx,
+        [this](auto surf, auto pev, auto action) { this->send_enter_exit_event(surf, pev, action); }))
+    {
+        ctx.current_target = ctx.target_surface;
+    }
+}
+
+void mi::SurfaceInputDispatcher::pointer_unusable()
+{
+    std::lock_guard lock{dispatcher_mutex};
+
+    if (!pointer_visible)
+        return;
+
+    pointer_visible = false;
+
+    if (current_target && last_pointer_event)
+    {
+        auto const* const pev = mir_input_event_get_pointer_event(mir_event_get_input_event(last_pointer_event.get()));
+        send_enter_exit_event(current_target, pev, mir_pointer_action_leave);
+    }
+
+    current_target.reset();
+    gesture_owner.reset();
+}
+
+void mi::SurfaceInputDispatcher::image_set_to(std::shared_ptr<mir::graphics::CursorImage>)
+{
 }

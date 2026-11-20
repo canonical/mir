@@ -547,6 +547,59 @@ TEST_F(SurfaceInputDispatcher, pointer_gesture_target_may_vanish_and_the_situati
     EXPECT_TRUE(dispatcher.dispatch(std::move(ev_3)));
 }
 
+TEST_F(SurfaceInputDispatcher, pointer_unusable_sends_leave_to_surface_under_pointer)
+{
+    auto surface = scene.add_surface({{0, 0}, {5, 5}});
+
+    FakePointer pointer;
+
+    InSequence seq;
+    EXPECT_CALL(*surface, consume(mt::PointerEnterEvent())).Times(1);
+    EXPECT_CALL(*surface, consume(mt::PointerLeaveEvent())).Times(1);
+
+    dispatcher.start();
+
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({1, 1})));
+    dispatcher.pointer_unusable();
+}
+
+TEST_F(SurfaceInputDispatcher, pointer_events_are_not_delivered_while_pointer_unusable)
+{
+    auto surface = scene.add_surface({{0, 0}, {5, 5}});
+
+    FakePointer pointer;
+
+    dispatcher.start();
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({1, 1})));
+    dispatcher.pointer_unusable();
+    Mock::VerifyAndClearExpectations(surface.get());
+
+    EXPECT_CALL(*surface, consume(_)).Times(0);
+
+    EXPECT_FALSE(dispatcher.dispatch(pointer.move_to({2, 2})));
+    EXPECT_FALSE(dispatcher.dispatch(pointer.press_button({2, 2})));
+    EXPECT_FALSE(dispatcher.dispatch(pointer.release_button({2, 2})));
+}
+
+TEST_F(SurfaceInputDispatcher, pointer_usable_sends_enter_to_surface_under_last_pointer_position)
+{
+    auto surface = scene.add_surface({{0, 0}, {5, 5}});
+    auto another_surface = scene.add_surface({{5, 5}, {5, 5}});
+
+    FakePointer pointer;
+
+    dispatcher.start();
+    EXPECT_TRUE(dispatcher.dispatch(pointer.move_to({1, 1})));
+    dispatcher.pointer_unusable();
+    EXPECT_FALSE(dispatcher.dispatch(pointer.move_to({6, 6})));
+    Mock::VerifyAndClearExpectations(surface.get());
+
+    EXPECT_CALL(*surface, consume(_)).Times(0);
+    EXPECT_CALL(*another_surface, consume(mt::PointerEnterEvent())).Times(1);
+
+    dispatcher.pointer_usable();
+}
+
 TEST_F(SurfaceInputDispatcher, touch_delivered_to_surface)
 {
     auto surface = scene.add_surface({{1, 1}, {1, 1}});
