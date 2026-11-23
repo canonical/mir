@@ -1222,7 +1222,7 @@ TEST(MultiThreadedCompositor, hardware_refresh_during_post_is_not_lost)
     auto scene = std::make_shared<StubScene>();
     auto factory = std::make_shared<ModeRecordingDisplayBufferCompositorFactory>();
     EXPECT_CALL(display->group, next_post_result())
-        .WillOnce(Invoke([&] { display->group.refresh(); return true; }))
+        .WillOnce([&] { display->group.refresh(); return true; })
         .WillRepeatedly(Return(true));
     mc::MultiThreadedCompositor compositor{
         display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, false};
