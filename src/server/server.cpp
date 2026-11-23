@@ -105,6 +105,7 @@ struct TemporaryCompositeEventFilter : public mi::CompositeEventFilter
     MACRO(the_compositor)\
     MACRO(the_compositor_report)\
     MACRO(the_cursor_observer_multiplexer)\
+    MACRO(the_cursor_hiding_policy)\
     MACRO(the_cursor)\
     MACRO(the_display)\
     MACRO(the_display_configuration_controller)\

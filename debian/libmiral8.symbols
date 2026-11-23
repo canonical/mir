@@ -814,3 +814,12 @@ libmiral.so.8 libmiral8 #MINVER#
  (c++)"miral::DecorationStyle::set_color(miral::DecorationStyle::Element, miral::DecorationStyle::State, unsigned char, unsigned char, unsigned char, unsigned char)@MIRAL_6.2" 6.2.0
  (c++)"miral::DecorationStyle::set_metric(miral::DecorationStyle::Metric, int)@MIRAL_6.2" 6.2.0
  (c++)"miral::DecorationStyle::~DecorationStyle()@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::HideCursor()@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::HideCursor(miral::live_config::Store&)@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::inactivity_timeout(std::chrono::duration<long, std::ratio<1l, 1000l> >)@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::on_inactivity(bool)@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::on_keyboard(bool)@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::on_touch(bool)@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::operator()(mir::Server&) const@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::reveal_threshold(float)@MIRAL_6.2" 6.2.0
+ (c++)"miral::HideCursor::~HideCursor()@MIRAL_6.2" 6.2.0

@@ -30,6 +30,7 @@
 #include "basic_seat.h"
 #include "seat_observer_multiplexer.h"
 #include "idle_poking_dispatcher.h"
+#include "cursor_hiding_dispatcher.h"
 
 #include <mir/input/touch_visualizer.h>
 #include <mir/input/input_probe.h>
@@ -40,6 +41,8 @@
 #include <mir/input/input_event_transformer.h>
 #include <mir/input/cursor_observer_multiplexer.h>
 #include <mir/input/cursor_controller.h>
+#include <mir/scene/surface.h>
+#include <mir/shell/focus_controller.h>
 #include <mir/options/configuration.h>
 #include <mir/options/option.h>
 #include <mir/dispatch/multiplexing_dispatchable.h>
@@ -196,17 +199,49 @@ mir::DefaultServerConfiguration::the_input_dispatcher()
             // lp:1675357: Disable generation of key repeat events on nested servers
             auto enable_repeat = options->get<bool>(options::enable_key_repeat_opt);
 
-            auto const idle_poking_dispatcher = std::make_shared<mi::IdlePokingDispatcher>(
-                the_event_filter_chain_dispatcher(),
-                the_idle_hub());
-
             auto const keyboard_resync_dispatcher =
-                std::make_shared<mi::KeyboardResyncDispatcher>(idle_poking_dispatcher);
+                std::make_shared<mi::KeyboardResyncDispatcher>(the_cursor_hiding_dispatcher());
 
             return std::make_shared<mi::KeyRepeatDispatcher>(
                 keyboard_resync_dispatcher, the_main_loop(),
                 enable_repeat, key_repeat_timeout, key_repeat_delay, false);
         });
+}
+
+auto mir::DefaultServerConfiguration::the_cursor_hiding_dispatcher() -> std::shared_ptr<mi::CursorHidingDispatcher>
+{
+    return cursor_hiding_dispatcher(
+        [this]()
+        {
+            auto const idle_poking_dispatcher = std::make_shared<mi::IdlePokingDispatcher>(
+                the_event_filter_chain_dispatcher(),
+                the_idle_hub());
+
+            // The focus controller (the shell) depends on the input dispatcher, so look it up on first use
+            auto pointer_constrained =
+                [this, focus_controller = std::weak_ptr<msh::FocusController>{}]() mutable
+                {
+                    auto locked = focus_controller.lock();
+                    if (!locked)
+                    {
+                        focus_controller = locked = the_focus_controller();
+                    }
+                    auto const surface = locked->focused_surface();
+                    return surface && surface->confine_pointer_state() != mir_pointer_unconfined;
+                };
+
+            return std::make_shared<mi::CursorHidingDispatcher>(
+                idle_poking_dispatcher,
+                [cursor_controller = the_cursor_controller()](bool hidden) { cursor_controller->set_hidden(hidden); },
+                std::move(pointer_constrained),
+                the_clock(),
+                *the_main_loop());
+        });
+}
+
+std::shared_ptr<mi::CursorHidingPolicy> mir::DefaultServerConfiguration::the_cursor_hiding_policy()
+{
+    return the_cursor_hiding_dispatcher();
 }
 
 std::shared_ptr<mi::CursorController> mir::DefaultServerConfiguration::the_cursor_controller()
@@ -376,6 +411,7 @@ std::shared_ptr<mi::DefaultInputDeviceHub> mir::DefaultServerConfiguration::the_
            // pressed keys get repeated indefinitely
            if (key_repeater)
                key_repeater->set_input_device_hub(hub);
+           hub->add_observer(the_cursor_hiding_dispatcher());
            return hub;
        });
 }
