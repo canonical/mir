@@ -34,6 +34,7 @@
 #include <mir/test/doubles/stub_scene.h>
 #include <mir/test/doubles/stub_display.h>
 #include <mir/test/doubles/stub_renderable.h>
+#include <mir/test/doubles/stub_scene_element.h>
 #include <mir/test/doubles/null_display_buffer_compositor_factory.h>
 #include <mir/test/doubles/stub_cursor.h>
 
@@ -616,6 +617,64 @@ TEST(MultiThreadedCompositor, composites_only_on_demand)
 
     // Verify we never triggered more than 9 compositions
     EXPECT_TRUE(db_compositor_factory->check_record_count_for_each_buffer(nbuffers, 3*composites_per_update, 3*composites_per_update));
+
+    compositor.stop();
+}
+
+TEST(MultiThreadedCompositor, an_occluded_surface_having_newer_buffers_does_not_trigger_recomposition)
+{
+    using namespace testing;
+    using namespace std::chrono;
+
+    std::shared_ptr<ms::Observer> compositor_observer;
+
+    auto display = std::make_shared<ScriptedDisplay>();
+
+    auto scene = std::make_shared<NiceMock<mtd::MockScene>>();
+    EXPECT_CALL(*scene, add_observer(_))
+        .WillOnce([&compositor_observer](auto const& observer) { compositor_observer = observer; });
+
+    auto factory = std::make_shared<RecordingDisplayBufferCompositorFactory>();
+
+    mc::MultiThreadedCompositor compositor{display, factory, scene, null_display_listener, null_report, stub_cursor, default_delay, true};
+
+    /*
+     * Although we can't directly inspect the compositor's state, we can tell when a composition pass is attempted
+     * indirectly by counting the number of times `scene->scene_elements_for` is called
+     *
+     * We first start the compositor, get the initial composite out of the way by tracking the first `post()` to the display.
+     * Then we set up a scene with two scene elements: the upper one fully occluding the lower one, the upper one with the
+     * latest buffer, and the lower one with a not-latest buffer. Then we trigger a recomposition via the scene observer.
+     *
+     * This should result in the compositor making one, and only one, additional call to `scene->scene_elements_for`.
+     */
+
+    compositor.start();
+    ASSERT_TRUE(display->group.wait_for_posts(1, 1s));
+
+    auto lower = std::make_shared<mtd::StubRenderable>(
+        geom::Rectangle{{0, 0}, {100, 100}});
+    auto upper = std::make_shared<mtd::StubRenderable>(
+        geom::Rectangle{{0, 0}, {100, 100}});
+
+    mc::SceneElementSequence const scene_elements{
+        std::make_shared<mtd::StubSceneElement>(lower),
+        std::make_shared<mtd::StubSceneElement>(upper)};
+
+    // The occlusion filter leaves only the upper element relevant, so even though the
+    // scene reports that there is a newer buffer we should not recomposite.
+    EXPECT_CALL(*scene, scene_elements_for(_))
+        .Times(1)
+        .WillOnce(Return(std::pair{
+            scene_elements,
+            mc::Scene::SceneElementState::NewerBufferAvailable}));
+
+    ASSERT_NE(compositor_observer, nullptr);
+    compositor_observer->surfaces_reordered({});
+
+    ASSERT_TRUE(display->group.wait_for_posts(2, 1s));
+    std::this_thread::sleep_for(100ms);
+    EXPECT_EQ(display->group.count_posts(), 2);
 
     compositor.stop();
 }
