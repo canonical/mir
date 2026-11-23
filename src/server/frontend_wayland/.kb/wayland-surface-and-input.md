@@ -4,7 +4,7 @@ This file covers the surface lifecycle and input handling in the Wayland fronten
 It explains surface roles, commit ordering, explicit synchronization, frame callbacks,
 input regions, pointer, axis, and seat behavior, and protocol state machines.
 
-Read the top-level `.kb/agents.md` file before continuing below.
+IMPORTANT: Read the `.kb/agents.md` file.
 
 
 # Laws

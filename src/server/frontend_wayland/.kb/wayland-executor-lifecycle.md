@@ -2,7 +2,7 @@
 
 This file covers the lifetime and threading invariants of [`WaylandExecutor`](../wayland_executor.cpp), the `mir::Executor` that marshals work onto a Wayland event loop.
 
-Read the top-level `.kb/agents.md` file before continuing below.
+IMPORTANT: Read the `.kb/agents.md` file.
 
 
 # Laws

@@ -2,7 +2,7 @@
 
 This file describes how Mir probes and selects graphics platform DSOs (display and rendering) at startup, and the invariants that make that selection deterministic.
 
-Read the top-level `.kb/agents.md` file before continuing below.
+IMPORTANT: Read the `.kb/agents.md` file.
 
 
 # Laws

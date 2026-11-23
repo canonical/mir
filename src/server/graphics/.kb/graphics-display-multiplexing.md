@@ -2,7 +2,7 @@
 
 This file describes how Mir multiplexes multiple platform displays into one `Display`: composite output identity, configuration apply/rollback, observer fan-out, and cursor selection.
 
-Read the top-level `.kb/agents.md` file before continuing below.
+IMPORTANT: Read the `.kb/agents.md` file.
 
 
 # Concepts

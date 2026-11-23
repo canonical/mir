@@ -2,7 +2,7 @@
 
 This file covers the lifetime, ordering, and threading invariants of [`WaylandConnector`](../wayland_connector.cpp), which owns the `wl_display`, publishes the frontend's globals, and accepts clients.
 
-Read the top-level `.kb/agents.md` file before continuing below.
+IMPORTANT: Read the `.kb/agents.md` file.
 
 
 # Laws
