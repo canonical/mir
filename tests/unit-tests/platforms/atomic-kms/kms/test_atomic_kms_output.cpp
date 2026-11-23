@@ -992,14 +992,11 @@ TEST_F(AtomicKMSOutputTest, reset_invalidates_capabilities_even_on_same_connecte
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 
-TEST_F(AtomicKMSOutputTest, hardware_refresh_rediscovers_capabilities_on_next_crtc_use)
+TEST_F(AtomicKMSOutputTest, hardware_refresh_rediscovers_capabilities_immediately)
 {
     auto output_under_test = output();
-    output_under_test->refresh_hardware_state();
-    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
-    StubFramebuffer framebuffer{primary_framebuffer_id};
-    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
+    output_under_test->refresh_hardware_state();
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 
