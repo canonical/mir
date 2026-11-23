@@ -271,6 +271,7 @@ private:
             geom::Size buf_size,
             std::string const& text,
             geom::Point top_left,
+            geom::X right,
             geom::Height height_pixels,
             Pixel color) = 0;
 
@@ -493,6 +494,7 @@ public:
         geom::Size buf_size,
         std::string const& text,
         geom::Point top_left,
+        geom::X right,
         geom::Height height_pixels,
         Pixel color) override;
 
@@ -502,12 +504,15 @@ private:
     FT_Face face;
 
     void set_char_size(geom::Height height);
+    auto ellipsize(std::u32string const& text, int available_width) -> std::u32string;
+    void load_glyph(char32_t glyph);
     void rasterize_glyph(char32_t glyph);
     void render_glyph(
         Pixel* buf,
         geom::Size buf_size,
         FT_Bitmap const* glyph,
         geom::Point top_left,
+        geom::X right,
         Pixel color);
 
     static auto font_path() -> std::string;
@@ -523,6 +528,7 @@ public:
         geom::Size,
         std::string const&,
         geom::Point,
+        geom::X,
         geom::Height,
         Pixel) override
     {
@@ -588,10 +594,12 @@ void RendererStrategy::Text::Impl::render(
     geom::Size buf_size,
     std::string const& text,
     geom::Point top_left,
+    geom::X right,
     geom::Height height_pixels,
     Pixel color)
 {
-    if (!area(buf_size) || height_pixels <= geom::Height{})
+    right = std::min(right, as_x(buf_size.width));
+    if (!area(buf_size) || height_pixels <= geom::Height{} || right <= top_left.x)
         return;
 
     std::lock_guard lock{mutex};
@@ -602,17 +610,17 @@ void RendererStrategy::Text::Impl::render(
         return;
     }
 
+    std::u32string utf32;
     try
     {
         set_char_size(height_pixels);
+        utf32 = ellipsize(utf8_to_utf32(text), (right - top_left.x).as_int());
     }
     catch (std::runtime_error const& error)
     {
         mir::log_warning("%s", error.what());
         return;
     }
-
-    auto const utf32 = utf8_to_utf32(text);
 
     for (char32_t const glyph : utf32)
     {
@@ -625,7 +633,7 @@ void RendererStrategy::Text::Impl::render(
                 geom::Displacement{
                     face->glyph->bitmap_left,
                     height_pixels.as_int() - face->glyph->bitmap_top};
-            render_glyph(buf, buf_size, &face->glyph->bitmap, glyph_top_left, color);
+            render_glyph(buf, buf_size, &face->glyph->bitmap, glyph_top_left, right, color);
 
             top_left += geom::Displacement{
                 face->glyph->advance.x / 64,
@@ -636,6 +644,81 @@ void RendererStrategy::Text::Impl::render(
             mir::log_warning("%s", error.what());
         }
     }
+}
+
+auto RendererStrategy::Text::Impl::ellipsize(std::u32string const& text, int available_width) -> std::u32string
+{
+    struct Extents
+    {
+        int64_t advance{0};
+        int64_t width{0};
+    };
+    auto const join = [](Extents left, Extents right) -> Extents
+    {
+        return {left.advance + right.advance, std::max(left.width, left.advance + right.width)};
+    };
+    auto const measure = [this](char32_t glyph) -> Extents
+    {
+        load_glyph(glyph);
+        auto const bitmap_right = face->glyph->metrics.horiBearingX + face->glyph->metrics.width;
+        auto const bitmap_right_pixels =
+            bitmap_right / 64 + (bitmap_right > 0 && bitmap_right % 64 != 0);
+        return {
+            face->glyph->advance.x / 64,
+            std::max<int64_t>(0, bitmap_right_pixels)};
+    };
+
+    struct Glyph
+    {
+        Extents extents;
+        size_t end;
+    };
+    std::vector<Glyph> glyphs;
+    glyphs.reserve(text.size());
+    Extents total;
+    for (size_t i = 0; i < text.size(); ++i)
+    {
+        auto const extents = measure(text[i]);
+        total = join(total, extents);
+        // Keep zero-advance marks with their base glyph when choosing where to cut.
+        if (extents.advance == 0 && !glyphs.empty())
+        {
+            glyphs.back().extents = join(glyphs.back().extents, extents);
+            glyphs.back().end = i + 1;
+        }
+        else
+        {
+            glyphs.push_back({extents, i + 1});
+        }
+    }
+    if (total.width <= available_width)
+        return text;
+
+    auto const ellipsis = measure(U'…');
+    if (ellipsis.width > available_width)
+        return {};
+
+    size_t prefix{0};
+    size_t suffix{glyphs.size()};
+    Extents prefix_extents;
+    Extents suffix_extents;
+    while (prefix < suffix)
+    {
+        bool const keep_prefix = prefix_extents.advance <= suffix_extents.advance;
+        auto const next_prefix = keep_prefix ? join(prefix_extents, glyphs[prefix].extents) : prefix_extents;
+        auto const next_suffix = keep_prefix ? suffix_extents : join(glyphs[suffix - 1].extents, suffix_extents);
+        if (join(join(next_prefix, ellipsis), next_suffix).width > available_width)
+            break;
+        prefix_extents = next_prefix;
+        suffix_extents = next_suffix;
+        if (keep_prefix)
+            ++prefix;
+        else
+            --suffix;
+    }
+    auto const prefix_end = prefix ? glyphs[prefix - 1].end : 0;
+    auto const suffix_start = suffix ? glyphs[suffix - 1].end : 0;
+    return text.substr(0, prefix_end) + U'…' + text.substr(suffix_start);
 }
 
 void RendererStrategy::Text::Impl::set_char_size(geom::Height height)
@@ -659,7 +742,7 @@ auto freetype_error_to_string(FT_Error error) -> char const*
 }
 }
 
-void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
+void RendererStrategy::Text::Impl::load_glyph(char32_t glyph)
 {
     auto const glyph_index = FT_Get_Char_Index(face, glyph);
 
@@ -669,9 +752,15 @@ void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
             "Failed to load glyph " + std::to_string(glyph_index) +
             " (" + freetype_error_to_string(error) + ")"));
     }
+}
 
+void RendererStrategy::Text::Impl::rasterize_glyph(char32_t glyph)
+{
+    load_glyph(glyph);
     if (auto const error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL))
     {
+        auto const glyph_index = FT_Get_Char_Index(face, glyph);
+
         BOOST_THROW_EXCEPTION(std::runtime_error(
             "Failed to render glyph " + std::to_string(glyph_index) +
             " (" + freetype_error_to_string(error) + ")"));
@@ -683,10 +772,11 @@ void RendererStrategy::Text::Impl::render_glyph(
     geom::Size buf_size,
     FT_Bitmap const* glyph,
     geom::Point top_left,
+    geom::X right,
     Pixel color)
 {
     geom::X const buffer_left = std::max(top_left.x, geom::X{});
-    geom::X const buffer_right = std::min(top_left.x + geom::DeltaX{glyph->width}, as_x(buf_size.width));
+    geom::X const buffer_right = std::min(top_left.x + geom::DeltaX{glyph->width}, right);
 
     geom::Y const buffer_top = std::max(top_left.y, geom::Y{});
     geom::Y const buffer_bottom = std::min(top_left.y + geom::DeltaY{glyph->rows}, as_y(buf_size.height));
@@ -995,6 +1085,10 @@ void RendererStrategy::redraw_titlebar_background(geom::Size const scaled_titleb
 
 void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_size)
 {
+    auto right = as_x(scaled_titlebar_size.width);
+    for (auto const& button : buttons)
+        right = std::min(right, geom::X{lround(button.rect.left().round_to<float>() * scale)});
+
     text->render(
         titlebar_pixels.get(),
         scaled_titlebar_size,
@@ -1002,6 +1096,7 @@ void RendererStrategy::redraw_titlebar_text(geom::Size const scaled_titlebar_siz
         geom::Point{
             lround(style->title_font_top_left.x.round_to<float>() * scale),
             lround(style->title_font_top_left.y.round_to<float>() * scale)},
+        right,
         style->title_font_height * scale,
         current_theme->text_color);
 }

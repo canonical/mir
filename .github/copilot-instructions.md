@@ -4,6 +4,8 @@ Mir is a Wayland compositor library written in C++26 (with some Rust components)
 stable ABI layer (MirAL) for building shells, plus graphics/input hardware abstraction and window
 management.
 
+For the knowledge base index, see [AGENTS.md](../AGENTS.md).
+
 This file holds repository-wide essentials. **Detailed, area-specific guidance lives in
 [`.github/instructions/`](instructions/)** and is applied automatically when you touch matching
 files:

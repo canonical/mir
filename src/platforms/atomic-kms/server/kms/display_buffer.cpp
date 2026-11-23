@@ -17,6 +17,7 @@
 #include "display_sink.h"
 #include <mir/graphics/kms_cpu_addressable_display_provider.h>
 #include "kms_output.h"
+#include "plane_capabilities.h"
 #include <mir/graphics/cpu_addressable_fb.h>
 #include "gbm_display_allocator.h"
 #include <mir/errno_utils.h>
@@ -24,22 +25,30 @@
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/drm_formats.h>
 #include <mir/graphics/platform.h>
+
 #include <mir/log.h>
 #include <mir/graphics/dmabuf_buffer.h>
 
 #include <algorithm>
+#include <array>
 #include <boost/throw_exception.hpp>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
 #include <GLES2/gl2ext.h>
+#include <cmath>
+#include <cstddef>
 #include <cstdint>
 #include <drm_fourcc.h>
 
 #include <drm_mode.h>
 #include <gbm.h>
 #include <memory>
+#include <optional>
+#include <ranges>
+#include <span>
 #include <stdexcept>
+#include <utility>
 #include <chrono>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -84,8 +93,8 @@ mga::DisplaySink::DisplaySink(
         auto mapping = initial_fb->map_writeable();
         ::memset(mapping->data(), 24, mapping->len());
 
-        visible_fb = std::move(initial_fb);
-        this->output->set_crtc(*visible_fb);
+        visible_state = PresentationState::full_scene(std::move(initial_fb));
+        this->output->set_crtc(visible_state->primary());
         listener->report_successful_drm_mode_set_crtc_on_construction();
     }
     listener->report_successful_display_construction();
@@ -113,41 +122,304 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
 {
     if (renderable_list.size() == 1)
     {
-        if (renderable_list[0].screen_positon != view_area())
+        if (auto fb = fullscreen_framebuffer(renderable_list[0]))
         {
-            return false;
-        }
-
-        if (renderable_list[0].source_position.top_left != geom::PointF{0, 0} ||
-            renderable_list[0].source_position.size.width.as_value() != view_area().size.width.as_int() ||
-            renderable_list[0].source_position.size.height.as_value() != view_area().size.height.as_int())
-        {
-            return false;
-        }
-
-        if (auto fb = std::dynamic_pointer_cast<graphics::FBHandle>(renderable_list[0].buffer))
-        {
-            next_swap = std::move(fb);
+            next_state = PresentationState::full_scene(std::move(fb));
             return true;
         }
         return false;
     }
-    else
+
+    if (renderable_list.size() == 2)
     {
-        // TODO map display elements to atomic KMS planes
+        return queue_mixed(renderable_list[0], renderable_list[1]);
     }
 
     return false;
 }
 
-auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const&)
-    -> std::optional<LogicalStacking>
+auto mga::DisplaySink::fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>
 {
-    if (plane_promotion != PlanePromotion::available)
+    if (element.screen_positon != view_area())
+    {
+        return nullptr;
+    }
+
+    if (element.source_position.top_left != geom::PointF{0, 0} ||
+        element.source_position.size.width.as_value() != view_area().size.width.as_int() ||
+        element.source_position.size.height.as_value() != view_area().size.height.as_int())
+    {
+        return nullptr;
+    }
+
+    return std::dynamic_pointer_cast<FBHandle>(element.buffer);
+}
+
+auto mga::DisplaySink::output_maps_1_to_1_to_crtc() const -> bool
+{
+    // Overlay destinations use CRTC pixels: the logical output rectangle must map 1:1 onto the mode.
+    // We do not scale, so a logical output smaller or larger than the mode cannot be promoted.
+    return plane_promotion == PlanePromotion::available &&
+        area.size == output->size() &&
+        transform == glm::mat2{1};
+}
+
+namespace
+{
+auto const identity_transform = glm::mat4{1};
+constexpr mga::PropertyValue opaque_alpha{0xffff};
+
+auto is_directly_scannable(mg::Renderable const& renderable) -> bool
+{
+    return renderable.alpha() == 1.0f &&
+        renderable.transformation() == identity_transform &&
+        renderable.orientation() == mir_orientation_normal &&
+        renderable.mirror_mode() == mir_mirror_mode_none &&
+        !renderable.clip_area();
+}
+
+auto find_legal_overlay_plane(
+    mga::CrtcPlaneCapabilities const& capabilities,
+    mga::FormatModifier format_modifier) -> mga::PlaneCapability const*
+{
+    auto const plane = std::ranges::find_if(capabilities.overlays, [&](mga::PlaneCapability const& plane)
+    {
+        return plane.can_be_above_primary &&
+            plane.bt709_limited.has_value() &&
+            std::ranges::find(plane.formats, format_modifier) != plane.formats.end() &&
+            (!plane.alpha_max || plane.alpha_max == opaque_alpha);
+    });
+    return plane == capabilities.overlays.end() ? nullptr : &*plane;
+}
+
+auto promotable_plane(
+    mga::CrtcPlaneCapabilities const& capabilities,
+    mga::FormatModifier format_modifier,
+    mg::gl::Texture::Layout layout) -> mga::PlaneCapability const*
+{
+    // Layout::GL means the buffer is not y-inverted (memory row 0 is the top). A y-inverted
+    // buffer would need the plane "rotation" property with DRM_MODE_REFLECT_Y, which is not decoded.
+    if (format_modifier.format != DRM_FORMAT_NV12 ||
+        layout != mg::gl::Texture::Layout::GL)
+    {
+        return nullptr;
+    }
+
+    return find_legal_overlay_plane(capabilities, format_modifier);
+}
+
+auto is_overlay_eligible(mg::Renderable const& renderable, mga::CrtcPlaneCapabilities const& capabilities) -> bool
+{
+    if (!is_directly_scannable(renderable))
+        return false;
+
+    auto const buffer = renderable.buffer();
+    if (!buffer)
+        return false;
+
+    auto const dmabuf = dynamic_cast<mg::DMABufBuffer*>(buffer->native_buffer_base());
+    if (!dmabuf)
+    {
+        return false;
+    }
+
+    auto const modifier = dmabuf->modifier();
+    return modifier && *modifier != DRM_FORMAT_MOD_INVALID &&
+        promotable_plane(capabilities, mga::FormatModifier{dmabuf->format(), *modifier}, dmabuf->layout()) &&
+        renderable.src_bounds() == geom::RectangleD{{0, 0}, dmabuf->size()} &&
+        renderable.screen_position().size == dmabuf->size();
+}
+
+auto pixel_area(geom::Rectangle const& rect) -> int
+{
+    return rect.size.width.as_int() * rect.size.height.as_int();
+}
+
+auto is_2d_affine(glm::mat4 const& transform) -> bool
+{
+    // screen_to_gl_coords sets w = 1 - z, so a transform only preserves the footprint
+    // when it leaves the z = 0 plane fixed and keeps w at 1. glm is column-major:
+    // transform[column][row].
+    return transform[0][3] == 0 && transform[1][3] == 0 && transform[3][3] == 1 &&
+        transform[0][2] == 0 && transform[1][2] == 0 && transform[3][2] == 0;
+}
+
+auto oriented_footprint(geom::Rectangle const& rect, MirOrientation orientation) -> geom::Rectangle
+{
+    // Left and right orientations rotate the rect about its centre and re-anchor it at the
+    // same top_left, which swaps its dimensions.
+    if (orientation == mir_orientation_left || orientation == mir_orientation_right)
+    {
+        return {
+            rect.top_left,
+            geom::Size{geom::Width{rect.size.height.as_int()}, geom::Height{rect.size.width.as_int()}}};
+    }
+    return rect;
+}
+
+// Mirror the shader, which composes the transform about the centre:
+// (transform * (position - centre)) + centre.
+auto transformed_bounds(glm::mat4 const& transform, geom::Rectangle const& rect) -> geom::Rectangle
+{
+    auto const rect_f = geom::RectangleF{geom::PointF{rect.top_left}, geom::SizeF{rect.size}};
+    auto const [centre_x, centre_y] = rect_f.centre();
+    auto const [half_width, half_height] = rect_f.size / 2.0f;
+
+    auto const corners = std::array{
+        glm::vec4{-half_width.as_value(), -half_height.as_value(), 0.0f, 1.0f},
+        glm::vec4{-half_width.as_value(),  half_height.as_value(), 0.0f, 1.0f},
+        glm::vec4{ half_width.as_value(), -half_height.as_value(), 0.0f, 1.0f},
+        glm::vec4{ half_width.as_value(),  half_height.as_value(), 0.0f, 1.0f}};
+
+    auto transformed = std::array<glm::vec4, 4>{};
+    std::ranges::transform(corners, transformed.begin(), [&](auto const& c) { return transform * c; });
+    auto const [min_x, max_x] = std::ranges::minmax(transformed, {}, [](auto const& v) { return v.x; });
+    auto const [min_y, max_y] = std::ranges::minmax(transformed, {}, [](auto const& v) { return v.y; });
+
+    // Round outward so float noise can never shrink the bound.
+    auto const left   = std::floor(centre_x.as_value() + min_x.x);
+    auto const top    = std::floor(centre_y.as_value() + min_y.y);
+    auto const right  = std::ceil (centre_x.as_value() + max_x.x);
+    auto const bottom = std::ceil (centre_y.as_value() + max_y.y);
+
+    return geom::Rectangle{
+        {geom::X{static_cast<int>(left)}, geom::Y{static_cast<int>(top)}},
+        {geom::Width{static_cast<int>(right - left)}, geom::Height{static_cast<int>(bottom - top)}}};
+}
+
+auto footprint_bounds(mg::Renderable const& renderable) -> std::optional<geom::Rectangle>
+{
+    auto const transform = renderable.transformation();
+
+    if (transform == identity_transform)
+        return oriented_footprint(renderable.screen_position(), renderable.orientation());
+
+    if (!is_2d_affine(transform))
         return std::nullopt;
 
-    // TODO: Build the logical stacking plan from the private plane state
-    return std::nullopt;
+    auto const oriented = oriented_footprint(renderable.screen_position(), renderable.orientation());
+    return transformed_bounds(transform, oriented);
+}
+
+auto content_above_blocks(
+    std::span<std::optional<geom::Rectangle> const> content_above,
+    geom::Rectangle const& candidate_bounds) -> bool
+{
+    return std::ranges::any_of(content_above, [&](auto const& bounds) { return !bounds || bounds->overlaps(candidate_bounds); });
+}
+
+auto select_direct_candidate(
+    std::vector<std::shared_ptr<mg::Renderable>> const& renderables,
+    geom::Rectangle const& sink_area,
+    mga::CrtcPlaneCapabilities const& capabilities) -> std::optional<std::size_t>
+{
+    std::optional<std::size_t> best;
+    int best_area{0};
+
+    auto const transformed_bounds =
+        renderables |
+        std::ranges::views::transform([](auto const& renderable) { return footprint_bounds(*renderable); })
+        | std::ranges::to<std::vector>();
+
+    for (auto candidate_index = std::size_t{0}; candidate_index < renderables.size(); ++candidate_index)
+    {
+        auto const& candidate_bounds = transformed_bounds[candidate_index];
+        if (!candidate_bounds || candidate_bounds->size.width.as_int() <= 0 ||
+            candidate_bounds->size.height.as_int() <= 0 || !sink_area.contains(*candidate_bounds))
+            continue;
+
+        auto const& renderable = renderables[candidate_index];
+        if (!is_overlay_eligible(*renderable, capabilities))
+            continue;
+
+        auto const content_above = std::span{transformed_bounds}.subspan(candidate_index + 1);
+        if (content_above_blocks(content_above, *candidate_bounds))
+            continue;
+
+        auto const candidate_area = pixel_area(*candidate_bounds);
+        // >= keeps the frontmost of equal-area candidates, as index increases towards the front
+        if (!best || candidate_area >= best_area)
+        {
+            best = candidate_index;
+            best_area = candidate_area;
+        }
+    }
+
+    return best;
+}
+}
+
+auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
+{
+    auto const capabilities = output->plane_capabilities();
+    if (!output_maps_1_to_1_to_crtc() || !capabilities)
+    {
+        return false;
+    }
+
+    auto primary_fb = fullscreen_framebuffer(primary);
+    if (!primary_fb)
+    {
+        return false;
+    }
+
+    auto client_fb = std::dynamic_pointer_cast<DirectScanoutFramebuffer>(client.buffer);
+    if (!client_fb)
+    {
+        return false;
+    }
+
+    auto const plane = promotable_plane(*capabilities, client_fb->format_modifier(), client_fb->layout());
+    if (!plane)
+    {
+        return false;
+    }
+
+    auto const size = client_fb->size();
+    // The client may be partly outside the output; the kernel clips the destination and
+    // adjusts the source, so only require a visible overlap.
+    if (client.source_position != geom::RectangleF{{0, 0}, {size.width.as_value(), size.height.as_value()}} ||
+        client.screen_positon.size != size ||
+        !view_area().overlaps(client.screen_positon))
+    {
+        return false;
+    }
+
+    auto const destination = client.screen_positon.top_left - geom::generic::as_displacement(view_area().top_left);
+    auto state = PresentationState::mixed(
+        std::move(primary_fb),
+        {ClientPlaneAssignment{plane->id, std::move(client_fb), destination}});
+
+    if (!output->test_presentation(state))
+    {
+        return false;
+    }
+
+    next_state = std::move(state);
+    return true;
+}
+
+auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
+    -> std::optional<LogicalStacking>
+{
+    auto const plane_capabilities = output->plane_capabilities();
+    if (!output_maps_1_to_1_to_crtc() || !plane_capabilities)
+    {
+        return std::nullopt;
+    }
+
+    auto const candidate = select_direct_candidate(renderables, area, *plane_capabilities);
+    if (!candidate)
+        return std::nullopt;
+
+    return LogicalStacking{{
+        CompositingLayer{
+            renderables |
+                std::views::filter([&](auto const& renderable) { return renderable != renderables[*candidate]; }) |
+                std::ranges::to<std::vector>(),
+        },
+        DirectLayer{renderables[*candidate]},
+    }};
 }
 
 void mga::DisplaySink::for_each_display_sink(std::function<void(graphics::DisplaySink&)> const& f)
@@ -181,21 +453,21 @@ bool mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
 
 bool mga::DisplaySink::post()
 {
-    if (!next_swap)
+    if (!next_state)
     {
         return output->post_cursor();
     }
     /*
      * Otherwise, pull the next frame into the pending slot
      */
-    scheduled_fb = std::move(next_swap);
-    next_swap = nullptr;
+    scheduled_state = std::move(next_state);
+    next_state.reset();
 
     /*
      * Try to schedule a page flip as first preference to avoid tearing.
      * We wait synchronously for this to complete.
      */
-    if (!needs_set_crtc && !output->page_flip(*scheduled_fb))
+    if (!needs_set_crtc && !output->page_flip(scheduled_state->primary()))
         needs_set_crtc = true;
 
     /*
@@ -205,15 +477,15 @@ bool mga::DisplaySink::post()
     auto presentation_succeeded = true;
     if (needs_set_crtc)
     {
-        presentation_succeeded = set_crtc(*scheduled_fb);
+        presentation_succeeded = set_crtc(scheduled_state->primary());
         // SetCrtc is immediate, so the FB is now visible and we have nothing pending
 
         needs_set_crtc = false;
     }
 
     if (presentation_succeeded)
-        visible_fb = std::move(scheduled_fb);
-    scheduled_fb = nullptr;
+        visible_state = std::move(scheduled_state);
+    scheduled_state.reset();
 
     using namespace std::chrono_literals;  // For operator""ms()
 
@@ -239,6 +511,7 @@ std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const
 
 void mga::DisplaySink::schedule_set_crtc()
 {
+    output->reset();
     needs_set_crtc = true;
 }
 
@@ -380,6 +653,43 @@ auto drm_fb_id_from_dma_buffer(
 }
 }
 
+mga::AtomicKmsFbHandle::AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_id, geometry::Size size) :
+    kms_fb_id{std::move(fb_id)},
+    size_{size}
+{
+}
+
+mga::AtomicKmsFbHandle::operator uint32_t() const
+{
+    return *kms_fb_id;
+}
+
+auto mga::AtomicKmsFbHandle::size() const -> geometry::Size
+{
+    return size_;
+}
+
+mga::DirectScanoutFramebuffer::DirectScanoutFramebuffer(
+    std::shared_ptr<uint32_t> fb_id,
+    geom::Size size,
+    mga::FormatModifier format_modifier,
+    mg::gl::Texture::Layout layout) :
+    AtomicKmsFbHandle{std::move(fb_id), size},
+    format_modifier_{format_modifier},
+    layout_{layout}
+{
+}
+
+auto mga::DirectScanoutFramebuffer::format_modifier() const -> mga::FormatModifier
+{
+    return format_modifier_;
+}
+
+auto mga::DirectScanoutFramebuffer::layout() const -> mg::gl::Texture::Layout
+{
+    return layout_;
+}
+
 auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> buffer) -> std::unique_ptr<Framebuffer>
 {
     auto fb_id = drm_fb_id_from_dma_buffer(drm_fd(), gbm, buffer);
@@ -388,29 +698,6 @@ auto mga::DmaBufDisplayAllocator::framebuffer_for(std::shared_ptr<DMABufBuffer> 
     {
         return {};
     }
-
-    struct AtomicKmsFbHandle : public mg::FBHandle
-    {
-        AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_handle, geometry::Size size) :
-            kms_fb_id{fb_handle},
-            size_{size}
-        {
-        }
-
-        virtual auto size() const -> geometry::Size override
-        {
-            return size_;
-        }
-
-        virtual operator uint32_t() const override
-        {
-            return *kms_fb_id;
-        }
-
-    private:
-        std::shared_ptr<uint32_t> kms_fb_id;
-        geometry::Size size_;
-    };
 
     buffer->on_consumed();
 

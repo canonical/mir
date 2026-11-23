@@ -15,17 +15,39 @@
  */
 
 #include "src/platforms/atomic-kms/server/kms/display_sink.h"
+#include "src/platforms/atomic-kms/server/kms/plane_capabilities.h"
 #include "src/platforms/atomic-kms/server/kms/quirks.h"
 #include "src/server/report/null_report_factory.h"
+#include "mock_kms_framebuffer.h"
 #include "mock_kms_output.h"
 
+#include <mir/graphics/dmabuf_buffer.h>
+#include <mir/graphics/drm_formats.h>
+#include <mir/graphics/texture.h>
+#include <mir/graphics/transformation.h>
+#include <mir/test/doubles/mock_buffer.h>
 #include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/mock_gbm.h>
+#include <mir/test/doubles/mock_renderable.h>
 #include <mir_test_framework/udev_environment.h>
 
+#include <drm_fourcc.h>
 #include <fcntl.h>
+#include <gbm.h>
+#include <glm/gtc/matrix_transform.hpp>
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+
+#include <cerrno>
+#include <cstdint>
+
+#include <memory>
 #include <optional>
+#include <ranges>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
 
 namespace mg = mir::graphics;
 namespace mga = mir::graphics::atomic;
@@ -37,16 +59,70 @@ using namespace testing;
 
 namespace
 {
-class MockKMSFramebuffer : public mg::FBHandle
-{
-public:
-    operator uint32_t() const override
-    {
-        return operator_uint32_thunk();
-    }
+geom::Size const output_size{56, 78};
+geom::Rectangle const display_area{{12, 34}, output_size};
+uint64_t const supported_modifier{DRM_FORMAT_MOD_LINEAR};
+uint64_t const other_modifier{0x0100000000000002ULL};
 
-    MOCK_METHOD(uint32_t, operator_uint32_thunk, (), (const));
-    MOCK_METHOD(geom::Size, size, (), (const, override));
+mga::PlaneId const legal_overlay_id{50};
+uint32_t const client_fb_id{0xabcd};
+geom::Size const client_size{20, 10};
+geom::RectangleF const client_full_source{{0, 0}, geom::SizeF{client_size}};
+geom::Point const client_top_left{20, 40};
+
+auto make_client_framebuffer(
+    mga::FormatModifier const& format_modifier = {DRM_FORMAT_NV12, supported_modifier},
+    mg::gl::Texture::Layout layout = mg::gl::Texture::Layout::GL) -> std::shared_ptr<mga::DirectScanoutFramebuffer>
+{
+    return std::make_shared<mga::DirectScanoutFramebuffer>(
+        std::make_shared<uint32_t>(client_fb_id), client_size, format_modifier, layout);
+}
+
+auto client_element(
+    std::shared_ptr<mg::Framebuffer> const& framebuffer,
+    geom::Point const& top_left = client_top_left) -> mg::DisplayElement
+{
+    return {{top_left, client_size}, client_full_source, framebuffer};
+}
+
+mga::CrtcPlaneCapabilities legal_capabilities()
+{
+    auto overlay = mga::PlaneCapability{
+        .id = legal_overlay_id,
+        .zpos = {},
+        .formats = {{DRM_FORMAT_NV12, supported_modifier}},
+        .alpha_max = mga::PropertyValue{0xffff},
+        .blend_none = {},
+        .fixed_opaque = false,
+        .bt709_limited = mga::Bt709Limited{1, 2},
+        .can_be_above_primary = true};
+    return mga::CrtcPlaneCapabilities{
+        .crtc_id = {},
+        .primary = {},
+        .overlays = {std::move(overlay)}};
+}
+
+auto shared_capabilities(mga::CrtcPlaneCapabilities capabilities)
+    -> std::shared_ptr<mga::CrtcPlaneCapabilities const>
+{
+    return std::make_shared<mga::CrtcPlaneCapabilities const>(std::move(capabilities));
+}
+
+struct StubDMABufBuffer : mg::DMABufBuffer
+{
+    explicit StubDMABufBuffer(geom::Size size) : size_{size} {}
+
+    auto format() const -> mg::DRMFormat override { return format_; }
+    auto modifier() const -> std::optional<uint64_t> override { return modifier_; }
+    auto planes() const -> std::vector<PlaneDescriptor> const& override { return planes_; }
+    auto layout() const -> mg::gl::Texture::Layout override { return layout_; }
+    auto size() const -> geom::Size override { return size_; }
+
+    mg::DRMFormat format_{DRM_FORMAT_NV12};
+    std::optional<uint64_t> modifier_{supported_modifier};
+    std::vector<PlaneDescriptor> planes_;
+    mg::gl::Texture::Layout layout_{mg::gl::Texture::Layout::GL};
+    geom::Size size_;
 };
 
 class StubSurfaceHasFreeBuffersQuirk : public mga::GbmQuirks::SurfaceHasFreeBuffersQuirk
@@ -73,34 +149,130 @@ protected:
             .WillByDefault(Return(60));
         ON_CALL(*output, post_cursor())
             .WillByDefault(Return(true));
+        ON_CALL(*output, size())
+            .WillByDefault(Return(output_size));
 
-        sink = std::make_unique<mga::DisplaySink>(
+        ON_CALL(*output, plane_capabilities())
+            .WillByDefault(Return(shared_capabilities(legal_capabilities())));
+        ON_CALL(*output, test_presentation(_)).WillByDefault(Return(true));
+
+        sink = make_sink();
+    }
+
+    auto make_sink(
+        glm::mat2 const& transformation = glm::mat2{1},
+        mga::PlanePromotion promotion = mga::PlanePromotion::available) -> std::unique_ptr<mga::DisplaySink>
+    {
+        return std::make_unique<mga::DisplaySink>(
             drm_fd,
             nullptr,
             mga::BypassOption::allowed,
-            mga::PlanePromotion::available,
+            promotion,
             mir::report::null_display_report(),
             output,
             display_area,
-            glm::mat2{1},
+            transformation,
             std::make_shared<mga::GbmQuirks>(std::make_unique<StubSurfaceHasFreeBuffersQuirk>()));
+    }
+
+    auto make_candidate(
+        std::shared_ptr<StubDMABufBuffer> const& dmabuf,
+        geom::Rectangle const& screen_position) const
+        -> std::shared_ptr<NiceMock<mtd::MockRenderable>>
+    {
+        std::shared_ptr<NiceMock<mtd::MockBuffer>> buffer{
+            new NiceMock<mtd::MockBuffer>(),
+            [dmabuf](auto* buffer) { delete buffer; }};
+        ON_CALL(*buffer, native_buffer_base())
+            .WillByDefault(Return(dmabuf.get()));
+
+        auto renderable = make_plain_renderable(screen_position);
+        ON_CALL(*renderable, buffer())
+            .WillByDefault(Return(buffer));
+        ON_CALL(*renderable, src_bounds())
+            .WillByDefault(Return(geom::RectangleD{{0, 0}, dmabuf->size_}));
+        return renderable;
+    }
+
+    auto make_candidate(geom::Rectangle const& screen_position) const
+        -> std::shared_ptr<NiceMock<mtd::MockRenderable>>
+    {
+        return make_candidate(
+            std::make_shared<StubDMABufBuffer>(screen_position.size),
+            screen_position);
+    }
+
+    auto make_plain_renderable(geom::Rectangle const& screen_position) const
+        -> std::shared_ptr<NiceMock<mtd::MockRenderable>>
+    {
+        auto renderable = std::make_shared<NiceMock<mtd::MockRenderable>>();
+        ON_CALL(*renderable, screen_position())
+            .WillByDefault(Return(screen_position));
+        ON_CALL(*renderable, transformation())
+            .WillByDefault(Return(glm::mat4{1}));
+        return renderable;
+    }
+
+    void expect_plan(
+        std::optional<mg::LogicalStacking> const& stacking,
+        mg::RenderableList const& renderables,
+        std::size_t selected) const
+    {
+        ASSERT_TRUE(stacking);
+        ASSERT_THAT(stacking->layers, SizeIs(2));
+        auto const compositing = std::get_if<mg::CompositingLayer>(&stacking->layers[0]);
+        auto const direct = std::get_if<mg::DirectLayer>(&stacking->layers[1]);
+        ASSERT_THAT(compositing, NotNull());
+        ASSERT_THAT(direct, NotNull());
+        auto const expected = renderables
+            | std::views::filter([&](auto const& renderable) { return renderable != renderables[selected]; })
+            | std::ranges::to<std::vector>();
+        EXPECT_THAT(compositing->renderables, ElementsAreArray(expected));
+        EXPECT_EQ(direct->renderable, renderables[selected]);
     }
 
     auto fullscreen_element(std::shared_ptr<mg::Framebuffer> const& framebuffer) const -> mg::DisplayElement
     {
-        return {
-            display_area,
-            {{0, 0}, {display_area.size.width.as_int(), display_area.size.height.as_int()}},
-            framebuffer};
+        return {display_area, {{0, 0}, geom::SizeF{display_area.size}}, framebuffer};
     }
 
-    geom::Rectangle const display_area{{12, 34}, {56, 78}};
+    auto legal_primary() const -> mg::DisplayElement
+    {
+        return fullscreen_element(std::make_shared<NiceMock<mt::MockKMSFramebuffer>>());
+    }
+
     mir_test_framework::UdevEnvironment devices;
     NiceMock<mtd::MockDRM> drm;
     mir::Fd drm_fd;
     std::shared_ptr<NiceMock<mt::MockKMSOutput>> const output{
         std::make_shared<NiceMock<mt::MockKMSOutput>>()};
     std::unique_ptr<mga::DisplaySink> sink;
+};
+
+class DmaBufImportTest : public Test
+{
+protected:
+    void SetUp() override
+    {
+        ON_CALL(gbm, gbm_bo_import(_, _, _, _))
+            .WillByDefault(Return(gbm.fake_gbm.bo));
+        ON_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _))
+            .WillByDefault(DoAll(SetArgPointee<8>(client_fb_id), Return(0)));
+    }
+
+    auto make_buffer() -> std::shared_ptr<StubDMABufBuffer>
+    {
+        auto buffer = std::make_shared<StubDMABufBuffer>(client_size);
+        buffer->planes_.push_back({mir::Fd{}, client_size.width.as_uint32_t(), 0});
+        return buffer;
+    }
+
+    NiceMock<mtd::MockDRM> drm;
+    NiceMock<mtd::MockGBM> gbm;
+    // MockDRM and MockGBM intercept every call, so no real fd is needed.
+    mir::Fd const drm_fd;
+    mga::DmaBufDisplayAllocator allocator{
+        std::shared_ptr<struct gbm_device>{gbm.fake_gbm.device, [](struct gbm_device*) {}}, drm_fd};
 };
 
 struct PostCase
@@ -113,12 +285,115 @@ struct PostCase
 class AtomicPostResult : public AtomicDisplaySinkTest, public WithParamInterface<PostCase>
 {
 };
+
+struct RejectionCase
+{
+    std::string_view name;
+    std::optional<uint64_t> modifier{supported_modifier};
+    uint32_t format{DRM_FORMAT_NV12};
+    float alpha{1.0f};
+    geom::Rectangle destination{display_area};
+    glm::mat4 transformation{1};
+    MirOrientation orientation{mir_orientation_normal};
+    MirMirrorMode mirror{mir_mirror_mode_none};
+    std::optional<geom::Rectangle> clip{};
+    mg::gl::Texture::Layout layout{mg::gl::Texture::Layout::GL};
+    geom::RectangleD source{{0, 0}, output_size};
+};
+
+class AtomicPlanRejection : public AtomicDisplaySinkTest, public WithParamInterface<RejectionCase>
+{
+};
+
+struct IneligibleOutputCase
+{
+    std::string_view name;
+    std::shared_ptr<mga::CrtcPlaneCapabilities const> capabilities{shared_capabilities(legal_capabilities())};
+    glm::mat2 transformation{glm::mat2{1}};
+    mga::PlanePromotion promotion{mga::PlanePromotion::available};
+    geom::Size reported_output_size{output_size};
+};
+
+class AtomicPlanIneligibleOutput : public AtomicDisplaySinkTest, public WithParamInterface<IneligibleOutputCase>
+{
+};
+
+struct PlaneCase
+{
+    std::string_view name;
+    bool above_primary{true};
+    bool bt709_limited{true};
+    uint64_t modifier{supported_modifier};
+    std::optional<mga::PropertyValue> alpha_max{mga::PropertyValue{0xffff}};
+    bool append_legal_plane{false};
+    bool expected{false};
+};
+
+class AtomicPlanPlaneLegality : public AtomicDisplaySinkTest, public WithParamInterface<PlaneCase>
+{
+};
+
+struct SceneElement
+{
+    geom::Rectangle area;
+    bool dmabuf{false};
+    glm::mat4 transformation{1};
+    uint64_t modifier{supported_modifier};
+    MirOrientation orientation{mir_orientation_normal};
+};
+
+struct SceneCase
+{
+    std::string_view name;
+    std::vector<SceneElement> elements;
+    std::optional<std::size_t> selected;
+};
+
+class AtomicPlanScene : public AtomicDisplaySinkTest, public WithParamInterface<SceneCase>
+{
+};
+
+/// Matches a state that presents `primary` plus exactly one client plane showing `client` on `plane` at `destination`
+auto presents_primary_and_one_client_plane(
+    mg::FBHandle const& primary,
+    mg::FBHandle const& client,
+    mga::PlaneId plane,
+    geom::Point destination) -> Matcher<mga::PresentationState const&>
+{
+    return AllOf(
+        Property(&mga::PresentationState::primary, Ref(primary)),
+        Property(&mga::PresentationState::client_planes, ElementsAre(FieldsAre(plane, Pointer(&client), destination))));
+}
+
+struct MixedProposalCase
+{
+    std::string_view name;
+    geom::Displacement offset;
+};
+
+class AtomicMixedProposal : public AtomicDisplaySinkTest, public WithParamInterface<MixedProposalCase>
+{
+};
+
+/// One property of an otherwise legal client element that the sink must reject
+struct RejectedClientCase
+{
+    std::string_view name;
+    mga::FormatModifier format;
+    mg::gl::Texture::Layout layout;
+    geom::Rectangle destination;
+    geom::RectangleF source;
+};
+
+class AtomicMixedRejectedClient : public AtomicDisplaySinkTest, public WithParamInterface<RejectedClientCase>
+{
+};
 }
 
 TEST_P(AtomicPostResult, post_reports_presentation_result)
 {
     auto const& param = GetParam();
-    auto const framebuffer = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto const framebuffer = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
     ASSERT_TRUE(sink->overlay({fullscreen_element(framebuffer)}));
 
     InSequence sequence;
@@ -181,9 +456,9 @@ TEST_F(AtomicDisplaySinkTest, refresh_handler_is_forwarded_to_output)
 
 TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuffer_alive)
 {
-    auto frame_a = std::make_shared<NiceMock<MockKMSFramebuffer>>();
-    auto frame_b = std::make_shared<NiceMock<MockKMSFramebuffer>>();
-    auto frame_c = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto frame_c = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
     std::weak_ptr<mg::Framebuffer> const weak_a{frame_a};
     std::weak_ptr<mg::Framebuffer> const weak_b{frame_b};
 
@@ -214,13 +489,378 @@ TEST_F(AtomicDisplaySinkTest, failed_post_keeps_the_previously_visible_framebuff
     EXPECT_TRUE(weak_a.expired());
 }
 
+TEST_F(AtomicDisplaySinkTest, replacing_a_queued_frame_retires_only_the_replaced_frame)
+{
+    auto frame_a = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto frame_b = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const frame_c = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    std::weak_ptr<mg::Framebuffer> const weak_a{frame_a};
+    std::weak_ptr<mg::Framebuffer> const weak_b{frame_b};
+
+    EXPECT_CALL(*output, page_flip(Ref(*frame_a)))
+        .WillOnce(Return(true));
+
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_a)}));
+    frame_a.reset();
+    ASSERT_TRUE(sink->post());
+
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_b)}));
+    frame_b.reset();
+    ASSERT_TRUE(sink->overlay({fullscreen_element(frame_c)}));
+
+    EXPECT_FALSE(weak_a.expired());
+    EXPECT_TRUE(weak_b.expired());
+
+    sink.reset();
+    EXPECT_TRUE(weak_a.expired());
+}
+
 TEST_F(AtomicDisplaySinkTest, overlay_must_be_a_single_fullscreen_element)
 {
-    auto const framebuffer = std::make_shared<NiceMock<MockKMSFramebuffer>>();
+    auto const framebuffer = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
     auto element = fullscreen_element(framebuffer);
 
     EXPECT_TRUE(sink->overlay({element}));
 
     element.screen_positon.size = {20, 20};
     EXPECT_FALSE(sink->overlay({element}));
+}
+
+TEST_P(AtomicPlanRejection, plan_presentation_rejects_ineligible_candidate)
+{
+    auto dmabuf = std::make_shared<StubDMABufBuffer>(output_size);
+    auto candidate = make_candidate(dmabuf, display_area);
+    auto const& param = GetParam();
+    dmabuf->modifier_ = param.modifier;
+    dmabuf->format_ = mg::DRMFormat{param.format};
+    ON_CALL(*candidate, alpha()).WillByDefault(Return(param.alpha));
+    ON_CALL(*candidate, screen_position()).WillByDefault(Return(param.destination));
+    ON_CALL(*candidate, transformation()).WillByDefault(Return(param.transformation));
+    ON_CALL(*candidate, orientation()).WillByDefault(Return(param.orientation));
+    ON_CALL(*candidate, mirror_mode()).WillByDefault(Return(param.mirror));
+    ON_CALL(*candidate, clip_area()).WillByDefault(Return(param.clip));
+    ON_CALL(*candidate, src_bounds()).WillByDefault(Return(param.source));
+    dmabuf->layout_ = param.layout;
+    auto capabilities = legal_capabilities();
+    capabilities.overlays.front().formats.push_back({DRM_FORMAT_NV12, DRM_FORMAT_MOD_INVALID});
+    ON_CALL(*output, plane_capabilities())
+        .WillByDefault(Return(shared_capabilities(std::move(capabilities))));
+
+    EXPECT_FALSE(sink->plan_presentation({candidate}).has_value());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    CandidateEligibility,
+    AtomicPlanRejection,
+    Values(
+        RejectionCase{.name = "missing_modifier", .modifier = std::nullopt},
+        RejectionCase{.name = "wrong_format", .format = DRM_FORMAT_XRGB8888},
+        RejectionCase{.name = "translucent", .alpha = 0.5f},
+        RejectionCase{.name = "scaled_destination", .destination = {display_area.top_left, output_size / 2}},
+        RejectionCase{.name = "extends_beyond_output",
+                      .destination = {display_area.top_left + geom::DeltaX{1}, output_size}},
+        RejectionCase{.name = "transformed_surface", .transformation = glm::mat4{2.0f}},
+        RejectionCase{.name = "invalid_modifier", .modifier = DRM_FORMAT_MOD_INVALID},
+        RejectionCase{.name = "orientation", .orientation = mir_orientation_left},
+        RejectionCase{.name = "mirror", .mirror = mir_mirror_mode_horizontal},
+        RejectionCase{.name = "clip", .clip = display_area},
+        RejectionCase{.name = "y_inverted", .layout = mg::gl::Texture::Layout::TopRowFirst},
+        RejectionCase{.name = "source_offset", .source = {{1, 0}, output_size}},
+        RejectionCase{.name = "cropped_source", .source = {{0, 0}, output_size / 2}}),
+    [](TestParamInfo<RejectionCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
+TEST_F(AtomicDisplaySinkTest, shaped_opaque_format_candidate_is_promoted)
+{
+    auto dmabuf = std::make_shared<StubDMABufBuffer>(output_size);
+    dmabuf->format_ = mg::DRMFormat{DRM_FORMAT_NV12};
+    auto candidate = make_candidate(dmabuf, display_area);
+    ON_CALL(*candidate, alpha()).WillByDefault(Return(1.0f));
+    ON_CALL(*candidate, shaped()).WillByDefault(Return(true));
+
+    expect_plan(sink->plan_presentation({candidate}), {candidate}, 0);
+}
+
+TEST_P(AtomicPlanIneligibleOutput, plane_promotion_requires_eligible_output)
+{
+    auto const& param = GetParam();
+    ON_CALL(*output, size())
+        .WillByDefault(Return(param.reported_output_size));
+    ON_CALL(*output, plane_capabilities())
+        .WillByDefault(Return(param.capabilities));
+    sink = make_sink(param.transformation, param.promotion);
+
+    auto candidate = make_candidate(display_area);
+
+    EXPECT_FALSE(sink->plan_presentation({candidate}).has_value());
+    EXPECT_FALSE(sink->overlay({legal_primary(), client_element(make_client_framebuffer())}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    OutputEligibility,
+    AtomicPlanIneligibleOutput,
+    Values(
+        IneligibleOutputCase{.name = "plane_promotion_unavailable", .promotion = mga::PlanePromotion::unavailable},
+        IneligibleOutputCase{.name = "no_plane_capabilities", .capabilities = nullptr},
+        IneligibleOutputCase{.name = "output_size_mismatch", .reported_output_size = geom::Size{55, 78}},
+        IneligibleOutputCase{.name = "non_identity_output_transformation", .transformation = glm::mat2{2.0f}}),
+    [](TestParamInfo<IneligibleOutputCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
+TEST_P(AtomicPlanPlaneLegality, plan_presentation_requires_a_legal_plane)
+{
+    auto const& param = GetParam();
+    auto capabilities = legal_capabilities();
+    auto& plane = capabilities.overlays.front();
+    plane.can_be_above_primary = param.above_primary;
+    if (!param.bt709_limited)
+        plane.bt709_limited = std::nullopt;
+    plane.formats = {{DRM_FORMAT_NV12, param.modifier}};
+    plane.alpha_max = param.alpha_max;
+    if (param.append_legal_plane)
+        capabilities.overlays.push_back(legal_capabilities().overlays.front());
+    ON_CALL(*output, plane_capabilities())
+        .WillByDefault(Return(shared_capabilities(std::move(capabilities))));
+
+    auto candidate = make_candidate(display_area);
+
+    auto const stacking = sink->plan_presentation({candidate});
+
+    if (param.expected)
+        expect_plan(stacking, {candidate}, 0);
+    else
+        EXPECT_FALSE(stacking);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PlaneLegality,
+    AtomicPlanPlaneLegality,
+    Values(
+        PlaneCase{.name = "cannot_be_above_primary", .above_primary = false},
+        PlaneCase{.name = "no_bt709_limited", .bt709_limited = false},
+        PlaneCase{.name = "modifier_not_supported", .modifier = other_modifier},
+        PlaneCase{.name = "partial_alpha_max", .alpha_max = mga::PropertyValue{0x7fff}},
+        PlaneCase{.name = "opaque_alpha_max", .expected = true},
+        PlaneCase{.name = "no_alpha_property", .alpha_max = std::nullopt, .expected = true},
+        PlaneCase{.name = "legal_second_plane", .above_primary = false,
+                  .append_legal_plane = true, .expected = true}),
+    [](TestParamInfo<PlaneCase> const& info)
+    {
+        return std::string{info.param.name};
+    });
+
+TEST_P(AtomicPlanScene, selects_largest_unobstructed_candidate)
+{
+    auto const& param = GetParam();
+    mg::RenderableList renderables;
+    for (auto const& element : param.elements)
+    {
+        auto dmabuf = std::make_shared<StubDMABufBuffer>(element.area.size);
+        dmabuf->modifier_ = element.modifier;
+        auto renderable = element.dmabuf ? make_candidate(dmabuf, element.area) : make_plain_renderable(element.area);
+        ON_CALL(*renderable, transformation()).WillByDefault(Return(element.transformation));
+        ON_CALL(*renderable, orientation()).WillByDefault(Return(element.orientation));
+        renderables.push_back(std::move(renderable));
+    }
+
+    auto const stacking = sink->plan_presentation(renderables);
+
+    if (param.selected)
+        expect_plan(stacking, renderables, *param.selected);
+    else
+        EXPECT_FALSE(stacking);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    ScenePolicy, AtomicPlanScene,
+    Values(
+        SceneCase{"excludes_only_direct_candidate", {{{{12, 34}, {20, 20}}}, {display_area, true}}, 1},
+        SceneCase{"largest_area_in_middle", {{{{12, 34}, {40, 6}}, true}, {{{12, 44}, {20, 20}}, true},
+                                             {{{38, 44}, {6, 40}}, true}, {{{50, 90}, {10, 10}}}}, 1},
+        SceneCase{"equal_area_prefers_frontmost", {{{{12, 34}, {20, 10}}, true},
+                                                   {{{40, 34}, {10, 20}}, true}}, 1},
+        SceneCase{"touching_edges_do_not_overlap", {{{{12, 34}, {30, 30}}, true},
+                                                     {{{42, 34}, {10, 10}}}}, 0},
+        SceneCase{"unsupported_modifier_falls_back", {{{{12, 34}, {30, 30}}, true, glm::mat4{1}, other_modifier},
+                                                      {{{44, 34}, {20, 20}}, true}}, 1},
+        SceneCase{"blocked_large_falls_back", {{{{12, 34}, {30, 30}}, true}, {{{12, 34}, {10, 10}}},
+                                              {{{44, 34}, {20, 20}}, true}}, 2},
+        SceneCase{"overlapping_plain_ui", {{display_area, true}, {{{12, 34}, {10, 10}}}}, std::nullopt},
+        SceneCase{"w_scaling_transform_above", {{{{12, 34}, {30, 30}}, true},
+                                                {{{50, 34}, {20, 20}}, false, glm::mat4{2.0f}}}, std::nullopt},
+        SceneCase{"half_turn_above_disjoint", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false, glm::mat4{mg::transformation(mir_orientation_inverted)}}}, 0},
+        SceneCase{"quarter_turn_above_disjoint", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false, glm::mat4{mg::transformation(mir_orientation_left)}}}, 0},
+        SceneCase{"oriented_above_disjoint", {{{{12, 34}, {30, 30}}, true},
+            {.area = {{50, 34}, {10, 10}}, .orientation = mir_orientation_left}}, 0},
+        SceneCase{"oriented_footprint_avoids_false_block", {{{{12, 34}, {30, 30}}, true},
+            {.area = {{30, 10}, {20, 40}}, .orientation = mir_orientation_left}}, 0},
+        SceneCase{"translated_above_overlaps", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false,
+             glm::translate(glm::mat4{1}, glm::vec3{-45.0f, 0.0f, 0.0f})}}, std::nullopt},
+        SceneCase{"tilted_above_blocks", {{{{12, 34}, {30, 30}}, true},
+            {{{50, 34}, {10, 10}}, false,
+             glm::rotate(glm::mat4{1}, 0.5f, glm::vec3{1.0f, 0.0f, 0.0f})}}, std::nullopt},
+        SceneCase{"disjoint_plain_ui", {{{{12, 34}, {30, 30}}, true}, {{{50, 34}, {20, 20}}}}, 0}),
+    [](TestParamInfo<SceneCase> const& info) { return std::string{info.param.name}; });
+
+TEST_P(AtomicMixedProposal, overlay_queues_mixed_state_when_accepted)
+{
+    auto const& param = GetParam();
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+
+    EXPECT_CALL(
+        *output,
+        test_presentation(presents_primary_and_one_client_plane(
+            *primary_fb, *client_fb, legal_overlay_id, geom::Point{} + param.offset)))
+        .WillOnce(Return(true));
+
+    EXPECT_TRUE(
+        sink->overlay(
+            {fullscreen_element(primary_fb), client_element(client_fb, display_area.top_left + param.offset)}));
+
+    EXPECT_CALL(*output, page_flip(Ref(*primary_fb))).WillOnce(Return(true));
+    EXPECT_TRUE(sink->post());
+}
+
+// The kernel clips a partly off-screen destination, so the sink still proposes it (RejectedClient
+// covers a non-overlapping destination).
+INSTANTIATE_TEST_SUITE_P(
+    MixedProposal,
+    AtomicMixedProposal,
+    Values(
+        MixedProposalCase{.name = "inside_output", .offset = {8, 6}},
+        MixedProposalCase{.name = "partly_outside_output", .offset = {-10, -5}}),
+    [](TestParamInfo<MixedProposalCase> const& info) { return std::string{info.param.name}; });
+
+TEST_P(AtomicMixedRejectedClient, overlay_rejects_a_client_it_cannot_scan_out)
+{
+    auto const& param = GetParam();
+    mg::DisplayElement const client{
+        param.destination, param.source, make_client_framebuffer(param.format, param.layout)};
+
+    EXPECT_FALSE(sink->overlay({legal_primary(), client}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    RejectedClient,
+    AtomicMixedRejectedClient,
+    Values(
+        RejectedClientCase{
+            .name = "unsupported_modifier",
+            .format = {DRM_FORMAT_NV12, other_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {client_top_left, client_size},
+            .source = client_full_source},
+        RejectedClientCase{
+            .name = "layout_not_gl",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::TopRowFirst,
+            .destination = {client_top_left, client_size},
+            .source = client_full_source},
+        RejectedClientCase{
+            .name = "scaled_destination",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {client_top_left, client_size / 2},
+            .source = client_full_source},
+        RejectedClientCase{
+            .name = "cropped_source",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {client_top_left, client_size},
+            .source = {{0, 0}, client_full_source.size / 2}},
+        RejectedClientCase{
+            .name = "completely_outside_output",
+            .format = {DRM_FORMAT_NV12, supported_modifier},
+            .layout = mg::gl::Texture::Layout::GL,
+            .destination = {display_area.top_left + geom::Displacement{output_size.width.as_int(), 0}, client_size},
+            .source = client_full_source}),
+    [](TestParamInfo<RejectedClientCase> const& info) { return std::string{info.param.name}; });
+
+TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_mixed_state_the_test_commit_rejects)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+    auto const offset = geom::Displacement{8, 6};
+
+    EXPECT_CALL(
+        *output,
+        test_presentation(presents_primary_and_one_client_plane(
+            *primary_fb, *client_fb, legal_overlay_id, geom::Point{} + offset)))
+        .WillOnce(Return(false));
+
+    EXPECT_FALSE(
+        sink->overlay({fullscreen_element(primary_fb), client_element(client_fb, display_area.top_left + offset)}));
+
+    EXPECT_CALL(*output, page_flip(_)).Times(0);
+    EXPECT_TRUE(sink->post());
+}
+
+TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_client_without_a_direct_scanout_framebuffer)
+{
+    EXPECT_FALSE(
+        sink->overlay({legal_primary(), client_element(std::make_shared<NiceMock<mt::MockKMSFramebuffer>>())}));
+}
+
+TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_primary_that_is_not_fullscreen)
+{
+    auto primary = legal_primary();
+    primary.screen_positon.size = client_size;
+
+    EXPECT_FALSE(sink->overlay({primary, client_element(make_client_framebuffer())}));
+}
+
+TEST_F(DmaBufImportTest, gbm_import_failure_returns_no_framebuffer)
+{
+    EXPECT_CALL(gbm, gbm_bo_import(_, _, _, _))
+        .WillOnce(SetErrnoAndReturn(EINVAL, nullptr));
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _)).Times(0);
+
+    EXPECT_EQ(allocator.framebuffer_for(make_buffer()), nullptr);
+}
+
+TEST_F(DmaBufImportTest, add_fb_failure_releases_the_bo_and_the_buffer)
+{
+    auto buffer = make_buffer();
+    std::weak_ptr<mg::DMABufBuffer> const weak_buffer{buffer};
+
+    EXPECT_CALL(drm, drmModeAddFB2WithModifiers(_, _, _, _, _, _, _, _, _, _))
+        .WillOnce(Return(-EINVAL));
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(1);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(0);
+
+    EXPECT_EQ(allocator.framebuffer_for(buffer), nullptr);
+
+    buffer.reset();
+    EXPECT_TRUE(weak_buffer.expired());
+}
+
+TEST_F(DmaBufImportTest, framebuffer_keeps_the_bo_and_the_buffer_until_destroyed)
+{
+    auto buffer = make_buffer();
+    std::weak_ptr<mg::DMABufBuffer> const weak_buffer{buffer};
+
+    EXPECT_CALL(gbm, gbm_bo_destroy(_)).Times(0);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(0);
+
+    auto framebuffer = allocator.framebuffer_for(buffer);
+    ASSERT_NE(framebuffer, nullptr);
+
+    buffer.reset();
+    EXPECT_FALSE(weak_buffer.expired());
+
+    Mock::VerifyAndClearExpectations(&gbm);
+    Mock::VerifyAndClearExpectations(&drm);
+    EXPECT_CALL(gbm, gbm_bo_destroy(gbm.fake_gbm.bo)).Times(1);
+    EXPECT_CALL(drm, drmModeRmFB(_, _)).Times(1);
+
+    framebuffer.reset();
+    EXPECT_TRUE(weak_buffer.expired());
 }

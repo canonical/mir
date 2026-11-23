@@ -11,6 +11,8 @@ repos:
   hooks:
   - id: trailing-whitespace
   - id: end-of-file-fixer
+    # Preserve the upstream knowledge-base rules file.
+    exclude: ^\.kb/agents\.md$
   - id: check-added-large-files
 
 - repo: https://github.com/zizmorcore/zizmor-pre-commit
@@ -29,6 +31,8 @@ repos:
   rev: 82912cdaea4fb830f751504486a7879c70526547  # frozen: 1.0.0
   hooks:
   - id: mdformat
+    # Knowledge-base headings require two blank lines.
+    exclude: (^|/)\.kb/[^/]+\.md$
     additional_dependencies:
     - mdformat-black
     - mdformat-beautysh
@@ -40,6 +44,8 @@ repos:
   rev: 6d3c1b70d44ea2202b23552af93aca3b5017ee83  # frozen: v0.9.36
   hooks:
   - id: pymarkdown
+    # Knowledge-base headings require two blank lines.
+    exclude: (^|/)\.kb/[^/]+\.md$
     args:
     - --config=doc/sphinx/_dev/.pymarkdown.json
     - fix

@@ -29,6 +29,8 @@
 #include <gbm.h>
 #include <functional>
 
+#include <memory>
+
 namespace mir
 {
 namespace graphics
@@ -38,6 +40,9 @@ class FBHandle;
 
 namespace atomic
 {
+
+struct CrtcPlaneCapabilities;
+class PresentationState;
 
 class KMSOutput
 {
@@ -49,6 +54,10 @@ public:
      * this may want to be an opaque class Id + operator== in future.
      */
     virtual uint32_t id() const = 0;
+
+    /// Null when there is no selected CRTC or discovery failed. Rebuilt after reset,
+    /// hardware refresh, release or a failed commit.
+    virtual auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> = 0;
 
     virtual void reset() = 0;
     virtual void configure(geometry::Displacement fb_offset, size_t kms_mode_index) = 0;
@@ -74,6 +83,14 @@ public:
     virtual bool page_flip(FBHandle const& fb) = 0;
     virtual bool post_cursor() { return true; }
     virtual void register_refresh_handler(std::function<void()> const&) {}
+
+    /// Builds the complete atomic request that would present \a state and checks it with a
+    /// single DRM_MODE_ATOMIC_TEST_ONLY commit. Nothing visible changes.
+    ///
+    /// \return true if the kernel accepts the request; false if it rejects it or the output
+    ///         cannot present \a state (no CRTC with known plane capabilities, or the primary
+    ///         does not match the mode size)
+    virtual bool test_presentation(PresentationState const& state) = 0;
 
     virtual void set_cursor_image(gbm_bo* buffer) = 0;
     virtual void move_cursor(geometry::Point destination) = 0;

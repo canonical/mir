@@ -1,6 +1,6 @@
 #!/bin/sh
 
-for terminal in gnome-terminal.real gnome-terminal weston-terminal qterminal lxterminal x-terminal-emulator xdg-terminal
+for terminal in ptyxis gnome-terminal.real gnome-terminal weston-terminal qterminal lxterminal x-terminal-emulator xdg-terminal
 do
   if which $terminal > /dev/null 2>&1
   then break;
@@ -11,13 +11,18 @@ done
 # while there's an existing desktop: either as a nested window, or after
 # VT switching.
 #
-# This doesn't fit with gnome-terminal's default behaviour: it tries to run as
-# a single process and any attempt to launch a second instance:
+# This doesn't fit with the default behaviour of gnome-terminal (and ptyxis,
+# the terminal GNOME now ships): they try to run as a single process and any
+# attempt to launch a second instance:
 #
 #   1. appears on the desktop that owns the first terminal; and,
 #   2. the process exits immediately so we can't wait for the exit
 #      (e.g. in miral-app).
-if [ "$terminal" != "gnome-terminal.real" ] && [ "$terminal" != "gnome-terminal" ]
+if [ "$terminal" = "ptyxis" ]
+then
+  # ptyxis supports running a new, independent instance, which suits us.
+  exec $terminal --standalone "$@"
+elif [ "$terminal" != "gnome-terminal.real" ] && [ "$terminal" != "gnome-terminal" ]
 then
   # Other terminals default to running as a separate process, which suits us.
   exec $terminal "$@"

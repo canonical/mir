@@ -32,6 +32,7 @@ namespace graphics
 namespace atomic
 {
 
+class AtomicUpdate;
 class PageFlipper;
 class AtomicUpdate;
 
@@ -44,6 +45,7 @@ public:
     ~AtomicKMSOutput();
 
     uint32_t id() const override;
+    auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> override;
 
     void reset() override;
     void configure(geometry::Displacement fb_offset, size_t kms_mode_index) override;
@@ -56,6 +58,7 @@ public:
     bool page_flip(FBHandle const& fb) override;
     bool post_cursor() override;
     void register_refresh_handler(std::function<void()> const& handler) override;
+    bool test_presentation(PresentationState const& state) override;
 
     void set_cursor_image(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
@@ -80,6 +83,7 @@ private:
         size_t mode_index;
         geometry::Displacement fb_offset;
         kms::DRMModeCrtcUPtr current_crtc;
+        std::shared_ptr<CrtcPlaneCapabilities const> plane_capabilities;
         kms::DRMModePlaneUPtr current_plane;
         std::unique_ptr<PropertyBlob> mode;
         std::unique_ptr<kms::ObjectProperties> crtc_props;
@@ -117,6 +121,7 @@ private:
     void cursor_update_committed(Configuration const& conf, CursorSnapshot const& cursor);
     bool request_cursor_refresh(CursorState& cursor);
     void notify_refresh();
+    void add_primary_properties(AtomicUpdate& update, Configuration const& conf, FBHandle const& fb) const;
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;

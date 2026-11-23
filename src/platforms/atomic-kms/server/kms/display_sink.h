@@ -19,15 +19,16 @@
 
 #include <mir/graphics/display_sink.h>
 #include <mir/graphics/display.h>
-#include "display_helpers.h"
-#include "egl_helper.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
-#include "platform_common.h"
 #include <mir/graphics/kms_framebuffer.h>
+#include <mir/graphics/texture.h>
 
-#include <boost/iostreams/detail/buffer.hpp>
-#include <future>
+#include "plane_capabilities.h"
+#include "platform_common.h"
+#include "presentation_state.h"
+
+#include <optional>
 #include <vector>
 #include <memory>
 #include <atomic>
@@ -71,6 +72,43 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
     private:
         mir::Fd const drm_fd_;
         std::shared_ptr<struct gbm_device> const gbm;
+};
+
+/// A framebuffer handle that owns a DRM framebuffer id.
+///
+/// Declared in this header only because DirectScanoutFramebuffer, which tests construct, derives
+/// from it.
+class AtomicKmsFbHandle : public FBHandle
+{
+public:
+    AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_id, geometry::Size size);
+
+    operator uint32_t() const override;
+    auto size() const -> geometry::Size override;
+
+private:
+    std::shared_ptr<uint32_t> kms_fb_id;
+    geometry::Size size_;
+};
+
+/// A framebuffer imported with an explicit modifier, for direct scanout on an overlay plane.
+///
+/// Declared here so tests can construct one.
+class DirectScanoutFramebuffer : public AtomicKmsFbHandle
+{
+public:
+    DirectScanoutFramebuffer(
+        std::shared_ptr<uint32_t> fb_id,
+        geometry::Size size,
+        FormatModifier format_modifier,
+        gl::Texture::Layout layout);
+
+    auto format_modifier() const -> FormatModifier;
+    auto layout() const -> gl::Texture::Layout;
+
+private:
+    FormatModifier format_modifier_;
+    gl::Texture::Layout layout_;
 };
 
 class DisplaySink :
@@ -121,6 +159,10 @@ protected:
 private:
     bool set_crtc(FBHandle const&);
 
+    auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
+    auto output_maps_1_to_1_to_crtc() const -> bool;
+    auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
+
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
 
@@ -135,9 +177,9 @@ private:
     // Framebuffer handling
     // KMS does not take a reference to submitted framebuffers; if you destroy a framebuffer while
     // it's in use, KMS treat that as submitting a null framebuffer and turn off the display.
-    std::shared_ptr<FBHandle const> next_swap{nullptr};    //< Next frame to submit to the hardware
-    std::shared_ptr<FBHandle const> scheduled_fb{nullptr}; //< Frame currently submitted to the hardware, not yet on-screen
-    std::shared_ptr<FBHandle const> visible_fb{nullptr};   //< Frame currently onscreen
+    std::optional<PresentationState> next_state;      //< Next frame to submit to the hardware
+    std::optional<PresentationState> scheduled_state; //< Frame currently submitted to the hardware, not yet on-screen
+    std::optional<PresentationState> visible_state;   //< Frame currently onscreen
 
     geometry::Rectangle area;
     glm::mat2 transform;
