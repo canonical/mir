@@ -361,6 +361,29 @@ TEST(ShmBacking, access_fault_is_true_after_invaild_write)
     EXPECT_TRUE(map->access_fault());
 }
 
+// Regression test for https://github.com/canonical/mir/issues/5426
+TEST(ShmBacking, access_fault_is_recovered_for_range_at_unaligned_offset)
+{
+    using namespace testing;
+
+    size_t const page_size = sysconf(_SC_PAGE_SIZE);
+    size_t const claimed_size = page_size + 1;    // Lie about our backing size
+    auto shm_fd = make_shm_fd(page_size);
+    auto backing = mir::shm::rw_pool_from_fd(shm_fd, claimed_size);
+
+    // The range starts at a non-page-aligned offset and its last byte lies beyond the backing file.
+    auto range = backing->get_rw_range(1, page_size);
+
+    auto map = range->map_ro();
+
+    for (auto const& a : *map)
+    {
+        EXPECT_THAT(a, Eq(std::byte{0}));
+    }
+
+    EXPECT_TRUE(map->access_fault());
+}
+
 TEST(ShmBacking, access_into_invalid_range_works_even_after_backing_destroyed)
 {
     using namespace testing;
