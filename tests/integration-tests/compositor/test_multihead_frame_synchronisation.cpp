@@ -142,7 +142,7 @@ private:
 class StubDisplayBufferCompositorFactory : public mc::DisplayBufferCompositorFactory
 {
 public:
-    StubDisplayBufferCompositorFactory(
+    explicit StubDisplayBufferCompositorFactory(
         std::function<CompositionRecord&(mg::DisplaySink&)> record_for)
         : record_for{std::move(record_for)}
     {
