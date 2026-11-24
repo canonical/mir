@@ -47,7 +47,6 @@ public:
     void set_key_state(MirInputDeviceId id, std::vector<uint32_t> const& key_state) override;
     void set_keymap_for_device(MirInputDeviceId id, std::shared_ptr<Keymap> map) override;
     void set_keymap_for_all_devices(std::shared_ptr<Keymap> map) override;
-    /// Called when device \a id is removed; also discards the LED observers registered for it.
     void clear_keymap_for_device(MirInputDeviceId id) override;
     void clear_all_keymaps() override;
     void map_event(MirEvent& event) override;
@@ -78,8 +77,7 @@ private:
         std::optional<std::tuple<xkb_keysym_t,xkb_keysym_t>> last_composed_key;
     };
 
-    /// LED observers are tracked per device independently of the keymap state so that
-    /// replacing a device's keymap does not drop observers registered when the device was added.
+    /// LED observers are tracked per device (independently of the keymap)
     class DeviceLedRegistrar : public ObserverMultiplexer<LedObserver>
     {
     public:
