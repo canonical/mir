@@ -32,6 +32,7 @@
 #include <vector>
 #include <memory>
 #include <atomic>
+#include <cstdint>
 
 namespace mir
 {
@@ -161,6 +162,7 @@ private:
     auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
     auto output_maps_1_to_1_to_crtc() const -> bool;
     auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
+    void set_next_state(PresentationState state);
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
@@ -183,6 +185,10 @@ private:
     geometry::Rectangle area;
     glm::mat2 transform;
     std::atomic<bool> needs_set_crtc;
+    /// Bumped whenever the layout changes, so a frame queued for the old layout cannot
+    /// acknowledge the newer modeset request.
+    std::atomic<std::uint64_t> layout_generation{0};
+    std::uint64_t next_state_generation{0};
     std::chrono::milliseconds recommend_sleep{0};
     std::shared_ptr<GbmQuirks> const gbm_quirks;
 };

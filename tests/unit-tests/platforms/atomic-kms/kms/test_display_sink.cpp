@@ -846,6 +846,39 @@ TEST_F(AtomicDisplaySinkTest, mixed_presentation_is_refused_until_a_full_scene_f
     EXPECT_TRUE(fresh_sink->overlay({fullscreen_element(primary_fb), client_element(client_fb)}));
 }
 
+TEST_F(AtomicDisplaySinkTest, layout_change_after_queueing_keeps_the_full_scene_gate)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+
+    // Queue a full-scene frame under the old layout.
+    ASSERT_TRUE(sink->overlay({fullscreen_element(primary_fb)}));
+
+    // Change the layout before that frame is posted. Keep the size so 1:1 promotion stays
+    // available and the gate is the only reason a mixed frame is refused.
+    EXPECT_CALL(*output, reset());
+    sink->set_transformation(glm::mat2{1}, {display_area.top_left + geom::DeltaX{1}, output_size});
+
+    // Posting the old-layout frame must not acknowledge the new modeset request.
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->post());
+
+    auto const area = sink->view_area();
+    mg::DisplayElement const new_fullscreen{area, {{0, 0}, geom::SizeF{area.size}}, primary_fb};
+
+    // The gate is still set, so a mixed frame for the new layout is refused.
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+    EXPECT_FALSE(sink->overlay({new_fullscreen, client_element(client_fb)}));
+
+    // A full-scene frame for the new layout clears the gate.
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({new_fullscreen}));
+    ASSERT_TRUE(sink->post());
+
+    EXPECT_CALL(*output, test_presentation(_)).WillOnce(Return(true));
+    EXPECT_TRUE(sink->overlay({new_fullscreen, client_element(client_fb)}));
+}
+
 TEST_P(AtomicLayoutChange, layout_change_forces_a_full_scene_frame)
 {
     auto const& param = GetParam();

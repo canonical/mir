@@ -132,7 +132,7 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     {
         if (auto fb = fullscreen_framebuffer(renderable_list[0]))
         {
-            next_state = PresentationState::full_scene(std::move(fb));
+            set_next_state(PresentationState::full_scene(std::move(fb)));
             return true;
         }
         return false;
@@ -409,8 +409,14 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
         return false;
     }
 
-    next_state = std::move(state);
+    set_next_state(std::move(state));
     return true;
+}
+
+void mga::DisplaySink::set_next_state(PresentationState state)
+{
+    next_state = std::move(state);
+    next_state_generation = layout_generation.load(std::memory_order_acquire);
 }
 
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
@@ -471,6 +477,7 @@ bool mga::DisplaySink::post()
     /*
      * Otherwise, pull the next frame into the pending slot
      */
+    auto const scheduled_generation = next_state_generation;
     scheduled_state = std::move(next_state);
     next_state.reset();
 
@@ -488,8 +495,12 @@ bool mga::DisplaySink::post()
              * to need to do this on every frame. [will complete in this thread]
              */
             presentation_succeeded = set_crtc(scheduled_state->primary());
-            // SetCrtc is immediate, so the FB is now visible and we have nothing pending
-            needs_set_crtc = false;
+            // SetCrtc is immediate, so the FB is now visible and we have nothing pending.
+            // Only acknowledge the modeset if no newer layout was requested while it ran.
+            if (scheduled_generation == layout_generation.load(std::memory_order_acquire))
+            {
+                needs_set_crtc = false;
+            }
         }
         else
         {
@@ -526,6 +537,7 @@ std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const
 
 void mga::DisplaySink::schedule_set_crtc()
 {
+    layout_generation.fetch_add(1, std::memory_order_acq_rel);
     output->reset();
     needs_set_crtc = true;
 }
