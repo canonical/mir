@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xdg_decoration_unstable_v1.h"
+#include "xdg_decoration_manager_v1.h"
 
 #include <mir/decoration_strategy.h>
 #include <mir/log.h>
