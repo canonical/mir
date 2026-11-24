@@ -759,6 +759,8 @@ TEST_F(AtomicKMSMixedPresentationTest, failed_power_off_keeps_overlays_for_retry
         .WillOnce(Return(-EIO));
     output_under_test->set_power_mode(mir_power_mode_off);
 
+    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
+
     Mock::VerifyAndClearExpectations(&mock_drm);
 
     EXPECT_CALL(

@@ -762,6 +762,11 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
         if (err)
         {
             mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
+            if (!should_be_active)
+            {
+                /* The overlay is still programmed; stop promoting until it is retired. */
+                conf->plane_capabilities = nullptr;
+            }
         }
     }
     else if (should_be_active)
