@@ -75,7 +75,6 @@ mga::DisplaySink::DisplaySink(
       plane_promotion{plane_promotion},
       area(area),
       transform{transformation},
-      needs_set_crtc{true},
       gbm_quirks{gbm_quirks}
 {
     listener->report_successful_setup_of_native_resources();
@@ -109,6 +108,9 @@ geom::Rectangle mga::DisplaySink::view_area() const
 
 glm::mat2 mga::DisplaySink::transformation() const
 {
+    // The compositor reads the transform before it renders, so this is the layout the frame
+    // about to be queued is composed for.
+    frame_generation = layout_generation.load(std::memory_order_acquire);
     return transform;
 }
 
@@ -360,7 +362,7 @@ auto select_direct_candidate(
 auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
 {
     // A pending set_crtc cannot present a mixed frame, so queueing one would only spur a GL recovery frame.
-    if (needs_set_crtc)
+    if (needs_set_crtc())
     {
         return false;
     }
@@ -416,7 +418,13 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
 void mga::DisplaySink::set_next_state(PresentationState state)
 {
     next_state = std::move(state);
-    next_state_generation = layout_generation.load(std::memory_order_acquire);
+    next_state_generation = frame_generation;
+}
+
+auto mga::DisplaySink::needs_set_crtc() const -> bool
+{
+    return presented_generation.load(std::memory_order_acquire) !=
+        layout_generation.load(std::memory_order_acquire);
 }
 
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
@@ -486,7 +494,7 @@ bool mga::DisplaySink::post()
      * We wait synchronously for this to complete.
      */
     auto presentation_succeeded = true;
-    if (needs_set_crtc || !output->page_flip(*scheduled_state))
+    if (needs_set_crtc() || !output->page_flip(*scheduled_state))
     {
         if (scheduled_state->client_planes().empty())
         {
@@ -495,11 +503,11 @@ bool mga::DisplaySink::post()
              * to need to do this on every frame. [will complete in this thread]
              */
             presentation_succeeded = set_crtc(scheduled_state->primary());
-            // SetCrtc is immediate, so the FB is now visible and we have nothing pending.
-            // Only acknowledge the modeset if no newer layout was requested while it ran.
-            if (scheduled_generation == layout_generation.load(std::memory_order_acquire))
+            // SetCrtc is immediate, so the FB is now visible. Record which layout it was
+            // composed for; a frame composed for an older layout leaves the gate closed.
+            if (presentation_succeeded)
             {
-                needs_set_crtc = false;
+                presented_generation.store(scheduled_generation, std::memory_order_release);
             }
         }
         else
@@ -539,7 +547,6 @@ void mga::DisplaySink::schedule_set_crtc()
 {
     layout_generation.fetch_add(1, std::memory_order_acq_rel);
     output->reset();
-    needs_set_crtc = true;
 }
 
 auto mga::DisplaySink::drm_fd() const -> mir::Fd

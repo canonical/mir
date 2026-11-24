@@ -163,6 +163,7 @@ private:
     auto output_maps_1_to_1_to_crtc() const -> bool;
     auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
     void set_next_state(PresentationState state);
+    auto needs_set_crtc() const -> bool;
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;
@@ -184,11 +185,13 @@ private:
 
     geometry::Rectangle area;
     glm::mat2 transform;
-    std::atomic<bool> needs_set_crtc;
-    /// Bumped whenever the layout changes, so a frame queued for the old layout cannot
-    /// acknowledge the newer modeset request.
-    std::atomic<std::uint64_t> layout_generation{0};
-    std::uint64_t next_state_generation{0};
+    /// Bumped whenever the layout changes. A frame is tagged with the generation it was
+    /// composed for, and the gate stays closed until a frame for the current generation has
+    /// been presented.
+    std::atomic<std::uint64_t> layout_generation{1};
+    std::atomic<std::uint64_t> presented_generation{0};
+    mutable std::uint64_t frame_generation{1};
+    std::uint64_t next_state_generation{1};
     std::chrono::milliseconds recommend_sleep{0};
     std::shared_ptr<GbmQuirks> const gbm_quirks;
 };

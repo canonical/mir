@@ -852,6 +852,7 @@ TEST_F(AtomicDisplaySinkTest, layout_change_after_queueing_keeps_the_full_scene_
     auto const client_fb = make_client_framebuffer();
 
     // Queue a full-scene frame under the old layout.
+    (void)sink->transformation();
     ASSERT_TRUE(sink->overlay({fullscreen_element(primary_fb)}));
 
     // Change the layout before that frame is posted. Keep the size so 1:1 promotion stays
@@ -871,6 +872,7 @@ TEST_F(AtomicDisplaySinkTest, layout_change_after_queueing_keeps_the_full_scene_
     EXPECT_FALSE(sink->overlay({new_fullscreen, client_element(client_fb)}));
 
     // A full-scene frame for the new layout clears the gate.
+    (void)sink->transformation();
     EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
     ASSERT_TRUE(sink->overlay({new_fullscreen}));
     ASSERT_TRUE(sink->post());
