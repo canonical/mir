@@ -71,7 +71,7 @@ private:
 
     void surface_removed();
     void surface_resized();
-    void surface_updated(geom::Rectangle const& damage);
+    void surface_updated(std::optional<geom::Rectangle> const& damage);
 
     std::weak_ptr<scene::Surface> const surface;
     std::shared_ptr<ExtImageCaptureV1Ctx> const ctx;
@@ -142,6 +142,7 @@ public:
 
     void window_resized_to(ms::Surface const*, geom::Size const&) override { backend->surface_resized(); }
     void frame_posted(ms::Surface const*, geom::Rectangle const& damage) override { backend->surface_updated(damage); }
+    void moved_to(ms::Surface const*, geom::Point const&) override { backend->surface_updated(std::nullopt); }
 
 private:
     ExtForeignToplevelImageCopyBackend* const backend;
@@ -165,7 +166,7 @@ mf::ExtForeignToplevelImageCopyBackend::ExtForeignToplevelImageCopyBackend(
         ctx->surface_stack->add_observer(scene_observer);
         locked->register_interest(surface_observer, *ctx->wayland_executor);
         surface_resized();
-        surface_updated({});
+        surface_updated(std::nullopt);
     }
     else
     {
@@ -200,7 +201,10 @@ void mf::ExtForeignToplevelImageCopyBackend::surface_resized()
     }
 }
 
-void mf::ExtForeignToplevelImageCopyBackend::surface_updated(geom::Rectangle const& damage) { apply_damage(damage); }
+void mf::ExtForeignToplevelImageCopyBackend::surface_updated(std::optional<geom::Rectangle> const& damage)
+{
+    apply_damage(damage);
+}
 
 bool mf::ExtForeignToplevelImageCopyBackend::has_damage() { return ExtImageCopyBackend::has_damage(); }
 

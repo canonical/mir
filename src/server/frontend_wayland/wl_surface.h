@@ -275,6 +275,8 @@ private:
     /// ignored once the client attaches something else.
     wayland::Weak<ExtForeignBufferV1> current_foreign_buffer;
 
+    void stop_tracking_foreign_buffer();
+
     /// Submits current_buffer to the stream. Returns whether the logical size changed.
     auto submit_current_buffer() -> bool;
 
