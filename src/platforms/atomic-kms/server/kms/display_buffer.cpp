@@ -75,7 +75,7 @@ mga::DisplaySink::DisplaySink(
       plane_promotion{plane_promotion},
       area(area),
       transform{transformation},
-      needs_set_crtc{false},
+      needs_set_crtc{true},
       gbm_quirks{gbm_quirks}
 {
     listener->report_successful_setup_of_native_resources();
@@ -114,8 +114,16 @@ glm::mat2 mga::DisplaySink::transformation() const
 
 void mga::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangle const& a)
 {
+    if (t == transform && a == area)
+    {
+        return;
+    }
+
     transform = t;
     area = a;
+    // The plane capabilities were discovered for the previous layout; rediscover them and
+    // present a full GL frame before allowing promotion again.
+    schedule_set_crtc();
 }
 
 bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_list)

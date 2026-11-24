@@ -259,10 +259,29 @@ void mga::AtomicKMSOutput::reset()
             if (auto err = commit_disabling_overlays(update, *conf))
             {
                 mir::log_warning("Failed to release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
+                /* The output still owns its CRTC and planes, so keep that state; stop promoting
+                 * until the capabilities are rediscovered. */
+                conf->plane_capabilities = nullptr;
+                return;
             }
 
             conf->crtc_props = nullptr;
             conf->plane_props = nullptr;
+        }
+        else if (!conf->current_crtc && !conf->enabled_overlays.empty())
+        {
+            /* A failed commit cleared the CRTC but left overlays programmed; retire them now. */
+            AtomicUpdate update;
+            if (auto err = commit_disabling_overlays(update, *conf))
+            {
+                mir::log_warning(
+                    "Failed to retire overlays for output %s: %s (%i)",
+                    mgk::connector_name(conf->connector).c_str(),
+                    mir::errno_to_cstr(-err),
+                    -err);
+                conf->plane_capabilities = nullptr;
+                return;
+            }
         }
     }
     catch (std::exception const& e)
@@ -409,17 +428,20 @@ void mga::AtomicKMSOutput::clear_crtc()
              * revoked device access before notifying us.
              *
              * Whatever we're switching to can handle the CRTCs; this should not be fatal.
+             * Losing DRM master does not prove that scanout stopped, so keep ownership.
              */
             mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
                 mgk::connector_name(conf->connector).c_str(),
                 mir::errno_to_cstr(-result),
                 -result);
+            /* The output still owns its CRTC and planes, so keep that state; stop promoting
+             * until the capabilities are rediscovered. */
+            conf->plane_capabilities = nullptr;
+            return;
         }
-        else
-        {
-            MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
-                        mgk::connector_name(conf->connector), result);
-        }
+
+        MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
+                    mgk::connector_name(conf->connector), result);
     }
 
     conf->current_crtc = nullptr;
@@ -463,7 +485,8 @@ bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
     }
 
     conf->enabled_overlays = state.client_planes()
-        | std::views::transform([](auto const& assignment) { return assignment.plane; })
+        | std::views::transform([](auto const& assignment)
+            { return Configuration::EnabledOverlay{assignment.plane, assignment.framebuffer}; })
         | std::ranges::to<std::vector>();
 
     using_saved_crtc = false;
@@ -574,13 +597,13 @@ void mga::AtomicKMSOutput::add_overlay_disable_properties(
     Configuration const& conf,
     std::span<ClientPlaneAssignment const> keep) const
 {
-    for (auto const id : conf.enabled_overlays)
+    for (auto const& overlay : conf.enabled_overlays)
     {
         bool const in_use = std::ranges::any_of(
-            keep, [id](ClientPlaneAssignment const& assignment) { return assignment.plane == id; });
+            keep, [&overlay](ClientPlaneAssignment const& assignment) { return assignment.plane == overlay.plane; });
         if (!in_use)
         {
-            mgk::ObjectProperties plane_props{drm_fd_, id, DRM_MODE_OBJECT_PLANE};
+            mgk::ObjectProperties plane_props{drm_fd_, overlay.plane, DRM_MODE_OBJECT_PLANE};
             update.add_property(plane_props, "FB_ID", 0);
             update.add_property(plane_props, "CRTC_ID", 0);
         }
@@ -733,7 +756,10 @@ void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)
     {
         AtomicUpdate update;
         update.add_property(*conf->crtc_props, "ACTIVE", should_be_active);
-        if (auto err = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET))
+        auto const err = should_be_active
+            ? update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET)
+            : commit_disabling_overlays(update, *conf);
+        if (err)
         {
             mir::log_warning("Failed to set DPMS %s (%s [%i])", should_be_active ? "active" : "off", mir::errno_to_cstr(-err), -err);
         }
@@ -792,8 +818,9 @@ void mga::AtomicKMSOutput::set_gamma(mg::GammaCurves const& gamma)
 void mga::AtomicKMSOutput::refresh_hardware_state()
 {
     auto conf = configuration.lock();
+    /* Stop promoting until the capabilities are rediscovered: the hardware state is about to
+     * change, and a failed disable keeps the CRTC and planes owned. */
     conf->plane_capabilities = nullptr;
-    conf->current_plane = nullptr;
     conf->connector = kms::get_connector(drm_fd_, conf->connector->connector_id);
 
     if (conf->current_crtc && (conf->connector->connection != DRM_MODE_CONNECTED))
@@ -805,12 +832,32 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
         update.add_property(*conf->plane_props, "FB_ID", 0);
         update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-        commit_disabling_overlays(update, *conf);
+        if (auto err = commit_disabling_overlays(update, *conf))
+        {
+            mir::log_warning("Failed to release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
+            return;
+        }
 
         conf->connector_props = nullptr;
         conf->crtc_props = nullptr;
         conf->plane_props = nullptr;
     }
+    else if (!conf->current_crtc && !conf->enabled_overlays.empty())
+    {
+        /* A failed commit cleared the CRTC but left overlays programmed; retire them now. */
+        AtomicUpdate update;
+        if (auto err = commit_disabling_overlays(update, *conf))
+        {
+            mir::log_warning(
+                "Failed to retire overlays for output %s: %s (%i)",
+                mgk::connector_name(conf->connector).c_str(),
+                mir::errno_to_cstr(-err),
+                -err);
+            return;
+        }
+    }
+
+    conf->current_plane = nullptr;
     conf->current_crtc = nullptr;
 
     if (conf->connector->encoder_id)

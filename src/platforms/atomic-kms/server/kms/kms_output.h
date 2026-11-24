@@ -54,8 +54,9 @@ public:
      */
     virtual uint32_t id() const = 0;
 
-    /// Null when there is no selected CRTC or discovery failed. Rebuilt after reset,
-    /// hardware refresh, release or a failed commit.
+    /// Null when there is no selected CRTC, discovery failed, or a failed disable kept the
+    /// CRTC owned. Rebuilt when the CRTC is re-ensured after a reset, hardware refresh, or a
+    /// failed page flip or set_crtc.
     virtual auto plane_capabilities() const -> std::shared_ptr<CrtcPlaneCapabilities const> = 0;
 
     virtual void reset() = 0;
