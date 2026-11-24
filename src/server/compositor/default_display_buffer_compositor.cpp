@@ -129,8 +129,8 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     completed_first_render = true;
     report->began_frame(this);
 
-    // Read the transform first: it captures the layout generation the frame is composed for,
-    // so a layout change before the viewport read leaves the gate closed.
+    // Read the transform before the viewport so the sink can associate the frame with the
+    // layout it was composed for.
     auto const transform = display_sink.transformation();
     auto const& view_area = display_sink.view_area();
     auto [occluded_elements, visible_elements] = mc::split_occluded_and_visible(std::move(scene_elements), view_area);

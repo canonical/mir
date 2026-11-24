@@ -88,13 +88,7 @@ private:
         std::unique_ptr<kms::ObjectProperties> crtc_props;
         std::unique_ptr<kms::ObjectProperties> plane_props;
         std::unique_ptr<kms::ObjectProperties> connector_props;
-        struct EnabledOverlay
-        {
-            PlaneId plane;
-            /// Keeps the scanned-out buffer alive until a commit retires the plane
-            std::shared_ptr<FBHandle const> framebuffer;
-        };
-        std::vector<EnabledOverlay> enabled_overlays;
+        std::vector<ClientPlaneAssignment> enabled_overlays;
     };
 
     bool ensure_crtc(Configuration& to_update);
@@ -104,6 +98,7 @@ private:
     void add_overlay_disable_properties(
         AtomicUpdate& update, Configuration const& conf, std::span<ClientPlaneAssignment const> keep = {}) const;
     auto commit_disabling_overlays(AtomicUpdate& update, Configuration& conf) -> int;
+    void retire_overlays_without_crtc(Configuration& conf);
     static auto matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool;
     void restore_saved_crtc();
 

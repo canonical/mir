@@ -268,20 +268,9 @@ void mga::AtomicKMSOutput::reset()
             conf->crtc_props = nullptr;
             conf->plane_props = nullptr;
         }
-        else if (!conf->current_crtc && !conf->enabled_overlays.empty())
+        else
         {
-            /* A failed commit cleared the CRTC but left overlays programmed; retire them now. */
-            AtomicUpdate update;
-            if (auto err = commit_disabling_overlays(update, *conf))
-            {
-                mir::log_warning(
-                    "Failed to retire overlays for output %s: %s (%i)",
-                    mgk::connector_name(conf->connector).c_str(),
-                    mir::errno_to_cstr(-err),
-                    -err);
-                conf->plane_capabilities = nullptr;
-                return;
-            }
+            retire_overlays_without_crtc(*conf);
         }
     }
     catch (std::exception const& e)
@@ -428,14 +417,13 @@ void mga::AtomicKMSOutput::clear_crtc()
              * revoked device access before notifying us.
              *
              * Whatever we're switching to can handle the CRTCs; this should not be fatal.
-             * Losing DRM master does not prove that scanout stopped, so keep ownership.
+             * Losing DRM master does not prove that scanout stopped, so keep ownership of the
+             * CRTC and planes, and stop promoting until the capabilities are rediscovered.
              */
             mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
                 mgk::connector_name(conf->connector).c_str(),
                 mir::errno_to_cstr(-result),
                 -result);
-            /* The output still owns its CRTC and planes, so keep that state; stop promoting
-             * until the capabilities are rediscovered. */
             conf->plane_capabilities = nullptr;
             return;
         }
@@ -484,10 +472,7 @@ bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
         return false;
     }
 
-    conf->enabled_overlays = state.client_planes()
-        | std::views::transform([](auto const& assignment)
-            { return Configuration::EnabledOverlay{assignment.plane, assignment.framebuffer}; })
-        | std::ranges::to<std::vector>();
+    conf->enabled_overlays = std::ranges::to<std::vector>(state.client_planes());
 
     using_saved_crtc = false;
     return true;
@@ -620,6 +605,25 @@ auto mga::AtomicKMSOutput::commit_disabling_overlays(AtomicUpdate& update, Confi
         conf.enabled_overlays.clear();
     }
     return result;
+}
+
+void mga::AtomicKMSOutput::retire_overlays_without_crtc(Configuration& conf)
+{
+    /* A failed page flip or set_crtc dropped our CRTC record while its overlays stay programmed. */
+    if (conf.current_crtc || conf.enabled_overlays.empty())
+    {
+        return;
+    }
+
+    AtomicUpdate update;
+    if (auto err = commit_disabling_overlays(update, conf))
+    {
+        mir::log_warning(
+            "Failed to retire overlays for output %s: %s (%i)",
+            mgk::connector_name(conf.connector).c_str(),
+            mir::errno_to_cstr(-err),
+            -err);
+    }
 }
 
 auto mga::AtomicKMSOutput::matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool
@@ -847,19 +851,9 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
         conf->crtc_props = nullptr;
         conf->plane_props = nullptr;
     }
-    else if (!conf->current_crtc && !conf->enabled_overlays.empty())
+    else
     {
-        /* A failed commit cleared the CRTC but left overlays programmed; retire them now. */
-        AtomicUpdate update;
-        if (auto err = commit_disabling_overlays(update, *conf))
-        {
-            mir::log_warning(
-                "Failed to retire overlays for output %s: %s (%i)",
-                mgk::connector_name(conf->connector).c_str(),
-                mir::errno_to_cstr(-err),
-                -err);
-            return;
-        }
+        retire_overlays_without_crtc(*conf);
     }
 
     conf->current_plane = nullptr;

@@ -189,9 +189,9 @@ private:
     /// composed for, and the gate stays closed until a frame for the current generation has
     /// been presented.
     std::atomic<std::uint64_t> layout_generation{1};
-    std::atomic<std::uint64_t> presented_generation{0};
+    std::uint64_t presented_generation{0};
     mutable std::uint64_t frame_generation{1};
-    std::uint64_t next_state_generation{1};
+    std::uint64_t next_state_generation;
     std::chrono::milliseconds recommend_sleep{0};
     std::shared_ptr<GbmQuirks> const gbm_quirks;
 };

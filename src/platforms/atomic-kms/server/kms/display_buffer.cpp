@@ -123,8 +123,7 @@ void mga::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangl
 
     transform = t;
     area = a;
-    // The plane capabilities were discovered for the previous layout; rediscover them and
-    // present a full GL frame before allowing promotion again.
+    // Retire overlays and require a full GL frame for the new layout before promoting again.
     schedule_set_crtc();
 }
 
@@ -423,8 +422,7 @@ void mga::DisplaySink::set_next_state(PresentationState state)
 
 auto mga::DisplaySink::needs_set_crtc() const -> bool
 {
-    return presented_generation.load(std::memory_order_acquire) !=
-        layout_generation.load(std::memory_order_acquire);
+    return presented_generation != layout_generation.load(std::memory_order_acquire);
 }
 
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
@@ -507,7 +505,7 @@ bool mga::DisplaySink::post()
             // composed for; a frame composed for an older layout leaves the gate closed.
             if (presentation_succeeded)
             {
-                presented_generation.store(scheduled_generation, std::memory_order_release);
+                presented_generation = scheduled_generation;
             }
         }
         else
