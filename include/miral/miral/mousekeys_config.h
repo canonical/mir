@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIRAL_MOUSE_KEYS_CONFIG_H
-#define MIRAL_MOUSE_KEYS_CONFIG_H
+#ifndef MIRAL_MOUSEKEYS_CONFIG_H
+#define MIRAL_MOUSEKEYS_CONFIG_H
 
 #include <mir/input/mousekeys_keymap.h>
 

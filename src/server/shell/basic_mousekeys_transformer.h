@@ -60,7 +60,7 @@ private:
 
     bool handle_motion(
         MirKeyboardAction keyboard_action,
-        mir::input::MouseKeysKeymap::Action mousekey_action,
+        mir::input::MouseKeysKeymap::Action mousekeys_action,
         Dispatcher const& dispatcher,
         mir::input::EventBuilder* const builder);
 

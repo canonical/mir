@@ -109,7 +109,7 @@ struct EnableMouseKeysOptionTest : public TestMouseKeysConfig, public WithParamI
 {
 };
 
-TEST_P(EnableMouseKeysOptionTest, enable_mouse_keys_option_overrides_mousekeys_default_enabled_state)
+TEST_P(EnableMouseKeysOptionTest, enable_mousekeys_option_overrides_mousekeys_default_enabled_state)
 {
     auto const enabled = GetParam();
     add_to_environment("MIR_SERVER_ENABLE_MOUSE_KEYS", enabled?  "1": "0");
@@ -124,7 +124,7 @@ TEST_P(EnableMouseKeysOptionTest, enable_mouse_keys_option_overrides_mousekeys_d
     start_server();
 }
 
-TEST_P(EnableMouseKeysOptionTest, mouse_keys_is_enabled_on_config_state_if_option_is_not_specified)
+TEST_P(EnableMouseKeysOptionTest, mousekeys_is_enabled_on_config_state_if_option_is_not_specified)
 {
     auto const enabled = GetParam();
 

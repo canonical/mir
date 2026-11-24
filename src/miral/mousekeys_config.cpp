@@ -30,19 +30,19 @@
 
 namespace
 {
-char const* const enable_mouse_keys_opt = "enable-mouse-keys";
-char const* const mouse_keys_acceleration_constant_factor = "mouse-keys-acceleration-constant-factor";
-char const* const mouse_keys_acceleration_linear_factor = "mouse-keys-acceleration-linear-factor";
-char const* const mouse_keys_acceleration_quadratic_factor = "mouse-keys-acceleration-quadratic-factor";
-char const* const mouse_keys_max_speed_x = "mouse-keys-max-speed-x";
-char const* const mouse_keys_max_speed_y = "mouse-keys-max-speed-y";
+char const* const enable_mousekeys_opt = "enable-mouse-keys";
+char const* const mousekeys_acceleration_constant_factor = "mouse-keys-acceleration-constant-factor";
+char const* const mousekeys_acceleration_linear_factor = "mouse-keys-acceleration-linear-factor";
+char const* const mousekeys_acceleration_quadratic_factor = "mouse-keys-acceleration-quadratic-factor";
+char const* const mousekeys_max_speed_x = "mouse-keys-max-speed-x";
+char const* const mousekeys_max_speed_y = "mouse-keys-max-speed-y";
 auto const old_options = std::array{
-    enable_mouse_keys_opt,
-    mouse_keys_acceleration_constant_factor,
-    mouse_keys_acceleration_linear_factor,
-    mouse_keys_acceleration_quadratic_factor,
-    mouse_keys_max_speed_x,
-    mouse_keys_max_speed_y,
+    enable_mousekeys_opt,
+    mousekeys_acceleration_constant_factor,
+    mousekeys_acceleration_linear_factor,
+    mousekeys_acceleration_quadratic_factor,
+    mousekeys_max_speed_x,
+    mousekeys_max_speed_y,
 };
 
 namespace defaults
@@ -268,28 +268,28 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
     {
         auto s = self->state.lock();
         server.add_configuration_option(
-            enable_mouse_keys_opt,
+            enable_mousekeys_opt,
             "Enable mousekeys (controlling the mouse with the numpad).",
             mir::OptionType::boolean);
         server.add_configuration_option(
-            mouse_keys_acceleration_constant_factor,
+            mousekeys_acceleration_constant_factor,
             "The base speed for mousekey pointer motion.",
             mir::OptionType::real);
         server.add_configuration_option(
-            mouse_keys_acceleration_linear_factor,
+            mousekeys_acceleration_linear_factor,
             "The linear speed increase for mousekey pointer motion.",
             mir::OptionType::real);
         server.add_configuration_option(
-            mouse_keys_acceleration_quadratic_factor,
+            mousekeys_acceleration_quadratic_factor,
             "The quadratic speed increase for mousekey pointer motion.",
             mir::OptionType::real);
         server.add_configuration_option(
-            mouse_keys_max_speed_x,
+            mousekeys_max_speed_x,
             "The maximum speed in pixels/second the mousekeys pointer can "
             "reach on the x axis. Pass zero to disable the speed limit.",
             mir::OptionType::real);
         server.add_configuration_option(
-            mouse_keys_max_speed_y,
+            mousekeys_max_speed_y,
             "The maximum speed in pixels/second the mousekeys pointer can "
             "reach on the y axis. Pass zero to disable the speed limit.",
             mir::OptionType::real);
@@ -310,7 +310,7 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
 
             auto const state = self->state.lock();
             auto enable = option_or_current_value_or_default(
-                maybe_option<bool>(options, enable_mouse_keys_opt), {state->enabled}, defaults::enable);
+                maybe_option<bool>(options, enable_mousekeys_opt), {state->enabled}, defaults::enable);
 
             if(enable)
                 this->enable();
@@ -322,15 +322,15 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
             auto& mk = server.the_accessibility_manager()->mousekeys();
             {
                 float acceleration_constant = option_or_current_value_or_default(
-                    maybe_option<double>(options, mouse_keys_acceleration_constant_factor),
+                    maybe_option<double>(options, mousekeys_acceleration_constant_factor),
                     state->acceleration_constant,
                     defaults::acceleration_constant);
                 float acceleration_linear = option_or_current_value_or_default(
-                    maybe_option<double>(options, mouse_keys_acceleration_linear_factor),
+                    maybe_option<double>(options, mousekeys_acceleration_linear_factor),
                     state->acceleration_linear,
                     defaults::acceleration_linear);
                 float acceleration_quadratic = option_or_current_value_or_default(
-                    maybe_option<double>(options, mouse_keys_acceleration_quadratic_factor),
+                    maybe_option<double>(options, mousekeys_acceleration_quadratic_factor),
                     state->acceleration_quadratic,
                     defaults::acceleration_quadratic);
                 mk.acceleration_factors(acceleration_constant, acceleration_linear, acceleration_quadratic);
@@ -338,9 +338,9 @@ void miral::MouseKeysConfig::operator()(mir::Server& server) const
 
             {
                 float max_speed_x = option_or_current_value_or_default(
-                    maybe_option<double>(options, mouse_keys_max_speed_x), state->max_speed_x, defaults::max_speed_x);
+                    maybe_option<double>(options, mousekeys_max_speed_x), state->max_speed_x, defaults::max_speed_x);
                 float max_speed_y = option_or_current_value_or_default(
-                    maybe_option<double>(options, mouse_keys_max_speed_y), state->max_speed_y, defaults::max_speed_y);
+                    maybe_option<double>(options, mousekeys_max_speed_y), state->max_speed_y, defaults::max_speed_y);
                 mk.max_speed(max_speed_x, max_speed_y);
             }
 
