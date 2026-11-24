@@ -42,12 +42,13 @@ struct StubWindowSurface : mtd::StubSurface
 
     auto window_size() const -> geom::Size override { return size; }
     void resize(geom::Size const& new_size) override { size = new_size; }
-    auto state() const -> MirWindowState override { return mir_window_state_restored; }
+    auto state() const -> MirWindowState override { return window_state; }
     auto name() const -> std::string override { return title; }
     auto focus_state() const -> MirWindowFocusState override { return focus; }
     void set_focus_state(MirWindowFocusState new_focus) override { focus = new_focus; }
 
     geom::Size size;
+    MirWindowState window_state{mir_window_state_restored};
     std::string title{"stub"};
     MirWindowFocusState focus{mir_window_focus_state_focused};
 };
@@ -211,6 +212,35 @@ TEST_F(DecorationStrategyRendering, corner_radius_larger_than_the_bottom_border_
     RenderedPixels const left{renderer->render_left_border().value()};
     EXPECT_THAT(left(0, left.size.height.as_int() - 1), Ne(0u));
     EXPECT_THAT(left(0, 0) >> 24, Eq(0xFFu));
+}
+
+TEST_F(DecorationStrategyRendering, only_restored_windows_have_rounded_corners)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->corner_radius = geom::Width{12};
+    auto const renderer = render(style);
+
+    auto const check_corners = [&](MirWindowState state, uint32_t expected_alpha)
+    {
+        SCOPED_TRACE(state);
+        surface->window_state = state;
+        renderer->update_state(*strategy->new_window_state(surface, 1.0f), {{}, {}});
+
+        RenderedPixels const titlebar{renderer->render_titlebar().value()};
+        EXPECT_THAT(titlebar(0, 0) >> 24, Eq(expected_alpha));
+        if (auto const border = renderer->render_bottom_border())
+        {
+            RenderedPixels const bottom{*border};
+            EXPECT_THAT(bottom(0, bottom.size.height.as_int() - 1) >> 24, Eq(expected_alpha));
+        }
+    };
+
+    check_corners(mir_window_state_restored, 0);
+    check_corners(mir_window_state_maximized, 0xFF);
+    check_corners(mir_window_state_vertmaximized, 0xFF);
+    check_corners(mir_window_state_horizmaximized, 0xFF);
+    check_corners(mir_window_state_unknown, 0xFF);
+    check_corners(mir_window_state_restored, 0);
 }
 
 TEST_F(DecorationStrategyRendering, buttons_are_drawn_with_the_unfocused_colors_while_unfocused)

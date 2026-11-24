@@ -361,6 +361,7 @@ void msd::BasicDecoration::update(
 
     if (window_updated({
             &WindowState::window_size,
+            &WindowState::corner_radius,
             &WindowState::focused_state,
             &WindowState::window_name,
             &WindowState::titlebar_rect,
@@ -380,6 +381,7 @@ void msd::BasicDecoration::update(
 
     if (window_updated({
             &WindowState::window_size,
+            &WindowState::corner_radius,
             &WindowState::focused_state,
             &WindowState::side_border_width,
             &WindowState::side_border_height,
@@ -395,6 +397,7 @@ void msd::BasicDecoration::update(
 
     if (window_updated({
             &WindowState::window_size,
+            &WindowState::corner_radius,
             &WindowState::focused_state,
             &WindowState::bottom_border_width,
             &WindowState::bottom_border_height,
@@ -407,6 +410,7 @@ void msd::BasicDecoration::update(
 
     if (window_updated({
             &WindowState::window_size,
+            &WindowState::corner_radius,
             &WindowState::focused_state,
             &WindowState::window_name,
             &WindowState::titlebar_rect,

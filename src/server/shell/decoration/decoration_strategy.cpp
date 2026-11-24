@@ -300,6 +300,7 @@ private:
     float scale{1.0f};
     std::string name;
     geom::Size window_size;
+    geom::Width corner_radius;
     geom::Rectangle left_border_rect;
     geom::Rectangle right_border_rect;
     geom::Rectangle bottom_border_rect;
@@ -389,16 +390,9 @@ auto DecorationStrategy::buffer_format() const -> MirPixelFormat
 
 auto DecorationStrategy::new_window_state(const std::shared_ptr<mir::scene::Surface>& window_surface,
                                           float scale) const -> std::unique_ptr<WindowState>
-
 {
     auto const style = this->style.load();
-
-    return std::make_unique<WindowState>(
-        window_surface,
-        style->titlebar_height,
-        style->side_border_width,
-        style->bottom_border_height,
-        scale);
+    return std::make_unique<WindowState>(window_surface, *style, scale);
 }
 
 auto DecorationStrategy::compute_size_with_decorations(
@@ -854,8 +848,6 @@ RendererStrategy::RendererStrategy(
 
 void RendererStrategy::update_state(WindowState const& window_state, InputState const& input_state)
 {
-    bool const window_size_changed = window_state.window_size() != window_size;
-
     if (auto const new_scale{window_state.scale()}; new_scale != scale)
     {
         scale = new_scale;
@@ -870,9 +862,10 @@ void RendererStrategy::update_state(WindowState const& window_state, InputState 
         needs_titlebar_buttons_redraw = true;
     }
 
-    window_size = window_state.window_size();
-    if (window_size_changed)
+    if (window_state.window_size() != window_size || window_state.corner_radius() != corner_radius)
     {
+        window_size = window_state.window_size();
+        corner_radius = window_state.corner_radius();
         drop_border_pixels();
         needs_titlebar_redraw = true;
     }
@@ -1019,7 +1012,7 @@ auto RendererStrategy::render_bottom_border() -> std::optional<std::shared_ptr<m
 
 auto RendererStrategy::scaled_corner_radius() const -> float
 {
-    return std::max(0.0f, style->corner_radius.as_value() * scale);
+    return std::max(0.0f, corner_radius.as_value() * scale);
 }
 
 void RendererStrategy::drop_border_pixels()
