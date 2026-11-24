@@ -129,6 +129,9 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     completed_first_render = true;
     report->began_frame(this);
 
+    // Read the transform before the viewport so the sink can associate the frame with the
+    // layout it was composed for.
+    auto const transform = display_sink.transformation();
     auto const& view_area = display_sink.view_area();
     auto [occluded_elements, visible_elements] = mc::split_occluded_and_visible(std::move(scene_elements), view_area);
 
@@ -154,7 +157,6 @@ bool mc::DefaultDisplayBufferCompositor::composite(mc::SceneElementSequence&& sc
     visible_elements.clear();  // Those in use are still in renderable_list
 
     auto const filter = output_filter->filter();
-    auto const transform = display_sink.transformation();
     if (mode == CompositionMode::normal &&
         try_bypass(renderable_list, *fb_provider, display_sink, filter, transform))
     {

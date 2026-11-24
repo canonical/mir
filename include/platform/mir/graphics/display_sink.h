@@ -134,6 +134,9 @@ public:
      * but in other cases this will represent transformations that the display
      * hardware is unable to do itself, such as screen rotation, flipping,
      * reflection, scaling or keystone correction.
+     *
+     * Read this before rendering a frame: the sink uses the read to associate the frame it is
+     * given with the layout it was composed for.
      */
     virtual glm::mat2 transformation() const = 0;
 

@@ -31,6 +31,7 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <optional>
 #include <unordered_set>
 
 namespace mf = mir::frontend;
@@ -297,7 +298,8 @@ bool configuration_changes_require_recompositing(
     {
         MirOrientation orientation;
         float scale;
-        bool operator<=>(O_S const&) const = default;
+        std::optional<mir::geometry::Size> custom_logical_size;
+        bool operator==(O_S const&) const = default;
     };
 
     std::unordered_map<mg::DisplayConfigurationOutputId, O_S> configs;
@@ -306,7 +308,7 @@ bool configuration_changes_require_recompositing(
     {
         if (output.used)
         {
-            configs.emplace(output.id, O_S{output.orientation, output.scale});
+            configs.emplace(output.id, O_S{output.orientation, output.scale, output.custom_logical_size});
         }
     });
 
@@ -317,7 +319,8 @@ bool configuration_changes_require_recompositing(
         if (result) return;
 
         auto const i = configs.find(output.id);
-        if (i != end(configs) && i->second != O_S{output.orientation, output.scale})
+        if (i != end(configs) &&
+            i->second != O_S{output.orientation, output.scale, output.custom_logical_size})
         {
             result = true;
         }

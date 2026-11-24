@@ -153,8 +153,10 @@ protected:
         ON_CALL(*output, plane_capabilities())
             .WillByDefault(Return(shared_capabilities(legal_capabilities())));
         ON_CALL(*output, test_presentation(_)).WillByDefault(Return(true));
+        ON_CALL(*output, set_crtc(_)).WillByDefault(Return(true));
 
         sink = make_sink();
+        prime();
     }
 
     auto make_sink(
@@ -171,6 +173,15 @@ protected:
             display_area,
             transformation,
             std::make_shared<mga::GbmQuirks>(std::make_unique<StubSurfaceHasFreeBuffersQuirk>()));
+    }
+
+    /// Present a full-scene frame so the sink is past its construction-time modeset
+    void prime()
+    {
+        auto const framebuffer = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+        (void)sink->transformation();
+        ASSERT_TRUE(sink->overlay({fullscreen_element(framebuffer)}));
+        ASSERT_TRUE(sink->post());
     }
 
     auto make_candidate(
@@ -386,6 +397,17 @@ struct RejectedClientCase
 class AtomicMixedRejectedClient : public AtomicDisplaySinkTest, public WithParamInterface<RejectedClientCase>
 {
 };
+
+struct LayoutChange
+{
+    std::string_view name;
+    glm::mat2 transformation;
+    geom::Rectangle area;
+};
+
+class AtomicLayoutChange : public AtomicDisplaySinkTest, public WithParamInterface<LayoutChange>
+{
+};
 }
 
 TEST_P(AtomicPostResult, post_reports_presentation_result)
@@ -571,6 +593,7 @@ TEST_P(AtomicPlanIneligibleOutput, plane_promotion_requires_eligible_output)
     ON_CALL(*output, plane_capabilities())
         .WillByDefault(Return(param.capabilities));
     sink = make_sink(param.transformation, param.promotion);
+    prime();
 
     auto candidate = make_candidate(display_area);
 
@@ -805,6 +828,146 @@ TEST_F(AtomicDisplaySinkTest, overlay_rejects_a_mixed_state_while_a_modeset_is_p
     sink->schedule_set_crtc();
 
     EXPECT_FALSE(sink->overlay({legal_primary(), client_element(make_client_framebuffer())}));
+}
+
+TEST_F(AtomicDisplaySinkTest, mixed_presentation_is_refused_until_a_full_scene_frame_is_posted)
+{
+    auto const fresh_sink = make_sink();
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+    EXPECT_FALSE(fresh_sink->overlay({fullscreen_element(primary_fb), client_element(client_fb)}));
+
+    (void)fresh_sink->transformation();
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(fresh_sink->overlay({fullscreen_element(primary_fb)}));
+    ASSERT_TRUE(fresh_sink->post());
+
+    EXPECT_CALL(*output, test_presentation(_)).WillOnce(Return(true));
+    EXPECT_TRUE(fresh_sink->overlay({fullscreen_element(primary_fb), client_element(client_fb)}));
+}
+
+TEST_F(AtomicDisplaySinkTest, layout_change_after_queueing_keeps_the_full_scene_gate)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+
+    // Queue a full-scene frame under the old layout.
+    (void)sink->transformation();
+    ASSERT_TRUE(sink->overlay({fullscreen_element(primary_fb)}));
+
+    // Change the layout before that frame is posted. Keep the size so 1:1 promotion stays
+    // available and the gate is the only reason a mixed frame is refused.
+    EXPECT_CALL(*output, reset());
+    sink->set_transformation(glm::mat2{1}, {display_area.top_left + geom::DeltaX{1}, output_size});
+
+    // Posting the old-layout frame must not acknowledge the new modeset request.
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->post());
+
+    auto const area = sink->view_area();
+    mg::DisplayElement const new_fullscreen{area, {{0, 0}, geom::SizeF{area.size}}, primary_fb};
+
+    // The gate is still set, so a mixed frame for the new layout is refused.
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+    EXPECT_FALSE(sink->overlay({new_fullscreen, client_element(client_fb)}));
+
+    // A full-scene frame for the new layout clears the gate.
+    (void)sink->transformation();
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({new_fullscreen}));
+    ASSERT_TRUE(sink->post());
+
+    EXPECT_CALL(*output, test_presentation(_)).WillOnce(Return(true));
+    EXPECT_TRUE(sink->overlay({new_fullscreen, client_element(client_fb)}));
+}
+
+TEST_F(AtomicDisplaySinkTest, layout_change_after_queueing_a_gl_frame_keeps_the_full_scene_gate)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+
+    // The compositor reads the transform, renders, then queues the frame.
+    (void)sink->transformation();
+    EXPECT_CALL(*output, reset());
+    sink->set_transformation(glm::mat2{1}, {display_area.top_left + geom::DeltaX{1}, output_size});
+    sink->set_next_image(
+        mg::FramebufferPtr{primary_fb.get(), mg::FramebufferDeleter{[primary_fb](mg::Framebuffer*) {}}});
+
+    // Posting the frame composed for the old layout must not acknowledge the new modeset.
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->post());
+
+    auto const area = sink->view_area();
+    mg::DisplayElement const new_fullscreen{area, {{0, 0}, geom::SizeF{area.size}}, primary_fb};
+
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+    EXPECT_FALSE(sink->overlay({new_fullscreen, client_element(client_fb)}));
+}
+
+TEST_F(AtomicDisplaySinkTest, failed_set_crtc_keeps_the_full_scene_gate)
+{
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    auto const client_fb = make_client_framebuffer();
+
+    EXPECT_CALL(*output, reset());
+    sink->set_transformation(glm::mat2{1}, {display_area.top_left + geom::DeltaX{1}, output_size});
+
+    auto const area = sink->view_area();
+    mg::DisplayElement const fullscreen{area, {{0, 0}, geom::SizeF{area.size}}, primary_fb};
+
+    // The modeset fails, so the new layout has not been presented.
+    (void)sink->transformation();
+    ASSERT_TRUE(sink->overlay({fullscreen}));
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(false));
+    EXPECT_FALSE(sink->post());
+
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+    EXPECT_FALSE(sink->overlay({fullscreen, client_element(client_fb)}));
+
+    // The next full frame succeeds and clears the gate.
+    (void)sink->transformation();
+    ASSERT_TRUE(sink->overlay({fullscreen}));
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->post());
+
+    EXPECT_CALL(*output, test_presentation(_)).WillOnce(Return(true));
+    EXPECT_TRUE(sink->overlay({fullscreen, client_element(client_fb)}));
+}
+
+TEST_P(AtomicLayoutChange, layout_change_forces_a_full_scene_frame)
+{
+    auto const& param = GetParam();
+    auto const framebuffer = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+
+    EXPECT_CALL(*output, reset());
+    sink->set_transformation(param.transformation, param.area);
+
+    EXPECT_CALL(*output, page_flip(_)).Times(0);
+    EXPECT_CALL(*output, set_crtc(Ref(*framebuffer))).WillOnce(Return(true));
+    auto const area = sink->view_area();
+    mg::DisplayElement const element{area, {{0, 0}, geom::SizeF{area.size}}, framebuffer};
+    ASSERT_TRUE(sink->overlay({element}));
+    EXPECT_TRUE(sink->post());
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    LayoutChanges, AtomicLayoutChange,
+    Values(
+        LayoutChange{.name = "transformation", .transformation = glm::mat2{2.0f}, .area = display_area},
+        LayoutChange{.name = "custom_logical_size", .transformation = glm::mat2{1}, .area = {display_area.top_left, output_size / 2}}),
+    [](TestParamInfo<LayoutChange> const& info) { return std::string{info.param.name}; });
+
+TEST_F(AtomicDisplaySinkTest, unchanged_layout_keeps_promotion_available)
+{
+    EXPECT_CALL(*output, reset()).Times(0);
+    sink->set_transformation(glm::mat2{1}, display_area);
+
+    EXPECT_CALL(*output, test_presentation(_)).WillOnce(Return(true));
+    EXPECT_TRUE(sink->overlay(
+        {fullscreen_element(std::make_shared<NiceMock<mt::MockKMSFramebuffer>>()),
+         client_element(make_client_framebuffer())}));
 }
 
 TEST_F(AtomicDisplaySinkTest, post_page_flips_an_accepted_mixed_state_until_the_client_is_replaced)

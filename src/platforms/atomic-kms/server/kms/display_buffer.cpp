@@ -75,7 +75,6 @@ mga::DisplaySink::DisplaySink(
       plane_promotion{plane_promotion},
       area(area),
       transform{transformation},
-      needs_set_crtc{false},
       gbm_quirks{gbm_quirks}
 {
     listener->report_successful_setup_of_native_resources();
@@ -109,13 +108,23 @@ geom::Rectangle mga::DisplaySink::view_area() const
 
 glm::mat2 mga::DisplaySink::transformation() const
 {
+    // The compositor reads the transform before it renders, so this is the layout the frame
+    // about to be queued is composed for.
+    frame_generation = layout_generation.load(std::memory_order_acquire);
     return transform;
 }
 
 void mga::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangle const& a)
 {
+    if (t == transform && a == area)
+    {
+        return;
+    }
+
     transform = t;
     area = a;
+    // Retire overlays and require a full GL frame for the new layout before promoting again.
+    schedule_set_crtc();
 }
 
 bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_list)
@@ -124,7 +133,7 @@ bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_lis
     {
         if (auto fb = fullscreen_framebuffer(renderable_list[0]))
         {
-            next_state = PresentationState::full_scene(std::move(fb));
+            set_next_state(PresentationState::full_scene(std::move(fb)));
             return true;
         }
         return false;
@@ -352,7 +361,7 @@ auto select_direct_candidate(
 auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
 {
     // A pending set_crtc cannot present a mixed frame, so queueing one would only spur a GL recovery frame.
-    if (needs_set_crtc)
+    if (needs_set_crtc())
     {
         return false;
     }
@@ -401,8 +410,19 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
         return false;
     }
 
-    next_state = std::move(state);
+    set_next_state(std::move(state));
     return true;
+}
+
+void mga::DisplaySink::set_next_state(PresentationState state)
+{
+    next_state = std::move(state);
+    next_state_generation = frame_generation;
+}
+
+auto mga::DisplaySink::needs_set_crtc() const -> bool
+{
+    return presented_generation != layout_generation.load(std::memory_order_acquire);
 }
 
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
@@ -463,6 +483,7 @@ bool mga::DisplaySink::post()
     /*
      * Otherwise, pull the next frame into the pending slot
      */
+    auto const scheduled_generation = next_state_generation;
     scheduled_state = std::move(next_state);
     next_state.reset();
 
@@ -471,7 +492,7 @@ bool mga::DisplaySink::post()
      * We wait synchronously for this to complete.
      */
     auto presentation_succeeded = true;
-    if (needs_set_crtc || !output->page_flip(*scheduled_state))
+    if (needs_set_crtc() || !output->page_flip(*scheduled_state))
     {
         if (scheduled_state->client_planes().empty())
         {
@@ -480,8 +501,12 @@ bool mga::DisplaySink::post()
              * to need to do this on every frame. [will complete in this thread]
              */
             presentation_succeeded = set_crtc(scheduled_state->primary());
-            // SetCrtc is immediate, so the FB is now visible and we have nothing pending
-            needs_set_crtc = false;
+            // SetCrtc is immediate, so the FB is now visible. Record which layout it was
+            // composed for; a frame composed for an older layout leaves the gate closed.
+            if (presentation_succeeded)
+            {
+                presented_generation = scheduled_generation;
+            }
         }
         else
         {
@@ -518,8 +543,8 @@ std::chrono::milliseconds mga::DisplaySink::recommended_sleep() const
 
 void mga::DisplaySink::schedule_set_crtc()
 {
+    layout_generation.fetch_add(1, std::memory_order_acq_rel);
     output->reset();
-    needs_set_crtc = true;
 }
 
 auto mga::DisplaySink::drm_fd() const -> mir::Fd

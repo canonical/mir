@@ -425,6 +425,19 @@ auto set_crtc_disabling_the_overlay(AtomicKMSMixedPresentationTest const& fixtur
     return fixture.with_overlay_disabled(fixture.primary_request_properties(
         {.framebuffer_id = AtomicKMSOutputTest::primary_framebuffer_id, .activate_crtc = true}));
 }
+
+auto set_crtc_without_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
+    -> std::map<AtomicPropertyKey, uint64_t>
+{
+    return fixture.primary_request_properties(
+        {.framebuffer_id = AtomicKMSOutputTest::primary_framebuffer_id, .activate_crtc = true});
+}
+
+auto all_disabled_including_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
+    -> std::map<AtomicPropertyKey, uint64_t>
+{
+    return fixture.with_overlay_disabled(fixture.disabled_properties());
+}
 }
 
 TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_and_modeset_flag)
@@ -529,6 +542,215 @@ INSTANTIATE_TEST_SUITE_P(
         DisableCase{"ResetDisconnectedConnector", &mga::AtomicKMSOutput::reset, true},
         DisableCase{"RefreshDisconnectedConnector", &mga::AtomicKMSOutput::refresh_hardware_state, true}),
     [](TestParamInfo<DisableCase> const& info) { return std::string{info.param.name}; });
+
+struct DisableFailureCase
+{
+    std::string_view name;
+    void (mga::AtomicKMSOutput::*operation)();
+    int error;
+    bool disconnect_connector{false};
+};
+
+class AtomicKMSDisableFailureTest : public AtomicKMSMixedPresentationTest,
+                                    public WithParamInterface<DisableFailureCase>
+{
+};
+
+// A failed disable leaves the hardware scanning out the old state, so the output must keep
+// ownership of its CRTC and overlays until a later commit succeeds. Promotion stops until
+// the capabilities are rediscovered.
+TEST_P(AtomicKMSDisableFailureTest, failed_disable_retains_ownership)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_THAT(output_under_test->plane_capabilities(), NotNull());
+    ASSERT_TRUE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    if (GetParam().disconnect_connector)
+        connector().connection = DRM_MODE_DISCONNECTED;
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(all_disabled_including_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET))
+        .WillOnce(Return(GetParam().error));
+
+    ((*output_under_test).*GetParam().operation)();
+
+    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    // A later power-off retires the overlay through the retained state.
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(with_overlay_disabled({{{crtc_id, crtc_active_property_id}, 0}}))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    output_under_test->set_power_mode(mir_power_mode_off);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    DisablePaths, AtomicKMSDisableFailureTest,
+    Values(
+        DisableFailureCase{"ClearCrtcEacces", &mga::AtomicKMSOutput::clear_crtc, -EACCES},
+        DisableFailureCase{"ClearCrtcEperm", &mga::AtomicKMSOutput::clear_crtc, -EPERM},
+        DisableFailureCase{"ResetDisconnectedConnector", &mga::AtomicKMSOutput::reset, -EIO, true},
+        DisableFailureCase{"RefreshDisconnectedConnector", &mga::AtomicKMSOutput::refresh_hardware_state, -EIO, true}),
+    [](TestParamInfo<DisableFailureCase> const& info) { return std::string{info.param.name}; });
+
+// The output must keep the scanned-out overlay buffer alive until a commit actually retires
+// the plane, so a failed disable cannot hand the buffer back to the client.
+TEST_F(AtomicKMSMixedPresentationTest, output_owns_overlay_framebuffer_until_disable_succeeds)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+
+    auto overlay_fb = std::make_shared<StubFramebuffer>(client_framebuffer_id, client_framebuffer_size);
+    std::weak_ptr<StubFramebuffer> const overlay_weak = overlay_fb;
+    {
+        auto state = mga::PresentationState::mixed(
+            std::make_shared<StubFramebuffer>(primary_framebuffer_id, requested_mode_size),
+            {mga::ClientPlaneAssignment{legal_overlay.id, overlay_fb, client_destination}});
+        ASSERT_TRUE(output_under_test->page_flip(state));
+    }
+    overlay_fb.reset();
+    EXPECT_FALSE(overlay_weak.expired());
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(all_disabled_including_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET))
+        .WillOnce(Return(-EACCES));
+    output_under_test->clear_crtc();
+    EXPECT_FALSE(overlay_weak.expired());
+    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(all_disabled_including_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    output_under_test->clear_crtc();
+    EXPECT_TRUE(overlay_weak.expired());
+}
+
+struct LostCrtcCase
+{
+    std::string_view name;
+    void (mga::AtomicKMSOutput::*operation)();
+};
+
+class AtomicKMSLostCrtcOverlayTest : public AtomicKMSMixedPresentationTest,
+                                     public WithParamInterface<LostCrtcCase>
+{
+};
+
+// A failed commit clears the CRTC but keeps the overlay recorded. Reconfiguring or refreshing
+// must still retire that overlay, even though there is no CRTC left to program, and a failed
+// retire must keep it recorded for a later commit to retire.
+TEST_P(AtomicKMSLostCrtcOverlayTest, retires_overlays_when_the_crtc_was_lost)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_TRUE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags)).WillOnce(Return(-EIO));
+    EXPECT_FALSE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(with_overlay_disabled({}))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET))
+        .WillOnce(Return(-EIO));
+    ((*output_under_test).*GetParam().operation)();
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    // The overlay is still recorded, so the next commit retires it.
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(set_crtc_disabling_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    EXPECT_TRUE(output_under_test->set_crtc(StubFramebuffer{primary_framebuffer_id}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    LostCrtcPaths, AtomicKMSLostCrtcOverlayTest,
+    Values(
+        LostCrtcCase{"Reset", &mga::AtomicKMSOutput::reset},
+        LostCrtcCase{"RefreshHardwareState", &mga::AtomicKMSOutput::refresh_hardware_state}),
+    [](TestParamInfo<LostCrtcCase> const& info) { return std::string{info.param.name}; });
+
+struct PowerOffCase
+{
+    std::string_view name;
+    int error;
+    std::map<AtomicPropertyKey, uint64_t> (*follow_up_request)(AtomicKMSMixedPresentationTest const&);
+};
+
+class AtomicKMSPowerOffTest : public AtomicKMSMixedPresentationTest,
+                              public WithParamInterface<PowerOffCase>
+{
+};
+
+// A power-off retires the overlay. A failed power-off keeps it recorded, so the next commit
+// retires it instead.
+TEST_P(AtomicKMSPowerOffTest, power_off_retires_the_overlay)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_TRUE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(with_overlay_disabled({{{crtc_id, crtc_active_property_id}, 0}}))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET))
+        .WillOnce(Return(GetParam().error));
+
+    output_under_test->set_power_mode(mir_power_mode_off);
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(GetParam().follow_up_request(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    EXPECT_TRUE(output_under_test->set_crtc(StubFramebuffer{primary_framebuffer_id}));
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    PowerOff, AtomicKMSPowerOffTest,
+    Values(
+        PowerOffCase{"retired", 0, set_crtc_without_the_overlay},
+        PowerOffCase{"failed", -EIO, set_crtc_disabling_the_overlay}),
+    [](TestParamInfo<PowerOffCase> const& info) { return std::string{info.param.name}; });
 
 TEST_F(AtomicKMSOutputTest, set_crtc_commit_failure_returns_false)
 {
