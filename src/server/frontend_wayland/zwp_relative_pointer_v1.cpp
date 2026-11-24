@@ -30,28 +30,30 @@ namespace frontend
 class RelativePointerManagerV1 : public wayland::RelativePointerManagerV1
 {
 public:
-    RelativePointerManagerV1(wl_resource* resource, std::shared_ptr<shell::Shell> shell);
-
-    class Global : public wayland::RelativePointerManagerV1::Global
-    {
-    public:
-        Global(wl_display* display, std::shared_ptr<shell::Shell> shell);
-
-    private:
-        void bind(wl_resource* new_zwp_relative_pointer_manager_v1) override;
-        std::shared_ptr<shell::Shell> const shell;
-    };
+    RelativePointerManagerV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::RelativePointerManagerV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<shell::Shell> shell);
 
 private:
     std::shared_ptr<shell::Shell> const shell;
 
-    void get_relative_pointer(wl_resource* id, wl_resource* pointer) override;
+    using wayland::RelativePointerManagerV1::get_relative_pointer;
+    auto get_relative_pointer(
+        wayland::Weak<wayland::Pointer> const& pointer,
+        rust::Box<wayland::RelativePointerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<wayland::RelativePointerV1> override;
 };
 
 class RelativePointerV1 : public wayland::RelativePointerV1
 {
 public:
-    RelativePointerV1(wl_resource* id, WlPointer* pointer);
+    RelativePointerV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::RelativePointerV1Middleware> instance,
+        uint32_t object_id,
+        WlPointer* pointer);
 
 private:
     wayland::Weak<WlPointer> const pointer;
@@ -59,37 +61,45 @@ private:
 }
 }
 
-auto mir::frontend::create_relative_pointer_unstable_v1(wl_display *display, std::shared_ptr<shell::Shell> shell)
--> std::shared_ptr<mw::RelativePointerManagerV1::Global>
+auto mir::frontend::create_relative_pointer_unstable_v1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::RelativePointerManagerV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<shell::Shell> shell)
+-> std::shared_ptr<wayland::RelativePointerManagerV1>
 {
-    return std::make_shared<RelativePointerManagerV1::Global>(display, std::move(shell));
+    return std::make_shared<RelativePointerManagerV1>(
+        std::move(client), std::move(instance), object_id, std::move(shell));
 }
 
-mir::frontend::RelativePointerManagerV1::Global::Global(wl_display* display, std::shared_ptr<shell::Shell> shell) :
-    wayland::RelativePointerManagerV1::Global::Global{display, Version<1>{}},
+mir::frontend::RelativePointerManagerV1::RelativePointerManagerV1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::RelativePointerManagerV1Middleware> instance,
+    uint32_t object_id,
+    std::shared_ptr<shell::Shell> shell) :
+    wayland::RelativePointerManagerV1{std::move(client), std::move(instance), object_id},
     shell{std::move(shell)}
 {
 }
 
-void mir::frontend::RelativePointerManagerV1::Global::bind(wl_resource* new_zwp_relative_pointer_manager_v1)
+auto mir::frontend::RelativePointerManagerV1::get_relative_pointer(
+    wayland::Weak<wayland::Pointer> const& pointer,
+    rust::Box<wayland::RelativePointerV1Middleware> child_instance,
+    uint32_t child_object_id) -> std::shared_ptr<wayland::RelativePointerV1>
 {
-    new RelativePointerManagerV1{new_zwp_relative_pointer_manager_v1, shell};
+    return std::make_shared<RelativePointerV1>(
+        client, std::move(child_instance), child_object_id,
+        wayland::Pointer::from<WlPointer>(pointer));
 }
 
-mir::frontend::RelativePointerManagerV1::RelativePointerManagerV1(wl_resource* resource, std::shared_ptr<shell::Shell> shell) :
-    wayland::RelativePointerManagerV1{resource, Version<1>{}},
-    shell{std::move(shell)}
+mir::frontend::RelativePointerV1::RelativePointerV1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::RelativePointerV1Middleware> instance,
+    uint32_t object_id,
+    WlPointer* pointer) :
+    wayland::RelativePointerV1{std::move(client), std::move(instance), object_id},
+    pointer{mw::make_weak(pointer)}
 {
-}
-
-void mir::frontend::RelativePointerManagerV1::get_relative_pointer(wl_resource* id, wl_resource* pointer)
-{
-    new RelativePointerV1{id, dynamic_cast<WlPointer*>(wayland::Pointer::from(pointer))};
-}
-
-mir::frontend::RelativePointerV1::RelativePointerV1(wl_resource* id, WlPointer* pointer) :
-    wayland::RelativePointerV1{id, Version<1>{}},
-    pointer{pointer}
-{
-    pointer->set_relative_pointer(this);
+    if (pointer)
+        pointer->set_relative_pointer(this);
 }

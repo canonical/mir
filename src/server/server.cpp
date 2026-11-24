@@ -531,7 +531,6 @@ auto mir::Server::scene_surface_for_wayland_surface(scene::Session const& sessio
 
 void mir::Server::add_wayland_extension(
     std::string const& name, std::function<std::shared_ptr<void>(
-        wl_display*,
         std::function<void(std::function<void()>&& work)> const&)> builder)
 {
     if (auto const config = self->server_config)

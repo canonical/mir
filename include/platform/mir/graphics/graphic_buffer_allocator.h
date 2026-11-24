@@ -34,6 +34,7 @@ namespace renderer::software { class RWMappable; }
 
 namespace graphics
 {
+class LinuxDmaBuf;
 
 /**
  * Interface to graphic buffer allocation.
@@ -87,6 +88,16 @@ public:
         std::shared_ptr<renderer::software::RWMappable> shm_data,
         std::function<void()>&& on_consumed,
         std::function<void()>&& on_release) -> std::shared_ptr<Buffer> = 0;
+
+    /**
+     * The linux-dmabuf client buffer support this allocator offers, if any.
+     *
+     * The platform decides which client buffer types it supports; the Wayland frontend
+     * only offers zwp_linux_dmabuf_v1 to clients when this is non-null.
+     *
+     * \return the platform's linux-dmabuf support, or nullptr if it has none
+     */
+    virtual auto linux_dmabuf() -> std::shared_ptr<LinuxDmaBuf> = 0;
 
 protected:
     GraphicBufferAllocator() = default;

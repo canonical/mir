@@ -17,8 +17,13 @@
 #ifndef MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 #define MIR_FRONTEND_PRIMARY_SELECTION_V1_H
 
+#include "wp_primary_selection_unstable_v1.h"
+
 #include <mir/scene/data_exchange.h>
-#include "primary-selection-unstable-v1_wrapper.h"
+
+#include <memory>
+#include <string>
+#include <vector>
 
 namespace mir
 {
@@ -29,27 +34,36 @@ class Clipboard;
 }
 namespace frontend
 {
-class PrimarySelectionSource : public mir::wayland::PrimarySelectionSourceV1
+class PrimarySelectionSourceV1 : public mir::wayland::PrimarySelectionSourceV1
 {
-private:
-    std::vector<std::string> mime_types;
-    std::shared_ptr<mir::Executor> const wayland_executor;
-
 public:
     class Source;
 
-    PrimarySelectionSource(wl_resource* resource, std::shared_ptr<mir::Executor> wayland_executor);
+    PrimarySelectionSourceV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::PrimarySelectionSourceV1Middleware> instance,
+        uint32_t object_id,
+        std::shared_ptr<mir::Executor> wayland_executor);
 
-    static auto from(struct wl_resource* resource) -> PrimarySelectionSource*;
+    auto offer(rust::String mime_type) -> void override;
+    auto destroy() -> void override
+    {
+        destroy_and_delete();
+    }
+    auto make_source() -> std::shared_ptr<mir::scene::DataExchangeSource>;
 
-    void offer(std::string const& mime_type) override;
-    auto make_source() const -> std::shared_ptr<mir::scene::DataExchangeSource>;
+private:
+    std::vector<std::string> mime_types;
+    std::shared_ptr<mir::Executor> const wayland_executor;
 };
-auto create_primary_selection_device_manager_v1(
-    wl_display* display,
+
+auto create_zwp_primary_selection_device_manager_v1(
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::PrimarySelectionDeviceManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<Executor> wayland_executor,
     std::shared_ptr<scene::Clipboard> primary_selection_clipboard)
--> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1::Global>;
+-> std::shared_ptr<wayland::PrimarySelectionDeviceManagerV1>;
 }
 }
 

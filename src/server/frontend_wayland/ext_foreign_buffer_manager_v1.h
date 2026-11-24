@@ -14,19 +14,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_FRONTEND_EXT_FOREIGN_BUFFER_V1_H
-#define MIR_FRONTEND_EXT_FOREIGN_BUFFER_V1_H
+#ifndef MIR_FRONTEND_EXT_FOREIGN_BUFFER_MANAGER_V1_H
+#define MIR_FRONTEND_EXT_FOREIGN_BUFFER_MANAGER_V1_H
 
-#include "ext-foreign-buffer-v1_wrapper.h"
-#include "wayland_wrapper.h"
-
-#include <mir/wayland/weak.h>
+#include "ext_foreign_buffer_v1.h"
+#include "wayland.h"
+#include "weak.h"
 
 #include <memory>
 #include <vector>
 
 namespace mir
 {
+class Executor;
 namespace graphics
 {
 class Buffer;
@@ -34,7 +34,6 @@ class GraphicBufferAllocator;
 }
 namespace frontend
 {
-class WaylandExecutor;
 class WlSurface;
 
 /// An opaque wl_buffer handed out by an ext_foreign_buffer_session_v1.
@@ -49,9 +48,10 @@ class WlSurface;
 class ExtForeignBufferV1 : public wayland::Buffer
 {
 public:
-    explicit ExtForeignBufferV1(wl_resource* resource);
-
-    static auto from(wl_resource* resource) -> ExtForeignBufferV1*;
+    ExtForeignBufferV1(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::BufferMiddleware> instance,
+        uint32_t object_id);
 
     /// The buffer currently holding the source's content, or nullptr if nothing has been
     /// captured yet.
@@ -72,11 +72,13 @@ private:
 };
 
 auto create_ext_foreign_buffer_manager_v1(
-    wl_display* display,
+    std::shared_ptr<wayland::Client> client,
+    rust::Box<wayland::ExtForeignBufferManagerV1Middleware> instance,
+    uint32_t object_id,
     std::shared_ptr<graphics::GraphicBufferAllocator> const& allocator,
-    std::shared_ptr<WaylandExecutor> const& executor)
-    -> std::shared_ptr<wayland::ForeignBufferManagerV1::Global>;
+    std::shared_ptr<Executor> const& wayland_executor)
+    -> std::shared_ptr<wayland::ExtForeignBufferManagerV1>;
 }
 }
 
-#endif
+#endif // MIR_FRONTEND_EXT_FOREIGN_BUFFER_MANAGER_V1_H

@@ -16,7 +16,8 @@
 
 #include "mir_shell.h"
 
-#include <mir/wayland/protocol_error.h>
+#include "protocol_error.h"
+#include "weak.h"
 #include "wl_surface.h"
 
 namespace mf = mir::frontend;
@@ -27,42 +28,13 @@ using namespace mir::geometry;
 
 namespace
 {
-mw::Resource::Version<1> const version1;
-mw::Resource::Version<2> const version2;
-
-struct Global : mw::MirShellV1::Global
-{
-    Global(struct wl_display* display) :
-        mw::MirShellV1::Global{display, Version<2>{}} {}
-
-    void bind(wl_resource* new_zmir_mir_shell_v1) override;
-};
-
-struct Instance : mw::MirShellV1
-{
-    Instance(struct wl_resource* resource) :
-        MirShellV1{resource, version2} {}
-
-    void get_regular_surface(struct wl_resource* id, struct wl_resource* surface) override;
-
-    void get_floating_regular_surface(struct wl_resource* id, struct wl_resource* surface) override;
-
-    void get_dialog_surface(struct wl_resource* id, struct wl_resource* surface) override;
-
-    void
-    get_satellite_surface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* positioner) override;
-
-    void get_menu_surface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* positioner) override;
-
-    void get_tip_surface(struct wl_resource* id, struct wl_resource* surface, struct wl_resource* positioner) override;
-
-    void create_positioner(struct wl_resource* id) override;
-};
-
 class MirPositioner : public mw::MirPositionerV1, SurfaceSpecification
 {
 public:
-    MirPositioner(wl_resource* new_resource);
+    MirPositioner(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::MirPositionerV1Middleware> instance,
+        uint32_t object_id);
 
     auto is_complete() const -> bool { return width && height && aux_rect; }
 
@@ -78,9 +50,9 @@ private:
 };
 
 template<typename Interface>
-auto validated_positioner(wl_resource* receiver, wl_resource* positioner) -> MirPositioner const&
+auto validated_positioner(uint32_t receiver, mw::Weak<mw::MirPositionerV1> const& positioner) -> MirPositioner const&
 {
-    auto const* const spec = dynamic_cast<MirPositioner const*>(mw::MirPositionerV1::from(positioner));
+    auto const* const spec = mw::MirPositionerV1::from<MirPositioner>(positioner);
 
     if (!spec || !spec->is_complete())
     {
@@ -93,13 +65,17 @@ auto validated_positioner(wl_resource* receiver, wl_resource* positioner) -> Mir
     return *spec;
 }
 
-template<typename MirSurface, MirWindowType type>
+template<typename MirSurface, typename Middleware, MirWindowType type>
 struct Surface : MirSurface, mf::WlSurfaceArchetype
 {
-    Surface(wl_resource* resource, mf::WlSurface* wl_surface,
-            std::optional<MirDepthLayer> depth_layer = std::nullopt) :
-        MirSurface{resource, version1},
-        wl_surface{wl_surface}
+    Surface(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<Middleware> instance,
+        uint32_t object_id,
+        mf::WlSurface* wl_surface,
+        std::optional<MirDepthLayer> depth_layer = std::nullopt) :
+        MirSurface{std::move(client), std::move(instance), object_id},
+        wl_surface{mw::make_weak(wl_surface)}
     {
         SurfaceSpecification spec;
         spec.type = type;
@@ -120,12 +96,17 @@ struct Surface : MirSurface, mf::WlSurfaceArchetype
     mw::Weak<mf::WlSurface> wl_surface;
 };
 
-template<typename MirSurface, MirWindowType type>
+template<typename MirSurface, typename Middleware, MirWindowType type>
 struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
 {
-    SurfaceWithPosition(wl_resource* resource, mf::WlSurface* wl_surface, MirPositioner const& positioner) :
-        MirSurface{resource, version1},
-        wl_surface{wl_surface}
+    SurfaceWithPosition(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<Middleware> instance,
+        uint32_t object_id,
+        mf::WlSurface* wl_surface,
+        MirPositioner const& positioner) :
+        MirSurface{std::move(client), std::move(instance), object_id},
+        wl_surface{mw::make_weak(wl_surface)}
     {
         position(positioner);
 
@@ -140,17 +121,18 @@ struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
 
     void make_inert() override { wl_surface = {}; }
 
-    void reposition(struct wl_resource* positioner, uint32_t /*token*/) override
+    using MirSurface::reposition;
+    auto reposition(mw::Weak<mw::MirPositionerV1> const& positioner, uint32_t /*token*/) -> void override
     {
         if (!wl_surface)
         {
             throw mw::ProtocolError{
-                MirSurface::resource,
+                MirSurface::object_id(),
                 MirSurface::Error::invalid_archetype,
                 "The archetype has been removed from the surface"};
         }
 
-        position(validated_positioner<MirSurface>(MirSurface::resource, positioner));
+        position(validated_positioner<MirSurface>(MirSurface::object_id(), positioner));
     }
 
     void position(MirPositioner const& positioner) const
@@ -163,9 +145,9 @@ struct SurfaceWithPosition : MirSurface, mf::WlSurfaceArchetype
     mw::Weak<mf::WlSurface> wl_surface;
 };
 
-auto archetype_target(wl_resource* shell, wl_resource* surface) -> mf::WlSurface*
+auto archetype_target(uint32_t shell, mw::Weak<mw::Surface> const& surface) -> mf::WlSurface*
 {
-    auto const wl_surface = mf::WlSurface::from(surface);
+    auto const wl_surface = mw::Surface::from<mf::WlSurface>(surface);
 
     if (!wl_surface->role_accepts_archetype())
     {
@@ -177,62 +159,112 @@ auto archetype_target(wl_resource* shell, wl_resource* surface) -> mf::WlSurface
 
     return wl_surface;
 }
-}
 
-auto mf::create_mir_shell_v1(struct wl_display* display) -> std::shared_ptr<mw::MirShellV1::Global>
+class MirShellV1 : public mw::MirShellV1
 {
-    return std::make_shared<Global>(display);
+public:
+    MirShellV1(
+        std::shared_ptr<mw::Client> client,
+        rust::Box<mw::MirShellV1Middleware> instance,
+        uint32_t object_id) :
+        mw::MirShellV1{std::move(client), std::move(instance), object_id}
+    {
+    }
+
+private:
+    using mw::MirShellV1::get_regular_surface;
+    auto get_regular_surface(
+        mw::Weak<mw::Surface> const& surface,
+        rust::Box<mw::MirRegularSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirRegularSurfaceV1> override
+    {
+        return std::make_shared<Surface<mw::MirRegularSurfaceV1, mw::MirRegularSurfaceV1Middleware, mir_window_type_normal>>(
+            client, std::move(child_instance), child_object_id, archetype_target(object_id(), surface));
+    }
+
+    using mw::MirShellV1::get_floating_regular_surface;
+    auto get_floating_regular_surface(
+        mw::Weak<mw::Surface> const& surface,
+        rust::Box<mw::MirFloatingRegularSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirFloatingRegularSurfaceV1> override
+    {
+        return std::make_shared<
+            Surface<mw::MirFloatingRegularSurfaceV1, mw::MirFloatingRegularSurfaceV1Middleware, mir_window_type_utility>>(
+            client, std::move(child_instance), child_object_id, archetype_target(object_id(), surface),
+            mir_depth_layer_always_on_top);
+    }
+
+    using mw::MirShellV1::get_dialog_surface;
+    auto get_dialog_surface(
+        mw::Weak<mw::Surface> const& surface,
+        rust::Box<mw::MirDialogSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirDialogSurfaceV1> override
+    {
+        return std::make_shared<Surface<mw::MirDialogSurfaceV1, mw::MirDialogSurfaceV1Middleware, mir_window_type_dialog>>(
+            client, std::move(child_instance), child_object_id, archetype_target(object_id(), surface));
+    }
+
+    using mw::MirShellV1::get_satellite_surface;
+    auto get_satellite_surface(
+        mw::Weak<mw::Surface> const& surface,
+        mw::Weak<mw::MirPositionerV1> const& positioner,
+        rust::Box<mw::MirSatelliteSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirSatelliteSurfaceV1> override
+    {
+        auto const& validated = validated_positioner<mw::MirShellV1>(object_id(), positioner);
+        return std::make_shared<
+            SurfaceWithPosition<mw::MirSatelliteSurfaceV1, mw::MirSatelliteSurfaceV1Middleware, mir_window_type_satellite>>(
+            client, std::move(child_instance), child_object_id, archetype_target(object_id(), surface), validated);
+    }
+
+    using mw::MirShellV1::get_menu_surface;
+    auto get_menu_surface(
+        mw::Weak<mw::Surface> const& surface,
+        mw::Weak<mw::MirPositionerV1> const& positioner,
+        rust::Box<mw::MirMenuSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirMenuSurfaceV1> override
+    {
+        auto const& validated = validated_positioner<mw::MirShellV1>(object_id(), positioner);
+        return std::make_shared<
+            SurfaceWithPosition<mw::MirMenuSurfaceV1, mw::MirMenuSurfaceV1Middleware, mir_window_type_menu>>(
+            client, std::move(child_instance), child_object_id, archetype_target(object_id(), surface), validated);
+    }
+
+    using mw::MirShellV1::get_tip_surface;
+    auto get_tip_surface(
+        mw::Weak<mw::Surface> const& surface,
+        mw::Weak<mw::MirPositionerV1> const& positioner,
+        rust::Box<mw::MirTipSurfaceV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirTipSurfaceV1> override
+    {
+        auto const& validated = validated_positioner<mw::MirShellV1>(object_id(), positioner);
+        return std::make_shared<
+            SurfaceWithPosition<mw::MirTipSurfaceV1, mw::MirTipSurfaceV1Middleware, mir_window_type_tip>>(
+            client, std::move(child_instance), child_object_id, archetype_target(object_id(), surface), validated);
+    }
+
+    auto create_positioner(
+        rust::Box<mw::MirPositionerV1Middleware> child_instance,
+        uint32_t child_object_id) -> std::shared_ptr<mw::MirPositionerV1> override
+    {
+        return std::make_shared<MirPositioner>(client, std::move(child_instance), child_object_id);
+    }
+};
 }
 
-void Global::bind(wl_resource* new_zmir_mir_shell_v1)
+auto mf::create_mir_shell_v1(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::MirShellV1Middleware> instance,
+    uint32_t object_id) -> std::shared_ptr<mw::MirShellV1>
 {
-    new Instance{new_zmir_mir_shell_v1};
+    return std::make_shared<MirShellV1>(std::move(client), std::move(instance), object_id);
 }
 
-void Instance::get_regular_surface(struct wl_resource* id, struct wl_resource* surface)
-{
-    new Surface<mw::MirRegularSurfaceV1, mir_window_type_normal>{id, archetype_target(resource, surface)};
-}
-
-void Instance::get_floating_regular_surface(struct wl_resource* id, struct wl_resource* surface)
-{
-    new Surface<mw::MirFloatingRegularSurfaceV1, mir_window_type_utility>
-        {id, archetype_target(resource, surface), mir_depth_layer_always_on_top};
-}
-
-void Instance::get_dialog_surface(struct wl_resource* id, struct wl_resource* surface)
-{
-    new Surface<mw::MirDialogSurfaceV1, mir_window_type_dialog>{id, archetype_target(resource, surface)};
-}
-
-void Instance::get_satellite_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
-{
-    auto const& validated = validated_positioner<mw::MirShellV1>(resource, positioner);
-    new SurfaceWithPosition<mw::MirSatelliteSurfaceV1, mir_window_type_satellite>
-        {id, archetype_target(resource, surface), validated};
-}
-
-void Instance::get_menu_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
-{
-    auto const& validated = validated_positioner<mw::MirShellV1>(resource, positioner);
-    new SurfaceWithPosition<mw::MirMenuSurfaceV1, mir_window_type_menu>
-        {id, archetype_target(resource, surface), validated};
-}
-
-void Instance::get_tip_surface(wl_resource* id, wl_resource* surface, wl_resource* positioner)
-{
-    auto const& validated = validated_positioner<mw::MirShellV1>(resource, positioner);
-    new SurfaceWithPosition<mw::MirTipSurfaceV1, mir_window_type_tip>
-        {id, archetype_target(resource, surface), validated};
-}
-
-void Instance::create_positioner(struct wl_resource* id)
-{
-    new MirPositioner(id);
-}
-
-MirPositioner::MirPositioner(wl_resource* new_resource)
-    : mw::MirPositionerV1(new_resource, Version<1>())
+MirPositioner::MirPositioner(
+    std::shared_ptr<mw::Client> client,
+    rust::Box<mw::MirPositionerV1Middleware> instance,
+    uint32_t object_id)
+    : mw::MirPositionerV1{std::move(client), std::move(instance), object_id}
 {
     // specifying gravity is not required by the xdg shell protocol, but is by Mir window managers
     surface_placement_gravity = mir_placement_gravity_center;
@@ -245,7 +277,7 @@ void MirPositioner::set_size(int32_t width, int32_t height)
     if (width <= 0 || height <= 0)
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             mw::MirPositionerV1::Error::invalid_input,
             "Invalid popup positioner size: %dx%d", width, height};
     }
@@ -258,7 +290,7 @@ void MirPositioner::set_anchor_rect(int32_t x, int32_t y, int32_t width, int32_t
     if (width < 0 || height < 0)
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             mw::MirPositionerV1::Error::invalid_input,
             "Invalid popup anchor rect size: %dx%d", width, height};
     }
@@ -309,7 +341,7 @@ void MirPositioner::set_anchor(uint32_t anchor)
 
     default:
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             mw::MirPositionerV1::Error::invalid_input,
             "Invalid anchor value %u", anchor};
     }
@@ -361,7 +393,7 @@ void MirPositioner::set_gravity(uint32_t gravity)
 
     default:
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             mw::MirPositionerV1::Error::invalid_input,
             "Invalid gravity value %d", gravity};
     }
@@ -379,7 +411,7 @@ void MirPositioner::set_constraint_adjustment(uint32_t constraint_adjustment)
     if (constraint_adjustment & ~all_adjustments)
     {
         throw mw::ProtocolError{
-            resource,
+            object_id(),
             mw::MirPositionerV1::Error::invalid_input,
             "Invalid constraint adjustment value 0x%x", constraint_adjustment};
     }

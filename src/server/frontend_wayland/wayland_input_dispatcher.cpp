@@ -22,7 +22,7 @@
 #include "wl_touch.h"
 
 #include <mir/input/keymap.h>
-#include <mir/wayland/client.h>
+#include "client.h"
 #include <mir/events/keyboard_event.h>
 #include <mir/events/pointer_event.h>
 #include <mir/events/touch_event.h>
@@ -53,7 +53,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_pointer:
     {
         auto const pointer_event = dynamic_pointer_cast<MirPointerEvent const>(event);
-        seat->for_each_listener(wl_surface.value().client, [&](PointerEventDispatcher* pointer)
+        seat->for_each_listener(wl_surface.value().client.get(), [&](PointerEventDispatcher* pointer)
             {
                 pointer->event(pointer_event, wl_surface.value());
             });
@@ -62,7 +62,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_touch:
     {
         auto const touch_event = dynamic_pointer_cast<MirTouchEvent const>(event);
-        seat->for_each_listener(wl_surface.value().client, [&](WlTouch* touch)
+        seat->for_each_listener(wl_surface.value().client.get(), [&](WlTouch* touch)
             {
                 touch->event(touch_event, wl_surface.value());
             });
@@ -72,7 +72,7 @@ void mf::WaylandInputDispatcher::handle_event(std::shared_ptr<MirInputEvent cons
     case mir_input_event_type_key:
     {
         auto const keyboard_event = dynamic_pointer_cast<MirKeyboardEvent const>(event);
-        seat->for_each_listener(wl_surface.value().client, [&](WlKeyboard* keyboard)
+        seat->for_each_listener(wl_surface.value().client.get(), [&](WlKeyboard* keyboard)
             {
                 keyboard->event(keyboard_event, wl_surface.value());
             });

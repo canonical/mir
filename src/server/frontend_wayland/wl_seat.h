@@ -18,10 +18,12 @@
 #define MIR_FRONTEND_WL_SEAT_H
 
 #include "input_trigger_registry.h"
-#include "wayland_wrapper.h"
-#include <mir/wayland/weak.h>
+#include "wayland.h"
+#include "weak.h"
 
+#include <cstdint>
 #include <functional>
+#include <memory>
 
 struct MirPointerEvent;
 
@@ -40,6 +42,13 @@ class KeyboardObserver;
 namespace shell
 {
 class AccessibilityManager;
+}
+namespace wayland
+{
+class Client;
+class Seat;
+template<typename T>
+class Weak;
 }
 namespace time
 {
@@ -69,14 +78,14 @@ public:
     void stop_dispatch_to_data_device();
 private:
     wayland::Weak<WlPointer> wl_pointer;
-    wayland::Weak<WlDataDevice> wl_data_device;
+    WlDataDevice* wl_data_device{nullptr};
+    std::shared_ptr<bool const> wl_data_device_destroyed;
 };
 
-class WlSeat : public wayland::Seat::Global
+class WlSeat
 {
 public:
     WlSeat(
-        wl_display* display,
         Executor& wayland_executor,
         std::shared_ptr<time::Clock> const& clock,
         std::shared_ptr<mir::input::InputDeviceHub> const& input_hub,
@@ -94,7 +103,12 @@ public:
     WlSeat(WlSeat&&) = delete;
     WlSeat& operator=(WlSeat&&) = delete;
 
-    static auto from(struct wl_resource* resource) -> WlSeat*;
+    static auto from(wayland::Weak<wayland::Seat> const& seat) -> WlSeat*;
+
+    auto create_instance(
+        std::shared_ptr<wayland::Client> client,
+        rust::Box<wayland::SeatMiddleware> instance,
+        uint32_t object_id) -> std::shared_ptr<wayland::Seat>;
 
     void for_each_listener(wayland::Client* client, std::function<void(PointerEventDispatcher*)> func);
     void for_each_listener(wayland::Client* client, std::function<void(WlKeyboard*)> func);
@@ -126,7 +140,7 @@ private:
 
     wayland::Client* focused_client{nullptr}; ///< Can be null
     wayland::Weak<WlSurface> focused_surface;
-    wayland::DestroyListenerId focused_surface_destroy_listener_id{};
+    uint64_t focused_surface_destroy_listener_id{};
 
     template<class T>
     class ListenerList;
@@ -151,8 +165,6 @@ private:
     std::shared_ptr<input::Seat> const seat;
 
     std::shared_ptr<shell::AccessibilityManager> const accessibility_manager;
-
-    void bind(wl_resource* new_wl_seat) override;
 };
 }
 }

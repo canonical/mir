@@ -17,6 +17,8 @@
 #ifndef MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 #define MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 
+#include "weak.h"
+
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -32,10 +34,6 @@ class Surface;
 namespace input
 {
 class Surface;
-}
-namespace wayland
-{
-template <typename T> class Weak;
 }
 namespace frontend
 {

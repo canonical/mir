@@ -26,7 +26,7 @@ namespace msh = mir::shell;
 namespace { int const max_serial_event_pairs = 100; }
 
 mf::WaylandClient::WaylandClient(
-    wayland_rs::RawWlClient raw_client,
+    wayland::RawWlClient raw_client,
     std::shared_ptr<ms::Session> session,
     std::shared_ptr<msh::Shell> shell,
     WaylandSerialSource serial_source) :
@@ -38,7 +38,7 @@ mf::WaylandClient::WaylandClient(
 
 mf::WaylandClient::~WaylandClient() { mark_being_destroyed(); }
 
-auto mf::WaylandClient::raw_client() const -> wayland_rs::RawWlClient const& { return raw; }
+auto mf::WaylandClient::raw_client() const -> wayland::RawWlClient const& { return raw; }
 
 auto mf::WaylandClient::is_being_destroyed() const -> bool { return being_destroyed; }
 

@@ -15,14 +15,13 @@
  */
 
 #include "wayland_surface_observer.h"
-#include "wayland_utils.h"
 #include "window_wl_surface_role.h"
 #include "wl_surface.h"
 
 #include <mir/executor.h>
 #include <mir/log.h>
 #include <mir/events/input_event.h>
-#include <mir/wayland/client.h>
+#include "client.h"
 
 namespace mf = mir::frontend;
 namespace ms = mir::scene;
