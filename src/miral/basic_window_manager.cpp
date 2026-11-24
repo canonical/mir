@@ -1190,7 +1190,7 @@ void miral::BasicWindowManager::modify_window(WindowInfo& window_info, WindowSpe
                 parent_content_area,
                 modifications,
                 window.size(),
-                window_info.ignore_exclusion_zones() || exclusion_zones_apply_to(parent));
+                window_info.ignore_exclusion_zones() || ignores_exclusion_zones(parent));
 
             if (new_pos.has_value())
                 place_and_size(window_info, new_pos.value().top_left, new_pos.value().size);
@@ -1908,7 +1908,7 @@ auto miral::BasicWindowManager::place_new_surface(WindowSpecification parameters
                 parameters,
                 proposed_size,
                 parameters.ignore_exclusion_zones().value_or(false) ||
-                    exclusion_zones_apply_to(parent_scene_surface));
+                    ignores_exclusion_zones(parent_scene_surface));
 
             if (position.has_value())
             {
@@ -2367,22 +2367,19 @@ auto child_placement_strategy(
 }
 }
 
-auto miral::BasicWindowManager::exclusion_zones_apply_to(std::weak_ptr<scene::Surface> const& surface) const -> bool
+auto miral::BasicWindowManager::ignores_exclusion_zones(std::weak_ptr<scene::Surface> const& surface) const -> bool
 {
     for (auto node = surface; ;)
     {
-        auto const i = window_info.find(node);
-
-        if (i == window_info.end())
+        auto const iter = window_info.find(node);
+        if (iter == window_info.end())
             return false;
 
-        auto const& info = i->second;
-
+        auto const& info = iter->second;
         if (info.state() == mir_window_state_fullscreen)
             return true;
 
         auto const parent = info.parent();
-
         if (!parent)
             return false;
 

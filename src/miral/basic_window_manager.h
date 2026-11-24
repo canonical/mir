@@ -288,9 +288,10 @@ private:
         bool ignore_exclusion_zones)
         -> std::optional<Rectangle>;
 
-    /// Returns true if the given surface, or any of its ancestors, should not be placed with respect to the
-    /// exclusive rectangles of other windows (because it ignores them or is fullscreen)
-    auto exclusion_zones_apply_to(std::weak_ptr<mir::scene::Surface> const& surface) const -> bool;
+    /// Checks if \p surface should ignores exclusion zones.
+    ///
+    /// \returns `true` if the surface should ignore exclusion zones, otherwise `false`
+    auto ignores_exclusion_zones(std::weak_ptr<mir::scene::Surface> const& surface) const -> bool;
 
     void move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement);
     void set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer);
