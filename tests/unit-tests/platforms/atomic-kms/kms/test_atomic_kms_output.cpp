@@ -379,6 +379,7 @@ struct FollowUpCase
     std::function<void(AtomicKMSMixedPresentationTest const&, mga::AtomicKMSOutput&)> follow_up;
     std::map<AtomicPropertyKey, uint64_t> (*expected)(AtomicKMSMixedPresentationTest const&);
     uint32_t flags;
+    bool disconnect_connector{false};
 };
 
 class AtomicKMSMixedFollowUpTest :
@@ -403,6 +404,21 @@ void follow_up_with_mixed_page_flip(AtomicKMSMixedPresentationTest const& fixtur
     output.page_flip(fixture.mixed_state(legal_overlay.id));
 }
 
+void follow_up_with_clear_crtc(AtomicKMSMixedPresentationTest const&, mga::AtomicKMSOutput& output)
+{
+    output.clear_crtc();
+}
+
+void follow_up_with_reset(AtomicKMSMixedPresentationTest const&, mga::AtomicKMSOutput& output)
+{
+    output.reset();
+}
+
+void follow_up_with_refresh_hardware_state(AtomicKMSMixedPresentationTest const&, mga::AtomicKMSOutput& output)
+{
+    output.refresh_hardware_state();
+}
+
 auto page_flip_disabling_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
     -> std::map<AtomicPropertyKey, uint64_t>
 {
@@ -424,6 +440,12 @@ auto set_crtc_disabling_the_overlay(AtomicKMSMixedPresentationTest const& fixtur
 {
     return fixture.with_overlay_disabled(fixture.primary_request_properties(
         {.framebuffer_id = AtomicKMSOutputTest::primary_framebuffer_id, .activate_crtc = true}));
+}
+
+auto all_disabled_including_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
+    -> std::map<AtomicPropertyKey, uint64_t>
+{
+    return fixture.with_overlay_disabled(fixture.disabled_properties());
 }
 }
 
@@ -753,6 +775,11 @@ TEST_P(AtomicKMSMixedFollowUpTest, follow_up_commit_disables_only_unused_overlay
 
     Mock::VerifyAndClearExpectations(&mock_drm);
 
+    if (GetParam().disconnect_connector)
+    {
+        connector().connection = DRM_MODE_DISCONNECTED;
+    }
+
     EXPECT_CALL(
         mock_drm,
         drmModeAtomicCommit(
@@ -773,7 +800,16 @@ INSTANTIATE_TEST_SUITE_P(
             set_crtc_disabling_the_overlay, DRM_MODE_ATOMIC_ALLOW_MODESET},
         FollowUpCase{
             "MixedPageFlip", follow_up_with_mixed_page_flip,
-            page_flip_keeping_the_overlay, no_flags}),
+            page_flip_keeping_the_overlay, no_flags},
+        FollowUpCase{
+            "ClearCrtc", follow_up_with_clear_crtc,
+            all_disabled_including_the_overlay, DRM_MODE_ATOMIC_ALLOW_MODESET},
+        FollowUpCase{
+            "ResetDisconnectedConnector", follow_up_with_reset,
+            all_disabled_including_the_overlay, DRM_MODE_ATOMIC_ALLOW_MODESET, true},
+        FollowUpCase{
+            "RefreshDisconnectedConnector", follow_up_with_refresh_hardware_state,
+            all_disabled_including_the_overlay, DRM_MODE_ATOMIC_ALLOW_MODESET, true}),
     [](TestParamInfo<FollowUpCase> const& info) { return std::string{info.param.name}; });
 
 // The failed page flip drops the plane capabilities, so the fallback set_crtc() has to re-ensure

@@ -97,6 +97,7 @@ private:
         AtomicUpdate& update, Configuration const& conf, PresentationState const& state) const -> bool;
     void add_overlay_disable_properties(
         AtomicUpdate& update, Configuration const& conf, std::span<ClientPlaneAssignment const> keep = {}) const;
+    auto commit_disabling_overlays(AtomicUpdate& update, Configuration& conf) -> int;
     static auto matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool;
     void restore_saved_crtc();
 

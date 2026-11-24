@@ -256,7 +256,7 @@ void mga::AtomicKMSOutput::reset()
             update.add_property(*conf->plane_props, "FB_ID", 0);
             update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-            if (auto err = update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET))
+            if (auto err = commit_disabling_overlays(update, *conf))
             {
                 mir::log_warning("Failed to release resources for disconnected output: %s (%i)", mir::errno_to_cstr(-err), -err);
             }
@@ -345,9 +345,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    add_overlay_disable_properties(update, *conf);
-
-    auto ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
+    auto ret = commit_disabling_overlays(update, *conf);
     if (ret)
     {
         mir::log_error("Failed to set CRTC: %s (%i)", mir::errno_to_cstr(-ret), -ret);
@@ -355,8 +353,6 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
         conf->plane_capabilities = nullptr;
         return false;
     }
-
-    conf->enabled_overlays.clear();
 
     // We might have performed a modeset; update our view of the hardware state accordingly!
     conf->current_crtc = mgk::get_crtc(drm_fd_, conf->current_crtc->crtc_id);
@@ -402,7 +398,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     update.add_property(*conf->plane_props, "FB_ID", 0);
     update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-    auto result = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
+    auto result = commit_disabling_overlays(update, *conf);
     if (result)
     {
         if (result == -EACCES || result == -EPERM)
@@ -589,6 +585,18 @@ void mga::AtomicKMSOutput::add_overlay_disable_properties(
             update.add_property(plane_props, "CRTC_ID", 0);
         }
     }
+}
+
+auto mga::AtomicKMSOutput::commit_disabling_overlays(AtomicUpdate& update, Configuration& conf) -> int
+{
+    add_overlay_disable_properties(update, conf);
+
+    auto const result = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
+    if (result == 0)
+    {
+        conf.enabled_overlays.clear();
+    }
+    return result;
 }
 
 auto mga::AtomicKMSOutput::matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool
@@ -797,7 +805,7 @@ void mga::AtomicKMSOutput::refresh_hardware_state()
         update.add_property(*conf->plane_props, "FB_ID", 0);
         update.add_property(*conf->plane_props, "CRTC_ID", 0);
 
-        update.commit(drm_fd(), DRM_MODE_ATOMIC_ALLOW_MODESET);
+        commit_disabling_overlays(update, *conf);
 
         conf->connector_props = nullptr;
         conf->crtc_props = nullptr;
