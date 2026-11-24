@@ -483,7 +483,7 @@ public:
     /// Run the supplied functor on the Wayland event-loop thread. Must only be
     /// called while the server is running. Used by WLCS that needs to
     /// interact with the running Wayland backend.
-    void run_on_wayland_display(std::function<void()> const& functor);
+    void run_on_wayland_thread(std::function<void()> const& functor);
 
     /// Resolve the `scene::Surface` for the Wayland surface identified by
     /// (`session`, protocol object `id`), or nullptr if unknown. Used by

@@ -175,7 +175,7 @@ public:
     {
         std::lock_guard lock{mutex};
         if (server)
-            server->run_on_wayland_display(work);
+            server->run_on_wayland_thread(work);
     }
 
     void stop()
@@ -546,7 +546,7 @@ void miral::TestWlcsDisplayServer::start_server()
 
     mir::test::Signal started;
 
-    mir_server->run_on_wayland_display(
+    mir_server->run_on_wayland_thread(
         [this, &started]()
             {
                 // Execute all observations on the Wayland event loop…
@@ -611,7 +611,7 @@ void miral::TestWlcsDisplayServer::position_window(wl_display* client_, wl_surfa
     auto const result = std::make_shared<Result>();
 
     // The surface registry may only be accessed from the Wayland thread
-    mir_server->run_on_wayland_display(
+    mir_server->run_on_wayland_thread(
         [server = mir_server, session, id, point, result]()
         {
             if (auto const scene_surface = server->scene_surface_for_wayland_surface(*session, id))
