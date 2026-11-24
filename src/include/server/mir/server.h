@@ -17,6 +17,7 @@
 #ifndef MIR_SERVER_H_
 #define MIR_SERVER_H_
 
+#include <mir/frontend/wayland.h>
 #include <mir/graphics/display_configuration.h>
 #include <mir/shell/window_manager_builder.h>
 #include <mir_toolkit/common.h>
@@ -28,7 +29,6 @@
 #include <vector>
 
 struct wl_display;
-struct wl_resource;
 namespace mir::wayland { class Client; }
 
 namespace mir
@@ -481,15 +481,17 @@ public:
     auto open_wayland_client_socket() -> Fd;
 
     /// Run the supplied functor on the Wayland event-loop thread. Must only be
-    /// called while the server is running. Used by WLCS that needs to
-    /// interact with the running Wayland backend.
+    /// called while the server is running.
+    ///
+    /// Intended for test/integration tooling.
     void run_on_wayland_thread(std::function<void()> const& functor);
 
-    /// Resolve the `scene::Surface` for the Wayland surface identified by
-    /// (`session`, protocol object `id`), or nullptr if unknown. Used by
-    /// WLCS to map a client-side surface to its Mir surface. Must only be
-    /// called on the Wayland event-loop thread (see run_on_wayland_display()).
-    auto scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
+    /// Resolve the [scene::Surface] identified by \p session and \p id.
+    ///
+    /// Intended for test/integration tooling.
+    ///
+    /// \returns the surface, or `nullptr` if it cannot be found
+    auto scene_surface_for_wayland_surface(scene::Session const& session, frontend::ProtocolId id) const
         -> std::shared_ptr<scene::Surface>;
 
     void add_wayland_extension(

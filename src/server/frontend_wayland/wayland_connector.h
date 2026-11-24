@@ -205,15 +205,14 @@ public:
 
     void run_on_wayland_display(std::function<void()> const& functor);
 
-    /// Create a Wayland client for `client_fd` on the Wayland event loop and
-    /// pass it to `callback`. The wl_display is owned by this connector, so
-    /// client creation happens here rather than handing the display out.
     void create_wayland_client(Fd const& client_fd, std::function<void(wl_client*)> const& callback);
 
-    /// Resolve the `scene::Surface` for the Wayland surface identified by
-    /// (`session`, protocol object `id`), or nullptr if unknown. Must only be
-    /// called on the Wayland thread.
-    auto scene_surface_for(scene::Session const& session, uint32_t id) const
+    /// Resolve the [scene::Surface] identified by \p session and \p id.
+    ///
+    /// Intended for test/integration tooling.
+    ///
+    /// \returns the surface, or `nullptr` if it cannot be found
+    auto scene_surface_for(scene::Session const& session, ProtocolId id) const
         -> std::shared_ptr<scene::Surface>;
 
     /// Runs callback the first time a wl_surface with the given id is created, or immediately if one currently exists
@@ -257,7 +256,7 @@ private:
     std::unique_ptr<WpViewporter> viewporter;
     std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
     std::shared_ptr<WaylandExecutor> const executor;
-    std::shared_ptr<SurfaceRegistry> surface_registry;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;

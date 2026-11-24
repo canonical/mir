@@ -517,7 +517,7 @@ void mir::Server::run_on_wayland_thread(std::function<void()> const& functor)
     }
 }
 
-auto mir::Server::scene_surface_for_wayland_surface(scene::Session const& session, uint32_t id) const
+auto mir::Server::scene_surface_for_wayland_surface(scene::Session const& session, frontend::ProtocolId id) const
     -> std::shared_ptr<scene::Surface>
 {
     if (auto const config = self->server_config)

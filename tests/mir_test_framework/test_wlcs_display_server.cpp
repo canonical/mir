@@ -163,10 +163,10 @@ protected:
 ///
 /// Once stopped, work is dropped: calling into mir::Server during shutdown
 /// would lazily recreate the (already destroyed) Wayland connector.
-class ServerWaylandExecutor : public mir::Executor
+class WaylandExecutor : public mir::Executor
 {
 public:
-    explicit ServerWaylandExecutor(mir::Server& server)
+    explicit WaylandExecutor(mir::Server& server)
         : server{&server}
     {
     }
@@ -534,7 +534,7 @@ miral::TestWlcsDisplayServer::TestWlcsDisplayServer(int argc, char const** argv)
 
             mir_server = &server;
 
-            auto const wayland_executor = std::make_shared<ServerWaylandExecutor>(server);
+            auto const wayland_executor = std::make_shared<WaylandExecutor>(server);
             server.add_stop_callback([wayland_executor] { wayland_executor->stop(); });
             executor = wayland_executor;
         });

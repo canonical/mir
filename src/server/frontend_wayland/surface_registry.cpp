@@ -44,7 +44,7 @@ auto mf::SurfaceRegistry::lookup_wayland_surface(std::shared_ptr<input::Surface 
     return std::nullopt;
 }
 
-auto mf::SurfaceRegistry::scene_surface_for(scene::Session const& session, uint32_t id) const
+auto mf::SurfaceRegistry::scene_surface_for(scene::Session const& session, ProtocolId id) const
     -> std::shared_ptr<scene::Surface>
 {
     for (auto const& [_, wl_surf] : scene_surface_to_wayland_surface)
