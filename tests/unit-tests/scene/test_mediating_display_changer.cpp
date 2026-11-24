@@ -589,6 +589,41 @@ TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_a
     session_event_sink.handle_focus_change(session2);
 }
 
+TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_pausing_if_custom_logical_size_changes)
+{
+    std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
+    conf->for_each_output(
+        [](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.used)
+            {
+                output.custom_logical_size = geom::Size{123, 456};
+            }
+        });
+
+    auto session1 = std::make_shared<mtd::StubSession>();
+    auto session2 = std::make_shared<mtd::StubSession>();
+
+    session_container.insert_session(session1);
+    changer->configure(session1, conf);
+
+    session_event_sink.handle_focus_change(session1);
+
+    Mock::VerifyAndClearExpectations(&mock_compositor);
+    Mock::VerifyAndClearExpectations(&mock_display);
+
+    EXPECT_CALL(
+        mock_display,
+        apply_if_configuration_preserves_display_buffers(mt::DisplayConfigMatches(std::cref(base_config))))
+            .WillOnce(Return(true));
+
+    EXPECT_CALL(mock_compositor, stop()).Times(1);
+    EXPECT_CALL(mock_display, configure(_)).Times(0);
+    EXPECT_CALL(mock_compositor, start()).Times(1);
+
+    session_event_sink.handle_focus_change(session2);
+}
+
 TEST_F(MediatingDisplayChangerTest, focusing_a_session_without_attached_config_applies_base_config_not_pausing_if_db_content_preserved)
 {
     std::shared_ptr<mg::DisplayConfiguration> conf = base_config.clone();
