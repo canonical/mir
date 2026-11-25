@@ -14,6 +14,11 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/.kb/mir-signal-and-termination.md](src/server/.kb/mir-signal-and-termination.md) - Fatal-signal interception and termination exception flow.
 - [src/server/compositor/.kb/mir-compositor.md](src/server/compositor/.kb/mir-compositor.md) - Compositor threading, buffer arbitration, bypass, and occlusion.
 - [src/server/console/.kb/console-services.md](src/server/console/.kb/console-services.md) - Console providers, VT switching, logind, and session lock.
+- [src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md](src/server/frontend_wayland/.kb/wayland-connector-lifecycle.md) - WaylandConnector publication order, teardown, and client authorization.
+- [src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md](src/server/frontend_wayland/.kb/wayland-executor-lifecycle.md) - WaylandExecutor workqueue ownership and thread affinity.
+- [src/server/frontend_wayland/.kb/wayland-surface-and-input.md](src/server/frontend_wayland/.kb/wayland-surface-and-input.md) - wl_surface role/commit rules, input translation, and protocol state machines.
+- [src/server/graphics/.kb/graphics-display-multiplexing.md](src/server/graphics/.kb/graphics-display-multiplexing.md) - Composite display configuration, rollback, and observer replay.
+- [src/server/graphics/.kb/graphics-platform-selection.md](src/server/graphics/.kb/graphics-platform-selection.md) - Graphics platform probing, selection order, and special cases.
 
 Bug references of the form `LP: #1237332` point to Launchpad bugs, at
 `https://bugs.launchpad.net/bugs/1237332`. Mir's development originally took place on Launchpad, so
