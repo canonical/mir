@@ -256,9 +256,12 @@ void mf::WlDataDevice::start_drag(
         drag_surface.emplace(icon_surface, drag_icon_controller);
     }
 
-    if (auto const wl_source = WlDataSource::from(source.value()))
+    if (source)
     {
-        wl_source->start_drag_n_drop_gesture();
+        if (auto const wl_source = WlDataSource::from(source.value()))
+        {
+            wl_source->start_drag_n_drop_gesture();
+        }
     }
 }
 
