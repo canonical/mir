@@ -45,7 +45,14 @@ bool greater_soname_version(std::filesystem::path const& lhs, std::filesystem::p
     if (!rhbuf) return lhbuf;
     if (!lhbuf) return false;
 
-    return std::strtol(++lhbuf, 0, 0) > std::strtol(++rhbuf, 0, 0);
+    // Base 10: suffixes like .so.08 must not be parsed as octal.
+    auto const lhver = std::strtol(++lhbuf, nullptr, 10);
+    auto const rhver = std::strtol(++rhbuf, nullptr, 10);
+    if (lhver != rhver)
+        return lhver > rhver;
+
+    // Deterministic order when versions tie (or are absent).
+    return lhs.string() > rhs.string();
 }
 }
 
