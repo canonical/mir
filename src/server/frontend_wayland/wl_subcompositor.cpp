@@ -122,7 +122,22 @@ mf::WlSubsurface::~WlSubsurface()
         parent.value().remove_subsurface(this);
     }
     surface->clear_role();
-    refresh_surface_data_now();
+
+    // When the client is going away all of its objects are destroyed, in whatever order they happen to be in, so there
+    // is nothing left to refresh.
+    if (client->is_being_destroyed())
+        return;
+
+    // Refreshing asks the shell to modify the window this sub-surface is part of, which it can refuse: for instance a
+    // popup whose parent window has already been destroyed. That must not escape a destructor.
+    try
+    {
+        refresh_surface_data_now();
+    }
+    catch (...)
+    {
+        mw::internal_error_processing_request(client->raw_client(), "WlSubsurface::~WlSubsurface()");
+    }
 }
 
 void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,

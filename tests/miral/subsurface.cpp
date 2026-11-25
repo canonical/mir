@@ -17,6 +17,7 @@
 #include <miral/test_server.h>
 
 #include <miral/internal_client.h>
+#include <miral/window_manager_tools.h>
 
 #include <mir/test/signal.h>
 
@@ -25,6 +26,8 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
+#include <algorithm>
+#include <array>
 #include <chrono>
 #include <functional>
 #include <string_view>
@@ -44,16 +47,28 @@ extern struct wl_interface const wl_surface_interface_data;
 extern struct wl_interface const wl_subcompositor_interface_data;
 extern struct wl_interface const wl_subsurface_interface_data;
 extern struct wl_interface const wl_shm_interface_data;
+extern struct wl_interface const xdg_wm_base_interface_data;
+extern struct wl_interface const xdg_surface_interface_data;
+extern struct wl_interface const xdg_toplevel_interface_data;
+extern struct wl_interface const xdg_positioner_interface_data;
+extern struct wl_interface const xdg_popup_interface_data;
 }
 
 namespace
 {
-/// Request opcodes, from the core Wayland protocol definition.
+/// Request opcodes, from the core Wayland and xdg-shell protocol definitions.
 enum : uint32_t
 {
     wl_compositor_create_surface = 0,
     wl_subcompositor_get_subsurface = 1,
     wl_subsurface_set_desync = 5,
+    xdg_wm_base_create_positioner = 1,
+    xdg_wm_base_get_xdg_surface = 2,
+    xdg_surface_get_toplevel = 1,
+    xdg_surface_get_popup = 2,
+    xdg_surface_ack_configure = 4,
+    xdg_positioner_set_size = 1,
+    xdg_positioner_set_anchor_rect = 2,
 };
 
 /// Adapts a callable into the pair of callbacks miral::InternalClientLauncher expects.
@@ -175,6 +190,7 @@ struct SubsurfaceClient
         bind(mir::wayland::wl_compositor_interface_data, self->compositor);
         bind(mir::wayland::wl_subcompositor_interface_data, self->subcompositor);
         bind(mir::wayland::wl_shm_interface_data, self->shm);
+        bind(mir::wayland::xdg_wm_base_interface_data, self->wm_base);
     }
 
     static void global_remove(void*, wl_registry*, uint32_t) {}
@@ -198,6 +214,7 @@ struct SubsurfaceClient
     wl_proxy* subcompositor{nullptr};
     wl_proxy* subsurface{nullptr};
     wl_shm* shm{nullptr};
+    wl_proxy* wm_base{nullptr};
 
     /// Whether the client got as far as committing its buffers.
     bool bound_globals{false};
@@ -206,6 +223,124 @@ struct SubsurfaceClient
 wl_registry_listener constexpr SubsurfaceClient::registry_listener;
 wl_buffer_listener constexpr SubsurfaceClient::buffer_listener;
 wl_callback_listener constexpr SubsurfaceClient::frame_listener;
+
+/// Maps a toplevel with a popup, and gives the popup a sub-surface whose protocol objects
+/// have lower ids than the popup's surface. A client's objects are destroyed in id order
+/// when it disconnects, so the toplevel goes first, leaving the popup's window without a
+/// parent, and then the sub-surface goes while the popup it is part of still exists.
+struct PopupWithSubsurfaceClient : SubsurfaceClient
+{
+    void operator()(wl_display* display)
+    {
+        auto* const registry = wl_display_get_registry(display);
+        wl_registry_add_listener(registry, &registry_listener, this);
+        wl_display_roundtrip(display);
+
+        if (!compositor || !subcompositor || !shm || !wm_base)
+            return;
+
+        auto* const toplevel_surface = create_surface();
+        auto* const toplevel_xdg_surface = get_xdg_surface(toplevel_surface);
+        wl_proxy_marshal_constructor(
+            toplevel_xdg_surface, xdg_surface_get_toplevel, &mir::wayland::xdg_toplevel_interface_data, nullptr);
+        map(display, toplevel_surface);
+
+        // Ids to give the sub-surface, which have to be lower than those of the popup.
+        auto* const first_placeholder = create_surface();
+        auto* const second_placeholder = create_surface();
+
+        auto* const popup_surface = create_surface();
+        auto* const popup_xdg_surface = get_xdg_surface(popup_surface);
+        auto* const positioner = wl_proxy_marshal_constructor(
+            wm_base, xdg_wm_base_create_positioner, &mir::wayland::xdg_positioner_interface_data, nullptr);
+        wl_proxy_marshal(positioner, xdg_positioner_set_size, width, height);
+        wl_proxy_marshal(positioner, xdg_positioner_set_anchor_rect, 0, 0, width, height);
+        wl_proxy_marshal_constructor(
+            popup_xdg_surface,
+            xdg_surface_get_popup,
+            &mir::wayland::xdg_popup_interface_data,
+            nullptr,
+            toplevel_xdg_surface,
+            positioner);
+        map(display, popup_surface);
+
+        // The ids of destroyed objects are reused once the compositor has acknowledged them.
+        wl_surface_destroy(reinterpret_cast<wl_surface*>(first_placeholder));
+        wl_surface_destroy(reinterpret_cast<wl_surface*>(second_placeholder));
+        wl_display_roundtrip(display);
+
+        auto* const child = create_surface();
+        subsurface = wl_proxy_marshal_constructor(
+            subcompositor,
+            wl_subcompositor_get_subsurface,
+            &mir::wayland::wl_subsurface_interface_data,
+            nullptr,
+            child,
+            popup_surface);
+        // Destroying either the sub-surface or its surface is the end of the sub-surface.
+        auto const first_destroyed = std::min(wl_proxy_get_id(child), wl_proxy_get_id(subsurface));
+        ids_as_required =
+            wl_proxy_get_id(toplevel_surface) < first_destroyed && first_destroyed < wl_proxy_get_id(popup_surface);
+        ids = {wl_proxy_get_id(toplevel_surface), wl_proxy_get_id(popup_surface), wl_proxy_get_id(child),
+               wl_proxy_get_id(subsurface)};
+
+        // The sub-surface is synchronized, so its buffer is applied when the popup is committed.
+        create_buffer(child_buffer);
+        commit(reinterpret_cast<wl_surface*>(child), child_buffer);
+        wl_surface_commit(reinterpret_cast<wl_surface*>(popup_surface));
+        wl_display_roundtrip(display);
+
+        mapped = toplevel_configured;
+    }
+
+    auto create_surface() -> wl_proxy*
+    {
+        return wl_proxy_marshal_constructor(
+            compositor, wl_compositor_create_surface, &mir::wayland::wl_surface_interface_data, nullptr);
+    }
+
+    auto get_xdg_surface(wl_proxy* surface) -> wl_proxy*
+    {
+        auto* const xdg_surface = wl_proxy_marshal_constructor(
+            wm_base, xdg_wm_base_get_xdg_surface, &mir::wayland::xdg_surface_interface_data, nullptr, surface);
+        wl_proxy_add_listener(xdg_surface, xdg_surface_listener, this);
+        return xdg_surface;
+    }
+
+    /// Commits the surface to get it configured, then gives it content, which is when Mir
+    /// creates the window for it.
+    void map(wl_display* display, wl_proxy* surface)
+    {
+        wl_surface_commit(reinterpret_cast<wl_surface*>(surface));
+        wl_display_roundtrip(display);
+
+        auto& buffer = buffers[next_buffer++];
+        create_buffer(buffer);
+        commit(reinterpret_cast<wl_surface*>(surface), buffer);
+        wl_display_roundtrip(display);
+    }
+
+    static void handle_configure(void* data, wl_proxy* xdg_surface, uint32_t serial)
+    {
+        wl_proxy_marshal(xdg_surface, xdg_surface_ack_configure, serial);
+        static_cast<PopupWithSubsurfaceClient*>(data)->toplevel_configured = true;
+    }
+
+    /// xdg_surface has a single event, `configure`.
+    static inline void (*xdg_surface_listener[])(){reinterpret_cast<void (*)()>(&handle_configure)};
+
+    Buffer buffers[2];
+    int next_buffer{0};
+    Buffer child_buffer;
+    bool toplevel_configured{false};
+
+    /// Whether the objects got ids in the order that reproduces the problem.
+    bool ids_as_required{false};
+    std::array<uint32_t, 4> ids{};
+
+    /// Whether the client got as far as mapping everything.
+    bool mapped{false};
+};
 
 struct Subsurface : miral::TestServer
 {
@@ -239,8 +374,10 @@ struct Subsurface : miral::TestServer
         return done.wait_for(client_completion_timeout) && subsurface_client.bound_globals;
     }
 
-private:
+protected:
     miral::InternalClientLauncher launcher;
+
+private:
     WaylandClient client;
 };
 }
@@ -339,4 +476,45 @@ TEST_F(Subsurface, cached_state_is_not_applied_while_synchronized)
         [&] { return frame_done; }));
 
     EXPECT_FALSE(frame_done);
+}
+
+// A sub-surface asks the shell to update the window it was part of when it is destroyed,
+// which the shell refuses for a popup that has lost its parent. Killing a client that had a
+// popup open - any Flutter application, as its GTK embedder draws into a sub-surface - used
+// to bring down the compositor with it, as the exception escaped the destructor.
+TEST_F(Subsurface, client_with_subsurface_on_orphaned_popup_can_disconnect)
+{
+    start_server();
+
+    mir::test::Signal done;
+    PopupWithSubsurfaceClient popup_client;
+    WaylandClient client;
+    miral::InternalClientLauncher const& launcher = this->launcher;
+
+    client.code = [&](wl_display* display)
+    {
+        popup_client(display);
+        done.raise();
+    };
+
+    launcher.launch(client);
+    ASSERT_TRUE(done.wait_for(client_completion_timeout));
+    ASSERT_TRUE(popup_client.mapped);
+    ASSERT_TRUE(popup_client.ids_as_required) << "toplevel, popup, child, sub-surface: " << PrintToString(popup_client.ids);
+
+    // The client disconnects once its code has run. Wait for the compositor to have
+    // destroyed its windows, which it has to survive.
+    auto windows_remain = true;
+    auto const give_up = std::chrono::steady_clock::now() + client_completion_timeout;
+    while (windows_remain && std::chrono::steady_clock::now() < give_up)
+    {
+        std::this_thread::sleep_for(std::chrono::milliseconds{10});
+        invoke_tools([&](miral::WindowManagerTools& tools)
+            {
+                windows_remain = false;
+                tools.for_each_application([&](miral::ApplicationInfo&) { windows_remain = true; });
+            });
+    }
+
+    EXPECT_FALSE(windows_remain);
 }
