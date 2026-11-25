@@ -19,6 +19,12 @@ IMPORTANT: Read the `.kb/agents.md` file.
 - [src/server/frontend_wayland/.kb/wayland-surface-and-input.md](src/server/frontend_wayland/.kb/wayland-surface-and-input.md) - wl_surface role/commit rules, input translation, and protocol state machines.
 - [src/server/graphics/.kb/graphics-display-multiplexing.md](src/server/graphics/.kb/graphics-display-multiplexing.md) - Composite display configuration, rollback, and observer replay.
 - [src/server/graphics/.kb/graphics-platform-selection.md](src/server/graphics/.kb/graphics-platform-selection.md) - Graphics platform probing, selection order, and special cases.
+- [src/server/input/.kb/input-device-hub.md](src/server/input/.kb/input-device-hub.md) - Input device hub lifecycle, configuration persistence, and change transactions.
+- [src/server/input/.kb/input-dispatch-chain.md](src/server/input/.kb/input-dispatch-chain.md) - Input dispatcher chain composition, key repeat, and timestamps.
+- [src/server/input/.kb/seat-input-state.md](src/server/input/.kb/seat-input-state.md) - Seat-wide input state, cursor control, and observer replay.
+- [src/server/scene/.kb/scene-idle-and-input-hubs.md](src/server/scene/.kb/scene-idle-and-input-hubs.md) - Idle hub state machine, text-input serials, and clipboard locking.
+- [src/server/scene/.kb/scene-sessions-and-display-config.md](src/server/scene/.kb/scene-sessions-and-display-config.md) - Session lifetime/order and display-configuration application semantics.
+- [src/server/scene/.kb/scene-surface-stack.md](src/server/scene/.kb/scene-surface-stack.md) - SurfaceStack layering, focus order, occlusion, and locking.
 
 Bug references of the form `LP: #1237332` point to Launchpad bugs, at
 `https://bugs.launchpad.net/bugs/1237332`. Mir's development originally took place on Launchpad, so
