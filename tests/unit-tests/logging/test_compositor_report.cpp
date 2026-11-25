@@ -105,7 +105,7 @@ TEST_F(LoggingCompositorReport, first_interval_establishes_a_baseline)
 TEST_F(LoggingCompositorReport, reports_structured_interval_totals)
 {
     void const* const id = "display";
-    // The first frame establishes the baseline; each following pair emits one interval sample.
+    // Frame 1 establishes the baseline; frame 2 emits one sample, and frames 3 and 4 emit another.
     render_frame(id, 20ms, 1s);
     render_frame(id, 20ms, 1s);
     render_frame(id, 10ms, 500ms);
