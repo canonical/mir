@@ -31,9 +31,8 @@ class msd::WindowState::Self
 public:
     Self(
         std::shared_ptr<scene::Surface> const& surface,
-        geometry::Height fixed_titlebar_height,
-        geometry::Width fixed_side_border_width,
-        geometry::Height fixed_bottom_border_height,
+        MirWindowState state,
+        DecorationStyle const& style,
         float scale);
 
     geometry::Height const fixed_titlebar_height;
@@ -41,6 +40,7 @@ public:
     geometry::Height const fixed_bottom_border_height;
     geometry::Size const window_size;
     BorderType const border_type;
+    geometry::Width const corner_radius;
     MirWindowFocusState const focus_state;
     std::string const window_name;
     float const scale;
@@ -48,15 +48,15 @@ public:
 
 msd::WindowState::Self::Self(
     std::shared_ptr<scene::Surface> const& surface,
-    geometry::Height fixed_titlebar_height,
-    geometry::Width fixed_side_border_width,
-    geometry::Height fixed_bottom_border_height,
+    MirWindowState state,
+    DecorationStyle const& style,
     float scale)
-    : fixed_titlebar_height(fixed_titlebar_height),
-      fixed_side_border_width(fixed_side_border_width),
-      fixed_bottom_border_height(fixed_bottom_border_height),
+    : fixed_titlebar_height{style.titlebar_height},
+      fixed_side_border_width{style.side_border_width},
+      fixed_bottom_border_height{style.bottom_border_height},
       window_size{surface->window_size()},
-      border_type{border_type_for(surface->type(), surface->state())},
+      border_type{border_type_for(surface->type(), state)},
+      corner_radius{state == mir_window_state_restored ? style.corner_radius : geom::Width{}},
       focus_state{surface->focus_state()},
       window_name{surface->name()},
       scale{scale}
@@ -65,16 +65,9 @@ msd::WindowState::Self::Self(
 
 msd::WindowState::WindowState(
     std::shared_ptr<scene::Surface> const& surface,
-    geometry::Height fixed_titlebar_height,
-    geometry::Width fixed_side_border_width,
-    geometry::Height fixed_bottom_border_height,
+    DecorationStyle const& style,
     float scale)
-    : self{std::make_unique<Self>(
-        surface,
-        fixed_titlebar_height,
-        fixed_side_border_width,
-        fixed_bottom_border_height,
-        scale)}
+    : self{std::make_unique<Self>(surface, surface->state(), style, scale)}
 {
 }
 
@@ -88,6 +81,11 @@ auto msd::WindowState::window_size() const -> geom::Size
 auto msd::WindowState::border_type() const -> BorderType
 {
     return self->border_type;
+}
+
+auto msd::WindowState::corner_radius() const -> geom::Width
+{
+    return self->corner_radius;
 }
 
 auto msd::WindowState::focused_state() const -> MirWindowFocusState
