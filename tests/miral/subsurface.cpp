@@ -28,6 +28,7 @@
 #include <chrono>
 #include <functional>
 #include <string_view>
+#include <thread>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -52,6 +53,7 @@ enum : uint32_t
 {
     wl_compositor_create_surface = 0,
     wl_subcompositor_get_subsurface = 1,
+    wl_subsurface_set_desync = 5,
 };
 
 /// Adapts a callable into the pair of callbacks miral::InternalClientLauncher expects.
@@ -73,11 +75,15 @@ struct Buffer
 };
 
 /// Creates a surface with a sub-surface, which is synchronized as all new sub-surfaces
-/// are, and commits buffers to the sub-surface without ever committing the parent.
+/// are, and commits to the sub-surface without ever committing the parent.
 struct SubsurfaceClient
 {
     /// Called with the sub-surface's wl_surface once it has been created.
     std::function<void(SubsurfaceClient& client, wl_surface* child)> commit_buffers{[](auto&, auto) {}};
+
+    /// If set, the client keeps processing events until this returns true or it has waited
+    /// for as long as an event that is coming could take.
+    std::function<bool()> wait_for;
 
     void operator()(wl_display* display)
     {
@@ -92,7 +98,7 @@ struct SubsurfaceClient
             compositor, wl_compositor_create_surface, &mir::wayland::wl_surface_interface_data, nullptr);
         auto* const child = wl_proxy_marshal_constructor(
             compositor, wl_compositor_create_surface, &mir::wayland::wl_surface_interface_data, nullptr);
-        wl_proxy_marshal_constructor(
+        subsurface = wl_proxy_marshal_constructor(
             subcompositor,
             wl_subcompositor_get_subsurface,
             &mir::wayland::wl_subsurface_interface_data,
@@ -103,9 +109,19 @@ struct SubsurfaceClient
         commit_buffers(*this, reinterpret_cast<wl_surface*>(child));
 
         // This client runs inside the server, so it must never block waiting for events:
-        // round-trips let any release events arrive without stalling the compositor.
+        // round-trips let any events arrive without stalling the compositor.
         wl_display_roundtrip(display);
         wl_display_roundtrip(display);
+
+        if (wait_for)
+        {
+            auto const give_up = std::chrono::steady_clock::now() + event_timeout;
+            while (!wait_for() && std::chrono::steady_clock::now() < give_up)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds{10});
+                wl_display_roundtrip(display);
+            }
+        }
 
         bound_globals = true;
     }
@@ -127,6 +143,16 @@ struct SubsurfaceClient
 
         wl_buffer_add_listener(buffer.buffer, &buffer_listener, &buffer);
     }
+
+    /// Asks to be told when it is a good time to draw `surface`, and commits that request.
+    /// `done` is set when the compositor says so.
+    static void commit_frame_request(wl_surface* surface, bool& done)
+    {
+        wl_callback_add_listener(wl_surface_frame(surface), &frame_listener, &done);
+        wl_surface_commit(surface);
+    }
+
+    void set_desync() { wl_proxy_marshal(subsurface, wl_subsurface_set_desync); }
 
     static void commit(wl_surface* surface, Buffer const& buffer)
     {
@@ -155,14 +181,22 @@ struct SubsurfaceClient
 
     static void buffer_released(void* data, wl_buffer*) { static_cast<Buffer*>(data)->released = true; }
 
+    static void frame_done(void* data, wl_callback*, uint32_t) { *static_cast<bool*>(data) = true; }
+
     static wl_registry_listener constexpr registry_listener{&new_global, &global_remove};
     static wl_buffer_listener constexpr buffer_listener{&buffer_released};
+    static wl_callback_listener constexpr frame_listener{&frame_done};
+
+    /// Frame requests committed without a buffer are answered from a timer, so this only
+    /// has to be long enough for that to have happened.
+    static auto constexpr event_timeout = std::chrono::milliseconds{500};
 
     static int constexpr width = 100;
     static int constexpr height = 100;
 
     wl_proxy* compositor{nullptr};
     wl_proxy* subcompositor{nullptr};
+    wl_proxy* subsurface{nullptr};
     wl_shm* shm{nullptr};
 
     /// Whether the client got as far as committing its buffers.
@@ -171,6 +205,7 @@ struct SubsurfaceClient
 
 wl_registry_listener constexpr SubsurfaceClient::registry_listener;
 wl_buffer_listener constexpr SubsurfaceClient::buffer_listener;
+wl_callback_listener constexpr SubsurfaceClient::frame_listener;
 
 struct Subsurface : miral::TestServer
 {
@@ -180,16 +215,19 @@ struct Subsurface : miral::TestServer
         add_server_init(launcher);
     }
 
-    /// Runs a client that commits buffers to a synchronized sub-surface, and waits for it
-    /// to finish. Returns whether it did.
+    /// Runs a client that commits to a synchronized sub-surface, and waits for it to
+    /// finish. Returns whether it did.
     ///
     /// Assertions are left to the caller, on the test thread, as gtest assertions on the
     /// client and server threads are unreliable.
-    auto run(std::function<void(SubsurfaceClient& client, wl_surface* child)>&& commit_buffers) -> bool
+    auto run(
+        std::function<void(SubsurfaceClient& client, wl_surface* child)>&& commit_buffers,
+        std::function<bool()>&& wait_for = {}) -> bool
     {
         mir::test::Signal done;
         SubsurfaceClient subsurface_client;
         subsurface_client.commit_buffers = std::move(commit_buffers);
+        subsurface_client.wait_for = std::move(wait_for);
 
         client.code = [&](wl_display* display)
         {
@@ -267,4 +305,38 @@ TEST_F(Subsurface, buffer_committed_again_while_synchronized_is_not_released)
 
     ASSERT_THAT(buffer.buffer, NotNull());
     EXPECT_FALSE(buffer.released);
+}
+
+// "If a surface's parent surface behaves as desynchronized, then the cached state is applied
+// on set_desync." A frame request committed without a buffer is answered once it has been
+// applied, which makes that visible to the client.
+TEST_F(Subsurface, cached_state_is_applied_on_set_desync)
+{
+    start_server();
+
+    bool frame_done = false;
+
+    ASSERT_TRUE(run(
+        [&](SubsurfaceClient& client, wl_surface* child)
+        {
+            SubsurfaceClient::commit_frame_request(child, frame_done);
+            client.set_desync();
+        },
+        [&] { return frame_done; }));
+
+    EXPECT_TRUE(frame_done);
+}
+
+// Without set_desync the state stays cached, as the parent surface is never committed.
+TEST_F(Subsurface, cached_state_is_not_applied_while_synchronized)
+{
+    start_server();
+
+    bool frame_done = false;
+
+    ASSERT_TRUE(run(
+        [&](SubsurfaceClient&, wl_surface* child) { SubsurfaceClient::commit_frame_request(child, frame_done); },
+        [&] { return frame_done; }));
+
+    EXPECT_FALSE(frame_done);
 }

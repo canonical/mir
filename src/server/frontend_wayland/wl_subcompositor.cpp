@@ -241,6 +241,16 @@ void mf::WlSubsurface::set_sync()
 void mf::WlSubsurface::set_desync()
 {
     synchronized_ = false;
+
+    // From the spec:
+    //   If a surface's parent surface behaves as desynchronized, then the cached state is applied on set_desync.
+    if (cached_state && !synchronized())
+    {
+        surface->commit(cached_state.value());
+        if (cached_state.value().surface_data_needs_refresh())
+            refresh_surface_data_now();
+        cached_state = std::nullopt;
+    }
 }
 
 void mf::WlSubsurface::refresh_surface_data_now()
