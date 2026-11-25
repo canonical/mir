@@ -228,7 +228,7 @@ private:
         if (data_control_source)
         {
             auto data_exchange_source = data_exchange_source_from_source(*data_control_source);
-            if (!data_control_source)
+            if (!data_exchange_source)
             {
                 mir::log_warning("Attempt to call `set_selection` with a null source or an unhandled source type");
                 return;
@@ -248,7 +248,7 @@ private:
         if (data_control_source)
         {
             auto data_exchange_source = data_exchange_source_from_source(*data_control_source);
-            if (!data_control_source)
+            if (!data_exchange_source)
             {
                 mir::log_warning(
                     "Attempt to call `set_primary_selection` with a null source or an unhandled source type");
