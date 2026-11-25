@@ -428,8 +428,13 @@ auto mga::DisplaySink::needs_set_crtc() const -> bool
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
     -> std::optional<LogicalStacking>
 {
+    if (needs_set_crtc() || !output_maps_1_to_1_to_crtc())
+    {
+        return std::nullopt;
+    }
+
     auto const plane_capabilities = output->plane_capabilities();
-    if (!output_maps_1_to_1_to_crtc() || !plane_capabilities)
+    if (!plane_capabilities)
     {
         return std::nullopt;
     }

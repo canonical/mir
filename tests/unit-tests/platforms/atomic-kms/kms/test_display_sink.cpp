@@ -585,6 +585,21 @@ TEST_F(AtomicDisplaySinkTest, shaped_opaque_format_candidate_is_promoted)
     expect_plan(sink->plan_presentation({candidate}), {candidate}, 0);
 }
 
+TEST_F(AtomicDisplaySinkTest, plan_presentation_is_refused_while_a_modeset_is_pending)
+{
+    sink->schedule_set_crtc();
+
+    EXPECT_FALSE(sink->plan_presentation({make_candidate(display_area)}));
+
+    auto const primary_fb = std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    (void)sink->transformation();
+    EXPECT_CALL(*output, set_crtc(Ref(*primary_fb))).WillOnce(Return(true));
+    ASSERT_TRUE(sink->overlay({fullscreen_element(primary_fb)}));
+    ASSERT_TRUE(sink->post());
+
+    EXPECT_TRUE(sink->plan_presentation({make_candidate(display_area)}));
+}
+
 TEST_P(AtomicPlanIneligibleOutput, plane_promotion_requires_eligible_output)
 {
     auto const& param = GetParam();
