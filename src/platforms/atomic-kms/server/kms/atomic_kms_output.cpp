@@ -479,10 +479,11 @@ bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
     }
 
     AtomicUpdate update;
-    if (!add_presentation_properties(update, *conf, state))
+    if (!try_add_plane_presentation_properties(update, *conf, state))
     {
         return false;
     }
+    add_primary_properties(update, *conf, state.primary());
 
     auto ret = update.commit(drm_fd_, 0);
     if (ret)
@@ -517,10 +518,11 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
     }
 
     AtomicUpdate update;
-    if (!add_presentation_properties(update, *conf, state))
+    if (!try_add_plane_presentation_properties(update, *conf, state))
     {
         return false;
     }
+    add_primary_properties(update, *conf, state.primary());
 
     auto const ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_TEST_ONLY);
     if (ret)
@@ -536,13 +538,11 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
     return true;
 }
 
-auto mga::AtomicKMSOutput::add_presentation_properties(
+auto mga::AtomicKMSOutput::try_add_plane_presentation_properties(
     AtomicUpdate& update,
     Configuration const& conf,
     PresentationState const& state) const -> bool
 {
-    add_primary_properties(update, conf, state.primary());
-
     // Nullable when client planes are absent: ensure_crtc() may have failed to discover them.
     auto const* const caps = conf.plane_capabilities.get();
     if (!state.client_planes().empty() && !caps)
