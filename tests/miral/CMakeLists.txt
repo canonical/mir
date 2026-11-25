@@ -81,6 +81,7 @@ mir_add_wrapped_executable(miral-test NOINSTALL
     output_configuration.cpp
     output_filter.cpp
     sticky_keys.cpp
+    subsurface.cpp
     runner.cpp
     wayland_extensions.cpp
     xdg_dialog.cpp

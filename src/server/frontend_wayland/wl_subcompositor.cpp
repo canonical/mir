@@ -18,6 +18,8 @@
 
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
+#include "resource_lifetime_tracker.h"
+#include "linux_drm_syncobj.h"
 
 #include <mir/wayland/client.h>
 #include <mir/wayland/protocol_error.h>
@@ -253,6 +255,28 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 {
     if (!cached_state)
         cached_state = WlSurfaceState();
+
+    // A buffer committed while synchronized waits in the cache for the parent to commit. If the client commits another
+    // one first, the cached buffer is replaced without ever reaching WlSurface::commit(), which is the only place a
+    // release is arranged for it. The client is still owed that release: Mesa's EGL platform keeps a buffer locked
+    // until it arrives, and blocks in eglSwapBuffers() once every buffer of the surface is locked.
+    if (state.buffer && cached_state.value().buffer)
+    {
+        auto const& superseded = cached_state.value().buffer.value();
+        if (superseded && !(superseded == state.buffer.value()))
+        {
+            if (auto& release_fence = cached_state.value().release_fence)
+            {
+                // With explicit sync the release is this commit's release point rather than a wl_buffer event.
+                release_fence->signal();
+                release_fence.reset();
+            }
+            else
+            {
+                wl_resource_post_event(superseded.value(), wayland::Buffer::Opcode::release);
+            }
+        }
+    }
 
     cached_state.value().update_from(state);
 
