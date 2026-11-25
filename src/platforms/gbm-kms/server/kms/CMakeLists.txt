@@ -6,7 +6,6 @@ add_compile_definitions(
 add_library(
   mirplatformgraphicsgbmkmsobjects OBJECT
 
-  bypass.cpp
   cursor.cpp
   display.cpp
   display_buffer.cpp

@@ -133,8 +133,7 @@ public:
             *device,
             mir::report::null_display_report(),
             *std::make_shared<mtd::StubConsoleServices>(),
-            *std::make_shared<mtd::NullEmergencyCleanup>(),
-            mgg::BypassOption::allowed);
+            *std::make_shared<mtd::NullEmergencyCleanup>());
     }
 
     std::shared_ptr<mg::Display> create_display(

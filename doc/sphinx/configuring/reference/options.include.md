@@ -393,14 +393,6 @@ Driver quirks to apply. May be specified multiple times; multiple quirks are com
 
 ## Options for mir:gbm-kms platform
 
-(mir-gbm-kms-bypass)=
-
-### `bypass`
-
-Enable bypass optimization for fullscreen surfaces.
-
-Defaults to `0`.
-
 (mir-gbm-kms-driver-quirks)=
 
 ### `driver-quirks`

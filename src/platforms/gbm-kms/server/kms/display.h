@@ -22,7 +22,6 @@
 #include "real_kms_display_configuration.h"
 #include "display_helpers.h"
 #include "egl_helper.h"
-#include "platform_common.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
 
@@ -60,7 +59,6 @@ public:
     Display(
         mir::Fd drm_fd,
         std::shared_ptr<struct gbm_device> gbm,
-        BypassOption bypass_option,
         std::shared_ptr<DisplayConfigurationPolicy> const& initial_conf_policy,
         std::shared_ptr<DisplayReport> const& listener);
     ~Display();
@@ -99,7 +97,6 @@ private:
         RealKMSDisplayConfiguration const& conf,
         std::lock_guard<decltype(configuration_mutex)> const&);
 
-    BypassOption bypass_option;
     std::weak_ptr<Cursor> cursor;
 };
 

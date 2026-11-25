@@ -15,7 +15,6 @@
  */
 
 #include <mir/graphics/event_handler_register.h>
-#include "platform_common.h"
 #include "src/platforms/gbm-kms/server/kms/platform.h"
 #include "src/platforms/gbm-kms/server/kms/quirks.h"
 #include "src/server/report/null_report_factory.h"
@@ -128,8 +127,7 @@ TEST_F(MesaGraphicsPlatform, a_failure_while_creating_a_platform_results_in_an_e
                 *device.device,
                 mir::report::null_display_report(),
                 *std::make_shared<mtd::StubConsoleServices>(),
-                *std::make_shared<mtd::NullEmergencyCleanup>(),
-                mgg::BypassOption::allowed
+                *std::make_shared<mtd::NullEmergencyCleanup>()
             };
         }
     } catch(std::exception const&)

@@ -20,7 +20,6 @@
 #include <mir/graphics/platform.h>
 #include <mir/graphics/egl_resources.h>
 #include "kms/display.h"
-#include "platform_common.h"
 #include "display_helpers.h"
 
 #include <EGL/egl.h>
@@ -55,8 +54,7 @@ public:
         udev::Device const& device,
         std::shared_ptr<DisplayReport> const& reporter,
         ConsoleServices& vt,
-        EmergencyCleanupRegistry& emergency_cleanup_registry,
-        BypassOption bypass_option);
+        EmergencyCleanupRegistry& emergency_cleanup_registry);
 
     ~Platform() override;
 
@@ -73,21 +71,16 @@ protected:
     auto maybe_create_provider(DisplayProvider::Tag const& type_tag)
         -> std::shared_ptr<DisplayProvider> override;
 
-public:
-    BypassOption bypass_option() const;
 private:
     Platform(
         std::tuple<std::unique_ptr<Device>, mir::Fd> drm,
         std::shared_ptr<DisplayReport> const& reporter,
-        EmergencyCleanupRegistry& emergency_cleanup_registry,
-        BypassOption bypass_option);
+        EmergencyCleanupRegistry& emergency_cleanup_registry);
 
     std::unique_ptr<Device> const device_handle;
     mir::Fd const drm_fd;
 
     std::shared_ptr<GBMDisplayProvider> gbm_display_provider;
-
-    BypassOption const bypass_option_;
 };
 
 class RenderingPlatform : public graphics::RenderingPlatform

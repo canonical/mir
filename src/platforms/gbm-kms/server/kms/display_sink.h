@@ -23,7 +23,6 @@
 #include "egl_helper.h"
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
-#include "platform_common.h"
 #include <mir/graphics/kms_framebuffer.h>
 
 #include <vector>
@@ -54,7 +53,6 @@ public:
     DisplaySink(
         mir::Fd drm_fd,
         std::shared_ptr<struct gbm_device> gbm,
-        BypassOption bypass_options,
         std::shared_ptr<DisplayReport> const& listener,
         std::shared_ptr<KMSOutput> const& output,
         geometry::Rectangle const& area,
@@ -93,7 +91,6 @@ private:
     bool set_crtc(FBHandle const&);
 
     std::shared_ptr<struct gbm_device> const gbm;
-    std::shared_ptr<FBHandle const> bypass_bufobj{nullptr};
     std::shared_ptr<DisplayReport> const listener;
 
     std::shared_ptr<KMSOutput> const output;
