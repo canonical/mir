@@ -383,7 +383,7 @@ Log trace message
 
 Enable displaying of eligible client buffers directly using primary or overlay planes, without compositor rendering.
 
-Defaults to `0`.
+Defaults to `1`.
 
 (mir-atomic-kms-driver-quirks)=
 
