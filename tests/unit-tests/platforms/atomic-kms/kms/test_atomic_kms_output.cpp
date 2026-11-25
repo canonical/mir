@@ -15,15 +15,19 @@
  */
 
 #include "atomic_kms_output.h"
+#include "display.h"
 #include "fake_plane_properties.h"
 #include "plane_capabilities.h"
 #include "presentation_state.h"
+#include "src/server/report/null_report_factory.h"
 
 #include <mir/geometry/rectangle.h>
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/graphics/kms_framebuffer.h>
 #include <mir/graphics/gamma_curves.h>
 #include <mir/test/doubles/mock_drm.h>
+#include <mir/test/doubles/null_display_configuration_policy.h>
+#include <mir_test_framework/udev_environment.h>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -1111,4 +1115,129 @@ TEST_F(AtomicKMSMixedPresentationTest, failed_full_scene_page_flip_then_set_crtc
             mtd::AtomicRequestWith(Eq(set_crtc_disabling_the_overlay(*this))),
             DRM_MODE_ATOMIC_ALLOW_MODESET));
     EXPECT_TRUE(output_under_test->set_crtc(StubFramebuffer{primary_framebuffer_id}));
+}
+
+namespace
+{
+/// Marks every connected output as used, powered on and using its only mode, so the display
+/// configures it.
+class UsedOutputConfigurationPolicy : public mtd::NullDisplayConfigurationPolicy
+{
+public:
+    void apply_to(mg::DisplayConfiguration& conf) override
+    {
+        conf.for_each_output([](mg::UserDisplayConfigurationOutput& output)
+        {
+            output.used = true;
+            output.current_mode_index = 0;
+            output.power_mode = mir_power_mode_on;
+        });
+    }
+};
+
+class AtomicKMSDisplayTest : public AtomicKMSMixedPresentationTest
+{
+public:
+    auto make_display() -> std::unique_ptr<mga::Display>
+    {
+        std::shared_ptr<struct gbm_device> const no_gbm{};
+        std::shared_ptr<mga::GbmQuirks> const no_quirks{};
+        return std::make_unique<mga::Display>(
+            std::move(drm_fd),
+            no_gbm,
+            mga::BypassOption::allowed,
+            std::make_shared<UsedOutputConfigurationPolicy>(),
+            mir::report::null_display_report(),
+            no_quirks);
+    }
+
+    auto kms_output(mga::Display& display) -> std::shared_ptr<mga::KMSOutput>
+    {
+        auto const conf = display.configuration();
+        auto const& kms_conf = dynamic_cast<mga::RealKMSDisplayConfiguration const&>(*conf);
+        return kms_conf.get_output_for(mg::DisplayConfigurationOutputId{1});
+    }
+
+    mir_test_framework::UdevEnvironment devices;
+};
+}
+
+TEST_F(AtomicKMSDisplayTest, pause_disables_the_output_and_its_overlay)
+{
+    add_overlay_plane(legal_overlay);
+    auto display = make_display();
+    auto output_under_test = kms_output(*display);
+    ASSERT_TRUE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(all_disabled_including_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+
+    display->pause();
+
+    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
+}
+
+TEST_F(AtomicKMSDisplayTest, failed_pause_keeps_the_overlay_until_resume_and_set_crtc)
+{
+    add_overlay_plane(legal_overlay);
+    auto display = make_display();
+    auto output_under_test = kms_output(*display);
+
+    auto const overlay_weak = page_flip_tracked_overlay(*output_under_test);
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(all_disabled_including_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET))
+        .WillOnce(Return(-EACCES));
+
+    display->pause();
+    EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
+    EXPECT_FALSE(overlay_weak.expired());
+
+    Mock::VerifyAndClearExpectations(&mock_drm);
+
+    // Resume schedules a modeset; the next full-scene set_crtc retires the retained overlay and
+    // rediscovers the plane capabilities.
+    display->resume();
+    EXPECT_FALSE(overlay_weak.expired());
+
+    EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
+    EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, legal_overlay.id)).Times(1);
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(set_crtc_disabling_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+
+    EXPECT_TRUE(output_under_test->set_crtc(StubFramebuffer{primary_framebuffer_id}));
+    EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
+    EXPECT_TRUE(overlay_weak.expired());
+}
+
+TEST_F(AtomicKMSDisplayTest, teardown_disables_the_overlay_before_restoring_the_saved_crtc)
+{
+    add_overlay_plane(legal_overlay);
+    auto display = make_display();
+    auto output_under_test = kms_output(*display);
+    ASSERT_TRUE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+
+    InSequence sequence;
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(all_disabled_including_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    EXPECT_CALL(mock_drm, drmModeSetCrtc(mtd::IsFdOfDevice(drm_device), crtc_id, _, _, _, _, 1, _));
+
+    output_under_test.reset();
+    display.reset();
 }

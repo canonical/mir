@@ -227,6 +227,14 @@ void mga::Display::register_configuration_change_handler(
 
 void mga::Display::pause()
 {
+    if (auto c = cursor.lock())
+        c->suspend();
+
+    std::lock_guard lg{configuration_mutex};
+    output_container->for_each_output([](auto const& output)
+    {
+        output->clear_crtc();
+    });
 }
 
 void mga::Display::resume()
@@ -244,6 +252,9 @@ void mga::Display::resume()
 
         clear_connected_unused_outputs();
     }
+
+    if (auto c = cursor.lock())
+        c->resume();
 }
 
 auto mga::Display::create_hardware_cursor() -> std::shared_ptr<graphics::Cursor>
