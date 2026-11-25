@@ -8,7 +8,6 @@ to mostly ignore this instance, some system components are starting to
 make direct use of systemd. This leads to problems if a compositor
 does not properly integrate with the system.
 
-
 ## Session startup process
 
 When a user logs into a graphical session via the display manager, the
@@ -37,23 +36,23 @@ Systemd provides some [standard targets][systemd.special] as
 integration points where services can hook into the startup
 process. These include two related to graphical user sessions:
 
-* `graphical-session-pre.target`: for services that should run before
+- `graphical-session-pre.target`: for services that should run before
   the compositor is available. This might be to set up sockets or
   environment variables that should be visible for everything starting
   at a later phase.
-* `graphical-session.target`: for services that should run after the
+- `graphical-session.target`: for services that should run after the
   compositor is available.
 
 For proper integration, we want the following to occur:
 
 1. `graphical-session-pre.target` and `graphical-session.target` to be
    started on login, with the compositor started in between.
-2. Everything started after the compositor should see the environment
+1. Everything started after the compositor should see the environment
    variables necessary to talk to the compositor
    (i.e. `WAYLAND_DISPLAY` and `DISPLAY`).
-3. The targets and compositor should all stop together.
-4. The PAM session should remain active until the compositor stops.
-5. The configuration should not interfere with any other desktop
+1. The targets and compositor should all stop together.
+1. The PAM session should remain active until the compositor stops.
+1. The configuration should not interfere with any other desktop
    session that might be instaled on the system.
 
 To complicate matters, these standard targets can not be started
@@ -64,15 +63,14 @@ Instead, it is necessary to define a new target representing the
 compositor's user session, along with a unit to run the compositor
 itself.
 
-
 ## Compositor systemd units
 
 The compositor should provide at least the following units:
 
 1. A `$compositor-session.target` target to represent the graphical
    session.
-2. A `$compositor.service` unit that runs the compositor itself.
-3. A `$compositor-session-shutdown.target` target to help shut down
+1. A `$compositor.service` unit that runs the compositor itself.
+1. A `$compositor-session-shutdown.target` target to help shut down
    the session.
 
 The session target should bind to the generic
@@ -110,7 +108,7 @@ communicate with it:
 ...
 # TODO: the compositor should do this itself so these have the correct values
 ExecStartPost=-systemctl --user set-environment WAYLAND_DISPLAY=wayland-0 DISPLAY=:0
-# Make sure services 
+# Make sure services
 ExecStopPost=-systemctl --user unset-environment WAYLAND_DISPLAY DISPLAY
 ```
 
