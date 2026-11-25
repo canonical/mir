@@ -473,7 +473,7 @@ bool mga::DisplaySink::post()
     auto presentation_succeeded = true;
     if (needs_set_crtc || !output->page_flip(*scheduled_state))
     {
-        if (scheduled_state->client_planes().empty())
+        if (scheduled_state->primary_holds_full_scene())
         {
             /*
              * Fallback blitting: Not pretty, since it may tear. VirtualBox seems
