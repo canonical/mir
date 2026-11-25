@@ -159,12 +159,13 @@ protected:
 
     auto make_sink(
         glm::mat2 const& transformation = glm::mat2{1},
-        mga::PlanePromotion promotion = mga::PlanePromotion::available) -> std::unique_ptr<mga::DisplaySink>
+        mga::PlanePromotion promotion = mga::PlanePromotion::available,
+        mga::BypassOption bypass = mga::BypassOption::allowed) -> std::unique_ptr<mga::DisplaySink>
     {
         return std::make_unique<mga::DisplaySink>(
             drm_fd,
             nullptr,
-            mga::BypassOption::allowed,
+            bypass,
             promotion,
             mir::report::null_display_report(),
             output,
@@ -245,6 +246,19 @@ protected:
     std::shared_ptr<NiceMock<mt::MockKMSOutput>> const output{
         std::make_shared<NiceMock<mt::MockKMSOutput>>()};
     std::unique_ptr<mga::DisplaySink> sink;
+};
+
+class BypassProhibitedAtomicDisplaySinkTest : public AtomicDisplaySinkTest
+{
+protected:
+    void SetUp() override
+    {
+        AtomicDisplaySinkTest::SetUp();
+        sink = make_sink(
+            glm::mat2{1},
+            mga::PlanePromotion::available,
+            mga::BypassOption::prohibited);
+    }
 };
 
 class DmaBufImportTest : public Test
@@ -843,4 +857,55 @@ TEST_F(DmaBufImportTest, framebuffer_keeps_the_bo_and_the_buffer_until_destroyed
 
     framebuffer.reset();
     EXPECT_TRUE(weak_buffer.expired());
+}
+
+TEST_F(AtomicDisplaySinkTest, provides_allocator)
+{
+    EXPECT_THAT(
+        sink->acquire_compatible_allocator<mg::DmaBufDisplayAllocator>(),
+        NotNull());
+}
+
+
+TEST_F(BypassProhibitedAtomicDisplaySinkTest, standard_composition_can_be_posted)
+{
+    mg::FramebufferPtr framebuffer =
+        std::make_unique<NiceMock<mt::MockKMSFramebuffer>>();
+
+    sink->set_next_image(std::move(framebuffer));
+
+    EXPECT_CALL(*output, page_flip(_))
+        .WillOnce(Return(true));
+
+    EXPECT_TRUE(sink->post());
+}
+
+TEST_F(BypassProhibitedAtomicDisplaySinkTest, reject_fullscreen_overlay)
+{
+    auto const framebuffer =
+        std::make_shared<NiceMock<mt::MockKMSFramebuffer>>();
+    EXPECT_FALSE(sink->overlay({fullscreen_element(framebuffer)}));
+}
+
+TEST_F(BypassProhibitedAtomicDisplaySinkTest, acquires_null_allocator)
+{
+    EXPECT_EQ(
+        nullptr,
+        sink->acquire_compatible_allocator<mg::DmaBufDisplayAllocator>());
+}
+
+TEST_F(BypassProhibitedAtomicDisplaySinkTest, no_presentation_plan)
+{
+    auto candidate = make_candidate(display_area);
+    EXPECT_FALSE(sink->plan_presentation({candidate}));
+}
+
+TEST_F(BypassProhibitedAtomicDisplaySinkTest, no_mixed_submission)
+{
+    EXPECT_CALL(*output, test_presentation(_)).Times(0);
+    EXPECT_FALSE(
+        sink->overlay({
+            legal_primary(),
+            client_element(make_client_framebuffer())
+        }));
 }

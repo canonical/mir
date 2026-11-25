@@ -381,7 +381,7 @@ Log trace message
 
 ### `bypass`
 
-Enable bypass optimization for fullscreen surfaces.
+Enable displaying of eligible client buffers directly using primary or overlay planes, without compositor rendering.
 
 Defaults to `0`.
 

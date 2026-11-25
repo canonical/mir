@@ -9,7 +9,6 @@ add_library(
   atomic_kms_output.h
   atomic_update.cpp
   atomic_update.h
-  bypass.cpp
   cursor.cpp
   display.cpp
   display_buffer.cpp

@@ -89,7 +89,7 @@ void add_graphics_platform_options(boost::program_options::options_description& 
     config.add_options()
         (bypass_option_name,
          boost::program_options::value<bool>()->default_value(false),
-         "Enable bypass optimization for fullscreen surfaces.");
+         "Enable displaying of eligible client buffers directly using primary or overlay planes, without compositor rendering.");
     mga::Quirks::add_quirks_option(config);
 }
 
