@@ -56,7 +56,7 @@ public:
 
     bool set_crtc(FBHandle const& fb) override;
     bool has_crtc_mismatch() override;
-    void clear_crtc() override;
+    bool clear_crtc() override;
     bool page_flip(PresentationState const& state) override;
     bool test_presentation(PresentationState const& state) override;
 
@@ -92,6 +92,7 @@ private:
     };
 
     bool ensure_crtc(Configuration& to_update);
+    bool clear_crtc_locked(Configuration& conf);
     void add_primary_properties(AtomicUpdate& update, Configuration const& conf, FBHandle const& fb) const;
     auto add_presentation_properties(
         AtomicUpdate& update, Configuration const& conf, PresentationState const& state) const -> bool;

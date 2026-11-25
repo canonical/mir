@@ -381,59 +381,80 @@ bool mga::AtomicKMSOutput::has_crtc_mismatch()
     return !kms_modes_are_equal(&conf->current_crtc->mode, &conf->connector->modes[conf->mode_index]);
 }
 
-void mga::AtomicKMSOutput::clear_crtc()
+bool mga::AtomicKMSOutput::clear_crtc()
 {
     auto conf = configuration.lock();
+    return clear_crtc_locked(*conf);
+}
+
+bool mga::AtomicKMSOutput::clear_crtc_locked(Configuration& conf)
+{
     try
     {
-        ensure_crtc(*conf);
-    }
-    catch (...)
-    {
-        /*
-         * In order to actually clear the output, we need to have a crtc
-         * connected to the output/connector so that we can disconnect
-         * it. However, not being able to get a crtc is OK, since it means
-         * that the output cannot be displaying anything anyway.
-         */
-        return;
-    }
-
-    AtomicUpdate update;
-    update.add_property(*conf->connector_props, "CRTC_ID", 0);
-    update.add_property(*conf->crtc_props, "ACTIVE", 0);
-    update.add_property(*conf->crtc_props, "MODE_ID", 0);
-    update.add_property(*conf->plane_props, "FB_ID", 0);
-    update.add_property(*conf->plane_props, "CRTC_ID", 0);
-
-    auto result = commit_disabling_overlays(update, *conf);
-    if (result)
-    {
-        if (result == -EACCES || result == -EPERM)
+        try
         {
-            /* We don't have modesetting rights.
-             *
-             * This can happen during session switching if (eg) logind has already
-             * revoked device access before notifying us.
-             *
-             * Whatever we're switching to can handle the CRTCs; this should not be fatal.
-             * Losing DRM master does not prove that scanout stopped, so keep ownership of the
-             * CRTC and planes, and stop promoting until the capabilities are rediscovered.
+            ensure_crtc(conf);
+        }
+        catch (...)
+        {
+            /*
+             * In order to actually clear the output, we need to have a crtc
+             * connected to the output/connector so that we can disconnect
+             * it. An unconfigured output has nothing displaying; a previously
+             * configured one retains its failure state and overlays below.
              */
-            mir::log_info("Couldn't clear output %s (drmModeSetCrtc: %s (%i))",
-                mgk::connector_name(conf->connector).c_str(),
-                mir::errno_to_cstr(-result),
-                -result);
-            conf->plane_capabilities = nullptr;
-            return;
+            conf.plane_capabilities = nullptr;
+            retire_overlays_without_crtc(conf);
+            return !conf.crtc_props && !conf.plane_props && conf.enabled_overlays.empty();
         }
 
-        MIR_FATAL_ERROR("Couldn't clear output {} (drmModeSetCrtc = {})",
-                    mgk::connector_name(conf->connector), result);
-    }
+        /* An unconfigured or disconnected output has no CRTC or plane properties to program, so
+         * there is nothing to disable. A failed page flip or set_crtc may still have left overlays
+         * programmed, so retire those first. */
+        if (!conf.connector_props || !conf.crtc_props || !conf.plane_props)
+        {
+            retire_overlays_without_crtc(conf);
+            return conf.enabled_overlays.empty();
+        }
 
-    conf->current_crtc = nullptr;
-    conf->plane_capabilities = nullptr;
+        AtomicUpdate update;
+        update.add_property(*conf.connector_props, "CRTC_ID", 0);
+        update.add_property(*conf.crtc_props, "ACTIVE", 0);
+        update.add_property(*conf.crtc_props, "MODE_ID", 0);
+        update.add_property(*conf.plane_props, "FB_ID", 0);
+        update.add_property(*conf.plane_props, "CRTC_ID", 0);
+
+        auto result = commit_disabling_overlays(update, conf);
+        if (result)
+        {
+            /* Losing DRM master (EACCES/EPERM) can happen during session switching if (eg) logind
+             * has already revoked device access before notifying us, and does not prove that
+             * scanout stopped; keep ownership of the CRTC and planes and stop promoting until
+             * capabilities are rediscovered. */
+            auto const severity = (result == -EACCES || result == -EPERM)
+                ? mir::logging::Severity::informational
+                : mir::logging::Severity::warning;
+            mir::log(severity, MIR_LOG_COMPONENT, "Couldn't clear output %s (atomic commit: %s (%i))",
+                mgk::connector_name(conf.connector).c_str(),
+                mir::errno_to_cstr(-result),
+                -result);
+            conf.plane_capabilities = nullptr;
+            return false;
+        }
+
+        conf.current_crtc = nullptr;
+        conf.plane_capabilities = nullptr;
+        return true;
+    }
+    catch (std::exception const& e)
+    {
+        /* Reading the properties of an enabled overlay can fail if the device has gone away.
+         * The hardware still owns the CRTC and planes, so keep them recorded and stop promoting. */
+        mir::log_warning("Couldn't clear output %s: %s",
+            mgk::connector_name(conf.connector).c_str(), e.what());
+        conf.plane_capabilities = nullptr;
+        return false;
+    }
 }
 
 bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
@@ -742,14 +763,19 @@ void mga::AtomicKMSOutput::add_primary_properties(
 
 void mga::AtomicKMSOutput::restore_saved_crtc()
 {
-    if (auto conf = configuration.lock(); !using_saved_crtc)
+    auto conf = configuration.lock();
+    if (using_saved_crtc)
+        return;
+    /* The legacy modeset below only updates the primary plane, so retire any overlay first. If
+     * that fails the overlay is still scanning out, so leave the saved CRTC alone. */
+    if (!conf->enabled_overlays.empty() && !clear_crtc_locked(*conf))
     {
-        drmModeSetCrtc(drm_fd_, saved_crtc.crtc_id, saved_crtc.buffer_id,
-                       saved_crtc.x, saved_crtc.y,
-                       &conf->connector->connector_id, 1, &saved_crtc.mode);
-
-        using_saved_crtc = true;
+        return;
     }
+    drmModeSetCrtc(drm_fd_, saved_crtc.crtc_id, saved_crtc.buffer_id,
+                   saved_crtc.x, saved_crtc.y,
+                   &conf->connector->connector_id, 1, &saved_crtc.mode);
+    using_saved_crtc = true;
 }
 
 void mga::AtomicKMSOutput::set_power_mode(MirPowerMode mode)

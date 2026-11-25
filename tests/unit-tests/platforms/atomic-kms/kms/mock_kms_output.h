@@ -40,7 +40,7 @@ public:
     MOCK_METHOD(unsigned, max_refresh_rate, (), (const, override));
     MOCK_METHOD(bool, set_crtc, (graphics::FBHandle const&), (override));
     MOCK_METHOD(bool, has_crtc_mismatch, (), (override));
-    MOCK_METHOD(void, clear_crtc, (), (override));
+    MOCK_METHOD(bool, clear_crtc, (), (override));
     MOCK_METHOD(bool, page_flip, (graphics::atomic::PresentationState const&), (override));
     MOCK_METHOD(bool, test_presentation, (graphics::atomic::PresentationState const&), (override));
     MOCK_METHOD(void, set_cursor_image, (gbm_bo*), (override));

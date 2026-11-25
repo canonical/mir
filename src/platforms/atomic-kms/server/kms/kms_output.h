@@ -78,7 +78,13 @@ public:
      * @returns true if a set_crtc is required, otherwise false
      */
     virtual bool has_crtc_mismatch() = 0;
-    virtual void clear_crtc() = 0;
+
+    /// Disable this output's CRTC and any overlay planes it enabled.
+    ///
+    /// \return true if the output had nothing to clear or the disable committed; false if the
+    ///         hardware still owns the CRTC and overlays, which stay recorded for a later commit
+    ///         to retire.
+    virtual bool clear_crtc() = 0;
 
     /// Commit \a state to the hardware, including any client overlay planes, with a
     /// normal blocking commit. This is the same request test_presentation() tests.
