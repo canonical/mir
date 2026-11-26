@@ -94,7 +94,6 @@ private:
     void add_primary_properties(AtomicUpdate& update, Configuration const& conf, FBHandle const& fb) const;
     auto try_add_plane_presentation_properties(
         AtomicUpdate& update, Configuration const& conf, PresentationState const& state) const -> bool;
-    static auto matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool;
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;

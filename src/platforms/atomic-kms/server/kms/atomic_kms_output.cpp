@@ -121,6 +121,12 @@ void add_overlay_disable_properties(
     }
 }
 
+auto matches_crtc_size(drmModeCrtc const& crtc, mg::FBHandle const& primary) -> bool
+{
+    return crtc.width == primary.size().width.as_uint32_t() &&
+        crtc.height == primary.size().height.as_uint32_t();
+}
+
 class PropertyBlobData
 {
 public:
@@ -467,7 +473,7 @@ bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
         return false;
     }
 
-    if (!matches_crtc_size(*conf, state.primary()))
+    if (!matches_crtc_size(*conf->current_crtc, state.primary()))
     {
         /* If the submitted FB isn't the same size as the output, we need
          * a modeset, which can't be done as a pageflip.
@@ -512,7 +518,7 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
         return false;
     }
 
-    if (!matches_crtc_size(*conf, state.primary()))
+    if (!matches_crtc_size(*conf->current_crtc, state.primary()))
     {
         return false;
     }
@@ -599,12 +605,6 @@ auto mga::AtomicKMSOutput::try_add_plane_presentation_properties(
     // KMS plane state persists across commits; detach any current overlays not reused by state.
     add_overlay_disable_properties(update, drm_fd_, overlays_retired_by(conf.current_overlays, state));
     return true;
-}
-
-auto mga::AtomicKMSOutput::matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool
-{
-    return conf.current_crtc->width == primary.size().width.as_uint32_t() &&
-        conf.current_crtc->height == primary.size().height.as_uint32_t();
 }
 
 void mga::AtomicKMSOutput::set_cursor_image(gbm_bo* buffer)
