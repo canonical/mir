@@ -332,6 +332,19 @@ inline constexpr generic::DeltaX<T> as_delta(generic::Width<T> const& w)
 template<typename T>
 inline constexpr generic::DeltaY<T> as_delta(generic::Height<T> const& h)
 { return generic::DeltaY<T>{h.as_value()}; }
+
+/// The area of `size`, that is, width × height.
+///
+/// Precondition: both dimensions must be non-negative.
+template<typename T>
+inline constexpr auto area(generic::Size<T> const& size)
+{
+    if constexpr (std::is_integral_v<T>)
+        return generic::Area<std::uint64_t>{
+            static_cast<std::uint64_t>(size.width.as_value()) * static_cast<std::uint64_t>(size.height.as_value())};
+    else
+        return generic::Area<T>{size.width.as_value() * size.height.as_value()};
+}
 } // namespace geometry
 } // namespace mir
 

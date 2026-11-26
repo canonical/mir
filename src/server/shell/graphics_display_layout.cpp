@@ -22,6 +22,8 @@
 #include <mir/geometry/rectangles.h>
 #include <mir/geometry/displacement.h>
 
+#include <optional>
+
 namespace msh = mir::shell;
 namespace mg = mir::graphics;
 namespace geom = mir::geometry;
@@ -87,7 +89,7 @@ bool msh::GraphicsDisplayLayout::place_in_output(
 
 geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& rect)
 {
-    int max_area = -1;
+    std::optional<geom::Area> max_area;
     geometry::Rectangle best = rect;
 
     display->for_each_display_sync_group([&](mg::DisplaySyncGroup& group)
@@ -96,9 +98,9 @@ geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& 
             {
                 auto const& screen = db.view_area();
                 auto const& overlap = intersection_of(rect, screen);
-                int overlap_area = geom::area(overlap.size);
+                auto const overlap_area = geom::area(overlap.size);
 
-                if (overlap_area > max_area)
+                if (!max_area || overlap_area > *max_area)
                 {
                     best = screen;
                     max_area = overlap_area;

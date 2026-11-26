@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mir/geometry/dimensions.h>
 #include <mir/geometry/size.h>
 
 #include <gmock/gmock.h>
@@ -71,9 +72,9 @@ static_assert(!std::convertible_to<geom::SizeD, geom::SizeF>, "Conversion double
 
 TEST(geometry, size_area)
 {
-    EXPECT_EQ(12, geom::area(geom::Size{3, 4}));
-    EXPECT_EQ(12.0f, geom::area(geom::SizeF{3.0f, 4.0f}));
-    EXPECT_EQ(0, geom::area(geom::Size{}));
+    EXPECT_EQ(12u, geom::area(geom::Size{3, 4}).as_value());
+    EXPECT_EQ(12.0f, geom::area(geom::SizeF{3.0f, 4.0f}).as_value());
+    EXPECT_EQ(0u, geom::area(geom::Size{}).as_value());
 }
 
-static_assert(geom::area(geom::Size{3, 4}) == 12, "area is constexpr");
+static_assert(geom::area(geom::Size{3, 4}).as_value() == 12u, "area is constexpr");

@@ -17,6 +17,8 @@
 #ifndef MIR_GEOMETRY_FORWARD_H_
 #define MIR_GEOMETRY_FORWARD_H_
 
+#include <cstdint>
+
 namespace mir
 {
 /// Basic geometry types. Types for dimensions, displacements, etc.
@@ -46,6 +48,9 @@ struct DeltaYTag
 {
 };
 struct StrideTag
+{
+};
+struct AreaTag
 {
 };
 /// @}
@@ -79,6 +84,8 @@ template<typename T>
 using DeltaX = Value<T, DeltaXTag>;
 template<typename T>
 using DeltaY = Value<T, DeltaYTag>;
+template<typename T>
+using Area = Value<T, AreaTag>;
 }
 
 using Width = generic::Width<int>;
@@ -97,6 +104,8 @@ using DeltaYF = generic::DeltaY<float>;
 
 // Just to be clear, mir::geometry::Stride is the stride of the buffer in bytes
 using Stride = generic::Value<int, StrideTag>;
+
+using Area = generic::Area<std::uint64_t>;
 
 using Point = generic::Point<int>;
 using Size = generic::Size<int>;

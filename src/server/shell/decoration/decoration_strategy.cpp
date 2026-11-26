@@ -126,7 +126,7 @@ uint32_t constexpr default_button_icon          = pack_pixel(0xFF, 0xFF, 0xFF);
 inline auto area(geom::Size size) -> size_t
 {
     return (size.width > geom::Width{} && size.height > geom::Height{})
-        ? geom::area(size)
+        ? static_cast<size_t>(geom::area(size).as_value())
         : 0;
 }
 
