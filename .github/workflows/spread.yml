@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - main
+    - ccache-size
     - release/[0-9]+.[0-9]+
     tags:
     - v[0-9]+[0-9]+.[0-9]+
@@ -112,25 +113,10 @@ jobs:
         # and evicting those we care for - from `main`
         echo "merge-base=$( git merge-base origin/main ${{ github.sha }} )" >> "$GITHUB_OUTPUT"
 
-    - name: CCache
-      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-      uses: actions/cache@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-      with: &ccache_with
-        key: ccache-${{ matrix.spread-task }}-${{ steps.setup-ccache.outputs.merge-base }}
-        # if exact match isn't found, use the most recent entry for the task
-        restore-keys: |
-          ccache-${{ matrix.spread-task }}-
-        path: ${{ env.CCACHE_DIR }}
-
-    - name: Restore CCache
-      if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
-      uses: actions/cache/restore@668228422ae6a00e4ad889ee87cd7109ec5666a7 # v5.0.4
-      with: *ccache_with
-
     - name: Ensure ccache size
       run: |
         # a full build yielded at most 650M cache
-        echo "max_size = 800M" > "${CCACHE_DIR}/ccache.conf"
+        echo "max_size = 10G" > "${CCACHE_DIR}/ccache.conf"
 
     - name: Create release tarball
       run: tools/make_release_tarball --skip-checks
