@@ -18,6 +18,9 @@ perform this in a dedicated private repository before merging into `main` and ma
 
 ### Start a release candidate
 
+Before you run Start Release, make sure that the series page and index entry exist.
+Start Release creates the next minor series page. Do not create the page by hand.
+
 Run the [Start Release](https://github.com/canonical/mir/actions/workflows/start-release.yml) workflow from GitHub Actions:
 
 - `version` (required): the target release version (for example, `2.26.1`)
@@ -31,6 +34,10 @@ After it completes, verify:
 1. A `release/X.Y` branch exists and contains the RC changes.
 1. A `vX.Y.Z-rc` tag exists.
 1. The release PR was created when run from `main`, with a comment containing the GitHub-generated release notes.
+
+For a new minor series, activate Read the Docs version `X.Y` for `release/X.Y`.
+Make sure that the versioned link in the release notes index opens the page.
+For a patch release, reuse the existing page and version.
 
 The release PR should have minimal changes on top of `main`,
 but if bugs or features are deemed to fit the release, they can be cherry-picked into the release branch.
@@ -63,8 +70,23 @@ After it completes, verify:
 
 ### Merge the release branch into `main`
 
-Finally, manually merge and push the release branch into `main`,
-resolving conflicts to ensure the correct ordering and dates in `debian/changelog` and `rpm/mir.spec`.
+After Finalize Release, leave `release/X.Y` at `vX.Y.Z`. Add the pull request for `release/X.Y` to the GitHub merge queue.
+
+If the pull request has conflicts, enable the merge driver. Merge the tag on a new branch from `main`:
+
+```sh
+git config --local include.path ../.gitconfig &&
+git fetch --tags origin &&
+git switch -c release/X.Y-merge origin/main &&
+git merge --no-ff vX.Y.Z
+```
+
+Resolve any remaining conflicts. Finish the merge. Push the recovery branch. Open a pull request. Add the pull request to the merge queue.
+
+PPA Upload promotes packages only when the tagged commit is a non-first parent of the commit pushed to `main`.
+After the merge, make sure that the final notes appear on Read the Docs.
+Make sure that each target Ubuntu series has the release packages in `ppa:mir-team/release`.
+If PPA Upload skipped promotion, copy the release packages and their binaries from `ppa:mir-team/rc` to `ppa:mir-team/release`.
 
 ### Back out a release
 
