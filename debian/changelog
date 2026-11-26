@@ -11,23 +11,44 @@ mir (2.32.0) UNRELEASED; urgency=medium
       - mircommon ABI unchanged at 14
       - mircore ABI unchanged at 3
       - miroil ABI unchanged at 10
-      - mirplatform ABI unchanged at 36
-      - mirserver ABI unchanged at 70
+      - mirplatform ABI bumped to 37
+      - mirserver ABI  bumped to 71
       - mirwayland ABI unchanged at 7
-      - mirplatformgraphics ABI unchanged at 25
+      - mirplatformgraphics ABI  bumped to 26
       - mirinputplatform ABI unchanged at 11
 
     - Enhancements:
 
-      - Pull request title (#<PR number>)
+      - miroil: support keyboard events via `dispatch_input_event()` [#5327](https://github.com/canonical/mir/pull/5327)
+      - miroil: Adds BasicTextInputHub for compositors trying to access IMEs for processing inputs for themselves
+        [#5437](https://github.com/canonical/mir/pull/5437)
+      - customize ssd [#5377](https://github.com/canonical/mir/pull/5377)
+      - SSD: Ellipsize long window titles in the middle [#5394](https://github.com/canonical/mir/pull/5394)
+      - Rounded corners are only for restored windows [#5442](https://github.com/canonical/mir/pull/5442)
+      - Constrain popup positioners to the application zone [#5385](https://github.com/canonical/mir/pull/5385)
+      - platforms/wayland: Retry event poll()ing on interrupted syscall
+        [#5375](https://github.com/canonical/mir/pull/5375)
+      - Use Rectangle::centre() for rectangle midpoints [#5345](https://github.com/canonical/mir/pull/5345)
+      - feat: software blitter rendering provider [#5270](https://github.com/canonical/mir/pull/5270)
+      - Full implementation of the blitter::Renderer [#5339](https://github.com/canonical/mir/pull/5339)
+      - Prefer ptyxis in miral-terminal [#5383](https://github.com/canonical/mir/pull/5383)
+      - Add a std::formatter for std::exception [#5346](https://github.com/canonical/mir/pull/5346)
+      - atomic-kms: implement `plan_presentation` [#5380](https://github.com/canonical/mir/pull/5380)
+      - atomic-kms: build and validate one mixed proposal [#5419](https://github.com/canonical/mir/pull/5419)
 
     - Bugs fixed:
 
-      - Issue title (#<Issue number>)
+      - XdgPositionerStable::ensure_complete(): report error on the right object
+        [#5362](https://github.com/canonical/mir/pull/5362)
+      - Fix for keyboard LEDs not working once a device's keymap is replaced
+        [#5371](https://github.com/canonical/mir/pull/5371)
 
     - Documentation:
 
-      - Pull request title (#<PR number>)
+      - Update README to highlight Office Hours and provide examples of downstream projects
+        [#5381](https://github.com/canonical/mir/pull/5381)
+      - doc: update documentation on use of privileged Wayland extensions
+        [#5289](https://github.com/canonical/mir/pull/5289)
 
  -- Mir CI Bot <mir-ci-bot@canonical.com>  Thu, 26 Nov 2026 15:21:02 +0000
 
