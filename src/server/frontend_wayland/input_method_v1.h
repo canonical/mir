@@ -18,7 +18,11 @@
 #define MIR_FRONTEND_INPUT_METHOD_V1_H
 
 #include "input-method-unstable-v1_wrapper.h"
+#include <mir/geometry/rectangle.h>
+#include <mir/graphics/display_configuration.h>
+#include <mir/shell/surface_specification.h>
 #include <memory>
+#include <optional>
 
 namespace mir
 {
@@ -26,6 +30,7 @@ class Executor;
 
 namespace scene
 {
+class Surface;
 class TextInputHub;
 }
 
@@ -81,6 +86,12 @@ private:
     std::shared_ptr<scene::TextInputHub> const text_input_hub;
     std::shared_ptr<SurfaceRegistry> const surface_registry;
 };
+
+auto input_panel_exclusive_rect(scene::Surface const& surface) -> std::optional<geometry::Rectangle>;
+
+auto input_panel_toplevel_spec(
+    std::optional<graphics::DisplayConfigurationOutputId> output_id,
+    uint32_t position) -> shell::SurfaceSpecification;
 
 }
 }
