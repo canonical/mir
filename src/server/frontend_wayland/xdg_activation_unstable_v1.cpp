@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "xdg_activation_v1.h"
+#include "xdg_activation_unstable_v1.h"
 
 #include <mir/events/keyboard_event.h>
 #include <mir/input/keyboard_observer.h>
