@@ -13,15 +13,10 @@ kill-timeout: 90m
 execute: |
     cd $SPREAD_PATH
 
-    if [ -n "${SBUILD_PROXY_URL}" ]; then
-      install -d /usr/local/share/ca-certificates
-      printf '%s' "${SBUILD_PROXY_CA}" | base64 --decode \
-        > /usr/local/share/ca-certificates/mir-sbuild-proxy.crt
-      export http_proxy="${SBUILD_PROXY_URL}" https_proxy="${SBUILD_PROXY_URL}"
-      export no_proxy=localhost,127.0.0.1,::1
-      unset NO_PROXY
-      update-ca-certificates
-    fi
+    proxy_ca_directory=/usr/local/share/ca-certificates
+    proxy_install_certs="apt-get update; apt-get install --yes --no-install-recommends ca-certificates"
+    proxy_update_ca=update-ca-certificates
+    source "${SPREAD_PATH}/spread/setup-proxy.sh"
 
     add-apt-repository universe
     apt-get update
