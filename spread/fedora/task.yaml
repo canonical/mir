@@ -27,6 +27,8 @@ execute: |
 
     dnf install ccache mock rpmdevtools
 
+    echo "debug_dir = /var/tmp/ccache/debug" >> "${CCACHE_DIR}/ccache.conf"
+
     rpmdev-setuptree
     cp ${SPREAD_PATH}/mir-*.tar.xz ~/rpmbuild/SOURCES
     cp ${SPREAD_PATH}/rpm/mir.spec ~/rpmbuild/SPECS
@@ -39,9 +41,16 @@ execute: |
       --enable-plugin=ccache \
       --plugin-option=ccache:dir=${CCACHE_DIR} \
       --plugin-option=ccache:hashdir=False \
+      --plugin-option=ccache:debug=True \
       --plugin-option=ccache:show_stats=True \
       "${RPMBUILD_EXTRA_OPTIONS[@]}" \
       ~/rpmbuild/SRPMS/mir-*.src.rpm
+
+    echo "CCache debug results:"
+    find "${CCACHE_DIR}/debug" -name '*.ccache-log' -type f -print0 \
+      | xargs -0 grep -hE 'Command line:|Result:' \
+      | sort \
+      | uniq -c
 
     ccache --show-stats --zero-stats > ${CCACHE_DIR}/ccache.stats
 
