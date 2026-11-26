@@ -32,6 +32,7 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <algorithm>
+#include <concepts>
 #include <ranges>
 #include <span>
 #include <string_view>
@@ -92,6 +93,32 @@ void add_plane_scanout(
     update.add_property(plane_props, "CRTC_Y", destination.top_left.y.as_int());
     update.add_property(plane_props, "CRTC_W", destination.size.width.as_uint32_t());
     update.add_property(plane_props, "CRTC_H", destination.size.height.as_uint32_t());
+}
+
+auto overlays_retired_by(
+    std::span<mga::PlaneId const> current_overlays,
+    mga::PresentationState const& next_state)
+{
+    return current_overlays | std::views::filter([&next_state](mga::PlaneId const id) {
+        return std::ranges::none_of(
+            next_state.client_planes(),
+            [id](mga::ClientPlaneAssignment const& assignment) { return assignment.plane == id; });
+    });
+}
+
+template<std::ranges::input_range R>
+    requires std::same_as<std::ranges::range_value_t<R>, mga::PlaneId>
+void add_overlay_disable_properties(
+    mga::AtomicUpdate& update,
+    mir::Fd const& drm_fd,
+    R&& overlays)
+{
+    for (auto const id : overlays)
+    {
+        mgk::ObjectProperties plane_props{drm_fd, id, DRM_MODE_OBJECT_PLANE};
+        update.add_property(plane_props, "FB_ID", 0);
+        update.add_property(plane_props, "CRTC_ID", 0);
+    }
 }
 
 class PropertyBlobData
@@ -202,7 +229,7 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
           .crtc_props = nullptr,
           .plane_props = nullptr,
           .connector_props = nullptr,
-          .enabled_overlays = {}
+          .current_overlays = {}
       }},
       saved_crtc(),
       using_saved_crtc{true}
@@ -345,7 +372,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
-    add_overlay_disable_properties(update, *conf);
+    add_overlay_disable_properties(update, drm_fd_, conf->current_overlays);
 
     auto ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
     if (ret)
@@ -356,7 +383,7 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
         return false;
     }
 
-    conf->enabled_overlays.clear();
+    conf->current_overlays.clear();
 
     // We might have performed a modeset; update our view of the hardware state accordingly!
     conf->current_crtc = mgk::get_crtc(drm_fd_, conf->current_crtc->crtc_id);
@@ -466,7 +493,7 @@ bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
         return false;
     }
 
-    conf->enabled_overlays = state.client_planes()
+    conf->current_overlays = state.client_planes()
         | std::views::transform([](auto const& assignment) { return assignment.plane; })
         | std::ranges::to<std::vector>();
 
@@ -569,26 +596,9 @@ auto mga::AtomicKMSOutput::add_presentation_properties(
         }
     }
 
-    add_overlay_disable_properties(update, conf, state.client_planes());
+    // KMS plane state persists across commits; detach any current overlays not reused by state.
+    add_overlay_disable_properties(update, drm_fd_, overlays_retired_by(conf.current_overlays, state));
     return true;
-}
-
-void mga::AtomicKMSOutput::add_overlay_disable_properties(
-    AtomicUpdate& update,
-    Configuration const& conf,
-    std::span<ClientPlaneAssignment const> keep) const
-{
-    for (auto const id : conf.enabled_overlays)
-    {
-        bool const in_use = std::ranges::any_of(
-            keep, [id](ClientPlaneAssignment const& assignment) { return assignment.plane == id; });
-        if (!in_use)
-        {
-            mgk::ObjectProperties plane_props{drm_fd_, id, DRM_MODE_OBJECT_PLANE};
-            update.add_property(plane_props, "FB_ID", 0);
-            update.add_property(plane_props, "CRTC_ID", 0);
-        }
-    }
 }
 
 auto mga::AtomicKMSOutput::matches_crtc_size(Configuration const& conf, FBHandle const& primary) -> bool
