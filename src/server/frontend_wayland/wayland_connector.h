@@ -203,7 +203,17 @@ public:
     int client_socket_fd(
         std::function<void(std::shared_ptr<scene::Session> const& session)> const& connect_handler) const override;
 
-    void run_on_wayland_display(std::function<void(wl_display*)> const& functor);
+    void run_on_wayland_display(std::function<void()> const& functor);
+
+    void create_wayland_client(Fd const& client_fd, std::function<void(wl_client*)> const& callback);
+
+    /// Resolve the [scene::Surface] identified by \p session and \p id.
+    ///
+    /// Intended for test/integration tooling.
+    ///
+    /// \returns the surface, or `nullptr` if it cannot be found
+    auto scene_surface_for(scene::Session const& session, ProtocolId id) const
+        -> std::shared_ptr<scene::Surface>;
 
     /// Runs callback the first time a wl_surface with the given id is created, or immediately if one currently exists
     /// Callback is never called if a wl_surface with the id is never created
@@ -246,6 +256,7 @@ private:
     std::unique_ptr<WpViewporter> viewporter;
     std::unique_ptr<LinuxDRMSyncobjManager> drm_syncobj;
     std::shared_ptr<WaylandExecutor> const executor;
+    std::shared_ptr<SurfaceRegistry> const surface_registry;
     std::shared_ptr<graphics::GraphicBufferAllocator> const allocator;
     std::shared_ptr<shell::Shell> const shell;
     std::unique_ptr<WaylandExtensions> const extensions;

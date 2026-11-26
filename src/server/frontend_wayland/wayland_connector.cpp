@@ -261,6 +261,7 @@ mf::WaylandConnector::WaylandConnector(
       display{wl_display_create(), &cleanup_display},
       pause_signal{eventfd(0, EFD_CLOEXEC | EFD_SEMAPHORE)},
       executor{std::make_shared<WaylandExecutor>(wl_display_get_event_loop(display.get()))},
+      surface_registry{std::make_shared<mf::SurfaceRegistry>()},
       allocator{allocator_for_display(allocator, display.get(), executor)},
       shell{shell},
       extensions{std::move(extensions_)},
@@ -302,7 +303,6 @@ mf::WaylandConnector::WaylandConnector(
         this->allocator);
     subcompositor_global = std::make_unique<mf::WlSubcompositor>(display.get());
     fixes_global = std::make_unique<mf::WlFixes>(display.get());
-    auto const surface_registry = std::make_shared<mf::SurfaceRegistry>();
 
     auto const action_group_manager =
         std::make_shared<InputTriggerRegistry::ActionGroupManager>(token_authority, *executor);
@@ -578,9 +578,26 @@ int mf::WaylandConnector::client_socket_fd(
     return socket_fd[client];
 }
 
-void mf::WaylandConnector::run_on_wayland_display(std::function<void(wl_display*)> const& functor)
+void mf::WaylandConnector::run_on_wayland_display(std::function<void()> const& functor)
 {
-    executor->spawn([display_ref = display.get(), functor]() { functor(display_ref); });
+    executor->spawn([functor]() { functor(); });
+}
+
+void mf::WaylandConnector::create_wayland_client(
+    Fd const& client_fd,
+    std::function<void(wl_client*)> const& callback)
+{
+    executor->spawn(
+        [display_ref = display.get(), client_fd, callback]()
+        {
+            callback(wl_client_create(display_ref, client_fd));
+        });
+}
+
+auto mf::WaylandConnector::scene_surface_for(scene::Session const& session, ProtocolId id) const
+    -> std::shared_ptr<scene::Surface>
+{
+    return surface_registry->scene_surface_for(session, id);
 }
 
 void mf::WaylandConnector::on_surface_created(

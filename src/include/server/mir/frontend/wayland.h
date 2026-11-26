@@ -19,6 +19,7 @@
 
 #include <mir/graphics/display_configuration.h>
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -36,6 +37,9 @@ class Surface;
 }
 namespace frontend
 {
+
+/// Identifies a Wayland protocol object within its client
+typedef uint32_t ProtocolId;
 
 /// Utility function to recover the session associated with a wl_client
 auto get_session(wl_client const* client) -> std::shared_ptr<scene::Session>;

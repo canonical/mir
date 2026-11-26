@@ -17,12 +17,20 @@
 #ifndef MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 #define MIR_FRONTEND_WAYLAND_SURFACE_REGISTRY_H_
 
+#include <mir/frontend/wayland.h>
+
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <unordered_map>
 
 namespace mir
 {
+namespace scene
+{
+class Session;
+class Surface;
+}
 namespace input
 {
 class Surface;
@@ -43,6 +51,14 @@ public:
     void remove_surface(std::shared_ptr<input::Surface const> const& surf);
     auto lookup_wayland_surface(std::shared_ptr<input::Surface const> const& surf)
         -> std::optional<wayland::Weak<frontend::WlSurface>>;
+
+    /// Resolve the [scene::Surface] identified by \p session and \p id.
+    ///
+    /// Intended for test/integration tooling.
+    ///
+    /// \returns the surface, or `nullptr` if it cannot be found
+    auto scene_surface_for(scene::Session const& session, ProtocolId id) const
+        -> std::shared_ptr<scene::Surface>;
 
 private:
     std::unordered_map<std::shared_ptr<input::Surface const>, wayland::Weak<frontend::WlSurface> const>
