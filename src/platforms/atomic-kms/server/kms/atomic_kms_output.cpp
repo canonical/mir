@@ -301,8 +301,8 @@ void mga::AtomicKMSOutput::configure(
 {
     if (!crtc || !plane)
     {
-        BOOST_THROW_EXCEPTION(std::invalid_argument(
-            "AtomicKMSOutput::configure requires a non-null CRTC and plane"));
+        MIR_FATAL_ERROR(
+            "AtomicKMSOutput::configure requires a non-null CRTC and plane");
     }
 
     auto conf = configuration.lock();
