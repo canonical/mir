@@ -71,11 +71,9 @@ static_assert(!std::convertible_to<geom::SizeD, geom::SizeF>, "Conversion double
 
 TEST(geometry, size_area)
 {
-    using namespace geom;
-
-    EXPECT_EQ(12, area(Size{3, 4}));
-    EXPECT_EQ(12.0f, area(SizeF{3.0f, 4.0f}));
-    EXPECT_EQ(0, area(Size{}));
+    EXPECT_EQ(12, geom::area(geom::Size{3, 4}));
+    EXPECT_EQ(12.0f, geom::area(geom::SizeF{3.0f, 4.0f}));
+    EXPECT_EQ(0, geom::area(geom::Size{}));
 }
 
-static_assert(geom::generic::area(geom::Size{3, 4}) == 12, "area is constexpr");
+static_assert(geom::area(geom::Size{3, 4}) == 12, "area is constexpr");

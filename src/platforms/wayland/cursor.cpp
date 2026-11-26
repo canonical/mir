@@ -97,7 +97,7 @@ void mpw::Cursor::show(std::shared_ptr<graphics::CursorImage> const& cursor_imag
 
         auto const width = scaled_cursor_buf.size.width.as_uint32_t();
         auto const height = scaled_cursor_buf.size.height.as_uint32_t();
-        auto const buf_size_bytes = 4 * area(scaled_cursor_buf.size);
+        auto const buf_size_bytes = 4 * geometry::area(scaled_cursor_buf.size);
         auto const hotspot_x = current_cursor_image->hotspot().dx.as_uint32_t() * current_scale;
         auto const hotspot_y = current_cursor_image->hotspot().dy.as_uint32_t() * current_scale;
         void* data_buffer;

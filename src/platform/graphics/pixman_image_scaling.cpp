@@ -33,7 +33,7 @@ mir::graphics::ARGB8Buffer mir::graphics::scale_cursor_image(
     // Special case: no resizing. Just copy the data.
     if(new_scale == 1.0f)
     {
-        auto const pixel_count = area(size);
+        auto const pixel_count = mir::geometry::area(size);
         auto buf = std::make_unique<uint32_t[]>(pixel_count);
         std::memcpy(buf.get(), cursor_image.as_argb_8888(), pixel_count * MIR_BYTES_PER_PIXEL(mir_pixel_format_argb_8888));
         return {std::move(buf), {width, height}};

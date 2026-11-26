@@ -96,7 +96,7 @@ geom::Rectangle msh::GraphicsDisplayLayout::get_output_for(geometry::Rectangle& 
             {
                 auto const& screen = db.view_area();
                 auto const& overlap = intersection_of(rect, screen);
-                int overlap_area = area(overlap.size);
+                int overlap_area = geom::area(overlap.size);
 
                 if (overlap_area > max_area)
                 {
