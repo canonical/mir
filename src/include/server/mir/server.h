@@ -68,6 +68,7 @@ class SurfaceFactory;
 class Session;
 class SessionLock;
 class SceneReport;
+class TextInputHub;
 }
 namespace input
 {
@@ -521,6 +522,8 @@ public:
     auto the_scene() const -> std::shared_ptr<compositor::Scene>;
 
     auto the_screen_shooter_factory() const -> std::shared_ptr<compositor::ScreenShooterFactory>;
+
+    auto the_text_input_hub() const -> std::shared_ptr<scene::TextInputHub>;
 
     /** @name Wayland tools
      * These facilitate shells implementing Wayland protocol extensions.

@@ -237,6 +237,7 @@ global:
     mir::Server::the_shell_display_layout*;
     mir::Server::the_surface_factory*;
     mir::Server::the_surface_stack*;
+    mir::Server::the_text_input_hub*;
     mir::Server::the_token_authority*;
     mir::Server::the_touch_visualizer*;
     mir::Server::wayland_display*;

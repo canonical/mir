@@ -23,6 +23,7 @@
 #include <mir/graphics/cursor.h>
 #include <mir/input/input_device_hub.h>
 #include <mir/input/input_device_observer.h>
+#include <mir/scene/text_input_hub.h>
 #include <mir/input/cursor_images.h>
 #include <mir/version.h>
 
@@ -95,6 +96,7 @@ struct miroil::MirServerHooks::Self
     std::weak_ptr<mir::graphics::Display> mir_display;
     std::weak_ptr<mir::shell::DisplayConfigurationController> mir_display_configuration_controller;
     std::weak_ptr<mir::input::InputDeviceHub> input_device_hub;
+    std::weak_ptr<mir::scene::TextInputHub> text_input_hub;
     CreateNamedCursor create_cursor;
 };
 
@@ -120,6 +122,7 @@ void miroil::MirServerHooks::operator()(mir::Server& server)
             self->mir_display = server.the_display();
             self->mir_display_configuration_controller = server.the_display_configuration_controller();
             self->input_device_hub = server.the_input_device_hub();
+            self->text_input_hub = server.the_text_input_hub();
         });
 }
 
@@ -139,6 +142,15 @@ auto miroil::MirServerHooks::the_display_configuration_controller() const
         return result;
 
     throw std::logic_error("No input device hub available. Server not running?");
+}
+
+auto miroil::MirServerHooks::the_text_input_hub() const
+-> std::shared_ptr<mir::scene::TextInputHub>
+{
+    if (auto result = self->text_input_hub.lock())
+        return result;
+
+    throw std::logic_error("No text input hub available. Server not running?");
 }
 
 void miroil::MirServerHooks::create_named_cursor(CreateNamedCursor func)
