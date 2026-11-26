@@ -59,7 +59,7 @@ After it completes, verify:
 
 1. Tag `vX.Y.Z` exists on the release branch tip.
 1. The GitHub release is published.
-1. The GitHub release body matches the release's documentation section, and the RPM changelog matches the Debian entry.
+1. The GitHub release body matches the documentation section plus the Full Changelog link, and the RPM changelog matches the Debian entry.
 
 ### Merge the release branch into `main`
 
