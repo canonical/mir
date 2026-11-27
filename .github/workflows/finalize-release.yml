@@ -49,6 +49,12 @@ jobs:
             exit 1
           fi
 
+          if ! PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" HEAD); then
+            echo "Failed to determine the previous release tag; cannot build the Full Changelog link" >&2
+            exit 1
+          fi
+          echo "previous_tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+
       - name: Update Debian changelog
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
@@ -164,7 +170,6 @@ jobs:
             /^\(release-[0-9]+\.[0-9]+\.[0-9]+\)=$/ {
               if (in_notes) exit
               if ($0 == "(release-" version ")=") {
-                print "# [Mir " version "](https://github.com/canonical/mir/releases/v" version ")"
                 in_notes = 1
               }
               next
@@ -189,10 +194,14 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
           SHA: ${{ steps.release.outputs.sha }}
+          PREVIOUS_TAG: ${{ steps.version.outputs.previous_tag }}
         with:
           script: |
             const fs = require('fs');
             const releaseNotes = fs.readFileSync('/tmp/github-release-notes.md', 'utf8');
+            const { PREVIOUS_TAG, VERSION } = process.env;
+            if (!PREVIOUS_TAG) throw new Error('Previous release tag is empty; cannot build the Full Changelog link');
+            const compareUrl = `https://github.com/${context.repo.owner}/${context.repo.repo}/compare/${PREVIOUS_TAG}...v${VERSION}`;
 
             const release = await github.rest.repos.createRelease({
               owner: context.repo.owner,
@@ -200,7 +209,7 @@ jobs:
               tag_name: `v${process.env.VERSION}`,
               target_commitish: process.env.SHA,
               name: `Mir ${process.env.VERSION}`,
-              body: releaseNotes,
+              body: `${releaseNotes}\n\n**Full Changelog**: ${compareUrl}`,
               draft: false,
               prerelease: false
             });
