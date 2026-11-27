@@ -281,8 +281,17 @@ private:
     void place_attached(Point& top_left, Size& size, MirPlacementGravity edges, Rectangle application_zone);
 
     auto place_new_surface(WindowSpecification parameters) -> WindowSpecification;
-    auto place_relative(mir::geometry::Rectangle const& parent, miral::WindowSpecification const& parameters, Size size)
+    auto place_relative(
+        mir::geometry::Rectangle const& parent,
+        miral::WindowSpecification const& parameters,
+        Size size,
+        bool ignore_exclusion_zones)
         -> std::optional<Rectangle>;
+
+    /// Checks if \p surface should ignores exclusion zones.
+    ///
+    /// \returns `true` if the surface should ignore exclusion zones, otherwise `false`
+    auto ignores_exclusion_zones(std::weak_ptr<mir::scene::Surface> const& surface) const -> bool;
 
     void move_tree(miral::WindowInfo& root, mir::geometry::Displacement movement);
     void set_tree_depth_layer(miral::WindowInfo& root, MirDepthLayer new_layer);

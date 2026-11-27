@@ -57,16 +57,15 @@ parts:
       - librust-nix+default-dev
       - librust-nix+event-dev
       - librust-nix+poll-dev
-      - librust-prettyplease-0.2+default-dev
       - librust-proc-macro2-1+default-dev
       - librust-quick-xml+default-dev
       - librust-quick-xml+serialize-dev
       - librust-quote-1+default-dev
       - librust-serde-1+default-dev
       - librust-serde-1+derive-dev
-      - librust-syn-2+default-dev
-      - librust-syn-2+full-dev
-      - librust-syn-2+parsing-dev
+      - librust-syn+default-dev
+      - librust-syn+full-dev
+      - librust-syn+parsing-dev
       - librust-udev-0.9+default-dev
       - librust-wayland-backend+default-dev
       - librust-wayland-scanner+default-dev
