@@ -30,7 +30,6 @@ sphinx-sitemap~=2.9
 sphinx-llm~=0.4
 
 # Vale dependencies
-rst2html
 vale~=3.13
 
 # Mir dependencies
