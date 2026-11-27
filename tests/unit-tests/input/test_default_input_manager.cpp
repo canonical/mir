@@ -27,8 +27,10 @@
 
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
+#include <atomic>
 #include <chrono>
 #include <list>
+#include <thread>
 
 namespace mt = mir::test;
 namespace md = mir::dispatch;
@@ -148,4 +150,51 @@ TEST_F(DefaultInputManagerTest, forwards_pause_continue_state_changes_to_platfor
     EXPECT_CALL(platform, continue_after_config()).WillOnce(WakeUp(&continued));
     input_manager.continue_after_config();
     EXPECT_TRUE(continued.wait_for(timeout));
+}
+
+TEST_F(DefaultInputManagerTest, calls_platform_methods_on_a_single_dedicated_thread)
+{
+    std::atomic<std::thread::id> platform_thread{};
+    auto check_thread = [&]
+    {
+        auto const current_thread = std::this_thread::get_id();
+        auto expected_thread = std::thread::id{};
+
+        // First time through here we replace the empty default value for `platform_thread` with the current thread.
+        platform_thread.compare_exchange_strong(expected_thread, current_thread);
+
+        EXPECT_THAT(current_thread, Eq(platform_thread.load()));
+    };
+
+    EXPECT_CALL(platform, start()).Times(AtLeast(1)).WillRepeatedly(check_thread);
+    EXPECT_CALL(platform, stop()).Times(AtLeast(1)).WillRepeatedly(check_thread);
+    EXPECT_CALL(platform, pause_for_config()).Times(AtLeast(1)).WillRepeatedly(check_thread);
+    EXPECT_CALL(platform, continue_after_config()).Times(AtLeast(1)).WillRepeatedly(check_thread);
+    EXPECT_CALL(platform, dispatchable()).Times(AtLeast(1)).WillRepeatedly([&]
+        {
+            check_thread();
+            return mt::fake_shared(platform_dispatchable);
+        });
+
+    auto const main_thread = std::this_thread::get_id();
+    input_manager.start();
+    mt::Signal dispatched;
+    platform_dispatchable.enqueue([&]
+        {
+            check_thread();
+            dispatched.raise();
+        });
+    EXPECT_TRUE(dispatched.wait_for(std::chrono::seconds{2}));
+
+    std::jthread caller{[&]
+        {
+            input_manager.pause_for_config();
+            input_manager.continue_after_config();
+            input_manager.stop();
+        }};
+    auto const caller_thread = caller.get_id();
+    caller.join();
+
+    EXPECT_THAT(platform_thread.load(), Ne(main_thread));
+    EXPECT_THAT(platform_thread.load(), Ne(caller_thread));
 }
