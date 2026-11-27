@@ -821,5 +821,14 @@ global:
     miral::DecorationStyle::set_color*;
     miral::DecorationStyle::set_metric*;
     typeinfo?for?miral::DecorationStyle;
+    miral::HideCursor::?HideCursor*;
+    miral::HideCursor::HideCursor*;
+    miral::HideCursor::inactivity_timeout*;
+    miral::HideCursor::on_inactivity*;
+    miral::HideCursor::on_keyboard*;
+    miral::HideCursor::on_touch*;
+    miral::HideCursor::operator*;
+    miral::HideCursor::reveal_threshold*;
+    typeinfo?for?miral::HideCursor;
   };
 } MIRAL_6.1;

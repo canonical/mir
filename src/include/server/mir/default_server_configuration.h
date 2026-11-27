@@ -120,6 +120,8 @@ class DefaultInputDeviceHub;
 class CompositeEventFilter;
 class EventFilterChainDispatcher;
 class CursorController;
+class CursorHidingDispatcher;
+class CursorHidingPolicy;
 class CursorObserverMultiplexer;
 class TouchVisualizer;
 class CursorImages;
@@ -313,6 +315,7 @@ public:
     virtual std::shared_ptr<ObserverRegistrar<input::KeyboardObserver>> the_keyboard_observer_registrar();
     virtual std::shared_ptr<input::Scene>  the_input_scene();
     virtual std::shared_ptr<input::CursorController> the_cursor_controller();
+    virtual std::shared_ptr<input::CursorHidingPolicy> the_cursor_hiding_policy();
     virtual std::shared_ptr<input::CursorObserverMultiplexer> the_cursor_observer_multiplexer();
     virtual std::shared_ptr<input::TouchVisualizer> the_touch_visualizer();
     virtual std::shared_ptr<input::Seat> the_seat();
@@ -468,6 +471,9 @@ private:
     CachedPtr<scene::BroadcastingSessionEventSink> broadcasting_session_event_sink;
 
     std::shared_ptr<scene::BroadcastingSessionEventSink> the_broadcasting_session_event_sink();
+
+    CachedPtr<input::CursorHidingDispatcher> cursor_hiding_dispatcher;
+    auto the_cursor_hiding_dispatcher() -> std::shared_ptr<input::CursorHidingDispatcher>;
 
     auto report_factory(char const* report_opt) -> std::unique_ptr<report::ReportFactory>;
 

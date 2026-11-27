@@ -37,7 +37,7 @@ class ObserverRegistrar;
 
 namespace compositor { class Compositor; class DisplayBufferCompositorFactory; class CompositorReport; class ScreenShooterFactory; class Scene; }
 namespace graphics { class Cursor; class DisplayPlatform; class RenderingPlatform; class Display; class GLConfig; class DisplayConfigurationPolicy; class DisplayConfigurationObserver; class GraphicBufferAllocator; class CursorImage; class OutputFilter; }
-namespace input { class CompositeEventFilter; class InputDispatcher; class CursorObserverMultiplexer; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
+namespace input { class CompositeEventFilter; class InputDispatcher; class CursorObserverMultiplexer; class CursorHidingPolicy; class CursorImages; class TouchVisualizer; class InputDeviceHub; class InputDeviceRegistry;}
 namespace logging { class Logger; }
 namespace options { class Option; }
 namespace frontend
@@ -363,6 +363,9 @@ public:
 
     /// \return the cursor
     auto the_cursor() const -> std::shared_ptr<graphics::Cursor>;
+
+    /// \return the policy deciding when the cursor is hidden while a pointing device is attached
+    auto the_cursor_hiding_policy() const -> std::shared_ptr<input::CursorHidingPolicy>;
 
     /// \return the output filter.
     auto the_output_filter() const -> std::shared_ptr<graphics::OutputFilter>;

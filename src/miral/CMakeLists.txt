@@ -146,6 +146,7 @@ add_library(miral-external OBJECT
     decorations.cpp                     ${miral_include}/miral/decorations.h
     decoration_style.cpp                ${miral_include}/miral/decoration_style.h
     cursor_scale.cpp                    ${miral_include}/miral/cursor_scale.h
+    hide_cursor.cpp                     ${miral_include}/miral/hide_cursor.h
     mousekeys_config.cpp                ${miral_include}/miral/mousekeys_config.h
     output_filter.cpp                   ${miral_include}/miral/output_filter.h
     simulated_secondary_click.cpp       ${miral_include}/miral/simulated_secondary_click.h

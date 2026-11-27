@@ -22,6 +22,7 @@ set(
   seat_observer_multiplexer.cpp
   seat_observer_multiplexer.h
   idle_poking_dispatcher.cpp
+  cursor_hiding_dispatcher.cpp
   virtual_input_device.cpp
   xkb_mapper_registrar.cpp
   input_event_transformer.cpp
