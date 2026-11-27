@@ -18,6 +18,7 @@ These pages provide additional detail about a number of aspects related to using
 - {ref}`exp-desktop-environment`
 - [Accessibility Methods](accessibility-methods.md)
 - [Libraries](consumer-libraries.md)
+- [Systemd integration](systemd-integration.md)
 - [XDG Portals support](xdg-portal.md)
 - [Configuration overrides](configuration-overrides.md)
 
