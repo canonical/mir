@@ -135,12 +135,12 @@ void mgw::Display::register_configuration_change_handler(
 
 void mgw::Display::pause()
 {
-   BOOST_THROW_EXCEPTION(std::runtime_error("'Display::pause()' not yet supported on wayland platform"));
+    mir::log_debug("'Display::pause()' not yet supported on wayland platform");
 }
 
 void mgw::Display::resume()
 {
-    BOOST_THROW_EXCEPTION(std::runtime_error("'Display::resume()' not yet supported on wayland platform"));
+    mir::log_debug("'Display::resume()' not yet supported on wayland platform");
 }
 
 auto mgw::Display::create_hardware_cursor() -> std::shared_ptr<Cursor>
