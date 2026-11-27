@@ -28,5 +28,6 @@ wayland-backend = { version = ">=0.3.12" }
 bitflags = "2"
 quote = "1"
 proc-macro2 = "1"
-prettyplease = "0.2"
-syn = { version = "2", features = ["full", "parsing"] }
+prettyplease = ">=0.2, <0.4"
+# Must resolve to the same major version as prettyplease's own syn (0.2 -> 2, 0.3 -> 3)
+syn = { version = ">=2, <4", features = ["full", "parsing"] }
