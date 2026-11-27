@@ -70,7 +70,7 @@ public:
     }
 
     auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
-    { return server().the_scene()->scene_elements_for(this).at(magnifier_index)->renderable(); }
+    { return server().the_scene()->scene_elements_for(this).first.at(magnifier_index)->renderable(); }
 
     auto magnifier_transform(float magnification) const
     { return glm::scale(glm::mat4(1.0), glm::vec3(magnification, magnification, 1.0f)); }
@@ -78,7 +78,7 @@ public:
     auto magnifier_top_left() const -> geom::Point
     { return magnifier_renderable()->screen_position().top_left; }
 
-    auto scene_element_count() const -> size_t { return server().the_scene()->scene_elements_for(this).size(); }
+    auto scene_element_count() const -> size_t { return server().the_scene()->scene_elements_for(this).first.size(); }
 
     /// Waits for work already queued on the main loop to complete. The display
     /// configuration observer multiplexer dispatches on the main loop, so this
@@ -504,7 +504,7 @@ struct MagnifierLiveConfigTest : TestServer
     }
 
     auto magnifier_renderable() const -> std::shared_ptr<mir::graphics::Renderable>
-    { return server().the_scene()->scene_elements_for(this).at(0)->renderable(); }
+    { return server().the_scene()->scene_elements_for(this).first.at(0)->renderable(); }
 
     void load_config(std::string const& text)
     {
@@ -534,11 +534,11 @@ TEST_F(MagnifierLiveConfigTest, can_set_magnifier_enable)
 {
     start_with_config("magnifier_enable=true\n");
 
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(1));
 
     load_config("magnifier_enable=false\n");
 
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(0));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(0));
 }
 
 struct MagnifierLiveConfigBehaviorTest :
@@ -556,7 +556,7 @@ TEST_P(MagnifierLiveConfigBehaviorTest, can_set_magnifier_behavior)
     start_with_config(
         std::string{"magnifier_enable=true\nmagnifier_behavior="} + std::string{GetParam()} + "\n");
 
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(follow_cursor ? 1 : 5));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(follow_cursor ? 1 : 5));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -598,7 +598,7 @@ TEST_F(MagnifierLiveConfigTest, invalid_behavior_is_ignored)
     magnifier.set_behavior(Magnifier::Behavior::freely_positioned);
     start_with_config("magnifier_enable=true\nmagnifier_behavior=invalid\n");
 
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(5));
 }
 
 struct MagnifierLiveConfigValueTestCase
@@ -706,7 +706,7 @@ TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_reapplies_c
     magnifier.set_behavior(Magnifier::Behavior::follow_cursor).magnification(2.0f).capture_size(Size(200, 200));
     magnifier_renderable()->buffer();
 
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(1));
     EXPECT_THAT(
         magnifier_renderable()->transformation(),
         Eq(glm::scale(glm::mat4(1.0), glm::vec3(2.0f, 2.0f, 1.0f))));
@@ -715,7 +715,7 @@ TEST_F(MagnifierLiveConfigTest, reload_with_unchanged_magnifier_keys_reapplies_c
     load_config(config_values);
     magnifier_renderable()->buffer();
 
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(5));
     EXPECT_THAT(
         magnifier_renderable()->transformation(),
         Eq(glm::scale(glm::mat4(1.0), glm::vec3(1.5f, 1.5f, 1.0f))));
@@ -754,10 +754,10 @@ TEST_F(MagnifierLiveConfigTest, restoring_valid_behavior_after_invalid_value_rea
 
     magnifier.set_behavior(Magnifier::Behavior::follow_cursor);
     load_config("magnifier_enable=true\nmagnifier_behavior=invalid\n");
-    ASSERT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(1));
+    ASSERT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(1));
 
     load_config("magnifier_enable=true\nmagnifier_behavior=freely_positioned\n");
-    EXPECT_THAT(server().the_scene()->scene_elements_for(this), SizeIs(5));
+    EXPECT_THAT(server().the_scene()->scene_elements_for(this).first, SizeIs(5));
 }
 
 // Input events are dispatched synchronously through SurfaceInputDispatcher into
@@ -818,7 +818,7 @@ struct MagnifierHandleTest : MagnifierTest
 
     geom::Rectangle element_rectangle(int index)
     {
-        auto const elements = server().the_scene()->scene_elements_for(this);
+        auto const elements = server().the_scene()->scene_elements_for(this).first;
         return elements.at(static_cast<std::size_t>(index))->renderable()->screen_position();
     }
 

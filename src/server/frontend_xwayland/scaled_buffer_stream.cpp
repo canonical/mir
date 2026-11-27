@@ -41,7 +41,8 @@ void mf::ScaledBufferStream::set_frame_posted_callback(std::function<void(geomet
     inner->set_frame_posted_callback(callback);
 }
 
-auto mf::ScaledBufferStream::next_submission_for_compositor(void const* user_id) -> std::shared_ptr<Submission>
+auto mf::ScaledBufferStream::next_submission_for_compositor(void const* user_id)
+    -> std::pair<std::shared_ptr<Submission>, SubmissionState>
 {
     return inner->next_submission_for_compositor(user_id);
 }

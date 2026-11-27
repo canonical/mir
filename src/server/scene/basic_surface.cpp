@@ -901,7 +901,8 @@ void ms::BasicSurface::set_streams(std::list<StreamInfo> const& s)
     observers->moved_to(this, surface_top_left);
 }
 
-mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) const
+auto ms::BasicSurface::generate_renderables(mc::CompositorID id) const
+    -> std::pair<mg::RenderableList, RenderableState>
 {
     auto state = synchronised_state.lock();
     mg::RenderableList list;
@@ -909,17 +910,21 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
     if (state->clip_area)
     {
         if (!state->surface_rect.overlaps(state->clip_area.value()))
-            return list;
+            return {list, RenderableState::Latest};
     }
 
     auto const content_top_left_ = content_top_left(*state);
 
+    // Start by assuming we have the latest buffers, and then if at any point we don't have
+    // the most recent buffer set this to NewBufferAvailable
+    RenderableState buffer_state = RenderableState::Latest;
     for (auto const& info : state->layers)
     {
         if (info.stream->has_submitted_buffer())
         {
+            auto [submission, submission_state] = info.stream->next_submission_for_compositor(id);
             list.emplace_back(std::make_shared<SurfaceSnapshot>(
-                info.stream->next_submission_for_compositor(id),
+                std::move(submission),
                 content_top_left_ + info.displacement,
                 state->clip_area,
                 state->transformation_matrix,
@@ -929,9 +934,12 @@ mg::RenderableList ms::BasicSurface::generate_renderables(mc::CompositorID id) c
                 info.stream.get(),
                 this,
                 state->opaque_region));
+
+            if (submission_state != mc::BufferStream::SubmissionState::Latest)
+                buffer_state = RenderableState::NewerBufferAvailable;
         }
     }
-    return list;
+    return {list, buffer_state};
 }
 
 void ms::BasicSurface::set_confine_pointer_state(MirPointerConfinementState state)

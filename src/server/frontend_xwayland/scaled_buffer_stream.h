@@ -44,7 +44,7 @@ public:
 
     /// Overrides from compositor::BufferStream
     /// @{
-    auto next_submission_for_compositor(void const* user_id) -> std::shared_ptr<Submission>;
+    auto next_submission_for_compositor(void const* user_id) -> std::pair<std::shared_ptr<Submission>, SubmissionState>;
     auto has_submitted_buffer() const -> bool;
     /// @}
 

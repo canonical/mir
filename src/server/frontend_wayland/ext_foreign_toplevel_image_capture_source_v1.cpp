@@ -215,7 +215,7 @@ auto mf::ExtForeignToplevelImageCopyBackend::acquire_content(void const* consume
 
     // A surface with subsurfaces (or multiple streams) produces one renderable per layer, which
     // only a composite can flatten into a single buffer.
-    auto const renderables = locked->generate_renderables(consumer_id);
+    auto const renderables = locked->generate_renderables(consumer_id).first;
     if (renderables.size() != 1)
     {
         return nullptr;

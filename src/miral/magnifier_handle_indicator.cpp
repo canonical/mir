@@ -338,9 +338,9 @@ miral::MagnifierHandleIndicator::MagnifierHandleIndicator(
 }
 
 auto miral::MagnifierHandleIndicator::generate_renderables(mir::compositor::CompositorID id) const
-    -> mir::graphics::RenderableList
+    -> std::pair<mir::graphics::RenderableList, mir::scene::Surface::RenderableState>
 {
     if (id == capture_compositor_id)
-        return {};
+        return {{}, mir::scene::Surface::RenderableState::Latest};
     return BasicSurface::generate_renderables(id);
 }

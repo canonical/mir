@@ -44,7 +44,7 @@ public:
         geometry::RectangleD src_bounds) override;
     void set_frame_posted_callback(
         std::function<void(geometry::Size const&)> const& callback) override;
-    auto next_submission_for_compositor(void const* user_id) -> std::shared_ptr<Submission> override;
+    auto next_submission_for_compositor(void const* user_id) -> std::pair<std::shared_ptr<Submission>, SubmissionState> override;
     bool has_submitted_buffer() const override;
 private:
     std::shared_ptr<MultiMonitorArbiter> const arbiter;

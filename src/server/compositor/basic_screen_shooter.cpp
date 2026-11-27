@@ -217,7 +217,7 @@ auto mc::BasicScreenShooter::Self::render(
 {
     std::lock_guard lock{mutex};
 
-    auto scene_elements = scene->scene_elements_for(this);
+    auto scene_elements = scene->scene_elements_for(this).first;
     auto const captured_time = clock->now();
     mg::RenderableList renderable_list;
     renderable_list.reserve(scene_elements.size());

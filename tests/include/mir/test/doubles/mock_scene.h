@@ -33,10 +33,15 @@ public:
     MockScene()
     {
         ON_CALL(*this, scene_elements_for(testing::_))
-            .WillByDefault(testing::Return(compositor::SceneElementSequence{}));
+            .WillByDefault(testing::Return(std::pair<compositor::SceneElementSequence, SceneElementState>{
+                {}, SceneElementState::Latest}));
     }
 
-    MOCK_METHOD(compositor::SceneElementSequence, scene_elements_for, (compositor::CompositorID), (override));
+    MOCK_METHOD(
+        (std::pair<compositor::SceneElementSequence, SceneElementState>),
+        scene_elements_for,
+        (compositor::CompositorID),
+        (override));
     MOCK_METHOD(void, register_compositor, (compositor::CompositorID), (override));
     MOCK_METHOD(void, unregister_compositor, (compositor::CompositorID), (override));
 

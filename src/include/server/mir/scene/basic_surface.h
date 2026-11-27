@@ -116,7 +116,8 @@ public:
 
     bool visible() const override;
 
-    graphics::RenderableList generate_renderables(compositor::CompositorID id) const override;
+    auto generate_renderables(compositor::CompositorID id) const
+        -> std::pair<graphics::RenderableList, RenderableState> override;
 
     MirWindowType type() const override;
     MirWindowState state() const override;

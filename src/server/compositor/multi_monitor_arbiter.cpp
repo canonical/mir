@@ -87,9 +87,12 @@ mc::MultiMonitorArbiter::~MultiMonitorArbiter()
 }
 
 auto mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
-    -> std::shared_ptr<BufferStream::Submission>
+    -> std::pair<std::shared_ptr<BufferStream::Submission>, BufferStream::SubmissionState>
 {
     auto current_state = state.lock();
+
+    // Default to the safe (ie: please composite again) value
+    auto has_next_buffer = BufferStream::SubmissionState::NewerBufferAvailable;
 
     // If there is no current buffer or there is, but this compositor is already using it...
     if (!current_state->current_submission || is_user_of_current_buffer(*current_state, id))
@@ -103,14 +106,20 @@ auto mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
             clear_current_users(*current_state);
         }
         // Otherwise leave the current buffer alone
+
+        // In either case, `current_submission` is now the latest submission —
+        // either we've advanced it to `next_submission`, or there isn't a newer
+        // submission and we're already using the current (most recent) one.
+        has_next_buffer = BufferStream::SubmissionState::Latest;
     }
 
     // If there was no current buffer and we weren't able to set one, throw and exception
     if (!current_state->current_submission)
         BOOST_THROW_EXCEPTION(std::logic_error("no buffer to give to compositor"));
 
-    return std::make_shared<TrackingSubmission>(
-        current_state->current_submission,
+    return std::make_pair(
+        std::make_shared<TrackingSubmission>(
+            current_state->current_submission,
         [me = shared_from_this(), submission = current_state->current_submission, id]()
         {
             auto state = me->state.lock();
@@ -120,7 +129,8 @@ auto mc::MultiMonitorArbiter::compositor_acquire(compositor::CompositorID id)
             // The compositor is now a user of the current buffer
             // This means we will try to give it a new buffer next time it asks
             add_current_buffer_user(*state, id);
-        });
+        }),
+        has_next_buffer);
 }
 
 void mc::MultiMonitorArbiter::submit_buffer(
