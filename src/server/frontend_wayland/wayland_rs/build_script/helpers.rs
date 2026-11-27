@@ -11,7 +11,9 @@ pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
 
     let code = tokens.to_string();
     if let Err(e) = syn::parse2::<syn::File>(tokens) {
-        panic!("syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{code}");
+        panic!(
+            "syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{code}"
+        );
     }
 
     fs::write(dest_path, code).unwrap();
