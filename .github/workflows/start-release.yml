@@ -67,24 +67,63 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
 
+      - name: Find previous release tag
+        id: previous_tag
+        run: |
+          if ! PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}"); then
+            echo "Failed to determine the previous release tag; cannot compare ABIs" >&2
+            exit 1
+          fi
+          echo "tag=$PREVIOUS_TAG" >> "$GITHUB_OUTPUT"
+
       - name: Add a Debian changelog entry
         env:
           DEBFULLNAME: ${{ steps.gpg.outputs.name }}
           DEBEMAIL: ${{ steps.gpg.outputs.email }}
+          PREVIOUS_TAG: ${{ steps.previous_tag.outputs.tag }}
+        shell: bash
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends devscripts
 
+          : "${PREVIOUS_TAG:?Missing previous release tag; cannot compare ABIs}"
+
           debchange --newversion "${INPUTS_VERSION}" "Begin Release Candidate for ${INPUTS_VERSION} release"
+
+          abi_value() {
+            sed -nE "s/^set\\($1 ([0-9]+)\\).*/\\1/p" | awk 'NR == 1'
+          }
+
+          while IFS=: read -r name file var; do
+            if ! current=$(abi_value "$var" < "$file") || [ -z "$current" ]; then
+              echo "Failed to read $var from $file" >&2
+              exit 1
+            fi
+            if ! previous=$(git show "$PREVIOUS_TAG:$file" | abi_value "$var") || [ -z "$previous" ]; then
+              echo "Failed to read $var from $file at $PREVIOUS_TAG" >&2
+              exit 1
+            fi
+            status="unchanged at"
+            if [ "$previous" != "$current" ]; then status="bumped to"; fi
+            printf '%s %s %s\n' "$name" "$status" "$current"
+          done > /tmp/abi-status <<'EOF'
+          miral:src/miral/CMakeLists.txt:MIRAL_ABI
+          mircommon:src/common/CMakeLists.txt:MIRCOMMON_ABI
+          mircore:src/core/CMakeLists.txt:MIRCORE_ABI
+          miroil:src/miroil/CMakeLists.txt:MIROIL_ABI
+          mirplatform:src/CMakeLists.txt:MIRPLATFORM_ABI
+          mirserver:src/server/CMakeLists.txt:MIRSERVER_ABI
+          mirwayland:src/wayland/CMakeLists.txt:MIRWAYLAND_ABI
+          mirplatformgraphics:src/platforms/CMakeLists.txt:MIR_SERVER_GRAPHICS_PLATFORM_ABI
+          mirinputplatform:src/platforms/CMakeLists.txt:MIR_SERVER_INPUT_PLATFORM_ABI
+          EOF
+
           awk --include=inplace -v version="${INPUTS_VERSION}" '
             BEGIN {
-              while ((getline line < "debian/changelog") > 0) {
-                if (match(line, /^[[:space:]]+- ([[:alnum:]]+) ABI (unchanged at|bumped to) ([0-9]+)$/, abi_fields) &&
-                    !(abi_fields[1] in abi_versions)) {
-                  abi_versions[abi_fields[1]] = abi_fields[3]
-                }
+              while ((getline < "/tmp/abi-status") > 0) {
+                status[$1] = $2 " " $3 " " $4
               }
-              close("debian/changelog")
+              close("/tmp/abi-status")
             }
             { print }
             !inserted && $0 == "  * Begin Release Candidate for " version " release" {
@@ -92,9 +131,8 @@ jobs:
               while ((getline line < ".github/workflows/changelog-template") > 0) {
                 gsub(/X\.YY\.Z/, version, line)
                 if (match(line, /^      - ([[:alnum:]]+) ABI /, abi_fields) &&
-                    abi_fields[1] in abi_versions) {
-                  sub(/(unchanged at|bumped to) <version>/,
-                      "unchanged at " abi_versions[abi_fields[1]], line)
+                    abi_fields[1] in status) {
+                  sub(/(unchanged at|bumped to) <version>/, status[abi_fields[1]], line)
                 }
                 print line
               }
@@ -152,13 +190,6 @@ jobs:
             END { if (!found) exit 1 }
           ' doc/sphinx/release-notes/index.md
           git add doc/sphinx/release-notes/index.md "$PAGE"
-
-      - name: Find previous release tag
-        id: previous_tag
-        run: |
-          # Get the most recent tag excluding -rc and -dev tags
-          PREVIOUS_TAG=$(git describe --abbrev=0 --exclude="*-rc" --exclude="*-dev" "${INPUTS_SHA}" 2>/dev/null || echo "")
-          echo "tag=$PREVIOUS_TAG" | tee --append "$GITHUB_OUTPUT"
 
       - name: Tag and push the Release Candidate
         env:
