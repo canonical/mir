@@ -4,20 +4,17 @@ use quote::{format_ident, quote};
 use std::{fs, sync::LazyLock};
 use syn::{parse_file, Ident, Item};
 
-/// Write the generated Rust code to a file with proper formatting.
+/// Write the generated Rust code to a file, unformatted (run `cargo fmt` to read it).
 pub fn write_generated_rust_file(tokens: TokenStream, filename: &str) {
     let out_dir = "src";
     let dest_path = std::path::Path::new(&out_dir).join(filename);
 
-    let tokens_for_error = tokens.to_string();
-    let syntax_tree: syn::File = syn::parse2(tokens).unwrap_or_else(|e| {
-        panic!(
-            "syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{tokens_for_error}"
-        )
-    });
-    let formatted_code = prettyplease::unparse(&syntax_tree);
+    let code = tokens.to_string();
+    if let Err(e) = syn::parse2::<syn::File>(tokens) {
+        panic!("syn::parse2 failed while generating '{filename}': {e}\n\nGenerated tokens:\n{code}");
+    }
 
-    fs::write(dest_path, formatted_code).unwrap();
+    fs::write(dest_path, code).unwrap();
 }
 
 /// Write the generated C++ code to the correct directory.
