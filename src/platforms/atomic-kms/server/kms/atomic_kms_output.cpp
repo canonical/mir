@@ -32,8 +32,11 @@
 #include <drm_fourcc.h>
 #include <drm_mode.h>
 #include <algorithm>
+#include <concepts>
+#include <ranges>
 #include <span>
 #include <string_view>
+#include <vector>
 
 #include <boost/throw_exception.hpp>
 #include <system_error>
@@ -90,6 +93,38 @@ void add_plane_scanout(
     update.add_property(plane_props, "CRTC_Y", destination.top_left.y.as_int());
     update.add_property(plane_props, "CRTC_W", destination.size.width.as_uint32_t());
     update.add_property(plane_props, "CRTC_H", destination.size.height.as_uint32_t());
+}
+
+auto overlays_retired_by(
+    std::span<mga::PlaneId const> current_overlays,
+    mga::PresentationState const& next_state)
+{
+    return current_overlays | std::views::filter([&next_state](mga::PlaneId const id) {
+        return std::ranges::none_of(
+            next_state.client_planes(),
+            [id](mga::ClientPlaneAssignment const& assignment) { return assignment.plane == id; });
+    });
+}
+
+template<std::ranges::input_range R>
+    requires std::same_as<std::ranges::range_value_t<R>, mga::PlaneId>
+void add_overlay_disable_properties(
+    mga::AtomicUpdate& update,
+    mir::Fd const& drm_fd,
+    R&& overlays)
+{
+    for (auto const id : overlays)
+    {
+        mgk::ObjectProperties plane_props{drm_fd, id, DRM_MODE_OBJECT_PLANE};
+        update.add_property(plane_props, "FB_ID", 0);
+        update.add_property(plane_props, "CRTC_ID", 0);
+    }
+}
+
+auto matches_crtc_size(drmModeCrtc const& crtc, mg::FBHandle const& primary) -> bool
+{
+    return crtc.width == primary.size().width.as_uint32_t() &&
+        crtc.height == primary.size().height.as_uint32_t();
 }
 
 class PropertyBlobData
@@ -199,7 +234,8 @@ mga::AtomicKMSOutput::AtomicKMSOutput(
           .mode = nullptr,
           .crtc_props = nullptr,
           .plane_props = nullptr,
-          .connector_props = nullptr
+          .connector_props = nullptr,
+          .current_overlays = {}
       }},
       saved_crtc(),
       using_saved_crtc{true}
@@ -342,6 +378,8 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
     update.add_property(*conf->plane_props, "CRTC_ID", conf->current_crtc->crtc_id);
     update.add_property(*conf->plane_props, "FB_ID", fb);
 
+    add_overlay_disable_properties(update, drm_fd_, conf->current_overlays);
+
     auto ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_ALLOW_MODESET);
     if (ret)
     {
@@ -350,6 +388,8 @@ bool mga::AtomicKMSOutput::set_crtc(FBHandle const& fb)
         conf->plane_capabilities = nullptr;
         return false;
     }
+
+    conf->current_overlays.clear();
 
     // We might have performed a modeset; update our view of the hardware state accordingly!
     conf->current_crtc = mgk::get_crtc(drm_fd_, conf->current_crtc->crtc_id);
@@ -423,7 +463,7 @@ void mga::AtomicKMSOutput::clear_crtc()
     conf->plane_capabilities = nullptr;
 }
 
-bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
+bool mga::AtomicKMSOutput::page_flip(PresentationState const& state)
 {
     auto conf = configuration.lock();
     if (!ensure_crtc(*conf))
@@ -433,25 +473,23 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
         return false;
     }
 
-    auto const crtc_width = conf->current_crtc->width;
-    auto const crtc_height = conf->current_crtc->height;
-
-    auto const fb_width = fb.size().width.as_uint32_t();
-    auto const fb_height = fb.size().height.as_uint32_t();
-
-    if ((crtc_width != fb_width) || (crtc_height != fb_height))
+    if (!matches_crtc_size(*conf->current_crtc, state.primary()))
     {
         /* If the submitted FB isn't the same size as the output, we need
          * a modeset, which can't be done as a pageflip.
          *
-         * The calling code should detect a failure to pagefilp, and fall back
-         * on `set_crtc`.
+         * The calling code should detect a failure to pageflip, and fall back
+         * on `set_crtc` if there are no client planes to present.
          */
         return false;
     }
 
     AtomicUpdate update;
-    add_primary_properties(update, *conf, fb);
+    if (!try_add_plane_presentation_properties(update, *conf, state))
+    {
+        return false;
+    }
+    add_primary_properties(update, *conf, state.primary());
 
     auto ret = update.commit(drm_fd_, 0);
     if (ret)
@@ -461,6 +499,10 @@ bool mga::AtomicKMSOutput::page_flip(FBHandle const& fb)
         conf->plane_capabilities = nullptr;
         return false;
     }
+
+    conf->current_overlays = state.client_planes()
+        | std::views::transform([](auto const& assignment) { return assignment.plane; })
+        | std::ranges::to<std::vector>();
 
     using_saved_crtc = false;
     return true;
@@ -476,23 +518,50 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
         return false;
     }
 
-    auto const& primary = state.primary();
-    if ((conf->current_crtc->width != primary.size().width.as_uint32_t()) ||
-        (conf->current_crtc->height != primary.size().height.as_uint32_t()))
+    if (!matches_crtc_size(*conf->current_crtc, state.primary()))
     {
         return false;
     }
 
     AtomicUpdate update;
-    add_primary_properties(update, *conf, primary);
+    if (!try_add_plane_presentation_properties(update, *conf, state))
+    {
+        return false;
+    }
+    add_primary_properties(update, *conf, state.primary());
 
-    auto const& caps = *conf->plane_capabilities;
+    auto const ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_TEST_ONLY);
+    if (ret)
+    {
+        mir::log_debug(
+            "Output %s rejected mixed presentation: %s (%i)",
+            mgk::connector_name(conf->connector).c_str(),
+            mir::errno_to_cstr(-ret),
+            -ret);
+        return false;
+    }
+
+    return true;
+}
+
+auto mga::AtomicKMSOutput::try_add_plane_presentation_properties(
+    AtomicUpdate& update,
+    Configuration const& conf,
+    PresentationState const& state) const -> bool
+{
+    // Nullable when client planes are absent: ensure_crtc() may have failed to discover them.
+    auto const* const caps = conf.plane_capabilities.get();
+    if (!state.client_planes().empty() && !caps)
+    {
+        return false;
+    }
+
     for (auto const& assignment : state.client_planes())
     {
         // configure_locked() may have rediscovered the capabilities since planning, so look the plane up again.
         auto const plane_iter = std::ranges::find_if(
-            caps.overlays, [&assignment](auto const& candidate) { return candidate.id == assignment.plane; });
-        if (plane_iter == caps.overlays.end())
+            caps->overlays, [&assignment](auto const& candidate) { return candidate.id == assignment.plane; });
+        if (plane_iter == caps->overlays.end())
         {
             return false;
         }
@@ -508,7 +577,7 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
         mgk::ObjectProperties plane_props{drm_fd_, plane.id, DRM_MODE_OBJECT_PLANE};
 
         add_plane_scanout(
-            update, plane_props, conf->current_crtc->crtc_id, fb, {}, {assignment.destination, fb.size()});
+            update, plane_props, conf.current_crtc->crtc_id, fb, {}, {assignment.destination, fb.size()});
 
         if (plane.alpha_max)
         {
@@ -529,21 +598,12 @@ bool mga::AtomicKMSOutput::test_presentation(PresentationState const& state)
             update.add_property(
                 plane_props,
                 "zpos",
-                std::max(plane.zpos.min, caps.primary.zpos.current + (plane.id > caps.primary.id ? 0 : 1)));
+                std::max(plane.zpos.min, caps->primary.zpos.current + (plane.id > caps->primary.id ? 0 : 1)));
         }
     }
 
-    auto const ret = update.commit(drm_fd_, DRM_MODE_ATOMIC_TEST_ONLY);
-    if (ret)
-    {
-        mir::log_debug(
-            "Output %s rejected mixed presentation: %s (%i)",
-            mgk::connector_name(conf->connector).c_str(),
-            mir::errno_to_cstr(-ret),
-            -ret);
-        return false;
-    }
-
+    // KMS plane state persists across commits; detach any current overlays not reused by state.
+    add_overlay_disable_properties(update, drm_fd_, overlays_retired_by(conf.current_overlays, state));
     return true;
 }
 

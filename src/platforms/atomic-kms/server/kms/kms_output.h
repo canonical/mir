@@ -79,7 +79,10 @@ public:
     virtual bool has_crtc_mismatch() = 0;
     virtual void clear_crtc() = 0;
 
-    virtual bool page_flip(FBHandle const& fb) = 0;
+    /// Commit \a state to the hardware.
+    ///
+    /// \return `true` if the kernel accepts the request, otherwise `false`
+    virtual bool page_flip(PresentationState const& state) = 0;
 
     /// Builds the complete atomic request that would present \a state and checks it with a
     /// single DRM_MODE_ATOMIC_TEST_ONLY commit. Nothing visible changes.

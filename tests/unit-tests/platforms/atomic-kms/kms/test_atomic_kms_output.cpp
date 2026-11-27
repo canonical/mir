@@ -343,6 +343,15 @@ public:
              {{request.overlay.id, ids.zpos}, request.expected_overlay_zpos}});
         return properties;
     }
+
+    auto with_overlay_disabled(std::map<AtomicPropertyKey, uint64_t> properties) const
+        -> std::map<AtomicPropertyKey, uint64_t>
+    {
+        mt::PlanePropertyIds const ids{legal_overlay.id};
+        properties[{legal_overlay.id, ids.fb_id}] = 0;
+        properties[{legal_overlay.id, ids.crtc_id}] = 0;
+        return properties;
+    }
 };
 
 class AtomicKMSMixedRequestTest : public AtomicKMSMixedPresentationTest, public WithParamInterface<MixedRequestCase>
@@ -362,6 +371,44 @@ class AtomicKMSMixedRejectionTest : public AtomicKMSMixedPresentationTest,
                                     public WithParamInterface<MixedPresentationRejectionCase>
 {
 };
+
+auto page_flip_disabling_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
+    -> std::map<AtomicPropertyKey, uint64_t>
+{
+    return fixture.with_overlay_disabled(
+        fixture.primary_request_properties({.framebuffer_id = AtomicKMSOutputTest::flip_framebuffer_id}));
+}
+
+auto page_flip_keeping_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
+    -> std::map<AtomicPropertyKey, uint64_t>
+{
+    return fixture.mixed_request_properties(MixedRequestCase{
+        .name = "higher_id_overlay_shares_primary_zpos",
+        .overlay = legal_overlay,
+        .expected_overlay_zpos = AtomicKMSOutputTest::primary_zpos});
+}
+
+void present_initial_mixed_frame(
+    AtomicKMSMixedPresentationTest& fixture,
+    mga::AtomicKMSOutput& output_under_test)
+{
+    ASSERT_THAT(output_under_test.plane_capabilities(), NotNull());
+    EXPECT_CALL(
+        fixture.mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(page_flip_keeping_the_overlay(fixture))),
+            no_flags));
+    ASSERT_TRUE(output_under_test.page_flip(fixture.mixed_state(legal_overlay.id)));
+    Mock::VerifyAndClearExpectations(&fixture.mock_drm);
+}
+
+auto set_crtc_disabling_the_overlay(AtomicKMSMixedPresentationTest const& fixture)
+    -> std::map<AtomicPropertyKey, uint64_t>
+{
+    return fixture.with_overlay_disabled(fixture.primary_request_properties(
+        {.framebuffer_id = AtomicKMSOutputTest::primary_framebuffer_id, .activate_crtc = true}));
+}
 }
 
 TEST_F(AtomicKMSOutputTest, set_crtc_preserves_primary_request_and_modeset_flag)
@@ -386,17 +433,17 @@ TEST_F(AtomicKMSOutputTest, page_flip_preserves_primary_request_and_uses_normal_
     EXPECT_CALL(
         mock_drm, drmModeAtomicCommit(mtd::IsFdOfDevice(drm_device), mtd::AtomicRequestWith(Eq(properties)), no_flags));
 
-    StubFramebuffer framebuffer{flip_framebuffer_id};
-    EXPECT_TRUE(output_under_test->page_flip(framebuffer));
+    EXPECT_TRUE(output_under_test->page_flip(
+        mga::PresentationState::full_scene(std::make_shared<StubFramebuffer>(flip_framebuffer_id))));
 }
 
 TEST_P(AtomicKMSFramebufferSizeTest, page_flip_rejects_mismatch_without_allocating_request)
 {
     auto output_under_test = output();
-    StubFramebuffer framebuffer{flip_framebuffer_id, GetParam().size};
+    auto const framebuffer = std::make_shared<StubFramebuffer>(flip_framebuffer_id, GetParam().size);
     EXPECT_CALL(mock_drm, drmModeAtomicAlloc()).Times(0);
 
-    EXPECT_FALSE(output_under_test->page_flip(framebuffer));
+    EXPECT_FALSE(output_under_test->page_flip(mga::PresentationState::full_scene(framebuffer)));
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -495,8 +542,8 @@ TEST_F(AtomicKMSOutputTest, page_flip_commit_failure_returns_false)
             no_flags))
         .WillOnce(Return(-EIO));
 
-    StubFramebuffer framebuffer{flip_framebuffer_id};
-    EXPECT_FALSE(output_under_test->page_flip(framebuffer));
+    EXPECT_FALSE(output_under_test->page_flip(
+        mga::PresentationState::full_scene(std::make_shared<StubFramebuffer>(flip_framebuffer_id))));
 }
 
 TEST_F(AtomicKMSOutputTest, initial_capabilities_match_crtc_and_primary_plane)
@@ -512,13 +559,13 @@ TEST_F(AtomicKMSOutputTest, failed_flip_clears_capabilities_until_rediscovered)
 {
     auto output_under_test = output();
     EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, no_flags)).WillOnce(Return(-EIO));
-    StubFramebuffer framebuffer{flip_framebuffer_id};
-    EXPECT_FALSE(output_under_test->page_flip(framebuffer));
+    auto const framebuffer = std::make_shared<StubFramebuffer>(flip_framebuffer_id);
+    EXPECT_FALSE(output_under_test->page_flip(mga::PresentationState::full_scene(framebuffer)));
     EXPECT_THAT(output_under_test->plane_capabilities(), IsNull());
 
     EXPECT_CALL(mock_drm, drmModeGetPropertyBlob(_, plane_formats_blob_id)).Times(1);
     EXPECT_CALL(mock_drm, drmModeAtomicCommit(_, _, DRM_MODE_ATOMIC_ALLOW_MODESET));
-    EXPECT_TRUE(output_under_test->set_crtc(framebuffer));
+    EXPECT_TRUE(output_under_test->set_crtc(*framebuffer));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
 }
 
@@ -672,4 +719,77 @@ TEST_F(AtomicKMSMixedPresentationTest, failed_test_commit_returns_false_and_keep
 
     EXPECT_FALSE(output_under_test->test_presentation(mixed_state(legal_overlay.id)));
     EXPECT_THAT(output_under_test->plane_capabilities(), NotNull());
+}
+
+TEST_F(AtomicKMSMixedPresentationTest, full_scene_page_flip_disables_previously_enabled_overlay)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_NO_FATAL_FAILURE(present_initial_mixed_frame(*this, *output_under_test));
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(page_flip_disabling_the_overlay(*this))),
+            no_flags));
+    EXPECT_TRUE(output_under_test->page_flip(mga::PresentationState::full_scene(
+        std::make_shared<StubFramebuffer>(flip_framebuffer_id))));
+}
+
+TEST_F(AtomicKMSMixedPresentationTest, set_crtc_disables_previously_enabled_overlay)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_NO_FATAL_FAILURE(present_initial_mixed_frame(*this, *output_under_test));
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(set_crtc_disabling_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    EXPECT_TRUE(output_under_test->set_crtc(StubFramebuffer{primary_framebuffer_id}));
+}
+
+TEST_F(AtomicKMSMixedPresentationTest, mixed_page_flip_keeps_reused_overlay_enabled)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_NO_FATAL_FAILURE(present_initial_mixed_frame(*this, *output_under_test));
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(page_flip_keeping_the_overlay(*this))),
+            no_flags));
+    EXPECT_TRUE(output_under_test->page_flip(mixed_state(legal_overlay.id)));
+}
+
+// The failed page flip drops the plane capabilities, so the fallback set_crtc() has to re-ensure
+// the CRTC and disable the overlay the previous frame had enabled.
+TEST_F(AtomicKMSMixedPresentationTest, failed_full_scene_page_flip_then_set_crtc_disables_the_overlay)
+{
+    add_overlay_plane(legal_overlay);
+    auto output_under_test = output();
+    ASSERT_NO_FATAL_FAILURE(present_initial_mixed_frame(*this, *output_under_test));
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(page_flip_disabling_the_overlay(*this))),
+            no_flags))
+        .WillOnce(Return(-EIO));
+    EXPECT_FALSE(output_under_test->page_flip(mga::PresentationState::full_scene(
+        std::make_shared<StubFramebuffer>(flip_framebuffer_id))));
+
+    EXPECT_CALL(
+        mock_drm,
+        drmModeAtomicCommit(
+            mtd::IsFdOfDevice(drm_device),
+            mtd::AtomicRequestWith(Eq(set_crtc_disabling_the_overlay(*this))),
+            DRM_MODE_ATOMIC_ALLOW_MODESET));
+    EXPECT_TRUE(output_under_test->set_crtc(StubFramebuffer{primary_framebuffer_id}));
 }

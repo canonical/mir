@@ -18,12 +18,14 @@
 #define MIR_GRAPHICS_GBM_ATOMIC_KMS_ATOMIC_OUTPUT_H_
 
 #include "kms_output.h"
+#include "presentation_state.h"
 #include <mir/graphics/kms/drm_mode_resources.h>
 #include <mir/fd.h>
 #include <mir/synchronised.h>
 
 #include <memory>
 #include <future>
+#include <vector>
 
 namespace mir
 {
@@ -54,7 +56,7 @@ public:
     bool set_crtc(FBHandle const& fb) override;
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
-    bool page_flip(FBHandle const& fb) override;
+    bool page_flip(PresentationState const& state) override;
     bool test_presentation(PresentationState const& state) override;
 
     void set_cursor_image(gbm_bo* buffer) override;
@@ -85,10 +87,13 @@ private:
         std::unique_ptr<kms::ObjectProperties> crtc_props;
         std::unique_ptr<kms::ObjectProperties> plane_props;
         std::unique_ptr<kms::ObjectProperties> connector_props;
+        std::vector<PlaneId> current_overlays;
     };
 
     bool ensure_crtc(Configuration& to_update);
     void add_primary_properties(AtomicUpdate& update, Configuration const& conf, FBHandle const& fb) const;
+    auto try_add_plane_presentation_properties(
+        AtomicUpdate& update, Configuration const& conf, PresentationState const& state) const -> bool;
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;
