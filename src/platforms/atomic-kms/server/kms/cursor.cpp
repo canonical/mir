@@ -102,10 +102,23 @@ inline mga::Cursor::GBMBOWrapper::operator gbm_bo*()
 
 inline mga::Cursor::GBMBOWrapper::~GBMBOWrapper()
 {
-    if (device)
-        gbm_device_destroy(device);
     if (buffer)
         gbm_bo_destroy(buffer);
+    if (device)
+        gbm_device_destroy(device);
+}
+
+void mga::Cursor::GBMBOWrapper::replace_buffer()
+{
+    auto replacement = gbm_bo_create(
+        device, gbm_bo_get_width(buffer), gbm_bo_get_height(buffer),
+        GBM_FORMAT_ARGB8888, GBM_BO_USE_CURSOR | GBM_BO_USE_WRITE);
+    if (!replacement)
+        BOOST_THROW_EXCEPTION(std::runtime_error{"Failed to allocate cursor image buffer"});
+
+    // Framebuffer references retain the old GEM storage until its replacement is committed.
+    gbm_bo_destroy(buffer);
+    buffer = replacement;
 }
 
 mga::Cursor::GBMBOWrapper::GBMBOWrapper(GBMBOWrapper&& from)
@@ -176,6 +189,7 @@ void mga::Cursor::pad_and_write_image_data_locked(
     std::lock_guard<std::mutex> const& lg,
     GBMBOWrapper& gbm_buffer)
 {
+    gbm_buffer.replace_buffer();
     auto const orientation = gbm_buffer.orientation();
     bool const sideways = orientation == mir_orientation_left || orientation == mir_orientation_right;
 

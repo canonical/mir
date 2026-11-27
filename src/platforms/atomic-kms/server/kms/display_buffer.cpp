@@ -427,6 +427,11 @@ void mga::DisplaySink::for_each_display_sink(std::function<void(graphics::Displa
     f(*this);
 }
 
+void mga::DisplaySink::register_refresh_handler(std::function<void()> const& handler)
+{
+    output->register_refresh_handler(handler);
+}
+
 bool mga::DisplaySink::set_crtc(FBHandle const& forced_frame)
 {
     /*
@@ -450,9 +455,7 @@ bool mga::DisplaySink::post()
 {
     if (!next_state)
     {
-        // Hey! No one has given us a next frame yet, so we don't have to change what's onscreen.
-        // Sweet! We can just bail.
-        return true;
+        return output->post_cursor();
     }
     /*
      * Otherwise, pull the next frame into the pending slot

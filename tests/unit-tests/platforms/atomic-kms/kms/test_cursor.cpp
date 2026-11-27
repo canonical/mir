@@ -411,6 +411,51 @@ TEST_F(AtomicKmsCursorTest, does_not_need_compositing)
     EXPECT_THAT(cursor.needs_compositing(), Eq(false));
 }
 
+TEST_F(AtomicKmsCursorTest, showing_a_new_image_does_not_rewrite_the_previous_buffer)
+{
+    uintptr_t next_buffer{0x10000};
+    ON_CALL(mock_gbm, gbm_bo_create(_, _, _, _, _)).WillByDefault(
+        [&] (auto...) { return reinterpret_cast<gbm_bo*>(next_buffer++); });
+    gbm_bo* previous{nullptr};
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(_)).WillOnce(SaveArg<0>(&previous));
+    auto image = std::make_shared<StubCursorImage>();
+    cursor.show(image);
+    ASSERT_THAT(previous, NotNull());
+    EXPECT_CALL(mock_gbm, gbm_bo_write(previous, _, _)).Times(0);
+    EXPECT_CALL(mock_gbm, gbm_bo_write(Ne(previous), _, _)).Times(AtLeast(1));
+    EXPECT_CALL(*output_container->outputs[0], set_cursor_image(Ne(previous)));
+    cursor.show(image);
+}
+
+TEST_F(AtomicKmsCursorTest, constructor_rejects_an_output_without_hardware_cursor_support)
+{
+    ON_CALL(*output_container->outputs[0], clear_cursor()).WillByDefault(Return(false));
+    EXPECT_THROW(
+        (mga::Cursor{output_container, mt::fake_shared(current_configuration)}),
+        std::runtime_error);
+}
+
+TEST_F(AtomicKmsCursorTest, orientation_change_does_not_rewrite_the_previous_buffer)
+{
+    uintptr_t next_buffer{0x10000};
+    ON_CALL(mock_gbm, gbm_bo_create(_, _, _, _, _)).WillByDefault(
+        [&] (auto...) { return reinterpret_cast<gbm_bo*>(next_buffer++); });
+    cursor.move_to({700, 10});
+    gbm_bo* previous{nullptr};
+    EXPECT_CALL(*output_container->outputs[2], set_cursor_image(_)).WillOnce(SaveArg<0>(&previous));
+    cursor.show(std::make_shared<StubCursorImage>());
+    ASSERT_THAT(previous, NotNull());
+    current_configuration.conf.stub_config.for_each_output([](mg::UserDisplayConfigurationOutput& output)
+        {
+            if (output.id.as_value() == 2)
+                output.orientation = mir_orientation_left;
+        });
+    EXPECT_CALL(mock_gbm, gbm_bo_write(previous, _, _)).Times(0);
+    EXPECT_CALL(mock_gbm, gbm_bo_write(Ne(previous), _, _)).Times(1);
+    EXPECT_CALL(*output_container->outputs[2], set_cursor_image(Ne(previous)));
+    cursor.move_to({701, 10});
+}
+
 
 TEST_F(AtomicKmsCursorTest, renderable_has_mirror_mode_none)
 {

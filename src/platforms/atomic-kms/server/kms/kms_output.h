@@ -27,6 +27,7 @@
 #include <mir/graphics/kms/drm_mode_resources.h>
 
 #include <gbm.h>
+#include <functional>
 
 #include <memory>
 
@@ -80,6 +81,8 @@ public:
     virtual void clear_crtc() = 0;
 
     virtual bool page_flip(FBHandle const& fb) = 0;
+    virtual bool post_cursor() { return true; }
+    virtual void register_refresh_handler(std::function<void()> const&) {}
 
     /// Builds the complete atomic request that would present \a state and checks it with a
     /// single DRM_MODE_ATOMIC_TEST_ONLY commit. Nothing visible changes.

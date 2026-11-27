@@ -73,6 +73,7 @@ struct PlaneSpec
     uint32_t crtcs{0};
     std::optional<uint64_t> type{};
     bool in_formats{true};
+    uint32_t bound_crtc{0};
     std::optional<RangeProperty> zpos{};
     std::optional<RangeProperty> alpha{};
     EnumValues blend{};
@@ -135,7 +136,7 @@ public:
                                        {ids.crtc_x, "CRTC_X"}, {ids.crtc_y, "CRTC_Y"},
                                        {ids.crtc_w, "CRTC_W"}, {ids.crtc_h, "CRTC_H"},
                                        {ids.crtc_id, "CRTC_ID"}, {ids.fb_id, "FB_ID"}})
-            add_property(plane.id, id, name);
+            add_property(plane.id, id, name, id == ids.crtc_id ? plane.bound_crtc : 0);
         if (plane.in_formats)
         {
             add_property(plane.id, ids.in_formats, "IN_FORMATS", plane.id);

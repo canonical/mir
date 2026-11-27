@@ -79,6 +79,16 @@ public:
      */
     virtual std::chrono::milliseconds recommended_sleep() const = 0;
 
+    /**
+     * Registers a request to post hardware-only changes, without rendering the scene.
+     *
+     * The handler may be called from any thread. Replacing or clearing it must wait
+     * for any previous invocation to finish and prevent further calls to the old
+     * handler. Pass an empty function to clear it. The handler must not call this
+     * method itself.
+     */
+    virtual void register_refresh_handler(std::function<void()> const&) {}
+
     virtual ~DisplaySyncGroup() = default;
 
 protected:
