@@ -82,17 +82,24 @@ public:
     void load_device_ioctls(std::string const& name);
 
     /**
-     * Load an evemu evdev recording for a UMockdev device
+     * Replay an evemu evdev recording on a UMockdev device
      *
      * Looks for a <tt>name</tt>.evemu file recorded with umockdev-record --evemu
-     * (or evemu-record) and associates it with the udev device it was recorded from.
+     * (or evemu-record) and replays it on the udev device it was recorded from.
      *
      * The udev records for the device this recording is associated with
-     * must already exist in the testbed
+     * must already exist in the testbed. Events are queued on the device node
+     * until something reads them. Event timestamps are rebased so that the first
+     * event is stamped with the current CLOCK_MONOTONIC time, and events are written
+     * with the recorded timing. As with the kernel, each event frame (up to SYN_REPORT)
+     * is delivered atomically. Blocks until the whole recording has been written.
      *
-     * @param name The unadorned filename for the ioctl records to add
+     * The recording must have a "# device /dev/input/eventN" header identifying
+     * the device node to replay on.
+     *
+     * @param name The unadorned filename for the evemu recording to replay
      */
-    void load_device_evemu(std::string const& name);
+    void play_device_evemu(std::string const& name);
 
     UMockdevTestbed *testbed;
     std::string const recordings_path;
