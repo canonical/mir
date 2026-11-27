@@ -9,6 +9,7 @@ These pages provide additional detail about contributing to Mir.
 - [](mir-architecture)
 - [](mir-libraries)
 - {ref}`Input Platform <mir-input-platform>`
+- {ref}`Threading model <mir-threading>`
 
 ```{toctree}
 ---

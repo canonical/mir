@@ -24,8 +24,9 @@ on GitHub.
 ### Develop and maintain Mir
 
 - Learn about Mir's {ref}`architecture <mir-architecture>`,
-  {ref}`libraries and module structure <mir-libraries>`, and
-  {ref}`input platform APIs <mir-input-platform>`.
+  {ref}`libraries and module structure <mir-libraries>`,
+  {ref}`input platform APIs <mir-input-platform>`, and
+  {ref}`threading model <mir-threading>`.
 - Work with {ref}`graphics support for snaps <how-to-enable-graphics-for-snaps-on-a-device>`,
   {ref}`debug Mir snaps <how-to-debug-mir-snaps>`,
   {ref}`update Wayland Explorer <how-to-update-wayland-explorer>`, and
