@@ -20,6 +20,7 @@
 #include <mir/shell/shell.h>
 #include <mir/scene/session.h>
 #include <mir/scene/surface.h>
+#include <mir/geometry/rectangles.h>
 #include <mir/log.h>
 #include "wl_surface.h"
 #include "output_manager.h"
@@ -484,24 +485,21 @@ private:
             geometry::Size const& /*new_size*/) override {};
         virtual void handle_close_request() override {};
         virtual void handle_tiled_edges(Flags<MirTiledEdge> /*tiled_edges*/) override {}
-        virtual void handle_commit() override
+        void handle_commit() override
         {
-            auto surface_opt = scene_surface();
+            auto const surface_opt = scene_surface();
             if (!surface_opt)
                 return;
 
-            auto surface = surface_opt->get();
-            auto input_region_list = surface->get_input_region();
-            auto next_bounds = input_region_list.empty() ? surface->input_bounds()
-                : input_region_list[0];
-            if (last_bounds == next_bounds)
+            auto const next_exclusive_rect = input_panel_exclusive_rect(*surface_opt->get());
+            if (last_exclusive_rect == next_exclusive_rect)
                 return;
 
             mir::shell::SurfaceSpecification spec;
-            spec.exclusive_rect = std::optional<mir::geometry::Rectangle>(next_bounds);
-            last_bounds = next_bounds;
+            spec.exclusive_rect = next_exclusive_rect;
+            last_exclusive_rect = next_exclusive_rect;
             apply_spec(spec);
-        };
+        }
         virtual void destroy_role() const override
         {
             wl_resource_destroy(resource);
@@ -537,17 +535,7 @@ private:
 
         void set_toplevel(struct wl_resource* output, uint32_t position) override
         {
-            mir::shell::SurfaceSpecification spec;
-            auto const output_id = output_manager->output_id_for(output);
-            spec.output_id = output_id.value();
-            if (position == Position::center_bottom)
-            {
-                spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
-            }
-            else
-                log_warning("Invalid position: %u", position);
-
-            apply_spec(spec);
+            apply_spec(input_panel_toplevel_spec(output_manager->output_id_for(output), position));
             show();
         }
 
@@ -559,7 +547,7 @@ private:
         OutputManager* output_manager;
         std::shared_ptr<scene::TextInputHub> const text_input_hub;
         std::shared_ptr<StateObserver> const state_observer;
-        geometry::Rectangle last_bounds;
+        std::optional<geometry::Rectangle> last_exclusive_rect;
     };
 
     void get_input_panel_surface(wl_resource* id, wl_resource* surface) override
@@ -611,4 +599,60 @@ void mf::InputPanelV1::bind(wl_resource *new_resource)
         text_input_hub,
         surface_registry,
     };
+}
+
+auto mf::input_panel_exclusive_rect(scene::Surface const& surface) -> std::optional<geometry::Rectangle>
+{
+    auto const input_region_list = surface.get_input_region();
+    if (input_region_list.empty())
+    {
+        auto const size = surface.content_size();
+        if (size.width > geometry::Width{0} && size.height > geometry::Height{0})
+        {
+            return geometry::Rectangle{{}, size};
+        }
+        return std::nullopt;
+    }
+
+    geometry::Rectangles non_empty_rects;
+    for (auto const& rect : input_region_list)
+    {
+        if (rect.size.width > geometry::Width{0} && rect.size.height > geometry::Height{0})
+        {
+            non_empty_rects.add(rect);
+        }
+    }
+
+    if (non_empty_rects.size() == 0)
+    {
+        return std::nullopt;
+    }
+
+    return non_empty_rects.bounding_rectangle();
+}
+
+auto mf::input_panel_toplevel_spec(
+    std::optional<graphics::DisplayConfigurationOutputId> output_id,
+    uint32_t position) -> shell::SurfaceSpecification
+{
+    shell::SurfaceSpecification spec;
+    if (output_id)
+    {
+        spec.output_id = output_id.value();
+    }
+    else
+    {
+        log_warning("Ignoring unknown or disabled wl_output in zwp_input_panel_surface_v1.set_toplevel");
+    }
+
+    if (position == wayland::InputPanelSurfaceV1::Position::center_bottom)
+    {
+        spec.attached_edges = MirPlacementGravity::mir_placement_gravity_south;
+    }
+    else
+    {
+        log_warning("Invalid position: %u", position);
+    }
+
+    return spec;
 }
