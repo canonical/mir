@@ -47,8 +47,8 @@ execute: |
       ~/rpmbuild/SRPMS/mir-*.src.rpm
 
     find "${CCACHE_DIR}/debug" -name '*.ccache-log' -type f -print0 \
-      | xargs -0 grep -h 'Result:' \
-      | sed 's/^.*Result: /Result: /' \
+      | xargs -0 grep -hE 'Result:|Unsupported compiler option|Compiler option .* is unsupported' \
+      | sed -e 's/^.*Result: /Result: /' -e 's/^.*Unsupported /Unsupported /' -e 's/^.*Compiler option /Compiler option /' \
       | sort \
       | uniq -c > "${CCACHE_DIR}/ccache.debug-results"
 
