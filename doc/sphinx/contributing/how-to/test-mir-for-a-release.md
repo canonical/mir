@@ -14,17 +14,21 @@ in the Mir repository, such that the repository is updated beforehand.
 
 We will run the test plan on the `miral-app` test compositor.
 
+1. If the stable Mir PPA is enabled, run `sudo add-apt-repository --remove ppa:mir-team/release` before you add the release candidate PPA.
+   Disable any other PPA that supplies Mir packages.
 1. Install mir from the release candidate PPA
    ```sh
    sudo add-apt-repository --update ppa:mir-team/rc
    sudo apt install mir-demos mir-platform-graphics-virtual mir-graphics-drivers-desktop mir-test-tools
    ```
+1. Always run `miral-shell --version` before testing. If the version does not match the target release, stop.
+   This command does not distinguish builds that report the same version.
 1. Confirm that you can run `miral-app`
 
 ## Testing with `mir-smoke-test-runner`
 
 These verify our demo clients work with `mir_demo_server` and should be run for
-each of the ubuntu series (see previous section).
+each of the [Ubuntu releases in the test matrix](#testing-each-graphics-platform).
 
 The tests will automatically test the platforms that are expected to work.
 
@@ -48,8 +52,8 @@ results collated.
 
 ## Testing with `mir-compositor-smoke-test`
 
-These verify our demo servers work and should be run for each of the ubuntu
-series (see previous section).
+These verify our demo servers work and should be run for each of the
+[Ubuntu releases in the test matrix](#testing-each-graphics-platform).
 
 1. Run `mir-compositor-smoke-test` like so:
 
@@ -125,6 +129,7 @@ you should encounter one of the following scenarios for each output:
 1. Check that the virtual platform can run and you can connect to it via a VNC:
 
    ```sh
+   sudo snap install ubuntu-frame-vnc
    MIR_SERVER_PLATFORM_DISPLAY_LIBS=mir:virtual MIR_SERVER_VIRTUAL_OUTPUT=1280x1024 WAYLAND_DISPLAY=wayland-1 miral-app \
        --add-wayland-extension=zwp_virtual_keyboard_manager_v1:zwlr_virtual_pointer_manager_v1:zwlr_screencopy_manager_v1
    ```
@@ -160,7 +165,7 @@ For each empty box in the matrix above, ensure that the following applications c
 1. Test that `weston-terminal` can be started and can receive input:
 
    ```
-   sudo apt install weston-terminal
+   sudo apt install weston
    weston-terminal
    ```
 
@@ -268,8 +273,9 @@ miral-app -kiosk # a typical kiosk
 
 For each of our downstream snaps, check that you have installed a build with the Mir version under test (typically from the `beta` channel). Then run the tests for that snap.
 
-E.g. for `mir-test-tools`:
+For `mir-test-tools`, replace `CHANNEL` with the channel that contains the Mir version under test:
 
 ```sh
+sudo snap install mir-test-tools --channel=CHANNEL
 /snap/mir-test-tools/current/bin/selftest
 ```
