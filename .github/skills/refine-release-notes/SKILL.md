@@ -85,6 +85,8 @@ with these Mir-specific conventions:
    previous limitation, new behavior, who benefits, and how to adopt or enable it
    when supported by the diff or documentation. Group related smaller changes and
    bug fixes together; provide more context than the concise packaging bullets.
+1. Verify that the release implements and exposes each feature you highlight.
+   Omit stubs and groundwork. If the evidence is unclear, flag the claim for review.
 1. Explain compatibility changes with affected interfaces, old and new behavior,
    replacements and concrete migration steps. Distinguish removals from deprecations;
    name removal versions only when confirmed. Describe build/runtime requirements
