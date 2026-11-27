@@ -3,6 +3,7 @@
 IMPORTANT: Read the `.kb/agents.md` file.
 
 - [.kb/agents.md](.kb/agents.md) - Structure and rules of the knowledge base. You MUST read this file.
+- [.kb/mir-threading-model.md](.kb/mir-threading-model.md) - Thread affinity, GL cleanup, and synchronized shared-data guidance.
 - [src/server/.kb/mir-server.md](src/server/.kb/mir-server.md) - Server startup, shutdown, and ownership.
 - [src/miral/.kb/miral-basic-window-manager.md](src/miral/.kb/miral-basic-window-manager.md) - BasicWindowManager locking, MRU/focus rules, zones and placement.
 - [src/miral/.kb/miral-window-management-model.md](src/miral/.kb/miral-window-management-model.md) - MirAL window-management model: lock contract, Window identity, resize rules.
