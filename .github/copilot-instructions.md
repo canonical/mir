@@ -113,6 +113,8 @@ rather than jumping straight into code.
 PRs use `.github/pull_request_template.md`: link the issue (**Closes #???**), summarize what's new,
 give test steps, and complete the checklist. Reviewers focus on:
 
+- For reviews of changed `.h` or `.cpp` files, use the
+  [cppguide-review skill](skills/cppguide-review/SKILL.md) for advisory C++ guide feedback.
 - **ABI compatibility**: Are symbol maps and Debian symbols updated? Do MirAL headers stay ABI-stable?
 - **Protocol correctness**: Do Wayland protocol implementations follow the spec? Are client errors reported on the correct interface?
 - **Exception safety**: Does the change maintain at least basic exception safety?
