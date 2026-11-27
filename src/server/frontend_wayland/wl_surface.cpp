@@ -534,7 +534,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
         {
             // TODO: unmap surface, and unmap all subsurfaces
             buffer_size_ = std::nullopt;
-            current_foreign_buffer = {};
+            stop_tracking_foreign_buffer();
             send_frame_callbacks(frame_callbacks);
         }
         else
@@ -574,14 +574,7 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
                         });
                 };
 
-            // If we have a current buffer attached currently, let's stop listening on it.
-            if (current_foreign_buffer)
-            {
-                auto foreign_buffer = ExtForeignBufferV1::from(weak_buffer.value());
-                foreign_buffer->remove_listener(*this);
-                current_foreign_buffer = {};
-            }
-
+            stop_tracking_foreign_buffer();
 
             if (auto const shm_buffer = ShmBuffer::from(weak_buffer.value()))
             {
@@ -622,8 +615,6 @@ void mf::WlSurface::commit(WlSurfaceState const& state)
     }
     else
     {
-        current_foreign_buffer = {};
-
         if (state.release_fence)
         {
             throw wayland::ProtocolError{
@@ -717,10 +708,24 @@ auto mf::WlSurface::submit_current_buffer() -> bool
     return size_changed;
 }
 
+void mf::WlSurface::stop_tracking_foreign_buffer()
+{
+    if (current_foreign_buffer)
+    {
+        current_foreign_buffer.value().remove_listener(*this);
+    }
+    current_foreign_buffer = {};
+}
+
 void mf::WlSurface::advise_foreign_buffer_content_changed(std::shared_ptr<graphics::Buffer> buffer)
 {
     // The client may have attached something else since this surface registered as a consumer.
     if (!current_foreign_buffer)
+    {
+        return;
+    }
+
+    if (buffer == current_buffer)
     {
         return;
     }
