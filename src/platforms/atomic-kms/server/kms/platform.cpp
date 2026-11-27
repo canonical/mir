@@ -155,8 +155,3 @@ auto mga::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag)
     }
     return {};
 }
-
-mga::BypassOption mga::Platform::bypass_option() const
-{
-    return bypass_option_;
-}

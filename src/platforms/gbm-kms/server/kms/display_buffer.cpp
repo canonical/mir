@@ -23,7 +23,6 @@
 #include <mir/graphics/display_report.h>
 #include <mir/graphics/platform.h>
 #include <mir/graphics/transformation.h>
-#include "bypass.h"
 #include <mir/fatal.h>
 #include <mir/log.h>
 #include "display_helpers.h"
@@ -51,7 +50,6 @@ namespace geom = mir::geometry;
 mgg::DisplaySink::DisplaySink(
     mir::Fd drm_fd,
     std::shared_ptr<struct gbm_device> gbm,
-    mgg::BypassOption,
     std::shared_ptr<DisplayReport> const& listener,
     std::shared_ptr<KMSOutput> const& output,
     geom::Rectangle const& area,

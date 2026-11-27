@@ -381,9 +381,9 @@ Log trace message
 
 ### `bypass`
 
-Enable bypass optimization for fullscreen surfaces.
+Enable displaying of eligible client buffers directly using primary or overlay planes, without compositor rendering.
 
-Defaults to `0`.
+Defaults to `1`.
 
 (mir-atomic-kms-driver-quirks)=
 
@@ -392,14 +392,6 @@ Defaults to `0`.
 Driver quirks to apply. May be specified multiple times; multiple quirks are combined.
 
 ## Options for mir:gbm-kms platform
-
-(mir-gbm-kms-bypass)=
-
-### `bypass`
-
-Enable bypass optimization for fullscreen surfaces.
-
-Defaults to `0`.
 
 (mir-gbm-kms-driver-quirks)=
 

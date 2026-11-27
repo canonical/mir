@@ -160,6 +160,7 @@ private:
 
     auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
     auto output_maps_1_to_1_to_crtc() const -> bool;
+    auto queue_full_scene(DisplayElement const& element) -> bool;
     auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
 
     std::shared_ptr<struct gbm_device> const gbm;
@@ -185,6 +186,7 @@ private:
     std::atomic<bool> needs_set_crtc;
     std::chrono::milliseconds recommend_sleep{0};
     std::shared_ptr<GbmQuirks> const gbm_quirks;
+    BypassOption const bypass_option;
 };
 
 }

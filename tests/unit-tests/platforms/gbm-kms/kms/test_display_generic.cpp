@@ -92,8 +92,7 @@ public:
             *device,
             mir::report::null_display_report(),
             *std::make_shared<mtd::StubConsoleServices>(),
-            *std::make_shared<mtd::NullEmergencyCleanup>(),
-            mgg::BypassOption::allowed);
+            *std::make_shared<mtd::NullEmergencyCleanup>());
         return platform->create_display(
             std::make_shared<mg::CloneDisplayConfigurationPolicy>(),
             std::make_shared<mtd::StubGLConfig>());

@@ -16,6 +16,7 @@
 
 #include "display_sink.h"
 #include <mir/graphics/kms_cpu_addressable_display_provider.h>
+#include "kms/presentation_state.h"
 #include "kms_output.h"
 #include "plane_capabilities.h"
 #include <mir/graphics/cpu_addressable_fb.h>
@@ -61,7 +62,7 @@ namespace mgk = mir::graphics::kms;
 mga::DisplaySink::DisplaySink(
     mir::Fd drm_fd,
     std::shared_ptr<struct gbm_device> gbm,
-    mga::BypassOption,
+    mga::BypassOption bypass_option,
     mga::PlanePromotion plane_promotion,
     std::shared_ptr<DisplayReport> const& listener,
     std::shared_ptr<KMSOutput> output,
@@ -76,7 +77,8 @@ mga::DisplaySink::DisplaySink(
       area(area),
       transform{transformation},
       needs_set_crtc{false},
-      gbm_quirks{gbm_quirks}
+      gbm_quirks{gbm_quirks},
+      bypass_option{bypass_option}
 {
     listener->report_successful_setup_of_native_resources();
 
@@ -120,14 +122,14 @@ void mga::DisplaySink::set_transformation(glm::mat2 const& t, geometry::Rectangl
 
 bool mga::DisplaySink::overlay(std::vector<DisplayElement> const& renderable_list)
 {
+    if (bypass_option == BypassOption::prohibited)
+    {
+        return false;
+    }
+
     if (renderable_list.size() == 1)
     {
-        if (auto fb = fullscreen_framebuffer(renderable_list[0]))
-        {
-            next_state = PresentationState::full_scene(std::move(fb));
-            return true;
-        }
-        return false;
+        return queue_full_scene(renderable_list[0]);
     }
 
     if (renderable_list.size() == 2)
@@ -349,6 +351,16 @@ auto select_direct_candidate(
 }
 }
 
+auto mga::DisplaySink::queue_full_scene(DisplayElement const& element) -> bool
+{
+    if (auto fb = fullscreen_framebuffer(element))
+    {
+        next_state = PresentationState::full_scene(std::move(fb));
+        return true;
+    }
+    return false;
+}
+
 auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool
 {
     auto const capabilities = output->plane_capabilities();
@@ -402,6 +414,10 @@ auto mga::DisplaySink::queue_mixed(DisplayElement const& primary, DisplayElement
 auto mga::DisplaySink::plan_presentation(std::vector<std::shared_ptr<Renderable>> const& renderables)
     -> std::optional<LogicalStacking>
 {
+    if (bypass_option == BypassOption::prohibited)
+    {
+        return std::nullopt;
+    }
     auto const plane_capabilities = output->plane_capabilities();
     if (!output_maps_1_to_1_to_crtc() || !plane_capabilities)
     {
@@ -524,18 +540,15 @@ auto mga::DisplaySink::gbm_device() const -> std::shared_ptr<struct gbm_device>
 
 void mga::DisplaySink::set_next_image(FramebufferPtr content)
 {
-    std::vector<DisplayElement> const single_buffer = {
-        DisplayElement {
-            view_area(),
-            geom::RectangleF{
-                {0, 0},
-                {view_area().size.width.as_value(), view_area().size.height.as_value()}},
-            std::move(content)
-        }
-    };
-    if (!overlay(single_buffer))
+    DisplayElement const single_buffer = {
+        view_area(),
+        geom::RectangleF{
+            {0, 0},
+            {view_area().size.width.as_value(), view_area().size.height.as_value()}},
+        std::move(content)};
+    if (!queue_full_scene(single_buffer))
     {
-        // Oh, oh! We should be *guaranteed* to “overlay” a single Framebuffer; this is likely a programming error
+        // Oh, oh! We should be *guaranteed* to queue a single Framebuffer; this is likely a programming error
         BOOST_THROW_EXCEPTION((std::runtime_error{"Failed to post buffer to display"}));
     }
 }
@@ -722,6 +735,11 @@ auto mga::DisplaySink::maybe_create_allocator(DisplayAllocator::Tag const& type_
     }
     if(dynamic_cast<DmaBufDisplayAllocator::Tag const*>(&type_tag))
     {
+        if (bypass_option == BypassOption::prohibited)
+        {
+            return nullptr;
+        }
+
         if (!bypass_allocator)
         {
            bypass_allocator = std::make_shared<DmaBufDisplayAllocator>(gbm, drm_fd());

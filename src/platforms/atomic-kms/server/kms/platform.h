@@ -63,8 +63,6 @@ protected:
     auto maybe_create_provider(DisplayProvider::Tag const& type_tag)
         -> std::shared_ptr<DisplayProvider> override;
 
-public:
-    BypassOption bypass_option() const;
 private:
     Platform(
         std::tuple<std::unique_ptr<Device>, mir::Fd> drm,

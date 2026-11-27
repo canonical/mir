@@ -88,23 +88,20 @@ mgg::Platform::Platform(
     udev::Device const& device,
     std::shared_ptr<DisplayReport> const& listener,
     ConsoleServices& vt,
-    EmergencyCleanupRegistry& registry,
-    BypassOption bypass_option)
-    : Platform(master_fd_for_device(device, vt), listener, registry, bypass_option)
+    EmergencyCleanupRegistry& registry)
+    : Platform(master_fd_for_device(device, vt), listener, registry)
 {
 }
 
 mgg::Platform::Platform(
     std::tuple<std::unique_ptr<Device>, mir::Fd> drm,
     std::shared_ptr<DisplayReport> const& listener,
-    EmergencyCleanupRegistry&,
-    BypassOption bypass_option)
+    EmergencyCleanupRegistry&)
     : udev{std::make_shared<mir::udev::Context>()},
       listener{listener},
       device_handle{std::move(std::get<0>(drm))},
       drm_fd{std::move(std::get<1>(drm))},
-      gbm_display_provider{maybe_make_gbm_provider(drm_fd)},
-      bypass_option_{bypass_option}
+      gbm_display_provider{maybe_make_gbm_provider(drm_fd)}
 {
     if (drm_fd == mir::Fd::invalid)
     {
@@ -493,7 +490,6 @@ mir::UniqueModulePtr<mg::Display> mgg::Platform::create_display(
     return make_module_ptr<mgg::Display>(
         drm_fd,
         gbm_device_from_provider(gbm_display_provider),
-        bypass_option_,
         initial_conf_policy,
         listener);
 }
@@ -513,9 +509,4 @@ auto mgg::Platform::maybe_create_provider(DisplayProvider::Tag const& type_tag)
         return std::make_shared<CPUAddressableDisplayProvider>();
     }
     return {};
-}
-
-mgg::BypassOption mgg::Platform::bypass_option() const
-{
-    return bypass_option_;
 }
