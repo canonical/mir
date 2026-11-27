@@ -30,6 +30,8 @@
 
 namespace
 {
+auto const page_size = static_cast<uintptr_t>(sysconf(_SC_PAGE_SIZE));
+
 class ShmBufferSIGBUSHandler
 {
 public:
@@ -85,12 +87,23 @@ public:
 
         auto provide_fallback_mapping() -> bool
         {
+            /* MAP_FIXED requires a page-aligned address, so round down.
+             * This may also zero out some of an earlier buffer with the same backing,
+             * but that's fine because this is a fatal client error anyway.
+             *
+             * This *cannot* zero-out unrelated buffers because the base address
+             * of a mapping will always be page-aligned.
+             */
+            auto const start = reinterpret_cast<uintptr_t>(addr);
+            auto const aligned_start = start - start % page_size;
+            auto* const aligned_addr = reinterpret_cast<void*>(aligned_start);
+
             // Replace the existing mapping with a fallback
             if (mmap(
-                addr, len,
+                aligned_addr, len + (start - aligned_start),
                 PROT_READ | PROT_WRITE,
                 MAP_PRIVATE | MAP_FIXED | MAP_ANONYMOUS,
-                -1, 0) == addr)
+                -1, 0) == aligned_addr)
             {
                 // We've successfully replaced any existing mapping with a new,
                 // all-0, mapping that will not SIGBUS on access.
