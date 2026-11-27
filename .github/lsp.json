@@ -1,0 +1,16 @@
+{
+  "lspServers": {
+    "clangd": {
+      "command": "clangd",
+      "args": ["--background-index"],
+      "fileExtensions": {
+        ".c": "c",
+        ".h": "cpp",
+        ".cpp": "cpp",
+        ".cc": "cpp",
+        ".cxx": "cpp",
+        ".hpp": "cpp"
+      }
+    }
+  }
+}
