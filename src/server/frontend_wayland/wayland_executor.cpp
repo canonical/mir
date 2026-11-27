@@ -169,11 +169,13 @@ public:
         auto listener =
             wl_event_loop_get_destroy_listener(loop, &EventLoopDestroyedHandler::on_destroyed);
 
+        if (!listener)
+            return;
+
         EventLoopDestroyedHandler* me;
         me = wl_container_of(listener, me, destruction_listener);
-        delete me;
-
         wl_list_remove(&listener->link);
+        delete me;
     }
 private:
     EventLoopDestroyedHandler(
