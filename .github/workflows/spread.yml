@@ -148,7 +148,11 @@ jobs:
         MATRIX_SPREAD_TASK: ${{ matrix.spread-task }}
 
     - name: CCache stats
-      run: cat "${CCACHE_DIR}/ccache.stats"
+      run: |
+        cat "${CCACHE_DIR}/ccache.stats"
+        if [ -f "${CCACHE_DIR}/ccache.debug-results" ]; then
+          cat "${CCACHE_DIR}/ccache.debug-results"
+        fi
 
     - if: ${{ failure() && runner.debug }}
       name: Setup upterm session
