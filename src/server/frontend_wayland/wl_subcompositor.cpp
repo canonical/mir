@@ -18,6 +18,8 @@
 
 #include "wl_subcompositor.h"
 #include "wl_surface.h"
+#include "resource_lifetime_tracker.h"
+#include "linux_drm_syncobj.h"
 
 #include <mir/wayland/client.h>
 #include <mir/wayland/protocol_error.h>
@@ -120,7 +122,22 @@ mf::WlSubsurface::~WlSubsurface()
         parent.value().remove_subsurface(this);
     }
     surface->clear_role();
-    refresh_surface_data_now();
+
+    // When the client is going away all of its objects are destroyed, in whatever order they happen to be in, so there
+    // is nothing left to refresh.
+    if (client->is_being_destroyed())
+        return;
+
+    // Refreshing asks the shell to modify the window this sub-surface is part of, which it can refuse: for instance a
+    // popup whose parent window has already been destroyed. That must not escape a destructor.
+    try
+    {
+        refresh_surface_data_now();
+    }
+    catch (...)
+    {
+        mw::internal_error_processing_request(client->raw_client(), "WlSubsurface::~WlSubsurface()");
+    }
 }
 
 void mf::WlSubsurface::populate_surface_data(std::vector<shell::StreamSpecification>& buffer_streams,
@@ -239,6 +256,16 @@ void mf::WlSubsurface::set_sync()
 void mf::WlSubsurface::set_desync()
 {
     synchronized_ = false;
+
+    // From the spec:
+    //   If a surface's parent surface behaves as desynchronized, then the cached state is applied on set_desync.
+    if (cached_state && !synchronized())
+    {
+        surface->commit(cached_state.value());
+        if (cached_state.value().surface_data_needs_refresh())
+            refresh_surface_data_now();
+        cached_state = std::nullopt;
+    }
 }
 
 void mf::WlSubsurface::refresh_surface_data_now()
@@ -253,6 +280,28 @@ void mf::WlSubsurface::commit(WlSurfaceState const& state)
 {
     if (!cached_state)
         cached_state = WlSurfaceState();
+
+    // A buffer committed while synchronized waits in the cache for the parent to commit. If the client commits another
+    // one first, the cached buffer is replaced without ever reaching WlSurface::commit(), which is the only place a
+    // release is arranged for it. The client is still owed that release: Mesa's EGL platform keeps a buffer locked
+    // until it arrives, and blocks in eglSwapBuffers() once every buffer of the surface is locked.
+    if (state.buffer && cached_state.value().buffer)
+    {
+        auto const& superseded = cached_state.value().buffer.value();
+        if (superseded && !(superseded == state.buffer.value()))
+        {
+            if (auto& release_fence = cached_state.value().release_fence)
+            {
+                // With explicit sync the release is this commit's release point rather than a wl_buffer event.
+                release_fence->signal();
+                release_fence.reset();
+            }
+            else
+            {
+                wl_resource_post_event(superseded.value(), wayland::Buffer::Opcode::release);
+            }
+        }
+    }
 
     cached_state.value().update_from(state);
 
