@@ -79,7 +79,7 @@ public:
         {
             auto fault_addr = reinterpret_cast<uintptr_t>(access);
             auto protected_addr = reinterpret_cast<uintptr_t>(addr);
-            return fault_addr > protected_addr &&
+            return fault_addr >= protected_addr &&
                 fault_addr < protected_addr + len;
         }
 

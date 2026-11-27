@@ -14,13 +14,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "output_configuration_options.h"
 #include "server_example_input_event_filter.h"
 #include "server_example_input_filter.h"
 #include "server_example_test_client.h"
 
 #include <miral/cursor_theme.h>
 #include <miral/decoration_style.h>
+#include <miral/display_configuration_option.h>
 #include <miral/input_configuration.h>
 #include <miral/keymap.h>
 #include <miral/live_config.h>
@@ -143,7 +143,6 @@ try
     miral::Keymap keymap{config_store};
     miral::HoverClick hover_click{config_store};
     miral::TouchEmulator touch_emulator{config_store};
-    OutputConfigurationOptions output_configuration_options{config_store};
 
     miral::ConfigFile config_file{
         runner,
@@ -164,7 +163,7 @@ try
 
     auto const server_exit_status = runner.run_with({
         // example options for display layout, logging and timeout
-        output_configuration_options,
+        miral::display_configuration_options,
         miral::X11Support{},
         wayland_extensions,
         miral::set_window_management_policy<miral::FloatingWindowManager>(),

@@ -73,15 +73,14 @@ class WindowState
 public:
     WindowState(
         std::shared_ptr<scene::Surface> const& window_surface,
-        geometry::Height fixed_titlebar_height,
-        geometry::Width fixed_side_border_width,
-        geometry::Height fixed_bottom_border_height,
+        DecorationStyle const& style,
         float scale);
 
     ~WindowState();
 
     auto window_size() const -> geometry::Size;
     auto border_type() const -> BorderType;
+    auto corner_radius() const -> geometry::Width;
     auto focused_state() const -> MirWindowFocusState;
     auto window_name() const -> std::string;
 

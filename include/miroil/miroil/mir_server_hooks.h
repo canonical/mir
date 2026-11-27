@@ -32,6 +32,7 @@ class CursorImage;
 }
 namespace mir
 {
+namespace scene { class TextInputHub; }
 namespace shell { class DisplayConfigurationController; }
 }
 
@@ -48,6 +49,7 @@ public:
 
     auto the_mir_display() const -> std::shared_ptr<mir::graphics::Display>;
     auto the_display_configuration_controller() const -> std::shared_ptr<mir::shell::DisplayConfigurationController>;
+    auto the_text_input_hub() const -> std::shared_ptr<mir::scene::TextInputHub>;
     void create_named_cursor(CreateNamedCursor func);
     void create_input_device_observer(std::shared_ptr<InputDeviceObserver>& observer);
 

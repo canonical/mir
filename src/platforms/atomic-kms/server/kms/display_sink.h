@@ -22,7 +22,9 @@
 #include <mir/graphics/platform.h>
 #include <mir/graphics/display_providers.h>
 #include <mir/graphics/kms_framebuffer.h>
+#include <mir/graphics/texture.h>
 
+#include "plane_capabilities.h"
 #include "platform_common.h"
 #include "presentation_state.h"
 
@@ -72,6 +74,43 @@ class DmaBufDisplayAllocator : public graphics::DmaBufDisplayAllocator
         std::shared_ptr<struct gbm_device> const gbm;
 };
 
+/// A framebuffer handle that owns a DRM framebuffer id.
+///
+/// Declared in this header only because DirectScanoutFramebuffer, which tests construct, derives
+/// from it.
+class AtomicKmsFbHandle : public FBHandle
+{
+public:
+    AtomicKmsFbHandle(std::shared_ptr<uint32_t> fb_id, geometry::Size size);
+
+    operator uint32_t() const override;
+    auto size() const -> geometry::Size override;
+
+private:
+    std::shared_ptr<uint32_t> kms_fb_id;
+    geometry::Size size_;
+};
+
+/// A framebuffer imported with an explicit modifier, for direct scanout on an overlay plane.
+///
+/// Declared here so tests can construct one.
+class DirectScanoutFramebuffer : public AtomicKmsFbHandle
+{
+public:
+    DirectScanoutFramebuffer(
+        std::shared_ptr<uint32_t> fb_id,
+        geometry::Size size,
+        FormatModifier format_modifier,
+        gl::Texture::Layout layout);
+
+    auto format_modifier() const -> FormatModifier;
+    auto layout() const -> gl::Texture::Layout;
+
+private:
+    FormatModifier format_modifier_;
+    gl::Texture::Layout layout_;
+};
+
 class DisplaySink :
     public graphics::DisplaySink,
     public graphics::DisplaySyncGroup,
@@ -118,6 +157,10 @@ protected:
 
 private:
     bool set_crtc(FBHandle const&);
+
+    auto fullscreen_framebuffer(DisplayElement const& element) const -> std::shared_ptr<FBHandle>;
+    auto output_maps_1_to_1_to_crtc() const -> bool;
+    auto queue_mixed(DisplayElement const& primary, DisplayElement const& client) -> bool;
 
     std::shared_ptr<struct gbm_device> const gbm;
     std::shared_ptr<DisplayReport> const listener;

@@ -194,7 +194,7 @@ struct DecorationBasicDecoration
             mt::fake_shared(executor),
             mt::fake_shared(cursor_images),
             mt::fake_shared(window_surface),
-            msd::DecorationStrategy::default_decoration_strategy(mt::fake_shared(buffer_allocator)));
+            decoration_strategy);
         executor.execute();
     }
 
@@ -212,6 +212,8 @@ struct DecorationBasicDecoration
 
     NiceMock<MockShell> shell;
     mtd::StubBufferAllocator buffer_allocator;
+    std::shared_ptr<msd::DecorationStrategy> const decoration_strategy{
+        msd::DecorationStrategy::default_decoration_strategy(mt::fake_shared(buffer_allocator))};
     mtd::ExplicitExecutor executor;
     StubCursorImages cursor_images;
     std::shared_ptr<msd::BasicDecoration> basic_decoration;
@@ -352,6 +354,20 @@ TEST_F(DecorationBasicDecoration, redrawn_on_focus_state_change)
     window_surface.configure(mir_window_attrib_focus, mir_window_focus_state_unfocused);
     executor.execute();
     Mock::VerifyAndClearExpectations(&buffer_stream);
+}
+
+TEST_F(DecorationBasicDecoration, maximizing_redraws_rounded_titlebar_without_a_resize)
+{
+    auto style = std::make_shared<msd::DecorationStyle>();
+    style->corner_radius = geom::Width{12};
+    decoration_strategy->update_style(style);
+    basic_decoration->restyle();
+    executor.execute();
+
+    geom::Size const titlebar_size{default_window_size.width, style->titlebar_height};
+    EXPECT_CALL(buffer_stream, submit_buffer(_, titlebar_size, _));
+    window_surface.configure(mir_window_attrib_state, mir_window_state_maximized);
+    executor.execute();
 }
 
 TEST_F(DecorationBasicDecoration, decoration_resized_on_window_resize)
