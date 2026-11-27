@@ -3,6 +3,11 @@ systems: [alpine-*]
 variants: [amd64, "*ld"]
 
 execute: |
+    proxy_ca_directory=/usr/local/share/ca-certificates
+    proxy_install_certs="apk add ca-certificates"
+    proxy_update_ca=update-ca-certificates
+    source "${SPREAD_PATH}/spread/setup-proxy.sh"
+
     apk add \
         boost-dev \
         cargo \

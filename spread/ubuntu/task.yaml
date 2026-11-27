@@ -13,6 +13,11 @@ summary: Build Ubuntu packages
 execute: |
     cd $SPREAD_PATH
 
+    proxy_ca_directory=/usr/local/share/ca-certificates
+    proxy_update_ca=update-ca-certificates
+    proxy_install_certs="apt-get update; apt-get install --yes --no-install-recommends ca-certificates"
+    source "${SPREAD_PATH}/spread/setup-proxy.sh"
+
     NODBG=$( [[ "${DEB_BUILD_OPTIONS}" != *nostrip* ]] && echo true || echo false )
 
     # Add Mir dev PPA for any out-of-archive packages needed

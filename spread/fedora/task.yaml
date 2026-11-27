@@ -6,6 +6,11 @@ kill-timeout: 60m
 execute: |
     echo "defaultyes=True" >> /etc/dnf/dnf.conf
 
+    proxy_ca_directory=/etc/pki/ca-trust/source/anchors
+    proxy_install_certs="dnf install ca-certificates"
+    proxy_update_ca=update-ca-trust
+    source "${SPREAD_PATH}/spread/setup-proxy.sh"
+
     TEST_PKGS=(
       cmake
       createrepo
