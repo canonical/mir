@@ -5,9 +5,10 @@ description: C++ coding standards, common patterns, and logging for Mir source a
 
 # Mir C++ guidelines
 
-Mir follows a comprehensive C++ style guide in
-`doc/sphinx/contributing/reference/cppguide.md`. When in doubt, match the style of the
-surrounding code. Highlights:
+Mir's detailed C++ style guide is
+[`doc/sphinx/contributing/reference/cppguide.md`](../../doc/sphinx/contributing/reference/cppguide.md).
+This file is a concise summary; follow the detailed guide for the full guidance. When in doubt,
+match the style of the surrounding code.
 
 ## File headers
 
@@ -81,7 +82,7 @@ Use these standard aliases in `.cpp` files for brevity:
 
 ## C++ features
 
-- **Use C++23 features** where appropriate
+- **Use C++26 features** where appropriate and supported by Mir's toolchains
 - **Constructors**: Use `explicit` for single-argument constructors
 - **Initialization**: Prefer `{}` initialization (e.g., `int n{5}`). This includes default member initializers — write `bool ready{false};`, not `bool ready = false;`
 - **Null pointers**: Use `nullptr` instead of `NULL` or `0`
@@ -106,7 +107,9 @@ Use these standard aliases in `.cpp` files for brevity:
 
 - **Exceptions**: Functions should throw exceptions when they cannot meet post-conditions
 - **Exception safety**: Provide at least the basic exception safety guarantee
-- **Preconditions**: May be verified using `fatal_error_abort()` for fatal errors. Do not use `assert()` — its behavior differs between debug and release builds.
+- **Fatal errors**: Use `MIR_FATAL_ERROR()` when an unrecoverable internal error occurs.
+- **Assertions**: Use `assert()` only for debug-time programmer invariants, not input validation or behavior that must be
+  enforced in release builds.
 - **Pointers**: Assumed to be valid unless explicitly documented otherwise
 - **Wayland protocol errors**: Client-caused errors (invalid input, protocol violations) should be reported by throwing `mw::ProtocolError` (see the Wayland protocol instructions)
 
@@ -127,7 +130,7 @@ Use these standard aliases in `.cpp` files for brevity:
 - **Public API changes**: When adding, removing, or changing symbols in public headers, update the corresponding `symbols.map` and Debian symbols file — see the ABI & symbols instructions for the procedure.
 - **Inline functions**: Only for small functions (≤10 lines)
 - **Preprocessor macros**: Avoid when possible; prefer inline functions, enums, and const variables
-- **Streams**: Use only for logging, prefer `printf`-style for other I/O
+- **Streams**: Use `std::stringstream` or `std::ostringstream` for in-memory text when appropriate; use Mir's logging APIs for logging
 - **Reference parameters**: Input parameters should be `const` references or values; output parameters are rare and should use non-const references when modifying inputs, or return `std::pair`/`std::tuple` for multiple outputs
 - **Modern idioms**:
   - **Optionals**: Prefer `value_or()` over `if (opt) ... else ...` for defaults; chain with `.transform(fn).value_or(fallback)` for map-then-default

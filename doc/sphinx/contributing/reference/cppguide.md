@@ -165,34 +165,14 @@ inline. The main reason for making a virtual function inline is to place
 its definition in the class, either for convenience or to document its
 behavior, e.g., for accessors and mutators.
 
-(the-inl-h-files)=
+### Inline and template definitions
 
-### The -inl.h files
-
-You may use file names with a `-inl.h` suffix to define complex inline
-functions when needed.
-
-The definition of an inline function needs to be in a header file, so
-that the compiler has the definition available for inlining at the call
-sites. However, implementation code properly belongs in `.cpp` files,
-and we do not like to have much actual code in `.h` files unless there
-is a readability or performance advantage.
-
-If an inline function definition is short, with very little, if any,
-logic in it, you should put the code in your `.h` file. For example,
-accessors and mutators should certainly be inside a class definition.
-More complex inline functions may also be put in a `.h` file for the
-convenience of the implementer and callers, though if this makes the
-`.h` file too unwieldy you can instead put that code in a separate
-`-inl.h` file. This separates the implementation from the class
-definition, while still allowing the implementation to be included where
-necessary.
-
-Another use of `-inl.h` files is for definitions of function templates.
-This can be used to keep your template definitions easy to read.
-
-Do not forget that a `-inl.h` file requires a [`#define`
-guard](#the-define-guard) just like any other header file.
+When a header declares inline functions or templates whose definitions
+are needed by code including that header, put the definitions in the
+header or in another self-contained header that it includes. Do not
+split them into separately included `-inl.h` files. If all uses of a
+template are confined to one `.cpp` file, its definition may remain
+there.
 
 ### Function parameter ordering
 
@@ -1001,18 +981,15 @@ Within function parameter lists all references must be `const`:
 void foo(string const& in, string* out);
 ```
 
-In fact it is a very strong convention in Unity code that input
-arguments are values or `const` references while output arguments are
-pointers. Input parameters may be `const` pointers. Non-`const`
-reference parameters are allowed but there must be a valid reason for
-it, a strong preference is given to `const` reference parameters.
+In Mir code, input arguments are usually values or `const` references
+while output arguments are usually pointers. Input parameters may be
+`const` pointers. Non-`const` reference parameters are allowed when
+there is a valid reason, but `const` references are preferred for input.
 
 One case when you might want an input parameter to be a `const` pointer
 is if you want to emphasize that the argument is not copied, so it must
 exist for the lifetime of the object; it is usually best to document
-this in comments as well. STL adapters such as `bind2nd` and `mem_fun`
-do not permit reference parameters, so you must declare functions with
-pointer parameters in these cases, too.
+this in comments as well.
 
 ### Function overloading
 
@@ -1055,41 +1032,11 @@ some information about the arguments, e.g., `append_string()`,
 
 ### Default arguments
 
-We do not allow default function parameters, except in a few uncommon
-situations explained below.
-
-**Pros:**
-
-Often you have a function that uses lots of default values, but
-occasionally you want to override the defaults. Default parameters allow
-an easy way to do this without having to define many functions for the
-rare exceptions.
-
-**Cons:**
-
-People often figure out how to use an API by looking at existing code
-that uses it. Default parameters are more difficult to maintain because
-copy-and-paste from previous code may not reveal all the parameters.
-Copy-and-pasting of code segments can cause major problems when the
-default arguments are not appropriate for the new code.
-
-**Decision:**
-
-Except as described below, we require all arguments to be explicitly
-specified, to force programmers to consider the API and the values they
-are passing for each argument rather than silently accepting defaults
-they may not be aware of.
-
-One specific exception is when default arguments are used to simulate
-variable-length argument lists.
-
-```c++
-// Support up to 4 params by using a default empty AlphaNum.
-string str_cat(AlphaNum const& a,
-               AlphaNum const& b = gEmptyAlphaNum,
-               AlphaNum const& c = gEmptyAlphaNum,
-               AlphaNum const& d = gEmptyAlphaNum);
-```
+Use default arguments when they make a common call clearer and the
+default is unsurprising and stable. Avoid them when the value changes
+the meaning of an operation in a way callers should choose explicitly.
+Declare a default argument once, on the declaration visible to callers;
+do not repeat it in the function definition.
 
 ### Variable-length arrays and alloca()
 
@@ -1161,93 +1108,20 @@ Do not use C-style casts. Instead, use these C++-style casts.
 - Use `reinterpret_cast` to do unsafe conversions of pointer types to
   and from integer and other pointer types. Use this only if you know
   what you are doing and you understand the aliasing issues.
-- Do not use `dynamic_cast` except in test code. If you need to know
-  type information at runtime in this way outside of a unit test, you
-  probably have a design flaw.
+- Use `dynamic_cast` for checked runtime interface queries or
+  downcasts when the API contract requires them, as in Mir's graphics
+  platform interfaces. Avoid using it for routine type-based branching
+  when virtual dispatch or a type-safe alternative better expresses the
+  design.
 
 ### Streams
 
-Use streams only for logging.
-
-**Definition:**
-
-Streams are a replacement for `printf()` and `scanf()`.
-
-**Pros:**
-
-With streams, you do not need to know the type of the object you are
-printing. You do not have problems with format strings not matching the
-argument list. (Though with gcc, you do not have that problem with
-`printf` either.) Streams have automatic constructors and destructors
-that open and close the relevant files.
-
-**Cons:**
-
-Streams make it difficult to do functionality like `pread()`. Some
-formatting (particularly the common format string idiom `%.*s`) is
-difficult if not impossible to do efficiently using streams without
-using `printf`-like hacks. Streams do not support operator reordering
-(the `%1s` directive), which is helpful for internationalization.
-
-**Decision:**
-
-Do not use streams, except where required by a logging interface. Use
-`printf`-like routines instead.
-
-There are various pros and cons to using streams, but in this case, as
-in many other cases, consistency trumps the debate. Do not use streams
-in your code.
-
-**Extended Discussion**
-
-There has been debate on this issue, so this explains the reasoning in
-greater depth. Recall the Only One Way guiding principle: we want to
-make sure that whenever we do a certain type of I/O, the code looks the
-same in all those places. Because of this, we do not want to allow users
-to decide between using streams or using `printf` plus Read/Write/etc.
-Instead, we should settle on one or the other. We made an exception for
-logging because it is a pretty specialized application, and for
-historical reasons.
-
-Proponents of streams have argued that streams are the obvious choice of
-the two, but the issue is not actually so clear. For every advantage of
-streams they point out, there is an equivalent disadvantage. The biggest
-advantage is that you do not need to know the type of the object to be
-printing. This is a fair point. But, there is a downside: you can easily
-use the wrong type, and the compiler will not warn you. It is easy to
-make this kind of mistake without knowing when using streams.
-
-```c++
-cout << this;  // Prints the address
-cout << *this;  // Prints the contents
-```
-
-The compiler does not generate an error because `<<` has been
-overloaded. We discourage overloading for just this reason.
-
-Some say `printf` formatting is ugly and hard to read, but streams are
-often no better. Consider the following two fragments, both with the
-same typo. Which is easier to discover?
-
-```c++
-cerr << "Error connecting to '" << foo->bar()->hostname.first
-     << ":" << foo->bar()->hostname.second << ": " << strerror(errno);
-
-fprintf(stderr, "Error connecting to '%s:%u: %s",
-        foo->bar()->hostname.first, foo->bar()->hostname.second,
-        strerror(errno));
-```
-
-And so on and so forth for any issue you might bring up. (You could
-argue, "Things would be better with the right wrappers," but if it is
-true for one scheme, is it not also true for the other? Also, remember
-the goal is to make the language smaller, not add yet more machinery
-that someone has to learn.)
-
-Either path would yield different advantages and disadvantages, and
-there is not a clearly superior solution. The simplicity doctrine
-mandates we settle on one of them though, and the majority decision was
-on `printf` + `read`/`write`.
+Use `std::stringstream` or `std::ostringstream` to assemble in-memory
+text when they make the code clear; Mir uses them for reports, generated
+text, and diagnostic messages. Use Mir's logging interfaces for logging.
+For file, socket, and descriptor I/O, follow the APIs and patterns of the
+subsystem rather than choosing streams or `printf`-style routines by
+general rule.
 
 ### Preincrement and predecrement
 
@@ -1382,62 +1256,19 @@ For integers we know can be "big", use `int64_t`.
 Code should be 64-bit and 32-bit friendly. Bear in mind problems of
 printing, comparisons, and structure alignment.
 
-- `printf()` specifiers for some types are not cleanly portable between
-  32-bit and 64-bit systems. C99 defines some portable format
-  specifiers. Unfortunately, MSVC 7.1 does not understand some of these
-  specifiers and the standard is missing a few, so we have to define our
-  own ugly versions in some cases (in the style of the standard include
-  file `inttypes.h`):
-
-  ```c++
-  // printf macros for size_t, in the style of inttypes.h
-  #ifdef _LP64
-  #define __PRIS_PREFIX "z"
-  #else
-  #define __PRIS_PREFIX
-  #endif
-
-  // Use these macros after a % in a printf format string
-  // to get correct 32/64 bit behavior, like this:
-  // size_t size = records.size();
-  // printf("%"PRIuS"\n", size);
-
-  #define PRIdS __PRIS_PREFIX "d"
-  #define PRIxS __PRIS_PREFIX "x"
-  #define PRIuS __PRIS_PREFIX "u"
-  #define PRIXS __PRIS_PREFIX "X"
-  #define PRIoS __PRIS_PREFIX "o"
-  ```
-
-  | Type                     | DO NOT use            | DO use                   | Notes               |
-  | ------------------------ | --------------------- | ------------------------ | ------------------- |
-  | `void*` (or any pointer) | `%lx`                 | `%p`                     |                     |
-  | `int64_t`                | `%qd`, `%lld`         | `%"PRId64"`              |                     |
-  | `uint64_t`               | `%qu`, `%llu`, `%llx` | `%"PRIu64"`, `%"PRIx64"` |                     |
-  | `size_t`                 | `%u`                  | `%"PRIuS"`, `%"PRIxS"`   | C99 specifies `%zu` |
-  | `ptrdiff_t`              | `%d`                  | `%"PRIdS"`               | C99 specifies `%zd` |
-
-  Note that the `PRI*` macros expand to independent strings which are
-  concatenated by the compiler. Hence if you are using a non-constant
-  format string, you need to insert the value of the macro into the
-  format, rather than the name. It is still possible, as usual, to
-  include length specifiers, etc., after the `%` when using the `PRI*`
-  macros. So, e.g. `printf("x = %30"PRIuS"\n", x)` would expand on
-  32-bit Linux to `printf("x = %30" "u" "\n", x)`, which the compiler
-  will treat as `printf("x = %30u\n", x)`.
+- When using `printf()`-style formatting, use specifiers that match the
+  argument types. Use `%p` for pointers, `%zu` for `size_t`, and `%td`
+  for `ptrdiff_t`. For fixed-width integers, use the corresponding
+  `PRI*` macro from `<cinttypes>` (for example, `"%" PRId64` for
+  `int64_t`).
 
 - Remember that `sizeof(void*)` != `sizeof(int)`. Use `intptr_t` if you
   want a pointer-sized integer.
 
-- You may need to be careful with structure alignments, particularly for
-  structures being stored on disk. Any class/structure with a
-  `int64_t`/`uint64_t` member will by default end up being 8-byte
-  aligned on a 64-bit system. If you have such structures being shared
-  on disk between 32-bit and 64-bit code, you will need to ensure that
-  they are packed the same on both architectures. Most compilers offer a
-  way to alter structure alignment. For gcc, you can use
-  `__attribute__((packed))`. MSVC offers `#pragma pack()` and
-  `__declspec(align())`.
+- For structures stored on disk or shared between 32-bit and 64-bit
+  code, do not rely on implementation-specific layout. Prefer explicit
+  serialization; if a shared layout is required, define and verify its
+  alignment and packing for every supported toolchain.
 
 - Use the `LL` or `ULL` suffixes as needed to create 64-bit constants.
   For example:
@@ -1447,9 +1278,10 @@ printing, comparisons, and structure alignment.
   uint64_t my_mask = 3ULL << 48;
   ```
 
-- If you really need different code on 32-bit and 64-bit systems, use
-  `#ifdef _LP64` to choose between the code variants. (But please avoid
-  this if possible, and keep any such changes localized.)
+- If code must differ between 32-bit and 64-bit systems, use compile-time
+  checks supported by the toolchains and keep the differences localized.
+  Avoid architecture-specific branches when using portable types can
+  solve the problem.
 
 ### Preprocessor macros
 
@@ -1523,12 +1355,8 @@ memset(&data, 0, sizeof(Struct));
 
 ### C++26
 
-Use C++26 features wherever appropriate.
-
-**Definition:**
-
-C++26 is the current ISO C++ standard. It contains significant
-changes to both the language and libraries from older standards.
+Mir's CMake configuration requires C++26. Use C++26 features where they improve the code and are
+supported by Mir's toolchains.
 
 ## Naming
 
@@ -1637,19 +1465,9 @@ In general, make your filenames very specific. For example, use
 a pair of files called, e.g., `foo_bar.h` and `foo_bar.cpp`, defining a
 class called `FooBar`.
 
-Inline functions must be in a `.h` file. If your inline functions are
-very short, they should go directly into your `.h` file. However, if
-your inline functions include a lot of code, they may go into a third
-file that ends in `-inl.h`. In a class with a lot of inline code, your
-class could have three files:
-
-```c++
-url_table.h      // The class declaration.
-url_table.cpp     // The class definition.
-url_table-inl.h  // Inline functions that include lots of code.
-```
-
-See also the section [-inl.h Files](the-inl-h-files)
+Definitions needed by clients of a header belong in that header or in
+another self-contained header it includes. See
+[Inline and template definitions](#inline-and-template-definitions).
 
 ### Type names
 
@@ -2491,7 +2309,9 @@ be placed as shown below.
 If not conditional on an enumerated value, switch statements should
 always have a `default` case (in the case of an enumerated value, the
 compiler will warn you if any values are not handled). If the default
-case should never execute, simply `assert`:
+case should never execute, `assert` may document that debug-time
+programmer invariant. Do not use it to validate input or enforce
+behavior required in release builds.
 
 ```c++
 switch (var)
