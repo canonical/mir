@@ -120,6 +120,8 @@ struct WlSurfaceState
     std::optional<SyncPoint> release_fence;
 
 private:
+    void release_buffer_replaced_by(wayland::Weak<ResourceLifetimeTracker> const& new_buffer);
+
     // only set to true if invalidate_surface_data() is called
     // surface_data_needs_refresh() returns true if this is true, or if other things are changed which mandate a refresh
     // is marked mutable so invalidate_surface_data() can be const and be called from a const reference

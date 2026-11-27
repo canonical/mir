@@ -76,7 +76,10 @@ mf::WlSurfaceState::Callback::Callback(wl_resource* new_resource)
 void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 {
     if (source.buffer)
+    {
+        release_buffer_replaced_by(source.buffer.value());
         buffer = source.buffer;
+    }
 
     if (source.scale)
         scale = source.scale;
@@ -105,6 +108,26 @@ void mf::WlSurfaceState::update_from(WlSurfaceState const& source)
 
     if (source.release_fence)
         release_fence = source.release_fence;
+}
+
+void mf::WlSurfaceState::release_buffer_replaced_by(mw::Weak<ResourceLifetimeTracker> const& new_buffer)
+{
+    if (!buffer || !buffer.value())
+        return;
+
+    auto const& old_buffer = buffer.value();
+    if (new_buffer && &new_buffer.value() == &old_buffer.value())
+        return;
+
+    if (release_fence)
+    {
+        release_fence->signal();
+        release_fence = std::nullopt;
+    }
+    else
+    {
+        wl_resource_post_event(old_buffer.value(), wayland::Buffer::Opcode::release);
+    }
 }
 
 bool mf::WlSurfaceState::surface_data_needs_refresh() const
