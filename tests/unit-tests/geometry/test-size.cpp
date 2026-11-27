@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <mir/geometry/dimensions.h>
 #include <mir/geometry/size.h>
 
 #include <gmock/gmock.h>
@@ -68,3 +69,12 @@ static_assert(std::convertible_to<geom::SizeF, geom::SizeD>, "Implicit conversio
 // Test that lossy implicit conversions fail
 static_assert(!std::convertible_to<geom::Size, geom::SizeF>, "Conversion float->int is lossy");
 static_assert(!std::convertible_to<geom::SizeD, geom::SizeF>, "Conversion double->float is lossy");
+
+TEST(geometry, size_area)
+{
+    EXPECT_EQ(12u, geom::area(geom::Size{3, 4}).as_value());
+    EXPECT_EQ(12.0f, geom::area(geom::SizeF{3.0f, 4.0f}).as_value());
+    EXPECT_EQ(0u, geom::area(geom::Size{}).as_value());
+}
+
+static_assert(geom::area(geom::Size{3, 4}).as_value() == 12u, "area is constexpr");

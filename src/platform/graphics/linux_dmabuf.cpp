@@ -1163,7 +1163,7 @@ private:
                     GLsizei width = parent.size_.width.as_int();
                     GLsizei height = parent.size_.height.as_int();
 
-                    auto pixels = std::make_unique<std::byte[]>(static_cast<size_t>(width) * height * 4uz);
+                    auto pixels = std::make_unique<std::byte[]>(static_cast<size_t>(geom::area(parent.size_).as_value()) * 4uz);
 
                     glGenFramebuffers(1, &fbo);
                     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
