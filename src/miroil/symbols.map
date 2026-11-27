@@ -105,3 +105,16 @@ global:
   };
 local: *;
 };
+
+MIROIL_10.1 {
+global:
+  extern "C++" {
+    miroil::MirServerHooks::the_text_input_hub*;
+    miroil::TextInputHubWrapper::?TextInputHubWrapper*;
+    miroil::TextInputHubWrapper::TextInputHubWrapper*;
+    miroil::TextInputHubWrapper::set_handler_state*;
+    miroil::TextInputHubWrapper::deactivate_handler*;
+    miroil::TextInputHubWrapper::show_input_panel*;
+    miroil::TextInputHubWrapper::hide_input_panel*;
+  };
+} MIROIL_10.0;

@@ -46,7 +46,7 @@ TEST(PresentationState, only_a_state_without_client_planes_holds_the_full_scene)
 
     auto const mixed = mga::PresentationState::mixed(
         primary,
-        {mga::ClientPlaneAssignment{overlay_plane, overlay}});
+        {mga::ClientPlaneAssignment{overlay_plane, overlay, {}}});
     EXPECT_FALSE(mixed.primary_holds_full_scene());
 }
 

@@ -13,6 +13,7 @@ list(APPEND UNIT_TEST_SOURCES
   ${CMAKE_CURRENT_SOURCE_DIR}/test_default_input_manager.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_surface_input_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_seat_input_device_tracker.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/test_xkb_mapper_registrar.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_key_repeat_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_keyboard_resync_dispatcher.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/test_idle_poking_dispatcher.cpp

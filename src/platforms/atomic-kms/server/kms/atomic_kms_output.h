@@ -32,6 +32,7 @@ namespace graphics
 namespace atomic
 {
 
+class AtomicUpdate;
 class PageFlipper;
 
 class AtomicKMSOutput : public KMSOutput
@@ -54,6 +55,7 @@ public:
     bool has_crtc_mismatch() override;
     void clear_crtc() override;
     bool page_flip(FBHandle const& fb) override;
+    bool test_presentation(PresentationState const& state) override;
 
     void set_cursor_image(gbm_bo* buffer) override;
     void move_cursor(geometry::Point destination) override;
@@ -86,6 +88,7 @@ private:
     };
 
     bool ensure_crtc(Configuration& to_update);
+    void add_primary_properties(AtomicUpdate& update, Configuration const& conf, FBHandle const& fb) const;
     void restore_saved_crtc();
 
     mir::Fd const drm_fd_;
