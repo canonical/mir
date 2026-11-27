@@ -60,6 +60,11 @@ public:
 
     void pointer_unusable() override;
 
+    // Hides (or stops hiding) the cursor independently of whether a pointing device is attached.
+    // The cursor is visible only while it is usable and not hidden. Attaching the first pointing
+    // device clears the hidden state.
+    void set_hidden(bool hide);
+
     void image_set_to(std::shared_ptr<graphics::CursorImage> new_image) override;
 
     void set_drag_icon(std::weak_ptr<scene::Surface> icon) override;
@@ -74,12 +79,15 @@ private:
     std::mutex cursor_state_guard;
     geometry::Point cursor_location;
     std::shared_ptr<graphics::CursorImage> current_cursor;
+    // Written only while holding both serialize_visibility_changes and cursor_state_guard
     bool usable = false;
+    bool hidden = false;
     std::weak_ptr<scene::Surface> drag_icon;
 
-    // Used only to serialize calls to pointer_usable()/pointer_unusable()
-    std::mutex serialize_pointer_usable_unusable;
+    // Used to serialize calls to pointer_usable()/pointer_unusable()/set_hidden()
+    std::mutex serialize_visibility_changes;
 
+    void update_visibility(std::lock_guard<std::mutex> const&, bool new_usable, bool new_hidden);
     void update_cursor_image_locked(std::unique_lock<std::mutex>&);
     void set_cursor_image_locked(std::unique_lock<std::mutex>&, std::shared_ptr<graphics::CursorImage> const& image);
 };

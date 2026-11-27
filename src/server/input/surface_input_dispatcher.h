@@ -20,6 +20,7 @@
 #include <mir/executor.h>
 #include <mir/frontend/pointer_input_dispatcher.h>
 #include <mir/geometry/point.h>
+#include <mir/input/cursor_observer.h>
 #include <mir/input/input_dispatcher.h>
 #include <mir/input/keyboard_observer.h>
 #include <mir/observer_multiplexer.h>
@@ -47,7 +48,8 @@ class SurfaceInputDispatcher :
     public input::InputDispatcher,
     public shell::InputTargeter,
     public frontend::PointerInputDispatcher,
-    public ObserverRegistrar<KeyboardObserver>
+    public ObserverRegistrar<KeyboardObserver>,
+    public CursorObserver
 {
 public:
     SurfaceInputDispatcher(std::shared_ptr<input::Scene> const& scene);
@@ -73,6 +75,13 @@ public:
     void unregister_interest(KeyboardObserver const& observer) override;
 
     void disable_dispatch_to_gesture_owner(std::function<void()> on_end_gesture) override;
+
+    // CursorObserver
+    // While the cursor is hidden, pointer events are tracked but not delivered to surfaces
+    void cursor_moved_to(float abs_x, float abs_y) override;
+    void pointer_usable() override;
+    void pointer_unusable() override;
+    void image_set_to(std::shared_ptr<graphics::CursorImage> new_image) override;
 
 private:
     bool dispatch_key(std::shared_ptr<MirEvent const> const& ev);
@@ -126,6 +135,7 @@ private:
     std::shared_ptr<MirEvent const> last_pointer_event;
     std::weak_ptr<input::Surface> focus_surface;
     bool screen_is_locked;
+    bool pointer_visible = true;
     bool dispatch_to_gesture_owner = true;
     std::function<void()> on_end_gesture = []{};
 };

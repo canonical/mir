@@ -223,13 +223,13 @@ void mi::CursorController::set_cursor_image_locked(std::unique_lock<std::mutex>&
     }
 
     current_cursor = image;
-    auto const usable = this->usable;
+    auto const visible = usable && !hidden;
 
     lock.unlock();
 
     if (image && !is_empty(image))
     {
-        if (usable)
+        if (visible)
             cursor->show(image);
         cursor_observer->image_set_to(image);
     }
@@ -282,51 +282,65 @@ void mi::CursorController::cursor_moved_to(float abs_x, float abs_y)
 
 void mir::input::CursorController::pointer_usable()
 {
-    std::lock_guard lock(serialize_pointer_usable_unusable);
-    bool became_usable = false;
+    std::lock_guard serialize(serialize_visibility_changes);
+    // The first pointing device shows the cursor, even if it was previously hidden
+    update_visibility(serialize, true, usable && hidden);
+}
+
+void mir::input::CursorController::pointer_unusable()
+{
+    std::lock_guard serialize(serialize_visibility_changes);
+    update_visibility(serialize, false, false);
+}
+
+void mir::input::CursorController::set_hidden(bool hide)
+{
+    std::lock_guard serialize(serialize_visibility_changes);
+    update_visibility(serialize, usable, hide);
+}
+
+void mir::input::CursorController::update_visibility(
+    std::lock_guard<std::mutex> const&, bool new_usable, bool new_hidden)
+{
+    bool was_visible;
+    bool is_visible;
     std::shared_ptr<mg::CursorImage> image;
     std::shared_ptr<ms::Surface> di;
 
     {
         std::lock_guard lock(cursor_state_guard);
-        became_usable = !usable;
+        was_visible = usable && !hidden;
+        usable = new_usable;
+        hidden = new_hidden;
+        is_visible = usable && !hidden;
         image = current_cursor;
-        usable = true;
         di = drag_icon.lock();
     }
 
-    if (became_usable)
+    if (is_visible)
     {
-        cursor_observer->pointer_usable();
-        if (image && !is_empty(image))
-            cursor->show(image);
-        if (di)
+        if (!was_visible)
         {
-            di->show();
+            cursor_observer->pointer_usable();
+            if (image && !is_empty(image))
+                cursor->show(image);
+            if (di)
+            {
+                di->show();
+            }
         }
     }
-}
-
-void mir::input::CursorController::pointer_unusable()
-{
-    std::lock_guard lock(serialize_pointer_usable_unusable);
-    std::shared_ptr<ms::Surface> di;
-    bool became_unusable = false;
+    else
     {
-        std::lock_guard lock(cursor_state_guard);
-        became_unusable = usable;
-        usable = false;
-        di = drag_icon.lock();
-    }
-
-    cursor->hide();
-    if (di)
-    {
-        di->hide();
-    }
-    if (became_unusable)
-    {
-        cursor_observer->pointer_unusable();
+        cursor->hide();
+        if (di)
+        {
+            di->hide();
+        }
+        if (was_visible)
+        {
+            cursor_observer->pointer_unusable();
+        }
     }
 }
 
