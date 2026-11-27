@@ -32,7 +32,7 @@ jobs:
   CheckSymbols:
     needs: [check-paths]
     if: needs.check-paths.outputs.should-run == 'true'
-    runs-on: ubuntu-26.04
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
@@ -44,28 +44,11 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install dependencies
-        run: |
-          sudo --preserve-env apt-add-repository --yes ppa:mir-team/dev
-          sudo apt-get install --yes clang libclang-dev python3-clang
-          # shellcheck disable=SC2012
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_SO_PATH=$( ls /usr/lib/llvm-??/lib/libclang*.so.1 | tail -n1 )" >> "$GITHUB_ENV"
-          # shellcheck disable=SC2012
-          echo "MIR_SYMBOLS_MAP_GENERATOR_CLANG_LIBRARY_PATH=$( ls -d /usr/lib/llvm-??/lib | tail -n1 )" >> "$GITHUB_ENV"
-          sudo apt-get build-dep ./
-
-      - name: Configure
-        run: >
-          cmake -B build ${{ github.workspace }}
+      - name: Launch workshop
+        uses: canonical/launch-workshop@b9e184e38f49808ced78e25de19483fe02484c46 # v1.0.1
 
       - name: Check symbols
-        run: |
-          RET=0
-          cmake --build build --target check-miral-symbols-map || RET=$?
-          cmake --build build --target check-miroil-symbols-map || RET=$?
-          cmake --build build --target check-mirserver-symbols-map || RET=$?
-          cmake --build build --target check-mircommon-symbols-map || RET=$?
-          exit $RET
+        run: workshop run dev symbols-check
 
       - if: ${{ failure() && runner.debug }}
         name: Setup upterm session

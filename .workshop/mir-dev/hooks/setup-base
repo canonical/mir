@@ -15,11 +15,13 @@ apt-get --yes --no-install-recommends install \
   graphviz \
   inotify-tools \
   lcov \
+  libclang-dev \
   libclang-rt-dev \
   llvm \
   mesa-utils \
   mold \
   ninja-build \
+  python3-clang \
   python3-venv \
   python3-livereload \
   ripgrep \
