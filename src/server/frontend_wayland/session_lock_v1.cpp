@@ -241,16 +241,13 @@ void mf::SessionLockV1::destroy()
 {
     if (manager.is_active_lock(this))
     {
-        manager.try_relinquish_locking_privilege(this);
-        mir::log_debug("SessionLockV1 successfully destroyed itself");
-    }
-    else
-    {
         throw mw::ProtocolError{
             resource,
             Error::invalid_destroy,
             "Destroy requested but session is still locked"};
     }
+
+    mir::log_debug("SessionLockV1 successfully destroyed itself");
 }
 
 void mf::SessionLockV1::unlock_and_destroy()
