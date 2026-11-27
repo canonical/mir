@@ -74,26 +74,26 @@ bool mir::shell::BasicMouseKeysTransformer::transform_input_event(
         auto const keysym = mir_keyboard_event_keysym(kev);
         auto const keyboard_action = mir_keyboard_event_action(kev);
 
-        if (auto const mousekey_action = state.lock()->keymap_.get_action(keysym))
+        if (auto const mousekeys_action = state.lock()->keymap_.get_action(keysym))
         {
-            switch (*mousekey_action)
+            switch (*mousekeys_action)
             {
             case move_left:
             case move_right:
             case move_up:
             case move_down:
-                return handle_motion(keyboard_action, *mousekey_action, dispatcher, builder);
+                return handle_motion(keyboard_action, *mousekeys_action, dispatcher, builder);
             case click:
                 return handle_click(keyboard_action, dispatcher, builder);
             case double_click:
                 return handle_double_click(keyboard_action, dispatcher, builder);
             case drag_start:
             case drag_end:
-                return handle_drag(keyboard_action, *mousekey_action, dispatcher, builder);
+                return handle_drag(keyboard_action, *mousekeys_action, dispatcher, builder);
             case button_primary:
             case button_secondary:
             case button_tertiary:
-                return handle_change_pointer_button(keyboard_action, *mousekey_action, dispatcher, builder);
+                return handle_change_pointer_button(keyboard_action, *mousekeys_action, dispatcher, builder);
             }
         }
     }
@@ -103,7 +103,7 @@ bool mir::shell::BasicMouseKeysTransformer::transform_input_event(
 
 bool mir::shell::BasicMouseKeysTransformer::handle_motion(
     MirKeyboardAction keyboard_action,
-    mir::input::MouseKeysKeymap::Action mousekey_action,
+    mir::input::MouseKeysKeymap::Action mousekeys_action,
     Dispatcher const& dispatcher,
     mir::input::EventBuilder* const builder)
 {
@@ -120,7 +120,7 @@ bool mir::shell::BasicMouseKeysTransformer::handle_motion(
     {
         auto const locked_state = state.lock();
         auto& buttons_down = locked_state->buttons_down;
-        switch (mousekey_action)
+        switch (mousekeys_action)
         {
         case move_down:
             set_or_clear(buttons_down, directional_buttons_down, keyboard_action);

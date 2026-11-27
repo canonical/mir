@@ -103,7 +103,7 @@ private:
     std::shared_ptr<graphics::Cursor> const cursor;
 
     std::shared_ptr<input::InputEventTransformer> const event_transformer;
-    std::shared_ptr<MouseKeysTransformer> const mouse_keys_transformer;
+    std::shared_ptr<MouseKeysTransformer> const mousekeys_transformer;
     std::shared_ptr<SimulatedSecondaryClickTransformer> const simulated_secondary_click_transformer;
     std::shared_ptr<HoverClickTransformer> const hover_click_transformer;
     std::shared_ptr<SlowKeysTransformer> const slow_keys_transformer;

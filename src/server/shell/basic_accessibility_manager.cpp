@@ -89,12 +89,12 @@ void msh::BasicAccessibilityManager::repeat_rate_and_delay(
 void msh::BasicAccessibilityManager::mousekeys_enabled(bool on)
 {
     auto const state = mutable_state.lock();
-    toggle_transformer(on, state->mousekeys_on, mouse_keys_transformer, event_transformer);
+    toggle_transformer(on, state->mousekeys_on, mousekeys_transformer, event_transformer);
 }
 
 auto msh::BasicAccessibilityManager::mousekeys() -> MouseKeysTransformer&
 {
-    return *mouse_keys_transformer;
+    return *mousekeys_transformer;
 }
 
 msh::BasicAccessibilityManager::BasicAccessibilityManager(
@@ -109,7 +109,7 @@ msh::BasicAccessibilityManager::BasicAccessibilityManager(
     enable_key_repeat{enable_key_repeat},
     cursor{cursor},
     event_transformer{event_transformer},
-    mouse_keys_transformer{mousekeys_transformer},
+    mousekeys_transformer{mousekeys_transformer},
     simulated_secondary_click_transformer{simulated_secondary_click_transformer},
     hover_click_transformer{hover_click_transformer},
     slow_keys_transformer{slow_keys_transformer},

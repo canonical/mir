@@ -14,8 +14,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MIR_MOUSE_KEYS_KEYMAP_
-#define MIR_MOUSE_KEYS_KEYMAP_
+#ifndef MIR_MOUSEKEYS_KEYMAP_
+#define MIR_MOUSEKEYS_KEYMAP_
 
 #include <initializer_list>
 #include <memory>
